@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-06-29T18:20:50.589Z",
+  "generatedAt": "2026-06-30T18:45:42.873Z",
   "branch": "claude/crazy-merkle-3ad1a1",
   "registryDrift": {
     "unregisteredModules": [],
     "missingOnDiskModules": []
   },
   "summary": {
-    "totalServices": 95,
+    "totalServices": 96,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2418,
+    "bffRouteCount": 2551,
     "contractCount": 105,
     "byProductStatus": {
       "internal-only": 25,
-      "real": 70
+      "real": 71
     },
     "byMaturity": {
       "INTERNAL_ONLY": 25,
-      "REAL_CODE_NOT_PROBED": 66,
+      "REAL_CODE_NOT_PROBED": 67,
       "REAL_PROVEN": 4
     },
     "gapCounts": {
@@ -35,21 +35,21 @@
       "missingTest": 0
     },
     "phase6": {
-      "complete": 95,
-      "userFacing": 70,
-      "userFacingReal": 70,
+      "complete": 96,
+      "userFacing": 71,
+      "userFacingReal": 71,
       "userFacingRealProven": 4
     },
     "capabilities": {
-      "totalCapabilities": 3681,
+      "totalCapabilities": 3892,
       "byDisposition": {
-        "real": 3139,
-        "partial": 141,
+        "real": 3324,
+        "partial": 154,
         "real-proven": 207,
-        "fixture": 194
+        "fixture": 207
       },
       "provenCapabilities": 207,
-      "fixtureCapabilities": 194
+      "fixtureCapabilities": 207
     }
   },
   "services": [
@@ -290,19 +290,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 5,
-        "entities": 5,
-        "repositories": 5,
-        "serviceLayer": 2,
-        "controllers": 4,
-        "routes": 16,
+        "migrations": 7,
+        "entities": 19,
+        "repositories": 19,
+        "serviceLayer": 3,
+        "controllers": 5,
+        "routes": 50,
         "stubRoutes": 0,
         "contractOperations": 14,
         "contractViolations": 0,
-        "bffClients": 3,
-        "uiReferences": 4,
-        "mobileReferences": 0,
-        "tests": 2
+        "bffClients": 4,
+        "uiReferences": 6,
+        "mobileReferences": 2,
+        "tests": 4
       },
       "dimensions": {
         "database": "real",
@@ -321,15 +321,21 @@
       "bffClients": [
         "AssetRegistryServiceClient",
         "AssetRegistrySupplyBffController→inline",
+        "EquipmentOperationsBffController→inline",
         "asset-registry→yml-base-url"
       ],
       "uiPaths": [
         "ui/one-ui-shell/src/app/erp/assets/page.tsx",
         "ui/one-ui-shell/src/app/operations/assets/page.tsx",
+        "ui/one-ui-shell/src/app/operations/equipment/page.tsx",
         "ui/one-ui-shell/src/hooks/queries/useAssets.ts",
+        "ui/one-ui-shell/src/hooks/queries/useEquipment.ts",
         "ui/one-ui-shell/src/lib/registry-service-module-refs.ts"
       ],
-      "mobilePaths": [],
+      "mobilePaths": [
+        "provider-app:apps/mobile/provider-app/src/__tests__/services/theatreService.test.ts",
+        "provider-app:apps/mobile/provider-app/src/services/equipmentService.ts"
+      ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
       "stubRouteCount": 0,
@@ -495,8 +501,8 @@
         "contractOperations": 54,
         "contractViolations": 0,
         "bffClients": 11,
-        "uiReferences": 38,
-        "mobileReferences": 21,
+        "uiReferences": 42,
+        "mobileReferences": 22,
         "tests": 5
       },
       "dimensions": {
@@ -540,13 +546,13 @@
         "ui/one-ui-shell/src/app/marketplace/bookings/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/page.test.tsx",
         "ui/one-ui-shell/src/app/marketplace/page.tsx",
+        "ui/one-ui-shell/src/app/marketplace/store/activity/page.tsx",
+        "ui/one-ui-shell/src/app/marketplace/store/page.tsx",
         "ui/one-ui-shell/src/app/operations/facility-operations/resources/page.tsx",
         "ui/one-ui-shell/src/app/organization-admin/staffing/page.tsx",
         "ui/one-ui-shell/src/app/queue/scheduled/page.tsx",
         "ui/one-ui-shell/src/app/scheduling/booking-requests/page.test.tsx",
-        "ui/one-ui-shell/src/app/scheduling/booking-requests/page.tsx",
-        "ui/one-ui-shell/src/app/scheduling/bookings/config/page.tsx",
-        "ui/one-ui-shell/src/app/scheduling/page.tsx"
+        "ui/one-ui-shell/src/app/scheduling/booking-requests/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/integration/BackendIntegration.test.tsx",
@@ -557,8 +563,8 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/AppointmentsSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/BookingsSection.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/personal/PersonalScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/personal/ProductionReadinessJourneyScreen.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/MarketplaceStoreSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/PersonalScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -741,9 +747,9 @@
         "stubRoutes": 0,
         "contractOperations": 16,
         "contractViolations": 0,
-        "bffClients": 8,
-        "uiReferences": 32,
-        "mobileReferences": 20,
+        "bffClients": 9,
+        "uiReferences": 35,
+        "mobileReferences": 27,
         "tests": 4
       },
       "dimensions": {
@@ -762,6 +768,7 @@
       "contractFile": "butano.custom.openapi.yaml",
       "bffClients": [
         "ButanoServiceClient",
+        "CitizenWalletController→inline",
         "ClinicalShrArtifactController→inline",
         "SummaryProxyController→ButanoServiceClient",
         "SummaryProxyController→inline",
@@ -773,6 +780,9 @@
       "uiPaths": [
         "ui/one-ui-shell/src/app/admin/sidecar-retirement/page.test.tsx",
         "ui/one-ui-shell/src/app/api/mobile/provider/hubs/[hub]/route.ts",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.test.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/records/page.tsx",
         "ui/one-ui-shell/src/app/developer/api-catalog/page.tsx",
         "ui/one-ui-shell/src/app/developer/sandbox/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/ips/page.test.tsx",
@@ -787,22 +797,19 @@
         "ui/one-ui-shell/src/components/shell/ShellFileExplorer.tsx",
         "ui/one-ui-shell/src/config/serviceBranding.test.ts",
         "ui/one-ui-shell/src/config/serviceBranding.ts",
-        "ui/one-ui-shell/src/features/core-transaction/fixtures/core-transactions.ts",
-        "ui/one-ui-shell/src/features/core-transaction/types.ts",
-        "ui/one-ui-shell/src/features/production-command-centre/tile-registry.ts",
-        "ui/one-ui-shell/src/hooks/queries/useSummary.ts"
+        "ui/one-ui-shell/src/features/core-transaction/fixtures/core-transactions.ts"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/social/socialService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/navigation/citizenServiceNavigation.ts",
         "citizen-app:apps/mobile/citizen-app/src/screens/NhumeTrackingScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/emergency/TrackEmergencyScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/HealthTimelineScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/PersonalScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletOverviewSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/rito/TrackFeedbackScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/social/CommunitiesScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/social/SocialFeedScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/services/healthTimelineService.ts"
+        "citizen-app:apps/mobile/citizen-app/src/screens/social/SocialFeedScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -1100,7 +1107,7 @@
         "contractOperations": 12,
         "contractViolations": 0,
         "bffClients": 11,
-        "uiReferences": 25,
+        "uiReferences": 27,
         "mobileReferences": 7,
         "tests": 3
       },
@@ -1135,6 +1142,8 @@
         "ui/one-ui-shell/src/app/access/governance/page.tsx",
         "ui/one-ui-shell/src/app/access/page.tsx",
         "ui/one-ui-shell/src/app/api/mobile/provider/hubs/[hub]/route.ts",
+        "ui/one-ui-shell/src/app/citizen/wallet/comms/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.tsx",
         "ui/one-ui-shell/src/app/communication/page.test.tsx",
         "ui/one-ui-shell/src/app/communication/page.tsx",
         "ui/one-ui-shell/src/app/communication/secure-messaging/page.test.tsx",
@@ -1149,9 +1158,7 @@
         "ui/one-ui-shell/src/components/facility-mode/types.ts",
         "ui/one-ui-shell/src/components/platform/NotificationCommsOrchestrationRail.test.tsx",
         "ui/one-ui-shell/src/components/platform/NotificationCommsOrchestrationRail.tsx",
-        "ui/one-ui-shell/src/data/workSurfaceModules.ts",
-        "ui/one-ui-shell/src/features/maternity/ctg/VitalsCtgSection.tsx",
-        "ui/one-ui-shell/src/features/maternity/ctg/ctgTraceUtils.ts"
+        "ui/one-ui-shell/src/data/workSurfaceModules.ts"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx",
@@ -1344,7 +1351,7 @@
         "contractViolations": 0,
         "bffClients": 19,
         "uiReferences": 59,
-        "mobileReferences": 35,
+        "mobileReferences": 39,
         "tests": 2
       },
       "dimensions": {
@@ -1414,7 +1421,7 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/live/LiveDiscoverScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/ImmunizationsSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/PersonalScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/publicHealth/PublicHealthScreen.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletOverviewSection.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -1781,6 +1788,124 @@
         "citizen-app:apps/mobile/citizen-app/src/types/index.ts",
         "provider-app:apps/mobile/provider-app/src/__tests__/provider/FinanceOverviewScreen.test.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/offline/OfflineDashboardScreen.tsx"
+      ],
+      "mockStubHits": [],
+      "securityPlaceholderHits": [],
+      "stubRouteCount": 0,
+      "bffOrphanRoutes": 0,
+      "internalOnlyDocumented": false,
+      "frontendExpected": true,
+      "expectsPersistence": true,
+      "traceability": {
+        "q1_realBackendCapabilities": true,
+        "q2_exposedViaApi": true,
+        "q3_wiredViaBff": true,
+        "q4_visibleInUi": true,
+        "q5_visibleOnMobile": true,
+        "q6_fakePartialDisconnected": false,
+        "q7_backendNoUi": false,
+        "q8_uiNoBackend": false,
+        "q9_persistsToDb": true,
+        "q10_fixtureOnly": false
+      },
+      "phase6Complete": true,
+      "probeEvidence": null,
+      "gaps": [],
+      "maturity": "REAL_CODE_NOT_PROBED"
+    },
+    {
+      "id": "daidzai-service",
+      "mavenModule": "daidzai-service",
+      "repoPath": "services/daidzai-service",
+      "domain": "workflow-orchestration",
+      "plane": "experience",
+      "productNames": [
+        "Daidzai"
+      ],
+      "sovereign": false,
+      "sovereignGroup": null,
+      "registryStatus": {
+        "production": "baseline-assessed",
+        "implementation": "implemented-or-partial",
+        "frontendWiring": "wired",
+        "apiContract": "partial",
+        "authzAudit": "partial",
+        "authzAuditCode": "wired"
+      },
+      "authzReadiness": {
+        "status": "wired",
+        "checks": {
+          "trustContext": true,
+          "tenantScoping": true,
+          "securityBaseline": true,
+          "adminAudit": true,
+          "rateLimit": true,
+          "outbox": true,
+          "outboxCompatible": false,
+          "outboxSchema": null,
+          "securityConfig": true,
+          "configPackage": "zw.gov.mohcc.impilo.daidzai.config"
+        },
+        "missing": [],
+        "isTrustPlane": false
+      },
+      "counts": {
+        "migrations": 1,
+        "entities": 6,
+        "repositories": 6,
+        "serviceLayer": 2,
+        "controllers": 3,
+        "routes": 22,
+        "stubRoutes": 0,
+        "contractOperations": 0,
+        "contractViolations": 0,
+        "bffClients": 3,
+        "uiReferences": 13,
+        "mobileReferences": 7,
+        "tests": 4
+      },
+      "dimensions": {
+        "database": "real",
+        "entitiesRepos": "real",
+        "serviceLayer": "real",
+        "controllers": "real",
+        "contract": "real",
+        "bffWiring": "real",
+        "frontendUi": "real",
+        "mobileUi": "n/a",
+        "tests": "real",
+        "authzAudit": "real"
+      },
+      "productStatus": "real",
+      "contractFile": "daidzai.openapi.yaml",
+      "bffClients": [
+        "DaidzaiServiceClient",
+        "DaidzaiController→inline",
+        "daidzai→yml-base-url"
+      ],
+      "uiPaths": [
+        "ui/one-ui-shell/src/app/emergency/page.tsx",
+        "ui/one-ui-shell/src/app/emergency/services/page.tsx",
+        "ui/one-ui-shell/src/app/emergency/sos/page.test.tsx",
+        "ui/one-ui-shell/src/app/emergency/sos/page.tsx",
+        "ui/one-ui-shell/src/app/emergency/track/[id]/page.tsx",
+        "ui/one-ui-shell/src/app/emergency/track/page.tsx",
+        "ui/one-ui-shell/src/app/work/daidzai/disasters/page.test.tsx",
+        "ui/one-ui-shell/src/app/work/daidzai/disasters/page.tsx",
+        "ui/one-ui-shell/src/app/work/daidzai/dispatch/page.tsx",
+        "ui/one-ui-shell/src/app/work/daidzai/missions/page.tsx",
+        "ui/one-ui-shell/src/app/work/daidzai/page.test.tsx",
+        "ui/one-ui-shell/src/app/work/daidzai/page.tsx",
+        "ui/one-ui-shell/src/lib/routes.ts"
+      ],
+      "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/screens/emergency/SosScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/emergency/TrackEmergencyScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/services/emergencyService.test.ts",
+        "citizen-app:apps/mobile/citizen-app/src/services/emergencyService.ts",
+        "provider-app:apps/mobile/provider-app/src/__tests__/services/daidzaiFieldService.test.ts",
+        "provider-app:apps/mobile/provider-app/src/screens/provider/DaidzaiFieldMissionScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/services/daidzaiFieldService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -2586,9 +2711,9 @@
         "stubRoutes": 0,
         "contractOperations": 32,
         "contractViolations": 0,
-        "bffClients": 15,
-        "uiReferences": 71,
-        "mobileReferences": 23,
+        "bffClients": 18,
+        "uiReferences": 75,
+        "mobileReferences": 28,
         "tests": 3
       },
       "dimensions": {
@@ -2608,10 +2733,13 @@
       "bffClients": [
         "DispatchServiceClient",
         "CommsApprovalController→inline",
+        "DaidzaiController→inline",
         "DiagnosticsExperienceController→inline",
         "DispatchController→inline",
+        "EquipmentOperationsBffController→inline",
         "IntegrationHubController→inline",
         "LearningController→inline",
+        "MarketplaceStorefrontController→inline",
         "MobileCitizenController→inline",
         "NhumeController→inline",
         "OmnichannelController→inline",
@@ -2628,6 +2756,7 @@
         "ui/one-ui-shell/src/app/diagnostics/lab-worklist/page.test.tsx",
         "ui/one-ui-shell/src/app/diagnostics/lab-worklist/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx",
+        "ui/one-ui-shell/src/app/emergency/sos/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/fleet/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/warehousing/page.tsx",
         "ui/one-ui-shell/src/app/home/page.tsx",
@@ -2641,20 +2770,19 @@
         "ui/one-ui-shell/src/app/nhume/deliveries/new/page.tsx",
         "ui/one-ui-shell/src/app/nhume/dispatcher/page.tsx",
         "ui/one-ui-shell/src/app/nhume/fleet/page.tsx",
-        "ui/one-ui-shell/src/app/nhume/map/page.tsx",
-        "ui/one-ui-shell/src/app/nhume/page.tsx"
+        "ui/one-ui-shell/src/app/nhume/map/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsHubScreen.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/EventDiscussionSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/IdRecoverySection.interaction.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/NhumeTrackingScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/emergency/SosScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/ProductionReadinessJourneyScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/services/emergencyService.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/nhumeService.ts",
         "provider-app:apps/mobile/provider-app/src/__tests__/provider/AdminRegistryHubScreen.test.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/courier/CourierDashboardScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/courier/CourierProofScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx"
+        "provider-app:apps/mobile/provider-app/src/__tests__/services/daidzaiFieldService.test.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -2726,9 +2854,9 @@
         "stubRoutes": 0,
         "contractOperations": 26,
         "contractViolations": 0,
-        "bffClients": 19,
+        "bffClients": 20,
         "uiReferences": 154,
-        "mobileReferences": 127,
+        "mobileReferences": 132,
         "tests": 3
       },
       "dimensions": {
@@ -2751,6 +2879,7 @@
         "ClinicalDocumentsController→inline",
         "ClinicalSourceIngestionController→inline",
         "ClinicalToolsController→inline",
+        "DeathPathwayController→inline",
         "FacilityRegulatoryController→inline",
         "FinanceController→inline",
         "FinancialDocumentFinanceBffController→inline",
@@ -2864,16 +2993,16 @@
         "migrations": 45,
         "entities": 0,
         "repositories": 2,
-        "serviceLayer": 42,
-        "controllers": 270,
-        "routes": 2418,
+        "serviceLayer": 45,
+        "controllers": 280,
+        "routes": 2551,
         "stubRoutes": 0,
-        "contractOperations": 1537,
+        "contractOperations": 1538,
         "contractViolations": 0,
         "bffClients": 0,
-        "uiReferences": 177,
-        "mobileReferences": 62,
-        "tests": 175
+        "uiReferences": 183,
+        "mobileReferences": 70,
+        "tests": 186
       },
       "dimensions": {
         "database": "real",
@@ -3309,19 +3438,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 2,
-        "entities": 4,
-        "repositories": 3,
-        "serviceLayer": 1,
-        "controllers": 1,
-        "routes": 5,
+        "migrations": 11,
+        "entities": 7,
+        "repositories": 6,
+        "serviceLayer": 3,
+        "controllers": 3,
+        "routes": 17,
         "stubRoutes": 0,
         "contractOperations": 7,
         "contractViolations": 0,
-        "bffClients": 6,
-        "uiReferences": 92,
-        "mobileReferences": 5,
-        "tests": 3
+        "bffClients": 10,
+        "uiReferences": 141,
+        "mobileReferences": 12,
+        "tests": 5
       },
       "dimensions": {
         "database": "real",
@@ -3340,9 +3469,13 @@
       "bffClients": [
         "GuidanceServiceClient",
         "AssistantNotificationsController→inline",
+        "CitizenWalletController→inline",
+        "EquipmentOperationsBffController→inline",
         "GuidanceController→inline",
         "HealthIntelligenceController→inline",
         "MadiDonorAssistController→inline",
+        "NompiloGuidanceController→inline",
+        "WellnessHomeController→inline",
         "guidance→yml-base-url"
       ],
       "uiPaths": [
@@ -3350,7 +3483,13 @@
         "ui/one-ui-shell/src/app/admin/clinical-curation/page.tsx",
         "ui/one-ui-shell/src/app/ai-governance/page.tsx",
         "ui/one-ui-shell/src/app/ask/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.test.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.tsx",
         "ui/one-ui-shell/src/app/client-journey/page.tsx",
+        "ui/one-ui-shell/src/app/clinical/inpatient/discharge-board/page.test.tsx",
+        "ui/one-ui-shell/src/app/clinical/inpatient/discharge-board/page.tsx",
+        "ui/one-ui-shell/src/app/clinical/inpatient/escalations/page.test.tsx",
+        "ui/one-ui-shell/src/app/clinical/inpatient/escalations/page.tsx",
         "ui/one-ui-shell/src/app/clinical-tools/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/consults/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/documents/page.test.tsx",
@@ -3359,20 +3498,19 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounters/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounters/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.test.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/page.test.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/summary/page.test.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/summary/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/timeline/page.test.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/timeline/page.tsx"
+        "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/MarketplaceStoreSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/NompiloGuidanceSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletOverviewSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/WellnessJourneysSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/services/nompiloGuidanceService.ts",
+        "citizen-app:apps/mobile/citizen-app/src/services/personHealthWalletService.ts",
         "provider-app:apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx",
-        "packages:apps/mobile/packages/mobile-registry/src/registry.ts",
-        "packages:apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts"
+        "provider-app:apps/mobile/provider-app/src/screens/equipment/EquipmentToolsScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -3546,8 +3684,8 @@
         "contractOperations": 6,
         "contractViolations": 0,
         "bffClients": 3,
-        "uiReferences": 8,
-        "mobileReferences": 3,
+        "uiReferences": 12,
+        "mobileReferences": 4,
         "tests": 9
       },
       "dimensions": {
@@ -3574,7 +3712,11 @@
         "ui/one-ui-shell/src/app/auth/register/page.test.tsx",
         "ui/one-ui-shell/src/app/auth/register/page.tsx",
         "ui/one-ui-shell/src/app/citizen/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/identity/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.test.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.tsx",
         "ui/one-ui-shell/src/components/citizen/IdentityAssuranceBanner.tsx",
+        "ui/one-ui-shell/src/components/intelligent/NompiloContextualGuidance.test.tsx",
         "ui/one-ui-shell/src/hooks/queries/useIdentity.ts",
         "ui/one-ui-shell/src/lib/registry-service-module-refs.ts",
         "ui/one-ui-shell/src/lib/routes.ts"
@@ -3582,7 +3724,8 @@
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/components/TrustBanner.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/assuranceService.test.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/assuranceService.ts"
+        "citizen-app:apps/mobile/citizen-app/src/services/assuranceService.ts",
+        "citizen-app:apps/mobile/citizen-app/src/services/personHealthWalletService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -3771,19 +3914,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 14,
-        "entities": 32,
-        "repositories": 31,
-        "serviceLayer": 5,
-        "controllers": 6,
-        "routes": 89,
+        "migrations": 18,
+        "entities": 37,
+        "repositories": 36,
+        "serviceLayer": 8,
+        "controllers": 7,
+        "routes": 111,
         "stubRoutes": 0,
         "contractOperations": 14,
         "contractViolations": 0,
-        "bffClients": 13,
-        "uiReferences": 48,
-        "mobileReferences": 10,
-        "tests": 10
+        "bffClients": 15,
+        "uiReferences": 55,
+        "mobileReferences": 12,
+        "tests": 14
       },
       "dimensions": {
         "database": "real",
@@ -3810,14 +3953,22 @@
         "MobileProviderExtendedController→inline",
         "ProcedureWorkflowController→inline",
         "StructuredHistoryController→inline",
+        "TheatreController→inline",
         "MobileDischargeController→inline",
         "CitizenClinicalRecordsController→inline",
+        "CitizenVisitStatusController→inline",
         "inpatient→yml-base-url"
       ],
       "uiPaths": [
+        "ui/one-ui-shell/src/app/citizen/inpatient/[admissionRef]/page.test.tsx",
+        "ui/one-ui-shell/src/app/citizen/inpatient/[admissionRef]/page.tsx",
         "ui/one-ui-shell/src/app/clinical/inpatient/admissions/[admissionId]/page.tsx",
         "ui/one-ui-shell/src/app/clinical/inpatient/admissions/page.tsx",
         "ui/one-ui-shell/src/app/clinical/inpatient/discharge/[admissionId]/page.tsx",
+        "ui/one-ui-shell/src/app/clinical/inpatient/discharge-board/page.test.tsx",
+        "ui/one-ui-shell/src/app/clinical/inpatient/discharge-board/page.tsx",
+        "ui/one-ui-shell/src/app/clinical/inpatient/escalations/page.test.tsx",
+        "ui/one-ui-shell/src/app/clinical/inpatient/escalations/page.tsx",
         "ui/one-ui-shell/src/app/clinical/inpatient/nursing/page.tsx",
         "ui/one-ui-shell/src/app/clinical/inpatient/page.tsx",
         "ui/one-ui-shell/src/app/clinical/inpatient/rounds/page.tsx",
@@ -3828,25 +3979,19 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/charts/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/discharge/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounters/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/page.test.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/page.tsx",
-        "ui/one-ui-shell/src/app/home/page.tsx",
-        "ui/one-ui-shell/src/app/madi/page.tsx",
-        "ui/one-ui-shell/src/app/pharmacy/page.tsx",
-        "ui/one-ui-shell/src/app/production-command-centre/page.tsx",
-        "ui/one-ui-shell/src/components/clinical/PatientJourneyContextPanel.tsx"
+        "ui/one-ui-shell/src/app/ehr/[patientId]/page.test.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/ProductionReadinessJourneyScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/wardAlertService.ts",
+        "provider-app:apps/mobile/provider-app/src/__tests__/services/theatreService.test.ts",
         "provider-app:apps/mobile/provider-app/src/screens/provider/APGARScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/InpatientScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/ShiftHandoffScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/WardAlertsScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/services/demoJourneyService.ts",
-        "provider-app:apps/mobile/provider-app/src/services/inpatientService.ts"
+        "provider-app:apps/mobile/provider-app/src/services/demoJourneyService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -4126,9 +4271,9 @@
         "stubRoutes": 0,
         "contractOperations": 73,
         "contractViolations": 0,
-        "bffClients": 9,
+        "bffClients": 10,
         "uiReferences": 59,
-        "mobileReferences": 16,
+        "mobileReferences": 17,
         "tests": 6
       },
       "dimensions": {
@@ -4151,6 +4296,7 @@
         "InventoryController→inline",
         "InventoryElmisSupplyBffController→inline",
         "InventorySupplyBffController→inline",
+        "MarketplaceStorefrontController→inline",
         "PayerOpsController→inline",
         "ProcedureWorkflowController→inline",
         "MobileInventoryController→inline",
@@ -4179,6 +4325,7 @@
         "ui/one-ui-shell/src/app/inventory/stock-management/page.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/services/marketplaceStoreService.ts",
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/BackendIntegration.test.tsx",
         "provider-app:apps/mobile/provider-app/src/__tests__/supervisor/InventoryScreen.test.tsx",
         "provider-app:apps/mobile/provider-app/src/navigation/SupervisorTabs.tsx",
@@ -4187,8 +4334,7 @@
         "provider-app:apps/mobile/provider-app/src/screens/provider/ProviderDashboardScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/supervisor/InventoryScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/supervisor/StockScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/services/demoJourneyService.ts",
-        "provider-app:apps/mobile/provider-app/src/services/inventoryService.ts"
+        "provider-app:apps/mobile/provider-app/src/services/demoJourneyService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -4261,7 +4407,7 @@
         "contractOperations": 4,
         "contractViolations": 0,
         "bffClients": 3,
-        "uiReferences": 2,
+        "uiReferences": 3,
         "mobileReferences": 0,
         "tests": 2
       },
@@ -4285,6 +4431,7 @@
         "iot-ingestion→yml-base-url"
       ],
       "uiPaths": [
+        "ui/one-ui-shell/src/app/operations/equipment/iot/page.tsx",
         "ui/one-ui-shell/src/hooks/queries/useDevices.ts",
         "ui/one-ui-shell/src/lib/registry-service-module-refs.ts"
       ],
@@ -4570,11 +4717,11 @@
         "controllers": 27,
         "routes": 166,
         "stubRoutes": 0,
-        "contractOperations": 162,
+        "contractOperations": 218,
         "contractViolations": 0,
-        "bffClients": 5,
-        "uiReferences": 131,
-        "mobileReferences": 31,
+        "bffClients": 6,
+        "uiReferences": 132,
+        "mobileReferences": 32,
         "tests": 34
       },
       "dimensions": {
@@ -4595,6 +4742,7 @@
         "LearningServiceClient",
         "LearningController→inline",
         "LiveComposerController→inline",
+        "NompiloGuidanceController→inline",
         "SearchController→inline",
         "ProviderProfessionalChannelsHubController→inline"
       ],
@@ -4629,8 +4777,8 @@
         "citizen-app:apps/mobile/citizen-app/src/services/fundoLearningService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/fundoLearningService.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/fundoLearningSummary.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/socialService.ts",
-        "provider-app:apps/mobile/provider-app/src/__tests__/provider/appStoreLearningSubject.test.ts"
+        "citizen-app:apps/mobile/citizen-app/src/services/nompiloGuidanceService.ts",
+        "citizen-app:apps/mobile/citizen-app/src/services/socialService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -4714,8 +4862,8 @@
         "contractOperations": 61,
         "contractViolations": 0,
         "bffClients": 2,
-        "uiReferences": 283,
-        "mobileReferences": 63,
+        "uiReferences": 295,
+        "mobileReferences": 67,
         "tests": 5
       },
       "dimensions": {
@@ -4738,25 +4886,25 @@
       ],
       "uiPaths": [
         "ui/one-ui-shell/src/app/admin/beds/page.tsx",
+        "ui/one-ui-shell/src/app/admin/comms-ops/page.test.tsx",
+        "ui/one-ui-shell/src/app/admin/comms-ops/page.tsx",
         "ui/one-ui-shell/src/app/admin/integration-status/page.tsx",
         "ui/one-ui-shell/src/app/admin/sidecar-retirement/page.tsx",
         "ui/one-ui-shell/src/app/admin/system-monitor/page.tsx",
         "ui/one-ui-shell/src/app/beds/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/inpatient/[admissionRef]/page.tsx",
         "ui/one-ui-shell/src/app/citizen/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/visit/[transactionId]/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/comms/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.test.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/records/page.tsx",
         "ui/one-ui-shell/src/app/client-journey/page.tsx",
         "ui/one-ui-shell/src/app/clinical/control-tower/page.test.tsx",
         "ui/one-ui-shell/src/app/clinical/control-tower/page.tsx",
         "ui/one-ui-shell/src/app/clinical/inpatient/admissions/[admissionId]/page.tsx",
         "ui/one-ui-shell/src/app/clinical/inpatient/admissions/page.tsx",
-        "ui/one-ui-shell/src/app/clinical/inpatient/nursing/page.tsx",
-        "ui/one-ui-shell/src/app/clinical/page.tsx",
-        "ui/one-ui-shell/src/app/clinical-tools/page.tsx",
-        "ui/one-ui-shell/src/app/communication/secure-messaging/page.tsx",
-        "ui/one-ui-shell/src/app/core-transaction/page.tsx",
-        "ui/one-ui-shell/src/app/coverage/page.tsx",
-        "ui/one-ui-shell/src/app/data-intelligence/integration/page.tsx",
-        "ui/one-ui-shell/src/app/data-intelligence/pipelines/page.tsx",
-        "ui/one-ui-shell/src/app/discover/services/page.tsx"
+        "ui/one-ui-shell/src/app/clinical/inpatient/nursing/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsHubScreen.test.tsx",
@@ -4945,8 +5093,8 @@
         "contractOperations": 119,
         "contractViolations": 0,
         "bffClients": 2,
-        "uiReferences": 65,
-        "mobileReferences": 27,
+        "uiReferences": 66,
+        "mobileReferences": 28,
         "tests": 11
       },
       "dimensions": {
@@ -5072,8 +5220,8 @@
         "contractOperations": 28,
         "contractViolations": 0,
         "bffClients": 4,
-        "uiReferences": 18,
-        "mobileReferences": 4,
+        "uiReferences": 19,
+        "mobileReferences": 5,
         "tests": 4
       },
       "dimensions": {
@@ -5113,12 +5261,14 @@
         "ui/one-ui-shell/src/components/shell/ShellStartMenu.tsx",
         "ui/one-ui-shell/src/hooks/queries/useHealthOsLauncher.ts",
         "ui/one-ui-shell/src/hooks/queries/useMarketplace.ts",
+        "ui/one-ui-shell/src/hooks/queries/useMsikaStore.ts",
         "ui/one-ui-shell/src/lib/__tests__/marketplace-order-golden-thread.test.ts",
         "ui/one-ui-shell/src/lib/__tests__/marketplace-procurement-claims-golden-thread.test.ts"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/screens/marketplace/HealthOsAppsScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/healthOsLauncherService.ts",
+        "citizen-app:apps/mobile/citizen-app/src/services/marketplaceStoreService.ts",
         "provider-app:apps/mobile/provider-app/src/screens/provider/HealthOsAppsScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/services/healthOsLauncherService.ts"
       ],
@@ -5192,9 +5342,9 @@
         "stubRoutes": 0,
         "contractOperations": 84,
         "contractViolations": 0,
-        "bffClients": 8,
-        "uiReferences": 28,
-        "mobileReferences": 1,
+        "bffClients": 10,
+        "uiReferences": 31,
+        "mobileReferences": 3,
         "tests": 10
       },
       "dimensions": {
@@ -5217,6 +5367,8 @@
         "CommerceSubstitutionController→inline",
         "MarketplaceController→inline",
         "MarketplaceOpsController→inline",
+        "MarketplaceStorefrontController→inline",
+        "SellerCentreController→inline",
         "VendorOperationsController→inline",
         "CitizenMarketplaceController→inline",
         "msika-flow→yml-base-url"
@@ -5233,18 +5385,20 @@
         "ui/one-ui-shell/src/app/marketplace/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/pickup/page.test.tsx",
         "ui/one-ui-shell/src/app/marketplace/pickup/page.tsx",
+        "ui/one-ui-shell/src/app/marketplace/store/activity/page.tsx",
+        "ui/one-ui-shell/src/app/marketplace/store/listing/[id]/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/substitutions/page.test.tsx",
         "ui/one-ui-shell/src/app/marketplace/substitutions/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/vendor/orders/page.test.tsx",
         "ui/one-ui-shell/src/app/marketplace/vendor/orders/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/vendor/page.tsx",
         "ui/one-ui-shell/src/hooks/queries/useCommerceFlow.ts",
-        "ui/one-ui-shell/src/hooks/queries/useCommercePickup.ts",
-        "ui/one-ui-shell/src/hooks/queries/useCommerceSubstitutions.ts",
-        "ui/one-ui-shell/src/hooks/queries/useCommerceVendor.ts"
+        "ui/one-ui-shell/src/hooks/queries/useCommercePickup.ts"
       ],
       "mobilePaths": [
-        "citizen-app:apps/mobile/citizen-app/src/services/cartService.ts"
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/MarketplaceStoreSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/services/cartService.ts",
+        "citizen-app:apps/mobile/citizen-app/src/services/marketplaceStoreService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -5307,19 +5461,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 5,
-        "entities": 26,
-        "repositories": 15,
-        "serviceLayer": 11,
-        "controllers": 11,
-        "routes": 51,
+        "migrations": 6,
+        "entities": 31,
+        "repositories": 20,
+        "serviceLayer": 15,
+        "controllers": 13,
+        "routes": 73,
         "stubRoutes": 0,
         "contractOperations": 61,
         "contractViolations": 0,
-        "bffClients": 17,
-        "uiReferences": 45,
-        "mobileReferences": 8,
-        "tests": 5
+        "bffClients": 21,
+        "uiReferences": 54,
+        "mobileReferences": 10,
+        "tests": 6
       },
       "dimensions": {
         "database": "real",
@@ -5346,10 +5500,14 @@
         "MarketplaceController→MsikaServiceClient",
         "MarketplaceController→inline",
         "MarketplaceOpsController→inline",
+        "MarketplaceStorefrontController→MsikaServiceClient",
+        "MarketplaceStorefrontController→inline",
         "MsikaGovernanceController→MsikaServiceClient",
         "MsikaGovernanceController→inline",
         "ProductRegistryController→MsikaServiceClient",
         "ProductRegistryController→inline",
+        "SellerCentreController→MsikaServiceClient",
+        "SellerCentreController→inline",
         "VendorOperationsController→inline",
         "CitizenMarketplaceController→inline",
         "msika→yml-base-url"
@@ -5371,14 +5529,16 @@
         "ui/one-ui-shell/src/app/marketplace/catalog/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/pickup/page.tsx",
-        "ui/one-ui-shell/src/app/marketplace/substitutions/page.tsx",
-        "ui/one-ui-shell/src/app/marketplace/vendor/orders/page.tsx",
-        "ui/one-ui-shell/src/app/marketplace/vendor/page.tsx",
-        "ui/one-ui-shell/src/app/registry/products/page.tsx"
+        "ui/one-ui-shell/src/app/marketplace/seller/listings/new/page.tsx",
+        "ui/one-ui-shell/src/app/marketplace/seller/listings/page.tsx",
+        "ui/one-ui-shell/src/app/marketplace/seller/moderation/page.tsx",
+        "ui/one-ui-shell/src/app/marketplace/seller/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/navigation/citizenServiceNavigation.ts",
         "citizen-app:apps/mobile/citizen-app/src/screens/marketplace/HealthOsAppsScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/MarketplaceStoreSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/services/marketplaceStoreService.ts",
         "provider-app:apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/HealthOsAppsScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/services/healthOsLauncherService.ts",
@@ -5458,7 +5618,7 @@
         "contractViolations": 0,
         "bffClients": 4,
         "uiReferences": 7,
-        "mobileReferences": 7,
+        "mobileReferences": 8,
         "tests": 2
       },
       "dimensions": {
@@ -5485,10 +5645,10 @@
         "ui/one-ui-shell/src/app/finance/billing/[id]/page.tsx",
         "ui/one-ui-shell/src/app/finance/mushex-platform/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/cart/page.tsx",
-        "ui/one-ui-shell/src/app/wallet/page.tsx",
         "ui/one-ui-shell/src/components/navigation/ExperienceSidebar.tsx",
         "ui/one-ui-shell/src/components/payment/PaymentMethodPicker.tsx",
-        "ui/one-ui-shell/src/hooks/queries/useMusheWallet.ts"
+        "ui/one-ui-shell/src/hooks/queries/useMusheWallet.ts",
+        "ui/one-ui-shell/src/lib/routes.ts"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/FinanceSection.test.tsx",
@@ -5497,6 +5657,7 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/FinanceSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/financeService.ts",
+        "citizen-app:apps/mobile/citizen-app/src/services/personHealthWalletService.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/walletService.ts"
       ],
       "mockStubHits": [],
@@ -5569,9 +5730,9 @@
         "stubRoutes": 0,
         "contractOperations": 75,
         "contractViolations": 0,
-        "bffClients": 11,
-        "uiReferences": 90,
-        "mobileReferences": 18,
+        "bffClients": 12,
+        "uiReferences": 100,
+        "mobileReferences": 21,
         "tests": 19
       },
       "dimensions": {
@@ -5593,6 +5754,7 @@
         "FinanceController→inline",
         "FinanceLedgerController→inline",
         "FinanceMushexPlatformController→inline",
+        "MarketplaceStorefrontController→inline",
         "PayerClaimsController→inline",
         "PayerOpsController→inline",
         "ReconciliationController→inline",
@@ -5602,6 +5764,9 @@
         "mushex→yml-base-url"
       ],
       "uiPaths": [
+        "ui/one-ui-shell/src/app/citizen/wallet/page.test.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/payments/page.tsx",
         "ui/one-ui-shell/src/app/coverage/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/charge-sheet/page.tsx",
         "ui/one-ui-shell/src/app/finance/billing/[id]/page.tsx",
@@ -5618,10 +5783,7 @@
         "ui/one-ui-shell/src/app/finance/ledger/page.tsx",
         "ui/one-ui-shell/src/app/finance/mushex-platform/cards/[cardId]/page.test.tsx",
         "ui/one-ui-shell/src/app/finance/mushex-platform/cards/[cardId]/page.tsx",
-        "ui/one-ui-shell/src/app/finance/mushex-platform/page.test.tsx",
-        "ui/one-ui-shell/src/app/finance/mushex-platform/page.tsx",
-        "ui/one-ui-shell/src/app/finance/mushex-platform/remittance/[transferId]/page.test.tsx",
-        "ui/one-ui-shell/src/app/finance/mushex-platform/remittance/[transferId]/page.tsx"
+        "ui/one-ui-shell/src/app/finance/mushex-platform/page.test.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/FinanceSection.test.tsx",
@@ -5629,11 +5791,11 @@
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/walletService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/navigation/citizenServiceNavigation.ts",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/FinanceSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/MarketplaceStoreSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletOverviewSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/coverageCommandService.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/financeService.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/walletService.ts",
-        "provider-app:apps/mobile/provider-app/src/__tests__/provider/FinanceOverviewScreen.test.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/services/financeService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -5705,9 +5867,9 @@
         "stubRoutes": 0,
         "contractOperations": 37,
         "contractViolations": 0,
-        "bffClients": 11,
-        "uiReferences": 38,
-        "mobileReferences": 6,
+        "bffClients": 12,
+        "uiReferences": 41,
+        "mobileReferences": 8,
         "tests": 9
       },
       "dimensions": {
@@ -5727,6 +5889,7 @@
       "bffClients": [
         "MvumoServiceClient",
         "BookingMvumoController→inline",
+        "CitizenWalletController→inline",
         "EhrPatientSummaryController→inline",
         "MvumoAdminController→inline",
         "MvumoRemoteSessionController→inline",
@@ -5738,6 +5901,9 @@
         "mvumo→yml-base-url"
       ],
       "uiPaths": [
+        "ui/one-ui-shell/src/app/citizen/wallet/dependants/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.test.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/preferences/communications/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/summary/page.tsx",
         "ui/one-ui-shell/src/app/home/bookings/[bookingId]/page.tsx",
@@ -5754,15 +5920,14 @@
         "ui/one-ui-shell/src/components/citizen/DelegationManagementSection.tsx",
         "ui/one-ui-shell/src/components/clinical/ProcedureConsentCapture.tsx",
         "ui/one-ui-shell/src/components/navigation/ExperienceSidebar.tsx",
-        "ui/one-ui-shell/src/components/notifications/NotificationsCommsHub.tsx",
-        "ui/one-ui-shell/src/components/ui/DictatableTextarea.tsx",
-        "ui/one-ui-shell/src/components/ui/DictationButton.tsx",
-        "ui/one-ui-shell/src/config/serviceBranding.ts"
+        "ui/one-ui-shell/src/components/notifications/NotificationsCommsHub.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/BookingsSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/CommunicationPreferencesScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletOverviewSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/telehealth/TelehealthListScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/services/personHealthWalletService.ts",
         "provider-app:apps/mobile/provider-app/src/screens/provider/AssistedCommunicationPreferencesScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/BookingRequestsScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/TheatreProcedureScreen.tsx"
@@ -5932,7 +6097,7 @@
         "contractOperations": 76,
         "contractViolations": 0,
         "bffClients": 6,
-        "uiReferences": 73,
+        "uiReferences": 76,
         "mobileReferences": 16,
         "tests": 8
       },
@@ -5960,6 +6125,8 @@
       ],
       "uiPaths": [
         "ui/one-ui-shell/src/app/discover/facilities/page.tsx",
+        "ui/one-ui-shell/src/app/emergency/page.tsx",
+        "ui/one-ui-shell/src/app/emergency/services/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/oversight/page.tsx",
         "ui/one-ui-shell/src/app/madi/donor/drives/page.tsx",
         "ui/one-ui-shell/src/app/ndila/page.tsx",
@@ -5976,9 +6143,7 @@
         "ui/one-ui-shell/src/app/registry/facilities/[id]/page.tsx",
         "ui/one-ui-shell/src/app/registry/facilities/new/page.tsx",
         "ui/one-ui-shell/src/app/registry/facilities/page.tsx",
-        "ui/one-ui-shell/src/app/registry/intake/page.tsx",
-        "ui/one-ui-shell/src/app/reports/page.test.tsx",
-        "ui/one-ui-shell/src/components/coverage/CoverageGeoMapPanel.tsx"
+        "ui/one-ui-shell/src/app/registry/intake/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/main.tsx",
@@ -6160,8 +6325,8 @@
         "contractOperations": 43,
         "contractViolations": 0,
         "bffClients": 5,
-        "uiReferences": 48,
-        "mobileReferences": 21,
+        "uiReferences": 51,
+        "mobileReferences": 23,
         "tests": 1
       },
       "dimensions": {
@@ -6289,9 +6454,9 @@
         "stubRoutes": 0,
         "contractOperations": 33,
         "contractViolations": 0,
-        "bffClients": 21,
-        "uiReferences": 63,
-        "mobileReferences": 22,
+        "bffClients": 25,
+        "uiReferences": 66,
+        "mobileReferences": 24,
         "tests": 5
       },
       "dimensions": {
@@ -6313,13 +6478,17 @@
         "AccessChannelsController→inline",
         "AppointmentCommsController→inline",
         "AssistantNotificationsController→inline",
+        "CitizenWalletController→inline",
         "CommsApprovalController→inline",
         "CommsTemplateController→inline",
         "CommunicationController→inline",
+        "DeathPathwayController→inline",
         "EdWorkflowController→inline",
+        "EquipmentOperationsBffController→inline",
         "LearningController→inline",
         "MobileCitizenController→inline",
         "MobileGovernanceController→inline",
+        "NompiloGuidanceController→inline",
         "NotificationController→inline",
         "NotificationTemplateController→inline",
         "PolicyConsentController→inline",
@@ -6339,6 +6508,8 @@
         "ui/one-ui-shell/src/app/ask/page.tsx",
         "ui/one-ui-shell/src/app/caregiving/notifications/page.tsx",
         "ui/one-ui-shell/src/app/caregiving/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/comms/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.test.tsx",
         "ui/one-ui-shell/src/app/clinical/page.tsx",
         "ui/one-ui-shell/src/app/coverage/page.tsx",
         "ui/one-ui-shell/src/app/home/notifications/page.tsx",
@@ -6349,9 +6520,7 @@
         "ui/one-ui-shell/src/app/learning/notifications/page.tsx",
         "ui/one-ui-shell/src/app/learning/page.tsx",
         "ui/one-ui-shell/src/app/learning/studio/publish/__tests__/page.test.tsx",
-        "ui/one-ui-shell/src/app/learning/studio/publish/page.tsx",
-        "ui/one-ui-shell/src/app/madi/donor/preferences/page.tsx",
-        "ui/one-ui-shell/src/app/omnichannel/page.tsx"
+        "ui/one-ui-shell/src/app/learning/studio/publish/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/EventDiscussionSection.test.tsx",
@@ -6360,10 +6529,10 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/crvs/UbomiCrvsScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/madi/DonorProfileScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/marketplace/HealthOsAppsScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/NompiloGuidanceSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/SettingsSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/khulumaCommsService.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/ubomiService.test.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/ubomiService.ts"
+        "citizen-app:apps/mobile/citizen-app/src/services/personHealthWalletService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -6731,8 +6900,8 @@
         "contractOperations": 58,
         "contractViolations": 0,
         "bffClients": 13,
-        "uiReferences": 71,
-        "mobileReferences": 15,
+        "uiReferences": 74,
+        "mobileReferences": 17,
         "tests": 33
       },
       "dimensions": {
@@ -6787,16 +6956,16 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.test.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/services/marketplaceStoreService.ts",
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts",
         "provider-app:apps/mobile/provider-app/src/__tests__/provider/EncounterWorkflow.test.tsx",
+        "provider-app:apps/mobile/provider-app/src/__tests__/services/theatreService.test.ts",
         "provider-app:apps/mobile/provider-app/src/navigation/providerServiceNavigation.ts",
         "provider-app:apps/mobile/provider-app/src/screens/provider/DiagnosticsScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/LabOrderPanel.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/services/diagnosticsService.ts",
-        "provider-app:apps/mobile/provider-app/src/services/labService.ts",
-        "provider-app:apps/mobile/provider-app/src/services/madiService.ts"
+        "provider-app:apps/mobile/provider-app/src/services/diagnosticsService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -6981,7 +7150,7 @@
         "controllers": 5,
         "routes": 30,
         "stubRoutes": 0,
-        "contractOperations": 0,
+        "contractOperations": 25,
         "contractViolations": 0,
         "bffClients": 4,
         "uiReferences": 8,
@@ -7090,19 +7259,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 21,
-        "entities": 44,
-        "repositories": 34,
+        "migrations": 22,
+        "entities": 46,
+        "repositories": 36,
         "serviceLayer": 18,
         "controllers": 22,
-        "routes": 143,
+        "routes": 156,
         "stubRoutes": 0,
         "contractOperations": 120,
         "contractViolations": 0,
-        "bffClients": 42,
-        "uiReferences": 434,
-        "mobileReferences": 101,
-        "tests": 18
+        "bffClients": 44,
+        "uiReferences": 447,
+        "mobileReferences": 107,
+        "tests": 19
       },
       "dimensions": {
         "database": "real",
@@ -7128,6 +7297,7 @@
         "ClinicalTimelineController→PctServiceClient",
         "ClinicalWorklistController→PctServiceClient",
         "ConditionsController→PctServiceClient",
+        "DeathPathwayController→PctServiceClient",
         "EdWorkflowController→PctServiceClient",
         "EhrPatientSummaryController→PctServiceClient",
         "EncounterController→PctServiceClient",
@@ -7160,6 +7330,7 @@
         "CitizenRecordsController→PctServiceClient",
         "CitizenTelehealthController→PctServiceClient",
         "CitizenTimelineController→PctServiceClient",
+        "WellnessHomeController→PctServiceClient",
         "pct→yml-base-url"
       ],
       "uiPaths": [
@@ -7168,6 +7339,8 @@
         "ui/one-ui-shell/src/app/admin/beds/page.tsx",
         "ui/one-ui-shell/src/app/admin/clinical-curation/page.test.tsx",
         "ui/one-ui-shell/src/app/admin/clinical-curation/page.tsx",
+        "ui/one-ui-shell/src/app/admin/comms-ops/page.test.tsx",
+        "ui/one-ui-shell/src/app/admin/comms-ops/page.tsx",
         "ui/one-ui-shell/src/app/admin/data-export/page.test.tsx",
         "ui/one-ui-shell/src/app/admin/data-export/page.tsx",
         "ui/one-ui-shell/src/app/admin/page.tsx",
@@ -7175,14 +7348,12 @@
         "ui/one-ui-shell/src/app/admin/sidecar-retirement/page.test.tsx",
         "ui/one-ui-shell/src/app/beds/page.test.tsx",
         "ui/one-ui-shell/src/app/beds/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/visit/[transactionId]/page.test.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/timeline/page.tsx",
         "ui/one-ui-shell/src/app/clinical/control-tower/page.test.tsx",
         "ui/one-ui-shell/src/app/clinical/control-tower/page.tsx",
         "ui/one-ui-shell/src/app/clinical/emergency/[visitId]/page.tsx",
-        "ui/one-ui-shell/src/app/clinical/emergency/page.test.tsx",
-        "ui/one-ui-shell/src/app/clinical/emergency/page.tsx",
-        "ui/one-ui-shell/src/app/clinical/inpatient/admissions/page.tsx",
-        "ui/one-ui-shell/src/app/clinical/page.tsx",
-        "ui/one-ui-shell/src/app/clinical-tools/page.tsx"
+        "ui/one-ui-shell/src/app/clinical/emergency/page.test.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/PersonalFlow.test.tsx",
@@ -7729,9 +7900,9 @@
         "stubRoutes": 0,
         "contractOperations": 11,
         "contractViolations": 0,
-        "bffClients": 14,
-        "uiReferences": 74,
-        "mobileReferences": 19,
+        "bffClients": 15,
+        "uiReferences": 82,
+        "mobileReferences": 23,
         "tests": 1
       },
       "dimensions": {
@@ -7762,7 +7933,8 @@
         "MobileSupervisorController→inline",
         "MobileTelemedicineController→inline",
         "CitizenClinicalRecordsController→inline",
-        "CitizenTelehealthController→inline"
+        "CitizenTelehealthController→inline",
+        "WellnessHomeController→inline"
       ],
       "uiPaths": [
         "ui/one-ui-shell/src/app/admin/system-monitor/page.tsx",
@@ -7791,12 +7963,12 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/BookingsSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/PersonalScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/ReferralsSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/WellnessJourneysSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/clinicalRecordsService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/clinicalRecordsService.ts",
         "citizen-app:apps/mobile/citizen-app/src/types/index.ts",
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/BackendIntegration.test.tsx",
-        "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts",
-        "provider-app:apps/mobile/provider-app/src/__tests__/provider/EncounterWorkflow.test.tsx"
+        "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -7868,8 +8040,8 @@
         "stubRoutes": 0,
         "contractOperations": 5,
         "contractViolations": 0,
-        "bffClients": 6,
-        "uiReferences": 40,
+        "bffClients": 7,
+        "uiReferences": 41,
         "mobileReferences": 5,
         "tests": 8
       },
@@ -7890,6 +8062,7 @@
       "bffClients": [
         "ReportingServiceClient",
         "AdminReportJobController→inline",
+        "EquipmentOperationsBffController→inline",
         "ReportJobController→inline",
         "ProviderOpsReportsController→inline",
         "ProviderReportsController→inline",
@@ -7910,12 +8083,12 @@
         "ui/one-ui-shell/src/app/inventory/stock-management/page.tsx",
         "ui/one-ui-shell/src/app/learning/reports/page.tsx",
         "ui/one-ui-shell/src/app/madi/haemovigilance/national/page.tsx",
+        "ui/one-ui-shell/src/app/marketplace/store/listing/[id]/page.tsx",
         "ui/one-ui-shell/src/app/operations/vito/biometrics/page.tsx",
         "ui/one-ui-shell/src/app/organization-admin/page.tsx",
         "ui/one-ui-shell/src/app/pharmacy/transaction-journey/page.tsx",
         "ui/one-ui-shell/src/app/reports/page.tsx",
-        "ui/one-ui-shell/src/app/workspace/aggregate/page.tsx",
-        "ui/one-ui-shell/src/components/clinical/ClinicalReferences.tsx"
+        "ui/one-ui-shell/src/app/workspace/aggregate/page.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx",
@@ -7992,11 +8165,11 @@
         "controllers": 8,
         "routes": 79,
         "stubRoutes": 0,
-        "contractOperations": 0,
+        "contractOperations": 41,
         "contractViolations": 0,
-        "bffClients": 3,
-        "uiReferences": 13,
-        "mobileReferences": 7,
+        "bffClients": 4,
+        "uiReferences": 18,
+        "mobileReferences": 11,
         "tests": 6
       },
       "dimensions": {
@@ -8015,11 +8188,14 @@
       "contractFile": "rito-quality-safety.openapi.yaml",
       "bffClients": [
         "RitoServiceClient",
+        "MarketplaceStorefrontController→RitoServiceClient",
         "RitoController→RitoServiceClient",
         "RitoPersonaController→RitoServiceClient"
       ],
       "uiPaths": [
+        "ui/one-ui-shell/src/app/marketplace/store/listing/[id]/page.tsx",
         "ui/one-ui-shell/src/app/my-life/feedback/[caseId]/page.tsx",
+        "ui/one-ui-shell/src/app/operations/equipment/[equipmentId]/page.tsx",
         "ui/one-ui-shell/src/app/rito/audits/[auditId]/page.tsx",
         "ui/one-ui-shell/src/app/rito/audits/page.tsx",
         "ui/one-ui-shell/src/app/rito/cases/[caseId]/page.tsx",
@@ -8029,18 +8205,24 @@
         "ui/one-ui-shell/src/app/rito/quality-signals/page.tsx",
         "ui/one-ui-shell/src/app/rito/surveys/page.tsx",
         "ui/one-ui-shell/src/app/work/above-site/rito/page.tsx",
+        "ui/one-ui-shell/src/app/work/daidzai/disasters/page.tsx",
+        "ui/one-ui-shell/src/app/work/daidzai/page.tsx",
         "ui/one-ui-shell/src/app/work/facility/rito/page.tsx",
         "ui/one-ui-shell/src/config/serviceBranding.ts",
+        "ui/one-ui-shell/src/hooks/queries/useMsikaStore.ts",
         "ui/one-ui-shell/src/lib/routes.ts"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/screens/rito/FeedbackScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/rito/TrackFeedbackScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/services/marketplaceStoreService.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/ritoFeedbackService.ts",
         "citizen-app:apps/mobile/citizen-app/src/stores/appStore.ts",
+        "provider-app:apps/mobile/provider-app/src/__tests__/services/theatreService.test.ts",
+        "provider-app:apps/mobile/provider-app/src/screens/equipment/ReportEquipmentFaultScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/rito/MySafetyCasesScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/rito/ReportSafetyScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/services/ritoSafetyService.ts"
+        "provider-app:apps/mobile/provider-app/src/services/equipmentService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -8253,7 +8435,7 @@
         "contractOperations": 10,
         "contractViolations": 0,
         "bffClients": 13,
-        "uiReferences": 47,
+        "uiReferences": 48,
         "mobileReferences": 4,
         "tests": 4
       },
@@ -8299,14 +8481,14 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/vitals/page.tsx",
         "ui/one-ui-shell/src/app/kiosk/page.tsx",
+        "ui/one-ui-shell/src/app/marketplace/seller/moderation/page.tsx",
         "ui/one-ui-shell/src/app/nhume/page.tsx",
         "ui/one-ui-shell/src/app/omnichannel/page.test.tsx",
         "ui/one-ui-shell/src/app/omnichannel/page.tsx",
         "ui/one-ui-shell/src/app/scheduling/bookings/config/page.tsx",
         "ui/one-ui-shell/src/app/terms/page.tsx",
         "ui/one-ui-shell/src/components/EHRLayout.tsx",
-        "ui/one-ui-shell/src/components/billing/ServiceAccessPaymentPanel.tsx",
-        "ui/one-ui-shell/src/components/clinical/AIDiagnosticAssistant.tsx"
+        "ui/one-ui-shell/src/components/billing/ServiceAccessPaymentPanel.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
@@ -8610,9 +8792,9 @@
         "stubRoutes": 0,
         "contractOperations": 7,
         "contractViolations": 0,
-        "bffClients": 34,
-        "uiReferences": 412,
-        "mobileReferences": 53,
+        "bffClients": 35,
+        "uiReferences": 420,
+        "mobileReferences": 59,
         "tests": 6
       },
       "dimensions": {
@@ -8646,6 +8828,7 @@
         "IdentityServicesController→inline",
         "ImagingExperienceController→inline",
         "MarketplaceController→inline",
+        "MarketplaceStorefrontController→inline",
         "PacsController→inline",
         "PatientController→inline",
         "ProductRegistryController→inline",
@@ -8682,10 +8865,10 @@
         "ui/one-ui-shell/src/app/admin/users/page.tsx",
         "ui/one-ui-shell/src/app/ask/page.tsx",
         "ui/one-ui-shell/src/app/auth/context-chooser/page.tsx",
-        "ui/one-ui-shell/src/app/auth/login/biometric/page.tsx",
         "ui/one-ui-shell/src/app/auth/login/page.test.tsx",
         "ui/one-ui-shell/src/app/auth/login/page.tsx",
-        "ui/one-ui-shell/src/app/auth/login/provider-id/page.tsx"
+        "ui/one-ui-shell/src/app/auth/login/provider-id/page.tsx",
+        "ui/one-ui-shell/src/app/auth/mfa/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/marketplace/MarketplaceFlow.test.tsx",
@@ -8967,19 +9150,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 4,
-        "entities": 17,
-        "repositories": 17,
-        "serviceLayer": 10,
-        "controllers": 18,
-        "routes": 93,
+        "migrations": 5,
+        "entities": 25,
+        "repositories": 25,
+        "serviceLayer": 15,
+        "controllers": 22,
+        "routes": 111,
         "stubRoutes": 0,
         "contractOperations": 54,
         "contractViolations": 0,
-        "bffClients": 4,
-        "uiReferences": 64,
-        "mobileReferences": 26,
-        "tests": 1
+        "bffClients": 6,
+        "uiReferences": 68,
+        "mobileReferences": 28,
+        "tests": 2
       },
       "dimensions": {
         "database": "real",
@@ -8998,6 +9181,8 @@
       "bffClients": [
         "SimbaServiceClient",
         "CitizenMonitoringDevicesController→inline",
+        "WellnessHomeController→SimbaServiceClient",
+        "WellnessHomeController→inline",
         "WellnessServiceProxyController→inline",
         "simba→yml-base-url"
       ],
@@ -9019,9 +9204,9 @@
         "ui/one-ui-shell/src/app/queue/triage/page.test.tsx",
         "ui/one-ui-shell/src/app/search/page.tsx",
         "ui/one-ui-shell/src/app/wellness/activity/page.tsx",
+        "ui/one-ui-shell/src/app/wellness/care/page.tsx",
         "ui/one-ui-shell/src/app/wellness/challenges/page.tsx",
-        "ui/one-ui-shell/src/app/wellness/clubs/page.tsx",
-        "ui/one-ui-shell/src/app/wellness/coaching/page.tsx"
+        "ui/one-ui-shell/src/app/wellness/clubs/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/WellnessSection.test.tsx",
@@ -9105,9 +9290,9 @@
         "stubRoutes": 0,
         "contractOperations": 19,
         "contractViolations": 0,
-        "bffClients": 25,
-        "uiReferences": 131,
-        "mobileReferences": 36,
+        "bffClients": 27,
+        "uiReferences": 132,
+        "mobileReferences": 38,
         "tests": 3
       },
       "dimensions": {
@@ -9130,12 +9315,14 @@
         "ClientRegistryController→inline",
         "ClinicalKnowledgeController→inline",
         "CommunicationController→inline",
+        "DeathPathwayController→inline",
         "DiagnosisSearchController→inline",
         "EdWorkflowController→inline",
         "FinanceController→inline",
         "HealthIntelligenceController→inline",
         "HealthOsMarketplaceController→inline",
         "MobileProviderExtendedController→inline",
+        "NompiloGuidanceController→inline",
         "OmnichannelController→inline",
         "PacsController→inline",
         "PolicyConsentController→inline",
@@ -9159,6 +9346,7 @@
         "ui/one-ui-shell/src/app/auth/mfa/page.tsx",
         "ui/one-ui-shell/src/app/auth/register/page.tsx",
         "ui/one-ui-shell/src/app/beds/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/profile/page.tsx",
         "ui/one-ui-shell/src/app/clinical-tools/page.tsx",
         "ui/one-ui-shell/src/app/communities/page.tsx",
         "ui/one-ui-shell/src/app/coverage/page.test.tsx",
@@ -9170,8 +9358,7 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/documents/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/emergency/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/encounters/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/functional-status/page.tsx"
+        "ui/one-ui-shell/src/app/ehr/[patientId]/encounters/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/support/SupportScreen.test.tsx",
@@ -9258,7 +9445,7 @@
         "bffClients": 8,
         "uiReferences": 32,
         "mobileReferences": 4,
-        "tests": 7
+        "tests": 8
       },
       "dimensions": {
         "database": "real",
@@ -9383,7 +9570,7 @@
         "contractOperations": 18,
         "contractViolations": 0,
         "bffClients": 8,
-        "uiReferences": 18,
+        "uiReferences": 20,
         "mobileReferences": 0,
         "tests": 4
       },
@@ -9418,12 +9605,14 @@
         "ui/one-ui-shell/src/app/admin/page.tsx",
         "ui/one-ui-shell/src/app/admin/system-monitor/page.tsx",
         "ui/one-ui-shell/src/app/data-intelligence/audit/page.tsx",
+        "ui/one-ui-shell/src/app/operations/equipment/audit/page.tsx",
         "ui/one-ui-shell/src/app/organization-admin/facility/page.tsx",
         "ui/one-ui-shell/src/components/ZoneNavigation.tsx",
         "ui/one-ui-shell/src/components/administration-governance/ScopedAdministrationSurface.tsx",
         "ui/one-ui-shell/src/components/trust/TrustGovernanceStrip.tsx",
         "ui/one-ui-shell/src/data/workSurfaceModules.ts",
         "ui/one-ui-shell/src/hooks/queries/useAudit.ts",
+        "ui/one-ui-shell/src/hooks/queries/useEquipment.ts",
         "ui/one-ui-shell/src/lib/__tests__/phase6-service-completion-golden-thread.test.ts",
         "ui/one-ui-shell/src/lib/administration-governance/route-registry.ts",
         "ui/one-ui-shell/src/lib/administration-governance/surfaces.ts",
@@ -9493,7 +9682,7 @@
         "isTrustPlane": true
       },
       "counts": {
-        "migrations": 25,
+        "migrations": 29,
         "entities": 13,
         "repositories": 13,
         "serviceLayer": 12,
@@ -9505,7 +9694,7 @@
         "bffClients": 9,
         "uiReferences": 17,
         "mobileReferences": 2,
-        "tests": 18
+        "tests": 19
       },
       "dimensions": {
         "database": "real",
@@ -9637,8 +9826,8 @@
         "contractOperations": 23,
         "contractViolations": 0,
         "bffClients": 9,
-        "uiReferences": 23,
-        "mobileReferences": 0,
+        "uiReferences": 22,
+        "mobileReferences": 1,
         "tests": 4
       },
       "dimensions": {
@@ -9667,7 +9856,6 @@
         "tshepo-consent→yml-base-url"
       ],
       "uiPaths": [
-        "ui/one-ui-shell/src/app/auth/login/biometric/page.tsx",
         "ui/one-ui-shell/src/app/auth/login/page.test.tsx",
         "ui/one-ui-shell/src/app/auth/login/page.tsx",
         "ui/one-ui-shell/src/app/auth/login/provider-id/page.tsx",
@@ -9686,9 +9874,12 @@
         "ui/one-ui-shell/src/hooks/queries/useProcedureConsentCapture.ts",
         "ui/one-ui-shell/src/hooks/useConsentStore.ts",
         "ui/one-ui-shell/src/lib/__tests__/consent-capture-golden-thread.test.ts",
-        "ui/one-ui-shell/src/lib/__tests__/phase6-service-completion-golden-thread.test.ts"
+        "ui/one-ui-shell/src/lib/__tests__/phase6-service-completion-golden-thread.test.ts",
+        "ui/one-ui-shell/src/lib/registry-service-module-refs.ts"
       ],
-      "mobilePaths": [],
+      "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/services/personHealthWalletService.ts"
+      ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
       "stubRouteCount": 0,
@@ -10083,7 +10274,7 @@
         "isTrustPlane": true
       },
       "counts": {
-        "migrations": 11,
+        "migrations": 12,
         "entities": 9,
         "repositories": 9,
         "serviceLayer": 6,
@@ -10092,9 +10283,9 @@
         "stubRoutes": 0,
         "contractOperations": 16,
         "contractViolations": 0,
-        "bffClients": 30,
+        "bffClients": 32,
         "uiReferences": 36,
-        "mobileReferences": 5,
+        "mobileReferences": 6,
         "tests": 9
       },
       "dimensions": {
@@ -10117,6 +10308,7 @@
         "AuditController→inline",
         "BiometricPolicyBffController→inline",
         "CitizenStepUpController→inline",
+        "CitizenWalletController→inline",
         "ClinicalToolsController→inline",
         "CommunicationController→inline",
         "EhrPatientSummaryController→inline",
@@ -10132,6 +10324,7 @@
         "PolicyConsentController→inline",
         "ProcedureWorkflowController→inline",
         "QueueController→inline",
+        "SellerCentreController→inline",
         "ShellWorkspaceStateController→inline",
         "TeleconsultController→inline",
         "TriageImagingLinkController→inline",
@@ -10166,6 +10359,7 @@
         "ui/one-ui-shell/src/config/serviceBranding.test.ts"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/services/personHealthWalletService.ts",
         "provider-app:apps/mobile/provider-app/src/navigation/ModeSwitcher.tsx",
         "packages:apps/mobile/packages/mobile-registry/src/registry.ts",
         "packages:apps/mobile/packages/mobile-registry/src/types.ts",
@@ -10245,7 +10439,7 @@
         "bffClients": 17,
         "uiReferences": 34,
         "mobileReferences": 5,
-        "tests": 17
+        "tests": 18
       },
       "dimensions": {
         "database": "real",
@@ -10370,19 +10564,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 1,
+        "migrations": 2,
         "entities": 4,
         "repositories": 4,
         "serviceLayer": 3,
         "controllers": 4,
-        "routes": 13,
+        "routes": 15,
         "stubRoutes": 0,
         "contractOperations": 9,
         "contractViolations": 0,
-        "bffClients": 3,
+        "bffClients": 4,
         "uiReferences": 12,
-        "mobileReferences": 8,
-        "tests": 1
+        "mobileReferences": 9,
+        "tests": 2
       },
       "dimensions": {
         "database": "real",
@@ -10400,6 +10594,7 @@
       "contractFile": "ubomi.openapi.yaml",
       "bffClients": [
         "UbomiServiceClient",
+        "DeathPathwayController→inline",
         "UbomiController→inline",
         "ubomi→yml-base-url"
       ],
@@ -10423,6 +10618,7 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/marketplace/HealthOsAppsScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/ubomiService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/ubomiService.ts",
+        "provider-app:apps/mobile/provider-app/src/services/deathPathwayService.ts",
         "packages:apps/mobile/packages/mobile-registry/src/registry.ts",
         "packages:apps/mobile/packages/mobile-registry/src/types.ts",
         "packages:apps/mobile/packages/mobile-registry/src/wiring.ts"
@@ -10500,7 +10696,7 @@
         "bffClients": 22,
         "uiReferences": 28,
         "mobileReferences": 6,
-        "tests": 14
+        "tests": 15
       },
       "dimensions": {
         "database": "real",
@@ -10640,9 +10836,9 @@
         "stubRoutes": 0,
         "contractOperations": 160,
         "contractViolations": 0,
-        "bffClients": 28,
-        "uiReferences": 78,
-        "mobileReferences": 6,
+        "bffClients": 29,
+        "uiReferences": 84,
+        "mobileReferences": 8,
         "tests": 34
       },
       "dimensions": {
@@ -10662,6 +10858,7 @@
       "bffClients": [
         "VitoServiceClient",
         "AuthSessionController→VitoServiceClient",
+        "CitizenWalletController→VitoServiceClient",
         "ClientRegistryController→VitoServiceClient",
         "EhrPatientSummaryController→VitoServiceClient",
         "IdentityServicesController→VitoServiceClient",
@@ -10694,6 +10891,11 @@
         "ui/one-ui-shell/src/app/citizen/delegated-pickup/page.tsx",
         "ui/one-ui-shell/src/app/citizen/id-recovery/page.tsx",
         "ui/one-ui-shell/src/app/citizen/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/dependants/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/identity/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.test.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/profile/page.tsx",
         "ui/one-ui-shell/src/app/collaboration/access/page.tsx",
         "ui/one-ui-shell/src/app/developer/api-catalog/page.tsx",
         "ui/one-ui-shell/src/app/developer/sandbox/page.tsx",
@@ -10704,15 +10906,12 @@
         "ui/one-ui-shell/src/app/operations/vito/cards/page.tsx",
         "ui/one-ui-shell/src/app/operations/vito/cards/pickup/page.tsx",
         "ui/one-ui-shell/src/app/operations/vito/dedup/page.tsx",
-        "ui/one-ui-shell/src/app/operations/vito/internal-search/page.tsx",
-        "ui/one-ui-shell/src/app/operations/vito/issuance/[requestId]/page.tsx",
-        "ui/one-ui-shell/src/app/operations/vito/issuance/page.tsx",
-        "ui/one-ui-shell/src/app/operations/vito/match/page.tsx",
-        "ui/one-ui-shell/src/app/operations/vito/page.tsx",
-        "ui/one-ui-shell/src/app/operations/vito/patient-shares/page.tsx"
+        "ui/one-ui-shell/src/app/operations/vito/internal-search/page.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletOverviewSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/clientRegistryService.ts",
+        "citizen-app:apps/mobile/citizen-app/src/services/personHealthWalletService.ts",
         "provider-app:apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx",
         "packages:apps/mobile/packages/mobile-registry/src/registry.ts",
@@ -10793,9 +10992,9 @@
         "stubRoutes": 0,
         "contractOperations": 86,
         "contractViolations": 0,
-        "bffClients": 8,
-        "uiReferences": 68,
-        "mobileReferences": 31,
+        "bffClients": 9,
+        "uiReferences": 72,
+        "mobileReferences": 33,
         "tests": 5
       },
       "dimensions": {
@@ -10819,6 +11018,7 @@
         "MadiDonorAssistController→inline",
         "SocialComposerController→inline",
         "WellnessController→inline",
+        "WellnessHomeController→inline",
         "WellnessServiceProxyController→inline",
         "wellness→yml-base-url"
       ],
@@ -10839,10 +11039,10 @@
         "ui/one-ui-shell/src/app/privacy/page.tsx",
         "ui/one-ui-shell/src/app/search/page.tsx",
         "ui/one-ui-shell/src/app/wellness/activity/page.tsx",
+        "ui/one-ui-shell/src/app/wellness/care/page.tsx",
         "ui/one-ui-shell/src/app/wellness/challenges/page.tsx",
         "ui/one-ui-shell/src/app/wellness/clubs/page.tsx",
-        "ui/one-ui-shell/src/app/wellness/coaching/page.tsx",
-        "ui/one-ui-shell/src/app/wellness/commodities/page.tsx"
+        "ui/one-ui-shell/src/app/wellness/coaching/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/WellnessSection.test.tsx",
@@ -10926,8 +11126,8 @@
         "stubRoutes": 0,
         "contractOperations": 11,
         "contractViolations": 0,
-        "bffClients": 29,
-        "uiReferences": 186,
+        "bffClients": 30,
+        "uiReferences": 189,
         "mobileReferences": 28,
         "tests": 2
       },
@@ -10951,6 +11151,7 @@
         "AiModelRegistryController→inline",
         "AppointmentCommsController→inline",
         "BookingController→inline",
+        "CitizenWalletController→inline",
         "ClinicalWorklistController→inline",
         "CommunicationController→inline",
         "DataAccessGovernanceController→inline",
@@ -10982,6 +11183,7 @@
         "ui/one-ui-shell/src/app/admin/page.tsx",
         "ui/one-ui-shell/src/app/ai-governance/page.tsx",
         "ui/one-ui-shell/src/app/beds/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/profile/page.tsx",
         "ui/one-ui-shell/src/app/clinical/page.tsx",
         "ui/one-ui-shell/src/app/communication/page.tsx",
         "ui/one-ui-shell/src/app/coverage/page.tsx",
@@ -10995,8 +11197,7 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/discharge/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/documents/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/documents/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/emergency/page.tsx",
-        "ui/one-ui-shell/src/app/ehr/[patientId]/encounters/page.tsx"
+        "ui/one-ui-shell/src/app/ehr/[patientId]/emergency/page.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/__tests__/provider/Diagnostics.test.tsx",
@@ -11310,19 +11511,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 2,
-        "entities": 10,
-        "repositories": 10,
-        "serviceLayer": 5,
-        "controllers": 3,
-        "routes": 30,
+        "migrations": 6,
+        "entities": 14,
+        "repositories": 14,
+        "serviceLayer": 11,
+        "controllers": 7,
+        "routes": 53,
         "stubRoutes": 0,
-        "contractOperations": 0,
+        "contractOperations": 42,
         "contractViolations": 0,
-        "bffClients": 4,
-        "uiReferences": 13,
-        "mobileReferences": 7,
-        "tests": 9
+        "bffClients": 7,
+        "uiReferences": 22,
+        "mobileReferences": 11,
+        "tests": 17
       },
       "dimensions": {
         "database": "real",
@@ -11340,13 +11541,21 @@
       "contractFile": "khuluma.openapi.yaml",
       "bffClients": [
         "KhulumaServiceClient",
+        "EquipmentOperationsBffController→inline",
+        "MarketplaceStorefrontController→inline",
+        "NompiloGuidanceController→inline",
         "KhulumaBffController→inline",
         "KhulumaMobileController→inline",
         "khuluma→yml-base-url"
       ],
       "uiPaths": [
+        "ui/one-ui-shell/src/app/admin/comms-ops/page.test.tsx",
+        "ui/one-ui-shell/src/app/admin/comms-ops/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/comms/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/page.tsx",
         "ui/one-ui-shell/src/app/facility/[id]/setup/page.tsx",
         "ui/one-ui-shell/src/app/my/comms/page.tsx",
+        "ui/one-ui-shell/src/app/operations/equipment/iot/page.tsx",
         "ui/one-ui-shell/src/app/work/comms/page.tsx",
         "ui/one-ui-shell/src/components/comms/CommsCallModal.tsx",
         "ui/one-ui-shell/src/components/comms/CommsHub.test.tsx",
@@ -11355,9 +11564,11 @@
         "ui/one-ui-shell/src/components/comms/EventDiscussionPanel.tsx",
         "ui/one-ui-shell/src/components/facility-mode/SetupWizard.tsx",
         "ui/one-ui-shell/src/components/facility-mode/types.ts",
+        "ui/one-ui-shell/src/components/intelligent/NompiloContextualGuidance.test.tsx",
+        "ui/one-ui-shell/src/components/intelligent/NompiloContextualGuidance.tsx",
         "ui/one-ui-shell/src/hooks/queries/useComms.ts",
-        "ui/one-ui-shell/src/hooks/useKhulumaRealtime.ts",
-        "ui/one-ui-shell/src/lib/routes.ts"
+        "ui/one-ui-shell/src/hooks/queries/useMsikaStore.ts",
+        "ui/one-ui-shell/src/hooks/queries/useNompilo.ts"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsHubScreen.test.tsx",
@@ -11366,7 +11577,10 @@
         "citizen-app:apps/mobile/citizen-app/src/navigation/CitizenTabs.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/comms/CommsHubScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/live/EventDiscussionSection.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/services/khulumaCommsService.ts"
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/NompiloGuidanceSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletOverviewSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/services/khulumaCommsService.ts",
+        "citizen-app:apps/mobile/citizen-app/src/services/marketplaceStoreService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -11798,53 +12012,17 @@
       "pageTitle": "Biometric Verification",
       "zone": "auth",
       "pageFile": "ui/one-ui-shell/src/app/auth/login/biometric/page.tsx",
-      "bffPaths": [
-        "/internal/v1/identity/linked-ids",
-        "/internal/v1/auth/login",
-        "/internal/v1/auth/logout"
-      ],
-      "backingSignals": [
-        "apiClient-dynamic",
-        "auth-keycloak"
-      ],
+      "bffPaths": [],
+      "backingSignals": [],
       "gatewayPaths": [],
-      "mockStubHits": [
-        {
-          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
-          "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
-          "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
-          "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/lib/api-client.ts",
-          "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
-          "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
-          "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/hooks/useConsentStore.ts",
-          "pattern": "json-stringify-render"
-        }
-      ],
-      "hasMutation": true,
-      "hasPersistHint": true,
+      "mockStubHits": [],
+      "hasMutation": false,
+      "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
       "readsRealData": true,
-      "writesRealData": true,
-      "completeVsCosmetic": false,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
       "allowlistedShell": true,
       "gaps": []
     },
@@ -13380,6 +13558,7 @@
       "pageFile": "ui/one-ui-shell/src/app/clinical/inpatient/admissions/page.tsx",
       "bffPaths": [
         "/internal/v1/inpatient/admissions",
+        "/internal/v1/inpatient/discharge-summary",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience",
         "/internal/v1/work-context"
@@ -13441,6 +13620,7 @@
       "pageFile": "ui/one-ui-shell/src/app/clinical/inpatient/admissions/[admissionId]/page.tsx",
       "bffPaths": [
         "/internal/v1/inpatient/admissions",
+        "/internal/v1/inpatient/discharge-summary",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience",
         "/internal/v1/work-context",
@@ -13507,7 +13687,8 @@
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience",
         "/internal/v1/work-context",
-        "/internal/v1/inpatient/admissions"
+        "/internal/v1/inpatient/admissions",
+        "/internal/v1/inpatient/discharge-summary"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -13566,6 +13747,7 @@
       "pageFile": "ui/one-ui-shell/src/app/clinical/inpatient/nursing/page.tsx",
       "bffPaths": [
         "/internal/v1/inpatient/admissions",
+        "/internal/v1/inpatient/discharge-summary",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience",
         "/internal/v1/work-context"
@@ -13627,6 +13809,7 @@
       "pageFile": "ui/one-ui-shell/src/app/clinical/inpatient/rounds/page.tsx",
       "bffPaths": [
         "/internal/v1/inpatient/admissions",
+        "/internal/v1/inpatient/discharge-summary",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience",
         "/internal/v1/work-context"
@@ -13688,9 +13871,140 @@
       "pageFile": "ui/one-ui-shell/src/app/clinical/inpatient/discharge/[admissionId]/page.tsx",
       "bffPaths": [
         "/internal/v1/inpatient/admissions",
+        "/internal/v1/inpatient/discharge-summary",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience",
         "/internal/v1/work-context"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "shell-composition",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": true,
+      "gaps": []
+    },
+    {
+      "path": "/clinical/inpatient/escalations",
+      "pageTitle": "Deterioration Escalations",
+      "zone": "queue",
+      "pageFile": "ui/one-ui-shell/src/app/clinical/inpatient/escalations/page.tsx",
+      "bffPaths": [
+        "/internal/v1/inpatient/admissions",
+        "/internal/v1/inpatient/discharge-summary",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "shell-composition",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": true,
+      "gaps": []
+    },
+    {
+      "path": "/clinical/inpatient/discharge-board",
+      "pageTitle": "Discharge Board",
+      "zone": "queue",
+      "pageFile": "ui/one-ui-shell/src/app/clinical/inpatient/discharge-board/page.tsx",
+      "bffPaths": [
+        "/internal/v1/inpatient/admissions",
+        "/internal/v1/inpatient/discharge-summary",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/work-context",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -16575,6 +16889,514 @@
       "gaps": []
     },
     {
+      "path": "/citizen/visit/[transactionId]",
+      "pageTitle": "My Visit",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/citizen/visit/[transactionId]/page.tsx",
+      "bffPaths": [],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/citizen/inpatient/[admissionRef]",
+      "pageTitle": "My Inpatient Stay",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/citizen/inpatient/[admissionRef]/page.tsx",
+      "bffPaths": [],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/citizen/wallet",
+      "pageTitle": "Mushe Personal Health Wallet",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/citizen/wallet/page.tsx",
+      "bffPaths": [
+        "/internal/v1/citizen/wallet/overview",
+        "/internal/v1/citizen/wallet/profile/correction",
+        "/internal/v1/identity/patient/resolve",
+        "/internal/v1/identity/patient/register",
+        "/internal/v1/identity/assurance/status",
+        "/internal/v1/identity/assurance/upgrade/request",
+        "/internal/v1/vito/identity/resolve",
+        "/internal/v1/vito/identity/rotate"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/citizen/wallet/identity",
+      "pageTitle": "Identity & Trust",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/citizen/wallet/identity/page.tsx",
+      "bffPaths": [
+        "/internal/v1/citizen/wallet/overview",
+        "/internal/v1/citizen/wallet/profile/correction",
+        "/internal/v1/identity/patient/resolve",
+        "/internal/v1/identity/patient/register",
+        "/internal/v1/identity/assurance/status",
+        "/internal/v1/identity/assurance/upgrade/request",
+        "/internal/v1/vito/identity/resolve",
+        "/internal/v1/vito/identity/rotate"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/citizen/wallet/profile",
+      "pageTitle": "Profile & Corrections",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/citizen/wallet/profile/page.tsx",
+      "bffPaths": [
+        "/internal/v1/citizen/wallet/overview",
+        "/internal/v1/citizen/wallet/profile/correction"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/citizen/wallet/records",
+      "pageTitle": "My Health Records",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/citizen/wallet/records/page.tsx",
+      "bffPaths": [
+        "/internal/v1/citizen/wallet/overview",
+        "/internal/v1/citizen/wallet/profile/correction"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/citizen/wallet/timeline",
+      "pageTitle": "Care Timeline",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/citizen/wallet/timeline/page.tsx",
+      "bffPaths": [
+        "/internal/v1/citizen/wallet/overview",
+        "/internal/v1/citizen/wallet/profile/correction"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/citizen/wallet/dependants",
+      "pageTitle": "Dependants & Proxy",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/citizen/wallet/dependants/page.tsx",
+      "bffPaths": [
+        "/internal/v1/citizen/wallet/overview",
+        "/internal/v1/citizen/wallet/profile/correction"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/citizen/wallet/payments",
+      "pageTitle": "Payments & Bills",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/citizen/wallet/payments/page.tsx",
+      "bffPaths": [
+        "/internal/v1/citizen/wallet/overview",
+        "/internal/v1/citizen/wallet/profile/correction"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/citizen/wallet/comms",
+      "pageTitle": "Communication Preferences",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/citizen/wallet/comms/page.tsx",
+      "bffPaths": [
+        "/internal/v1/citizen/wallet/overview",
+        "/internal/v1/citizen/wallet/profile/correction"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
       "path": "/verify/credential",
       "pageTitle": "Verify Credential",
       "zone": "home",
@@ -18180,8 +19002,8 @@
         "/internal/v1/teleconsult/ops/rtc-health",
         "/internal/v1/teleconsult/ops/sla",
         "/internal/v1/inpatient/admissions",
-        "/internal/v1/core-transactions",
-        "/internal/v1/workflows/definitions"
+        "/internal/v1/inpatient/discharge-summary",
+        "/internal/v1/core-transactions"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -20251,6 +21073,58 @@
       "hardcodedDataHints": 0,
       "readsRealData": true,
       "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/admin/comms-ops",
+      "pageTitle": "Comms Operations",
+      "zone": "admin",
+      "pageFile": "ui/one-ui-shell/src/app/admin/comms-ops/page.tsx",
+      "bffPaths": [
+        "/internal/v1/khuluma/escalations",
+        "/internal/v1/khuluma/delivery/adapters",
+        "/internal/v1/khuluma/on-call"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
       "gaps": []
@@ -23936,6 +24810,517 @@
       "gaps": []
     },
     {
+      "path": "/marketplace/store",
+      "pageTitle": "Marketplace Store",
+      "zone": "marketplace",
+      "pageFile": "ui/one-ui-shell/src/app/marketplace/store/page.tsx",
+      "bffPaths": [
+        "/internal/v1/marketplace/store/home",
+        "/internal/v1/marketplace/store/activity",
+        "/internal/v1/marketplace/store/feedback",
+        "/internal/v1/marketplace/seller/moderation/queue",
+        "/internal/v1/marketplace/seller/listings",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/marketplace/store/search",
+      "pageTitle": "Search Listings",
+      "zone": "marketplace",
+      "pageFile": "ui/one-ui-shell/src/app/marketplace/store/search/page.tsx",
+      "bffPaths": [
+        "/internal/v1/marketplace/store/home",
+        "/internal/v1/marketplace/store/activity",
+        "/internal/v1/marketplace/store/feedback",
+        "/internal/v1/marketplace/seller/moderation/queue",
+        "/internal/v1/marketplace/seller/listings",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/marketplace/store/listing/[id]",
+      "pageTitle": "Listing",
+      "zone": "marketplace",
+      "pageFile": "ui/one-ui-shell/src/app/marketplace/store/listing/[id]/page.tsx",
+      "bffPaths": [
+        "/internal/v1/marketplace/store/home",
+        "/internal/v1/marketplace/store/activity",
+        "/internal/v1/marketplace/store/feedback",
+        "/internal/v1/marketplace/seller/moderation/queue",
+        "/internal/v1/marketplace/seller/listings",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/marketplace/store/activity",
+      "pageTitle": "My Marketplace Activity",
+      "zone": "marketplace",
+      "pageFile": "ui/one-ui-shell/src/app/marketplace/store/activity/page.tsx",
+      "bffPaths": [
+        "/internal/v1/marketplace/store/home",
+        "/internal/v1/marketplace/store/activity",
+        "/internal/v1/marketplace/store/feedback",
+        "/internal/v1/marketplace/seller/moderation/queue",
+        "/internal/v1/marketplace/seller/listings",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/app/marketplace/store/activity/page.tsx",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/marketplace/seller",
+      "pageTitle": "Seller Centre",
+      "zone": "marketplace",
+      "pageFile": "ui/one-ui-shell/src/app/marketplace/seller/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/marketplace/seller/listings",
+      "pageTitle": "My Listings",
+      "zone": "marketplace",
+      "pageFile": "ui/one-ui-shell/src/app/marketplace/seller/listings/page.tsx",
+      "bffPaths": [
+        "/internal/v1/marketplace/store/home",
+        "/internal/v1/marketplace/store/activity",
+        "/internal/v1/marketplace/store/feedback",
+        "/internal/v1/marketplace/seller/moderation/queue",
+        "/internal/v1/marketplace/seller/listings",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/marketplace/seller/listings/new",
+      "pageTitle": "New Listing",
+      "zone": "marketplace",
+      "pageFile": "ui/one-ui-shell/src/app/marketplace/seller/listings/new/page.tsx",
+      "bffPaths": [
+        "/internal/v1/marketplace/store/home",
+        "/internal/v1/marketplace/store/activity",
+        "/internal/v1/marketplace/store/feedback",
+        "/internal/v1/marketplace/seller/moderation/queue",
+        "/internal/v1/marketplace/seller/listings",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/marketplace/seller/moderation",
+      "pageTitle": "Listing Moderation",
+      "zone": "marketplace",
+      "pageFile": "ui/one-ui-shell/src/app/marketplace/seller/moderation/page.tsx",
+      "bffPaths": [
+        "/internal/v1/marketplace/store/home",
+        "/internal/v1/marketplace/store/activity",
+        "/internal/v1/marketplace/store/feedback",
+        "/internal/v1/marketplace/seller/moderation/queue",
+        "/internal/v1/marketplace/seller/listings",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
       "path": "/finance",
       "pageTitle": "Finance Dashboard",
       "zone": "finance",
@@ -25674,7 +27059,7 @@
     },
     {
       "path": "/wallet",
-      "pageTitle": "Wallet",
+      "pageTitle": "MusheX Wallet",
       "zone": "finance",
       "pageFile": "ui/one-ui-shell/src/app/wallet/page.tsx",
       "bffPaths": [
@@ -29414,8 +30799,136 @@
       "gaps": []
     },
     {
+      "path": "/wellness/plans",
+      "pageTitle": "Plans & Journeys",
+      "zone": "wellness",
+      "pageFile": "ui/one-ui-shell/src/app/wellness/plans/page.tsx",
+      "bffPaths": [
+        "/internal/v1/wellness/home/overview",
+        "/internal/v1/wellness/programs",
+        "/internal/v1/wellness/enrollments",
+        "/internal/v1/wellness/habits/check-ins",
+        "/internal/v1/wellness/coaching/relationships",
+        "/internal/v1/wellness/care-linkages",
+        "/internal/v1/wellness/home/care-routing",
+        "/internal/v1/identity/linked-ids"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "auth-keycloak"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/wellness/care",
+      "pageTitle": "Connect to Care",
+      "zone": "wellness",
+      "pageFile": "ui/one-ui-shell/src/app/wellness/care/page.tsx",
+      "bffPaths": [
+        "/internal/v1/wellness/home/overview",
+        "/internal/v1/wellness/programs",
+        "/internal/v1/wellness/enrollments",
+        "/internal/v1/wellness/habits/check-ins",
+        "/internal/v1/wellness/coaching/relationships",
+        "/internal/v1/wellness/care-linkages",
+        "/internal/v1/wellness/home/care-routing",
+        "/internal/v1/identity/linked-ids"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "auth-keycloak"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
       "path": "/wellness/commodities",
-      "pageTitle": "Wellness Commodities",
+      "pageTitle": "Programme commodities (Dura)",
       "zone": "wellness",
       "pageFile": "ui/one-ui-shell/src/app/wellness/commodities/page.tsx",
       "bffPaths": [
@@ -33757,16 +35270,22 @@
       "zone": "operations",
       "pageFile": "ui/one-ui-shell/src/app/operations/equipment/page.tsx",
       "bffPaths": [
+        "/internal/v1/equipment",
         "/internal/v1/identity/linked-ids",
-        "/internal/v1/session/experience"
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [
         {
-          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
           "pattern": "json-stringify-render"
         },
         {
@@ -33774,11 +35293,11 @@
           "pattern": "json-stringify-render"
         },
         {
-          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
           "pattern": "json-stringify-render"
         },
         {
-          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
           "pattern": "json-stringify-render"
         },
         {
@@ -33798,12 +35317,430 @@
           "pattern": "json-stringify-render"
         }
       ],
-      "hasMutation": false,
+      "hasMutation": true,
       "hasPersistHint": true,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
       "readsRealData": true,
-      "writesRealData": false,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/operations/equipment/[equipmentId]",
+      "pageTitle": "Equipment Detail",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/operations/equipment/[equipmentId]/page.tsx",
+      "bffPaths": [
+        "/internal/v1/equipment",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/operations/equipment/maintenance",
+      "pageTitle": "Maintenance",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/operations/equipment/maintenance/page.tsx",
+      "bffPaths": [
+        "/internal/v1/equipment",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/operations/equipment/calibration",
+      "pageTitle": "Calibration",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/operations/equipment/calibration/page.tsx",
+      "bffPaths": [
+        "/internal/v1/equipment",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/operations/equipment/readiness",
+      "pageTitle": "Service Readiness",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/operations/equipment/readiness/page.tsx",
+      "bffPaths": [
+        "/internal/v1/equipment",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/operations/equipment/iot",
+      "pageTitle": "IoT & Device Status",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/operations/equipment/iot/page.tsx",
+      "bffPaths": [
+        "/internal/v1/equipment",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/operations/equipment/deployment",
+      "pageTitle": "Deployment Kits",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/operations/equipment/deployment/page.tsx",
+      "bffPaths": [
+        "/internal/v1/equipment",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/operations/equipment/audit",
+      "pageTitle": "Asset Audit",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/operations/equipment/audit/page.tsx",
+      "bffPaths": [
+        "/internal/v1/equipment",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
       "gaps": []
@@ -34657,6 +36594,68 @@
       "zone": "intelligent",
       "pageFile": "ui/one-ui-shell/src/app/search/page.tsx",
       "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/nompilo",
+      "pageTitle": "Nompilo",
+      "zone": "intelligent",
+      "pageFile": "ui/one-ui-shell/src/app/nompilo/page.tsx",
+      "bffPaths": [
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience"
       ],
@@ -42377,6 +44376,1025 @@
       "hardcodedDataHints": 0,
       "readsRealData": true,
       "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/emergency",
+      "pageTitle": "Emergency",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/emergency/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/emergency/sos",
+      "pageTitle": "Send SOS",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/emergency/sos/page.tsx",
+      "bffPaths": [
+        "/internal/v1/daidzai/requests",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/emergency/services",
+      "pageTitle": "Nearest Services",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/emergency/services/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/emergency/track",
+      "pageTitle": "Track Emergency",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/emergency/track/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/emergency/track/[id]",
+      "pageTitle": "Track Emergency",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/emergency/track/[id]/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/daidzai",
+      "pageTitle": "Emergency Command",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/daidzai/page.tsx",
+      "bffPaths": [
+        "/internal/v1/daidzai/incidents",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/daidzai/dispatch",
+      "pageTitle": "Dispatch Console",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/daidzai/dispatch/page.tsx",
+      "bffPaths": [
+        "/internal/v1/daidzai/incidents",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/daidzai/missions",
+      "pageTitle": "Mission Tracking",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/daidzai/missions/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/daidzai/disasters",
+      "pageTitle": "Disaster Command",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/daidzai/disasters/page.tsx",
+      "bffPaths": [
+        "/internal/v1/daidzai/disasters",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/clinical/death-cases",
+      "pageTitle": "Death Cases",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/clinical/death-cases/page.tsx",
+      "bffPaths": [
+        "/internal/v1/death/cases",
+        "/internal/v1/death/confirm",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/clinical/death-cases/[id]",
+      "pageTitle": "Death Case",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/clinical/death-cases/[id]/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/clinical/mortality-certification",
+      "pageTitle": "Mortality Certification",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/clinical/mortality-certification/page.tsx",
+      "bffPaths": [
+        "/internal/v1/death/cases",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/mortuary",
+      "pageTitle": "Mortuary",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/mortuary/page.tsx",
+      "bffPaths": [
+        "/internal/v1/death/cases",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/crvs/death-registration",
+      "pageTitle": "Death Registration",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/crvs/death-registration/page.tsx",
+      "bffPaths": [
+        "/internal/v1/death/crvs/notifications",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/clinical/theatre",
+      "pageTitle": "Theatre",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/clinical/theatre/page.tsx",
+      "bffPaths": [
+        "/internal/v1/theatre/queue",
+        "/internal/v1/theatre/cases",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/clinical/theatre/[id]",
+      "pageTitle": "Theatre Case",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/clinical/theatre/[id]/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/nompilo/context",
+        "/internal/v1/nompilo/explain-locked",
+        "/internal/v1/nompilo/dismiss",
+        "/internal/v1/nompilo/follow-up"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
       "gaps": []
@@ -50675,6 +53693,20 @@
     },
     {
       "app": "citizen-app",
+      "screen": "apps/mobile/citizen-app/src/screens/emergency/SosScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "citizen-app",
+      "screen": "apps/mobile/citizen-app/src/screens/emergency/TrackEmergencyScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "citizen-app",
       "screen": "apps/mobile/citizen-app/src/screens/live/EventDiscussionSection.tsx",
       "bffPaths": [],
       "mockStubHits": [],
@@ -50934,7 +53966,21 @@
     },
     {
       "app": "citizen-app",
+      "screen": "apps/mobile/citizen-app/src/screens/personal/MarketplaceStoreSection.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "citizen-app",
       "screen": "apps/mobile/citizen-app/src/screens/personal/MonitoringSection.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "citizen-app",
+      "screen": "apps/mobile/citizen-app/src/screens/personal/NompiloGuidanceSection.tsx",
       "bffPaths": [],
       "mockStubHits": [],
       "readsRealData": false
@@ -51057,7 +54103,21 @@
     },
     {
       "app": "citizen-app",
+      "screen": "apps/mobile/citizen-app/src/screens/personal/WalletOverviewSection.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "citizen-app",
       "screen": "apps/mobile/citizen-app/src/screens/personal/WalletSection.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "citizen-app",
+      "screen": "apps/mobile/citizen-app/src/screens/personal/WellnessJourneysSection.tsx",
       "bffPaths": [],
       "mockStubHits": [],
       "readsRealData": false
@@ -51248,6 +54308,34 @@
     },
     {
       "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/equipment/EquipmentSearchScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/equipment/EquipmentToolsScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/equipment/MaintenanceTasksScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/equipment/ReportEquipmentFaultScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
       "screen": "apps/mobile/provider-app/src/screens/live/ProviderLiveHubScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
@@ -51427,6 +54515,13 @@
     },
     {
       "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/provider/ConfirmDeathScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
       "screen": "apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
@@ -51440,6 +54535,13 @@
       ],
       "mockStubHits": [],
       "readsRealData": true
+    },
+    {
+      "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/provider/DaidzaiFieldMissionScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
     },
     {
       "app": "provider-app",

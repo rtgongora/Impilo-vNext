@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-29T18:20:50.589Z
-> Web surfaces: **672** | Mobile screens: **181**
+> Generated: 2026-06-30T18:45:42.873Z
+> Web surfaces: **719** | Mobile screens: **193**
 
 ## Web routes (one-ui-shell)
 
@@ -11,7 +11,7 @@
 | /auth/login | Sign In | auth | yes | no | yes | yes | yes | — |
 | /auth/login/email | Sign In with Email | auth | no | no | yes | no | no | — |
 | /auth/login/provider-id | Sign In with Provider ID | auth | yes | no | yes | yes | yes | — |
-| /auth/login/biometric | Biometric Verification | auth | yes | no | yes | yes | yes | — |
+| /auth/login/biometric | Biometric Verification | auth | no | no | yes | no | no | — |
 | /auth/forgot-password | Forgot Password | auth | yes | no | yes | no | yes | — |
 | /auth/reset-password | Reset Password | auth | yes | no | yes | no | yes | — |
 | /auth/mfa | Multi-Factor Authentication | auth | yes | no | yes | yes | yes | — |
@@ -50,6 +50,8 @@
 | /clinical/inpatient/nursing | Nursing Workbench | queue | yes | no | yes | yes | yes | — |
 | /clinical/inpatient/rounds | Medical Rounds | queue | yes | no | yes | yes | yes | — |
 | /clinical/inpatient/discharge/[admissionId] | Inpatient Discharge | queue | yes | no | yes | yes | yes | — |
+| /clinical/inpatient/escalations | Deterioration Escalations | queue | yes | no | yes | yes | yes | — |
+| /clinical/inpatient/discharge-board | Discharge Board | queue | yes | no | yes | yes | yes | — |
 | /production-command-centre | Production Command Centre | admin | yes | no | yes | no | yes | — |
 | /platform/all-features | All Features | admin | yes | no | yes | no | yes | — |
 | /health-os/command-centre | Health OS Command Centre | admin | no | no | yes | no | no | — |
@@ -98,6 +100,16 @@
 | /citizen/id-recovery | ID Recovery | home | yes | no | yes | no | yes | — |
 | /citizen/delegated-pickup | Delegated Pickup | home | yes | no | yes | yes | yes | — |
 | /citizen/record-sharing | Share My Record | home | yes | no | yes | yes | yes | — |
+| /citizen/visit/[transactionId] | My Visit | home | no | no | yes | no | yes | — |
+| /citizen/inpatient/[admissionRef] | My Inpatient Stay | home | no | no | yes | no | yes | — |
+| /citizen/wallet | Mushe Personal Health Wallet | home | yes | no | yes | yes | yes | — |
+| /citizen/wallet/identity | Identity & Trust | home | yes | no | yes | yes | yes | — |
+| /citizen/wallet/profile | Profile & Corrections | home | yes | no | yes | yes | yes | — |
+| /citizen/wallet/records | My Health Records | home | yes | no | yes | yes | yes | — |
+| /citizen/wallet/timeline | Care Timeline | home | yes | no | yes | yes | yes | — |
+| /citizen/wallet/dependants | Dependants & Proxy | home | yes | no | yes | yes | yes | — |
+| /citizen/wallet/payments | Payments & Bills | home | yes | no | yes | yes | yes | — |
+| /citizen/wallet/comms | Communication Preferences | home | yes | no | yes | yes | yes | — |
 | /verify/credential | Verify Credential | home | no | no | yes | yes | no | — |
 | /share/claim | Claim Shared Documents | home | yes | no | yes | yes | no | — |
 | /collaboration/access | Provider collaboration access | home | yes | no | yes | yes | yes | — |
@@ -164,6 +176,7 @@
 | /ehr/[patientId]/imaging/viewer | DICOM Viewer | ehr | yes | no | yes | yes | yes | — |
 | /admin | Administration | admin | yes | no | yes | no | yes | — |
 | /admin/users | Worker & Provider Access | admin | yes | no | yes | yes | yes | — |
+| /admin/comms-ops | Comms Operations | admin | yes | no | yes | no | yes | — |
 | /admin/users/[id] | User Details | admin | yes | no | yes | yes | yes | — |
 | /admin/roles | Role Management | admin | yes | no | yes | yes | yes | — |
 | /admin/policies | Policy Management | admin | yes | no | yes | yes | yes | — |
@@ -224,6 +237,14 @@
 | /marketplace/pickup | Pickup Handoff | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/vendors | Vendors | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/bookings | Bookings | marketplace | yes | no | yes | yes | yes | — |
+| /marketplace/store | Marketplace Store | marketplace | yes | no | yes | yes | yes | — |
+| /marketplace/store/search | Search Listings | marketplace | yes | no | yes | yes | yes | — |
+| /marketplace/store/listing/[id] | Listing | marketplace | yes | no | yes | yes | yes | — |
+| /marketplace/store/activity | My Marketplace Activity | marketplace | yes | no | yes | yes | yes | — |
+| /marketplace/seller | Seller Centre | marketplace | yes | no | yes | yes | yes | — |
+| /marketplace/seller/listings | My Listings | marketplace | yes | no | yes | yes | yes | — |
+| /marketplace/seller/listings/new | New Listing | marketplace | yes | no | yes | yes | yes | — |
+| /marketplace/seller/moderation | Listing Moderation | marketplace | yes | no | yes | yes | yes | — |
 | /finance | Finance Dashboard | finance | yes | no | yes | yes | yes | — |
 | /finance/claims | Claims | finance | yes | no | yes | no | yes | — |
 | /finance/claims/[id] | Claim Details | finance | yes | no | yes | no | yes | — |
@@ -252,7 +273,7 @@
 | /finance/commerce-integrations | Commerce & Payer Stack | finance | yes | no | yes | no | yes | — |
 | /finance/reports | Financial reports | finance | yes | no | yes | yes | yes | — |
 | /finance/my-account | My Healthcare Account | finance | yes | no | yes | yes | yes | — |
-| /wallet | Wallet | finance | yes | no | yes | yes | yes | — |
+| /wallet | MusheX Wallet | finance | yes | no | yes | yes | yes | — |
 | /wallet/deposit | Deposit | finance | yes | no | yes | yes | yes | — |
 | /wallet/send | Send Money | finance | yes | no | yes | yes | yes | — |
 | /wallet/transactions | Transactions | finance | yes | no | yes | yes | yes | — |
@@ -312,7 +333,9 @@
 | /wellness/challenges | Challenges | wellness | yes | no | yes | yes | yes | — |
 | /wellness/routes | Routes & Places | wellness | yes | no | yes | yes | yes | — |
 | /wellness/coaching | Coaching & Habits | wellness | yes | no | yes | yes | yes | — |
-| /wellness/commodities | Wellness Commodities | wellness | yes | no | yes | yes | yes | — |
+| /wellness/plans | Plans & Journeys | wellness | yes | no | yes | yes | yes | — |
+| /wellness/care | Connect to Care | wellness | yes | no | yes | yes | yes | — |
+| /wellness/commodities | Programme commodities (Dura) | wellness | yes | no | yes | yes | yes | — |
 | /wellness/community | Wellness Community | wellness | yes | no | yes | yes | yes | — |
 | /social | Social Timeline | wellness | yes | no | yes | yes | yes | — |
 | /social/drafts | Draft Posts | wellness | yes | no | yes | yes | yes | — |
@@ -383,7 +406,14 @@
 | /operations/vito/registry-admin | Registry Admin | operations | yes | no | yes | yes | yes | — |
 | /operations/butano | SHR Operations | operations | yes | no | yes | no | yes | — |
 | /operations/assets | Asset Management | operations | yes | no | yes | yes | yes | — |
-| /operations/equipment | Equipment Management | operations | yes | no | yes | no | yes | — |
+| /operations/equipment | Equipment Management | operations | yes | no | yes | yes | yes | — |
+| /operations/equipment/[equipmentId] | Equipment Detail | operations | yes | no | yes | yes | yes | — |
+| /operations/equipment/maintenance | Maintenance | operations | yes | no | yes | yes | yes | — |
+| /operations/equipment/calibration | Calibration | operations | yes | no | yes | yes | yes | — |
+| /operations/equipment/readiness | Service Readiness | operations | yes | no | yes | yes | yes | — |
+| /operations/equipment/iot | IoT & Device Status | operations | yes | no | yes | yes | yes | — |
+| /operations/equipment/deployment | Deployment Kits | operations | yes | no | yes | yes | yes | — |
+| /operations/equipment/audit | Asset Audit | operations | yes | no | yes | yes | yes | — |
 | /support | Support | support | yes | no | yes | no | yes | — |
 | /support/tickets | Support Tickets | support | yes | no | yes | no | yes | — |
 | /support/knowledge-base | Knowledge Base | support | yes | no | yes | no | yes | — |
@@ -399,6 +429,7 @@
 | /ask | Ask | intelligent | yes | no | yes | yes | yes | — |
 | /intelligence | Health Intelligence | intelligent | yes | no | yes | no | yes | — |
 | /search | Search | intelligent | yes | no | yes | yes | yes | — |
+| /nompilo | Nompilo | intelligent | yes | no | yes | yes | yes | — |
 | /guidance | Guidance | intelligent | yes | no | yes | yes | yes | — |
 | /guidance/reminders | Reminders & Prompts | intelligent | yes | no | yes | no | yes | — |
 | /guidance/education | Health Education | intelligent | yes | no | yes | no | yes | — |
@@ -476,37 +507,6 @@
 | /madi | Madi Blood Services | operations | yes | no | yes | no | yes | — |
 | /madi/donor | My Donor Hub | home | yes | no | yes | yes | yes | — |
 | /madi/donor/register | Become a Donor | home | yes | no | yes | yes | yes | — |
-| /madi/donor/profile | Donor Profile | home | yes | no | yes | yes | yes | — |
-| /madi/donor/screening | Donor Screening | home | yes | no | yes | yes | yes | — |
-| /madi/donor/drives | Donation Drives Near Me | home | yes | no | yes | yes | yes | — |
-| /madi/donor/history | Donation History | home | yes | no | yes | yes | yes | — |
-| /madi/donor/feedback | Donor Feedback | home | yes | no | yes | yes | yes | — |
-| /madi/donor/preferences | Donor Preferences | home | yes | no | yes | yes | yes | — |
-| /madi/drives | Donation Drives | operations | yes | no | yes | yes | yes | — |
-| /madi/drives/new | New Donation Drive | operations | yes | no | yes | yes | yes | — |
-| /madi/drives/[driveId] | Drive Detail | operations | yes | no | yes | yes | yes | — |
-| /madi/blood-bank | Local Blood Bank | operations | yes | no | yes | yes | yes | — |
-| /madi/blood-bank/orders | Blood Bank Orders | operations | yes | no | yes | no | yes | — |
-| /madi/blood-bank/stock | Blood Stock | operations | yes | no | yes | yes | yes | — |
-| /madi/blood-bank/crossmatch | Crossmatch | operations | yes | no | yes | no | yes | — |
-| /madi/blood-bank/issue | Issue Blood | operations | yes | no | yes | no | yes | — |
-| /madi/blood-bank/fridges | Blood Fridge Monitoring | operations | yes | no | yes | yes | yes | — |
-| /madi/central-bank | Central Blood Bank | operations | yes | no | yes | yes | yes | — |
-| /madi/orders | Order Blood | queue | yes | no | yes | yes | yes | — |
-| /madi/orders/[orderId] | Blood Order Detail | queue | yes | no | yes | yes | yes | — |
-| /madi/transfusion | Record Transfusion | queue | yes | no | yes | yes | yes | — |
-| /madi/transfusion/[episodeId] | Transfusion Episode | operations | yes | no | yes | yes | yes | — |
-| /madi/haemovigilance | Haemovigilance | operations | yes | no | yes | yes | yes | — |
-| /madi/haemovigilance/national | National Haemovigilance | operations | yes | no | yes | yes | yes | — |
-| /madi/dashboard | Madi Dashboard | operations | yes | no | yes | yes | yes | — |
-| /madi/processing | Blood Processing | operations | yes | no | yes | yes | yes | — |
-| /madi/logistics | Blood Logistics | operations | yes | no | yes | yes | yes | — |
-| /live | Impilo Live | operations | yes | no | yes | yes | yes | — |
-| /live/manage | Live Event Management | operations | yes | no | yes | yes | yes | — |
-| /live/admin | Impilo Live Administration | operations | yes | no | yes | yes | yes | — |
-| /live/create | Create Live Event | operations | yes | no | yes | yes | yes | — |
-| /live/discover | Discover Live Events | home | yes | no | yes | yes | yes | — |
-| /live/saved | Saved Live Events | home | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 
@@ -527,6 +527,8 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/comms/CommsHubScreen.tsx | 0 | yes |
 | citizen-app | apps/mobile/citizen-app/src/screens/crvs/UbomiCrvsScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/discover/ProviderDiscoveryScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/emergency/SosScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/emergency/TrackEmergencyScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/live/EventDiscussionSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/live/LiveDiscoverScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/live/LiveEventScreen.tsx | 0 | no |
@@ -562,7 +564,9 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/HealthTimelineScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/IdRecoverySection.tsx | 0 | yes |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/ImmunizationsSection.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/personal/MarketplaceStoreSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/MonitoringSection.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/personal/NompiloGuidanceSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/PatientConsentScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/PersonalScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/PrescriptionsSection.tsx | 0 | no |
@@ -579,7 +583,9 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/SettingsSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/TermsOfUseScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/VerifyCredentialScreen.tsx | 1 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/personal/WalletOverviewSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/WalletSection.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/personal/WellnessJourneysSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/publicHealth/PublicHealthScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/rito/FeedbackScreen.tsx | 0 | no |
@@ -606,6 +612,10 @@
 | provider-app | apps/mobile/provider-app/src/screens/SelectWorkspaceScreen.tsx | 1 | no |
 | provider-app | apps/mobile/provider-app/src/screens/courier/CourierDashboardScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/courier/CourierProofScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/equipment/EquipmentSearchScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/equipment/EquipmentToolsScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/equipment/MaintenanceTasksScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/equipment/ReportEquipmentFaultScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/live/ProviderLiveHubScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/madi/MadiCentralBankScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/madi/MadiDriveCaptureScreen.tsx | 0 | yes |
@@ -629,8 +639,10 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/BookingRequestsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/ConfirmDeathScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/CriticalEventScreen.tsx | 1 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/DaidzaiFieldMissionScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DeveloperHubScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DiagnosisPanel.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DiagnosticsScreen.tsx | 0 | no |

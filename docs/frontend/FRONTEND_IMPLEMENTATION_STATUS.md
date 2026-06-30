@@ -1,6 +1,6 @@
 # Frontend Implementation Status
 
-> Updated: 2026-06-27
+> Updated: 2026-06-30
 
 ## Route registries
 

@@ -1,6 +1,6 @@
 # Full Helm Deployability Matrix
 
-Generated: 2026-06-15T01:25:43.786467+00:00
+Generated: 2026-06-30T19:00:01.822823+00:00
 
 **Required services:** 22
 

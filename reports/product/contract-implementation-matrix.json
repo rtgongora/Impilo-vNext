@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-06-20T11:43:44.918Z",
+  "generatedAt": "2026-06-30T18:40:46.865Z",
   "counts": {
-    "totalOpenApiOperations": 4591,
+    "totalOpenApiOperations": 4756,
     "totalAsyncChannels": 84,
-    "implemented": 4652,
+    "implemented": 4809,
     "partial": 0,
-    "missing": 0,
+    "missing": 8,
     "unownedContract": 23,
-    "orphanHandlers": 3,
-    "violations": 3,
+    "orphanHandlers": 19,
+    "violations": 27,
     "contractParseErrors": 0
   },
   "openApiOperations": [
@@ -3053,7 +3053,7 @@
         "costing-engine-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/costing-engine-service/src/main/java/zw/gov/mohcc/impilo/costa/api/PaymentController.java",
+      "serviceHandler": "services/costing-engine-service/src/main/java/zw/gov/mohcc/impilo/costa/api/FacilityBillingController.java",
       "stubPattern": null
     },
     {
@@ -4019,7 +4019,7 @@
         "costing-engine-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/costing-engine-service/src/main/java/zw/gov/mohcc/impilo/costa/api/finance/FinancialLifecycleController.java",
+      "serviceHandler": "services/costing-engine-service/src/main/java/zw/gov/mohcc/impilo/costa/api/FacilityBillingController.java",
       "stubPattern": null
     },
     {
@@ -6684,7 +6684,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VitoMatchBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/GdhcnReadinessBffController.java",
       "stubPattern": null
     },
     {
@@ -7490,7 +7490,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MadiController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DiagnosticsExperienceController.java",
       "stubPattern": null
     },
     {
@@ -7750,7 +7750,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DeathPathwayController.java",
       "stubPattern": null
     },
     {
@@ -7763,7 +7763,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IndawoPlaceModeController.java",
       "stubPattern": null
     },
     {
@@ -7828,7 +7828,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IndawoPlaceModeController.java",
       "stubPattern": null
     },
     {
@@ -11000,7 +11000,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FacilityRegulatoryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DeathPathwayController.java",
       "stubPattern": null
     },
     {
@@ -11117,7 +11117,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MadiController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DiagnosticsExperienceController.java",
       "stubPattern": null
     },
     {
@@ -12469,7 +12469,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DataAccessGovernanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DaidzaiController.java",
       "stubPattern": null
     },
     {
@@ -14419,7 +14419,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/HealthOsMarketplaceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EquipmentOperationsBffController.java",
       "stubPattern": null
     },
     {
@@ -14770,7 +14770,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IdentityServicesController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenStepUpController.java",
       "stubPattern": null
     },
     {
@@ -15108,7 +15108,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DispatchController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DaidzaiController.java",
       "stubPattern": null
     },
     {
@@ -15420,7 +15420,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/InventorySupplyBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/GdhcnReadinessBffController.java",
       "stubPattern": null
     },
     {
@@ -16070,7 +16070,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LearningController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenWalletController.java",
       "stubPattern": null
     },
     {
@@ -16265,7 +16265,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LearningController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EquipmentOperationsBffController.java",
       "stubPattern": null
     },
     {
@@ -16616,7 +16616,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LiveController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/GdhcnReadinessBffController.java",
       "stubPattern": null
     },
     {
@@ -16954,7 +16954,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LiveController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/GdhcnReadinessBffController.java",
       "stubPattern": null
     },
     {
@@ -16967,7 +16967,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LiveController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/GdhcnReadinessBffController.java",
       "stubPattern": null
     },
     {
@@ -17071,7 +17071,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LiveController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/GdhcnReadinessBffController.java",
       "stubPattern": null
     },
     {
@@ -17084,7 +17084,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LiveController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/GdhcnReadinessBffController.java",
       "stubPattern": null
     },
     {
@@ -17708,7 +17708,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MadiController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DiagnosticsExperienceController.java",
       "stubPattern": null
     },
     {
@@ -17851,7 +17851,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MadiController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenStepUpController.java",
       "stubPattern": null
     },
     {
@@ -17877,7 +17877,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MadiController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IndawoPlaceModeController.java",
       "stubPattern": null
     },
     {
@@ -18254,7 +18254,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VitoBiometricBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenStepUpController.java",
       "stubPattern": null
     },
     {
@@ -18319,7 +18319,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MobileProviderExtendedController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/GdhcnReadinessBffController.java",
       "stubPattern": null
     },
     {
@@ -19450,7 +19450,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PacsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/GdhcnReadinessBffController.java",
       "stubPattern": null
     },
     {
@@ -19827,7 +19827,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PayerOpsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PatientSafetyController.java",
       "stubPattern": null
     },
     {
@@ -20282,7 +20282,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DeathPathwayController.java",
       "stubPattern": null
     },
     {
@@ -20295,7 +20295,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FacilityModeController.java",
       "stubPattern": null
     },
     {
@@ -20308,7 +20308,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LabOrdersController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FacilityModeController.java",
       "stubPattern": null
     },
     {
@@ -20386,7 +20386,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DaidzaiController.java",
       "stubPattern": null
     },
     {
@@ -20620,7 +20620,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MvumoRemoteSessionController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenStepUpController.java",
       "stubPattern": null
     },
     {
@@ -20646,7 +20646,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/GdhcnReadinessBffController.java",
       "stubPattern": null
     },
     {
@@ -20672,7 +20672,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FacilityModeController.java",
       "stubPattern": null
     },
     {
@@ -20893,7 +20893,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IndawoPlaceModeController.java",
       "stubPattern": null
     },
     {
@@ -20958,7 +20958,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IndawoPlaceModeController.java",
       "stubPattern": null
     },
     {
@@ -20971,7 +20971,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IndawoPlaceModeController.java",
       "stubPattern": null
     },
     {
@@ -21439,7 +21439,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MadiController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EquipmentOperationsBffController.java",
       "stubPattern": null
     },
     {
@@ -21777,7 +21777,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/SchedulingController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DeathPathwayController.java",
       "stubPattern": null
     },
     {
@@ -22908,7 +22908,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MadiController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DiagnosticsExperienceController.java",
       "stubPattern": null
     },
     {
@@ -23753,7 +23753,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/WellnessController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LearningController.java",
       "stubPattern": null
     },
     {
@@ -24091,7 +24091,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileFormController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LearningController.java",
       "stubPattern": null
     },
     {
@@ -24104,7 +24104,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileFormController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LearningController.java",
       "stubPattern": null
     },
     {
@@ -24221,7 +24221,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IndawoPlaceModeController.java",
       "stubPattern": null
     },
     {
@@ -24260,7 +24260,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/SchedulingController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DeathPathwayController.java",
       "stubPattern": null
     },
     {
@@ -24403,7 +24403,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileSupportController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/InpatientController.java",
       "stubPattern": null
     },
     {
@@ -24416,7 +24416,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LabOrdersController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/InpatientController.java",
       "stubPattern": null
     },
     {
@@ -24442,7 +24442,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileTaskController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/RitoPersonaController.java",
       "stubPattern": null
     },
     {
@@ -24663,7 +24663,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VitoBiometricBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenStepUpController.java",
       "stubPattern": null
     },
     {
@@ -25040,7 +25040,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/provider/ProviderDeliveryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EquipmentOperationsBffController.java",
       "stubPattern": null
     },
     {
@@ -26235,8 +26235,8 @@
       "modules": [
         "hr-payroll-service"
       ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/hr-payroll-service/src/main/java/zw/gov/mohcc/impilo/hrpayroll/api/InternalHrApi.java",
+      "implStatus": "missing",
+      "serviceHandler": null,
       "stubPattern": null
     },
     {
@@ -26248,8 +26248,8 @@
       "modules": [
         "hr-payroll-service"
       ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/hr-payroll-service/src/main/java/zw/gov/mohcc/impilo/hrpayroll/api/InternalHrApi.java",
+      "implStatus": "missing",
+      "serviceHandler": null,
       "stubPattern": null
     },
     {
@@ -26261,8 +26261,8 @@
       "modules": [
         "hr-payroll-service"
       ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/hr-payroll-service/src/main/java/zw/gov/mohcc/impilo/hrpayroll/api/InternalHrApi.java",
+      "implStatus": "missing",
+      "serviceHandler": null,
       "stubPattern": null
     },
     {
@@ -26274,8 +26274,8 @@
       "modules": [
         "hr-payroll-service"
       ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/hr-payroll-service/src/main/java/zw/gov/mohcc/impilo/hrpayroll/api/InternalHrApi.java",
+      "implStatus": "missing",
+      "serviceHandler": null,
       "stubPattern": null
     },
     {
@@ -26287,8 +26287,8 @@
       "modules": [
         "hr-payroll-service"
       ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/hr-payroll-service/src/main/java/zw/gov/mohcc/impilo/hrpayroll/api/InternalHrApi.java",
+      "implStatus": "missing",
+      "serviceHandler": null,
       "stubPattern": null
     },
     {
@@ -26300,8 +26300,8 @@
       "modules": [
         "hr-payroll-service"
       ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/hr-payroll-service/src/main/java/zw/gov/mohcc/impilo/hrpayroll/api/InternalHrApi.java",
+      "implStatus": "missing",
+      "serviceHandler": null,
       "stubPattern": null
     },
     {
@@ -26404,8 +26404,8 @@
       "modules": [
         "hr-payroll-service"
       ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/hr-payroll-service/src/main/java/zw/gov/mohcc/impilo/hrpayroll/api/InternalHrApi.java",
+      "implStatus": "missing",
+      "serviceHandler": null,
       "stubPattern": null
     },
     {
@@ -26417,8 +26417,8 @@
       "modules": [
         "hr-payroll-service"
       ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/hr-payroll-service/src/main/java/zw/gov/mohcc/impilo/hrpayroll/api/InternalHrApi.java",
+      "implStatus": "missing",
+      "serviceHandler": null,
       "stubPattern": null
     },
     {
@@ -29347,6 +29347,552 @@
       "stubPattern": null
     },
     {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_calls",
+      "method": "POST",
+      "path": "/calls",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_calls_incoming",
+      "method": "GET",
+      "path": "/calls/incoming",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_calls_id",
+      "method": "GET",
+      "path": "/calls/{id}",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/EscalationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_calls_id_accept",
+      "method": "POST",
+      "path": "/calls/{id}/accept",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/EscalationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_calls_id_decline",
+      "method": "POST",
+      "path": "/calls/{id}/decline",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_calls_id_end",
+      "method": "POST",
+      "path": "/calls/{id}/end",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_calls_id_signals",
+      "method": "POST",
+      "path": "/calls/{id}/signals",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_conversations",
+      "method": "GET",
+      "path": "/conversations",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_conversations",
+      "method": "POST",
+      "path": "/conversations",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_conversations_id",
+      "method": "GET",
+      "path": "/conversations/{id}",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/EscalationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_conversations_id_links",
+      "method": "POST",
+      "path": "/conversations/{id}/links",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_conversations_id_meeting_end",
+      "method": "POST",
+      "path": "/conversations/{id}/meeting/end",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_conversations_id_meeting_join",
+      "method": "POST",
+      "path": "/conversations/{id}/meeting/join",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_conversations_id_messages",
+      "method": "GET",
+      "path": "/conversations/{id}/messages",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_conversations_id_messages",
+      "method": "POST",
+      "path": "/conversations/{id}/messages",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_conversations_id_messages_read",
+      "method": "POST",
+      "path": "/conversations/{id}/messages/read",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_conversations_id_participants",
+      "method": "POST",
+      "path": "/conversations/{id}/participants",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_delete_conversations_id_participants_actorId",
+      "method": "DELETE",
+      "path": "/conversations/{id}/participants/{actorId}",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_events_eventId_conversation",
+      "method": "GET",
+      "path": "/events/{eventId}/conversation",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_health",
+      "method": "GET",
+      "path": "/health",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaV11ProbeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_delete_internal_v1",
+      "method": "DELETE",
+      "path": "/internal/v1",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaV11ProbeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_internal_v1",
+      "method": "GET",
+      "path": "/internal/v1",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaV11ProbeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_patch_internal_v1",
+      "method": "PATCH",
+      "path": "/internal/v1",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaV11ProbeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_internal_v1",
+      "method": "POST",
+      "path": "/internal/v1",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaV11ProbeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_put_internal_v1",
+      "method": "PUT",
+      "path": "/internal/v1",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaV11ProbeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_delete_internal_v1_khuluma",
+      "method": "DELETE",
+      "path": "/internal/v1/khuluma",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_internal_v1_khuluma",
+      "method": "GET",
+      "path": "/internal/v1/khuluma",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_patch_internal_v1_khuluma",
+      "method": "PATCH",
+      "path": "/internal/v1/khuluma",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_internal_v1_khuluma",
+      "method": "POST",
+      "path": "/internal/v1/khuluma",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_put_internal_v1_khuluma",
+      "method": "PUT",
+      "path": "/internal/v1/khuluma",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_delete_internal_v1_khuluma_stream",
+      "method": "DELETE",
+      "path": "/internal/v1/khuluma/stream",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/realtime/RealtimeStreamController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_internal_v1_khuluma_stream",
+      "method": "GET",
+      "path": "/internal/v1/khuluma/stream",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/realtime/RealtimeStreamController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_patch_internal_v1_khuluma_stream",
+      "method": "PATCH",
+      "path": "/internal/v1/khuluma/stream",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/realtime/RealtimeStreamController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_internal_v1_khuluma_stream",
+      "method": "POST",
+      "path": "/internal/v1/khuluma/stream",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/realtime/RealtimeStreamController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_put_internal_v1_khuluma_stream",
+      "method": "PUT",
+      "path": "/internal/v1/khuluma/stream",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/realtime/RealtimeStreamController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_meetings",
+      "method": "POST",
+      "path": "/meetings",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_meetings_from-event",
+      "method": "POST",
+      "path": "/meetings/from-event",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_put_presence",
+      "method": "PUT",
+      "path": "/presence",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_presence_actorId",
+      "method": "GET",
+      "path": "/presence/{actorId}",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/EscalationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_sse",
+      "method": "GET",
+      "path": "/sse",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/realtime/RealtimeStreamController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_post_test-command",
+      "method": "POST",
+      "path": "/test-command",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaV11ProbeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "khuluma.openapi.yaml",
+      "operationId": "khuluma_get_unread-count",
+      "method": "GET",
+      "path": "/unread-count",
+      "summary": "Documented from khuluma-service handler (Wave 2 contract sync)",
+      "modules": [
+        "khuluma-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/khuluma-service/src/main/java/zw/gov/mohcc/impilo/khuluma/api/KhulumaController.java",
+      "stubPattern": null
+    },
+    {
       "contract": "landela-adapter.openapi.yaml",
       "operationId": "uploadDocument",
       "method": "POST",
@@ -29907,6 +30453,19 @@
     },
     {
       "contract": "learning.openapi.yaml",
+      "operationId": "bulkEnrol",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/enrolments/bulk",
+      "summary": "Bulk-enrol subjects into a course (campaign/surveillance bridge contract)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoEnrolmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
       "operationId": "createFundoEnrolment",
       "method": "POST",
       "path": "/internal/v1/learning/v11/enrolments",
@@ -30232,6 +30791,32 @@
     },
     {
       "contract": "learning.openapi.yaml",
+      "operationId": "getFundoProgrammeSummary",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/reports/programme-summary",
+      "summary": "Programme dashboard — course/enrolment/completion rollup by programme",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoReportController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "getFundoRegulatorSummary",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/reports/regulator-summary",
+      "summary": "Regulator dashboard — provider accreditation posture by kind",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoReportController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
       "operationId": "getFundoCourseCompletionsReport",
       "method": "GET",
       "path": "/internal/v1/learning/v11/reports/course-completions",
@@ -30319,6 +30904,32 @@
       ],
       "implStatus": "implemented",
       "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/LearningInternalController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "fundoLearnerCpdSummary",
+      "method": "GET",
+      "path": "/v1/internal/fundo/learners/{providerWorkerId}/cpd-summary",
+      "summary": "Training-evidence / workforce-readiness summary for a provider worker",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoWorkforceReadinessController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "fundoLearnerTrainingGate",
+      "method": "GET",
+      "path": "/v1/internal/fundo/learners/{subjectId}/training-gate",
+      "summary": "Training-gate read-model for Tshepo policy (required learning satisfied?)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoWorkforceReadinessController.java",
       "stubPattern": null
     },
     {
@@ -30657,6 +31268,669 @@
       ],
       "implStatus": "implemented",
       "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudioController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listFacilitators",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/facilitators",
+      "summary": "List learning facilitators (trainer/teacher/preceptor/guest)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "createFacilitator",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/facilitators",
+      "summary": "Create a facilitator",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "updateFacilitatorStatus",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/facilitators/{id}/status",
+      "summary": "Update facilitator status",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listTrainingVenues",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/venues",
+      "summary": "List training venues",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "createTrainingVenue",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/venues",
+      "summary": "Create a training venue",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listCohortFacilitators",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/cohorts/{cohortId}/facilitators",
+      "summary": "List facilitators assigned to a cohort",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "assignCohortFacilitator",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/cohorts/{cohortId}/facilitators",
+      "summary": "Assign a facilitator to a cohort",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "assignSessionDelivery",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/sessions/{sessionId}/delivery",
+      "summary": "Assign structured facilitator/venue to a session (read prefers FK over legacy free-text)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoDeliveryController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "createSessionCheckinToken",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/sessions/{sessionId}/checkin-tokens",
+      "summary": "Create a code/QR check-in token for a session",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAttendanceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listSessionAttendance",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/sessions/{sessionId}/attendance",
+      "summary": "List attendance for a session",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAttendanceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "markSessionAttendance",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/sessions/{sessionId}/attendance",
+      "summary": "Facilitator bulk-mark attendance (entries[] of subjectType/subjectId/status)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAttendanceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "sessionSelfCheckin",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/sessions/{sessionId}/checkin",
+      "summary": "Learner self check-in with a code/QR token",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAttendanceController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listAssignments",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/assignments",
+      "summary": "List assignments (filter by course or cohort)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "createAssignment",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/assignments",
+      "summary": "Create an assignment / task",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "getAssignment",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/assignments/{assignmentId}",
+      "summary": "Get an assignment",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listAssignmentSubmissions",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/assignments/{assignmentId}/submissions",
+      "summary": "List submissions for an assignment",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "submitAssignment",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/assignments/{assignmentId}/submissions",
+      "summary": "Submit to an assignment (submission_no auto-increments)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "assignmentMarkingQueue",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/marking-queue",
+      "summary": "Submissions awaiting marking (optionally filtered by cohort)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "markAssignmentSubmission",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/submissions/{submissionId}/mark",
+      "summary": "Mark a submission (score/passed/feedback/rubric)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAssignmentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listAcademicPrograms",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/academic/programs",
+      "summary": "List academic programs (qualifications)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAcademicController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "createAcademicProgram",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/academic/programs",
+      "summary": "Create an academic program",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAcademicController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "getAcademicProgram",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/academic/programs/{programId}",
+      "summary": "Get an academic program",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAcademicController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listAcademicTerms",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/academic/terms",
+      "summary": "List academic terms (optionally by program)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAcademicController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "createAcademicTerm",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/academic/terms",
+      "summary": "Create an academic term",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAcademicController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listStudentApplications",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/admissions/applications",
+      "summary": "List admission applications (filter by status or program)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "submitStudentApplication",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/admissions/applications",
+      "summary": "Submit an admission application",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "decideStudentApplication",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/admissions/applications/{applicationId}/decision",
+      "summary": "Record an admission decision",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listStudents",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/students",
+      "summary": "List students (optionally by program)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "admitStudent",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/students",
+      "summary": "Admit a student (generates a student number)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "getStudent",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/students/{studentId}",
+      "summary": "Get a student profile",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listCourseRegistrations",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/students/{studentId}/registrations",
+      "summary": "List a student's course registrations",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "registerCourse",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/students/{studentId}/registrations",
+      "summary": "Register a student for a course (creates the academic enrolment)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listClinicalPlacements",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/students/{studentId}/placements",
+      "summary": "List a student's clinical placements",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "createClinicalPlacement",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/students/{studentId}/placements",
+      "summary": "Create a clinical placement",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "signoffPlacement",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/placements/{placementId}/signoff",
+      "summary": "Preceptor sign-off of a placement",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "graduateStudent",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/students/{studentId}/graduate",
+      "summary": "Confer a qualification / graduate a student",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "getAcademicRecord",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/students/{studentId}/academic-record",
+      "summary": "Aggregated academic record (registrations + placements + graduation)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoStudentController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listLearningProviders",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/providers",
+      "summary": "List learning providers (INDIVIDUAL/ORGANISATION/FACILITY)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoLearningProviderController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "createLearningProvider",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/providers",
+      "summary": "Register a learning provider (binds to the kind's identity SoR)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoLearningProviderController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "learningProviderDirectory",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/providers/directory",
+      "summary": "Directory of accredited providers + academies (privacy-safe; micro-spaces included)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoLearningProviderController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "getLearningProvider",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/providers/{providerId}",
+      "summary": "Get a learning provider",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoLearningProviderController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listProviderSpaces",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/providers/{providerId}/spaces",
+      "summary": "List a provider's learning spaces (academies)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoLearningProviderController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "createProviderSpace",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/providers/{providerId}/spaces",
+      "summary": "Create a learning space (academy) bound to a governance OrganisationUnit",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoLearningProviderController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listProviderAccreditations",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/providers/{providerId}/accreditations",
+      "summary": "List a provider's accreditation records",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAccreditationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listProviderApplications",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/provider-applications",
+      "summary": "List learning-provider set-up applications",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAccreditationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "submitProviderApplication",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/provider-applications",
+      "summary": "Request to set up & run a learning provider/academy (kind-aware)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAccreditationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "decideProviderApplication",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/provider-applications/{applicationId}/decision",
+      "summary": "Record a review decision on a provider application",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAccreditationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "accreditProvider",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/provider-applications/{applicationId}/accredit",
+      "summary": "Accredit & provision a provider (routes to the kind's regulator)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoAccreditationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "assignCourseToLearningSpace",
+      "method": "POST",
+      "path": "/internal/v1/learning/v11/courses/{courseId}/learning-space",
+      "summary": "Bind/unbind a course to a learning space (delegated admin)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoLearningProviderController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "listLearningSpaceCourses",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/spaces/{spaceId}/courses",
+      "summary": "Space-scoped course list (delegated admin)",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoLearningProviderController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "learning.openapi.yaml",
+      "operationId": "learningSpaceSummary",
+      "method": "GET",
+      "path": "/internal/v1/learning/v11/spaces/{spaceId}/summary",
+      "summary": "Self-managed academy dashboard summary",
+      "modules": [
+        "learning-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/learning-service/src/main/java/zw/gov/mohcc/impilo/learning/api/v11/fundo/FundoLearningProviderController.java",
       "stubPattern": null
     },
     {
@@ -33321,7 +34595,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VitoBiometricBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenStepUpController.java",
       "stubPattern": null
     },
     {
@@ -33490,7 +34764,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MobileProviderExtendedController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/GdhcnReadinessBffController.java",
       "stubPattern": null
     },
     {
@@ -33763,7 +35037,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/provider/ProviderReportsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PatientSafetyController.java",
       "stubPattern": null
     },
     {
@@ -34348,7 +35622,7 @@
         "msika-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/msika-service/src/main/java/zw/gov/mohcc/impilo/msika/api/controller/SearchController.java",
+      "serviceHandler": "services/msika-service/src/main/java/zw/gov/mohcc/impilo/msika/api/controller/ListingController.java",
       "stubPattern": null
     },
     {
@@ -34504,7 +35778,7 @@
         "msika-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/msika-service/src/main/java/zw/gov/mohcc/impilo/msika/api/controller/MappingController.java",
+      "serviceHandler": "services/msika-service/src/main/java/zw/gov/mohcc/impilo/msika/api/controller/ListingController.java",
       "stubPattern": null
     },
     {
@@ -34842,7 +36116,7 @@
         "msika-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/msika-service/src/main/java/zw/gov/mohcc/impilo/msika/api/controller/MappingController.java",
+      "serviceHandler": "services/msika-service/src/main/java/zw/gov/mohcc/impilo/msika/api/controller/ListingController.java",
       "stubPattern": null
     },
     {
@@ -37910,7 +39184,7 @@
         "mvumo-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mvumo-service/src/main/java/zw/gov/mohcc/impilo/mvumo/api/MvumoInternalController.java",
+      "serviceHandler": "services/mvumo-service/src/main/java/zw/gov/mohcc/impilo/mvumo/api/LegalAgreementController.java",
       "stubPattern": null
     },
     {
@@ -37923,7 +39197,7 @@
         "mvumo-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mvumo-service/src/main/java/zw/gov/mohcc/impilo/mvumo/api/MvumoInternalController.java",
+      "serviceHandler": "services/mvumo-service/src/main/java/zw/gov/mohcc/impilo/mvumo/api/LegalAgreementController.java",
       "stubPattern": null
     },
     {
@@ -37975,7 +39249,7 @@
         "mvumo-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mvumo-service/src/main/java/zw/gov/mohcc/impilo/mvumo/api/MvumoInternalController.java",
+      "serviceHandler": "services/mvumo-service/src/main/java/zw/gov/mohcc/impilo/mvumo/api/LegalAgreementController.java",
       "stubPattern": null
     },
     {
@@ -38092,7 +39366,7 @@
         "mvumo-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mvumo-service/src/main/java/zw/gov/mohcc/impilo/mvumo/api/MvumoInternalController.java",
+      "serviceHandler": "services/mvumo-service/src/main/java/zw/gov/mohcc/impilo/mvumo/api/LegalAgreementController.java",
       "stubPattern": null
     },
     {
@@ -38118,7 +39392,7 @@
         "mvumo-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mvumo-service/src/main/java/zw/gov/mohcc/impilo/mvumo/api/MvumoInternalController.java",
+      "serviceHandler": "services/mvumo-service/src/main/java/zw/gov/mohcc/impilo/mvumo/api/LegalAgreementController.java",
       "stubPattern": null
     },
     {
@@ -38235,7 +39509,7 @@
         "mvumo-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mvumo-service/src/main/java/zw/gov/mohcc/impilo/mvumo/api/MvumoInternalController.java",
+      "serviceHandler": "services/mvumo-service/src/main/java/zw/gov/mohcc/impilo/mvumo/api/LegalAgreementController.java",
       "stubPattern": null
     },
     {
@@ -41069,7 +42343,7 @@
         "oros-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/WorklistController.java",
+      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/OrderController.java",
       "stubPattern": null
     },
     {
@@ -41082,7 +42356,7 @@
         "oros-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/WorklistController.java",
+      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/OrderController.java",
       "stubPattern": null
     },
     {
@@ -41108,7 +42382,7 @@
         "oros-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/WorkstepController.java",
+      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/OrderController.java",
       "stubPattern": null
     },
     {
@@ -41121,7 +42395,7 @@
         "oros-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/WorkstepController.java",
+      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/OrderController.java",
       "stubPattern": null
     },
     {
@@ -41615,7 +42889,7 @@
         "oros-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/WorklistController.java",
+      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/OrderController.java",
       "stubPattern": null
     },
     {
@@ -41628,7 +42902,7 @@
         "oros-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/WorklistController.java",
+      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/OrderController.java",
       "stubPattern": null
     },
     {
@@ -41641,7 +42915,7 @@
         "oros-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/WorklistController.java",
+      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/OrderController.java",
       "stubPattern": null
     },
     {
@@ -41654,7 +42928,7 @@
         "oros-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/WorklistController.java",
+      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/OrderController.java",
       "stubPattern": null
     },
     {
@@ -41693,7 +42967,7 @@
         "oros-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/WorkstepController.java",
+      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/OrderController.java",
       "stubPattern": null
     },
     {
@@ -41706,7 +42980,7 @@
         "oros-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/WorkstepController.java",
+      "serviceHandler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/OrderController.java",
       "stubPattern": null
     },
     {
@@ -42334,6 +43608,331 @@
       "stubPattern": null
     },
     {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyReportCreate",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/reports",
+      "summary": "Create a draft adverse-event report",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyReportController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyReportList",
+      "method": "GET",
+      "path": "/internal/v1/patient-safety/reports",
+      "summary": "List adverse-event reports (paged, filterable)",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyReportController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyReportGet",
+      "method": "GET",
+      "path": "/internal/v1/patient-safety/reports/{id}",
+      "summary": "Get a single adverse-event report",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyReportUpdate",
+      "method": "PATCH",
+      "path": "/internal/v1/patient-safety/reports/{id}",
+      "summary": "Update a draft adverse-event report",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyReportController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyReportAddProduct",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/reports/{id}/products",
+      "summary": "Add a suspect/concomitant product to a report",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyReportController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyReportAddEvent",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/reports/{id}/events",
+      "summary": "Add an adverse-event detail line to a report",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyReportController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyReportAddAttachment",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/reports/{id}/attachments",
+      "summary": "Attach a supporting document reference to a report",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyReportController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyReportSubmit",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/reports/{id}/submit",
+      "summary": "Submit a completed report, promoting it to a safety case",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyReportController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyCaseList",
+      "method": "GET",
+      "path": "/internal/v1/patient-safety/cases",
+      "summary": "List safety cases (paged, filterable)",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyCaseGet",
+      "method": "GET",
+      "path": "/internal/v1/patient-safety/cases/{id}",
+      "summary": "Get a single safety case",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyCaseTriage",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/cases/{id}/triage",
+      "summary": "Triage a case (seriousness, causality, priority)",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyCaseReviewAction",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/cases/{id}/review-actions",
+      "summary": "Record a clinical-review action on a case",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyCaseCreateFollowUp",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/cases/{id}/follow-up",
+      "summary": "Open a follow-up request on a case",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyCaseRespondFollowUp",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/cases/{id}/follow-up/{followUpId}/response",
+      "summary": "Record a response to a follow-up request",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyCaseVigiflowManualEntry",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/cases/{id}/vigiflow-manual-entry",
+      "summary": "Record a manual VigiFlow entry reference for a case",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyCaseMarkExportReady",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/cases/{id}/mark-export-ready",
+      "summary": "Flag a case as ready for regulatory (E2B/VigiFlow) export",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "safetyCaseClose",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/cases/{id}/close",
+      "summary": "Close a safety case with an outcome",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/SafetyCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "aefiInvestigationCreate",
+      "method": "POST",
+      "path": "/internal/v1/patient-safety/cases/{caseId}/investigation",
+      "summary": "Open an AEFI causality investigation for a case",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/AefiInvestigationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "aefiInvestigationGet",
+      "method": "GET",
+      "path": "/internal/v1/patient-safety/cases/{caseId}/investigation",
+      "summary": "Get the AEFI investigation for a case",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/AefiInvestigationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "aefiInvestigationUpdate",
+      "method": "PATCH",
+      "path": "/internal/v1/patient-safety/investigations/{investigationId}",
+      "summary": "Update an AEFI investigation (classification, findings)",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/AefiInvestigationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "mcazWorkbench",
+      "method": "GET",
+      "path": "/internal/v1/patient-safety/mcaz/workbench",
+      "summary": "MCAZ reviewer workbench summary",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/McazWorkbenchController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "mcazIncomingQueue",
+      "method": "GET",
+      "path": "/internal/v1/patient-safety/mcaz/incoming-queue",
+      "summary": "MCAZ incoming case queue",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/McazWorkbenchController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "mcazPriorityQueue",
+      "method": "GET",
+      "path": "/internal/v1/patient-safety/mcaz/priority-queue",
+      "summary": "MCAZ priority (serious/expedited) case queue",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/McazWorkbenchController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "configVigimobileLinks",
+      "method": "GET",
+      "path": "/internal/v1/patient-safety/config/vigimobile-links",
+      "summary": "List VigiMobile deep-link configuration",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/ConfigController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "patient-safety.openapi.yaml",
+      "operationId": "configAdapters",
+      "method": "GET",
+      "path": "/internal/v1/patient-safety/config/adapters",
+      "summary": "List configured external safety adapters and their status",
+      "modules": [
+        "patient-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/patient-safety-service/src/main/java/zw/gov/mohcc/impilo/patientsafety/api/ConfigController.java",
+      "stubPattern": null
+    },
+    {
       "contract": "pct.openapi.yaml",
       "operationId": "startShift",
       "method": "POST",
@@ -42395,7 +43994,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -42538,7 +44137,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -42824,7 +44423,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -42941,7 +44540,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -43032,7 +44631,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -43045,7 +44644,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -43110,7 +44709,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -43123,7 +44722,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -43136,7 +44735,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -43292,7 +44891,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -43357,7 +44956,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -43487,7 +45086,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -43604,7 +45203,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -43617,7 +45216,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -43656,7 +45255,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -43747,7 +45346,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ClinicalNoteController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/CarePlanController.java",
       "stubPattern": null
     },
     {
@@ -45311,6 +46910,539 @@
       "stubPattern": null
     },
     {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/cases",
+      "method": "GET",
+      "path": "/internal/v1/rito/cases",
+      "summary": "List cases (filterable)",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/cases",
+      "method": "POST",
+      "path": "/internal/v1/rito/cases",
+      "summary": "Open a case",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/cases/{id}",
+      "method": "GET",
+      "path": "/internal/v1/rito/cases/{id}",
+      "summary": "Get a case",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/cases/{id}/timeline",
+      "method": "GET",
+      "path": "/internal/v1/rito/cases/{id}/timeline",
+      "summary": "Case lifecycle timeline",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/cases/{id}/acknowledge",
+      "method": "POST",
+      "path": "/internal/v1/rito/cases/{id}/acknowledge",
+      "summary": "Acknowledge",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/cases/{id}/triage",
+      "method": "POST",
+      "path": "/internal/v1/rito/cases/{id}/triage",
+      "summary": "Triage (severity/category; AI suggestions advisory only)",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/cases/{id}/assign",
+      "method": "POST",
+      "path": "/internal/v1/rito/cases/{id}/assign",
+      "summary": "Assign an owner",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/cases/{id}/escalate",
+      "method": "POST",
+      "path": "/internal/v1/rito/cases/{id}/escalate",
+      "summary": "Escalate",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/cases/{id}/resolve",
+      "method": "POST",
+      "path": "/internal/v1/rito/cases/{id}/resolve",
+      "summary": "Resolve (human decision-maker required for CRITICAL/sensitive)",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/cases/{id}/close",
+      "method": "POST",
+      "path": "/internal/v1/rito/cases/{id}/close",
+      "summary": "Close (optional satisfaction 1-5)",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/cases/{id}/reopen",
+      "method": "POST",
+      "path": "/internal/v1/rito/cases/{id}/reopen",
+      "summary": "Reopen",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoCaseController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/cases/{caseId}/safety-incident",
+      "method": "POST",
+      "path": "/internal/v1/rito/cases/{caseId}/safety-incident",
+      "summary": "Record/update the safety-incident detail for a safety case",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoSafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/cases/{caseId}/safety-incident",
+      "method": "GET",
+      "path": "/internal/v1/rito/cases/{caseId}/safety-incident",
+      "summary": "Get the safety-incident detail",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoSafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/safety-incidents/sentinel",
+      "method": "GET",
+      "path": "/internal/v1/rito/safety-incidents/sentinel",
+      "summary": "List sentinel incidents",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoSafetyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/quality-signals",
+      "method": "GET",
+      "path": "/internal/v1/rito/quality-signals",
+      "summary": "List quality signals",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoSignalController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/quality-signals",
+      "method": "POST",
+      "path": "/internal/v1/rito/quality-signals",
+      "summary": "Ingest a quality signal",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoSignalController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/quality-signals/{id}/review",
+      "method": "POST",
+      "path": "/internal/v1/rito/quality-signals/{id}/review",
+      "summary": "Review or dismiss a signal",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoSignalController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/quality-signals/{id}/convert",
+      "method": "POST",
+      "path": "/internal/v1/rito/quality-signals/{id}/convert",
+      "summary": "Convert a signal to a case",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoSignalController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/audits",
+      "method": "GET",
+      "path": "/internal/v1/rito/audits",
+      "summary": "List audits",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoAuditController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/audits",
+      "method": "POST",
+      "path": "/internal/v1/rito/audits",
+      "summary": "Create an audit",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoAuditController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/audits/{id}",
+      "method": "GET",
+      "path": "/internal/v1/rito/audits/{id}",
+      "summary": "Get an audit",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoAuditController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/audits/{id}/findings",
+      "method": "GET",
+      "path": "/internal/v1/rito/audits/{id}/findings",
+      "summary": "List findings",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoAuditController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/audits/{id}/findings",
+      "method": "POST",
+      "path": "/internal/v1/rito/audits/{id}/findings",
+      "summary": "Add a finding",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoAuditController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/audits/{id}/submit",
+      "method": "POST",
+      "path": "/internal/v1/rito/audits/{id}/submit",
+      "summary": "Submit an audit (computes score)",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoAuditController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/corrective-actions",
+      "method": "GET",
+      "path": "/internal/v1/rito/corrective-actions",
+      "summary": "List corrective actions",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoImprovementController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/corrective-actions",
+      "method": "POST",
+      "path": "/internal/v1/rito/corrective-actions",
+      "summary": "Create a corrective action",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoImprovementController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/corrective-actions/{id}/verify",
+      "method": "POST",
+      "path": "/internal/v1/rito/corrective-actions/{id}/verify",
+      "summary": "Verify a corrective action (EFFECTIVE/NOT_EFFECTIVE/PARTIAL)",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoImprovementController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/qi-plans",
+      "method": "GET",
+      "path": "/internal/v1/rito/qi-plans",
+      "summary": "List QI plans",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoImprovementController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/qi-plans",
+      "method": "POST",
+      "path": "/internal/v1/rito/qi-plans",
+      "summary": "Create a QI/PDSA plan",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoImprovementController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/surveys",
+      "method": "GET",
+      "path": "/internal/v1/rito/surveys",
+      "summary": "List surveys",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoSurveyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/surveys",
+      "method": "POST",
+      "path": "/internal/v1/rito/surveys",
+      "summary": "Create a survey",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoSurveyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/surveys/{id}/responses",
+      "method": "POST",
+      "path": "/internal/v1/rito/surveys/{id}/responses",
+      "summary": "Submit a survey response (low score may spawn a case)",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoSurveyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/surveys/{id}/aggregate",
+      "method": "GET",
+      "path": "/internal/v1/rito/surveys/{id}/aggregate",
+      "summary": "Aggregate (CSAT/NPS)",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoSurveyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/dashboards/facility",
+      "method": "GET",
+      "path": "/internal/v1/rito/dashboards/facility",
+      "summary": "Facility quality/safety dashboard",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoDashboardController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/dashboards/above-site",
+      "method": "GET",
+      "path": "/internal/v1/rito/dashboards/above-site",
+      "summary": "Above-site rollup dashboard",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoDashboardController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/dashboards/client-voice",
+      "method": "GET",
+      "path": "/internal/v1/rito/dashboards/client-voice",
+      "summary": "Client-voice dashboard",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoDashboardController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/dashboards/safety",
+      "method": "GET",
+      "path": "/internal/v1/rito/dashboards/safety",
+      "summary": "Safety dashboard",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoDashboardController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/config/sla-policies",
+      "method": "GET",
+      "path": "/internal/v1/rito/config/sla-policies",
+      "summary": "List SLA policies",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoConfigController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/config/sla-policies",
+      "method": "POST",
+      "path": "/internal/v1/rito/config/sla-policies",
+      "summary": "Create an SLA policy",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoConfigController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "GET /internal/v1/rito/config/escalation-rules",
+      "method": "GET",
+      "path": "/internal/v1/rito/config/escalation-rules",
+      "summary": "List escalation rules",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoConfigController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "rito-quality-safety.openapi.yaml",
+      "operationId": "POST /internal/v1/rito/config/escalation-rules",
+      "method": "POST",
+      "path": "/internal/v1/rito/config/escalation-rules",
+      "summary": "Create an escalation rule",
+      "modules": [
+        "rito-quality-safety-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoConfigController.java",
+      "stubPattern": null
+    },
+    {
       "contract": "rtc-gateway.openapi.yaml",
       "operationId": "provisionRtcSession",
       "method": "POST",
@@ -46746,7 +48878,7 @@
         "simba-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/simba-service/src/main/java/zw/gov/mohcc/impilo/simba/api/controller/WellnessProfileController.java",
+      "serviceHandler": "services/simba-service/src/main/java/zw/gov/mohcc/impilo/simba/api/controller/PlanController.java",
       "stubPattern": null
     },
     {
@@ -52050,7 +54182,7 @@
         "varapi-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderController.java",
+      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/CouncilRegistrationResolverController.java",
       "stubPattern": null
     },
     {
@@ -54260,7 +56392,7 @@
         "varapi-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderController.java",
+      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/CouncilRegistrationResolverController.java",
       "stubPattern": null
     },
     {
@@ -54928,6 +57060,19 @@
     },
     {
       "contract": "vashandi.openapi.yaml",
+      "operationId": "vashandiImportWorkforceBridge",
+      "method": "POST",
+      "path": "/workforce-profiles/import-bridge",
+      "summary": "Bulk import workforce profiles and assignments via import bridge",
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "vashandi.openapi.yaml",
       "operationId": "vashandiListAssignments",
       "method": "GET",
       "path": "/assignments",
@@ -54936,7 +57081,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VashandiController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LearningController.java",
       "stubPattern": null
     },
     {
@@ -54949,7 +57094,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LearningController.java",
       "stubPattern": null
     },
     {
@@ -60780,6 +62925,62 @@
       "remediation": "add OpenAPI operation — complete contract; do not delete handler"
     },
     {
+      "module": "data-governance-service",
+      "method": "POST",
+      "path": "/internal/v1/governance/data-subject-requests",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/api/PrivacyRightsController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "data-governance-service",
+      "method": "GET",
+      "path": "/internal/v1/governance/data-subject-requests",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/api/PrivacyRightsController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "data-governance-service",
+      "method": "POST",
+      "path": "/internal/v1/governance/data-subject-requests/cancel",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/api/PrivacyRightsController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "data-governance-service",
+      "method": "GET",
+      "path": "/internal/v1/governance/privacy-preferences",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/api/PrivacyRightsController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "data-governance-service",
+      "method": "PUT",
+      "path": "/internal/v1/governance/privacy-preferences",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/api/PrivacyRightsController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "data-governance-service",
+      "method": "GET",
+      "path": "/internal/v1/governance/display-settings",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/api/PrivacyRightsController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "data-governance-service",
+      "method": "PUT",
+      "path": "/internal/v1/governance/display-settings",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/api/PrivacyRightsController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
       "module": "ndila-service",
       "method": "GET",
       "path": "/api/v1/ndila/tiles/{z}/{x}/{y}.png",
@@ -60792,6 +62993,78 @@
       "method": "GET",
       "path": "/api/v1/maps/tiles/{z}/{x}/{y}.png",
       "handler": "services/ndila-service/src/main/java/zw/gov/mohcc/impilo/ndila/api/NdilaTileRasterController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "oros-service",
+      "method": "GET",
+      "path": "/v1/reconcile/diagnostics/summary",
+      "handler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/DiagnosticOperationsController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "oros-service",
+      "method": "GET",
+      "path": "/v1/reconcile/diagnostics/stuck",
+      "handler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/DiagnosticOperationsController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "oros-service",
+      "method": "GET",
+      "path": "/v1/reconcile/diagnostics/critical-unacknowledged",
+      "handler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/DiagnosticOperationsController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "oros-service",
+      "method": "POST",
+      "path": "/v1/orders/external-manual",
+      "handler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/IntakeController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/availability/by-provider",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiLeaveController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/leave/balances",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiLeaveController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/leave/balances",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiLeaveController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/leave/types",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiLeaveController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/leave/types",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiLeaveController.java",
       "implStatus": "contract-gap",
       "remediation": "add OpenAPI operation — complete contract; do not delete handler"
     }

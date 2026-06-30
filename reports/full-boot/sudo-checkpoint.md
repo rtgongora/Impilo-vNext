@@ -1,12 +1,12 @@
 # Full boot — human sudo checkpoint
 
-**Checkpoint ID:** cp-20260611062832-4917def8  
-**Time:** 2026-06-11T06:28:32+02:00  
-**Branch:** claude/staging-ux-orchestration-remediation-Yypyl @ 4917def8  
+**Checkpoint ID:** cp-20260630225914-63c2d792b  
+**Time:** 2026-06-30T22:59:14+02:00  
+**Branch:** claude/crazy-merkle-3ad1a1 @ 63c2d792b  
 
 ## What needs your consent
 
-Privileged action (sudo password): **refresh_stale27_containerd_refs**
+Privileged action (sudo password): **import_full_boot_images_to_k3s**
 
 - **Affected namespace:** `impilo-full-preview` (full boot only)
 - **Protected (untouched):** `impilo-preview` (slice at http://41.57.127.235)
@@ -22,13 +22,13 @@ ssh -p 2276 robert@41.57.127.235
 Inside the VM:
 
 ```bash
-cd /opt/impilo/repos/Impilo-vNext
+cd /opt/impilo/repos/Impilo-vNext/.claude/worktrees/crazy-merkle-3ad1a1
 git pull
 sudo -v
 bash scripts/operator/fullboot.sh sudo-checkpoint-run
 ```
 
-This performs **only**: refresh_stale27_containerd_refs  
+This performs **only**: import_full_boot_images_to_k3s  
 It will **not** deploy unless you separately authorize deploy later.
 
 ## After it succeeds
@@ -47,8 +47,8 @@ bash scripts/operator/fullboot.sh continue
 
 ## Success marker
 
-`STALE27_CONTAINERD_REF_REFRESH: complete`
+`IMAGE_PRESENCE: PASS and SUMMARY ok=22 fail=0`
 
 ## Log
 
-`/opt/impilo/repos/Impilo-vNext/reports/full-boot/sudo-checkpoint-run.log`
+`/opt/impilo/repos/Impilo-vNext/.claude/worktrees/crazy-merkle-3ad1a1/reports/full-boot/sudo-checkpoint-run.log`

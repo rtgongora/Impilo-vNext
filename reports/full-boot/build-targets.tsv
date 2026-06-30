@@ -103,6 +103,7 @@ tshepo-offline-service		services/tshepo-offline-service	wave_sequenced_full_boot
 tuso-service		services/tuso-service	required_full_boot
 ubomi-service		services/ubomi-service	required_full_boot
 varapi-service		services/varapi-service	required_full_boot
+vashandi-workforce-service		services/vashandi-workforce-service	wave_sequenced_full_boot
 vito-service		services/vito-service	required_full_boot
 wellness-service		services/wellness-service	wave_sequenced_full_boot
 workflow-service		services/workflow-service	wave_sequenced_full_boot

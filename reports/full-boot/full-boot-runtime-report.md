@@ -4,7 +4,7 @@
 
 **Estate status:** `FAIL`
 **Estate reason:** runtime image truth: 91 stale non-exempt service(s)
-**Runtime estate ready:** 91/91 (missing/not-ready: 0)
+**Runtime estate ready:** 92/92 (missing/not-ready: 0)
 **Legacy full-boot status (alias):** `FULL_BOOT_PASS` — images, helm, and runtime healthy
 
 | Phase | State |
@@ -16,10 +16,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total discovered | 146 |
+| Total discovered | 147 |
 | Required full boot | 22 |
 | Image pass / fail | 99 / 0 |
 | Helm ready / missing / partial | 22 / 0 / 0 |
-| Deployed in full boot | 98 |
-| Pods ready / total | 98 / 98 |
+| Deployed in full boot | 99 |
+| Pods ready / total | 99 / 99 |
 

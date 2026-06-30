@@ -81,6 +81,8 @@ fullBootServices:
     enabled: true
     port: 8170
     database: data_access_governance
+    env:
+      DAGS_ENFORCEMENT_SIGNING_KEY: preview-dags-permit-signing-key-change-me-0123456789
   data-governance-service:
     enabled: true
     port: 8220

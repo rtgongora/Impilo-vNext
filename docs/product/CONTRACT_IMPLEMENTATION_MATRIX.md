@@ -1,19 +1,19 @@
 # Contract Implementation Matrix
 
-> Generated: 2026-06-20T11:43:44.918Z
-> OpenAPI operations: **4591** | AsyncAPI channels: **84**
+> Generated: 2026-06-30T18:40:46.865Z
+> OpenAPI operations: **4756** | AsyncAPI channels: **84**
 
 ## Summary
 
 | Status | Count |
 |--------|------:|
-| implemented | 4652 |
+| implemented | 4809 |
 | partial | 0 |
-| missing | 0 |
+| missing | 8 |
 | unowned-contract | 23 |
-| contract-gap (handler exists — extend OpenAPI) | 3 |
+| contract-gap (handler exists — extend OpenAPI) | 19 |
 | contract-parse-errors | 0 |
-| **violations (partial + missing + orphan + invalid contract)** | **3** |
+| **violations (partial + missing + orphan + invalid contract)** | **27** |
 
 ## Remediation doctrine: complete — never delete
 
@@ -31,7 +31,22 @@ Forbidden: deleting controllers, removing routes, or trimming contracts to make 
 
 ## Sample violations (first 40)
 
+- `missing` hrLeaveTypes (hr-payroll.openapi.yaml)
+- `missing` hrpayroll_post__internal_v1_hr_leave_types (hr-payroll.openapi.yaml)
+- `missing` hrLeaveRequests (hr-payroll.openapi.yaml)
+- `missing` hrpayroll_post__internal_v1_hr_leave_requests (hr-payroll.openapi.yaml)
+- `missing` hrAttendance (hr-payroll.openapi.yaml)
+- `missing` hrpayroll_post__internal_v1_hr_attendance (hr-payroll.openapi.yaml)
+- `missing` hrpayroll_get__internal_v1_hr_leave_balances (hr-payroll.openapi.yaml)
+- `missing` hrpayroll_post__internal_v1_hr_leave_balances (hr-payroll.openapi.yaml)
 - `contract-gap` GET /internal/v1/governance/decision-audit (data-governance-service)
+- `contract-gap` POST /internal/v1/governance/data-subject-requests (data-governance-service)
+- `contract-gap` GET /internal/v1/governance/data-subject-requests (data-governance-service)
+- `contract-gap` POST /internal/v1/governance/data-subject-requests/cancel (data-governance-service)
+- `contract-gap` GET /internal/v1/governance/privacy-preferences (data-governance-service)
+- `contract-gap` PUT /internal/v1/governance/privacy-preferences (data-governance-service)
+- `contract-gap` GET /internal/v1/governance/display-settings (data-governance-service)
+- `contract-gap` PUT /internal/v1/governance/display-settings (data-governance-service)
 - `contract-gap` GET /api/v1/ndila/tiles/{z}/{x}/{y}.png (ndila-service)
 - `contract-gap` GET /api/v1/maps/tiles/{z}/{x}/{y}.png (ndila-service)
 

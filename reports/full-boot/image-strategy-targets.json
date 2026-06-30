@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-14T23:06:31.227Z",
+  "generated_at": "2026-06-19T08:57:12.729Z",
   "targets": [
     {
       "id": "ai-model-registry-service",
@@ -2352,6 +2352,27 @@
       "official_chart": null,
       "image_build_command": "docker build -f services/varapi-service/Dockerfile OR build-runtime-image-from-jar.sh varapi-service",
       "image_name": "impilo/varapi-service"
+    },
+    {
+      "id": "vashandi-workforce-service",
+      "path": "services/vashandi-workforce-service",
+      "component_name": "vashandi-workforce-service",
+      "type": "backend_service",
+      "plane": "enterprise",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/vashandi-workforce-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/vashandi-workforce-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/vashandi-workforce-service/Dockerfile OR build-runtime-image-from-jar.sh vashandi-workforce-service",
+      "image_name": "impilo/vashandi-workforce-service"
     },
     {
       "id": "vito-service",

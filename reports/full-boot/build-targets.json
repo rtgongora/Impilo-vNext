@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-14T23:06:31.227Z",
+  "generated_at": "2026-06-19T08:57:12.729Z",
   "targets": [
     {
       "id": "ai-model-registry-service",
@@ -1452,6 +1452,20 @@
       "classification": "required_full_boot",
       "build_required": true,
       "image_required": true,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain"
+    },
+    {
+      "id": "vashandi-workforce-service",
+      "path": "services/vashandi-workforce-service",
+      "component_name": "vashandi-workforce-service",
+      "type": "backend_service",
+      "plane": "enterprise",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
       "image_strategy": "shared-dockerfile-template",
       "image_strategy_status": "valid",
       "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",

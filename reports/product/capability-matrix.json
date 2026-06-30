@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-06-29T18:20:50.581Z",
+  "generatedAt": "2026-06-30T18:45:42.864Z",
   "summary": {
-    "totalCapabilities": 3681,
+    "totalCapabilities": 3892,
     "byDisposition": {
-      "real": 3139,
-      "partial": 141,
+      "real": 3324,
+      "partial": 154,
       "real-proven": 207,
-      "fixture": 194
+      "fixture": 207
     },
     "provenCapabilities": 207,
-    "fixtureCapabilities": 194
+    "fixtureCapabilities": 207
   },
   "capabilities": [
     {
@@ -28,8 +28,8 @@
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 181,
-      "contractOps": 183,
+      "bffProxied": 184,
+      "contractOps": 188,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1",
@@ -137,7 +137,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 5,
-      "contractOps": 89,
+      "contractOps": 90,
       "contractUnowned": 0,
       "samplePaths": [
         "/health"
@@ -158,7 +158,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 58,
+      "contractOps": 59,
       "contractUnowned": 0,
       "samplePaths": [
         "/test-command"
@@ -267,6 +267,113 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/telemedicine"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::(root)",
+      "service": "asset-registry-service",
+      "capability": "(root)",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 3,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/",
+        "/{equipment_id}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::alerts",
+      "service": "asset-registry-service",
+      "capability": "alerts",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 5,
+      "contractOps": 1,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/alerts"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::alerts/active",
+      "service": "asset-registry-service",
+      "capability": "alerts/active",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/alerts/active"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::alerts/khuluma-requested",
+      "service": "asset-registry-service",
+      "capability": "alerts/khuluma-requested",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/alerts/{alert_id}/khuluma-requested"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::alerts/resolve",
+      "service": "asset-registry-service",
+      "capability": "alerts/resolve",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/alerts/{alert_id}/resolve"
       ],
       "frontendPaths": []
     },
@@ -383,6 +490,227 @@
       "frontendPaths": []
     },
     {
+      "id": "asset-registry-service::audits",
+      "service": "asset-registry-service",
+      "capability": "audits",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 6,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/audits"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::audits/complete",
+      "service": "asset-registry-service",
+      "capability": "audits/complete",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/audits/{audit_id}/complete"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::audits/items",
+      "service": "asset-registry-service",
+      "capability": "audits/items",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/audits/items/{item_id}",
+        "/audits/{audit_id}/items"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::calibration",
+      "service": "asset-registry-service",
+      "capability": "calibration",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{equipment_id}/calibration"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::calibration/due",
+      "service": "asset-registry-service",
+      "capability": "calibration/due",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/calibration/due"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::deployment-kits",
+      "service": "asset-registry-service",
+      "capability": "deployment-kits",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/deployment-kits"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::deployment-kits/deploy",
+      "service": "asset-registry-service",
+      "capability": "deployment-kits/deploy",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/deployment-kits/{kit_id}/deploy"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::deployment-kits/return",
+      "service": "asset-registry-service",
+      "capability": "deployment-kits/return",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/deployment-kits/{kit_id}/return"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::detail",
+      "service": "asset-registry-service",
+      "capability": "detail",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{equipment_id}/detail"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::equipment",
+      "service": "asset-registry-service",
+      "capability": "equipment",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 8,
+      "frontendFixtures": 8,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/equipment"
+      ],
+      "frontendPaths": [
+        "/operations/equipment",
+        "/operations/equipment/[equipmentId]",
+        "/operations/equipment/maintenance",
+        "/operations/equipment/calibration",
+        "/operations/equipment/readiness",
+        "/operations/equipment/iot"
+      ]
+    },
+    {
       "id": "asset-registry-service::external/assets",
       "service": "asset-registry-service",
       "capability": "external/assets",
@@ -401,6 +729,48 @@
       "samplePaths": [
         "/external/v1/assets/{asset_id}",
         "/external/v1/assets"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::faults",
+      "service": "asset-registry-service",
+      "capability": "faults",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{equipment_id}/faults"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::faults/link-rito",
+      "service": "asset-registry-service",
+      "capability": "faults/link-rito",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/faults/{fault_id}/link-rito"
       ],
       "frontendPaths": []
     },
@@ -447,6 +817,154 @@
       "frontendPaths": []
     },
     {
+      "id": "asset-registry-service::maintenance",
+      "service": "asset-registry-service",
+      "capability": "maintenance",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{equipment_id}/maintenance",
+        "/maintenance/{task_id}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::maintenance/complete",
+      "service": "asset-registry-service",
+      "capability": "maintenance/complete",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/maintenance/{task_id}/complete"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::maintenance/due",
+      "service": "asset-registry-service",
+      "capability": "maintenance/due",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/maintenance/due"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::maintenance/open",
+      "service": "asset-registry-service",
+      "capability": "maintenance/open",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/maintenance/open"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::metadata",
+      "service": "asset-registry-service",
+      "capability": "metadata",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 2,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{equipment_id}/metadata"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::readiness",
+      "service": "asset-registry-service",
+      "capability": "readiness",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/readiness"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::readiness/profiles",
+      "service": "asset-registry-service",
+      "capability": "readiness/profiles",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/readiness/profiles"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "asset-registry-service::snapshots",
       "service": "asset-registry-service",
       "capability": "snapshots",
@@ -464,6 +982,92 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/snapshots"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::status",
+      "service": "asset-registry-service",
+      "capability": "status",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 8,
+      "contractOps": 8,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{equipment_id}/status"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::transfers",
+      "service": "asset-registry-service",
+      "capability": "transfers",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 1,
+      "frontendFixtures": 1,
+      "bffProxied": 3,
+      "contractOps": 2,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{equipment_id}/transfers"
+      ],
+      "frontendPaths": [
+        "/ehr/[patientId]/vitals"
+      ]
+    },
+    {
+      "id": "asset-registry-service::transfers/approve",
+      "service": "asset-registry-service",
+      "capability": "transfers/approve",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/transfers/{transfer_id}/approve"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "asset-registry-service::transfers/receive",
+      "service": "asset-registry-service",
+      "capability": "transfers/receive",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/transfers/{transfer_id}/receive"
       ],
       "frontendPaths": []
     },
@@ -772,7 +1376,7 @@
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 1,
+      "bffProxied": 2,
       "contractOps": 3,
       "contractUnowned": 0,
       "samplePaths": [
@@ -1608,8 +2212,8 @@
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 7,
-      "contractOps": 8,
+      "bffProxied": 0,
+      "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
         "/status",
@@ -2474,7 +3078,7 @@
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 2,
+      "bffProxied": 3,
       "contractOps": 2,
       "contractUnowned": 0,
       "samplePaths": [
@@ -5640,6 +6244,332 @@
       "frontendPaths": []
     },
     {
+      "id": "daidzai-service::(root)",
+      "service": "daidzai-service",
+      "capability": "(root)",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 3,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL",
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1",
+        "/"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::close",
+      "service": "daidzai-service",
+      "capability": "close",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/close"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::daidzai",
+      "service": "daidzai-service",
+      "capability": "daidzai",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/daidzai"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::daidzai/disasters",
+      "service": "daidzai-service",
+      "capability": "daidzai/disasters",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 1,
+      "frontendFixtures": 1,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/daidzai/disasters"
+      ],
+      "frontendPaths": [
+        "/work/daidzai/disasters"
+      ]
+    },
+    {
+      "id": "daidzai-service::health",
+      "service": "daidzai-service",
+      "capability": "health",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/health"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::incidents",
+      "service": "daidzai-service",
+      "capability": "incidents",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 3,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 6,
+      "contractOps": 2,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/incidents",
+        "/incidents/{id}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::incidents/death-outcome",
+      "service": "daidzai-service",
+      "capability": "incidents/death-outcome",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/incidents/{id}/death-outcome"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::incidents/dispatch",
+      "service": "daidzai-service",
+      "capability": "incidents/dispatch",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/incidents/{id}/dispatch"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::incidents/handoff",
+      "service": "daidzai-service",
+      "capability": "incidents/handoff",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/incidents/{id}/handoff"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::incidents/mission-events",
+      "service": "daidzai-service",
+      "capability": "incidents/mission-events",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/incidents/{id}/mission-events"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::incidents/missions",
+      "service": "daidzai-service",
+      "capability": "incidents/missions",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/incidents/{id}/missions"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::incidents/resources",
+      "service": "daidzai-service",
+      "capability": "incidents/resources",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/incidents/{id}/resources"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::requests",
+      "service": "daidzai-service",
+      "capability": "requests",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 7,
+      "contractOps": 4,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/requests",
+        "/requests/{id}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::requests/triage",
+      "service": "daidzai-service",
+      "capability": "requests/triage",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/requests/{id}/triage"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "daidzai-service::sites",
+      "service": "daidzai-service",
+      "capability": "sites",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 7,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/sites"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "data-access-governance-service::(root)",
       "service": "data-access-governance-service",
       "capability": "(root)",
@@ -7160,7 +8090,7 @@
       "capability": "(root)",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 181,
+      "backendRoutes": 184,
       "stubRoutes": 0,
       "methods": [
         "ALL",
@@ -7599,6 +8529,28 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/active/{healthId}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::activity",
+      "service": "experience-bff",
+      "capability": "activity",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/activity",
+        "/activity/{orderId}"
       ],
       "frontendPaths": []
     },
@@ -8068,7 +9020,7 @@
       "capability": "alerts",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 4,
+      "backendRoutes": 5,
       "stubRoutes": 0,
       "methods": [
         "GET",
@@ -8076,8 +9028,8 @@
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 4,
-      "contractOps": 1,
+      "bffProxied": 0,
+      "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
         "/alerts"
@@ -8102,6 +9054,69 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/alerts/{alertId}/acknowledge"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::alerts/active",
+      "service": "experience-bff",
+      "capability": "alerts/active",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/alerts/active"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::alerts/notify",
+      "service": "experience-bff",
+      "capability": "alerts/notify",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/alerts/{alertId}/notify"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::alerts/resolve",
+      "service": "experience-bff",
+      "capability": "alerts/resolve",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/alerts/{alertId}/resolve"
       ],
       "frontendPaths": []
     },
@@ -9343,7 +10358,7 @@
       "capability": "audits",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 4,
+      "backendRoutes": 6,
       "stubRoutes": 0,
       "methods": [
         "GET",
@@ -9351,13 +10366,34 @@
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 4,
+      "bffProxied": 0,
       "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
         "/audits",
         "/audits/{id}",
         "/audits/{id}/{action:start|findings|submit|close}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::audits/complete",
+      "service": "experience-bff",
+      "capability": "audits/complete",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/audits/{auditId}/complete"
       ],
       "frontendPaths": []
     },
@@ -9383,6 +10419,29 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::audits/items",
+      "service": "experience-bff",
+      "capability": "audits/items",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/audits/items/{itemId}",
+        "/audits/{auditId}/items"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::auth/login",
       "service": "experience-bff",
       "capability": "auth/login",
@@ -9393,8 +10452,8 @@
       "methods": [
         "POST"
       ],
-      "frontendSurfaces": 5,
-      "frontendFixtures": 5,
+      "frontendSurfaces": 4,
+      "frontendFixtures": 4,
       "bffProxied": 1,
       "contractOps": 1,
       "contractUnowned": 0,
@@ -9404,7 +10463,6 @@
       "frontendPaths": [
         "/auth/login",
         "/auth/login/provider-id",
-        "/auth/login/biometric",
         "/auth/logout",
         "/consent"
       ]
@@ -9420,8 +10478,8 @@
       "methods": [
         "POST"
       ],
-      "frontendSurfaces": 5,
-      "frontendFixtures": 5,
+      "frontendSurfaces": 4,
+      "frontendFixtures": 4,
       "bffProxied": 1,
       "contractOps": 1,
       "contractUnowned": 0,
@@ -9431,7 +10489,6 @@
       "frontendPaths": [
         "/auth/login",
         "/auth/login/provider-id",
-        "/auth/login/biometric",
         "/auth/logout",
         "/consent"
       ]
@@ -10445,6 +11502,48 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::calibration",
+      "service": "experience-bff",
+      "capability": "calibration",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{equipmentId}/calibration"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::calibration/due",
+      "service": "experience-bff",
+      "capability": "calibration/due",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/calibration/due"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::callbacks",
       "service": "experience-bff",
       "capability": "callbacks",
@@ -10502,7 +11601,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 3,
-      "contractOps": 0,
+      "contractOps": 2,
       "contractUnowned": 0,
       "samplePaths": [
         "/calls",
@@ -10524,7 +11623,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 2,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/calls/{id}/accept"
@@ -10545,7 +11644,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 2,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/calls/{id}/decline"
@@ -10566,7 +11665,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 2,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/calls/{id}/end"
@@ -10587,7 +11686,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 2,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/calls/incoming"
@@ -10608,7 +11707,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/calls/{id}/signals"
@@ -11047,6 +12146,27 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::care-routing",
+      "service": "experience-bff",
+      "capability": "care-routing",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/care-routing"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::cart",
       "service": "experience-bff",
       "capability": "cart",
@@ -11137,7 +12257,7 @@
       "capability": "cases",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 11,
+      "backendRoutes": 14,
       "stubRoutes": 0,
       "methods": [
         "GET",
@@ -11145,14 +12265,124 @@
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 11,
+      "bffProxied": 14,
       "contractOps": 4,
       "contractUnowned": 0,
       "samplePaths": [
         "/cases",
+        "/cases/{caseId}",
         "/cases/{id}",
         "/cases/{id}/{sub:timeline|parties|links|messages}",
         "/cases/{id}/{action:acknowledge|triage|assign|transition|escalate|resolve|close|reopen|cancel|messages|parties|links|attachments}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/audit",
+      "service": "experience-bff",
+      "capability": "cases/audit",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{caseId}/audit"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/body",
+      "service": "experience-bff",
+      "capability": "cases/body",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 4,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 4,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{caseId}/body",
+        "/cases/{caseId}/body/receive",
+        "/cases/{caseId}/body/postmortem-hold",
+        "/cases/{caseId}/body/release"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/book",
+      "service": "experience-bff",
+      "capability": "cases/book",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/book"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/cancel",
+      "service": "experience-bff",
+      "capability": "cases/cancel",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/cancel"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/certify",
+      "service": "experience-bff",
+      "capability": "cases/certify",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{caseId}/certify"
       ],
       "frontendPaths": []
     },
@@ -11174,6 +12404,90 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/cases/{id}/close"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/coroner-status",
+      "service": "experience-bff",
+      "capability": "cases/coroner-status",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{caseId}/coroner-status"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/crvs-package",
+      "service": "experience-bff",
+      "capability": "cases/crvs-package",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{caseId}/crvs-package"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/death",
+      "service": "experience-bff",
+      "capability": "cases/death",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/death"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/documents",
+      "service": "experience-bff",
+      "capability": "cases/documents",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{caseId}/documents"
       ],
       "frontendPaths": []
     },
@@ -11264,6 +12578,93 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::cases/note",
+      "service": "experience-bff",
+      "capability": "cases/note",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 3,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 3,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/note",
+        "/cases/{id}/note/sign"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/pacu",
+      "service": "experience-bff",
+      "capability": "cases/pacu",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/pacu/disposition"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/public-health-screen",
+      "service": "experience-bff",
+      "capability": "cases/public-health-screen",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{caseId}/public-health-screen"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/readiness",
+      "service": "experience-bff",
+      "capability": "cases/readiness",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/readiness"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::cases/review-actions",
       "service": "experience-bff",
       "capability": "cases/review-actions",
@@ -11281,6 +12682,28 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/cases/{id}/review-actions"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/safety-events",
+      "service": "experience-bff",
+      "capability": "cases/safety-events",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/safety-events"
       ],
       "frontendPaths": []
     },
@@ -11307,9 +12730,9 @@
       "frontendPaths": []
     },
     {
-      "id": "experience-bff::cases/triage",
+      "id": "experience-bff::cases/start",
       "service": "experience-bff",
-      "capability": "cases/triage",
+      "capability": "cases/start",
       "disposition": "real",
       "proven": false,
       "backendRoutes": 1,
@@ -11320,6 +12743,27 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/start"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::cases/triage",
+      "service": "experience-bff",
+      "capability": "cases/triage",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
       "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
@@ -11845,6 +13289,34 @@
         "/internal/v1/citizen/clients/{healthId}/patient-shares/{shareRequestId}/contributions"
       ],
       "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::citizen/wallet",
+      "service": "experience-bff",
+      "capability": "citizen/wallet",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 8,
+      "frontendFixtures": 8,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/citizen/wallet"
+      ],
+      "frontendPaths": [
+        "/citizen/wallet",
+        "/citizen/wallet/identity",
+        "/citizen/wallet/profile",
+        "/citizen/wallet/records",
+        "/citizen/wallet/timeline",
+        "/citizen/wallet/dependants"
+      ]
     },
     {
       "id": "experience-bff::claims",
@@ -13128,7 +14600,7 @@
       "capability": "confirm",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 2,
       "stubRoutes": 0,
       "methods": [
         "POST"
@@ -13139,6 +14611,7 @@
       "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
+        "/confirm",
         "/{id}/confirm"
       ],
       "frontendPaths": []
@@ -13258,14 +14731,15 @@
       "capability": "context",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 2,
+      "backendRoutes": 3,
       "stubRoutes": 0,
       "methods": [
-        "GET"
+        "GET",
+        "POST"
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 2,
+      "bffProxied": 3,
       "contractOps": 4,
       "contractUnowned": 0,
       "samplePaths": [
@@ -13397,7 +14871,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 9,
-      "contractOps": 3,
+      "contractOps": 6,
       "contractUnowned": 0,
       "samplePaths": [
         "/conversations",
@@ -13419,7 +14893,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/conversations/{id}/links"
@@ -13440,7 +14914,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 4,
-      "contractOps": 0,
+      "contractOps": 2,
       "contractUnowned": 0,
       "samplePaths": [
         "/conversations/{id}/meeting/join",
@@ -13463,7 +14937,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 10,
-      "contractOps": 2,
+      "contractOps": 5,
       "contractUnowned": 0,
       "samplePaths": [
         "/conversations/{id}/messages",
@@ -13485,7 +14959,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 2,
       "contractUnowned": 0,
       "samplePaths": [
         "/conversations/{id}/participants"
@@ -14011,6 +15485,30 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::crvs/notifications",
+      "service": "experience-bff",
+      "capability": "crvs/notifications",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 3,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 3,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/crvs/notifications",
+        "/crvs/notifications/{notificationId}/package-ready",
+        "/crvs/notifications/{notificationId}/register"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::current",
       "service": "experience-bff",
       "capability": "current",
@@ -14028,6 +15526,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/current"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::daidzai",
+      "service": "experience-bff",
+      "capability": "daidzai",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/daidzai"
       ],
       "frontendPaths": []
     },
@@ -14218,6 +15737,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/deadletters/{id}/replay"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::death",
+      "service": "experience-bff",
+      "capability": "death",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/death"
       ],
       "frontendPaths": []
     },
@@ -14797,6 +16337,27 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::delivery/adapters",
+      "service": "experience-bff",
+      "capability": "delivery/adapters",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/delivery/adapters"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::demo-journeys",
       "service": "experience-bff",
       "capability": "demo-journeys",
@@ -14818,6 +16379,70 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::deployment-kits",
+      "service": "experience-bff",
+      "capability": "deployment-kits",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/deployment-kits"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::deployment-kits/deploy",
+      "service": "experience-bff",
+      "capability": "deployment-kits/deploy",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/deployment-kits/{kitId}/deploy"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::deployment-kits/return",
+      "service": "experience-bff",
+      "capability": "deployment-kits/return",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/deployment-kits/{kitId}/return"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::deployments/recall",
       "service": "experience-bff",
       "capability": "deployments/recall",
@@ -14835,6 +16460,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/deployments/{deploymentId}/recall"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::detail",
+      "service": "experience-bff",
+      "capability": "detail",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{equipmentId}/detail"
       ],
       "frontendPaths": []
     },
@@ -14955,6 +16601,71 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::disasters",
+      "service": "experience-bff",
+      "capability": "disasters",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/disasters"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::disasters/close",
+      "service": "experience-bff",
+      "capability": "disasters/close",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/disasters/{id}/close"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::disasters/sites",
+      "service": "experience-bff",
+      "capability": "disasters/sites",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/disasters/{id}/sites"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::discharge",
       "service": "experience-bff",
       "capability": "discharge",
@@ -15056,6 +16767,49 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/discharge-clearances/{id}/waive"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::discharge-summary",
+      "service": "experience-bff",
+      "capability": "discharge-summary",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/discharge-summary"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::discharge-summary/finalise",
+      "service": "experience-bff",
+      "capability": "discharge-summary/finalise",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/discharge-summary/{encounterId}/finalise"
       ],
       "frontendPaths": []
     },
@@ -15162,6 +16916,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/discover/role"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::dismiss",
+      "service": "experience-bff",
+      "capability": "dismiss",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/dismiss"
       ],
       "frontendPaths": []
     },
@@ -17022,6 +18797,27 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::equipment",
+      "service": "experience-bff",
+      "capability": "equipment",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/equipment"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::erp/gl",
       "service": "experience-bff",
       "capability": "erp/gl",
@@ -17119,14 +18915,14 @@
       "capability": "escalations",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 3,
       "stubRoutes": 0,
       "methods": [
         "GET"
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 1,
+      "bffProxied": 3,
       "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
@@ -17140,17 +18936,18 @@
       "capability": "escalations/acknowledge",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 2,
       "stubRoutes": 0,
       "methods": [
         "POST"
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 1,
+      "bffProxied": 2,
       "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
+        "/escalations/{escalationId}/acknowledge",
         "/escalations/{id}/acknowledge"
       ],
       "frontendPaths": []
@@ -17173,6 +18970,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/escalations/{id}/resolve"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::escalations/respond",
+      "service": "experience-bff",
+      "capability": "escalations/respond",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/escalations/{escalationId}/respond"
       ],
       "frontendPaths": []
     },
@@ -17279,7 +19097,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 2,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/events/{eventId}/conversation"
@@ -17580,6 +19398,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/experience/core-transactions"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::explain-locked",
+      "service": "experience-bff",
+      "capability": "explain-locked",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/explain-locked"
       ],
       "frontendPaths": []
     },
@@ -17929,6 +19768,48 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::faults",
+      "service": "experience-bff",
+      "capability": "faults",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{equipmentId}/faults"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::faults/link-rito",
+      "service": "experience-bff",
+      "capability": "faults/link-rito",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/faults/{faultId}/link-rito"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::feed",
       "service": "experience-bff",
       "capability": "feed",
@@ -17955,14 +19836,14 @@
       "capability": "feedback",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 2,
+      "backendRoutes": 3,
       "stubRoutes": 0,
       "methods": [
         "POST"
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 2,
+      "bffProxied": 3,
       "contractOps": 4,
       "contractUnowned": 0,
       "samplePaths": [
@@ -18642,6 +20523,27 @@
       ]
     },
     {
+      "id": "experience-bff::follow-up",
+      "service": "experience-bff",
+      "capability": "follow-up",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/follow-up"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::forms",
       "service": "experience-bff",
       "capability": "forms",
@@ -18872,6 +20774,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/functional-assessments"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::fundo",
+      "service": "experience-bff",
+      "capability": "fundo",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/fundo/{resourceId}"
       ],
       "frontendPaths": []
     },
@@ -19595,6 +21518,27 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::home",
+      "service": "experience-bff",
+      "capability": "home",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/home"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::households",
       "service": "experience-bff",
       "capability": "households",
@@ -19783,8 +21727,8 @@
       "methods": [
         "ALL"
       ],
-      "frontendSurfaces": 4,
-      "frontendFixtures": 4,
+      "frontendSurfaces": 6,
+      "frontendFixtures": 6,
       "bffProxied": 1,
       "contractOps": 0,
       "contractUnowned": 0,
@@ -19795,6 +21739,8 @@
         "/auth/register",
         "/auth/register/assurance",
         "/citizen",
+        "/citizen/wallet",
+        "/citizen/wallet/identity",
         "/operations/vito"
       ]
     },
@@ -19834,8 +21780,8 @@
       "methods": [
         "GET"
       ],
-      "frontendSurfaces": 501,
-      "frontendFixtures": 478,
+      "frontendSurfaces": 536,
+      "frontendFixtures": 513,
       "bffProxied": 1,
       "contractOps": 1,
       "contractUnowned": 0,
@@ -19846,9 +21792,9 @@
         "/bootstrap",
         "/auth/login",
         "/auth/login/provider-id",
-        "/auth/login/biometric",
         "/auth/mfa",
-        "/auth/resolving"
+        "/auth/resolving",
+        "/auth/context-chooser"
       ]
     },
     {
@@ -20312,7 +22258,7 @@
       "capability": "incidents",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 3,
+      "backendRoutes": 6,
       "stubRoutes": 0,
       "methods": [
         "GET",
@@ -20320,11 +22266,118 @@
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 3,
-      "contractOps": 2,
+      "bffProxied": 0,
+      "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
-        "/incidents"
+        "/incidents",
+        "/incidents/{id}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::incidents/dispatch",
+      "service": "experience-bff",
+      "capability": "incidents/dispatch",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/incidents/{id}/dispatch"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::incidents/handoff",
+      "service": "experience-bff",
+      "capability": "incidents/handoff",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/incidents/{id}/handoff"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::incidents/mission-events",
+      "service": "experience-bff",
+      "capability": "incidents/mission-events",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/incidents/{id}/mission-events"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::incidents/missions",
+      "service": "experience-bff",
+      "capability": "incidents/missions",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/incidents/{id}/missions"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::incidents/resources",
+      "service": "experience-bff",
+      "capability": "incidents/resources",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/incidents/{id}/resources"
       ],
       "frontendPaths": []
     },
@@ -21623,7 +23676,7 @@
       "frontendSurfaces": 3,
       "frontendFixtures": 3,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 5,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/khuluma"
@@ -22220,6 +24273,137 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::listing",
+      "service": "experience-bff",
+      "capability": "listing",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/listing/{listingId}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::listing/favourite",
+      "service": "experience-bff",
+      "capability": "listing/favourite",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "DELETE",
+        "PUT"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/listing/{listingId}/favourite"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::listings",
+      "service": "experience-bff",
+      "capability": "listings",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 3,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "PATCH",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 3,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/listings",
+        "/listings/{listingId}",
+        "/listings/{sellerType}/{sellerId}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::listings/publish",
+      "service": "experience-bff",
+      "capability": "listings/publish",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/listings/{listingId}/publish"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::listings/submit",
+      "service": "experience-bff",
+      "capability": "listings/submit",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/listings/{listingId}/submit"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::listings/unpublish",
+      "service": "experience-bff",
+      "capability": "listings/unpublish",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/listings/{listingId}/unpublish"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::live",
       "service": "experience-bff",
       "capability": "live",
@@ -22652,6 +24836,91 @@
       ]
     },
     {
+      "id": "experience-bff::maintenance",
+      "service": "experience-bff",
+      "capability": "maintenance",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{equipmentId}/maintenance",
+        "/maintenance/{taskId}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::maintenance/complete",
+      "service": "experience-bff",
+      "capability": "maintenance/complete",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/maintenance/{taskId}/complete"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::maintenance/due",
+      "service": "experience-bff",
+      "capability": "maintenance/due",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/maintenance/due"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::maintenance/open",
+      "service": "experience-bff",
+      "capability": "maintenance/open",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/maintenance/open"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::map-markers",
       "service": "experience-bff",
       "capability": "map-markers",
@@ -22798,6 +25067,62 @@
         "/internal/v1/marketplace"
       ],
       "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::marketplace/seller",
+      "service": "experience-bff",
+      "capability": "marketplace/seller",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 7,
+      "frontendFixtures": 7,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/marketplace/seller"
+      ],
+      "frontendPaths": [
+        "/marketplace/store",
+        "/marketplace/store/search",
+        "/marketplace/store/listing/[id]",
+        "/marketplace/store/activity",
+        "/marketplace/seller/listings",
+        "/marketplace/seller/listings/new"
+      ]
+    },
+    {
+      "id": "experience-bff::marketplace/store",
+      "service": "experience-bff",
+      "capability": "marketplace/store",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 7,
+      "frontendFixtures": 7,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/marketplace/store"
+      ],
+      "frontendPaths": [
+        "/marketplace/store",
+        "/marketplace/store/search",
+        "/marketplace/store/listing/[id]",
+        "/marketplace/store/activity",
+        "/marketplace/seller/listings",
+        "/marketplace/seller/listings/new"
+      ]
     },
     {
       "id": "experience-bff::marking-queue",
@@ -23067,7 +25392,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 2,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/meetings"
@@ -23088,7 +25413,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 2,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/meetings/from-event"
@@ -23253,17 +25578,19 @@
       "capability": "metadata",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 2,
       "stubRoutes": 0,
       "methods": [
-        "GET"
+        "GET",
+        "POST"
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 1,
-      "contractOps": 2,
+      "bffProxied": 0,
+      "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
+        "/{equipmentId}/metadata",
         "/metadata"
       ],
       "frontendPaths": []
@@ -23337,7 +25664,7 @@
       "capability": "mobile/citizen",
       "disposition": "partial",
       "proven": false,
-      "backendRoutes": 40,
+      "backendRoutes": 42,
       "stubRoutes": 0,
       "methods": [
         "ALL",
@@ -23346,7 +25673,7 @@
       ],
       "frontendSurfaces": 11,
       "frontendFixtures": 11,
-      "bffProxied": 40,
+      "bffProxied": 42,
       "contractOps": 43,
       "contractUnowned": 0,
       "samplePaths": [
@@ -23551,6 +25878,27 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::moderation/approve",
+      "service": "experience-bff",
+      "capability": "moderation/approve",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/moderation/{listingId}/approve"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::moderation/chat",
       "service": "experience-bff",
       "capability": "moderation/chat",
@@ -23640,7 +25988,7 @@
       "capability": "moderation/queue",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 2,
+      "backendRoutes": 3,
       "stubRoutes": 0,
       "methods": [
         "GET"
@@ -23652,6 +26000,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/moderation/queue"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::moderation/reject",
+      "service": "experience-bff",
+      "capability": "moderation/reject",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/moderation/{listingId}/reject"
       ],
       "frontendPaths": []
     },
@@ -23673,6 +26042,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/moderation/{caseId}/resolve"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::moderation/suspend",
+      "service": "experience-bff",
+      "capability": "moderation/suspend",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/moderation/{listingId}/suspend"
       ],
       "frontendPaths": []
     },
@@ -23936,18 +26326,19 @@
       "capability": "next-actions",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 2,
       "stubRoutes": 0,
       "methods": [
         "GET"
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 1,
+      "bffProxied": 2,
       "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
-        "/{transactionId}/next-actions"
+        "/{transactionId}/next-actions",
+        "/next-actions"
       ],
       "frontendPaths": []
     },
@@ -24006,18 +26397,20 @@
       "capability": "nompilo",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 2,
       "stubRoutes": 0,
       "methods": [
+        "ALL",
         "GET"
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 1,
+      "bffProxied": 2,
       "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
-        "/{transactionId}/nompilo"
+        "/{transactionId}/nompilo",
+        "/internal/v1/nompilo"
       ],
       "frontendPaths": []
     },
@@ -24228,6 +26621,27 @@
       ]
     },
     {
+      "id": "experience-bff::notify",
+      "service": "experience-bff",
+      "capability": "notify",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 2,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/notify"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::objects/ocr",
       "service": "experience-bff",
       "capability": "objects/ocr",
@@ -24388,14 +26802,14 @@
       "capability": "on-call",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 2,
       "stubRoutes": 0,
       "methods": [
         "GET"
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 1,
+      "bffProxied": 2,
       "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
@@ -25558,6 +27972,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/{cpid}/outstanding"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::overview",
+      "service": "experience-bff",
+      "capability": "overview",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 1,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/overview"
       ],
       "frontendPaths": []
     },
@@ -26881,7 +29316,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 3,
-      "contractOps": 0,
+      "contractOps": 2,
       "contractUnowned": 0,
       "samplePaths": [
         "/presence",
@@ -27122,6 +29557,27 @@
         "/{providerPublicId}/profile",
         "/internal/v1/profile",
         "/profile"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::profile/correction",
+      "service": "experience-bff",
+      "capability": "profile/correction",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/profile/correction"
       ],
       "frontendPaths": []
     },
@@ -28240,7 +30696,7 @@
       "capability": "queue",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 3,
+      "backendRoutes": 4,
       "stubRoutes": 0,
       "methods": [
         "ALL",
@@ -28248,7 +30704,7 @@
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 3,
+      "bffProxied": 4,
       "contractOps": 4,
       "contractUnowned": 0,
       "samplePaths": [
@@ -28360,6 +30816,69 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/read-all"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::readiness",
+      "service": "experience-bff",
+      "capability": "readiness",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/readiness"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::readiness/guidance",
+      "service": "experience-bff",
+      "capability": "readiness/guidance",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/readiness/guidance"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::readiness/profiles",
+      "service": "experience-bff",
+      "capability": "readiness/profiles",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/readiness/profiles"
       ],
       "frontendPaths": []
     },
@@ -29410,7 +31929,7 @@
       "capability": "requests",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 5,
+      "backendRoutes": 7,
       "stubRoutes": 0,
       "methods": [
         "GET",
@@ -29418,8 +31937,8 @@
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 5,
-      "contractOps": 4,
+      "bffProxied": 0,
+      "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
         "/requests",
@@ -29487,6 +32006,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/requests/{id}/deny"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::requests/triage",
+      "service": "experience-bff",
+      "capability": "requests/triage",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/requests/{id}/triage"
       ],
       "frontendPaths": []
     },
@@ -30796,7 +33336,7 @@
       "capability": "search",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 6,
+      "backendRoutes": 7,
       "stubRoutes": 0,
       "methods": [
         "ALL",
@@ -30805,7 +33345,7 @@
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 6,
+      "bffProxied": 7,
       "contractOps": 12,
       "contractUnowned": 0,
       "samplePaths": [
@@ -31822,8 +34362,8 @@
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
-      "bffProxied": 2,
-      "contractOps": 7,
+      "bffProxied": 0,
+      "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
         "/sites",
@@ -32246,7 +34786,7 @@
       "capability": "status",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 7,
+      "backendRoutes": 8,
       "stubRoutes": 0,
       "methods": [
         "GET",
@@ -32260,7 +34800,8 @@
       "samplePaths": [
         "/{id}/status",
         "/status",
-        "/status/{challengeId}"
+        "/status/{challengeId}",
+        "/{equipmentId}/status"
       ],
       "frontendPaths": []
     },
@@ -32388,6 +34929,48 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/stock/alerts"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::storefront",
+      "service": "experience-bff",
+      "capability": "storefront",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/storefront"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::storefront/verify",
+      "service": "experience-bff",
+      "capability": "storefront/verify",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/storefront/{storefrontId}/verify"
       ],
       "frontendPaths": []
     },
@@ -33575,6 +36158,27 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::theatre",
+      "service": "experience-bff",
+      "capability": "theatre",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/theatre"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "experience-bff::tickets",
       "service": "experience-bff",
       "capability": "tickets",
@@ -33771,25 +36375,24 @@
       "id": "experience-bff::transfers",
       "service": "experience-bff",
       "capability": "transfers",
-      "disposition": "partial",
+      "disposition": "real",
       "proven": false,
-      "backendRoutes": 2,
+      "backendRoutes": 3,
       "stubRoutes": 0,
       "methods": [
         "GET",
         "POST"
       ],
-      "frontendSurfaces": 1,
-      "frontendFixtures": 1,
-      "bffProxied": 2,
-      "contractOps": 2,
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
-        "/transfers"
+        "/transfers",
+        "/{equipmentId}/transfers"
       ],
-      "frontendPaths": [
-        "/ehr/[patientId]/vitals"
-      ]
+      "frontendPaths": []
     },
     {
       "id": "experience-bff::transfers/accept",
@@ -33809,6 +36412,48 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/transfers/{id}/accept"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::transfers/approve",
+      "service": "experience-bff",
+      "capability": "transfers/approve",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/transfers/{transferId}/approve"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::transfers/receive",
+      "service": "experience-bff",
+      "capability": "transfers/receive",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/transfers/{transferId}/receive"
       ],
       "frontendPaths": []
     },
@@ -34171,7 +36816,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/unread-count"
@@ -34982,8 +37627,8 @@
       "methods": [
         "ALL"
       ],
-      "frontendSurfaces": 1,
-      "frontendFixtures": 1,
+      "frontendSurfaces": 3,
+      "frontendFixtures": 3,
       "bffProxied": 1,
       "contractOps": 0,
       "contractUnowned": 0,
@@ -34991,7 +37636,9 @@
         "/internal/v1/vito/identity"
       ],
       "frontendPaths": [
-        "/citizen"
+        "/citizen",
+        "/citizen/wallet",
+        "/citizen/wallet/identity"
       ]
     },
     {
@@ -35528,6 +38175,30 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::wellness/home",
+      "service": "experience-bff",
+      "capability": "wellness/home",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 2,
+      "frontendFixtures": 2,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/wellness/home"
+      ],
+      "frontendPaths": [
+        "/wellness/plans",
+        "/wellness/care"
+      ]
+    },
+    {
       "id": "experience-bff::withdraw",
       "service": "experience-bff",
       "capability": "withdraw",
@@ -35559,8 +38230,8 @@
       "methods": [
         "ALL"
       ],
-      "frontendSurfaces": 15,
-      "frontendFixtures": 15,
+      "frontendSurfaces": 17,
+      "frontendFixtures": 17,
       "bffProxied": 1,
       "contractOps": 0,
       "contractUnowned": 0,
@@ -35700,7 +38371,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/workforce-profiles/import-bridge"
@@ -37190,6 +39861,64 @@
       ]
     },
     {
+      "id": "frontend:daidzai::daidzai/incidents",
+      "service": "frontend:daidzai",
+      "capability": "daidzai/incidents",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 2,
+      "frontendFixtures": 2,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/work/daidzai",
+        "/work/daidzai/dispatch"
+      ]
+    },
+    {
+      "id": "frontend:daidzai::daidzai/requests",
+      "service": "frontend:daidzai",
+      "capability": "daidzai/requests",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 1,
+      "frontendFixtures": 1,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/emergency/sos"
+      ]
+    },
+    {
+      "id": "frontend:death::death/crvs",
+      "service": "frontend:death",
+      "capability": "death/crvs",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 1,
+      "frontendFixtures": 1,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/work/crvs/death-registration"
+      ]
+    },
+    {
       "id": "frontend:diagnostics::diagnostics/critical-unacknowledged",
       "service": "frontend:diagnostics",
       "capability": "diagnostics/critical-unacknowledged",
@@ -37859,8 +40588,8 @@
       "backendRoutes": 0,
       "stubRoutes": 0,
       "methods": [],
-      "frontendSurfaces": 4,
-      "frontendFixtures": 4,
+      "frontendSurfaces": 6,
+      "frontendFixtures": 6,
       "bffProxied": 0,
       "contractOps": 0,
       "contractUnowned": 0,
@@ -37868,6 +40597,8 @@
       "frontendPaths": [
         "/id-services",
         "/citizen",
+        "/citizen/wallet",
+        "/citizen/wallet/identity",
         "/registry",
         "/operations/vito"
       ]
@@ -37922,8 +40653,32 @@
       "backendRoutes": 0,
       "stubRoutes": 0,
       "methods": [],
-      "frontendSurfaces": 7,
-      "frontendFixtures": 7,
+      "frontendSurfaces": 9,
+      "frontendFixtures": 9,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/clinical/inpatient/admissions",
+        "/clinical/inpatient/admissions/[admissionId]",
+        "/clinical/inpatient/ward-board",
+        "/clinical/inpatient/nursing",
+        "/clinical/inpatient/rounds",
+        "/clinical/inpatient/discharge/[admissionId]"
+      ]
+    },
+    {
+      "id": "frontend:inpatient::inpatient/discharge-summary",
+      "service": "frontend:inpatient",
+      "capability": "inpatient/discharge-summary",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 9,
+      "frontendFixtures": 9,
       "bffProxied": 0,
       "contractOps": 0,
       "contractUnowned": 0,
@@ -38094,6 +40849,25 @@
         "/inventory/requisitions",
         "/inventory/stock-management",
         "/enterprise"
+      ]
+    },
+    {
+      "id": "frontend:khuluma::khuluma/on-call",
+      "service": "frontend:khuluma",
+      "capability": "khuluma/on-call",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 1,
+      "frontendFixtures": 1,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/admin/comms-ops"
       ]
     },
     {
@@ -38709,6 +41483,102 @@
       "samplePaths": [],
       "frontendPaths": [
         "/registry/mvumo"
+      ]
+    },
+    {
+      "id": "frontend:nompilo::nompilo/context",
+      "service": "frontend:nompilo",
+      "capability": "nompilo/context",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 31,
+      "frontendFixtures": 31,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/clinical/inpatient/escalations",
+        "/clinical/inpatient/discharge-board",
+        "/marketplace/store",
+        "/marketplace/store/search",
+        "/marketplace/store/listing/[id]",
+        "/marketplace/store/activity"
+      ]
+    },
+    {
+      "id": "frontend:nompilo::nompilo/dismiss",
+      "service": "frontend:nompilo",
+      "capability": "nompilo/dismiss",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 24,
+      "frontendFixtures": 24,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/clinical/inpatient/escalations",
+        "/clinical/inpatient/discharge-board",
+        "/marketplace/seller",
+        "/operations/equipment",
+        "/operations/equipment/[equipmentId]",
+        "/operations/equipment/calibration"
+      ]
+    },
+    {
+      "id": "frontend:nompilo::nompilo/explain-locked",
+      "service": "frontend:nompilo",
+      "capability": "nompilo/explain-locked",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 24,
+      "frontendFixtures": 24,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/clinical/inpatient/escalations",
+        "/clinical/inpatient/discharge-board",
+        "/marketplace/seller",
+        "/operations/equipment",
+        "/operations/equipment/[equipmentId]",
+        "/operations/equipment/calibration"
+      ]
+    },
+    {
+      "id": "frontend:nompilo::nompilo/follow-up",
+      "service": "frontend:nompilo",
+      "capability": "nompilo/follow-up",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 22,
+      "frontendFixtures": 22,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/marketplace/seller",
+        "/operations/equipment",
+        "/operations/equipment/[equipmentId]",
+        "/operations/equipment/calibration",
+        "/operations/equipment/readiness",
+        "/nompilo"
       ]
     },
     {
@@ -39608,8 +42478,8 @@
       "backendRoutes": 0,
       "stubRoutes": 0,
       "methods": [],
-      "frontendSurfaces": 485,
-      "frontendFixtures": 464,
+      "frontendSurfaces": 519,
+      "frontendFixtures": 498,
       "bffProxied": 0,
       "contractOps": 0,
       "contractUnowned": 0,
@@ -39937,6 +42807,44 @@
       ]
     },
     {
+      "id": "frontend:theatre::theatre/cases",
+      "service": "frontend:theatre",
+      "capability": "theatre/cases",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 1,
+      "frontendFixtures": 1,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/work/clinical/theatre"
+      ]
+    },
+    {
+      "id": "frontend:theatre::theatre/queue",
+      "service": "frontend:theatre",
+      "capability": "theatre/queue",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 1,
+      "frontendFixtures": 1,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/work/clinical/theatre"
+      ]
+    },
+    {
       "id": "frontend:trust::trust/biometric-policy",
       "service": "frontend:trust",
       "capability": "trust/biometric-policy",
@@ -40110,6 +43018,46 @@
       "samplePaths": [],
       "frontendPaths": [
         "/data-intelligence/pipelines"
+      ]
+    },
+    {
+      "id": "frontend:wellness::wellness/enrollments",
+      "service": "frontend:wellness",
+      "capability": "wellness/enrollments",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 2,
+      "frontendFixtures": 2,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/wellness/plans",
+        "/wellness/care"
+      ]
+    },
+    {
+      "id": "frontend:wellness::wellness/programs",
+      "service": "frontend:wellness",
+      "capability": "wellness/programs",
+      "disposition": "fixture",
+      "proven": false,
+      "backendRoutes": 0,
+      "stubRoutes": 0,
+      "methods": [],
+      "frontendSurfaces": 2,
+      "frontendFixtures": 2,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [],
+      "frontendPaths": [
+        "/wellness/plans",
+        "/wellness/care"
       ]
     },
     {
@@ -40556,6 +43504,50 @@
       "frontendPaths": []
     },
     {
+      "id": "guidance-service::(root)",
+      "service": "guidance-service",
+      "capability": "(root)",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 3,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/",
+        "/{id}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "guidance-service::accept",
+      "service": "guidance-service",
+      "capability": "accept",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/accept"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "guidance-service::ask",
       "service": "guidance-service",
       "capability": "ask",
@@ -40573,6 +43565,90 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/ask"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "guidance-service::cancel",
+      "service": "guidance-service",
+      "capability": "cancel",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/cancel"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "guidance-service::close",
+      "service": "guidance-service",
+      "capability": "close",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/close"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "guidance-service::context",
+      "service": "guidance-service",
+      "capability": "context",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/context"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "guidance-service::dismiss",
+      "service": "guidance-service",
+      "capability": "dismiss",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/dismiss"
       ],
       "frontendPaths": []
     },
@@ -40598,6 +43674,48 @@
       "frontendPaths": []
     },
     {
+      "id": "guidance-service::escalate",
+      "service": "guidance-service",
+      "capability": "escalate",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/escalate"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "guidance-service::explain-locked",
+      "service": "guidance-service",
+      "capability": "explain-locked",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/explain-locked"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "guidance-service::guidance",
       "service": "guidance-service",
       "capability": "guidance",
@@ -40615,6 +43733,28 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/guidance"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "guidance-service::guidance/nompilo",
+      "service": "guidance-service",
+      "capability": "guidance/nompilo",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/guidance/nompilo",
+        "/internal/v1/guidance/nompilo/handoffs"
       ],
       "frontendPaths": []
     },
@@ -41809,6 +44949,220 @@
       "frontendPaths": []
     },
     {
+      "id": "inpatient-service::cases",
+      "service": "inpatient-service",
+      "capability": "cases",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::cases/book",
+      "service": "inpatient-service",
+      "capability": "cases/book",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/book"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::cases/cancel",
+      "service": "inpatient-service",
+      "capability": "cases/cancel",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/cancel"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::cases/death",
+      "service": "inpatient-service",
+      "capability": "cases/death",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/death"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::cases/note",
+      "service": "inpatient-service",
+      "capability": "cases/note",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 3,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/note",
+        "/cases/{id}/note/sign"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::cases/pacu",
+      "service": "inpatient-service",
+      "capability": "cases/pacu",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/pacu/disposition"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::cases/readiness",
+      "service": "inpatient-service",
+      "capability": "cases/readiness",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/readiness"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::cases/safety-events",
+      "service": "inpatient-service",
+      "capability": "cases/safety-events",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/safety-events"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::cases/start",
+      "service": "inpatient-service",
+      "capability": "cases/start",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/start"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::cases/triage",
+      "service": "inpatient-service",
+      "capability": "cases/triage",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/cases/{id}/triage"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "inpatient-service::current-location",
       "service": "inpatient-service",
       "capability": "current-location",
@@ -41932,6 +45286,49 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/discharge-clearances/{id}/waive"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::discharge-summary",
+      "service": "inpatient-service",
+      "capability": "discharge-summary",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/discharge-summary"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::discharge-summary/finalise",
+      "service": "inpatient-service",
+      "capability": "discharge-summary/finalise",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/discharge-summary/{encounterId}/finalise"
       ],
       "frontendPaths": []
     },
@@ -42388,6 +45785,69 @@
       "frontendPaths": []
     },
     {
+      "id": "inpatient-service::escalations",
+      "service": "inpatient-service",
+      "capability": "escalations",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/escalations"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::escalations/acknowledge",
+      "service": "inpatient-service",
+      "capability": "escalations/acknowledge",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/escalations/{escalationId}/acknowledge"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::escalations/respond",
+      "service": "inpatient-service",
+      "capability": "escalations/respond",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/escalations/{escalationId}/respond"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "inpatient-service::ews",
       "service": "inpatient-service",
       "capability": "ews",
@@ -42602,6 +46062,27 @@
       "frontendPaths": []
     },
     {
+      "id": "inpatient-service::queue",
+      "service": "inpatient-service",
+      "capability": "queue",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/queue"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "inpatient-service::status",
       "service": "inpatient-service",
       "capability": "status",
@@ -42640,6 +46121,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/test-command"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "inpatient-service::theatre",
+      "service": "inpatient-service",
+      "capability": "theatre",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/theatre"
       ],
       "frontendPaths": []
     },
@@ -44413,10 +47915,12 @@
       "capability": "(root)",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 5,
       "stubRoutes": 0,
       "methods": [
-        "ALL"
+        "ALL",
+        "GET",
+        "POST"
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
@@ -44424,7 +47928,116 @@
       "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
+        "/",
+        "/{id}",
         "/internal/v1"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "khuluma-service::accept",
+      "service": "khuluma-service",
+      "capability": "accept",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/accept"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "khuluma-service::adapters",
+      "service": "khuluma-service",
+      "capability": "adapters",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/adapters",
+        "/adapters/{channel}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "khuluma-service::assign",
+      "service": "khuluma-service",
+      "capability": "assign",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/assign"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "khuluma-service::attempts",
+      "service": "khuluma-service",
+      "capability": "attempts",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/attempts"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "khuluma-service::broadcast",
+      "service": "khuluma-service",
+      "capability": "broadcast",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/broadcast"
       ],
       "frontendPaths": []
     },
@@ -44557,6 +48170,27 @@
       "frontendPaths": []
     },
     {
+      "id": "khuluma-service::cancel",
+      "service": "khuluma-service",
+      "capability": "cancel",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/cancel"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "khuluma-service::conversations",
       "service": "khuluma-service",
       "capability": "conversations",
@@ -44669,6 +48303,90 @@
       "frontendPaths": []
     },
     {
+      "id": "khuluma-service::discover",
+      "service": "khuluma-service",
+      "capability": "discover",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/discover"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "khuluma-service::dispatch",
+      "service": "khuluma-service",
+      "capability": "dispatch",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/dispatch"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "khuluma-service::duty",
+      "service": "khuluma-service",
+      "capability": "duty",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "PUT"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/duty"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "khuluma-service::escalate",
+      "service": "khuluma-service",
+      "capability": "escalate",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/escalate"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "khuluma-service::events/conversation",
       "service": "khuluma-service",
       "capability": "events/conversation",
@@ -44711,12 +48429,33 @@
       "frontendPaths": []
     },
     {
+      "id": "khuluma-service::join",
+      "service": "khuluma-service",
+      "capability": "join",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/join"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "khuluma-service::khuluma",
       "service": "khuluma-service",
       "capability": "khuluma",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 2,
       "stubRoutes": 0,
       "methods": [
         "ALL"
@@ -44732,9 +48471,9 @@
       "frontendPaths": []
     },
     {
-      "id": "khuluma-service::khuluma/stream",
+      "id": "khuluma-service::khuluma/channels",
       "service": "khuluma-service",
-      "capability": "khuluma/stream",
+      "capability": "khuluma/channels",
       "disposition": "real",
       "proven": false,
       "backendRoutes": 1,
@@ -44748,7 +48487,95 @@
       "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
+        "/internal/v1/khuluma/channels"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "khuluma-service::khuluma/delivery",
+      "service": "khuluma-service",
+      "capability": "khuluma/delivery",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 1,
+      "frontendFixtures": 1,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/khuluma/delivery"
+      ],
+      "frontendPaths": [
+        "/admin/comms-ops"
+      ]
+    },
+    {
+      "id": "khuluma-service::khuluma/escalations",
+      "service": "khuluma-service",
+      "capability": "khuluma/escalations",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 1,
+      "frontendFixtures": 1,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/khuluma/escalations"
+      ],
+      "frontendPaths": [
+        "/admin/comms-ops"
+      ]
+    },
+    {
+      "id": "khuluma-service::khuluma/stream",
+      "service": "khuluma-service",
+      "capability": "khuluma/stream",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 5,
+      "contractUnowned": 0,
+      "samplePaths": [
         "/internal/v1/khuluma/stream"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "khuluma-service::leave",
+      "service": "khuluma-service",
+      "capability": "leave",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/leave"
       ],
       "frontendPaths": []
     },
@@ -44795,6 +48622,27 @@
       "frontendPaths": []
     },
     {
+      "id": "khuluma-service::on-call",
+      "service": "khuluma-service",
+      "capability": "on-call",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/on-call"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "khuluma-service::presence",
       "service": "khuluma-service",
       "capability": "presence",
@@ -44818,6 +48666,27 @@
       "frontendPaths": []
     },
     {
+      "id": "khuluma-service::resolve",
+      "service": "khuluma-service",
+      "capability": "resolve",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{id}/resolve"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "khuluma-service::sse",
       "service": "khuluma-service",
       "capability": "sse",
@@ -44831,7 +48700,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/sse"
@@ -45992,7 +49861,7 @@
       "frontendSurfaces": 1,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 5,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/learning/v11/academic"
@@ -46085,7 +49954,7 @@
       "frontendSurfaces": 29,
       "frontendFixtures": 27,
       "bffProxied": 0,
-      "contractOps": 5,
+      "contractOps": 7,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/learning/v11/reports"
@@ -46411,7 +50280,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 1,
+      "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
         "/overview"
@@ -51380,7 +55249,7 @@
       "capability": "(root)",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 13,
+      "backendRoutes": 19,
       "stubRoutes": 0,
       "methods": [
         "ALL",
@@ -51398,6 +55267,7 @@
         "/{catalogId}",
         "/{policyId}",
         "/v1",
+        "/{listingId}",
         "/{offeringId}"
       ],
       "frontendPaths": []
@@ -51408,7 +55278,7 @@
       "capability": "approve",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 2,
+      "backendRoutes": 3,
       "stubRoutes": 0,
       "methods": [
         "POST"
@@ -51420,6 +55290,7 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/{catalogId}/approve",
+        "/{listingId}/approve",
         "/{mappingId}/approve"
       ],
       "frontendPaths": []
@@ -51575,6 +55446,49 @@
       "frontendPaths": []
     },
     {
+      "id": "msika-service::favourite",
+      "service": "msika-service",
+      "capability": "favourite",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "DELETE",
+        "PUT"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{listingId}/favourite"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "msika-service::favourites",
+      "service": "msika-service",
+      "capability": "favourites",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/favourites"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "msika-service::fulfillment-policies",
       "service": "msika-service",
       "capability": "fulfillment-policies",
@@ -51723,6 +55637,27 @@
       "frontendPaths": []
     },
     {
+      "id": "msika-service::listings",
+      "service": "msika-service",
+      "capability": "listings",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/v1/listings"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "msika-service::mappings",
       "service": "msika-service",
       "capability": "mappings",
@@ -51740,6 +55675,48 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/v1/mappings"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "msika-service::media",
+      "service": "msika-service",
+      "capability": "media",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{listingId}/media"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "msika-service::moderation/queue",
+      "service": "msika-service",
+      "capability": "moderation/queue",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/moderation/queue"
       ],
       "frontendPaths": []
     },
@@ -51854,7 +55831,7 @@
       "capability": "publish",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 2,
       "stubRoutes": 0,
       "methods": [
         "POST"
@@ -51865,7 +55842,8 @@
       "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
-        "/{catalogId}/publish"
+        "/{catalogId}/publish",
+        "/{listingId}/publish"
       ],
       "frontendPaths": []
     },
@@ -51938,7 +55916,7 @@
       "capability": "reject",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 2,
       "stubRoutes": 0,
       "methods": [
         "POST"
@@ -51949,6 +55927,7 @@
       "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
+        "/{listingId}/reject",
         "/{mappingId}/reject"
       ],
       "frontendPaths": []
@@ -51980,10 +55959,11 @@
       "capability": "search",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 2,
       "stubRoutes": 0,
       "methods": [
-        "ALL"
+        "ALL",
+        "GET"
       ],
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
@@ -51991,7 +55971,29 @@
       "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
+        "/search",
         "/v1/search"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "msika-service::seller",
+      "service": "msika-service",
+      "capability": "seller",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/seller/{sellerType}/{sellerId}"
       ],
       "frontendPaths": []
     },
@@ -52059,6 +56061,48 @@
       "frontendPaths": []
     },
     {
+      "id": "msika-service::storefronts",
+      "service": "msika-service",
+      "capability": "storefronts",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/v1/storefronts"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "msika-service::submit",
+      "service": "msika-service",
+      "capability": "submit",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{listingId}/submit"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "msika-service::submit-review",
       "service": "msika-service",
       "capability": "submit-review",
@@ -52076,6 +56120,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/{catalogId}/submit-review"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "msika-service::suspend",
+      "service": "msika-service",
+      "capability": "suspend",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{listingId}/suspend"
       ],
       "frontendPaths": []
     },
@@ -52101,6 +56166,27 @@
       "frontendPaths": []
     },
     {
+      "id": "msika-service::unpublish",
+      "service": "msika-service",
+      "capability": "unpublish",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{listingId}/unpublish"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "msika-service::validate",
       "service": "msika-service",
       "capability": "validate",
@@ -52118,6 +56204,27 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/v1/validate"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "msika-service::verify",
+      "service": "msika-service",
+      "capability": "verify",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{storefrontId}/verify"
       ],
       "frontendPaths": []
     },
@@ -56175,7 +60282,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 2,
+      "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
         "/notify"
@@ -59503,7 +63610,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 11,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/patient-safety/cases"
@@ -59524,7 +63631,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 2,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/patient-safety/config"
@@ -59545,7 +63652,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 3,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/patient-safety/mcaz"
@@ -59566,7 +63673,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 8,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/patient-safety/reports"
@@ -60085,6 +64192,119 @@
       "frontendPaths": []
     },
     {
+      "id": "pct-service::death",
+      "service": "pct-service",
+      "capability": "death",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/death/{caseId}"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "pct-service::death/audit",
+      "service": "pct-service",
+      "capability": "death/audit",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/death/{caseId}/audit"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "pct-service::death/body",
+      "service": "pct-service",
+      "capability": "death/body",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 4,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/death/{caseId}/body",
+        "/death/{caseId}/body/receive",
+        "/death/{caseId}/body/postmortem-hold",
+        "/death/{caseId}/body/release"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "pct-service::death/cases",
+      "service": "pct-service",
+      "capability": "death/cases",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 3,
+      "frontendFixtures": 3,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/death/cases"
+      ],
+      "frontendPaths": [
+        "/work/clinical/death-cases",
+        "/work/clinical/mortality-certification",
+        "/work/mortuary"
+      ]
+    },
+    {
+      "id": "pct-service::death/certify",
+      "service": "pct-service",
+      "capability": "death/certify",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/death/{caseId}/certify"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "pct-service::death/complete",
       "service": "pct-service",
       "capability": "death/complete",
@@ -60102,6 +64322,113 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/death/{caseId}/complete"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "pct-service::death/confirm",
+      "service": "pct-service",
+      "capability": "death/confirm",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 1,
+      "frontendFixtures": 1,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/death/confirm"
+      ],
+      "frontendPaths": [
+        "/work/clinical/death-cases"
+      ]
+    },
+    {
+      "id": "pct-service::death/coroner-status",
+      "service": "pct-service",
+      "capability": "death/coroner-status",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/death/{caseId}/coroner-status"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "pct-service::death/crvs-package",
+      "service": "pct-service",
+      "capability": "death/crvs-package",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/death/{caseId}/crvs-package"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "pct-service::death/documents",
+      "service": "pct-service",
+      "capability": "death/documents",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/death/{caseId}/documents"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "pct-service::death/public-health-screen",
+      "service": "pct-service",
+      "capability": "death/public-health-screen",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/death/{caseId}/public-health-screen"
       ],
       "frontendPaths": []
     },
@@ -64025,7 +68352,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 13,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/rito/cases"
@@ -64046,7 +68373,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 4,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/rito/config"
@@ -64067,7 +68394,7 @@
       "frontendSurfaces": 1,
       "frontendFixtures": 1,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 4,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/rito/dashboards"
@@ -64090,7 +68417,7 @@
       "frontendSurfaces": 1,
       "frontendFixtures": 1,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 4,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/rito/quality-signals"
@@ -64113,7 +68440,7 @@
       "frontendSurfaces": 1,
       "frontendFixtures": 1,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 4,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/rito/surveys"
@@ -65069,7 +69396,7 @@
       "capability": "(root)",
       "disposition": "real",
       "proven": false,
-      "backendRoutes": 24,
+      "backendRoutes": 26,
       "stubRoutes": 0,
       "methods": [
         "ALL",
@@ -65107,6 +69434,28 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/changesets"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "simba-service::check-ins",
+      "service": "simba-service",
+      "capability": "check-ins",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/check-ins"
       ],
       "frontendPaths": []
     },
@@ -65191,6 +69540,51 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/crowdfunding/{id}/donate"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "simba-service::enrollments",
+      "service": "simba-service",
+      "capability": "enrollments",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/enrollments"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "simba-service::enrollments/tasks",
+      "service": "simba-service",
+      "capability": "enrollments/tasks",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/enrollments/{enrollmentId}/tasks",
+        "/enrollments/tasks/{enrollmentTaskId}/complete"
       ],
       "frontendPaths": []
     },
@@ -65450,6 +69844,28 @@
       "frontendPaths": []
     },
     {
+      "id": "simba-service::programs",
+      "service": "simba-service",
+      "capability": "programs",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/programs",
+        "/programs/{planId}"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "simba-service::progress",
       "service": "simba-service",
       "capability": "progress",
@@ -65573,6 +69989,50 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/readings/manual"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "simba-service::relationships",
+      "service": "simba-service",
+      "capability": "relationships",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/relationships"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "simba-service::relationships/touchpoints",
+      "service": "simba-service",
+      "capability": "relationships/touchpoints",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/relationships/{relationshipId}/touchpoints"
       ],
       "frontendPaths": []
     },
@@ -65834,6 +70294,27 @@
       "frontendPaths": []
     },
     {
+      "id": "simba-service::wellness",
+      "service": "simba-service",
+      "capability": "wellness",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/wellness"
+      ],
+      "frontendPaths": []
+    },
+    {
       "id": "simba-service::wellness/activities",
       "service": "simba-service",
       "capability": "wellness/activities",
@@ -65862,6 +70343,30 @@
         "/wellness/clubs",
         "/wellness/challenges",
         "/wellness/routes"
+      ]
+    },
+    {
+      "id": "simba-service::wellness/care-linkages",
+      "service": "simba-service",
+      "capability": "wellness/care-linkages",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 2,
+      "frontendFixtures": 2,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/wellness/care-linkages"
+      ],
+      "frontendPaths": [
+        "/wellness/plans",
+        "/wellness/care"
       ]
     },
     {
@@ -65927,22 +70432,26 @@
       "id": "simba-service::wellness/coaching",
       "service": "simba-service",
       "capability": "wellness/coaching",
-      "disposition": "real",
+      "disposition": "partial",
       "proven": false,
-      "backendRoutes": 1,
+      "backendRoutes": 2,
       "stubRoutes": 0,
       "methods": [
         "ALL"
       ],
-      "frontendSurfaces": 0,
-      "frontendFixtures": 0,
+      "frontendSurfaces": 2,
+      "frontendFixtures": 2,
       "bffProxied": 0,
       "contractOps": 0,
       "contractUnowned": 0,
       "samplePaths": [
+        "/internal/v1/wellness/coaching",
         "/internal/v1/wellness/coaching/nudges"
       ],
-      "frontendPaths": []
+      "frontendPaths": [
+        "/wellness/plans",
+        "/wellness/care"
+      ]
     },
     {
       "id": "simba-service::wellness/connect",
@@ -66050,6 +70559,30 @@
         "/wellness/clubs",
         "/wellness/challenges",
         "/wellness/routes"
+      ]
+    },
+    {
+      "id": "simba-service::wellness/habits",
+      "service": "simba-service",
+      "capability": "wellness/habits",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 2,
+      "frontendFixtures": 2,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/wellness/habits"
+      ],
+      "frontendPaths": [
+        "/wellness/plans",
+        "/wellness/care"
       ]
     },
     {
@@ -70884,6 +75417,48 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/health"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "ubomi-service::package-ready",
+      "service": "ubomi-service",
+      "capability": "package-ready",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{notificationId}/package-ready"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "ubomi-service::register",
+      "service": "ubomi-service",
+      "capability": "register",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "POST"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 0,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/{notificationId}/register"
       ],
       "frontendPaths": []
     },
@@ -77814,8 +82389,8 @@
         "GET",
         "POST"
       ],
-      "frontendSurfaces": 12,
-      "frontendFixtures": 12,
+      "frontendSurfaces": 11,
+      "frontendFixtures": 11,
       "bffProxied": 0,
       "contractOps": 4,
       "contractUnowned": 0,

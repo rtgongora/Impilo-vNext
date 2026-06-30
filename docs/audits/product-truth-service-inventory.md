@@ -1,15 +1,15 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-06-29T18:20:50.589Z
+> Generated: 2026-06-30T18:45:42.873Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
-> Total services: **95** | Libraries: **12** | UI workspaces: **24**
+> Total services: **96** | Libraries: **12** | UI workspaces: **24**
 
 ## Summary by product status
 
 | Status | Count |
 |--------|------:|
 | internal-only | 25 |
-| real | 70 |
+| real | 71 |
 
 ## Service inventory
 
@@ -30,6 +30,7 @@
 | connector-fhir-adapter | integration | real | real | real | absent | thin | absent | real | internal-only |
 | costing-engine-service | enterprise | real | real | real | real | real | n/a | real | real |
 | coverage-service | enterprise | real | real | real | real | real | real | real | real |
+| daidzai-service | experience | real | real | real | real | real | n/a | real | real |
 | credential-verification-service | enterprise | real | real | real | real | real | n/a | real | real |
 | data-access-governance-service | data | real | real | real | real | real | n/a | real | real |
 | data-governance-service | data | real | real | real | real | real | n/a | real | real |

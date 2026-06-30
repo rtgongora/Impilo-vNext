@@ -1,9 +1,9 @@
 {
-  "total_discovered": 146,
+  "total_discovered": 147,
   "by_plane": {
     "data": 12,
     "integration": 46,
-    "enterprise": 16,
+    "enterprise": 17,
     "experience": 31,
     "clinical": 19,
     "registry_spine": 1,
@@ -12,14 +12,14 @@
     "registry": 7
   },
   "by_classification": {
-    "wave_sequenced_full_boot": 98,
+    "wave_sequenced_full_boot": 99,
     "external_dependency": 9,
     "required_full_boot": 22,
     "internal_package": 12,
     "deprecated_retired": 5
   },
   "by_image_strategy": {
-    "shared-dockerfile-template": 70,
+    "shared-dockerfile-template": 71,
     "not-required-generated-client": 9,
     "jib": 20,
     "buildpacks": 19,
@@ -140,6 +140,7 @@
     "tuso-service",
     "ubomi-service",
     "varapi-service",
+    "vashandi-workforce-service",
     "vito-service",
     "wellness-service",
     "workflow-service",
@@ -152,8 +153,8 @@
     "postgres",
     "redis"
   ],
-  "full_boot_pods_total": 98,
-  "full_boot_pods_ready": 98,
+  "full_boot_pods_total": 99,
+  "full_boot_pods_ready": 99,
   "full_boot_pods_crashloop": 0,
   "full_boot_pods_pending": 0,
   "healthy_required_estimate": 22,
@@ -186,9 +187,9 @@
   "full_boot_reason": "images, helm, and runtime healthy",
   "estate_status": "FAIL",
   "estate_reason": "runtime image truth: 91 stale non-exempt service(s)",
-  "runtime_estate_total": 91,
-  "runtime_estate_ready": 91,
-  "runtime_estate_deployed": 91,
+  "runtime_estate_total": 92,
+  "runtime_estate_ready": 92,
+  "runtime_estate_deployed": 92,
   "runtime_estate_missing": [],
   "runtime_estate_missing_count": 0,
   "estate_stale_services": [
