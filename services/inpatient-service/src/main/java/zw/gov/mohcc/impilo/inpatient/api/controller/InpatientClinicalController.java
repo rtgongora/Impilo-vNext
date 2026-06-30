@@ -15,11 +15,14 @@ public class InpatientClinicalController {
 
     private final InpatientClinicalService clinicalService;
     private final zw.gov.mohcc.impilo.inpatient.core.InpatientSafetyService safetyService;
+    private final zw.gov.mohcc.impilo.inpatient.core.DischargeSummaryService dischargeSummaryService;
 
     public InpatientClinicalController(InpatientClinicalService clinicalService,
-                                       zw.gov.mohcc.impilo.inpatient.core.InpatientSafetyService safetyService) {
+                                       zw.gov.mohcc.impilo.inpatient.core.InpatientSafetyService safetyService,
+                                       zw.gov.mohcc.impilo.inpatient.core.DischargeSummaryService dischargeSummaryService) {
         this.clinicalService = clinicalService;
         this.safetyService = safetyService;
+        this.dischargeSummaryService = dischargeSummaryService;
     }
 
     @GetMapping("/care-plans")
@@ -288,5 +291,22 @@ public class InpatientClinicalController {
         String note = body == null ? null : String.valueOf(body.getOrDefault("note", body.get("response_note")));
         var esc = safetyService.respond(escalationId, note);
         return Map.of("id", esc.getEscalationId().toString(), "status", esc.getStatus());
+    }
+
+    // ── Discharge summary (gated on clearance completion, FHIR Composition → Butano) ──────────
+
+    @PostMapping("/discharge-summary")
+    public Map<String, Object> saveDischargeSummary(@RequestBody Map<String, Object> body) {
+        return dischargeSummaryService.saveDraft(body);
+    }
+
+    @GetMapping("/discharge-summary")
+    public Map<String, Object> getDischargeSummary(@RequestParam UUID encounterId) {
+        return dischargeSummaryService.get(encounterId);
+    }
+
+    @PostMapping("/discharge-summary/{encounterId}/finalise")
+    public Map<String, Object> finaliseDischargeSummary(@PathVariable UUID encounterId) {
+        return dischargeSummaryService.finalise(encounterId);
     }
 }
