@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-nati
 import { Ionicons } from "@expo/vector-icons";
 import { Screen, Header } from "@impilo/mobile-design-system";
 import { WalletOverviewSection } from "./WalletOverviewSection";
+import { MarketplaceStoreSection } from "./MarketplaceStoreSection";
 import { ProfileSection } from "./ProfileSection";
 import { AppointmentsSection } from "./AppointmentsSection";
 import { BookingsSection } from "./BookingsSection";
@@ -94,6 +95,7 @@ type PersonalTab =
   | "rito-track"
   | "prod-ready"
   | "madi-donor"
+  | "marketplace-store"
   | "impilo-live";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
@@ -142,12 +144,14 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "verify", label: "Verify", icon: "shield-checkmark" },
   { id: "delegated-pickup", label: "Pickup", icon: "car" },
   { id: "nhume-track", label: "Track Delivery", icon: "navigate" },
+  { id: "marketplace-store", label: "Marketplace", icon: "storefront" },
   { id: "privacy", label: "Privacy", icon: "lock-closed" },
   { id: "terms", label: "Terms", icon: "document-text" },
 ];
 
 const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
   "wallet-home": WalletOverviewSection,
+  "marketplace-store": MarketplaceStoreSection,
   profile: ProfileSection,
   "health-id": HealthIdSection,
   allergies: AllergiesSection,
