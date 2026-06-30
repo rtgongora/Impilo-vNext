@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LoadingSpinner, ErrorState } from "@impilo/mobile-design-system";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPersonWalletOverview } from "../../services/personHealthWalletService";
+import { NompiloGuidanceSection } from "./NompiloGuidanceSection";
 import { appStore } from "../../stores/appStore";
 
 /**
@@ -143,6 +144,11 @@ export function WalletOverviewSection() {
           ))}
         </View>
       ) : null}
+
+      {/* Nompilo deepens the wallet next-steps with config-driven contextual guidance:
+          locked-state explainers, route-to-owner CTAs, Khuluma follow-ups, and dismissal.
+          Mirrors the web NompiloContextualGuidance panel for web↔mobile parity. */}
+      <NompiloGuidanceSection routePath="/citizen/wallet" />
 
       <View style={styles.grid}>
         {cards.map((c) => (
