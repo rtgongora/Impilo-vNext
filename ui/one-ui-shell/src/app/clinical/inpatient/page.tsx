@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  AlertTriangle,
   BedDouble,
   ClipboardList,
   DoorOpen,
@@ -38,15 +39,21 @@ const INPATIENT_MODULES = [
     icon: Stethoscope,
   },
   {
+    label: "Escalations",
+    description: "Early-warning deterioration escalations",
+    href: "/clinical/inpatient/escalations",
+    icon: AlertTriangle,
+  },
+  {
     label: "Bed admin",
     description: "Capacity configuration",
     href: "/beds",
     icon: Users,
   },
   {
-    label: "Discharge",
-    description: "Discharge planning and summaries",
-    href: "/clinical/inpatient/admissions",
+    label: "Discharge board",
+    description: "Clearance-gated discharge planning and summaries",
+    href: "/clinical/inpatient/discharge-board",
     icon: DoorOpen,
   },
 ];
@@ -57,6 +64,8 @@ const INPATIENT_TABS = [
   { label: "Ward board", href: "/clinical/inpatient/ward-board" },
   { label: "Nursing", href: "/clinical/inpatient/nursing" },
   { label: "Rounds", href: "/clinical/inpatient/rounds" },
+  { label: "Escalations", href: "/clinical/inpatient/escalations" },
+  { label: "Discharge", href: "/clinical/inpatient/discharge-board" },
 ];
 
 export default function InpatientOverviewPage() {
