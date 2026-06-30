@@ -174,6 +174,93 @@ public class MsikaServiceClient {
         return restTemplate.getForEntity(url, String.class);
     }
 
+    // ── Storefront lane (V006): listings + storefronts ──────────────────────
+
+    public ResponseEntity<String> searchListings(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/listings/search")
+                .queryParams(queryParams)
+                .toUriString();
+        log.info("MSIKA: searching listings params={}", queryParams.keySet());
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> getListing(String listingId) {
+        return restTemplate.getForEntity(baseUrl + "/v1/listings/" + listingId, String.class);
+    }
+
+    public ResponseEntity<String> myFavourites() {
+        return restTemplate.getForEntity(baseUrl + "/v1/listings/favourites", String.class);
+    }
+
+    public ResponseEntity<String> favourite(String listingId) {
+        HttpHeaders headers = new HttpHeaders();
+        return restTemplate.exchange(baseUrl + "/v1/listings/" + listingId + "/favourite",
+                HttpMethod.PUT, new HttpEntity<>(headers), String.class);
+    }
+
+    public ResponseEntity<String> unfavourite(String listingId) {
+        return restTemplate.exchange(baseUrl + "/v1/listings/" + listingId + "/favourite",
+                HttpMethod.DELETE, HttpEntity.EMPTY, String.class);
+    }
+
+    public ResponseEntity<String> createListing(String requestBody) {
+        return postJson(baseUrl + "/v1/listings", requestBody);
+    }
+
+    public ResponseEntity<String> updateListing(String listingId, String requestBody) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return restTemplate.exchange(baseUrl + "/v1/listings/" + listingId, HttpMethod.PATCH,
+                new HttpEntity<>(requestBody, headers), String.class);
+    }
+
+    public ResponseEntity<String> submitListing(String listingId) {
+        return postWithoutBody(baseUrl + "/v1/listings/" + listingId + "/submit", "Submitting listing");
+    }
+
+    public ResponseEntity<String> publishListing(String listingId) {
+        return postWithoutBody(baseUrl + "/v1/listings/" + listingId + "/publish", "Publishing listing");
+    }
+
+    public ResponseEntity<String> unpublishListing(String listingId) {
+        return postWithoutBody(baseUrl + "/v1/listings/" + listingId + "/unpublish", "Unpublishing listing");
+    }
+
+    public ResponseEntity<String> approveListing(String listingId, String requestBody) {
+        return postJson(baseUrl + "/v1/listings/" + listingId + "/approve", requestBody);
+    }
+
+    public ResponseEntity<String> rejectListing(String listingId, String requestBody) {
+        return postJson(baseUrl + "/v1/listings/" + listingId + "/reject", requestBody);
+    }
+
+    public ResponseEntity<String> suspendListing(String listingId, String requestBody) {
+        return postJson(baseUrl + "/v1/listings/" + listingId + "/suspend", requestBody);
+    }
+
+    public ResponseEntity<String> moderationQueue(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/listings/moderation/queue")
+                .queryParams(queryParams)
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> listingsForSeller(String sellerType, String sellerId) {
+        return restTemplate.getForEntity(baseUrl + "/v1/listings/seller/" + sellerType + "/" + sellerId, String.class);
+    }
+
+    public ResponseEntity<String> createStorefront(String requestBody) {
+        return postJson(baseUrl + "/v1/storefronts", requestBody);
+    }
+
+    public ResponseEntity<String> verifyStorefront(String storefrontId, String requestBody) {
+        return postJson(baseUrl + "/v1/storefronts/" + storefrontId + "/verify", requestBody);
+    }
+
+    public ResponseEntity<String> getStorefront(String storefrontId) {
+        return restTemplate.getForEntity(baseUrl + "/v1/storefronts/" + storefrontId, String.class);
+    }
+
     private ResponseEntity<String> postJson(String url, String requestBody) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
