@@ -22,6 +22,16 @@
 - **BFF is stateless.** experience-bff is composition/orchestration only — persist in a sovereign service, never the BFF.
 - **Append, don't rewrite.** Each completed workstream appends its row below. Do not edit other rows.
 
+## Checkpoint & Anti-Hallucination Protocol (MANDATORY for every pop-out)
+
+Two background agents have already lost in-process state on process exit. Work so it survives.
+
+1. **Per-chunk commit + push.** Break the workstream into small named chunks (e.g. discovery → schema → service → controller → BFF → each web surface → mobile → tests → policy → docs). After EACH chunk: `git commit` **and** `git push origin feature/<name>`. Never batch to the end. A death then loses ≤1 in-progress chunk.
+2. **Filesystem-overlay defense.** The Write tool can land files in a sparse overlay Bash can't see, on the wrong branch — producing FALSE "BUILD SUCCESS". After writing any file, confirm via Bash (`git status`/`ls`) it exists in the Bash-visible tree BEFORE trusting any build. If Write-tool files don't show in `git status`, author via Bash heredoc and do all compile/test/commit/push in that one tree.
+3. **Never report an unrun number.** Only state a test/build result you actually ran THIS session on the real tree; quote the literal `Tests run: N` / `PASS: N/N` / tsc lines. If not run, write **NOT RUN** — never estimate or assume.
+4. **Cite before asserting.** Before claiming ownership / "already exists" / "not implemented" / a negative, cite the grep/read that proves it (SoR-first).
+5. **Coordinator re-verifies before merge.** The coordinator independently re-runs each agent's key tests (mvn / OPA / runtime-prove / tsc) on the real tree and never merges on report alone — because of (2)+(3), self-reports are not trusted.
+
 ## Canonical SoR reuse map (who owns what — extend these)
 
 person/client identity, profile, relationships, corrections → **Vito** · Health-ID/anchor + trust/assurance/LoA →
