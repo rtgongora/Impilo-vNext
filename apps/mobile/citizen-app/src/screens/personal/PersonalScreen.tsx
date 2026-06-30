@@ -15,6 +15,7 @@ import { RemindersScreen } from "./RemindersScreen";
 import { HealthTimelineScreen } from "./HealthTimelineScreen";
 import { HealthIdSection } from "./HealthIdSection";
 import { WellnessSection } from "./WellnessSection";
+import { WellnessJourneysSection } from "./WellnessJourneysSection";
 import { WalletSection } from "./WalletSection";
 import { EmergencySOSSection } from "./EmergencySOSSection";
 import { MonitoringSection } from "./MonitoringSection";
@@ -66,6 +67,7 @@ type PersonalTab =
   | "reminders"
   | "timeline"
   | "wellness"
+  | "journeys"
   | "finance"
   | "challenges"
   | "programs"
@@ -114,6 +116,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "reminders", label: "Reminders", icon: "alarm" },
   { id: "timeline", label: "Timeline", icon: "time" },
   { id: "wellness", label: "Wellness", icon: "fitness" },
+  { id: "journeys", label: "Journeys", icon: "trail-sign" },
   { id: "madi-donor", label: "Blood Donor", icon: "heart" },
   { id: "impilo-live", label: "Impilo Live", icon: "radio" },
   { id: "prod-ready", label: "Prod Ready", icon: "rocket" },
@@ -161,6 +164,7 @@ const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
   reminders: RemindersScreen,
   timeline: HealthTimelineScreen,
   wellness: WellnessSection,
+  journeys: WellnessJourneysSection,
   "madi-donor": MadiDonorHubScreen,
   "impilo-live": LiveDiscoverScreen,
   finance: FinanceSection,

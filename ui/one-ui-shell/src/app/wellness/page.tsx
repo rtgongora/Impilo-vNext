@@ -14,6 +14,7 @@ import Link from "next/link";
 import {
   Sparkles, Target, BookOpen, CalendarCheck, Activity,
   UtensilsCrossed, Moon, Users2, Trophy, MapPin, HeartHandshake, LayoutDashboard, Package,
+  Route, Stethoscope,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -29,8 +30,10 @@ const SECTIONS = [
   { href: "/wellness/challenges", label: "Challenges", description: "Wellness challenges, achievements, and progress", Icon: Trophy, color: "bg-warning-soft text-amber-600" },
   { href: "/wellness/routes", label: "Routes & Places", description: "Find safe places, routes, and parks for exercise", Icon: MapPin, color: "bg-teal-50 text-teal-600" },
   { href: "/wellness/coaching", label: "Coaching & Habits", description: "Coaching, motivation, and habit support", Icon: HeartHandshake, color: "bg-pink-50 text-pink-600" },
+  { href: "/wellness/plans", label: "Plans & Journeys", description: "Structured prevention journeys — enrol and track your progress", Icon: Route, color: "bg-emerald-50 text-emerald-600" },
+  { href: "/wellness/care", label: "Connect to Care", description: "Route a wellness concern safely to the right care service", Icon: Stethoscope, color: "bg-rose-50 text-rose-600" },
   { href: "/wellness/programs", label: "Prevention Programs", description: "Enroll in wellness and prevention programmes", Icon: BookOpen, color: "bg-success-soft text-primary" },
-  { href: "/wellness/commodities", label: "Wellness Commodities", description: "Inventory-backed programme commodities and stock", Icon: Package, color: "bg-sky-50 text-sky-600" },
+  { href: "/wellness/commodities", label: "Programme commodities (Dura)", description: "Stock for wellness programmes is owned by Dura, not Simba", Icon: Package, color: "bg-sky-50 text-sky-600" },
   { href: "/wellness/screenings", label: "Screening Schedule", description: "View due and upcoming health screenings", Icon: CalendarCheck, color: "bg-cyan-50 text-cyan-600" },
 ];
 

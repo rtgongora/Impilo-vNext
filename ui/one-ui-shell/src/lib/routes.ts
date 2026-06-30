@@ -440,7 +440,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/wellness/challenges", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Challenges", navLabel: "Challenges", navZone: "life" },
   { path: "/wellness/routes", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Routes & Places", navLabel: "Routes", navZone: "life" },
   { path: "/wellness/coaching", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Coaching & Habits", navLabel: "Coaching", navZone: "life" },
-  { path: "/wellness/commodities", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Commodities", navLabel: "Commodities", navZone: "life" },
+  { path: "/wellness/plans", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Plans & Journeys", navLabel: "Journeys", navZone: "life" },
+  { path: "/wellness/care", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Connect to Care", navLabel: "Care linkage", navZone: "life" },
+  { path: "/wellness/commodities", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Programme commodities (Dura)", navLabel: "Commodities (Dura)", navZone: "life" },
   { path: "/wellness/community", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Community", navLabel: "Community", navZone: "life" },
   { path: "/social", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Social Timeline", navLabel: "Social", navZone: "life" },
   { path: "/social/drafts", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Draft Posts", navLabel: "Drafts", navZone: "life" },
@@ -757,7 +759,7 @@ export const ROUTES: RouteDefinition[] = [
 // Person Health Wallet (Jun 2026): 8 routes under /citizen/wallet for the unified person anchor
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
-export const EXPECTED_ROUTE_COUNT = 640;
+export const EXPECTED_ROUTE_COUNT = 642;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -222,6 +222,53 @@ public class SimbaServiceClient {
         return extractData(response);
     }
 
+    // ── Wellness DEPTH: plans/journeys, habits, coaching, care linkage ───────────────
+
+    public JsonNode listPlans() {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/internal/v1/wellness/programs", JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listEnrollments(String cpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/wellness/enrollments")
+                .queryParam("person_cpid", cpid).encode().toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode enrollPlan(Map<String, Object> request) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/wellness/enrollments", request, JsonNode.class));
+    }
+
+    public JsonNode listHabitCheckIns(String cpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/wellness/habits/check-ins")
+                .queryParam("person_cpid", cpid).encode().toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode checkInHabit(Map<String, Object> request) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/wellness/habits/check-ins", request, JsonNode.class));
+    }
+
+    public JsonNode listCoaching(String cpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/wellness/coaching/relationships")
+                .queryParam("person_cpid", cpid).encode().toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode listCareLinkages(String cpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/wellness/care-linkages")
+                .queryParam("person_cpid", cpid).encode().toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode routeCare(Map<String, Object> request) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/wellness/care-linkages", request, JsonNode.class));
+    }
+
     private static String requirePersonCpidForMembership() {
         ServletRequestAttributes attrs =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
