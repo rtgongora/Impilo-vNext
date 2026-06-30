@@ -87,6 +87,23 @@ public class KhulumaBffController {
         return relay(khuluma.post("/conversations/" + id + "/links", body));
     }
 
+    // ── ops admin: escalations / delivery adapters / on-call (W4/W6/W7) ─────────
+
+    @GetMapping("/escalations")
+    public ResponseEntity<JsonNode> escalationQueue() {
+        return relay(khuluma.get("/escalations", Map.of("queue", "true")));
+    }
+
+    @GetMapping("/delivery/adapters")
+    public ResponseEntity<JsonNode> deliveryAdapters() {
+        return relay(khuluma.get("/delivery/adapters", Map.of()));
+    }
+
+    @GetMapping("/on-call")
+    public ResponseEntity<JsonNode> onCallRoster() {
+        return relay(khuluma.get("/on-call", Map.of()));
+    }
+
     // ── messages ──────────────────────────────────────────────────────────────
 
     @GetMapping("/conversations/{id}/messages")

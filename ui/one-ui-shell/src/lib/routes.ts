@@ -247,6 +247,7 @@ export const ROUTES: RouteDefinition[] = [
   // â”€â”€ Zone: Admin / TSHEPO Governance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/admin", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Administration", navLabel: "Admin", navZone: "professional" },
   { path: "/admin/users", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Worker & Provider Access", navLabel: "Worker Access", navZone: "professional" },
+  { path: "/admin/comms-ops", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Comms Operations", navLabel: "Comms Ops", navZone: "professional" },
   { path: "/admin/users/[id]", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "User Details", navLabel: "User", navZone: "professional" },
   { path: "/admin/roles", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Role Management", navLabel: "Roles", navZone: "professional" },
   { path: "/admin/policies", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Policy Management", navLabel: "Policies", navZone: "professional" },
