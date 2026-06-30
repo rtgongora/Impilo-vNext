@@ -14,9 +14,15 @@ import java.util.UUID;
 public class InpatientClinicalController {
 
     private final InpatientClinicalService clinicalService;
+    private final zw.gov.mohcc.impilo.inpatient.core.InpatientSafetyService safetyService;
+    private final zw.gov.mohcc.impilo.inpatient.core.DischargeSummaryService dischargeSummaryService;
 
-    public InpatientClinicalController(InpatientClinicalService clinicalService) {
+    public InpatientClinicalController(InpatientClinicalService clinicalService,
+                                       zw.gov.mohcc.impilo.inpatient.core.InpatientSafetyService safetyService,
+                                       zw.gov.mohcc.impilo.inpatient.core.DischargeSummaryService dischargeSummaryService) {
         this.clinicalService = clinicalService;
+        this.safetyService = safetyService;
+        this.dischargeSummaryService = dischargeSummaryService;
     }
 
     @GetMapping("/care-plans")
@@ -257,5 +263,50 @@ public class InpatientClinicalController {
     @GetMapping("/emergency/{activationId}/phases")
     public List<Map<String, Object>> listResuscitationPhases(@PathVariable UUID activationId) {
         return clinicalService.listResuscitationPhases(activationId);
+    }
+
+    // ── Deterioration escalations (EWS-triggered) ───────────────────
+
+    @GetMapping("/escalations")
+    public List<Map<String, Object>> listEscalations(@RequestParam(required = false) String patientId,
+                                                     @RequestParam(required = false) UUID wardId) {
+        if (wardId != null) {
+            return safetyService.listOpenForWard(wardId);
+        }
+        if (patientId != null) {
+            return safetyService.listForPatient(patientId);
+        }
+        return List.of();
+    }
+
+    @PostMapping("/escalations/{escalationId}/acknowledge")
+    public Map<String, Object> acknowledgeEscalation(@PathVariable UUID escalationId) {
+        var esc = safetyService.acknowledge(escalationId);
+        return Map.of("id", esc.getEscalationId().toString(), "status", esc.getStatus());
+    }
+
+    @PostMapping("/escalations/{escalationId}/respond")
+    public Map<String, Object> respondEscalation(@PathVariable UUID escalationId,
+                                                 @RequestBody(required = false) Map<String, Object> body) {
+        String note = body == null ? null : String.valueOf(body.getOrDefault("note", body.get("response_note")));
+        var esc = safetyService.respond(escalationId, note);
+        return Map.of("id", esc.getEscalationId().toString(), "status", esc.getStatus());
+    }
+
+    // ── Discharge summary (gated on clearance completion, FHIR Composition → Butano) ──────────
+
+    @PostMapping("/discharge-summary")
+    public Map<String, Object> saveDischargeSummary(@RequestBody Map<String, Object> body) {
+        return dischargeSummaryService.saveDraft(body);
+    }
+
+    @GetMapping("/discharge-summary")
+    public Map<String, Object> getDischargeSummary(@RequestParam UUID encounterId) {
+        return dischargeSummaryService.get(encounterId);
+    }
+
+    @PostMapping("/discharge-summary/{encounterId}/finalise")
+    public Map<String, Object> finaliseDischargeSummary(@PathVariable UUID encounterId) {
+        return dischargeSummaryService.finalise(encounterId);
     }
 }

@@ -151,3 +151,119 @@ export function useTransferPatient() {
     },
   });
 }
+
+// ── Deterioration escalations (WS#6) ───────────────────────────────────────
+
+export interface InpatientEscalation {
+  escalation_id?: string;
+  id?: string;
+  subject_cpid?: string;
+  ward_id?: string | null;
+  total_score?: number;
+  risk_level?: string;
+  status?: string;
+  response_due_at?: string | null;
+  raised_at?: string | null;
+}
+
+/** Open deterioration escalations for a ward, or all for a patient. */
+export function useEscalations(args: { patientId?: string; wardId?: string } = {}) {
+  const { patientId, wardId } = args;
+  return useQuery<ApiResponse<InpatientEscalation[]>>({
+    queryKey: ["inpatient-escalations", patientId ?? null, wardId ?? null],
+    queryFn: () => {
+      const sp = new URLSearchParams();
+      if (patientId) sp.set("patientId", patientId);
+      if (wardId) sp.set("wardId", wardId);
+      const qs = sp.toString();
+      return apiClient.get<ApiResponse<InpatientEscalation[]>>(
+        `/internal/v1/inpatient/escalations${qs ? `?${qs}` : ""}`,
+      );
+    },
+    enabled: !!patientId || !!wardId,
+  });
+}
+
+export function useAcknowledgeEscalation() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<unknown>, unknown, { escalationId: string }>({
+    mutationFn: ({ escalationId }) =>
+      apiClient.post<ApiResponse<unknown>>(
+        `/internal/v1/inpatient/escalations/${escalationId}/acknowledge`,
+        {},
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["inpatient-escalations"] });
+    },
+  });
+}
+
+export function useRespondEscalation() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<unknown>, unknown, { escalationId: string; note?: string }>({
+    mutationFn: ({ escalationId, note }) =>
+      apiClient.post<ApiResponse<unknown>>(
+        `/internal/v1/inpatient/escalations/${escalationId}/respond`,
+        { note: note ?? "" },
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["inpatient-escalations"] });
+    },
+  });
+}
+
+// ── Discharge summary (WS#6) ───────────────────────────────────────────────
+
+export interface DischargeSummary {
+  id?: string | null;
+  encounter_id?: string;
+  subject_cpid?: string;
+  status?: string;
+  discharge_diagnosis?: string | null;
+  discharge_disposition?: string | null;
+  hospital_course?: string | null;
+  medication_reconciliation?: string | null;
+  discharge_medications?: string | null;
+  follow_up?: string | null;
+  referrals?: string | null;
+  fhir_composition?: string | null;
+  finalised_by?: string | null;
+  finalised_at?: string | null;
+}
+
+export function useDischargeSummary(encounterId?: string | null) {
+  return useQuery<ApiResponse<DischargeSummary>>({
+    queryKey: ["inpatient-discharge-summary", encounterId ?? null],
+    queryFn: () =>
+      apiClient.get<ApiResponse<DischargeSummary>>(
+        `/internal/v1/inpatient/discharge-summary?encounterId=${encounterId}`,
+      ),
+    enabled: !!encounterId,
+  });
+}
+
+export function useSaveDischargeSummary() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<DischargeSummary>, unknown, Record<string, unknown>>({
+    mutationFn: (body) =>
+      apiClient.post<ApiResponse<DischargeSummary>>("/internal/v1/inpatient/discharge-summary", body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["inpatient-discharge-summary"] });
+    },
+  });
+}
+
+export function useFinaliseDischargeSummary() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<DischargeSummary>, unknown, { encounterId: string }>({
+    mutationFn: ({ encounterId }) =>
+      apiClient.post<ApiResponse<DischargeSummary>>(
+        `/internal/v1/inpatient/discharge-summary/${encounterId}/finalise`,
+        {},
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["inpatient-discharge-summary"] });
+      void queryClient.invalidateQueries({ queryKey: ["inpatient-admissions"] });
+    },
+  });
+}

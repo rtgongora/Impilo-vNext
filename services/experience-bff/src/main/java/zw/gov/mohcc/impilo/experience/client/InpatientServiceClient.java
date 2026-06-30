@@ -576,6 +576,50 @@ public class InpatientServiceClient {
         return response.getBody();
     }
 
+
+    // ── Deterioration escalations (WS#6) ─────────────────────────────
+
+    public JsonNode listEscalations(String patientId, String wardId) {
+        org.springframework.web.util.UriComponentsBuilder b =
+                org.springframework.web.util.UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/escalations");
+        if (patientId != null && !patientId.isBlank()) b.queryParam("patientId", patientId);
+        if (wardId != null && !wardId.isBlank()) b.queryParam("wardId", wardId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(b.encode().toUriString(), JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode acknowledgeEscalation(String escalationId) {
+        String url = baseUrl + "/internal/v1/escalations/" + escalationId + "/acknowledge";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode respondEscalation(String escalationId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/escalations/" + escalationId + "/respond";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    // ── Discharge summary (WS#6) ─────────────────────────────────────
+
+    public JsonNode saveDischargeSummary(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/discharge-summary";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode getDischargeSummary(String encounterId) {
+        String url = baseUrl + "/internal/v1/discharge-summary?encounterId=" + encounterId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode finaliseDischargeSummary(String encounterId) {
+        String url = baseUrl + "/internal/v1/discharge-summary/" + encounterId + "/finalise";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return response.getBody();
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

@@ -12,6 +12,7 @@ import {
   recordResuscitation, recordApgar, fetchApgar, recordEWS, fetchEWS,
   createAdmission, listAdmissions, startWardRound, addRoundEntry, listWardRounds,
   recordObservation, fetchObservations, requestTransfer, listTransfers,
+  listEscalations, acknowledgeEscalation, respondEscalation, type InpatientEscalation,
 } from "../../services/inpatientService";
 import { useEncounterStore } from "../../stores/encounterStore";
 import { NEWS2ScoringScreen } from "./NEWS2ScoringScreen";
@@ -27,13 +28,13 @@ import { CriticalEventScreen } from "./CriticalEventScreen";
 import { WardAlertsScreen } from "./WardAlertsScreen";
 import { TheatreProcedureScreen } from "./TheatreProcedureScreen";
 
-type InpatientTab = "care" | "fluid" | "vitals" | "emergency" | "ed" | "resus" | "trauma" | "ews" | "apgar" | "theatre" | "admit" | "rounds" | "obs" | "transfer" | "handoff" | "alerts" | "clearance";
+type InpatientTab = "care" | "fluid" | "vitals" | "emergency" | "ed" | "resus" | "trauma" | "ews" | "escalations" | "apgar" | "theatre" | "admit" | "rounds" | "obs" | "transfer" | "handoff" | "alerts" | "clearance";
 
 const TABS: { id: InpatientTab; label: string }[] = [
   { id: "care", label: "Care Plans" }, { id: "fluid", label: "Fluid I/O" },
   { id: "vitals", label: "Vitals" }, { id: "emergency", label: "Emergency" },
   { id: "ed", label: "ED Visit" }, { id: "resus", label: "Resus" }, { id: "trauma", label: "Trauma" },
-  { id: "ews", label: "NEWS2" },   { id: "apgar", label: "APGAR" },
+  { id: "ews", label: "NEWS2" },   { id: "escalations", label: "Escalations" },   { id: "apgar", label: "APGAR" },
   { id: "theatre", label: "Theatre" },
   { id: "admit", label: "Admissions" }, { id: "rounds", label: "Rounds" },
   { id: "obs", label: "Observations" }, { id: "transfer", label: "Transfers" },
@@ -59,6 +60,7 @@ export function InpatientScreen() {
         {tab === "emergency" && <CriticalEventScreen />}
         {tab === "ed" && <EdVisitScreen />}
         {tab === "ews" && <NEWS2ScoringScreen />}
+        {tab === "escalations" && <EscalationsPanel />}
         {tab === "admit" && <AdmissionsPanel />}
         {tab === "rounds" && <WardRoundsPanel />}
         {tab === "obs" && <ObservationsPanel />}
@@ -243,6 +245,57 @@ function EWSPanel() {
           <Text style={s.meta}>{sc.recorded_at ? new Date(sc.recorded_at as string).toLocaleString() : ""}</Text>
         </View>
       ))}
+    </View>
+  );
+}
+
+/**
+ * EscalationsPanel — WS#6 deterioration escalations awaiting clinician response.
+ * Scoped to a ward; acknowledge + respond are audited safety actions (BFF → inpatient-service).
+ */
+function EscalationsPanel() {
+  const [wardId, setWardId] = useState("");
+  const qc = useQueryClient();
+  const { data: escalations = [], isLoading } = useQuery({
+    queryKey: ["escalations", wardId],
+    queryFn: () => listEscalations({ wardId }),
+    enabled: !!wardId,
+  });
+  const ack = useMutation({
+    mutationFn: (id: string) => acknowledgeEscalation(id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["escalations"] }); Alert.alert("Acknowledged"); },
+  });
+  const respond = useMutation({
+    mutationFn: (id: string) => respondEscalation(id, "Reviewed at bedside"),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["escalations"] }); Alert.alert("Responded"); },
+  });
+  const riskColors: Record<string, string> = { LOW: "#3B82F6", MEDIUM: "#F59E0B", HIGH: "#DC2626" };
+  return (
+    <View style={s.section}>
+      <Text style={s.title}>Deterioration Escalations</Text>
+      <TextInput style={s.input} placeholder="Ward ID" value={wardId} onChangeText={setWardId} />
+      {!wardId ? (
+        <Text style={s.meta}>Enter a ward ID to load open escalations.</Text>
+      ) : isLoading ? (
+        <LoadingSpinner />
+      ) : (escalations as InpatientEscalation[]).length === 0 ? (
+        <Text style={s.meta}>No open escalations on this ward.</Text>
+      ) : (
+        (escalations as InpatientEscalation[]).map((e) => {
+          const id = e.escalation_id ?? e.id ?? "";
+          return (
+            <View key={id} style={[s.card, { borderLeftColor: riskColors[String(e.risk_level)] ?? "#6B7280", borderLeftWidth: 4 }]}>
+              <Text style={s.cardTitle}>EWS {e.total_score} — {e.risk_level}</Text>
+              <Text style={s.meta}>Patient {e.subject_cpid} · {e.status}</Text>
+              {e.response_due_at ? <Text style={s.meta}>Response due {new Date(e.response_due_at).toLocaleString()}</Text> : null}
+              <View style={s.row}>
+                <Button title="Acknowledge" size="sm" variant="outline" onPress={() => ack.mutate(id)} disabled={ack.isPending} />
+                <Button title="Respond" size="sm" onPress={() => respond.mutate(id)} disabled={respond.isPending} />
+              </View>
+            </View>
+          );
+        })
+      )}
     </View>
   );
 }

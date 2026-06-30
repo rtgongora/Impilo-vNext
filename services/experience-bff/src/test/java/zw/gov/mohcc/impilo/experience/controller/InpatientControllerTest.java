@@ -89,6 +89,34 @@ class InpatientControllerTest {
         assertEquals("admission-demo-admission", meta.get("core_transaction_id"));
     }
 
+
+    @Test
+    void listEscalations_returnsData() {
+        InpatientController controller = new InpatientController(new StubInpatientClient());
+        ResponseEntity<Map<String, Object>> response = controller.listEscalations(
+                "req-e", "corr-e", "CPID-ZW-00001", null);
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody().get("data"));
+    }
+
+    @Test
+    void respondEscalation_returnsResponded() {
+        InpatientController controller = new InpatientController(new StubInpatientClient());
+        ResponseEntity<Map<String, Object>> response = controller.respondEscalation(
+                "esc-1", "req-e", "corr-e", Map.of("note", "Reviewed"));
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("RESPONDED", ((JsonNode) response.getBody().get("data")).path("status").asText());
+    }
+
+    @Test
+    void finaliseDischargeSummary_returnsFinalised() {
+        InpatientController controller = new InpatientController(new StubInpatientClient());
+        ResponseEntity<Map<String, Object>> response = controller.finaliseDischargeSummary(
+                "enc-1", "req-d", "corr-d");
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("FINALISED", ((JsonNode) response.getBody().get("data")).path("status").asText());
+    }
+
     private static final class StubInpatientClient extends InpatientServiceClient {
         StubInpatientClient() {
             super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints(), mapper);
@@ -129,6 +157,38 @@ class InpatientControllerTest {
             return mapper.createObjectNode()
                     .put("id", admissionRef)
                     .put("status", "DISCHARGED");
+        }
+
+        @Override
+        public JsonNode listEscalations(String patientId, String wardId) {
+            ArrayNode rows = mapper.createArrayNode();
+            rows.addObject().put("id", "esc-1").put("status", "RAISED").put("total_score", 7);
+            return rows;
+        }
+
+        @Override
+        public JsonNode acknowledgeEscalation(String escalationId) {
+            return mapper.createObjectNode().put("id", escalationId).put("status", "ACKNOWLEDGED");
+        }
+
+        @Override
+        public JsonNode respondEscalation(String escalationId, Map<String, Object> body) {
+            return mapper.createObjectNode().put("id", escalationId).put("status", "RESPONDED");
+        }
+
+        @Override
+        public JsonNode saveDischargeSummary(Map<String, Object> body) {
+            return mapper.createObjectNode().put("id", "ds-1").put("status", "DRAFT");
+        }
+
+        @Override
+        public JsonNode getDischargeSummary(String encounterId) {
+            return mapper.createObjectNode().put("encounter_id", encounterId).put("status", "DRAFT");
+        }
+
+        @Override
+        public JsonNode finaliseDischargeSummary(String encounterId) {
+            return mapper.createObjectNode().put("encounter_id", encounterId).put("status", "FINALISED");
         }
     }
 }

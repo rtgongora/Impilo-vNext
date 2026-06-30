@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.*;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.*;
+import zw.gov.mohcc.impilo.inpatient.integration.InventoryConsumptionClient;
+import zw.gov.mohcc.impilo.inpatient.integration.OrosOrderClient;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.time.LocalDate;
@@ -66,6 +68,10 @@ public class InpatientClinicalService {
     private final AdmissionRepository admissionRepository;
     private final TransferRepository transferRepository;
     private final ObjectMapper objectMapper;
+    private final InpatientSafetyService safetyService;
+    private final InventoryConsumptionClient inventoryConsumptionClient;
+    private final OrosOrderClient orosOrderClient;
+    private final EventOutboxRepository outboxRepository;
 
     private static final List<String> CLEARANCE_TYPES = List.of(
             "CLINICAL", "NURSING", "PHARMACY", "LABORATORY", "IMAGING",
@@ -90,7 +96,11 @@ public class InpatientClinicalService {
             ResuscitationPhaseRepository resuscitationPhaseRepository,
             AdmissionRepository admissionRepository,
             TransferRepository transferRepository,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            InpatientSafetyService safetyService,
+            InventoryConsumptionClient inventoryConsumptionClient,
+            OrosOrderClient orosOrderClient,
+            EventOutboxRepository outboxRepository) {
         this.carePlanRepository = carePlanRepository;
         this.goalRepository = goalRepository;
         this.interventionRepository = interventionRepository;
@@ -110,6 +120,10 @@ public class InpatientClinicalService {
         this.admissionRepository = admissionRepository;
         this.transferRepository = transferRepository;
         this.objectMapper = objectMapper;
+        this.safetyService = safetyService;
+        this.inventoryConsumptionClient = inventoryConsumptionClient;
+        this.orosOrderClient = orosOrderClient;
+        this.outboxRepository = outboxRepository;
     }
 
     private String patientCpid(Map<String, Object> body) {
@@ -482,12 +496,83 @@ public class InpatientClinicalService {
             mar.setDose(ClinicalPayloadMapper.str(body, "dose"));
             mar.setRoute(ClinicalPayloadMapper.str(body, "route"));
         }
+        // Five-rights safety check: right patient / drug / dose / route / time. We fail closed on the
+        // identity rights (patient + drug); dose/route/time are recorded for audit. A confirmation flag
+        // asserts the bedside check was done — its absence is a 400 (no silent administration).
+        String confirmedDrug = ClinicalPayloadMapper.str(body, "drugName", "drug_name");
+        if (confirmedDrug != null && mar.getDrugName() != null
+                && !confirmedDrug.equalsIgnoreCase(mar.getDrugName())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Five-rights drug mismatch: chart has '" + mar.getDrugName()
+                            + "' but administration confirmed '" + confirmedDrug + "'");
+        }
+        Object fiveRights = body.get("fiveRightsConfirmed");
+        if (fiveRights == null) {
+            fiveRights = body.get("five_rights_confirmed");
+        }
+        boolean confirmed = fiveRights == null
+                ? false
+                : (fiveRights instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(fiveRights)));
+        if (!confirmed) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "fiveRightsConfirmed is required (right patient/drug/dose/route/time)");
+        }
+
         mar.setStatus("ADMINISTERED");
         mar.setTimeGiven(OffsetDateTime.now().toLocalTime().toString().substring(0, 5));
         mar.setAdministeredBy(ClinicalPayloadMapper.str(body, "administeredBy", "administered_by"));
         mar.setNotes(ClinicalPayloadMapper.str(body, "notes"));
         mar = marEntryRepository.save(mar);
-        return Map.of("id", mar.getMarId().toString(), "status", "ADMINISTERED");
+
+        // Emit the administration event (audit + downstream). eMAR administration is the clinical SoR.
+        Map<String, Object> evt = new LinkedHashMap<>();
+        evt.put("mar_id", mar.getMarId().toString());
+        evt.put("subject_cpid", mar.getSubjectCpid());
+        evt.put("prescription_id", mar.getPrescriptionId());
+        evt.put("drug_name", mar.getDrugName());
+        evt.put("dose", mar.getDose());
+        evt.put("route", mar.getRoute());
+        evt.put("administered_by", mar.getAdministeredBy());
+        emitClinicalEvent("MEDICATION", mar.getMarId().toString(),
+                "inpatient.medication.administered", evt);
+
+        // Stock-consumption hook → inventory-service (Dura). Inpatient does NOT own stock; it records
+        // consumption against the ward store. Best-effort: an inventory outage must not block care.
+        String storeId = ClinicalPayloadMapper.str(body, "storeId", "store_id", "wardStoreId", "ward_store_id");
+        String itemCode = ClinicalPayloadMapper.str(body, "itemCode", "item_code", "inventoryItemCode");
+        Integer qty = ClinicalPayloadMapper.integer(body, "quantity", "qty");
+        boolean consumed = false;
+        if (storeId != null && itemCode != null && qty != null && qty > 0) {
+            consumed = inventoryConsumptionClient.recordEmarConsumption(
+                    storeId, itemCode, qty,
+                    mar.getPrescriptionId() != null ? mar.getPrescriptionId() : mar.getMarId().toString());
+        }
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("id", mar.getMarId().toString());
+        out.put("status", "ADMINISTERED");
+        out.put("stockConsumptionRecorded", consumed);
+        return out;
+    }
+
+    /** Emit a clinical-domain event onto the inpatient outbox (audit + downstream consumers). */
+    private void emitClinicalEvent(String aggregateType, String aggregateId, String eventType,
+                                   Map<String, Object> payload) {
+        EventOutboxEntity outbox = new EventOutboxEntity();
+        outbox.setAggregateType(aggregateType);
+        outbox.setAggregateId(aggregateId);
+        outbox.setTenantId(currentTenant().toString());
+        outbox.setPodId(System.getenv("HOSTNAME") != null ? System.getenv("HOSTNAME") : "local");
+        outbox.setCorrelationId(UUID.randomUUID().toString());
+        outbox.setEventType(eventType);
+        outbox.setSchemaVersion(1);
+        outbox.setOccurredAt(OffsetDateTime.now());
+        try {
+            outbox.setPayloadJson(objectMapper.writeValueAsString(payload));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialise clinical event", e);
+        }
+        outboxRepository.save(outbox);
     }
 
     private Map<String, Object> marRow(MarEntryEntity m) {
@@ -522,11 +607,35 @@ public class InpatientClinicalService {
         e.setTotalScore(total);
         String risk = total >= 7 ? "HIGH" : total >= 5 ? "MEDIUM" : total >= 1 ? "LOW" : "NONE";
         e.setRiskLevel(risk);
-        e.setEscalationRequired(total >= 5);
+        boolean escalate = total >= safetyService.escalationThreshold();
+        e.setEscalationRequired(escalate);
         e.setComponentsJson(ClinicalPayloadMapper.str(body, "components", "components_json"));
         e.setRecordedBy(ClinicalPayloadMapper.str(body, "recordedBy", "recorded_by"));
         e = ewsRepository.save(e);
-        return Map.of("id", e.getScoreId().toString(), "riskLevel", risk, "escalationRequired", e.isEscalationRequired());
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("id", e.getScoreId().toString());
+        result.put("riskLevel", risk);
+        result.put("escalationRequired", e.isEscalationRequired());
+
+        if (escalate) {
+            // Resolve ward/facility from the patient's active admission so the escalation lands on the
+            // right ward cockpit, then raise the deterioration escalation (ward alert + event + Rito timer).
+            UUID wardId = null;
+            UUID facilityId = e.getEncounterId() != null ? null : null;
+            List<AdmissionEntity> active = admissionRepository
+                    .findBySubjectCpidAndStatus(cpid, "ADMITTED").stream()
+                    .filter(a -> a.getTenantId().equals(currentTenant()))
+                    .toList();
+            if (!active.isEmpty()) {
+                wardId = active.get(0).getWardId();
+                facilityId = active.get(0).getFacilityId();
+            }
+            DeteriorationEscalationEntity esc = safetyService.raiseFromEws(e, wardId, facilityId);
+            result.put("escalationId", esc.getEscalationId().toString());
+            result.put("responseDueAt", esc.getResponseDueAt().toString());
+        }
+        return result;
     }
 
     public List<Map<String, Object>> getEws(String patientId) {

@@ -54,6 +54,33 @@ public class BedEntity {
     @Column(name = "occupied_at")
     private OffsetDateTime occupiedAt;
 
+    @Column(name = "gender_designation")
+    private String genderDesignation;
+
+    @Column(name = "isolation_capable", nullable = false)
+    private boolean isolationCapable = false;
+
+    @Column(name = "oxygen_available", nullable = false)
+    private boolean oxygenAvailable = true;
+
+    @Column(name = "monitoring_capable", nullable = false)
+    private boolean monitoringCapable = false;
+
+    @Column(name = "icu_capable", nullable = false)
+    private boolean icuCapable = false;
+
+    @Column(name = "requires_isolation", nullable = false)
+    private boolean requiresIsolation = false;
+
+    @Column(name = "requires_oxygen", nullable = false)
+    private boolean requiresOxygen = false;
+
+    @Column(name = "requires_monitoring", nullable = false)
+    private boolean requiresMonitoring = false;
+
+    @Column(name = "requires_icu", nullable = false)
+    private boolean requiresIcu = false;
+
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
 
@@ -111,4 +138,22 @@ public class BedEntity {
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getGenderDesignation() { return genderDesignation; }
+    public void setGenderDesignation(String genderDesignation) { this.genderDesignation = genderDesignation; }
+    public boolean isIsolationCapable() { return isolationCapable; }
+    public void setIsolationCapable(boolean isolationCapable) { this.isolationCapable = isolationCapable; }
+    public boolean isOxygenAvailable() { return oxygenAvailable; }
+    public void setOxygenAvailable(boolean oxygenAvailable) { this.oxygenAvailable = oxygenAvailable; }
+    public boolean isMonitoringCapable() { return monitoringCapable; }
+    public void setMonitoringCapable(boolean monitoringCapable) { this.monitoringCapable = monitoringCapable; }
+    public boolean isIcuCapable() { return icuCapable; }
+    public void setIcuCapable(boolean icuCapable) { this.icuCapable = icuCapable; }
+    public boolean isRequiresIsolation() { return requiresIsolation; }
+    public void setRequiresIsolation(boolean requiresIsolation) { this.requiresIsolation = requiresIsolation; }
+    public boolean isRequiresOxygen() { return requiresOxygen; }
+    public void setRequiresOxygen(boolean requiresOxygen) { this.requiresOxygen = requiresOxygen; }
+    public boolean isRequiresMonitoring() { return requiresMonitoring; }
+    public void setRequiresMonitoring(boolean requiresMonitoring) { this.requiresMonitoring = requiresMonitoring; }
+    public boolean isRequiresIcu() { return requiresIcu; }
+    public void setRequiresIcu(boolean requiresIcu) { this.requiresIcu = requiresIcu; }
 }

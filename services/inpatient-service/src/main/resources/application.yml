@@ -54,6 +54,17 @@ inpatient:
     poll-interval-ms: 2000
   v11:
     emit-mode: ${INPATIENT_EMIT_MODE:DUAL}
+  integration:
+    inventory:
+      base-url: ${INVENTORY_BASE_URL:http://localhost:8098}
+      enabled: ${INPATIENT_INVENTORY_CONSUMPTION_ENABLED:true}
+    oros:
+      base-url: ${OROS_BASE_URL:http://localhost:8089}
+  ews:
+    # NEWS2 aggregate at/above which a deterioration escalation is raised
+    escalation-threshold: ${INPATIENT_EWS_ESCALATION_THRESHOLD:5}
+    # minutes within which a clinician must respond to a raised escalation before it is overdue (Rito)
+    response-due-minutes: ${INPATIENT_EWS_RESPONSE_DUE_MINUTES:15}
 
 management:
   endpoints:
