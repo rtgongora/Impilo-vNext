@@ -1011,6 +1011,168 @@ class PolicyEngineTest {
         assertEquals("DEVICE_BLOCKED", response.errorCode());
     }
 
+    // ════════════════════════════════════════════════════════════════════
+    // WS#5 GAP-1: Assets / Equipment policy rules (V026) at the gateway PDP.
+    // Mirrors the V026 seed shape — wildcard resource_type pinned by path_contains
+    // to /internal/v1/equipment (or /assets), min_loa>=2 on writes, DENY-wins for
+    // citizen / stock-as-asset / retire-by-cadre. The DB orders effect DESC so the
+    // DENY rules are presented to the engine first (as the live cache does).
+    // ════════════════════════════════════════════════════════════════════
+
+    /** An asset-domain request: actor type STAFF, given roles, on the supplied equipment/asset path. */
+    private static AuthzInternalRequest assetRequest(String path, String httpMethod,
+                                                     String action, List<String> roles,
+                                                     String actorType, String assuranceLevel) {
+        // resourceType = last path segment (what the gateway derives + caches on)
+        String norm = path.contains("?") ? path.substring(0, path.indexOf('?')) : path;
+        String resourceType = norm.substring(norm.lastIndexOf('/') + 1);
+        return new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, actorType, roles, "OPERATIONS",
+                DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
+                null, httpMethod, path, action, resourceType, null,
+                3, "session-abc", null,
+                null, null, null, null, null, assuranceLevel,
+                null, null
+        );
+    }
+
+    /** Build the V026 ALLOW rule for an asset cadre: wildcard pinned to the equipment path + min_loa. */
+    private PolicyRuleEntity assetOpsAllowRule(String role) {
+        PolicyRuleEntity rule = buildAllowRule(null, null, role, null, null);
+        rule.setName("asset-ops-" + role.toLowerCase());
+        rule.setConditions("{\"path_contains\": \"/internal/v1/equipment\", \"min_loa\": 2}");
+        rule.setPriority(60);
+        return rule;
+    }
+
+    /** Build the V026 citizen DENY rule (pinned to the equipment path). */
+    private PolicyRuleEntity assetCitizenDenyRule() {
+        PolicyRuleEntity rule = buildAllowRule(null, null, "CITIZEN", null, null);
+        rule.setName("asset-deny-citizen-equipment");
+        rule.setEffect("DENY");
+        rule.setPriority(10);
+        rule.setConditions("{\"path_contains\": \"/internal/v1/equipment\"}");
+        return rule;
+    }
+
+    @Test
+    @DisplayName("WS#5 V026: FACILITY_ADMIN registering equipment (LOA2) -> ALLOW")
+    void evaluate_assetFacilityAdminRegister_allows() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(assetOpsAllowRule("FACILITY_ADMIN")));
+
+        AuthzInternalRequest req = assetRequest(
+                "/internal/v1/equipment", "POST", "POST:/internal/v1/equipment",
+                List.of("FACILITY_ADMIN"), "STAFF", "LOA2");
+
+        assertEquals(Verdict.ALLOW, policyEngine.evaluate(req).verdict(),
+                "FACILITY_ADMIN at LOA2 registering equipment must be ALLOWed by the V026 rule");
+    }
+
+    @Test
+    @DisplayName("WS#5 V026: ASSET_TECHNICIAN updating an assigned maintenance task (LOA2) -> ALLOW")
+    void evaluate_assetTechnicianMaintenanceUpdate_allows() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(assetOpsAllowRule("ASSET_TECHNICIAN")));
+
+        AuthzInternalRequest req = assetRequest(
+                "/internal/v1/equipment/maintenance/task-1", "POST",
+                "POST:/internal/v1/equipment/maintenance/task-1",
+                List.of("ASSET_TECHNICIAN"), "STAFF", "LOA2");
+
+        assertEquals(Verdict.ALLOW, policyEngine.evaluate(req).verdict(),
+                "ASSET_TECHNICIAN at LOA2 on the maintenance path must be ALLOWed (by-assignment enforced in-service)");
+    }
+
+    @Test
+    @DisplayName("WS#5 V026: CITIZEN reaching the equipment domain -> DENY (DENY-wins over any ALLOW)")
+    void evaluate_assetCitizen_denies() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        // DB orders DENY first (effect DESC); the citizen also carries no operational ALLOW.
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(assetCitizenDenyRule(), assetOpsAllowRule("FACILITY_ADMIN")));
+
+        AuthzInternalRequest req = assetRequest(
+                "/internal/v1/equipment", "GET", "GET:/internal/v1/equipment",
+                List.of("CITIZEN"), "CITIZEN", "LOA2");
+
+        AuthzResponse resp = policyEngine.evaluate(req);
+        assertEquals(Verdict.DENY, resp.verdict(), "CITIZEN must be DENIED the operational asset domain");
+        assertEquals("POLICY_DENY", resp.errorCode());
+    }
+
+    @Test
+    @DisplayName("WS#5 V026: stock action posed as an asset function -> DENY (Dura owns stock)")
+    void evaluate_assetStockAsAsset_denies() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity stockDeny = buildAllowRule(null, null, null, null, null);
+        stockDeny.setName("asset-deny-stock-as-asset");
+        stockDeny.setEffect("DENY");
+        stockDeny.setPriority(10);
+        stockDeny.setConditions("{\"path_contains\": [\"/internal/v1/equipment/stock\", \"/stock/adjust\"]}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(stockDeny, assetOpsAllowRule("FACILITY_ADMIN")));
+
+        AuthzInternalRequest req = assetRequest(
+                "/internal/v1/equipment/stock/adjust", "POST",
+                "POST:/internal/v1/equipment/stock/adjust",
+                List.of("FACILITY_ADMIN"), "STAFF", "LOA2");
+
+        AuthzResponse resp = policyEngine.evaluate(req);
+        assertEquals(Verdict.DENY, resp.verdict(), "A stock action on the asset path must be DENIED");
+        assertEquals("POLICY_DENY", resp.errorCode());
+    }
+
+    @Test
+    @DisplayName("WS#5 V026: ASSET_TECHNICIAN retiring equipment -> DENY (elevated approval / admin only)")
+    void evaluate_assetTechnicianRetire_denies() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity retireDeny = buildAllowRule(null, null, "ASSET_TECHNICIAN", "POST", null);
+        retireDeny.setName("asset-deny-retire-technician");
+        retireDeny.setEffect("DENY");
+        retireDeny.setPriority(9);
+        retireDeny.setConditions("{\"path_contains\": [\"/internal/v1/equipment/retire\", \"/internal/v1/equipment/dispose\"]}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(retireDeny, assetOpsAllowRule("ASSET_TECHNICIAN")));
+
+        AuthzInternalRequest req = assetRequest(
+                "/internal/v1/equipment/retire", "POST",
+                "POST:/internal/v1/equipment/retire",
+                List.of("ASSET_TECHNICIAN"), "STAFF", "LOA2");
+
+        AuthzResponse resp = policyEngine.evaluate(req);
+        assertEquals(Verdict.DENY, resp.verdict(), "Technician retire must be DENIED (elevated approval required)");
+        assertEquals("POLICY_DENY", resp.errorCode());
+    }
+
+    @Test
+    @DisplayName("WS#5 V026: a low-trust write (LOA1) below min_loa=2 -> DENY (no matching ALLOW)")
+    void evaluate_assetLowTrustWrite_denies() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(assetOpsAllowRule("FACILITY_ADMIN")));
+
+        // ACR loaLevel is 3 in assetRequest; force effective LOA to 1 by passing acr via a low-LOA request.
+        AuthzInternalRequest base = assetRequest(
+                "/internal/v1/equipment", "POST", "POST:/internal/v1/equipment",
+                List.of("FACILITY_ADMIN"), "STAFF", "LOA1");
+        AuthzInternalRequest req = new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, "STAFF", List.of("FACILITY_ADMIN"), "OPERATIONS",
+                DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
+                null, "POST", "/internal/v1/equipment", "POST:/internal/v1/equipment",
+                base.resourceType(), null,
+                1, "session-abc", null,
+                null, null, null, null, null, "LOA1",
+                null, null);
+
+        AuthzResponse resp = policyEngine.evaluate(req);
+        assertEquals(Verdict.DENY, resp.verdict(),
+                "A write below min_loa=2 must not match the conditioned ALLOW -> DENY");
+        assertEquals("NO_ALLOW_RULE", resp.errorCode());
+    }
+
     @Test
     @DisplayName("evaluate: risk score just below deny threshold (80) -> continues evaluation")
     void evaluate_withRiskScoreJustBelowDenyThreshold_continues() {

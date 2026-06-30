@@ -79,6 +79,7 @@ public class TelemetryIngestionService {
         // Emit telemetry event on SEPARATE telemetry bus
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("reading_id", readingId.toString());
+        payload.put("tenant_id", tenantId.toString());
         payload.put("device_id", request.deviceId());
         payload.put("metric_type", request.metricType());
         payload.put("metric_value", request.metricValue());
