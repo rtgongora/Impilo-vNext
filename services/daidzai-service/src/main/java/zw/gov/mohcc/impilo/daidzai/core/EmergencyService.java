@@ -224,6 +224,37 @@ public class EmergencyService {
         return inc;
     }
 
+    // ---- 5b. Death outcome → Death & Post-Death Pathway (WS#7 → WS#8 seam) ----
+
+    /**
+     * Record that an emergency incident ended in death and route it to the Death &amp; Post-Death
+     * Pathway. PCT owns the DeathCase; Daidzai signals the death with the subject identity (health id
+     * or temporary reference for an unidentified casualty) and incident provenance. We never duplicate
+     * the death record — the death pathway consumes {@code daidzai.death.routed} and opens the case.
+     *
+     * @param placeContext death context to seed the pathway, e.g. COMMUNITY|IN_TRANSIT|BROUGHT_IN_DEAD
+     */
+    @Transactional
+    public EmergencyIncidentEntity recordDeathOutcome(UUID tenantId, UUID incidentId,
+                                                      String placeContext, String actorId) {
+        EmergencyIncidentEntity inc = getIncident(tenantId, incidentId);
+        inc.setStatus("DECEASED");
+        incidentRepo.save(inc);
+        recordMissionEvent(tenantId, incidentId, "DECEASED", inc.getNhumeMissionRef(),
+                "Emergency outcome: death — routed to the Death & Post-Death Pathway", actorId, "RESPONDER");
+        java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("incidentId", incidentId.toString());
+        payload.put("incidentReference", inc.getIncidentReference());
+        payload.put("subjectHealthId", inc.getSubjectHealthId());
+        payload.put("subjectTempRef", inc.getSubjectTempRef());
+        payload.put("facilityId", inc.getFacilityId() != null ? inc.getFacilityId().toString() : null);
+        payload.put("placeOfDeathContext", placeContext != null ? placeContext : "IN_TRANSIT");
+        payload.put("sourceContext", "EMERGENCY_INCIDENT");
+        emitter.emit("EMERGENCY_INCIDENT", incidentId.toString(), "daidzai.death.routed",
+                "EMERGENCY_INCIDENT", incidentId.toString(), payload, tenantId);
+        return inc;
+    }
+
     // ---- 6. Resource requests (Daidzai raises the need; owner executes) ----
 
     @Transactional

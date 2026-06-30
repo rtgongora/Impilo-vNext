@@ -120,6 +120,16 @@ public class EmergencyController {
         return service.recordClinicalHandoff(tenantId, id, required(body, "pctEncounterRef"), actorId);
     }
 
+    // ---- Death outcome → Death & Post-Death Pathway (WS#7 → WS#8 seam) ----
+    @PostMapping("/incidents/{id}/death-outcome")
+    public EmergencyIncidentEntity deathOutcome(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
+        String placeContext = body != null ? str(body, "placeOfDeathContext") : null;
+        return service.recordDeathOutcome(tenantId, id, placeContext, actorId);
+    }
+
     // ---- Resource requests ----
     @PostMapping("/incidents/{id}/resources")
     public ResponseEntity<ResourceRequestEntity> requestResource(
