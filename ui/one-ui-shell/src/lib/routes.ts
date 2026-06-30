@@ -324,6 +324,16 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/marketplace/vendors", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Vendors", navLabel: "Vendors", navZone: "work" },
   { path: "/marketplace/bookings", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Bookings", navLabel: "Bookings", navZone: "work" },
 
+  // Msika storefront lane (WS#4) — buyer storefront + seller centre + moderation
+  { path: "/marketplace/store", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Marketplace Store", navLabel: "Store", navZone: "life" },
+  { path: "/marketplace/store/search", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Search Listings", navLabel: "Search", navZone: "life" },
+  { path: "/marketplace/store/listing/[id]", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Listing", navLabel: "Listing", navZone: "life" },
+  { path: "/marketplace/store/activity", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "My Marketplace Activity", navLabel: "My Activity", navZone: "life" },
+  { path: "/marketplace/seller", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Seller Centre", navLabel: "Seller Centre", navZone: "work" },
+  { path: "/marketplace/seller/listings", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "My Listings", navLabel: "My Listings", navZone: "work" },
+  { path: "/marketplace/seller/listings/new", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "New Listing", navLabel: "New Listing", navZone: "work" },
+  { path: "/marketplace/seller/moderation", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Listing Moderation", navLabel: "Moderation", navZone: "work" },
+
   // â”€â”€ Zone: Finance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/finance", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Finance Dashboard", navLabel: "Finance", navZone: "work" },
   { path: "/finance/claims", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Claims", navLabel: "Claims", navZone: "work" },
@@ -759,7 +769,7 @@ export const ROUTES: RouteDefinition[] = [
 // Person Health Wallet (Jun 2026): 8 routes under /citizen/wallet for the unified person anchor
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
-export const EXPECTED_ROUTE_COUNT = 642;
+export const EXPECTED_ROUTE_COUNT = 650;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
