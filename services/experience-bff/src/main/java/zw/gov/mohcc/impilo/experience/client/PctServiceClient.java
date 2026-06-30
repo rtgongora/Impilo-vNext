@@ -1191,6 +1191,56 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    // ── WS#8 Death & Post-Death Pathway (PCT owns the DeathCase) ──
+
+    public JsonNode confirmDeath(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/confirm", body, JsonNode.class));
+    }
+
+    public JsonNode listDeathCases() {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/death/cases", JsonNode.class));
+    }
+
+    public JsonNode getDeathCase(String caseId) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/death/" + caseId, JsonNode.class));
+    }
+
+    public JsonNode getDeathAudit(String caseId) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/death/" + caseId + "/audit", JsonNode.class));
+    }
+
+    public JsonNode screenDeathPublicHealth(String caseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/public-health-screen", body, JsonNode.class));
+    }
+
+    public JsonNode certifyDeathCause(String caseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/certify", body, JsonNode.class));
+    }
+
+    public JsonNode updateDeathCoronerStatus(String caseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/coroner-status", body, JsonNode.class));
+    }
+
+    public JsonNode stageDeathCrvsPackage(String caseId) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/crvs-package", Map.of(), JsonNode.class));
+    }
+
+    public JsonNode getDeathBodyCustody(String caseId) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/death/" + caseId + "/body", JsonNode.class));
+    }
+
+    public JsonNode receiveDeathBody(String caseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/body/receive", body, JsonNode.class));
+    }
+
+    public JsonNode setDeathPostmortemHold(String caseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/body/postmortem-hold", body, JsonNode.class));
+    }
+
+    public JsonNode releaseDeathBody(String caseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/body/release", body, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

@@ -91,6 +91,18 @@ public class UbomiServiceClient {
         return extractData(response);
     }
 
+    public JsonNode markDeathPackageReady(long notificationId) {
+        String url = baseUrl + "/v1/deaths/" + notificationId + "/package-ready";
+        log.info("UBOMI: markDeathPackageReady operation [notificationId={}]", notificationId);
+        return extractData(restTemplate.postForEntity(url, HttpEntity.EMPTY, JsonNode.class));
+    }
+
+    public JsonNode registerDeath(long notificationId, java.util.Map<String, Object> body) {
+        String url = baseUrl + "/v1/deaths/" + notificationId + "/register";
+        log.info("UBOMI: registerDeath operation [notificationId={}]", notificationId);
+        return extractData(restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
