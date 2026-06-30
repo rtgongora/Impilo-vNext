@@ -188,6 +188,69 @@ public class InventoryServiceClient {
         return exchangeJson(HttpMethod.POST, baseUrl + "/v1/handover/" + id + "/sign-incoming", null);
     }
 
+    // ── Dura (sovereign stock brain) ────────────────────────────
+
+    public JsonNode duraCategories(String programmeArea) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/dura/categories");
+        if (programmeArea != null && !programmeArea.isBlank()) {
+            b.queryParam("programmeArea", programmeArea);
+        }
+        return getJson(b.toUriString());
+    }
+
+    public JsonNode duraCommodities(String q, String programmeArea, Boolean controlled, Boolean coldChain) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/dura/commodities");
+        if (q != null && !q.isBlank()) {
+            b.queryParam("q", q);
+        }
+        if (programmeArea != null && !programmeArea.isBlank()) {
+            b.queryParam("programmeArea", programmeArea);
+        }
+        if (controlled != null) {
+            b.queryParam("controlled", controlled);
+        }
+        if (coldChain != null) {
+            b.queryParam("coldChain", coldChain);
+        }
+        return getJson(b.toUriString());
+    }
+
+    public JsonNode duraNearExpiryBatches(int days) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/dura/batches/near-expiry")
+                .queryParam("days", days)
+                .toUriString();
+        return getJson(url);
+    }
+
+    public JsonNode duraRecalls(String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/dura/recalls");
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        return getJson(b.toUriString());
+    }
+
+    public JsonNode duraCreateRecall(JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/v1/dura/recalls", body);
+    }
+
+    public JsonNode duraColdChainExcursions(String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/dura/cold-chain/excursions");
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        return getJson(b.toUriString());
+    }
+
+    public JsonNode duraPctAvailability(UUID facilityId, UUID storeId, String itemCode) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/dura/pct/availability")
+                .queryParam("facilityId", facilityId)
+                .queryParam("storeId", storeId)
+                .queryParam("itemCode", itemCode)
+                .toUriString();
+        return getJson(url);
+    }
+
     private JsonNode getJson(String url) {
         return getJsonEntity(url).getBody();
     }
