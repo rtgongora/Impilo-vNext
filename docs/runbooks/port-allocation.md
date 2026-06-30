@@ -157,7 +157,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | Port | Service / module |
 |------|------------------|
 | **8160** | `experience-bff` |
-| **8161** | `wellness-service` (citizen wellness, health wallet, Health Connect ingest — BFF proxies same paths) |
+| ~~**8161**~~ | ~~`wellness-service`~~ **DEPRECATED — migrated into `simba-service` (8125).** Wellness is now owned by SIMBA; the BFF `wellness-base-url` default points to **8125**. Do not start a separate wellness-service. |
 | **8167** | `vashandi-workforce-service` (operational workforce profile, assignment, roster, shift, attendance, leave, access risk) |
 
 **Optional DB split:** run `wellness-service` with Spring profile `wellness-own-db` and database `impilo_wellness` (see `services/wellness-service/src/main/resources/application-wellness-own-db.yml`) after provisioning an empty Postgres DB and running Flyway once.
@@ -197,7 +197,7 @@ These match `ServiceClientConfig` / `impilo.services` in `experience-bff` (local
 | Workflow | `http://localhost:8250` |
 | Guidance | `http://localhost:8260` |
 | Clinical Knowledge Platform | `http://localhost:8270` (`impilo.clinical-platform.base-url`) |
-| Wellness | `http://localhost:8161` (`impilo.services.wellness-base-url` / `WELLNESS_SERVICE_BASE_URL`) |
+| Wellness (SIMBA) | `http://localhost:8125` (`impilo.services.wellness-base-url` / `WELLNESS_SERVICE_BASE_URL` now default **8125** = simba-service; legacy 8161 wellness-service is deprecated) |
 | Vashandi | `http://localhost:8167` (`impilo.services.vashandi-base-url` / `VASHANDI_BASE_URL`) |
 
 ---
