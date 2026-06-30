@@ -138,6 +138,8 @@ public class ServiceClientConfig {
             String rtcGatewayBaseUrl,
             /** Rito — quality, safety & client voice (port 8391). */
             String ritoBaseUrl,
+            /** Daidzai — emergency, disaster & public-health response command (port 8392). */
+            String daidzaiBaseUrl,
             /** patient-safety-service — pharmacovigilance (ADR/AEFI) SoR + MCAZ workbench (port 8202). */
             String patientSafetyBaseUrl,
             /** identity-assurance-service — identity assurance level + upgrade workflow (port 8201). */
@@ -218,6 +220,7 @@ public class ServiceClientConfig {
             if (iotIngestionBaseUrl == null) iotIngestionBaseUrl = "http://localhost:8330";
             if (rtcGatewayBaseUrl == null) rtcGatewayBaseUrl = "http://localhost:8195";
             if (ritoBaseUrl == null) ritoBaseUrl = "http://localhost:8391";
+            if (daidzaiBaseUrl == null) daidzaiBaseUrl = "http://localhost:8392";
             if (patientSafetyBaseUrl == null) patientSafetyBaseUrl = "http://localhost:8202";
             if (identityAssuranceBaseUrl == null) identityAssuranceBaseUrl = "http://localhost:8201";
         }
@@ -236,7 +239,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null
+                null, null, null, null, null, null
         );
     }
 
@@ -257,7 +260,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null
+                null, null, null, null
         );
     }
 
