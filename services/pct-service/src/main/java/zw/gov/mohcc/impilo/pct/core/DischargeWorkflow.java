@@ -89,6 +89,7 @@ public class DischargeWorkflow {
     private final TransferService transferService;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final DeathWorkflow deathWorkflow;
 
     public DischargeWorkflow(DischargeCaseRepository dischargeCaseRepository,
                              JourneyRepository journeyRepository,
@@ -96,7 +97,8 @@ public class DischargeWorkflow {
                              AdmissionWorkflow admissionWorkflow,
                              TransferService transferService,
                              EventOutboxRepository outboxRepository,
-                             ObjectMapper objectMapper) {
+                             ObjectMapper objectMapper,
+                             DeathWorkflow deathWorkflow) {
         this.dischargeCaseRepository = dischargeCaseRepository;
         this.journeyRepository = journeyRepository;
         this.journeyStateMachine = journeyStateMachine;
@@ -104,6 +106,7 @@ public class DischargeWorkflow {
         this.transferService = transferService;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.deathWorkflow = deathWorkflow;
     }
 
     /**
@@ -170,6 +173,11 @@ public class DischargeWorkflow {
 
         log.info("Discharge initiated: case={}, journey={}, type={}, blockers={}",
                 dischargeCase.getId(), journeyId, dischargeType, blockers);
+
+        // WS#6 → WS#8 seam: a death disposition opens the death case spine (idempotent).
+        if (dischargeType != null && "DEATH".equalsIgnoreCase(dischargeType)) {
+            deathWorkflow.openFromInpatientDischarge(journeyId, OffsetDateTime.now());
+        }
 
         return dischargeCase;
     }

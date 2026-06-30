@@ -84,4 +84,39 @@ public class DeathNotificationController {
             ApiResponse.ok(certified, ctx.correlationId().toString())
         );
     }
+
+    /**
+     * Stage the civil-registration package for the Registrar General (WS#8). Validates required
+     * fields; does not forge a registration.
+     */
+    @PostMapping("/{notificationId}/package-ready")
+    public ResponseEntity<ApiResponse<DeathNotificationEntity>> markPackageReady(
+            @PathVariable Long notificationId) {
+        TrustContext ctx = TrustContextHolder.require();
+        if (ctx.mode() == AccessMode.EXTERNAL) {
+            return ResponseEntity.status(403).body(
+                ApiResponse.error("FORBIDDEN", "External consumers cannot stage CRVS packages", 403, ctx.correlationId().toString())
+            );
+        }
+        DeathNotificationEntity e = deathNotificationService.markPackageReady(ctx.tenantId(), notificationId);
+        return ResponseEntity.ok(ApiResponse.ok(e, ctx.correlationId().toString()));
+    }
+
+    /**
+     * Record a real civil-registration outcome from the Registrar General (owner-routed). Requires a
+     * civil registration number — REGISTERED is never synthesised.
+     */
+    @PostMapping("/{notificationId}/register")
+    public ResponseEntity<ApiResponse<DeathNotificationEntity>> register(
+            @PathVariable Long notificationId, @RequestBody java.util.Map<String, String> body) {
+        TrustContext ctx = TrustContextHolder.require();
+        if (ctx.mode() == AccessMode.EXTERNAL) {
+            return ResponseEntity.status(403).body(
+                ApiResponse.error("FORBIDDEN", "External consumers cannot register deaths", 403, ctx.correlationId().toString())
+            );
+        }
+        DeathNotificationEntity e = deathNotificationService.register(
+                ctx.tenantId(), notificationId, body.get("civilRegNumber"));
+        return ResponseEntity.ok(ApiResponse.ok(e, ctx.correlationId().toString()));
+    }
 }

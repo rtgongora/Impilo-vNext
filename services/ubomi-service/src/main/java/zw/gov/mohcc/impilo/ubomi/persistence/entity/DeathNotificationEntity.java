@@ -80,6 +80,15 @@ public class DeathNotificationEntity {
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;
 
+    @Column(name = "pct_case_ref")
+    private String pctCaseRef;
+
+    @Column(name = "package_ready", nullable = false)
+    private boolean packageReady = false;
+
+    @Column(name = "package_validated_at")
+    private OffsetDateTime packageValidatedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -142,6 +151,12 @@ public class DeathNotificationEntity {
     public void setRegisteredAt(OffsetDateTime registeredAt) { this.registeredAt = registeredAt; }
     public String getMetadata() { return metadata; }
     public void setMetadata(String metadata) { this.metadata = metadata; }
+    public String getPctCaseRef() { return pctCaseRef; }
+    public void setPctCaseRef(String pctCaseRef) { this.pctCaseRef = pctCaseRef; }
+    public boolean isPackageReady() { return packageReady; }
+    public void setPackageReady(boolean packageReady) { this.packageReady = packageReady; }
+    public OffsetDateTime getPackageValidatedAt() { return packageValidatedAt; }
+    public void setPackageValidatedAt(OffsetDateTime packageValidatedAt) { this.packageValidatedAt = packageValidatedAt; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 }

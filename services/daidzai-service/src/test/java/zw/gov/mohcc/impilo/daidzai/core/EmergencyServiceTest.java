@@ -86,6 +86,17 @@ class EmergencyServiceTest {
     }
 
     @Test
+    void deathOutcomeRoutesToDeathPathwayWithoutDuplicatingRecord() {
+        UUID tenant = UUID.randomUUID();
+        EmergencyIncidentEntity inc = service.escalateToIncident(tenant, "MAJOR_TRAUMA", "CRITICAL",
+                "RTA fatality", null, "UNKNOWN", null, null, null, "highway", "responder-1");
+        EmergencyIncidentEntity after = service.recordDeathOutcome(tenant, inc.getId(), "IN_TRANSIT", "responder-1");
+        assertThat(after.getStatus()).isEqualTo("DECEASED");
+        List<MissionEventEntity> timeline = service.missionTimeline(tenant, inc.getId());
+        assertThat(timeline).extracting(MissionEventEntity::getStatus).contains("DECEASED");
+    }
+
+    @Test
     void resourceRequestRecordsNeedAgainstOwner() {
         UUID tenant = UUID.randomUUID();
         EmergencyIncidentEntity inc = service.escalateToIncident(tenant, "HAEMORRHAGE", "CRITICAL",

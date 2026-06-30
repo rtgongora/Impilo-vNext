@@ -50,6 +50,112 @@ public class DeathCaseEntity {
     @Column(name = "closed_at")
     private OffsetDateTime closedAt;
 
+    // ── WS#8 death-spine: confirmation / place / context ──
+    @Column(name = "death_datetime")
+    private OffsetDateTime deathDatetime;
+
+    @Column(name = "place_of_death_context")
+    private String placeOfDeathContext;
+
+    @Column(name = "place_of_death_location")
+    private String placeOfDeathLocation;
+
+    @Column(name = "resuscitation_attempted")
+    private Boolean resuscitationAttempted;
+
+    @Column(name = "present_at_death")
+    private String presentAtDeath;
+
+    @Column(name = "confirmed_by")
+    private String confirmedBy;
+
+    @Column(name = "confirmed_by_role")
+    private String confirmedByRole;
+
+    @Column(name = "confirmed_at")
+    private OffsetDateTime confirmedAt;
+
+    @Column(name = "deceased_identity_status")
+    private String deceasedIdentityStatus = "KNOWN";
+
+    @Column(name = "temporary_identity_ref")
+    private String temporaryIdentityRef;
+
+    // ── medico-legal screening ──
+    @Column(name = "coroner_referral_required")
+    private boolean coronerReferralRequired = false;
+
+    @Column(name = "medico_legal_triggers")
+    private String medicoLegalTriggers;
+
+    @Column(name = "coroner_referral_status")
+    private String coronerReferralStatus;
+
+    // ── public-health screening ──
+    @Column(name = "public_health_flags")
+    private String publicHealthFlags;
+
+    @Column(name = "death_review_required")
+    private boolean deathReviewRequired = false;
+
+    @Column(name = "rito_review_ref")
+    private String ritoReviewRef;
+
+    // ── WHO cause-of-death certification draft ──
+    @Column(name = "cod_immediate")
+    private String codImmediate;
+
+    @Column(name = "cod_antecedent")
+    private String codAntecedent;
+
+    @Column(name = "cod_underlying")
+    private String codUnderlying;
+
+    @Column(name = "cod_contributory")
+    private String codContributory;
+
+    @Column(name = "cod_manner")
+    private String codManner;
+
+    @Column(name = "cod_external_cause")
+    private String codExternalCause;
+
+    @Column(name = "certifier_id")
+    private String certifierId;
+
+    @Column(name = "certifier_role")
+    private String certifierRole;
+
+    @Column(name = "certifier_licence")
+    private String certifierLicence;
+
+    @Column(name = "certification_status")
+    private String certificationStatus = "NOT_STARTED";
+
+    @Column(name = "certified_at")
+    private OffsetDateTime certifiedAt;
+
+    @Column(name = "cert_warnings")
+    private String certWarnings;
+
+    @Column(name = "cert_composition_ref")
+    private String certCompositionRef;
+
+    // ── body / mortuary release gating ──
+    @Column(name = "body_release_blocked")
+    private boolean bodyReleaseBlocked = false;
+
+    // ── CRVS handoff ──
+    @Column(name = "civil_registration_status")
+    private String civilRegistrationStatus = "NOT_STARTED";
+
+    // ── source seam provenance ──
+    @Column(name = "source_context")
+    private String sourceContext;
+
+    @Column(name = "source_ref")
+    private String sourceRef;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -101,5 +207,104 @@ public class DeathCaseEntity {
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+
+    public OffsetDateTime getDeathDatetime() { return deathDatetime; }
+    public void setDeathDatetime(OffsetDateTime deathDatetime) { this.deathDatetime = deathDatetime; }
+
+    public String getPlaceOfDeathContext() { return placeOfDeathContext; }
+    public void setPlaceOfDeathContext(String placeOfDeathContext) { this.placeOfDeathContext = placeOfDeathContext; }
+
+    public String getPlaceOfDeathLocation() { return placeOfDeathLocation; }
+    public void setPlaceOfDeathLocation(String placeOfDeathLocation) { this.placeOfDeathLocation = placeOfDeathLocation; }
+
+    public Boolean getResuscitationAttempted() { return resuscitationAttempted; }
+    public void setResuscitationAttempted(Boolean resuscitationAttempted) { this.resuscitationAttempted = resuscitationAttempted; }
+
+    public String getPresentAtDeath() { return presentAtDeath; }
+    public void setPresentAtDeath(String presentAtDeath) { this.presentAtDeath = presentAtDeath; }
+
+    public String getConfirmedBy() { return confirmedBy; }
+    public void setConfirmedBy(String confirmedBy) { this.confirmedBy = confirmedBy; }
+
+    public String getConfirmedByRole() { return confirmedByRole; }
+    public void setConfirmedByRole(String confirmedByRole) { this.confirmedByRole = confirmedByRole; }
+
+    public OffsetDateTime getConfirmedAt() { return confirmedAt; }
+    public void setConfirmedAt(OffsetDateTime confirmedAt) { this.confirmedAt = confirmedAt; }
+
+    public String getDeceasedIdentityStatus() { return deceasedIdentityStatus; }
+    public void setDeceasedIdentityStatus(String deceasedIdentityStatus) { this.deceasedIdentityStatus = deceasedIdentityStatus; }
+
+    public String getTemporaryIdentityRef() { return temporaryIdentityRef; }
+    public void setTemporaryIdentityRef(String temporaryIdentityRef) { this.temporaryIdentityRef = temporaryIdentityRef; }
+
+    public boolean isCoronerReferralRequired() { return coronerReferralRequired; }
+    public void setCoronerReferralRequired(boolean coronerReferralRequired) { this.coronerReferralRequired = coronerReferralRequired; }
+
+    public String getMedicoLegalTriggers() { return medicoLegalTriggers; }
+    public void setMedicoLegalTriggers(String medicoLegalTriggers) { this.medicoLegalTriggers = medicoLegalTriggers; }
+
+    public String getCoronerReferralStatus() { return coronerReferralStatus; }
+    public void setCoronerReferralStatus(String coronerReferralStatus) { this.coronerReferralStatus = coronerReferralStatus; }
+
+    public String getPublicHealthFlags() { return publicHealthFlags; }
+    public void setPublicHealthFlags(String publicHealthFlags) { this.publicHealthFlags = publicHealthFlags; }
+
+    public boolean isDeathReviewRequired() { return deathReviewRequired; }
+    public void setDeathReviewRequired(boolean deathReviewRequired) { this.deathReviewRequired = deathReviewRequired; }
+
+    public String getRitoReviewRef() { return ritoReviewRef; }
+    public void setRitoReviewRef(String ritoReviewRef) { this.ritoReviewRef = ritoReviewRef; }
+
+    public String getCodImmediate() { return codImmediate; }
+    public void setCodImmediate(String codImmediate) { this.codImmediate = codImmediate; }
+
+    public String getCodAntecedent() { return codAntecedent; }
+    public void setCodAntecedent(String codAntecedent) { this.codAntecedent = codAntecedent; }
+
+    public String getCodUnderlying() { return codUnderlying; }
+    public void setCodUnderlying(String codUnderlying) { this.codUnderlying = codUnderlying; }
+
+    public String getCodContributory() { return codContributory; }
+    public void setCodContributory(String codContributory) { this.codContributory = codContributory; }
+
+    public String getCodManner() { return codManner; }
+    public void setCodManner(String codManner) { this.codManner = codManner; }
+
+    public String getCodExternalCause() { return codExternalCause; }
+    public void setCodExternalCause(String codExternalCause) { this.codExternalCause = codExternalCause; }
+
+    public String getCertifierId() { return certifierId; }
+    public void setCertifierId(String certifierId) { this.certifierId = certifierId; }
+
+    public String getCertifierRole() { return certifierRole; }
+    public void setCertifierRole(String certifierRole) { this.certifierRole = certifierRole; }
+
+    public String getCertifierLicence() { return certifierLicence; }
+    public void setCertifierLicence(String certifierLicence) { this.certifierLicence = certifierLicence; }
+
+    public String getCertificationStatus() { return certificationStatus; }
+    public void setCertificationStatus(String certificationStatus) { this.certificationStatus = certificationStatus; }
+
+    public OffsetDateTime getCertifiedAt() { return certifiedAt; }
+    public void setCertifiedAt(OffsetDateTime certifiedAt) { this.certifiedAt = certifiedAt; }
+
+    public String getCertWarnings() { return certWarnings; }
+    public void setCertWarnings(String certWarnings) { this.certWarnings = certWarnings; }
+
+    public String getCertCompositionRef() { return certCompositionRef; }
+    public void setCertCompositionRef(String certCompositionRef) { this.certCompositionRef = certCompositionRef; }
+
+    public boolean isBodyReleaseBlocked() { return bodyReleaseBlocked; }
+    public void setBodyReleaseBlocked(boolean bodyReleaseBlocked) { this.bodyReleaseBlocked = bodyReleaseBlocked; }
+
+    public String getCivilRegistrationStatus() { return civilRegistrationStatus; }
+    public void setCivilRegistrationStatus(String civilRegistrationStatus) { this.civilRegistrationStatus = civilRegistrationStatus; }
+
+    public String getSourceContext() { return sourceContext; }
+    public void setSourceContext(String sourceContext) { this.sourceContext = sourceContext; }
+
+    public String getSourceRef() { return sourceRef; }
+    public void setSourceRef(String sourceRef) { this.sourceRef = sourceRef; }
 
 }
