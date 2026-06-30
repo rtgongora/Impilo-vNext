@@ -172,6 +172,22 @@ multi-service e2e + ENFORCE · UI/mobile waves · honest-safe feature builds). S
   bundle pipeline, condition-eval rego mirrors, Java↔OPA equivalence harness, SHADOW→ENFORCE canary —
   all in [`deferred-for-live-testing.md`](deferred-for-live-testing.md) (needs a live OPA + staging cluster).
 
+## Phase 7 — Stage A (sandbox-buildable cutover prep) — largely done (2026-06-30)
+
+Corrected the over-claim that "the remaining migration all needs a live cluster" — most of Stage A is
+buildable + provable here because the `opa` 0.68 CLI is local.
+- `04b0ffd15` **A1** `conditions.rego` — exact mirror of `evaluateConditions` + effectiveLoa/accountVerified
+  (min_loa on effective-LoA, segment-bounded path_contains w/ query-smuggle rejection, allowed_*,
+  account-assurance, grace, fail-closed sentinel). `opa test` 21/21.
+- **A2** — input contract documented in the rego; the Java `AuthzInternalRequest` already carries the full
+  vocabulary, so no Java expansion needed.
+- `94947533e` **A4** `policy_decision.rego` — exact mirror of Step-4 (resource prefix-match, effect DESC /
+  priority ASC → deny-wins, scope, conditions, SYSTEM bypass, tenant isolation). 11/11.
+- `525066545` **A3** `PolicyRuleBundleBuilder` + **Java→OPA round-trip** (the A5 mechanism): the Java-built
+  bundle drives the local `opa` to the same verdict (ALLOW / POLICY_DENY). 3/3 (round-trip ran, 0 skipped).
+- Whole OPA suite: `opa test` 69/69, `opa check --strict` clean.
+- **Remaining A5:** full PolicyEngine-vs-OPA corpus harness (nightly); **Stage B** (B1–B5) is the live cutover.
+
 ## Deferred cross-service wiring (P3/P4) + live verification
 All consolidated in [`deferred-for-live-testing.md`](deferred-for-live-testing.md).
 
