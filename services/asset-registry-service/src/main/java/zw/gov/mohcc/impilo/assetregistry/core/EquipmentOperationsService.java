@@ -44,6 +44,8 @@ public class EquipmentOperationsService {
     private final CalibrationRecordRepository calibrationRepo;
     private final FaultReportRepository faultRepo;
     private final IotAlertRepository alertRepo;
+    private final IotThresholdRuleRepository thresholdRuleRepo;
+    private final IotBreachStateRepository breachStateRepo;
     private final ReadinessProfileRepository profileRepo;
     private final ReadinessRequirementRepository requirementRepo;
     private final DeploymentKitRepository kitRepo;
@@ -60,6 +62,8 @@ public class EquipmentOperationsService {
                                       CalibrationRecordRepository calibrationRepo,
                                       FaultReportRepository faultRepo,
                                       IotAlertRepository alertRepo,
+                                      IotThresholdRuleRepository thresholdRuleRepo,
+                                      IotBreachStateRepository breachStateRepo,
                                       ReadinessProfileRepository profileRepo,
                                       ReadinessRequirementRepository requirementRepo,
                                       DeploymentKitRepository kitRepo,
@@ -75,6 +79,8 @@ public class EquipmentOperationsService {
         this.calibrationRepo = calibrationRepo;
         this.faultRepo = faultRepo;
         this.alertRepo = alertRepo;
+        this.thresholdRuleRepo = thresholdRuleRepo;
+        this.breachStateRepo = breachStateRepo;
         this.profileRepo = profileRepo;
         this.requirementRepo = requirementRepo;
         this.kitRepo = kitRepo;
@@ -419,6 +425,20 @@ public class EquipmentOperationsService {
     @Transactional
     public IotAlertEntity raiseAlert(UUID tenantId, String deviceId, String alertType, String metricType,
                                      Double observedValue, Double thresholdValue, String severity, String detail) {
+        return raiseAlert(tenantId, deviceId, alertType, metricType, observedValue, thresholdValue, severity, detail, null);
+    }
+
+    /**
+     * Records a derived IoT alert from a real device signal, optionally tagged with a downstream
+     * {@code routeTo} owner (e.g. MADI for cold-chain breaches). Reuses the single dedupe +
+     * lifecycle-event + outbox path; the {@code routeTo} is carried on the outbox event so the
+     * documented owner (Madi/public-health/inventory) can pick it up — the asset domain holds only
+     * the operational device status.
+     */
+    @Transactional
+    public IotAlertEntity raiseAlert(UUID tenantId, String deviceId, String alertType, String metricType,
+                                     Double observedValue, Double thresholdValue, String severity, String detail,
+                                     String routeTo) {
         // Suppress duplicate ACTIVE alerts of the same type for the same device.
         List<IotAlertEntity> existing = alertRepo.findByDeviceIdAndAlertTypeAndStatus(deviceId, alertType, "ACTIVE");
         if (!existing.isEmpty()) {
@@ -441,12 +461,82 @@ public class EquipmentOperationsService {
         }
         alertRepo.save(alert);
         recordEvent(tenantId, alert.getEquipmentId(), "IOT_ALERT", null, alertType, deviceId, detail);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("device_id", deviceId);
+        payload.put("alert_type", alertType);
+        payload.put("severity", alert.getSeverity());
+        if (metricType != null) payload.put("metric_type", metricType);
+        if (observedValue != null) payload.put("observed_value", observedValue);
+        if (thresholdValue != null) payload.put("threshold_value", thresholdValue);
+        if (routeTo != null && !routeTo.isBlank()) payload.put("route_to", routeTo);
         emitOutbox("impilo.asset.iot.alert.raised.v1",
                 alert.getEquipmentId() != null ? alert.getEquipmentId() : UUID.fromString(deterministicUuid(deviceId)),
-                tenantId, null, null, null,
-                Map.of("device_id", deviceId, "alert_type", alertType, "severity", alert.getSeverity()));
-        log.info("IoT alert raised [device={}, type={}, severity={}]", deviceId, alertType, alert.getSeverity());
+                tenantId, null, null, null, payload);
+        log.info("IoT alert raised [device={}, type={}, severity={}, route={}]",
+                deviceId, alertType, alert.getSeverity(), routeTo);
         return alert;
+    }
+
+    // ── Threshold-breach derivation (from REAL ingested metricValue — never fabricated) ──
+
+    /**
+     * Derive THRESHOLD_BREACH alerts from a real metric reading. Looks up the configured threshold
+     * rule(s) for the metric type, tracks a per-device consecutive-breach streak, and raises a
+     * deduped THRESHOLD_BREACH alert via {@link #raiseAlert} once the streak reaches the rule's
+     * {@code minCount}. A within-threshold reading resets the streak. Returns the alert raised this
+     * reading (or {@code null} when nothing was raised). Reads only real ingested values.
+     */
+    @Transactional
+    public IotAlertEntity evaluateThresholdReading(UUID tenantId, String deviceId, String metricType,
+                                                   Double metricValue) {
+        if (tenantId == null || deviceId == null || deviceId.isBlank()
+                || metricType == null || metricType.isBlank() || metricValue == null) {
+            return null;
+        }
+        List<IotThresholdRuleEntity> rules =
+                thresholdRuleRepo.findByTenantIdAndMetricTypeAndActiveTrue(tenantId, metricType);
+        IotAlertEntity raised = null;
+        for (IotThresholdRuleEntity rule : rules) {
+            // Optional narrowing by equipment type via the linked equipment.
+            if (rule.getEquipmentType() != null && !rule.getEquipmentType().isBlank()
+                    && !equipmentTypeMatches(deviceId, rule.getEquipmentType())) {
+                continue;
+            }
+            IotBreachStateEntity state = breachStateRepo
+                    .findByTenantIdAndDeviceIdAndRuleId(tenantId, deviceId, rule.getRuleId())
+                    .orElseGet(() -> new IotBreachStateEntity(tenantId, deviceId, rule.getRuleId()));
+            if (rule.breaches(metricValue)) {
+                state.setConsecutive(state.getConsecutive() + 1);
+            } else {
+                state.setConsecutive(0); // streak broken by a within-threshold reading
+            }
+            state.setLastValue(metricValue);
+            state.setUpdatedAt(OffsetDateTime.now());
+            breachStateRepo.save(state);
+
+            if (state.getConsecutive() >= rule.getMinCount()) {
+                String detail = "Threshold breach: " + metricType + "=" + metricValue + " "
+                        + rule.getComparison() + " " + rule.getThresholdValue()
+                        + " for " + state.getConsecutive() + " consecutive readings"
+                        + (rule.getLabel() != null ? " (" + rule.getLabel() + ")" : "");
+                // raiseAlert dedupes on an ACTIVE THRESHOLD_BREACH for this device, so re-breaches
+                // after the streak is met do not create duplicate alerts.
+                IotAlertEntity a = raiseAlert(tenantId, deviceId, "THRESHOLD_BREACH", metricType,
+                        metricValue, rule.getThresholdValue(), rule.getSeverity(), detail, rule.getRouteTo());
+                if (raised == null) raised = a;
+            }
+        }
+        return raised;
+    }
+
+    private boolean equipmentTypeMatches(String deviceId, String equipmentType) {
+        List<EquipmentEntity> linked = equipmentRepo.findByDeviceId(deviceId);
+        for (EquipmentEntity eq : linked) {
+            if (equipmentType.equalsIgnoreCase(eq.getEquipmentType())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Transactional
