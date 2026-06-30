@@ -98,31 +98,90 @@ function GuidanceCard({ item, routePath }: { item: NompiloGuidanceItem; routePat
   );
 }
 
-export function NompiloGuidanceSection({ routePath = "/citizen/wallet" }: { routePath?: string }) {
+export function NompiloGuidanceSection({
+  routePath = "/citizen/wallet",
+  announceMs = 5500,
+}: {
+  routePath?: string;
+  /** How long Nompilo "speaks" in full before fading to a tappable resting whisper. */
+  announceMs?: number;
+}) {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["nompilo", "context", routePath],
     queryFn: () => fetchNompiloContext(routePath),
   });
 
   const items = data?.guidance ?? [];
+
+  // Nompilo whispers: announces in full, then fades to a compact resting teaser. The touch analogue
+  // of the web hover-to-reveal is tap-to-expand (no hover on mobile).
+  const [resting, setResting] = React.useState(false);
+  const [expanded, setExpanded] = React.useState(false);
+  React.useEffect(() => {
+    if (items.length === 0) return;
+    const t = setTimeout(() => setResting(true), announceMs);
+    return () => clearTimeout(t);
+  }, [items.length, announceMs]);
+
   // Quiet states — Nompilo never invents guidance to fill space.
   if (isLoading || isError || items.length === 0) {
     return null;
   }
 
+  const collapsed = resting && !expanded;
+  const top = items[0];
+
   return (
     <View style={styles.container} testID="nompilo-guidance-section">
-      <Text style={styles.header}>Nompilo · your guide</Text>
-      {items.map((item) => (
-        <GuidanceCard key={item.key} item={item} routePath={routePath} />
-      ))}
+      <TouchableOpacity
+        style={styles.headerRow}
+        onPress={() => setExpanded((e) => !e)}
+        accessibilityRole="button"
+        accessibilityLabel={
+          collapsed
+            ? `Nompilo: ${top.title}. Tap to see ${items.length} suggestion${items.length > 1 ? "s" : ""}`
+            : "Nompilo guidance. Tap to collapse"
+        }
+        testID="nompilo-guidance-toggle"
+      >
+        <Ionicons name="sparkles" size={14} color="#0f766e" />
+        {collapsed ? (
+          <>
+            <Text style={styles.teaser} numberOfLines={1}>
+              {top.title}
+            </Text>
+            {items.length > 1 ? <Text style={styles.badge}>+{items.length - 1}</Text> : null}
+            <Ionicons name="chevron-down" size={14} color="#6b7280" />
+          </>
+        ) : (
+          <>
+            <Text style={styles.header}>Nompilo · your guide</Text>
+            {resting ? <Ionicons name="chevron-up" size={14} color="#6b7280" /> : null}
+          </>
+        )}
+      </TouchableOpacity>
+      {!collapsed
+        ? items.map((item) => <GuidanceCard key={item.key} item={item} routePath={routePath} />)
+        : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { marginTop: 12, marginBottom: 4 },
-  header: { fontSize: 13, fontWeight: "600", color: "#111827", marginBottom: 8 },
+  headerRow: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 6, marginBottom: 2 },
+  header: { fontSize: 13, fontWeight: "600", color: "#111827" },
+  teaser: { flex: 1, fontSize: 12, color: "#6b7280" },
+  badge: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#374151",
+    backgroundColor: "#f3f4f6",
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
   card: {
     borderLeftWidth: 3,
     borderWidth: 1,

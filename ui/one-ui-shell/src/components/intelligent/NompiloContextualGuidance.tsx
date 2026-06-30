@@ -15,6 +15,7 @@
  */
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Sparkles, ArrowUpRight, Lock, ListChecks, Info, AlertTriangle, X, BellRing, GraduationCap } from "lucide-react";
 import {
   useNompiloContext,
@@ -115,36 +116,75 @@ export function NompiloContextualGuidance({
   routePath,
   title = "Nompilo guidance",
   className = "",
+  announceMs = 5500,
 }: {
   routePath: string;
   title?: string;
   className?: string;
+  /** How long Nompilo "speaks" in full before fading to a resting whisper. */
+  announceMs?: number;
 }) {
   const { data, isLoading, isError } = useNompiloContext(routePath);
   const items = data?.data?.guidance ?? [];
+
+  // Nompilo whispers: it announces in full, then fades to a compact resting state. Hover or
+  // keyboard-focus the panel to bring it back. The detail always stays in the DOM (collapsed via
+  // opacity/height, never removed) so it remains screen-reader + keyboard accessible.
+  const [resting, setResting] = useState(false);
+  useEffect(() => {
+    if (items.length === 0) return;
+    const t = setTimeout(() => setResting(true), announceMs);
+    return () => clearTimeout(t);
+  }, [items.length, announceMs]);
 
   // Empty / loading / error states are quiet — Nompilo never invents guidance to fill space.
   if (isLoading || isError || items.length === 0) {
     return null;
   }
 
+  const top = items[0];
+  const reveal = "group-hover:max-h-[40rem] group-hover:opacity-100 group-focus-within:max-h-[40rem] group-focus-within:opacity-100";
+
   return (
     <section
-      className={`rounded-lg border border-border bg-card p-4 ${className}`}
+      className={`group relative rounded-lg border border-border bg-card p-4 transition-all duration-300 motion-reduce:transition-none ${
+        resting ? "opacity-80 hover:opacity-100 focus-within:opacity-100" : "opacity-100"
+      } ${className}`}
       data-testid="nompilo-contextual-guidance"
+      data-state={resting ? "resting" : "announcing"}
       aria-label={title}
+      tabIndex={0}
     >
-      <div className="mb-2 flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-primary" aria-hidden />
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-4 w-4 shrink-0 text-primary" aria-hidden />
         <span className="text-sm font-semibold text-foreground">{title}</span>
-        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+        <span className="hidden text-[10px] uppercase tracking-wide text-muted-foreground sm:inline">
           On-platform guide
         </span>
         {data?.data?.degraded ? (
           <span className="text-[10px] text-muted-foreground">(some guidance unavailable)</span>
         ) : null}
+        {/* Resting whisper: the top suggestion lingers as a one-line teaser; hover/focus reveals all. */}
+        {resting ? (
+          <span
+            className="ml-auto flex min-w-0 items-center gap-1 text-xs text-muted-foreground group-hover:hidden group-focus-within:hidden"
+            title={top.title}
+          >
+            <span className="truncate">{top.title}</span>
+            {items.length > 1 ? (
+              <span className="shrink-0 rounded-full bg-neutral-100 px-1.5 text-[10px] font-medium">
+                +{items.length - 1}
+              </span>
+            ) : null}
+          </span>
+        ) : null}
       </div>
-      <ul className="space-y-2">
+
+      <ul
+        className={`space-y-2 overflow-hidden transition-all duration-300 motion-reduce:transition-none ${
+          resting ? `mt-0 max-h-0 opacity-0 ${reveal} group-hover:mt-2 group-focus-within:mt-2` : "mt-2 max-h-[40rem] opacity-100"
+        }`}
+      >
         {items.map((item) => (
           <GuidanceCard key={item.key} item={item} routePath={routePath} />
         ))}

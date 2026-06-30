@@ -55,6 +55,25 @@ describe("NompiloContextualGuidance", () => {
     expect(screen.getByText(/via identity-assurance/i)).toBeInTheDocument();
   });
 
+  it("announces in full, then fades to a resting whisper (detail stays accessible)", async () => {
+    post.mockResolvedValue(TRUST_LOCK);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <NompiloContextualGuidance routePath="/citizen/wallet" announceMs={30} />
+      </QueryClientProvider>,
+    );
+
+    // Speaks in full first.
+    expect(await screen.findByText(/Verify your identity to unlock/i)).toBeInTheDocument();
+    // Then fades to a resting whisper (panel marks itself resting).
+    await waitFor(() =>
+      expect(screen.getByTestId("nompilo-contextual-guidance")).toHaveAttribute("data-state", "resting"),
+    );
+    // The detail (CTA) is still in the DOM — collapsed via CSS, revealed on hover/focus, never removed.
+    expect(screen.getByRole("link", { name: /Verify identity/i })).toBeInTheDocument();
+  });
+
   it("renders nothing when there is no guidance (never invents filler)", async () => {
     post.mockResolvedValue({ data: { guidance: [] }, meta: {} });
     const { container } = renderGuidance();
