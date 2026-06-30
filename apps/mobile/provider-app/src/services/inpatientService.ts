@@ -66,3 +66,40 @@ export const listWardAlerts = async (wardId: string) =>
   (await apiClient.get<{ data: unknown[] }>(`${V1}/ward-alerts?wardId=${wardId}`)).data.data;
 export const acknowledgeWardAlert = async (alertId: string, body: Record<string, string>) =>
   apiClient.post(`${V1}/ward-alerts/${alertId}/acknowledge`, body);
+
+// Deterioration escalations (WS#6) — early-warning escalations awaiting clinician response.
+// Backed by the inpatient BFF /internal/v1/inpatient/escalations{,/{id}/acknowledge,/respond}.
+export interface InpatientEscalation {
+  escalation_id?: string;
+  id?: string;
+  subject_cpid?: string;
+  ward_id?: string | null;
+  total_score?: number;
+  risk_level?: string;
+  status?: string;
+  response_due_at?: string | null;
+  raised_at?: string | null;
+}
+export const listEscalations = async (args: { patientId?: string; wardId?: string } = {}) => {
+  const sp = new URLSearchParams();
+  if (args.patientId) sp.set("patientId", args.patientId);
+  if (args.wardId) sp.set("wardId", args.wardId);
+  const qs = sp.toString();
+  return (
+    await apiClient.get<{ data: InpatientEscalation[] }>(
+      `${V1}/inpatient/escalations${qs ? `?${qs}` : ""}`,
+    )
+  ).data.data;
+};
+export const acknowledgeEscalation = async (escalationId: string) =>
+  (await apiClient.post<{ data: { status: string } }>(`${V1}/inpatient/escalations/${escalationId}/acknowledge`, {})).data.data;
+export const respondEscalation = async (escalationId: string, note: string) =>
+  (await apiClient.post<{ data: { status: string } }>(`${V1}/inpatient/escalations/${escalationId}/respond`, { note })).data.data;
+
+// Discharge summary (WS#6) — clearance-gated finalisation toward Butano/FHIR Composition.
+export const fetchDischargeSummary = async (encounterId: string) =>
+  (await apiClient.get<{ data: Record<string, unknown> }>(`${V1}/inpatient/discharge-summary?encounterId=${encounterId}`)).data.data;
+export const saveDischargeSummary = async (body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: { id: string } }>(`${V1}/inpatient/discharge-summary`, body)).data.data;
+export const finaliseDischargeSummary = async (encounterId: string) =>
+  (await apiClient.post<{ data: { status: string } }>(`${V1}/inpatient/discharge-summary/${encounterId}/finalise`, {})).data.data;
