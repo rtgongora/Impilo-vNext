@@ -281,6 +281,24 @@
         "clientRole": false
       },
       {
+        "name": "BIOMEDICAL_ENGINEER",
+        "description": "Biomedical engineer — asset/equipment maintenance, calibration and safe-to-use determination",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "ASSET_TECHNICIAN",
+        "description": "Asset technician — assigned equipment maintenance and servicing tasks",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "ASSET_FIELD_OFFICER",
+        "description": "Asset field officer — field deployment, custody and asset verification",
+        "composite": false,
+        "clientRole": false
+      },
+      {
         "name": "DEVELOPER",
         "description": "Platform developer \u2014 governed dev access across all role groups",
         "composite": false,
