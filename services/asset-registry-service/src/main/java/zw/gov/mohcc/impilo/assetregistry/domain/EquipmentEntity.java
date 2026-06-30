@@ -83,6 +83,29 @@ public class EquipmentEntity {
     @Column(name = "device_id", length = 255)
     private String deviceId;
 
+    /** Criticality drives alert priority / readiness / escalation. STANDARD|ELEVATED|CRITICAL. */
+    @Column(name = "criticality", nullable = false, length = 16)
+    private String criticality = "STANDARD";
+
+    /** CLINICAL|PUBLIC_HEALTH|INFRASTRUCTURE|EMERGENCY|REGULATED. */
+    @Column(name = "asset_class", nullable = false, length = 32)
+    private String assetClass = "INFRASTRUCTURE";
+
+    @Column(name = "regulated", nullable = false)
+    private boolean regulated = false;
+
+    /** Vashandi custodian reference (not owned here). */
+    @Column(name = "custodian_ref", length = 255)
+    private String custodianRef;
+
+    /** Asset tag / QR / barcode value. */
+    @Column(name = "tag", length = 255)
+    private String tag;
+
+    /** Optional Butano FHIR device-type reference (clinical record owns the observation). */
+    @Column(name = "clinical_device_type", length = 128)
+    private String clinicalDeviceType;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata_json", columnDefinition = "jsonb")
     private String metadataJson;
@@ -140,6 +163,18 @@ public class EquipmentEntity {
     public void setNextMaintenance(LocalDate nextMaintenance) { this.nextMaintenance = nextMaintenance; }
     public String getDeviceId() { return deviceId; }
     public void setDeviceId(String deviceId) { this.deviceId = deviceId; }
+    public String getCriticality() { return criticality; }
+    public void setCriticality(String criticality) { this.criticality = criticality; }
+    public String getAssetClass() { return assetClass; }
+    public void setAssetClass(String assetClass) { this.assetClass = assetClass; }
+    public boolean isRegulated() { return regulated; }
+    public void setRegulated(boolean regulated) { this.regulated = regulated; }
+    public String getCustodianRef() { return custodianRef; }
+    public void setCustodianRef(String custodianRef) { this.custodianRef = custodianRef; }
+    public String getTag() { return tag; }
+    public void setTag(String tag) { this.tag = tag; }
+    public String getClinicalDeviceType() { return clinicalDeviceType; }
+    public void setClinicalDeviceType(String clinicalDeviceType) { this.clinicalDeviceType = clinicalDeviceType; }
     public String getMetadataJson() { return metadataJson; }
     public void setMetadataJson(String metadataJson) { this.metadataJson = metadataJson; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

@@ -534,6 +534,13 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/operations/butano", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "SHR Operations", navLabel: "SHR Ops", navZone: "professional" },
   { path: "/operations/assets", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Asset Management", navLabel: "Assets", navZone: "professional" },
   { path: "/operations/equipment", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Equipment Management", navLabel: "Equipment", navZone: "professional" },
+  { path: "/operations/equipment/[equipmentId]", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Equipment Detail", navLabel: "Equipment Detail", navZone: "professional" },
+  { path: "/operations/equipment/maintenance", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Maintenance", navLabel: "Maintenance", navZone: "professional" },
+  { path: "/operations/equipment/calibration", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Calibration", navLabel: "Calibration", navZone: "professional" },
+  { path: "/operations/equipment/readiness", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Service Readiness", navLabel: "Readiness", navZone: "professional" },
+  { path: "/operations/equipment/iot", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "IoT & Device Status", navLabel: "IoT Status", navZone: "professional" },
+  { path: "/operations/equipment/deployment", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Deployment Kits", navLabel: "Deployment Kits", navZone: "professional" },
+  { path: "/operations/equipment/audit", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Asset Audit", navLabel: "Asset Audit", navZone: "professional" },
 
   // â”€â”€ Zone: Support (absorbs support-console sidecar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/support", zone: "support", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Support", navLabel: "Support", navZone: "life" },
@@ -769,7 +776,7 @@ export const ROUTES: RouteDefinition[] = [
 // Person Health Wallet (Jun 2026): 8 routes under /citizen/wallet for the unified person anchor
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
-export const EXPECTED_ROUTE_COUNT = 650;
+export const EXPECTED_ROUTE_COUNT = 657;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
