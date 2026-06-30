@@ -17,7 +17,7 @@ import java.util.Map;
  * confirmations/updates via Khuluma — it never sends messages itself.
  * Khuluma owns delivery; this just forwards a dispatch request.
  */
-@Component
+@Component("khulumaDispatchClient")
 public class KhulumaServiceClient {
 
     private static final Logger log = LoggerFactory.getLogger(KhulumaServiceClient.class);
