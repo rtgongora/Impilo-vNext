@@ -120,3 +120,27 @@ reconciles the OPA `role_template`s to these, mirroring V021's REGULATOR precede
   (no functional change — still embeds Dura's `StockManagementPanel`). No stock/inventory tables, endpoints,
   or routes exist under simba-service. A registry note clarifying that wellness-programme commodities are a
   Dura concern (Simba only links out) would be welcome.
+
+### WS#6 deferred owner-routed seams (authoritative register — 9, none faked)
+
+Correcting the count: the WS#6 row above named 7; the discovery doc (`docs/inpatient/ws6-discovery-and-ownership.md`)
+names **9**. Recorded here in full and classified, so each stays visible as an owner-routed hook / depth-deferral —
+**not** as completed inpatient-native functionality. Verified against the merged code on 2026-06-30.
+
+| # | Area | State | Verified seam → owner | Deferred (owner-depth work) |
+|---|------|-------|-----------------------|------------------------------|
+| 1 | Theatre | owner-routed hook | OROS `PROCEDURE` orders + existing transfer mechanism | booking, WHO checklist, procedure note, pack reservation |
+| 2 | Blood / transfusion | owner-routed hook | `OrosOrderClient` orderType `BLOOD_BANK` → Madi | compatibility, issue, transfusion obs, reaction handling (Madi) |
+| 3 | Inter-facility transport | owner-routed hook | transfer request → Ndila (routing) / Nhume (dispatch) | dispatch + transport execution |
+| 4 | Maternity / neonatal | partially built + depth-deferred | `inpatient.apgar_score` (V007) built; birth-notification → Ubomi | labour/delivery outcome, C-section link, KMC, multiple-birth, neonatal death |
+| 5 | Mental-health / medico-legal | policy-config deferred | configurable policy (Tshepo) + Rito rights/safety; no jurisdiction law hard-coded | involuntary-admission flags, observation levels, restraint/seclusion, legal forms |
+| 6 | Infection prevention / control | partially built + depth-deferred | isolation is a built `BedSafetyEvaluator` constraint; PPE→Dura, surveillance→public-health, safety→Rito | HAI surveillance, outbreak dashboard, contact tracing, antimicrobial stewardship |
+| 7 | Billing | owner-routed hook | references → Costa (bills) / MusheX (payments) | bed-day accrual, invoicing, payment execution. Clinical care must **not** block on billing absent explicit policy |
+| 8 | Death / CRVS | owner-routed hook | death disposition → Ubomi (+ PCT DeathWorkflow) | certification, post-death workflow, CRVS execution |
+| 9 | Offline-first sync | substrate exists + wiring-deferred | provider-app ships generic `@impilo/mobile-offline` syncEngine | inpatient offline vitals/notes/med-admin queue, conflict resolution, downtime packs |
+
+**Classification guarantee:** every row is (a) a real hook to the named SoR, (b) a partially-built spine with depth deferred,
+(c) an existing substrate not yet wired, or (d) intentionally policy-configurable — **none is a fake UI/API**. The
+inpatient surfaces that *were* built (escalations, discharge-board, EWS, eMAR) carry tests asserting no dead buttons.
+Any future inpatient UI for a deferred area must render an honest "routed to owner / not yet implemented here" state,
+never fake completion. These are deferrals, not failures or blockers — the hooks to the correct owners exist.
