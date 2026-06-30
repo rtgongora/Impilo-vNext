@@ -736,6 +736,17 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/patient-safety/reports/[reportId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Safety Report", navLabel: "Report", navZone: "work" },
   { path: "/work/patient-safety/cases/[caseId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Safety Case", navLabel: "Case", navZone: "work" },
   { path: "/work/patient-safety/mcaz", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "MCAZ Workbench", navLabel: "MCAZ", navZone: "work" },
+  // ── Zone: Daidzai — Emergency, Disaster & Public-Health Response Command (WS#7) ──
+  // Citizen emergency surfaces (low-friction, life-safety) + provider command surfaces.
+  { path: "/emergency", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Emergency", navLabel: "Emergency", navZone: "life" },
+  { path: "/emergency/sos", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Send SOS", navLabel: "Send SOS", navZone: "life" },
+  { path: "/emergency/services", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Nearest Services", navLabel: "Nearest Services", navZone: "life" },
+  { path: "/emergency/track", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Emergency", navLabel: "Track", navZone: "life" },
+  { path: "/emergency/track/[id]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Emergency", navLabel: "Track", navZone: "life" },
+  { path: "/work/daidzai", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Emergency Command", navLabel: "Emergency Command", navZone: "work" },
+  { path: "/work/daidzai/dispatch", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Dispatch Console", navLabel: "Dispatch", navZone: "work" },
+  { path: "/work/daidzai/missions", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mission Tracking", navLabel: "Missions", navZone: "work" },
+  { path: "/work/daidzai/disasters", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Disaster Command", navLabel: "Disasters", navZone: "work" },
 ];
 
 // Total route count assertion.
@@ -778,7 +789,7 @@ export const ROUTES: RouteDefinition[] = [
 // Person Health Wallet (Jun 2026): 8 routes under /citizen/wallet for the unified person anchor
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
-export const EXPECTED_ROUTE_COUNT = 659;
+export const EXPECTED_ROUTE_COUNT = 668;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
