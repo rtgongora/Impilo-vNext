@@ -50,6 +50,7 @@ class PatientJourneyIntegrationTest {
     @Mock private WorkspaceSessionRepository sessionRepository;
     @Mock private TelemetryEventRepository telemetryRepository;
     @Mock private TransferRepository transferRepository;
+    @Mock private zw.gov.mohcc.impilo.pct.core.DeathWorkflow deathWorkflow;
 
     private WorkspaceSessionService workspaceSessionService;
     private JourneyStateMachine journeyStateMachine;
@@ -109,7 +110,7 @@ class PatientJourneyIntegrationTest {
 
         dischargeWorkflow = new DischargeWorkflow(
                 dischargeCaseRepository, journeyRepository, journeyStateMachine,
-                admissionWorkflow, transferService, outboxRepository, objectMapper);
+                admissionWorkflow, transferService, outboxRepository, objectMapper, deathWorkflow);
     }
 
     private TrustContext createTrustContext() {

@@ -56,6 +56,9 @@ class DischargeWorkflowTest {
     @Mock
     private TransferService transferService;
 
+    @Mock
+    private DeathWorkflow deathWorkflow;
+
     private DischargeWorkflow dischargeWorkflow;
 
     private static final UUID TENANT_ID = UUID.randomUUID();
@@ -70,7 +73,7 @@ class DischargeWorkflowTest {
         dischargeWorkflow = new DischargeWorkflow(
                 dischargeCaseRepository, journeyRepository,
                 journeyStateMachine, admissionWorkflow, transferService,
-                outboxRepository, objectMapper);
+                outboxRepository, objectMapper, deathWorkflow);
     }
 
     private TrustContext createTrustContext() {
