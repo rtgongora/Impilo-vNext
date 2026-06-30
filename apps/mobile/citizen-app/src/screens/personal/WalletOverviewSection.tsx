@@ -7,7 +7,7 @@ import { fetchPersonWalletOverview } from "../../services/personHealthWalletServ
 import { appStore } from "../../stores/appStore";
 
 /**
- * Unified Person Health Wallet — mobile home / overview.
+ * Mushe Person Health Wallet — mobile home / overview.
  *
  * The person anchor landing inside "My Health". Shows trust + profile completion, Nompilo
  * next-steps, and a grid of real, source-labelled cards that jump into the existing Personal
@@ -111,7 +111,7 @@ export function WalletOverviewSection() {
 
   return (
     <ScrollView contentContainerStyle={styles.container} testID="wallet-overview-section">
-      <Text style={styles.title}>My Health Wallet</Text>
+      <Text style={styles.title}>Mushe Person Health Wallet</Text>
       <Text style={styles.subtitle}>
         Your health life in one place — drawn live from the services that own it.
       </Text>

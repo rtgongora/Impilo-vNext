@@ -165,7 +165,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/citizen/visit/[transactionId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Visit", navLabel: "My Visit", navZone: "life" },
   { path: "/citizen/inpatient/[admissionRef]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Inpatient Stay", navLabel: "My Stay", navZone: "life" },
   // Unified Person Health Wallet — the person anchor experience (MY LIFE · MY HEALTH).
-  { path: "/citizen/wallet", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Health Wallet", navLabel: "Health Wallet", navZone: "life" },
+  { path: "/citizen/wallet", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mushe Person Health Wallet", navLabel: "Mushe Wallet", navZone: "life" },
   { path: "/citizen/wallet/identity", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Identity & Trust", navLabel: "Identity & Trust", navZone: "life" },
   { path: "/citizen/wallet/profile", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Profile & Corrections", navLabel: "Profile", navZone: "life" },
   { path: "/citizen/wallet/records", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Health Records", navLabel: "Health Records", navZone: "life" },

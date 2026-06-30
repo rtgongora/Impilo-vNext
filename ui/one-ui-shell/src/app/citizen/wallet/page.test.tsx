@@ -47,7 +47,7 @@ describe("PersonHealthWalletPage", () => {
     get.mockResolvedValue(OVERVIEW);
     renderPage();
 
-    expect(await screen.findByText("My Health Wallet")).toBeInTheDocument();
+    expect(await screen.findByText("Mushe Person Health Wallet")).toBeInTheDocument();
     // Cards link to real surfaces and show real counts from the BFF overview.
     expect(await screen.findByText("My health records")).toBeInTheDocument();
     expect(screen.getByText("Care timeline")).toBeInTheDocument();
