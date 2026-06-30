@@ -89,6 +89,145 @@ public class AssetRegistryServiceClient {
         return exchangeJson(HttpMethod.PUT, baseUrl + "/internal/v1/fixed-assets/assets/" + assetId + "/details", body);
     }
 
+    // ── Equipment operations (WS#5) ──────────────────────────────────────────
+
+    public JsonNode listEquipment(String facilityId, int page, int size) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/equipment")
+                .queryParam("page", page).queryParam("size", size);
+        if (facilityId != null && !facilityId.isBlank()) b.queryParam("facility_id", facilityId);
+        return getJson(b.toUriString());
+    }
+
+    public JsonNode registerEquipment(JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment", body);
+    }
+
+    public JsonNode getEquipment(UUID equipmentId) {
+        return getJson(baseUrl + "/internal/v1/equipment/" + equipmentId);
+    }
+
+    public JsonNode getEquipmentDetail(UUID equipmentId) {
+        return getJson(baseUrl + "/internal/v1/equipment/" + equipmentId + "/detail");
+    }
+
+    public JsonNode updateEquipmentMetadata(UUID equipmentId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/" + equipmentId + "/metadata", body);
+    }
+
+    public JsonNode changeEquipmentStatus(UUID equipmentId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/" + equipmentId + "/status", body);
+    }
+
+    public JsonNode initiateTransfer(UUID equipmentId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/" + equipmentId + "/transfers", body);
+    }
+
+    public JsonNode approveTransfer(UUID transferId) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/transfers/" + transferId + "/approve", null);
+    }
+
+    public JsonNode confirmReceipt(UUID transferId) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/transfers/" + transferId + "/receive", null);
+    }
+
+    public JsonNode openMaintenance(UUID equipmentId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/" + equipmentId + "/maintenance", body);
+    }
+
+    public JsonNode updateMaintenance(UUID taskId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/maintenance/" + taskId, body);
+    }
+
+    public JsonNode completeMaintenance(UUID taskId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/maintenance/" + taskId + "/complete", body);
+    }
+
+    public JsonNode maintenanceDue() {
+        return getJson(baseUrl + "/internal/v1/equipment/maintenance/due");
+    }
+
+    public JsonNode openMaintenanceList() {
+        return getJson(baseUrl + "/internal/v1/equipment/maintenance/open");
+    }
+
+    public JsonNode recordCalibration(UUID equipmentId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/" + equipmentId + "/calibration", body);
+    }
+
+    public JsonNode calibrationDue() {
+        return getJson(baseUrl + "/internal/v1/equipment/calibration/due");
+    }
+
+    public JsonNode reportFault(UUID equipmentId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/" + equipmentId + "/faults", body);
+    }
+
+    public JsonNode linkRito(UUID faultId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/faults/" + faultId + "/link-rito", body);
+    }
+
+    public JsonNode raiseAlert(JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/alerts", body);
+    }
+
+    public JsonNode resolveAlert(UUID alertId) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/alerts/" + alertId + "/resolve", null);
+    }
+
+    public JsonNode markAlertKhuluma(UUID alertId) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/alerts/" + alertId + "/khuluma-requested", null);
+    }
+
+    public JsonNode activeAlerts() {
+        return getJson(baseUrl + "/internal/v1/equipment/alerts/active");
+    }
+
+    public JsonNode createReadinessProfile(JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/readiness/profiles", body);
+    }
+
+    public JsonNode readiness(String facilityRef) {
+        return getJson(UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/equipment/readiness")
+                .queryParam("facility_ref", facilityRef).toUriString());
+    }
+
+    public JsonNode createKit(JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/deployment-kits", body);
+    }
+
+    public JsonNode deployKit(UUID kitId) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/deployment-kits/" + kitId + "/deploy", null);
+    }
+
+    public JsonNode returnKit(UUID kitId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/deployment-kits/" + kitId + "/return", body);
+    }
+
+    public JsonNode kits() {
+        return getJson(baseUrl + "/internal/v1/equipment/deployment-kits");
+    }
+
+    public JsonNode openAudit(JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/audits", body);
+    }
+
+    public JsonNode confirmAuditItem(UUID itemId, JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/audits/items/" + itemId, body);
+    }
+
+    public JsonNode completeAudit(UUID auditId) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/internal/v1/equipment/audits/" + auditId + "/complete", null);
+    }
+
+    public JsonNode audits(String facilityRef) {
+        return getJson(UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/equipment/audits")
+                .queryParam("facility_ref", facilityRef).toUriString());
+    }
+
+    public JsonNode auditItems(UUID auditId) {
+        return getJson(baseUrl + "/internal/v1/equipment/audits/" + auditId + "/items");
+    }
+
     private JsonNode getJson(String url) {
         log.debug("Asset registry GET {}", url);
         ResponseEntity<JsonNode> r = restTemplate.getForEntity(url, JsonNode.class);
