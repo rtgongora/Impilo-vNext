@@ -159,8 +159,21 @@ multi-service e2e + ENFORCE · UI/mobile waves · honest-safe feature builds). S
 - **Environment-gated (cannot close in-sandbox):** G-OR-02/03 live FHIR/HL7/DICOM/LIMS soak · MADI e2e.
 - **Larger UI/mobile waves:** G-PX-05/06 · G-TI-04 · G-RT-02 · patient-lane mobile · Khuluma W8 tail.
 
-## Later phase (7)
-OPA-as-PDP migration · (deferred cross-service wiring from P3/P4).
+## Phase 7 — OPA-as-PDP — FOUNDATION (2026-06-30)
+
+- `bdd7f9aa0` **test(opa)** — *verified, not assumed:* the doctrine corpus `infra/opa/impilo/*.rego`
+  **compiles** under OPA 0.68 (`opa check --strict` exits 0) — the register's "doesn't compile" claim was
+  **stale** and is corrected in 3 places. The real gap: the corpus was **untested + unmounted**. Authored
+  opa tests for the 3 richest security-critical modules — khuluma (10), organisation (10), vashandi (11) =
+  **31/31 corpus, 38/38 with the authz gate**. Mounted `./infra/opa/impilo` at `/policies/impilo` in
+  `docker-compose.runtime.yml` for SHADOW; all 3 policy dirs load with no package collision.
+- **SYS-1 reframed:** enforcement is **live via the DB-rule PDP** (Phase 1); OPA corpus is now
+  tested+mounted in SHADOW. **Remaining Phase-7 (live-gated):** input-schema expansion, `policy_rule`→OPA
+  bundle pipeline, condition-eval rego mirrors, Java↔OPA equivalence harness, SHADOW→ENFORCE canary —
+  all in [`deferred-for-live-testing.md`](deferred-for-live-testing.md) (needs a live OPA + staging cluster).
+
+## Deferred cross-service wiring (P3/P4) + live verification
+All consolidated in [`deferred-for-live-testing.md`](deferred-for-live-testing.md).
 
 ## PO decisions parked
 See `docs/audits/po-decision-index.md`.
