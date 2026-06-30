@@ -136,8 +136,30 @@ capability-matrix + probeEvidence) is now runtime-verifiable here — the metric
 
 **Phase 5 COMPLETE (W4–W8).** All migrations runtime-proven on PG16; ~6 new test suites green.
 
-## Later phases (6–7)
-Per-wave High/Med closures · OPA-as-PDP migration · (deferred cross-service wiring from P3/P4).
+## Phase 6 — per-wave High/Med closures — IN PROGRESS (2026-06-30)
+
+Closed (provable):
+- `6779de98c` **G-CZO-14** — removed the fake biometric door (simulated 2s verify + placeholder creds
+  that only 401); honest "not available yet" state instead.
+- `6d2f4514b` **G-CZO-13** — temp tier no longer collects DOB+National-ID it discards; honest
+  facility-verification note (the stub upgrade backend can't gate them yet).
+- `f98a6847c` **G-TI-01** — *found + fixed a real cross-tenant IDOR*: `FacilityService.getFacility(id)`
+  had no tenant check (every other single-read did). Added the guard + FacilityReadIsolationTest 3/3.
+- `5e9b2b87e` **G-PS-02** — PatientSafetySignalConsumerTest 4/4 (signal feed: parse/fallback/snake-case/
+  malformed-swallow).
+- `57375956d` **G-FU-03** — wired the native Fundo CPD egress consumer (certificate.issued.v1 →
+  ingestCompletion), guarded to CPD-eligible PROVIDER certs, idempotent. Listener test 4/4.
+
+Remaining Phase-6 dispositions:
+- **Feature-completeness (buildable, not dishonest):** G-PX-03 contact-resolve seam (current state is
+  honest uniform-deny, no leak) · G-CT-02 structured telemedicine completion-note depth.
+- **Environment-gated (cannot close in-sandbox — the plan itself says "at rollout"):** G-OR-02/03 live
+  FHIR/HL7/DICOM/LIMS counterparty soak · MADI blood-bank e2e compose profile.
+- **Larger UI/mobile waves:** G-PX-05/06 mobile provider parity + clinical UX depth · G-TI-04
+  facility-admin mobile screens · G-RT-02 survey renderer + mobile triage parity.
+
+## Later phase (7)
+OPA-as-PDP migration · (deferred cross-service wiring from P3/P4).
 
 ## PO decisions parked
 See `docs/audits/po-decision-index.md`.
