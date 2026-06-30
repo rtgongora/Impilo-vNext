@@ -315,8 +315,14 @@ public class FacilityService {
      */
     @Transactional(readOnly = true)
     public FacilityDetail getFacility(Long id) {
+        UUID tenantId = TrustContextHolder.require().tenantId();
         FacilityEntity facility = facilityRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Facility not found: " + id));
+
+        // Read isolation (G-TI-01): a caller may only read a facility within their own tenant.
+        if (!facility.getTenantId().equals(tenantId)) {
+            throw new SecurityException("Tenant isolation violation: facility belongs to different tenant");
+        }
 
         List<FacilityIdentifierEntity> identifiers = identifierRepository.findByFacilityId(id);
         List<FacilityContactEntity> contacts = contactRepository.findByFacilityId(id);
