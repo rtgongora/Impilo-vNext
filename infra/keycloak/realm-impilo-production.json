@@ -341,6 +341,48 @@
         "clientRole": false
       },
       {
+        "name": "MORTUARY_OFFICER",
+        "description": "Death pathway — mortuary attendant: receive/tag/store body, manage custody, release after authorisation",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "MORTUARY_MANAGER",
+        "description": "Death pathway — mortuary manager: oversees body custody, release authorisation and occupancy",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "MEDICAL_EXAMINER",
+        "description": "Death pathway — medical examiner: medico-legal death review and examination authority",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "FORENSIC_PATHOLOGIST",
+        "description": "Death pathway — forensic pathologist: conducts post-mortem, records findings, manages samples/chain-of-custody",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CORONER_LIAISON",
+        "description": "Death pathway — coroner/police liaison: receives medico-legal notifications, places/lifts legal holds",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "REGISTRY_CLERK",
+        "description": "Death pathway — civil registration clerk: prepares/validates the CRVS death-registration package",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "CIVIL_REGISTRAR",
+        "description": "Death pathway — civil registrar: authority over civil death registration (Ubomi/Registrar-General handoff)",
+        "composite": false,
+        "clientRole": false
+      },
+      {
         "name": "DEVELOPER",
         "description": "Platform developer \u2014 governed dev access across all role groups",
         "composite": false,
