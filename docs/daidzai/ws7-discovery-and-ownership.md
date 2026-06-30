@@ -59,3 +59,33 @@ Copied EXACTLY from `services/rito-quality-safety-service`: pom.xml (parent, sha
 tech-companion deps), application.yml, V001 Flyway baseline, package `zw.gov.mohcc.impilo.daidzai`,
 `dai_outbox` + CompanionOutboxPublisher pattern, TrustContextFilter SecurityConfig, SecurityBaselineConfig,
 RestControllerAdvice, MockMvc/H2 `@SpringBootTest` test setup, BFF RestTemplate client + ServiceEndpoints.
+
+## Deferred owner-routed seams (WS#7 authoritative register — none faked)
+
+Built REAL: emergency spine (SOS intake → triage → incident → dispatch-need + mission
+timeline → PCT handoff link → resource-request → outbox) + disaster spine (declare DISASTER/MCI
+→ affected sites → resource-request → command dashboard → close→Rito after-action) + OPA policy +
+tshepo V028 + guidance V009 + web (9 routes) + mobile slices. Everything below is classified, not faked.
+
+| Area | Classification | Seam/owner | Built surface | Deferred depth | No-fake guarantee |
+|---|---|---|---|---|---|
+| Maps / routing / nearest-service | owner-routed hook | Ndila (8155) | geo stored on request/incident; `ndila_route_ref` field; /emergency/services explains the seam | actual routing/tiles call | no fake map widget; page states Ndila owns routing |
+| Dispatch execution | owner-routed hook | Nhume (8210) | dispatch *need* created + mission timeline tracked; `nhume_mission_ref`; OwnerRoutedGateway logs intent | live HTTP dispatch call + ref return | no fake ambulance tracker; mission events are real records, status only |
+| Emergency clinical encounter / record | owner-routed hook | PCT (8088) / Butano (8090) | handoff endpoint stores `pct_encounter_ref`; status→HANDOVER | live PCT encounter create | clinical record never duplicated in daidzai |
+| Facility readiness matching | substrate exists + wiring-deferred | Tuso (8084) / Indawo (8150) | `facility_id` + affected-site Indawo refs | live readiness query | no fabricated availability numbers |
+| Comms delivery (SOS ack / alerts) | owner-routed hook | Khuluma (8390) | requestNotification intent (logged) on SOS + disaster activation | live Khuluma send | request-only; no fake "delivered" status |
+| After-action review | owner-routed hook | Rito (8391) | disaster close stores `rito_case_ref` | live Rito case create | review record owned by Rito, link only |
+| Emergency stock / kits / PPE | owner-routed hook | inventory-service (Dura) | resource_request type KIT_PPE, owner=DURA | live stock reservation | no fake stock levels |
+| Blood | owner-routed hook | Madi (8300) | resource_request type BLOOD, owner=MADI | live Madi crossmatch/issue | no fake blood availability |
+| Ambulance / equipment readiness | owner-routed hook | asset-registry (8310) | resource_request type EQUIPMENT/AMBULANCE | live readiness | no fake fleet status |
+| Emergency orders | owner-routed hook | OROS (8089) | (resource_request can model the need) | live order issuance | orders never issued from daidzai |
+| Death / CRVS | not present + explicitly deferred | Ubomi (8087) | triage BLACK category recognised | fatality reporting workflow | no fake death record |
+| Responder roster / scope | substrate exists + wiring-deferred | Vashandi (8167) / Varapi (8083) | actor captured on mission events; role gating at PDP | live roster assignment | no fake responder assignment |
+| Outbreak protocol templates (cholera/measles/AFP/VHF/…) | partially built + depth-deferred | Fundo / clinical-knowledge-platform | incident_type=OUTBREAK supported on the aggregate | the ~10 disease protocol templates | no fake protocol content |
+| MCI triage-tag depth | partially built + depth-deferred | daidzai | rules-based RED/ORANGE/YELLOW/GREEN/BLACK triage | full START/SALT MCI tag algorithm | classifier is real + tested, just not full MCI depth |
+| Full incident-command role matrix | policy-config deferred | daidzai PDP | command/dispatcher/responder roles in rego + V028 | full ICS role hierarchy | roles enforced, hierarchy depth deferred |
+| Protocol-versioning engine | not present + explicitly deferred | Forms/Rules | — | versioned protocol engine | none built, no fake |
+| Offline-first depth | substrate exists + wiring-deferred | tshepo-offline / mobile | mobile slices written | offline queue + sync for SOS | not claimed; mobile not test-run here |
+| External adapters (DHIS2/IDSR/LIMS/SMS/USSD/IVR) | not present + explicitly deferred | integration-hub | channel field (USSD/IVR) on request | adapter implementations | none built, no fake |
+| Analytics dashboards depth | not present + explicitly deferred | reporting (8176) | outbox events emitted for downstream | analytics surfaces | no fake charts |
+| @PreAuthorize method-security | policy-config deferred | tshepo PDP + Envoy ext_authz | authz enforced at PDP (rego + V028) consistent with rito/madi | per-method annotations | enforcement is real at the gateway/PDP layer |
