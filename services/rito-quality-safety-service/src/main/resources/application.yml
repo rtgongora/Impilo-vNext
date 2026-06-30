@@ -64,6 +64,7 @@ rito:
       patient-safety: ${RITO_SIGNAL_TOPIC_PV:impilo.patientsafety.case.opened}
       support: ${RITO_SIGNAL_TOPIC_SUPPORT:impilo.support.ticket.escalated}
       fundo: ${RITO_SIGNAL_TOPIC_FUNDO:impilo.learning.assignment.completed}
+      inpatient: ${RITO_SIGNAL_TOPIC_INPATIENT:inpatient.safety}
   integration:
     notification:
       base-url: ${NOTIFICATION_BASE_URL:http://localhost:8200}

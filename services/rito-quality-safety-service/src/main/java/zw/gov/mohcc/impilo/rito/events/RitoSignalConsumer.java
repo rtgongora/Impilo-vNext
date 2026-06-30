@@ -44,7 +44,8 @@ public class RitoSignalConsumer {
                     "${rito.signals.topics.madi}",
                     "${rito.signals.topics.patient-safety}",
                     "${rito.signals.topics.support}",
-                    "${rito.signals.topics.fundo}"
+                    "${rito.signals.topics.fundo}",
+                    "${rito.signals.topics.inpatient}"
             },
             groupId = "rito-quality-safety-service")
     public void onSignal(String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
@@ -102,6 +103,9 @@ public class RitoSignalConsumer {
         }
         if (t.contains("learning") || t.contains("fundo")) {
             return "FUNDO";
+        }
+        if (t.contains("inpatient")) {
+            return "INPATIENT";
         }
         return "RULES";
     }
