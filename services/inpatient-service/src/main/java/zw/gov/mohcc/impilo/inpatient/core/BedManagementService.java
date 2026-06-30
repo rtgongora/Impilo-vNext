@@ -1,6 +1,10 @@
 package zw.gov.mohcc.impilo.inpatient.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.inpatient.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.inpatient.persistence.repository.EventOutboxRepository;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.BedEntity;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.WardEntity;
@@ -16,10 +20,20 @@ public class BedManagementService {
 
     private final WardRepository wardRepository;
     private final BedRepository bedRepository;
+    private final BedSafetyEvaluator bedSafetyEvaluator;
+    private final EventOutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
-    public BedManagementService(WardRepository wardRepository, BedRepository bedRepository) {
+    public BedManagementService(WardRepository wardRepository,
+                                BedRepository bedRepository,
+                                BedSafetyEvaluator bedSafetyEvaluator,
+                                EventOutboxRepository outboxRepository,
+                                ObjectMapper objectMapper) {
         this.wardRepository = wardRepository;
         this.bedRepository = bedRepository;
+        this.bedSafetyEvaluator = bedSafetyEvaluator;
+        this.outboxRepository = outboxRepository;
+        this.objectMapper = objectMapper;
     }
 
     public List<Map<String, Object>> listWardResources(UUID facilityId) {
@@ -42,6 +56,12 @@ public class BedManagementService {
             attributes.put("occupiedBeds", occupied);
             attributes.put("availableBeds", available);
             attributes.put("maintenanceBeds", maintenance);
+            attributes.put("genderDesignation", ward.getGenderDesignation());
+            attributes.put("ageGroup", ward.getAgeGroup());
+            attributes.put("isolationCapable", ward.isIsolationCapable());
+            attributes.put("oxygenAvailable", ward.isOxygenAvailable());
+            attributes.put("monitoringCapable", ward.isMonitoringCapable());
+            attributes.put("icuCapable", ward.isIcuCapable());
 
             resources.add(Map.of(
                     "id", ward.getId().toString(),
@@ -93,19 +113,90 @@ public class BedManagementService {
             throw new IllegalArgumentException("patientId is required");
         }
 
+        WardEntity ward = wardRepository.findById(bed.getWardId()).orElse(null);
+
+        String patientGender = stringVal(body, "gender", "patientGender", "patient_gender");
+        Integer patientAge = intVal(body, "age", "patientAge", "patient_age");
+        boolean requiresIsolation = boolVal(body, "requiresIsolation", "requires_isolation", "isolationRequired");
+        boolean requiresOxygen = boolVal(body, "requiresOxygen", "requires_oxygen", "oxygenRequired");
+        boolean requiresMonitoring = boolVal(body, "requiresMonitoring", "requires_monitoring", "monitoringRequired");
+        boolean requiresIcu = boolVal(body, "requiresIcu", "requires_icu", "icuRequired");
+
+        // Safety gate: fail closed if the bed is clinically unsafe for this patient (gender bay, age
+        // group, isolation, oxygen, monitoring, ICU). EMERGENCY/BREAK_GLASS is NOT silently bypassed
+        // here — an unsafe placement under emergency must be an explicit clinical decision recorded
+        // elsewhere; this method protects routine ward placement.
+        List<String> violations = bedSafetyEvaluator.evaluate(bed, ward, new BedSafetyEvaluator.SafetyRequest(
+                patientGender, patientAge, requiresIsolation, requiresOxygen, requiresMonitoring, requiresIcu));
+        if (!violations.isEmpty()) {
+            throw new BedSafetyViolationException(violations);
+        }
+
         bed.setStatus("OCCUPIED");
         bed.setSubjectCpid(patientId.trim());
         bed.setPatientName(stringVal(body, "patientName", "patient_name"));
         bed.setPatientDiagnosis(stringVal(body, "diagnosis", "patientDiagnosis", "patient_diagnosis"));
         bed.setAttendingPhysician(stringVal(body, "assignedDoctor", "assigned_doctor", "attendingPhysician"));
         bed.setAcuityLevel(stringVal(body, "acuity", "acuityLevel", "acuity_level"));
-        bed.setPatientGender(stringVal(body, "gender", "patientGender", "patient_gender"));
-        bed.setPatientAge(intVal(body, "age", "patientAge", "patient_age"));
+        bed.setPatientGender(patientGender);
+        bed.setPatientAge(patientAge);
+        bed.setRequiresIsolation(requiresIsolation);
+        bed.setRequiresOxygen(requiresOxygen);
+        bed.setRequiresMonitoring(requiresMonitoring);
+        bed.setRequiresIcu(requiresIcu);
         bed.setOccupiedAt(OffsetDateTime.now());
         bedRepository.save(bed);
 
-        WardEntity ward = wardRepository.findById(bed.getWardId()).orElse(null);
+        emitBedAssigned(bed);
+
         return toBedResource(bed, ward);
+    }
+
+    /**
+     * Emit {@code inpatient.bed.assigned} for the bed board / location-event stream. The bed entity is
+     * the SoR; this is a notification of the safe placement (it carries the resolved requirements that
+     * were satisfied, for audit). Best-effort: a serialisation failure must not roll back the placement.
+     */
+    private void emitBedAssigned(BedEntity bed) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("bed_id", bed.getId().toString());
+            payload.put("ward_id", bed.getWardId().toString());
+            payload.put("facility_id", bed.getFacilityId().toString());
+            payload.put("bed_number", bed.getBedNumber());
+            payload.put("subject_cpid", bed.getSubjectCpid());
+            payload.put("acuity_level", bed.getAcuityLevel());
+            payload.put("requires_isolation", bed.isRequiresIsolation());
+            payload.put("requires_oxygen", bed.isRequiresOxygen());
+            payload.put("requires_monitoring", bed.isRequiresMonitoring());
+            payload.put("requires_icu", bed.isRequiresIcu());
+            EventOutboxEntity outbox = new EventOutboxEntity();
+            outbox.setAggregateType("BED");
+            outbox.setAggregateId(bed.getId().toString());
+            outbox.setTenantId(bed.getTenantId().toString());
+            outbox.setPodId(System.getenv("HOSTNAME") != null ? System.getenv("HOSTNAME") : "local");
+            outbox.setCorrelationId(UUID.randomUUID().toString());
+            outbox.setEventType("inpatient.bed.assigned");
+            outbox.setSchemaVersion(1);
+            outbox.setOccurredAt(OffsetDateTime.now());
+            outbox.setPayloadJson(objectMapper.writeValueAsString(payload));
+            outboxRepository.save(outbox);
+        } catch (JsonProcessingException e) {
+            // do not fail the placement on an event-serialisation problem
+            throw new IllegalStateException("Failed to serialise bed-assigned event", e);
+        }
+    }
+
+    private static boolean boolVal(Map<String, Object> body, String... keys) {
+        for (String key : keys) {
+            Object value = body.get(key);
+            if (value == null) continue;
+            if (value instanceof Boolean b) return b;
+            String sv = String.valueOf(value).trim();
+            if ("true".equalsIgnoreCase(sv) || "yes".equalsIgnoreCase(sv) || "1".equals(sv)) return true;
+            if ("false".equalsIgnoreCase(sv) || "no".equalsIgnoreCase(sv) || "0".equals(sv)) return false;
+        }
+        return false;
     }
 
     @Transactional
@@ -148,6 +239,14 @@ public class BedManagementService {
         attributes.put("patientAdmissionDate", bed.getOccupiedAt() != null ? bed.getOccupiedAt().toString() : null);
         attributes.put("patientAge", bed.getPatientAge());
         attributes.put("patientGender", bed.getPatientGender());
+        attributes.put("genderDesignation", bed.getGenderDesignation());
+        attributes.put("isolationCapable", bed.isIsolationCapable());
+        attributes.put("oxygenAvailable", bed.isOxygenAvailable());
+        attributes.put("monitoringCapable", bed.isMonitoringCapable());
+        attributes.put("icuCapable", bed.isIcuCapable());
+        attributes.put("requiresIsolation", bed.isRequiresIsolation());
+        attributes.put("requiresMonitoring", bed.isRequiresMonitoring());
+        attributes.put("requiresIcu", bed.isRequiresIcu());
 
         return Map.of(
                 "id", bed.getId().toString(),

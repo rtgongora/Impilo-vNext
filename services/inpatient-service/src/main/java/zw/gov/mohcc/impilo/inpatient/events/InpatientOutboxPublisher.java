@@ -82,6 +82,7 @@ public class InpatientOutboxPublisher extends CompanionOutboxPublisher {
         return switch (row.aggregateType()) {
             case "TRANSFER" -> "inpatient.transfer";
             case "ADMISSION" -> "inpatient.admission";
+            case "BED" -> "inpatient.bed";
             default -> "inpatient.events";
         };
     }
