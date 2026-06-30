@@ -137,7 +137,7 @@ export default function DepositPage() {
     <AppLayout>
       <PageShell
         title="Deposit Money"
-        subtitle="Add funds to your Mushe wallet from a linked source or cash at a facility"
+        subtitle="Add funds to your MusheX wallet from a linked source or cash at a facility"
         icon={<ArrowDownLeft className="h-6 w-6" />}
       >
         <div className="mb-4">

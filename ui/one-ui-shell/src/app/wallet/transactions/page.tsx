@@ -169,7 +169,7 @@ export default function TransactionHistoryPage() {
     <AppLayout>
       <PageShell
         title="Transaction History"
-        subtitle="Full transaction history for your Mushe wallet"
+        subtitle="Full transaction history for your MusheX wallet"
         icon={<Receipt className="h-6 w-6" />}
       >
         <div className="mb-4">

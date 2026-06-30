@@ -24,6 +24,7 @@ import {
   Sparkles,
   ArrowUpRight,
   AlertCircle,
+  Wallet,
 } from "lucide-react";
 import { IdentityAssuranceBanner } from "@/components/citizen/IdentityAssuranceBanner";
 import { ActingForBanner } from "@/components/citizen/ActingForBanner";
@@ -195,6 +196,15 @@ export default function PersonHealthWalletPage() {
       countLabel: "outstanding",
       unavailable: payments.unavailable === true,
       source: String(payments._source ?? "Costa · MusheX"),
+    },
+    {
+      // The money face of the wallet — the existing MusheX financial wallet (balance, cards,
+      // send/deposit). Cross-link only; MusheX owns the financial system-of-record.
+      href: "/wallet",
+      label: "Money — MusheX Wallet",
+      icon: Wallet,
+      source: "MusheX",
+      note: "Balance, cards, send & deposit",
     },
     {
       href: "/citizen/wallet/comms",

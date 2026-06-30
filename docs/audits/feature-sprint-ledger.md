@@ -53,3 +53,13 @@ maps/location/routing → **Ndila** · dispatch → **Nhume**.
 | # | Workstream | Branch | Owning service(s) | Migrations | Ports | Routes added | Tests | Parity | Commit | Coordination items |
 |---|-----------|--------|-------------------|------------|-------|--------------|-------|--------|--------|--------------------|
 | 1 | Mushe Person Health Wallet | `feature/person-health-wallet` | experience-bff (CitizenWalletController + WalletOverviewService + 2 Mvumo client reads), one-ui-shell (8 `/citizen/wallet/**` pages + `useWallet`), citizen-app mobile (WalletOverviewSection), OPA `impilo.wallet` policy — **no new service, no new SoR** | none | none | `GET /internal/v1/citizen/wallet/overview`, `POST .../wallet/profile/correction`; 8 web `/citizen/wallet/**`; mobile Wallet tab | BFF 10/10, OPA 11/11, web 3/3 (tsc clean) | routes 636/636; be↔fe pass; **mobile vitest blocked** (`apps/mobile` uses pnpm `workspace:*`; npm install EUNSUPPORTEDPROTOCOL — section written + verified vs exports, not run) | `b3fd638bc` | none (no SoR/registry/port/contract changes) |
+
+## Coordination items (deferred — for the roadmap, not a workstream)
+
+- **Wallet brand taxonomy (resolved at UI level).** `Mushe Person Health Wallet` = the broad person
+  anchor (`/citizen/wallet`, health/identity/care/consent). `MusheX Wallet` = the money wallet
+  (`/wallet`, balance/cards/send/deposit). The person wallet home cross-links a **Money — MusheX Wallet**
+  tile to `/wallet`; both keep their own systems-of-record.
+- **DEFERRED (invasive):** the financial wallet's internal service is still named `mushe-wallet-service`.
+  Aligning it to a `musheX`-named service (package, DB schema, Kafka topics, registry, ports) is a real
+  service rename and must be planned as its own change — it should NOT ride on a UI label change.

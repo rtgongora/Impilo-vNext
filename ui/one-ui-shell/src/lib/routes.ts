@@ -353,7 +353,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/finance/commerce-integrations", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Commerce & Payer Stack", navLabel: "Commerce Integrations", navZone: "work" },
   { path: "/finance/reports", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Financial reports", navLabel: "Financial reports", navZone: "work" },
   { path: "/finance/my-account", zone: "finance", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Healthcare Account", navLabel: "My healthcare costs", navZone: "life" },
-  { path: "/wallet", zone: "finance", layout: "app", sidebar: "finance", guard: "auth", pageTitle: "Wallet", navLabel: "Wallet", navZone: "life" },
+  { path: "/wallet", zone: "finance", layout: "app", sidebar: "finance", guard: "auth", pageTitle: "MusheX Wallet", navLabel: "MusheX Wallet", navZone: "life" },
   { path: "/wallet/deposit", zone: "finance", layout: "app", sidebar: "finance", guard: "auth", pageTitle: "Deposit", navLabel: "Deposit", navZone: "life" },
   { path: "/wallet/send", zone: "finance", layout: "app", sidebar: "finance", guard: "auth", pageTitle: "Send Money", navLabel: "Send", navZone: "life" },
   { path: "/wallet/transactions", zone: "finance", layout: "app", sidebar: "finance", guard: "auth", pageTitle: "Transactions", navLabel: "Transactions", navZone: "life" },

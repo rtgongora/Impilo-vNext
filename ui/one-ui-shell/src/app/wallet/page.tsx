@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Mushe Wallet Dashboard — main wallet overview.
+ * MusheX Wallet Dashboard — main wallet overview.
  * Route: /wallet
  *
  * Sections: balance card, quick actions, recent transactions,

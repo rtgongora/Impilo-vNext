@@ -128,7 +128,7 @@ export default function SendMoneyPage() {
     <AppLayout>
       <PageShell
         title="Send Money"
-        subtitle="Transfer funds or pay a merchant from your Mushe wallet"
+        subtitle="Transfer funds or pay a merchant from your MusheX wallet"
         icon={<ArrowUpRight className="h-6 w-6" />}
       >
         <div className="mb-4">
