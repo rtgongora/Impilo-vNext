@@ -4,6 +4,7 @@ import Link from "next/link";
 import { IdentityAssuranceBanner } from "@/components/citizen/IdentityAssuranceBanner";
 
 const LINKS: { href: string; label: string; note: string }[] = [
+  { href: "/citizen/wallet", label: "My Health Wallet", note: "Your health life in one place — identity, records, care, consent, payments" },
   { href: "/citizen/health-id/qr", label: "My Health ID QR", note: "VITO portal contract via gateway" },
   { href: "/citizen/health-id/request", label: "Request Health ID", note: "POST /api/v1/portal/id/request" },
   { href: "/citizen/id-recovery", label: "ID recovery", note: "Step-up + VITO recovery" },
