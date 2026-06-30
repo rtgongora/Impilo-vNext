@@ -10,6 +10,8 @@ import zw.gov.mohcc.impilo.ubomi.persistence.repository.DeathNotificationReposit
 import zw.gov.mohcc.impilo.ubomi.persistence.repository.EventOutboxRepository;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -91,6 +93,67 @@ public class DeathNotificationService {
                         entity.getId(), entity.getDeceasedCpid(), certifyingPractitioner));
 
         return entity;
+    }
+
+    /**
+     * Required fields a civil-registration package cannot be submitted without (WS#8).
+     */
+    public List<String> validatePackage(DeathNotificationEntity e) {
+        List<String> missing = new ArrayList<>();
+        if (e.getDeceasedCpid() == null || e.getDeceasedCpid().isBlank()) missing.add("deceasedIdentity");
+        if (e.getDateOfDeath() == null) missing.add("dateOfDeath");
+        if (e.getPlaceOfDeathType() == null || e.getPlaceOfDeathType().isBlank()) missing.add("placeOfDeath");
+        if (e.getUnderlyingCause() == null || e.getUnderlyingCause().isBlank()) missing.add("underlyingCause");
+        if (!"CERTIFIED".equals(e.getStatus()) && !"REGISTERED".equals(e.getStatus())) missing.add("certification");
+        return missing;
+    }
+
+    /**
+     * Mark the civil-registration package ready for the Registrar General. Blocks when required
+     * fields are missing. Marking ready does NOT forge a registration — it stages the handoff.
+     */
+    @Transactional
+    public DeathNotificationEntity markPackageReady(UUID tenantId, Long notificationId) {
+        DeathNotificationEntity e = deathRepository.findByTenantIdAndId(tenantId, notificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Death notification not found: " + notificationId));
+        List<String> missing = validatePackage(e);
+        if (!missing.isEmpty()) {
+            throw new IllegalStateException(
+                    "Civil-registration package incomplete — missing: " + String.join(", ", missing));
+        }
+        e.setPackageReady(true);
+        e.setPackageValidatedAt(OffsetDateTime.now());
+        e = deathRepository.save(e);
+        // Owner-routed hook → Registrar General electronic submission (execution deferred; we never
+        // forge a completed registration). Downstream submission updates status to REGISTERED with a
+        // real civil_reg_number via register().
+        publishEvent("DEATH_NOTIFICATION", e.getId().toString(), "CRVS_PACKAGE_READY",
+                String.format("{\"notificationId\":%d,\"deceasedCpid\":\"%s\"}", e.getId(), e.getDeceasedCpid()));
+        return e;
+    }
+
+    /**
+     * Record a real civil registration outcome from the Registrar General (owner-routed). REGISTERED
+     * requires a civil_reg_number — we never synthesise one. May only follow a CERTIFIED notification.
+     */
+    @Transactional
+    public DeathNotificationEntity register(UUID tenantId, Long notificationId, String civilRegNumber) {
+        DeathNotificationEntity e = deathRepository.findByTenantIdAndId(tenantId, notificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Death notification not found: " + notificationId));
+        if (!"CERTIFIED".equals(e.getStatus())) {
+            throw new IllegalStateException("Only a CERTIFIED notification may be registered; status is " + e.getStatus());
+        }
+        if (civilRegNumber == null || civilRegNumber.isBlank()) {
+            throw new IllegalArgumentException("A civil registration number from the Registrar General is required");
+        }
+        e.setStatus("REGISTERED");
+        e.setCivilRegNumber(civilRegNumber);
+        e.setRegisteredAt(OffsetDateTime.now());
+        e = deathRepository.save(e);
+        publishEvent("DEATH_NOTIFICATION", e.getId().toString(), "DEATH_REGISTERED",
+                String.format("{\"notificationId\":%d,\"deceasedCpid\":\"%s\",\"civilRegNumber\":\"%s\"}",
+                        e.getId(), e.getDeceasedCpid(), civilRegNumber));
+        return e;
     }
 
     /**
