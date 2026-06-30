@@ -163,6 +163,27 @@ public class MvumoServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Delegated relationships where {@code actorId} is the delegate (i.e. the people this person
+     * may act for). Read-only composition surface for the person health wallet's dependants card —
+     * Mvumo remains the sovereign owner of the delegation records.
+     */
+    public JsonNode listDelegationsForDelegate(String actorId) {
+        String url = baseUrl + "/internal/v1/mvumo/delegations/delegate/" + actorId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Delegated relationships where {@code subjectRef} is the subject (i.e. who may act for this
+     * person). Read-only composition surface for the wallet's "who can act for me" card.
+     */
+    public JsonNode listDelegationsForSubject(String subjectRef) {
+        String url = baseUrl + "/internal/v1/mvumo/delegations/subject/" + subjectRef;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

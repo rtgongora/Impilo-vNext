@@ -164,6 +164,15 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/citizen/record-sharing", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Share My Record", navLabel: "Record sharing", navZone: "life" },
   { path: "/citizen/visit/[transactionId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Visit", navLabel: "My Visit", navZone: "life" },
   { path: "/citizen/inpatient/[admissionRef]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Inpatient Stay", navLabel: "My Stay", navZone: "life" },
+  // Unified Person Health Wallet — the person anchor experience (MY LIFE · MY HEALTH).
+  { path: "/citizen/wallet", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Health Wallet", navLabel: "Health Wallet", navZone: "life" },
+  { path: "/citizen/wallet/identity", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Identity & Trust", navLabel: "Identity & Trust", navZone: "life" },
+  { path: "/citizen/wallet/profile", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Profile & Corrections", navLabel: "Profile", navZone: "life" },
+  { path: "/citizen/wallet/records", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Health Records", navLabel: "Health Records", navZone: "life" },
+  { path: "/citizen/wallet/timeline", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Care Timeline", navLabel: "Care Timeline", navZone: "life" },
+  { path: "/citizen/wallet/dependants", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Dependants & Proxy", navLabel: "Dependants", navZone: "life" },
+  { path: "/citizen/wallet/payments", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Payments & Bills", navLabel: "Payments", navZone: "life" },
+  { path: "/citizen/wallet/comms", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Communication Preferences", navLabel: "Comms Preferences", navZone: "life" },
   { path: "/verify/credential", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Verify Credential", navLabel: "Verify Credential", navZone: "life" },
   { path: "/share/claim", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Claim Shared Documents", navLabel: "Claim Shared Documents", navZone: "life" },
   { path: "/collaboration/access", zone: "home", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Provider collaboration access", navLabel: "Collaboration access", navZone: "life" },
@@ -744,7 +753,10 @@ export const ROUTES: RouteDefinition[] = [
 // Impilo Live (Jun 2026): 14 routes under /live incl. /live/admin (services/live-service).
 // Trust & Access Administration (Jun 2026): 90 contract-governed routes under /work/** (administration-governance scaffold).
 // Vashandi (Jun 2026): 10 routes under /work/vashandi for operational workforce UI. New canonical total is 589.
-export const EXPECTED_ROUTE_COUNT = 594;
+// Person Health Wallet (Jun 2026): 8 routes under /citizen/wallet for the unified person anchor
+// experience (overview, identity, profile, records, timeline, dependants, payments, comms).
+// Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
+export const EXPECTED_ROUTE_COUNT = 639;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

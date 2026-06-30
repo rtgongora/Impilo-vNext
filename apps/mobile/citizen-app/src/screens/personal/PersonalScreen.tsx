@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Screen, Header } from "@impilo/mobile-design-system";
+import { WalletOverviewSection } from "./WalletOverviewSection";
 import { ProfileSection } from "./ProfileSection";
 import { AppointmentsSection } from "./AppointmentsSection";
 import { BookingsSection } from "./BookingsSection";
@@ -48,6 +49,7 @@ import { LiveDiscoverScreen } from "../live/LiveDiscoverScreen";
 import { appStore, useAppStore } from "../../stores/appStore";
 
 type PersonalTab =
+  | "wallet-home"
   | "profile"
   | "health-id"
   | "allergies"
@@ -95,6 +97,7 @@ type PersonalTab =
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
 const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName }> = [
+  { id: "wallet-home", label: "Wallet", icon: "wallet-outline" },
   { id: "profile", label: "Profile", icon: "person" },
   { id: "health-id", label: "Health ID", icon: "card" },
   { id: "allergies", label: "Allergies", icon: "medical" },
@@ -141,6 +144,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
 ];
 
 const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
+  "wallet-home": WalletOverviewSection,
   profile: ProfileSection,
   "health-id": HealthIdSection,
   allergies: AllergiesSection,
@@ -187,7 +191,7 @@ const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
 
 export function PersonalScreen() {
   const { personalSectionRequest } = useAppStore();
-  const [activeSection, setActiveSection] = useState<PersonalTab>("profile");
+  const [activeSection, setActiveSection] = useState<PersonalTab>("wallet-home");
   const SectionComponent = SECTIONS[activeSection];
 
   useEffect(() => {
