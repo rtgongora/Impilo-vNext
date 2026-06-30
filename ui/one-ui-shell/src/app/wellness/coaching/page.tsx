@@ -8,6 +8,7 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useLogWellnessActivity } from "@/hooks/queries/useCitizenWellness";
 import { useAskGuidance } from "@/hooks/queries/useGuidance";
 import { useCoachingNudges, useCreateGoal, useWellnessGoals } from "@/hooks/queries/useSimba";
+import { useCheckInHabit } from "@/hooks/queries/useSimbaDepth";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -19,6 +20,7 @@ export default function CoachingPage() {
   const nudgesQ = useCoachingNudges(cpid);
   const createGoal = useCreateGoal();
   const logActivity = useLogWellnessActivity(cpid);
+  const checkInHabit = useCheckInHabit();
   const askGuidance = useAskGuidance();
 
   const [showForm, setShowForm] = useState(false);
@@ -51,6 +53,15 @@ export default function CoachingPage() {
       } else {
         next.add(id);
         if (cpid) {
+          // Persist a real daily habit check-in (Simba), and log the light activity.
+          // habit_code is a short stable key (VARCHAR(64)); goal_id is omitted unless it is a UUID.
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+          checkInHabit.mutate({
+            person_cpid: cpid,
+            habit_code: `goal:${id}`.slice(0, 64),
+            status: "DONE",
+            ...(isUuid ? { goal_id: id } : {}),
+          });
           logActivity.mutate({
             patientId: cpid,
             activeMinutes: 5,

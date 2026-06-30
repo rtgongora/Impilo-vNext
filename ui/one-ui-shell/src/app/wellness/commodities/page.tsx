@@ -13,14 +13,14 @@ export default function WellnessCommoditiesPage() {
   return (
     <AppLayout>
       <PageShell
-        title="Wellness commodities"
-        subtitle="Inventory-backed wellness commodities (SIMBA plane) — on-hand stock from inventory-service, not simba-service"
+        title="Programme commodities (Dura)"
+        subtitle="Stock for wellness programmes is owned by Dura (inventory-service). Simba is wellness — it does not own or manage stock; this is a convenience window into the Dura ledger."
         icon={<Package className="h-6 w-6" />}
       >
         <div className="mb-6 rounded-xl border border-teal-200 bg-teal-50/70 p-4 text-sm text-teal-950">
           <p>
-            Wellness programme commodities are tracked as inventory on-hand positions. Use the embedded stock panel
-            below or open the full{" "}
+            Commodities for wellness programmes are stock positions owned by <span className="font-semibold">Dura</span>
+            {" "}(inventory-service), not Simba. Use the embedded stock panel below or open the full{" "}
             <Link href="/inventory/stock-management" className="font-semibold text-teal-800 underline">
               stock management workspace
             </Link>{" "}
