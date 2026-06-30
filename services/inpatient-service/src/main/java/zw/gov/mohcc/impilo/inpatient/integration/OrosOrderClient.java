@@ -46,13 +46,14 @@ public class OrosOrderClient {
     public String placeOrder(String orderType, String priority, String patientCpid, String encounterRef,
                              String clinicalNotes, List<Map<String, Object>> items) {
         try {
-            Map<String, Object> payload = Map.of(
-                    "orderType", orderType,
-                    "priority", priority != null ? priority : "ROUTINE",
-                    "patientCpid", patientCpid,
-                    "encounterRef", encounterRef,
-                    "clinicalNotes", clinicalNotes != null ? clinicalNotes : "",
-                    "items", items);
+            // null-tolerant payload — Map.of rejects null encounterRef and would NPE before the call
+            Map<String, Object> payload = new java.util.LinkedHashMap<>();
+            payload.put("orderType", orderType);
+            payload.put("priority", priority != null ? priority : "ROUTINE");
+            payload.put("patientCpid", patientCpid);
+            payload.put("encounterRef", encounterRef);
+            payload.put("clinicalNotes", clinicalNotes != null ? clinicalNotes : "");
+            payload.put("items", items);
             ResponseEntity<Map> resp = restTemplate.postForEntity(baseUrl + "/v1/orders",
                     new HttpEntity<>(payload, trustHeaders()), Map.class);
             Map<String, Object> body = resp.getBody();
