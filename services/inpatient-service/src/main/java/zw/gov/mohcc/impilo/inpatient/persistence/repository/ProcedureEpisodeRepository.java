@@ -11,4 +11,10 @@ public interface ProcedureEpisodeRepository extends JpaRepository<ProcedureEpiso
     List<ProcedureEpisodeEntity> findByTenantIdAndSubjectCpidOrderByScheduledAtDesc(UUID tenantId, String subjectCpid);
 
     Optional<ProcedureEpisodeEntity> findByTenantIdAndBookingId(UUID tenantId, String bookingId);
+
+    Optional<ProcedureEpisodeEntity> findByTenantIdAndOrosOrderId(UUID tenantId, String orosOrderId);
+
+    List<ProcedureEpisodeEntity> findByTenantIdAndStatusInOrderByScheduledAtAsc(UUID tenantId, List<String> statuses);
+
+    List<ProcedureEpisodeEntity> findByTenantIdOrderByScheduledAtAsc(UUID tenantId);
 }

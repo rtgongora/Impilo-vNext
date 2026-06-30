@@ -72,6 +72,37 @@ public class ProcedureEpisodeEntity {
     @Column(name = "completed_at")
     private OffsetDateTime completedAt;
 
+    // -- Theatre & perioperative depth (V018) --
+    @Column(name = "oros_order_id")
+    private String orosOrderId;
+
+    @Column(name = "triage_priority", nullable = false)
+    private String triagePriority = "ELECTIVE";
+
+    @Column(name = "theatre_room_id")
+    private UUID theatreRoomId;
+
+    @Column(name = "scrub_nurse_id")
+    private String scrubNurseId;
+
+    @Column(name = "cancellation_reason", columnDefinition = "TEXT")
+    private String cancellationReason;
+
+    @Column(name = "cancelled_by")
+    private String cancelledBy;
+
+    @Column(name = "cancelled_at")
+    private OffsetDateTime cancelledAt;
+
+    @Column(name = "emergency_override", nullable = false)
+    private boolean emergencyOverride;
+
+    @Column(name = "emergency_override_reason", columnDefinition = "TEXT")
+    private String emergencyOverrideReason;
+
+    @Column(name = "death_case_ref")
+    private String deathCaseRef;
+
     @PrePersist
     void onCreate() {
         if (episodeId == null) episodeId = UUID.randomUUID();
@@ -127,4 +158,24 @@ public class ProcedureEpisodeEntity {
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
     public OffsetDateTime getCompletedAt() { return completedAt; }
     public void setCompletedAt(OffsetDateTime completedAt) { this.completedAt = completedAt; }
+    public String getOrosOrderId() { return orosOrderId; }
+    public void setOrosOrderId(String orosOrderId) { this.orosOrderId = orosOrderId; }
+    public String getTriagePriority() { return triagePriority; }
+    public void setTriagePriority(String triagePriority) { this.triagePriority = triagePriority; }
+    public UUID getTheatreRoomId() { return theatreRoomId; }
+    public void setTheatreRoomId(UUID theatreRoomId) { this.theatreRoomId = theatreRoomId; }
+    public String getScrubNurseId() { return scrubNurseId; }
+    public void setScrubNurseId(String scrubNurseId) { this.scrubNurseId = scrubNurseId; }
+    public String getCancellationReason() { return cancellationReason; }
+    public void setCancellationReason(String cancellationReason) { this.cancellationReason = cancellationReason; }
+    public String getCancelledBy() { return cancelledBy; }
+    public void setCancelledBy(String cancelledBy) { this.cancelledBy = cancelledBy; }
+    public OffsetDateTime getCancelledAt() { return cancelledAt; }
+    public void setCancelledAt(OffsetDateTime cancelledAt) { this.cancelledAt = cancelledAt; }
+    public boolean isEmergencyOverride() { return emergencyOverride; }
+    public void setEmergencyOverride(boolean emergencyOverride) { this.emergencyOverride = emergencyOverride; }
+    public String getEmergencyOverrideReason() { return emergencyOverrideReason; }
+    public void setEmergencyOverrideReason(String emergencyOverrideReason) { this.emergencyOverrideReason = emergencyOverrideReason; }
+    public String getDeathCaseRef() { return deathCaseRef; }
+    public void setDeathCaseRef(String deathCaseRef) { this.deathCaseRef = deathCaseRef; }
 }
