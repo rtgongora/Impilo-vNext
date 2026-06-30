@@ -558,6 +558,7 @@ export const ROUTES: RouteDefinition[] = [
     navZone: "life",
   },
   { path: "/search", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Search", navLabel: "Search", navZone: "life" },
+  { path: "/nompilo", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Nompilo", navLabel: "Nompilo", navZone: "life" },
   { path: "/guidance", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Guidance", navLabel: "Guidance", navZone: "life" },
   { path: "/guidance/reminders", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Reminders & Prompts", navLabel: "Reminders", navZone: "life" },
   { path: "/guidance/education", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Health Education", navLabel: "Education", navZone: "life" },
@@ -756,7 +757,7 @@ export const ROUTES: RouteDefinition[] = [
 // Person Health Wallet (Jun 2026): 8 routes under /citizen/wallet for the unified person anchor
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
-export const EXPECTED_ROUTE_COUNT = 639;
+export const EXPECTED_ROUTE_COUNT = 640;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

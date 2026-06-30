@@ -5,7 +5,7 @@ import PersonHealthWalletPage from "./page";
 import { apiClient } from "@/lib/api-client";
 
 vi.mock("@/lib/api-client", () => ({
-  apiClient: { get: vi.fn() },
+  apiClient: { get: vi.fn(), post: vi.fn().mockResolvedValue({ data: { guidance: [] } }) },
 }));
 
 // The identity/trust banner is a separately-tested component with its own assurance query; stub it

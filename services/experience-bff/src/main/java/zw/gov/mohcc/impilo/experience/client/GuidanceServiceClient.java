@@ -55,6 +55,41 @@ public class GuidanceServiceClient {
         return extractData(response);
     }
 
+    // ── Nompilo context-aware guidance (V004) ─────────────────────────────────────────
+
+    /** Resolve the contextual guidance set for the caller's route/user-type/trust + signals. */
+    public JsonNode resolveContext(Map<String, Object> contextRequest) {
+        String url = baseUrl + "/internal/v1/guidance/nompilo/context";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, contextRequest, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Map a denied/locked reason code to a safe plain-language explanation (no sensitive leak). */
+    public JsonNode explainLocked(Map<String, Object> request) {
+        String url = baseUrl + "/internal/v1/guidance/nompilo/explain-locked";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Record a person's dismissal of a guidance item. */
+    public JsonNode dismiss(Map<String, Object> request) {
+        String url = baseUrl + "/internal/v1/guidance/nompilo/dismiss";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Request a Nompilo handoff / follow-up via the real guidance-service lifecycle (V003). This is
+     * the canonical pathway Nompilo uses to REQUEST a human/Khuluma follow-up — it emits
+     * {@code core.nompilo.handoff.requested}, which the comms (Khuluma) and Rito subscribers consume.
+     * Nompilo never sends a notification itself.
+     */
+    public JsonNode requestHandoff(Map<String, Object> request) {
+        String url = baseUrl + "/internal/v1/guidance/nompilo/handoffs";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode getEducation(String domain, int page, int size) {
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/guidance/education")
                 .queryParam("domain", domain)

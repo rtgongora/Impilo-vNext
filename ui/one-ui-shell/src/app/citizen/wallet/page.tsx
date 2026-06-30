@@ -29,6 +29,7 @@ import {
 import { IdentityAssuranceBanner } from "@/components/citizen/IdentityAssuranceBanner";
 import { ActingForBanner } from "@/components/citizen/ActingForBanner";
 import { useWalletOverview, type WalletNextAction } from "@/hooks/queries/useWallet";
+import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
 
 type AnyRecord = Record<string, unknown>;
 
@@ -252,6 +253,10 @@ export default function PersonHealthWalletPage() {
           {completion ? <ProfileMeter percent={completion.percent} missing={completion.missing} /> : null}
 
           <NextActions actions={overview?.nextActions ?? []} />
+
+          {/* Nompilo deepens the wallet's "what next" cards with config-driven contextual guidance:
+              locked-state explainers, route-to-owner CTAs, Khuluma follow-ups, and dismissal. */}
+          <NompiloContextualGuidance routePath="/citizen/wallet" title="Nompilo · your guide" />
 
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {cards.map((spec) => (
