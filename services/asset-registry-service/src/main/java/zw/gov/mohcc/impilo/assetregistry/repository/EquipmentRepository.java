@@ -24,5 +24,14 @@ public interface EquipmentRepository extends JpaRepository<EquipmentEntity, UUID
     @Query("SELECT e FROM EquipmentEntity e WHERE e.tenantId = :tenantId AND e.nextMaintenance <= :cutoff ORDER BY e.nextMaintenance ASC")
     List<EquipmentEntity> findMaintenanceDue(@Param("tenantId") UUID tenantId, @Param("cutoff") LocalDate cutoff);
 
+    @Query("SELECT e FROM EquipmentEntity e WHERE e.tenantId = :tenantId AND e.nextCalibration <= :cutoff ORDER BY e.nextCalibration ASC")
+    List<EquipmentEntity> findCalibrationDue(@Param("tenantId") UUID tenantId, @Param("cutoff") LocalDate cutoff);
+
     List<EquipmentEntity> findByDeviceId(String deviceId);
+
+    List<EquipmentEntity> findByTenantIdAndSerialNumber(UUID tenantId, String serialNumber);
+
+    List<EquipmentEntity> findByTenantIdAndTag(UUID tenantId, String tag);
+
+    List<EquipmentEntity> findByTenantIdAndFacilityIdAndEquipmentType(UUID tenantId, String facilityId, String equipmentType);
 }
