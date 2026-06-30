@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Mushe Person Health Wallet — home / overview (MY LIFE · MY HEALTH).
+ * Mushe Personal Health Wallet — home / overview (MY LIFE · MY HEALTH).
  *
  * The person anchor: identity & trust, profile completion, next-step guidance (Nompilo), and a
  * grid of real, source-labelled cards that link into the existing record / timeline / consent /
@@ -222,8 +222,9 @@ export default function PersonHealthWalletPage() {
 
       <div>
         <h1 className="flex items-center gap-2 text-xl font-semibold text-foreground">
-          <ShieldCheck className="h-5 w-5 text-primary" /> Mushe Person Health Wallet
+          <ShieldCheck className="h-5 w-5 text-primary" /> Mushe Personal Health Wallet
         </h1>
+        <p className="mt-0.5 text-sm font-medium text-primary">Your Health, Your Wealth</p>
         <p className="mt-1 text-sm text-muted-foreground">
           Your health life in one place — identity, records, care, consent, dependants and payments.
           Everything here is drawn live from the services that own it.

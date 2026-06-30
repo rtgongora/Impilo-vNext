@@ -7,7 +7,7 @@ import { fetchPersonWalletOverview } from "../../services/personHealthWalletServ
 import { appStore } from "../../stores/appStore";
 
 /**
- * Mushe Person Health Wallet — mobile home / overview.
+ * Mushe Personal Health Wallet — mobile home / overview.
  *
  * The person anchor landing inside "My Health". Shows trust + profile completion, Nompilo
  * next-steps, and a grid of real, source-labelled cards that jump into the existing Personal
@@ -111,7 +111,8 @@ export function WalletOverviewSection() {
 
   return (
     <ScrollView contentContainerStyle={styles.container} testID="wallet-overview-section">
-      <Text style={styles.title}>Mushe Person Health Wallet</Text>
+      <Text style={styles.title}>Mushe Personal Health Wallet</Text>
+      <Text style={styles.tagline}>Your Health, Your Wealth</Text>
       <Text style={styles.subtitle}>
         Your health life in one place — drawn live from the services that own it.
       </Text>
@@ -172,6 +173,7 @@ export function WalletOverviewSection() {
 const styles = StyleSheet.create({
   container: { paddingBottom: 24 },
   title: { fontSize: 20, fontWeight: "700", color: "#111827" },
+  tagline: { marginTop: 2, fontSize: 14, fontWeight: "600", color: "#2563EB" },
   subtitle: { marginTop: 4, fontSize: 13, color: "#6B7280" },
   meterCard: {
     marginTop: 16,
