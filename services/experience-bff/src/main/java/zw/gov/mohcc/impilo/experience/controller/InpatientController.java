@@ -276,6 +276,115 @@ public class InpatientController {
         }
     }
 
+    // ── Deterioration escalations (WS#6) ─────────────────────────────
+
+    @GetMapping("/escalations")
+    public ResponseEntity<Map<String, Object>> listEscalations(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(required = false) String patientId,
+            @RequestParam(required = false) String wardId) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.listEscalations(patientId, wardId),
+                    "Inpatient listEscalations");
+            return ResponseEntity.ok(Map.of("data", data,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient listEscalations", e);
+        }
+    }
+
+    @PostMapping("/escalations/{escalationId}/acknowledge")
+    public ResponseEntity<Map<String, Object>> acknowledgeEscalation(
+            @PathVariable String escalationId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.acknowledgeEscalation(escalationId),
+                    "Inpatient acknowledgeEscalation");
+            return ResponseEntity.ok(Map.of("data", data,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient acknowledgeEscalation", e);
+        }
+    }
+
+    @PostMapping("/escalations/{escalationId}/respond")
+    public ResponseEntity<Map<String, Object>> respondEscalation(
+            @PathVariable String escalationId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            JsonNode data = requirePayload(
+                    inpatientClient.respondEscalation(escalationId, body == null ? Map.of() : body),
+                    "Inpatient respondEscalation");
+            return ResponseEntity.ok(Map.of("data", data,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient respondEscalation", e);
+        }
+    }
+
+    // ── Discharge summary (WS#6) ─────────────────────────────────────
+
+    @PostMapping("/discharge-summary")
+    public ResponseEntity<Map<String, Object>> saveDischargeSummary(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.saveDischargeSummary(body),
+                    "Inpatient saveDischargeSummary");
+            return ResponseEntity.ok(Map.of("data", data,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient saveDischargeSummary", e);
+        }
+    }
+
+    @GetMapping("/discharge-summary")
+    public ResponseEntity<Map<String, Object>> getDischargeSummary(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam String encounterId) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.getDischargeSummary(encounterId),
+                    "Inpatient getDischargeSummary");
+            return ResponseEntity.ok(Map.of("data", data,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient getDischargeSummary", e);
+        }
+    }
+
+    @PostMapping("/discharge-summary/{encounterId}/finalise")
+    public ResponseEntity<Map<String, Object>> finaliseDischargeSummary(
+            @PathVariable String encounterId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.finaliseDischargeSummary(encounterId),
+                    "Inpatient finaliseDischargeSummary");
+            return ResponseEntity.ok(Map.of("data", data,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient finaliseDischargeSummary", e);
+        }
+    }
+
     private static Map<String, Object> normalizeTransferBody(Map<String, Object> body) {
         Map<String, Object> normalized = new LinkedHashMap<>();
         if (body == null) {
