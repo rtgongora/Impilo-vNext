@@ -37,7 +37,7 @@
 | `inpatient-service` | clinical | Inpatient canonical records |
 | `integration-hub` | integration | Integration Hub canonical records |
 | `inventory-elmis-adapter` | clinical | Inventory Elmis Adapter canonical records |
-| `inventory-service` | clinical | Inventory canonical records |
+| `inventory-service` | clinical | Inventory canonical records — **this is "Dura"** (the doctrine name for stock / commodity / storehouse / supply truth). There is no separate `dura-service`; do not create one. Marketplace/wellness/care flows that reference "Dura" reserve/issue through `inventory-service` (8098) + `msika-flow-service` reservations. |
 | `iot-ingestion-service` | integration | Iot Ingestion canonical records |
 | `jobs-service` | integration | Jobs canonical records |
 | `khuluma-service` | experience | Khuluma Comms Hub: unified conversation index, participants, messages + read receipts, presence, conversation↔canonical-object links, escalation/SLA, and the realtime push gateway (SSE + WebSocket). **Reuses** channels-service (channel sessions/messages), notification-service (notification inbox/templates/delivery/providers), live-service (meetings/webinars), rtc-gateway-service + LiveKit (call/meeting media), pct-service (teleconsult) — must not duplicate any of these. |
