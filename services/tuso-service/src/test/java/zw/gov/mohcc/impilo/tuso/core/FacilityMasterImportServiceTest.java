@@ -24,6 +24,11 @@ import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityImportRowReposito
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityImportRunEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRepository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -32,6 +37,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -482,6 +488,72 @@ class FacilityMasterImportServiceTest {
         when(importRunRepository.findById(9L)).thenReturn(Optional.of(otherTenantRun));
 
         assertThat(service.getRun(9L)).isEmpty();
+    }
+
+    @Test
+    void searchRowsMapsPageToPagedRows() {
+        FacilityImportRowEntity e = new FacilityImportRowEntity();
+        e.setId(1L);
+        e.setImportRunId(500L);
+        e.setFacilityCode("ZW1");
+        e.setFacilityName("Row Clinic");
+        e.setOutcome(FacilityImportRowEntity.IMPORTED);
+        when(importRowRepository.search(eq(500L), eq("IMPORTED"), any(), any(), any(), any(), any(), any(),
+                any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(e), PageRequest.of(0, 50), 1));
+
+        var paged = service.searchRows(500L, "IMPORTED", null, null, null, null, null, null, 0, 50);
+
+        assertThat(paged.totalElements()).isEqualTo(1);
+        assertThat(paged.content()).hasSize(1);
+        assertThat(paged.content().get(0).facilityCode()).isEqualTo("ZW1");
+        assertThat(paged.content().get(0).outcome()).isEqualTo("IMPORTED");
+    }
+
+    @Test
+    void reviewBucketsAggregatesPersistedCounts() {
+        when(importRowRepository.countByOutcome(500L)).thenReturn(List.of(
+                new Object[]{FacilityImportRowEntity.IMPORTED, 3L},
+                new Object[]{FacilityImportRowEntity.EXCLUDED_MISSING_FACILITY_CODE, 1L},
+                new Object[]{FacilityImportRowEntity.EXCLUDED_DUPLICATE_FACILITY_NAME, 2L}));
+        when(importRowRepository.countByImportRunIdAndHasAcceptableMissingTrue(500L)).thenReturn(4L);
+        when(importRowRepository.search(any(), any(), any(), any(), any(), any(), any(), any(),
+                any(Pageable.class))).thenReturn(Page.empty());
+
+        var buckets = service.reviewBuckets(500L);
+
+        assertThat(buckets.importedRows().count()).isEqualTo(3);
+        assertThat(buckets.missingFacilityCode().count()).isEqualTo(1);
+        assertThat(buckets.duplicateFacilityNames().count()).isEqualTo(2);
+        assertThat(buckets.acceptableMissingFields().count()).isEqualTo(4);
+        assertThat(buckets.duplicateFacilityCodes().count()).isZero();
+        assertThat(buckets.failedRows().count()).isZero();
+    }
+
+    @Test
+    void duplicateGroupsGroupsRowsByKey() {
+        FacilityImportRowEntity a = new FacilityImportRowEntity();
+        a.setImportRunId(500L);
+        a.setFacilityCode("ZWDA");
+        a.setFacilityName("Twin Clinic");
+        a.setOutcome(FacilityImportRowEntity.EXCLUDED_DUPLICATE_FACILITY_NAME);
+        a.setDuplicateType(FacilityImportRowEntity.DUP_TYPE_NAME);
+        a.setDuplicateGroupKey("NAME:twin clinic");
+        FacilityImportRowEntity b = new FacilityImportRowEntity();
+        b.setImportRunId(500L);
+        b.setFacilityCode("ZWDB");
+        b.setFacilityName("Twin Clinic");
+        b.setOutcome(FacilityImportRowEntity.EXCLUDED_DUPLICATE_FACILITY_NAME);
+        b.setDuplicateType(FacilityImportRowEntity.DUP_TYPE_NAME);
+        b.setDuplicateGroupKey("NAME:twin clinic");
+        when(importRowRepository.findByImportRunIdAndDuplicateTypeOrderByDuplicateGroupKeyAscFacilityCodeAsc(
+                500L, FacilityImportRowEntity.DUP_TYPE_NAME)).thenReturn(List.of(a, b));
+
+        var resp = service.duplicateGroups(500L, FacilityImportRowEntity.DUP_TYPE_NAME);
+
+        assertThat(resp.groupCount()).isEqualTo(1);
+        assertThat(resp.groups().get(0).size()).isEqualTo(2);
+        assertThat(resp.groups().get(0).duplicateGroupKey()).isEqualTo("NAME:twin clinic");
     }
 
     @Test

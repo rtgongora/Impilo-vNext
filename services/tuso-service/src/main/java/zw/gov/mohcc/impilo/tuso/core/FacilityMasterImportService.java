@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.tuso.api.dto.FacilityImportRowDtos;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityImportRunDtos;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityMasterImportDtos;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityContactEntity;
@@ -460,6 +461,98 @@ public class FacilityMasterImportService {
         return importRunRepository.findById(runId)
                 .filter(r -> tenantId.equals(r.getTenantId()))
                 .map(FacilityMasterImportService::toRunView);
+    }
+
+    /** Filtered, paginated row search for a run. {@code size} is clamped to a sane max. */
+    @Transactional(readOnly = true)
+    public FacilityImportRowDtos.PagedRows searchRows(
+            Long runId, String outcome, String duplicateType, String province, String district,
+            String facilityCode, String facilityName, Boolean hasAcceptableMissing, int page, int size) {
+        int safeSize = Math.min(Math.max(size, 1), 200);
+        int safePage = Math.max(page, 0);
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+                safePage, safeSize, org.springframework.data.domain.Sort.by("id").ascending());
+        org.springframework.data.domain.Page<FacilityImportRowEntity> result = importRowRepository.search(
+                runId, blankToNull(outcome), blankToNull(duplicateType), blankToNull(province),
+                blankToNull(district), blankToNull(facilityCode), blankToNull(facilityName),
+                hasAcceptableMissing, pageable);
+        return new FacilityImportRowDtos.PagedRows(
+                result.getContent().stream().map(FacilityMasterImportService::toRowView).toList(),
+                result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages());
+    }
+
+    /** Review buckets (counts + bounded preview) for a run. */
+    @Transactional(readOnly = true)
+    public FacilityImportRowDtos.ReviewBuckets reviewBuckets(Long runId) {
+        Map<String, Long> counts = new HashMap<>();
+        for (Object[] row : importRowRepository.countByOutcome(runId)) {
+            counts.put((String) row[0], (Long) row[1]);
+        }
+        long acceptable = importRowRepository.countByImportRunIdAndHasAcceptableMissingTrue(runId);
+        return new FacilityImportRowDtos.ReviewBuckets(
+                runId,
+                bucket(runId, FacilityImportRowEntity.IMPORTED, counts.getOrDefault(FacilityImportRowEntity.IMPORTED, 0L)),
+                bucket(runId, FacilityImportRowEntity.EXCLUDED_MISSING_FACILITY_CODE,
+                        counts.getOrDefault(FacilityImportRowEntity.EXCLUDED_MISSING_FACILITY_CODE, 0L)),
+                bucket(runId, FacilityImportRowEntity.EXCLUDED_DUPLICATE_FACILITY_CODE,
+                        counts.getOrDefault(FacilityImportRowEntity.EXCLUDED_DUPLICATE_FACILITY_CODE, 0L)),
+                bucket(runId, FacilityImportRowEntity.EXCLUDED_DUPLICATE_FACILITY_NAME,
+                        counts.getOrDefault(FacilityImportRowEntity.EXCLUDED_DUPLICATE_FACILITY_NAME, 0L)),
+                acceptableBucket(runId, acceptable),
+                bucket(runId, FacilityImportRowEntity.FAILED, counts.getOrDefault(FacilityImportRowEntity.FAILED, 0L)));
+    }
+
+    private FacilityImportRowDtos.Bucket bucket(Long runId, String outcome, long count) {
+        if (count == 0) {
+            return new FacilityImportRowDtos.Bucket(0, List.of());
+        }
+        var preview = importRowRepository.search(runId, outcome, null, null, null, null, null, null,
+                        org.springframework.data.domain.PageRequest.of(0, 5))
+                .getContent().stream().map(FacilityMasterImportService::toRowView).toList();
+        return new FacilityImportRowDtos.Bucket(count, preview);
+    }
+
+    private FacilityImportRowDtos.Bucket acceptableBucket(Long runId, long count) {
+        if (count == 0) {
+            return new FacilityImportRowDtos.Bucket(0, List.of());
+        }
+        var preview = importRowRepository.search(runId, null, null, null, null, null, null, true,
+                        org.springframework.data.domain.PageRequest.of(0, 5))
+                .getContent().stream().map(FacilityMasterImportService::toRowView).toList();
+        return new FacilityImportRowDtos.Bucket(count, preview);
+    }
+
+    /** Duplicate rows for a run, grouped by group key (never auto-merged). */
+    @Transactional(readOnly = true)
+    public FacilityImportRowDtos.DuplicateGroupsResponse duplicateGroups(Long runId, String duplicateType) {
+        List<FacilityImportRowEntity> rows =
+                importRowRepository.findByImportRunIdAndDuplicateTypeOrderByDuplicateGroupKeyAscFacilityCodeAsc(
+                        runId, duplicateType);
+        java.util.LinkedHashMap<String, List<FacilityImportRowDtos.FacilityImportRowView>> grouped =
+                new java.util.LinkedHashMap<>();
+        for (FacilityImportRowEntity r : rows) {
+            grouped.computeIfAbsent(r.getDuplicateGroupKey(), k -> new ArrayList<>()).add(toRowView(r));
+        }
+        List<FacilityImportRowDtos.DuplicateGroup> groups = new ArrayList<>();
+        grouped.forEach((key, groupRows) ->
+                groups.add(new FacilityImportRowDtos.DuplicateGroup(key, duplicateType, groupRows.size(), groupRows)));
+        return new FacilityImportRowDtos.DuplicateGroupsResponse(runId, duplicateType, groups.size(), groups);
+    }
+
+    private static String blankToNull(String s) {
+        return (s == null || s.isBlank()) ? null : s.trim();
+    }
+
+    private static FacilityImportRowDtos.FacilityImportRowView toRowView(FacilityImportRowEntity e) {
+        return new FacilityImportRowDtos.FacilityImportRowView(
+                e.getId(), e.getImportRunId(), e.getSourceLabel(), e.getSourceRow(), e.getCorrelationKey(),
+                e.getProvince(), e.getDistrict(), e.getFacilityName(), e.getFacilityCode(),
+                e.getLatitude(), e.getLongitude(), e.getFacilityType(), e.getOwnership(),
+                e.getLocationCategory(), e.getFacilityLevel(), e.getContact(), e.getOperatingStatus(),
+                e.getBedCapacity(), e.getRawValues(), e.getOutcome(), e.getImportDecision(),
+                e.getExclusionReason(), e.getDuplicateType(), e.getDuplicateGroupKey(),
+                e.getAcceptableMissing(), e.isHasAcceptableMissing(), e.getValidationWarnings(),
+                e.getValidationErrors(), e.getMatchedFacilityId(), e.getResultFacilityId(), e.getCreatedAt());
     }
 
     private static FacilityImportRunDtos.FacilityImportRunView toRunView(FacilityImportRunEntity run) {

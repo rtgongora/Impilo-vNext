@@ -10,14 +10,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.tuso.api.dto.FacilityImportRowDtos;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityImportRunDtos;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityMasterImportDtos;
 import zw.gov.mohcc.impilo.tuso.core.FacilityMasterImportService;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityImportRowEntity;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -75,6 +78,67 @@ public class FacilityMasterImportController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Facility import run not found: " + runId));
         return ResponseEntity.ok(ApiResponse.ok(run, ctx.correlationId().toString()));
+    }
+
+    /** Filtered, paginated persisted rows for a run. {@code status} is an alias for {@code outcome}. */
+    @GetMapping("/runs/{runId}/rows")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.PagedRows>> getRows(
+            @PathVariable Long runId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String outcome,
+            @RequestParam(required = false) String duplicateType,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String district,
+            @RequestParam(required = false) String facilityCode,
+            @RequestParam(required = false) String facilityName,
+            @RequestParam(required = false) Boolean hasAcceptableMissingFields,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        TrustContext ctx = TrustContextHolder.require();
+        String effectiveOutcome = outcome != null ? outcome : status;
+        var rows = importService.searchRows(runId, effectiveOutcome, duplicateType, province, district,
+                facilityCode, facilityName, hasAcceptableMissingFields, page, size);
+        return ResponseEntity.ok(ApiResponse.ok(rows, ctx.correlationId().toString()));
+    }
+
+    /** Review buckets (counts + preview) built from persisted rows. */
+    @GetMapping("/runs/{runId}/review")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.ReviewBuckets>> getReview(
+            @PathVariable Long runId) {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(importService.reviewBuckets(runId), ctx.correlationId().toString()));
+    }
+
+    /** Duplicate rows grouped for review; {@code type} defaults to FACILITY_CODE. */
+    @GetMapping("/runs/{runId}/duplicates")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.DuplicateGroupsResponse>> getDuplicates(
+            @PathVariable Long runId,
+            @RequestParam(defaultValue = FacilityImportRowEntity.DUP_TYPE_CODE) String type) {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(importService.duplicateGroups(runId, type), ctx.correlationId().toString()));
+    }
+
+    /** Rows excluded for missing facility code. */
+    @GetMapping("/runs/{runId}/missing-code")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.PagedRows>> getMissingCode(
+            @PathVariable Long runId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        TrustContext ctx = TrustContextHolder.require();
+        var rows = importService.searchRows(runId, FacilityImportRowEntity.EXCLUDED_MISSING_FACILITY_CODE,
+                null, null, null, null, null, null, page, size);
+        return ResponseEntity.ok(ApiResponse.ok(rows, ctx.correlationId().toString()));
+    }
+
+    /** Import-eligible rows that carry acceptable-missing fields. */
+    @GetMapping("/runs/{runId}/acceptable-missing")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.PagedRows>> getAcceptableMissing(
+            @PathVariable Long runId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        TrustContext ctx = TrustContextHolder.require();
+        var rows = importService.searchRows(runId, null, null, null, null, null, null, true, page, size);
+        return ResponseEntity.ok(ApiResponse.ok(rows, ctx.correlationId().toString()));
     }
 
     @GetMapping("/master-pack/quality-report")
