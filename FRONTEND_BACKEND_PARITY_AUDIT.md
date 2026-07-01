@@ -32,7 +32,7 @@ Classification labels:
 | Encounter cadre orchestration | Partial | Missing | Partial | Adaptive Encounter Cockpit renders from PCT/BFF cadre decision; cadre-specific form *content* Partial (GAP-10); two cadre authorities to unify (GAP-4) |
 | Provider bootstrap / silent resolution | Partial | Partial | Partial | VARAPI bootstrap + council/EC resolver and Tshepo-identity silent resolution live for Health/Impilo/Provider-ID/council; phone/email/invite deny-safe (GAP-5) |
 | Access / value / compensation (COSTA + coverage) | Partial | N/A | Missing | Emergency reconciliation, waiver CRUD, teleconsult→value, subsidy+cap are live backend; web surfacing Partial; mobile Missing (GAP-19) |
-| Patient-facing journey status surfaces | Missing | Missing | Missing | **Not shipped for this journey (GAP-8)** — queue/check-in/orders/referral/inpatient/outcome status absent on our side |
+| Patient-facing journey status surfaces | Partial | Partial | N/A | **GAP-8 reassessed 2026-07-01 (verified vs code):** web `/citizen/visit/[transactionId]`, `/citizen/inpatient/[admissionRef]` (wired to `PatientLaneService`) and `/citizen/my-care` (live `/internal/v1/citizen/health-summary`) ship; citizen mobile `QueueStatusSection` on `/internal/v1/mobile/citizen/{queue,visit,inpatient}`. Still Partial: unified web queue/active-visit-status + orders/outcome timeline not yet composed. |
 
 ## Doctrine-alignment findings
 
@@ -41,6 +41,22 @@ Classification labels:
 - **Contract-first:** strong movement, but legacy local model drift still appears in selected fronts.
 - **No fake capability:** maturity badges and explicit placeholders are in use; remaining fixture-backed doctrine routes are documented.
 - **Person-first and trust layer:** structure exists in identity and header layers; consistency across all surfaces remains partial.
+
+## Reconciliation note (2026-07-01)
+
+A verification pass confirmed several matrix rows lagged the code:
+
+- **GAP-8 (patient-facing journey status)** was labelled "Missing everywhere" but web
+  `/citizen/visit/[transactionId]` + `/citizen/inpatient/[admissionRef]` are wired to
+  `PatientLaneService`, and citizen mobile ships `QueueStatusSection`. Downgraded from Missing
+  to **Partial** (web + citizen) and a `/citizen/my-care` at-a-glance index was added on the
+  live `/internal/v1/citizen/health-summary` composition. Remaining Partial: unified web
+  queue/active-visit-status + orders/outcome timeline (deferred seam — not faked).
+- **Mobile trust headers**: verified the mobile client (`@impilo/mobile-trust/headerBuilder`)
+  auto-injects the full v1.1/v1.2 header set (14 headers, 4 hard-required); the "Partial" label
+  reflects server-side *enforcement* variance (GAP-6), not header *injection*, which is complete.
+
+Fuller row-by-row reconciliation across all services remains open.
 
 ## High-priority gaps (remediation queue)
 
