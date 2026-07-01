@@ -65,6 +65,15 @@ shipped in this drive because the experience-bff Java module cannot be compiled/
 web-session environment; the citizen surface remains honestly `blocked` (no fabricated charges)
 rather than wired to an undeployed route.
 
+**Deferred seam — policy enforcement (GAP-6/7):** intentionally **not** actioned. The gap register
+(`docs/audits/provider-clinical-place/consolidated-gap-register.md`) marks GAP-6 **CZO-locked under a
+PolicyEngine single-writer lock — "NOT ours to author"**; the spec'd fine-grained rules (cadre
+actions, facility-mode entry, Provider-ID-deny, WORK-REQUIRES-ASSIGNMENT, SELF-TREATMENT-BLOCK,
+PROVIDER-SELF-CLAIM) must be routed to WS-OPA `impilo.authz` / the CZO lead, not authored here.
+Decision required: CZO/WS-OPA owner to author and enforce the rego. A client-only guard would be
+security-theater and is deliberately avoided. (Also unverifiable here — Java/OPA not buildable in the
+web-session environment.)
+
 ## High-priority gaps (remediation queue)
 
 1. Complete wiring for fixture-backed doctrine pages to real BFF orchestration where available.
