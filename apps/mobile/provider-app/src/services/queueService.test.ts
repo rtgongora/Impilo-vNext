@@ -61,4 +61,21 @@ describe("queueService", () => {
     await completeEntry("entry-9");
     expect(apiClient.post).toHaveBeenCalledWith("/internal/v1/queue/entries/entry-9/complete");
   });
+
+  it("fetchQueueDefinitions maps PCT queue definitions for a facility (read-only)", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: { data: [{ id: "q1", name: "OPD Triage", serviceType: "TRIAGE", status: "ACTIVE" }] },
+      status: 200,
+      correlationId: "c1",
+      headers: {},
+    });
+    const { fetchQueueDefinitions } = await import("./queueService");
+    const defs = await fetchQueueDefinitions("fac-uuid-1");
+    expect(defs).toEqual([
+      { id: "q1", name: "OPD Triage", serviceType: "TRIAGE", status: "ACTIVE", active: true },
+    ]);
+    expect(apiClient.get).toHaveBeenCalledWith(
+      "/internal/v1/queue/definitions?facility_id=fac-uuid-1",
+    );
+  });
 });

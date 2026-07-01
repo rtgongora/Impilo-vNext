@@ -12,6 +12,46 @@ export async function fetchQueue(facilityId?: string): Promise<unknown[]> {
   const r = await apiClient.get<{ data: unknown[] }>(`/internal/v1/queue/entries${qs ? `?${qs}` : ""}`);
   return r.data.data;
 }
+
+export interface QueueDefinition {
+  id: string;
+  name: string;
+  serviceType: string | null;
+  status: string | null;
+  active: boolean;
+}
+
+/**
+ * Queue definitions for a facility (governed upstream in PCT; read-only here). The BFF wraps the
+ * PCT payload under `data`; shapes vary, so fields are read defensively without fabricating values.
+ */
+export async function fetchQueueDefinitions(facilityId: string): Promise<QueueDefinition[]> {
+  const r = await apiClient.get<{ data: unknown }>(
+    `/internal/v1/queue/definitions?facility_id=${encodeURIComponent(facilityId)}`,
+  );
+  const raw = r.data?.data;
+  const list: Record<string, unknown>[] = Array.isArray(raw)
+    ? (raw as Record<string, unknown>[])
+    : Array.isArray((raw as { content?: unknown[] })?.content)
+      ? ((raw as { content: Record<string, unknown>[] }).content)
+      : Array.isArray((raw as { items?: unknown[] })?.items)
+        ? ((raw as { items: Record<string, unknown>[] }).items)
+        : [];
+  const pick = (o: Record<string, unknown>, keys: string[]): string | null => {
+    for (const k of keys) {
+      const v = o[k];
+      if (typeof v === "string" && v) return v;
+    }
+    return null;
+  };
+  return list.map((o) => ({
+    id: pick(o, ["id", "queueId", "code"]) ?? "",
+    name: pick(o, ["name", "queueName", "label", "displayName"]) ?? "Unnamed queue",
+    serviceType: pick(o, ["serviceType", "servicePointType", "type"]),
+    status: pick(o, ["status", "state"]),
+    active: o.active !== false && o.status !== "INACTIVE",
+  }));
+}
 export async function callNext(entryId: string): Promise<unknown> {
   const r = await apiClient.post<{ data: unknown }>(`/internal/v1/queue/entries/${entryId}/call`);
   return r.data.data;

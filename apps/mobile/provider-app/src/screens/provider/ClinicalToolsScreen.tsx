@@ -21,6 +21,7 @@ import { ControlTowerScreen } from "./ControlTowerScreen";
 import { PlaceModeDashboardScreen } from "../outreach/PlaceModeDashboardScreen";
 import { FacilityRegulatorsScreen } from "./FacilityRegulatorsScreen";
 import { FacilitySetupScreen } from "./FacilitySetupScreen";
+import { QueueDefinitionsScreen } from "./QueueDefinitionsScreen";
 import { ReportsScreen } from "./ReportsScreen";
 import { FinanceOverviewScreen } from "./FinanceOverviewScreen";
 import { PharmacyHubScreen } from "./PharmacyHubScreen";
@@ -71,6 +72,7 @@ type ToolTab =
   | "place_mode"
   | "regulators"
   | "facility_setup"
+  | "queue_definitions"
   | "reports"
   | "finance"
   | "schedule"
@@ -106,7 +108,7 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "soap", label: "SOAP" }, { id: "triage", label: "Triage" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
   { id: "care", label: "Care Plan" }, { id: "mar", label: "MAR" }, { id: "cds", label: "CDS" },
   { id: "paging", label: "Paging" }, { id: "barcode", label: "Barcode" }, { id: "workspaces", label: "Specialty" },
-  { id: "inpatient", label: "Inpatient" }, { id: "facility", label: "Facility" }, { id: "control_tower", label: "Control Tower" }, { id: "place_mode", label: "Place Mode" }, { id: "regulators", label: "Regulators" }, { id: "facility_setup", label: "Setup" }, { id: "reports", label: "Reports" },
+  { id: "inpatient", label: "Inpatient" }, { id: "facility", label: "Facility" }, { id: "control_tower", label: "Control Tower" }, { id: "place_mode", label: "Place Mode" }, { id: "regulators", label: "Regulators" }, { id: "facility_setup", label: "Setup" }, { id: "queue_definitions", label: "Queues" }, { id: "reports", label: "Reports" },
   { id: "finance", label: "Finance" }, { id: "billing", label: "Billing" }, { id: "pacs", label: "PACS" },
   { id: "schedule", label: "Schedule" },
   { id: "booking_requests", label: "Bookings" },
@@ -178,6 +180,7 @@ export function ClinicalToolsScreen() {
         {tab === "place_mode" && <PlaceModeDashboardScreen />}
         {tab === "regulators" && <FacilityRegulatorsScreen />}
         {tab === "facility_setup" && <FacilitySetupScreen />}
+        {tab === "queue_definitions" && <QueueDefinitionsScreen />}
         {tab === "reports" && <ReportsScreen />}
         {tab === "finance" && <FinanceOverviewScreen />}
         {tab === "billing" && <BillingScreen />}
