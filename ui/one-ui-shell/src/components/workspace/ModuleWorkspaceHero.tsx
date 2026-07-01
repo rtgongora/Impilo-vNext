@@ -14,6 +14,12 @@ export interface ModuleWorkspaceHeroProps {
   icon?: ReactNode;
   /** Optional accent colour class for the logo tile border/background */
   accentClassName?: string;
+  /**
+   * Header density. "hero" (default) = large landing/open-page treatment;
+   * "compact" = smaller logo + title for dense workflow/operational pages
+   * where a large decorative logo would distract from the task.
+   */
+  density?: "hero" | "compact";
 }
 
 /**
@@ -26,30 +32,38 @@ export function ModuleWorkspaceHero({
   serviceSlug,
   icon,
   accentClassName,
+  density = "hero",
 }: ModuleWorkspaceHeroProps) {
   const branding = serviceSlug ? getServiceBranding(serviceSlug) : undefined;
+  const compact = density === "compact";
   const accent =
     accentClassName ??
     "border-[color:var(--primary-muted)]/40 bg-[color:var(--primary-soft)]/60";
+  const fallbackTile = compact ? "h-12 w-12" : "h-[4.5rem] w-[4.5rem]";
 
   return (
     <section
-      className="impilo-module-hero relative mb-5 overflow-hidden rounded-3xl border border-[color:var(--border-strong)] p-4 sm:p-5 md:p-6"
+      className={`impilo-module-hero relative mb-5 overflow-hidden rounded-3xl border border-[color:var(--border-strong)] ${
+        compact ? "p-3 sm:p-4" : "p-4 sm:p-5 md:p-6"
+      }`}
       data-testid="module-workspace-hero"
+      data-density={density}
     >
       <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
         <div
-          className={`module-hero-logo-tile inline-flex shrink-0 items-center justify-center rounded-2xl border p-3 shadow-sm ${accent}`}
+          className={`module-hero-logo-tile inline-flex shrink-0 items-center justify-center rounded-2xl border shadow-sm ${
+            compact ? "p-2" : "p-3"
+          } ${accent}`}
           data-testid="module-hero-logo-tile"
         >
           {serviceSlug ? (
-            <ServiceLogo slug={serviceSlug} size="hero" />
+            <ServiceLogo slug={serviceSlug} variant={compact ? "header" : "hero"} />
           ) : icon ? (
-            <div className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-xl bg-[color:var(--primary-soft)] text-[color:var(--primary)]">
+            <div className={`flex ${fallbackTile} items-center justify-center rounded-xl bg-[color:var(--primary-soft)] text-[color:var(--primary)]`}>
               {icon}
             </div>
           ) : branding ? (
-            <span className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-xl bg-[color:var(--surface-soft)]">
+            <span className={`flex ${fallbackTile} items-center justify-center rounded-xl bg-[color:var(--surface-soft)]`}>
               <ShellIcon
                 name={branding.fallbackIcon}
                 className="h-8 w-8 text-[color:var(--text-secondary)]"
@@ -59,7 +73,9 @@ export function ModuleWorkspaceHero({
         </div>
 
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-semibold tracking-tight text-[color:var(--text-primary)] md:text-2xl lg:text-[1.75rem]">
+          <h1 className={`font-semibold tracking-tight text-[color:var(--text-primary)] ${
+            compact ? "text-lg md:text-xl" : "text-xl md:text-2xl lg:text-[1.75rem]"
+          }`}>
             {title}
           </h1>
           {subtitle ? (

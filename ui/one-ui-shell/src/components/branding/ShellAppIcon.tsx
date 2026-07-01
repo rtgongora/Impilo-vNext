@@ -30,13 +30,15 @@ export function ShellAppIcon({
     resolveServiceSlug(name ?? undefined);
 
   if (slug) {
+    // Full-colour service logos keep a light plate in dark mode so dark-ink
+    // wordmarks stay readable (no inversion — see ServiceLogo dark plate).
     return (
       <span
-        className={`flex shrink-0 items-center justify-center rounded-md bg-card p-0.5 dark:bg-neutral-900 ${
+        className={`flex shrink-0 items-center justify-center rounded-md bg-card p-0.5 dark:bg-white/90 ${
           size === "card" ? "h-9 w-9" : "h-6 w-6"
         } ${className ?? ""}`}
       >
-        <ServiceLogo slug={slug} size={size} fallbackIcon={icon} />
+        <ServiceLogo slug={slug} variant={size} plate={false} fallbackIcon={icon} />
       </span>
     );
   }

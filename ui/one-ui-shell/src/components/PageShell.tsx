@@ -16,11 +16,17 @@ interface PageShellProps {
   hideHeader?: boolean;
   /** Sovereign service slug — renders branded logo in header when set (overrides route inference) */
   serviceSlug?: string;
+  /**
+   * Header density. Defaults to "hero" (large landing/open-page logo treatment).
+   * Set "compact" on dense workflow/operational/data-heavy pages so the logo
+   * stays present but does not distract from task completion.
+   */
+  density?: "hero" | "compact";
   emptyStateLabel?: string;
   children?: React.ReactNode;
 }
 
-export function PageShell({ title, subtitle, icon, hideHeader, serviceSlug, emptyStateLabel, children }: PageShellProps) {
+export function PageShell({ title, subtitle, icon, hideHeader, serviceSlug, density, emptyStateLabel, children }: PageShellProps) {
   const resolvedSlug = useInferredServiceSlug(serviceSlug);
 
   return (
@@ -31,6 +37,7 @@ export function PageShell({ title, subtitle, icon, hideHeader, serviceSlug, empt
           subtitle={subtitle}
           serviceSlug={resolvedSlug}
           icon={resolvedSlug ? undefined : icon}
+          density={density}
         />
       ) : null}
       {children || (
