@@ -22,6 +22,7 @@ import {
 import { useEncounterStore, encounterStore } from "../../stores/encounterStore";
 import { closeEncounter, addEncounterNotes } from "../../services/encounterService";
 import { applyCoreTransactionAction, listCoreTransactions } from "../../services/coreTransactionService";
+import { AdaptiveEncounterCockpit } from "./AdaptiveEncounterCockpit";
 import { EncounterFormsPanel } from "./EncounterFormsPanel";
 import { VitalsPanel } from "./VitalsPanel";
 import { DiagnosisPanel } from "./DiagnosisPanel";
@@ -32,6 +33,7 @@ import { NotesPanel } from "./NotesPanel";
 import { TriageScreen } from "./TriageScreen";
 
 const TABS = [
+  { key: "cockpit", label: "Cockpit" },
   { key: "forms", label: "Forms" },
   { key: "vitals", label: "Vitals" },
   { key: "diagnosis", label: "Diagnosis" },
@@ -124,6 +126,20 @@ export function EncounterScreen() {
 
   const renderPanel = () => {
     switch (activeTab) {
+      case "cockpit": {
+        const et = String(activeEncounter.encounterType ?? "").toUpperCase();
+        const inpatient = et.includes("INPATIENT") || et.includes("ADMISSION") || et.includes("WARD");
+        return (
+          <AdaptiveEncounterCockpit
+            request={{
+              cadre: "CLINICIAN",
+              visitType: activeEncounter.encounterType,
+              context: inpatient ? "inpatient" : "outpatient",
+              encounterId: activeEncounter.id,
+            }}
+          />
+        );
+      }
       case "forms": {
         const et = String(activeEncounter.encounterType ?? "").toUpperCase();
         const inpatient = et.includes("INPATIENT") || et.includes("ADMISSION") || et.includes("WARD");
