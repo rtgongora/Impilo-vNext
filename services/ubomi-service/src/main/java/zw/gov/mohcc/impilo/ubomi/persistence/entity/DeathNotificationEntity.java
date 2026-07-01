@@ -83,6 +83,18 @@ public class DeathNotificationEntity {
     @Column(name = "pct_case_ref")
     private String pctCaseRef;
 
+    /** Certainty class of the cause — keeps verbal-autopsy/field-probable distinct from certified. */
+    @Column(name = "cause_of_death_basis")
+    private String causeOfDeathBasis;
+
+    /** Origin of the death (facility / brought-in-dead / community / field / etc.). */
+    @Column(name = "source_context")
+    private String sourceContext;
+
+    /** Where the body went; a community death need not enter facility mortuary custody. */
+    @Column(name = "body_disposition_context")
+    private String bodyDispositionContext;
+
     @Column(name = "package_ready", nullable = false)
     private boolean packageReady = false;
 
@@ -153,6 +165,12 @@ public class DeathNotificationEntity {
     public void setMetadata(String metadata) { this.metadata = metadata; }
     public String getPctCaseRef() { return pctCaseRef; }
     public void setPctCaseRef(String pctCaseRef) { this.pctCaseRef = pctCaseRef; }
+    public String getCauseOfDeathBasis() { return causeOfDeathBasis; }
+    public void setCauseOfDeathBasis(String causeOfDeathBasis) { this.causeOfDeathBasis = causeOfDeathBasis; }
+    public String getSourceContext() { return sourceContext; }
+    public void setSourceContext(String sourceContext) { this.sourceContext = sourceContext; }
+    public String getBodyDispositionContext() { return bodyDispositionContext; }
+    public void setBodyDispositionContext(String bodyDispositionContext) { this.bodyDispositionContext = bodyDispositionContext; }
     public boolean isPackageReady() { return packageReady; }
     public void setPackageReady(boolean packageReady) { this.packageReady = packageReady; }
     public OffsetDateTime getPackageValidatedAt() { return packageValidatedAt; }

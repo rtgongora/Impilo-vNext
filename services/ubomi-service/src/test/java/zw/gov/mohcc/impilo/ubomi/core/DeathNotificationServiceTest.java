@@ -69,6 +69,39 @@ class DeathNotificationServiceTest {
         assertThat(r.isPackageReady()).isTrue();
     }
 
+    // A community/field death may complete on a verbal-autopsy PROBABLE cause (no medical certification),
+    // and the probable basis is preserved — never counted as certified.
+    @Test
+    void package_ready_on_verbal_autopsy_probable() {
+        DeathNotificationEntity e = new DeathNotificationEntity();
+        e.setId(1L);
+        e.setTenantId(TENANT);
+        e.setDeceasedCpid("TMP-DEC-ABCD1234");
+        e.setDateOfDeath(LocalDate.now());
+        e.setPlaceOfDeathType("COMMUNITY");
+        e.setUnderlyingCause("Malaria");
+        e.setStatus("SUBMITTED"); // never medically certified
+        e.setCauseOfDeathBasis("VERBAL_AUTOPSY_PROBABLE");
+        assertThat(service.validatePackage(e)).isEmpty();
+        when(repo.findByTenantIdAndId(TENANT, 1L)).thenReturn(Optional.of(e));
+        when(repo.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(outbox.save(any())).thenAnswer(i -> i.getArgument(0));
+        DeathNotificationEntity r = service.markPackageReady(TENANT, 1L);
+        assertThat(r.isPackageReady()).isTrue();
+        assertThat(r.getCauseOfDeathBasis()).isEqualTo("VERBAL_AUTOPSY_PROBABLE");
+    }
+
+    // A verbal-autopsy probable notification is NOT medically certified — the two are never conflated.
+    @Test
+    void probable_basis_is_not_certification() {
+        DeathNotificationEntity e = new DeathNotificationEntity();
+        e.setStatus("SUBMITTED");
+        e.setCauseOfDeathBasis("VERBAL_AUTOPSY_PROBABLE");
+        // certification requirement satisfied by the probable basis, but status is not CERTIFIED.
+        assertThat(service.validatePackage(e)).doesNotContain("certification");
+        assertThat(e.getStatus()).isNotEqualTo("CERTIFIED");
+    }
+
     @Test
     void register_requires_civil_reg_number() {
         DeathNotificationEntity e = complete();

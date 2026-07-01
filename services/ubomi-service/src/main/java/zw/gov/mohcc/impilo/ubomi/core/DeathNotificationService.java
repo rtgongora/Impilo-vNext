@@ -85,6 +85,8 @@ public class DeathNotificationService {
         entity.setCertifyingPractitioner(certifyingPractitioner);
         entity.setCertifierRole(certifierRole);
         entity.setCertifiedAt(OffsetDateTime.now());
+        // A practitioner certification is the highest certainty class — supersedes any probable basis.
+        entity.setCauseOfDeathBasis("MEDICALLY_CERTIFIED");
         entity = deathRepository.save(entity);
 
         publishEvent("DEATH_NOTIFICATION", entity.getId().toString(),
@@ -96,7 +98,11 @@ public class DeathNotificationService {
     }
 
     /**
-     * Required fields a civil-registration package cannot be submitted without (WS#8).
+     * Required fields a civil-registration package cannot be submitted without (WS#8). The cause
+     * requirement is satisfied either by a medical certification (status CERTIFIED/REGISTERED) OR — for
+     * a community/field death that never entered a facility — by a probable cause from verbal autopsy
+     * or field investigation ({@code cause_of_death_basis}). The probable-vs-certified distinction is
+     * preserved on the record; it is never flattened into "certified".
      */
     public List<String> validatePackage(DeathNotificationEntity e) {
         List<String> missing = new ArrayList<>();
@@ -104,7 +110,10 @@ public class DeathNotificationService {
         if (e.getDateOfDeath() == null) missing.add("dateOfDeath");
         if (e.getPlaceOfDeathType() == null || e.getPlaceOfDeathType().isBlank()) missing.add("placeOfDeath");
         if (e.getUnderlyingCause() == null || e.getUnderlyingCause().isBlank()) missing.add("underlyingCause");
-        if (!"CERTIFIED".equals(e.getStatus()) && !"REGISTERED".equals(e.getStatus())) missing.add("certification");
+        boolean certified = "CERTIFIED".equals(e.getStatus()) || "REGISTERED".equals(e.getStatus());
+        boolean probable = "VERBAL_AUTOPSY_PROBABLE".equals(e.getCauseOfDeathBasis())
+                || "FIELD_INVESTIGATION_PROBABLE".equals(e.getCauseOfDeathBasis());
+        if (!certified && !probable) missing.add("certification");
         return missing;
     }
 
