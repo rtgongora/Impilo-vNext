@@ -26,8 +26,25 @@ public final class FacilityMasterImportDtos {
             Double latitude,
             Double longitude,
             @JsonProperty("contact_phone_e164") String contactPhoneE164,
-            @JsonProperty("source_dataset_date") String sourceDatasetDate
-    ) {}
+            @JsonProperty("source_dataset_date") String sourceDatasetDate,
+            /**
+             * Raw source values preserved verbatim (never lost during canonicalisation). Populated by the
+             * CSV loader from the {@code *_raw} columns; null on the JSON-seed path. Not part of the wire
+             * contract — carried through to row-level staging.
+             */
+            @JsonProperty("raw_values") Map<String, Object> rawValues
+    ) {
+        /** Backward-compatible 15-arg constructor (no raw values) for the JSON seed + existing callers. */
+        public MasterFacilitySeedRecord(
+                String facilityUid, String facilityCode, String facilityName, String province,
+                String district, String facilityType, String ownership, String locationContext,
+                String serviceLevel, String status, Integer bedCapacity, Double latitude,
+                Double longitude, String contactPhoneE164, String sourceDatasetDate) {
+            this(facilityUid, facilityCode, facilityName, province, district, facilityType, ownership,
+                    locationContext, serviceLevel, status, bedCapacity, latitude, longitude,
+                    contactPhoneE164, sourceDatasetDate, null);
+        }
+    }
 
     public record FacilityMasterImportRequest(
             boolean dryRun,

@@ -15,11 +15,13 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityGeoEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierSystem;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityImportRowEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityImportRunEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityContactRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityGeoRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityIdentifierRepository;
+import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityImportRowRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityImportRunRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRepository;
 
@@ -55,6 +57,7 @@ public class FacilityMasterImportService {
     private final FacilityContactRepository contactRepository;
     private final FacilityGeoRepository geoRepository;
     private final FacilityImportRunRepository importRunRepository;
+    private final FacilityImportRowRepository importRowRepository;
     private final ObjectMapper objectMapper;
 
     public FacilityMasterImportService(
@@ -63,12 +66,14 @@ public class FacilityMasterImportService {
             FacilityContactRepository contactRepository,
             FacilityGeoRepository geoRepository,
             FacilityImportRunRepository importRunRepository,
+            FacilityImportRowRepository importRowRepository,
             ObjectMapper objectMapper) {
         this.facilityRepository = facilityRepository;
         this.identifierRepository = identifierRepository;
         this.contactRepository = contactRepository;
         this.geoRepository = geoRepository;
         this.importRunRepository = importRunRepository;
+        this.importRowRepository = importRowRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -133,13 +138,32 @@ public class FacilityMasterImportService {
             List<String> f = parseCsvLine(lines.get(i));
             String sourceRow = cell(f, idx, "source_row");
             String correlationUid = "MHF-" + SOURCE_LABEL + "-row" + (isBlank(sourceRow) ? String.valueOf(i) : sourceRow.trim());
+            // Preserve the raw source columns verbatim so canonicalisation never loses them.
+            Map<String, Object> raw = new LinkedHashMap<>();
+            putIfPresent(raw, "source_row", cell(f, idx, "source_row"));
+            putIfPresent(raw, "province", cell(f, idx, "province"));
+            putIfPresent(raw, "district", cell(f, idx, "district"));
+            putIfPresent(raw, "facility_name", cell(f, idx, "facility_name"));
+            putIfPresent(raw, "facility_code", cell(f, idx, "facility_code"));
+            putIfPresent(raw, "latitude", cell(f, idx, "latitude"));
+            putIfPresent(raw, "longitude", cell(f, idx, "longitude"));
+            putIfPresent(raw, "facility_type_raw", cell(f, idx, "facility_type_raw"));
+            putIfPresent(raw, "ownership_raw", cell(f, idx, "ownership_raw"));
+            putIfPresent(raw, "location_raw", cell(f, idx, "location_raw"));
+            putIfPresent(raw, "level_raw", cell(f, idx, "level_raw"));
+            putIfPresent(raw, "contact_raw", cell(f, idx, "contact_raw"));
+            putIfPresent(raw, "status_raw", cell(f, idx, "status_raw"));
+            putIfPresent(raw, "bed_capacity", cell(f, idx, "bed_capacity"));
+            putIfPresent(raw, "date_opened", cell(f, idx, "date_opened"));
+            putIfPresent(raw, "date_closed", cell(f, idx, "date_closed"));
+            putIfPresent(raw, "comments", cell(f, idx, "comments"));
             records.add(new FacilityMasterImportDtos.MasterFacilitySeedRecord(
                     correlationUid,
                     cell(f, idx, "facility_code"),
                     cell(f, idx, "facility_name"),
                     cell(f, idx, "province"),
                     cell(f, idx, "district"),
-                    // Prefer canonical classifications; the raw columns remain in the source CSV for audit.
+                    // Prefer canonical classifications; the raw columns are preserved in rawValues.
                     firstNonBlank(cell(f, idx, "facility_type_canonical"), cell(f, idx, "facility_type_raw")),
                     firstNonBlank(cell(f, idx, "ownership_canonical"), cell(f, idx, "ownership_raw")),
                     firstNonBlank(cell(f, idx, "location_canonical"), cell(f, idx, "location_raw")),
@@ -151,7 +175,8 @@ public class FacilityMasterImportService {
                     doubleOrNull(cell(f, idx, "latitude")),
                     doubleOrNull(cell(f, idx, "longitude")),
                     cell(f, idx, "contact_raw"),
-                    SOURCE_LABEL_DATE));
+                    SOURCE_LABEL_DATE,
+                    raw));
         }
         return records;
     }
@@ -165,6 +190,7 @@ public class FacilityMasterImportService {
 
         Instant startedAt = Instant.now();
         List<FacilityMasterImportDtos.FacilityMasterImportRowResult> results = new ArrayList<>();
+        List<RowDraft> rowDrafts = new ArrayList<>();
         int created = 0;
         int updated = 0;
         int skipped = 0;
@@ -186,9 +212,18 @@ public class FacilityMasterImportService {
                 if (request.dryRun()) {
                     results.add(rowResult(record, decision.dryRunOutcome(), decision.warning(), decision.message(), decision.facilityId()));
                     switch (decision.dryRunOutcome()) {
-                        case "WOULD_CREATE" -> created++;
-                        case "WOULD_UPDATE" -> updated++;
-                        case "SKIPPED" -> skipped++;
+                        case "WOULD_CREATE" -> {
+                            created++;
+                            rowDrafts.add(readyDraft(record, decision, "CREATE"));
+                        }
+                        case "WOULD_UPDATE" -> {
+                            updated++;
+                            rowDrafts.add(readyDraft(record, decision, "UPDATE"));
+                        }
+                        case "SKIPPED" -> {
+                            skipped++;
+                            rowDrafts.add(exclusionDraft(record, decision));
+                        }
                         default -> { }
                     }
                     continue;
@@ -196,11 +231,13 @@ public class FacilityMasterImportService {
                 if ("SKIPPED".equals(decision.dryRunOutcome())) {
                     skipped++;
                     results.add(rowResult(record, "SKIPPED", decision.warning(), decision.message(), decision.facilityId()));
+                    rowDrafts.add(exclusionDraft(record, decision));
                     continue;
                 }
 
                 FacilityEntity facility = decision.existing().orElseGet(FacilityEntity::new);
                 boolean isNew = facility.getId() == null;
+                Long matchedId = isNew ? null : facility.getId();
                 applyRecord(tenantId, actorId, facility, record, decision.resolvedCode());
                 facility = facilityRepository.save(facility);
                 // Internal correlation key: matches the same facility on re-import (never regenerates
@@ -217,23 +254,28 @@ public class FacilityMasterImportService {
                 if (isNew) {
                     created++;
                     results.add(rowResult(record, "CREATED", decision.warning(), null, facility.getId()));
+                    rowDrafts.add(importedDraft(record, "CREATE", null, facility.getId()));
                 } else {
                     updated++;
                     results.add(rowResult(record, "UPDATED", decision.warning(), null, facility.getId()));
+                    rowDrafts.add(importedDraft(record, "UPDATE", matchedId, facility.getId()));
                 }
             } catch (Exception e) {
                 failed++;
                 warnings++;
                 results.add(rowResult(record, "FAILED", "DOWNSTREAM", e.getMessage(), null));
+                rowDrafts.add(failedDraft(record, e.getMessage()));
                 log.warn("Master pack import failed for {}: {}", record.facilityUid(), e.getMessage());
             }
         }
 
         Map<String, Object> qualitySummary = buildQualitySummary(request.records(), results, warnings);
 
-        // Persist an audit row for the batch (dry-run or real) so operators can review import history.
-        persistImportRun(tenantId, actorId, request.dryRun(), request.records().size(),
+        // Persist an audit row for the batch (dry-run or real) so operators can review import history,
+        // then persist the row-level outcomes linked to it.
+        Long runId = persistImportRun(tenantId, actorId, request.dryRun(), request.records().size(),
                 created, updated, skipped, failed, warnings, startedAt, qualitySummary);
+        persistImportRows(runId, rowDrafts);
 
         return new FacilityMasterImportDtos.FacilityMasterImportResponse(
                 request.dryRun(),
@@ -247,7 +289,7 @@ public class FacilityMasterImportService {
                 qualitySummary);
     }
 
-    private void persistImportRun(
+    private Long persistImportRun(
             UUID tenantId, String actorId, boolean dryRun, int total,
             int created, int updated, int skipped, int failed, int warnings,
             Instant startedAt, Map<String, Object> qualitySummary) {
@@ -267,12 +309,140 @@ public class FacilityMasterImportService {
             run.setStartedAt(startedAt);
             run.setCompletedAt(Instant.now());
             run.setInitiatedBy(actorId);
-            importRunRepository.save(run);
+            return importRunRepository.save(run).getId();
         } catch (Exception e) {
             // Audit persistence must never fail the import itself; log and continue.
             log.warn("Failed to persist facility_import_run audit row: {}", e.getMessage());
+            return null;
         }
     }
+
+    /** Persist the row-level outcomes for a run (best-effort; never fails the import). */
+    private void persistImportRows(Long runId, List<RowDraft> drafts) {
+        if (runId == null || drafts.isEmpty()) {
+            return;
+        }
+        try {
+            List<FacilityImportRowEntity> entities = new ArrayList<>(drafts.size());
+            for (RowDraft d : drafts) {
+                entities.add(toRowEntity(runId, d));
+            }
+            importRowRepository.saveAll(entities);
+        } catch (Exception e) {
+            log.warn("Failed to persist facility_import_row rows for run {}: {}", runId, e.getMessage());
+        }
+    }
+
+    private FacilityImportRowEntity toRowEntity(Long runId, RowDraft d) {
+        FacilityMasterImportDtos.MasterFacilitySeedRecord r = d.record();
+        FacilityImportRowEntity e = new FacilityImportRowEntity();
+        e.setImportRunId(runId);
+        e.setSourceLabel(SOURCE_LABEL);
+        e.setSourceRow(extractSourceRow(r));
+        e.setCorrelationKey(r.facilityUid());
+        e.setProvince(r.province());
+        e.setDistrict(r.district());
+        e.setFacilityName(r.facilityName());
+        e.setFacilityCode(r.facilityCode());
+        e.setLatitude(r.latitude());
+        e.setLongitude(r.longitude());
+        e.setFacilityType(r.facilityType());
+        e.setOwnership(r.ownership());
+        e.setLocationCategory(r.locationContext());
+        e.setFacilityLevel(r.serviceLevel());
+        e.setContact(r.contactPhoneE164());
+        e.setOperatingStatus(r.status());
+        e.setBedCapacity(r.bedCapacity());
+        e.setRawValues(r.rawValues());
+        e.setOutcome(d.outcome());
+        e.setImportDecision(d.decision());
+        e.setExclusionReason(d.exclusionReason());
+        e.setDuplicateType(d.duplicateType());
+        e.setDuplicateGroupKey(d.duplicateGroupKey());
+        e.setMatchedFacilityId(d.matchedFacilityId());
+        e.setResultFacilityId(d.resultFacilityId());
+        e.setValidationErrors(d.validationErrors());
+
+        Map<String, Object> missing = acceptableMissingFlags(r);
+        boolean hasMissing = missing.values().stream().anyMatch(v -> Boolean.TRUE.equals(v));
+        e.setAcceptableMissing(missing);
+        e.setHasAcceptableMissing(hasMissing);
+        return e;
+    }
+
+    private static String extractSourceRow(FacilityMasterImportDtos.MasterFacilitySeedRecord r) {
+        if (r.rawValues() != null && r.rawValues().get("source_row") != null) {
+            return String.valueOf(r.rawValues().get("source_row"));
+        }
+        String uid = r.facilityUid();
+        int i = uid == null ? -1 : uid.lastIndexOf("row");
+        return (i >= 0 && i + 3 < uid.length()) ? uid.substring(i + 3) : null;
+    }
+
+    /** Structured acceptable-missing flags per row — surfaced so the frontend can show exact gaps. */
+    private static Map<String, Object> acceptableMissingFlags(
+            FacilityMasterImportDtos.MasterFacilitySeedRecord r) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("missing_latitude", r.latitude() == null);
+        m.put("missing_longitude", r.longitude() == null);
+        m.put("missing_facility_type", isBlank(r.facilityType()));
+        m.put("missing_ownership", isBlank(r.ownership()));
+        m.put("missing_operating_status", isBlank(r.status()));
+        return m;
+    }
+
+    private static RowDraft readyDraft(
+            FacilityMasterImportDtos.MasterFacilitySeedRecord record, ImportDecision d, String decision) {
+        return new RowDraft(record, FacilityImportRowEntity.READY_FOR_IMPORT, decision, null,
+                null, null, d.facilityId(), null, null);
+    }
+
+    private static RowDraft importedDraft(
+            FacilityMasterImportDtos.MasterFacilitySeedRecord record, String decision,
+            Long matchedId, Long resultId) {
+        return new RowDraft(record, FacilityImportRowEntity.IMPORTED, decision, null,
+                null, null, matchedId, resultId, null);
+    }
+
+    private static RowDraft failedDraft(
+            FacilityMasterImportDtos.MasterFacilitySeedRecord record, String error) {
+        return new RowDraft(record, FacilityImportRowEntity.FAILED, "FAIL", null,
+                null, null, null, null, error);
+    }
+
+    private static RowDraft exclusionDraft(
+            FacilityMasterImportDtos.MasterFacilitySeedRecord record, ImportDecision d) {
+        String warning = d.warning();
+        String outcome;
+        String dupType = null;
+        String dupKey = null;
+        if ("EXCLUDED_MISSING_FACILITY_CODE".equals(warning)) {
+            outcome = FacilityImportRowEntity.EXCLUDED_MISSING_FACILITY_CODE;
+        } else if ("EXCLUDED_DUPLICATE_FACILITY_CODE".equals(warning)) {
+            outcome = FacilityImportRowEntity.EXCLUDED_DUPLICATE_FACILITY_CODE;
+            dupType = FacilityImportRowEntity.DUP_TYPE_CODE;
+            dupKey = "CODE:" + (d.resolvedCode() != null ? d.resolvedCode() : record.facilityCode());
+        } else if ("EXCLUDED_DUPLICATE_FACILITY_NAME".equals(warning)) {
+            outcome = FacilityImportRowEntity.EXCLUDED_DUPLICATE_FACILITY_NAME;
+            dupType = FacilityImportRowEntity.DUP_TYPE_NAME;
+            dupKey = "NAME:" + normaliseName(record.facilityName());
+        } else {
+            outcome = FacilityImportRowEntity.REQUIRES_REVIEW;
+        }
+        return new RowDraft(record, outcome, "EXCLUDE", d.message(), dupType, dupKey,
+                d.facilityId(), null, null);
+    }
+
+    private record RowDraft(
+            FacilityMasterImportDtos.MasterFacilitySeedRecord record,
+            String outcome,
+            String decision,
+            String exclusionReason,
+            String duplicateType,
+            String duplicateGroupKey,
+            Long matchedFacilityId,
+            Long resultFacilityId,
+            String validationErrors) {}
 
     /** List import runs for the current tenant, most recent first. */
     @Transactional(readOnly = true)
@@ -678,6 +848,12 @@ public class FacilityMasterImportService {
 
     private static String firstNonBlank(String a, String b) {
         return !isBlank(a) ? a : (!isBlank(b) ? b : null);
+    }
+
+    private static void putIfPresent(Map<String, Object> map, String key, String value) {
+        if (value != null && !value.isBlank()) {
+            map.put(key, value.trim());
+        }
     }
 
     private static Integer intOrNull(String v) {

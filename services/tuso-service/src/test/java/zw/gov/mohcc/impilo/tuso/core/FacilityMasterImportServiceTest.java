@@ -14,11 +14,13 @@ import zw.gov.mohcc.impilo.tuso.api.dto.FacilityMasterImportDtos;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierSystem;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityImportRowEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityContactRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityGeoRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityIdentifierRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityImportRunRepository;
+import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityImportRowRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityImportRunEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRepository;
 
@@ -49,6 +51,8 @@ class FacilityMasterImportServiceTest {
     private FacilityGeoRepository geoRepository;
     @Mock
     private FacilityImportRunRepository importRunRepository;
+    @Mock
+    private FacilityImportRowRepository importRowRepository;
 
     private FacilityMasterImportService service;
     private final UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -61,6 +65,7 @@ class FacilityMasterImportServiceTest {
                 contactRepository,
                 geoRepository,
                 importRunRepository,
+                importRowRepository,
                 new ObjectMapper());
         TrustContextHolder.set(new TrustContext(
                 tenantId,
@@ -333,6 +338,68 @@ class FacilityMasterImportServiceTest {
         assertThat(run.getRecordsCreated()).isEqualTo(1);
         assertThat(run.getStatus()).isEqualTo("COMPLETED");
         assertThat(run.getCompletedAt()).isNotNull();
+    }
+
+    @Test
+    void persistsRowLevelOutcomesLinkedToRunWithAcceptableMissingAndRaw() {
+        // Imported-but-incomplete (missing ownership + coordinates), a missing-code exclusion, and a
+        // duplicate-name pair.
+        var imported = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-imp", "ZWIMP1", "Imported Clinic", "Harare", "Harare",
+                "CLINIC", "", "Urban", "Primary", "Open", 4, null, null, null, "2024-07-23",
+                java.util.Map.of("facility_name", "Imported Clinic RAW"));
+        var noCode = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-nc", null, "No Code Clinic", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4, -17.8, 31.0, null, "2024-07-23");
+        var dupA = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-da", "ZWDA", "Twin Clinic", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4, -17.8, 31.0, null, "2024-07-23");
+        var dupB = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-db", "ZWDB", "Twin Clinic", "Manicaland", "Buhera",
+                "CLINIC", "GOVERNMENT", "Rural", "Primary", "Open", 4, -19.5, 31.7, null, "2024-07-23");
+
+        when(identifierRepository.findBySystemAndValue(any(), any())).thenReturn(Optional.empty());
+        when(facilityRepository.findByTenantIdAndFacilityCode(any(), any())).thenReturn(Optional.empty());
+        when(facilityRepository.save(any(FacilityEntity.class))).thenAnswer(inv -> {
+            FacilityEntity f = inv.getArgument(0);
+            if (f.getId() == null) {
+                f.setId(900L);
+            }
+            return f;
+        });
+        FacilityImportRunEntity savedRun = new FacilityImportRunEntity();
+        savedRun.setId(500L);
+        when(importRunRepository.save(any(FacilityImportRunEntity.class))).thenReturn(savedRun);
+
+        service.importPack(new FacilityMasterImportDtos.FacilityMasterImportRequest(
+                false, false, false, List.of(imported, noCode, dupA, dupB)));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<FacilityImportRowEntity>> captor = ArgumentCaptor.forClass(List.class);
+        verify(importRowRepository).saveAll(captor.capture());
+        List<FacilityImportRowEntity> rows = captor.getValue();
+        assertThat(rows).hasSize(4);
+        assertThat(rows).allSatisfy(r -> assertThat(r.getImportRunId()).isEqualTo(500L));
+
+        var importedRow = rows.stream().filter(r -> "ZWIMP1".equals(r.getFacilityCode())).findFirst().orElseThrow();
+        assertThat(importedRow.getOutcome()).isEqualTo(FacilityImportRowEntity.IMPORTED);
+        assertThat(importedRow.getResultFacilityId()).isEqualTo(900L);
+        assertThat(importedRow.isHasAcceptableMissing()).isTrue();
+        assertThat(importedRow.getAcceptableMissing().get("missing_ownership")).isEqualTo(true);
+        assertThat(importedRow.getAcceptableMissing().get("missing_latitude")).isEqualTo(true);
+        assertThat(importedRow.getRawValues()).containsEntry("facility_name", "Imported Clinic RAW");
+
+        var noCodeRow = rows.stream().filter(r -> r.getFacilityName().equals("No Code Clinic")).findFirst().orElseThrow();
+        assertThat(noCodeRow.getOutcome()).isEqualTo(FacilityImportRowEntity.EXCLUDED_MISSING_FACILITY_CODE);
+        assertThat(noCodeRow.getResultFacilityId()).isNull();
+
+        var dupRows = rows.stream().filter(r -> "Twin Clinic".equals(r.getFacilityName())).toList();
+        assertThat(dupRows).hasSize(2);
+        assertThat(dupRows).allSatisfy(r -> {
+            assertThat(r.getOutcome()).isEqualTo(FacilityImportRowEntity.EXCLUDED_DUPLICATE_FACILITY_NAME);
+            assertThat(r.getDuplicateType()).isEqualTo(FacilityImportRowEntity.DUP_TYPE_NAME);
+            assertThat(r.getDuplicateGroupKey()).isEqualTo("NAME:twin clinic");
+        });
     }
 
     @Test
