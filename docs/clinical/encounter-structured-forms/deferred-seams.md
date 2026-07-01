@@ -17,6 +17,16 @@ future path. No deferral leaves a production path stubbed or mocked.
 | **Countersign matrix per trainee cadre + sensitive-form list** | Derived from `CadreEngine.escalation.supervisorRequiredFor` + definition `sensitivity`. | Clinical-governance-owned matrix once ratified. |
 | **National seed-form clinical sign-off** | Seeds are DAK-aligned **exemplars** (marked as such, per the antenatal precedent), not authoritative national protocols. | Replace with ratified national protocol content via governance workflow. |
 
+## Integration hooks — status
+
+| Hook | Status |
+|------|--------|
+| **OROS orders** | **Wired** — order fields extract to `OrosIntegration.submitOrder` (ServiceRequest), provenance recorded. |
+| **Rito safety/quality** | **Event-wired** — `SAFETY_EVENT` mappings emit `pct.form.safety.flagged` (Rito + surveillance consume) + provenance row. No seed form uses it yet (config-driven). |
+| **Khuluma comms / Nompilo guidance** | **Event-available** — `pct.form.response.submitted` / `pct.form.extracted` outbox events are emitted; a Khuluma dispatch / Nompilo handoff consumer (privacy-safe) is the deferred piece (BFF clients exist). |
+| **Dura stock** | **Deferred** — medication/supply forms can call `inventory-service /v1/dura/pct/availability|reserve|consume` on load/submit; not wired this pass. |
+| **Fundo/Varapi competence gate** | **Partial** — countersign requirement is derived from CadreEngine escalation + form `requiresCountersign`; a Fundo training-status gate is deferred. |
+
 ## Product-owner decisions parked (safe default implemented, continuing)
 - **Countersign/sensitive-form policy matrix** — safe default from CadreEngine escalation + sensitivity
   metadata; refine with clinical governance.

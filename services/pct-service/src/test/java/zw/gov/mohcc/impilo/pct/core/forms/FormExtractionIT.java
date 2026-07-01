@@ -165,6 +165,34 @@ class FormExtractionIT {
         assertThat(extractedRepository.findByResponseId(UUID.fromString(responseId))).hasSize(afterFirst);
     }
 
+    @Test
+    void safetyEventAnswer_emitsRitoProvenance() throws Exception {
+        String safetyMappings = "{\"mappings\":[{\"linkId\":\"adverseEvent\",\"resourceType\":\"SAFETY_EVENT\","
+                + "\"routeTarget\":\"RITO\",\"safetyCategory\":\"ADVERSE_DRUG_REACTION\"}]}";
+        FormCatalogEntry safetyForm = new FormCatalogEntry("schema-safety", "impilo.test.safety", "Safety", null, 1,
+                "ver-safety-1", "PUBLISHED", "SAFETY", List.of("OUTPATIENT"), List.of(), List.of(), List.of(),
+                List.of("outpatient"), "ASSESS", "OPTIONAL", List.of(), null, null, "ALL", null, List.of(), List.of(),
+                false, true, "STANDARD", "{}", safetyMappings);
+        when(formsCatalogIntegration.fetchCatalog()).thenReturn(List.of(safetyForm));
+
+        String createBody = mapper.writeValueAsString(Map.of(
+                "encounterId", encounterId, "formKey", "impilo.test.safety",
+                "answers", Map.of("adverseEvent", "ANAPHYLAXIS")));
+        MvcResult created = mockMvc.perform(trust(post("/v1/forms/responses"))
+                        .contentType(MediaType.APPLICATION_JSON).content(createBody))
+                .andExpect(status().isCreated()).andReturn();
+        String responseId = mapper.readTree(created.getResponse().getContentAsString())
+                .get("data").get("responseId").asText();
+        mockMvc.perform(trust(post("/v1/forms/responses/" + responseId + "/submit"))
+                .contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isOk());
+
+        FormExtractedResourceEntity safety = byType(
+                extractedRepository.findByResponseId(UUID.fromString(responseId)), "SAFETY_EVENT");
+        assertThat(safety.getRouteTarget()).isEqualTo("RITO");
+        assertThat(safety.getStatus()).isEqualTo("ROUTED");
+        assertThat(safety.getResourcePayload()).contains("ADVERSE_DRUG_REACTION");
+    }
+
     private static FormExtractedResourceEntity byType(List<FormExtractedResourceEntity> rows, String type) {
         return rows.stream().filter(r -> r.getResourceType().equals(type)).findFirst().orElseThrow();
     }

@@ -87,6 +87,7 @@ public class FormExtractionService implements FormExtractionHook {
                     case "CARE_PLAN" -> extractCarePlan(r, m, linkId, value);
                     case "SERVICE_REQUEST" -> extractServiceRequest(r, m, linkId, value);
                     case "OBSERVATION", "PROCEDURE" -> extractObservation(r, m, linkId, value, resourceType);
+                    case "SAFETY_EVENT" -> extractSafetyEvent(r, m, linkId, value);
                     default -> log.debug("Unmapped resource type {} for linkId {}", resourceType, linkId);
                 }
                 extracted++;
@@ -165,6 +166,27 @@ public class FormExtractionService implements FormExtractionHook {
         payload.put("unit", str(m.get("unit")));
         record(r, m, linkId, resourceType, "BUTANO", "PENDING", null, null, payload);
         writeOutbox(r, "pct.form.observation.extracted", payload);
+    }
+
+    /**
+     * Adverse-event / safety answers → a Rito safety signal (event-driven; Rito + surveillance consume
+     * {@code pct.form.safety.flagged}). Recorded as provenance (route RITO). The trigger is config: a
+     * mapping with resourceType SAFETY_EVENT, optionally gated to a specific answer via {@code triggerValue}.
+     */
+    private void extractSafetyEvent(FormResponseEntity r, Map<String, Object> m, String linkId, JsonNode value) {
+        String trigger = str(m.get("triggerValue"));
+        if (trigger != null && !trigger.equalsIgnoreCase(value.asText())) {
+            return; // answer did not match the safety trigger
+        }
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("subjectCpid", r.getSubjectCpid());
+        payload.put("encounterId", r.getEncounterId());
+        payload.put("formKey", r.getFormKey());
+        payload.put("field", linkId);
+        payload.put("value", value.asText());
+        payload.put("category", firstNonBlank(str(m.get("safetyCategory")), "ADVERSE_EVENT"));
+        record(r, m, linkId, "SAFETY_EVENT", "RITO", "ROUTED", null, null, payload);
+        writeOutbox(r, "pct.form.safety.flagged", payload);
     }
 
     private void record(FormResponseEntity r, Map<String, Object> m, String linkId, String resourceType,
