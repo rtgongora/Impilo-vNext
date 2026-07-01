@@ -35,7 +35,8 @@ public record FormCatalogEntry(
         boolean requiresCountersign,
         boolean offlineCapable,
         String sensitivity,
-        String definitionJson
+        String definitionJson,
+        String resourceMappings
 ) {
     public List<String> careSettingsOrEmpty() { return careSettings == null ? List.of() : careSettings; }
     public List<String> programmesOrEmpty() { return programmeApplicability == null ? List.of() : programmeApplicability; }

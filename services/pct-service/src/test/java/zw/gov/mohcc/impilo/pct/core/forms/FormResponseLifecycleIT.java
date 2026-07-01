@@ -50,7 +50,7 @@ class FormResponseLifecycleIT {
         return new FormCatalogEntry("schema-" + key, key, "Form " + key, null, 3, "ver-" + key + "-v3",
                 "PUBLISHED", "TEST", List.of("OUTPATIENT"), List.of("ASSESSMENT"), List.of("GENERAL"),
                 List.of(), List.of("outpatient"), workflow, "MANDATORY", List.of("NURSE"),
-                null, null, "ALL", null, List.of(), List.of(), countersign, true, "STANDARD", "{}");
+                null, null, "ALL", null, List.of(), List.of(), countersign, true, "STANDARD", "{}", "{\"mappings\":[]}");
     }
 
     @BeforeEach

@@ -210,7 +210,7 @@ public class FormSchemaService {
                     s.getMinAgeMonths(), s.getMaxAgeMonths(), s.getSexApplicability(), s.getRequirePregnant(),
                     parseList(s.getProgrammeApplicability()), parseList(s.getFacilityLevels()),
                     s.isRequiresCountersign(), s.isOfflineCapable(), s.getSensitivity(),
-                    ver.getSchemaJson()));
+                    ver.getSchemaJson(), s.getResourceMappings()));
         }
         return entries;
     }

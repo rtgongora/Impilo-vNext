@@ -36,6 +36,7 @@ public record FormCatalogEntry(
         boolean requiresCountersign,
         boolean offlineCapable,
         String sensitivity,
-        String definitionJson
+        String definitionJson,
+        String resourceMappings
 ) {
 }

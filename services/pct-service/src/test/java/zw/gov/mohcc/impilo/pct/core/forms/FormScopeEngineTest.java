@@ -22,7 +22,7 @@ class FormScopeEngineTest {
                 "schema-" + key, key, key, null, 1, "ver-" + key, "PUBLISHED", "TEST",
                 setting == null ? List.of() : List.of(setting), List.of(), List.of(), List.of(), List.of(),
                 workflow, obligation, List.of(), null, null, "ALL", null, List.of(), List.of(),
-                false, true, "STANDARD", "{}");
+                false, true, "STANDARD", "{}", null);
     }
 
     private static CadreDecision cadre(String cadre, String context, Integer acuity) {
@@ -99,11 +99,11 @@ class FormScopeEngineTest {
         FormCatalogEntry anc = new FormCatalogEntry("s-anc", "anc", "ANC", null, 1, "v-anc", "PUBLISHED", "PROG",
                 List.of("OUTPATIENT"), List.of(), List.of(), List.of(), List.of(),
                 "ASSESS", "MANDATORY", List.of(), 120, null, "FEMALE", Boolean.TRUE, List.of(), List.of(),
-                false, true, "SENSITIVE", "{}");
+                false, true, "SENSITIVE", "{}", null);
         FormCatalogEntry imci = new FormCatalogEntry("s-imci", "imci", "IMCI", null, 1, "v-imci", "PUBLISHED", "PROG",
                 List.of("OUTPATIENT"), List.of(), List.of(), List.of(), List.of(),
                 "ASSESS", "MANDATORY", List.of(), 0, 60, "ALL", null, List.of(), List.of(),
-                false, true, "STANDARD", "{}");
+                false, true, "STANDARD", "{}", null);
 
         // Adult male, not pregnant: ANC dropped (sex+pregnancy), IMCI dropped (age > 60mo).
         PatientFacts adultMale = new PatientFacts(360, "MALE", false, List.of(), List.of());
