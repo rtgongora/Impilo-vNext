@@ -36,6 +36,21 @@ deny_reasons contains "ACCOUNT_NOT_VERIFIED" if {
 	assurance_loa < 3
 }
 
+# SELF-TREATMENT-BLOCK (GAP-6): a person acting in a regulated provider capacity must not perform
+# clinical TREATMENT on their own person record — an integrity / conflict-of-interest control.
+# Fires only when the actor is a provider (provider_id present) AND is the subject of the action.
+# Self-access to one's own record for non-treatment purposes (e.g. viewing) is unaffected.
+# Deny-safe strangler behaviour: when tshepo-authz has not yet populated subject_id/provider_id the
+# rule simply does not fire, so it cannot cause false denials before cut-over to ENFORCE.
+deny_reasons contains "SELF_TREATMENT" if {
+	input.purpose == "TREATMENT"
+	is_string(input.provider_id)
+	input.provider_id != ""
+	is_string(input.subject_id)
+	input.subject_id != ""
+	input.subject_id == input.actor_id
+}
+
 # ── Derived values ──────────────────────────────────────────────────────────
 
 acr_loa := x if {

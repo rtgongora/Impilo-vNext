@@ -44,3 +44,34 @@ test_multiple_deny_reasons_sorted if {
 	d.allow == false
 	d.deny_reasons == ["INVALID_PURPOSE", "MIN_LOA"]
 }
+
+# ── SELF-TREATMENT-BLOCK (GAP-6) ─────────────────────────────────────────────
+
+test_deny_self_treatment_by_provider if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "provider_id": "PRV-1", "subject_id": "person-1",
+		"purpose": "TREATMENT", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == false
+	"SELF_TREATMENT" in d.deny_reasons
+}
+
+test_allow_provider_treats_a_different_patient if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "provider_id": "PRV-1", "subject_id": "person-2",
+		"purpose": "TREATMENT", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == true
+	not "SELF_TREATMENT" in d.deny_reasons
+}
+
+test_allow_self_access_when_not_acting_as_provider if {
+	# A person accessing their own record without a regulated provider capacity is not
+	# self-treatment — self-access to own data is legitimate.
+	d := authz.decision with input as {
+		"actor_id": "person-1", "subject_id": "person-1",
+		"purpose": "TREATMENT", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == true
+	not "SELF_TREATMENT" in d.deny_reasons
+}

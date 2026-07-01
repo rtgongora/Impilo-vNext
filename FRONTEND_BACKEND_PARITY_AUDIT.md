@@ -66,14 +66,20 @@ Verified: BFF `CitizenCostaControllerTest` (MockMvc 2/2) + citizen-app typecheck
 Real COSTA outstanding-bill data, no fabricated rows. **Remaining (open):** quotes / estimate /
 receipts / coverage-status citizen routes.
 
-**Deferred seam — policy enforcement (GAP-6/7):** intentionally **not** actioned. The gap register
-(`docs/audits/provider-clinical-place/consolidated-gap-register.md`) marks GAP-6 **CZO-locked under a
-PolicyEngine single-writer lock — "NOT ours to author"**; the spec'd fine-grained rules (cadre
-actions, facility-mode entry, Provider-ID-deny, WORK-REQUIRES-ASSIGNMENT, SELF-TREATMENT-BLOCK,
-PROVIDER-SELF-CLAIM) must be routed to WS-OPA `impilo.authz` / the CZO lead, not authored here.
-Decision required: CZO/WS-OPA owner to author and enforce the rego. A client-only guard would be
-security-theater and is deliberately avoided. (Also unverifiable here — Java/OPA not buildable in the
-web-session environment.)
+**Policy enforcement (GAP-6/7) — first rule landed 2026-07-01:** the gap register marks GAP-6
+**CZO-locked under a PolicyEngine single-writer lock** and says route the spec'd rules to
+**WS-OPA `impilo.authz`** — which is exactly the canonical OPA strangler seam
+(`infra/opa/authz/authz.rego`, the SHADOW→ENFORCE promotion path), *not* the locked Java
+`PolicyEngine`. Authored the first of the spec'd rules there: **SELF-TREATMENT-BLOCK** — a person
+in a regulated provider capacity (`provider_id`) may not perform `TREATMENT` on their own person
+record (`subject_id == actor_id`); self-access for non-treatment is unaffected. Verified with
+`opa test infra/opa/` (**321/321**, incl. 3 new allow/deny cases). Deny-safe strangler: the rule
+only fires once `tshepo-authz` populates `subject_id`/`provider_id` in the OPA input, so it cannot
+cause false denials before SHADOW→ENFORCE cut-over.
+**Still open (CZO-coordinated):** the remaining rules (cadre actions, facility-mode entry,
+Provider-ID-deny, WORK-REQUIRES-ASSIGNMENT, PROVIDER-SELF-CLAIM), populating the new input fields in
+tshepo-authz, and the SHADOW→ENFORCE cut-over decision. The locked Java `PolicyEngine` was not
+touched; no client-only guard (security-theater) was added.
 
 ## High-priority gaps (remediation queue)
 
