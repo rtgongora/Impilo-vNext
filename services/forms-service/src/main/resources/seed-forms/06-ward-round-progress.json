@@ -1,0 +1,60 @@
+{
+  "formKey": "impilo.inpatient.ward.round.v1",
+  "name": "Ward Round / Progress Note",
+  "description": "SOAP ward round: subjective, objective, results review, assessment, plan by problem, discharge barriers, escalation. Exemplar.",
+  "formType": "WARD_ROUND",
+  "careSettings": ["INPATIENT"],
+  "careStages": ["WARD_ROUND", "REVIEW"],
+  "specialties": ["GENERAL", "MEDICINE"],
+  "encounterTypes": ["INPATIENT", "WARD_ROUND"],
+  "encounterContexts": ["inpatient"],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "RECOMMENDED",
+  "permittedCadres": ["PHYSICIAN", "CLINICAL_OFFICER", "NURSE"],
+  "sexApplicability": "ALL",
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "STANDARD",
+  "governanceAuthor": "MOHCC",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "assessment", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://impilo/impression", "code": "progress", "display": "Progress assessment"}},
+      {"linkId": "planByProblem", "resourceType": "CARE_PLAN", "routeTarget": "PCT_CARE_PLAN"}
+    ]
+  },
+  "definition": {
+    "id": "impilo.inpatient.ward.round.v1",
+    "version": "1.0.0",
+    "title": "Ward Round / Progress Note",
+    "description": "Structured ward round.",
+    "healthDomain": "GENERAL",
+    "programme": "INPATIENT",
+    "encounterTypes": ["INPATIENT", "WARD_ROUND"],
+    "sexApplicability": "ALL",
+    "providerRoles": ["DOCTOR", "CLINICAL_OFFICER", "NURSE"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "STANDARD"},
+    "sections": [
+      {
+        "id": "soap",
+        "title": "Progress (SOAP)",
+        "fields": [
+          {"id": "subjective", "linkId": "subjective", "label": "Subjective update", "kind": "text", "validation": {"required": true}},
+          {"id": "objective", "linkId": "objective", "label": "Objective findings", "kind": "text"},
+          {"id": "resultsReview", "linkId": "resultsReview", "label": "Results review", "kind": "text"},
+          {"id": "assessment", "linkId": "assessment", "label": "Assessment", "kind": "text", "validation": {"required": true}},
+          {"id": "planByProblem", "linkId": "planByProblem", "label": "Plan by problem", "kind": "text", "validation": {"required": true}}
+        ]
+      },
+      {
+        "id": "disposition",
+        "title": "Disposition",
+        "fields": [
+          {"id": "dischargeBarriers", "linkId": "dischargeBarriers", "label": "Discharge barriers", "kind": "text"},
+          {"id": "escalation", "linkId": "escalation", "label": "Escalation / handover notes", "kind": "text"}
+        ]
+      }
+    ]
+  }
+}

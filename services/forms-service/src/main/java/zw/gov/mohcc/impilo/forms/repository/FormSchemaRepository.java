@@ -15,4 +15,7 @@ public interface FormSchemaRepository extends JpaRepository<FormSchemaEntity, St
     Optional<FormSchemaEntity> findByIdAndTenantId(String id, String tenantId);
 
     Optional<FormSchemaEntity> findByFormKeyAndTenantId(String formKey, String tenantId);
+
+    /** Clinical catalog slice for the resolver: available clinical forms for a tenant. */
+    List<FormSchemaEntity> findByTenantIdAndClinicalTrueAndStatusIn(String tenantId, List<String> statuses);
 }

@@ -1,0 +1,77 @@
+{
+  "formKey": "impilo.child.imci.v1",
+  "name": "Child Health (IMCI) Assessment",
+  "description": "IMCI-style under-5 assessment: danger signs, main symptoms, classification, treatment. Age-restricted (< 5 years). Exemplar.",
+  "formType": "PROGRAMME_VISIT",
+  "careSettings": ["OUTPATIENT", "COMMUNITY", "OUTREACH"],
+  "careStages": ["ASSESSMENT", "CONSULTATION"],
+  "specialties": ["PAEDIATRICS", "NURSING", "GENERAL"],
+  "encounterTypes": ["CHILD_HEALTH", "IMCI", "OPD"],
+  "encounterContexts": ["outpatient", "community"],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": ["NURSE", "CLINICAL_OFFICER", "PHYSICIAN", "COMMUNITY"],
+  "minAgeMonths": 0,
+  "maxAgeMonths": 60,
+  "sexApplicability": "ALL",
+  "programmeApplicability": ["IMCI", "CHILD_HEALTH"],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "STANDARD",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO IMCI (exemplar subset)",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "muac", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "8352-7", "display": "Mid-upper arm circumference"}, "unit": "cm"},
+      {"linkId": "classification", "resourceType": "CONDITION", "routeTarget": "PCT_PROBLEM", "category": "DIAGNOSIS"}
+    ]
+  },
+  "definition": {
+    "id": "impilo.child.imci.v1",
+    "version": "1.0.0",
+    "title": "Child Health (IMCI) Assessment",
+    "description": "IMCI under-5 assessment.",
+    "healthDomain": "CHILD",
+    "programme": "IMCI",
+    "encounterTypes": ["CHILD_HEALTH", "IMCI", "OPD"],
+    "minAgeMonths": 0,
+    "maxAgeMonths": 60,
+    "sexApplicability": "ALL",
+    "providerRoles": ["NURSE", "CLINICAL_OFFICER", "DOCTOR"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "STANDARD"},
+    "sections": [
+      {
+        "id": "danger",
+        "title": "General danger signs",
+        "fields": [
+          {"id": "dangerSigns", "linkId": "dangerSigns", "label": "General danger signs", "kind": "coded_multi", "options": [
+            {"code": "NOT_DRINKING", "display": "Not able to drink / breastfeed"},
+            {"code": "VOMITS_ALL", "display": "Vomits everything"},
+            {"code": "CONVULSIONS", "display": "Convulsions"},
+            {"code": "LETHARGIC", "display": "Lethargic / unconscious"}
+          ]}
+        ]
+      },
+      {
+        "id": "symptoms",
+        "title": "Main symptoms",
+        "fields": [
+          {"id": "cough", "linkId": "cough", "label": "Cough / difficult breathing", "kind": "boolean"},
+          {"id": "diarrhoea", "linkId": "diarrhoea", "label": "Diarrhoea", "kind": "boolean"},
+          {"id": "fever", "linkId": "fever", "label": "Fever", "kind": "boolean"},
+          {"id": "muac", "linkId": "muac", "label": "MUAC", "kind": "numeric_with_unit", "unit": "cm", "validation": {"min": 5, "max": 30}}
+        ]
+      },
+      {
+        "id": "classify",
+        "title": "Classification & treatment",
+        "fields": [
+          {"id": "classification", "linkId": "classification", "label": "Classification", "kind": "text", "validation": {"required": true}},
+          {"id": "treatment", "linkId": "treatment", "label": "Treatment / plan", "kind": "text", "validation": {"required": true}}
+        ]
+      }
+    ]
+  }
+}

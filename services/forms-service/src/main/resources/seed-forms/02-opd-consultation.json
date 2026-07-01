@@ -1,0 +1,91 @@
+{
+  "formKey": "impilo.opd.consultation.v1",
+  "name": "OPD Consultation",
+  "description": "Structured outpatient clinician consultation: history, examination, assessment, diagnosis, plan, disposition. Exemplar.",
+  "formType": "CONSULTATION",
+  "careSettings": ["OUTPATIENT", "TELEMEDICINE"],
+  "careStages": ["CONSULTATION", "ASSESSMENT"],
+  "specialties": ["GENERAL", "FAMILY_MEDICINE"],
+  "encounterTypes": ["OPD", "CONSULTATION", "TELECONSULT"],
+  "encounterContexts": ["outpatient", "telemedicine"],
+  "requiredWorkflow": "DIAGNOSE",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": ["PHYSICIAN", "CLINICAL_OFFICER"],
+  "sexApplicability": "ALL",
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "STANDARD",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "OPD consultation exemplar",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "primaryDiagnosis", "resourceType": "CONDITION", "routeTarget": "PCT_PROBLEM", "codeSystem": "ICD-10", "category": "DIAGNOSIS"},
+      {"linkId": "clinicalImpression", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://impilo/impression", "code": "impression", "display": "Clinical impression"}},
+      {"linkId": "managementPlan", "resourceType": "CARE_PLAN", "routeTarget": "PCT_CARE_PLAN"}
+    ]
+  },
+  "definition": {
+    "id": "impilo.opd.consultation.v1",
+    "version": "1.0.0",
+    "title": "OPD Consultation",
+    "description": "Structured clinician consultation.",
+    "healthDomain": "GENERAL",
+    "programme": "OPD",
+    "encounterTypes": ["OPD", "CONSULTATION", "TELECONSULT"],
+    "sexApplicability": "ALL",
+    "providerRoles": ["DOCTOR", "CLINICAL_OFFICER", "PHYSICIAN"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "STANDARD"},
+    "sections": [
+      {
+        "id": "history",
+        "title": "History",
+        "fields": [
+          {"id": "chiefComplaint", "linkId": "chiefComplaint", "label": "Chief complaint", "kind": "text", "validation": {"required": true, "maxLength": 500}},
+          {"id": "hpi", "linkId": "hpi", "label": "History of presenting complaint", "kind": "text"},
+          {"id": "ros", "linkId": "ros", "label": "Review of systems (abnormal)", "kind": "coded_multi", "options": [
+            {"code": "CVS", "display": "Cardiovascular"},
+            {"code": "RESP", "display": "Respiratory"},
+            {"code": "GI", "display": "Gastrointestinal"},
+            {"code": "GU", "display": "Genitourinary"},
+            {"code": "NEURO", "display": "Neurological"},
+            {"code": "MSK", "display": "Musculoskeletal"}
+          ]},
+          {"id": "allergies", "linkId": "allergies", "label": "Known allergies", "kind": "text"}
+        ]
+      },
+      {
+        "id": "examination",
+        "title": "Examination",
+        "fields": [
+          {"id": "generalExam", "linkId": "generalExam", "label": "General examination", "kind": "text"},
+          {"id": "systemExam", "linkId": "systemExam", "label": "Focused system examination", "kind": "text"}
+        ]
+      },
+      {
+        "id": "assessment",
+        "title": "Assessment & diagnosis",
+        "fields": [
+          {"id": "clinicalImpression", "linkId": "clinicalImpression", "label": "Clinical impression", "kind": "text", "validation": {"required": true}},
+          {"id": "primaryDiagnosis", "linkId": "primaryDiagnosis", "label": "Primary diagnosis (ICD-10)", "kind": "terminology_bound", "validation": {"required": true}, "terminologyBinding": {"system": "http://hl7.org/fhir/sid/icd-10", "code": ""}, "allowAuxiliaryNarrative": true, "auxiliaryNarrativeLabel": "Diagnosis text"},
+          {"id": "differentials", "linkId": "differentials", "label": "Differential diagnoses", "kind": "text"}
+        ]
+      },
+      {
+        "id": "plan",
+        "title": "Management plan & disposition",
+        "fields": [
+          {"id": "managementPlan", "linkId": "managementPlan", "label": "Management plan", "kind": "text", "validation": {"required": true}},
+          {"id": "disposition", "linkId": "disposition", "label": "Disposition", "kind": "coded_single", "validation": {"required": true}, "options": [
+            {"code": "TREAT_DISCHARGE", "display": "Treat and discharge"},
+            {"code": "REFER", "display": "Refer"},
+            {"code": "ADMIT", "display": "Admit"},
+            {"code": "FOLLOW_UP", "display": "Review / follow-up"}
+          ]},
+          {"id": "followUpPlan", "linkId": "followUpPlan", "label": "Follow-up plan", "kind": "text"}
+        ]
+      }
+    ]
+  }
+}

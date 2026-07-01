@@ -1,0 +1,75 @@
+{
+  "formKey": "impilo.ncd.chronic.review.v1",
+  "name": "Chronic NCD Review (HTN/DM)",
+  "description": "Hypertension / diabetes chronic review: control, complications screen, medication adherence, plan. Condition-gated (HTN or DM active). Exemplar.",
+  "formType": "CHRONIC_REVIEW",
+  "careSettings": ["OUTPATIENT", "TELEMEDICINE"],
+  "careStages": ["REVIEW", "CONSULTATION"],
+  "specialties": ["GENERAL", "MEDICINE"],
+  "encounterTypes": ["OPD", "CHRONIC_REVIEW", "NCD"],
+  "encounterContexts": ["outpatient", "telemedicine"],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "RECOMMENDED",
+  "permittedCadres": ["PHYSICIAN", "CLINICAL_OFFICER", "NURSE"],
+  "minAgeMonths": 216,
+  "sexApplicability": "ALL",
+  "programmeApplicability": ["NCD", "HYPERTENSION", "DIABETES"],
+  "eligibility": {"requireAnyConditionCode": ["I10", "E11", "E10", "HTN", "DM"]},
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "STANDARD",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO PEN NCD (exemplar subset)",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "sbp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "8480-6", "display": "Systolic blood pressure"}, "unit": "mm[Hg]"},
+      {"linkId": "fbg", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "1558-6", "display": "Fasting glucose"}, "unit": "mmol/L"}
+    ]
+  },
+  "definition": {
+    "id": "impilo.ncd.chronic.review.v1",
+    "version": "1.0.0",
+    "title": "Chronic NCD Review (HTN/DM)",
+    "description": "Chronic NCD review.",
+    "healthDomain": "NCD",
+    "programme": "NCD",
+    "encounterTypes": ["OPD", "CHRONIC_REVIEW", "NCD"],
+    "minAgeMonths": 216,
+    "sexApplicability": "ALL",
+    "providerRoles": ["DOCTOR", "CLINICAL_OFFICER", "NURSE"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "STANDARD"},
+    "sections": [
+      {
+        "id": "control",
+        "title": "Disease control",
+        "fields": [
+          {"id": "sbp", "linkId": "sbp", "label": "Systolic BP", "kind": "numeric_with_unit", "unit": "mmHg", "validation": {"min": 40, "max": 300}},
+          {"id": "dbp", "linkId": "dbp", "label": "Diastolic BP", "kind": "numeric_with_unit", "unit": "mmHg", "validation": {"min": 20, "max": 200}},
+          {"id": "fbg", "linkId": "fbg", "label": "Fasting blood glucose", "kind": "numeric_with_unit", "unit": "mmol/L", "validation": {"min": 1, "max": 40}}
+        ]
+      },
+      {
+        "id": "complications",
+        "title": "Complications & adherence",
+        "fields": [
+          {"id": "complications", "linkId": "complications", "label": "Complications screen", "kind": "coded_multi", "options": [
+            {"code": "RETINOPATHY", "display": "Eye / retinopathy"},
+            {"code": "NEPHROPATHY", "display": "Kidney"},
+            {"code": "NEUROPATHY", "display": "Foot / neuropathy"},
+            {"code": "CVS", "display": "Cardiovascular"}
+          ]},
+          {"id": "adherence", "linkId": "adherence", "label": "Medication adherence", "kind": "coded_single", "options": [{"code": "GOOD", "display": "Good"}, {"code": "PARTIAL", "display": "Partial"}, {"code": "POOR", "display": "Poor"}]}
+        ]
+      },
+      {
+        "id": "plan",
+        "title": "Plan",
+        "fields": [
+          {"id": "plan", "linkId": "plan", "label": "Management plan", "kind": "text", "validation": {"required": true}}
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "formKey": "impilo.anc.contact1.v1",
+  "name": "Antenatal Care — First Contact",
+  "description": "WHO ANC first-contact exemplar: history, examination, screening, counselling, referral decision. Female pregnant applicability.",
+  "formType": "PROGRAMME_VISIT",
+  "careSettings": ["OUTPATIENT", "COMMUNITY"],
+  "careStages": ["ASSESSMENT", "CONSULTATION"],
+  "specialties": ["MIDWIFERY", "OBSTETRICS", "NURSING"],
+  "encounterTypes": ["ANTENATAL", "ANC", "MATERNITY", "OBSTETRICS"],
+  "encounterContexts": ["outpatient", "community"],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": ["MIDWIFE", "NURSE", "PHYSICIAN", "CLINICAL_OFFICER"],
+  "minAgeMonths": 120,
+  "sexApplicability": "FEMALE",
+  "requirePregnant": true,
+  "programmeApplicability": ["ANC", "MATERNAL"],
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "SENSITIVE",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "WHO recommendations on antenatal care (exemplar subset)",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "lmp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "8665-2", "display": "Last menstrual period"}},
+      {"linkId": "bp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "85354-9", "display": "Blood pressure panel"}}
+    ]
+  },
+  "indicators": {"indicators": [{"programmeIndicatorCode": "ANC1_COVERAGE"}]},
+  "definition": {
+    "id": "impilo.anc.contact1.v1",
+    "version": "1.0.0",
+    "title": "Antenatal Care — First Contact",
+    "description": "WHO ANC-aligned exemplar.",
+    "dakReference": "WHO ANC DAK",
+    "healthDomain": "MATERNAL",
+    "programme": "ANC",
+    "encounterTypes": ["ANTENATAL", "ANC", "MATERNITY", "OBSTETRICS"],
+    "minAgeMonths": 120,
+    "sexApplicability": ["FEMALE"],
+    "providerRoles": ["MIDWIFE", "NURSE", "DOCTOR", "CLINICAL_OFFICER"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "SENSITIVE"},
+    "sections": [
+      {
+        "id": "history",
+        "title": "Obstetric history",
+        "fields": [
+          {"id": "lmp", "linkId": "lmp", "label": "Last menstrual period", "kind": "date", "validation": {"required": true}},
+          {"id": "gravida", "linkId": "gravida", "label": "Gravida", "kind": "numeric_with_unit", "unit": "count", "validation": {"min": 0, "max": 20, "required": true}},
+          {"id": "parity", "linkId": "parity", "label": "Parity", "kind": "numeric_with_unit", "unit": "count", "validation": {"min": 0, "max": 20, "required": true}}
+        ]
+      },
+      {
+        "id": "exam",
+        "title": "Examination & screening",
+        "fields": [
+          {"id": "bp", "linkId": "bp", "label": "Blood pressure", "kind": "text", "validation": {"required": true}},
+          {"id": "fundalHeight", "linkId": "fundalHeight", "label": "Fundal height", "kind": "numeric_with_unit", "unit": "cm", "validation": {"min": 0, "max": 50}},
+          {"id": "hivStatus", "linkId": "hivStatus", "label": "HIV status", "kind": "coded_single", "options": [{"code": "NEG", "display": "Negative"}, {"code": "POS", "display": "Positive"}, {"code": "UNKNOWN", "display": "Unknown / declined"}]}
+        ]
+      },
+      {
+        "id": "plan",
+        "title": "Counselling & plan",
+        "fields": [
+          {"id": "counselling", "linkId": "counselling", "label": "Counselling provided", "kind": "coded_multi", "options": [
+            {"code": "NUTRITION", "display": "Nutrition"},
+            {"code": "DANGER_SIGNS", "display": "Danger signs"},
+            {"code": "BIRTH_PLAN", "display": "Birth plan"},
+            {"code": "PMTCT", "display": "PMTCT"}
+          ]},
+          {"id": "referralDecision", "linkId": "referralDecision", "label": "Referral decision", "kind": "coded_single", "options": [{"code": "NONE", "display": "Continue routine ANC"}, {"code": "REFER", "display": "Refer"}]}
+        ]
+      }
+    ]
+  }
+}

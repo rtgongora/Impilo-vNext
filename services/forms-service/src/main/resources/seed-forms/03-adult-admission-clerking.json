@@ -1,0 +1,91 @@
+{
+  "formKey": "impilo.inpatient.admission.clerking.v1",
+  "name": "Adult Admission Clerking",
+  "description": "Medical admission clerking: source, admitting diagnosis, history, examination, problem list, initial orders, care plan, escalation status. Exemplar.",
+  "formType": "ADMISSION_CLERKING",
+  "careSettings": ["INPATIENT"],
+  "careStages": ["ADMISSION", "CLERKING"],
+  "specialties": ["GENERAL", "MEDICINE"],
+  "encounterTypes": ["INPATIENT", "ADMISSION"],
+  "encounterContexts": ["inpatient"],
+  "requiredWorkflow": "ADMIT",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": ["PHYSICIAN", "CLINICAL_OFFICER"],
+  "minAgeMonths": 156,
+  "sexApplicability": "ALL",
+  "requiresCountersign": false,
+  "offlineCapable": false,
+  "sensitivity": "STANDARD",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "Adult medical admission clerking exemplar",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "admittingDiagnosis", "resourceType": "CONDITION", "routeTarget": "PCT_PROBLEM", "codeSystem": "ICD-10", "category": "DIAGNOSIS"},
+      {"linkId": "initialCarePlan", "resourceType": "CARE_PLAN", "routeTarget": "PCT_CARE_PLAN"},
+      {"linkId": "initialInvestigations", "resourceType": "SERVICE_REQUEST", "routeTarget": "OROS", "orderCategory": "laboratory"}
+    ]
+  },
+  "definition": {
+    "id": "impilo.inpatient.admission.clerking.v1",
+    "version": "1.0.0",
+    "title": "Adult Admission Clerking",
+    "description": "Structured medical admission clerking.",
+    "healthDomain": "GENERAL",
+    "programme": "INPATIENT",
+    "encounterTypes": ["INPATIENT", "ADMISSION"],
+    "minAgeMonths": 156,
+    "sexApplicability": "ALL",
+    "providerRoles": ["DOCTOR", "CLINICAL_OFFICER", "PHYSICIAN"],
+    "offlineCapable": false,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "STANDARD"},
+    "sections": [
+      {
+        "id": "admission",
+        "title": "Admission context",
+        "fields": [
+          {"id": "admissionSource", "linkId": "admissionSource", "label": "Admission source", "kind": "coded_single", "validation": {"required": true}, "options": [
+            {"code": "OPD", "display": "OPD / clinic"},
+            {"code": "EMERGENCY", "display": "Emergency department"},
+            {"code": "REFERRAL", "display": "Referral"},
+            {"code": "TRANSFER", "display": "Transfer-in"},
+            {"code": "DIRECT", "display": "Direct admission"}
+          ]},
+          {"id": "admittingDiagnosis", "linkId": "admittingDiagnosis", "label": "Admitting diagnosis (ICD-10)", "kind": "terminology_bound", "validation": {"required": true}, "terminologyBinding": {"system": "http://hl7.org/fhir/sid/icd-10", "code": ""}, "allowAuxiliaryNarrative": true, "auxiliaryNarrativeLabel": "Diagnosis text"},
+          {"id": "resusStatus", "linkId": "resusStatus", "label": "Resuscitation / escalation status", "kind": "coded_single", "options": [
+            {"code": "FULL", "display": "For full resuscitation"},
+            {"code": "LIMITED", "display": "Limited escalation"},
+            {"code": "DNACPR", "display": "DNACPR (documented)"}
+          ]}
+        ]
+      },
+      {
+        "id": "history",
+        "title": "History & examination",
+        "fields": [
+          {"id": "presentingHistory", "linkId": "presentingHistory", "label": "Presenting history", "kind": "text", "validation": {"required": true}},
+          {"id": "pastHistory", "linkId": "pastHistory", "label": "Past medical / surgical history", "kind": "text"},
+          {"id": "drugHistory", "linkId": "drugHistory", "label": "Drug history & allergies", "kind": "text"},
+          {"id": "examination", "linkId": "examination", "label": "Examination findings", "kind": "text", "validation": {"required": true}}
+        ]
+      },
+      {
+        "id": "planning",
+        "title": "Problem list, orders & plan",
+        "fields": [
+          {"id": "problemList", "linkId": "problemList", "label": "Problem list", "kind": "text", "validation": {"required": true}},
+          {"id": "initialInvestigations", "linkId": "initialInvestigations", "label": "Initial investigations", "kind": "coded_multi", "options": [
+            {"code": "FBC", "display": "Full blood count"},
+            {"code": "UE", "display": "Urea & electrolytes"},
+            {"code": "GLU", "display": "Blood glucose"},
+            {"code": "MALARIA", "display": "Malaria test"},
+            {"code": "CXR", "display": "Chest X-ray"},
+            {"code": "HIV", "display": "HIV test"}
+          ]},
+          {"id": "initialCarePlan", "linkId": "initialCarePlan", "label": "Initial care plan", "kind": "text", "validation": {"required": true}},
+          {"id": "consultantTeam", "linkId": "consultantTeam", "label": "Consultant / team", "kind": "text"}
+        ]
+      }
+    ]
+  }
+}

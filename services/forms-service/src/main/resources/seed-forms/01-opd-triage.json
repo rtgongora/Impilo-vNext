@@ -1,0 +1,98 @@
+{
+  "formKey": "impilo.opd.triage.v1",
+  "name": "OPD Triage",
+  "description": "Universal outpatient triage: reason for visit, vital signs, danger signs, triage acuity. Exemplar — align with national triage protocol.",
+  "formType": "TRIAGE",
+  "careSettings": ["OUTPATIENT", "EMERGENCY", "COMMUNITY", "OUTREACH"],
+  "careStages": ["TRIAGE", "CHECK_IN"],
+  "specialties": ["NURSING", "GENERAL"],
+  "encounterTypes": ["OPD", "CONSULTATION", "EMERGENCY", "WALK_IN"],
+  "encounterContexts": ["outpatient", "emergency", "community"],
+  "requiredWorkflow": "TRIAGE",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": ["NURSE", "MIDWIFE", "CLINICAL_OFFICER", "COMMUNITY", "PHYSICIAN"],
+  "sexApplicability": "ALL",
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "STANDARD",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "National OPD triage protocol (exemplar)",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "temp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "8310-5", "display": "Body temperature"}, "unit": "Cel"},
+      {"linkId": "pulse", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "8867-4", "display": "Heart rate"}, "unit": "/min"},
+      {"linkId": "resp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "9279-1", "display": "Respiratory rate"}, "unit": "/min"},
+      {"linkId": "sbp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "8480-6", "display": "Systolic blood pressure"}, "unit": "mm[Hg]"},
+      {"linkId": "dbp", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "8462-4", "display": "Diastolic blood pressure"}, "unit": "mm[Hg]"},
+      {"linkId": "spo2", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "59408-5", "display": "Oxygen saturation"}, "unit": "%"},
+      {"linkId": "triageCategory", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://impilo/triage", "code": "acuity", "display": "Triage acuity"}}
+    ]
+  },
+  "definition": {
+    "id": "impilo.opd.triage.v1",
+    "version": "1.0.0",
+    "title": "OPD Triage",
+    "description": "Structured triage capture.",
+    "healthDomain": "GENERAL",
+    "programme": "OPD",
+    "encounterTypes": ["OPD", "CONSULTATION", "EMERGENCY", "WALK_IN"],
+    "sexApplicability": "ALL",
+    "providerRoles": ["NURSE", "MIDWIFE", "CLINICAL_OFFICER", "DOCTOR"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "STANDARD"},
+    "sections": [
+      {
+        "id": "reason",
+        "title": "Reason for visit",
+        "fields": [
+          {"id": "reasonForVisit", "linkId": "reasonForVisit", "label": "Reason for visit", "kind": "coded_single", "validation": {"required": true}, "options": [
+            {"code": "NEW_ILLNESS", "display": "New illness"},
+            {"code": "FOLLOW_UP", "display": "Follow-up"},
+            {"code": "CHRONIC_REVIEW", "display": "Chronic disease review"},
+            {"code": "INJURY", "display": "Injury"},
+            {"code": "ANC", "display": "Antenatal"},
+            {"code": "CHILD_HEALTH", "display": "Child health"},
+            {"code": "OTHER", "display": "Other"}
+          ], "allowAuxiliaryNarrative": true, "auxiliaryNarrativeLabel": "Describe"}
+        ]
+      },
+      {
+        "id": "vitals",
+        "title": "Vital signs",
+        "fields": [
+          {"id": "temp", "linkId": "temp", "label": "Temperature", "kind": "numeric_with_unit", "unit": "°C", "validation": {"min": 30, "max": 44, "requireOverrideReason": true}, "terminologyBinding": {"system": "http://loinc.org", "code": "8310-5"}},
+          {"id": "pulse", "linkId": "pulse", "label": "Pulse", "kind": "numeric_with_unit", "unit": "/min", "validation": {"min": 20, "max": 250}},
+          {"id": "resp", "linkId": "resp", "label": "Respiratory rate", "kind": "numeric_with_unit", "unit": "/min", "validation": {"min": 4, "max": 80}},
+          {"id": "sbp", "linkId": "sbp", "label": "Systolic BP", "kind": "numeric_with_unit", "unit": "mmHg", "validation": {"min": 40, "max": 300}},
+          {"id": "dbp", "linkId": "dbp", "label": "Diastolic BP", "kind": "numeric_with_unit", "unit": "mmHg", "validation": {"min": 20, "max": 200}},
+          {"id": "spo2", "linkId": "spo2", "label": "SpO2", "kind": "numeric_with_unit", "unit": "%", "validation": {"min": 40, "max": 100}},
+          {"id": "painScore", "linkId": "painScore", "label": "Pain score (0-10)", "kind": "numeric_with_unit", "unit": "score", "validation": {"min": 0, "max": 10}}
+        ]
+      },
+      {
+        "id": "safety",
+        "title": "Danger signs & acuity",
+        "fields": [
+          {"id": "dangerSigns", "linkId": "dangerSigns", "label": "Danger signs", "kind": "coded_multi", "options": [
+            {"code": "UNCONSCIOUS", "display": "Unconscious / altered mental state"},
+            {"code": "CONVULSING", "display": "Convulsing"},
+            {"code": "RESP_DISTRESS", "display": "Respiratory distress"},
+            {"code": "SHOCK", "display": "Signs of shock"},
+            {"code": "SEVERE_BLEEDING", "display": "Severe bleeding"},
+            {"code": "SEVERE_PAIN", "display": "Severe pain"}
+          ]},
+          {"id": "triageCategory", "linkId": "triageCategory", "label": "Triage acuity", "kind": "coded_single", "validation": {"required": true}, "options": [
+            {"code": "1", "display": "1 — Immediate (resuscitation)"},
+            {"code": "2", "display": "2 — Emergency"},
+            {"code": "3", "display": "3 — Urgent"},
+            {"code": "4", "display": "4 — Standard"},
+            {"code": "5", "display": "5 — Non-urgent"}
+          ]},
+          {"id": "escalate", "linkId": "escalate", "label": "Immediate escalation required", "kind": "boolean"},
+          {"id": "triageNotes", "linkId": "triageNotes", "label": "Triage notes", "kind": "text"}
+        ]
+      }
+    ]
+  }
+}

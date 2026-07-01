@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
+import zw.gov.mohcc.impilo.forms.api.dto.ClinicalFormUpsertRequest;
+import zw.gov.mohcc.impilo.forms.api.dto.FormCatalogEntry;
 import zw.gov.mohcc.impilo.forms.api.dto.FormSchemaRequest;
 import zw.gov.mohcc.impilo.forms.api.dto.FormSchemaResponse;
 import zw.gov.mohcc.impilo.forms.api.dto.FormVersionRequest;
@@ -43,6 +45,22 @@ public class FormSchemaController {
         RequestContext ctx = RequestContextHolder.require();
         List<FormSchemaResponse> schemas = formSchemaService.listSchemas(ctx.tenantId());
         return ResponseEntity.ok(schemas);
+    }
+
+    /** Clinical catalog slice for the PCT resolver: available clinical forms + immutable version + DAK JSON. */
+    @GetMapping("/catalog")
+    public ResponseEntity<List<FormCatalogEntry>> catalog() {
+        RequestContext ctx = RequestContextHolder.require();
+        return ResponseEntity.ok(formSchemaService.catalog(ctx.tenantId()));
+    }
+
+    /** Idempotent upsert of a clinical (WHO-DAK) encounter form definition (admin + seed path). */
+    @PostMapping("/clinical")
+    public ResponseEntity<FormSchemaResponse> upsertClinicalForm(
+            @Valid @RequestBody ClinicalFormUpsertRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        FormSchemaResponse response = formSchemaService.upsertClinicalForm(request, ctx);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{id}")

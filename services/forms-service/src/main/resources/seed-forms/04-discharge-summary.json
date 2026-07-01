@@ -1,0 +1,72 @@
+{
+  "formKey": "impilo.inpatient.discharge.summary.v1",
+  "name": "Discharge Summary & Readiness",
+  "description": "Discharge readiness + summary: diagnosis, hospital course, medication reconciliation, follow-up, patient instructions, warning signs. Exemplar.",
+  "formType": "DISCHARGE_SUMMARY",
+  "careSettings": ["INPATIENT"],
+  "careStages": ["DISCHARGE"],
+  "specialties": ["GENERAL", "MEDICINE", "NURSING"],
+  "encounterTypes": ["INPATIENT", "DISCHARGE"],
+  "encounterContexts": ["inpatient"],
+  "requiredWorkflow": "DISCHARGE",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": ["PHYSICIAN", "CLINICAL_OFFICER"],
+  "sexApplicability": "ALL",
+  "requiresCountersign": false,
+  "offlineCapable": false,
+  "sensitivity": "STANDARD",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "Discharge summary exemplar",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "dischargeDiagnosis", "resourceType": "CONDITION", "routeTarget": "PCT_PROBLEM", "codeSystem": "ICD-10", "category": "DIAGNOSIS"},
+      {"linkId": "followUpPlan", "resourceType": "CARE_PLAN", "routeTarget": "PCT_CARE_PLAN"}
+    ]
+  },
+  "definition": {
+    "id": "impilo.inpatient.discharge.summary.v1",
+    "version": "1.0.0",
+    "title": "Discharge Summary & Readiness",
+    "description": "Structured discharge summary.",
+    "healthDomain": "GENERAL",
+    "programme": "INPATIENT",
+    "encounterTypes": ["INPATIENT", "DISCHARGE"],
+    "sexApplicability": "ALL",
+    "providerRoles": ["DOCTOR", "CLINICAL_OFFICER", "PHYSICIAN"],
+    "offlineCapable": false,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "STANDARD"},
+    "sections": [
+      {
+        "id": "readiness",
+        "title": "Discharge readiness",
+        "fields": [
+          {"id": "clinicallyStable", "linkId": "clinicallyStable", "label": "Clinically stable for discharge", "kind": "boolean", "validation": {"required": true}},
+          {"id": "medsReconciled", "linkId": "medsReconciled", "label": "Discharge medications reconciled", "kind": "boolean", "validation": {"required": true}},
+          {"id": "followUpArranged", "linkId": "followUpArranged", "label": "Follow-up arranged", "kind": "boolean", "validation": {"required": true}}
+        ]
+      },
+      {
+        "id": "summary",
+        "title": "Summary",
+        "fields": [
+          {"id": "dischargeDiagnosis", "linkId": "dischargeDiagnosis", "label": "Discharge diagnosis (ICD-10)", "kind": "terminology_bound", "validation": {"required": true}, "terminologyBinding": {"system": "http://hl7.org/fhir/sid/icd-10", "code": ""}, "allowAuxiliaryNarrative": true, "auxiliaryNarrativeLabel": "Diagnosis text"},
+          {"id": "hospitalCourse", "linkId": "hospitalCourse", "label": "Hospital course", "kind": "text", "validation": {"required": true}},
+          {"id": "procedures", "linkId": "procedures", "label": "Procedures performed", "kind": "text"},
+          {"id": "significantResults", "linkId": "significantResults", "label": "Significant results", "kind": "text"}
+        ]
+      },
+      {
+        "id": "aftercare",
+        "title": "Medications, follow-up & instructions",
+        "fields": [
+          {"id": "dischargeMedications", "linkId": "dischargeMedications", "label": "Discharge medications", "kind": "text", "validation": {"required": true}},
+          {"id": "followUpPlan", "linkId": "followUpPlan", "label": "Follow-up plan", "kind": "text", "validation": {"required": true}},
+          {"id": "patientInstructions", "linkId": "patientInstructions", "label": "Patient instructions", "kind": "text", "validation": {"required": true}},
+          {"id": "warningSigns", "linkId": "warningSigns", "label": "Warning signs to return", "kind": "text", "validation": {"required": true}},
+          {"id": "responsibleProvider", "linkId": "responsibleProvider", "label": "Responsible provider", "kind": "text"}
+        ]
+      }
+    ]
+  }
+}

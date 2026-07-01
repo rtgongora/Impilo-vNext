@@ -1,0 +1,58 @@
+{
+  "formKey": "impilo.pharmacy.med.reconciliation.v1",
+  "name": "Medication Reconciliation (Pharmacy)",
+  "description": "Pharmacist medication reconciliation & review: current medications, discrepancies, interactions, counselling. Exemplar.",
+  "formType": "MEDICATION_REVIEW",
+  "careSettings": ["INPATIENT", "OUTPATIENT"],
+  "careStages": ["ADMISSION", "REVIEW", "DISCHARGE"],
+  "specialties": ["PHARMACY"],
+  "encounterTypes": ["INPATIENT", "OPD", "PHARMACY"],
+  "encounterContexts": ["inpatient", "outpatient"],
+  "requiredWorkflow": "MEDICATION_REVIEW",
+  "obligationDefault": "RECOMMENDED",
+  "permittedCadres": ["PHARMACY"],
+  "sexApplicability": "ALL",
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "STANDARD",
+  "governanceAuthor": "MOHCC",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "reconciledList", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://impilo/pharmacy", "code": "med-recon", "display": "Reconciled medication list"}}
+    ]
+  },
+  "definition": {
+    "id": "impilo.pharmacy.med.reconciliation.v1",
+    "version": "1.0.0",
+    "title": "Medication Reconciliation (Pharmacy)",
+    "description": "Pharmacist medication reconciliation.",
+    "healthDomain": "PHARMACY",
+    "programme": "PHARMACY",
+    "encounterTypes": ["INPATIENT", "OPD", "PHARMACY"],
+    "sexApplicability": "ALL",
+    "providerRoles": ["PHARMACIST", "PHARMACY_TECHNICIAN"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "STANDARD"},
+    "sections": [
+      {
+        "id": "recon",
+        "title": "Reconciliation",
+        "fields": [
+          {"id": "currentMedications", "linkId": "currentMedications", "label": "Current medications", "kind": "text", "validation": {"required": true}},
+          {"id": "reconciledList", "linkId": "reconciledList", "label": "Reconciled medication list", "kind": "text", "validation": {"required": true}},
+          {"id": "discrepancies", "linkId": "discrepancies", "label": "Discrepancies identified", "kind": "text"},
+          {"id": "interactions", "linkId": "interactions", "label": "Interactions / alerts", "kind": "text"}
+        ]
+      },
+      {
+        "id": "counselling",
+        "title": "Counselling & outcome",
+        "fields": [
+          {"id": "counsellingProvided", "linkId": "counsellingProvided", "label": "Counselling provided", "kind": "boolean"},
+          {"id": "pharmacistNotes", "linkId": "pharmacistNotes", "label": "Pharmacist notes", "kind": "text"}
+        ]
+      }
+    ]
+  }
+}

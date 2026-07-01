@@ -20,4 +20,7 @@ impilo:
     enabled: true
 
 forms:
+  seed:
+    clinical-forms:
+      enabled: false
   security:

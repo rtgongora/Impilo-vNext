@@ -1,0 +1,70 @@
+{
+  "formKey": "impilo.inpatient.nursing.admission.v1",
+  "name": "Nursing Admission Assessment",
+  "description": "Baseline vitals, functional status, risk screens (falls, pressure injury, nutrition), nursing problems & care plan. Exemplar.",
+  "formType": "NURSING_ASSESSMENT",
+  "careSettings": ["INPATIENT"],
+  "careStages": ["ADMISSION", "NURSING_SHIFT_ASSESSMENT"],
+  "specialties": ["NURSING"],
+  "encounterTypes": ["INPATIENT", "ADMISSION"],
+  "encounterContexts": ["inpatient"],
+  "requiredWorkflow": "ASSESS",
+  "obligationDefault": "MANDATORY",
+  "permittedCadres": ["NURSE", "MIDWIFE"],
+  "sexApplicability": "ALL",
+  "requiresCountersign": false,
+  "offlineCapable": true,
+  "sensitivity": "STANDARD",
+  "governanceAuthor": "MOHCC",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {"linkId": "weight", "resourceType": "OBSERVATION", "routeTarget": "BUTANO", "code": {"system": "http://loinc.org", "code": "29463-7", "display": "Body weight"}, "unit": "kg"}
+    ]
+  },
+  "definition": {
+    "id": "impilo.inpatient.nursing.admission.v1",
+    "version": "1.0.0",
+    "title": "Nursing Admission Assessment",
+    "description": "Structured nursing admission assessment.",
+    "healthDomain": "GENERAL",
+    "programme": "INPATIENT",
+    "encounterTypes": ["INPATIENT", "ADMISSION"],
+    "sexApplicability": "ALL",
+    "providerRoles": ["NURSE", "MIDWIFE"],
+    "offlineCapable": true,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "STANDARD"},
+    "sections": [
+      {
+        "id": "baseline",
+        "title": "Baseline",
+        "fields": [
+          {"id": "weight", "linkId": "weight", "label": "Weight", "kind": "numeric_with_unit", "unit": "kg", "validation": {"min": 0, "max": 400}},
+          {"id": "functionalStatus", "linkId": "functionalStatus", "label": "Functional status", "kind": "coded_single", "options": [
+            {"code": "INDEPENDENT", "display": "Independent"},
+            {"code": "ASSISTED", "display": "Needs assistance"},
+            {"code": "DEPENDENT", "display": "Fully dependent"}
+          ]}
+        ]
+      },
+      {
+        "id": "risks",
+        "title": "Risk screens",
+        "fields": [
+          {"id": "fallsRisk", "linkId": "fallsRisk", "label": "Falls risk", "kind": "coded_single", "options": [{"code": "LOW", "display": "Low"}, {"code": "MEDIUM", "display": "Medium"}, {"code": "HIGH", "display": "High"}]},
+          {"id": "pressureInjuryRisk", "linkId": "pressureInjuryRisk", "label": "Pressure injury risk", "kind": "coded_single", "options": [{"code": "LOW", "display": "Low"}, {"code": "MEDIUM", "display": "Medium"}, {"code": "HIGH", "display": "High"}]},
+          {"id": "nutritionRisk", "linkId": "nutritionRisk", "label": "Nutrition risk", "kind": "coded_single", "options": [{"code": "LOW", "display": "Low"}, {"code": "MEDIUM", "display": "Medium"}, {"code": "HIGH", "display": "High"}]},
+          {"id": "isolationScreen", "linkId": "isolationScreen", "label": "Infection / isolation screen", "kind": "text"}
+        ]
+      },
+      {
+        "id": "nursingPlan",
+        "title": "Nursing problems & plan",
+        "fields": [
+          {"id": "nursingProblems", "linkId": "nursingProblems", "label": "Nursing problems", "kind": "text", "validation": {"required": true}},
+          {"id": "nursingCarePlan", "linkId": "nursingCarePlan", "label": "Nursing care plan", "kind": "text", "validation": {"required": true}}
+        ]
+      }
+    ]
+  }
+}
