@@ -132,9 +132,11 @@ export function FinanceSection() {
                   {charge.facilityName ? (
                     <Text style={styles.chargeFacility}>{charge.facilityName}</Text>
                   ) : null}
-                  <Text style={styles.chargeDate}>
-                    {new Date(charge.chargeDate).toLocaleDateString()}
-                  </Text>
+                  {charge.chargeDate && !Number.isNaN(new Date(charge.chargeDate).getTime()) ? (
+                    <Text style={styles.chargeDate}>
+                      {new Date(charge.chargeDate).toLocaleDateString()}
+                    </Text>
+                  ) : null}
                 </View>
                 <Text style={styles.chargeAmount}>
                   {charge.currency} {charge.amount.toFixed(2)}

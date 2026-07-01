@@ -1,6 +1,9 @@
 # Mobile Costa BFF Contract (Citizen Gap)
 
-**Status:** Citizen routes **not implemented** in experience-bff as of closure wave.  
+**Status (updated 2026-07-01):** Citizen **pending-charges route is now IMPLEMENTED and verified** —
+`GET /internal/v1/mobile/citizen/costa/charges/pending` (`CitizenCostaController` → COSTA outstanding
+bills), consumed by `financeService.fetchPendingCharges`. Quotes / quote-detail / estimate / receipts /
+coverage-status routes remain **not yet implemented**.  
 **Provider:** Partial — `GET /internal/v1/mobile/provider/billing/charges` exists and is consumed via `queueService.fetchCharges` in the provider app (`BillingScreen`, `FinanceOverviewScreen`).
 
 ## Citizen routes required
@@ -34,11 +37,15 @@
 }
 ```
 
-## Mobile behaviour until routes exist
+## Mobile behaviour (updated 2026-07-01 — pending-charges live)
 
-- `financeService.fetchPendingCharges()` returns `{ blocked: true, charges: [], blockedReason }` — **no fabricated rows**.
-- `FinanceSection` renders `costa-blocked-state` with professional copy.
-- Service registry: Costa `wiringStatus: partiallyWired` (provider), citizen surface remains blocked.
+- `financeService.fetchPendingCharges()` now calls `GET /internal/v1/mobile/citizen/costa/charges/pending`
+  and returns `{ charges, blocked: false }`, adapting the real COSTA `OutstandingBillDto` rows onto
+  `PendingCharge` — **no fabricated rows**; fields COSTA does not provide (service name, dates) are
+  left empty rather than invented.
+- `FinanceSection` renders the live pending-charge rows (or an honest "No pending charges" empty state).
+  The `costa-blocked-state` card only shows if a future caller re-sets `blocked`.
+- Service registry: Costa `dataMode: native` (citizen pending-charges live); quotes/receipts still pending.
 - MusheX wallet balance/transactions remain on `/internal/v1/wallet/me/*`.
 
 ## Backend references
@@ -64,10 +71,10 @@ under `{ data, meta }`. Add a MockMvc controller test (mocked `CostaServiceClien
 new route and set `costa` `frontend_wiring_status: partiallyWired` (citizen) in
 `apps/mobile/packages/mobile-registry/src/wiring.ts`.
 
-**Deferred in the 2026-07-01 MVP drive (honest seam, not faked):** the experience-bff Java module
-cannot be compiled/tested in the current web-session environment (no local Maven artifact repo for
-the multi-module estate; a full reactor build is required). To avoid shipping unverified Java to the
-shared branch and to avoid pointing mobile at an undeployed route (a dead route), citizen Costa
-remains `blocked` and `financeService.fetchPendingCharges()` keeps returning
-`{ blocked: true, charges: [] }` with no fabricated rows. Implement + verify in an environment with a
-working backend build.
+**Implemented + verified 2026-07-01:** after bootstrapping the local Maven reactor (installing the
+internal SNAPSHOT libs into `~/.m2`), `experience-bff` compiles in-session and
+`CitizenCostaController` was added exactly as above, backed by
+`CostaServiceClient.getFinancePatientOutstanding`. Verified by `CitizenCostaControllerTest`
+(MockMvc, 2 tests: real pass-through + fail-soft-to-empty) and on mobile by
+`financeService.costa.test.ts` + `FinanceSection.test.tsx` (citizen-app typecheck + 6 tests green).
+Remaining COSTA citizen routes (quotes / estimate / receipts / coverage-status) are still open.

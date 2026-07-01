@@ -37,7 +37,7 @@ vi.mock("../../services/financeService", () => ({
     currency: "USD",
     updatedAt: "2026-05-01T00:00:00Z",
   }),
-  fetchPendingCharges: vi.fn().mockResolvedValue([]),
+  fetchPendingCharges: vi.fn().mockResolvedValue({ charges: [], blocked: false }),
   fetchTransactions: vi.fn().mockResolvedValue([]),
 }));
 
@@ -72,10 +72,10 @@ describe("FinanceSection", () => {
     expect(source).toMatch(/\/me\/transactions['"`]/);
   });
 
-  it("fetchPendingCharges resolves to [] (no live route until COSTA is wired)", async () => {
+  it("fetchPendingCharges resolves to an unblocked result now the COSTA route is live", async () => {
     const svc = await import("../../services/financeService");
-    // The current real implementation always resolves to []. The mock above
-    // mirrors that contract so call sites stay stable.
-    await expect(svc.fetchPendingCharges()).resolves.toEqual([]);
+    // The citizen COSTA route is now published; the contract is a result object
+    // ({ charges, blocked }) rather than a bare array. The mock mirrors it.
+    await expect(svc.fetchPendingCharges()).resolves.toEqual({ charges: [], blocked: false });
   });
 });

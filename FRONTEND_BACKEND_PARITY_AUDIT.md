@@ -58,12 +58,13 @@ A verification pass confirmed several matrix rows lagged the code:
 
 Fuller row-by-row reconciliation across all services remains open.
 
-**Deferred seam — citizen Costa billing (mobile):** verified the citizen pending-charges route is
-backed by an existing COSTA client method (`CostaServiceClient.getFinancePatientOutstanding`), and
-recorded an implementation-ready spec in `docs/implementation/mobile-costa-bff-contract.md`. Not
-shipped in this drive because the experience-bff Java module cannot be compiled/verified in the
-web-session environment; the citizen surface remains honestly `blocked` (no fabricated charges)
-rather than wired to an undeployed route.
+**Citizen Costa billing (mobile) — SHIPPED 2026-07-01:** bootstrapped the local Maven reactor
+(installed internal SNAPSHOT libs into `~/.m2`), then implemented `CitizenCostaController`
+(`GET /internal/v1/mobile/citizen/costa/charges/pending` → `CostaServiceClient.getFinancePatientOutstanding`)
+and wired mobile `financeService.fetchPendingCharges` (registry `costa` dataMode `blocked`→`native`).
+Verified: BFF `CitizenCostaControllerTest` (MockMvc 2/2) + citizen-app typecheck and 6 mobile tests.
+Real COSTA outstanding-bill data, no fabricated rows. **Remaining (open):** quotes / estimate /
+receipts / coverage-status citizen routes.
 
 **Deferred seam — policy enforcement (GAP-6/7):** intentionally **not** actioned. The gap register
 (`docs/audits/provider-clinical-place/consolidated-gap-register.md`) marks GAP-6 **CZO-locked under a

@@ -96,14 +96,14 @@ export const MOBILE_SERVICE_WIRING: Record<CanonicalServiceSlug, MobileServiceWi
     citizenRoutes: ["telehealth", "personal/appointments", "personal/bookings"],
     providerRoutes: ["queue", "patients", "encounter", "tools/telehealth"],
   }),
-  costa: wire("costa", "Costa", "partiallyWired", "blocked", {
+  costa: wire("costa", "Costa", "partiallyWired", "native", {
     apiClients: ["financeService.fetchPendingCharges", "queueService.fetchCharges"],
     backendServices: ["costa-service", "experience-bff"],
     requiredAuthContext: ["client", "provider"],
     citizenRoutes: ["personal/finance"],
     providerRoutes: ["tools/billing", "tools/finance"],
     knownGaps: [
-      "Citizen pending charges / quotes BFF routes not published — see mobile-costa-bff-contract.md",
+      "Citizen pending charges now live: GET /internal/v1/mobile/citizen/costa/charges/pending (CitizenCostaController → COSTA outstanding bills). Bill-level only — no per-service line/date breakdown yet; quotes/receipts routes still pending (see mobile-costa-bff-contract.md)",
       "Provider reads /internal/v1/mobile/provider/billing/charges via queueService.fetchCharges",
     ],
   }),

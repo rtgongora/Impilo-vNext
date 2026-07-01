@@ -20,15 +20,13 @@
  * the mobile API client injects from the Keycloak session — there is no
  * per-call ID parameter on the canonical plane.
  *
- * `fetchPendingCharges` is intentionally retained as a stable export that
- * always resolves to `[]`. The mobile UI's previous "Pending Charges" panel
- * was fed by a dead route; the canonical pending-charges surface (COSTA
- * "items owed" / claim-pack pre-bill) is not yet wired to experience-bff
- * and therefore has nothing to fetch. Returning an empty array keeps the
- * `FinanceSection` UI rendering its "No pending charges" empty state and
- * avoids re-introducing fabricated data. The function is documented as
- * temporary so a future stage can wire it onto COSTA without changing
- * call sites.
+ * `fetchPendingCharges` is now wired to the live citizen COSTA route published by
+ * experience-bff (`CitizenCostaController`):
+ *   - {@link fetchPendingCharges} → `GET /internal/v1/mobile/citizen/costa/charges/pending`
+ * composed from the sovereign COSTA outstanding-bills read. The owner (Health ID) is
+ * implied by the `x-actor-id` trust header. Real outstanding-bill rows are adapted onto
+ * `PendingCharge`; fields COSTA does not provide (service name, dates) are left empty
+ * rather than fabricated. See `docs/implementation/mobile-costa-bff-contract.md`.
  */
 
 import { apiClient } from "@impilo/mobile-api-client";
@@ -58,28 +56,23 @@ export async function fetchBalance(): Promise<Balance> {
   return adaptBalance(response.data?.data);
 }
 
-/** Citizen COSTA surface is blocked until BFF publishes pending-charge routes. */
-export const COSTA_CITIZEN_BLOCKED_REASON =
-  "Pending charges and cost quotes are not yet available in the citizen mobile app. " +
-  "The required experience-bff citizen COSTA routes are not published. " +
-  "Your MusheX wallet balance and transaction history below remain live.";
+const CITIZEN_COSTA = "/internal/v1/mobile/citizen/costa";
 
 export type PendingChargesResult = {
   charges: PendingCharge[];
+  /** Retained for source-compat with call sites; the citizen COSTA route is now live. */
   blocked: boolean;
   blockedReason?: string;
 };
 
 /**
- * Truthful blocked read — never fabricates pending charges.
- * See {@link docs/implementation/mobile-costa-bff-contract.md} for required BFF routes.
+ * Live citizen pending charges — composed by experience-bff `CitizenCostaController`
+ * from the sovereign COSTA outstanding-bills read. Adapts the real outstanding-bill list
+ * onto {@link PendingCharge}; never fabricates rows.
  */
 export async function fetchPendingCharges(): Promise<PendingChargesResult> {
-  return {
-    charges: [],
-    blocked: true,
-    blockedReason: COSTA_CITIZEN_BLOCKED_REASON,
-  };
+  const response = await apiClient.get<Envelope<unknown>>(`${CITIZEN_COSTA}/charges/pending`);
+  return { charges: adaptPendingCharges(response.data?.data), blocked: false };
 }
 
 // ── Adapters ────────────────────────────────────────────────────────────
@@ -132,6 +125,26 @@ function adaptTransaction(raw: unknown): Transaction {
     reference: pickString(attrs.reference, attrs.externalRef),
     category: pickString(attrs.category),
   };
+}
+
+/**
+ * Maps COSTA `OutstandingBillDto` rows ({ billId, facilityId, encounterId, patientPayable,
+ * totalPaidOnBill, balanceDue, currency }) onto the citizen UI `PendingCharge` shape.
+ * Only genuinely-present fields are mapped — no service names or charge dates are invented.
+ */
+function adaptPendingCharges(raw: unknown): PendingCharge[] {
+  return extractList(raw).map((row) => {
+    const r = asRecord(row) ?? {};
+    const encounterId = pickString(r.encounterId);
+    return {
+      id: pickString(r.billId, r.id) ?? "",
+      description: encounterId ? `Care episode ${encounterId}` : "Outstanding bill",
+      amount: pickNumber(r.balanceDue, r.patientPayable, r.amount) ?? 0,
+      currency: pickString(r.currency) ?? "USD",
+      chargeDate: "",
+      status: "PENDING",
+    };
+  });
 }
 
 // ── Tiny helpers (intentionally local to keep this file self-contained) ──
