@@ -7,8 +7,11 @@
 
 export type ServiceBrandingSlug =
   | "butano"
+  | "daidzai"
+  | "dura"
   | "fundo"
   | "indawo"
+  | "khuluma"
   | "madi"
   | "msika"
   | "mushex"
@@ -23,6 +26,7 @@ export type ServiceBrandingSlug =
   | "tuso"
   | "ubomi"
   | "varapi"
+  | "vashandi"
   | "vito"
   | "zibo";
 
@@ -48,6 +52,45 @@ export const SERVICE_BRANDING: Record<ServiceBrandingSlug, ServiceBrandingEntry>
     fallbackIcon: "FileHeart",
     aliases: ["butano", "butano-service", "shr", "shared-health-record", "app-butano"],
   },
+  daidzai: {
+    slug: "daidzai",
+    name: "Daidzai",
+    logo: "/brand/services/daidzai-logo.png",
+    description: "Emergency and Disaster Response Command",
+    domain: "Public Health",
+    fallbackIcon: "Siren",
+    aliases: [
+      "daidzai",
+      "daidzai-service",
+      "emergency",
+      "emergency-response",
+      "disaster",
+      "disaster-response",
+      "incident-command",
+      "mission",
+      "app-daidzai",
+    ],
+  },
+  dura: {
+    slug: "dura",
+    name: "Dura",
+    logo: "/brand/services/dura-logo.png",
+    description: "Stock, Commodity and Supply Storehouse",
+    domain: "Enterprise & Logistics",
+    fallbackIcon: "Warehouse",
+    aliases: [
+      "dura",
+      "dura-service",
+      "inventory",
+      "inventory-service",
+      "stock",
+      "commodity",
+      "supply",
+      "storehouse",
+      "elmis",
+      "app-dura",
+    ],
+  },
   fundo: {
     slug: "fundo",
     name: "Fundo",
@@ -65,6 +108,27 @@ export const SERVICE_BRANDING: Record<ServiceBrandingSlug, ServiceBrandingEntry>
     domain: "Public Health",
     fallbackIcon: "MapPin",
     aliases: ["indawo", "indawo-service", "site-registry", "public-health-sites"],
+  },
+  khuluma: {
+    slug: "khuluma",
+    name: "Khuluma",
+    logo: "/brand/services/khuluma-logo.png",
+    description: "Communications Hub — unified conversations, messaging and presence",
+    domain: "Experience",
+    fallbackIcon: "MessagesSquare",
+    aliases: [
+      "khuluma",
+      "khuluma-service",
+      "comms",
+      "comms-hub",
+      "communications",
+      "conversation",
+      "conversations",
+      "messaging",
+      "messages",
+      "chat",
+      "app-khuluma",
+    ],
   },
   madi: {
     slug: "madi",
@@ -229,6 +293,27 @@ export const SERVICE_BRANDING: Record<ServiceBrandingSlug, ServiceBrandingEntry>
     fallbackIcon: "UserCheck",
     aliases: ["varapi", "varapi-service", "provider-registry", "providers"],
   },
+  vashandi: {
+    slug: "vashandi",
+    name: "Vashandi",
+    logo: "/brand/services/vashandi-logo.png",
+    description: "Workforce — profile, assignment, roster, shift, attendance and leave",
+    domain: "Learning & Workforce",
+    fallbackIcon: "UsersRound",
+    aliases: [
+      "vashandi",
+      "vashandi-service",
+      "vashandi-workforce-service",
+      "workforce",
+      "roster",
+      "rosters",
+      "shift",
+      "attendance",
+      "leave",
+      "availability",
+      "app-vashandi",
+    ],
+  },
   vito: {
     slug: "vito",
     name: "Vito",
@@ -294,6 +379,14 @@ export const ROUTE_SERVICE_SLUG_PREFIXES: ReadonlyArray<{
   { prefix: "/my-life/feedback", slug: "rito" },
   { prefix: "/work/facility/rito", slug: "rito" },
   { prefix: "/work/above-site/rito", slug: "rito" },
+  { prefix: "/work/daidzai", slug: "daidzai" },
+  { prefix: "/emergency", slug: "daidzai" },
+  { prefix: "/work/dura", slug: "dura" },
+  { prefix: "/inventory", slug: "dura" },
+  { prefix: "/work/comms", slug: "khuluma" },
+  { prefix: "/my/comms", slug: "khuluma" },
+  { prefix: "/admin/comms-ops", slug: "khuluma" },
+  { prefix: "/work/vashandi", slug: "vashandi" },
   { prefix: "/ubomi", slug: "ubomi" },
   { prefix: "/ask", slug: "nompilo" },
 ];
@@ -313,6 +406,16 @@ export const SERVICE_SURFACE_COVERAGE: Record<ServiceBrandingSlug, ServiceSurfac
     primaryRoutes: ["/operations/butano", "/queue/search"],
     notes: "SHR clinical chart flows use Butano via queue search; ops hub at /operations/butano.",
   },
+  daidzai: {
+    status: "surfaced",
+    primaryRoutes: ["/work/daidzai", "/work/daidzai/missions", "/emergency"],
+    notes: "Emergency/disaster response command; also surfaced via clinical + welcome emergency flows.",
+  },
+  dura: {
+    status: "surfaced",
+    primaryRoutes: ["/work/dura", "/inventory"],
+    notes: "Stock/commodity/supply truth (inventory-service is the SoR).",
+  },
   fundo: {
     status: "surfaced",
     primaryRoutes: ["/learning", "/learning/studio", "/learning/admin"],
@@ -321,6 +424,11 @@ export const SERVICE_SURFACE_COVERAGE: Record<ServiceBrandingSlug, ServiceSurfac
     status: "surfaced",
     primaryRoutes: ["/public-health/site-registry", "/public-health?tab=sites"],
     notes: "Premises registry; also probed from /registry/intake.",
+  },
+  khuluma: {
+    status: "surfaced",
+    primaryRoutes: ["/work/comms", "/my/comms", "/admin/comms-ops"],
+    notes: "Communications hub — worker + citizen conversations and comms operations console.",
   },
   madi: { status: "surfaced", primaryRoutes: ["/madi", "/madi/donor"] },
   msika: { status: "surfaced", primaryRoutes: ["/marketplace", "/registry/products"] },
@@ -348,6 +456,11 @@ export const SERVICE_SURFACE_COVERAGE: Record<ServiceBrandingSlug, ServiceSurfac
   tuso: { status: "surfaced", primaryRoutes: ["/registry/facilities"] },
   ubomi: { status: "surfaced", primaryRoutes: ["/ubomi"] },
   varapi: { status: "surfaced", primaryRoutes: ["/registry/providers"] },
+  vashandi: {
+    status: "surfaced",
+    primaryRoutes: ["/work/vashandi", "/work/vashandi/workforce", "/work/vashandi/rosters"],
+    notes: "Workforce operations — profiles, rosters, attendance, leave/availability, access review.",
+  },
   vito: { status: "surfaced", primaryRoutes: ["/operations/vito", "/registry/clients", "/id-services"] },
   zibo: { status: "surfaced", primaryRoutes: ["/registry/terminology"] },
 };

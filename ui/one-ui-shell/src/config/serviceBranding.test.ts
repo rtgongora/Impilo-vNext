@@ -10,8 +10,20 @@ import {
 } from "@/config/serviceBranding";
 
 describe("serviceBranding registry", () => {
-  it("lists all 19 sovereign services", () => {
-    expect(listSovereignServices()).toHaveLength(19);
+  it("lists all 23 sovereign services", () => {
+    expect(listSovereignServices()).toHaveLength(23);
+  });
+
+  it("includes the newly-branded services", () => {
+    for (const slug of ["daidzai", "dura", "khuluma", "vashandi"] as const) {
+      const entry = SERVICE_BRANDING[slug];
+      expect(entry.logo).toBe(`/brand/services/${slug}-logo.png`);
+      expect(resolveServiceSlug(slug)).toBe(slug);
+    }
+    expect(resolveServiceSlug("workforce")).toBe("vashandi");
+    expect(resolveServiceSlug("comms-hub")).toBe("khuluma");
+    expect(inferServiceSlugFromPath("/work/daidzai/missions")).toBe("daidzai");
+    expect(inferServiceSlugFromPath("/work/vashandi/rosters")).toBe("vashandi");
   });
 
   it("maps every service to a public logo path", () => {

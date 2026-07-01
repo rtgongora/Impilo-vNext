@@ -1,0 +1,32 @@
+[
+  {
+    "service": "Daidzai",
+    "slug": "daidzai",
+    "assetFile": "daidzai-logo.png",
+    "recommendedPublicPath": "/brand/services/daidzai-logo.png"
+  },
+  {
+    "service": "Dura",
+    "slug": "dura",
+    "assetFile": "dura-logo.png",
+    "recommendedPublicPath": "/brand/services/dura-logo.png"
+  },
+  {
+    "service": "Khuluma",
+    "slug": "khuluma",
+    "assetFile": "khuluma-logo.png",
+    "recommendedPublicPath": "/brand/services/khuluma-logo.png"
+  },
+  {
+    "service": "Rito",
+    "slug": "rito",
+    "assetFile": "rito-logo.png",
+    "recommendedPublicPath": "/brand/services/rito-logo.png"
+  },
+  {
+    "service": "Vashandi",
+    "slug": "vashandi",
+    "assetFile": "vashandi-logo.png",
+    "recommendedPublicPath": "/brand/services/vashandi-logo.png"
+  }
+]
