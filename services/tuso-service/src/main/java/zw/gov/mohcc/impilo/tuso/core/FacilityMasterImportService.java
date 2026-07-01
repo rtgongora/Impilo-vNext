@@ -41,6 +41,8 @@ public class FacilityMasterImportService {
     public static final String PACK_ID = "master-health-facility-2024-07-23";
     /** Canonical source-provenance label for this national master dataset. */
     public static final String SOURCE_LABEL = "MASTER_HEALTH_FACILITY_2024_07_23";
+    /** Source dataset date carried on records loaded from the 2024-07-23 clean CSV. */
+    public static final String SOURCE_LABEL_DATE = "2024-07-23";
 
     private static final Logger log = LoggerFactory.getLogger(FacilityMasterImportService.class);
 
@@ -85,6 +87,64 @@ public class FacilityMasterImportService {
                     doubleOrNull(row.get("longitude")),
                     str(row, "contact_phone_e164"),
                     str(row, "source_dataset_date")));
+        }
+        return records;
+    }
+
+    /**
+     * Load the canonicalised master pack CSV ({@code clean_tuso_facility_import.csv}) into seed records.
+     *
+     * <p>The clean CSV carries {@code *_canonical} columns, completeness flags and a {@code source_row}
+     * index — but <b>no</b> {@code facility_uid}. Product truth forbids using the public facility code as
+     * the correlation key, so a stable, code-independent {@code MASTER_FACILITY_UID} is derived from the
+     * dataset provenance: {@code MHF-<sourceLabel>-row<source_row>}. That handle is deterministic across
+     * re-imports (same row ⇒ same handle ⇒ same internal facility, never regenerated).</p>
+     *
+     * <p>Only the clean, import-eligible dataset should be passed here — the excluded/review CSVs
+     * (missing-code, duplicate-code, duplicate-name) are never auto-imported.</p>
+     */
+    public List<FacilityMasterImportDtos.MasterFacilitySeedRecord> loadPackFromCsv(Path packCsv) throws IOException {
+        List<String> lines = Files.readAllLines(packCsv);
+        List<FacilityMasterImportDtos.MasterFacilitySeedRecord> records = new ArrayList<>();
+        if (lines.isEmpty()) {
+            return records;
+        }
+        // Strip a UTF-8 BOM if present on the header line.
+        String header = lines.get(0);
+        if (!header.isEmpty() && header.charAt(0) == '﻿') {
+            header = header.substring(1);
+        }
+        List<String> cols = parseCsvLine(header);
+        Map<String, Integer> idx = new HashMap<>();
+        for (int i = 0; i < cols.size(); i++) {
+            idx.put(cols.get(i).trim(), i);
+        }
+        for (int i = 1; i < lines.size(); i++) {
+            if (lines.get(i).isBlank()) {
+                continue;
+            }
+            List<String> f = parseCsvLine(lines.get(i));
+            String sourceRow = cell(f, idx, "source_row");
+            String correlationUid = "MHF-" + SOURCE_LABEL + "-row" + (isBlank(sourceRow) ? String.valueOf(i) : sourceRow.trim());
+            records.add(new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                    correlationUid,
+                    cell(f, idx, "facility_code"),
+                    cell(f, idx, "facility_name"),
+                    cell(f, idx, "province"),
+                    cell(f, idx, "district"),
+                    // Prefer canonical classifications; the raw columns remain in the source CSV for audit.
+                    firstNonBlank(cell(f, idx, "facility_type_canonical"), cell(f, idx, "facility_type_raw")),
+                    firstNonBlank(cell(f, idx, "ownership_canonical"), cell(f, idx, "ownership_raw")),
+                    firstNonBlank(cell(f, idx, "location_canonical"), cell(f, idx, "location_raw")),
+                    firstNonBlank(cell(f, idx, "level_canonical"), cell(f, idx, "level_raw")),
+                    // Status: pass the raw ("Open"/blank) so open-detection and MISSING_REQUIRES_CONFIRMATION
+                    // behave correctly; a blank raw status is preserved as missing, never faked to ACTIVE.
+                    cell(f, idx, "status_raw"),
+                    intOrNull(cell(f, idx, "bed_capacity")),
+                    doubleOrNull(cell(f, idx, "latitude")),
+                    doubleOrNull(cell(f, idx, "longitude")),
+                    cell(f, idx, "contact_raw"),
+                    SOURCE_LABEL_DATE));
         }
         return records;
     }
@@ -389,6 +449,68 @@ public class FacilityMasterImportService {
     private static String str(Map<String, Object> row, String key) {
         Object v = row.get(key);
         return v == null ? null : String.valueOf(v);
+    }
+
+    /** Minimal RFC-4180-ish CSV line splitter: handles quoted fields and escaped double-quotes. */
+    private static List<String> parseCsvLine(String line) {
+        List<String> fields = new ArrayList<>();
+        StringBuilder cur = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (inQuotes) {
+                if (c == '"') {
+                    if (i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                        cur.append('"');
+                        i++;
+                    } else {
+                        inQuotes = false;
+                    }
+                } else {
+                    cur.append(c);
+                }
+            } else if (c == '"') {
+                inQuotes = true;
+            } else if (c == ',') {
+                fields.add(cur.toString());
+                cur.setLength(0);
+            } else {
+                cur.append(c);
+            }
+        }
+        fields.add(cur.toString());
+        return fields;
+    }
+
+    private static String cell(List<String> fields, Map<String, Integer> idx, String column) {
+        Integer i = idx.get(column);
+        if (i == null || i >= fields.size()) {
+            return null;
+        }
+        String v = fields.get(i);
+        return v == null || v.isBlank() ? null : v.trim();
+    }
+
+    private static String firstNonBlank(String a, String b) {
+        return !isBlank(a) ? a : (!isBlank(b) ? b : null);
+    }
+
+    private static Integer intOrNull(String v) {
+        if (v == null || v.isBlank()) return null;
+        try {
+            return Integer.valueOf(v.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static Double doubleOrNull(String v) {
+        if (v == null || v.isBlank()) return null;
+        try {
+            return Double.valueOf(v.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private static Integer intOrNull(Object v) {

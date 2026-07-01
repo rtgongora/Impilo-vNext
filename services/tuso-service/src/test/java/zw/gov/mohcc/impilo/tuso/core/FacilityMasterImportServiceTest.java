@@ -20,6 +20,8 @@ import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityGeoRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityIdentifierRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRepository;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -269,6 +271,48 @@ class FacilityMasterImportServiceTest {
         // and never derived from the public facility code.
         assertThat(saved.getId()).isEqualTo(42L);
         assertThat(saved.getFacilityUuid()).isEqualTo(stableUuid);
+    }
+
+    @Test
+    void loadsCleanCsvDerivingStableCorrelationKeyNotFromCode() throws Exception {
+        String csv = String.join("\n",
+                "source_row,facility_code,facility_name,province,district,latitude,longitude,"
+                        + "facility_type_raw,facility_type_canonical,ownership_raw,ownership_canonical,"
+                        + "location_raw,location_canonical,level_raw,level_canonical,contact_raw,status_raw,"
+                        + "status_canonical,bed_capacity,date_opened,date_closed,comments,acceptable_missing_fields,"
+                        + "frontend_missing_visible,geospatial_readiness,facility_setup_state,source_label",
+                "2,ZW010125,Bangure Clinic,Manicaland,Buhera,-19.534847,31.759614,RDC,CLINIC,Rural Council,"
+                        + "RURAL_DISTRICT_COUNCIL,Rural,RURAL,Primary,PRIMARY,776673131,Open,ACTIVE_OR_OPERATIONAL,"
+                        + "6,,,,,NO,READY_WITH_COORDINATES,IMPORTED_PENDING_CONFIGURATION,MASTER_HEALTH_FACILITY_2024_07_23",
+                "5,ZW020200,\"Mba, Rural Hospital\",Harare,Harare,,,Hospital,HOSPITAL,Govt,GOVERNMENT,Urban,URBAN,"
+                        + "Secondary,SECONDARY,,,,,,,,,YES,MISSING_COORDINATES,IMPORTED_PENDING_CONFIGURATION,"
+                        + "MASTER_HEALTH_FACILITY_2024_07_23");
+        Path tmp = Files.createTempFile("clean_facilities", ".csv");
+        Files.writeString(tmp, csv);
+
+        var records = service.loadPackFromCsv(tmp);
+
+        assertThat(records).hasSize(2);
+        var first = records.get(0);
+        assertThat(first.facilityCode()).isEqualTo("ZW010125");
+        assertThat(first.facilityName()).isEqualTo("Bangure Clinic");
+        assertThat(first.facilityType()).isEqualTo("CLINIC");
+        assertThat(first.ownership()).isEqualTo("RURAL_DISTRICT_COUNCIL");
+        assertThat(first.latitude()).isEqualTo(-19.534847);
+        assertThat(first.status()).isEqualTo("Open");
+        assertThat(first.bedCapacity()).isEqualTo(6);
+        assertThat(first.sourceDatasetDate()).isEqualTo(FacilityMasterImportService.SOURCE_LABEL_DATE);
+        // Correlation key derived from provenance (source_row), never from the public facility code.
+        assertThat(first.facilityUid())
+                .isEqualTo("MHF-" + FacilityMasterImportService.SOURCE_LABEL + "-row2");
+        assertThat(first.facilityUid()).doesNotContain("ZW010125");
+
+        // Quoted name with an embedded comma parses intact; missing coordinates/status stay null (not faked).
+        var second = records.get(1);
+        assertThat(second.facilityName()).isEqualTo("Mba, Rural Hospital");
+        assertThat(second.latitude()).isNull();
+        assertThat(second.longitude()).isNull();
+        assertThat(second.status()).isNull();
     }
 
     private static FacilityMasterImportDtos.MasterFacilitySeedRecord sampleRecord() {
