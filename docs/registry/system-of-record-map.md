@@ -29,7 +29,7 @@
 | `document-service` | clinical | Document canonical records |
 | `experience-bff` | experience | Experience Bff canonical records |
 | `fhir-gateway-service` | clinical | Fhir Gateway canonical records |
-| `forms-service` | clinical | Forms canonical records |
+| `forms-service` | clinical | Forms canonical records; **encounter form definitions + immutable versions** (clinical DAK metadata). Must not own form responses or clinical encounters — those are PCT. |
 | `general-ledger-service` | enterprise | General Ledger canonical records |
 | `guidance-service` | clinical | Guidance canonical records |
 | `hr-payroll-service` | enterprise | Payroll-financial: employees, contracts, deductions, payroll runs, payslips, earnings. **Workforce attendance + leave are Vashandi's** — payroll derives worked-hours from Vashandi (no separately-entered attendance). |
@@ -62,7 +62,7 @@
 | `offline-sync-service` | integration | Offline Sync canonical records |
 | `oros-service` | clinical | Oros canonical records |
 | `pacs-adapter-service` | clinical | Pacs Adapter canonical records |
-| `pct-service` | clinical | Pct canonical records |
+| `pct-service` | clinical | Pct canonical records; **encounter form responses** (structured data-entry responses, resolver decisions, extraction provenance). Must not own form definitions — those are forms-service. |
 | `pharmacy-elmis-adapter` | clinical | Pharmacy Elmis Adapter canonical records |
 | `pharmacy-service` | clinical | Pharmacy canonical records |
 | `procurement-service` | enterprise | Procurement canonical records |

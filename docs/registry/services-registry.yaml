@@ -886,6 +886,7 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Forms canonical records
+      - Encounter form definitions and versions (clinical DAK metadata; immutable version snapshots)
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -894,6 +895,8 @@ services:
     forbidden_responsibilities:
       - must-not-act-as-identity-source-of-record
       - must-not-own-enterprise-ledgering
+      - must-not-own-clinical-encounters
+      - must-not-own-form-responses
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
@@ -1960,7 +1963,8 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Pct canonical records
-      - Encounter cadre decision (Java CadreEngine; GAP-4 unify-with-scope-rules pending)
+      - Encounter cadre decision (Java CadreEngine; GAP-4 unify-with-scope-rules resolved via FormScopeEngine composition)
+      - Encounter form responses (structured data-entry responses, resolver decisions, extraction provenance)
       - Front-door sorting desk (visit-type sort; GAP-11 unifying session pending)
       - Clinical problems list
       - OPD care plans and goals
@@ -1973,6 +1977,7 @@ services:
     forbidden_responsibilities:
       - must-not-act-as-identity-source-of-record
       - must-not-own-enterprise-ledgering
+      - must-not-own-form-definitions
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
