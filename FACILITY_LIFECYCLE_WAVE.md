@@ -264,13 +264,31 @@ audited, and idempotent.
   (supply/apply proxy, 409 passthrough); web tsc clean, parity 680/680, no-stub OK, product-truth 0,
   `useFacilityImports` hook tests 9.
 
-**Remaining increments (documented, not yet built):** importer script modes
-(`--stage-only/--validate/--apply-approved/--reconcile`) — the operator script still reads the JSON seed
-with no mode flags; DB execution/migration validation; downstream TUSO→PCT queue materialisation (task
-#15); broader facility lifecycle configuration completion. None are faked; imported facilities remain
-`IMPORTED_PENDING_CONFIGURATION` until real configuration exists. Migrations `V011`/`V013`/`V014`/`V015`
-+ service changes are compile + unit-test verified, **not DB-executed** (no database in the sandbox — no
-migration was run against a DB).
+**Increment G — operator importer script modes (LANDED 2026-07-01, verified):** the operator script
+now drives the cleaned CSV absorption package through the review workflow; it is no longer locked to the
+old JSON seed.
+
+- `scripts/operator/import-facility-master-pack.sh` reads `clean_tuso_facility_import.csv` (label
+  `MASTER_HEALTH_FACILITY_2024_07_23`), building records that mirror `loadPackFromCsv` (provenance-derived
+  correlation key, canonical fields, raw values preserved). JSON seed kept only as an optional legacy/dev
+  fallback (`FACILITY_MASTER_SEED`).
+- Modes: `--dry-run` (preview, no facilities), `--stage-only` (persist a reviewable run + rows, prints run
+  id + admin route), `--validate` (run or source; reports unresolved/approved/acceptable-missing, exits
+  non-zero when review is required), `--apply-approved` (imports only approved rows, idempotent),
+  `--reconcile` (honest check of imported rows vs facilities/provenance/lifecycle — no fake repair).
+- Calls **TUSO directly with operator trust headers** (existing convention; documented), optional
+  `IMPILO_AUTH_TOKEN` bearer, CLI flags + env vars. Fails safely on missing mode/source/run-id/auth and
+  any non-2xx. Never imports missing-code/unresolved-duplicate rows, never fabricates codes, never marks
+  facilities operational.
+- Backend support: import response now returns `runId`; row search gains a `decisionStatus` filter.
+- Verified: `test-import-facility-master-pack.sh` 16 checks (fake-curl, no network/DB); TUSO tests 28;
+  real CSV parses to 1,773 records.
+
+**Remaining increments (documented, not yet built):** DB execution/migration validation; downstream
+TUSO→PCT queue materialisation (task #15); broader facility lifecycle configuration completion. None are
+faked; imported facilities remain `IMPORTED_PENDING_CONFIGURATION` until real configuration exists.
+Migrations `V011`/`V013`/`V014`/`V015` + service changes are compile + unit-test verified, **not
+DB-executed** (no database in the sandbox — no migration was run against a DB).
 
 ---
 
