@@ -439,8 +439,8 @@ export const SERVICE_SURFACE_COVERAGE: Record<ServiceBrandingSlug, ServiceSurfac
   nompilo: { status: "surfaced", primaryRoutes: ["/ask", "/intelligence"] },
   "patient-safety": {
     status: "surfaced",
-    primaryRoutes: ["/work/patient-safety", "/work/patient-safety/mcaz"],
-    notes: "Pharmacovigilance — safety reports, cases and the MCAZ workbench.",
+    primaryRoutes: ["/work/patient-safety", "/work/patient-safety/new", "/work/patient-safety/mcaz"],
+    notes: "Pharmacovigilance — ADR/AEFI/serious adverse event reporting, cases and the MCAZ workbench; surfaces via BFF over /v1/public/patient-safety.",
   },
   rito: {
     status: "surfaced",
