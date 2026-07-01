@@ -10,13 +10,13 @@ import {
 } from "@/config/serviceBranding";
 
 describe("serviceBranding registry", () => {
-  it("lists all 18 sovereign services", () => {
-    expect(listSovereignServices()).toHaveLength(18);
+  it("lists all 19 sovereign services", () => {
+    expect(listSovereignServices()).toHaveLength(19);
   });
 
   it("maps every service to a public logo path", () => {
     for (const entry of listSovereignServices()) {
-      expect(entry.logo).toMatch(/^\/brand\/services\/[a-z]+-logo\.png$/);
+      expect(entry.logo).toMatch(/^\/brand\/services\/[a-z-]+-logo\.png$/);
       expect(entry.name).toBeTruthy();
       expect(entry.description).toBeTruthy();
       expect(entry.domain).toBeTruthy();

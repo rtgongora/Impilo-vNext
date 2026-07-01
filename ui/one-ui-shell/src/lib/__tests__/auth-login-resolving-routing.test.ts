@@ -5,10 +5,11 @@ import { resolve } from "node:path";
 describe("auth login success routes through /auth/resolving", () => {
   const repoRoot = resolve(__dirname, "../../../../..");
 
+  // Biometric sign-in is an intentional "not available yet" stub (G-CZO-14): it does NOT
+  // sign the user in and therefore does not route through /auth/resolving.
   const authPages = [
     "ui/one-ui-shell/src/app/auth/login/provider-id/page.tsx",
     "ui/one-ui-shell/src/app/auth/mfa/page.tsx",
-    "ui/one-ui-shell/src/app/auth/login/biometric/page.tsx",
   ] as const;
 
   it.each(authPages)("%s pushes buildPostLoginResolvingPath after success", (relativePath) => {
@@ -25,8 +26,8 @@ describe("auth login success routes through /auth/resolving", () => {
     expect(source).toContain('searchParams.get("returnTo")');
   });
 
-  it("MFA and biometric pages import resolver from shared module", () => {
-    for (const page of ["auth/mfa/page.tsx", "auth/login/biometric/page.tsx"] as const) {
+  it("MFA page imports resolver from shared module", () => {
+    for (const page of ["auth/mfa/page.tsx"] as const) {
       const source = readFileSync(resolve(repoRoot, "ui/one-ui-shell/src/app", page), "utf8");
       expect(source).toContain('@/lib/resolve-post-login-destination');
     }
