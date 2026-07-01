@@ -22,6 +22,7 @@ import {
 import { useEncounterStore, encounterStore } from "../../stores/encounterStore";
 import { closeEncounter, addEncounterNotes } from "../../services/encounterService";
 import { applyCoreTransactionAction, listCoreTransactions } from "../../services/coreTransactionService";
+import { EncounterFormsPanel } from "./EncounterFormsPanel";
 import { VitalsPanel } from "./VitalsPanel";
 import { DiagnosisPanel } from "./DiagnosisPanel";
 import { PrescriptionPanel } from "./PrescriptionPanel";
@@ -31,6 +32,7 @@ import { NotesPanel } from "./NotesPanel";
 import { TriageScreen } from "./TriageScreen";
 
 const TABS = [
+  { key: "forms", label: "Forms" },
   { key: "vitals", label: "Vitals" },
   { key: "diagnosis", label: "Diagnosis" },
   { key: "rx", label: "Rx" },
@@ -122,6 +124,21 @@ export function EncounterScreen() {
 
   const renderPanel = () => {
     switch (activeTab) {
+      case "forms": {
+        const et = String(activeEncounter.encounterType ?? "").toUpperCase();
+        const inpatient = et.includes("INPATIENT") || et.includes("ADMISSION") || et.includes("WARD");
+        return (
+          <EncounterFormsPanel
+            encounterId={activeEncounter.id}
+            resolveParams={{
+              cadre: "CLINICIAN",
+              careSetting: inpatient ? "INPATIENT" : "OUTPATIENT",
+              context: inpatient ? "inpatient" : "outpatient",
+              cpid: activeEncounter.patientId,
+            }}
+          />
+        );
+      }
       case "vitals":
         return <VitalsPanel encounterId={activeEncounter.id} patientId={activeEncounter.patientId} />;
       case "diagnosis":
