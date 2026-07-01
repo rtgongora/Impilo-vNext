@@ -1,48 +1,47 @@
 "use client";
 
 /**
- * Facility Import Review queues — read-only review buckets for excluded/duplicate/acceptable-missing
- * rows. Honestly labelled: counts are real; per-row detail requires row-level staging (next slice).
+ * Facility Import Review queues — real review buckets backed by persisted row-level staging.
+ * Counts and row previews come from the row-level API; full row detail is on the batch detail page.
  * Route: /admin/facility-imports/[runId]/review
  */
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2, AlertTriangle, ArrowLeft, Info } from "lucide-react";
+import { Loader2, AlertTriangle, ArrowLeft } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
-import { useFacilityImportReview } from "@/hooks/queries/useFacilityImports";
+import {
+  useFacilityImportReview,
+  type FacilityImportReviewBuckets,
+  type ImportBucket,
+} from "@/hooks/queries/useFacilityImports";
 
-const BUCKETS: Array<{ key: keyof ReviewBuckets; label: string; note: string }> = [
+const BUCKETS: Array<{ key: keyof Omit<FacilityImportReviewBuckets, "runId">; label: string; note: string }> = [
+  { key: "importedRows", label: "Imported rows", note: "Persisted as facilities (pending configuration)." },
   {
-    key: "missing_facility_code",
+    key: "missingFacilityCode",
     label: "Excluded — missing facility code",
     note: "No facility code; never imported, no synthetic code generated.",
   },
   {
-    key: "duplicate_facility_code",
+    key: "duplicateFacilityCodes",
     label: "Review — duplicate facility code",
     note: "Code already assigned; held for human resolution, no auto-merge.",
   },
   {
-    key: "duplicate_facility_name",
+    key: "duplicateFacilityNames",
     label: "Review — duplicate facility name",
     note: "Name duplicated in the batch; import only on explicit 'genuinely distinct' decision.",
   },
   {
-    key: "acceptable_missing",
+    key: "acceptableMissingFields",
     label: "Imported — acceptable missing data",
     note: "Imported with visible gaps (coords/type/ownership/status); no fake defaults.",
   },
+  { key: "failedRows", label: "Failed rows", note: "Rows that errored during import." },
 ];
-
-interface ReviewBuckets {
-  missing_facility_code: number;
-  duplicate_facility_code: number;
-  duplicate_facility_name: number;
-  acceptable_missing: number;
-}
 
 export default function FacilityImportReviewPage() {
   const params = useParams();
@@ -52,7 +51,7 @@ export default function FacilityImportReviewPage() {
 
   return (
     <AppLayout>
-      <PageShell title="Facility Import Review" subtitle="Review queues for excluded and flagged rows">
+      <PageShell title="Facility Import Review" subtitle="Review queues backed by persisted row staging">
         <div className="mb-4">
           <Link
             href={`/admin/facility-imports/${runId}`}
@@ -74,33 +73,47 @@ export default function FacilityImportReviewPage() {
         ) : (
           <div className="max-w-3xl space-y-4">
             <FeatureMaturityBadge
-              status="partial"
-              detail="Real counts; per-row review detail pending row-level staging"
+              status="connected"
+              detail="Real counts + row previews from persisted row-level staging"
             />
 
             <div className="grid gap-3">
-              {BUCKETS.map((b) => (
-                <div
-                  key={b.key}
-                  className="bg-card rounded-lg border border-border p-4 flex items-center justify-between"
-                >
-                  <div>
-                    <p className="font-medium text-foreground">{b.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{b.note}</p>
+              {BUCKETS.map((b) => {
+                const bucket = review[b.key] as ImportBucket;
+                const preview = bucket?.preview ?? [];
+                return (
+                  <div key={b.key} className="bg-card rounded-lg border border-border p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-foreground">{b.label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{b.note}</p>
+                      </div>
+                      <span className="text-2xl font-bold text-foreground tabular-nums">
+                        {bucket?.count ?? 0}
+                      </span>
+                    </div>
+                    {preview.length > 0 && (
+                      <ul className="mt-2 text-xs text-muted-foreground space-y-0.5">
+                        {preview.map((r) => (
+                          <li key={r.id}>
+                            {r.facilityName || "(no name)"}
+                            {r.facilityCode ? ` · ${r.facilityCode}` : ""}
+                            {r.district ? ` · ${r.district}` : ""}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
-                  <span className="text-2xl font-bold text-foreground tabular-nums">
-                    {review.buckets[b.key] ?? 0}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            {!review.rowLevelDetailAvailable && (
-              <div className="bg-primary-soft/40 rounded-lg border border-border p-4 flex gap-3">
-                <Info className="w-5 h-5 text-primary shrink-0" />
-                <p className="text-sm text-muted-foreground">{review.message}</p>
-              </div>
-            )}
+            <Link
+              href={`/admin/facility-imports/${runId}`}
+              className="inline-block text-sm text-primary hover:text-primary-hover"
+            >
+              View full row detail on the batch page →
+            </Link>
           </div>
         )}
       </PageShell>

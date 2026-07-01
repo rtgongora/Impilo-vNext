@@ -42,17 +42,76 @@ export interface FacilityImportRunList {
   runs: FacilityImportRunView[];
 }
 
-export interface FacilityImportReview {
-  contract: string;
+export interface FacilityImportRow {
+  id: number;
+  sourceRow: string | null;
+  facilityName: string | null;
+  facilityCode: string | null;
+  province: string | null;
+  district: string | null;
+  facilityType: string | null;
+  ownership: string | null;
+  operatingStatus: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  outcome: string;
+  importDecision: string | null;
+  exclusionReason: string | null;
+  duplicateType: string | null;
+  duplicateGroupKey: string | null;
+  acceptableMissing: Record<string, boolean> | null;
+  hasAcceptableMissing: boolean;
+  matchedFacilityId: number | null;
+  resultFacilityId: number | null;
+}
+
+export interface PagedRows {
+  content: FacilityImportRow[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface ImportBucket {
+  count: number;
+  preview: FacilityImportRow[];
+}
+
+export interface FacilityImportReviewBuckets {
   runId: number;
-  buckets: {
-    missing_facility_code: number;
-    duplicate_facility_code: number;
-    duplicate_facility_name: number;
-    acceptable_missing: number;
-  };
-  rowLevelDetailAvailable: boolean;
-  message: string;
+  importedRows: ImportBucket;
+  missingFacilityCode: ImportBucket;
+  duplicateFacilityCodes: ImportBucket;
+  duplicateFacilityNames: ImportBucket;
+  acceptableMissingFields: ImportBucket;
+  failedRows: ImportBucket;
+}
+
+export interface DuplicateGroup {
+  duplicateGroupKey: string;
+  duplicateType: string;
+  size: number;
+  rows: FacilityImportRow[];
+}
+
+export interface DuplicateGroupsResponse {
+  runId: number;
+  duplicateType: string;
+  groupCount: number;
+  groups: DuplicateGroup[];
+}
+
+export interface RowFilters {
+  outcome?: string;
+  duplicateType?: string;
+  province?: string;
+  district?: string;
+  facilityCode?: string;
+  facilityName?: string;
+  hasAcceptableMissingFields?: boolean;
+  page?: number;
+  size?: number;
 }
 
 export interface FacilityExternalIdentifier {
@@ -105,13 +164,52 @@ export function useFacilityImportRun(runId: string) {
 }
 
 export function useFacilityImportReview(runId: string) {
-  return useQuery<ApiResponse<FacilityImportReview>>({
+  return useQuery<ApiResponse<FacilityImportReviewBuckets>>({
     queryKey: ["facility-import-review", runId],
     queryFn: () =>
-      apiClient.get<ApiResponse<FacilityImportReview>>(
+      apiClient.get<ApiResponse<FacilityImportReviewBuckets>>(
         `/internal/v1/admin/facility-import-runs/${runId}/review`,
       ),
     enabled: !!runId,
+  });
+}
+
+function rowQuery(filters?: RowFilters): string {
+  if (!filters) return "";
+  const sp = new URLSearchParams();
+  if (filters.outcome) sp.set("outcome", filters.outcome);
+  if (filters.duplicateType) sp.set("duplicateType", filters.duplicateType);
+  if (filters.province) sp.set("province", filters.province);
+  if (filters.district) sp.set("district", filters.district);
+  if (filters.facilityCode) sp.set("facilityCode", filters.facilityCode);
+  if (filters.facilityName) sp.set("facilityName", filters.facilityName);
+  if (filters.hasAcceptableMissingFields != null)
+    sp.set("hasAcceptableMissingFields", String(filters.hasAcceptableMissingFields));
+  if (filters.page != null) sp.set("page", String(filters.page));
+  if (filters.size != null) sp.set("size", String(filters.size));
+  const qs = sp.toString();
+  return qs ? `?${qs}` : "";
+}
+
+export function useFacilityImportRows(runId: string, filters?: RowFilters) {
+  return useQuery<ApiResponse<PagedRows>>({
+    queryKey: ["facility-import-rows", runId, filters],
+    queryFn: () =>
+      apiClient.get<ApiResponse<PagedRows>>(
+        `/internal/v1/admin/facility-import-runs/${runId}/rows${rowQuery(filters)}`,
+      ),
+    enabled: !!runId,
+  });
+}
+
+export function useFacilityImportDuplicates(runId: string, type: string) {
+  return useQuery<ApiResponse<DuplicateGroupsResponse>>({
+    queryKey: ["facility-import-duplicates", runId, type],
+    queryFn: () =>
+      apiClient.get<ApiResponse<DuplicateGroupsResponse>>(
+        `/internal/v1/admin/facility-import-runs/${runId}/duplicates?type=${encodeURIComponent(type)}`,
+      ),
+    enabled: !!runId && !!type,
   });
 }
 

@@ -12,6 +12,7 @@ import { Loader2, AlertTriangle, ArrowLeft } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
+import { FacilityImportRowBrowser } from "@/components/admin/FacilityImportRowBrowser";
 import { useFacilityImportRun } from "@/hooks/queries/useFacilityImports";
 
 function Stat({ label, value }: { label: string; value: number | string }) {
@@ -147,6 +148,18 @@ export default function FacilityImportBatchDetailPage() {
                 <span className="font-medium">IMPORTED_PENDING_CONFIGURATION</span> until real
                 configuration exists.
               </p>
+            </div>
+
+            {/* Row-level detail (real persisted rows) */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-medium text-foreground">Rows</h3>
+                <FeatureMaturityBadge
+                  status="connected"
+                  detail="Real persisted facility_import_row detail"
+                />
+              </div>
+              <FacilityImportRowBrowser runId={String(run.runId)} />
             </div>
           </div>
         )}

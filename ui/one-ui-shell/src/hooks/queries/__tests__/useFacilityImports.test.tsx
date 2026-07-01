@@ -13,6 +13,8 @@ import {
   useFacilityImportRuns,
   useFacilityImportRun,
   useFacilityProvenance,
+  useFacilityImportRows,
+  useFacilityImportDuplicates,
 } from "../useFacilityImports";
 
 function wrapper() {
@@ -46,5 +48,28 @@ describe("useFacilityImports hooks", () => {
     const { result } = renderHook(() => useFacilityProvenance("55"), { wrapper: wrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(getMock).toHaveBeenCalledWith("/internal/v1/admin/facilities/55/import-provenance");
+  });
+
+  it("useFacilityImportRows builds the filtered/paginated rows path", async () => {
+    getMock.mockResolvedValue({ data: { content: [], page: 0, size: 25, totalElements: 0, totalPages: 0 } });
+    const { result } = renderHook(
+      () => useFacilityImportRows("7", { outcome: "IMPORTED", page: 0, size: 25 }),
+      { wrapper: wrapper() },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(getMock).toHaveBeenCalledWith(
+      "/internal/v1/admin/facility-import-runs/7/rows?outcome=IMPORTED&page=0&size=25",
+    );
+  });
+
+  it("useFacilityImportDuplicates hits the duplicates route with type", async () => {
+    getMock.mockResolvedValue({ data: { runId: 7, duplicateType: "FACILITY_NAME", groupCount: 0, groups: [] } });
+    const { result } = renderHook(() => useFacilityImportDuplicates("7", "FACILITY_NAME"), {
+      wrapper: wrapper(),
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(getMock).toHaveBeenCalledWith(
+      "/internal/v1/admin/facility-import-runs/7/duplicates?type=FACILITY_NAME",
+    );
   });
 });
