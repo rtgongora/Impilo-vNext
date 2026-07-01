@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.tuso.api.dto.FacilityImportRunDtos;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityMasterImportDtos;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityContactEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
@@ -228,7 +229,7 @@ public class FacilityMasterImportService {
             }
         }
 
-        Map<String, Object> qualitySummary = buildQualitySummary(request.records(), warnings);
+        Map<String, Object> qualitySummary = buildQualitySummary(request.records(), results, warnings);
 
         // Persist an audit row for the batch (dry-run or real) so operators can review import history.
         persistImportRun(tenantId, actorId, request.dryRun(), request.records().size(),
@@ -271,6 +272,72 @@ public class FacilityMasterImportService {
             // Audit persistence must never fail the import itself; log and continue.
             log.warn("Failed to persist facility_import_run audit row: {}", e.getMessage());
         }
+    }
+
+    /** List import runs for the current tenant, most recent first. */
+    @Transactional(readOnly = true)
+    public List<FacilityImportRunDtos.FacilityImportRunView> listRuns() {
+        UUID tenantId = TrustContextHolder.require().tenantId();
+        return importRunRepository.findByTenantIdOrderByStartedAtDesc(tenantId).stream()
+                .map(FacilityMasterImportService::toRunView)
+                .toList();
+    }
+
+    /** Read a single import run by id, scoped to the current tenant. */
+    @Transactional(readOnly = true)
+    public Optional<FacilityImportRunDtos.FacilityImportRunView> getRun(Long runId) {
+        UUID tenantId = TrustContextHolder.require().tenantId();
+        return importRunRepository.findById(runId)
+                .filter(r -> tenantId.equals(r.getTenantId()))
+                .map(FacilityMasterImportService::toRunView);
+    }
+
+    private static FacilityImportRunDtos.FacilityImportRunView toRunView(FacilityImportRunEntity run) {
+        Map<String, Object> q = run.getQualityReport() != null ? run.getQualityReport() : Map.of();
+        FacilityImportRunDtos.RunTotals totals = new FacilityImportRunDtos.RunTotals(
+                run.getRecordsTotal(),
+                asLong(q.get("records_imported"), run.getRecordsCreated() + run.getRecordsUpdated()),
+                run.getRecordsCreated(),
+                run.getRecordsUpdated(),
+                run.getRecordsSkipped(),
+                run.getRecordsFailed(),
+                run.getWarningsCount(),
+                asLong(q.get("records_missing_facility_code"), 0),
+                asLong(q.get("records_duplicate_facility_code"), 0),
+                asLong(q.get("records_duplicate_facility_name"), 0),
+                asLong(q.get("records_excluded_total"), run.getRecordsSkipped()),
+                asLong(q.get("records_acceptable_missing"), 0),
+                asLong(q.get("records_with_valid_coordinates"), 0));
+        return new FacilityImportRunDtos.FacilityImportRunView(
+                run.getId(),
+                run.getPackId(),
+                asString(q.get("source_label"), SOURCE_LABEL),
+                null, // source file name not captured per-run yet — documented as next backend slice
+                run.getStatus(),
+                run.isDryRun(),
+                run.getInitiatedBy(),
+                run.getStartedAt(),
+                run.getCompletedAt(),
+                totals,
+                run.getQualityReport());
+    }
+
+    private static long asLong(Object v, long fallback) {
+        if (v instanceof Number n) {
+            return n.longValue();
+        }
+        if (v instanceof String s && !s.isBlank()) {
+            try {
+                return Long.parseLong(s.trim());
+            } catch (NumberFormatException ignored) {
+                return fallback;
+            }
+        }
+        return fallback;
+    }
+
+    private static String asString(Object v, String fallback) {
+        return v == null ? fallback : String.valueOf(v);
     }
 
     /** Normalised facility names that appear more than once in the batch (case/space-insensitive). */
@@ -514,15 +581,54 @@ public class FacilityMasterImportService {
 
     private static Map<String, Object> buildQualitySummary(
             List<FacilityMasterImportDtos.MasterFacilitySeedRecord> records,
+            List<FacilityMasterImportDtos.FacilityMasterImportRowResult> results,
             int warnings) {
+        Map<String, FacilityMasterImportDtos.MasterFacilitySeedRecord> byUid = new HashMap<>();
+        for (FacilityMasterImportDtos.MasterFacilitySeedRecord r : records) {
+            byUid.put(r.facilityUid(), r);
+        }
+        Set<String> importedOutcomes = Set.of("CREATED", "UPDATED", "WOULD_CREATE", "WOULD_UPDATE");
+
+        long missingCode = countByFlag(results, "EXCLUDED_MISSING_FACILITY_CODE");
+        long duplicateCode = countByFlag(results, "EXCLUDED_DUPLICATE_FACILITY_CODE");
+        long duplicateName = countByFlag(results, "EXCLUDED_DUPLICATE_FACILITY_NAME");
+        long importedRows = results.stream().filter(r -> importedOutcomes.contains(r.outcome())).count();
+        long failedRows = results.stream().filter(r -> "FAILED".equals(r.outcome())).count();
+        // Acceptable-missing = rows that WERE import-eligible (imported/would-import) yet still carry an
+        // acceptable missing field (coords/type/ownership/status). Surfaced so the gap stays visible.
+        long acceptableMissing = results.stream()
+                .filter(r -> importedOutcomes.contains(r.outcome()))
+                .map(r -> byUid.get(r.facilityUid()))
+                .filter(java.util.Objects::nonNull)
+                .filter(FacilityMasterImportService::hasAcceptableMissingField)
+                .count();
+
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("pack_id", PACK_ID);
+        summary.put("source_label", SOURCE_LABEL);
         summary.put("records_total", records.size());
+        summary.put("records_imported", importedRows);
         summary.put("records_open", records.stream().filter(r -> "open".equalsIgnoreCase(r.status())).count());
         summary.put("records_with_valid_coordinates", records.stream().filter(FacilityMasterImportService::hasValidCoordinates).count());
-        summary.put("records_missing_facility_code", records.stream().filter(r -> r.facilityCode() == null || r.facilityCode().isBlank()).count());
+        summary.put("records_missing_facility_code", missingCode);
+        summary.put("records_duplicate_facility_code", duplicateCode);
+        summary.put("records_duplicate_facility_name", duplicateName);
+        summary.put("records_excluded_total", missingCode + duplicateCode + duplicateName);
+        summary.put("records_acceptable_missing", acceptableMissing);
+        summary.put("records_failed", failedRows);
         summary.put("warnings_emitted", warnings);
         return summary;
+    }
+
+    private static long countByFlag(
+            List<FacilityMasterImportDtos.FacilityMasterImportRowResult> results, String flag) {
+        return results.stream().filter(r -> flag.equals(r.qualityFlag())).count();
+    }
+
+    /** True when an import-eligible row still carries an acceptable-missing field (kept visible, not faked). */
+    private static boolean hasAcceptableMissingField(FacilityMasterImportDtos.MasterFacilitySeedRecord r) {
+        return isBlank(r.facilityType()) || isBlank(r.ownership()) || isBlank(r.status())
+                || !hasValidCoordinates(r);
     }
 
     private static String str(Map<String, Object> row, String key) {

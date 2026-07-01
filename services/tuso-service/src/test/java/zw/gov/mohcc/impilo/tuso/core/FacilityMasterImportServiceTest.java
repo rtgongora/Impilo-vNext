@@ -336,6 +336,88 @@ class FacilityMasterImportServiceTest {
     }
 
     @Test
+    void qualitySummaryBreaksDownExclusionsFromRealOutcomes() {
+        // One clean create, two duplicate-name rows (excluded), one missing-code row (excluded).
+        var clean = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-clean", "ZWC1", "Clean Clinic", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4,
+                -17.8, 31.0, null, "2024-07-23");
+        var dupA = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-dupa", "ZWD1", "Dup Name", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4, -17.8, 31.0, null, "2024-07-23");
+        var dupB = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-dupb", "ZWD2", "Dup Name", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4, -17.8, 31.0, null, "2024-07-23");
+        var noCode = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-nocode", null, "No Code Clinic", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4, -17.8, 31.0, null, "2024-07-23");
+        when(identifierRepository.findBySystemAndValue(any(), any())).thenReturn(Optional.empty());
+        when(facilityRepository.findByTenantIdAndFacilityCode(any(), any())).thenReturn(Optional.empty());
+        when(facilityRepository.save(any(FacilityEntity.class))).thenAnswer(inv -> {
+            FacilityEntity f = inv.getArgument(0);
+            if (f.getId() == null) {
+                f.setId(301L);
+            }
+            return f;
+        });
+        when(geoRepository.findByFacilityId(any())).thenReturn(Optional.empty());
+
+        service.importPack(new FacilityMasterImportDtos.FacilityMasterImportRequest(
+                false, false, false, List.of(clean, dupA, dupB, noCode)));
+
+        ArgumentCaptor<FacilityImportRunEntity> captor = ArgumentCaptor.forClass(FacilityImportRunEntity.class);
+        verify(importRunRepository).save(captor.capture());
+        var q = captor.getValue().getQualityReport();
+        assertThat(q.get("records_total")).isEqualTo(4);
+        assertThat(((Number) q.get("records_imported")).longValue()).isEqualTo(1L);
+        assertThat(((Number) q.get("records_duplicate_facility_name")).longValue()).isEqualTo(2L);
+        assertThat(((Number) q.get("records_missing_facility_code")).longValue()).isEqualTo(1L);
+        assertThat(((Number) q.get("records_excluded_total")).longValue()).isEqualTo(3L);
+    }
+
+    @Test
+    void listRunsMapsPersistedRunToViewWithBreakdown() {
+        FacilityImportRunEntity run = new FacilityImportRunEntity();
+        run.setId(7L);
+        run.setTenantId(tenantId);
+        run.setPackId(FacilityMasterImportService.PACK_ID);
+        run.setDryRun(false);
+        run.setRecordsTotal(4);
+        run.setRecordsCreated(1);
+        run.setRecordsSkipped(3);
+        run.setStatus("COMPLETED");
+        run.setInitiatedBy("operator-bootstrap");
+        run.setQualityReport(java.util.Map.of(
+                "source_label", FacilityMasterImportService.SOURCE_LABEL,
+                "records_imported", 1,
+                "records_missing_facility_code", 1,
+                "records_duplicate_facility_name", 2,
+                "records_excluded_total", 3));
+        when(importRunRepository.findByTenantIdOrderByStartedAtDesc(tenantId)).thenReturn(List.of(run));
+
+        var views = service.listRuns();
+
+        assertThat(views).hasSize(1);
+        var v = views.get(0);
+        assertThat(v.runId()).isEqualTo(7L);
+        assertThat(v.sourceLabel()).isEqualTo(FacilityMasterImportService.SOURCE_LABEL);
+        assertThat(v.sourceFileName()).isNull(); // not captured per-run yet
+        assertThat(v.totals().recordsImported()).isEqualTo(1L);
+        assertThat(v.totals().duplicateFacilityName()).isEqualTo(2L);
+        assertThat(v.totals().excludedTotal()).isEqualTo(3L);
+    }
+
+    @Test
+    void getRunIsTenantScoped() {
+        FacilityImportRunEntity otherTenantRun = new FacilityImportRunEntity();
+        otherTenantRun.setId(9L);
+        otherTenantRun.setTenantId(UUID.fromString("99999999-9999-9999-9999-999999999999"));
+        when(importRunRepository.findById(9L)).thenReturn(Optional.of(otherTenantRun));
+
+        assertThat(service.getRun(9L)).isEmpty();
+    }
+
+    @Test
     void loadsCleanCsvDerivingStableCorrelationKeyNotFromCode() throws Exception {
         String csv = String.join("\n",
                 "source_row,facility_code,facility_name,province,district,latitude,longitude,"

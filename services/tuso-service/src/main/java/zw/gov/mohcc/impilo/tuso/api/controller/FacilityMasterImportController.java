@@ -4,14 +4,18 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.tuso.api.dto.FacilityImportRunDtos;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityMasterImportDtos;
 import zw.gov.mohcc.impilo.tuso.core.FacilityMasterImportService;
 
@@ -51,6 +55,26 @@ public class FacilityMasterImportController {
                 request.records());
         FacilityMasterImportDtos.FacilityMasterImportResponse response = importService.importPack(dryRunRequest);
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
+    }
+
+    /** List persisted facility import runs/batches for the current tenant, most recent first. */
+    @GetMapping("/runs")
+    public ResponseEntity<ApiResponse<FacilityImportRunDtos.FacilityImportRunListResponse>> listRuns() {
+        TrustContext ctx = TrustContextHolder.require();
+        List<FacilityImportRunDtos.FacilityImportRunView> runs = importService.listRuns();
+        var body = new FacilityImportRunDtos.FacilityImportRunListResponse(runs.size(), runs);
+        return ResponseEntity.ok(ApiResponse.ok(body, ctx.correlationId().toString()));
+    }
+
+    /** Read a single import run/batch detail by id (tenant-scoped). */
+    @GetMapping("/runs/{runId}")
+    public ResponseEntity<ApiResponse<FacilityImportRunDtos.FacilityImportRunView>> getRun(
+            @PathVariable Long runId) {
+        TrustContext ctx = TrustContextHolder.require();
+        FacilityImportRunDtos.FacilityImportRunView run = importService.getRun(runId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Facility import run not found: " + runId));
+        return ResponseEntity.ok(ApiResponse.ok(run, ctx.correlationId().toString()));
     }
 
     @GetMapping("/master-pack/quality-report")
