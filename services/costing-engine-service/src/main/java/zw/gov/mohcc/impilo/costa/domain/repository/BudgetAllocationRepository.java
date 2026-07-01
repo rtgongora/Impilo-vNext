@@ -19,6 +19,8 @@ public interface BudgetAllocationRepository extends JpaRepository<BudgetAllocati
 
     Optional<BudgetAllocationEntity> findByIdAndTenantId(long id, UUID tenantId);
 
+    Optional<BudgetAllocationEntity> findByAllocationIdAndTenantId(UUID allocationId, UUID tenantId);
+
     @Query("""
             SELECT b FROM BudgetAllocationEntity b
             WHERE b.tenantId = :tenantId AND b.facilityId = :facilityId AND b.periodYear = :periodYear

@@ -80,6 +80,73 @@ final class BudgetJsonMapper {
         return m;
     }
 
+    static Map<String, Object> commitment(BudgetCommitmentEntity c) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("commitmentId", c.getCommitmentId().toString());
+        m.put("budgetId", c.getBudgetId().toString());
+        m.put("budgetLineId", c.getBudgetLineId().toString());
+        m.put("ownerSystem", c.getOwnerSystem());
+        m.put("ownerReference", c.getOwnerReference());
+        m.put("description", c.getDescription());
+        m.put("committedAmount", c.getCommittedAmount());
+        m.put("obligatedAmount", c.getObligatedAmount());
+        m.put("liquidatedAmount", c.getLiquidatedAmount());
+        m.put("outstanding", c.outstanding());
+        m.put("status", c.getStatus());
+        m.put("committedAt", c.getCommittedAt() != null ? c.getCommittedAt().toString() : null);
+        m.put("expiresAt", c.getExpiresAt() != null ? c.getExpiresAt().toString() : null);
+        return m;
+    }
+
+    static Map<String, Object> actual(BudgetActualReferenceEntity a) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("actualRefId", a.getActualRefId().toString());
+        m.put("budgetId", a.getBudgetId().toString());
+        m.put("budgetLineId", a.getBudgetLineId().toString());
+        m.put("source", a.getSource());
+        m.put("sourceReference", a.getSourceReference());
+        m.put("commitmentId", a.getCommitmentId() != null ? a.getCommitmentId().toString() : null);
+        m.put("actualAmount", a.getActualAmount());
+        m.put("ingestSource", a.getIngestSource());
+        m.put("reversed", a.isReversed());
+        m.put("postedAt", a.getPostedAt() != null ? a.getPostedAt().toString() : null);
+        return m;
+    }
+
+    static Map<String, Object> variance(BudgetVarianceSnapshotEntity v) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("varianceId", v.getVarianceId() != null ? v.getVarianceId().toString() : null);
+        m.put("budgetId", v.getBudgetId().toString());
+        m.put("budgetLineId", v.getBudgetLineId() != null ? v.getBudgetLineId().toString() : null);
+        m.put("asOfDate", v.getAsOfDate() != null ? v.getAsOfDate().toString() : null);
+        m.put("periodScope", v.getPeriodScope());
+        m.put("budgeted", v.getBudgeted());
+        m.put("committed", v.getCommitted());
+        m.put("actual", v.getActual());
+        m.put("available", v.getAvailable());
+        m.put("varianceAmount", v.getVarianceAmount());
+        m.put("variancePct", v.getVariancePct());
+        m.put("classification", v.getClassification());
+        m.put("driverNote", v.getDriverNote());
+        return m;
+    }
+
+    static Map<String, Object> forecast(BudgetForecastSnapshotEntity f) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("forecastId", f.getForecastId() != null ? f.getForecastId().toString() : null);
+        m.put("budgetId", f.getBudgetId().toString());
+        m.put("budgetLineId", f.getBudgetLineId() != null ? f.getBudgetLineId().toString() : null);
+        m.put("asOfDate", f.getAsOfDate() != null ? f.getAsOfDate().toString() : null);
+        m.put("method", f.getMethod());
+        m.put("elapsedFraction", f.getElapsedFraction());
+        m.put("burnRate", f.getBurnRate());
+        m.put("projectedYearEnd", f.getProjectedYearEnd());
+        m.put("projectedOverrun", f.getProjectedOverrun());
+        m.put("confidenceNote", f.getConfidenceNote());
+        m.put("inputs", f.getInputsJson());
+        return m;
+    }
+
     static Map<String, Object> fundingSource(FundingSourceEntity f) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("fundingSourceId", f.getFundingSourceId().toString());
