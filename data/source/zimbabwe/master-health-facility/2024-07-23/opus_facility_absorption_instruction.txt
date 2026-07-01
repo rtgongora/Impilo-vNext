@@ -1,0 +1,19 @@
+Place the attached facility absorption package under `data/source/zimbabwe/master-health-facility/2024-07-23/` and implement/import the clean file as TUSO facility master records. Use `clean_tuso_facility_import.csv` as the only initial apply dataset. Do not import rows from review sheets until reviewed.
+
+Rules already applied in the cleaned file:
+- Missing facility code = excluded/review, not import-ready.
+- Duplicate facility code = excluded/review, not import-ready.
+- Duplicate normalized facility name = excluded/review, not import-ready.
+- Missing latitude/longitude, facility type, ownership, or status is acceptable but must remain visibly missing in the frontend and setup checklist.
+- Clean rows are `IMPORTED_PENDING_CONFIGURATION`, not fully operational facilities.
+
+Counts:
+- Source rows: 2023
+- Clean import rows: 1773
+- Excluded/review rows: 250
+- Missing facility code rows: 124
+- Duplicate code review rows: 81
+- Duplicate name review rows: 47
+- Clean rows with acceptable missing fields: 194
+
+Required implementation path: staged import -> validate/canonicalise -> approve/apply clean rows -> create/update TUSO facility master records with source provenance -> show missing fields on frontend -> facility lifecycle setup checklist -> downstream materialisation readiness.
