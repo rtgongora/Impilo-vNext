@@ -209,16 +209,41 @@ only in backend tests.
   `AdminFacilityImportControllerTest` (5); web tsc clean, route-parity 680/680, no-stub OK,
   product-truth 0 violations, `useFacilityImports` hook test (3) + routes (31).
 
-**Row-level exposure:** run-level summary + breakdown are exposed; **row-level per-run staging is NOT
-persisted yet** — `/rows` reports this honestly and the excluded/review source CSVs remain authoritative
-for individual rows. Row-level staging is the next backend slice.
+**Increment E — row-level staging + review detail (LANDED 2026-07-01, verified):** row-level import
+outcomes are now persisted, so the product shows actual rows, not just aggregate counts.
 
-**Remaining increments (documented, not yet built):** row-level per-run staging + mutation (approve/
-reject review decisions); importer script modes (`--stage-only/--validate/--apply-approved/--reconcile`)
-— the operator script still reads the JSON seed with no mode flags; downstream TUSO→PCT queue
-materialisation (task #15). None are faked; imported facilities remain `IMPORTED_PENDING_CONFIGURATION`
-until real configuration exists. Migrations `V011`/`V013` + service changes are compile + unit-test
-verified, **not DB-executed** (no database in the sandbox — no migration was run against a DB).
+- **Schema/entity:** `V014` + `FacilityImportRowEntity` (`tuso.facility_import_row`) — raw source values
+  preserved verbatim as JSONB (never lost on canonicalisation) + canonical columns, outcome, import
+  decision, exclusion reason, duplicate group key/type, structured acceptable-missing flags, validation
+  errors, matched/result facility ids, correlation key.
+- **Persistence:** `importPack` records one row per record with the correct outcome (`IMPORTED` /
+  `READY_FOR_IMPORT` (dry-run) / `EXCLUDED_MISSING_FACILITY_CODE` / `EXCLUDED_DUPLICATE_FACILITY_CODE` /
+  `EXCLUDED_DUPLICATE_FACILITY_NAME` / `FAILED`), duplicate group key, and acceptable-missing flags — an
+  imported-but-incomplete row keeps BOTH `IMPORTED` and its missing flags (missing ≠ failure). Raw values
+  captured from the CSV `*_raw` columns.
+- **TUSO read APIs:** `/runs/{runId}/rows` (filtered by status/outcome, duplicateType, province,
+  district, facilityCode, facilityName, hasAcceptableMissingFields; paginated, size≤200), `/review`
+  (real buckets: imported, missing-code, duplicate-code, duplicate-name, acceptable-missing, failed —
+  counts + previews), `/duplicates?type=`, `/missing-code`, `/acceptable-missing`.
+- **BFF:** admin proxies now return real row data (the `NOT_PERSISTED` placeholder is gone), with
+  filters/pagination and RBAC preserved.
+- **Admin UI:** batch detail gains a tabbed row browser (Imported / Ready / Missing code / Duplicate
+  code / Duplicate name / Acceptable-missing / Failed) rendering real rows with pagination; duplicate
+  tabs group rows by key (no auto-merge); the review page shows real bucket counts + previews. The
+  "row-level staging not persisted" copy is removed.
+- **Verified:** TUSO `FacilityMasterImportServiceTest` 17 (row persistence per outcome, /rows, /review,
+  /duplicates) + `FacilityProvenanceServiceTest` 1; BFF `AdminFacilityImportControllerTest` 6; web tsc
+  clean, route-parity 680/680, no-stub OK, product-truth 0, `useFacilityImports` hook tests 5.
+
+**Review decisions remain read-only** (approve/reject/resolve/supply-code) — the row model was designed
+to support them next, but no mutation is implemented, and no fake action buttons are shown.
+
+**Remaining increments (documented, not yet built):** review-decision mutations; importer script modes
+(`--stage-only/--validate/--apply-approved/--reconcile`) — the operator script still reads the JSON seed
+with no mode flags; DB execution/migration validation; downstream TUSO→PCT queue materialisation (task
+#15). None are faked; imported facilities remain `IMPORTED_PENDING_CONFIGURATION` until real
+configuration exists. Migrations `V011`/`V013`/`V014` + service changes are compile + unit-test verified,
+**not DB-executed** (no database in the sandbox — no migration was run against a DB).
 
 ---
 
