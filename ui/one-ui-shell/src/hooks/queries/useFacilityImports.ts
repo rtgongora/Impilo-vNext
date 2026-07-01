@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 /**
@@ -63,6 +63,12 @@ export interface FacilityImportRow {
   hasAcceptableMissing: boolean;
   matchedFacilityId: number | null;
   resultFacilityId: number | null;
+  reviewDecision: string | null;
+  decisionStatus: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  reviewReason: string | null;
+  conflictReason: string | null;
 }
 
 export interface PagedRows {
@@ -210,6 +216,125 @@ export function useFacilityImportDuplicates(runId: string, type: string) {
         `/internal/v1/admin/facility-import-runs/${runId}/duplicates?type=${encodeURIComponent(type)}`,
       ),
     enabled: !!runId && !!type,
+  });
+}
+
+// ---- Review-decision mutations ----
+
+const ROWS_BASE = "/internal/v1/admin/facility-import-runs";
+
+function useReviewInvalidation(runId: string) {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: ["facility-import-rows", runId] });
+    qc.invalidateQueries({ queryKey: ["facility-import-review", runId] });
+    qc.invalidateQueries({ queryKey: ["facility-import-run", runId] });
+    qc.invalidateQueries({ queryKey: ["facility-import-duplicates", runId] });
+  };
+}
+
+export interface CanonicalValues {
+  facilityCode?: string;
+  facilityName?: string;
+  province?: string;
+  district?: string;
+  latitude?: number;
+  longitude?: number;
+  facilityType?: string;
+  ownership?: string;
+  operatingStatus?: string;
+  contact?: string;
+  bedCapacity?: number;
+  reviewNotes?: string;
+}
+
+export function useSupplyCode(runId: string) {
+  const invalidate = useReviewInvalidation(runId);
+  return useMutation({
+    mutationFn: (v: { rowId: number; facilityCode: string; reason?: string }) =>
+      apiClient.post<ApiResponse<FacilityImportRow>>(`${ROWS_BASE}/${runId}/rows/${v.rowId}/supply-code`, {
+        facilityCode: v.facilityCode,
+        reason: v.reason,
+      }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRejectRow(runId: string) {
+  const invalidate = useReviewInvalidation(runId);
+  return useMutation({
+    mutationFn: (v: { rowId: number; reason?: string }) =>
+      apiClient.post<ApiResponse<FacilityImportRow>>(`${ROWS_BASE}/${runId}/rows/${v.rowId}/reject`, {
+        reason: v.reason,
+      }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useSkipRow(runId: string) {
+  const invalidate = useReviewInvalidation(runId);
+  return useMutation({
+    mutationFn: (v: { rowId: number; reason?: string }) =>
+      apiClient.post<ApiResponse<FacilityImportRow>>(`${ROWS_BASE}/${runId}/rows/${v.rowId}/skip`, {
+        reason: v.reason,
+      }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useMatchExisting(runId: string) {
+  const invalidate = useReviewInvalidation(runId);
+  return useMutation({
+    mutationFn: (v: { rowId: number; facilityId: number; reason?: string }) =>
+      apiClient.post<ApiResponse<FacilityImportRow>>(`${ROWS_BASE}/${runId}/rows/${v.rowId}/match-existing`, {
+        facilityId: v.facilityId,
+        reason: v.reason,
+      }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useResolveDistinct(runId: string) {
+  const invalidate = useReviewInvalidation(runId);
+  return useMutation({
+    mutationFn: (v: { rowId: number; reason: string }) =>
+      apiClient.post<ApiResponse<FacilityImportRow>>(`${ROWS_BASE}/${runId}/rows/${v.rowId}/resolve-distinct`, {
+        reason: v.reason,
+      }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateCanonical(runId: string) {
+  const invalidate = useReviewInvalidation(runId);
+  return useMutation({
+    mutationFn: (v: { rowId: number; values: CanonicalValues }) =>
+      apiClient.patch<ApiResponse<FacilityImportRow>>(
+        `${ROWS_BASE}/${runId}/rows/${v.rowId}/canonical-values`,
+        v.values,
+      ),
+    onSuccess: invalidate,
+  });
+}
+
+export function useApproveRow(runId: string) {
+  const invalidate = useReviewInvalidation(runId);
+  return useMutation({
+    mutationFn: (v: { rowId: number }) =>
+      apiClient.post<ApiResponse<FacilityImportRow>>(`${ROWS_BASE}/${runId}/rows/${v.rowId}/approve`),
+    onSuccess: invalidate,
+  });
+}
+
+export function useApplyApproved(runId: string) {
+  const invalidate = useReviewInvalidation(runId);
+  return useMutation({
+    mutationFn: (v?: { rowIds?: number[] }) =>
+      apiClient.post<ApiResponse<{ applied: number; skipped: number }>>(
+        `${ROWS_BASE}/${runId}/apply-approved`,
+        { rowIds: v?.rowIds ?? null },
+      ),
+    onSuccess: invalidate,
   });
 }
 

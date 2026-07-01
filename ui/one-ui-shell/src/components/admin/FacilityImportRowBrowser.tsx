@@ -10,9 +10,122 @@ import { Loader2, AlertTriangle } from "lucide-react";
 import {
   useFacilityImportRows,
   useFacilityImportDuplicates,
+  useSupplyCode,
+  useRejectRow,
+  useSkipRow,
+  useMatchExisting,
+  useResolveDistinct,
+  useApproveRow,
+  useApplyApproved,
   type FacilityImportRow,
   type RowFilters,
 } from "@/hooks/queries/useFacilityImports";
+
+const TERMINAL = new Set(["IMPORTED", "REJECTED", "SKIPPED"]);
+
+function errorMessage(e: unknown): string {
+  if (e && typeof e === "object" && "message" in e) return String((e as { message: unknown }).message);
+  return "Action failed";
+}
+
+function RowActions({ runId, row }: { runId: string; row: FacilityImportRow }) {
+  const supply = useSupplyCode(runId);
+  const reject = useRejectRow(runId);
+  const skip = useSkipRow(runId);
+  const match = useMatchExisting(runId);
+  const resolve = useResolveDistinct(runId);
+  const approve = useApproveRow(runId);
+  const [msg, setMsg] = useState<string | null>(null);
+  const pending =
+    supply.isPending ||
+    reject.isPending ||
+    skip.isPending ||
+    match.isPending ||
+    resolve.isPending ||
+    approve.isPending;
+
+  if (TERMINAL.has(row.decisionStatus ?? "")) {
+    return (
+      <span className="text-xs text-muted-foreground">
+        {row.decisionStatus}
+        {row.resultFacilityId ? ` · #${row.resultFacilityId}` : ""}
+      </span>
+    );
+  }
+
+  const runAction = (p: Promise<unknown>) => {
+    setMsg(null);
+    p.then(() => setMsg("Saved")).catch((e) => setMsg(errorMessage(e)));
+  };
+
+  const btn = "px-2 py-0.5 text-xs rounded border border-border hover:bg-background disabled:opacity-40";
+
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      {!row.facilityCode && (
+        <button
+          className={btn}
+          disabled={pending}
+          onClick={() => {
+            const code = window.prompt("Supply facility code (external/admin code):");
+            if (code) runAction(supply.mutateAsync({ rowId: row.id, facilityCode: code }));
+          }}
+        >
+          Supply code
+        </button>
+      )}
+      {row.duplicateType && (
+        <>
+          <button
+            className={btn}
+            disabled={pending}
+            onClick={() => {
+              const id = window.prompt("Match to existing facility ID (internal numeric ID):");
+              if (id) runAction(match.mutateAsync({ rowId: row.id, facilityId: Number(id) }));
+            }}
+          >
+            Match existing
+          </button>
+          <button
+            className={btn}
+            disabled={pending}
+            onClick={() => {
+              const reason = window.prompt("Reason this is a genuinely distinct facility:");
+              if (reason) runAction(resolve.mutateAsync({ rowId: row.id, reason }));
+            }}
+          >
+            Resolve distinct
+          </button>
+        </>
+      )}
+      <button className={btn} disabled={pending} onClick={() => runAction(approve.mutateAsync({ rowId: row.id }))}>
+        Approve
+      </button>
+      <button
+        className={btn}
+        disabled={pending}
+        onClick={() => {
+          const reason = window.prompt("Reason for rejecting this row:") ?? undefined;
+          runAction(reject.mutateAsync({ rowId: row.id, reason }));
+        }}
+      >
+        Reject
+      </button>
+      <button
+        className={btn}
+        disabled={pending}
+        onClick={() => {
+          const reason = window.prompt("Reason for skipping this row:") ?? undefined;
+          runAction(skip.mutateAsync({ rowId: row.id, reason }));
+        }}
+      >
+        Skip
+      </button>
+      {pending && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+      {msg && <span className="text-xs text-muted-foreground">{msg}</span>}
+    </div>
+  );
+}
 
 const PAGE_SIZE = 25;
 
@@ -52,7 +165,7 @@ function missingList(row: FacilityImportRow): string[] {
   return out;
 }
 
-function RowTable({ rows }: { rows: FacilityImportRow[] }) {
+function RowTable({ rows, runId }: { rows: FacilityImportRow[]; runId: string }) {
   if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground py-6 text-center">No rows in this bucket.</p>;
   }
@@ -69,15 +182,16 @@ function RowTable({ rows }: { rows: FacilityImportRow[] }) {
             <th className="px-3 py-2 font-medium text-muted-foreground">Type</th>
             <th className="px-3 py-2 font-medium text-muted-foreground">Ownership</th>
             <th className="px-3 py-2 font-medium text-muted-foreground">Status</th>
-            <th className="px-3 py-2 font-medium text-muted-foreground">Outcome</th>
+            <th className="px-3 py-2 font-medium text-muted-foreground">Decision</th>
             <th className="px-3 py-2 font-medium text-muted-foreground">Detail</th>
+            <th className="px-3 py-2 font-medium text-muted-foreground">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {rows.map((r) => {
             const missing = missingList(r);
             return (
-              <tr key={r.id} className="hover:bg-background transition-colors">
+              <tr key={r.id} className="hover:bg-background transition-colors align-top">
                 <td className="px-3 py-2 text-muted-foreground">{r.sourceRow ?? "—"}</td>
                 <td className="px-3 py-2 text-foreground">{r.facilityName ?? "—"}</td>
                 <td className="px-3 py-2 text-foreground">{r.facilityCode ?? "—"}</td>
@@ -88,15 +202,18 @@ function RowTable({ rows }: { rows: FacilityImportRow[] }) {
                 <td className="px-3 py-2 text-muted-foreground">{r.operatingStatus ?? "—"}</td>
                 <td className="px-3 py-2">
                   <span className="px-2 py-0.5 text-xs rounded-full bg-neutral-100 text-foreground">
-                    {r.outcome}
+                    {r.decisionStatus ?? r.outcome}
                   </span>
                 </td>
-                <td className="px-3 py-2 text-xs text-muted-foreground">
-                  {r.exclusionReason ? r.exclusionReason : null}
-                  {r.resultFacilityId ? `facility #${r.resultFacilityId}` : null}
+                <td className="px-3 py-2 text-xs text-muted-foreground space-y-0.5">
+                  {r.exclusionReason ? <div>{r.exclusionReason}</div> : null}
+                  {r.conflictReason ? <div className="text-red-600">{r.conflictReason}</div> : null}
                   {missing.length > 0 ? (
-                    <span className="text-red-600">missing: {missing.join(", ")}</span>
+                    <div className="text-red-600">missing: {missing.join(", ")}</div>
                   ) : null}
+                </td>
+                <td className="px-3 py-2">
+                  <RowActions runId={runId} row={r} />
                 </td>
               </tr>
             );
@@ -128,7 +245,7 @@ function RowsPanel({ runId, filters }: { runId: string; filters: RowFilters }) {
   }
   return (
     <div>
-      <RowTable rows={paged.content} />
+      <RowTable rows={paged.content} runId={runId} />
       <div className="flex items-center justify-between mt-3 text-sm text-muted-foreground">
         <span>
           {paged.totalElements} row{paged.totalElements === 1 ? "" : "s"} · page {paged.page + 1} of{" "}
@@ -186,7 +303,7 @@ function DuplicatesPanel({ runId, type }: { runId: string; type: string }) {
               {g.duplicateType} · {g.size} rows · review required (no auto-merge)
             </span>
           </div>
-          <RowTable rows={g.rows} />
+          <RowTable rows={g.rows} runId={runId} />
         </div>
       ))}
     </div>
@@ -196,9 +313,32 @@ function DuplicatesPanel({ runId, type }: { runId: string; type: string }) {
 export function FacilityImportRowBrowser({ runId }: { runId: string }) {
   const [active, setActive] = useState(TABS[0].key);
   const tab = TABS.find((t) => t.key === active) ?? TABS[0];
+  const applyApproved = useApplyApproved(runId);
+  const [applyMsg, setApplyMsg] = useState<string | null>(null);
 
   return (
     <div className="bg-card rounded-lg border border-border p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-muted-foreground">
+          Resolve rows below; approved rows import into TUSO as pending-configuration facilities.
+        </p>
+        <div className="flex items-center gap-2">
+          {applyMsg && <span className="text-xs text-muted-foreground">{applyMsg}</span>}
+          <button
+            className="px-3 py-1 text-sm rounded border border-border hover:bg-background disabled:opacity-40"
+            disabled={applyApproved.isPending}
+            onClick={() => {
+              setApplyMsg(null);
+              applyApproved
+                .mutateAsync(undefined)
+                .then((r) => setApplyMsg(`Applied ${r.data?.applied ?? 0}, skipped ${r.data?.skipped ?? 0}`))
+                .catch((e) => setApplyMsg(errorMessage(e)));
+            }}
+          >
+            {applyApproved.isPending ? "Applying…" : "Apply approved rows"}
+          </button>
+        </div>
+      </div>
       <div className="flex flex-wrap gap-1 mb-4 border-b border-border">
         {TABS.map((t) => (
           <button
