@@ -33,6 +33,7 @@ public class PctRtcGatewaySessionProvider implements TelemedicineSessionProvider
     private final String baseUrl;
     private final String podId;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public PctRtcGatewaySessionProvider(
             @Value("${pct.telemedicine.provider.rtc-gateway.base-url:http://localhost:8195}") String baseUrl,
             @Value("${POD_ID:national-spine}") String podId) {
