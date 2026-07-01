@@ -217,3 +217,35 @@ one pre-existing serviceBranding error).
 depth deferred, or an existing substrate not yet fully wired — **none is a fake UI/API**. All cross-service
 readiness/death/blood/equipment/stock calls are best-effort and surface UNAVAILABLE/BLOCKED honestly;
 no owner record, availability, readiness, checklist completion, or operative note is ever fabricated.
+
+---
+
+## WS — Intelligent Budgeting & Budget Tracking (COSTA extension)
+
+**Ownership:** budgeting was **already owned** — extended `costing-engine-service` (COSTA, 8101);
+GL keeps account-level `gl.budget_lines`. **No new service.** The pre-existing thin
+`costa_budget_allocations` table + its 3 endpoints are preserved and repurposed as an
+availability-control projection. Full discovery/boundaries:
+[`docs/finance/budgeting-discovery-and-ownership.md`](../finance/budgeting-discovery-and-ownership.md).
+
+**Built (migrations V015–V018, all `costa_budget_*`):** rich budget header→version→line +
+funding sources + approval/transition log; lifecycle FSM with segregation of duties; commitments
+(owner references, invariants) and actuals (idempotent reference ledger from MusheX/COSTA-invoice/ERP);
+availability control (ALLOW/WARN/HARD_STOP/EMERGENCY_OVERRIDE — clinical emergency never blocked);
+transparent variance + LINEAR_YTD/BURN_RATE forecasts (drivers persisted); rule-based recommendations
+(evidence-carrying, no ML); revisions/reprogramming (virement nets to zero); thresholds; reconciliation
+exceptions; funding-source absorption; period close + carry-forward; nightly snapshot sweep. 15 `BUDGET_*`
+outbox events (financially-material ones dual-emit to `core.transaction.events`).
+
+**Surfaces:** BFF `ManagedBudgetBffController` (pass-through, safe partial on failure); web `/budgets`
+dashboard + `/budgets/[id]` detail (budget-vs-actual, variance, forecast, recommendations, registers,
+lifecycle actions); mobile provider budget-summary + variance + approval slice; OPA `impilo.budget` policy
+(SoD, org scope, funder scoping, elevated emergency override).
+
+**Verified:** COSTA `Tests run: 49` (FSM, lifecycle+SoD, commitment/actual invariants+idempotency,
+availability decisions, variance classification table, forecast math, revision net-zero, recommendation
+rules+dedup, period close); `opa test` budget `12/12`; experience-bff `ManagedBudgetBffControllerTest 2/2`;
+one-ui-shell `tsc` clean (new pages); provider-app `tsc` clean for the budget slice (3 remaining errors are
+pre-existing in unrelated screens). Deferred seams (none faked) are enumerated in the discovery doc §5:
+MusheX auto-ingest requires budget-tagged disbursements; per-owner commitment consumers; seasonal/ML
+forecasting; Khuluma dispatch; mobile tab wiring; web component tests.
