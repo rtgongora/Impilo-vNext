@@ -11,7 +11,8 @@ import { Screen, Header, Card, CardBody, Button, TextField, LoadingSpinner, Empt
 import {
   listDeathCases,
   confirmDeath,
-  reportCommunityDeath,
+  confirmFieldDeath,
+  reportBroughtInDead,
   caseId,
   type DeathCaseSummary,
 } from "../../services/deathPathwayService";
@@ -52,13 +53,21 @@ export function ConfirmDeathScreen() {
     setError(null);
     try {
       const identityStatus = community && !cpid ? "UNKNOWN" : "KNOWN";
-      if (community) {
-        await reportCommunityDeath({
+      if (community && broughtInDead) {
+        // Body physically brought in dead — its own endpoint (facility receipt + mortuary apply).
+        await reportBroughtInDead({
           deathDatetime,
           placeOfDeathLocation: location || undefined,
           deceasedCpid: cpid || undefined,
           deceasedIdentityStatus: identityStatus,
-          broughtInDead,
+        });
+      } else if (community) {
+        // Provider present in the field CONFIRMS the death (a confirmation, not a report).
+        await confirmFieldDeath({
+          deathDatetime,
+          placeOfDeathLocation: location || undefined,
+          deceasedCpid: cpid || undefined,
+          deceasedIdentityStatus: identityStatus,
         });
       } else {
         await confirmDeath({
@@ -100,7 +109,7 @@ export function ConfirmDeathScreen() {
             <View style={styles.row}>
               <Button
                 variant={community ? "primary" : "secondary"}
-                title={community ? "Community / home death" : "Facility death"}
+                title={community ? "Community / field death" : "Facility death"}
                 onPress={() => setCommunity((v) => !v)}
               />
               {community && (
