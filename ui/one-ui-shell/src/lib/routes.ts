@@ -159,6 +159,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/home/appointments", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Appointments", navLabel: "My Appointments", navZone: "life" },
   { path: "/home/appointments/[appointmentId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Appointment Details", navLabel: "Appointment", navZone: "life" },
   { path: "/citizen", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Citizen Services", navLabel: "Citizen Services", navZone: "life" },
+  { path: "/citizen/my-care", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Care", navLabel: "My Care", navZone: "life" },
   { path: "/citizen/health-id/qr", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Health ID QR", navLabel: "Health ID QR", navZone: "life" },
   { path: "/citizen/health-id/request", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Request Health ID", navLabel: "Request Health ID", navZone: "life" },
   { path: "/citizen/id-recovery", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "ID Recovery", navLabel: "ID Recovery", navZone: "life" },
@@ -801,7 +802,7 @@ export const ROUTES: RouteDefinition[] = [
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
 // Dura (Jun 2026): native sovereign stock brain — +1 net-new route (/dura) merged from the Dura workstream.
-export const EXPECTED_ROUTE_COUNT = 676;
+export const EXPECTED_ROUTE_COUNT = 677;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
