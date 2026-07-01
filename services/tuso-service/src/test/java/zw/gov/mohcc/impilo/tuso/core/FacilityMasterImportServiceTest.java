@@ -18,6 +18,8 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityContactRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityGeoRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityIdentifierRepository;
+import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityImportRunRepository;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityImportRunEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRepository;
 
 import java.nio.file.Files;
@@ -45,6 +47,8 @@ class FacilityMasterImportServiceTest {
     private FacilityContactRepository contactRepository;
     @Mock
     private FacilityGeoRepository geoRepository;
+    @Mock
+    private FacilityImportRunRepository importRunRepository;
 
     private FacilityMasterImportService service;
     private final UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -56,6 +60,7 @@ class FacilityMasterImportServiceTest {
                 identifierRepository,
                 contactRepository,
                 geoRepository,
+                importRunRepository,
                 new ObjectMapper());
         TrustContextHolder.set(new TrustContext(
                 tenantId,
@@ -271,6 +276,63 @@ class FacilityMasterImportServiceTest {
         // and never derived from the public facility code.
         assertThat(saved.getId()).isEqualTo(42L);
         assertThat(saved.getFacilityUuid()).isEqualTo(stableUuid);
+    }
+
+    @Test
+    void duplicateFacilityNameWithinBatchIsExcludedForReviewNotImported() {
+        // Two distinct rows (different uid + code) that share a facility name.
+        var a = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-a", "ZWA1", "Shared Name Clinic", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4,
+                -17.8, 31.0, null, "2024-07-23");
+        var b = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-b", "ZWB2", "shared name clinic", "Manicaland", "Buhera",
+                "CLINIC", "GOVERNMENT", "Rural", "Primary", "Open", 4,
+                -19.5, 31.7, null, "2024-07-23");
+        when(identifierRepository.findBySystemAndValue(
+                FacilityMasterImportService.MASTER_FACILITY_UID_SYSTEM, "mhf-a")).thenReturn(Optional.empty());
+        when(identifierRepository.findBySystemAndValue(
+                FacilityMasterImportService.MASTER_FACILITY_UID_SYSTEM, "mhf-b")).thenReturn(Optional.empty());
+
+        var response = service.importPack(new FacilityMasterImportDtos.FacilityMasterImportRequest(
+                false, false, false, List.of(a, b)));
+
+        // Both excluded for review — never created, never merged.
+        assertThat(response.recordsCreated()).isZero();
+        assertThat(response.recordsSkipped()).isEqualTo(2);
+        verify(facilityRepository, never()).save(any());
+    }
+
+    @Test
+    void importRunAuditRowIsPersistedWithBatchCounts() {
+        var record = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-audit", "ZWAUD1", "Audit Clinic", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4,
+                -17.8, 31.0, null, "2024-07-23");
+        when(identifierRepository.findBySystemAndValue(
+                FacilityMasterImportService.MASTER_FACILITY_UID_SYSTEM, "mhf-audit")).thenReturn(Optional.empty());
+        when(facilityRepository.findByTenantIdAndFacilityCode(tenantId, "ZWAUD1")).thenReturn(Optional.empty());
+        when(facilityRepository.save(any(FacilityEntity.class))).thenAnswer(inv -> {
+            FacilityEntity f = inv.getArgument(0);
+            if (f.getId() == null) {
+                f.setId(201L);
+            }
+            return f;
+        });
+        when(geoRepository.findByFacilityId(any())).thenReturn(Optional.empty());
+
+        service.importPack(new FacilityMasterImportDtos.FacilityMasterImportRequest(
+                false, false, false, List.of(record)));
+
+        ArgumentCaptor<FacilityImportRunEntity> captor = ArgumentCaptor.forClass(FacilityImportRunEntity.class);
+        verify(importRunRepository).save(captor.capture());
+        FacilityImportRunEntity run = captor.getValue();
+        assertThat(run.getTenantId()).isEqualTo(tenantId);
+        assertThat(run.isDryRun()).isFalse();
+        assertThat(run.getRecordsTotal()).isEqualTo(1);
+        assertThat(run.getRecordsCreated()).isEqualTo(1);
+        assertThat(run.getStatus()).isEqualTo("COMPLETED");
+        assertThat(run.getCompletedAt()).isNotNull();
     }
 
     @Test

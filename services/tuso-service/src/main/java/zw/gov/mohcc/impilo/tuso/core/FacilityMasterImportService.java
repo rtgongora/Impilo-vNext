@@ -14,10 +14,12 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityGeoEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierSystem;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityImportRunEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityContactRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityGeoRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityIdentifierRepository;
+import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityImportRunRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRepository;
 
 import java.io.IOException;
@@ -31,6 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -50,6 +53,7 @@ public class FacilityMasterImportService {
     private final FacilityIdentifierRepository identifierRepository;
     private final FacilityContactRepository contactRepository;
     private final FacilityGeoRepository geoRepository;
+    private final FacilityImportRunRepository importRunRepository;
     private final ObjectMapper objectMapper;
 
     public FacilityMasterImportService(
@@ -57,11 +61,13 @@ public class FacilityMasterImportService {
             FacilityIdentifierRepository identifierRepository,
             FacilityContactRepository contactRepository,
             FacilityGeoRepository geoRepository,
+            FacilityImportRunRepository importRunRepository,
             ObjectMapper objectMapper) {
         this.facilityRepository = facilityRepository;
         this.identifierRepository = identifierRepository;
         this.contactRepository = contactRepository;
         this.geoRepository = geoRepository;
+        this.importRunRepository = importRunRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -156,6 +162,7 @@ public class FacilityMasterImportService {
         UUID tenantId = ctx.tenantId();
         String actorId = ctx.actorId();
 
+        Instant startedAt = Instant.now();
         List<FacilityMasterImportDtos.FacilityMasterImportRowResult> results = new ArrayList<>();
         int created = 0;
         int updated = 0;
@@ -163,9 +170,15 @@ public class FacilityMasterImportService {
         int failed = 0;
         int warnings = 0;
 
+        // Product truth: facility names appearing more than once within this batch are duplicates that
+        // require human review — never auto-imported/merged. (The clean pack already excludes these; this
+        // is an in-service guard so any batch is safe regardless of how it was assembled.)
+        Set<String> duplicateNames = duplicateNamesInBatch(request.records());
+
         for (FacilityMasterImportDtos.MasterFacilitySeedRecord record : request.records()) {
             try {
-                ImportDecision decision = evaluateRecord(tenantId, record, request.reconcileDuplicateCodes());
+                ImportDecision decision =
+                        evaluateRecord(tenantId, record, request.reconcileDuplicateCodes(), duplicateNames);
                 if (decision.warning() != null) {
                     warnings++;
                 }
@@ -216,6 +229,11 @@ public class FacilityMasterImportService {
         }
 
         Map<String, Object> qualitySummary = buildQualitySummary(request.records(), warnings);
+
+        // Persist an audit row for the batch (dry-run or real) so operators can review import history.
+        persistImportRun(tenantId, actorId, request.dryRun(), request.records().size(),
+                created, updated, skipped, failed, warnings, startedAt, qualitySummary);
+
         return new FacilityMasterImportDtos.FacilityMasterImportResponse(
                 request.dryRun(),
                 request.records().size(),
@@ -228,10 +246,64 @@ public class FacilityMasterImportService {
                 qualitySummary);
     }
 
+    private void persistImportRun(
+            UUID tenantId, String actorId, boolean dryRun, int total,
+            int created, int updated, int skipped, int failed, int warnings,
+            Instant startedAt, Map<String, Object> qualitySummary) {
+        try {
+            FacilityImportRunEntity run = new FacilityImportRunEntity();
+            run.setTenantId(tenantId);
+            run.setPackId(PACK_ID);
+            run.setDryRun(dryRun);
+            run.setRecordsTotal(total);
+            run.setRecordsCreated(created);
+            run.setRecordsUpdated(updated);
+            run.setRecordsSkipped(skipped);
+            run.setRecordsFailed(failed);
+            run.setWarningsCount(warnings);
+            run.setStatus(failed > 0 ? "COMPLETED_WITH_FAILURES" : "COMPLETED");
+            run.setQualityReport(qualitySummary);
+            run.setStartedAt(startedAt);
+            run.setCompletedAt(Instant.now());
+            run.setInitiatedBy(actorId);
+            importRunRepository.save(run);
+        } catch (Exception e) {
+            // Audit persistence must never fail the import itself; log and continue.
+            log.warn("Failed to persist facility_import_run audit row: {}", e.getMessage());
+        }
+    }
+
+    /** Normalised facility names that appear more than once in the batch (case/space-insensitive). */
+    private static Set<String> duplicateNamesInBatch(
+            List<FacilityMasterImportDtos.MasterFacilitySeedRecord> records) {
+        Map<String, Integer> counts = new HashMap<>();
+        for (FacilityMasterImportDtos.MasterFacilitySeedRecord r : records) {
+            String key = normaliseName(r.facilityName());
+            if (key != null) {
+                counts.merge(key, 1, Integer::sum);
+            }
+        }
+        Set<String> dups = new java.util.HashSet<>();
+        counts.forEach((k, v) -> {
+            if (v > 1) {
+                dups.add(k);
+            }
+        });
+        return dups;
+    }
+
+    private static String normaliseName(String name) {
+        if (isBlank(name)) {
+            return null;
+        }
+        return name.trim().toLowerCase().replaceAll("\\s+", " ");
+    }
+
     private ImportDecision evaluateRecord(
             UUID tenantId,
             FacilityMasterImportDtos.MasterFacilitySeedRecord record,
-            boolean reconcileDuplicateCodes) {
+            boolean reconcileDuplicateCodes,
+            Set<String> duplicateNames) {
         Optional<FacilityEntity> byUid = findByMasterUid(record.facilityUid());
         String resolvedCode = resolveFacilityCode(record);
         boolean missingCode = resolvedCode == null;
@@ -247,6 +319,13 @@ public class FacilityMasterImportService {
         if (missingCode) {
             return new ImportDecision(Optional.empty(), "SKIPPED", "EXCLUDED_MISSING_FACILITY_CODE",
                     "Excluded: missing facility code (not imported; no synthetic code generated)", null, null);
+        }
+
+        // Product truth: a duplicate facility name within the batch is excluded for human review — never
+        // auto-imported, never auto-merged (two distinct facilities may legitimately share a name).
+        if (duplicateNames.contains(normaliseName(record.facilityName()))) {
+            return new ImportDecision(Optional.empty(), "SKIPPED", "EXCLUDED_DUPLICATE_FACILITY_NAME",
+                    "Excluded for review: facility name duplicated within the batch", resolvedCode, null);
         }
 
         Optional<FacilityEntity> byCode = facilityRepository.findByTenantIdAndFacilityCode(tenantId, record.facilityCode());

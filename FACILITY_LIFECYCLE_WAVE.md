@@ -175,12 +175,26 @@ The pre-existing service violated three binding rules; fixed:
   `missing_facility_type`, `missing_ownership`, `missing_operating_status`, `source_label`) so the
   frontend can show missing acceptable fields without faking defaults.
 
-**Remaining increments (documented, not yet built):** CSV→seed loader for `clean_tuso_facility_import.csv`
-(current importer reads a JSON seed); persist `facility_import_run` batch rows + `duplicate-name` check
-in-service; BFF routes + admin UI (batches list, batch detail, review queues, missing-field checklist);
-importer script modes (`--stage-only/--validate/--apply-approved/--reconcile`); facility-detail
-missing-field checklist UI; downstream materialisation honesty. None of these are faked; imported
-facilities remain `IMPORTED_PENDING_CONFIGURATION` until real configuration exists.
+**Increment B — CSV→seed loader (LANDED 2026-07-01, verified):** `loadPackFromCsv` reads the
+canonicalised `clean_tuso_facility_import.csv` (previously only a JSON seed was supported). The CSV has
+no `facility_uid`, so a stable, code-independent `MASTER_FACILITY_UID` correlation key is derived from
+provenance (`MHF-<sourceLabel>-row<source_row>`) — never from the public code — so re-imports match the
+same internal facility and never regenerate it. Header-mapped, quoted-field parser; prefers `*_canonical`
+columns; blank numerics/coordinates/status preserved as null (never faked).
+
+**Increment C — batch persistence + in-service duplicate-name guard (LANDED 2026-07-01, verified):**
+Every `importPack` (dry-run or real) now writes a `FacilityImportRunEntity` audit row to the pre-existing
+`tuso.facility_import_run` table (totals, quality summary, status, initiated_by, timing) — audit failures
+never fail the import. A within-batch duplicate facility-name guard excludes duplicated names for review
+(`EXCLUDED_DUPLICATE_FACILITY_NAME`, skipped, never auto-imported/merged) as defence-in-depth over the
+already-clean pack. Tuso import tests now 10/10.
+
+**Remaining increments (documented, not yet built):** TUSO read API for import runs + BFF routes + admin
+UI (batches list, batch detail, review queues, missing-field checklist); importer script modes
+(`--stage-only/--validate/--apply-approved/--reconcile`); facility-detail missing-field checklist UI;
+downstream materialisation honesty. None of these are faked; imported facilities remain
+`IMPORTED_PENDING_CONFIGURATION` until real configuration exists. Migration `V011`/`V013` + service
+changes are compile + unit-test verified, not DB-executed (no DB in sandbox).
 
 ---
 
