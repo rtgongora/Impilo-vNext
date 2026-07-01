@@ -26,6 +26,7 @@ import {
   type ControlTowerFacility,
 } from "../../services/controlTowerService";
 import {
+  advanceSetupStep,
   createFacilityUnit,
   createServicePoint,
   fetchFacilityUnits,
@@ -36,15 +37,16 @@ import {
   type ServicePoint,
 } from "../../services/facilitySetupService";
 
-const READINESS: Array<{ key: keyof FacilitySetupState; label: string }> = [
-  { key: "departmentsConfigured", label: "Departments" },
-  { key: "servicePointsConfigured", label: "Service points" },
-  { key: "queuesConfigured", label: "Queues" },
-  { key: "workflowsConfigured", label: "Workflows" },
-  { key: "workforceLinked", label: "Workforce" },
-  { key: "orosRoutingConfigured", label: "OROS routing" },
-  { key: "khulumaChannelsConfigured", label: "Comms channels" },
-  { key: "fundoReady", label: "Learning" },
+// step = wizard key sent to POST /setup/steps; flag = readiness field on the state (mirrors web SETUP_STEPS).
+const READINESS: Array<{ step: string; flag: keyof FacilitySetupState; label: string }> = [
+  { step: "DEPARTMENTS", flag: "departmentsConfigured", label: "Departments" },
+  { step: "SERVICE_POINTS", flag: "servicePointsConfigured", label: "Service points" },
+  { step: "QUEUES", flag: "queuesConfigured", label: "Queues" },
+  { step: "WORKFLOWS", flag: "workflowsConfigured", label: "Workflows" },
+  { step: "WORKFORCE", flag: "workforceLinked", label: "Workforce" },
+  { step: "OROS_ROUTING", flag: "orosRoutingConfigured", label: "OROS routing" },
+  { step: "KHULUMA_CHANNELS", flag: "khulumaChannelsConfigured", label: "Comms channels" },
+  { step: "FUNDO_READINESS", flag: "fundoReady", label: "Learning" },
 ];
 
 type Section = "checklist" | "units" | "service_points";
@@ -65,6 +67,25 @@ export function FacilitySetupScreen() {
   const [unitType, setUnitType] = useState("");
   const [spName, setSpName] = useState("");
   const [spType, setSpType] = useState("");
+  const [stepBusy, setStepBusy] = useState<string | null>(null);
+  const [stepError, setStepError] = useState<string | null>(null);
+
+  const advanceStep = useCallback(
+    async (step: string, complete: boolean) => {
+      if (!selected) return;
+      setStepBusy(step);
+      setStepError(null);
+      try {
+        // Returns the recomputed state; surfaces TUSO's honest go-live rejection as an error.
+        setSetup(await advanceSetupStep(selected.facilityId, { step, complete }));
+      } catch (err) {
+        setStepError(err instanceof Error ? err.message : "Step could not be updated");
+      } finally {
+        setStepBusy(null);
+      }
+    },
+    [selected],
+  );
 
   const loadFacilities = useCallback(async () => {
     setLoading(true);
@@ -193,21 +214,51 @@ export function FacilitySetupScreen() {
                     <CardHeader title={`${selected.name} — go-live readiness`} />
                     <CardBody>
                       <View style={styles.checklist}>
-                        {READINESS.map((step) => (
-                          <View key={step.key} style={styles.checkRow}>
-                            <Text style={styles.detailText}>{step.label}</Text>
-                            <Badge variant={setup[step.key] ? "success" : "secondary"}>
-                              {setup[step.key] ? "Done" : "Pending"}
-                            </Badge>
-                          </View>
-                        ))}
+                        {READINESS.map((item) => {
+                          const done = Boolean(setup[item.flag]);
+                          return (
+                            <View key={item.step} style={styles.checkRow}>
+                              <Text style={styles.detailText}>{item.label}</Text>
+                              <View style={styles.stepActions}>
+                                <Badge variant={done ? "success" : "secondary"}>
+                                  {done ? "Done" : "Pending"}
+                                </Badge>
+                                <Button
+                                  title={
+                                    stepBusy === item.step ? "…" : done ? "Reopen" : "Mark done"
+                                  }
+                                  variant="outline"
+                                  onPress={() => advanceStep(item.step, !done)}
+                                  disabled={stepBusy !== null}
+                                  testID={`step-${item.step}`}
+                                />
+                              </View>
+                            </View>
+                          );
+                        })}
                       </View>
+                      {stepError ? (
+                        <Text testID="step-error" style={styles.stepError}>
+                          {stepError}
+                        </Text>
+                      ) : null}
                       <View style={styles.goLiveRow}>
                         <Text style={styles.boldText}>Ready for go-live</Text>
                         <Badge variant={setup.readyForGoLive ? "success" : "warning"}>
                           {setup.readyForGoLive ? "Yes" : "Not yet"}
                         </Badge>
                       </View>
+                      {setup.goLive ? (
+                        <Badge variant="success">Facility is LIVE</Badge>
+                      ) : (
+                        <Button
+                          title={stepBusy === "GO_LIVE" ? "Going live…" : "Go live"}
+                          variant="primary"
+                          onPress={() => advanceStep("GO_LIVE", true)}
+                          disabled={stepBusy !== null || !setup.readyForGoLive}
+                          testID="go-live"
+                        />
+                      )}
                       {setup.nextStep ? (
                         <Text style={styles.detailText}>Next step: {setup.nextStep}</Text>
                       ) : null}
@@ -291,6 +342,8 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 13, fontWeight: "700", color: "#6B7280" },
   checklist: { gap: 8 },
   checkRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  stepActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+  stepError: { fontSize: 13, color: "#B91C1C", marginTop: 8 },
   goLiveRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 12 },
   listRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   listRowInfo: { flex: 1, gap: 2 },

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { apiClient } from "@impilo/mobile-api-client";
 import {
+  advanceSetupStep,
   createFacilityUnit,
   createServicePoint,
   fetchFacilityUnits,
@@ -77,6 +78,22 @@ describe("facilitySetupService", () => {
     expect(apiClient.post).toHaveBeenCalledWith("/internal/v1/facility-mode/1/service-points", {
       name: "Pharmacy Window",
       servicePointType: "DISPENSING",
+    });
+  });
+
+  it("advanceSetupStep posts the step and returns the recomputed readiness state", async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({
+      data: { data: { facilityId: 1, queuesConfigured: true, readyForGoLive: false, nextStep: "WORKFLOWS" } },
+      status: 200,
+      correlationId: "c1",
+      headers: {},
+    });
+    const state = await advanceSetupStep(1, { step: "QUEUES", complete: true });
+    expect(state.queuesConfigured).toBe(true);
+    expect(state.nextStep).toBe("WORKFLOWS");
+    expect(apiClient.post).toHaveBeenCalledWith("/internal/v1/facility-mode/1/setup/steps", {
+      step: "QUEUES",
+      complete: true,
     });
   });
 });
