@@ -139,3 +139,45 @@ destinations — each an honest, event-plus-reconciliation materialisation, surf
 TUSO lifecycle + events + service-point-as-queue config are **real today**. PCT materialisation is
 **not** — it is blocked on the facility-identity decision above, not on build capacity. No fake PCT
 queue editor and no seed-as-MVP-truth will be shipped to paper over it.
+
+---
+
+## Zimbabwe Master Health Facility absorption (MASTER_HEALTH_FACILITY_2024_07_23)
+
+**Product truth note (required):** The Zimbabwe Master Health Facility dataset dated 23 July 2024 has
+been cleaned into an Opus-ready TUSO absorption package. The importable dataset excludes facilities
+without facility codes and excludes duplicate facility-code/name conflicts for manual review. Missing
+latitude/longitude, facility type, ownership, and status are acceptable for import but must remain
+visible as missing/incomplete on the frontend and in the facility setup checklist. Imported facilities
+enter TUSO as national facility master records **pending configuration**, not as fully operational
+vNext facilities.
+
+**Package placed:** `data/source/zimbabwe/master-health-facility/2024-07-23/` (+ PROVENANCE.md). Counts
+verified exactly (2,023 source = 1,773 clean + 250 excluded/review; 124 missing-code, 81 dup-code,
+47 dup-name; 194 acceptable-missing).
+
+**Existing infra reused (not rebuilt):** `FacilityMasterImportService` + `FacilityMasterImportController`
+(`/v1/internal/facilities/import/master-pack{,/dry-run,/quality-report}`) +
+`scripts/operator/import-facility-master-pack.sh` + migration `V011` (staging + `facility_import_run`) +
+`FacilityDataQualityController` (BFF quality-report). Mockito test harness runs in-sandbox.
+
+**Increment A — product-truth enforcement in the import service (LANDED 2026-07-01, verified 5/5 tests):**
+The pre-existing service violated three binding rules; fixed:
+- **No synthetic codes.** `resolveFacilityCode` no longer fabricates `MHL-<uid>`; a missing-code row is
+  excluded (`EXCLUDED_MISSING_FACILITY_CODE`, skipped, never created). Duplicate code →
+  `EXCLUDED_DUPLICATE_FACILITY_CODE` (review, no auto-merge).
+- **Not operational on import.** New imported facilities enter `IMPORTED_PENDING_CONFIGURATION` (new
+  `FacilityRegulatoryStatus` value), not `REGISTERED_ACTIVE`.
+- **Blanks never clobber verified data.** On update, master values win only when present; blank CSV
+  fields are preserved. Blank status no longer becomes `ACTIVE`/`INACTIVE` — it sets
+  `operating_status = MISSING_REQUIRES_CONFIRMATION`.
+- **Structured completeness flags** in facility metadata (`geospatial_incomplete`,
+  `missing_facility_type`, `missing_ownership`, `missing_operating_status`, `source_label`) so the
+  frontend can show missing acceptable fields without faking defaults.
+
+**Remaining increments (documented, not yet built):** CSV→seed loader for `clean_tuso_facility_import.csv`
+(current importer reads a JSON seed); persist `facility_import_run` batch rows + `duplicate-name` check
+in-service; BFF routes + admin UI (batches list, batch detail, review queues, missing-field checklist);
+importer script modes (`--stage-only/--validate/--apply-approved/--reconcile`); facility-detail
+missing-field checklist UI; downstream materialisation honesty. None of these are faked; imported
+facilities remain `IMPORTED_PENDING_CONFIGURATION` until real configuration exists.

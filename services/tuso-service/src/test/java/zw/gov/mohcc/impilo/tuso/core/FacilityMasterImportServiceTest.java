@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityMasterImportDtos;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityContactRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityGeoRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityIdentifierRepository;
@@ -117,6 +118,85 @@ class FacilityMasterImportServiceTest {
         ArgumentCaptor<FacilityEntity> captor = ArgumentCaptor.forClass(FacilityEntity.class);
         verify(facilityRepository, times(2)).save(captor.capture());
         assertThat(captor.getValue().getName()).isEqualTo("Bangure Clinic");
+    }
+
+    @Test
+    void missingFacilityCodeIsExcludedNotSynthesised() {
+        var record = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-nocode", null, "No Code Clinic", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4,
+                -17.8, 31.0, "+263771111111", "2024-07-23");
+        when(identifierRepository.findBySystemAndValue(
+                FacilityMasterImportService.MASTER_FACILITY_UID_SYSTEM, "mhf-nocode"))
+                .thenReturn(Optional.empty());
+
+        var response = service.importPack(new FacilityMasterImportDtos.FacilityMasterImportRequest(
+                false, false, false, List.of(record)));
+
+        // Product truth: never imported, never given a synthetic code.
+        assertThat(response.recordsCreated()).isZero();
+        assertThat(response.recordsSkipped()).isEqualTo(1);
+        verify(facilityRepository, never()).save(any());
+    }
+
+    @Test
+    void importedFacilityEntersPendingConfigurationNotActive() {
+        var record = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-new", "ZWNEW1", "New Clinic", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4,
+                -17.8, 31.0, "+263772222222", "2024-07-23");
+        when(identifierRepository.findBySystemAndValue(
+                FacilityMasterImportService.MASTER_FACILITY_UID_SYSTEM, "mhf-new"))
+                .thenReturn(Optional.empty());
+        when(facilityRepository.findByTenantIdAndFacilityCode(tenantId, "ZWNEW1")).thenReturn(Optional.empty());
+        when(facilityRepository.save(any(FacilityEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(contactRepository.findByFacilityId(any())).thenReturn(List.of());
+        when(geoRepository.findByFacilityId(any())).thenReturn(Optional.empty());
+
+        ArgumentCaptor<FacilityEntity> captor = ArgumentCaptor.forClass(FacilityEntity.class);
+        var response = service.importPack(new FacilityMasterImportDtos.FacilityMasterImportRequest(
+                false, false, false, List.of(record)));
+
+        assertThat(response.recordsCreated()).isEqualTo(1);
+        verify(facilityRepository).save(captor.capture());
+        assertThat(captor.getValue().getRegulatoryStatus())
+                .isEqualTo(FacilityRegulatoryStatus.IMPORTED_PENDING_CONFIGURATION);
+    }
+
+    @Test
+    void blankMasterValuesDoNotOverwriteExistingVerifiedData() {
+        FacilityEntity existing = new FacilityEntity();
+        existing.setId(77L);
+        existing.setTenantId(tenantId);
+        existing.setFacilityCode("ZW999");
+        existing.setName("Verified Name");
+        existing.setOwnership("GOVERNMENT");
+        existing.setFacilityType("HOSPITAL");
+        existing.setVersion(3);
+
+        FacilityIdentifierEntity ident = new FacilityIdentifierEntity();
+        ident.setFacility(existing);
+        ident.setSystem(FacilityMasterImportService.MASTER_FACILITY_UID_SYSTEM);
+        ident.setValue("mhf-existing");
+
+        when(identifierRepository.findBySystemAndValue(
+                FacilityMasterImportService.MASTER_FACILITY_UID_SYSTEM, "mhf-existing"))
+                .thenReturn(Optional.of(ident));
+        when(facilityRepository.save(any(FacilityEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Acceptable-missing incoming row: blank ownership/type/status, no coordinates, no phone.
+        var record = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-existing", "ZW999", "Verified Name", "Harare", "Harare",
+                "", "", "Urban", "Primary", "", 4, null, null, null, "2024-07-23");
+
+        ArgumentCaptor<FacilityEntity> captor = ArgumentCaptor.forClass(FacilityEntity.class);
+        service.importPack(new FacilityMasterImportDtos.FacilityMasterImportRequest(
+                false, false, false, List.of(record)));
+
+        verify(facilityRepository).save(captor.capture());
+        FacilityEntity saved = captor.getValue();
+        assertThat(saved.getOwnership()).isEqualTo("GOVERNMENT");
+        assertThat(saved.getFacilityType()).isEqualTo("HOSPITAL");
     }
 
     private static FacilityMasterImportDtos.MasterFacilitySeedRecord sampleRecord() {

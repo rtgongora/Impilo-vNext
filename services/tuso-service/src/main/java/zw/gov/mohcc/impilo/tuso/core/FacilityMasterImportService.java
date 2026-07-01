@@ -37,6 +37,8 @@ public class FacilityMasterImportService {
 
     public static final String MASTER_FACILITY_UID_SYSTEM = "MASTER_FACILITY_UID";
     public static final String PACK_ID = "master-health-facility-2024-07-23";
+    /** Canonical source-provenance label for this national master dataset. */
+    public static final String SOURCE_LABEL = "MASTER_HEALTH_FACILITY_2024_07_23";
 
     private static final Logger log = LoggerFactory.getLogger(FacilityMasterImportService.class);
 
@@ -163,31 +165,31 @@ public class FacilityMasterImportService {
             boolean reconcileDuplicateCodes) {
         Optional<FacilityEntity> byUid = findByMasterUid(record.facilityUid());
         String resolvedCode = resolveFacilityCode(record);
-        String warning = null;
+        boolean missingCode = resolvedCode == null;
+        String warning = hasValidCoordinates(record) ? null : "MISSING_COORDINATES";
         String message = null;
 
-        if (record.facilityCode() == null || record.facilityCode().isBlank()) {
-            warning = "MISSING_FACILITY_CODE";
-            message = "Synthetic code applied: " + resolvedCode;
-        }
-        if (!hasValidCoordinates(record)) {
-            warning = warning == null ? "MISSING_COORDINATES" : warning + ",MISSING_COORDINATES";
-        }
-
         if (byUid.isPresent()) {
+            // Already absorbed previously — refresh from master (blanks never overwrite verified data).
             return new ImportDecision(byUid, "WOULD_UPDATE", warning, message, resolvedCode, byUid.get().getId());
         }
 
-        if (record.facilityCode() != null && !record.facilityCode().isBlank()) {
-            Optional<FacilityEntity> byCode = facilityRepository.findByTenantIdAndFacilityCode(tenantId, record.facilityCode());
-            if (byCode.isPresent()) {
-                if (reconcileDuplicateCodes) {
-                    return new ImportDecision(Optional.of(byCode.get()), "WOULD_UPDATE", "DUPLICATE_FACILITY_CODE",
-                            "Reconciling existing facility by code", resolvedCode, byCode.get().getId());
-                }
-                return new ImportDecision(Optional.empty(), "SKIPPED", "DUPLICATE_FACILITY_CODE",
-                        "Facility code already assigned to facility " + byCode.get().getId(), resolvedCode, byCode.get().getId());
+        // Product truth: a row with no facility code is EXCLUDED from import; no synthetic code is made.
+        if (missingCode) {
+            return new ImportDecision(Optional.empty(), "SKIPPED", "EXCLUDED_MISSING_FACILITY_CODE",
+                    "Excluded: missing facility code (not imported; no synthetic code generated)", null, null);
+        }
+
+        Optional<FacilityEntity> byCode = facilityRepository.findByTenantIdAndFacilityCode(tenantId, record.facilityCode());
+        if (byCode.isPresent()) {
+            if (reconcileDuplicateCodes) {
+                return new ImportDecision(Optional.of(byCode.get()), "WOULD_UPDATE", "DUPLICATE_FACILITY_CODE",
+                        "Reconciling existing facility by code", resolvedCode, byCode.get().getId());
             }
+            // Product truth: duplicate facility code is excluded for human review, not auto-imported/merged.
+            return new ImportDecision(Optional.empty(), "SKIPPED", "EXCLUDED_DUPLICATE_FACILITY_CODE",
+                    "Excluded for review: facility code already assigned to facility " + byCode.get().getId(),
+                    resolvedCode, byCode.get().getId());
         }
 
         return new ImportDecision(Optional.empty(), "WOULD_CREATE", warning, message, resolvedCode, null);
@@ -205,18 +207,20 @@ public class FacilityMasterImportService {
             facility.setFacilityCode(resolvedCode);
             facility.setVersion(1);
             facility.setCreatedBy(actorId);
-            facility.setRegulatoryStatus(FacilityRegulatoryStatus.REGISTERED_ACTIVE);
+            // Product truth: imported facilities are NOT operational — they enter pending configuration.
+            facility.setRegulatoryStatus(FacilityRegulatoryStatus.IMPORTED_PENDING_CONFIGURATION);
             facility.setRegulatoryStatusUpdatedAt(Instant.now());
         } else {
             facility.setVersion(facility.getVersion() + 1);
         }
 
-        facility.setName(record.facilityName());
-        facility.setFacilityType(record.facilityType());
-        facility.setProvince(record.province());
-        facility.setDistrict(record.district());
-        facility.setOwnership(record.ownership());
-        facility.setLevel(record.serviceLevel());
+        // Master-list values win only when PRESENT; blank CSV values never overwrite existing verified data.
+        setIfPresent(record.facilityName(), facility::setName);
+        setIfPresent(record.facilityType(), facility::setFacilityType);
+        setIfPresent(record.province(), facility::setProvince);
+        setIfPresent(record.district(), facility::setDistrict);
+        setIfPresent(record.ownership(), facility::setOwnership);
+        setIfPresent(record.serviceLevel(), facility::setLevel);
         facility.setDescription("Master Health Facility List import (" + PACK_ID + ")");
 
         if (hasValidCoordinates(record)) {
@@ -224,9 +228,15 @@ public class FacilityMasterImportService {
             facility.setLongitude(BigDecimal.valueOf(record.longitude()));
         }
 
-        boolean open = "open".equalsIgnoreCase(record.status());
-        facility.setStatus(open ? "ACTIVE" : "INACTIVE");
-        facility.setOperationalStatus(open ? "OPERATIONAL" : "NON_OPERATIONAL");
+        // Operating status: NEVER assume ACTIVE from a blank. A blank status requires confirmation and
+        // must not overwrite a previously verified status.
+        if (!isBlank(record.status())) {
+            boolean open = "open".equalsIgnoreCase(record.status().trim());
+            facility.setStatus(open ? "ACTIVE" : "INACTIVE");
+            facility.setOperationalStatus(open ? "OPERATIONAL" : "NON_OPERATIONAL");
+        } else if (isNew) {
+            facility.setOperationalStatus("MISSING_REQUIRES_CONFIRMATION");
+        }
         facility.setUpdatedBy(actorId);
 
         Map<String, Object> metadata = facility.getMetadata() != null
@@ -237,8 +247,14 @@ public class FacilityMasterImportService {
         metadata.put("location_context", record.locationContext());
         metadata.put("bed_capacity", record.bedCapacity());
         metadata.put("import_pack_id", PACK_ID);
+        metadata.put("source_label", SOURCE_LABEL);
         metadata.put("has_valid_coordinates", hasValidCoordinates(record));
-        if (record.facilityCode() == null || record.facilityCode().isBlank()) {
+        // Structured completeness flags so the frontend can show missing acceptable fields — nothing faked.
+        metadata.put("geospatial_incomplete", !hasValidCoordinates(record));
+        metadata.put("missing_facility_type", isBlank(record.facilityType()));
+        metadata.put("missing_ownership", isBlank(record.ownership()));
+        metadata.put("missing_operating_status", isBlank(record.status()));
+        if (isBlank(record.facilityCode())) {
             metadata.put("missing_facility_code", true);
         }
         facility.setMetadata(metadata);
@@ -298,8 +314,18 @@ public class FacilityMasterImportService {
         if (record.facilityCode() != null && !record.facilityCode().isBlank()) {
             return record.facilityCode().trim();
         }
-        String suffix = record.facilityUid().replace("mhf-", "");
-        return "MHL-" + suffix.substring(0, Math.min(12, suffix.length())).toUpperCase();
+        // Product truth: NEVER synthesise a facility code. A missing-code row is excluded from import.
+        return null;
+    }
+
+    private static void setIfPresent(String value, java.util.function.Consumer<String> setter) {
+        if (value != null && !value.isBlank()) {
+            setter.accept(value.trim());
+        }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private static boolean hasValidCoordinates(FacilityMasterImportDtos.MasterFacilitySeedRecord record) {
