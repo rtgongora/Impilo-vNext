@@ -64,6 +64,8 @@ public final class FacilityMasterImportDtos {
     ) {}
 
     public record FacilityMasterImportResponse(
+            /** Persisted import-run id (null only if run persistence failed). */
+            Long runId,
             boolean dryRun,
             int recordsTotal,
             int recordsCreated,

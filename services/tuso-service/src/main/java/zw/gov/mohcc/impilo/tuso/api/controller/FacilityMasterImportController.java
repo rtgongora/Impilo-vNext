@@ -87,6 +87,7 @@ public class FacilityMasterImportController {
             @PathVariable Long runId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String outcome,
+            @RequestParam(required = false) String decisionStatus,
             @RequestParam(required = false) String duplicateType,
             @RequestParam(required = false) String province,
             @RequestParam(required = false) String district,
@@ -97,8 +98,8 @@ public class FacilityMasterImportController {
             @RequestParam(defaultValue = "50") int size) {
         TrustContext ctx = TrustContextHolder.require();
         String effectiveOutcome = outcome != null ? outcome : status;
-        var rows = importService.searchRows(runId, effectiveOutcome, duplicateType, province, district,
-                facilityCode, facilityName, hasAcceptableMissingFields, page, size);
+        var rows = importService.searchRows(runId, effectiveOutcome, decisionStatus, duplicateType, province,
+                district, facilityCode, facilityName, hasAcceptableMissingFields, page, size);
         return ResponseEntity.ok(ApiResponse.ok(rows, ctx.correlationId().toString()));
     }
 
@@ -127,7 +128,7 @@ public class FacilityMasterImportController {
             @RequestParam(defaultValue = "50") int size) {
         TrustContext ctx = TrustContextHolder.require();
         var rows = importService.searchRows(runId, FacilityImportRowEntity.EXCLUDED_MISSING_FACILITY_CODE,
-                null, null, null, null, null, null, page, size);
+                null, null, null, null, null, null, null, page, size);
         return ResponseEntity.ok(ApiResponse.ok(rows, ctx.correlationId().toString()));
     }
 
@@ -138,7 +139,7 @@ public class FacilityMasterImportController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         TrustContext ctx = TrustContextHolder.require();
-        var rows = importService.searchRows(runId, null, null, null, null, null, null, true, page, size);
+        var rows = importService.searchRows(runId, null, null, null, null, null, null, null, true, page, size);
         return ResponseEntity.ok(ApiResponse.ok(rows, ctx.correlationId().toString()));
     }
 

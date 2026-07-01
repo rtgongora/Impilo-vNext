@@ -498,11 +498,11 @@ class FacilityMasterImportServiceTest {
         e.setFacilityCode("ZW1");
         e.setFacilityName("Row Clinic");
         e.setOutcome(FacilityImportRowEntity.IMPORTED);
-        when(importRowRepository.search(eq(500L), eq("IMPORTED"), any(), any(), any(), any(), any(), any(),
+        when(importRowRepository.search(eq(500L), eq("IMPORTED"), any(), any(), any(), any(), any(), any(), any(),
                 any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(e), PageRequest.of(0, 50), 1));
 
-        var paged = service.searchRows(500L, "IMPORTED", null, null, null, null, null, null, 0, 50);
+        var paged = service.searchRows(500L, "IMPORTED", null, null, null, null, null, null, null, 0, 50);
 
         assertThat(paged.totalElements()).isEqualTo(1);
         assertThat(paged.content()).hasSize(1);
@@ -517,7 +517,7 @@ class FacilityMasterImportServiceTest {
                 new Object[]{FacilityImportRowEntity.EXCLUDED_MISSING_FACILITY_CODE, 1L},
                 new Object[]{FacilityImportRowEntity.EXCLUDED_DUPLICATE_FACILITY_NAME, 2L}));
         when(importRowRepository.countByImportRunIdAndHasAcceptableMissingTrue(500L)).thenReturn(4L);
-        when(importRowRepository.search(any(), any(), any(), any(), any(), any(), any(), any(),
+        when(importRowRepository.search(any(), any(), any(), any(), any(), any(), any(), any(), any(),
                 any(Pageable.class))).thenReturn(Page.empty());
 
         var buckets = service.reviewBuckets(500L);

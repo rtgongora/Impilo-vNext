@@ -23,6 +23,7 @@ public interface FacilityImportRowRepository extends JpaRepository<FacilityImpor
             SELECT r FROM FacilityImportRowEntity r
              WHERE r.importRunId = :runId
                AND (:outcome IS NULL OR r.outcome = :outcome)
+               AND (:decisionStatus IS NULL OR r.decisionStatus = :decisionStatus)
                AND (:duplicateType IS NULL OR r.duplicateType = :duplicateType)
                AND (:province IS NULL OR lower(r.province) = lower(:province))
                AND (:district IS NULL OR lower(r.district) = lower(:district))
@@ -33,6 +34,7 @@ public interface FacilityImportRowRepository extends JpaRepository<FacilityImpor
     Page<FacilityImportRowEntity> search(
             @Param("runId") Long runId,
             @Param("outcome") String outcome,
+            @Param("decisionStatus") String decisionStatus,
             @Param("duplicateType") String duplicateType,
             @Param("province") String province,
             @Param("district") String district,

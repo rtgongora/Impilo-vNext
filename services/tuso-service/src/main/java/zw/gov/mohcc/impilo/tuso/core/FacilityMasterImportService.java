@@ -281,6 +281,7 @@ public class FacilityMasterImportService {
         persistImportRows(runId, rowDrafts);
 
         return new FacilityMasterImportDtos.FacilityMasterImportResponse(
+                runId,
                 request.dryRun(),
                 request.records().size(),
                 created,
@@ -479,16 +480,17 @@ public class FacilityMasterImportService {
     /** Filtered, paginated row search for a run. {@code size} is clamped to a sane max. */
     @Transactional(readOnly = true)
     public FacilityImportRowDtos.PagedRows searchRows(
-            Long runId, String outcome, String duplicateType, String province, String district,
-            String facilityCode, String facilityName, Boolean hasAcceptableMissing, int page, int size) {
+            Long runId, String outcome, String decisionStatus, String duplicateType, String province,
+            String district, String facilityCode, String facilityName, Boolean hasAcceptableMissing,
+            int page, int size) {
         int safeSize = Math.min(Math.max(size, 1), 200);
         int safePage = Math.max(page, 0);
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
                 safePage, safeSize, org.springframework.data.domain.Sort.by("id").ascending());
         org.springframework.data.domain.Page<FacilityImportRowEntity> result = importRowRepository.search(
-                runId, blankToNull(outcome), blankToNull(duplicateType), blankToNull(province),
-                blankToNull(district), blankToNull(facilityCode), blankToNull(facilityName),
-                hasAcceptableMissing, pageable);
+                runId, blankToNull(outcome), blankToNull(decisionStatus), blankToNull(duplicateType),
+                blankToNull(province), blankToNull(district), blankToNull(facilityCode),
+                blankToNull(facilityName), hasAcceptableMissing, pageable);
         return new FacilityImportRowDtos.PagedRows(
                 result.getContent().stream().map(FacilityMasterImportService::toRowView).toList(),
                 result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages());
@@ -519,7 +521,7 @@ public class FacilityMasterImportService {
         if (count == 0) {
             return new FacilityImportRowDtos.Bucket(0, List.of());
         }
-        var preview = importRowRepository.search(runId, outcome, null, null, null, null, null, null,
+        var preview = importRowRepository.search(runId, outcome, null, null, null, null, null, null, null,
                         org.springframework.data.domain.PageRequest.of(0, 5))
                 .getContent().stream().map(FacilityMasterImportService::toRowView).toList();
         return new FacilityImportRowDtos.Bucket(count, preview);
@@ -529,7 +531,7 @@ public class FacilityMasterImportService {
         if (count == 0) {
             return new FacilityImportRowDtos.Bucket(0, List.of());
         }
-        var preview = importRowRepository.search(runId, null, null, null, null, null, null, true,
+        var preview = importRowRepository.search(runId, null, null, null, null, null, null, null, true,
                         org.springframework.data.domain.PageRequest.of(0, 5))
                 .getContent().stream().map(FacilityMasterImportService::toRowView).toList();
         return new FacilityImportRowDtos.Bucket(count, preview);
