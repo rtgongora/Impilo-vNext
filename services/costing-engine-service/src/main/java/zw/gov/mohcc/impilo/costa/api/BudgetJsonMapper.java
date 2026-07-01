@@ -207,6 +207,19 @@ final class BudgetJsonMapper {
         return m;
     }
 
+    static Map<String, Object> periodClose(BudgetPeriodCloseEntity e) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("closeId", e.getCloseId().toString());
+        m.put("budgetId", e.getBudgetId().toString());
+        m.put("financialPeriodId", e.getFinancialPeriodId().toString());
+        m.put("status", e.getStatus());
+        m.put("closedBy", e.getClosedBy());
+        m.put("closedAt", e.getClosedAt() != null ? e.getClosedAt().toString() : null);
+        m.put("carryForwardAmount", e.getCarryForwardAmount());
+        m.put("notes", e.getNotes());
+        return m;
+    }
+
     static Map<String, Object> fundingSource(FundingSourceEntity f) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("fundingSourceId", f.getFundingSourceId().toString());
