@@ -13,6 +13,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AdminFacilityImportControllerTest {
 
@@ -40,32 +41,40 @@ class AdminFacilityImportControllerTest {
     }
 
     @Test
-    void reviewReshapesRunTotalsIntoBuckets() {
+    void reviewProxiesRealBuckets() {
         var controller = new AdminFacilityImportController(new StubTusoClient());
 
         ResponseEntity<Map<String, Object>> response = controller.getRunReview(7L, "req-1", "corr-1");
 
         assertEquals(200, response.getStatusCode().value());
-        @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
-        assertEquals("facility-import-run-review-v1", data.get("contract"));
-        assertEquals(false, data.get("rowLevelDetailAvailable"));
-        @SuppressWarnings("unchecked")
-        Map<String, Object> buckets = (Map<String, Object>) data.get("buckets");
-        assertEquals(1L, buckets.get("missing_facility_code"));
-        assertEquals(2L, buckets.get("duplicate_facility_name"));
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertTrue(data.has("importedRows"));
+        assertTrue(data.has("missingFacilityCode"));
     }
 
     @Test
-    void rowsRouteHonestlyReportsStagingNotPersisted() {
+    void rowsProxiesRealPersistedRows() {
         var controller = new AdminFacilityImportController(new StubTusoClient());
 
-        ResponseEntity<Map<String, Object>> response = controller.getRunRows(7L, "req-1", "corr-1");
+        ResponseEntity<Map<String, Object>> response =
+                controller.getRunRows(7L, Map.of("outcome", "IMPORTED", "page", "0"), "req-1", "corr-1");
 
         assertEquals(200, response.getStatusCode().value());
-        @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
-        assertEquals("NOT_PERSISTED", data.get("rowLevelStaging"));
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertTrue(data.has("content"));
+        assertFalse(response.getBody().containsKey("error"));
+    }
+
+    @Test
+    void duplicatesProxiesGroups() {
+        var controller = new AdminFacilityImportController(new StubTusoClient());
+
+        ResponseEntity<Map<String, Object>> response =
+                controller.getRunDuplicates(7L, "FACILITY_NAME", "req-1", "corr-1");
+
+        assertEquals(200, response.getStatusCode().value());
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertTrue(data.has("groups"));
     }
 
     @Test
@@ -110,6 +119,24 @@ class AdminFacilityImportControllerTest {
         public JsonNode getFacilityImportRun(long runId) {
             return node("{\"runId\":7,\"totals\":{\"missingFacilityCode\":1,\"duplicateFacilityCode\":0,"
                     + "\"duplicateFacilityName\":2,\"acceptableMissing\":3}}");
+        }
+
+        @Override
+        public JsonNode getFacilityImportRunRows(long runId, String query) {
+            return node("{\"content\":[{\"id\":1,\"facilityCode\":\"ZW1\",\"outcome\":\"IMPORTED\"}],"
+                    + "\"page\":0,\"size\":50,\"totalElements\":1,\"totalPages\":1}");
+        }
+
+        @Override
+        public JsonNode getFacilityImportRunReview(long runId) {
+            return node("{\"runId\":7,\"importedRows\":{\"count\":1,\"preview\":[]},"
+                    + "\"missingFacilityCode\":{\"count\":1,\"preview\":[]}}");
+        }
+
+        @Override
+        public JsonNode getFacilityImportRunDuplicates(long runId, String type) {
+            return node("{\"runId\":7,\"duplicateType\":\"FACILITY_NAME\",\"groupCount\":1,"
+                    + "\"groups\":[{\"duplicateGroupKey\":\"NAME:twin\",\"size\":2,\"rows\":[]}]}");
         }
 
         @Override

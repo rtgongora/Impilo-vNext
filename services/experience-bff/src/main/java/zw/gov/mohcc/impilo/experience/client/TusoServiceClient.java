@@ -150,6 +150,46 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** Persisted row-level outcomes for an import run (filters/pagination via query string). */
+    public JsonNode getFacilityImportRunRows(long runId, String query) {
+        String url = baseUrl + "/v1/internal/facilities/import/runs/" + runId + "/rows" + qs(query);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Review buckets (counts + previews) built from persisted rows. */
+    public JsonNode getFacilityImportRunReview(long runId) {
+        String url = baseUrl + "/v1/internal/facilities/import/runs/" + runId + "/review";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Duplicate rows grouped for review. */
+    public JsonNode getFacilityImportRunDuplicates(long runId, String type) {
+        String url = baseUrl + "/v1/internal/facilities/import/runs/" + runId + "/duplicates"
+                + qs(type != null ? "type=" + type : null);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Rows excluded for missing facility code. */
+    public JsonNode getFacilityImportRunMissingCode(long runId, String query) {
+        String url = baseUrl + "/v1/internal/facilities/import/runs/" + runId + "/missing-code" + qs(query);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Import-eligible rows carrying acceptable-missing fields. */
+    public JsonNode getFacilityImportRunAcceptableMissing(long runId, String query) {
+        String url = baseUrl + "/v1/internal/facilities/import/runs/" + runId + "/acceptable-missing" + qs(query);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    private static String qs(String query) {
+        return (query == null || query.isBlank()) ? "" : "?" + query;
+    }
+
     /** Facility import provenance + configuration-completeness checklist. */
     public JsonNode getFacilityImportProvenance(long facilityId) {
         String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/import-provenance";

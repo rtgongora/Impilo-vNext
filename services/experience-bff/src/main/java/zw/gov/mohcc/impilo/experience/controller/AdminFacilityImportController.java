@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -64,59 +66,106 @@ public class AdminFacilityImportController {
         return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
     }
 
-    /**
-     * Row-level view. Row-level import staging is NOT persisted per run yet, so this route reports that
-     * honestly rather than fabricating rows. Run-level totals live on the run detail; the excluded/review
-     * source datasets remain the authoritative row-level record until staging lands.
-     */
+    /** Real persisted row-level outcomes for a run (filters + pagination proxied to TUSO). */
     @GetMapping("/facility-import-runs/{runId}/rows")
     public ResponseEntity<Map<String, Object>> getRunRows(
             @PathVariable long runId,
+            @RequestParam Map<String, String> params,
             @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
             @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("contract", "facility-import-run-rows-v1");
-        data.put("runId", runId);
-        data.put("rowLevelStaging", "NOT_PERSISTED");
-        data.put("rows", java.util.List.of());
-        data.put("message", "Row-level import staging is not persisted per run yet. See run breakdown "
-                + "totals and the source review datasets; row-level staging is the next backend slice.");
-        return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        try {
+            JsonNode data = tusoClient.getFacilityImportRunRows(runId, buildQuery(params));
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "IMPORT_ROWS_UNAVAILABLE",
+                    "Unable to load facility import rows from TUSO");
+        }
     }
 
-    /**
-     * Review buckets for a run, reshaped from the run's real breakdown totals. Per-row review detail
-     * requires row-level staging (not yet persisted) — flagged via {@code rowLevelDetailAvailable}.
-     */
+    /** Real review buckets (counts + previews) built from persisted rows. */
     @GetMapping("/facility-import-runs/{runId}/review")
     public ResponseEntity<Map<String, Object>> getRunReview(
             @PathVariable long runId,
             @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
             @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
-        JsonNode run;
         try {
-            run = tusoClient.getFacilityImportRun(runId);
+            JsonNode data = tusoClient.getFacilityImportRunReview(runId);
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
         } catch (Exception e) {
-            return badGateway(requestId, correlationId, "IMPORT_RUN_UNAVAILABLE",
-                    "Unable to load facility import run from TUSO");
+            return badGateway(requestId, correlationId, "IMPORT_REVIEW_UNAVAILABLE",
+                    "Unable to load facility import review from TUSO");
         }
-        if (run == null || run.isNull()) {
-            return notFound(requestId, correlationId, "IMPORT_RUN_NOT_FOUND", "Import run not found: " + runId);
+    }
+
+    /** Duplicate rows grouped for review. */
+    @GetMapping("/facility-import-runs/{runId}/duplicates")
+    public ResponseEntity<Map<String, Object>> getRunDuplicates(
+            @PathVariable long runId,
+            @RequestParam(value = "type", required = false) String type,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        try {
+            JsonNode data = tusoClient.getFacilityImportRunDuplicates(runId, type);
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "IMPORT_DUPLICATES_UNAVAILABLE",
+                    "Unable to load facility import duplicates from TUSO");
         }
-        JsonNode totals = run.path("totals");
-        Map<String, Object> buckets = new LinkedHashMap<>();
-        buckets.put("missing_facility_code", totals.path("missingFacilityCode").asLong(0));
-        buckets.put("duplicate_facility_code", totals.path("duplicateFacilityCode").asLong(0));
-        buckets.put("duplicate_facility_name", totals.path("duplicateFacilityName").asLong(0));
-        buckets.put("acceptable_missing", totals.path("acceptableMissing").asLong(0));
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("contract", "facility-import-run-review-v1");
-        data.put("runId", runId);
-        data.put("buckets", buckets);
-        data.put("rowLevelDetailAvailable", false);
-        data.put("message", "Review counts are real; per-row review detail requires row-level staging "
-                + "(next backend slice). Excluded/review source datasets remain authoritative for rows.");
-        return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+    }
+
+    /** Rows excluded for missing facility code. */
+    @GetMapping("/facility-import-runs/{runId}/missing-code")
+    public ResponseEntity<Map<String, Object>> getRunMissingCode(
+            @PathVariable long runId,
+            @RequestParam Map<String, String> params,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        try {
+            JsonNode data = tusoClient.getFacilityImportRunMissingCode(runId, buildQuery(params));
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "IMPORT_MISSING_CODE_UNAVAILABLE",
+                    "Unable to load missing-code rows from TUSO");
+        }
+    }
+
+    /** Import-eligible rows carrying acceptable-missing fields. */
+    @GetMapping("/facility-import-runs/{runId}/acceptable-missing")
+    public ResponseEntity<Map<String, Object>> getRunAcceptableMissing(
+            @PathVariable long runId,
+            @RequestParam Map<String, String> params,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        try {
+            JsonNode data = tusoClient.getFacilityImportRunAcceptableMissing(runId, buildQuery(params));
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "IMPORT_ACCEPTABLE_MISSING_UNAVAILABLE",
+                    "Unable to load acceptable-missing rows from TUSO");
+        }
+    }
+
+    /** Forward only the recognised row filters/pagination params (drop unknowns) as a query string. */
+    private static String buildQuery(Map<String, String> params) {
+        if (params == null || params.isEmpty()) {
+            return "";
+        }
+        java.util.List<String> allowed = java.util.List.of("status", "outcome", "duplicateType",
+                "province", "district", "facilityCode", "facilityName", "hasAcceptableMissingFields",
+                "page", "size");
+        StringBuilder sb = new StringBuilder();
+        for (String key : allowed) {
+            String v = params.get(key);
+            if (v != null && !v.isBlank()) {
+                if (sb.length() > 0) {
+                    sb.append('&');
+                }
+                sb.append(URLEncoder.encode(key, StandardCharsets.UTF_8))
+                        .append('=')
+                        .append(URLEncoder.encode(v, StandardCharsets.UTF_8));
+            }
+        }
+        return sb.toString();
     }
 
     @GetMapping("/facilities/{facilityId}/import-provenance")
