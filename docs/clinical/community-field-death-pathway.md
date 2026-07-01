@@ -1,9 +1,10 @@
 # Community / Field Death Pathway — contract refinement (product-owner directed)
 
-**Status:** Design spec / follow-up. **Owner:** death-pathway team (PCT DeathCase + UBOMI CRVS + mobile
-`deathPathwayService`). **Origin:** raised while flagging the pre-existing `deathPathwayService.test.ts`
-failure during the Encounter Structured Forms work; expanded into a proper model by the product owner.
-This document is a **specification to implement**, not implemented behaviour.
+**Status:** **Implemented** (PCT DeathCase + UBOMI CRVS + experience-BFF + mobile `deathPathwayService`).
+**Owner:** death-pathway team. **Origin:** raised while flagging the pre-existing
+`deathPathwayService.test.ts` failure during the Encounter Structured Forms work; expanded into a
+proper model by the product owner. See the **Implementation notes** section at the foot for the two
+concrete decisions taken during build.
 
 ## Why
 
@@ -118,3 +119,31 @@ under test is a provider-**confirmed** field death (→ `/death/confirm` + `COMM
 - WHO Verbal Autopsy standard (ascertaining/attributing causes of death, incl. outside health facilities).
 - WHO safe and dignified burial protocol (infection control + family/religious involvement).
 - IFRC Safe and Dignified Burial guide (safe handling of bodies during outbreaks as public-health intervention).
+
+## Implementation notes
+
+Two decisions were taken during the build and are worth recording:
+
+1. **The failing mobile test — confirm vs report.** The provider app CONFIRMS when an authorised
+   provider is present (a confirmation, not a report), and only REPORTS when relaying an unverified
+   community death. So the flow previously under test split three ways:
+   `confirmFieldDeath()` → `/confirm` + `sourceContext: COMMUNITY_FIELD` (+ `bodyDispositionContext`);
+   `reportBroughtInDead()` → `/brought-in-dead`; `reportCommunityDeath()` → `/community-report`
+   (unverified, opens the case in status `REPORTED`). The test and service were aligned to this, not
+   collapsed.
+
+2. **Verbal-autopsy / field-body-management endpoints are case-scoped.** They attach to an existing
+   death case, so they are sub-resources — `/internal/v1/death/cases/{caseId}/verbal-autopsy` and
+   `/internal/v1/death/cases/{caseId}/field-body-management` (BFF), backed by
+   `/v1/death/{caseId}/verbal-autopsy` and `/v1/death/{caseId}/field-body-management` in PCT — rather
+   than the flat `/death/verbal-autopsy` / `/death/field-body-management` shown illustratively in the
+   endpoint table above. This matches the existing case sub-resource convention (`/cases/{id}/certify`,
+   `/cases/{id}/body/...`, `/cases/{id}/documents`).
+
+**Where it lives:** PCT owns the `DeathCase` — `pct_death_cases` gains `source_context` (widened to the
+full origin taxonomy), `body_disposition_context`, `cause_of_death_basis` and reporter provenance;
+`pct_verbal_autopsy` and `pct_field_body_management` are new child tables (no new sovereign service).
+Ubomi owns CRVS — `ubomi.death_notification` records `cause_of_death_basis` so a verbal-autopsy
+probable cause is registrable yet never counted as medically certified. A signed medical certificate
+always sets `MEDICALLY_CERTIFIED`; a verbal autopsy sets `VERBAL_AUTOPSY_PROBABLE` and can never be
+attached to an already-certified death. Payment never gates any of it.
