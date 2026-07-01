@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpStatusCodeException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 
@@ -209,6 +210,104 @@ public class AdminFacilityImportController {
         data.put("checklist", prov.path("checklist"));
         data.put("downstreamMaterialisationStatus", prov.path("downstreamMaterialisationStatus").asText(null));
         return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+    }
+
+    // ---- Review-decision mutations (RBAC-protected admin namespace; business rules live in TUSO) ----
+
+    @PostMapping("/facility-import-runs/{runId}/rows/{rowId}/supply-code")
+    public ResponseEntity<Map<String, Object>> supplyCode(
+            @PathVariable long runId, @PathVariable long rowId, @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        return proxyRowAction(runId, rowId, "supply-code", body, requestId, correlationId);
+    }
+
+    @PostMapping("/facility-import-runs/{runId}/rows/{rowId}/reject")
+    public ResponseEntity<Map<String, Object>> reject(
+            @PathVariable long runId, @PathVariable long rowId, @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        return proxyRowAction(runId, rowId, "reject", body, requestId, correlationId);
+    }
+
+    @PostMapping("/facility-import-runs/{runId}/rows/{rowId}/skip")
+    public ResponseEntity<Map<String, Object>> skip(
+            @PathVariable long runId, @PathVariable long rowId, @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        return proxyRowAction(runId, rowId, "skip", body, requestId, correlationId);
+    }
+
+    @PostMapping("/facility-import-runs/{runId}/rows/{rowId}/match-existing")
+    public ResponseEntity<Map<String, Object>> matchExisting(
+            @PathVariable long runId, @PathVariable long rowId, @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        return proxyRowAction(runId, rowId, "match-existing", body, requestId, correlationId);
+    }
+
+    @PostMapping("/facility-import-runs/{runId}/rows/{rowId}/resolve-distinct")
+    public ResponseEntity<Map<String, Object>> resolveDistinct(
+            @PathVariable long runId, @PathVariable long rowId, @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        return proxyRowAction(runId, rowId, "resolve-distinct", body, requestId, correlationId);
+    }
+
+    @PatchMapping("/facility-import-runs/{runId}/rows/{rowId}/canonical-values")
+    public ResponseEntity<Map<String, Object>> updateCanonical(
+            @PathVariable long runId, @PathVariable long rowId, @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        return proxyRowAction(runId, rowId, "canonical-values", body, requestId, correlationId);
+    }
+
+    @PostMapping("/facility-import-runs/{runId}/rows/{rowId}/approve")
+    public ResponseEntity<Map<String, Object>> approve(
+            @PathVariable long runId, @PathVariable long rowId,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        return proxyRowAction(runId, rowId, "approve", null, requestId, correlationId);
+    }
+
+    @PostMapping("/facility-import-runs/{runId}/apply-approved")
+    public ResponseEntity<Map<String, Object>> applyApproved(
+            @PathVariable long runId, @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        try {
+            JsonNode data = tusoClient.postImportRunAction(runId, "apply-approved", body);
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (HttpStatusCodeException e) {
+            return passthrough(e, requestId, correlationId);
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "APPLY_APPROVED_FAILED",
+                    "Unable to apply approved rows via TUSO");
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> proxyRowAction(
+            long runId, long rowId, String action, Map<String, Object> body,
+            String requestId, String correlationId) {
+        try {
+            JsonNode data = tusoClient.postImportRowAction(runId, rowId, action, body);
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (HttpStatusCodeException e) {
+            return passthrough(e, requestId, correlationId);
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "IMPORT_ROW_ACTION_FAILED",
+                    "Unable to apply review decision via TUSO");
+        }
+    }
+
+    /** Propagate a downstream 4xx (validation/conflict) with its status + message, not a 502. */
+    private ResponseEntity<Map<String, Object>> passthrough(
+            HttpStatusCodeException e, String requestId, String correlationId) {
+        String message = e.getResponseBodyAsString();
+        return ResponseEntity.status(e.getStatusCode()).body(Map.of(
+                "error", Map.of("code", "IMPORT_REVIEW_REJECTED",
+                        "message", message == null || message.isBlank() ? e.getStatusText() : message),
+                "meta", meta(requestId, correlationId)));
     }
 
     private static Map<String, Object> meta(String requestId, String correlationId) {

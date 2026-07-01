@@ -93,6 +93,41 @@ class AdminFacilityImportControllerTest {
         assertFalse(response.getBody().containsKey("error"));
     }
 
+    @Test
+    void supplyCodeProxiesToTuso() {
+        var controller = new AdminFacilityImportController(new StubTusoClient());
+
+        ResponseEntity<Map<String, Object>> response = controller.supplyCode(
+                7L, 1L, Map.of("facilityCode", "ZWX1"), "req-1", "corr-1");
+
+        assertEquals(200, response.getStatusCode().value());
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertEquals("CORRECTED_READY_FOR_IMPORT", data.path("decisionStatus").asText());
+    }
+
+    @Test
+    void applyApprovedProxiesToTuso() {
+        var controller = new AdminFacilityImportController(new StubTusoClient());
+
+        ResponseEntity<Map<String, Object>> response =
+                controller.applyApproved(7L, Map.of(), "req-1", "corr-1");
+
+        assertEquals(200, response.getStatusCode().value());
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertEquals(1, data.path("applied").asInt());
+    }
+
+    @Test
+    void downstreamConflictIsPropagatedNotMaskedAs502() {
+        var controller = new AdminFacilityImportController(new ConflictTusoClient());
+
+        ResponseEntity<Map<String, Object>> response =
+                controller.approve(7L, 1L, "req-1", "corr-1");
+
+        assertEquals(409, response.getStatusCode().value());
+        assertTrue(response.getBody().containsKey("error"));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -145,6 +180,29 @@ class AdminFacilityImportControllerTest {
                     + "\"acceptableMissing\":{\"missingLatitude\":true},"
                     + "\"checklist\":[{\"key\":\"queues\",\"status\":\"PENDING_DOWNSTREAM\",\"owner\":\"PCT\"}],"
                     + "\"downstreamMaterialisationStatus\":\"PENDING_CONFIGURATION\"}");
+        }
+
+        @Override
+        public JsonNode postImportRowAction(long runId, long rowId, String action, Object body) {
+            return node("{\"id\":1,\"decisionStatus\":\"CORRECTED_READY_FOR_IMPORT\"}");
+        }
+
+        @Override
+        public JsonNode postImportRunAction(long runId, String action, Object body) {
+            return node("{\"applied\":1,\"skipped\":0,\"rows\":[]}");
+        }
+    }
+
+    private static final class ConflictTusoClient extends TusoServiceClient {
+        private ConflictTusoClient() {
+            super(new RestTemplate(), endpoints());
+        }
+
+        @Override
+        public JsonNode postImportRowAction(long runId, long rowId, String action, Object body) {
+            throw org.springframework.web.client.HttpClientErrorException.create(
+                    org.springframework.http.HttpStatus.CONFLICT, "Conflict",
+                    org.springframework.http.HttpHeaders.EMPTY, new byte[0], null);
         }
     }
 

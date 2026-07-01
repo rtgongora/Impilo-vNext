@@ -190,6 +190,20 @@ public class TusoServiceClient {
         return (query == null || query.isBlank()) ? "" : "?" + query;
     }
 
+    /** POST a review-decision mutation for an import row and return the updated row/result. */
+    public JsonNode postImportRowAction(long runId, long rowId, String action, Object body) {
+        String url = baseUrl + "/v1/internal/facilities/import/runs/" + runId + "/rows/" + rowId + "/" + action;
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** POST apply-approved for a run (POST used since the request factory lacks PATCH). */
+    public JsonNode postImportRunAction(long runId, String action, Object body) {
+        String url = baseUrl + "/v1/internal/facilities/import/runs/" + runId + "/" + action;
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Facility import provenance + configuration-completeness checklist. */
     public JsonNode getFacilityImportProvenance(long facilityId) {
         String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/import-provenance";
