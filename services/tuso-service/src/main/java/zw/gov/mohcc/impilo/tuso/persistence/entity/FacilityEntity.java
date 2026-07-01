@@ -19,6 +19,14 @@ public class FacilityEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Canonical facility UUID (facility-lifecycle wave, Option 1). Stable, service-neutral facility
+     * identity that downstream services (PCT queues/care locations, Dura stores, Ndila map points,
+     * Vashandi locations) key off, instead of correlating TUSO's numeric id to per-service UUIDs.
+     */
+    @Column(name = "facility_uuid", unique = true, updatable = false)
+    private UUID facilityUuid;
+
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
@@ -142,6 +150,9 @@ public class FacilityEntity {
     protected void onCreate() {
         createdAt = Instant.now();
         updatedAt = Instant.now();
+        if (facilityUuid == null) {
+            facilityUuid = UUID.randomUUID();
+        }
     }
 
     @PreUpdate
@@ -153,6 +164,9 @@ public class FacilityEntity {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public UUID getFacilityUuid() { return facilityUuid; }
+    public void setFacilityUuid(UUID facilityUuid) { this.facilityUuid = facilityUuid; }
 
     public UUID getTenantId() { return tenantId; }
     public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }

@@ -94,6 +94,23 @@ parked as a decision, not implemented on assumption. **Options:**
 "one anchor, many IDs" doctrine, keeps PCT's UUID model, and makes every downstream materialisation
 (Dura stores, Ndila map points, Vashandi locations) key off one stable id.
 
+### DECISION TAKEN: Option 1 — increment status
+
+Proceeding with Option 1. Incremental, verified delivery (each increment compiles/tests before push):
+
+- **Increment 1 — TUSO canonical facility UUID keystone (LANDED 2026-07-01):** additive migration
+  `V013__facility_canonical_uuid.sql` (add `facility_uuid`, backfill existing, default
+  `gen_random_uuid()`, NOT NULL, unique index) + `FacilityEntity.facilityUuid` generated in
+  `@PrePersist`. Verified: `tuso-service` compiles offline. **Compile-verified + SQL-reviewed; the
+  migration is additive/idempotent but was NOT executed against a DB in-sandbox** (no DB here).
+- **Increment 2 (next):** expose `facilityUuid` in `FacilityResponse` + include it in the facility /
+  service-point event payloads (`WorkspaceService`/`ServicePointService`/`FacilityService`).
+- **Increment 3 (next):** PCT `QueueMaterializationService.reconcileFacilityQueues(tenantId,
+  facilityUuid)` upserting `QueueEntity` from TUSO service-points; wire `PctEventConsumer`; add a TUSO
+  endpoint that lists a facility's queue definitions (service-points-with-queueId) or delete the dead
+  `getQueueDefinitions`; drop seed-as-truth reliance.
+- **Increment 4 (next):** honest sync/materialisation status in the web/mobile queue viewer.
+
 ## Implementation plan once the id decision is made (otherwise ready)
 
 1. `QueueMaterializationService` in pct-service — `reconcileFacilityQueues(tenantId, facilityRef)`:
