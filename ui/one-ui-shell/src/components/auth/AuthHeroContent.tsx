@@ -24,10 +24,18 @@ export function AuthHeroContent({ variant = "desktop" }: AuthHeroContentProps) {
       <p
         className={
           isCompact
-            ? "text-[11px] font-semibold uppercase tracking-[0.2em] text-[#D4AF37]"
-            : "text-xs font-semibold uppercase tracking-[0.24em] text-[#D4AF37]"
+            ? "flex items-baseline gap-1.5 font-rounded text-lg font-semibold tracking-tight text-white sm:text-xl"
+            : "flex items-baseline gap-2 font-rounded text-2xl font-semibold tracking-tight text-white xl:text-[1.75rem]"
         }
       >
+        <span
+          aria-hidden
+          className={
+            isCompact
+              ? "inline-block h-2 w-2 shrink-0 translate-y-[-0.1em] rounded-full bg-[#D4AF37]"
+              : "inline-block h-2.5 w-2.5 shrink-0 translate-y-[-0.15em] rounded-full bg-[#D4AF37]"
+          }
+        />
         One Health OS.
       </p>
 

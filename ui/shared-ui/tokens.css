@@ -66,6 +66,10 @@
   /* Typography */
   --font-sans: "Inter", system-ui, sans-serif;
   --font-serif: "Source Serif 4", Georgia, serif;
+  /* Rounded/display stack — warm, premium wordmark feel. Uses the CSS
+     `ui-rounded` generic (SF Pro Rounded on Apple) and degrades gracefully
+     to the locally bundled Inter. No external/unlicensed font assets. */
+  --font-rounded: ui-rounded, "SF Pro Rounded", "Inter", system-ui, sans-serif;
 
   /* Spacing (4px base) */
   --space-unit: 4px;

@@ -88,6 +88,7 @@ const impiloPreset: Partial<Config> = {
       fontFamily: {
         sans: ['"Inter"', "system-ui", "sans-serif"],
         serif: ['"Source Serif 4"', "Georgia", "serif"],
+        rounded: ["ui-rounded", '"SF Pro Rounded"', '"Inter"', "system-ui", "sans-serif"],
       },
       borderRadius: {
         DEFAULT: "var(--radius-default)",

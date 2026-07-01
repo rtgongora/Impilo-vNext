@@ -14,6 +14,14 @@ export function AuthHeroAfroFuturistBackground() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_18%_82%,rgba(212,175,55,0.1),transparent_55%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_88%_12%,rgba(34,197,94,0.14),transparent_50%)]" />
 
+      {/* Brand Afro textile — canonical Impilo african-print motif, tiled and
+          blended so it reads as a subtle Zimbabwean/African textile grain
+          rather than added clutter. Theme-aware via the shared design token. */}
+      <div
+        className="auth-hero-afro-textile absolute inset-0 opacity-60 mix-blend-soft-light"
+        style={{ backgroundImage: "var(--impilo-african-print)", backgroundSize: "44px 44px" }}
+      />
+
       {/* Linework canvas */}
       <svg
         className="auth-hero-afro-svg absolute inset-0 h-full w-full"
