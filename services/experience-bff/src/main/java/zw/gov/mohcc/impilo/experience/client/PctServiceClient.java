@@ -1245,6 +1245,52 @@ public class PctServiceClient {
         return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/documents", body, JsonNode.class));
     }
 
+    // ── Encounter Structured Forms (PCT owns resolver + responses) ──
+
+    public JsonNode resolveEncounterForms(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/forms/resolve", body, JsonNode.class));
+    }
+
+    public JsonNode createFormResponse(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/forms/responses", body, JsonNode.class));
+    }
+
+    public JsonNode getFormResponse(String responseId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/forms/responses/" + responseId, JsonNode.class));
+    }
+
+    public JsonNode updateFormAnswers(String responseId, Map<String, Object> body) {
+        return extractData(restTemplate.exchange(
+                baseUrl + "/v1/forms/responses/" + responseId + "/answers",
+                HttpMethod.PATCH, new HttpEntity<>(body), JsonNode.class));
+    }
+
+    public JsonNode submitFormResponse(String responseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/forms/responses/" + responseId + "/submit", body, JsonNode.class));
+    }
+
+    public JsonNode countersignFormResponse(String responseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/forms/responses/" + responseId + "/countersign", body, JsonNode.class));
+    }
+
+    public JsonNode amendFormResponse(String responseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/forms/responses/" + responseId + "/amend", body, JsonNode.class));
+    }
+
+    public JsonNode voidFormResponse(String responseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/forms/responses/" + responseId + "/void", body, JsonNode.class));
+    }
+
+    public JsonNode listEncounterFormResponses(String encounterId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/encounters/" + encounterId + "/form-responses", JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

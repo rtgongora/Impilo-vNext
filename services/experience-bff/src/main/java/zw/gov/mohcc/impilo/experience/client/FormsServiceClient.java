@@ -85,4 +85,18 @@ public class FormsServiceClient {
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return response.getBody();
     }
+
+    /** Clinical form catalog (resolver slice: applicability + immutable version + DAK definition). */
+    public JsonNode catalog() {
+        ResponseEntity<JsonNode> response =
+                restTemplate.getForEntity(baseUrl + "/internal/v1/forms/catalog", JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Idempotent upsert of a clinical (WHO-DAK) encounter form definition. */
+    public JsonNode upsertClinicalForm(Map<String, Object> body) {
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(baseUrl + "/internal/v1/forms/clinical", body, JsonNode.class);
+        return response.getBody();
+    }
 }

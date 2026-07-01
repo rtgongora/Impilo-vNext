@@ -55,6 +55,28 @@ public class ExtensionController {
         return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of()));
     }
 
+    /** Clinical encounter-form catalog (applicability + immutable version + DAK definition). */
+    @GetMapping("/forms/catalog")
+    public ResponseEntity<Map<String, Object>> formsCatalog(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        try {
+            JsonNode result = formsClient.catalog();
+            return ResponseEntity.ok(Map.of("data", result != null ? result : new Object[0]));
+        } catch (Exception e) {
+            log.error("Forms catalog failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of("data", new Object[0]));
+        }
+    }
+
+    /** Upsert a clinical (WHO-DAK) encounter form definition. */
+    @PostMapping("/forms/clinical")
+    public ResponseEntity<Map<String, Object>> upsertClinicalForm(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        JsonNode result = formsClient.upsertClinicalForm(body);
+        return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of()));
+    }
+
     @GetMapping("/forms/{formId}")
     public ResponseEntity<Map<String, Object>> getForm(
             @PathVariable String formId,

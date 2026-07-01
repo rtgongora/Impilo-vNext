@@ -6,8 +6,11 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.FormsServiceClient;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,12 +31,17 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/provider/forms")
 public class MobileFormController {
 
+    private static final Logger log = LoggerFactory.getLogger(MobileFormController.class);
+
     private final ObjectMapper objectMapper;
     private final FormsServiceClient formsClient;
+    private final PctServiceClient pctClient;
 
-    public MobileFormController(ObjectMapper objectMapper, FormsServiceClient formsClient) {
+    public MobileFormController(ObjectMapper objectMapper, FormsServiceClient formsClient,
+                                PctServiceClient pctClient) {
         this.objectMapper = objectMapper;
         this.formsClient = formsClient;
+        this.pctClient = pctClient;
     }
 
     public record SubmitFormRequest(
@@ -100,38 +108,9 @@ public class MobileFormController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody SubmitFormByIdRequest request) {
-
-        UUID submissionId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
-
-        String formDataJson;
-        try {
-            formDataJson = objectMapper.writeValueAsString(request.form_data());
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize form data", e);
-        }
-
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("form_id", id.toString());
-        attributes.put("encounter_id", request.encounter_id());
-        attributes.put("patient_id", request.patient_id());
-        attributes.put("submitted_by", request.submitted_by());
-        attributes.put("form_data", request.form_data());
-        attributes.put("status", "SUBMITTED");
-        attributes.put("submitted_at", now);
-        attributes.put("created_at", now);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", submissionId.toString(),
-                "type", "FormSubmission",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
+        String formKey = resolveFormKey(id.toString());
+        Map<String, Object> response = persistViaPct(formKey, id.toString(), request.encounter_id(),
+                request.patient_id(), request.submitted_by(), request.form_data(), requestId, correlationId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -143,39 +122,88 @@ public class MobileFormController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody SubmitFormRequest request) {
+        String formKey = resolveFormKey(request.form_id());
+        Map<String, Object> response = persistViaPct(formKey, request.form_id(), request.encounter_id(),
+                request.patient_id(), request.submitted_by(), request.form_data(), requestId, correlationId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 
-        UUID submissionId = UUID.randomUUID();
+    /**
+     * Persist a mobile form submission through the canonical PCT response path (draft → submit), so the
+     * submission is a real version-locked, extractable, audited encounter form response — not a throwaway
+     * client UUID. The response envelope stays backward-compatible (id = the persisted PCT responseId).
+     * Falls back to an unpersisted envelope only if PCT/forms are unavailable, so the mobile flow degrades
+     * rather than fails.
+     */
+    private Map<String, Object> persistViaPct(String formKey, String formId, String encounterId,
+                                              String patientId, String submittedBy,
+                                              Map<String, Object> formData, String requestId, String correlationId) {
         OffsetDateTime now = OffsetDateTime.now();
-
-        String formDataJson;
+        String status = "SUBMITTED";
+        String persistedId = null;
         try {
-            formDataJson = objectMapper.writeValueAsString(request.form_data());
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize form data", e);
+            if (formKey == null || formKey.isBlank()) {
+                throw new IllegalStateException("no formKey for schema " + formId);
+            }
+            Map<String, Object> draftBody = new LinkedHashMap<>();
+            draftBody.put("encounterId", parseEncounterId(encounterId));
+            draftBody.put("formKey", formKey);
+            draftBody.put("answers", formData);
+            JsonNode draft = pctClient.createFormResponse(draftBody);
+            String responseId = draft != null && draft.hasNonNull("responseId")
+                    ? draft.get("responseId").asText() : null;
+            if (responseId != null) {
+                JsonNode submitted = pctClient.submitFormResponse(responseId, Map.of());
+                persistedId = responseId;
+                if (submitted != null && submitted.hasNonNull("status")) {
+                    status = submitted.get("status").asText();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Mobile form submit could not persist via PCT (form={}, encounter={}): {} — returning "
+                    + "unpersisted envelope", formId, encounterId, e.getMessage());
         }
 
         Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("form_id", request.form_id());
-        attributes.put("encounter_id", request.encounter_id());
-        attributes.put("patient_id", request.patient_id());
-        attributes.put("submitted_by", request.submitted_by());
-        attributes.put("form_data", request.form_data());
-        attributes.put("status", "SUBMITTED");
+        attributes.put("form_id", formId);
+        attributes.put("encounter_id", encounterId);
+        attributes.put("patient_id", patientId);
+        attributes.put("submitted_by", submittedBy);
+        attributes.put("form_data", formData);
+        attributes.put("status", status);
+        attributes.put("persisted", persistedId != null);
         attributes.put("submitted_at", now);
         attributes.put("created_at", now);
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", submissionId.toString(),
-                "type", "FormSubmission",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("id", persistedId != null ? persistedId : UUID.randomUUID().toString());
+        data.put("type", "FormSubmission");
+        data.put("attributes", attributes);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data);
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return response;
+    }
+
+    private String resolveFormKey(String schemaId) {
+        try {
+            JsonNode schema = formsClient.getSchema(schemaId);
+            if (schema != null && schema.hasNonNull("formKey")) {
+                return schema.get("formKey").asText();
+            }
+        } catch (Exception e) {
+            log.warn("Could not resolve formKey for schema {}: {}", schemaId, e.getMessage());
+        }
+        return null;
+    }
+
+    private Object parseEncounterId(String raw) {
+        try {
+            return Long.parseLong(raw.trim());
+        } catch (NumberFormatException e) {
+            return raw;
+        }
     }
 
     @GetMapping("/submissions")
