@@ -22,7 +22,7 @@ function isPng(file: string): boolean {
  * the registry path 404s until an asset is supplied. Keep this list SHORT and
  * documented; a new entry here should be a deliberate, reported gap.
  */
-const KNOWN_MISSING_LOGOS = new Set(["patient-safety"]);
+const KNOWN_MISSING_LOGOS = new Set<string>([]);
 
 describe("brand assets — service logos", () => {
   it("every registry logo path resolves to a real PNG (except documented known-missing)", () => {
