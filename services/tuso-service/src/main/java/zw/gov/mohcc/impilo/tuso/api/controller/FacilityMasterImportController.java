@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -139,6 +140,79 @@ public class FacilityMasterImportController {
         TrustContext ctx = TrustContextHolder.require();
         var rows = importService.searchRows(runId, null, null, null, null, null, null, true, page, size);
         return ResponseEntity.ok(ApiResponse.ok(rows, ctx.correlationId().toString()));
+    }
+
+    // ---- Review-decision mutations (reviewer identity from trust context) ----
+
+    @PostMapping("/runs/{runId}/rows/{rowId}/supply-code")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.FacilityImportRowView>> supplyCode(
+            @PathVariable Long runId, @PathVariable Long rowId,
+            @RequestBody FacilityImportRowDtos.SupplyCodeRequest req) {
+        TrustContext ctx = TrustContextHolder.require();
+        var row = importService.supplyCode(runId, rowId, req.facilityCode(), req.reason());
+        return ResponseEntity.ok(ApiResponse.ok(row, ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/runs/{runId}/rows/{rowId}/reject")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.FacilityImportRowView>> reject(
+            @PathVariable Long runId, @PathVariable Long rowId,
+            @RequestBody(required = false) FacilityImportRowDtos.ReasonRequest req) {
+        TrustContext ctx = TrustContextHolder.require();
+        var row = importService.rejectRow(runId, rowId, req != null ? req.reason() : null);
+        return ResponseEntity.ok(ApiResponse.ok(row, ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/runs/{runId}/rows/{rowId}/skip")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.FacilityImportRowView>> skip(
+            @PathVariable Long runId, @PathVariable Long rowId,
+            @RequestBody(required = false) FacilityImportRowDtos.ReasonRequest req) {
+        TrustContext ctx = TrustContextHolder.require();
+        var row = importService.skipRow(runId, rowId, req != null ? req.reason() : null);
+        return ResponseEntity.ok(ApiResponse.ok(row, ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/runs/{runId}/rows/{rowId}/match-existing")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.FacilityImportRowView>> matchExisting(
+            @PathVariable Long runId, @PathVariable Long rowId,
+            @RequestBody FacilityImportRowDtos.MatchExistingRequest req) {
+        TrustContext ctx = TrustContextHolder.require();
+        var row = importService.matchExisting(runId, rowId, req.facilityId(), req.reason());
+        return ResponseEntity.ok(ApiResponse.ok(row, ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/runs/{runId}/rows/{rowId}/resolve-distinct")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.FacilityImportRowView>> resolveDistinct(
+            @PathVariable Long runId, @PathVariable Long rowId,
+            @RequestBody FacilityImportRowDtos.ReasonRequest req) {
+        TrustContext ctx = TrustContextHolder.require();
+        var row = importService.resolveDistinct(runId, rowId, req != null ? req.reason() : null);
+        return ResponseEntity.ok(ApiResponse.ok(row, ctx.correlationId().toString()));
+    }
+
+    @PatchMapping("/runs/{runId}/rows/{rowId}/canonical-values")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.FacilityImportRowView>> updateCanonical(
+            @PathVariable Long runId, @PathVariable Long rowId,
+            @RequestBody FacilityImportRowDtos.CanonicalValuesRequest req) {
+        TrustContext ctx = TrustContextHolder.require();
+        var row = importService.updateCanonical(runId, rowId, req);
+        return ResponseEntity.ok(ApiResponse.ok(row, ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/runs/{runId}/rows/{rowId}/approve")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.FacilityImportRowView>> approve(
+            @PathVariable Long runId, @PathVariable Long rowId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var row = importService.approveRow(runId, rowId);
+        return ResponseEntity.ok(ApiResponse.ok(row, ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/runs/{runId}/apply-approved")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.ApplyApprovedResponse>> applyApproved(
+            @PathVariable Long runId,
+            @RequestBody(required = false) FacilityImportRowDtos.ApplyApprovedRequest req) {
+        TrustContext ctx = TrustContextHolder.require();
+        var result = importService.applyApproved(runId, req != null ? req.rowIds() : null);
+        return ResponseEntity.ok(ApiResponse.ok(result, ctx.correlationId().toString()));
     }
 
     @GetMapping("/master-pack/quality-report")

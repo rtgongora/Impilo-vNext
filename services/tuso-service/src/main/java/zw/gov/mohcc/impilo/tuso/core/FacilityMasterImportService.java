@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityImportRowDtos;
@@ -368,7 +370,18 @@ public class FacilityMasterImportService {
         boolean hasMissing = missing.values().stream().anyMatch(v -> Boolean.TRUE.equals(v));
         e.setAcceptableMissing(missing);
         e.setHasAcceptableMissing(hasMissing);
+        e.setDecisionStatus(initialDecisionStatus(d.outcome()));
         return e;
+    }
+
+    /** Initial review lifecycle state derived from the immutable import outcome. */
+    private static String initialDecisionStatus(String outcome) {
+        return switch (outcome) {
+            case FacilityImportRowEntity.IMPORTED -> FacilityImportRowEntity.DS_IMPORTED;
+            case FacilityImportRowEntity.READY_FOR_IMPORT -> FacilityImportRowEntity.DS_READY_FOR_IMPORT;
+            case FacilityImportRowEntity.FAILED -> FacilityImportRowEntity.DS_FAILED;
+            default -> FacilityImportRowEntity.DS_PENDING_REVIEW;
+        };
     }
 
     private static String extractSourceRow(FacilityMasterImportDtos.MasterFacilitySeedRecord r) {
@@ -522,6 +535,333 @@ public class FacilityMasterImportService {
         return new FacilityImportRowDtos.Bucket(count, preview);
     }
 
+    // ============================ Review-decision mutations ============================
+
+    /** Supply/link a facility code for a missing-code row; conflicts leave the row in review. */
+    @Transactional
+    public FacilityImportRowDtos.FacilityImportRowView supplyCode(
+            Long runId, Long rowId, String facilityCode, String reason) {
+        UUID tenantId = requireRun(runId).getTenantId();
+        FacilityImportRowEntity row = requireRow(runId, rowId);
+        assertNotTerminal(row);
+        String code = facilityCode == null ? null : facilityCode.trim();
+        if (code == null || code.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Facility code must not be blank");
+        }
+        String prev = row.getDecisionStatus();
+        String conflict = codeConflict(tenantId, runId, rowId, code, row.getMatchedFacilityId());
+        row.setFacilityCode(code);
+        if (conflict != null) {
+            row.setConflictReason(conflict);
+            row.setDecisionStatus(FacilityImportRowEntity.DS_RESOLUTION_CONFLICT);
+            row.setReviewDecision("SUPPLY_CODE");
+            recordReview(row, "SUPPLY_CODE", prev, reason, java.util.Map.of("facility_code", code), "CONFLICT:" + conflict);
+        } else {
+            row.setConflictReason(null);
+            row.setDecisionStatus(FacilityImportRowEntity.DS_CORRECTED_READY_FOR_IMPORT);
+            row.setReviewDecision("SUPPLY_CODE");
+            recordReview(row, "SUPPLY_CODE", prev, reason, java.util.Map.of("facility_code", code), "OK");
+        }
+        return toRowView(importRowRepository.save(row));
+    }
+
+    @Transactional
+    public FacilityImportRowDtos.FacilityImportRowView rejectRow(Long runId, Long rowId, String reason) {
+        return terminalDecision(runId, rowId, "REJECT", FacilityImportRowEntity.DS_REJECTED, reason);
+    }
+
+    @Transactional
+    public FacilityImportRowDtos.FacilityImportRowView skipRow(Long runId, Long rowId, String reason) {
+        return terminalDecision(runId, rowId, "SKIP", FacilityImportRowEntity.DS_SKIPPED, reason);
+    }
+
+    private FacilityImportRowDtos.FacilityImportRowView terminalDecision(
+            Long runId, Long rowId, String action, String newStatus, String reason) {
+        requireRun(runId);
+        FacilityImportRowEntity row = requireRow(runId, rowId);
+        if (FacilityImportRowEntity.DS_IMPORTED.equals(row.getDecisionStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Row already imported; use a facility update workflow instead");
+        }
+        String prev = row.getDecisionStatus();
+        row.setDecisionStatus(newStatus);
+        row.setReviewDecision(action);
+        recordReview(row, action, prev, reason, null, "OK");
+        return toRowView(importRowRepository.save(row));
+    }
+
+    /** Match a row to an existing TUSO facility (imports as fill-missing update, preserving internal id). */
+    @Transactional
+    public FacilityImportRowDtos.FacilityImportRowView matchExisting(
+            Long runId, Long rowId, Long facilityId, String reason) {
+        UUID tenantId = requireRun(runId).getTenantId();
+        FacilityImportRowEntity row = requireRow(runId, rowId);
+        assertNotTerminal(row);
+        FacilityEntity target = facilityRepository.findById(facilityId)
+                .filter(f -> tenantId.equals(f.getTenantId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Target facility not found: " + facilityId));
+        // Matching must not violate facility-code uniqueness against a DIFFERENT facility.
+        String code = row.getFacilityCode();
+        String conflict = codeConflict(tenantId, runId, rowId, code, target.getId());
+        String prev = row.getDecisionStatus();
+        row.setMatchedFacilityId(target.getId());
+        row.setReviewDecision("MATCHED_EXISTING_FACILITY");
+        if (conflict != null) {
+            row.setConflictReason(conflict);
+            row.setDecisionStatus(FacilityImportRowEntity.DS_RESOLUTION_CONFLICT);
+            recordReview(row, "MATCH_EXISTING", prev, reason,
+                    java.util.Map.of("matched_facility_id", target.getId()), "CONFLICT:" + conflict);
+        } else {
+            row.setConflictReason(null);
+            row.setDecisionStatus(FacilityImportRowEntity.DS_MATCHED_EXISTING_FACILITY);
+            recordReview(row, "MATCH_EXISTING", prev, reason,
+                    java.util.Map.of("matched_facility_id", target.getId()), "OK");
+        }
+        return toRowView(importRowRepository.save(row));
+    }
+
+    /** Resolve a duplicate row as a genuinely-distinct facility (reason required). */
+    @Transactional
+    public FacilityImportRowDtos.FacilityImportRowView resolveDistinct(Long runId, Long rowId, String reason) {
+        UUID tenantId = requireRun(runId).getTenantId();
+        FacilityImportRowEntity row = requireRow(runId, rowId);
+        assertNotTerminal(row);
+        if (reason == null || reason.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A reason is required to resolve a duplicate as a distinct facility");
+        }
+        // Two distinct facilities must not share an external facility code — a duplicate-code row must
+        // carry a non-conflicting code before it can be distinct.
+        String prev = row.getDecisionStatus();
+        if (FacilityImportRowEntity.DUP_TYPE_CODE.equals(row.getDuplicateType())) {
+            String conflict = codeConflict(tenantId, runId, rowId, row.getFacilityCode(), row.getMatchedFacilityId());
+            if (conflict != null) {
+                row.setConflictReason("Duplicate code must be changed before distinct resolution: " + conflict);
+                row.setDecisionStatus(FacilityImportRowEntity.DS_RESOLUTION_CONFLICT);
+                row.setReviewDecision("RESOLVE_DISTINCT");
+                recordReview(row, "RESOLVE_DISTINCT", prev, reason, null, "CONFLICT:" + conflict);
+                return toRowView(importRowRepository.save(row));
+            }
+        }
+        row.setConflictReason(null);
+        row.setReviewDecision("RESOLVED_AS_DISTINCT_FACILITY");
+        row.setDecisionStatus(FacilityImportRowEntity.DS_RESOLVED_AS_DISTINCT_FACILITY);
+        recordReview(row, "RESOLVE_DISTINCT", prev, reason, null, "OK");
+        return toRowView(importRowRepository.save(row));
+    }
+
+    /** Correct selected canonical fields (raw source values are never touched). */
+    @Transactional
+    public FacilityImportRowDtos.FacilityImportRowView updateCanonical(
+            Long runId, Long rowId, FacilityImportRowDtos.CanonicalValuesRequest req) {
+        requireRun(runId);
+        FacilityImportRowEntity row = requireRow(runId, rowId);
+        assertNotTerminal(row);
+        Map<String, Object> changed = new LinkedHashMap<>();
+        applyCanonicalChange(req.facilityCode(), row.getFacilityCode(), row::setFacilityCode, "facility_code", changed);
+        applyCanonicalChange(req.facilityName(), row.getFacilityName(), row::setFacilityName, "facility_name", changed);
+        applyCanonicalChange(req.province(), row.getProvince(), row::setProvince, "province", changed);
+        applyCanonicalChange(req.district(), row.getDistrict(), row::setDistrict, "district", changed);
+        applyCanonicalChange(req.facilityType(), row.getFacilityType(), row::setFacilityType, "facility_type", changed);
+        applyCanonicalChange(req.ownership(), row.getOwnership(), row::setOwnership, "ownership", changed);
+        applyCanonicalChange(req.operatingStatus(), row.getOperatingStatus(), row::setOperatingStatus, "operating_status", changed);
+        applyCanonicalChange(req.contact(), row.getContact(), row::setContact, "contact", changed);
+        if (req.latitude() != null) { row.setLatitude(req.latitude()); changed.put("latitude", req.latitude()); }
+        if (req.longitude() != null) { row.setLongitude(req.longitude()); changed.put("longitude", req.longitude()); }
+        if (req.bedCapacity() != null) { row.setBedCapacity(req.bedCapacity()); changed.put("bed_capacity", req.bedCapacity()); }
+        // Refresh acceptable-missing flags after edits so the gap view stays truthful.
+        Map<String, Object> missing = new LinkedHashMap<>();
+        missing.put("missing_latitude", row.getLatitude() == null);
+        missing.put("missing_longitude", row.getLongitude() == null);
+        missing.put("missing_facility_type", isBlank(row.getFacilityType()));
+        missing.put("missing_ownership", isBlank(row.getOwnership()));
+        missing.put("missing_operating_status", isBlank(row.getOperatingStatus()));
+        row.setAcceptableMissing(missing);
+        row.setHasAcceptableMissing(missing.values().stream().anyMatch(Boolean.TRUE::equals));
+        recordReview(row, "UPDATE_CANONICAL", row.getDecisionStatus(), req.reviewNotes(), changed, "OK");
+        return toRowView(importRowRepository.save(row));
+    }
+
+    /** Approve a resolved/corrected row for import. */
+    @Transactional
+    public FacilityImportRowDtos.FacilityImportRowView approveRow(Long runId, Long rowId) {
+        UUID tenantId = requireRun(runId).getTenantId();
+        FacilityImportRowEntity row = requireRow(runId, rowId);
+        if (FacilityImportRowEntity.DS_IMPORTED.equals(row.getDecisionStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Row already imported");
+        }
+        if (FacilityImportRowEntity.DS_REJECTED.equals(row.getDecisionStatus())
+                || FacilityImportRowEntity.DS_SKIPPED.equals(row.getDecisionStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Rejected/skipped rows cannot be approved");
+        }
+        if (isBlank(row.getFacilityCode())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Facility code required before approval");
+        }
+        String conflict = codeConflict(tenantId, runId, rowId, row.getFacilityCode(), row.getMatchedFacilityId());
+        if (conflict != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Facility code conflict: " + conflict);
+        }
+        if (FacilityImportRowEntity.DS_RESOLUTION_CONFLICT.equals(row.getDecisionStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Unresolved review conflict");
+        }
+        String prev = row.getDecisionStatus();
+        row.setDecisionStatus(FacilityImportRowEntity.DS_APPROVED_FOR_IMPORT);
+        recordReview(row, "APPROVE", prev, null, null, "OK");
+        return toRowView(importRowRepository.save(row));
+    }
+
+    /** Apply approved rows into TUSO (idempotent). rowIds null/empty = all approved rows in the run. */
+    @Transactional
+    public FacilityImportRowDtos.ApplyApprovedResponse applyApproved(Long runId, List<Long> rowIds) {
+        FacilityImportRunEntity run = requireRun(runId);
+        String actor = reviewer();
+        List<FacilityImportRowEntity> approved =
+                importRowRepository.findByImportRunIdAndDecisionStatus(runId, FacilityImportRowEntity.DS_APPROVED_FOR_IMPORT);
+        int applied = 0;
+        int skipped = 0;
+        List<FacilityImportRowDtos.FacilityImportRowView> views = new ArrayList<>();
+        for (FacilityImportRowEntity row : approved) {
+            if (rowIds != null && !rowIds.isEmpty() && !rowIds.contains(row.getId())) {
+                continue;
+            }
+            if (FacilityImportRowEntity.DS_IMPORTED.equals(row.getDecisionStatus()) || row.getResultFacilityId() != null) {
+                skipped++;
+                continue;
+            }
+            FacilityEntity facility = resolveApplyTarget(run.getTenantId(), row);
+            boolean isNew = facility.getId() == null;
+            FacilityMasterImportDtos.MasterFacilitySeedRecord record = rebuildRecord(row);
+            applyRecord(run.getTenantId(), actor, facility, record, row.getFacilityCode());
+            facility = facilityRepository.save(facility);
+            upsertIdentifier(facility, FacilityIdentifierSystem.MASTER_FACILITY_UID, record.facilityUid());
+            upsertIdentifier(facility, FacilityIdentifierSystem.NATIONAL_FACILITY_CODE, row.getFacilityCode());
+            upsertIdentifier(facility, FacilityIdentifierSystem.IMPORT_SOURCE_ROW_ID, record.facilityUid());
+            upsertContact(facility, record.contactPhoneE164());
+            upsertGeo(facility, record);
+
+            row.setResultFacilityId(facility.getId());
+            String prev = row.getDecisionStatus();
+            row.setDecisionStatus(FacilityImportRowEntity.DS_IMPORTED);
+            recordReview(row, "APPLY", prev, null,
+                    java.util.Map.of("result_facility_id", facility.getId(), "created", isNew), "OK");
+            importRowRepository.save(row);
+            if (isNew) {
+                run.setRecordsCreated(run.getRecordsCreated() + 1);
+            } else {
+                run.setRecordsUpdated(run.getRecordsUpdated() + 1);
+            }
+            applied++;
+            views.add(toRowView(row));
+        }
+        if (applied > 0) {
+            importRunRepository.save(run);
+        }
+        return new FacilityImportRowDtos.ApplyApprovedResponse(applied, skipped, views);
+    }
+
+    private FacilityEntity resolveApplyTarget(UUID tenantId, FacilityImportRowEntity row) {
+        if (row.getMatchedFacilityId() != null) {
+            return facilityRepository.findById(row.getMatchedFacilityId())
+                    .filter(f -> tenantId.equals(f.getTenantId()))
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
+                            "Matched facility no longer exists: " + row.getMatchedFacilityId()));
+        }
+        return findByMasterUid(row.getCorrelationKey()).orElseGet(FacilityEntity::new);
+    }
+
+    private FacilityMasterImportDtos.MasterFacilitySeedRecord rebuildRecord(FacilityImportRowEntity row) {
+        return new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                row.getCorrelationKey(), row.getFacilityCode(), row.getFacilityName(), row.getProvince(),
+                row.getDistrict(), row.getFacilityType(), row.getOwnership(), row.getLocationCategory(),
+                row.getFacilityLevel(), row.getOperatingStatus(), row.getBedCapacity(), row.getLatitude(),
+                row.getLongitude(), row.getContact(), SOURCE_LABEL_DATE, row.getRawValues());
+    }
+
+    private FacilityImportRunEntity requireRun(Long runId) {
+        UUID tenantId = TrustContextHolder.require().tenantId();
+        return importRunRepository.findById(runId)
+                .filter(r -> tenantId.equals(r.getTenantId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Import run not found: " + runId));
+    }
+
+    private FacilityImportRowEntity requireRow(Long runId, Long rowId) {
+        return importRowRepository.findByIdAndImportRunId(rowId, runId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Row " + rowId + " not found in run " + runId));
+    }
+
+    private static void assertNotTerminal(FacilityImportRowEntity row) {
+        String s = row.getDecisionStatus();
+        if (FacilityImportRowEntity.DS_IMPORTED.equals(s)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Row already imported; changes must go through a facility update workflow");
+        }
+        if (FacilityImportRowEntity.DS_REJECTED.equals(s) || FacilityImportRowEntity.DS_SKIPPED.equals(s)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Row is " + s + " and cannot be modified");
+        }
+    }
+
+    /** @return a conflict description if the code collides with another facility/unresolved row, else null. */
+    private String codeConflict(UUID tenantId, Long runId, Long rowId, String code, Long allowedFacilityId) {
+        if (code == null || code.isBlank()) {
+            return null;
+        }
+        Optional<FacilityEntity> byCode = facilityRepository.findByTenantIdAndFacilityCode(tenantId, code);
+        if (byCode.isPresent() && !byCode.get().getId().equals(allowedFacilityId)) {
+            return "code already assigned to facility " + byCode.get().getId();
+        }
+        for (FacilityImportRowEntity other : importRowRepository.findByImportRunIdAndFacilityCode(runId, code)) {
+            if (!other.getId().equals(rowId)
+                    && !FacilityImportRowEntity.DS_REJECTED.equals(other.getDecisionStatus())
+                    && !FacilityImportRowEntity.DS_SKIPPED.equals(other.getDecisionStatus())) {
+                return "code also used by unresolved row " + other.getId();
+            }
+        }
+        return null;
+    }
+
+    private static void applyCanonicalChange(
+            String newValue, String current, java.util.function.Consumer<String> setter,
+            String key, Map<String, Object> changed) {
+        if (newValue != null && !newValue.equals(current)) {
+            setter.accept(newValue.isBlank() ? null : newValue.trim());
+            changed.put(key, newValue);
+        }
+    }
+
+    private void recordReview(FacilityImportRowEntity row, String action, String previousStatus,
+                              String reason, Map<String, Object> changedValues, String validationResult) {
+        String actor = reviewer();
+        Instant now = Instant.now();
+        row.setReviewedBy(actor);
+        row.setReviewedAt(now);
+        if (reason != null && !reason.isBlank()) {
+            row.setReviewReason(reason);
+        }
+        Map<String, Object> event = new LinkedHashMap<>();
+        event.put("action", action);
+        event.put("import_run_id", row.getImportRunId());
+        event.put("row_id", row.getId());
+        event.put("source_row", row.getSourceRow());
+        event.put("previous_status", previousStatus);
+        event.put("new_status", row.getDecisionStatus());
+        event.put("reviewer", actor);
+        event.put("reason", reason);
+        event.put("changed_values", changedValues);
+        event.put("matched_facility_id", row.getMatchedFacilityId());
+        event.put("validation_result", validationResult);
+        event.put("timestamp", now.toString());
+        List<Map<String, Object>> history = row.getReviewHistory() != null
+                ? new ArrayList<>(row.getReviewHistory()) : new ArrayList<>();
+        history.add(event);
+        row.setReviewHistory(history);
+    }
+
+    private static String reviewer() {
+        return TrustContextHolder.require().actorId();
+    }
+
     /** Duplicate rows for a run, grouped by group key (never auto-merged). */
     @Transactional(readOnly = true)
     public FacilityImportRowDtos.DuplicateGroupsResponse duplicateGroups(Long runId, String duplicateType) {
@@ -543,7 +883,7 @@ public class FacilityMasterImportService {
         return (s == null || s.isBlank()) ? null : s.trim();
     }
 
-    private static FacilityImportRowDtos.FacilityImportRowView toRowView(FacilityImportRowEntity e) {
+    public static FacilityImportRowDtos.FacilityImportRowView toRowView(FacilityImportRowEntity e) {
         return new FacilityImportRowDtos.FacilityImportRowView(
                 e.getId(), e.getImportRunId(), e.getSourceLabel(), e.getSourceRow(), e.getCorrelationKey(),
                 e.getProvince(), e.getDistrict(), e.getFacilityName(), e.getFacilityCode(),
@@ -552,7 +892,9 @@ public class FacilityMasterImportService {
                 e.getBedCapacity(), e.getRawValues(), e.getOutcome(), e.getImportDecision(),
                 e.getExclusionReason(), e.getDuplicateType(), e.getDuplicateGroupKey(),
                 e.getAcceptableMissing(), e.isHasAcceptableMissing(), e.getValidationWarnings(),
-                e.getValidationErrors(), e.getMatchedFacilityId(), e.getResultFacilityId(), e.getCreatedAt());
+                e.getValidationErrors(), e.getMatchedFacilityId(), e.getResultFacilityId(),
+                e.getReviewDecision(), e.getDecisionStatus(), e.getReviewedBy(), e.getReviewedAt(),
+                e.getReviewReason(), e.getConflictReason(), e.getReviewHistory(), e.getCreatedAt());
     }
 
     private static FacilityImportRunDtos.FacilityImportRunView toRunView(FacilityImportRunEntity run) {

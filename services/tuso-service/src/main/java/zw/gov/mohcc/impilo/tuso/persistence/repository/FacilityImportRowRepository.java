@@ -52,4 +52,11 @@ public interface FacilityImportRowRepository extends JpaRepository<FacilityImpor
     /** Rows of a given duplicate type, grouped for review (ordered by group key then code). */
     List<FacilityImportRowEntity> findByImportRunIdAndDuplicateTypeOrderByDuplicateGroupKeyAscFacilityCodeAsc(
             Long importRunId, String duplicateType);
+
+    java.util.Optional<FacilityImportRowEntity> findByIdAndImportRunId(Long id, Long importRunId);
+
+    /** Other rows in the same run that carry a given facility code (for in-run uniqueness checks). */
+    List<FacilityImportRowEntity> findByImportRunIdAndFacilityCode(Long importRunId, String facilityCode);
+
+    List<FacilityImportRowEntity> findByImportRunIdAndDecisionStatus(Long importRunId, String decisionStatus);
 }

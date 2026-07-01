@@ -40,6 +40,13 @@ public final class FacilityImportRowDtos {
             String validationErrors,
             Long matchedFacilityId,
             Long resultFacilityId,
+            String reviewDecision,
+            String decisionStatus,
+            String reviewedBy,
+            Instant reviewedAt,
+            String reviewReason,
+            String conflictReason,
+            List<Map<String, Object>> reviewHistory,
             Instant createdAt) {}
 
     public record PagedRows(
@@ -72,4 +79,31 @@ public final class FacilityImportRowDtos {
             String duplicateType,
             int groupCount,
             List<DuplicateGroup> groups) {}
+
+    // ---- Review-decision mutation requests (reviewer identity comes from the trust context) ----
+
+    public record SupplyCodeRequest(String facilityCode, String reason) {}
+
+    public record ReasonRequest(String reason) {}
+
+    public record MatchExistingRequest(Long facilityId, String reason) {}
+
+    /** Optional canonical-field corrections (null = leave unchanged). Raw source values are never touched. */
+    public record CanonicalValuesRequest(
+            String facilityCode,
+            String facilityName,
+            String province,
+            String district,
+            Double latitude,
+            Double longitude,
+            String facilityType,
+            String ownership,
+            String operatingStatus,
+            String contact,
+            Integer bedCapacity,
+            String reviewNotes) {}
+
+    public record ApplyApprovedRequest(List<Long> rowIds) {}
+
+    public record ApplyApprovedResponse(int applied, int skipped, List<FacilityImportRowView> rows) {}
 }

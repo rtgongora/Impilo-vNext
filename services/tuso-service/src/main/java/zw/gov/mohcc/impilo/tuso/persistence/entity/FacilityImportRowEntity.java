@@ -31,6 +31,20 @@ public class FacilityImportRowEntity {
     public static final String DUP_TYPE_CODE = "FACILITY_CODE";
     public static final String DUP_TYPE_NAME = "FACILITY_NAME";
 
+    /** Review decision lifecycle (overlay on the immutable original {@code outcome}). */
+    public static final String DS_PENDING_REVIEW = "PENDING_REVIEW";
+    public static final String DS_READY_FOR_IMPORT = "READY_FOR_IMPORT";
+    public static final String DS_APPROVED_FOR_IMPORT = "APPROVED_FOR_IMPORT";
+    public static final String DS_IMPORTED = "IMPORTED";
+    public static final String DS_REJECTED = "REJECTED";
+    public static final String DS_SKIPPED = "SKIPPED";
+    public static final String DS_CORRECTION_REQUIRED = "CORRECTION_REQUIRED";
+    public static final String DS_CORRECTED_READY_FOR_IMPORT = "CORRECTED_READY_FOR_IMPORT";
+    public static final String DS_MATCHED_EXISTING_FACILITY = "MATCHED_EXISTING_FACILITY";
+    public static final String DS_RESOLVED_AS_DISTINCT_FACILITY = "RESOLVED_AS_DISTINCT_FACILITY";
+    public static final String DS_RESOLUTION_CONFLICT = "RESOLUTION_CONFLICT";
+    public static final String DS_FAILED = "FAILED";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -133,6 +147,28 @@ public class FacilityImportRowEntity {
 
     @Column(name = "result_facility_id")
     private Long resultFacilityId;
+
+    @Column(name = "review_decision", length = 48)
+    private String reviewDecision;
+
+    @Column(name = "decision_status", length = 48)
+    private String decisionStatus;
+
+    @Column(name = "reviewed_by", length = 255)
+    private String reviewedBy;
+
+    @Column(name = "reviewed_at")
+    private Instant reviewedAt;
+
+    @Column(name = "review_reason", columnDefinition = "TEXT")
+    private String reviewReason;
+
+    @Column(name = "conflict_reason", length = 255)
+    private String conflictReason;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "review_history", columnDefinition = "jsonb")
+    private java.util.List<Map<String, Object>> reviewHistory;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -252,6 +288,27 @@ public class FacilityImportRowEntity {
 
     public Long getResultFacilityId() { return resultFacilityId; }
     public void setResultFacilityId(Long resultFacilityId) { this.resultFacilityId = resultFacilityId; }
+
+    public String getReviewDecision() { return reviewDecision; }
+    public void setReviewDecision(String reviewDecision) { this.reviewDecision = reviewDecision; }
+
+    public String getDecisionStatus() { return decisionStatus; }
+    public void setDecisionStatus(String decisionStatus) { this.decisionStatus = decisionStatus; }
+
+    public String getReviewedBy() { return reviewedBy; }
+    public void setReviewedBy(String reviewedBy) { this.reviewedBy = reviewedBy; }
+
+    public Instant getReviewedAt() { return reviewedAt; }
+    public void setReviewedAt(Instant reviewedAt) { this.reviewedAt = reviewedAt; }
+
+    public String getReviewReason() { return reviewReason; }
+    public void setReviewReason(String reviewReason) { this.reviewReason = reviewReason; }
+
+    public String getConflictReason() { return conflictReason; }
+    public void setConflictReason(String conflictReason) { this.conflictReason = conflictReason; }
+
+    public java.util.List<Map<String, Object>> getReviewHistory() { return reviewHistory; }
+    public void setReviewHistory(java.util.List<Map<String, Object>> reviewHistory) { this.reviewHistory = reviewHistory; }
 
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
