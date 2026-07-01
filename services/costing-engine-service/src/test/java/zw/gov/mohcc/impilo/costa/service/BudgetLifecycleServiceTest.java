@@ -37,8 +37,9 @@ class BudgetLifecycleServiceTest {
 
     @BeforeEach
     void setUp() {
+        BudgetProjectionSyncer syncer = new BudgetProjectionSyncer(allocationRepository, lineRepository);
         service = new BudgetLifecycleService(budgetRepository, versionRepository, lineRepository,
-                approvalRepository, allocationRepository, outboxRepository, new ObjectMapper(), true);
+                approvalRepository, syncer, outboxRepository, new ObjectMapper(), true);
         lenient().when(budgetRepository.save(any(BudgetEntity.class))).thenAnswer(inv -> {
             BudgetEntity e = inv.getArgument(0);
             if (e.getBudgetId() == null) e.setBudgetId(UUID.randomUUID());

@@ -40,7 +40,7 @@ public class BudgetLifecycleService {
     private final BudgetVersionRepository versionRepository;
     private final BudgetLineRepository lineRepository;
     private final BudgetApprovalRepository approvalRepository;
-    private final BudgetAllocationRepository allocationRepository;
+    private final BudgetProjectionSyncer projectionSyncer;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
     private final boolean enforceSegregationOfDuties;
@@ -49,7 +49,7 @@ public class BudgetLifecycleService {
                                   BudgetVersionRepository versionRepository,
                                   BudgetLineRepository lineRepository,
                                   BudgetApprovalRepository approvalRepository,
-                                  BudgetAllocationRepository allocationRepository,
+                                  BudgetProjectionSyncer projectionSyncer,
                                   EventOutboxRepository outboxRepository,
                                   ObjectMapper objectMapper,
                                   @Value("${costa.budget.enforce-segregation-of-duties:true}")
@@ -58,7 +58,7 @@ public class BudgetLifecycleService {
         this.versionRepository = versionRepository;
         this.lineRepository = lineRepository;
         this.approvalRepository = approvalRepository;
-        this.allocationRepository = allocationRepository;
+        this.projectionSyncer = projectionSyncer;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
         this.enforceSegregationOfDuties = enforceSegregationOfDuties;
@@ -212,7 +212,7 @@ public class BudgetLifecycleService {
         v.setStatus(BudgetStatus.ACTIVE.name());
         if (v.getEffectiveFrom() == null) v.setEffectiveFrom(LocalDate.now());
         versionRepository.save(v);
-        syncAllocations(tenantId, b, v);
+        projectionSyncer.sync(tenantId, b, v.getVersionId());
         emit("BUDGET", budgetId.toString(), "BUDGET_ACTIVATED", tenantId, budgetPayload(b, v));
         return b;
     }
@@ -259,53 +259,6 @@ public class BudgetLifecycleService {
             emit("BUDGET", budgetId.toString(), "BUDGET_APPROVED", tenantId, statusPayload(b));
         }
         return b;
-    }
-
-    /**
-     * Resync the flat availability-control projection from the active version's
-     * lines. Facility-scoped only (the projection is facility-grained); lines on
-     * non-facility budgets are skipped and left to the rich model.
-     */
-    private void syncAllocations(UUID tenantId, BudgetEntity b, BudgetVersionEntity v) {
-        if (b.getFacilityId() == null) {
-            log.info("Budget {} has no facility scope; skipping allocation projection sync", b.getBudgetId());
-            return;
-        }
-        List<BudgetLineEntity> lines =
-                lineRepository.findByVersionIdAndTenantIdOrderByLineOrderAscCreatedAtAsc(v.getVersionId(), tenantId);
-        // aggregate by (department, category)
-        Map<String, BigDecimal> byKey = new LinkedHashMap<>();
-        Map<String, BudgetLineEntity> sample = new LinkedHashMap<>();
-        for (BudgetLineEntity line : lines) {
-            String key = (line.getDepartmentId() == null ? "" : line.getDepartmentId())
-                    + "|" + line.getBudgetCategory();
-            byKey.merge(key, line.getAllocatedAmount(), BigDecimal::add);
-            sample.putIfAbsent(key, line);
-        }
-        for (Map.Entry<String, BigDecimal> e : byKey.entrySet()) {
-            BudgetLineEntity s = sample.get(e.getKey());
-            BudgetAllocationEntity alloc = allocationRepository.findForSpendLine(
-                    tenantId, b.getFacilityId(), s.getDepartmentId(), s.getBudgetCategory(), b.getPeriodYear())
-                    .orElseGet(() -> {
-                        BudgetAllocationEntity a = new BudgetAllocationEntity();
-                        a.setTenantId(tenantId);
-                        a.setFacilityId(b.getFacilityId());
-                        a.setDepartmentId(s.getDepartmentId());
-                        a.setBudgetCategory(s.getBudgetCategory());
-                        a.setPeriodYear(b.getPeriodYear());
-                        a.setSpentAmount(BigDecimal.ZERO);
-                        a.setCommittedAmount(BigDecimal.ZERO);
-                        return a;
-                    });
-            alloc.setAllocatedAmount(e.getValue());
-            alloc.recomputeAvailable();
-            allocationRepository.save(alloc);
-            // link the sampled line back to its projection row
-            if (s.getAllocationId() == null && alloc.getAllocationId() != null) {
-                s.setAllocationId(alloc.getAllocationId());
-                lineRepository.save(s);
-            }
-        }
     }
 
     // ----- reads ------------------------------------------------------------

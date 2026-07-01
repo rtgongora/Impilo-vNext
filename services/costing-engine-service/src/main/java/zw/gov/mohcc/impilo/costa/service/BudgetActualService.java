@@ -29,6 +29,7 @@ public class BudgetActualService {
     private final BudgetLineRepository lineRepository;
     private final BudgetRepository budgetRepository;
     private final BudgetAllocationRepository allocationRepository;
+    private final FundingSourceRepository fundingSourceRepository;
     private final BudgetCommitmentService commitmentService;
     private final BudgetEventEmitter emitter;
 
@@ -36,12 +37,14 @@ public class BudgetActualService {
                                BudgetLineRepository lineRepository,
                                BudgetRepository budgetRepository,
                                BudgetAllocationRepository allocationRepository,
+                               FundingSourceRepository fundingSourceRepository,
                                BudgetCommitmentService commitmentService,
                                BudgetEventEmitter emitter) {
         this.actualRepository = actualRepository;
         this.lineRepository = lineRepository;
         this.budgetRepository = budgetRepository;
         this.allocationRepository = allocationRepository;
+        this.fundingSourceRepository = fundingSourceRepository;
         this.commitmentService = commitmentService;
         this.emitter = emitter;
     }
@@ -90,8 +93,19 @@ public class BudgetActualService {
             commitmentService.liquidate(tenantId, cmd.commitmentId(), amount);
         }
         addSpentToProjection(tenantId, line, amount);
+        absorbFunding(tenantId, line.getFundingSourceId(), amount);
         emitter.emit("BUDGET_ACTUAL", a.getActualRefId().toString(), "BUDGET_ACTUAL_POSTED", tenantId, payload(a));
         return a;
+    }
+
+    /** Accrue actual expenditure against the line's funding source absorption. */
+    private void absorbFunding(UUID tenantId, UUID fundingSourceId, BigDecimal amount) {
+        if (fundingSourceId == null) return;
+        fundingSourceRepository.findByFundingSourceIdAndTenantId(fundingSourceId, tenantId).ifPresent(fs -> {
+            BigDecimal absorbed = fs.getAbsorbedAmount() != null ? fs.getAbsorbedAmount() : BigDecimal.ZERO;
+            fs.setAbsorbedAmount(absorbed.add(amount));
+            fundingSourceRepository.save(fs);
+        });
     }
 
     public List<BudgetActualReferenceEntity> list(UUID tenantId, UUID budgetId) {

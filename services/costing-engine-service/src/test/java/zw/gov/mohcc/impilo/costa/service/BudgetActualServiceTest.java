@@ -26,6 +26,7 @@ class BudgetActualServiceTest {
     @Mock private BudgetLineRepository lineRepository;
     @Mock private BudgetRepository budgetRepository;
     @Mock private BudgetAllocationRepository allocationRepository;
+    @Mock private FundingSourceRepository fundingSourceRepository;
     @Mock private BudgetCommitmentService commitmentService;
     @Mock private BudgetEventEmitter emitter;
 
@@ -38,7 +39,7 @@ class BudgetActualServiceTest {
     @BeforeEach
     void setUp() {
         service = new BudgetActualService(actualRepository, lineRepository, budgetRepository,
-                allocationRepository, commitmentService, emitter);
+                allocationRepository, fundingSourceRepository, commitmentService, emitter);
         BudgetEntity b = new BudgetEntity();
         b.setBudgetId(budgetId);
         b.setTenantId(tenantId);

@@ -147,6 +147,66 @@ final class BudgetJsonMapper {
         return m;
     }
 
+    static Map<String, Object> revision(BudgetRevisionEntity r) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("revisionId", r.getRevisionId().toString());
+        m.put("budgetId", r.getBudgetId().toString());
+        m.put("fromVersionId", r.getFromVersionId() != null ? r.getFromVersionId().toString() : null);
+        m.put("toVersionId", r.getToVersionId() != null ? r.getToVersionId().toString() : null);
+        m.put("revisionType", r.getRevisionType());
+        m.put("reason", r.getReason());
+        m.put("netChange", r.getNetChange());
+        m.put("requestedBy", r.getRequestedBy());
+        m.put("approvedBy", r.getApprovedBy());
+        m.put("status", r.getStatus());
+        return m;
+    }
+
+    static Map<String, Object> recommendation(BudgetRecommendationEntity r) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("recommendationId", r.getRecommendationId().toString());
+        m.put("budgetId", r.getBudgetId().toString());
+        m.put("budgetLineId", r.getBudgetLineId() != null ? r.getBudgetLineId().toString() : null);
+        m.put("ruleCode", r.getRuleCode());
+        m.put("severity", r.getSeverity());
+        m.put("title", r.getTitle());
+        m.put("rationale", r.getRationale());
+        m.put("evidence", r.getEvidenceJson());
+        m.put("suggestedAction", r.getSuggestedAction());
+        m.put("status", r.getStatus());
+        m.put("createdAt", r.getCreatedAt() != null ? r.getCreatedAt().toString() : null);
+        return m;
+    }
+
+    static Map<String, Object> threshold(BudgetThresholdEntity t) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("thresholdId", t.getThresholdId().toString());
+        m.put("budgetId", t.getBudgetId() != null ? t.getBudgetId().toString() : null);
+        m.put("budgetLineId", t.getBudgetLineId() != null ? t.getBudgetLineId().toString() : null);
+        m.put("metric", t.getMetric());
+        m.put("warnAt", t.getWarnAt());
+        m.put("hardStopAt", t.getHardStopAt());
+        m.put("allowEmergencyOverride", t.isAllowEmergencyOverride());
+        m.put("active", t.isActive());
+        return m;
+    }
+
+    static Map<String, Object> reconciliation(BudgetReconciliationExceptionEntity e) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("exceptionId", e.getExceptionId().toString());
+        m.put("budgetId", e.getBudgetId() != null ? e.getBudgetId().toString() : null);
+        m.put("budgetLineId", e.getBudgetLineId() != null ? e.getBudgetLineId().toString() : null);
+        m.put("exceptionType", e.getExceptionType());
+        m.put("source", e.getSource());
+        m.put("sourceReference", e.getSourceReference());
+        m.put("expected", e.getExpected());
+        m.put("observed", e.getObserved());
+        m.put("delta", e.getDelta());
+        m.put("status", e.getStatus());
+        m.put("resolutionNote", e.getResolutionNote());
+        return m;
+    }
+
     static Map<String, Object> fundingSource(FundingSourceEntity f) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("fundingSourceId", f.getFundingSourceId().toString());

@@ -19,4 +19,6 @@ public interface BudgetRepository extends JpaRepository<BudgetEntity, Long> {
             UUID tenantId, UUID facilityId, int periodYear);
 
     List<BudgetEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
+
+    List<BudgetEntity> findByStatus(String status);
 }
