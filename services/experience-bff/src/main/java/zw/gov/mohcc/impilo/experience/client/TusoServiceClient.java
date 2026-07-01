@@ -136,6 +136,27 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** List persisted facility import runs/batches (tenant-scoped downstream). */
+    public JsonNode listFacilityImportRuns() {
+        String url = baseUrl + "/v1/internal/facilities/import/runs";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Read a single facility import run/batch detail by id. */
+    public JsonNode getFacilityImportRun(long runId) {
+        String url = baseUrl + "/v1/internal/facilities/import/runs/" + runId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Facility import provenance + configuration-completeness checklist. */
+    public JsonNode getFacilityImportProvenance(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/import-provenance";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Facility detail by numeric facility id. */
     public JsonNode getFacility(long facilityId) {
         String url = baseUrl + "/v1/internal/facilities/" + facilityId;
