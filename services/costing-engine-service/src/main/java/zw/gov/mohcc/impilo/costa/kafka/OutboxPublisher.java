@@ -85,6 +85,22 @@ public class OutboxPublisher {
             case "WAIVER_APPLIED" -> "costa.waiver.applied";
             case "ESTIMATE_CREATED" -> "costa.estimate.created";
             case "RULESET_PUBLISHED" -> "costa.ruleset.published";
+            // Intelligent Budgeting & Budget Tracking
+            case "BUDGET_CREATED" -> "costa.budget.created";
+            case "BUDGET_SUBMITTED" -> "costa.budget.submitted";
+            case "BUDGET_APPROVED" -> "costa.budget.approved";
+            case "BUDGET_ACTIVATED" -> "costa.budget.activated";
+            case "BUDGET_REVISED" -> "costa.budget.revised";
+            case "BUDGET_FROZEN" -> "costa.budget.frozen";
+            case "BUDGET_CLOSED" -> "costa.budget.closed";
+            case "BUDGET_COMMITMENT_RECORDED" -> "costa.budget.commitment.recorded";
+            case "BUDGET_COMMITMENT_LIQUIDATED" -> "costa.budget.commitment.liquidated";
+            case "BUDGET_ACTUAL_POSTED" -> "costa.budget.actual.posted";
+            case "BUDGET_AVAILABILITY_OVERRIDE" -> "costa.budget.availability.override";
+            case "BUDGET_THRESHOLD_BREACHED" -> "costa.budget.threshold.breached";
+            case "BUDGET_RECOMMENDATION_RAISED" -> "costa.budget.recommendation.raised";
+            case "BUDGET_RECON_EXCEPTION_OPENED" -> "costa.budget.recon.exception.opened";
+            case "BUDGET_PERIOD_CLOSED" -> "costa.budget.period.closed";
             default -> "costa.events";
         };
     }
@@ -106,7 +122,12 @@ public class OutboxPublisher {
                  "CLAIM_PACK_CREATED",
                  "EMERGENCY_DEFERRED_CHARGE",
                  "WAIVER_APPLIED",
-                 "REFUND_CREATED" -> true;
+                 "REFUND_CREATED",
+                 // budget execution events that move money / obligations
+                 "BUDGET_ACTUAL_POSTED",
+                 "BUDGET_COMMITMENT_RECORDED",
+                 "BUDGET_COMMITMENT_LIQUIDATED",
+                 "BUDGET_AVAILABILITY_OVERRIDE" -> true;
             default -> false;
         };
     }

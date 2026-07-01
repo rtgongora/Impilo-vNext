@@ -25,7 +25,22 @@ class OutboxPublisherRoutingConventionTest {
                 "REFUND_CREATED",
                 "CLAIM_PACK_CREATED",
                 "EMERGENCY_DEFERRED_CHARGE",
-                "RULESET_PUBLISHED"
+                "RULESET_PUBLISHED",
+                "BUDGET_CREATED",
+                "BUDGET_SUBMITTED",
+                "BUDGET_APPROVED",
+                "BUDGET_ACTIVATED",
+                "BUDGET_REVISED",
+                "BUDGET_FROZEN",
+                "BUDGET_CLOSED",
+                "BUDGET_COMMITMENT_RECORDED",
+                "BUDGET_COMMITMENT_LIQUIDATED",
+                "BUDGET_ACTUAL_POSTED",
+                "BUDGET_AVAILABILITY_OVERRIDE",
+                "BUDGET_THRESHOLD_BREACHED",
+                "BUDGET_RECOMMENDATION_RAISED",
+                "BUDGET_RECON_EXCEPTION_OPENED",
+                "BUDGET_PERIOD_CLOSED"
         );
 
         for (String eventType : producedTypes) {
@@ -42,6 +57,10 @@ class OutboxPublisherRoutingConventionTest {
         assertTrue(OutboxPublisher.shouldEmitCoreTransaction("EMERGENCY_DEFERRED_CHARGE"));
         assertTrue(OutboxPublisher.shouldEmitCoreTransaction("WAIVER_APPLIED"));
         assertTrue(OutboxPublisher.shouldEmitCoreTransaction("CHARGE_CREATED"));
+        assertTrue(OutboxPublisher.shouldEmitCoreTransaction("BUDGET_ACTUAL_POSTED"));
+        assertTrue(OutboxPublisher.shouldEmitCoreTransaction("BUDGET_COMMITMENT_RECORDED"));
+        assertTrue(OutboxPublisher.shouldEmitCoreTransaction("BUDGET_AVAILABILITY_OVERRIDE"));
         assertFalse(OutboxPublisher.shouldEmitCoreTransaction("RULESET_PUBLISHED"));
+        assertFalse(OutboxPublisher.shouldEmitCoreTransaction("BUDGET_CREATED"));
     }
 }
