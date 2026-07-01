@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { RoleSpecificEncounterForm } from "@/components/encounter/StructuredEncounterForms";
+import { EncounterFormsPanel } from "@/components/encounter/EncounterFormsPanel";
 import {
   Loader2,
   Activity,
@@ -541,6 +542,40 @@ export default function EncounterPage() {
                     />
                   )}
                 </div>
+              </div>
+            )}
+
+            {dakRuntime && encounter && (
+              <div className="rounded-3xl border border-border bg-background/70 p-4" data-testid="encounter-forms-panel">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground mb-3">
+                  Structured encounter forms
+                </p>
+                <EncounterFormsPanel
+                  encounterId={encounterId}
+                  patientId={patientId}
+                  patient={dakRuntime.patient}
+                  providerRoles={roles}
+                  encounterType={dakRuntime.encounterType}
+                  resolveParams={{
+                    cadre: activeRole,
+                    role: roles[0],
+                    careSetting: String(
+                      (encounter.attributes as Record<string, unknown>).careSetting ??
+                        (encounter.attributes as Record<string, unknown>).care_setting ??
+                        "",
+                    ),
+                    context: String(
+                      (encounter.attributes as Record<string, unknown>).encounterContext ??
+                        (encounter.attributes as Record<string, unknown>).encounter_context ??
+                        "",
+                    ),
+                    cpid: String(patientData?.data?.attributes?.cpid ?? ""),
+                    ageMonths: dakRuntime.patient.ageMonths,
+                    sex: dakRuntime.patient.sex,
+                    pregnant: dakRuntime.patient.pregnant ?? undefined,
+                    programmes: dakRuntime.patient.programmes,
+                  }}
+                />
               </div>
             )}
 

@@ -134,8 +134,12 @@ export function DakFormRenderer(props: {
   patientId: string;
   encounterId: string;
   showProgress?: boolean;
+  /** When provided, a Submit button appears; called with the current answers once validation passes. */
+  onSubmit?: (values: FormValues) => void | Promise<void>;
+  submitting?: boolean;
+  submitLabel?: string;
 }) {
-  const { form, runtime, patientId, encounterId, showProgress = true } = props;
+  const { form, runtime, patientId, encounterId, showProgress = true, onSubmit, submitting = false, submitLabel = "Submit" } = props;
   const initial: FormValues = {};
   const { values, setField, clearDraft, dirty } = useClinicalFormDraft(form.id, patientId, encounterId, initial);
   const [attempted, setAttempted] = useState(false);
@@ -242,13 +246,28 @@ export function DakFormRenderer(props: {
         </p>
       )}
 
-      <button
-        type="button"
-        className="text-xs text-muted-foreground underline"
-        onClick={() => setAttempted(true)}
-      >
-        Check validation
-      </button>
+      <div className="flex items-center gap-3 pt-1">
+        <button
+          type="button"
+          className="text-xs text-muted-foreground underline"
+          onClick={() => setAttempted(true)}
+        >
+          Check validation
+        </button>
+        {onSubmit && (
+          <button
+            type="button"
+            disabled={submitting}
+            className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
+            onClick={() => {
+              setAttempted(true);
+              if (issues.length === 0) void onSubmit(values);
+            }}
+          >
+            {submitting ? "Submitting…" : submitLabel}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
