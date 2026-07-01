@@ -75,3 +75,73 @@ test_allow_self_access_when_not_acting_as_provider if {
 	d.allow == true
 	not "SELF_TREATMENT" in d.deny_reasons
 }
+
+# ── PROVIDER-SELF-CLAIM (GAP-6) ──────────────────────────────────────────────
+
+test_deny_provider_self_claim if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "subject_id": "person-1", "action": "PROVIDER_CLAIM_APPROVE",
+		"purpose": "OPERATIONS", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == false
+	"PROVIDER_SELF_CLAIM" in d.deny_reasons
+}
+
+test_allow_provider_claim_approved_by_someone_else if {
+	d := authz.decision with input as {
+		"actor_id": "approver-9", "subject_id": "person-1", "action": "PROVIDER_CLAIM_APPROVE",
+		"purpose": "OPERATIONS", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == true
+	not "PROVIDER_SELF_CLAIM" in d.deny_reasons
+}
+
+# ── PROVIDER-ID-DENY (GAP-6) ─────────────────────────────────────────────────
+
+test_deny_regulated_action_without_provider_id if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "regulated_action": true,
+		"purpose": "TREATMENT", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == false
+	"PROVIDER_ID_REQUIRED" in d.deny_reasons
+}
+
+test_allow_regulated_action_with_provider_id if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "regulated_action": true, "provider_id": "PRV-1",
+		"purpose": "TREATMENT", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == true
+	not "PROVIDER_ID_REQUIRED" in d.deny_reasons
+}
+
+# ── WORK-REQUIRES-ASSIGNMENT (GAP-7) ─────────────────────────────────────────
+
+test_deny_work_zone_without_assignment if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "access_mode": "WORK",
+		"purpose": "OPERATIONS", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == false
+	"WORK_REQUIRES_ASSIGNMENT" in d.deny_reasons
+}
+
+test_allow_work_zone_with_active_assignment if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "access_mode": "WORK", "assignment_active": true,
+		"purpose": "OPERATIONS", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == true
+	not "WORK_REQUIRES_ASSIGNMENT" in d.deny_reasons
+}
+
+test_life_zone_needs_no_assignment if {
+	# Personal/LIFE-zone access must never require a work assignment.
+	d := authz.decision with input as {
+		"actor_id": "person-1", "access_mode": "LIFE",
+		"purpose": "TREATMENT", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == true
+	not "WORK_REQUIRES_ASSIGNMENT" in d.deny_reasons
+}

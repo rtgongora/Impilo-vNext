@@ -51,6 +51,46 @@ deny_reasons contains "SELF_TREATMENT" if {
 	input.subject_id == input.actor_id
 }
 
+# ── GAP-6 fine-grained rules (deny-safe strangler; ENFORCE cut-over is CZO-gated) ────────────
+#
+# These extend the OPA input contract with explicit intent fields that tshepo-authz assembles.
+# Every rule is DENY-SAFE: it fires only when its intent field is present, so until tshepo-authz
+# populates the field the rule cannot cause a false denial (SHADOW). The WS-OPA/CZO owner decides
+# the SHADOW→ENFORCE cut-over. Input contract additions (all optional; absent ⇒ rule inert):
+#   input.action           string   fine-grained action verb (e.g. "PROVIDER_CLAIM_APPROVE")
+#   input.regulated_action boolean  true when the action requires a regulated professional capacity
+#   input.access_mode      string   actor's active zone: "WORK" | "PROFESSIONAL" | "LIFE"
+#   input.assignment_active boolean true when the actor has an active work assignment/context
+
+# PROVIDER-SELF-CLAIM: a person must not approve/verify their OWN provider credential claim.
+deny_reasons contains "PROVIDER_SELF_CLAIM" if {
+	input.action == "PROVIDER_CLAIM_APPROVE"
+	is_string(input.subject_id)
+	input.subject_id != ""
+	input.subject_id == input.actor_id
+}
+
+# PROVIDER-ID-DENY: a regulated professional action must carry a Provider ID (regulated capacity).
+deny_reasons contains "PROVIDER_ID_REQUIRED" if {
+	input.regulated_action == true
+	not provider_id_present
+}
+
+provider_id_present if {
+	is_string(input.provider_id)
+	input.provider_id != ""
+}
+
+# WORK-REQUIRES-ASSIGNMENT (GAP-7): acting in the WORK zone requires an active work assignment.
+# `not assignment_active` fires when the flag is absent OR false (an absent field is undefined, so
+# a bare `!= true` would not hold — the helper makes the "missing assignment" case explicit).
+deny_reasons contains "WORK_REQUIRES_ASSIGNMENT" if {
+	input.access_mode == "WORK"
+	not assignment_active
+}
+
+assignment_active if input.assignment_active == true
+
 # ── Derived values ──────────────────────────────────────────────────────────
 
 acr_loa := x if {

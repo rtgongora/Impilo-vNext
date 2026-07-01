@@ -76,10 +76,21 @@ record (`subject_id == actor_id`); self-access for non-treatment is unaffected. 
 `opa test infra/opa/` (**321/321**, incl. 3 new allow/deny cases). Deny-safe strangler: the rule
 only fires once `tshepo-authz` populates `subject_id`/`provider_id` in the OPA input, so it cannot
 cause false denials before SHADOW→ENFORCE cut-over.
-**Still open (CZO-coordinated):** the remaining rules (cadre actions, facility-mode entry,
-Provider-ID-deny, WORK-REQUIRES-ASSIGNMENT, PROVIDER-SELF-CLAIM), populating the new input fields in
-tshepo-authz, and the SHADOW→ENFORCE cut-over decision. The locked Java `PolicyEngine` was not
-touched; no client-only guard (security-theater) was added.
+
+**Update 2026-07-01 — three more GAP-6/7 rules landed** in the same `impilo.authz` seam, each
+deny-safe and `opa test`-verified (bundle now **328/328**):
+- **PROVIDER_SELF_CLAIM** — `action == "PROVIDER_CLAIM_APPROVE"` AND `subject_id == actor_id` → deny.
+- **PROVIDER_ID_REQUIRED** (Provider-ID-deny) — `regulated_action == true` AND no `provider_id` → deny.
+- **WORK_REQUIRES_ASSIGNMENT** (GAP-7) — `access_mode == "WORK"` AND not `assignment_active` → deny.
+
+These extend the OPA **input contract** with explicit intent fields that `tshepo-authz` must assemble
+to activate enforcement (all optional; absent ⇒ rule inert): `action`, `regulated_action`,
+`access_mode` (`WORK`/`PROFESSIONAL`/`LIFE`), `assignment_active`. The rules are documented in
+`infra/opa/authz/authz.rego`.
+
+**Still open (CZO-coordinated):** cadre-action / facility-mode-entry rules; wiring `tshepo-authz` to
+populate the new input fields; and the SHADOW→ENFORCE cut-over decision. The locked Java
+`PolicyEngine` remains untouched; no client-only guard (security-theater) was added.
 
 ## High-priority gaps (remediation queue)
 
