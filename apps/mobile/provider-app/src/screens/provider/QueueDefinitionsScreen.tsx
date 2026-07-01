@@ -51,8 +51,8 @@ export function QueueDefinitionsScreen() {
       <Header title="Queue Definitions" />
       <View testID="queue-definitions-screen" style={styles.container}>
         <Text style={styles.note}>
-          Queue definitions are governed in PCT and shown here read-only, to confirm the QUEUES setup
-          step for this facility.
+          Queue definitions are owned by TUSO facility configuration (service points) and materialised
+          into PCT for care operations. Shown here read-only, to confirm the QUEUES setup step.
         </Text>
 
         {!facilityId ? (
