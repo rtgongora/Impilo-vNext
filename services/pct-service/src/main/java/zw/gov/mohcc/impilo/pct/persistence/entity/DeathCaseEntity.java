@@ -156,6 +156,25 @@ public class DeathCaseEntity {
     @Column(name = "source_ref")
     private String sourceRef;
 
+    // ── community/field pathway refinement (V027) ──
+    /** Where the body actually goes; a case no longer requires facility mortuary custody. */
+    @Column(name = "body_disposition_context")
+    private String bodyDispositionContext;
+
+    /** Certainty class of the assigned cause — keeps VA-probable distinct from medically certified. */
+    @Column(name = "cause_of_death_basis")
+    private String causeOfDeathBasis;
+
+    // Unverified community-report provenance (distinct from a provider confirmation).
+    @Column(name = "reporter_name")
+    private String reporterName;
+
+    @Column(name = "reporter_role")
+    private String reporterRole;
+
+    @Column(name = "reporter_contact")
+    private String reporterContact;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -306,5 +325,20 @@ public class DeathCaseEntity {
 
     public String getSourceRef() { return sourceRef; }
     public void setSourceRef(String sourceRef) { this.sourceRef = sourceRef; }
+
+    public String getBodyDispositionContext() { return bodyDispositionContext; }
+    public void setBodyDispositionContext(String bodyDispositionContext) { this.bodyDispositionContext = bodyDispositionContext; }
+
+    public String getCauseOfDeathBasis() { return causeOfDeathBasis; }
+    public void setCauseOfDeathBasis(String causeOfDeathBasis) { this.causeOfDeathBasis = causeOfDeathBasis; }
+
+    public String getReporterName() { return reporterName; }
+    public void setReporterName(String reporterName) { this.reporterName = reporterName; }
+
+    public String getReporterRole() { return reporterRole; }
+    public void setReporterRole(String reporterRole) { this.reporterRole = reporterRole; }
+
+    public String getReporterContact() { return reporterContact; }
+    public void setReporterContact(String reporterContact) { this.reporterContact = reporterContact; }
 
 }

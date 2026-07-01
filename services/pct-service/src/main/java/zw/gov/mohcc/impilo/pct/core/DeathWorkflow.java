@@ -14,12 +14,16 @@ import zw.gov.mohcc.impilo.pct.persistence.entity.BodyCustodyEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.DeathAuditEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.DeathCaseEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.FieldBodyManagementEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.JourneyEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.VerbalAutopsyEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.BodyCustodyRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.DeathAuditRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.DeathCaseRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.FieldBodyManagementRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.JourneyRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.VerbalAutopsyRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -68,6 +72,8 @@ public class DeathWorkflow {
     private final ObjectMapper objectMapper;
     private final BodyCustodyRepository bodyCustodyRepository;
     private final DeathAuditRepository deathAuditRepository;
+    private final VerbalAutopsyRepository verbalAutopsyRepository;
+    private final FieldBodyManagementRepository fieldBodyManagementRepository;
     private final MedicoLegalScreener medicoLegalScreener;
     private final PublicHealthScreener publicHealthScreener;
     private final CauseOfDeathValidator causeOfDeathValidator;
@@ -79,6 +85,8 @@ public class DeathWorkflow {
                          ObjectMapper objectMapper,
                          BodyCustodyRepository bodyCustodyRepository,
                          DeathAuditRepository deathAuditRepository,
+                         VerbalAutopsyRepository verbalAutopsyRepository,
+                         FieldBodyManagementRepository fieldBodyManagementRepository,
                          MedicoLegalScreener medicoLegalScreener,
                          PublicHealthScreener publicHealthScreener,
                          CauseOfDeathValidator causeOfDeathValidator) {
@@ -89,6 +97,8 @@ public class DeathWorkflow {
         this.objectMapper = objectMapper;
         this.bodyCustodyRepository = bodyCustodyRepository;
         this.deathAuditRepository = deathAuditRepository;
+        this.verbalAutopsyRepository = verbalAutopsyRepository;
+        this.fieldBodyManagementRepository = fieldBodyManagementRepository;
         this.medicoLegalScreener = medicoLegalScreener;
         this.publicHealthScreener = publicHealthScreener;
         this.causeOfDeathValidator = causeOfDeathValidator;
@@ -298,6 +308,9 @@ public class DeathWorkflow {
         }
         if (req.sourceContext() != null) dc.setSourceContext(req.sourceContext());
         if (req.sourceRef() != null) dc.setSourceRef(req.sourceRef());
+        dc.setBodyDispositionContext(req.bodyDispositionContext() != null
+                ? req.bodyDispositionContext()
+                : defaultBodyDisposition(req.placeOfDeathContext(), dc.getSourceContext()));
 
         // ── Medico-legal screen ──
         MedicoLegalScreener.Result ml = medicoLegalScreener.evaluate(
@@ -310,6 +323,10 @@ public class DeathWorkflow {
             dc.setCoronerReferralStatus("PENDING_REFERRAL"); // owner-routed hook to coroner/police
             dc.setBodyReleaseBlocked(true);                  // body release blocked until cleared
             if (dc.getCodManner() == null) dc.setCodManner("PENDING");
+            // Cause is not yet established — a coroner referral is pending, NOT medically certified.
+            if (dc.getCauseOfDeathBasis() == null) dc.setCauseOfDeathBasis("MEDICO_LEGAL_PENDING");
+        } else if (dc.getCauseOfDeathBasis() == null) {
+            dc.setCauseOfDeathBasis("UNKNOWN_UNCERTIFIED"); // set on certification / verbal autopsy
         }
 
         dc = deathCaseRepository.save(dc);
@@ -331,11 +348,263 @@ public class DeathWorkflow {
         payload.put("journeyId", dc.getJourneyId());
         payload.put("coronerReferralRequired", dc.isCoronerReferralRequired());
         payload.put("sourceContext", dc.getSourceContext());
+        payload.put("bodyDispositionContext", dc.getBodyDispositionContext());
+        payload.put("causeOfDeathBasis", dc.getCauseOfDeathBasis());
         writeOutbox("DEATH_CASE", dc.getId().toString(), "DEATH_CONFIRMED", toJson(payload));
 
-        log.info("Death confirmed: case={}, journey={}, by role {}, coronerReferral={}",
-                dc.getId(), dc.getJourneyId(), role, dc.isCoronerReferralRequired());
+        log.info("Death confirmed: case={}, journey={}, source={}, by role {}, coronerReferral={}",
+                dc.getId(), dc.getJourneyId(), dc.getSourceContext(), role, dc.isCoronerReferralRequired());
         return dc;
+    }
+
+    /**
+     * Confirm a body brought in dead to a facility / mortuary / police point. Forces the
+     * brought-in-dead place + source and a facility body-disposition, then runs the same authorised
+     * confirmation + medico-legal screen as {@link #confirmDeath}. Facility body receipt, mortuary
+     * custody, and medico-legal screening apply (this is NOT a community/field death).
+     */
+    @Transactional
+    public DeathCaseEntity confirmBroughtInDead(zw.gov.mohcc.impilo.pct.api.dto.ConfirmDeathRequest req) {
+        zw.gov.mohcc.impilo.pct.api.dto.ConfirmDeathRequest forced =
+                new zw.gov.mohcc.impilo.pct.api.dto.ConfirmDeathRequest(
+                        req.journeyId(), req.deathDatetime(), "BROUGHT_IN_DEAD", req.placeOfDeathLocation(),
+                        req.resuscitationAttempted(), req.presentAtDeath(), req.deceasedCpid(),
+                        req.deceasedIdentityStatus(), req.admittedAt(), req.suspectedManner(),
+                        req.inCustody(), req.facilityId(), "BROUGHT_IN_DEAD",
+                        req.sourceRef(),
+                        req.bodyDispositionContext() != null ? req.bodyDispositionContext() : "BROUGHT_TO_FACILITY");
+        return confirmDeath(forced);
+    }
+
+    /**
+     * Report a community / field death by a non-confirming actor (CHW, family, surveillance). This is
+     * an UNVERIFIED notification, NOT a provider confirmation: the case opens in status REPORTED with
+     * {@code cause_of_death_basis = UNKNOWN_UNCERTIFIED}, no mortuary custody, and no asserted cause.
+     * A red-flag manner still routes it to the medico-legal pathway. The body may never come to a
+     * facility. No confirm-role gate — a report can legitimately originate from a non-clinical actor.
+     */
+    @Transactional
+    public DeathCaseEntity reportCommunityDeath(
+            zw.gov.mohcc.impilo.pct.api.dto.CommunityDeathReportRequest req) {
+        TrustContext ctx = TrustContextHolder.require();
+        String role = roleOf(ctx);
+
+        UUID facilityId = req.facilityId() != null ? UUID.fromString(req.facilityId()) : ctx.facilityId();
+        String source = req.sourceContext() != null ? req.sourceContext() : "COMMUNITY_FIELD";
+        if ("FACILITY".equals(source) || "BROUGHT_IN_DEAD".equals(source)
+                || "INPATIENT_DISCHARGE".equals(source) || "EMERGENCY_INCIDENT".equals(source)) {
+            throw new IllegalArgumentException(
+                    "A community death report requires a community/field source_context, not " + source);
+        }
+
+        DeathCaseEntity dc = new DeathCaseEntity();
+        dc.setId(UUID.randomUUID());
+        dc.setTenantId(ctx.tenantId());
+        dc.setFacilityId(facilityId);
+        dc.setStatus("REPORTED");
+        dc.setDeathDatetime(req.deathDatetime());
+        dc.setPronouncedAt(req.deathDatetime());
+        dc.setPlaceOfDeathContext(req.placeOfDeathContext() != null ? req.placeOfDeathContext() : "COMMUNITY");
+        dc.setPlaceOfDeathLocation(req.placeOfDeathLocation());
+        if (req.deceasedCpid() != null) dc.setPatientCpid(req.deceasedCpid());
+        dc.setDeceasedIdentityStatus(
+                req.deceasedIdentityStatus() != null ? req.deceasedIdentityStatus() : "UNKNOWN");
+        if (!"KNOWN".equalsIgnoreCase(dc.getDeceasedIdentityStatus())) {
+            dc.setTemporaryIdentityRef("TMP-DEC-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        }
+        dc.setSourceContext(source);
+        dc.setBodyDispositionContext(req.bodyDispositionContext() != null
+                ? req.bodyDispositionContext() : "NOT_BROUGHT_TO_FACILITY");
+        dc.setReporterName(req.reporterName());
+        dc.setReporterRole(req.reporterRole());
+        dc.setReporterContact(req.reporterContact());
+        dc.setCreatedAt(OffsetDateTime.now());
+
+        // A report is unverified — no confirming provider, no asserted cause yet.
+        MedicoLegalScreener.Result ml = medicoLegalScreener.evaluate(
+                null, req.deathDatetime(), dc.getPlaceOfDeathContext(),
+                req.suspectedManner(), Boolean.TRUE.equals(req.inCustody()),
+                dc.getDeceasedIdentityStatus());
+        dc.setCoronerReferralRequired(ml.coronerReferralRequired());
+        dc.setMedicoLegalTriggers(String.join(",", ml.triggers()));
+        if (ml.coronerReferralRequired()) {
+            dc.setCoronerReferralStatus("PENDING_REFERRAL");
+            dc.setCauseOfDeathBasis("MEDICO_LEGAL_PENDING");
+            if (dc.getCodManner() == null) dc.setCodManner("PENDING");
+        } else {
+            dc.setCauseOfDeathBasis("UNKNOWN_UNCERTIFIED");
+        }
+
+        dc = deathCaseRepository.save(dc);
+
+        audit(dc, "COMMUNITY_REPORTED", "source_context", null, source,
+                "Community/field death reported by " + (req.reporterRole() != null ? req.reporterRole() : role)
+                        + " (unverified)", ctx, role);
+
+        Map<String, Object> p = new LinkedHashMap<>();
+        p.put("caseId", dc.getId().toString());
+        p.put("sourceContext", source);
+        p.put("deceasedIdentityStatus", dc.getDeceasedIdentityStatus());
+        p.put("coronerReferralRequired", dc.isCoronerReferralRequired());
+        writeOutbox("DEATH_CASE", dc.getId().toString(), "DEATH_COMMUNITY_REPORTED", toJson(p));
+
+        log.info("Community death reported: case={}, source={}, reporter={}, coronerReferral={}",
+                dc.getId(), source, req.reporterRole(), dc.isCoronerReferralRequired());
+        return dc;
+    }
+
+    /**
+     * Record a verbal-autopsy interview for a community/field death (WHO VA standard). Yields a
+     * PROBABLE cause only — never a medical certification. Hard rule: a VA may NOT be attached to a
+     * medically certified (or post-mortem certified) death — VA-inferred causes are never mixed with
+     * certified ones in mortality intelligence. If red flags are present the case is routed to the
+     * medico-legal pathway and NO probable cause is assigned.
+     */
+    @Transactional
+    public VerbalAutopsyEntity recordVerbalAutopsy(UUID caseId,
+            zw.gov.mohcc.impilo.pct.api.dto.VerbalAutopsyRequest req) {
+        TrustContext ctx = TrustContextHolder.require();
+        String role = roleOf(ctx);
+        DeathCaseEntity dc = require(ctx, caseId);
+
+        String basis = dc.getCauseOfDeathBasis();
+        if ("MEDICALLY_CERTIFIED".equals(basis) || "POST_MORTEM_CERTIFIED".equals(basis)
+                || "SIGNED".equals(dc.getCertificationStatus()) || "AMENDED".equals(dc.getCertificationStatus())) {
+            throw new IllegalStateException(
+                    "This death already has a medically certified cause — a verbal-autopsy probable "
+                            + "cause must not be mixed with a certified cause.");
+        }
+
+        List<String> redFlags = req.redFlags() == null ? List.of()
+                : req.redFlags().stream().filter(f -> f != null && !f.isBlank()).toList();
+
+        VerbalAutopsyEntity va = new VerbalAutopsyEntity();
+        va.setVaId(UUID.randomUUID());
+        va.setTenantId(ctx.tenantId());
+        va.setCaseId(caseId);
+        va.setFacilityId(dc.getFacilityId());
+        va.setInstrument(req.instrument() != null ? req.instrument() : "WHO_VA_2022");
+        va.setIntervieweeRelationship(req.intervieweeRelationship());
+        va.setInterviewedAt(req.interviewedAt());
+        va.setInterviewerId(ctx.actorId());
+        va.setInterviewerRole(role);
+        va.setNarrative(req.narrative());
+        va.setCauseAssignmentMethod(req.causeAssignmentMethod());
+        va.setRecordedBy(ctx.actorId());
+        va.setRecordedByRole(role);
+        va.setRedFlags(redFlags.isEmpty() ? null : String.join(",", redFlags));
+
+        if (!redFlags.isEmpty()) {
+            // Red flags trump verbal autopsy — route to the medico-legal pathway, assign no cause.
+            va.setStatus("DRAFT");
+            va = verbalAutopsyRepository.save(va);
+            dc.setCoronerReferralRequired(true);
+            if (dc.getCoronerReferralStatus() == null) dc.setCoronerReferralStatus("PENDING_REFERRAL");
+            dc.setMedicoLegalTriggers(mergeTriggers(dc.getMedicoLegalTriggers(), redFlags));
+            dc.setCauseOfDeathBasis("MEDICO_LEGAL_PENDING");
+            deathCaseRepository.save(dc);
+            audit(dc, "VERBAL_AUTOPSY_RED_FLAGGED", "red_flags", null, va.getRedFlags(),
+                    "Verbal autopsy surfaced medico-legal red flags — routed to coroner/investigation",
+                    ctx, role);
+            Map<String, Object> rp = new LinkedHashMap<>();
+            rp.put("caseId", caseId.toString());
+            rp.put("redFlags", va.getRedFlags());
+            writeOutbox("DEATH_CASE", caseId.toString(), "DEATH_MEDICO_LEGAL_FLAGGED", toJson(rp));
+            return va;
+        }
+
+        va.setProbableImmediateCause(req.probableImmediateCause());
+        va.setProbableUnderlyingCause(req.probableUnderlyingCause());
+        va.setProbableCauseCode(req.probableCauseCode());
+        va.setStatus(req.complete() ? "COMPLETED" : "DRAFT");
+        va = verbalAutopsyRepository.save(va);
+
+        if (req.complete()) {
+            // Assign the PROBABLE cause on the case — NOT a certification. certification_status stays
+            // NOT_STARTED; the basis marks this as verbal-autopsy-probable so mortality intelligence
+            // never treats it as certified.
+            dc.setCodImmediate(req.probableImmediateCause());
+            dc.setCodUnderlying(req.probableUnderlyingCause());
+            dc.setCauseOfDeathBasis("VERBAL_AUTOPSY_PROBABLE");
+            deathCaseRepository.save(dc);
+        }
+
+        audit(dc, req.complete() ? "VERBAL_AUTOPSY_COMPLETED" : "VERBAL_AUTOPSY_DRAFTED",
+                "cause_of_death_basis", basis, dc.getCauseOfDeathBasis(),
+                "Verbal autopsy " + va.getStatus().toLowerCase(), ctx, role);
+
+        Map<String, Object> p = new LinkedHashMap<>();
+        p.put("caseId", caseId.toString());
+        p.put("vaId", va.getVaId().toString());
+        p.put("status", va.getStatus());
+        p.put("causeOfDeathBasis", dc.getCauseOfDeathBasis());
+        writeOutbox("DEATH_CASE", caseId.toString(), "DEATH_VERBAL_AUTOPSY", toJson(p));
+        return va;
+    }
+
+    /**
+     * Record non-facility (field) body management — safe &amp; dignified burial, family release,
+     * funeral-director direct, police handover, or unrecovered. This is the branch for a body that
+     * never comes to a facility; it does NOT require mortuary custody. A non-police disposition is
+     * refused while an open medico-legal / coroner referral is present (that body must go to the
+     * competent authority). Infectious-risk deaths emit a public-health signal.
+     */
+    @Transactional
+    public FieldBodyManagementEntity recordFieldBodyManagement(UUID caseId,
+            zw.gov.mohcc.impilo.pct.api.dto.FieldBodyManagementRequest req) {
+        TrustContext ctx = TrustContextHolder.require();
+        String role = roleOf(ctx);
+        DeathCaseEntity dc = require(ctx, caseId);
+
+        String disposition = req.dispositionType();
+        boolean openMedicoLegal = dc.isCoronerReferralRequired()
+                && !"CLEARED".equals(dc.getCoronerReferralStatus());
+        if (openMedicoLegal && !"POLICE_HANDOVER".equals(disposition)) {
+            throw new IllegalStateException(
+                    "An open medico-legal / coroner referral is present — the body must be handed to the "
+                            + "competent authority (POLICE_HANDOVER), not released or buried.");
+        }
+
+        FieldBodyManagementEntity fbm = new FieldBodyManagementEntity();
+        fbm.setFbmId(UUID.randomUUID());
+        fbm.setTenantId(ctx.tenantId());
+        fbm.setCaseId(caseId);
+        fbm.setFacilityId(dc.getFacilityId());
+        fbm.setDispositionType(disposition);
+        fbm.setInfectiousRisk(req.infectiousRisk());
+        fbm.setInfectiousHazard(req.infectiousHazard());
+        fbm.setSafeBurialProtocolApplied(req.safeBurialProtocolApplied());
+        fbm.setPpeUsed(req.ppeUsed());
+        fbm.setHandlingTeam(req.handlingTeam());
+        fbm.setFamilyPresent(req.familyPresent());
+        fbm.setReligiousRitesObserved(req.religiousRitesObserved());
+        fbm.setReleasedToName(req.releasedToName());
+        fbm.setReleasedToRelationship(req.releasedToRelationship());
+        fbm.setLocation(req.location());
+        fbm.setOccurredAt(req.occurredAt());
+        fbm.setNotes(req.notes());
+        fbm.setManagedBy(ctx.actorId());
+        fbm.setManagedByRole(role);
+        fbm = fieldBodyManagementRepository.save(fbm);
+
+        dc.setBodyDispositionContext(dispositionToBodyContext(disposition));
+        deathCaseRepository.save(dc);
+
+        audit(dc, "FIELD_BODY_MANAGED", "body_disposition_context", null, dc.getBodyDispositionContext(),
+                "Field body management: " + disposition
+                        + (req.infectiousRisk() ? " (infectious risk)" : ""), ctx, role);
+
+        Map<String, Object> p = new LinkedHashMap<>();
+        p.put("caseId", caseId.toString());
+        p.put("dispositionType", disposition);
+        p.put("bodyDispositionContext", dc.getBodyDispositionContext());
+        p.put("infectiousRisk", req.infectiousRisk());
+        writeOutbox("DEATH_CASE", caseId.toString(), "DEATH_FIELD_BODY_MANAGED", toJson(p));
+        if (req.infectiousRisk()) {
+            // owner-routed: surveillance picks up the public-health signal (safe & dignified burial).
+            writeOutbox("DEATH_CASE", caseId.toString(), "DEATH_PUBLIC_HEALTH_SIGNAL", toJson(p));
+        }
+        return fbm;
     }
 
     /**
@@ -454,6 +723,10 @@ public class DeathWorkflow {
             boolean amendment = "SIGNED".equals(prevStatus) || "AMENDED".equals(prevStatus);
             dc.setCertificationStatus(amendment ? "AMENDED" : "SIGNED");
             dc.setCertifiedAt(OffsetDateTime.now());
+            // A clinician-signed certificate is a MEDICALLY certified cause — the highest certainty
+            // class. This deliberately overrides any prior probable/pending basis; a certified cause
+            // supersedes a verbal-autopsy or field-investigation probable one.
+            dc.setCauseOfDeathBasis("MEDICALLY_CERTIFIED");
             // Real clinical record: emit a Composition/DocumentReference toward Butano (owner-routed).
             // We persist the intended reference; rendering of a PDF certificate is deferred to Butano.
             dc.setCertCompositionRef("COD-COMP-" + caseId.toString().substring(0, 8).toUpperCase());
@@ -600,16 +873,62 @@ public class DeathWorkflow {
         return dc;
     }
 
-    /** Fields the CRVS package cannot be submitted without. */
+    /**
+     * Fields the CRVS package cannot be submitted without. A cause is satisfied either by a signed
+     * medical certificate OR — for a community/field death that never entered a facility — by a
+     * probable cause from verbal autopsy or field investigation. The probable-vs-certified distinction
+     * is preserved on the notification via {@code cause_of_death_basis}; it is not flattened here.
+     */
     public List<String> crvsMissingFields(DeathCaseEntity dc) {
         java.util.ArrayList<String> missing = new java.util.ArrayList<>();
         if (dc.getDeathDatetime() == null) missing.add("dateOfDeath");
         if (dc.getPatientCpid() == null && dc.getTemporaryIdentityRef() == null) missing.add("deceasedIdentity");
         if (dc.getPlaceOfDeathContext() == null) missing.add("placeOfDeath");
-        if (!"SIGNED".equals(dc.getCertificationStatus()) && !"AMENDED".equals(dc.getCertificationStatus())) {
+        boolean certified = "SIGNED".equals(dc.getCertificationStatus())
+                || "AMENDED".equals(dc.getCertificationStatus());
+        boolean probable = "VERBAL_AUTOPSY_PROBABLE".equals(dc.getCauseOfDeathBasis())
+                || "FIELD_INVESTIGATION_PROBABLE".equals(dc.getCauseOfDeathBasis());
+        if (!certified && !probable) {
             missing.add("signedCauseOfDeath");
         }
         return missing;
+    }
+
+    // ── community/field pathway helpers ──
+
+    /** Default body-disposition context when the caller did not specify one. */
+    private static String defaultBodyDisposition(String placeOfDeathContext, String sourceContext) {
+        String place = placeOfDeathContext == null ? "" : placeOfDeathContext.toUpperCase();
+        String source = sourceContext == null ? "" : sourceContext.toUpperCase();
+        if (place.equals("INPATIENT") || place.equals("ED") || place.equals("THEATRE")
+                || place.equals("BROUGHT_IN_DEAD") || place.equals("IN_TRANSIT")
+                || source.equals("FACILITY") || source.equals("BROUGHT_IN_DEAD")
+                || source.equals("INPATIENT_DISCHARGE")) {
+            return "BROUGHT_TO_FACILITY";
+        }
+        return "NOT_BROUGHT_TO_FACILITY";
+    }
+
+    /** Map a field disposition type to the body-disposition context recorded on the case. */
+    private static String dispositionToBodyContext(String dispositionType) {
+        if (dispositionType == null) return "NOT_BROUGHT_TO_FACILITY";
+        return switch (dispositionType) {
+            case "SAFE_AND_DIGNIFIED_BURIAL" -> "FIELD_SAFE_BURIAL";
+            case "FAMILY_RELEASE" -> "COMMUNITY_RELEASE";
+            case "FUNERAL_DIRECTOR" -> "FUNERAL_DIRECTOR_DIRECT";
+            case "POLICE_HANDOVER" -> "POLICE_CUSTODY";
+            default -> "NOT_BROUGHT_TO_FACILITY";
+        };
+    }
+
+    /** Merge freshly-surfaced medico-legal triggers into the existing comma list, de-duplicated. */
+    private static String mergeTriggers(String existing, List<String> add) {
+        java.util.LinkedHashSet<String> set = new java.util.LinkedHashSet<>();
+        if (existing != null && !existing.isBlank()) {
+            for (String t : existing.split(",")) if (!t.isBlank()) set.add(t.trim());
+        }
+        for (String t : add) if (t != null && !t.isBlank()) set.add(t.trim());
+        return String.join(",", set);
     }
 
     /**
@@ -648,6 +967,18 @@ public class DeathWorkflow {
     public BodyCustodyEntity getCustody(UUID caseId) {
         TrustContext ctx = TrustContextHolder.require();
         return bodyCustodyRepository.findByTenantIdAndCaseId(ctx.tenantId(), caseId).orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<VerbalAutopsyEntity> listVerbalAutopsies(UUID caseId) {
+        TrustContext ctx = TrustContextHolder.require();
+        return verbalAutopsyRepository.findByTenantIdAndCaseIdOrderByCreatedAtDesc(ctx.tenantId(), caseId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FieldBodyManagementEntity> listFieldBodyManagement(UUID caseId) {
+        TrustContext ctx = TrustContextHolder.require();
+        return fieldBodyManagementRepository.findByTenantIdAndCaseIdOrderByCreatedAtDesc(ctx.tenantId(), caseId);
     }
 
     // ------------------------------------------------------------------

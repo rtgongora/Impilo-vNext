@@ -8,13 +8,18 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.pct.api.dto.BodyReceiveRequest;
 import zw.gov.mohcc.impilo.pct.api.dto.BodyReleaseRequest;
 import zw.gov.mohcc.impilo.pct.api.dto.CertifyCauseOfDeathRequest;
+import zw.gov.mohcc.impilo.pct.api.dto.CommunityDeathReportRequest;
 import zw.gov.mohcc.impilo.pct.api.dto.ConfirmDeathRequest;
+import zw.gov.mohcc.impilo.pct.api.dto.FieldBodyManagementRequest;
 import zw.gov.mohcc.impilo.pct.api.dto.PublicHealthScreenRequest;
 import zw.gov.mohcc.impilo.pct.api.dto.RecordDeathRequest;
+import zw.gov.mohcc.impilo.pct.api.dto.VerbalAutopsyRequest;
 import zw.gov.mohcc.impilo.pct.core.DeathWorkflow;
 import zw.gov.mohcc.impilo.pct.persistence.entity.BodyCustodyEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.DeathAuditEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.DeathCaseEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.FieldBodyManagementEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.VerbalAutopsyEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 
@@ -109,6 +114,51 @@ public class DeathController {
     public ResponseEntity<ApiResponse<DeathCaseEntity>> confirmDeath(
             @Valid @RequestBody ConfirmDeathRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(deathWorkflow.confirmDeath(request), cid()));
+    }
+
+    /** Confirm a body brought in dead to the facility (facility receipt + mortuary + medico-legal apply). */
+    @PostMapping("/death/brought-in-dead")
+    public ResponseEntity<ApiResponse<DeathCaseEntity>> broughtInDead(
+            @Valid @RequestBody ConfirmDeathRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(deathWorkflow.confirmBroughtInDead(request), cid()));
+    }
+
+    /**
+     * Report a community / field death (unverified) — by a CHW, family, surveillance team, etc. A
+     * report is NOT a confirmation: the case opens in status REPORTED with no asserted cause.
+     */
+    @PostMapping("/death/community-report")
+    public ResponseEntity<ApiResponse<DeathCaseEntity>> communityReport(
+            @Valid @RequestBody CommunityDeathReportRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(deathWorkflow.reportCommunityDeath(request), cid()));
+    }
+
+    /** Record a verbal-autopsy interview for a community/field death (WHO VA — probable cause only). */
+    @PostMapping("/death/{caseId}/verbal-autopsy")
+    public ResponseEntity<ApiResponse<VerbalAutopsyEntity>> verbalAutopsy(
+            @PathVariable UUID caseId, @Valid @RequestBody VerbalAutopsyRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(deathWorkflow.recordVerbalAutopsy(caseId, request), cid()));
+    }
+
+    /** List verbal-autopsy interviews recorded against a death case. */
+    @GetMapping("/death/{caseId}/verbal-autopsy")
+    public ResponseEntity<ApiResponse<List<VerbalAutopsyEntity>>> listVerbalAutopsies(
+            @PathVariable UUID caseId) {
+        return ResponseEntity.ok(ApiResponse.ok(deathWorkflow.listVerbalAutopsies(caseId), cid()));
+    }
+
+    /** Record non-facility (field) body management — safe burial / release / handover (no mortuary custody). */
+    @PostMapping("/death/{caseId}/field-body-management")
+    public ResponseEntity<ApiResponse<FieldBodyManagementEntity>> fieldBodyManagement(
+            @PathVariable UUID caseId, @Valid @RequestBody FieldBodyManagementRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(deathWorkflow.recordFieldBodyManagement(caseId, request), cid()));
+    }
+
+    /** List field body-management records for a death case. */
+    @GetMapping("/death/{caseId}/field-body-management")
+    public ResponseEntity<ApiResponse<List<FieldBodyManagementEntity>>> listFieldBodyManagement(
+            @PathVariable UUID caseId) {
+        return ResponseEntity.ok(ApiResponse.ok(deathWorkflow.listFieldBodyManagement(caseId), cid()));
     }
 
     /** List death cases for the active facility (death dashboard). */

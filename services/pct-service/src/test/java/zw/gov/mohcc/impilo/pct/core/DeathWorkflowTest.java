@@ -16,6 +16,8 @@ import zw.gov.mohcc.impilo.pct.core.death.PublicHealthScreener;
 import zw.gov.mohcc.impilo.pct.persistence.entity.BodyCustodyEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.DeathAuditEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.DeathCaseEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.FieldBodyManagementEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.VerbalAutopsyEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.*;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
@@ -43,6 +45,8 @@ class DeathWorkflowTest {
     @Mock private EventOutboxRepository outboxRepository;
     @Mock private BodyCustodyRepository bodyCustodyRepository;
     @Mock private DeathAuditRepository deathAuditRepository;
+    @Mock private VerbalAutopsyRepository verbalAutopsyRepository;
+    @Mock private FieldBodyManagementRepository fieldBodyManagementRepository;
 
     private DeathWorkflow workflow;
     private final ObjectMapper om = new ObjectMapper();
@@ -55,10 +59,13 @@ class DeathWorkflowTest {
     void setUp() {
         workflow = new DeathWorkflow(deathCaseRepository, journeyRepository, journeyStateMachine,
                 outboxRepository, om, bodyCustodyRepository, deathAuditRepository,
+                verbalAutopsyRepository, fieldBodyManagementRepository,
                 new MedicoLegalScreener(), new PublicHealthScreener(), new CauseOfDeathValidator());
         when(deathCaseRepository.save(any(DeathCaseEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(bodyCustodyRepository.save(any(BodyCustodyEntity.class))).thenAnswer(i -> i.getArgument(0));
         when(deathAuditRepository.save(any(DeathAuditEntity.class))).thenAnswer(i -> i.getArgument(0));
+        when(verbalAutopsyRepository.save(any(VerbalAutopsyEntity.class))).thenAnswer(i -> i.getArgument(0));
+        when(fieldBodyManagementRepository.save(any(FieldBodyManagementEntity.class))).thenAnswer(i -> i.getArgument(0));
     }
 
     private TrustContext ctx(String actorType) {
@@ -75,7 +82,7 @@ class DeathWorkflowTest {
     private ConfirmDeathRequest natural() {
         return new ConfirmDeathRequest(null, OffsetDateTime.now(), "INPATIENT", "Ward 3",
                 false, "Dr. A", "CPID-1", "KNOWN", OffsetDateTime.now().minusDays(5),
-                "NATURAL", false, FACILITY.toString(), "FACILITY", null);
+                "NATURAL", false, FACILITY.toString(), "FACILITY", null, null);
     }
 
     // 1. Authorised provider confirms a natural death; it persists with no coroner referral.
@@ -103,7 +110,7 @@ class DeathWorkflowTest {
     void within_24h_triggers_medico_legal() {
         OffsetDateTime now = OffsetDateTime.now();
         ConfirmDeathRequest req = new ConfirmDeathRequest(null, now, "INPATIENT", null, true, null,
-                "CPID-2", "KNOWN", now.minusHours(6), "NATURAL", false, FACILITY.toString(), "FACILITY", null);
+                "CPID-2", "KNOWN", now.minusHours(6), "NATURAL", false, FACILITY.toString(), "FACILITY", null, null);
         try (var t = trust("DOCTOR")) {
             DeathCaseEntity dc = workflow.confirmDeath(req);
             assertThat(dc.isCoronerReferralRequired()).isTrue();
@@ -116,23 +123,28 @@ class DeathWorkflowTest {
     @Test
     void theatre_death_triggers_referral() {
         ConfirmDeathRequest req = new ConfirmDeathRequest(null, OffsetDateTime.now(), "THEATRE", null,
-                true, null, "CPID-3", "KNOWN", null, "NATURAL", false, FACILITY.toString(), "FACILITY", null);
+                true, null, "CPID-3", "KNOWN", null, "NATURAL", false, FACILITY.toString(), "FACILITY", null, null);
         try (var t = trust("DOCTOR")) {
             assertThat(workflow.confirmDeath(req).getMedicoLegalTriggers()).contains("DURING_SURGERY_OR_PROCEDURE");
         }
     }
 
-    // 2c. Brought-in-dead unknown body mints a temporary deceased identity + medico-legal screen.
+    // 2c. Brought-in-dead unknown body mints a temporary deceased identity + medico-legal screen, and
+    // resolves to the BROUGHT_IN_DEAD source + BROUGHT_TO_FACILITY disposition (not a community death).
     @Test
     void brought_in_dead_unknown_creates_temporary_identity() {
-        ConfirmDeathRequest req = new ConfirmDeathRequest(null, OffsetDateTime.now(), "BROUGHT_IN_DEAD",
+        ConfirmDeathRequest req = new ConfirmDeathRequest(null, OffsetDateTime.now(), null,
                 null, false, null, null, "UNKNOWN", null, "UNDETERMINED", false, FACILITY.toString(),
-                "COMMUNITY", null);
+                null, null, null);
         try (var t = trust("MEDICAL_OFFICER")) {
-            DeathCaseEntity dc = workflow.confirmDeath(req);
+            DeathCaseEntity dc = workflow.confirmBroughtInDead(req);
             assertThat(dc.getTemporaryIdentityRef()).startsWith("TMP-DEC-");
             assertThat(dc.getMedicoLegalTriggers()).contains("UNKNOWN_IDENTITY");
             assertThat(dc.isCoronerReferralRequired()).isTrue();
+            assertThat(dc.getSourceContext()).isEqualTo("BROUGHT_IN_DEAD");
+            assertThat(dc.getPlaceOfDeathContext()).isEqualTo("BROUGHT_IN_DEAD");
+            assertThat(dc.getBodyDispositionContext()).isEqualTo("BROUGHT_TO_FACILITY");
+            assertThat(dc.getCauseOfDeathBasis()).isEqualTo("MEDICO_LEGAL_PENDING");
         }
     }
 
@@ -278,6 +290,166 @@ class DeathWorkflowTest {
         try (var t = trust("DOCTOR")) {
             workflow.confirmDeath(natural());
             verify(deathAuditRepository, atLeastOnce()).save(any(DeathAuditEntity.class));
+        }
+    }
+
+    // ── Community / field death pathway refinement ──
+
+    // 9. A community/field death REPORT opens an unverified case (status REPORTED, no asserted cause).
+    // A known-identity natural death has no medico-legal trigger, so the basis is UNKNOWN_UNCERTIFIED.
+    @Test
+    void community_report_opens_unverified_case() {
+        CommunityDeathReportRequest req = new CommunityDeathReportRequest(
+                OffsetDateTime.now(), "COMMUNITY_FIELD", "COMMUNITY_HOME", "Village 7", "CPID-77", "KNOWN",
+                "NATURAL", false, null, "Health worker", "CHW", "+263...", FACILITY.toString());
+        try (var t = trust("CHW")) {
+            DeathCaseEntity dc = workflow.reportCommunityDeath(req);
+            assertThat(dc.getStatus()).isEqualTo("REPORTED");
+            assertThat(dc.getSourceContext()).isEqualTo("COMMUNITY_FIELD");
+            assertThat(dc.getBodyDispositionContext()).isEqualTo("NOT_BROUGHT_TO_FACILITY");
+            assertThat(dc.getCauseOfDeathBasis()).isEqualTo("UNKNOWN_UNCERTIFIED");
+            assertThat(dc.isCoronerReferralRequired()).isFalse();
+            assertThat(dc.getConfirmedByRole()).isNull(); // a report is not a confirmation
+        }
+    }
+
+    // 9d. An unidentified body in a community report is a medico-legal trigger (mints a temp identity).
+    @Test
+    void community_report_unknown_identity_is_medico_legal() {
+        CommunityDeathReportRequest req = new CommunityDeathReportRequest(
+                OffsetDateTime.now(), "COMMUNITY_FIELD", "COMMUNITY_HOME", "Village 7", null, "UNKNOWN",
+                "NATURAL", false, null, "Health worker", "CHW", "+263...", FACILITY.toString());
+        try (var t = trust("CHW")) {
+            DeathCaseEntity dc = workflow.reportCommunityDeath(req);
+            assertThat(dc.getTemporaryIdentityRef()).startsWith("TMP-DEC-");
+            assertThat(dc.isCoronerReferralRequired()).isTrue();
+            assertThat(dc.getCauseOfDeathBasis()).isEqualTo("MEDICO_LEGAL_PENDING");
+        }
+    }
+
+    // 9b. A community report cannot claim a facility / brought-in-dead source.
+    @Test
+    void community_report_rejects_facility_source() {
+        CommunityDeathReportRequest req = new CommunityDeathReportRequest(
+                OffsetDateTime.now(), "FACILITY", null, null, "CPID-9", "KNOWN", "NATURAL", false,
+                null, "X", "FAMILY", null, FACILITY.toString());
+        try (var t = trust("CHW")) {
+            assertThatThrownBy(() -> workflow.reportCommunityDeath(req))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    // 9c. A red-flag manner on a community report routes it to the medico-legal pathway.
+    @Test
+    void community_report_red_flag_routes_medico_legal() {
+        CommunityDeathReportRequest req = new CommunityDeathReportRequest(
+                OffsetDateTime.now(), "COMMUNITY_FIELD", null, null, null, "UNKNOWN", "HOMICIDE", false,
+                null, "Neighbour", "COMMUNITY_LEADER", null, FACILITY.toString());
+        try (var t = trust("SURVEILLANCE_OFFICER")) {
+            DeathCaseEntity dc = workflow.reportCommunityDeath(req);
+            assertThat(dc.isCoronerReferralRequired()).isTrue();
+            assertThat(dc.getCauseOfDeathBasis()).isEqualTo("MEDICO_LEGAL_PENDING");
+            assertThat(dc.getMedicoLegalTriggers()).contains("UNNATURAL_MANNER");
+        }
+    }
+
+    // 10. A verbal autopsy assigns a PROBABLE cause without a medical certification.
+    @Test
+    void verbal_autopsy_assigns_probable_cause() {
+        DeathCaseEntity dc = baseCase();
+        dc.setCertificationStatus("NOT_STARTED");
+        dc.setCauseOfDeathBasis("UNKNOWN_UNCERTIFIED");
+        when(deathCaseRepository.findByTenantIdAndCaseId(TENANT, dc.getId())).thenReturn(Optional.of(dc));
+        try (var t = trust("NURSE")) {
+            VerbalAutopsyEntity va = workflow.recordVerbalAutopsy(dc.getId(), new VerbalAutopsyRequest(
+                    "WHO_VA_2022", "SPOUSE", OffsetDateTime.now(), "Fever for a week, then died at home.",
+                    "Sepsis", "Malaria", "1F40", "PHYSICIAN_REVIEW", null, true));
+            assertThat(va.getStatus()).isEqualTo("COMPLETED");
+            assertThat(dc.getCauseOfDeathBasis()).isEqualTo("VERBAL_AUTOPSY_PROBABLE");
+            assertThat(dc.getCodUnderlying()).isEqualTo("Malaria");
+            // A verbal autopsy is NEVER a medical certification.
+            assertThat(dc.getCertificationStatus()).isEqualTo("NOT_STARTED");
+        }
+    }
+
+    // 10b. A verbal autopsy may NOT be attached to a medically certified death (never mixed).
+    @Test
+    void verbal_autopsy_blocked_on_certified_death() {
+        DeathCaseEntity dc = baseCase();
+        dc.setCertificationStatus("SIGNED");
+        dc.setCauseOfDeathBasis("MEDICALLY_CERTIFIED");
+        when(deathCaseRepository.findByTenantIdAndCaseId(TENANT, dc.getId())).thenReturn(Optional.of(dc));
+        try (var t = trust("DOCTOR")) {
+            assertThatThrownBy(() -> workflow.recordVerbalAutopsy(dc.getId(), new VerbalAutopsyRequest(
+                    null, "CHILD", OffsetDateTime.now(), "n", "a", "b", null, "PHYSICIAN_REVIEW", null, true)))
+                    .isInstanceOf(IllegalStateException.class);
+        }
+    }
+
+    // 10c. Red flags surfaced during a verbal autopsy route the case to the medico-legal pathway.
+    @Test
+    void verbal_autopsy_red_flags_route_medico_legal() {
+        DeathCaseEntity dc = baseCase();
+        dc.setCauseOfDeathBasis("UNKNOWN_UNCERTIFIED");
+        when(deathCaseRepository.findByTenantIdAndCaseId(TENANT, dc.getId())).thenReturn(Optional.of(dc));
+        try (var t = trust("NURSE")) {
+            VerbalAutopsyEntity va = workflow.recordVerbalAutopsy(dc.getId(), new VerbalAutopsyRequest(
+                    null, "SIBLING", OffsetDateTime.now(), "Signs of violence.", "x", "y", null,
+                    "PHYSICIAN_REVIEW", List.of("SIGNS_OF_VIOLENCE"), true));
+            assertThat(dc.isCoronerReferralRequired()).isTrue();
+            assertThat(dc.getCauseOfDeathBasis()).isEqualTo("MEDICO_LEGAL_PENDING");
+            // No probable cause assigned when red-flagged.
+            assertThat(va.getProbableUnderlyingCause()).isNull();
+        }
+    }
+
+    // 11. Field body management records a non-facility disposition (safe burial) — no mortuary custody.
+    @Test
+    void field_body_management_safe_burial() {
+        DeathCaseEntity dc = baseCase();
+        dc.setSourceContext("ISOLATION_FIELD_SITE");
+        when(deathCaseRepository.findByTenantIdAndCaseId(TENANT, dc.getId())).thenReturn(Optional.of(dc));
+        try (var t = trust("PUBLIC_HEALTH_OFFICER")) {
+            FieldBodyManagementEntity fbm = workflow.recordFieldBodyManagement(dc.getId(),
+                    new FieldBodyManagementRequest("SAFE_AND_DIGNIFIED_BURIAL", true, "EVD", true, true,
+                            "Burial team A", true, true, null, null, "Village 3", OffsetDateTime.now(), null));
+            assertThat(fbm.getDispositionType()).isEqualTo("SAFE_AND_DIGNIFIED_BURIAL");
+            assertThat(dc.getBodyDispositionContext()).isEqualTo("FIELD_SAFE_BURIAL");
+            verify(bodyCustodyRepository, never()).save(any()); // no mandatory mortuary custody
+        }
+    }
+
+    // 11b. A non-police field disposition is blocked while an open coroner referral is present.
+    @Test
+    void field_body_management_blocked_under_open_coroner() {
+        DeathCaseEntity dc = baseCase();
+        dc.setCoronerReferralRequired(true);
+        dc.setCoronerReferralStatus("PENDING_REFERRAL");
+        when(deathCaseRepository.findByTenantIdAndCaseId(TENANT, dc.getId())).thenReturn(Optional.of(dc));
+        try (var t = trust("PUBLIC_HEALTH_OFFICER")) {
+            assertThatThrownBy(() -> workflow.recordFieldBodyManagement(dc.getId(),
+                    new FieldBodyManagementRequest("FAMILY_RELEASE", false, null, false, null, null,
+                            null, null, "Kin", "SON", null, OffsetDateTime.now(), null)))
+                    .isInstanceOf(IllegalStateException.class);
+            // But a police handover IS permitted under an open referral.
+            FieldBodyManagementEntity fbm = workflow.recordFieldBodyManagement(dc.getId(),
+                    new FieldBodyManagementRequest("POLICE_HANDOVER", false, null, false, null, null,
+                            null, null, null, null, null, OffsetDateTime.now(), null));
+            assertThat(dc.getBodyDispositionContext()).isEqualTo("POLICE_CUSTODY");
+        }
+    }
+
+    // 12. A community death CRVS package stages READY on a verbal-autopsy probable cause (no signed cert).
+    @Test
+    void crvs_package_ready_with_verbal_autopsy_probable() {
+        DeathCaseEntity dc = baseCase();
+        dc.setPatientCpid(null);
+        dc.setTemporaryIdentityRef("TMP-DEC-ABCD1234");
+        dc.setCauseOfDeathBasis("VERBAL_AUTOPSY_PROBABLE");
+        when(deathCaseRepository.findByTenantIdAndCaseId(TENANT, dc.getId())).thenReturn(Optional.of(dc));
+        try (var t = trust("REGISTRY_CLERK")) {
+            DeathCaseEntity r = workflow.stageCrvsPackage(dc.getId());
+            assertThat(r.getCivilRegistrationStatus()).isEqualTo("PACKAGE_READY");
         }
     }
 
