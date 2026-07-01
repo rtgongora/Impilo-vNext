@@ -189,12 +189,36 @@ never fail the import. A within-batch duplicate facility-name guard excludes dup
 (`EXCLUDED_DUPLICATE_FACILITY_NAME`, skipped, never auto-imported/merged) as defence-in-depth over the
 already-clean pack. Tuso import tests now 10/10.
 
-**Remaining increments (documented, not yet built):** TUSO read API for import runs + BFF routes + admin
-UI (batches list, batch detail, review queues, missing-field checklist); importer script modes
-(`--stage-only/--validate/--apply-approved/--reconcile`); facility-detail missing-field checklist UI;
-downstream materialisation honesty. None of these are faked; imported facilities remain
-`IMPORTED_PENDING_CONFIGURATION` until real configuration exists. Migration `V011`/`V013` + service
-changes are compile + unit-test verified, not DB-executed (no DB in sandbox).
+**Increment D — product visibility (import-run read API + BFF + admin UI + facility checklist)
+(LANDED 2026-07-01, verified):** the persisted absorption state is now surfaced in the product, not
+only in backend tests.
+
+- **TUSO read API:** `GET /v1/internal/facilities/import/runs` (list) and `/runs/{runId}` (detail),
+  tenant-scoped. Quality summary enriched from real row outcomes (imported, missing-code, dup-code,
+  dup-name, excluded total, acceptable-missing, failed, valid-coordinates, source_label). Plus
+  `GET /v1/internal/facilities/{id}/import-provenance`: identity separation (internal id/uuid vs public
+  code vs external identifiers), acceptable-missing flags, and a configuration-completeness checklist
+  (TUSO-owned items counted from repositories; queues/workforce/stores marked PENDING_DOWNSTREAM).
+- **BFF proxy (policy-protected under `/internal/v1/admin/**`):** facility-import-runs list/detail,
+  `/rows` (honestly reports row-level staging NOT_PERSISTED), `/review` (real breakdown buckets, per-row
+  detail flagged pending), facility `import-provenance` and `missing-field-checklist`.
+- **Admin UI:** `/admin/facility-imports` (batches list), `/admin/facility-imports/[runId]` (detail),
+  `/admin/facility-imports/[runId]/review` (read-only, honestly labelled queues). Facility detail page
+  gains an identity + provenance + missing-field + setup-completeness checklist section.
+- **Verified:** TUSO `FacilityMasterImportServiceTest` (13) + `FacilityProvenanceServiceTest` (1); BFF
+  `AdminFacilityImportControllerTest` (5); web tsc clean, route-parity 680/680, no-stub OK,
+  product-truth 0 violations, `useFacilityImports` hook test (3) + routes (31).
+
+**Row-level exposure:** run-level summary + breakdown are exposed; **row-level per-run staging is NOT
+persisted yet** — `/rows` reports this honestly and the excluded/review source CSVs remain authoritative
+for individual rows. Row-level staging is the next backend slice.
+
+**Remaining increments (documented, not yet built):** row-level per-run staging + mutation (approve/
+reject review decisions); importer script modes (`--stage-only/--validate/--apply-approved/--reconcile`)
+— the operator script still reads the JSON seed with no mode flags; downstream TUSO→PCT queue
+materialisation (task #15). None are faked; imported facilities remain `IMPORTED_PENDING_CONFIGURATION`
+until real configuration exists. Migrations `V011`/`V013` + service changes are compile + unit-test
+verified, **not DB-executed** (no database in the sandbox — no migration was run against a DB).
 
 ---
 
