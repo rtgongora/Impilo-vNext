@@ -49,10 +49,21 @@ prohibited[+reason], countersignRequired[], auditRef }`.
    `FieldVisibilityRule` semantics from `types.ts`. Non-applicable → dropped entirely.
 2. **Setting/stage applicability** — care_setting / care_stage / specialty / encounter_context match.
 3. **Cadre-workflow gate** — each catalog entry's `required_workflow` vs `cadreDecision.permittedWorkflows()`:
-   - permitted & not escalated → completable (bucket by `obligation_default`).
-   - permitted & in `escalation.supervisorRequiredFor` → **COUNTERSIGN_REQUIRED**.
-   - not permitted → **PROHIBITED** (emitted with reason; doctrine "no fake completions" — cockpit greys it).
+   - directly permitted **or** escalation-eligible (`escalation.supervisorRequiredFor`) → the cadre **may
+     complete** it; bucket by `obligation_default`.
+   - not permitted **and** not escalation-eligible → **PROHIBITED** (emitted with reason; doctrine "no fake
+     completions" — cockpit greys it).
    - emergency widening (Law 1) flows through from CadreDecision automatically.
+
+   **Countersignature is author/policy-driven, not a blanket cadre rule.** A form is `COUNTERSIGN_REQUIRED`
+   only when its definition sets `requires_countersign` (or a future prescribing-policy rule says so). Cadre
+   escalation is surfaced as an advisory `supervisorRecommended` hint (for UI nudges + audit + future policy),
+   **never** a forced gate. Rationale (Zimbabwe context): nurses do prescribe; prescribing authority is
+   competence-, training-, programme- and setting-based, not a clean universal cadre-by-medication ban the
+   platform can safely hard-code today. So `nurse + PRESCRIBE` is *allowed by default* and requires
+   countersignature only where the authored workflow (e.g. controlled drug, high acuity) flags it. The
+   `escalation.supervisorRequiredFor` substrate and per-response audit are retained so precise prescribing
+   rules (by cadre × training × scope × facility level × programme × medication class) can be tightened later.
 
 **FormResolverService** (`pct/core/forms/FormResolverService.java`) mirrors `CadreEngineService`: resolve
 CadreDecision → `VitoIntegration` patient facts (de-PII'd) → `FormsCatalogIntegration` catalog slice

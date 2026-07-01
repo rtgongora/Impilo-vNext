@@ -68,7 +68,8 @@ class FormResponseLifecycleIT {
         when(vitoIntegration.resolvePatientByCpid(CPID)).thenReturn(Map.of("gender", "FEMALE"));
         when(formsCatalogIntegration.fetchCatalog()).thenReturn(List.of(
                 catalogForm("impilo.test.triage", "TRIAGE", false),
-                catalogForm("impilo.test.prescribe", "PRESCRIBE", false)));
+                // Author-flagged prescribing form (e.g. controlled drug) → countersign required.
+                catalogForm("impilo.test.prescribe", "PRESCRIBE", true)));
     }
 
     private MockHttpServletRequestBuilder trust(MockHttpServletRequestBuilder b) {
@@ -83,7 +84,7 @@ class FormResponseLifecycleIT {
 
     @Test
     void resolve_draft_submit_amend_void_roundTrip() throws Exception {
-        // 1) Resolve: NURSE → triage MANDATORY, prescribe COUNTERSIGN (escalation), for this encounter.
+        // 1) Resolve: NURSE → triage MANDATORY; the author-flagged prescribing form → COUNTERSIGN.
         String resolveBody = mapper.writeValueAsString(Map.of(
                 "encounterId", encounterId, "cadre", "NURSE", "role", "PROVIDER",
                 "careSetting", "OUTPATIENT", "context", "outpatient"));

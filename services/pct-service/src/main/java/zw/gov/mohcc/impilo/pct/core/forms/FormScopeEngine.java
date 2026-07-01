@@ -45,28 +45,37 @@ public final class FormScopeEngine {
             }
 
             // 2) Cadre-workflow gate (GAP-4 unification):
-            //    form scope = cadre permitted-workflows ∩ form required-workflow, escalation → countersign.
+            //    form scope        = cadre permitted-workflows ∩ form required-workflow.
+            //    "may complete"    = directly permitted OR the CadreEngine lists it as escalation-eligible
+            //                        (e.g. a Zimbabwe nurse prescribing — competence/programme/setting-based,
+            //                        NOT a universal cadre-by-medication ban we can hard-code today).
+            //    countersignature  = AUTHOR/POLICY-driven only (form.requiresCountersign, or a future
+            //                        prescribing policy rule). Cadre escalation is surfaced as an advisory
+            //                        supervisorRecommended hint, never a blanket hard gate. See the design
+            //                        note on prescribing.
             String workflow = entry.requiredWorkflow();
             boolean workflowGated = workflow != null && !workflow.isBlank();
             boolean directlyPermitted = !workflowGated || containsIgnoreCase(permitted, workflow);
             boolean supervisorEligible = workflowGated && containsIgnoreCase(supervisorRequired, workflow);
 
-            if (supervisorEligible) {
-                // Cadre may perform this workflow only with a supervisor countersignature.
-                countersign.add(obligation(entry, "COUNTERSIGN_REQUIRED",
-                        "Requires supervisor countersignature for " + workflow));
-            } else if (!directlyPermitted) {
-                // Neither independently permitted nor supervisor-eligible → prohibited (with reason).
-                prohibited.add(obligation(entry, "PROHIBITED",
+            if (!directlyPermitted && !supervisorEligible) {
+                // Neither independently permitted nor escalation-eligible → prohibited (with reason).
+                prohibited.add(obligation(entry, "PROHIBITED", false,
                         "Cadre " + safe(req.providerCadre()) + " is not permitted to perform workflow "
                                 + workflow + " for this form."));
-            } else if (entry.requiresCountersign()) {
-                countersign.add(obligation(entry, "COUNTERSIGN_REQUIRED", null));
             } else {
-                switch (upper(entry.obligationDefault())) {
-                    case "MANDATORY" -> mandatory.add(obligation(entry, "MANDATORY", null));
-                    case "RECOMMENDED" -> recommended.add(obligation(entry, "RECOMMENDED", null));
-                    default -> optional.add(obligation(entry, "OPTIONAL", null));
+                boolean supervisorRecommended = supervisorEligible && !directlyPermitted;
+                String advisory = supervisorRecommended
+                        ? "Supervisor review recommended for " + workflow + " by this cadre" : null;
+                if (entry.requiresCountersign()) {
+                    // Author (or future policy) has flagged this specific form/action as needing countersign.
+                    countersign.add(obligation(entry, "COUNTERSIGN_REQUIRED", supervisorRecommended, advisory));
+                } else {
+                    switch (upper(entry.obligationDefault())) {
+                        case "MANDATORY" -> mandatory.add(obligation(entry, "MANDATORY", supervisorRecommended, advisory));
+                        case "RECOMMENDED" -> recommended.add(obligation(entry, "RECOMMENDED", supervisorRecommended, advisory));
+                        default -> optional.add(obligation(entry, "OPTIONAL", supervisorRecommended, advisory));
+                    }
                 }
             }
         }
@@ -133,10 +142,11 @@ public final class FormScopeEngine {
     // Helpers
     // ------------------------------------------------------------------
 
-    private static FormResolution.FormObligation obligation(FormCatalogEntry e, String verdict, String reason) {
+    private static FormResolution.FormObligation obligation(FormCatalogEntry e, String verdict,
+                                                            boolean supervisorRecommended, String reason) {
         return new FormResolution.FormObligation(
                 e.formKey(), e.formSchemaId(), e.version(), e.formSchemaVersionId(),
-                e.name(), verdict, e.requiredWorkflow(), e.requiresCountersign(), reason);
+                e.name(), verdict, e.requiredWorkflow(), e.requiresCountersign(), supervisorRecommended, reason);
     }
 
     private static boolean containsIgnoreCase(List<String> list, String value) {

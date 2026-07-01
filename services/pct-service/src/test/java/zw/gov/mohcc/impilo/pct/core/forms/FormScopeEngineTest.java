@@ -18,11 +18,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FormScopeEngineTest {
 
     private static FormCatalogEntry form(String key, String workflow, String obligation, String setting) {
+        return form(key, workflow, obligation, setting, false);
+    }
+
+    private static FormCatalogEntry form(String key, String workflow, String obligation, String setting,
+                                         boolean requiresCountersign) {
         return new FormCatalogEntry(
                 "schema-" + key, key, key, null, 1, "ver-" + key, "PUBLISHED", "TEST",
                 setting == null ? List.of() : List.of(setting), List.of(), List.of(), List.of(), List.of(),
                 workflow, obligation, List.of(), null, null, "ALL", null, List.of(), List.of(),
-                false, true, "STANDARD", "{}", null);
+                requiresCountersign, true, "STANDARD", "{}", null);
     }
 
     private static CadreDecision cadre(String cadre, String context, Integer acuity) {
@@ -40,17 +45,27 @@ class FormScopeEngineTest {
     }
 
     @Test
-    @DisplayName("Nurse: TRIAGE mandatory, PRESCRIBE countersign-required, DIAGNOSE-only-form countersign via supervisor")
-    void nurseGates() {
+    @DisplayName("Nurse prescribing: allowed without forced countersign (Zimbabwe reality); countersign only when the form author flags it; supervisor is advisory")
+    void nursePrescribingIsAuthorDriven() {
         CadreDecision nurse = cadre("NURSE", "OUTPATIENT", 3);
         FormResolution r = resolve(nurse, "OUTPATIENT", PatientFacts.unknown(),
                 form("triage", "TRIAGE", "MANDATORY", "OUTPATIENT"),
-                form("prescribe", "PRESCRIBE", "OPTIONAL", "OUTPATIENT"));
+                // A plain prescribing form (author did NOT flag countersign) — nurse may complete it directly.
+                form("prescribe", "PRESCRIBE", "OPTIONAL", "OUTPATIENT"),
+                // A prescribing form the author flagged as needing countersignature (e.g. controlled drug).
+                form("prescribeControlled", "PRESCRIBE", "OPTIONAL", "OUTPATIENT", true));
 
         assertThat(has(r.mandatory(), "triage")).isTrue();
-        // Nurse cannot independently PRESCRIBE but escalation lists it → countersign, NOT prohibited.
-        assertThat(has(r.countersignRequired(), "prescribe")).isTrue();
+        // Not a blanket cadre rule: nurse PRESCRIBE is NOT auto-forced to countersign, and NOT prohibited.
+        assertThat(has(r.optional(), "prescribe")).isTrue();
+        assertThat(has(r.countersignRequired(), "prescribe")).isFalse();
         assertThat(has(r.prohibited(), "prescribe")).isFalse();
+        // But the CadreEngine escalation is preserved as an advisory supervisor hint (for UI + future policy).
+        FormResolution.FormObligation rx = r.optional().stream()
+                .filter(o -> o.formKey().equals("prescribe")).findFirst().orElseThrow();
+        assertThat(rx.supervisorRecommended()).isTrue();
+        // Author-flagged prescribing form → countersign IS required.
+        assertThat(has(r.countersignRequired(), "prescribeControlled")).isTrue();
     }
 
     @Test
