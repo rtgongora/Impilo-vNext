@@ -235,15 +235,42 @@ outcomes are now persisted, so the product shows actual rows, not just aggregate
   /duplicates) + `FacilityProvenanceServiceTest` 1; BFF `AdminFacilityImportControllerTest` 6; web tsc
   clean, route-parity 680/680, no-stub OK, product-truth 0, `useFacilityImports` hook tests 5.
 
-**Review decisions remain read-only** (approve/reject/resolve/supply-code) — the row model was designed
-to support them next, but no mutation is implemented, and no fake action buttons are shown.
+**Increment F — review-decision mutations (LANDED 2026-07-01, verified):** authorised reviewers can now
+resolve review rows safely; every visible action is real, policy-protected (RBAC admin namespace),
+audited, and idempotent.
 
-**Remaining increments (documented, not yet built):** review-decision mutations; importer script modes
+- **Schema:** `V015` adds a review overlay (`review_decision`, `decision_status`, `reviewed_by/at`,
+  `review_reason`, `conflict_reason`, append-only `review_history` JSONB); the original import `outcome`
+  is preserved separately. Initial `decision_status` derived from the outcome at staging.
+- **TUSO mutations:** POST supply-code / reject / skip / match-existing / resolve-distinct, PATCH (or
+  POST) canonical-values, POST approve, POST apply-approved. Rules enforced: no blank/duplicate facility
+  codes (uniqueness vs existing facilities + unresolved rows; conflicts leave the row in review, not
+  through); duplicates never auto-merged; duplicate-code rows need a non-conflicting code before distinct
+  resolution; resolve-distinct requires a reason; approval needs a present, unique code and no unresolved
+  conflict; **apply is idempotent** (already-imported rows skipped), **updates matched facilities**
+  (fill-missing, internal id preserved) or creates new, never overwrites verified fields with blanks
+  (`setIfPresent`), and **raw source values are never mutated**; imported facilities stay
+  `IMPORTED_PENDING_CONFIGURATION`. Reviewer identity from the trust context; each mutation appends an
+  audit event to `review_history`.
+- **BFF:** matching admin proxy routes (RBAC preserved); downstream 4xx (validation/conflict) is
+  propagated with its real status + message, not masked as 502.
+- **Admin UI:** per-row actions gated by decision status — terminal rows show status only (no fake
+  buttons); missing-code rows get Supply code; duplicate rows get Match existing / Resolve distinct
+  (reason required); non-terminal rows get Approve/Reject/Skip; an Apply-approved button imports approved
+  rows. Loading + success/error feedback; counts refresh on success.
+- **Verified:** TUSO `FacilityImportReviewServiceTest` 11 (supply success/conflict/blank, reject, skip,
+  match, resolve reason-required, approve-without-code blocked, approve corrected, apply create, apply
+  update-matched, idempotent + raw preserved) + existing 18; BFF `AdminFacilityImportControllerTest` 9
+  (supply/apply proxy, 409 passthrough); web tsc clean, parity 680/680, no-stub OK, product-truth 0,
+  `useFacilityImports` hook tests 9.
+
+**Remaining increments (documented, not yet built):** importer script modes
 (`--stage-only/--validate/--apply-approved/--reconcile`) — the operator script still reads the JSON seed
 with no mode flags; DB execution/migration validation; downstream TUSO→PCT queue materialisation (task
-#15). None are faked; imported facilities remain `IMPORTED_PENDING_CONFIGURATION` until real
-configuration exists. Migrations `V011`/`V013`/`V014` + service changes are compile + unit-test verified,
-**not DB-executed** (no database in the sandbox — no migration was run against a DB).
+#15); broader facility lifecycle configuration completion. None are faked; imported facilities remain
+`IMPORTED_PENDING_CONFIGURATION` until real configuration exists. Migrations `V011`/`V013`/`V014`/`V015`
++ service changes are compile + unit-test verified, **not DB-executed** (no database in the sandbox — no
+migration was run against a DB).
 
 ---
 
