@@ -1197,6 +1197,30 @@ public class PctServiceClient {
         return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/confirm", body, JsonNode.class));
     }
 
+    public JsonNode confirmBroughtInDead(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/brought-in-dead", body, JsonNode.class));
+    }
+
+    public JsonNode reportCommunityDeath(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/community-report", body, JsonNode.class));
+    }
+
+    public JsonNode recordDeathVerbalAutopsy(String caseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/verbal-autopsy", body, JsonNode.class));
+    }
+
+    public JsonNode listDeathVerbalAutopsies(String caseId) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/death/" + caseId + "/verbal-autopsy", JsonNode.class));
+    }
+
+    public JsonNode recordDeathFieldBodyManagement(String caseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/field-body-management", body, JsonNode.class));
+    }
+
+    public JsonNode listDeathFieldBodyManagement(String caseId) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/v1/death/" + caseId + "/field-body-management", JsonNode.class));
+    }
+
     public JsonNode listDeathCases() {
         return extractData(restTemplate.getForEntity(baseUrl + "/v1/death/cases", JsonNode.class));
     }

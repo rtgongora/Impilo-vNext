@@ -35,6 +35,42 @@ public class DeathPathwayController {
         return ResponseEntity.status(HttpStatus.CREATED).body(pct.confirmDeath(body));
     }
 
+    /** Body brought in dead to the facility (facility receipt + mortuary + medico-legal apply). */
+    @PostMapping("/brought-in-dead")
+    public ResponseEntity<JsonNode> broughtInDead(@RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(pct.confirmBroughtInDead(body));
+    }
+
+    /** Unverified community / field death report (CHW / family / surveillance) — not a confirmation. */
+    @PostMapping("/community-report")
+    public ResponseEntity<JsonNode> communityReport(@RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(pct.reportCommunityDeath(body));
+    }
+
+    /** Verbal-autopsy interview for a community/field death (WHO VA — probable cause, never certified). */
+    @PostMapping("/cases/{caseId}/verbal-autopsy")
+    public ResponseEntity<JsonNode> verbalAutopsy(@PathVariable String caseId,
+            @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(pct.recordDeathVerbalAutopsy(caseId, body));
+    }
+
+    @GetMapping("/cases/{caseId}/verbal-autopsy")
+    public ResponseEntity<JsonNode> listVerbalAutopsies(@PathVariable String caseId) {
+        return ResponseEntity.ok(pct.listDeathVerbalAutopsies(caseId));
+    }
+
+    /** Non-facility (field) body management — safe burial / release / handover (no mortuary custody). */
+    @PostMapping("/cases/{caseId}/field-body-management")
+    public ResponseEntity<JsonNode> fieldBodyManagement(@PathVariable String caseId,
+            @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(pct.recordDeathFieldBodyManagement(caseId, body));
+    }
+
+    @GetMapping("/cases/{caseId}/field-body-management")
+    public ResponseEntity<JsonNode> listFieldBodyManagement(@PathVariable String caseId) {
+        return ResponseEntity.ok(pct.listDeathFieldBodyManagement(caseId));
+    }
+
     @GetMapping("/cases")
     public ResponseEntity<JsonNode> listCases() {
         return ResponseEntity.ok(pct.listDeathCases());

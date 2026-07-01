@@ -94,4 +94,61 @@ class DeathPathwayControllerTest {
         assertTrue(resp.getBody().get("packageReady").asBoolean());
         verify(ubomi).markDeathPackageReady(7L);
     }
+
+    @Test
+    void communityReport_delegatesToPctAndReturns201() {
+        PctServiceClient pct = mock(PctServiceClient.class);
+        UbomiServiceClient ubomi = mock(UbomiServiceClient.class);
+        ObjectNode created = mapper.createObjectNode();
+        created.put("caseId", "dc-2");
+        created.put("status", "REPORTED");
+        when(pct.reportCommunityDeath(any())).thenReturn(created);
+        var resp = controller(pct, ubomi).communityReport(
+                Map.of("deathDatetime", "2026-06-30T08:00:00Z", "sourceContext", "COMMUNITY_FIELD"));
+        assertEquals(201, resp.getStatusCode().value());
+        assertEquals("REPORTED", resp.getBody().get("status").asText());
+        verify(pct).reportCommunityDeath(any());
+    }
+
+    @Test
+    void broughtInDead_delegatesToPctAndReturns201() {
+        PctServiceClient pct = mock(PctServiceClient.class);
+        UbomiServiceClient ubomi = mock(UbomiServiceClient.class);
+        ObjectNode created = mapper.createObjectNode();
+        created.put("caseId", "dc-3");
+        created.put("sourceContext", "BROUGHT_IN_DEAD");
+        when(pct.confirmBroughtInDead(any())).thenReturn(created);
+        var resp = controller(pct, ubomi).broughtInDead(Map.of("deathDatetime", "2026-06-30T08:00:00Z"));
+        assertEquals(201, resp.getStatusCode().value());
+        assertEquals("BROUGHT_IN_DEAD", resp.getBody().get("sourceContext").asText());
+        verify(pct).confirmBroughtInDead(any());
+    }
+
+    @Test
+    void verbalAutopsy_delegatesToPct() {
+        PctServiceClient pct = mock(PctServiceClient.class);
+        UbomiServiceClient ubomi = mock(UbomiServiceClient.class);
+        ObjectNode va = mapper.createObjectNode();
+        va.put("status", "COMPLETED");
+        when(pct.recordDeathVerbalAutopsy(eq("dc-2"), any())).thenReturn(va);
+        var resp = controller(pct, ubomi).verbalAutopsy("dc-2",
+                Map.of("probableUnderlyingCause", "Malaria", "complete", true));
+        assertEquals(201, resp.getStatusCode().value());
+        assertEquals("COMPLETED", resp.getBody().get("status").asText());
+        verify(pct).recordDeathVerbalAutopsy(eq("dc-2"), any());
+    }
+
+    @Test
+    void fieldBodyManagement_delegatesToPct() {
+        PctServiceClient pct = mock(PctServiceClient.class);
+        UbomiServiceClient ubomi = mock(UbomiServiceClient.class);
+        ObjectNode fbm = mapper.createObjectNode();
+        fbm.put("dispositionType", "SAFE_AND_DIGNIFIED_BURIAL");
+        when(pct.recordDeathFieldBodyManagement(eq("dc-2"), any())).thenReturn(fbm);
+        var resp = controller(pct, ubomi).fieldBodyManagement("dc-2",
+                Map.of("dispositionType", "SAFE_AND_DIGNIFIED_BURIAL", "infectiousRisk", true));
+        assertEquals(201, resp.getStatusCode().value());
+        assertEquals("SAFE_AND_DIGNIFIED_BURIAL", resp.getBody().get("dispositionType").asText());
+        verify(pct).recordDeathFieldBodyManagement(eq("dc-2"), any());
+    }
 }
