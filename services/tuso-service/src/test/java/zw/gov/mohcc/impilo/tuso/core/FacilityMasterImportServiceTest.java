@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityMasterImportDtos;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierSystem;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityContactRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityGeoRepository;
@@ -25,6 +26,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -197,6 +199,76 @@ class FacilityMasterImportServiceTest {
         FacilityEntity saved = captor.getValue();
         assertThat(saved.getOwnership()).isEqualTo("GOVERNMENT");
         assertThat(saved.getFacilityType()).isEqualTo("HOSPITAL");
+    }
+
+    @Test
+    void facilityCodeStoredAsExternalNationalIdentifierNotAsInternalIdentity() {
+        var record = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-extid", "ZWEXT9", "External Id Clinic", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4,
+                -17.8, 31.0, null, "2024-07-23");
+        when(identifierRepository.findBySystemAndValue(
+                FacilityMasterImportService.MASTER_FACILITY_UID_SYSTEM, "mhf-extid"))
+                .thenReturn(Optional.empty());
+        when(facilityRepository.findByTenantIdAndFacilityCode(tenantId, "ZWEXT9")).thenReturn(Optional.empty());
+        when(facilityRepository.save(any(FacilityEntity.class))).thenAnswer(inv -> {
+            FacilityEntity f = inv.getArgument(0);
+            if (f.getId() == null) {
+                f.setId(101L);
+            }
+            return f;
+        });
+        when(geoRepository.findByFacilityId(any())).thenReturn(Optional.empty());
+
+        service.importPack(new FacilityMasterImportDtos.FacilityMasterImportRequest(
+                false, false, false, List.of(record)));
+
+        ArgumentCaptor<FacilityIdentifierEntity> captor = ArgumentCaptor.forClass(FacilityIdentifierEntity.class);
+        verify(identifierRepository, atLeastOnce()).save(captor.capture());
+
+        // Security truth: the public facility code is persisted as an EXTERNAL matching identifier,
+        // never as the internal facility identity or an authority.
+        var national = captor.getAllValues().stream()
+                .filter(i -> FacilityIdentifierSystem.NATIONAL_FACILITY_CODE.equals(i.getSystem()))
+                .findFirst();
+        assertThat(national).isPresent();
+        assertThat(national.get().getValue()).isEqualTo("ZWEXT9");
+        assertThat(FacilityIdentifierSystem.isInternalIdentity(national.get().getSystem())).isFalse();
+    }
+
+    @Test
+    void reimportReusesInternalIdentityAndDoesNotRegenerateItFromTheCode() {
+        UUID stableUuid = UUID.fromString("11111111-2222-3333-4444-555555555555");
+        FacilityEntity existing = new FacilityEntity();
+        existing.setId(42L);
+        existing.setFacilityUuid(stableUuid);
+        existing.setTenantId(tenantId);
+        existing.setFacilityCode("ZW010125");
+        existing.setName("Bangure Clinic");
+        existing.setVersion(1);
+
+        FacilityIdentifierEntity ident = new FacilityIdentifierEntity();
+        ident.setFacility(existing);
+        ident.setSystem(FacilityMasterImportService.MASTER_FACILITY_UID_SYSTEM);
+        ident.setValue("mhf-test");
+
+        when(identifierRepository.findBySystemAndValue(
+                FacilityMasterImportService.MASTER_FACILITY_UID_SYSTEM, "mhf-test"))
+                .thenReturn(Optional.of(ident));
+        when(facilityRepository.save(any(FacilityEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(contactRepository.findByFacilityId(42L)).thenReturn(List.of());
+        when(geoRepository.findByFacilityId(42L)).thenReturn(Optional.empty());
+
+        ArgumentCaptor<FacilityEntity> captor = ArgumentCaptor.forClass(FacilityEntity.class);
+        service.importPack(new FacilityMasterImportDtos.FacilityMasterImportRequest(
+                false, false, false, List.of(sampleRecord())));
+
+        verify(facilityRepository).save(captor.capture());
+        FacilityEntity saved = captor.getValue();
+        // Internal identity is matched by the correlation key and reused as-is — never regenerated,
+        // and never derived from the public facility code.
+        assertThat(saved.getId()).isEqualTo(42L);
+        assertThat(saved.getFacilityUuid()).isEqualTo(stableUuid);
     }
 
     private static FacilityMasterImportDtos.MasterFacilitySeedRecord sampleRecord() {

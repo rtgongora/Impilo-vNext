@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityContactEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityGeoEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierSystem;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityContactRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityGeoRepository;
@@ -35,7 +36,8 @@ import java.util.UUID;
 @Service
 public class FacilityMasterImportService {
 
-    public static final String MASTER_FACILITY_UID_SYSTEM = "MASTER_FACILITY_UID";
+    /** @see FacilityIdentifierSystem#MASTER_FACILITY_UID — import correlation key, not the public code. */
+    public static final String MASTER_FACILITY_UID_SYSTEM = FacilityIdentifierSystem.MASTER_FACILITY_UID;
     public static final String PACK_ID = "master-health-facility-2024-07-23";
     /** Canonical source-provenance label for this national master dataset. */
     public static final String SOURCE_LABEL = "MASTER_HEALTH_FACILITY_2024_07_23";
@@ -127,7 +129,14 @@ public class FacilityMasterImportService {
                 boolean isNew = facility.getId() == null;
                 applyRecord(tenantId, actorId, facility, record, decision.resolvedCode());
                 facility = facilityRepository.save(facility);
-                upsertIdentifier(facility, record.facilityUid());
+                // Internal correlation key: matches the same facility on re-import (never regenerates
+                // the internal facility id / facility_uuid).
+                upsertIdentifier(facility, FacilityIdentifierSystem.MASTER_FACILITY_UID, record.facilityUid());
+                // Public administrative code recorded as an EXTERNAL identifier — for matching, reporting
+                // and interoperability only. It is not the internal identity and never an authority.
+                upsertIdentifier(facility, FacilityIdentifierSystem.NATIONAL_FACILITY_CODE, decision.resolvedCode());
+                // Provenance handle for the source row (audit/traceability), distinct from the code.
+                upsertIdentifier(facility, FacilityIdentifierSystem.IMPORT_SOURCE_ROW_ID, record.facilityUid());
                 upsertContact(facility, record.contactPhoneE164());
                 upsertGeo(facility, record);
 
@@ -260,16 +269,24 @@ public class FacilityMasterImportService {
         facility.setMetadata(metadata);
     }
 
-    private void upsertIdentifier(FacilityEntity facility, String facilityUid) {
+    /**
+     * Idempotently record an external identifier ({@code system}/{@code value}) for a facility. Blank
+     * values are skipped (e.g. a facility with no national code never gets an empty NATIONAL_FACILITY_CODE
+     * row). These identifiers are external, public matching handles — never internal identity or authority.
+     */
+    private void upsertIdentifier(FacilityEntity facility, String system, String value) {
+        if (value == null || value.isBlank()) {
+            return;
+        }
         Optional<FacilityIdentifierEntity> existing =
-                identifierRepository.findBySystemAndValue(MASTER_FACILITY_UID_SYSTEM, facilityUid);
+                identifierRepository.findBySystemAndValue(system, value.trim());
         if (existing.isPresent()) {
             return;
         }
         FacilityIdentifierEntity ident = new FacilityIdentifierEntity();
         ident.setFacility(facility);
-        ident.setSystem(MASTER_FACILITY_UID_SYSTEM);
-        ident.setValue(facilityUid);
+        ident.setSystem(system);
+        ident.setValue(value.trim());
         ident.setActive(true);
         identifierRepository.save(ident);
     }

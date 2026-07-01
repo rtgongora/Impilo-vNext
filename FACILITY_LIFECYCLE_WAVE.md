@@ -181,3 +181,58 @@ in-service; BFF routes + admin UI (batches list, batch detail, review queues, mi
 importer script modes (`--stage-only/--validate/--apply-approved/--reconcile`); facility-detail
 missing-field checklist UI; downstream materialisation honesty. None of these are faked; imported
 facilities remain `IMPORTED_PENDING_CONFIGURATION` until real configuration exists.
+
+---
+
+## Facility code vs. internal facility identity — security & identity correction
+
+**Required product-truth note (verbatim, binding):**
+
+> The uploaded master facility dataset provides facility codes, not secure digital facility
+> identities. Facility codes are public administrative identifiers used for import, reporting, DHIS2
+> alignment, and interoperability. TUSO must generate and maintain a separate internal Impilo/TUSO
+> facility digital ID. Authentication, Facility Mode, provider assignment, facility setup authority,
+> and downstream access control must use verified user identity, provider/staff assignment, Tshepo
+> context resolution, and OPA policy — never possession of a facility code.
+
+**Identity separation (verified + hardened 2026-07-01):**
+
+- **Internal facility identity** = `FacilityEntity.facilityUuid` (opaque, immutable `updatable=false`
+  canonical UUID, generated in `@PrePersist`, unique-indexed via `V013`) plus the numeric surrogate
+  `FacilityEntity.id`. This is the sole reference for authz, downstream services, audit and events.
+- **Public administrative code** = `FacilityEntity.facilityCode` — a matching/interoperability handle,
+  never identity, never a credential.
+- **External identifier taxonomy** — new `FacilityIdentifierSystem` constants formalise the external,
+  public identifier systems stored in `FacilityIdentifierEntity`: `NATIONAL_FACILITY_CODE`,
+  `DHIS2_ORG_UNIT_ID`, `LEGACY_EHR_FACILITY_ID`, `HPA_REGISTRATION_NUMBER`,
+  `MOHCC_FACILITY_REGISTRY_CODE`, `LOCAL_AUTHORITY_CODE`, `IMPORT_SOURCE_ROW_ID`, plus the import
+  correlation key `MASTER_FACILITY_UID`. `isInternalIdentity(system)` always returns `false` — an
+  explicit guard asserting none of these are internal identity or authority; `issuingAuthority(system)`
+  labels each by its source registry.
+
+**Import wiring (LANDED 2026-07-01, verified 7/7 tests):**
+
+- The import now persists the facility code as a `NATIONAL_FACILITY_CODE` **external identifier** (in
+  addition to the human-facing `facility_code` field) and records `IMPORT_SOURCE_ROW_ID` provenance —
+  it never uses the code as a primary key or as the internal identity.
+- Re-import matches an existing facility by the `MASTER_FACILITY_UID` correlation key and **reuses the
+  existing internal identity** (`id` + `facility_uuid` unchanged) — the internal id is never
+  regenerated, and never derived from the public code. New tests
+  `facilityCodeStoredAsExternalNationalIdentifierNotAsInternalIdentity` and
+  `reimportReusesInternalIdentityAndDoesNotRegenerateItFromTheCode` prove both.
+
+**Codebase audit (very-thorough sweep, 2026-07-01) — no code-as-authority found:**
+
+| Surface | Finding |
+|---|---|
+| Login / auth | Email/phone + password only; no facility code accepted as a credential. |
+| Facility Mode | `FacilityModeController` (TUSO + experience-bff) key off internal `Long facilityId`; the shell store (`useFacilityStore`) is keyed on internal `id`, code is display-only. |
+| Invitations | Tracked by `invitationId` + `expiresAt` + verified provider/staff assignment, not raw codes. |
+| QR codes | Only signed Health-ID QR tokens (public-key verified); no facility-code-as-authority QR. |
+| Protected routes | All facility routes take internal `facilityId`/`uuid`; no `@PathVariable`/`@RequestParam facilityCode` for access control. |
+| Frontend labelling | Code shown as a display subtitle / labelled `facilityCode` on the registration form; never presented as "Facility ID" or asked for as a login credential. |
+
+The correction is therefore **structural doctrine now enforced in the identifier model + import**, and a
+verified-clean audit of the login / Facility Mode / invitation / QR / route / labelling surfaces. Facility
+Mode entry remains gated by verified identity + assignment + Tshepo/OPA (`FACILITY-MODE-ENTER`), with the
+facility code carried only as display/interoperability metadata.
