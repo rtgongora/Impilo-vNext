@@ -1,6 +1,6 @@
 import { matchRouteDefinition } from "@/lib/routes";
 import type { RunningTaskType } from "@/lib/shell/types";
-import { findShellAppByCode } from "@/lib/shell/app-registry";
+import { findShellAppByCode, SHELL_APPS } from "@/lib/shell/app-registry";
 
 export interface RouteTaskMeta {
   title: string;
@@ -49,6 +49,15 @@ export function deriveRouteTaskMeta(pathname: string): RouteTaskMeta {
       title: def.pageTitle,
       appId: def.zone,
       taskType,
+    };
+  }
+
+  const app = SHELL_APPS.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
+  if (app) {
+    return {
+      title: app.appCode === "learning" ? "Impilo Fundo" : app.name,
+      appId: app.id,
+      taskType: "module",
     };
   }
 

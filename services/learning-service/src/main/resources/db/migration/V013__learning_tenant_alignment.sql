@@ -1,0 +1,29 @@
+-- Align Fundo seed tenant with Experience shell default (moh-zw / 00000000-0000-4000-8000-000000000001).
+
+UPDATE lrn_learning_resource
+SET tenant_id = '00000000-0000-4000-8000-000000000001'::uuid
+WHERE tenant_id = '00000000-0000-0000-0000-000000000001'::uuid;
+
+UPDATE lrn_learning_path
+SET tenant_id = '00000000-0000-4000-8000-000000000001'::uuid
+WHERE tenant_id = '00000000-0000-0000-0000-000000000001'::uuid;
+
+UPDATE lrn_course
+SET tenant_id = '00000000-0000-4000-8000-000000000001'::uuid
+WHERE tenant_id = '00000000-0000-0000-0000-000000000001'::uuid;
+
+UPDATE lrn_course_module
+SET tenant_id = '00000000-0000-4000-8000-000000000001'::uuid
+WHERE tenant_id = '00000000-0000-0000-0000-000000000001'::uuid;
+
+UPDATE lrn_course_lesson
+SET tenant_id = '00000000-0000-4000-8000-000000000001'::uuid
+WHERE tenant_id = '00000000-0000-0000-0000-000000000001'::uuid;
+
+UPDATE lrn_assessment
+SET tenant_id = '00000000-0000-4000-8000-000000000001'::uuid
+WHERE tenant_id = '00000000-0000-0000-0000-000000000001'::uuid;
+
+UPDATE lrn_fundo_pathway
+SET tenant_id = '00000000-0000-4000-8000-000000000001'::uuid
+WHERE tenant_id = '00000000-0000-0000-0000-000000000001'::uuid;

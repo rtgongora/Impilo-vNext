@@ -24,7 +24,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-impilo}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./scripts/seed/01-init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql
@@ -41,11 +41,54 @@ services:
       timeout: 3s
       retries: 10
 
+  # ── PostgreSQL database bootstrap ─────────────────────────────────
+  # The official postgres init scripts only run on an empty pg_data volume.
+  # This idempotent step also repairs existing local volumes that were started
+  # before all runtime databases existed.
+  db-bootstrap:
+    image: postgres:16-alpine
+    environment:
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: ${POSTGRES_USER:-impilo}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      - sh
+      - -ec
+      - |
+        databases="
+        tshepo vito varapi tuso zibo msika ubomi pct oros pharmacy inpatient inventory mushex costing
+        document_service notification jobs offline_sync integration_hub
+        tshepo_authz tshepo_identity tshepo_consent mvumo tshepo_audit tshepo_keys tshepo_offline
+        landela_adapter credential_verification share_slip card_print
+        msika_flow product_registry inventory_elmis pharmacy_elmis
+        butano butano_fhir fhir_gateway pacs
+        keycloak experience_bff guidance clinical_knowledge impilo_learning
+        reporting ndr impilo_ndr impilo_data_warehouse pipeline impilo_data_ingestion impilo_data_governance
+        dags secharden surv camp impilo_audit_ledger
+        impilo_forms impilo_search impilo_channels impilo_connector_fhir impilo_dispatch impilo_rules impilo_workflow impilo_schema_registry
+        impilo_iot_ingestion impilo_asset_registry impilo_offline_edge
+        impilo_coverage impilo_indawo costa_db mushex_db
+        impilo_dev_portal impilo_support observability impilo_identity_assurance
+        "
+        for db in $${databases}; do
+          if ! psql -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = '$${db}'" | grep -q 1; then
+            createdb "$${db}"
+            echo "created database $${db}"
+          fi
+        done
+        psql -d tuso -c 'CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE EXTENSION IF NOT EXISTS btree_gin;'
+        psql -d impilo_search -c 'CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE EXTENSION IF NOT EXISTS btree_gin;'
+    restart: "no"
+
   # ── Redis 7 ────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6390:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -91,8 +134,8 @@ services:
     ports:
       - "8480:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\":\"UP\"\\|200' <&3"]
       interval: 10s
@@ -109,7 +152,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
     ports:
       - "9000:9000"
-      - "9001:9001"
+      - "9003:9001"
     volumes:
       - minio_data:/data
 
@@ -128,8 +171,8 @@ services:
     ports:
       - "18090:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
     healthcheck:
       disable: true
 
@@ -177,8 +220,8 @@ services:
       - "19090:9090"
       - "18082:8081"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       kafka:
@@ -237,8 +280,8 @@ services:
     ports:
       - "18081:8081"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       kafka:
@@ -272,8 +315,8 @@ services:
     ports:
       - "8092:8082"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       kafka:
@@ -304,10 +347,10 @@ services:
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
     mem_limit: 768m
     ports:
-      - "8083:8083"
+      - "8097:8083"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       kafka:
@@ -338,10 +381,10 @@ services:
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
     mem_limit: 768m
     ports:
-      - "8084:8084"
+      - "8096:8084"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       kafka:
@@ -374,8 +417,8 @@ services:
     ports:
       - "8085:8085"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       kafka:
@@ -408,8 +451,8 @@ services:
     ports:
       - "8088:8088"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       kafka:
@@ -442,8 +485,8 @@ services:
     ports:
       - "18089:8089"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       kafka:
@@ -472,8 +515,8 @@ services:
     ports:
       - "8260:8260"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8260/actuator/health || exit 1"]
       interval: 10s
@@ -501,8 +544,8 @@ services:
     ports:
       - "8270:8270"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       kafka:
         condition: service_healthy
     healthcheck:
@@ -510,6 +553,39 @@ services:
       interval: 10s
       timeout: 5s
       retries: 15
+      start_period: 40s
+
+  # ── Learning Service — Impilo Fundo backend (port 8235) ─────────────
+  fundo:
+    build:
+      context: ./services/learning-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-impilo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/impilo_learning
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+      SERVER_PORT: 8235
+      LEARNING_SECURITY_OAUTH2_ENABLED: "false"
+      LEARNING_DATABASE_AUTO_CREATE_ENABLED: ${LEARNING_DATABASE_AUTO_CREATE_ENABLED:-true}
+      LEARNING_OUTBOX_PUBLISHER_ENABLED: ${LEARNING_OUTBOX_PUBLISHER_ENABLED:-false}
+    mem_limit: 1024m
+    ports:
+      - "8235:8235"
+    depends_on:
+      db-bootstrap:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8235/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
       start_period: 40s
 
   # ===========================================================================
@@ -560,13 +636,16 @@ services:
       ORTHANC_DICOMWEB_URL: http://orthanc:8042/dicom-web
       GUIDANCE_BASE_URL: http://guidance:8260
       CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL: http://clinical-knowledge-platform:8270
+      LEARNING_SERVICE_BASE_URL: http://fundo:8235
     mem_limit: 768m
     ports:
       - "8160:8160"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       kafka:
+        condition: service_healthy
+      fundo:
         condition: service_healthy
       clinical-knowledge-platform:
         condition: service_healthy

@@ -58,6 +58,26 @@ public class LearningPlatformFacade {
 
     public static final String SUBJECT_PROVIDER_PUBLIC_ID = "PROVIDER_PUBLIC_ID";
 
+    // ── Phase 4B: v1.1-compliant event-type constants ──────────────────────
+    //
+    // Dual-emit: every legacy event-type row continues to be written to
+    // lrn_event_outbox byte-for-byte unchanged for backwards compatibility,
+    // and a second row carrying the v1.1-compliant equivalent is appended in
+    // the same transaction. Consumers reading legacy strings (e.g.
+    // "learning.completion.recorded") continue to work; new consumers can
+    // subscribe to the v1.1 names. A future phase will retire the legacy
+    // emissions once all downstream consumers have migrated.
+    //
+    // Convention enforced by EventEnvelopeValidator (libs/contract-tests):
+    //   impilo.{service}.{entity}.{action}.v{N}
+    static final String V11_LEARNING_COMPLETION_RECORDED        = "impilo.learning.completion.recorded.v1";
+    static final String V11_FUNDO_SYNC_COMPLETED                = "impilo.learning.fundo.sync.completed.v1";
+    static final String V11_LEARNING_RESOURCE_OPENED            = "impilo.learning.resource.opened.v1";
+    static final String V11_LEARNING_PATH_ASSIGNED              = "impilo.learning.path.assigned.v1";
+    static final String V11_LEARNING_PREREQUISITE_REGISTERED    = "impilo.learning.prerequisite.registered.v1";
+    static final String V11_MOODLE_WS_COMPLETION_INGESTED       = "impilo.learning.moodle.ws.completion.ingested.v1";
+    static final String V11_FUNDO_LINK_ESTABLISHED              = "impilo.learning.fundo.link.established.v1";
+
     private final LearningResourceRepository resourceRepository;
     private final LearningPathRepository pathRepository;
     private final RoleLearningRequirementRepository roleRequirementRepository;
@@ -176,10 +196,11 @@ public class LearningPlatformFacade {
                 null,
                 Map.of("providerPublicId", p.providerPublicId(), "resourceCode", resource.getResourceCode()));
 
-        appendOutbox(
+        appendOutboxPair(
                 "LearningCompletion",
                 completion.getId().toString(),
                 "learning.completion.recorded",
+                V11_LEARNING_COMPLETION_RECORDED,
                 Map.of(
                         "tenantId",
                         p.tenantId().toString(),
@@ -190,10 +211,11 @@ public class LearningPlatformFacade {
                         "externalRef",
                         p.externalRef()));
 
-        appendOutbox(
+        appendOutboxPair(
                 "FundoIntegration",
                 p.externalRef(),
                 "fundo.sync.completed",
+                V11_FUNDO_SYNC_COMPLETED,
                 Map.of("candidateId", p.varapiFundoCandidateId(), "courseId", p.courseId()));
 
         return Map.of(
@@ -349,10 +371,11 @@ public class LearningPlatformFacade {
                 "OK",
                 correlationId,
                 workflowContext == null ? Map.of() : workflowContext);
-        appendOutbox(
+        appendOutboxPair(
                 "LearningResource",
                 resourceId.toString(),
                 "learning.resource.opened",
+                V11_LEARNING_RESOURCE_OPENED,
                 Map.of(
                         "tenantId",
                         tenantId.toString(),
@@ -434,10 +457,11 @@ public class LearningPlatformFacade {
                 "OK",
                 correlationId,
                 Map.of("subjectType", subjectType, "subjectId", subjectId));
-        appendOutbox(
+        appendOutboxPair(
                 "SubjectPathAssignment",
                 row.getId().toString(),
                 "learning.path.assigned",
+                V11_LEARNING_PATH_ASSIGNED,
                 Map.of(
                         "tenantId",
                         tenantId.toString(),
@@ -484,10 +508,11 @@ public class LearningPlatformFacade {
                 "OK",
                 correlationId,
                 ctx);
-        appendOutbox(
+        appendOutboxPair(
                 "WorkflowPrerequisite",
                 correlationId == null ? UUID.randomUUID().toString() : correlationId,
                 "learning.prerequisite.registered",
+                V11_LEARNING_PREREQUISITE_REGISTERED,
                 ctx);
         return Map.of("status", "recorded");
     }
@@ -607,10 +632,11 @@ public class LearningPlatformFacade {
         }
         moodleWsSnapshotRepository.save(snap);
 
-        appendOutbox(
+        appendOutboxPair(
                 "MoodleWsSnapshot",
                 snap.getId().toString(),
                 "moodle.ws.completion.ingested",
+                V11_MOODLE_WS_COMPLETION_INGESTED,
                 Map.of(
                         "tenantId",
                         tenantId.toString(),
@@ -708,10 +734,11 @@ public class LearningPlatformFacade {
                         e.getFundoUserRef() == null ? "" : e.getFundoUserRef(),
                         "metadataPatched",
                         patchMetadata));
-        appendOutbox(
+        appendOutboxPair(
                 "UserLearningProfile",
                 e.getId().toString(),
                 "fundo.link.established",
+                V11_FUNDO_LINK_ESTABLISHED,
                 Map.of("tenantId", tenantId.toString(), "subjectType", subjectType, "subjectId", subjectId));
         return Map.of("status", "ok", "profileId", e.getId().toString());
     }
@@ -950,5 +977,35 @@ public class LearningPlatformFacade {
             e.setPayloadJson("{}");
         }
         outboxRepository.save(e);
+    }
+
+    /**
+     * Phase 4B — additive v1.1 event-type dual-emit.
+     *
+     * <p>Writes outbox rows in the current transaction with identical
+     * aggregate metadata and payload. The v1.1-compliant
+     * ({@code impilo.{service}.{entity}.{action}.v{N}}) row is always
+     * written. The legacy event-type row is written when
+     * {@code learning.events.legacy-emission.enabled} is {@code true} (the
+     * default), and skipped when the operator flips the flag to
+     * {@code false}.</p>
+     *
+     * <p>Phase 6E: the {@code learning.events.legacy-emission.enabled} flag
+     * lets operators retire the legacy emission on a per-environment
+     * basis once every downstream consumer (Varapi, credential-verification,
+     * etc.) has confirmed migration — no event-type strings are renamed or
+     * deleted, the legacy constants stay in the codebase, and the flag can
+     * be flipped back instantly if a rollback is needed.</p>
+     */
+    private void appendOutboxPair(
+            String aggregateType,
+            String aggregateId,
+            String legacyEventType,
+            String v11EventType,
+            Map<String, Object> payload) {
+        if (learningProperties.getEvents().isLegacyEmissionEnabled()) {
+            appendOutbox(aggregateType, aggregateId, legacyEventType, payload);
+        }
+        appendOutbox(aggregateType, aggregateId, v11EventType, payload);
     }
 }

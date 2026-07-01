@@ -26,6 +26,11 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
 management:
   endpoints:
@@ -40,6 +45,9 @@ management:
       application: learning-service
 
 learning:
+  database:
+    auto-create-enabled: ${LEARNING_DATABASE_AUTO_CREATE_ENABLED:true}
+    maintenance-database: ${LEARNING_DATABASE_MAINTENANCE_DATABASE:postgres}
   security:
     oauth2-enabled: ${LEARNING_SECURITY_OAUTH2_ENABLED:true}
   fundo:
@@ -54,6 +62,20 @@ learning:
   integration:
     varapi-internal-key: ${VARAPI_TO_LEARNING_INTERNAL_KEY:}
     orchestration-internal-key: ${LEARNING_ORCHESTRATION_INTERNAL_KEY:}
+    live:
+      enabled: ${LEARNING_LIVE_INTEGRATION_ENABLED:true}
+      base-url: ${LEARNING_LIVE_BASE_URL:http://localhost:8380}
+  outbox:
+    publisher:
+      # Phase 2: transactional outbox → Kafka publisher (mirrors pct-service).
+      # Default true to match platform pattern; override to false in dev/integration where Kafka is unavailable.
+      enabled: ${LEARNING_OUTBOX_PUBLISHER_ENABLED:true}
+      poll-interval-ms: ${LEARNING_OUTBOX_POLL_INTERVAL_MS:500}
+      batch-size: ${LEARNING_OUTBOX_BATCH_SIZE:100}
+    topics:
+      default: ${LEARNING_OUTBOX_DEFAULT_TOPIC:platform.learning.events}
+  events:
+    legacy-emission-enabled: ${LEARNING_EVENTS_LEGACY_EMISSION_ENABLED:true}
 
 impilo:
   companion:

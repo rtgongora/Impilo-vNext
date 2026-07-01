@@ -9,6 +9,7 @@ public class LearningProperties {
     private final Fundo fundo = new Fundo();
     private final Integration integration = new Integration();
     private final Moodle moodle = new Moodle();
+    private final Events events = new Events();
 
     public Security getSecurity() {
         return security;
@@ -24,6 +25,10 @@ public class LearningProperties {
 
     public Moodle getMoodle() {
         return moodle;
+    }
+
+    public Events getEvents() {
+        return events;
     }
 
     public static class Security {
@@ -118,6 +123,37 @@ public class LearningProperties {
 
         public void setOrchestrationInternalKey(String orchestrationInternalKey) {
             this.orchestrationInternalKey = orchestrationInternalKey;
+        }
+    }
+
+    /**
+     * Phase 6E — controlled retirement of the seven legacy event-type
+     * strings that {@code LearningPlatformFacade.appendOutboxPair(...)}
+     * has been dual-emitting since Phase 4B.
+     *
+     * <p>When {@code legacyEmissionEnabled=true} (the default), both the
+     * legacy and v1.1-compliant event-type rows are written to
+     * {@code lrn_event_outbox} inside the same transaction — fully
+     * backwards-compatible. When {@code legacyEmissionEnabled=false}, only
+     * the v1.1 row is written. The flag exists so operators can switch a
+     * single tenant or environment to v1.1-only emission once every
+     * downstream consumer (Varapi, credential-verification, etc.) has
+     * confirmed migration, without re-deploying the service or removing
+     * the legacy constants from the codebase.</p>
+     *
+     * <p>No event-type strings are renamed or deleted by this flag — the
+     * legacy constants remain in the codebase and can be re-enabled
+     * instantly by flipping the flag back to {@code true}.</p>
+     */
+    public static class Events {
+        private boolean legacyEmissionEnabled = true;
+
+        public boolean isLegacyEmissionEnabled() {
+            return legacyEmissionEnabled;
+        }
+
+        public void setLegacyEmissionEnabled(boolean legacyEmissionEnabled) {
+            this.legacyEmissionEnabled = legacyEmissionEnabled;
         }
     }
 

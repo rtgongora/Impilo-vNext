@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -147,6 +148,70 @@ public class LearningServiceClient {
         }
     }
 
+    /**
+     * BFF passthrough for the native Fundo catalogue list endpoint. Returns
+     * the {@code data} envelope unwrapped, or {@code null} when the upstream
+     * is unavailable so the BFF can degrade gracefully.
+     */
+    public JsonNode getFundoCatalog(
+            String status,
+            String category,
+            String level,
+            Boolean cpdEligible,
+            Boolean mandatory,
+            String language,
+            int limit) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(
+                trim(props.getBaseUrl()) + "/internal/v1/learning/fundo/catalog");
+        if (status != null && !status.isBlank()) b.queryParam("status", status);
+        if (category != null && !category.isBlank()) b.queryParam("category", category);
+        if (level != null && !level.isBlank()) b.queryParam("level", level);
+        if (cpdEligible != null) b.queryParam("cpdEligible", cpdEligible);
+        if (mandatory != null) b.queryParam("mandatory", mandatory);
+        if (language != null && !language.isBlank()) b.queryParam("language", language);
+        b.queryParam("limit", limit);
+        try {
+            ResponseEntity<JsonNode> res = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning Fundo catalog list failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** BFF passthrough for {@code GET /fundo/catalog/{courseId}}. */
+    public JsonNode getFundoCourse(String courseId) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/fundo/catalog/" + courseId;
+        try {
+            ResponseEntity<JsonNode> res = restTemplate.getForEntity(url, JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning Fundo course detail failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** BFF passthrough for {@code GET /fundo/courses/{courseId}/structure}. */
+    public JsonNode getFundoCourseStructure(String courseId) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/fundo/courses/" + courseId + "/structure";
+        try {
+            ResponseEntity<JsonNode> res = restTemplate.getForEntity(url, JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning Fundo course structure failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
     public JsonNode postSubjectProfile(Map<String, Object> body) {
         if (!props.isConfigured()) {
             return null;
@@ -160,6 +225,62 @@ public class LearningServiceClient {
             return unwrapData(res.getBody());
         } catch (Exception e) {
             log.debug("Learning subject-profile failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode getFundo(String relativePath, Map<String, Object> queryParams) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(
+                trim(props.getBaseUrl()) + "/internal/v1/learning/fundo/" + relativePath);
+        if (queryParams != null) {
+            queryParams.forEach((k, v) -> {
+                if (v != null && !v.toString().isBlank()) {
+                    b.queryParam(k, v);
+                }
+            });
+        }
+        try {
+            ResponseEntity<JsonNode> res = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning Fundo GET {} failed: {}", relativePath, e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode postFundo(String relativePath, Map<String, Object> body) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/fundo/" + relativePath;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body == null ? Map.of() : body, headers);
+            ResponseEntity<JsonNode> res = restTemplate.postForEntity(url, entity, JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning Fundo POST {} failed: {}", relativePath, e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode putFundo(String relativePath, Map<String, Object> body) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/fundo/" + relativePath;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body == null ? Map.of() : body, headers);
+            ResponseEntity<JsonNode> res = restTemplate.exchange(url, HttpMethod.PUT, entity, JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning Fundo PUT {} failed: {}", relativePath, e.getMessage());
             return null;
         }
     }
