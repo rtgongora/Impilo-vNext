@@ -58,6 +58,13 @@ A verification pass confirmed several matrix rows lagged the code:
 
 Fuller row-by-row reconciliation across all services remains open.
 
+**Deferred seam — citizen Costa billing (mobile):** verified the citizen pending-charges route is
+backed by an existing COSTA client method (`CostaServiceClient.getFinancePatientOutstanding`), and
+recorded an implementation-ready spec in `docs/implementation/mobile-costa-bff-contract.md`. Not
+shipped in this drive because the experience-bff Java module cannot be compiled/verified in the
+web-session environment; the citizen surface remains honestly `blocked` (no fabricated charges)
+rather than wired to an undeployed route.
+
 ## High-priority gaps (remediation queue)
 
 1. Complete wiring for fixture-backed doctrine pages to real BFF orchestration where available.

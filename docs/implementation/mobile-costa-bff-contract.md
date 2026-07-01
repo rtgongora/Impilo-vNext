@@ -46,3 +46,28 @@
 - Provider BFF: `MobileProviderExtendedController` — `/billing/charges`, `/billing/charge`
 - OpenAPI: `contracts/openapi/experience-bff.openapi.yaml` — `/internal/v1/mobile/provider/billing/charges`
 - Audit: `docs/audits/costa-mushex-experience-layer-wiring-audit.md` (G-3 citizen finance dead routes)
+
+## Implementation-ready note (verified 2026-07-01)
+
+The citizen pending-charges route is **backed by an existing, real COSTA client method** —
+no new downstream contract is required:
+
+- `CostaServiceClient.getFinancePatientOutstanding(cpid)` →
+  `GET {costa}/costa/v1/finance/patient-accounts/{cpid}/outstanding` (also `getFinancePatientAccount`
+  and `getFinancePatientTransactions(cpid, page, size, dateFrom, dateTo)` for receipts/history).
+
+**Recommended implementation** (mirror `CitizenHealthSummaryWebController` / `CitizenVisitStatusController`):
+add a `CitizenCostaController` at `/internal/v1/mobile/citizen/costa/charges/pending` that resolves
+the citizen `cpid` from `X-Actor-ID` and returns `costaClient.getFinancePatientOutstanding(actorId)`
+under `{ data, meta }`. Add a MockMvc controller test (mocked `CostaServiceClient`) alongside
+`CitizenAppointmentControllerTest`. Then point mobile `financeService.fetchPendingCharges()` at the
+new route and set `costa` `frontend_wiring_status: partiallyWired` (citizen) in
+`apps/mobile/packages/mobile-registry/src/wiring.ts`.
+
+**Deferred in the 2026-07-01 MVP drive (honest seam, not faked):** the experience-bff Java module
+cannot be compiled/tested in the current web-session environment (no local Maven artifact repo for
+the multi-module estate; a full reactor build is required). To avoid shipping unverified Java to the
+shared branch and to avoid pointing mobile at an undeployed route (a dead route), citizen Costa
+remains `blocked` and `financeService.fetchPendingCharges()` keeps returning
+`{ blocked: true, charges: [] }` with no fabricated rows. Implement + verify in an environment with a
+working backend build.
