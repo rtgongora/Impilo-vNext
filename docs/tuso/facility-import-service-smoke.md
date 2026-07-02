@@ -47,6 +47,18 @@ PY
 The smoke script also enforces this before a `--full-stage` (fails if the file is missing or the row
 count ≠ 1,773).
 
+## 0.5 Preflight (go/no-go before staging)
+
+Runs your steps 1–3 as one gate — verifies the ready pack (1,773 rows), the fixture, endpoint
+reachability, and token presence. No staging or mutations; non-zero exit if not ready.
+
+```bash
+scripts/operator/smoke-facility-import-service.sh --preflight \
+  --base-url "$TUSO_BASE_URL" --bff-base-url "$EXPERIENCE_BFF_BASE_URL" --token "$IMPILO_AUTH_TOKEN"
+```
+
+Only proceed to the fixture smoke once it prints `PREFLIGHT: READY`.
+
 ## 1. Run the fixture smoke (first proof — 7-row fixture)
 
 ```bash

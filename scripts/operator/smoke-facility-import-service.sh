@@ -37,6 +37,7 @@ SOURCE="${FACILITY_IMPORT_SOURCE:-}"
 SOURCE_LABEL="${FACILITY_IMPORT_SOURCE_LABEL:-}"
 RUN_ID="${FACILITY_IMPORT_RUN_ID:-}"
 FULL_STAGE=0
+PREFLIGHT=0
 SKIP_UI_CHECK=0
 FULL_CSV="$REPO_ROOT/data/source/zimbabwe/master-health-facility/2024-07-23/clean_tuso_facility_import.csv"
 EXPECTED_FULL_ROWS=1773
@@ -55,6 +56,7 @@ while [[ $# -gt 0 ]]; do
     --smoke-fixture)  SMOKE_FIXTURE="$2"; shift 2 ;;
     --run-id)         RUN_ID="$2"; shift 2 ;;
     --full-stage)     FULL_STAGE=1; shift ;;
+    --preflight)      PREFLIGHT=1; shift ;;
     --skip-ui-check)  SKIP_UI_CHECK=1; shift ;;
     -h|--help)        usage; exit 0 ;;
     *) echo "unknown argument: $1 (see --help)" >&2; exit 1 ;;
@@ -105,6 +107,35 @@ first_row_id() { # $1 query -> first content[].id or empty
   local body; body="$(rows_json "$1")" || return 1
   field "$body" content.0.id
 }
+
+# ==================================================================================================
+# PREFLIGHT: go/no-go before staging (pack + row count + endpoint reachability + token). No mutations.
+# ==================================================================================================
+reachable() { # $1 base-url -> prints reachable|unreachable (any HTTP response counts as reachable)
+  local code
+  code="$("$CURL" -s -o /dev/null -w '%{http_code}' --max-time 5 "$1/actuator/health" 2>/dev/null || echo 000)"
+  [[ "$code" != "000" ]] && echo reachable || echo unreachable
+}
+if [[ "$PREFLIGHT" == "1" ]]; then
+  info "PREFLIGHT — go/no-go for the service-level smoke (no staging, no mutations)"
+  rc=0
+  # 1) ready pack + row count
+  if [[ -f "$FULL_CSV" ]]; then
+    n="$(python3 -c 'import csv,sys; print(sum(1 for _ in csv.DictReader(open(sys.argv[1],encoding="utf-8-sig"))))' "$FULL_CSV")"
+    if [[ "$n" == "$EXPECTED_FULL_ROWS" ]]; then ok "ready pack present with ${n} rows"; else echo "  FAIL: ready pack row count ${n} != ${EXPECTED_FULL_ROWS}"; rc=1; fi
+  else echo "  FAIL: ready pack missing: $FULL_CSV"; rc=1; fi
+  # 2) fixture present
+  [[ -f "$SMOKE_FIXTURE" ]] && ok "smoke fixture present" || { echo "  FAIL: smoke fixture missing: $SMOKE_FIXTURE"; rc=1; }
+  # 3) endpoint reachability
+  t="$(reachable "$TUSO_BASE")"; echo "  TUSO ${TUSO_BASE}: ${t}"
+  [[ "$t" == "reachable" ]] || { echo "  FAIL: TUSO not reachable — cannot run the smoke"; rc=1; }
+  b="$(reachable "$BFF_BASE")"; echo "  BFF  ${BFF_BASE}: ${b} (needed only for admin route checks)"
+  # 4) token
+  if [[ -n "$TOKEN" ]]; then ok "admin token present (BFF admin checks enabled)"; else echo "  WARN: IMPILO_AUTH_TOKEN unset — BFF admin route checks will be skipped"; fi
+  echo ""
+  [[ "$rc" == "0" ]] && echo "PREFLIGHT: READY — run the fixture smoke next." || { echo "PREFLIGHT: NOT READY (see FAIL lines above)."; exit 1; }
+  exit 0
+fi
 
 # ==================================================================================================
 # Ready-pack / fixture existence checks

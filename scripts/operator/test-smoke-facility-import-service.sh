@@ -55,6 +55,12 @@ echo "== service-level smoke script =="
 
 out="$(bash "$SMOKE" --help)"; ahas "$out" "Service-level facility master import smoke" "--help prints header"
 
+# preflight (fake endpoints reachable) -> READY
+out="$(run --preflight --base-url http://tuso.test --bff-base-url http://bff.test --token tkn)"; rc=$?
+aexit "$rc" 0 "preflight exits 0 when ready"
+ahas "$out" "PREFLIGHT: READY" "preflight reports READY"
+ahas "$out" "ready pack present with 1773 rows" "preflight verifies 1773-row pack"
+
 # fixture missing -> fail before hitting services
 out="$(run --smoke-fixture "$WORK/nope.csv"; echo "rc=$?")"; ahas "$out" "rc=1" "missing fixture fails safely"
 
