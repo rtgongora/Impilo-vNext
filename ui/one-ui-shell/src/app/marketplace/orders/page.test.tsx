@@ -49,7 +49,7 @@ describe("OrdersPage", () => {
 
   it("creates real marketplace orders with the normalized backend contract", async () => {
     get.mockResolvedValue({ data: [] });
-    post.mockResolvedValue({ data: { id: "order-2", type: "MarketplaceOrder", attributes: { facility_id: "facility-1", order_number: "PO-NEW", status: "PENDING", total_amount: 120, currency: "USD", items: "[]", ordered_by: "Tariro Moyo", created_at: "2026-04-09T10:00:00.000Z" } } });
+    post.mockResolvedValue({ data: { id: "order-2", type: "marketplace-order", attributes: { facility_id: "facility-1", order_number: "order-2", status: "CREATED", total_amount: 120, currency: "USD", items: [], ordered_by: "Tariro Moyo", created_at: "2026-04-09T10:00:00.000Z" } } });
 
     const user = userEvent.setup();
     renderPage();
@@ -66,12 +66,13 @@ describe("OrdersPage", () => {
       expect(post).toHaveBeenCalledWith("/internal/v1/marketplace/orders", expect.objectContaining({
         facility_id: "facility-1",
         ordered_by: "Tariro Moyo",
-        total_amount: "120.00",
       }));
     });
 
-    const payload = post.mock.calls[0][1] as { items: string };
-    expect(JSON.parse(payload.items)).toEqual([
+    // Order identity is server-assigned: no client-fabricated order_number in the payload.
+    const payload = post.mock.calls[0][1] as { items: unknown; order_number?: string };
+    expect(payload.order_number).toBeUndefined();
+    expect(payload.items).toEqual([
       expect.objectContaining({ productId: "95000000-0000-0000-0000-000000000001", description: "Cold-chain boxes", quantity: 2, unitPrice: 60 }),
     ]);
   }, 30_000);

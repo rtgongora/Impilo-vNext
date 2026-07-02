@@ -38,12 +38,11 @@ export default function OrdersPage() {
 
     const qty = Number(quantity);
     const price = Number(unitPrice);
+    // Order number is assigned by msika-flow — never fabricated in the browser.
     await createOrder.mutateAsync({
       facilityId: facility.id,
-      orderNumber: `PO-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random().toString(16).slice(2, 8).toUpperCase()}`,
       orderedBy: user.displayName,
       items: [{ productId, description, quantity: qty, unitPrice: price }],
-      totalAmount: qty * price,
     });
 
     setProductId("");

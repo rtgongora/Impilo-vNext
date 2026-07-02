@@ -127,10 +127,10 @@ export interface MarketplaceBooking {
 
 export interface CreateOrderPayload {
   facilityId: string;
-  orderNumber: string;
+  /** Optional msika-flow order type; the BFF defaults to OTC_PRODUCT_ORDER. */
+  orderType?: string;
   orderedBy: string;
   items: MarketplaceOrderItem[];
-  totalAmount: number;
 }
 
 type MarketplaceOrdersResponse = ApiResponse<MarketplaceOrderApiResource[]>;
@@ -281,10 +281,9 @@ export function useCreateOrder() {
     mutationFn: async (payload) => {
       const response = await apiClient.post<MarketplaceOrderResponse>("/internal/v1/marketplace/orders", {
         facility_id: payload.facilityId,
-        order_number: payload.orderNumber,
-        items: JSON.stringify(payload.items),
+        order_type: payload.orderType,
+        items: payload.items,
         ordered_by: payload.orderedBy,
-        total_amount: payload.totalAmount.toFixed(2),
       });
       return normalizeOrder(response.data);
     },
