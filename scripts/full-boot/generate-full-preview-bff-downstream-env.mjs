@@ -111,6 +111,12 @@ const SERVICE_ENV = [
   ["SCHEMA_REGISTRY_BASE_URL", "schema-registry-service"],
   ["SECURITY_HARDENING_BASE_URL", "security-hardening-service"],
   ["SHARE_SLIP_BASE_URL", "share-slip-service"],
+  // Newly wave-manifested services (2026-07-02) — BFF application.yml already
+  // declares these base-url properties.
+  ["DAIDZAI_BASE_URL", "daidzai-service"],
+  ["KHULUMA_BASE_URL", "khuluma-service"],
+  ["PATIENT_SAFETY_BASE_URL", "patient-safety-service"],
+  ["RITO_BASE_URL", "rito-quality-safety-service"],
 ];
 
 /**
