@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-06-15T01:23:31Z",
-  "commit": "f79ca017",
-  "public_generation": "98/98 deployments ready (namespace impilo-full-preview); helm enabled 89/89 microservices (wave\u22640)",
-  "coverage_summary": "runtime 89/89 k8s microservices | registry runtime lanes 99 | non-runtime validate 47/47",
+  "generated_at": "2026-07-02T20:07:26Z",
+  "commit": "7e8d636f8",
+  "public_generation": "103/103 deployments ready (namespace impilo-full-preview); helm enabled 94/94 microservices (wave\u22640)",
+  "coverage_summary": "runtime 94/94 k8s microservices | registry runtime lanes 104 | non-runtime validate 47/47",
   "runtime": {
-    "deployments_ready": 98,
-    "deployments_total": 98,
-    "k8s_microservice_catalog": 89,
-    "helm_enabled_microservices": 89,
+    "deployments_ready": 103,
+    "deployments_total": 103,
+    "k8s_microservice_catalog": 94,
+    "helm_enabled_microservices": 94,
     "max_wave": 0,
-    "wave_runtime_catalog": 99
+    "wave_runtime_catalog": 104
   },
   "non_runtime": {
     "lane_total": 47,
@@ -18,8 +18,8 @@
   },
   "full_stack": {
     "namespace": "impilo-full-preview",
-    "ready": 98,
-    "total": 98,
+    "ready": 103,
+    "total": 103,
     "has_public_ingress": true
   },
   "fallback_slice": {

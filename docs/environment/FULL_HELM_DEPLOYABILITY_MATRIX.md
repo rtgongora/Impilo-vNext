@@ -1,155 +1,38 @@
 # Full Helm Deployability Matrix
 
-| Service | Plane | Helm | Location | Ingress | Deployability | Blocker | Next |
-|---|---|---|---|---|---|---|---|
-| ai-model-registry-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| analytics-pipeline-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| asset-registry-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| audit-ledger-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| banking-rails | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| booking-service | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| butano-fhir | clinical | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
-| butano-service | clinical | yes | chart_in_helm/ | required | partially_deployable | — | add subchart or impilo-vnext template |
-| butano-web | experience | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
-| campaigns-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| card-print-agent | integration | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
-| channels-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| citizen-app | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| civil-registry-system | registry_spine | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| clinical-knowledge-platform-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| community-service | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| connector-fhir-adapter | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| contract-tests | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| costa-console | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| costing-engine-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| coverage-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| credential-verification-service | enterprise | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
-| daidzai-service | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| data-access-governance-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| data-governance-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| data-ingestion-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| data-pipeline-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| data-warehouse-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| developer-console | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| developer-portal-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| dhis2 | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| dispatch-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| document-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| ehr | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| envoy | trust | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| experience-bff | experience | yes | deploy/helm/impilo-vnext | required | partially_deployable | — | add subchart or impilo-vnext template |
-| external-elmis | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| external-idp | trust_governance | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| external-pacs-network | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| federation-connector | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| fhir-gateway-service | clinical | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| forms-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| general-ledger-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| guidance-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| hapi-fhir | clinical | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| hr-payroll-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| identity-assurance-service | trust | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| indawo-service | registry | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| inpatient-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| integration-hub | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| inventory-elmis-adapter | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| inventory-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| inventory-web | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| iot-ingestion-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| jobs-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| kafka | integration | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| keycloak | trust | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| khuluma-service | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| knowledge-admin | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| landela-adapter-service | integration | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
-| learning-service | experience | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
-| lims | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| live-service | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| llm-orchestration-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| madi-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| minio | integration | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| mosip | trust_governance | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| msika-apps-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| msika-flow-ops | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| msika-flow-portal | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| msika-flow-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| msika-flow-vendor | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| msika-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| msika-web | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| mushe-wallet-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| mushex-finance-console | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| mushex-ops-console | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| mushex-payer-portal | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| mushex-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| mvumo-service | trust | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
-| national-data-repository-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| ndila-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| ndr-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| nhume-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| notification-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| observability-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| offline-edge-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| offline-sdk | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| offline-sync-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| one-ui-shell | experience | yes | deploy/helm/impilo-vnext | required | partially_deployable | — | add subchart or impilo-vnext template |
-| opa | trust | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| ops-console | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| ops-docs | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| ops-instrumentation | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| oros-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| oros-web | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| pacs-adapter-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| patient-safety-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| pct-service | clinical | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| pct-web | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| pharmacy-elmis-adapter | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| pharmacy-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| pharmacy-web | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| portal | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| postgres | integration | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| procurement-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| product-registry-service | registry | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| provider-app | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| redis | integration | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| referral-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| reporting-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| rito-quality-safety-service | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| rtc-gateway-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| rules-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| scheduling-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| schema-registry-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| search-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| security-baseline | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| security-hardening-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| self-service | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| share-slip-service | enterprise | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
-| shared-core | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| shared-kernel-java | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| shared-ui | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| simba-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| sms-whatsapp-gateway | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| support-console | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| support-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| surveillance-service | data | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| tech-companion | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| tech-companion-harness | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| tech-companion-mock | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| tshepo-audit-service | trust | yes | chart_in_helm/ | required | partially_deployable | — | add subchart or impilo-vnext template |
-| tshepo-authz-service | trust | yes | chart_in_helm/ | required | partially_deployable | — | add subchart or impilo-vnext template |
-| tshepo-consent-service | trust | yes | chart_in_helm/ | required | partially_deployable | — | add subchart or impilo-vnext template |
-| tshepo-contracts | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| tshepo-identity-service | trust | yes | chart_in_helm/ | required | partially_deployable | — | add subchart or impilo-vnext template |
-| tshepo-keys-service | trust | yes | chart_in_helm/ | required | partially_deployable | — | add subchart or impilo-vnext template |
-| tshepo-offline-service | trust | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
-| tshepo-sdk | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| tshepo-service | trust | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| tuso-service | registry | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| ubomi-service | registry | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| varapi-service | registry | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| vashandi-workforce-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| vito-service | registry | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| wellness-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| workflow-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| workforce-governance-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| zibo-service | registry | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
-| zibo-web | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
+Generated: 2026-07-02T20:07:22.857768+00:00
+
+**Required services:** 22
+
+## Summary
+
+| Status | Count |
+|--------|-------|
+| helm_ready | 22 |
+
+## Required services
+
+| Service | Plane | Port | Deploy group | Image | Helm status | Notes |
+|---------|-------|------|--------------|-------|-------------|-------|
+| butano-service | clinical | 8090 | domain_services | impilo/butano-service | helm_ready | microservice.yaml |
+| envoy | trust | 10000 | infrastructure | envoyproxy/envoy:v1.31-latest | helm_ready | envoy.yaml |
+| experience-bff | experience | 8160 | experience_layer | impilo/experience-bff | helm_ready | experience-bff.yaml |
+| fhir-gateway-service | clinical | 8091 | domain_services | impilo/fhir-gateway-service | helm_ready | microservice.yaml |
+| hapi-fhir | clinical | 8090 | infrastructure | hapiproject/hapi:v7.4.0 | helm_ready | hapi-fhir.yaml |
+| kafka | integration | 9092 | infrastructure | apache/kafka:3.7.1 | helm_ready | kafka.yaml |
+| keycloak | trust | 8080 | infrastructure | quay.io/keycloak/keycloak:25.0 | helm_ready | keycloak.yaml |
+| minio | integration | 9000 | infrastructure | minio/minio:latest | helm_ready | minio.yaml |
+| one-ui-shell | experience | — | experience_layer | impilo/one-ui-shell | helm_ready | one-ui-shell.yaml |
+| pct-service | clinical | 8088 | domain_services | impilo/pct-service | helm_ready | microservice.yaml |
+| postgres | integration | 5432 | infrastructure | postgres:16-alpine | helm_ready | postgres.yaml |
+| redis | integration | 6379 | infrastructure | redis:7-alpine | helm_ready | redis.yaml |
+| tshepo-audit-service | trust | 8183 | identity_trust_policy | impilo/tshepo-audit-service | helm_ready | microservice.yaml |
+| tshepo-authz-service | trust | 8081 | identity_trust_policy | impilo/tshepo-authz-service | helm_ready | microservice.yaml |
+| tshepo-consent-service | trust | 8182 | identity_trust_policy | impilo/tshepo-consent-service | helm_ready | microservice.yaml |
+| tshepo-identity-service | trust | 8181 | identity_trust_policy | impilo/tshepo-identity-service | helm_ready | microservice.yaml |
+| tshepo-keys-service | trust | 8184 | identity_trust_policy | impilo/tshepo-keys-service | helm_ready | microservice.yaml |
+| tuso-service | registry | 8084 | registries | impilo/tuso-service | helm_ready | microservice.yaml |
+| ubomi-service | registry | 8087 | registries | impilo/ubomi-service | helm_ready | microservice.yaml |
+| varapi-service | registry | 8083 | registries | impilo/varapi-service | helm_ready | microservice.yaml |
+| vito-service | registry | 8082 | registries | impilo/vito-service | helm_ready | microservice.yaml |
+| zibo-service | registry | 8085 | registries | impilo/zibo-service | helm_ready | microservice.yaml |

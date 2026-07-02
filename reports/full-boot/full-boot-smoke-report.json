@@ -98,6 +98,12 @@
       "available": 1,
       "healthy": true
     },
+    "daidzai-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "data-access-governance-service": {
       "replicas": 1,
       "ready": 1,
@@ -254,6 +260,12 @@
       "available": 1,
       "healthy": true
     },
+    "khuluma-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "landela-adapter-service": {
       "replicas": 1,
       "ready": 1,
@@ -392,6 +404,12 @@
       "available": 1,
       "healthy": true
     },
+    "patient-safety-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "pct-service": {
       "replicas": 1,
       "ready": 1,
@@ -441,6 +459,12 @@
       "healthy": true
     },
     "reporting-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "rito-quality-safety-service": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
@@ -560,6 +584,12 @@
       "available": 1,
       "healthy": true
     },
+    "vashandi-workforce-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "vito-service": {
       "replicas": 1,
       "ready": 1,
@@ -593,7 +623,7 @@
   },
   "missing_deployments": [],
   "unhealthy_deployments": [],
-  "runtime_pods_count": 99,
+  "runtime_pods_count": 103,
   "verify_pods_ignored": 0,
   "crashloop": [],
   "pending": [],
