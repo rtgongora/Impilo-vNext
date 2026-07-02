@@ -71,6 +71,11 @@ public class QueueController {
             queueWithStats.put("name", queue.getName());
             queueWithStats.put("queueType", queue.getQueueType());
             queueWithStats.put("active", queue.isActive());
+            // Materialisation provenance: queue definitions are owned by TUSO facility service-point/
+            // workspace configuration and materialised into PCT for care operations.
+            queueWithStats.put("source", queue.getSource());
+            queueWithStats.put("materializationStatus", queue.getMaterializationStatus());
+            queueWithStats.put("lastMaterializedAt", queue.getLastMaterializedAt());
 
             Map<String, Object> stats = queueEngine.getQueueStats(queue.getQueueId());
             queueWithStats.putAll(stats);

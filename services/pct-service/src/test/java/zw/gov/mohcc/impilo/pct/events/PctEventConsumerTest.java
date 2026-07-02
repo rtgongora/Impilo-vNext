@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.pct.core.DischargeWorkflow;
+import zw.gov.mohcc.impilo.pct.core.QueueMaterializationService;
 import zw.gov.mohcc.impilo.pct.core.TaskService;
 import zw.gov.mohcc.impilo.pct.persistence.entity.DischargeCaseEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.DischargeCaseRepository;
@@ -46,6 +47,9 @@ class PctEventConsumerTest {
     @Mock
     private DischargeCaseRepository dischargeCaseRepository;
 
+    @Mock
+    private zw.gov.mohcc.impilo.pct.core.QueueMaterializationService queueMaterializationService;
+
     private PctEventConsumer consumer;
     private ObjectMapper objectMapper;
 
@@ -58,7 +62,8 @@ class PctEventConsumerTest {
     void setUp() {
         objectMapper = new ObjectMapper();
         consumer = new PctEventConsumer(
-                dischargeWorkflow, taskService, dischargeCaseRepository, objectMapper);
+                dischargeWorkflow, taskService, dischargeCaseRepository,
+                queueMaterializationService, objectMapper);
     }
 
     private TrustContext createTrustContext() {
@@ -218,6 +223,40 @@ class PctEventConsumerTest {
                         isNull(),
                         contains("LAB"));
             }
+        }
+    }
+
+    @Nested
+    @DisplayName("TUSO Workspace/Service-Point Update Consumer")
+    class TusoWorkspaceConsumer {
+
+        @Test
+        @DisplayName("triggers PCT queue materialisation for the facility")
+        void triggersMaterialisation() {
+            UUID facility = UUID.randomUUID();
+            when(queueMaterializationService.reconcileFacility(eq(TENANT_ID), eq(facility)))
+                    .thenReturn(new QueueMaterializationService.MaterializationResult(
+                            facility, "OK", 2, 0, 0, 0, 2, null));
+
+            String event = "{\"facilityId\":\"" + facility + "\",\"tenantId\":\"" + TENANT_ID
+                    + "\",\"changeType\":\"SERVICE_POINT_UPDATED\"}";
+            consumer.consumeTusoWorkspaceUpdated(event);
+
+            verify(queueMaterializationService).reconcileFacility(TENANT_ID, facility);
+        }
+
+        @Test
+        @DisplayName("skips materialisation when facilityId is missing")
+        void skipsWhenNoFacility() {
+            consumer.consumeTusoWorkspaceUpdated("{\"tenantId\":\"" + TENANT_ID + "\"}");
+            verify(queueMaterializationService, never()).reconcileFacility(any(), any());
+        }
+
+        @Test
+        @DisplayName("skips materialisation when tenantId is missing (tenant-scoped)")
+        void skipsWhenNoTenant() {
+            consumer.consumeTusoWorkspaceUpdated("{\"facilityId\":\"" + UUID.randomUUID() + "\"}");
+            verify(queueMaterializationService, never()).reconcileFacility(any(), any());
         }
     }
 }

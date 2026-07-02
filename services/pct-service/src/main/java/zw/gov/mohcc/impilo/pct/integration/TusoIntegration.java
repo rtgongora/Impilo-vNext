@@ -76,35 +76,45 @@ public class TusoIntegration {
     }
 
     /**
-     * Retrieve the queue definitions for a facility.
+     * Retrieve TUSO's queue definitions for a facility (derived from its service points).
      *
-     * <p>Returns all configured queues including their type (TRIAGE,
-     * CONSULTATION, PHARMACY, LAB, etc.), workspace association, SLA
-     * thresholds, and active status.</p>
+     * <p>TUSO owns queue definitions via facility service-point/workspace configuration; PCT materialises
+     * them. The facility is addressed by its canonical facility UUID (the identity downstream services
+     * key off). Each definition carries a stable {@code sourceRef} (TUSO service-point id), {@code name},
+     * {@code queueType}, {@code active}, and optional {@code workspaceId}.</p>
      *
-     * @param facilityId the facility to query
-     * @return list of queue definitions, or empty list on failure
+     * <p>Returns {@code null} on failure/unavailability (distinct from an empty list, which means the
+     * facility genuinely has no queues) so materialisation can stay failure-safe and never wipe queues
+     * when TUSO is unreachable.</p>
+     *
+     * @param facilityUuid the canonical facility UUID to query
+     * @return list of queue definitions, an empty list if none, or {@code null} on failure
      */
     @SuppressWarnings("unchecked")
-    public List<Map<String, Object>> getQueueDefinitions(UUID facilityId) {
+    public List<Map<String, Object>> getQueueDefinitions(UUID facilityUuid) {
         try {
-            String url = baseUrl + "/v1/facilities/" + facilityId + "/queues";
-            ResponseEntity<List> response = restTemplate.getForEntity(url, List.class);
+            String url = baseUrl + "/v1/internal/facilities/by-uuid/" + facilityUuid + "/queue-definitions";
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                log.info("TUSO queue definitions retrieved for facility {} ({} queues)",
-                        facilityId, response.getBody().size());
-                return response.getBody();
+                Object data = response.getBody().getOrDefault("data", response.getBody().get("definitions"));
+                if (data instanceof List<?> list) {
+                    log.info("TUSO queue definitions retrieved for facility {} ({} definitions)",
+                            facilityUuid, list.size());
+                    return (List<Map<String, Object>>) list;
+                }
+                log.warn("TUSO queue-definitions response for facility {} had no data array", facilityUuid);
+                return null;
             }
 
-            log.warn("TUSO returned non-success status {} when retrieving queues for facility {}",
-                    response.getStatusCode(), facilityId);
-            return Collections.emptyList();
+            log.warn("TUSO returned non-success status {} when retrieving queue definitions for facility {}",
+                    response.getStatusCode(), facilityUuid);
+            return null;
 
         } catch (RestClientException e) {
-            log.warn("TUSO unavailable when retrieving queues for facility {}: {}",
-                    facilityId, e.getMessage());
-            return Collections.emptyList();
+            log.warn("TUSO unavailable when retrieving queue definitions for facility {}: {}",
+                    facilityUuid, e.getMessage());
+            return null;
         }
     }
 

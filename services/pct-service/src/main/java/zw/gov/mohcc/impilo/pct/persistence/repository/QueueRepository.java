@@ -41,4 +41,10 @@ public interface QueueRepository extends JpaRepository<QueueEntity, UUID> {
      * @return the queue if found
      */
     Optional<QueueEntity> findByTenantIdAndQueueId(UUID tenantId, UUID queueId);
+
+    /** All queues at a facility with a given source — used by materialisation to reconcile + retire. */
+    List<QueueEntity> findByTenantIdAndFacilityIdAndSource(UUID tenantId, UUID facilityId, String source);
+
+    /** The materialised queue for a given TUSO source reference — the idempotent upsert key. */
+    Optional<QueueEntity> findByTenantIdAndFacilityIdAndSourceRef(UUID tenantId, UUID facilityId, String sourceRef);
 }

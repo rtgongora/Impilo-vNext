@@ -1,0 +1,53 @@
+package zw.gov.mohcc.impilo.pct.api.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import zw.gov.mohcc.impilo.pct.core.QueueMaterializationService;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * On-demand reconciliation of a facility's queue definitions FROM TUSO, plus a materialisation-status
+ * read. This is the reconciliation path that complements event-driven materialisation — events can be
+ * missed/delayed/replayed, so operators (and schedulers) can pull the current TUSO configuration on
+ * demand.
+ *
+ * <p>This is NOT a queue create/edit surface — PCT never authors queue definitions; it materialises
+ * them from TUSO (the facility service-point/workspace system of record).</p>
+ */
+@RestController
+@RequestMapping("/v1/internal/queues")
+public class QueueReconciliationController {
+
+    private final QueueMaterializationService materializationService;
+
+    public QueueReconciliationController(QueueMaterializationService materializationService) {
+        this.materializationService = materializationService;
+    }
+
+    /** Reconcile the facility's queues from TUSO's current queue definitions (idempotent, failure-safe). */
+    @PostMapping("/reconcile")
+    public ResponseEntity<ApiResponse<QueueMaterializationService.MaterializationResult>> reconcile(
+            @RequestParam UUID facilityId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var result = materializationService.reconcileFacility(ctx.tenantId(), facilityId);
+        return ResponseEntity.ok(ApiResponse.ok(result, ctx.correlationId().toString()));
+    }
+
+    /** Materialisation-status summary for a facility (materialised vs seed/demo, counts, last sync). */
+    @GetMapping("/materialization-status")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> materializationStatus(
+            @RequestParam UUID facilityId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var summary = materializationService.materializationStatus(ctx.tenantId(), facilityId);
+        return ResponseEntity.ok(ApiResponse.ok(summary, ctx.correlationId().toString()));
+    }
+}

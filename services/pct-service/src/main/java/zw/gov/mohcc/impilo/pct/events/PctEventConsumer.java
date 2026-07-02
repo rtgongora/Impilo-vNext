@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import zw.gov.mohcc.impilo.pct.core.DischargeWorkflow;
+import zw.gov.mohcc.impilo.pct.core.QueueMaterializationService;
 import zw.gov.mohcc.impilo.pct.core.TaskService;
 import zw.gov.mohcc.impilo.pct.persistence.entity.DischargeCaseEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.DischargeCaseRepository;
@@ -43,15 +44,18 @@ public class PctEventConsumer {
     private final DischargeWorkflow dischargeWorkflow;
     private final TaskService taskService;
     private final DischargeCaseRepository dischargeCaseRepository;
+    private final QueueMaterializationService queueMaterializationService;
     private final ObjectMapper objectMapper;
 
     public PctEventConsumer(DischargeWorkflow dischargeWorkflow,
                             TaskService taskService,
                             DischargeCaseRepository dischargeCaseRepository,
+                            QueueMaterializationService queueMaterializationService,
                             ObjectMapper objectMapper) {
         this.dischargeWorkflow = dischargeWorkflow;
         this.taskService = taskService;
         this.dischargeCaseRepository = dischargeCaseRepository;
+        this.queueMaterializationService = queueMaterializationService;
         this.objectMapper = objectMapper;
     }
 
@@ -206,29 +210,55 @@ public class PctEventConsumer {
     }
 
     /**
-     * Consume TUSO workspace configuration update events.
+     * Consume TUSO workspace / service-point / queue configuration update events and materialise the
+     * affected facility's queue definitions into PCT.
      *
-     * <p>When workspace or queue configuration changes in TUSO, this consumer
-     * logs the event for cache invalidation purposes. Future versions will
-     * trigger actual cache eviction in the TUSO integration service.</p>
+     * <p>The event is a trigger, not the source of truth: we reconcile the whole facility from TUSO's
+     * current queue definitions rather than trusting the event payload. That keeps materialisation
+     * idempotent and robust to missed, delayed, duplicated, or replayed events. Queue definitions remain
+     * owned by TUSO; PCT only materialises them.</p>
      *
-     * @param message the Kafka message payload (JSON)
+     * @param message the Kafka message payload (JSON) — expects at least {@code facilityId} + {@code tenantId}
      */
     @KafkaListener(topics = {"tuso.workspace.updated", "impilo.tuso.workspace"}, groupId = "pct-service")
     public void consumeTusoWorkspaceUpdated(String message) {
         try {
             JsonNode event = objectMapper.readTree(message);
             String facilityId = getTextField(event, "facilityId");
-            String workspaceId = getTextField(event, "workspaceId");
+            String tenantId = getTextField(event, "tenantId");
             String changeType = getTextField(event, "changeType");
 
-            log.info("TUSO workspace updated: facilityId={}, workspaceId={}, changeType={}. " +
-                    "Consider invalidating cached configuration.", facilityId, workspaceId, changeType);
+            if (facilityId == null) {
+                log.warn("TUSO workspace event missing facilityId — cannot materialise, skipping");
+                return;
+            }
+            if (tenantId == null) {
+                // Materialisation is tenant-scoped; without a tenant we cannot safely reconcile.
+                log.warn("TUSO workspace event for facility {} missing tenantId — skipping materialisation", facilityId);
+                return;
+            }
 
-            // Future: invalidate local cache for the affected facility/workspace
+            UUID facilityUuid;
+            UUID tenantUuid;
+            try {
+                facilityUuid = UUID.fromString(facilityId);
+                tenantUuid = UUID.fromString(tenantId);
+            } catch (IllegalArgumentException e) {
+                log.warn("TUSO workspace event has non-UUID facilityId/tenantId ({}/{}) — skipping", facilityId, tenantId);
+                return;
+            }
+
+            QueueMaterializationService.MaterializationResult result =
+                    queueMaterializationService.reconcileFacility(tenantUuid, facilityUuid);
+            log.info("TUSO workspace event (changeType={}) reconciled facility {}: status={}, created={}, "
+                            + "updated={}, retired={}", changeType, facilityId, result.status(),
+                    result.created(), result.updated(), result.retired());
 
         } catch (JsonProcessingException e) {
             log.error("Failed to parse TUSO workspace updated event: {}", e.getMessage(), e);
+        } catch (Exception e) {
+            // Never let a materialisation failure crash the consumer / abort the partition.
+            log.error("TUSO workspace materialisation failed: {}", e.getMessage(), e);
         }
     }
 
