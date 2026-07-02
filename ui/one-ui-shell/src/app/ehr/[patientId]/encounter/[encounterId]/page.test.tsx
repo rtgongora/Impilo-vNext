@@ -31,6 +31,9 @@ vi.mock("@/components/encounter/EncounterImagingOrdersPanel", () => ({
 vi.mock("@/components/encounter/EncounterLinkedImagingStudiesPanel", () => ({
   EncounterLinkedImagingStudiesPanel: () => <div data-testid="encounter-linked-imaging-panel">Linked imaging</div>,
 }));
+vi.mock("@/components/encounter/EncounterFormsPanel", () => ({
+  EncounterFormsPanel: () => <div data-testid="encounter-forms-panel">Encounter forms</div>,
+}));
 vi.mock("@/components/encounter/EncounterDischargePanel", () => ({
   EncounterDischargePanel: () => <div data-testid="encounter-discharge-panel">Discharge</div>,
 }));
@@ -81,6 +84,8 @@ vi.mock("@tanstack/react-query", () => ({
     }
     return { data: { data: [] } };
   },
+  useMutation: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
 }));
 vi.mock("@/lib/api-client", () => ({ apiClient: { get: vi.fn(), post: vi.fn() } }));
 
