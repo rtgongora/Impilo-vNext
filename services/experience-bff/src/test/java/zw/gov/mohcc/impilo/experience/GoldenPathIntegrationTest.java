@@ -261,11 +261,11 @@ class GoldenPathIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "facility_id", "f1000000-0000-0000-0000-000000000001",
-                                "order_number", "ORD-" + System.currentTimeMillis(),
                                 "items", java.util.List.of(Map.of(
-                                        "product_code", "PARA-500",
+                                        "productId", "PARA-500",
+                                        "description", "Paracetamol 500mg",
                                         "quantity", 100,
-                                        "unit_price", 0.50
+                                        "unitPrice", 0.50
                                 )),
                                 "ordered_by", "admin.harare"
                         )))
