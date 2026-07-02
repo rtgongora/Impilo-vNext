@@ -34,6 +34,9 @@ public class JwksCache {
     private volatile JWKSet cached;
     private volatile Instant fetchedAt;
 
+    // @Autowired is required: with two constructors and no annotation Spring
+    // resolves neither and fails on a missing default constructor at boot.
+    @org.springframework.beans.factory.annotation.Autowired
     public JwksCache(KeysServiceClient keysClient, OfflineProperties properties) {
         this(keysClient, properties, Clock.systemUTC());
     }
