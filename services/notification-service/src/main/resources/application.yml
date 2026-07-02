@@ -56,3 +56,9 @@ impilo:
   ops:
     enabled: true
     outbox-table: ns_event_outbox
+
+notification:
+  worker:
+    scheduler-enabled: ${NOTIFICATION_WORKER_SCHEDULER_ENABLED:true}
+    poll-interval-ms: ${NOTIFICATION_WORKER_POLL_INTERVAL_MS:10000}
+    batch-limit: ${NOTIFICATION_WORKER_BATCH_LIMIT:25}

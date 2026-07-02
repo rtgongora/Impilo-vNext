@@ -13,6 +13,12 @@ spring:
   flyway:
     enabled: false
 
+notification:
+  worker:
+    # Keep the autonomous dispatch loop out of test contexts — a live @Scheduled
+    # drain would race tests that assert on PENDING notifications.
+    scheduler-enabled: false
+
 impilo:
   security:
     disable-oauth-for-tests: true
