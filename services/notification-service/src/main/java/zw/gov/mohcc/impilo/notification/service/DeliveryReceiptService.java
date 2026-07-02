@@ -13,14 +13,18 @@ import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.notification.api.dto.DeliveryReceiptRequest;
 import zw.gov.mohcc.impilo.notification.api.dto.DeliveryReceiptResponse;
 import zw.gov.mohcc.impilo.notification.domain.DeliveryReceiptEntity;
+import zw.gov.mohcc.impilo.notification.domain.NotificationEntity;
+import zw.gov.mohcc.impilo.notification.domain.NotificationStatus;
 import zw.gov.mohcc.impilo.notification.domain.OutboxEventEntity;
 import zw.gov.mohcc.impilo.notification.repository.DeliveryReceiptRepository;
+import zw.gov.mohcc.impilo.notification.repository.NotificationRepository;
 import zw.gov.mohcc.impilo.notification.repository.OutboxEventRepository;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class DeliveryReceiptService {
@@ -28,13 +32,16 @@ public class DeliveryReceiptService {
     private static final Logger log = LoggerFactory.getLogger(DeliveryReceiptService.class);
 
     private final DeliveryReceiptRepository deliveryReceiptRepository;
+    private final NotificationRepository notificationRepository;
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
 
     public DeliveryReceiptService(DeliveryReceiptRepository deliveryReceiptRepository,
+                                  NotificationRepository notificationRepository,
                                   OutboxEventRepository outboxEventRepository,
                                   ObjectMapper objectMapper) {
         this.deliveryReceiptRepository = deliveryReceiptRepository;
+        this.notificationRepository = notificationRepository;
         this.outboxEventRepository = outboxEventRepository;
         this.objectMapper = objectMapper;
     }
@@ -82,7 +89,72 @@ public class DeliveryReceiptService {
         outbox.setPayloadJson(serializePayload(payload));
         outboxEventRepository.save(outbox);
 
+        reconcileNotificationStatus(entity, ctx);
+
         return toResponse(entity);
+    }
+
+    /**
+     * Fold the provider receipt back into the parent notification so status
+     * tracking does not stop at SENT. Forward-only: receipts never resurrect
+     * PENDING/CANCELLED rows and never downgrade a DELIVERED notification
+     * (late or out-of-order failure receipts are recorded but not applied).
+     */
+    private void reconcileNotificationStatus(DeliveryReceiptEntity receipt, RequestContext ctx) {
+        Optional<NotificationEntity> notificationOpt =
+                notificationRepository.findById(receipt.getNotificationId());
+        if (notificationOpt.isEmpty()) {
+            log.warn("Delivery receipt {} references unknown notification {} — receipt stored, no status to reconcile",
+                    receipt.getId(), receipt.getNotificationId());
+            return;
+        }
+
+        NotificationEntity notification = notificationOpt.get();
+        if (notification.getStatus() != NotificationStatus.SENT) {
+            log.info("Delivery receipt {} for notification {} in status {} — not reconciled (forward-only from SENT)",
+                    receipt.getId(), notification.getId(), notification.getStatus());
+            return;
+        }
+
+        if ("DELIVERED".equals(receipt.getStatus())) {
+            notification.setStatus(NotificationStatus.DELIVERED);
+            notification.setLastError(null);
+            notificationRepository.save(notification);
+            emitStatusEvent(notification, "impilo.notify.notification.delivered.v1", receipt, ctx);
+        } else if ("FAILED".equals(receipt.getStatus())) {
+            notification.setStatus(NotificationStatus.FAILED);
+            notification.setLastError(receipt.getFailureReason() != null
+                    ? receipt.getFailureReason()
+                    : "Delivery failed (provider receipt)");
+            notificationRepository.save(notification);
+            emitStatusEvent(notification, "impilo.notify.notification.failed.v1", receipt, ctx);
+        }
+    }
+
+    private void emitStatusEvent(NotificationEntity notification, String eventType,
+                                 DeliveryReceiptEntity receipt, RequestContext ctx) {
+        OutboxEventEntity outbox = new OutboxEventEntity();
+        outbox.setTenantId(notification.getTenantId());
+        outbox.setPodId(notification.getPodId());
+        outbox.setCorrelationId(ctx.correlationId());
+        outbox.setEventType(eventType);
+        outbox.setSchemaVersion(1);
+        outbox.setOccurredAt(OffsetDateTime.now());
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("notificationId", notification.getId());
+        payload.put("channel", notification.getChannel());
+        payload.put("to", notification.getToAddr());
+        payload.put("status", notification.getStatus().name());
+        payload.put("receiptId", receipt.getId());
+        if (receipt.getProviderRef() != null) {
+            payload.put("providerRef", receipt.getProviderRef());
+        }
+        if (notification.getLastError() != null) {
+            payload.put("lastError", notification.getLastError());
+        }
+        outbox.setPayloadJson(serializePayload(payload));
+        outboxEventRepository.save(outbox);
     }
 
     @Transactional(readOnly = true)

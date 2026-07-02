@@ -14,12 +14,16 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import zw.gov.mohcc.impilo.notification.config.TestSecurityConfig;
+import zw.gov.mohcc.impilo.notification.domain.NotificationEntity;
+import zw.gov.mohcc.impilo.notification.domain.NotificationStatus;
+import zw.gov.mohcc.impilo.notification.domain.OutboxEventEntity;
 import zw.gov.mohcc.impilo.notification.repository.DeliveryReceiptRepository;
 import zw.gov.mohcc.impilo.notification.repository.NotificationRepository;
 import zw.gov.mohcc.impilo.notification.repository.OutboxEventRepository;
 import zw.gov.mohcc.impilo.notification.repository.TemplateRepository;
 import zw.gov.mohcc.impilo.notification.repository.TemplateVersionRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -494,5 +498,77 @@ class NotificationExtensionsTest {
 
         JsonNode after = MAPPER.readTree(afterGet.getResponse().getContentAsString());
         assertThat(after.get("currentVersion").asInt()).isGreaterThan(initialVersion);
+    }
+
+    // ── Delivery receipt → notification status reconciliation ────────────
+
+    private void markSent(String notificationId) {
+        NotificationEntity notification = notificationRepository.findById(notificationId).orElseThrow();
+        notification.setStatus(NotificationStatus.SENT);
+        notificationRepository.save(notification);
+    }
+
+    @Test
+    @DisplayName("DELIVERED receipt transitions a SENT notification to DELIVERED and emits delivered event")
+    void deliveredReceiptReconcilesSentNotification() throws Exception {
+        String notificationId = enqueueNotificationAndGetId("SMS", "+263771230001");
+        markSent(notificationId);
+
+        recordReceipt(notificationId, "SMS", "+263771230001", "DELIVERED", null);
+
+        NotificationEntity reconciled = notificationRepository.findById(notificationId).orElseThrow();
+        assertThat(reconciled.getStatus()).isEqualTo(NotificationStatus.DELIVERED);
+        assertThat(reconciled.getLastError()).isNull();
+
+        List<OutboxEventEntity> events = outboxEventRepository.findAll();
+        assertThat(events)
+                .anyMatch(e -> "impilo.notify.notification.delivered.v1".equals(e.getEventType()));
+    }
+
+    @Test
+    @DisplayName("FAILED receipt transitions a SENT notification to FAILED with the failure reason")
+    void failedReceiptReconcilesSentNotification() throws Exception {
+        String notificationId = enqueueNotificationAndGetId("EMAIL", "fail@example.com");
+        markSent(notificationId);
+
+        recordReceipt(notificationId, "EMAIL", "fail@example.com", "FAILED", "Mailbox full");
+
+        NotificationEntity reconciled = notificationRepository.findById(notificationId).orElseThrow();
+        assertThat(reconciled.getStatus()).isEqualTo(NotificationStatus.FAILED);
+        assertThat(reconciled.getLastError()).isEqualTo("Mailbox full");
+
+        List<OutboxEventEntity> events = outboxEventRepository.findAll();
+        assertThat(events)
+                .anyMatch(e -> "impilo.notify.notification.failed.v1".equals(e.getEventType()));
+    }
+
+    @Test
+    @DisplayName("Receipts do not resurrect PENDING notifications (forward-only from SENT)")
+    void receiptDoesNotTouchPendingNotification() throws Exception {
+        String notificationId = enqueueNotificationAndGetId("SMS", "+263771230002");
+
+        recordReceipt(notificationId, "SMS", "+263771230002", "DELIVERED", null);
+
+        NotificationEntity untouched = notificationRepository.findById(notificationId).orElseThrow();
+        assertThat(untouched.getStatus()).isEqualTo(NotificationStatus.PENDING);
+    }
+
+    @Test
+    @DisplayName("Late FAILED receipt does not downgrade a DELIVERED notification")
+    void lateFailureReceiptDoesNotDowngradeDelivered() throws Exception {
+        String notificationId = enqueueNotificationAndGetId("SMS", "+263771230003");
+        markSent(notificationId);
+
+        recordReceipt(notificationId, "SMS", "+263771230003", "DELIVERED", null);
+        recordReceipt(notificationId, "SMS", "+263771230003", "FAILED", "Out-of-order receipt");
+
+        NotificationEntity reconciled = notificationRepository.findById(notificationId).orElseThrow();
+        assertThat(reconciled.getStatus()).isEqualTo(NotificationStatus.DELIVERED);
+    }
+
+    @Test
+    @DisplayName("Receipt for an unknown notification is stored without erroring")
+    void receiptForUnknownNotificationIsStored() throws Exception {
+        recordReceipt(UUID.randomUUID().toString(), "SMS", "+263771230004", "DELIVERED", null);
     }
 }
