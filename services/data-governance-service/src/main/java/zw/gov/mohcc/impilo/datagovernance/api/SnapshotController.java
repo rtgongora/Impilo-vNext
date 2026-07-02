@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.datagovernance.api;
 
+import zw.gov.mohcc.impilo.datagovernance.core.TenantKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -46,7 +47,7 @@ public class SnapshotController {
             @RequestParam(defaultValue = "50") int limit) {
 
         RequestContext ctx = RequestContextHolder.require();
-        UUID tenantId = UUID.fromString(ctx.tenantId());
+        UUID tenantId = TenantKeys.tenantUuid(ctx.tenantId());
         int effectiveLimit = Math.min(Math.max(limit, 1), MAX_LIMIT);
 
         log.info("Snapshot datasets [cursor={}, limit={}] correlationId={}",
@@ -73,7 +74,7 @@ public class SnapshotController {
             @RequestParam(defaultValue = "50") int limit) {
 
         RequestContext ctx = RequestContextHolder.require();
-        UUID tenantId = UUID.fromString(ctx.tenantId());
+        UUID tenantId = TenantKeys.tenantUuid(ctx.tenantId());
         int effectiveLimit = Math.min(Math.max(limit, 1), MAX_LIMIT);
 
         log.info("Snapshot policies [cursor={}, limit={}] correlationId={}",

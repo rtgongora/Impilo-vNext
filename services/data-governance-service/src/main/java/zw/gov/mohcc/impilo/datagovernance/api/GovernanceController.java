@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.datagovernance.api;
 
+import zw.gov.mohcc.impilo.datagovernance.core.TenantKeys;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -55,7 +56,7 @@ public class GovernanceController {
 
         DatasetEntity dataset = governanceService.createDataset(
                 request,
-                UUID.fromString(ctx.tenantId()),
+                TenantKeys.tenantUuid(ctx.tenantId()),
                 ctx.podId(),
                 ctx.correlationId(),
                 idempotencyKey);
@@ -72,7 +73,7 @@ public class GovernanceController {
         log.info("List datasets correlationId={}", ctx.correlationId());
 
         List<DatasetResponse> datasets = governanceService
-                .listDatasets(UUID.fromString(ctx.tenantId()))
+                .listDatasets(TenantKeys.tenantUuid(ctx.tenantId()))
                 .stream()
                 .map(this::toDatasetResponse)
                 .toList();
@@ -85,7 +86,7 @@ public class GovernanceController {
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "20") int size) {
         RequestContext ctx = RequestContextHolder.require();
-        var rows = governanceService.listDecisionAudit(UUID.fromString(ctx.tenantId()), page, size)
+        var rows = governanceService.listDecisionAudit(TenantKeys.tenantUuid(ctx.tenantId()), page, size)
                 .stream()
                 .map(a -> Map.of(
                         "decisionId", a.getDecisionId().toString(),
@@ -113,7 +114,7 @@ public class GovernanceController {
 
         GrantEntity grant = governanceService.createGrant(
                 request,
-                UUID.fromString(ctx.tenantId()),
+                TenantKeys.tenantUuid(ctx.tenantId()),
                 ctx.podId(),
                 ctx.correlationId(),
                 idempotencyKey);
@@ -134,7 +135,7 @@ public class GovernanceController {
 
         GrantEntity grant = governanceService.revokeGrant(
                 request,
-                UUID.fromString(ctx.tenantId()),
+                TenantKeys.tenantUuid(ctx.tenantId()),
                 ctx.podId(),
                 ctx.correlationId(),
                 idempotencyKey);
@@ -155,7 +156,7 @@ public class GovernanceController {
 
         PolicyEntity policy = governanceService.publishPolicy(
                 request,
-                UUID.fromString(ctx.tenantId()),
+                TenantKeys.tenantUuid(ctx.tenantId()),
                 ctx.podId(),
                 ctx.correlationId(),
                 idempotencyKey);
@@ -176,7 +177,7 @@ public class GovernanceController {
 
         DecideResponse response = governanceService.decide(
                 request,
-                UUID.fromString(ctx.tenantId()),
+                TenantKeys.tenantUuid(ctx.tenantId()),
                 ctx.correlationId());
 
         return ResponseEntity.ok(response);
@@ -190,7 +191,7 @@ public class GovernanceController {
         log.info("External list datasets correlationId={}", ctx.correlationId());
 
         List<ExternalDatasetResponse> datasets = governanceService
-                .listDatasets(UUID.fromString(ctx.tenantId()))
+                .listDatasets(TenantKeys.tenantUuid(ctx.tenantId()))
                 .stream()
                 .map(d -> new ExternalDatasetResponse(d.getDatasetId(), d.getName(), d.getClassification()))
                 .toList();

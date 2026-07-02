@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.datagovernance.api;
 
+import zw.gov.mohcc.impilo.datagovernance.core.TenantKeys;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -60,7 +61,7 @@ public class PrivacyRightsController {
 
         DataSubjectRequestEntity req = dsrService.submit(
                 request.subjectId(), request.requestType(), request.reason(),
-                UUID.fromString(ctx.tenantId()), ctx.podId(), ctx.correlationId(), idempotencyKey);
+                TenantKeys.tenantUuid(ctx.tenantId()), ctx.podId(), ctx.correlationId(), idempotencyKey);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(DataSubjectRequestResponse.from(req));
@@ -76,7 +77,7 @@ public class PrivacyRightsController {
                 subjectId, ctx.correlationId());
 
         Optional<DataSubjectRequestEntity> latest = dsrService.latest(
-                subjectId, requestType, UUID.fromString(ctx.tenantId()));
+                subjectId, requestType, TenantKeys.tenantUuid(ctx.tenantId()));
 
         return latest
                 .<ResponseEntity<?>>map(e -> ResponseEntity.ok(DataSubjectRequestResponse.from(e)))
@@ -96,7 +97,7 @@ public class PrivacyRightsController {
 
         Optional<DataSubjectRequestEntity> cancelled = dsrService.cancel(
                 request.subjectId(), request.requestType(),
-                UUID.fromString(ctx.tenantId()), ctx.podId(), ctx.correlationId(), idempotencyKey);
+                TenantKeys.tenantUuid(ctx.tenantId()), ctx.podId(), ctx.correlationId(), idempotencyKey);
 
         return cancelled
                 .<ResponseEntity<?>>map(e -> ResponseEntity.ok(DataSubjectRequestResponse.from(e)))
@@ -111,7 +112,7 @@ public class PrivacyRightsController {
         log.info("Get privacy preference [user={}] correlationId={}", userId, ctx.correlationId());
 
         Optional<PrivacyDisplayPreferenceEntity> pref = preferenceService.find(
-                userId, UUID.fromString(ctx.tenantId()));
+                userId, TenantKeys.tenantUuid(ctx.tenantId()));
 
         return pref
                 .<ResponseEntity<?>>map(p -> ResponseEntity.ok(PrivacyPreferenceResponse.from(p)))
@@ -132,7 +133,7 @@ public class PrivacyRightsController {
         PrivacyDisplayPreferenceEntity pref = preferenceService.upsert(
                 request.userId(), request.defaultLevel(), request.autoLockMinutes(),
                 request.screenShareMode(),
-                UUID.fromString(ctx.tenantId()), ctx.podId(), ctx.correlationId(), idempotencyKey);
+                TenantKeys.tenantUuid(ctx.tenantId()), ctx.podId(), ctx.correlationId(), idempotencyKey);
 
         return ResponseEntity.ok(PrivacyPreferenceResponse.from(pref));
     }
@@ -142,7 +143,7 @@ public class PrivacyRightsController {
     @GetMapping("/internal/v1/governance/display-settings")
     public ResponseEntity<?> getDisplaySettings(@RequestParam String userId) {
         RequestContext ctx = RequestContextHolder.require();
-        return preferenceService.find(userId, UUID.fromString(ctx.tenantId()))
+        return preferenceService.find(userId, TenantKeys.tenantUuid(ctx.tenantId()))
                 .<ResponseEntity<?>>map(p -> ResponseEntity.ok(displaySettingsBody(p)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -152,7 +153,7 @@ public class PrivacyRightsController {
         RequestContext ctx = RequestContextHolder.require();
         PrivacyDisplayPreferenceEntity p = preferenceService.upsertDisplaySettings(
                 request.userId(), request.theme(), request.fontSize(), request.density(),
-                UUID.fromString(ctx.tenantId()));
+                TenantKeys.tenantUuid(ctx.tenantId()));
         return ResponseEntity.ok(displaySettingsBody(p));
     }
 

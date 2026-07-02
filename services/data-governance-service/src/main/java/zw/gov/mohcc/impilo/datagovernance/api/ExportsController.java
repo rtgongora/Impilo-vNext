@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.datagovernance.api;
 
+import zw.gov.mohcc.impilo.datagovernance.core.TenantKeys;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +52,7 @@ public class ExportsController {
         log.info("Export request [dataset={}, purpose={}] correlationId={}",
                 request.dataset(), request.purposeOfUse(), ctx.correlationId());
 
-        UUID tenantId = UUID.fromString(ctx.tenantId());
+        UUID tenantId = TenantKeys.tenantUuid(ctx.tenantId());
         ExportResponse response = governanceService.evaluateExport(
                 request, tenantId, ctx.correlationId(), idempotencyKey);
 

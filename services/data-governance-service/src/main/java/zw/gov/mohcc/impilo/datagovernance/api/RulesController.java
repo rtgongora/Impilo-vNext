@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.datagovernance.api;
 
+import zw.gov.mohcc.impilo.datagovernance.core.TenantKeys;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,7 @@ public class RulesController {
     public ResponseEntity<?> createRule(@RequestBody CreateRuleRequest request,
                                          HttpServletRequest httpRequest) {
         RequestContext ctx = RequestContextHolder.require();
-        UUID tenantId = UUID.fromString(ctx.tenantId());
+        UUID tenantId = TenantKeys.tenantUuid(ctx.tenantId());
 
         log.info("Create rule [name={}] correlationId={}", request.name(), ctx.correlationId());
 
@@ -57,7 +58,7 @@ public class RulesController {
     @GetMapping("/internal/v1/governance/rules")
     public ResponseEntity<?> listRules() {
         RequestContext ctx = RequestContextHolder.require();
-        UUID tenantId = UUID.fromString(ctx.tenantId());
+        UUID tenantId = TenantKeys.tenantUuid(ctx.tenantId());
 
         List<RuleResponse> rules = ruleRepository.findByTenantIdAndActiveTrue(tenantId)
                 .stream()
@@ -70,7 +71,7 @@ public class RulesController {
     @GetMapping("/internal/v1/governance/rules/{ruleId}")
     public ResponseEntity<?> getRule(@PathVariable UUID ruleId) {
         RequestContext ctx = RequestContextHolder.require();
-        UUID tenantId = UUID.fromString(ctx.tenantId());
+        UUID tenantId = TenantKeys.tenantUuid(ctx.tenantId());
 
         Optional<GovernanceRuleEntity> ruleOpt = ruleRepository.findByTenantIdAndRuleId(tenantId, ruleId);
         if (ruleOpt.isEmpty()) {
@@ -86,7 +87,7 @@ public class RulesController {
     @DeleteMapping("/internal/v1/governance/rules/{ruleId}")
     public ResponseEntity<?> deactivateRule(@PathVariable UUID ruleId) {
         RequestContext ctx = RequestContextHolder.require();
-        UUID tenantId = UUID.fromString(ctx.tenantId());
+        UUID tenantId = TenantKeys.tenantUuid(ctx.tenantId());
 
         Optional<GovernanceRuleEntity> ruleOpt = ruleRepository.findByTenantIdAndRuleId(tenantId, ruleId);
         if (ruleOpt.isEmpty()) {
