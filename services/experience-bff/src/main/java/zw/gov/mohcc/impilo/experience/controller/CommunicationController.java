@@ -152,7 +152,9 @@ public class CommunicationController {
                 if (isToday(text(item, "createdAt", "created_at"))) {
                     if ("FAILED".equalsIgnoreCase(text(item, "status"))) {
                         failedToday++;
-                    } else if ("SENT".equalsIgnoreCase(text(item, "status"))) {
+                    } else if ("SENT".equalsIgnoreCase(text(item, "status"))
+                            || "DELIVERED".equalsIgnoreCase(text(item, "status"))) {
+                        // DELIVERED is a receipt-confirmed SENT — still a send for today's count.
                         sentToday++;
                     }
                 }
