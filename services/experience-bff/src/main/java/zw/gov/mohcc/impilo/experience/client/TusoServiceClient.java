@@ -3,6 +3,8 @@ package zw.gov.mohcc.impilo.experience.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -586,6 +588,77 @@ public class TusoServiceClient {
         log.info("TUSO: Getting workspace id={}", workspaceId);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
+    }
+
+    // ── Facility Configuration Console (TUSO SoR) ────────────────────
+    // NEW methods added for the Facility Configuration Console. Append-only: no existing method was
+    // renamed or altered. Distinct names avoid collision with the import/queue-definition methods owned
+    // by the absorption/materialisation workstream.
+
+    /** Facility configuration summary (lifecycle state + counts + missing sections). */
+    public JsonNode getFacilityConfiguration(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/configuration";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** Facility setup/readiness checklist. */
+    public JsonNode getFacilitySetupChecklist(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/configuration/setup-checklist";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** Queue definitions derived from a facility's active service points (TUSO-owned, read-only). */
+    public JsonNode getFacilityConfigQueueDefinitions(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/configuration/queue-definitions";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** TUSO's downstream-readiness view (queue-definition counts + last config change). */
+    public JsonNode getFacilityDownstreamReadiness(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/configuration/downstream-readiness";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** Facility configuration change history (outbox-derived). */
+    public JsonNode getFacilityConfigurationHistory(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/configuration/history";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** Emit a facility configuration-update event so downstream (PCT) can reconcile derived queues. */
+    public JsonNode publishFacilityConfiguration(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/configuration/publish";
+        return extractData(restTemplate.postForEntity(url, null, JsonNode.class));
+    }
+
+    /** Partial-update a service point (TUSO PATCH). */
+    public JsonNode updateServicePoint(long facilityId, String servicePointId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/service-points/" + servicePointId;
+        return extractData(restTemplate.exchange(url, HttpMethod.PATCH, new HttpEntity<>(body), JsonNode.class));
+    }
+
+    /** Retire a service point. */
+    public JsonNode retireServicePoint(long facilityId, String servicePointId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/service-points/" + servicePointId + "/retire";
+        return extractData(restTemplate.postForEntity(url, null, JsonNode.class));
+    }
+
+    /** Create a workspace for a facility. */
+    public JsonNode createWorkspace(long facilityId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/workspaces";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    /** Update a workspace (TUSO PUT). */
+    public JsonNode updateWorkspace(String workspaceId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/workspaces/" + workspaceId;
+        return extractData(restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(body), JsonNode.class));
+    }
+
+    /** Retire a workspace. */
+    public JsonNode retireWorkspace(String workspaceId) {
+        String url = baseUrl + "/v1/internal/workspaces/" + workspaceId + "/retire";
+        return extractData(restTemplate.postForEntity(url, null, JsonNode.class));
     }
 
     // ── Locality gazetteer ───────────────────────────────────────────
