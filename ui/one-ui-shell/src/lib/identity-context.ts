@@ -289,6 +289,7 @@ export function resolveIdentityContext(input: IdentityContextInput): IdentityCon
     user,
     activeAffs,
     hasWorkAccess,
+    hasProfessionalAccess,
     hasProgrammeRole,
     hasAboveSiteRole,
     isFacilityAdmin,
@@ -341,15 +342,19 @@ function buildContextChooserOptions(args: {
   user: AuthUser | null;
   activeAffs: FacilityAffiliation[];
   hasWorkAccess: boolean;
+  hasProfessionalAccess: boolean;
   hasProgrammeRole: boolean;
   hasAboveSiteRole: boolean;
   isFacilityAdmin: boolean;
 }): ContextChooserOption[] {
-  if (!args.hasWorkAccess || !args.user) return [];
+  if (!args.user) return [];
 
   const options: ContextChooserOption[] = [];
 
-  if (args.activeAffs.length > 0) {
+  // Facility work and the telemedicine pool genuinely require an active work
+  // assignment. Everything below does NOT: a national admin or a provider with
+  // no assignment yet must still land somewhere — never a zero-option chooser.
+  if (args.hasWorkAccess && args.activeAffs.length > 0) {
     options.push({
       id: "facility_work",
       label: args.activeAffs.length === 1 ? "Work at Facility" : "Choose Facility",
@@ -362,7 +367,7 @@ function buildContextChooserOptions(args: {
     });
   }
 
-  if (args.user.roles.some((r) => PROFESSIONAL_ROLES.has(r))) {
+  if (args.hasWorkAccess && args.user.roles.some((r) => PROFESSIONAL_ROLES.has(r))) {
     options.push({
       id: "telemedicine_pool",
       label: "Join Telemedicine Pool",
@@ -372,13 +377,15 @@ function buildContextChooserOptions(args: {
     });
   }
 
-  options.push({
-    id: "professional_profile",
-    label: "Open My Professional Profile",
-    description: "Credentials, licence, CPD and professional details",
-    href: "/professional",
-    operationalMode: "my_professional",
-  });
+  if (args.hasProfessionalAccess) {
+    options.push({
+      id: "professional_profile",
+      label: "Open My Professional Profile",
+      description: "Credentials, licence, CPD and professional details",
+      href: "/professional",
+      operationalMode: "my_professional",
+    });
+  }
 
   if (args.hasProgrammeRole) {
     options.push({
@@ -400,13 +407,15 @@ function buildContextChooserOptions(args: {
     });
   }
 
-  options.push({
-    id: "fundo_learning",
-    label: "Open Fundo Learning",
-    description: "Professional learning and CPD courses",
-    href: "/learning",
-    operationalMode: "my_professional",
-  });
+  if (args.hasProfessionalAccess) {
+    options.push({
+      id: "fundo_learning",
+      label: "Open Fundo Learning",
+      description: "Professional learning and CPD courses",
+      href: "/learning",
+      operationalMode: "my_professional",
+    });
+  }
 
   options.push({
     id: "personal_health",

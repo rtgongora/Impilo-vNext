@@ -70,4 +70,37 @@ describe("identity-context three-tab doctrine", () => {
     const ctx = resolveIdentityContext({ user: citizen });
     expect(isRouteBlockedForCitizen("/clinical", ctx)).toBe(true);
   });
+
+  it("above-site admin without work assignments still gets chooser options", () => {
+    const admin: AuthUser = {
+      id: "H3",
+      email: "a@example.com",
+      displayName: "System Admin",
+      roles: ["SYSTEM_ADMIN"],
+      actorType: "OPERATOR",
+      assuranceLevel: "VERIFIED",
+      providerActivated: true,
+      providerId: "PROV-ZW-ADMIN-001",
+    };
+    const ctx = resolveIdentityContext({
+      user: admin,
+      linkedIds: { providerStatus: "ACTIVE", licenceValid: true },
+      workAssignments: [],
+    });
+    expect(ctx.hasWorkAccess).toBe(false);
+    const ids = ctx.contextChooserOptions.map((o) => o.id);
+    expect(ids).toContain("above_site_dashboard");
+    expect(ids).toContain("professional_profile");
+    expect(ids).toContain("personal_health");
+    // Work-assignment-gated options must stay hidden without assignments.
+    expect(ids).not.toContain("facility_work");
+    expect(ids).not.toContain("telemedicine_pool");
+  });
+
+  it("chooser options are never empty for a signed-in user", () => {
+    const ctx = resolveIdentityContext({ user: citizen });
+    const ids = ctx.contextChooserOptions.map((o) => o.id);
+    expect(ids).toContain("personal_health");
+    expect(ids.length).toBeGreaterThan(0);
+  });
 });

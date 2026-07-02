@@ -65,6 +65,24 @@ export default function ContextChooserPage() {
 
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading your authorised contexts...</p>
+        ) : contextChooserOptions.length === 0 ? (
+          // Never strand a signed-in user on a zero-option chooser.
+          <button
+            type="button"
+            onClick={() => handleSelect("/home", "my_life")}
+            className="w-full flex items-center gap-4 rounded-xl border border-border bg-card p-4 text-left hover:border-impilo-400 hover:ring-1 hover:ring-impilo-200 transition-all"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+              <Heart className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-foreground">Continue to My Life / My Health</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                No work contexts are assigned to you yet — you can request access from your profile.
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          </button>
         ) : (
           <div className="space-y-3">
             {contextChooserOptions.map((option) => {
