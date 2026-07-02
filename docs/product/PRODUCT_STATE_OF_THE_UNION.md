@@ -71,7 +71,7 @@ curl -sS http://41.57.127.235/internal/v1/appointments -H 'X-Tenant-ID: default'
 
 - **Route:** `/platform/all-features` (576 routes by zone/journey)
 - **Access:** superadmin taskbar **Features** button + error-boundary links
-- **Login:** `super@mohcc.gov.zw` / `test123` for broadest role coverage
+- **Login:** `superadmin` / `Impilo@2024!` (seeded test users: `ImpiloTest123!`) for broadest role coverage
 
 ---
 

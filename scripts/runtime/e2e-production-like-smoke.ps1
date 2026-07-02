@@ -228,7 +228,7 @@ $tokenRes = Try-InvokeJson -Method "POST" `
     client_id = "integration-test"
     client_secret = "integration-test-secret"
     username = "dr.mapfumo"
-    password = "test123"
+    password = "ImpiloTest123!"
   } `
   -TimeoutSec 10
 if ($tokenRes.Ok -and $tokenRes.Json -and $tokenRes.Json.access_token) {

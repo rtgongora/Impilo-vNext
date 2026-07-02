@@ -125,7 +125,14 @@ if [[ "${REALM_EXISTED}" == "false" ]]; then
         exit 1
     fi
 else
-    info "4/6 Skipped — realm already present"
+    info "4/6 Realm already present — reconciling seeded users into it"
+    # Keycloak only imports the realm file into an empty database; seeded users
+    # added to the file later never materialise without this reconcile.
+    if [[ -f "scripts/operator/reconcile-keycloak-realm-users.sh" ]]; then
+        KEYCLOAK_URL="${KEYCLOAK_URL}" REALM_NAME="${REALM_NAME}" REALM_JSON="${REALM_JSON}" \
+            bash scripts/operator/reconcile-keycloak-realm-users.sh || \
+            warn "Seeded-user reconcile failed — existing realm users may be stale"
+    fi
 fi
 
 # ── 5. Verify realm contents ────────────────────────────────────────────────

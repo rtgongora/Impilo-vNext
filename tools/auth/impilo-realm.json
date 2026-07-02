@@ -337,10 +337,19 @@
         "http://localhost:3003/*",
         "http://197.221.242.150:3003/*"
       ],
-      "webOrigins": ["http://localhost:3003", "http://197.221.242.150:3003"],
+      "webOrigins": [
+        "http://localhost:3003",
+        "http://197.221.242.150:3003"
+      ],
       "protocol": "openid-connect",
       "fullScopeAllowed": true,
-      "defaultClientScopes": ["openid", "profile", "email", "impilo-tenant", "impilo-identity"]
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant",
+        "impilo-identity"
+      ]
     },
     {
       "clientId": "impilo-backend",
@@ -355,7 +364,12 @@
       "webOrigins": [],
       "protocol": "openid-connect",
       "fullScopeAllowed": true,
-      "defaultClientScopes": ["openid", "profile", "email", "impilo-tenant"],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
       "protocolMappers": [
         {
           "name": "facility_id",
@@ -403,7 +417,13 @@
       "webOrigins": [],
       "protocol": "openid-connect",
       "fullScopeAllowed": true,
-      "defaultClientScopes": ["openid", "profile", "email", "impilo-tenant", "impilo-identity"]
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant",
+        "impilo-identity"
+      ]
     },
     {
       "clientId": "citizen-app",
@@ -506,7 +526,10 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": true,
       "secret": "00000000-0000-4000-8000-000000000001",
-      "defaultClientScopes": ["openid", "impilo-tenant"],
+      "defaultClientScopes": [
+        "openid",
+        "impilo-tenant"
+      ],
       "attributes": {
         "access.token.lifespan": "300"
       },
@@ -541,7 +564,6 @@
         }
       ]
     }
-
   ],
   "users": [
     {
@@ -554,11 +576,13 @@
       "credentials": [
         {
           "type": "password",
-          "value": "test123",
+          "value": "ImpiloTest123!",
           "temporary": false
         }
       ],
-      "realmRoles": ["SYSTEM_ADMIN"]
+      "realmRoles": [
+        "SYSTEM_ADMIN"
+      ]
     },
     {
       "username": "admin.harare",
@@ -570,11 +594,13 @@
       "credentials": [
         {
           "type": "password",
-          "value": "test123",
+          "value": "ImpiloTest123!",
           "temporary": false
         }
       ],
-      "realmRoles": ["FACILITY_ADMIN"]
+      "realmRoles": [
+        "FACILITY_ADMIN"
+      ]
     },
     {
       "username": "dr.mapfumo",
@@ -584,19 +610,29 @@
       "lastName": "Mapfumo",
       "email": "mapfumo@mohcc.gov.zw",
       "attributes": {
-        "facility_id": ["f1000000-0000-0000-0000-000000000001"],
-        "health_id": ["c0000000-0000-4000-8000-000000000001"],
-        "provider_id": ["PROV-ZW-00001"],
-        "provider_number": ["PROV-ZW-00001"]
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000001"
+        ],
+        "provider_id": [
+          "PROV-ZW-00001"
+        ],
+        "provider_number": [
+          "PROV-ZW-00001"
+        ]
       },
       "credentials": [
         {
           "type": "password",
-          "value": "test123",
+          "value": "ImpiloTest123!",
           "temporary": false
         }
       ],
-      "realmRoles": ["CLINICIAN"]
+      "realmRoles": [
+        "CLINICIAN"
+      ]
     },
     {
       "username": "nurse.chienda",
@@ -606,16 +642,20 @@
       "lastName": "Chienda",
       "email": "chienda@mohcc.gov.zw",
       "attributes": {
-        "facility_id": ["f1000000-0000-0000-0000-000000000002"]
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000002"
+        ]
       },
       "credentials": [
         {
           "type": "password",
-          "value": "test123",
+          "value": "ImpiloTest123!",
           "temporary": false
         }
       ],
-      "realmRoles": ["NURSE"]
+      "realmRoles": [
+        "NURSE"
+      ]
     },
     {
       "username": "citizen.moyo",
@@ -625,16 +665,20 @@
       "lastName": "Moyo",
       "email": "tatenda.moyo@example.com",
       "attributes": {
-        "cpid": ["CPID-ZW-00001"]
+        "cpid": [
+          "CPID-ZW-00001"
+        ]
       },
       "credentials": [
         {
           "type": "password",
-          "value": "test123",
+          "value": "ImpiloTest123!",
           "temporary": false
         }
       ],
-      "realmRoles": ["CITIZEN"]
+      "realmRoles": [
+        "CITIZEN"
+      ]
     },
     {
       "username": "support.agent1",
@@ -646,11 +690,13 @@
       "credentials": [
         {
           "type": "password",
-          "value": "test123",
+          "value": "ImpiloTest123!",
           "temporary": false
         }
       ],
-      "realmRoles": ["SUPPORT_AGENT"]
+      "realmRoles": [
+        "SUPPORT_AGENT"
+      ]
     },
     {
       "username": "finance.ndlovu",
@@ -662,11 +708,13 @@
       "credentials": [
         {
           "type": "password",
-          "value": "test123",
+          "value": "ImpiloTest123!",
           "temporary": false
         }
       ],
-      "realmRoles": ["FINANCE"]
+      "realmRoles": [
+        "FINANCE"
+      ]
     },
     {
       "username": "superadmin",
@@ -676,8 +724,12 @@
       "lastName": "Admin",
       "email": "superadmin@impilo.gov.zw",
       "attributes": {
-        "health_id": ["b0000000-0000-4000-8000-000000000010"],
-        "provider_id": ["PROV-ZW-ADMIN-001"]
+        "health_id": [
+          "b0000000-0000-4000-8000-000000000010"
+        ],
+        "provider_id": [
+          "PROV-ZW-ADMIN-001"
+        ]
       },
       "credentials": [
         {
