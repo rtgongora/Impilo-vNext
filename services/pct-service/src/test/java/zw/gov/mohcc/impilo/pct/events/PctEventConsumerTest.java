@@ -258,5 +258,31 @@ class PctEventConsumerTest {
             consumer.consumeTusoWorkspaceUpdated("{\"facilityId\":\"" + UUID.randomUUID() + "\"}");
             verify(queueMaterializationService, never()).reconcileFacility(any(), any());
         }
+
+        @Test
+        @DisplayName("safely skips a legacy/compat event with a non-UUID facilityId")
+        void skipsWhenFacilityIdNotUuid() {
+            consumer.consumeTusoWorkspaceUpdated(
+                    "{\"facilityId\":42,\"tenantId\":\"" + TENANT_ID + "\",\"action\":\"UPDATED\"}");
+            verify(queueMaterializationService, never()).reconcileFacility(any(), any());
+        }
+
+        @Test
+        @DisplayName("replay of the same trigger reconciles again (idempotent upsert downstream)")
+        void replayReconcilesEachTime() {
+            UUID facility = UUID.randomUUID();
+            when(queueMaterializationService.reconcileFacility(eq(TENANT_ID), eq(facility)))
+                    .thenReturn(new QueueMaterializationService.MaterializationResult(
+                            facility, "OK", 0, 0, 0, 2, 2, null));
+            String event = "{\"facilityId\":\"" + facility + "\",\"tenantId\":\"" + TENANT_ID
+                    + "\",\"changeType\":\"CONFIGURATION_PUBLISHED\"}";
+
+            consumer.consumeTusoWorkspaceUpdated(event);
+            consumer.consumeTusoWorkspaceUpdated(event);
+
+            // The consumer delegates to reconcileFacility, whose upsert (keyed by source_ref) is the
+            // idempotency boundary — replays produce no duplicate queues.
+            verify(queueMaterializationService, times(2)).reconcileFacility(TENANT_ID, facility);
+        }
     }
 }

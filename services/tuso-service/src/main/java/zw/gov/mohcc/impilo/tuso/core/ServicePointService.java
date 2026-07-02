@@ -79,6 +79,7 @@ public class ServicePointService {
         ServicePointEntity saved = repository.save(sp);
 
         publishEvent(facilityId, saved.getId(), "SERVICE_POINT_CREATED");
+        emitQueueReconcile(facility.getFacilityUuid(), facility.getTenantId(), "SERVICE_POINT_CREATED");
         log.info("Service point {} created for facility {} (actor={})", saved.getId(), facilityId, actor(ctx));
         return saved;
     }
@@ -120,6 +121,7 @@ public class ServicePointService {
         sp.setUpdatedBy(actor(ctx));
         ServicePointEntity saved = repository.save(sp);
         publishEvent(sp.getFacilityId(), servicePointId, "SERVICE_POINT_UPDATED");
+        emitQueueReconcileForFacility(sp.getFacilityId(), sp.getTenantId(), "SERVICE_POINT_UPDATED");
         log.info("Service point {} updated for facility {} (actor={})", servicePointId, sp.getFacilityId(), actor(ctx));
         return saved;
     }
@@ -136,7 +138,27 @@ public class ServicePointService {
         sp.setUpdatedBy(actor(ctx));
         ServicePointEntity saved = repository.save(sp);
         publishEvent(sp.getFacilityId(), servicePointId, "SERVICE_POINT_RETIRED");
+        emitQueueReconcileForFacility(sp.getFacilityId(), sp.getTenantId(), "SERVICE_POINT_RETIRED");
         return saved;
+    }
+
+    /**
+     * Emit a PCT reconcile trigger for a service-point change, resolving the facility UUID from the
+     * numeric facility id. No-op if the facility (or its UUID) or tenant cannot be resolved, so an
+     * unreconcilable trigger is never emitted.
+     */
+    private void emitQueueReconcileForFacility(Long facilityId, UUID tenantId, String changeType) {
+        UUID facilityUuid = facilityRepository.findById(facilityId)
+                .map(FacilityEntity::getFacilityUuid).orElse(null);
+        emitQueueReconcile(facilityUuid, tenantId, changeType);
+    }
+
+    private void emitQueueReconcile(UUID facilityUuid, UUID tenantId, String changeType) {
+        EventOutboxEntity trigger =
+                FacilityConfigurationService.queueReconcileTrigger(facilityUuid, tenantId, changeType);
+        if (trigger != null) {
+            outboxRepository.save(trigger);
+        }
     }
 
     private void publishEvent(Long facilityId, UUID servicePointId, String eventType) {

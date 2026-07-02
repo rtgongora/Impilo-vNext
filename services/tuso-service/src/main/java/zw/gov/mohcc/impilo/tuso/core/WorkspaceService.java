@@ -129,6 +129,7 @@ public class WorkspaceService {
                 String.format("{\"workspaceId\":\"%s\",\"facilityId\":%d,\"tenantId\":\"%s\"," +
                         "\"name\":\"%s\",\"workspaceType\":\"%s\",\"action\":\"CREATED\"}",
                         workspaceId, facilityId, tenantId, dto.name(), dto.workspaceType()));
+        emitQueueReconcile(facilityId, tenantId, "WORKSPACE_CREATED");
 
         log.info("Workspace '{}' created with id {} for facility {}", dto.name(), workspaceId, facilityId);
         return toWorkspaceResponse(workspace, savedRules, Collections.emptyList());
@@ -180,6 +181,8 @@ public class WorkspaceService {
                 String.format("{\"workspaceId\":\"%s\",\"facilityId\":%d,\"tenantId\":\"%s\"," +
                         "\"name\":\"%s\",\"action\":\"UPDATED\"}",
                         workspaceId, workspace.getFacility().getId(), tenantId, workspace.getName()));
+        emitQueueReconcile(workspace.getFacility() != null ? workspace.getFacility().getId() : null,
+                tenantId, "WORKSPACE_UPDATED");
 
         log.info("Workspace {} updated", workspaceId);
 
@@ -225,6 +228,7 @@ public class WorkspaceService {
                 "\"name\":\"%s\",\"action\":\"RETIRED\"}",
                 workspaceId, facilityId, tenantId, workspace.getName()));
         outboxRepository.save(event);
+        emitQueueReconcile(facilityId, tenantId, "WORKSPACE_RETIRED");
 
         log.info("Workspace {} retired (actor={})", workspaceId, actorId);
         List<WorkspaceRuleEntity> rules = ruleRepository.findByWorkspaceId(workspaceId);
@@ -492,6 +496,23 @@ public class WorkspaceService {
         event.setEventType(eventType);
         event.setPayload(payload);
         outboxRepository.save(event);
+    }
+
+    /**
+     * Emit a PCT queue reconcile trigger for a workspace change, resolving the facility UUID from the
+     * numeric facility id. No-op if the facility (or its UUID) or tenant cannot be resolved.
+     */
+    private void emitQueueReconcile(Long facilityId, UUID tenantId, String changeType) {
+        if (facilityId == null) {
+            return;
+        }
+        UUID facilityUuid = facilityRepository.findById(facilityId)
+                .map(FacilityEntity::getFacilityUuid).orElse(null);
+        EventOutboxEntity trigger =
+                FacilityConfigurationService.queueReconcileTrigger(facilityUuid, tenantId, changeType);
+        if (trigger != null) {
+            outboxRepository.save(trigger);
+        }
     }
 
     // ---- Internal DTOs ----

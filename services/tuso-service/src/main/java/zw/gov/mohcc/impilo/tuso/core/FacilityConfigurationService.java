@@ -32,6 +32,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Composes existing TUSO facility entities into the read-models the Facility Configuration Console
@@ -50,6 +51,47 @@ public class FacilityConfigurationService {
 
     /** Outbox subject-type used to tag facility-scoped configuration audit events. */
     public static final String SUBJECT_FACILITY = "FACILITY";
+
+    /**
+     * Dedicated aggregate type for PCT queue reconcile triggers. The dual-emit publisher derives the
+     * v1.1 Kafka topic from the aggregate type, so this maps to {@code impilo.tuso.facility_queue_config}
+     * — a purpose-scoped channel PCT subscribes to (it is not flooded with unrelated facility events).
+     */
+    public static final String QUEUE_RECONCILE_AGGREGATE = "FACILITY_QUEUE_CONFIG";
+
+    /** Event type carried on the reconcile trigger. */
+    public static final String QUEUE_RECONCILE_EVENT = "FacilityQueueConfigurationChanged";
+
+    /**
+     * Build a PCT-consumable queue reconcile-trigger outbox event for a queue-relevant facility
+     * configuration change (service point / workspace / published config). The event is a trigger only:
+     * it carries just enough to identify the facility (UUID) and tenant, plus a {@code changeType} tag —
+     * it deliberately does NOT carry queue definitions. PCT reconciles the whole facility from TUSO's
+     * current queue definitions when it receives this event, which keeps materialisation idempotent and
+     * robust to missed/duplicated/replayed events. Queue definitions remain TUSO-owned; PCT only
+     * materialises them.
+     *
+     * <p>The {@code facilityId} payload field carries the facility <em>UUID</em> (the identifier PCT
+     * uses to reconcile), matching {@code PctEventConsumer}. Returns {@code null} when the facility UUID
+     * or tenant is unknown, so callers never emit an unreconcilable trigger.</p>
+     */
+    public static EventOutboxEntity queueReconcileTrigger(UUID facilityUuid, UUID tenantId, String changeType) {
+        if (facilityUuid == null || tenantId == null) {
+            return null;
+        }
+        EventOutboxEntity event = new EventOutboxEntity();
+        event.setAggregateType(QUEUE_RECONCILE_AGGREGATE);
+        event.setAggregateId(facilityUuid.toString());
+        event.setEventType(QUEUE_RECONCILE_EVENT);
+        event.setTenantId(tenantId.toString());
+        Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("facilityId", facilityUuid.toString());
+        payload.put("facilityUuid", facilityUuid.toString());
+        payload.put("tenantId", tenantId.toString());
+        payload.put("changeType", changeType);
+        event.setPayload(payload);
+        return event;
+    }
 
     private final FacilityRepository facilityRepository;
     private final ServicePointRepository servicePointRepository;
@@ -244,6 +286,13 @@ public class FacilityConfigurationService {
         payload.put("version", facility.getVersion());
         event.setPayload(payload);
         outboxRepository.save(event);
+        // Reconcile trigger for PCT (dedicated queue-config channel). The event above is the
+        // facility-scoped audit/history record; this one drives downstream materialisation.
+        EventOutboxEntity reconcile = queueReconcileTrigger(
+                facility.getFacilityUuid(), facility.getTenantId(), "CONFIGURATION_PUBLISHED");
+        if (reconcile != null) {
+            outboxRepository.save(reconcile);
+        }
         log.info("Published facility configuration update for facility {} (actor={})", facilityId, actor(ctx));
         return getConfigurationSummary(ctx, facilityId);
     }

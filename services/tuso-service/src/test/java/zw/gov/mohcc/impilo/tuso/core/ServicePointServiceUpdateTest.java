@@ -11,6 +11,7 @@ import org.mockito.quality.Strictness;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.ServicePointEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRepository;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -80,5 +82,77 @@ class ServicePointServiceUpdateTest {
                 new ServicePointService.UpdateServicePointRequest(
                         "x", null, null, null, null, null, null, null, null)));
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void update_emitsQueueReconcileTriggerWithFacilityUuidAndTenant() {
+        ServicePointEntity sp = new ServicePointEntity();
+        sp.setTenantId(tenantId);
+        sp.setFacilityId(7L);
+        UUID spId = UUID.randomUUID();
+        UUID facilityUuid = UUID.randomUUID();
+        FacilityEntity facility = new FacilityEntity();
+        facility.setId(7L);
+        facility.setFacilityUuid(facilityUuid);
+        facility.setTenantId(tenantId);
+        when(repository.findById(spId)).thenReturn(Optional.of(sp));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(facilityRepository.findById(7L)).thenReturn(Optional.of(facility));
+
+        service.update(ctx(tenantId), spId, new ServicePointService.UpdateServicePointRequest(
+                "New", null, null, null, null, null, null, null, null));
+
+        // Two outbox rows: the SERVICE_POINT audit event + the PCT reconcile trigger.
+        ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+        verify(outboxRepository, times(2)).save(captor.capture());
+        EventOutboxEntity reconcile = captor.getAllValues().stream()
+                .filter(e -> "FACILITY_QUEUE_CONFIG".equals(e.getAggregateType()))
+                .findFirst().orElseThrow();
+        assertEquals("FacilityQueueConfigurationChanged", reconcile.getEventType());
+        assertEquals("SERVICE_POINT_UPDATED", reconcile.getPayload().get("changeType"));
+        assertEquals(facilityUuid.toString(), reconcile.getPayload().get("facilityId"));
+        assertEquals(tenantId.toString(), reconcile.getPayload().get("tenantId"));
+    }
+
+    @Test
+    void retire_emitsQueueReconcileTrigger() {
+        ServicePointEntity sp = new ServicePointEntity();
+        sp.setTenantId(tenantId);
+        sp.setFacilityId(7L);
+        UUID spId = UUID.randomUUID();
+        UUID facilityUuid = UUID.randomUUID();
+        FacilityEntity facility = new FacilityEntity();
+        facility.setFacilityUuid(facilityUuid);
+        facility.setTenantId(tenantId);
+        when(repository.findById(spId)).thenReturn(Optional.of(sp));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(facilityRepository.findById(7L)).thenReturn(Optional.of(facility));
+
+        service.deactivate(ctx(tenantId), spId);
+
+        ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+        verify(outboxRepository, times(2)).save(captor.capture());
+        EventOutboxEntity reconcile = captor.getAllValues().stream()
+                .filter(e -> "FACILITY_QUEUE_CONFIG".equals(e.getAggregateType()))
+                .findFirst().orElseThrow();
+        assertEquals("SERVICE_POINT_RETIRED", reconcile.getPayload().get("changeType"));
+        assertEquals(facilityUuid.toString(), reconcile.getPayload().get("facilityId"));
+    }
+
+    @Test
+    void update_skipsReconcileTriggerWhenFacilityUuidUnknown() {
+        ServicePointEntity sp = new ServicePointEntity();
+        sp.setTenantId(tenantId);
+        sp.setFacilityId(7L);
+        UUID spId = UUID.randomUUID();
+        when(repository.findById(spId)).thenReturn(Optional.of(sp));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        // facilityRepository.findById(7L) unstubbed -> empty -> no facility UUID -> trigger skipped.
+
+        service.update(ctx(tenantId), spId, new ServicePointService.UpdateServicePointRequest(
+                "New", null, null, null, null, null, null, null, null));
+
+        // Only the SERVICE_POINT audit event — never an unreconcilable trigger.
+        verify(outboxRepository, times(1)).save(any());
     }
 }

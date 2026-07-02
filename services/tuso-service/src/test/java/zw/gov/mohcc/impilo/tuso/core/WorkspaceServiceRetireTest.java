@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -94,6 +95,36 @@ class WorkspaceServiceRetireTest {
         assertEquals("tuso.workspace.updated", captor.getValue().getEventType());
         assertEquals("FACILITY", captor.getValue().getSubjectType());
         assertEquals("7", captor.getValue().getSubjectId());
+    }
+
+    @Test
+    void retire_emitsQueueReconcileTriggerWhenFacilityUuidKnown() {
+        UUID facilityUuid = UUID.randomUUID();
+        FacilityEntity facility = new FacilityEntity();
+        facility.setId(7L);
+        facility.setFacilityUuid(facilityUuid);
+        WorkspaceEntity ws = new WorkspaceEntity();
+        ws.setTenantId(tenantId);
+        ws.setName("OPD");
+        ws.setWorkspaceType("OPD");
+        ws.setActive(true);
+        ws.setFacility(facility);
+        UUID wsId = UUID.randomUUID();
+        when(workspaceRepository.findById(wsId)).thenReturn(Optional.of(ws));
+        when(workspaceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(facilityRepository.findById(7L)).thenReturn(Optional.of(facility));
+
+        service.retireWorkspace(wsId);
+
+        // Two rows: the workspace audit event + the PCT reconcile trigger carrying the facility UUID.
+        ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+        verify(outboxRepository, times(2)).save(captor.capture());
+        EventOutboxEntity reconcile = captor.getAllValues().stream()
+                .filter(e -> "FACILITY_QUEUE_CONFIG".equals(e.getAggregateType()))
+                .findFirst().orElseThrow();
+        assertEquals("FacilityQueueConfigurationChanged", reconcile.getEventType());
+        assertEquals("WORKSPACE_RETIRED", reconcile.getPayload().get("changeType"));
+        assertEquals(facilityUuid.toString(), reconcile.getPayload().get("facilityId"));
     }
 
     @Test

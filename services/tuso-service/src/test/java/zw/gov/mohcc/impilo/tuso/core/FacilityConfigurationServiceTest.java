@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -194,12 +195,25 @@ class FacilityConfigurationServiceTest {
 
         service.publishConfigurationUpdate(ctx(), FAC);
 
+        // Two events: the facility-scoped audit/history record, and the PCT reconcile trigger.
         ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
-        verify(outboxRepository).save(captor.capture());
-        EventOutboxEntity event = captor.getValue();
-        assertEquals("FacilityQueueConfigurationChanged", event.getEventType());
-        assertEquals("FACILITY", event.getSubjectType());
-        assertEquals(String.valueOf(FAC), event.getSubjectId());
+        verify(outboxRepository, times(2)).save(captor.capture());
+
+        EventOutboxEntity audit = captor.getAllValues().stream()
+                .filter(e -> "FACILITY".equals(e.getSubjectType()))
+                .findFirst().orElseThrow();
+        assertEquals("FacilityQueueConfigurationChanged", audit.getEventType());
+        assertEquals(String.valueOf(FAC), audit.getSubjectId());
+
+        EventOutboxEntity reconcile = captor.getAllValues().stream()
+                .filter(e -> "FACILITY_QUEUE_CONFIG".equals(e.getAggregateType()))
+                .findFirst().orElseThrow();
+        assertEquals("FacilityQueueConfigurationChanged", reconcile.getEventType());
+        assertEquals("CONFIGURATION_PUBLISHED", reconcile.getPayload().get("changeType"));
+        // The reconcile trigger carries the facility UUID (not numeric id) — the id PCT reconciles by —
+        // and the tenant, so PCT can materialise without any queue definitions in the payload.
+        assertEquals(reconcile.getPayload().get("facilityUuid"), reconcile.getPayload().get("facilityId"));
+        assertEquals(tenantId.toString(), reconcile.getPayload().get("tenantId"));
     }
 
     private static String itemStatus(SetupChecklist checklist, String key) {

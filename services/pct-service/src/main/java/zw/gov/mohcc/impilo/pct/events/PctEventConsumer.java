@@ -30,7 +30,10 @@ import java.util.UUID;
  *   <li>{@code oros.order.status_changed} — updates task status when orders complete or fail</li>
  *   <li>{@code oros.result.available} — creates a task for clinical result review</li>
  *   <li>{@code mushex.payment.status.changed} — auto-clears PAYMENT discharge blocker when payment is settled</li>
- *   <li>{@code tuso.workspace.updated} — logs workspace configuration changes for cache invalidation</li>
+ *   <li>{@code impilo.tuso.facility_queue_config} — queue-relevant facility configuration change
+ *       (service point / workspace / published config) → reconcile the facility's queue definitions</li>
+ *   <li>{@code tuso.workspace.updated} / {@code impilo.tuso.workspace} — workspace configuration
+ *       changes → reconcile the facility's queue definitions (backwards-compatible channel)</li>
  * </ul>
  */
 @Component
@@ -220,7 +223,8 @@ public class PctEventConsumer {
      *
      * @param message the Kafka message payload (JSON) — expects at least {@code facilityId} + {@code tenantId}
      */
-    @KafkaListener(topics = {"tuso.workspace.updated", "impilo.tuso.workspace"}, groupId = "pct-service")
+    @KafkaListener(topics = {"impilo.tuso.facility_queue_config", "tuso.workspace.updated",
+            "impilo.tuso.workspace"}, groupId = "pct-service")
     public void consumeTusoWorkspaceUpdated(String message) {
         try {
             JsonNode event = objectMapper.readTree(message);
@@ -229,12 +233,12 @@ public class PctEventConsumer {
             String changeType = getTextField(event, "changeType");
 
             if (facilityId == null) {
-                log.warn("TUSO workspace event missing facilityId — cannot materialise, skipping");
+                log.debug("TUSO config event missing facilityId — cannot materialise, skipping");
                 return;
             }
             if (tenantId == null) {
                 // Materialisation is tenant-scoped; without a tenant we cannot safely reconcile.
-                log.warn("TUSO workspace event for facility {} missing tenantId — skipping materialisation", facilityId);
+                log.debug("TUSO config event for facility {} missing tenantId — skipping materialisation", facilityId);
                 return;
             }
 
@@ -244,7 +248,10 @@ public class PctEventConsumer {
                 facilityUuid = UUID.fromString(facilityId);
                 tenantUuid = UUID.fromString(tenantId);
             } catch (IllegalArgumentException e) {
-                log.warn("TUSO workspace event has non-UUID facilityId/tenantId ({}/{}) — skipping", facilityId, tenantId);
+                // Legacy/compat events may carry a non-UUID facilityId; the facility-UUID-bearing
+                // reconcile trigger (impilo.tuso.facility_queue_config) covers the same change, so this
+                // is an expected skip rather than an error.
+                log.debug("TUSO config event has non-UUID facilityId/tenantId ({}/{}) — skipping", facilityId, tenantId);
                 return;
             }
 
