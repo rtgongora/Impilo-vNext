@@ -63,6 +63,24 @@ public class ServicePointController {
             @PathVariable Long facilityId,
             @PathVariable UUID servicePointId,
             @RequestBody ServicePointDto.UpdateRequest request) {
+        return doUpdate(facilityId, servicePointId, request);
+    }
+
+    /**
+     * POST alias for partial update. Mirrors {@link #retirePost} so composition layers whose HTTP
+     * client cannot issue PATCH (e.g. the BFF's {@code SimpleClientHttpRequestFactory}) can update a
+     * service point over POST. Same partial-merge semantics as the PATCH route.
+     */
+    @PostMapping("/{servicePointId}/update")
+    public ResponseEntity<ApiResponse<ServicePointDto.Response>> updatePost(
+            @PathVariable Long facilityId,
+            @PathVariable UUID servicePointId,
+            @RequestBody ServicePointDto.UpdateRequest request) {
+        return doUpdate(facilityId, servicePointId, request);
+    }
+
+    private ResponseEntity<ApiResponse<ServicePointDto.Response>> doUpdate(
+            Long facilityId, UUID servicePointId, ServicePointDto.UpdateRequest request) {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Updating service point [facilityId={}, id={}] correlationId={}",
                 facilityId, servicePointId, ctx.correlationId());

@@ -631,10 +631,16 @@ public class TusoServiceClient {
         return extractData(restTemplate.postForEntity(url, null, JsonNode.class));
     }
 
-    /** Partial-update a service point (TUSO PATCH). */
+    /**
+     * Partial-update a service point. Uses TUSO's POST update alias
+     * ({@code /service-points/{id}/update}) rather than PATCH, because the shared RestTemplate is backed
+     * by {@code SimpleClientHttpRequestFactory}, which does not support the PATCH method at runtime.
+     * Same partial-merge semantics as PATCH on the TUSO side.
+     */
     public JsonNode updateServicePoint(long facilityId, String servicePointId, Map<String, Object> body) {
-        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/service-points/" + servicePointId;
-        return extractData(restTemplate.exchange(url, HttpMethod.PATCH, new HttpEntity<>(body), JsonNode.class));
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/service-points/" + servicePointId + "/update";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
     }
 
     /** Retire a service point. */
