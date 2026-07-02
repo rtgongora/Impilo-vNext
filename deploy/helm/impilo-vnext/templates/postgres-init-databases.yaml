@@ -19,7 +19,12 @@ metadata:
   name: postgres-init-databases
   namespace: {{ .Release.Namespace }}
   annotations:
-    helm.sh/hook: post-install,post-upgrade
+    # pre-upgrade, NOT post-upgrade: with `helm --wait`, a post-upgrade hook can
+    # never run before newly-added services need their databases to become
+    # ready — deadlock until the wait times out. First install is covered by
+    # postgres initdb (this configmap seeds the empty data dir), so post-install
+    # remains only as a safety net there.
+    helm.sh/hook: post-install,pre-upgrade
     helm.sh/hook-weight: "10"
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 spec:
