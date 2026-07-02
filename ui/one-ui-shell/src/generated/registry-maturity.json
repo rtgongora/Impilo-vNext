@@ -1,10 +1,6 @@
 {
-  "generatedAt": "2026-06-30T18:46:06.369Z",
+  "generatedAt": "2026-07-02T04:54:22.090Z",
   "services": {
-    "tech-companion-mock": "unknown-or-partial",
-    "ops-instrumentation": "unknown-or-partial",
-    "offline-sdk": "unknown-or-partial",
-    "contract-tests": "unknown-or-partial",
     "ai-model-registry-service": "unknown-or-partial",
     "analytics-pipeline-service": "unknown-or-partial",
     "asset-registry-service": "unknown-or-partial",
@@ -46,6 +42,7 @@
     "jobs-service": "unknown-or-partial",
     "landela-adapter-service": "unknown-or-partial",
     "learning-service": "wired",
+    "live-service": "wired",
     "llm-orchestration-service": "unknown-or-partial",
     "madi-service": "wired",
     "msika-apps-service": "unknown-or-partial",
@@ -55,7 +52,9 @@
     "mushex-service": "unknown-or-partial",
     "mvumo-service": "unknown-or-partial",
     "national-data-repository-service": "unknown-or-partial",
+    "ndila-service": "unknown-or-partial",
     "ndr-service": "unknown-or-partial",
+    "nhume-service": "unknown-or-partial",
     "notification-service": "unknown-or-partial",
     "observability-service": "unknown-or-partial",
     "offline-edge-service": "unknown-or-partial",
@@ -78,6 +77,7 @@
     "search-service": "unknown-or-partial",
     "security-hardening-service": "unknown-or-partial",
     "share-slip-service": "unknown-or-partial",
+    "simba-service": "unknown-or-partial",
     "support-service": "unknown-or-partial",
     "surveillance-service": "unknown-or-partial",
     "tshepo-audit-service": "unknown-or-partial",
@@ -94,7 +94,8 @@
     "wellness-service": "unknown-or-partial",
     "workflow-service": "unknown-or-partial",
     "workforce-governance-service": "unknown-or-partial",
-    "vashandi-workforce-service": "p",
+    "vashandi-workforce-service": "partial",
+    "khuluma-service": "partial",
     "zibo-service": "unknown-or-partial"
   }
 }

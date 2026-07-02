@@ -20,7 +20,10 @@ const names = [...source.matchAll(idRe)].map((m) => m[1].trim());
 
 for (const name of names) {
   const anchor = source.indexOf(`\n  - id: ${name}`);
-  const slice = anchor >= 0 ? source.slice(anchor, anchor + 1200) : "";
+  // Slice to the next service entry, not a fixed window — long entries pushed
+  // frontend_wiring_status past a fixed cutoff and silently truncated values.
+  const next = anchor >= 0 ? source.indexOf("\n  - id: ", anchor + 1) : -1;
+  const slice = anchor >= 0 ? source.slice(anchor, next >= 0 ? next : source.length) : "";
   const wiring = slice.match(/frontend_wiring_status:\s*(\S+)/);
   if (wiring) {
     entries[name] = wiring[1];
