@@ -139,6 +139,22 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    /** Queue materialisation-status summary for a facility (materialised vs seed/demo, counts, last sync). */
+    public JsonNode getQueueMaterializationStatus(UUID facilityId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/queues/materialization-status")
+                .queryParam("facilityId", facilityId).toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Reconcile a facility's queues from TUSO (idempotent, failure-safe in PCT). */
+    public JsonNode reconcileQueues(UUID facilityId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/queues/reconcile")
+                .queryParam("facilityId", facilityId).toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
     /**
      * List items in a queue, optionally filtered by status.
      */
