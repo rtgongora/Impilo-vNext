@@ -17,6 +17,19 @@ public final class ServicePointDto {
             Map<String, Object> metadata
     ) {}
 
+    /** Partial-update request for a service point; null fields are left unchanged. */
+    public record UpdateRequest(
+            String name,
+            String code,
+            String servicePointType,
+            Long facilityUnitId,
+            String queueId,
+            String workflowArchetype,
+            String status,
+            Boolean active,
+            Map<String, Object> metadata
+    ) {}
+
     public record Response(
             String id,
             Long facilityId,

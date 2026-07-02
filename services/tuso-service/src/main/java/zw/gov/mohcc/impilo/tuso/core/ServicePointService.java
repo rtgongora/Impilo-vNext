@@ -42,6 +42,12 @@ public class ServicePointService {
             Long facilityUnitId, String queueId, String workflowArchetype,
             Map<String, Object> metadata) {}
 
+    /** Partial-update request; null fields are left unchanged. */
+    public record UpdateServicePointRequest(
+            String name, String code, String servicePointType,
+            Long facilityUnitId, String queueId, String workflowArchetype,
+            String status, Boolean active, Map<String, Object> metadata) {}
+
     @Transactional(readOnly = true)
     public List<ServicePointEntity> list(Long facilityId) {
         return repository.findByFacilityIdAndActiveTrueOrderByCreatedAtAsc(facilityId);
@@ -78,6 +84,47 @@ public class ServicePointService {
     }
 
     @Transactional
+    public ServicePointEntity update(TrustContext ctx, UUID servicePointId, UpdateServicePointRequest req) {
+        ServicePointEntity sp = repository.findById(servicePointId)
+                .orElseThrow(() -> new IllegalArgumentException("Service point not found: " + servicePointId));
+        if (ctx != null && !sp.getTenantId().equals(ctx.tenantId())) {
+            throw new SecurityException("Tenant isolation violation: service point belongs to different tenant");
+        }
+        if (req.name() != null && !req.name().isBlank()) {
+            sp.setName(req.name());
+        }
+        if (req.code() != null) {
+            sp.setCode(req.code());
+        }
+        if (req.servicePointType() != null && !req.servicePointType().isBlank()) {
+            sp.setServicePointType(req.servicePointType());
+        }
+        if (req.facilityUnitId() != null) {
+            sp.setFacilityUnitId(req.facilityUnitId());
+        }
+        if (req.queueId() != null) {
+            sp.setQueueId(req.queueId());
+        }
+        if (req.workflowArchetype() != null) {
+            sp.setWorkflowArchetype(req.workflowArchetype());
+        }
+        if (req.status() != null && !req.status().isBlank()) {
+            sp.setStatus(req.status());
+        }
+        if (req.active() != null) {
+            sp.setActive(req.active());
+        }
+        if (req.metadata() != null) {
+            sp.setMetadata(req.metadata());
+        }
+        sp.setUpdatedBy(actor(ctx));
+        ServicePointEntity saved = repository.save(sp);
+        publishEvent(sp.getFacilityId(), servicePointId, "SERVICE_POINT_UPDATED");
+        log.info("Service point {} updated for facility {} (actor={})", servicePointId, sp.getFacilityId(), actor(ctx));
+        return saved;
+    }
+
+    @Transactional
     public ServicePointEntity deactivate(TrustContext ctx, UUID servicePointId) {
         ServicePointEntity sp = repository.findById(servicePointId)
                 .orElseThrow(() -> new IllegalArgumentException("Service point not found: " + servicePointId));
@@ -97,6 +144,10 @@ public class ServicePointService {
         event.setAggregateType("SERVICE_POINT");
         event.setAggregateId(servicePointId.toString());
         event.setEventType(eventType);
+        // Tag the facility as the event subject so the configuration console can render a per-facility
+        // audit/history trail (see FacilityConfigurationService.getConfigurationHistory).
+        event.setSubjectType(FacilityConfigurationService.SUBJECT_FACILITY);
+        event.setSubjectId(String.valueOf(facilityId));
         event.setPayload(String.format("{\"facilityId\":%d,\"servicePointId\":\"%s\"}",
                 facilityId, servicePointId));
         outboxRepository.save(event);

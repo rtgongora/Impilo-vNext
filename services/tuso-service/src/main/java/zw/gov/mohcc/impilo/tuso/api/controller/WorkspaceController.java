@@ -95,6 +95,18 @@ public class WorkspaceController {
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }
 
+    @PostMapping("/workspaces/{workspaceId}/retire")
+    public ResponseEntity<ApiResponse<WorkspaceResponse>> retireWorkspace(
+            @PathVariable UUID workspaceId) {
+
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Retiring workspace [workspaceId={}] correlationId={}", workspaceId, ctx.correlationId());
+
+        var response = workspaceService.retireWorkspace(workspaceId);
+
+        return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
+    }
+
     @PostMapping("/workspaces/{workspaceId}/override")
     public ResponseEntity<ApiResponse<WorkspaceResponse>> overrideWorkspace(
             @PathVariable UUID workspaceId,

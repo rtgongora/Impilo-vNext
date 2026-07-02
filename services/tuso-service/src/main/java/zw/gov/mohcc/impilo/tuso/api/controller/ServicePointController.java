@@ -58,10 +58,37 @@ public class ServicePointController {
                 .body(ApiResponse.ok(toResponse(entity), ctx.correlationId().toString()));
     }
 
+    @PatchMapping("/{servicePointId}")
+    public ResponseEntity<ApiResponse<ServicePointDto.Response>> update(
+            @PathVariable Long facilityId,
+            @PathVariable UUID servicePointId,
+            @RequestBody ServicePointDto.UpdateRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Updating service point [facilityId={}, id={}] correlationId={}",
+                facilityId, servicePointId, ctx.correlationId());
+        ServicePointEntity entity = servicePointService.update(ctx, servicePointId,
+                new ServicePointService.UpdateServicePointRequest(
+                        request.name(), request.code(), request.servicePointType(),
+                        request.facilityUnitId(), request.queueId(), request.workflowArchetype(),
+                        request.status(), request.active(), request.metadata()));
+        return ResponseEntity.ok(ApiResponse.ok(toResponse(entity), ctx.correlationId().toString()));
+    }
+
     @DeleteMapping("/{servicePointId}")
     public ResponseEntity<ApiResponse<ServicePointDto.Response>> retire(
             @PathVariable Long facilityId,
             @PathVariable UUID servicePointId) {
+        return doRetire(facilityId, servicePointId);
+    }
+
+    @PostMapping("/{servicePointId}/retire")
+    public ResponseEntity<ApiResponse<ServicePointDto.Response>> retirePost(
+            @PathVariable Long facilityId,
+            @PathVariable UUID servicePointId) {
+        return doRetire(facilityId, servicePointId);
+    }
+
+    private ResponseEntity<ApiResponse<ServicePointDto.Response>> doRetire(Long facilityId, UUID servicePointId) {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Retiring service point [facilityId={}, id={}] correlationId={}",
                 facilityId, servicePointId, ctx.correlationId());

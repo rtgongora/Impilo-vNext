@@ -190,6 +190,50 @@ public class WorkspaceService {
     }
 
     /**
+     * Retire (deactivate) a workspace. Emits {@code tuso.workspace.updated} (the event PCT consumes) with
+     * {@code action=RETIRED} so downstream can drop the materialised queue for a retired workspace.
+     *
+     * @param workspaceId the workspace UUID
+     * @return the retired workspace response
+     */
+    @Transactional
+    public WorkspaceResponse retireWorkspace(UUID workspaceId) {
+        TrustContext ctx = TrustContextHolder.require();
+        UUID tenantId = ctx.tenantId();
+        String actorId = ctx.actorId();
+
+        WorkspaceEntity workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new IllegalArgumentException("Workspace not found: " + workspaceId));
+        if (!workspace.getTenantId().equals(tenantId)) {
+            throw new SecurityException("Tenant isolation violation: workspace belongs to different tenant");
+        }
+
+        workspace.setActive(false);
+        workspace.setUpdatedBy(actorId);
+        workspace = workspaceRepository.save(workspace);
+
+        Long facilityId = workspace.getFacility() != null ? workspace.getFacility().getId() : null;
+        EventOutboxEntity event = new EventOutboxEntity();
+        event.setAggregateType("WORKSPACE");
+        event.setAggregateId(workspaceId.toString());
+        event.setEventType("tuso.workspace.updated");
+        event.setSubjectType(FacilityConfigurationService.SUBJECT_FACILITY);
+        if (facilityId != null) {
+            event.setSubjectId(String.valueOf(facilityId));
+        }
+        event.setPayload(String.format("{\"workspaceId\":\"%s\",\"facilityId\":%s,\"tenantId\":\"%s\"," +
+                "\"name\":\"%s\",\"action\":\"RETIRED\"}",
+                workspaceId, facilityId, tenantId, workspace.getName()));
+        outboxRepository.save(event);
+
+        log.info("Workspace {} retired (actor={})", workspaceId, actorId);
+        List<WorkspaceRuleEntity> rules = ruleRepository.findByWorkspaceId(workspaceId);
+        List<WorkspaceDashboardEntity> dashboards =
+                dashboardRepository.findByWorkspaceIdAndActiveTrueOrderBySortOrderAsc(workspaceId);
+        return toWorkspaceResponse(workspace, toRuleDtos(rules), toDashboardDetails(dashboards));
+    }
+
+    /**
      * Get a workspace with its rules and dashboard panels.
      *
      * @param workspaceId the workspace UUID

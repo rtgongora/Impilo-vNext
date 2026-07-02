@@ -16,4 +16,12 @@ public interface EventOutboxRepository extends JpaRepository<EventOutboxEntity, 
     Page<EventOutboxEntity> findByAggregateTypeOrderByCreatedAtDesc(String aggregateType, Pageable pageable);
 
     Page<EventOutboxEntity> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    /**
+     * Facility-scoped configuration audit trail: events whose subject is a facility. Service-point,
+     * workspace and configuration mutations tag {@code subjectType=FACILITY} + {@code subjectId=<facilityId>}
+     * so the configuration console can render an honest change history for one facility.
+     */
+    List<EventOutboxEntity> findTop50BySubjectTypeAndSubjectIdOrderByCreatedAtDesc(
+            String subjectType, String subjectId);
 }
