@@ -183,6 +183,7 @@ export const ROUTES: RouteDefinition[] = [
   // â”€â”€ Zone: Facility Selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/facility", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Select Facility", navLabel: "Facilities" },
   { path: "/facility/[id]", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Facility Details", navLabel: "Facility" },
+  { path: "/facility/[id]/configuration", zone: "facility", layout: "app", sidebar: "facility", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Configuration", navLabel: "Configuration" },
 
   // â”€â”€ Zone: Workspace Selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/workspace", zone: "workspace", layout: "app", sidebar: "workspace", guard: "facility", pageTitle: "Select Workspace", navLabel: "Workspaces" },
@@ -806,7 +807,7 @@ export const ROUTES: RouteDefinition[] = [
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
 // Dura (Jun 2026): native sovereign stock brain — +1 net-new route (/dura) merged from the Dura workstream.
-export const EXPECTED_ROUTE_COUNT = 681;
+export const EXPECTED_ROUTE_COUNT = 682;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
