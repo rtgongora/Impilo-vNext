@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-19T08:57:12.729Z",
+  "generated_at": "2026-07-02T05:08:24.812Z",
   "targets": [
     {
       "id": "ai-model-registry-service",
@@ -378,6 +378,27 @@
       "official_chart": null,
       "image_build_command": "bash scripts/build/build-runtime-image-from-jar.sh credential-verification-service",
       "image_name": "impilo/credential-verification-service"
+    },
+    {
+      "id": "daidzai-service",
+      "path": "services/daidzai-service",
+      "component_name": "daidzai-service",
+      "type": "backend_service",
+      "plane": "experience",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Java service \u2014 default shared JRE template after mvn install",
+      "classification_confidence": "certain",
+      "dockerfile_path": null,
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/daidzai-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "build-runtime-image-from-jar.sh daidzai-service",
+      "image_name": "impilo/daidzai-service"
     },
     {
       "id": "data-access-governance-service",
@@ -966,6 +987,27 @@
       "official_chart": "codecentric/keycloak or values.keycloak",
       "image_build_command": "no local build \u2014 pull/chart deploy",
       "image_name": "quay.io/keycloak/keycloak:25.0"
+    },
+    {
+      "id": "khuluma-service",
+      "path": "services/khuluma-service",
+      "component_name": "khuluma-service",
+      "type": "backend_service",
+      "plane": "experience",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/khuluma-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/khuluma-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/khuluma-service/Dockerfile OR build-runtime-image-from-jar.sh khuluma-service",
+      "image_name": "impilo/khuluma-service"
     },
     {
       "id": "knowledge-admin",
@@ -1640,6 +1682,27 @@
       "image_name": "impilo/pacs-adapter-service"
     },
     {
+      "id": "patient-safety-service",
+      "path": "services/patient-safety-service",
+      "component_name": "patient-safety-service",
+      "type": "backend_service",
+      "plane": "clinical",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Java service \u2014 default shared JRE template after mvn install",
+      "classification_confidence": "certain",
+      "dockerfile_path": null,
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/patient-safety-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "build-runtime-image-from-jar.sh patient-safety-service",
+      "image_name": "impilo/patient-safety-service"
+    },
+    {
       "id": "pct-service",
       "path": "services/pct-service",
       "component_name": "pct-service",
@@ -1890,6 +1953,27 @@
       "official_chart": null,
       "image_build_command": "docker build -f services/reporting-service/Dockerfile OR build-runtime-image-from-jar.sh reporting-service",
       "image_name": "impilo/reporting-service"
+    },
+    {
+      "id": "rito-quality-safety-service",
+      "path": "services/rito-quality-safety-service",
+      "component_name": "rito-quality-safety-service",
+      "type": "backend_service",
+      "plane": "experience",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Java service \u2014 default shared JRE template after mvn install",
+      "classification_confidence": "certain",
+      "dockerfile_path": null,
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/rito-quality-safety-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "build-runtime-image-from-jar.sh rito-quality-safety-service",
+      "image_name": "impilo/rito-quality-safety-service"
     },
     {
       "id": "rtc-gateway-service",

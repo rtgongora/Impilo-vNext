@@ -17,6 +17,7 @@ contracts/openapi/costa-billing-extensions.yaml
 contracts/openapi/costa.openapi.yaml
 contracts/openapi/coverage.openapi.yaml
 contracts/openapi/credential-verification.openapi.yaml
+contracts/openapi/daidzai.openapi.yaml
 contracts/openapi/data-access-governance.openapi.yaml
 contracts/openapi/data-governance.openapi.yaml
 contracts/openapi/data-ingestion.openapi.yaml
@@ -43,6 +44,7 @@ contracts/openapi/inventory-elmis.openapi.yaml
 contracts/openapi/inventory.openapi.yaml
 contracts/openapi/iot-ingestion.openapi.yaml
 contracts/openapi/jobs.openapi.yaml
+contracts/openapi/khuluma.openapi.yaml
 contracts/openapi/landela-adapter.openapi.yaml
 contracts/openapi/learning.openapi.yaml
 contracts/openapi/madi.openapi.yaml
@@ -58,12 +60,14 @@ contracts/openapi/mvumo.openapi.yaml
 contracts/openapi/national-data-repository.openapi.yaml
 contracts/openapi/ndila.openapi.yaml
 contracts/openapi/ndr.openapi.yaml
+contracts/openapi/nhume.openapi.yaml
 contracts/openapi/notification.openapi.yaml
 contracts/openapi/observability.openapi.yaml
 contracts/openapi/offline-edge.openapi.yaml
 contracts/openapi/offline-sync.openapi.yaml
 contracts/openapi/oros.openapi.yaml
 contracts/openapi/pacs-adapter.openapi.yaml
+contracts/openapi/patient-safety.openapi.yaml
 contracts/openapi/pct.openapi.yaml
 contracts/openapi/pharmacy-elmis.openapi.yaml
 contracts/openapi/pharmacy.openapi.yaml
@@ -71,6 +75,7 @@ contracts/openapi/procurement.openapi.yaml
 contracts/openapi/product-registry.openapi.yaml
 contracts/openapi/referral.openapi.yaml
 contracts/openapi/reporting.openapi.yaml
+contracts/openapi/rito-quality-safety.openapi.yaml
 contracts/openapi/rtc-gateway.openapi.yaml
 contracts/openapi/rules.openapi.yaml
 contracts/openapi/scheduling.openapi.yaml
@@ -92,6 +97,8 @@ contracts/openapi/tshepo.openapi.yaml
 contracts/openapi/tuso.openapi.yaml
 contracts/openapi/ubomi.openapi.yaml
 contracts/openapi/varapi.openapi.yaml
+contracts/openapi/vashandi-workforce.openapi.yaml
+contracts/openapi/vashandi.openapi.yaml
 contracts/openapi/vito.openapi.yaml
 contracts/openapi/wellness.openapi.yaml
 contracts/openapi/workflow.openapi.yaml
@@ -129,6 +136,7 @@ services/coverage-service/Dockerfile
 services/coverage-service/pom.xml
 services/credential-verification-service/Dockerfile
 services/credential-verification-service/pom.xml
+services/daidzai-service/pom.xml
 services/data-access-governance-service/Dockerfile
 services/data-access-governance-service/pom.xml
 services/data-governance-service/Dockerfile
@@ -173,6 +181,8 @@ services/iot-ingestion-service/Dockerfile
 services/iot-ingestion-service/pom.xml
 services/jobs-service/Dockerfile
 services/jobs-service/pom.xml
+services/khuluma-service/Dockerfile
+services/khuluma-service/pom.xml
 services/landela-adapter-service/Dockerfile
 services/landela-adapter-service/pom.xml
 services/learning-service/Dockerfile
@@ -215,6 +225,7 @@ services/oros-service/Dockerfile
 services/oros-service/pom.xml
 services/pacs-adapter-service/Dockerfile
 services/pacs-adapter-service/pom.xml
+services/patient-safety-service/pom.xml
 services/pct-service/Dockerfile
 services/pct-service/pom.xml
 services/pharmacy-elmis-adapter/Dockerfile
@@ -229,6 +240,7 @@ services/referral-service/Dockerfile
 services/referral-service/pom.xml
 services/reporting-service/Dockerfile
 services/reporting-service/pom.xml
+services/rito-quality-safety-service/pom.xml
 services/rtc-gateway-service/Dockerfile
 services/rtc-gateway-service/pom.xml
 services/rules-service/Dockerfile
@@ -270,6 +282,8 @@ services/ubomi-service/Dockerfile
 services/ubomi-service/pom.xml
 services/varapi-service/Dockerfile
 services/varapi-service/pom.xml
+services/vashandi-workforce-service/Dockerfile
+services/vashandi-workforce-service/pom.xml
 services/vito-service/Dockerfile
 services/vito-service/pom.xml
 services/wellness-service/Dockerfile

@@ -9,6 +9,7 @@
 | `docs/architecture/MOBILE_APP_INVENTORY.md` | partial-auto | all planes | yes |
 | `docs/architecture/MOBILE_PARITY_MATRIX.md` | partial-auto | all planes | yes |
 | `docs/architecture/SERVICE_TO_SERVICE_TRUST_PATTERN.md` | human-review | all planes | advisory |
+| `docs/architecture/SESSION_EXPERIENCE_AUTHORITY_AND_REMEDIATION.md` | human-review | all planes | advisory |
 | `docs/architecture/VNEXT_DOCTRINE_COMPLIANCE_MATRIX.md` | human-review | all planes | advisory |
 | `docs/architecture/VNEXT_DOCTRINE_INDEX.md` | human-review | all planes | advisory |
 | `docs/architecture/VNEXT_KEYCLOAK_TRUST_ALIGNMENT_REPORT.md` | human-review | all planes | advisory |
@@ -59,6 +60,7 @@
 | `docs/architecture/trust-plane-endpoint-inventory.md` | partial-auto | all planes | yes |
 | `docs/architecture/trust-plane-production-readiness-audit.md` | human-review | all planes | advisory |
 | `docs/architecture/trust-plane-production-readiness-final-report.md` | human-review | all planes | advisory |
+| `docs/architecture/tshepo-gdhcn-trust-and-certification.md` | human-review | all planes | advisory |
 | `docs/architecture/ui-experience-doctrine.md` | human-review | all planes | advisory |
 | `docs/architecture/ui-route-journey-map.md` | human-review | all planes | advisory |
 | `docs/doctrine/CLIENT_PROVIDER_JOURNEY_MAP.md` | human-review | all planes | advisory |
@@ -79,8 +81,10 @@
 | `docs/doctrine/booking-appointment-doctrine.md` | human-review | all planes | advisory |
 | `docs/doctrine/costa-mushex-billing-timing.md` | human-review | all planes | advisory |
 | `docs/doctrine/doctrine-gap-matrix.md` | human-review | all planes | advisory |
+| `docs/doctrine/dura-stock-doctrine.md` | human-review | all planes | advisory |
 | `docs/doctrine/health-os-doctrine.md` | human-review | all planes | advisory |
 | `docs/doctrine/healthcare-coding-standards.md` | human-review | all planes | advisory |
+| `docs/doctrine/khuluma-comms-orchestration.md` | human-review | all planes | advisory |
 | `docs/doctrine/mushex-gateway-neutrality.md` | partial-auto | all planes | yes |
 | `docs/environment/BACKEND_FRONTEND_PARITY_GATE.md` | partial-auto | all planes | yes |
 | `docs/environment/BACKEND_FRONTEND_PARITY_GATE_REPORT.md` | partial-auto | all planes | yes |

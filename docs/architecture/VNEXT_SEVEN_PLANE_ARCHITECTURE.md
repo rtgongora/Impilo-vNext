@@ -11,11 +11,11 @@
 |---|---|---|---|
 | trust | Trust, Identity Assurance & Governance | `docs/architecture/planes/01-trust-identity-assurance-governance.md` | 12 |
 | registry | Registry & Sovereign Identity Spine | `docs/architecture/planes/02-registry-sovereign-identity-spine.md` | 7 |
-| clinical | Clinical Execution & Shared Health Record | `docs/architecture/planes/03-clinical-execution-shared-health-record.md` | 19 |
+| clinical | Clinical Execution & Shared Health Record | `docs/architecture/planes/03-clinical-execution-shared-health-record.md` | 20 |
 | data | Data, Intelligence & Public Health | `docs/architecture/planes/04-data-intelligence-public-health.md` | 12 |
 | integration | Integration, Interoperability & Edge | `docs/architecture/planes/05-integration-interoperability-edge.md` | 46 |
-| experience | Experience, Workflow & Orchestration | `docs/architecture/planes/06-experience-workflow-orchestration.md` | 31 |
-| enterprise | Enterprise Resource & Market Operations | `docs/architecture/planes/07-enterprise-resource-market-operations.md` | 16 |
+| experience | Experience, Workflow & Orchestration | `docs/architecture/planes/06-experience-workflow-orchestration.md` | 34 |
+| enterprise | Enterprise Resource & Market Operations | `docs/architecture/planes/07-enterprise-resource-market-operations.md` | 17 |
 
 ## Trust, Identity Assurance & Governance
 
@@ -70,6 +70,7 @@ Evidence: [`docs/architecture/planes/03-clinical-execution-shared-health-record.
 | `madi-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `oros-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `pacs-adapter-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
+| `patient-safety-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `pct-service` | backend_service | required_full_boot | image_strategy_defined | certain |
 | `pharmacy-elmis-adapter` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `pharmacy-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
@@ -159,10 +160,12 @@ Evidence: [`docs/architecture/planes/06-experience-workflow-orchestration.md`](d
 | `citizen-app` | mobile_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `community-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `costa-console` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
+| `daidzai-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `developer-console` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `ehr` | frontend_app | deprecated_retired | no_runtime_image_required | certain |
 | `experience-bff` | backend_service | required_full_boot | deployed_and_healthy | certain |
 | `inventory-web` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
+| `khuluma-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `knowledge-admin` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `learning-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `live-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
@@ -181,6 +184,7 @@ Evidence: [`docs/architecture/planes/06-experience-workflow-orchestration.md`](d
 | `pharmacy-web` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `portal` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `provider-app` | mobile_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
+| `rito-quality-safety-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `self-service` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `shared-ui` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `support-console` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
@@ -206,5 +210,6 @@ Evidence: [`docs/architecture/planes/07-enterprise-resource-market-operations.md
 | `procurement-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `share-slip-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `simba-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
+| `vashandi-workforce-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `wellness-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `workforce-governance-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |

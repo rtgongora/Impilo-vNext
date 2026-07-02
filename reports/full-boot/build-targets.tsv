@@ -17,6 +17,7 @@ costa-console		ui/costa-console	wave_sequenced_full_boot
 costing-engine-service		services/costing-engine-service	wave_sequenced_full_boot
 coverage-service		services/coverage-service	wave_sequenced_full_boot
 credential-verification-service		services/credential-verification-service	wave_sequenced_full_boot
+daidzai-service		services/daidzai-service	wave_sequenced_full_boot
 data-access-governance-service		services/data-access-governance-service	wave_sequenced_full_boot
 data-governance-service		services/data-governance-service	wave_sequenced_full_boot
 data-ingestion-service		services/data-ingestion-service	wave_sequenced_full_boot
@@ -41,6 +42,7 @@ inventory-service		services/inventory-service	wave_sequenced_full_boot
 inventory-web		ui/inventory-web	wave_sequenced_full_boot
 iot-ingestion-service		services/iot-ingestion-service	wave_sequenced_full_boot
 jobs-service		services/jobs-service	wave_sequenced_full_boot
+khuluma-service		services/khuluma-service	wave_sequenced_full_boot
 knowledge-admin		ui/knowledge-admin	wave_sequenced_full_boot
 landela-adapter-service		services/landela-adapter-service	wave_sequenced_full_boot
 learning-service		services/learning-service	wave_sequenced_full_boot
@@ -71,6 +73,7 @@ ops-docs		ui/ops-docs	wave_sequenced_full_boot
 oros-service		services/oros-service	wave_sequenced_full_boot
 oros-web		ui/oros-web	wave_sequenced_full_boot
 pacs-adapter-service		services/pacs-adapter-service	wave_sequenced_full_boot
+patient-safety-service		services/patient-safety-service	wave_sequenced_full_boot
 pct-service		services/pct-service	required_full_boot
 pct-web		ui/pct-web	wave_sequenced_full_boot
 pharmacy-elmis-adapter		services/pharmacy-elmis-adapter	wave_sequenced_full_boot
@@ -81,6 +84,7 @@ procurement-service		services/procurement-service	wave_sequenced_full_boot
 product-registry-service		services/product-registry-service	wave_sequenced_full_boot
 referral-service		services/referral-service	wave_sequenced_full_boot
 reporting-service		services/reporting-service	wave_sequenced_full_boot
+rito-quality-safety-service		services/rito-quality-safety-service	wave_sequenced_full_boot
 rtc-gateway-service		services/rtc-gateway-service	wave_sequenced_full_boot
 rules-service		services/rules-service	wave_sequenced_full_boot
 scheduling-service		services/scheduling-service	wave_sequenced_full_boot

@@ -1,6 +1,6 @@
 # Full Build Matrix
 
-> 129 buildable targets. Regenerate after classification.
+> 134 buildable targets. Regenerate after classification.
 
 | Service | Plane | Path | Tool | Command | Artifact | Status | Failure | Log |
 |---|---|---|---|---|---|---|---|---|
@@ -24,6 +24,7 @@
 | costing-engine-service | enterprise | services/costing-engine-service | maven | cd services/costing-engine-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | coverage-service | enterprise | services/coverage-service | maven | cd services/coverage-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | credential-verification-service | enterprise | services/credential-verification-service | maven | cd services/credential-verification-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
+| daidzai-service | experience | services/daidzai-service | maven | cd services/daidzai-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | data-access-governance-service | data | services/data-access-governance-service | maven | cd services/data-access-governance-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | data-governance-service | data | services/data-governance-service | maven | cd services/data-governance-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | data-ingestion-service | data | services/data-ingestion-service | maven | cd services/data-ingestion-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
@@ -50,6 +51,7 @@
 | inventory-web | experience | ui/inventory-web | npm | cd ui/inventory-web && npm run build | jar\|dist | not_run | — | — |
 | iot-ingestion-service | integration | services/iot-ingestion-service | maven | cd services/iot-ingestion-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | jobs-service | integration | services/jobs-service | maven | cd services/jobs-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
+| khuluma-service | experience | services/khuluma-service | maven | cd services/khuluma-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | knowledge-admin | experience | ui/knowledge-admin | npm | cd ui/knowledge-admin && npm run build | jar\|dist | not_run | — | — |
 | landela-adapter-service | integration | services/landela-adapter-service | maven | cd services/landela-adapter-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | learning-service | experience | services/learning-service | maven | cd services/learning-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
@@ -85,6 +87,7 @@
 | oros-service | clinical | services/oros-service | maven | cd services/oros-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | oros-web | experience | ui/oros-web | npm | cd ui/oros-web && npm run build | jar\|dist | not_run | — | — |
 | pacs-adapter-service | clinical | services/pacs-adapter-service | maven | cd services/pacs-adapter-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
+| patient-safety-service | clinical | services/patient-safety-service | maven | cd services/patient-safety-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | pct-service | clinical | services/pct-service | maven | cd services/pct-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | pct-web | experience | ui/pct-web | npm | cd ui/pct-web && npm run build | jar\|dist | not_run | — | — |
 | pharmacy-elmis-adapter | clinical | services/pharmacy-elmis-adapter | maven | cd services/pharmacy-elmis-adapter && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
@@ -96,6 +99,7 @@
 | provider-app | experience | apps/mobile/provider-app | pnpm | — | jar\|dist | not_run | — | — |
 | referral-service | integration | services/referral-service | maven | cd services/referral-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | reporting-service | data | services/reporting-service | maven | cd services/reporting-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
+| rito-quality-safety-service | experience | services/rito-quality-safety-service | maven | cd services/rito-quality-safety-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | rtc-gateway-service | integration | services/rtc-gateway-service | maven | cd services/rtc-gateway-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | rules-service | clinical | services/rules-service | maven | cd services/rules-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | scheduling-service | clinical | services/scheduling-service | maven | cd services/scheduling-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
@@ -127,6 +131,7 @@
 | tuso-service | registry | services/tuso-service | maven | cd services/tuso-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | ubomi-service | registry | services/ubomi-service | maven | cd services/ubomi-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | varapi-service | registry | services/varapi-service | maven | cd services/varapi-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
+| vashandi-workforce-service | enterprise | services/vashandi-workforce-service | maven | cd services/vashandi-workforce-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | vito-service | registry | services/vito-service | maven | cd services/vito-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | wellness-service | enterprise | services/wellness-service | maven | cd services/wellness-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | workflow-service | integration | services/workflow-service | maven | cd services/workflow-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |

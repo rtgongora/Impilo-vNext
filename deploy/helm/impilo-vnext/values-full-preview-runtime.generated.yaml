@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
-# Microservices: 90 | enabled: 90 (all waves)
+# Microservices: 94 | enabled: 94 (all waves)
 fullBootServices:
   ai-model-registry-service:
     enabled: true
@@ -77,6 +77,10 @@ fullBootServices:
     enabled: true
     port: 8094
     database: credential_verification
+  daidzai-service:
+    enabled: true
+    port: 8392
+    database: daidzai
   data-access-governance-service:
     enabled: true
     port: 8170
@@ -167,6 +171,10 @@ fullBootServices:
     enabled: true
     port: 8109
     database: jobs
+  khuluma-service:
+    enabled: true
+    port: 8390
+    database: khuluma
   landela-adapter-service:
     enabled: true
     port: 8092
@@ -261,6 +269,10 @@ fullBootServices:
     enabled: true
     port: 8113
     database: pacs_adapter
+  patient-safety-service:
+    enabled: true
+    port: 8202
+    database: patient_safety
   pct-service:
     enabled: true
     port: 8088
@@ -296,6 +308,10 @@ fullBootServices:
     enabled: true
     port: 8176
     database: reporting
+  rito-quality-safety-service:
+    enabled: true
+    port: 8391
+    database: rito_quality_safety
   rtc-gateway-service:
     enabled: true
     port: 8196
@@ -421,6 +437,7 @@ postgres:
     - costing_engine
     - coverage
     - credential_verification
+    - daidzai
     - data_access_governance
     - data_governance
     - data_ingestion
@@ -443,6 +460,7 @@ postgres:
     - inventory_elmis_adapter
     - iot_ingestion
     - jobs
+    - khuluma
     - landela_adapter
     - learning
     - live
@@ -464,6 +482,7 @@ postgres:
     - offline_sync
     - oros
     - pacs_adapter
+    - patient_safety
     - pct
     - pharmacy
     - pharmacy_elmis_adapter
@@ -471,6 +490,7 @@ postgres:
     - product_registry
     - referral
     - reporting
+    - rito_quality_safety
     - rtc_gateway
     - rules
     - scheduling

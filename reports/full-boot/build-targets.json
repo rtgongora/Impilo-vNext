@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-19T08:57:12.729Z",
+  "generated_at": "2026-07-02T05:08:24.812Z",
   "targets": [
     {
       "id": "ai-model-registry-service",
@@ -251,6 +251,20 @@
       "image_strategy": "jib",
       "image_strategy_status": "valid",
       "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
+      "classification_confidence": "certain"
+    },
+    {
+      "id": "daidzai-service",
+      "path": "services/daidzai-service",
+      "component_name": "daidzai-service",
+      "type": "backend_service",
+      "plane": "experience",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Java service \u2014 default shared JRE template after mvn install",
       "classification_confidence": "certain"
     },
     {
@@ -581,6 +595,20 @@
       "component_name": "jobs-service",
       "type": "backend_service",
       "plane": "integration",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain"
+    },
+    {
+      "id": "khuluma-service",
+      "path": "services/khuluma-service",
+      "component_name": "khuluma-service",
+      "type": "backend_service",
+      "plane": "experience",
       "classification": "wave_sequenced_full_boot",
       "build_required": true,
       "image_required": false,
@@ -1010,6 +1038,20 @@
       "classification_confidence": "certain"
     },
     {
+      "id": "patient-safety-service",
+      "path": "services/patient-safety-service",
+      "component_name": "patient-safety-service",
+      "type": "backend_service",
+      "plane": "clinical",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Java service \u2014 default shared JRE template after mvn install",
+      "classification_confidence": "certain"
+    },
+    {
       "id": "pct-service",
       "path": "services/pct-service",
       "component_name": "pct-service",
@@ -1147,6 +1189,20 @@
       "image_strategy": "shared-dockerfile-template",
       "image_strategy_status": "valid",
       "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain"
+    },
+    {
+      "id": "rito-quality-safety-service",
+      "path": "services/rito-quality-safety-service",
+      "component_name": "rito-quality-safety-service",
+      "type": "backend_service",
+      "plane": "experience",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Java service \u2014 default shared JRE template after mvn install",
       "classification_confidence": "certain"
     },
     {

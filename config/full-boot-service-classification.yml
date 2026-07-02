@@ -1,8 +1,8 @@
 metadata:
-  generated_at: '2026-06-19T08:57:12.729Z'
+  generated_at: '2026-07-02T05:08:28.897Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
-  total_entries: 147
+  total_entries: 151
 classifications:
   - id: ai-model-registry-service
     canonical_name: ai-model-registry-service
@@ -912,6 +912,47 @@ classifications:
     priority: P2
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
+  - id: daidzai-service
+    canonical_name: daidzai-service
+    plane: experience
+    domain: workflow-orchestration
+    component_type: backend_service
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
+    estate_role: wave_sequenced_full_estate
+    runtime_kind: kubernetes_service
+    deploy_order_group: experience_layer
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: build-runtime-image-from-jar.sh daidzai-service
+    image_name: impilo/daidzai-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: null
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/daidzai-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/daidzai-service
+    build_tool: maven
+    default_http_port: 8392
+    priority: P2
+    blocker: null
+    reason: Java service — default shared JRE template after mvn install
     classification_confidence: certain
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
@@ -2324,6 +2365,47 @@ classifications:
     deployment_lane: runtime_official
     run_applicable: true
     run_not_applicable_reason: null
+  - id: khuluma-service
+    canonical_name: khuluma-service
+    plane: experience
+    domain: communication-coordination
+    component_type: backend_service
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
+    estate_role: wave_sequenced_full_estate
+    runtime_kind: kubernetes_service
+    deploy_order_group: experience_layer
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: docker build -f services/khuluma-service/Dockerfile OR build-runtime-image-from-jar.sh khuluma-service
+    image_name: impilo/khuluma-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: services/khuluma-service/Dockerfile
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/khuluma-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/khuluma-service
+    build_tool: maven
+    default_http_port: 8390
+    priority: P2
+    blocker: null
+    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: knowledge-admin
     canonical_name: knowledge-admin
     plane: experience
@@ -2607,7 +2689,7 @@ classifications:
     doctrine_compliance_required: false
     source_path: services/madi-service
     build_tool: maven
-    default_http_port: null
+    default_http_port: 8300
     priority: P2
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
@@ -3929,6 +4011,47 @@ classifications:
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
     run_not_applicable_reason: null
+  - id: patient-safety-service
+    canonical_name: patient-safety-service
+    plane: clinical
+    domain: pharmacovigilance
+    component_type: backend_service
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
+    estate_role: wave_sequenced_full_estate
+    runtime_kind: kubernetes_service
+    deploy_order_group: domain_services
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: build-runtime-image-from-jar.sh patient-safety-service
+    image_name: impilo/patient-safety-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: null
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/patient-safety-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/patient-safety-service
+    build_tool: maven
+    default_http_port: 8202
+    priority: P2
+    blocker: null
+    reason: Java service — default shared JRE template after mvn install
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: pct-service
     canonical_name: pct-service
     plane: clinical
@@ -4466,6 +4589,47 @@ classifications:
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
     run_not_applicable_reason: null
+  - id: rito-quality-safety-service
+    canonical_name: rito-quality-safety-service
+    plane: experience
+    domain: workflow-orchestration
+    component_type: backend_service
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
+    estate_role: wave_sequenced_full_estate
+    runtime_kind: kubernetes_service
+    deploy_order_group: experience_layer
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: build-runtime-image-from-jar.sh rito-quality-safety-service
+    image_name: impilo/rito-quality-safety-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: null
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/rito-quality-safety-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: false
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/rito-quality-safety-service
+    build_tool: maven
+    default_http_port: 8391
+    priority: P2
+    blocker: null
+    reason: Java service — default shared JRE template after mvn install
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: rtc-gateway-service
     canonical_name: rtc-gateway-service
     plane: integration
@@ -4499,7 +4663,7 @@ classifications:
     doctrine_compliance_required: false
     source_path: services/rtc-gateway-service
     build_tool: maven
-    default_http_port: 8196
+    default_http_port: null
     priority: P2
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
@@ -4995,7 +5159,7 @@ classifications:
     doctrine_compliance_required: false
     source_path: services/simba-service
     build_tool: maven
-    default_http_port: 8125
+    default_http_port: null
     priority: P2
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
@@ -5896,12 +6060,12 @@ classifications:
     helm_required: false
     health_check_required: false
     contract_check_required: true
-    frontend_surface_expected: false
+    frontend_surface_expected: true
     mobile_surface_expected: false
     doctrine_compliance_required: false
     source_path: services/wellness-service
     build_tool: maven
-    default_http_port: 8161
+    default_http_port: null
     priority: P2
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
