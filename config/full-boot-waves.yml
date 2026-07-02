@@ -50,6 +50,7 @@ waves:
       - inventory-service
       - oros-service
       - pacs-adapter-service
+      - patient-safety-service
       - pharmacy-elmis-adapter
       - pharmacy-service
       - rules-service
@@ -104,7 +105,10 @@ waves:
     plane: experience
     services:
       - booking-service
+      - daidzai-service
+      - khuluma-service
       - live-service
+      - rito-quality-safety-service
       - butano-web
       - community-service
       - costa-console
