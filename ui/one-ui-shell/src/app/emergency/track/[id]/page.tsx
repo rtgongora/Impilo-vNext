@@ -143,7 +143,7 @@ export default function EmergencyTrackPage() {
                 </div>
                 {missions.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    No response updates yet. You'll see each step here as the team acts.
+                    No response updates yet. You&apos;ll see each step here as the team acts.
                   </p>
                 ) : (
                   <ol className="space-y-3">

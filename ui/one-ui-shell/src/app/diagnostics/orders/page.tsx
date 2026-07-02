@@ -92,7 +92,7 @@ export default function DiagnosticsOrdersPage() {
         {issuedToken && (
           <div className="mb-4 rounded-lg border border-success/40 bg-success-soft p-3 text-sm" role="status">
             QR issued for <span className="font-mono">{issuedToken.orderId}</span> — share token{" "}
-            <span className="font-mono">{issuedToken.token}</span>. Print the slip from the order's secure link.
+            <span className="font-mono">{issuedToken.token}</span>. Print the slip from the order&apos;s secure link.
             <button type="button" className="ml-3 text-xs text-primary hover:underline"
               onClick={() => setIssuedToken(null)}>dismiss</button>
           </div>

@@ -29,9 +29,11 @@ import {
 
 function wrapper() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return ({ children }: { children: ReactNode }) => (
+  const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
+  Wrapper.displayName = "TestQueryClientWrapper";
+  return Wrapper;
 }
 
 describe("useFacilityImports hooks", () => {
