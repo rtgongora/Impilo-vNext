@@ -113,6 +113,30 @@ export function OnboardReviewSubmit({ flowId, option }: OnboardReviewSubmitProps
             />
           </label>
         ))}
+        <label className="text-sm text-foreground">
+          Full name
+          <input
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2"
+            type="text"
+            placeholder="Name shown on the staged account"
+            value={String(form.profile?.displayName ?? "")}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, profile: { ...prev.profile, displayName: event.target.value } }))
+            }
+          />
+        </label>
+        <label className="text-sm text-foreground">
+          Official email
+          <input
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2"
+            type="email"
+            placeholder="Receives the activation invitation on approval"
+            value={String(form.profile?.officialEmail ?? "")}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, profile: { ...prev.profile, officialEmail: event.target.value } }))
+            }
+          />
+        </label>
         {flowId === "external-partner-user" ? (
           <label className="flex items-center gap-2 text-sm text-foreground md:col-span-2">
             <input
