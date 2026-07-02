@@ -548,99 +548,25 @@ function RecoveryTab() {
 }
 
 // ── BATCH TAB ────────────────────────────────────────────────────
+// Batch issuance stays blocked until a real BFF contract exists for reserve,
+// issue, and audited download. Identity must never be fabricated in the browser.
 function BatchTab() {
-  const [count, setCount] = useState(10);
-  const [facility, setFacility] = useState("Harare Central Hospital");
-  const [generated, setGenerated] = useState<string[]>([]);
-  const batchIssuanceSupported = false;
-
-  if (!batchIssuanceSupported) {
-    return (
-      <div className="rounded-lg border border-warning/35 bg-warning-soft p-6 text-sm text-warning-foreground">
-        <div className="flex items-start gap-3">
-          <Layers className="mt-0.5 h-5 w-5 shrink-0 text-warning-foreground" />
-          <div>
-            <h3 className="text-base font-semibold">Batch identity issuance is intentionally unsupported</h3>
-            <p className="mt-2">
-              Experience will not deliver browser-generated PHIDs or CSV exports. The accepted surface now blocks this
-              until a real backend contract exists for reserve, issue, and audited download.
-            </p>
-            <p className="mt-3 text-xs text-warning-foreground/80">
-              Required contract: a canonical Experience BFF route for batch issuance with facility scope, audit
-              metadata, and server-generated identifiers.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const FACILITIES = ["Harare Central Hospital", "Parirenyatwa Group", "Chitungwiza Central", "Mpilo Central", "United Bulawayo"];
-
-  function handleGenerate() {
-    // Generate client-side batch of PHID-format IDs
-    const ids: string[] = [];
-    for (let i = 0; i < count; i++) {
-      const d1 = String(Math.floor(Math.random() * 1000)).padStart(3, "0");
-      const s = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-      const d2 = String(Math.floor(Math.random() * 1000)).padStart(3, "0");
-      const check = (parseInt(d1 + d2) % 10);
-      ids.push(`${d1}${s}${d2}${check}`);
-    }
-    setGenerated(ids);
-  }
-
-  function downloadCsv() {
-    const csv = "PHID,Facility,GeneratedAt\n" + generated.map((id) => `${id},${facility},${new Date().toISOString()}`).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `batch-phids-${generated.length}.csv`; a.click();
-    URL.revokeObjectURL(url);
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="bg-card rounded-lg border border-border p-6 space-y-4">
-        <h3 className="text-base font-semibold text-foreground">Batch ID Generation</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Facility</label>
-            <select value={facility} onChange={(e) => setFacility(e.target.value)} className="w-full px-3 py-2 text-sm border border-border rounded-lg">
-              {FACILITIES.map((f) => <option key={f} value={f}>{f}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Batch Size</label>
-            <input type="number" min={1} max={1000} value={count} onChange={(e) => setCount(Number(e.target.value))} className="w-full px-3 py-2 text-sm border border-border rounded-lg" />
-          </div>
+    <div className="rounded-lg border border-warning/35 bg-warning-soft p-6 text-sm text-warning-foreground">
+      <div className="flex items-start gap-3">
+        <Layers className="mt-0.5 h-5 w-5 shrink-0 text-warning-foreground" />
+        <div>
+          <h3 className="text-base font-semibold">Batch identity issuance is intentionally unsupported</h3>
+          <p className="mt-2">
+            Experience will not deliver browser-generated PHIDs or CSV exports. The accepted surface now blocks this
+            until a real backend contract exists for reserve, issue, and audited download.
+          </p>
+          <p className="mt-3 text-xs text-warning-foreground/80">
+            Required contract: a canonical Experience BFF route for batch issuance with facility scope, audit
+            metadata, and server-generated identifiers.
+          </p>
         </div>
-        <button onClick={handleGenerate} className="w-full py-2.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2">
-          <Layers className="w-4 h-4" /> Generate {count} IDs
-        </button>
       </div>
-
-      {generated.length > 0 && (
-        <div className="bg-card rounded-lg border border-border p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-sm font-semibold text-foreground">{generated.length} IDs Generated</p>
-              <p className="text-xs text-muted-foreground">{facility} · {new Date().toLocaleDateString()}</p>
-            </div>
-            <button onClick={downloadCsv} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700">
-              <Download className="w-4 h-4" /> Download CSV
-            </button>
-          </div>
-          <div className="max-h-48 overflow-y-auto bg-background rounded-lg p-3 font-mono text-xs space-y-0.5">
-            {generated.slice(0, 100).map((id, i) => (
-              <div key={i} className="flex items-center justify-between py-0.5">
-                <span className="text-foreground">{id}</span>
-                <button onClick={() => copyToClipboard(id)} className="text-muted-foreground hover:text-muted-foreground"><Copy className="w-3 h-3" /></button>
-              </div>
-            ))}
-            {generated.length > 100 && <p className="text-muted-foreground pt-1">+{generated.length - 100} more...</p>}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
