@@ -1,8 +1,9 @@
 /**
  * QueueDefinitionsScreen — read-only viewer of a facility's queue definitions.
  *
- * Queue definitions are governed upstream in PCT (there is no create/edit route at the BFF), so this
- * surface is intentionally read-only: it lets facility staff confirm the queue configuration for the
+ * Queue definitions are owned by TUSO facility service-point/workspace configuration and materialised
+ * into PCT for care operations (there is no create/edit route at the BFF), so this surface is
+ * intentionally read-only: it lets facility staff confirm the queue configuration for the
  * QUEUES setup step. Keyed on the provider's active facility (session X-Facility-ID via appStore).
  * Backed by the live GET /internal/v1/queue/definitions?facility_id=. Real data only — no mock rows.
  */

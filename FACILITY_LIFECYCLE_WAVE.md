@@ -344,3 +344,46 @@ The correction is therefore **structural doctrine now enforced in the identifier
 verified-clean audit of the login / Facility Mode / invitation / QR / route / labelling surfaces. Facility
 Mode entry remains gated by verified identity + assignment + Tshepo/OPA (`FACILITY-MODE-ENTER`), with the
 facility code carried only as display/interoperability metadata.
+
+---
+
+## Downstream TUSO → PCT queue materialisation (task #15)
+
+**Ownership chain (implemented + unit-tested 2026-07-02):**
+
+```
+TUSO facility service-point/workspace configuration (SoR)
+  → TUSO queue-definitions read API (GET /v1/internal/facilities/by-uuid/{facilityUuid}/queue-definitions)
+  → PCT TusoIntegration.getQueueDefinitions(facilityUuid)
+  → PCT QueueMaterializationService (event-triggered + on-demand reconcile)
+  → PCT pct_queues (source=TUSO_MATERIALISED, keyed by source_ref = TUSO service-point id)
+  → PCT queue runtime APIs (GET /v1/queues surfaces source + materializationStatus + lastMaterializedAt)
+  → BFF/web/mobile visibility
+```
+
+- **TUSO** owns queue definitions (derived from active service points); addressable by canonical
+  facility UUID. PCT never authors queue definitions — no PCT queue create/edit route was added; the
+  reconcile endpoint pulls FROM TUSO.
+- **PCT consumer** `consumeTusoWorkspaceUpdated` no longer a stub — a `tuso.workspace.updated` /
+  `impilo.tuso.workspace` event triggers a full facility reconcile (robust to missed/delayed/replayed
+  events; never crashes the consumer).
+- **Reconciliation path** (not only events): `POST /v1/internal/queues/reconcile?facilityId=` +
+  `GET /v1/internal/queues/materialization-status?facilityId=`.
+- **Idempotent + safe:** upsert keyed by `(tenant, facility, source_ref)` — replay never duplicates;
+  TUSO-removed/disabled queues are **RETIRED** (marked inactive, never deleted) so active work is not
+  broken; a null/invalid TUSO response **fails safely** (no queues changed); malformed defs are skipped.
+- **Seed truth:** `V028` labels existing/demo queue rows `SEED_DEMO`; materialisation-status surfaces
+  materialised-vs-seed so seeded queues are never presented as production facility truth.
+- **Wording corrected** (web `/admin/queues`, mobile QueueDefinitionsScreen + queueService): "Queue
+  definitions are owned by TUSO facility service-point/workspace configuration and materialised into PCT
+  for care operations" — no "governed in PCT".
+- **Verified here:** PCT `QueueMaterializationServiceTest` (7) + `PctEventConsumerTest` (18 incl. 3 new
+  TUSO-trigger tests); TUSO facility tests (29) still green; web tsc clean, no-stub OK. TUSO + PCT
+  compile.
+
+**Honest boundary:** implemented and **unit-tested**; **end-to-end materialisation against live
+TUSO/PCT is NOT proven** — it remains gated behind (1) the service-level facility import smoke on
+VM/preview, (2) TUSO actually emitting facility/service-point/workspace config events (producer wiring
+is a runtime concern; the consumer + reconcile pull path are in place), and (3) a real reconcile against
+running TUSO. No live runtime integration is claimed. Mobile change was comment-only (deps not installed
+in this sandbox; no logic changed).

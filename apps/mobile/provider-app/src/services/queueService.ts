@@ -22,8 +22,9 @@ export interface QueueDefinition {
 }
 
 /**
- * Queue definitions for a facility (governed upstream in PCT; read-only here). The BFF wraps the
- * PCT payload under `data`; shapes vary, so fields are read defensively without fabricating values.
+ * Queue definitions for a facility (owned by TUSO facility service-point/workspace configuration and
+ * materialised into PCT for care operations; read-only here). The BFF wraps the PCT payload under
+ * `data`; shapes vary, so fields are read defensively without fabricating values.
  */
 export async function fetchQueueDefinitions(facilityId: string): Promise<QueueDefinition[]> {
   const r = await apiClient.get<{ data: unknown }>(

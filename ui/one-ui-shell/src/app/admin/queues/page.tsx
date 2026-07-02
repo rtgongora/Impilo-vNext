@@ -1,7 +1,9 @@
 "use client";
 
 /**
- * Admin Queue Configuration — Manage queue definitions, service types, SLAs.
+ * Admin Queue Configuration — read-only viewer of a facility's queue definitions.
+ * Queue definitions are owned by TUSO facility service-point/workspace configuration and materialised
+ * into PCT for care operations; they are not authored/edited here.
  * Route: /admin/queues
  */
 
@@ -40,6 +42,11 @@ export default function AdminQueuesPage() {
             <ArrowLeft className="w-4 h-4" /> Back to Admin
           </Link>
         </div>
+
+        <p className="mb-4 text-xs text-muted-foreground">
+          Queue definitions are owned by TUSO facility service-point/workspace configuration and
+          materialised into PCT for care operations. This view is read-only.
+        </p>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
