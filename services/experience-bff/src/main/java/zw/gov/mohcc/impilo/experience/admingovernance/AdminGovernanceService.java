@@ -27,6 +27,7 @@ public class AdminGovernanceService {
     private final AdminGovernanceAuditHelper auditHelper;
     private final AdminGovernanceOrganisationService organisationService;
     private final AdminGovernanceLookupService lookupService;
+    private final GovernanceInvitationService governanceInvitationService;
 
     public AdminGovernanceService(SessionExperienceService sessionExperienceService,
                                   AdminGovernancePolicyService policyService,
@@ -37,7 +38,8 @@ public class AdminGovernanceService {
                                   TshepoAuditServiceClient auditClient,
                                   AdminGovernanceAuditHelper auditHelper,
                                   AdminGovernanceOrganisationService organisationService,
-                                  AdminGovernanceLookupService lookupService) {
+                                  AdminGovernanceLookupService lookupService,
+                                  GovernanceInvitationService governanceInvitationService) {
         this.sessionExperienceService = sessionExperienceService;
         this.policyService = policyService;
         this.accessRequestPersistence = accessRequestPersistence;
@@ -48,6 +50,7 @@ public class AdminGovernanceService {
         this.auditHelper = auditHelper;
         this.organisationService = organisationService;
         this.lookupService = lookupService;
+        this.governanceInvitationService = governanceInvitationService;
     }
 
     public AdminGovernanceDtos.ActionResponse precheck(
@@ -240,20 +243,99 @@ public class AdminGovernanceService {
         updated = accessRequestPersistence.decide(tenantId, updated, decisionRequest.decision(), actorId, decisionRequest.notes());
         var audit = auditHelper.emit("access_request." + normalize(decisionRequest.decision()), actorId, requestId, Map.of("status", newStatus));
 
+        Map<String, Object> fulfilment = null;
+        if ("APPROVED".equals(newStatus) && updated.requestType() != null
+                && updated.requestType().startsWith("onboarding.")) {
+            fulfilment = fulfilOnboardingApproval(updated, actorId);
+        }
+
+        Map<String, Object> responsePayload = new LinkedHashMap<>();
+        responsePayload.put("request", updated);
+        if (fulfilment != null) {
+            responsePayload.put("fulfilment", fulfilment);
+        }
+
+        String friendlyMessage = fulfilment != null && fulfilment.get("friendlyMessage") != null
+                ? friendlyDecisionMessage(newStatus) + " " + fulfilment.get("friendlyMessage")
+                : friendlyDecisionMessage(newStatus);
+
         return AdminGovernanceResponses.of(
                 "completed",
                 requestId,
                 updated.targetSubjectId(),
                 null,
                 friendlyDecisionTitle(newStatus),
-                friendlyDecisionMessage(newStatus),
+                friendlyMessage,
                 List.of("View access requests", "Audit review"),
                 null,
                 decision,
                 audit,
-                "live",
-                Map.of("request", updated)
+                fulfilment != null && "pending_backend".equals(fulfilment.get("integrationStatus"))
+                        ? "pending_backend" : "live",
+                responsePayload
         );
+    }
+
+    /**
+     * Approving an onboarding access request must produce a usable account, not just an
+     * APPROVED record. Stages a Keycloak account and sends the activation invitation via
+     * the existing invitation seam. Role/authority binding stays a separate governance
+     * step — approval never silently grants realm authority.
+     */
+    private Map<String, Object> fulfilOnboardingApproval(
+            AdminGovernanceDtos.AccessRequestRecord request, String actorId) {
+        Map<String, Object> meta = new LinkedHashMap<>();
+        String flowKey = request.requestType().substring("onboarding.".length());
+        Map<String, Object> payload = request.payload() != null ? request.payload() : Map.of();
+        String email = firstNonBlank(payload, "officialEmail", "email", "contactEmail");
+        String displayName = firstNonBlank(payload, "displayName", "fullName", "name");
+        if (displayName == null) {
+            displayName = request.targetSubjectId();
+        }
+
+        if (email == null) {
+            meta.put("fulfilmentStatus", "blocked_missing_contact");
+            meta.put("integrationStatus", "live");
+            meta.put("friendlyMessage",
+                    "No official email on the request — account was not staged. Re-submit onboarding with a contact email or create the account from organisation user management.");
+            auditHelper.emit("onboarding.fulfilment_blocked", actorId, request.id(),
+                    Map.of("reason", "missing_contact_email", "flow", flowKey));
+            return meta;
+        }
+
+        GovernanceInvitationService.InvitationDeliveryResult delivery =
+                governanceInvitationService.deliverOrganisationInvitation(
+                        request.organisationId(),
+                        email,
+                        displayName,
+                        request.requestedRole(),
+                        "onboarding_" + flowKey);
+
+        meta.put("fulfilmentStatus", delivery.status());
+        meta.put("integrationStatus",
+                "pending_backend".equals(delivery.auditStatus()) ? "pending_backend" : "live");
+        meta.put("friendlyMessage", delivery.friendlyMessage());
+        if (delivery.invitationId() != null) {
+            meta.put("invitationId", delivery.invitationId());
+        }
+        if (delivery.keycloakUserId() != null) {
+            meta.put("keycloakUserId", delivery.keycloakUserId());
+        }
+        auditHelper.emit("onboarding.fulfilment_" + delivery.status(), actorId, request.id(),
+                Map.of("flow", flowKey, "email", email,
+                        "invitationId", delivery.invitationId() != null ? delivery.invitationId() : "",
+                        "keycloakUserId", delivery.keycloakUserId() != null ? delivery.keycloakUserId() : ""));
+        return meta;
+    }
+
+    private static String firstNonBlank(Map<String, Object> payload, String... keys) {
+        for (String key : keys) {
+            Object value = payload.get(key);
+            if (value instanceof String s && !s.isBlank()) {
+                return s;
+            }
+        }
+        return null;
     }
 
     public AdminGovernanceDtos.ActionResponse createFacilityAssignment(
