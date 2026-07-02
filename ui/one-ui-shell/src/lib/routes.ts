@@ -205,6 +205,7 @@ export const ROUTES: RouteDefinition[] = [
   // â”€â”€ Zone: Communication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/communication", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Communication Hub", navLabel: "Communication", navZone: "work" },
   { path: "/communication/secure-messaging", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Secure Messaging", navLabel: "Messaging", navZone: "work" },
+  { path: "/communication/approvals", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Comms Approval Queue", navLabel: "Approvals", navZone: "work" },
   // Khuluma — Impilo Comms Hub (the comms orchestration umbrella): unified conversations, presence, calls, meetings.
   { path: "/work/comms", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Comms Hub", navLabel: "Khuluma", navZone: "work" },
   { path: "/my/comms", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Messages", navLabel: "Khuluma", navZone: "life" },
@@ -805,7 +806,7 @@ export const ROUTES: RouteDefinition[] = [
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
 // Dura (Jun 2026): native sovereign stock brain — +1 net-new route (/dura) merged from the Dura workstream.
-export const EXPECTED_ROUTE_COUNT = 680;
+export const EXPECTED_ROUTE_COUNT = 681;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

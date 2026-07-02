@@ -65,7 +65,14 @@ export default function CommunicationPage() {
   return (
     <AppLayout>
       <PageShell title="Communication Hub" icon={<MessageSquare className="h-5 w-5" />}>
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex justify-end gap-2">
+          <Link
+            href="/communication/approvals"
+            className="inline-flex items-center gap-1 rounded-lg border border-primary/25 bg-primary-soft px-3 py-1.5 text-xs font-medium text-primary-hover hover:bg-primary-soft"
+          >
+            <CheckCircle className="h-3.5 w-3.5" />
+            Approval queue
+          </Link>
           <Link
             href="/scheduling"
             className="inline-flex items-center gap-1 rounded-lg border border-primary/25 bg-primary-soft px-3 py-1.5 text-xs font-medium text-primary-hover hover:bg-primary-soft"
