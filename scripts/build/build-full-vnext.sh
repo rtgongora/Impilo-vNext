@@ -54,7 +54,10 @@ run_maven() {
     echo "SKIP $mod (no pom.xml)" | tee "$log"
     return 2
   fi
-  if (cd services && $mvn -q package -DskipTests -pl "$mod" -am >"$log" 2>&1); then
+  # clean is mandatory: without it, renamed/renumbered Flyway migrations
+  # accumulate in target/classes and both versions ship in the jar
+  # (estate crashloop: "Found more than one migration with version N").
+  if (cd services && $mvn -q clean package -DskipTests -pl "$mod" -am >"$log" 2>&1); then
     echo "PASS $mod" | tee -a "$log"
     return 0
   fi
@@ -100,7 +103,7 @@ else
   if [[ -n "$MVN" && -f services/pom.xml ]]; then
     reactor_log="$LOG_DIR/_reactor.log"
     echo "Running Maven reactor (services/pom.xml) via $MVN..."
-    if (cd services && $MVN -q install -DskipTests >"$reactor_log" 2>&1); then
+    if (cd services && $MVN -q clean install -DskipTests >"$reactor_log" 2>&1); then
       echo "PASS reactor" | tee -a "$reactor_log"
       REACTOR_OK=1
     else
