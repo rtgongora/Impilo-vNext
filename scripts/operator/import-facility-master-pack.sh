@@ -113,15 +113,25 @@ trust_headers=(
 )
 [[ -n "$AUTH_TOKEN" ]] && trust_headers+=( -H "Authorization: Bearer ${AUTH_TOKEN}" )
 
-# ---- HTTP helpers (curl -f => non-2xx fails safely; overridable via IMPORT_CURL) -------------------
-http_get() {
-  "$CURL" -sS -f "${trust_headers[@]}" "$1" \
-    || fail "request failed (GET $1) — backend unreachable or returned non-2xx"
-}
-http_post() {
-  # $1 url, $2 json body
-  "$CURL" -sS -f -X POST "${trust_headers[@]}" -d "${2:-{}}" "$1" \
-    || fail "request failed (POST $1) — backend unreachable, unauthorised, or returned non-2xx"
+# ---- HTTP helpers ---------------------------------------------------------------------------------
+# curl -f => non-2xx exits non-zero. Helpers RETURN that status (they do NOT call fail themselves) so
+# callers can propagate failure at the top level — a `fail` inside a $(...) subshell would only kill
+# the subshell and let the script continue, which would be unsafe. Overridable via IMPORT_CURL.
+http_get()  { "$CURL" -sS -f "${trust_headers[@]}" "$1"; }
+http_post() { "$CURL" -sS -f -X POST "${trust_headers[@]}" -d "${2:-{}}" "$1"; }
+http_post_file() { "$CURL" -sS -f -X POST "${trust_headers[@]}" -d @"$2" "$1"; }
+
+# Build the import payload to a temp file and POST it (safe for the full 1,773-row pack — avoids
+# ARG_MAX). Sets the global RESP; returns non-zero on build/POST failure so the caller can fail safely.
+RESP=""
+post_import_payload() {
+  # $1 url, $2 dryRun("true"/"false")
+  local pf rc
+  pf="$(mktemp)"
+  if ! build_payload "$2" > "$pf"; then rm -f "$pf"; return 1; fi
+  RESP="$(http_post_file "$1" "$pf")"; rc=$?
+  rm -f "$pf"
+  return "$rc"
 }
 
 # Extract a value from a JSON doc ($1) by a dotted path ($2) against the "data" envelope.
@@ -248,9 +258,9 @@ mode_dry_run() {
   echo "==> DRY-RUN facility master import"
   echo "  Source label : $SOURCE_LABEL"
   echo "  Source file  : $SOURCE"
-  local payload resp
-  payload="$(build_payload true)"
-  resp="$(http_post "${TUSO_BASE}/v1/internal/facilities/import/master-pack/dry-run" "$payload")"
+  post_import_payload "${TUSO_BASE}/v1/internal/facilities/import/master-pack/dry-run" true \
+    || fail "dry-run request failed — backend unreachable, unauthorised, or returned non-2xx"
+  local resp="$RESP"
   print_import_summary "$resp"
   local run_id
   run_id="$(data_field "$resp" runId)"
@@ -262,9 +272,9 @@ mode_dry_run() {
 mode_stage_only() {
   require_source
   echo "==> STAGE-ONLY facility master import (persist rows for review; no facilities created)"
-  local payload resp run_id
-  payload="$(build_payload true)"
-  resp="$(http_post "${TUSO_BASE}/v1/internal/facilities/import/master-pack/dry-run" "$payload")"
+  post_import_payload "${TUSO_BASE}/v1/internal/facilities/import/master-pack/dry-run" true \
+    || fail "stage request failed — backend unreachable, unauthorised, or returned non-2xx"
+  local resp="$RESP" run_id
   run_id="$(data_field "$resp" runId)"
   echo "  Source label : $SOURCE_LABEL"
   echo "  Source file  : $SOURCE"
@@ -277,7 +287,8 @@ mode_stage_only() {
 count_rows() {
   # $1 = query string (e.g. "decisionStatus=APPROVED_FOR_IMPORT"); prints totalElements
   local body
-  body="$(http_get "${TUSO_BASE}/v1/internal/facilities/import/runs/${RUN_ID}/rows?${1}&size=1")"
+  body="$(http_get "${TUSO_BASE}/v1/internal/facilities/import/runs/${RUN_ID}/rows?${1}&size=1")" \
+    || fail "request failed (rows query) — backend unreachable or returned non-2xx"
   data_field "$body" totalElements
 }
 
@@ -286,7 +297,8 @@ mode_validate() {
   if [[ -n "$RUN_ID" ]]; then
     echo "==> VALIDATE staged run ${RUN_ID}"
     # Confirm the run resolves.
-    http_get "${TUSO_BASE}/v1/internal/facilities/import/runs/${RUN_ID}" >/dev/null
+    http_get "${TUSO_BASE}/v1/internal/facilities/import/runs/${RUN_ID}" >/dev/null \
+      || fail "import run ${RUN_ID} not found or backend unreachable"
     unresolved_pending="$(count_rows "decisionStatus=PENDING_REVIEW")"
     unresolved_conflict="$(count_rows "decisionStatus=RESOLUTION_CONFLICT")"
     approved="$(count_rows "decisionStatus=APPROVED_FOR_IMPORT")"
@@ -308,8 +320,9 @@ mode_validate() {
   else
     require_source
     echo "==> VALIDATE source package"
-    local resp
-    resp="$(http_post "${TUSO_BASE}/v1/internal/facilities/import/master-pack/dry-run" "$(build_payload true)")"
+    post_import_payload "${TUSO_BASE}/v1/internal/facilities/import/master-pack/dry-run" true \
+      || fail "source validation request failed — backend unreachable or returned non-2xx"
+    local resp="$RESP"
     echo "  Source validation status: OK (parsed + evaluated)"
     print_import_summary "$resp"
     echo "  Recommendation: run --stage-only to register a reviewable run, then review + approve."
@@ -321,7 +334,8 @@ mode_apply_approved() {
   echo "==> APPLY-APPROVED for run ${RUN_ID}"
   local approved_before resp applied skipped remaining
   approved_before="$(count_rows "decisionStatus=APPROVED_FOR_IMPORT")"
-  resp="$(http_post "${TUSO_BASE}/v1/internal/facilities/import/runs/${RUN_ID}/apply-approved" '{"rowIds":null}')"
+  resp="$(http_post "${TUSO_BASE}/v1/internal/facilities/import/runs/${RUN_ID}/apply-approved" '{"rowIds":null}')" \
+    || fail "apply-approved request failed — backend unreachable, unauthorised, or returned non-2xx"
   applied="$(data_field "$resp" applied)"
   skipped="$(data_field "$resp" skipped)"
   remaining="$(count_rows "decisionStatus=PENDING_REVIEW")"
@@ -341,7 +355,8 @@ mode_reconcile() {
   require_run_id
   echo "==> RECONCILE run ${RUN_ID} (honest check; no fake repair)"
   local report
-  report="$(http_get "${TUSO_BASE}/v1/internal/facilities/import/runs/${RUN_ID}/rows?decisionStatus=IMPORTED&size=200")"
+  report="$(http_get "${TUSO_BASE}/v1/internal/facilities/import/runs/${RUN_ID}/rows?decisionStatus=IMPORTED&size=200")" \
+    || fail "reconcile request failed — backend unreachable or returned non-2xx"
   # For each imported row, check the result facility still resolves + provenance/lifecycle.
   local rows_checked resolved missing_prov lifecycle_mismatch
   rows_checked=0; resolved=0; missing_prov=0; lifecycle_mismatch=0
