@@ -21,6 +21,9 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
 
     Optional<FacilityEntity> findByTenantIdAndFacilityCode(UUID tenantId, String facilityCode);
 
+    /** Resolve a facility by its canonical UUID — the identity downstream services (PCT) key off. */
+    Optional<FacilityEntity> findByFacilityUuid(UUID facilityUuid);
+
     Optional<FacilityEntity> findByGofrId(String gofrId);
 
     @Query("SELECT f FROM FacilityEntity f WHERE f.tenantId = :tenantId " +
