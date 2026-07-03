@@ -25,10 +25,10 @@ public interface FacilityImportRowRepository extends JpaRepository<FacilityImpor
                AND (:outcome IS NULL OR r.outcome = :outcome)
                AND (:decisionStatus IS NULL OR r.decisionStatus = :decisionStatus)
                AND (:duplicateType IS NULL OR r.duplicateType = :duplicateType)
-               AND (:province IS NULL OR lower(r.province) = lower(:province))
-               AND (:district IS NULL OR lower(r.district) = lower(:district))
+               AND (:province IS NULL OR lower(r.province) = lower(cast(:province as string)))
+               AND (:district IS NULL OR lower(r.district) = lower(cast(:district as string)))
                AND (:facilityCode IS NULL OR r.facilityCode = :facilityCode)
-               AND (:facilityName IS NULL OR lower(r.facilityName) LIKE lower(concat('%', :facilityName, '%')))
+               AND (:facilityName IS NULL OR lower(r.facilityName) LIKE lower(concat('%', cast(:facilityName as string), '%')))
                AND (:hasAcceptableMissing IS NULL OR r.hasAcceptableMissing = :hasAcceptableMissing)
             """)
     Page<FacilityImportRowEntity> search(
