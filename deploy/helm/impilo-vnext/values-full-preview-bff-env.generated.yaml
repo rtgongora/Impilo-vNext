@@ -1,9 +1,11 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-bff-downstream-env.mjs
-# Downstream env vars: 102
+# Downstream env vars: 104
 experienceBff:
   env:
     FHIR_BASE_URL: http://hapi-fhir:8090/fhir
+    ORTHANC_BASE_URL: http://orthanc:8042
+    ORTHANC_DICOMWEB_URL: http://orthanc:8042/dicom-web
     ONE_UI_SHELL_BASE_URL: http://one-ui-shell:3000
     IMPILO_BFF_FACILITIES_MODE: live
     IMPILO_BFF_PROVIDER_HUBS_MODE: live
