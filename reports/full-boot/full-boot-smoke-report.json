@@ -398,6 +398,12 @@
       "available": 1,
       "healthy": true
     },
+    "orthanc": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "pacs-adapter-service": {
       "replicas": 1,
       "ready": 1,
@@ -623,7 +629,7 @@
   },
   "missing_deployments": [],
   "unhealthy_deployments": [],
-  "runtime_pods_count": 103,
+  "runtime_pods_count": 104,
   "verify_pods_ignored": 0,
   "crashloop": [],
   "pending": [],

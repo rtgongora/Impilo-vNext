@@ -20,6 +20,6 @@
 | Required full boot | 22 |
 | Image pass / fail | 3 / 0 |
 | Helm ready / missing / partial | 22 / 0 / 0 |
-| Deployed in full boot | 103 |
-| Pods ready / total | 103 / 103 |
+| Deployed in full boot | 104 |
+| Pods ready / total | 104 / 104 |
 

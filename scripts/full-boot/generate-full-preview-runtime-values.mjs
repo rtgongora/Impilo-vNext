@@ -107,6 +107,16 @@ function specialEnv(serviceId) {
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "",
     };
   }
+  if (serviceId === "oros-service") {
+    // Same preview convention as pct-service: blank the issuer so the OAuth
+    // resource-server block is skipped and the trust-context filter
+    // authenticates internal calls (the default localhost issuer 401s
+    // every order placement from the BFF otherwise).
+    return {
+      KEYCLOAK_ISSUER: "",
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "",
+    };
+  }
   if (serviceId === "ndila-service") {
     return {
       NDILA_ALLOW_ANONYMOUS: "true",

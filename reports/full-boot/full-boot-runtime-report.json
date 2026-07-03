@@ -113,6 +113,7 @@
     "offline-sync-service",
     "one-ui-shell",
     "oros-service",
+    "orthanc",
     "pacs-adapter-service",
     "patient-safety-service",
     "pct-service",
@@ -157,8 +158,8 @@
     "postgres",
     "redis"
   ],
-  "full_boot_pods_total": 103,
-  "full_boot_pods_ready": 103,
+  "full_boot_pods_total": 104,
+  "full_boot_pods_ready": 104,
   "full_boot_pods_crashloop": 0,
   "full_boot_pods_pending": 0,
   "healthy_required_estimate": 22,

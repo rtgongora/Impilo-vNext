@@ -265,6 +265,9 @@ fullBootServices:
     enabled: true
     port: 8089
     database: oros
+    env:
+      KEYCLOAK_ISSUER: ''
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ''
   pacs-adapter-service:
     enabled: true
     port: 8113
