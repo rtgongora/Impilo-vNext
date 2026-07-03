@@ -298,7 +298,13 @@ public class ServiceClientConfig {
                 forwardHeader(inbound, request, CompanionHeaders.TUSO_FACILITY_ID);
                 forwardHeader(inbound, request, CompanionHeaders.WORKSPACE_ID);
                 forwardHeader(inbound, request, CompanionHeaders.SHIFT_ID);
-                forwardHeader(inbound, request, CompanionHeaders.IDEMPOTENCY_KEY);
+                // Idempotency keys are scoped to ONE mutation: when a BFF handler fans
+                // out to several downstream mutations it must set distinct keys, and
+                // blind forwarding would clobber them (downstream then 409s the second
+                // call as "key reused with different request").
+                if (!request.getHeaders().containsKey(CompanionHeaders.IDEMPOTENCY_KEY)) {
+                    forwardHeader(inbound, request, CompanionHeaders.IDEMPOTENCY_KEY);
+                }
                 forwardHeader(inbound, request, CompanionHeaders.CLIENT_TIMEOUT_MS);
                 forwardHeader(inbound, request, CompanionHeaders.PATIENT_SHARE_GRANT_ID);
                 forwardHeader(inbound, request, CompanionHeaders.VITO_CONTRIBUTION_ID);

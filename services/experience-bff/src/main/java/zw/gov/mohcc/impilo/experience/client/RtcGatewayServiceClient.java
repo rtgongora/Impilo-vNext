@@ -27,8 +27,10 @@ public class RtcGatewayServiceClient {
 
     public JsonNode provisionSession(Map<String, Object> body) {
         log.info("RTC: provision session");
-        ResponseEntity<JsonNode> response =
-                restTemplate.postForEntity(baseUrl + API + "/sessions", new HttpEntity<>(body), JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + API + "/sessions",
+                new HttpEntity<>(body, idempotency("rtc-provision:" + body.getOrDefault("sessionId", ""))),
+                JsonNode.class);
         return extractData(response);
     }
 
@@ -39,17 +41,31 @@ public class RtcGatewayServiceClient {
 
     public JsonNode issueParticipantToken(String sessionId, Map<String, Object> body) {
         log.info("RTC: issue token sessionId={}", sessionId);
+        Object participant = body.get("participant");
+        String identity = participant instanceof Map<?, ?> p && p.get("identity") != null
+                ? p.get("identity").toString() : "";
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(
                 baseUrl + API + "/sessions/" + sessionId + "/participants/token",
-                new HttpEntity<>(body), JsonNode.class);
+                new HttpEntity<>(body, idempotency(
+                        "rtc-token:" + sessionId + ":" + identity + ":" + System.currentTimeMillis())),
+                JsonNode.class);
         return extractData(response);
     }
 
     public JsonNode endSession(String sessionId) {
         log.info("RTC: end session id={}", sessionId);
-        ResponseEntity<JsonNode> response =
-                restTemplate.postForEntity(baseUrl + API + "/sessions/" + sessionId + "/end", new HttpEntity<>(Map.of()), JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + API + "/sessions/" + sessionId + "/end",
+                new HttpEntity<>(Map.of(), idempotency("rtc-end:" + sessionId)),
+                JsonNode.class);
         return extractData(response);
+    }
+
+    /** Distinct idempotency key per downstream mutation (see ServiceClientConfig). */
+    private static org.springframework.http.HttpHeaders idempotency(String key) {
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.IDEMPOTENCY_KEY, key);
+        return headers;
     }
 
     public JsonNode getOpsHealth() {
