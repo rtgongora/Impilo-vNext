@@ -94,6 +94,39 @@ for role in sorted(seeded_roles - have_roles):
     if not DRY:
         req("POST", f"/admin/realms/{REALM}/roles", token, body={"name": role})
 
+# --- Realm preconditions for identity-anchor claims -------------------------
+# 1) Keycloak 24+ declarative user profile drops "unmanaged" attributes silently
+#    unless the policy allows them. Our identity anchors (health_id, provider_id,
+#    facility_id, tenant_id, cpid) are unmanaged — enable ADMIN_EDIT so admin API
+#    writes stick but end users cannot edit their own anchors.
+_, prof = req("GET", f"/admin/realms/{REALM}/users/profile", token)
+if prof is not None and prof.get("unmanagedAttributePolicy") not in ("ENABLED", "ADMIN_EDIT"):
+    if DRY:
+        print("users/profile: would set unmanagedAttributePolicy=ADMIN_EDIT (dry-run)")
+    else:
+        prof["unmanagedAttributePolicy"] = "ADMIN_EDIT"
+        req("PUT", f"/admin/realms/{REALM}/users/profile", token, body=prof)
+        print("users/profile: unmanagedAttributePolicy=ADMIN_EDIT")
+
+# 2) Keycloak 25 moved the `sub` claim into the `basic` client scope. Clients
+#    imported from older realm exports lack it, producing sub-less access tokens
+#    (the BFF then mints a random person anchor per login). Ensure each browser/
+#    backend client carries `basic` as a default scope.
+_, basic_scopes = req("GET", f"/admin/realms/{REALM}/client-scopes", token)
+basic_id = next((s["id"] for s in (basic_scopes or []) if s.get("name") == "basic"), None)
+if basic_id:
+    for client_name in ("experience-ui", "impilo-backend", "integration-test"):
+        _, cl = req("GET", f"/admin/realms/{REALM}/clients?clientId={urllib.parse.quote(client_name)}", token)
+        client = (cl or [None])[0]
+        if not client:
+            continue
+        if "basic" not in (client.get("defaultClientScopes") or []):
+            if DRY:
+                print(f"client {client_name}: would add default scope 'basic' (dry-run)")
+            else:
+                req("PUT", f"/admin/realms/{REALM}/clients/{client['id']}/default-client-scopes/{basic_id}", token)
+                print(f"client {client_name}: default scope 'basic' added (sub claim restored)")
+
 created = updated = skipped = 0
 for u in realm.get("users", []):
     username = u.get("username")
@@ -121,10 +154,28 @@ for u in realm.get("users", []):
         user = next((x for x in (found or []) if x.get("username") == username), None)
     else:
         updated += 1
-        print(f"user {username}: exists — reconciling password/roles" + (" (dry-run)" if DRY else ""))
+        print(f"user {username}: exists — reconciling password/roles/attributes" + (" (dry-run)" if DRY else ""))
     if DRY or user is None:
         continue
     uid = user["id"]
+    # Attribute sync: seeded identity anchors (health_id, provider_id, facility_id,
+    # tenant_id) feed JWT claims via the impilo-trust-headers scope mappers. Users
+    # created before this script existed have empty attributes — merge, seed wins.
+    want_attrs = u.get("attributes") or {}
+    have_attrs = user.get("attributes") or {}
+    if any(have_attrs.get(k) != v for k, v in want_attrs.items()):
+        merged = dict(have_attrs)
+        merged.update(want_attrs)
+        req("PUT", f"/admin/realms/{REALM}/users/{uid}", token, body={
+            "username": username,
+            "email": u.get("email") or user.get("email"),
+            "firstName": u.get("firstName") or user.get("firstName"),
+            "lastName": u.get("lastName") or user.get("lastName"),
+            "enabled": user.get("enabled", True),
+            "emailVerified": True,
+            "attributes": merged,
+        })
+        print(f"  attributes synced: {sorted(want_attrs.keys())}")
     if password:
         try:
             req("PUT", f"/admin/realms/{REALM}/users/{uid}/reset-password", token, body={
