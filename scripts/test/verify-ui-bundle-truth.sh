@@ -22,7 +22,11 @@ REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
 cd "$REPO_PATH" 2>/dev/null || true
 
 URL="${PREVIEW_URL:-http://41.57.127.235}"
-EXPECT_MARKERS="All Features,ShellErrorBoundary,all-features"
+# Markers must be strings that live in the layout/main-app chunks themselves.
+# Feature-component strings (e.g. the "All Features" label) get code-split into
+# arbitrary route chunks by webpack and false-fail here; the all-features route
+# token + shell error boundary are chunk-stable proof of the deployed shell.
+EXPECT_MARKERS="ShellErrorBoundary,all-features"
 EXPECT_CHANGED=0
 RECORD=0
 PREV_HASH_FILE="reports/full-boot/ui-bundle-hash.txt"
