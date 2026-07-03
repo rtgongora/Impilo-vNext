@@ -79,6 +79,15 @@ public class CostaEventConsumer {
             String patientCpid = text(event, "patientCpid");
             String encounterType = text(event, "encounterType");
 
+            // Kafka threads carry no servlet trust context, but the bill/costing
+            // services require() one — synthesize it from the event (same
+            // pattern as Dura's PharmacyConsumer). Without this the inner
+            // failure marked the shared transaction rollback-only and the
+            // message redelivered forever, duplicating encounters each cycle.
+            zw.gov.mohcc.impilo.shared.auth.TrustContextHolder.set(new zw.gov.mohcc.impilo.shared.auth.TrustContext(
+                    UUID.fromString(tenantId), "PCT-SYSTEM", "SYSTEM", "BILLING", null,
+                    UUID.randomUUID(), UUID.fromString(facilityId), null, null, null));
+
             EncounterEntity encounter = new EncounterEntity();
             encounter.setEncounterId(zw.gov.mohcc.impilo.costa.service.UlidGenerator.generate());
             encounter.setTenantId(UUID.fromString(tenantId));
@@ -118,6 +127,9 @@ public class CostaEventConsumer {
             log.info("Created encounter {} for PCT journey {}", encounter.getEncounterId(), journeyId);
         } catch (Exception e) {
             log.error("Failed to process pct.encounter.started", e);
+            ack.acknowledge(); // poison-pill guard: do not redeliver forever
+        } finally {
+            zw.gov.mohcc.impilo.shared.auth.TrustContextHolder.clear();
             ack.acknowledge();
         }
     }
