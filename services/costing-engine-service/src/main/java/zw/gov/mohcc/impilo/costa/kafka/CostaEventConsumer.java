@@ -85,7 +85,7 @@ public class CostaEventConsumer {
             encounter.setFacilityId(UUID.fromString(facilityId));
             encounter.setPatientCpid(patientCpid);
             encounter.setPctJourneyId(journeyId);
-            encounter.setEncounterType(encounterType != null ? EncounterType.valueOf(encounterType) : EncounterType.OUTPATIENT);
+            encounter.setEncounterType(mapEncounterType(encounterType));
             encounter.setStatus(EncounterStatus.OPEN);
             encounterRepository.save(encounter);
 
@@ -119,6 +119,25 @@ public class CostaEventConsumer {
         } catch (Exception e) {
             log.error("Failed to process pct.encounter.started", e);
             ack.acknowledge();
+        }
+    }
+
+    /**
+     * PCT encounter types (CONSULTATION, TELEHEALTH, PROCEDURE, ...) are a
+     * clinical taxonomy, not COSTA's billing settings — a strict valueOf threw
+     * on every real event and the consumer never created an encounter/bill.
+     */
+    static EncounterType mapEncounterType(String pctType) {
+        if (pctType == null || pctType.isBlank()) {
+            return EncounterType.OUTPATIENT;
+        }
+        String t = pctType.trim().toUpperCase(java.util.Locale.ROOT);
+        try {
+            return EncounterType.valueOf(t);
+        } catch (IllegalArgumentException notACostaType) {
+            if (t.contains("EMERG")) return EncounterType.EMERGENCY;
+            if (t.contains("INPAT") || t.contains("ADMIS")) return EncounterType.INPATIENT;
+            return EncounterType.OUTPATIENT;
         }
     }
 

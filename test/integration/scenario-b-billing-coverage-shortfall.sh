@@ -45,37 +45,49 @@ svc_curl() { # svc_curl <method> <url> [json-body]
 
 # ── 1. Coverage SoR: plan + member ───────────────────────────────────────────
 step "1. coverage plan + member enrolment"
-PLANS=$(svc_curl GET "http://$COVERAGE_IP:8140/internal/v1/coverage/plans")
-PLAN_ID=$(echo "$PLANS" | jqpy "
-rows=d if isinstance(d,list) else d.get('data',[])
-match=[r for r in rows if r.get('planCode')=='COV-MOHCC-CORE']
-print(match[0]['id'] if match else '')")
-[[ -n "$PLAN_ID" ]] || fail "COV-MOHCC-CORE plan not present at coverage SoR: $(echo "$PLANS" | head -c 300)"
+# No plan-catalog API exists (GET /plans is a member view) — resolve the plan
+# id at the SoR database, operator-style.
+PLAN_ID=$(kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d coverage -tAc \
+  "SELECT id FROM cv_coverage_plans WHERE plan_code='COV-MOHCC-CORE' AND status='ACTIVE' LIMIT 1;" | tr -d '[:space:]')
+[[ -n "$PLAN_ID" ]] || fail "COV-MOHCC-CORE plan not present at coverage SoR"
 ok "plan COV-MOHCC-CORE present ($PLAN_ID)"
 
-MEMBER_CPID="scnb-member-$RUN"
+# Register a real patient at VITO through the BFF, then enrol THEM in coverage.
+PATIENT=$(svc_curl POST "http://experience-bff:8160/internal/v1/patients" \
+  "{\"given_name\":\"ScnB\",\"family_name\":\"$RUN\",\"date_of_birth\":\"1985-03-11\",\"sex\":\"MALE\",\"facility_id\":\"$FACILITY_ID\"}")
+MEMBER_CPID=$(echo "$PATIENT" | jqpy "
+data=d.get('data') or {}
+attrs=data.get('attributes', data)
+print(attrs.get('cpid') or attrs.get('patient_id') or data.get('id') or '')")
+[[ -n "$MEMBER_CPID" ]] || fail "patient registration failed: $(echo "$PATIENT" | head -c 300)"
 ENROL=$(svc_curl POST "http://$COVERAGE_IP:8140/internal/v1/coverage/members" \
   "{\"planId\":\"$PLAN_ID\",\"clientId\":\"$MEMBER_CPID\",\"memberNumber\":\"MEM-$RUN\",\"relationship\":\"SELF\",\"effectiveFrom\":\"2026-01-01\"}")
 COVERAGE_ID=$(echo "$ENROL" | jqpy "print(d.get('id',''))")
 [[ -n "$COVERAGE_ID" ]] || fail "member enrolment failed: $(echo "$ENROL" | head -c 300)"
-ok "member enrolled → coverage $COVERAGE_ID"
+ok "patient $MEMBER_CPID enrolled → coverage $COVERAGE_ID"
 
-# ── 2. COSTA encounter + bill with charges ───────────────────────────────────
-step "2. bill draft + charge lines"
-ENC=$(svc_curl POST "http://$COSTA_IP:8101/costa/v1/encounters" \
-  "{\"patientCpid\":\"$MEMBER_CPID\",\"encounterType\":\"OUTPATIENT\",\"facilityId\":\"$FACILITY_ID\"}")
-COSTA_ENC=$(echo "$ENC" | jqpy "
-data=d.get('data') or d
-print(data.get('encounterId') or data.get('id') or '')")
-[[ -n "$COSTA_ENC" ]] || fail "costa encounter create failed: $(echo "$ENC" | head -c 300)"
+# ── 2. Real clinical journey: PCT encounter → auto DRAFT bill (event loop) ───
+step "2. PCT encounter → costa auto-bill via pct.encounter.started"
+QUEUE=$(svc_curl POST "http://experience-bff:8160/internal/v1/queue/entries" \
+  "{\"patient_id\":\"$MEMBER_CPID\",\"patient_cpid\":\"$MEMBER_CPID\",\"facility_id\":\"$FACILITY_ID\",\"queue_type\":\"FIFO\"}")
+JOURNEY_ID=$(echo "$QUEUE" | jqpy "print((d.get('meta') or {}).get('journey_id',''))")
+[[ -n "$JOURNEY_ID" ]] || fail "queue entry failed: $(echo "$QUEUE" | head -c 300)"
+svc_curl POST "http://experience-bff:8160/internal/v1/encounters" \
+  "{\"patient_id\":\"$MEMBER_CPID\",\"journey_id\":\"$JOURNEY_ID\",\"encounter_type\":\"CONSULTATION\",\"entry_point\":\"walk_in\"}" >/dev/null
 
-BILL=$(svc_curl POST "http://$COSTA_IP:8101/costa/v1/bills/draft" \
-  "{\"encounterId\":\"$COSTA_ENC\",\"billType\":\"PATIENT\"}")
-BILL_ID=$(echo "$BILL" | jqpy "
-data=d.get('data') or d
-print(data.get('billId') or '')")
-[[ -n "$BILL_ID" ]] || fail "bill draft failed: $(echo "$BILL" | head -c 300)"
-ok "bill drafted: $BILL_ID (encounter $COSTA_ENC)"
+BILL_ID=""
+for i in $(seq 1 12); do
+  BILL_ID=$(kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d costing_engine -tAc \
+    "SELECT b.bill_id FROM costa_bill_headers b JOIN costa_encounters e ON b.encounter_id=e.encounter_id WHERE e.pct_journey_id='$JOURNEY_ID' LIMIT 1;" | tr -d '[:space:]')
+  [[ -n "$BILL_ID" ]] && break
+  sleep 5
+done
+[[ -n "$BILL_ID" ]] || fail "no auto DRAFT bill for journey $JOURNEY_ID — pct→costa listener broken"
+COSTA_ENC=$(kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d costing_engine -tAc \
+  "SELECT encounter_id FROM costa_encounters WHERE pct_journey_id='$JOURNEY_ID' LIMIT 1;" | tr -d '[:space:]')
+ok "auto DRAFT bill $BILL_ID created from the live PCT event (encounter $COSTA_ENC)"
+
+step "2b. charge lines"
 
 for LINE in '{"msikaCode":"CONSULT-GP","description":"GP consultation","kind":"SERVICE","qty":1}' \
             '{"msikaCode":"LAB-FBC","description":"Full blood count","kind":"SERVICE","qty":1}'; do
