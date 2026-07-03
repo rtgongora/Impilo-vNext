@@ -221,3 +221,8 @@ fullBootServices:
     env:
       # Preview-only key material — NOT production key management.
       WALLET_CARD_ENCRYPTION_MASTER_KEY: "preview-only-card-master-key-0123456789abcdef01"
+  tuso-service:
+    env:
+      # Diagnostic rider for the silent import row-approve 403 (task #9):
+      # surfaces the authorization decision path in pod logs. Preview-only.
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: "DEBUG"
