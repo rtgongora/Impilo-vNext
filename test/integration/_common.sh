@@ -80,11 +80,15 @@ assert_json_equals() {
   fi
 }
 
-# Generate trust headers as curl args
+# Generate trust headers as curl args.
+# TENANT_ID is overridable: TUSO/msika-flow (and the full-preview estate) require
+# the canonical UUID 00000000-0000-4000-8000-000000000001 — string tenants are
+# silently nulled there. Default stays moh-zw for compose-local compatibility.
+TENANT_ID="${TENANT_ID:-moh-zw}"
 trust_headers() {
   local request_id="${1:-req-$(date +%s%N)}"
   local correlation_id="${2:-corr-$(date +%s%N)}"
-  echo "-H 'X-Tenant-ID: moh-zw' -H 'X-Pod-ID: national' -H 'X-Request-ID: $request_id' -H 'X-Correlation-ID: $correlation_id'"
+  echo "-H 'X-Tenant-ID: ${TENANT_ID}' -H 'X-Pod-ID: national' -H 'X-Request-ID: $request_id' -H 'X-Correlation-ID: $correlation_id'"
 }
 
 # Print test summary
