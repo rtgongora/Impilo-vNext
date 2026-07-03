@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-07-03T11:02:47.606381+00:00",
+  "generated_at": "2026-07-03T11:08:17.140949+00:00",
   "namespace": "impilo-full-preview",
   "registry": "127.0.0.1:5000",
-  "phase": "pre-rollout",
+  "phase": "post-rollout",
   "runtime_service_count": 96,
   "stale_non_exempt": [],
   "tools": {
@@ -975,15 +975,15 @@
     {
       "service": "oros-service",
       "source_commit": "",
-      "expected_image_ref": "127.0.0.1:5000/impilo/oros-service@sha256:637d33bb8022b932bc1ddb550a291904d0480da1d7f7b6bdf644b5beeaeea79e",
-      "expected_registry_digest": "sha256:637d33bb8022",
+      "expected_image_ref": "127.0.0.1:5000/impilo/oros-service@sha256:54ee85f58517e9541f0e6cd2d8853c478be198ec3b07d685c0fcb399139a438d",
+      "expected_registry_digest": "sha256:54ee85f58517",
       "local_docker_image_id": "sha256:18205d52b793",
       "local_registry_digest": "sha256:54ee85f58517",
       "containerd_digest": "",
-      "helm_deployment_image_ref": "127.0.0.1:5000/impilo/oros-service@sha256:637d33bb8022b932bc1ddb550a291904d0480da1d7f7b6bdf644b5beeaeea79e",
-      "running_pod_imageID": "sha256:637d33bb8022",
-      "running_pod_manifest_digest": "sha256:637d33bb8022",
-      "expected_digest": "sha256:637d33bb8022",
+      "helm_deployment_image_ref": "127.0.0.1:5000/impilo/oros-service@sha256:54ee85f58517e9541f0e6cd2d8853c478be198ec3b07d685c0fcb399139a438d",
+      "running_pod_imageID": "sha256:54ee85f58517",
+      "running_pod_manifest_digest": "sha256:54ee85f58517",
+      "expected_digest": "sha256:54ee85f58517",
       "digest_pinned": "YES",
       "aligned": "YES",
       "reason": "aligned"

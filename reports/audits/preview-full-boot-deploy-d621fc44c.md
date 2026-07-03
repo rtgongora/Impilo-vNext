@@ -1,18 +1,19 @@
 # Preview Deploy Report — full-boot
 
-- **Generated:** 2026-07-03T11:05:43Z
-- **Status:** FAIL
+- **Generated:** 2026-07-03T11:08:22Z
+- **Status:** PASS
 - **Branch:** claude/web-session-anchor-nnnkf6
-- **HEAD commit:** `d621fc44c9185346de76361a170ab22975a4e481` (d621fc44c)
+- **HEAD commit:** `3ff72f8c89321999e16274e7831f2006f4a1f270` (3ff72f8c8)
 - **Preview URL:** http://127.0.0.1
 - **Namespace:** impilo-full-preview
 - **Helm release:** impilo-full-preview (revision 20)
-- **Runtime readiness:** 34/104 deployments ready
+- **Runtime readiness:** 104/104 deployments ready
 - **Public /health/version environment:** full-preview
 - **Public /health/version commit:** `d621fc44c9185346de76361a170ab22975a4e481`
-- **Commit alignment:** OK
+- **Commit alignment:** MISMATCH (live d621fc44 vs HEAD 3ff72f8c8)
 
-Quality gates failed.
+See [runtime-image-truth.md](../../reports/full-boot/runtime-image-truth.md) for digest alignment.
+See [full-boot-runtime-report.md](../../reports/full-boot/full-boot-runtime-report.md) for estate completeness.
 
 ## health/version raw
 

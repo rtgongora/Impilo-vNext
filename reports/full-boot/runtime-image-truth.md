@@ -2,7 +2,7 @@
 
 > Deployment truth is the running estate, not the deployment story.
 
-- Namespace: `impilo-full-preview` | Registry: `127.0.0.1:5000` | Phase: `pre-rollout`
+- Namespace: `impilo-full-preview` | Registry: `127.0.0.1:5000` | Phase: `post-rollout`
 - Runtime services checked: **96**
 - Stale non-exempt services: **0**
 
@@ -68,7 +68,7 @@
 | offline-edge-service | YES | aligned | sha256:761b3440ceae | sha256:761b3440ceae | sha256:761b3440ceae | 127.0.0.1:5000/impilo/offline-edge-service@sha256:761b3440ceaeea6f976c071e5c9bab9ef4407e354330277520044cdb684ca395 |
 | offline-sync-service | YES | aligned | sha256:aae428272521 | sha256:aae428272521 | sha256:aae428272521 | 127.0.0.1:5000/impilo/offline-sync-service@sha256:aae4282725219aaa8e4ec4d74e1c9164b31919f63868b65f9c950b23295adeec |
 | one-ui-shell | YES | aligned | sha256:3472d00fd1a8 | sha256:3472d00fd1a8 | sha256:3472d00fd1a8 | 127.0.0.1:5000/impilo/one-ui-shell@sha256:3472d00fd1a8583f7611454afb7af70d4b99083b92029b28d48e5917a349936b |
-| oros-service | YES | aligned | sha256:637d33bb8022 | sha256:54ee85f58517 | sha256:637d33bb8022 | 127.0.0.1:5000/impilo/oros-service@sha256:637d33bb8022b932bc1ddb550a291904d0480da1d7f7b6bdf644b5beeaeea79e |
+| oros-service | YES | aligned | sha256:54ee85f58517 | sha256:54ee85f58517 | sha256:54ee85f58517 | 127.0.0.1:5000/impilo/oros-service@sha256:54ee85f58517e9541f0e6cd2d8853c478be198ec3b07d685c0fcb399139a438d |
 | pacs-adapter-service | YES | aligned | sha256:99b5e6b0b773 | sha256:99b5e6b0b773 | sha256:99b5e6b0b773 | 127.0.0.1:5000/impilo/pacs-adapter-service@sha256:99b5e6b0b77345d9ad05b9e9ebf1b761c6ccc613ec7d95230674911c77319bcf |
 | patient-safety-service | YES | aligned | sha256:ff08beb3c1f7 | sha256:ff08beb3c1f7 | sha256:2ec8f3396b9d | 127.0.0.1:5000/impilo/patient-safety-service@sha256:ff08beb3c1f7a3bc0dd1d945731d4bf73ccddfb9a5fb92beffce9e011ac725f8 |
 | pct-service | YES | aligned | sha256:fe5d662c6729 | sha256:fe5d662c6729 | sha256:fe5d662c6729 | 127.0.0.1:5000/impilo/pct-service@sha256:fe5d662c672932fac4f411086c0fbe68473d62288cac8d2e408a5d659f679729 |
