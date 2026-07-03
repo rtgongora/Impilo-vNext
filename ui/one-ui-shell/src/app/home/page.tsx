@@ -805,6 +805,19 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Professional without a work assignment → self-service access request */}
+          {!identity.hasWorkAccess && !identity.isCitizenOnly && identity.hasProfessionalAccess && (
+            <Link
+              href="/professional/request-access"
+              className="flex items-center gap-2 rounded-lg border border-primary/25 bg-primary-soft px-3 py-2 text-sm text-primary hover:bg-primary-soft/80 transition-colors"
+            >
+              <Briefcase className="h-4 w-4 shrink-0" />
+              <span className="font-medium">No work assignment yet</span>
+              <span className="hidden text-xs text-primary-hover sm:inline">Request facility access to unlock the Work tab</span>
+              <ArrowRight className="ml-auto w-3.5 h-3.5" />
+            </Link>
+          )}
+
           {/* Tab Switcher (Lovable 3-tab: Work / Professional / Personal) */}
           {!focusedWorkMode ? (
           <div className="flex gap-1 bg-neutral-100 p-1 rounded-lg">
