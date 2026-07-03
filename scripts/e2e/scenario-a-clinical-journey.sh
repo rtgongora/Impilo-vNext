@@ -42,15 +42,17 @@ jqpy() { python3 -c "import json,sys
 d=json.load(sys.stdin)
 $1"; }
 
-hdrs() {
-  # trust headers + actor identity; $1 optional extra purpose
-  echo -H "X-Tenant-ID: $TENANT_ID" -H "X-Pod-ID: pod-e2e" \
-       -H "X-Request-ID: $(cat /proc/sys/kernel/random/uuid)" \
-       -H "X-Correlation-ID: $RUN_TAG" \
-       -H "X-Actor-ID: ${ANCHOR:-anonymous}" -H "X-Actor-Type: PROVIDER" \
-       ${PROVIDER_ID:+-H "X-Provider-ID: $PROVIDER_ID"} \
-       ${TOKEN:+-H "Authorization: Bearer $TOKEN"} \
-       -H "X-Facility-ID: $FACILITY_ID"
+# Rebuild the trust-header array before each call (TOKEN/ANCHOR evolve by phase).
+HDRS=()
+build_hdrs() {
+  HDRS=(-H "X-Tenant-ID: $TENANT_ID" -H "X-Pod-ID: pod-e2e"
+        -H "X-Request-ID: $(cat /proc/sys/kernel/random/uuid)"
+        -H "X-Correlation-ID: $RUN_TAG"
+        -H "X-Actor-ID: ${ANCHOR:-anonymous}" -H "X-Actor-Type: PROVIDER"
+        -H "X-Facility-ID: $FACILITY_ID")
+  [[ -n "${PROVIDER_ID:-}" ]] && HDRS+=(-H "X-Provider-ID: $PROVIDER_ID")
+  [[ -n "${TOKEN:-}" ]] && HDRS+=(-H "Authorization: Bearer $TOKEN")
+  return 0
 }
 
 # ── Phase 1: login → person anchor ──────────────────────────────────────────
@@ -68,10 +70,12 @@ ok "$PERSONA anchored as $ANCHOR"
 
 # ── Phase 2: linked-ids → provider → ACTIVE assignment ──────────────────────
 phase 2 "linked-ids → provider → ACTIVE workforce assignment"
-PROVIDER_ID=$(curl -s "$PREVIEW_URL/internal/v1/identity/linked-ids" $(hdrs) \
+build_hdrs
+PROVIDER_ID=$(curl -s "$PREVIEW_URL/internal/v1/identity/linked-ids" "${HDRS[@]}" \
   | jqpy "print(d['data']['attributes'].get('providerId',''))")
 [[ "$PROVIDER_ID" == "$EXPECTED_PROVIDER" ]] || fail "providerId '$PROVIDER_ID' != '$EXPECTED_PROVIDER'"
-ASSIGN_COUNT=$(curl -s "$PREVIEW_URL/internal/v1/workforce-governance/assignments/search?subjectType=PROVIDER&subjectId=$PROVIDER_ID&status=ACTIVE" $(hdrs) \
+build_hdrs
+ASSIGN_COUNT=$(curl -s "$PREVIEW_URL/internal/v1/workforce-governance/assignments/search?subjectType=PROVIDER&subjectId=$PROVIDER_ID&status=ACTIVE" "${HDRS[@]}" \
   | jqpy "print(len(d.get('data',[])))")
 [[ "$ASSIGN_COUNT" -ge 1 ]] || fail "no ACTIVE assignments for $PROVIDER_ID"
 ok "$PROVIDER_ID has $ASSIGN_COUNT ACTIVE assignment(s) → work access"
@@ -79,22 +83,26 @@ ok "$PROVIDER_ID has $ASSIGN_COUNT ACTIVE assignment(s) → work access"
 
 # ── Phase 3: session contract → workforce profile → shift check-in ──────────
 phase 3 "session contract → Vashandi profile → shift check-in (persisted)"
-CONTRACT=$(curl -s "$PREVIEW_URL/internal/v1/session/experience" $(hdrs))
+build_hdrs
+CONTRACT=$(curl -s "$PREVIEW_URL/internal/v1/session/experience" "${HDRS[@]}")
 PROFILE_ID=$(echo "$CONTRACT" | jqpy "
 attrs=d.get('data',{}).get('attributes',d.get('data',{}))
 print(attrs.get('vashandiWorkforceProfileId') or '')")
 [[ -n "$PROFILE_ID" ]] || fail "session contract has no vashandiWorkforceProfileId (vashandi session-context broken) — contract: $(echo "$CONTRACT" | head -c 400)"
 ok "workforce profile bound: $PROFILE_ID"
 
-CHECKIN=$(curl -s -X POST "$PREVIEW_URL/internal/v1/vashandi/attendance/check-in" \
-  -H "Content-Type: application/json" $(hdrs) \
-  -d "{\"shiftId\":\"self-service\",\"workforceProfileId\":\"$PROFILE_ID\",\"checkInMode\":\"self_check_in\"}")
+build_hdrs
+CHECKIN=$(curl -s -X POST "$PREVIEW_URL/internal/v1/vashandi/attendance/adhoc-check-in" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-checkin" "${HDRS[@]}" \
+  -d "{\"workforceProfileId\":\"$PROFILE_ID\",\"facilityId\":\"$FACILITY_ID\"}")
 CHECKIN_OK=$(echo "$CHECKIN" | jqpy "print(str(d.get('success', d.get('data') is not None)).lower())")
 [[ "$CHECKIN_OK" == "true" ]] || fail "check-in failed: $(echo "$CHECKIN" | head -c 400)"
 SHIFT_ID=$(echo "$CHECKIN" | jqpy "
 data=d.get('data') or {}
-print(data.get('shiftId') or data.get('id') or 'self-service')")
-ATTEND_COUNT=$(curl -s "$PREVIEW_URL/internal/v1/vashandi/attendance?workforceProfileId=$PROFILE_ID" $(hdrs) \
+print(data.get('shiftId') or data.get('eventId') or data.get('id') or '')")
+[[ -n "$SHIFT_ID" ]] || fail "check-in returned no event/shift id: $(echo "$CHECKIN" | head -c 300)"
+build_hdrs
+ATTEND_COUNT=$(curl -s "$PREVIEW_URL/internal/v1/vashandi/attendance?workforceProfileId=$PROFILE_ID" "${HDRS[@]}" \
   | jqpy "
 data=d.get('data') or {}
 items=data.get('items') if isinstance(data,dict) else data
@@ -105,14 +113,16 @@ ok "checked in (shift ref $SHIFT_ID, $ATTEND_COUNT attendance event(s) persisted
 
 # ── Phase 4: patient search + walk-in registration (VITO SoR) ───────────────
 phase 4 "patient search + walk-in registration"
+build_hdrs
 SEARCH=$(curl -s -X POST "$PREVIEW_URL/internal/v1/patients/search" \
-  -H "Content-Type: application/json" $(hdrs) -d '{"name":"Moyo"}')
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-search" "${HDRS[@]}" -d '{"name":"Moyo"}')
 SEARCH_N=$(echo "$SEARCH" | jqpy "print(len(d.get('data') or []))")
 ok "patient search by name returned $SEARCH_N result(s)"
 
 WALKIN_NAME="Walkin ${RUN_TAG}"
+build_hdrs
 CREATED=$(curl -s -X POST "$PREVIEW_URL/internal/v1/patients" \
-  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-patient" $(hdrs) \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-patient" "${HDRS[@]}" \
   -d "{\"given_name\":\"Walkin\",\"family_name\":\"${RUN_TAG}\",\"date_of_birth\":\"1990-05-01\",\"sex\":\"FEMALE\",\"phone\":\"+263771$(date +%N | cut -c1-6)\",\"facility_id\":\"$FACILITY_ID\"}")
 CPID=$(echo "$CREATED" | jqpy "
 data=d.get('data') or {}
@@ -124,8 +134,9 @@ ok "walk-in registered → CPID $CPID (minted by VITO)"
 
 # ── Phase 5: queue lifecycle WAITING → CALLED → COMPLETED ────────────────────
 phase 5 "queue entry lifecycle"
+build_hdrs
 ENTRY=$(curl -s -X POST "$PREVIEW_URL/internal/v1/queue/entries" \
-  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-queue" $(hdrs) \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-queue" "${HDRS[@]}" \
   -d "{\"patient_id\":\"$CPID\",\"patient_cpid\":\"$CPID\",\"facility_id\":\"$FACILITY_ID\",\"queue_type\":\"FIFO\",\"priority\":\"routine\"}")
 ITEM_ID=$(echo "$ENTRY" | jqpy "
 data=d.get('data') or {}
@@ -135,8 +146,9 @@ JOURNEY_ID=$(echo "$ENTRY" | jqpy "print((d.get('meta') or {}).get('journey_id',
 STATUS=$(echo "$ENTRY" | jqpy "print((d.get('data') or {}).get('status',''))")
 ok "queued: item $ITEM_ID journey $JOURNEY_ID status ${STATUS:-WAITING}"
 
+build_hdrs
 CALLED=$(curl -s -X POST "$PREVIEW_URL/internal/v1/queue/entries/$ITEM_ID/call" \
-  -H "Content-Type: application/json" $(hdrs) -d '{}')
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-call" "${HDRS[@]}" -d '{}')
 CALLED_STATUS=$(echo "$CALLED" | jqpy "print((d.get('data') or {}).get('status',''))")
 [[ "$CALLED_STATUS" == "CALLED" ]] || fail "call transition: got '$CALLED_STATUS': $(echo "$CALLED" | head -c 300)"
 ok "patient CALLED"
@@ -144,9 +156,10 @@ ok "patient CALLED"
 
 # ── Phase 6: encounter start carrying the shift linkage ──────────────────────
 phase 6 "encounter start with X-Shift-ID → PCT persists shift linkage"
+build_hdrs
 ENC=$(curl -s -X POST "$PREVIEW_URL/internal/v1/encounters" \
   -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-enc" \
-  -H "X-Shift-ID: $SHIFT_ID" $(hdrs) \
+  -H "X-Shift-ID: $SHIFT_ID" "${HDRS[@]}" \
   -d "{\"patient_id\":\"$CPID\",\"journey_id\":\"$JOURNEY_ID\",\"encounter_type\":\"CONSULTATION\",\"entry_point\":\"walk_in\"}")
 ENC_ID=$(echo "$ENC" | jqpy "print((d.get('meta') or {}).get('encounter_id',''))")
 [[ -n "$ENC_ID" ]] || fail "encounter not created: $(echo "$ENC" | head -c 400)"
@@ -156,8 +169,9 @@ print(data.get('shiftId') or '')")
 [[ "$ENC_SHIFT" == "$SHIFT_ID" ]] || fail "encounter shiftId '$ENC_SHIFT' != checked-in shift '$SHIFT_ID'"
 ok "encounter $ENC_ID linked to shift $SHIFT_ID (patient/provider/facility/journey/shift chain closed)"
 
+build_hdrs
 COMPLETED=$(curl -s -X POST "$PREVIEW_URL/internal/v1/queue/entries/$ITEM_ID/complete" \
-  -H "Content-Type: application/json" $(hdrs) -d '{}')
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-complete" "${HDRS[@]}" -d '{}')
 COMPLETED_STATUS=$(echo "$COMPLETED" | jqpy "print((d.get('data') or {}).get('status',''))")
 [[ "$COMPLETED_STATUS" == "COMPLETED" ]] || fail "complete transition: got '$COMPLETED_STATUS'"
 ok "queue item COMPLETED"

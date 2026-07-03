@@ -9,6 +9,11 @@ export async function checkIn(body: CheckInRequest) {
   return postVashandi<AttendanceEvent>("/attendance/check-in", body);
 }
 
+/** Self-service check-in without a rostered shift — anchored to facility/assignment context. */
+export async function adhocCheckIn(body: { workforceProfileId: string; facilityId?: string; checkInMode?: string }) {
+  return postVashandi<AttendanceEvent>("/attendance/adhoc-check-in", body);
+}
+
 export async function checkOut(body: CheckOutRequest) {
   return postVashandi<AttendanceEvent>("/attendance/check-out", body);
 }

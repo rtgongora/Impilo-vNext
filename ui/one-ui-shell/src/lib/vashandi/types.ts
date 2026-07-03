@@ -274,7 +274,8 @@ export interface CheckInRequest {
 }
 
 export interface CheckOutRequest {
-  shiftId: string;
+  /** Rostered shift UUID — omit for ad-hoc (self-service) attendance. */
+  shiftId?: string;
   workforceProfileId: string;
   eventTime?: string;
   checkInMode?: string;

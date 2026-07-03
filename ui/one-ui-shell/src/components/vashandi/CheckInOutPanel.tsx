@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useCheckIn, useCheckOut } from "@/hooks/useVashandi";
+import { useAdhocCheckIn, useCheckIn, useCheckOut } from "@/hooks/useVashandi";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
@@ -13,15 +13,26 @@ interface CheckInOutPanelProps {
   workforceProfileId: string;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function CheckInOutPanel({ shiftId, workforceProfileId }: CheckInOutPanelProps) {
+  // Vashandi types shiftId as a UUID; the self-service surface passes a
+  // sentinel ("self-service") which must route to the ad-hoc check-in that
+  // anchors to assignment/facility context instead of a rostered shift.
+  const hasRosteredShift = UUID_RE.test(shiftId);
   const checkIn = useCheckIn();
+  const adhocCheckIn = useAdhocCheckIn();
   const checkOut = useCheckOut();
   const startShift = useShiftStore((state) => state.startShift);
   const endShift = useShiftStore((state) => state.endShift);
   const facility = useFacilityStore((state) => state.facility);
   const workspace = useWorkspaceStore((state) => state.workspace);
   const [lastAction, setLastAction] = useState<string | null>(null);
-  const blocked = checkIn.data && !checkIn.data.success ? checkIn.data : checkOut.data && !checkOut.data.success ? checkOut.data : null;
+  const blocked =
+    checkIn.data && !checkIn.data.success ? checkIn.data
+    : adhocCheckIn.data && !adhocCheckIn.data.success ? adhocCheckIn.data
+    : checkOut.data && !checkOut.data.success ? checkOut.data
+    : null;
 
   if (blocked) {
     return (
@@ -40,13 +51,15 @@ export function CheckInOutPanel({ shiftId, workforceProfileId }: CheckInOutPanel
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={checkIn.isPending}
+          disabled={checkIn.isPending || adhocCheckIn.isPending}
           onClick={async () => {
-            const result = await checkIn.mutateAsync({ shiftId, workforceProfileId, checkInMode: "self_check_in" });
+            const result = hasRosteredShift
+              ? await checkIn.mutateAsync({ shiftId, workforceProfileId, checkInMode: "self_check_in" })
+              : await adhocCheckIn.mutateAsync({ workforceProfileId, facilityId: facility?.id || undefined });
             if (result.success) {
-              const event = (result.data ?? {}) as AttendanceEvent;
+              const event = (result.data ?? {}) as AttendanceEvent & { eventId?: string };
               startShift({
-                id: event.shiftId ?? event.id ?? shiftId,
+                id: event.shiftId ?? event.eventId ?? event.id ?? shiftId,
                 startedAt: event.eventTime ?? new Date().toISOString(),
                 workspaceId: workspace?.id ?? "",
                 facilityId: facility?.id ?? "",
@@ -62,7 +75,11 @@ export function CheckInOutPanel({ shiftId, workforceProfileId }: CheckInOutPanel
           type="button"
           disabled={checkOut.isPending}
           onClick={async () => {
-            const result = await checkOut.mutateAsync({ shiftId, workforceProfileId, checkInMode: "self_check_in" });
+            const result = await checkOut.mutateAsync({
+              ...(hasRosteredShift ? { shiftId } : {}),
+              workforceProfileId,
+              checkInMode: "self_check_in",
+            });
             if (result.success) {
               endShift();
               setLastAction("Checked out");

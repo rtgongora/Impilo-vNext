@@ -345,6 +345,25 @@ public class VashandiController {
                 "vashandi.attendance.checked_in"));
     }
 
+    /**
+     * Ad-hoc self-service check-in — no rostered shift required; anchors the
+     * attendance event to an active assignment or explicit facility context.
+     */
+    @PostMapping("/attendance/adhoc-check-in")
+    public ResponseEntity<Map<String, Object>> adhocCheckIn(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestBody Map<String, Object> body) {
+        return wrap(vashandiService.proxyPost("ATTENDANCE_CHECK_IN", "/attendance/adhoc-check-in", body,
+                tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId, purposeOfUse,
+                "vashandi.attendance.checked_in"));
+    }
+
     @PostMapping("/attendance/check-out")
     public ResponseEntity<Map<String, Object>> checkOut(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

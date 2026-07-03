@@ -8,7 +8,7 @@ import {
   assignmentsFromResponse,
 } from "@/lib/vashandi/api/assignments";
 import { listRosters, rostersFromResponse } from "@/lib/vashandi/api/rosters";
-import { listAttendance, checkIn, checkOut, attendanceFromResponse } from "@/lib/vashandi/api/attendance";
+import { listAttendance, checkIn, adhocCheckIn, checkOut, attendanceFromResponse } from "@/lib/vashandi/api/attendance";
 import { listAvailability, leaveFromResponse } from "@/lib/vashandi/api/leave";
 import { listAccessRisks, scanAccessRisks, accessRisksFromResponse } from "@/lib/vashandi/api/accessReview";
 import {
@@ -132,6 +132,16 @@ export function useCheckIn() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: CheckInRequest) => checkIn(body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "attendance"] });
+    },
+  });
+}
+
+export function useAdhocCheckIn() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { workforceProfileId: string; facilityId?: string; checkInMode?: string }) => adhocCheckIn(body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["vashandi", "attendance"] });
     },
