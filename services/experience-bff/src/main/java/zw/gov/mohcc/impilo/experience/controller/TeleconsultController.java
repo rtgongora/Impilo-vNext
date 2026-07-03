@@ -23,6 +23,7 @@ import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MvumoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.RtcGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
@@ -58,9 +59,11 @@ public class TeleconsultController {
     private final AnalyticsPipelineServiceClient analyticsClient;
     private final RtcGatewayServiceClient rtcClient;
     private final TelemedicineGovernanceService telemedicineGovernanceService;
+    private final VitoServiceClient vitoClient;
     private final ObjectMapper objectMapper;
 
     public TeleconsultController(PctServiceClient pctClient,
+                                 VitoServiceClient vitoClient,
                                  MvumoServiceClient mvumoClient,
                                  DocumentServiceClient documentClient,
                                  VarapiServiceClient varapiClient,
@@ -74,6 +77,7 @@ public class TeleconsultController {
                                  TelemedicineGovernanceService telemedicineGovernanceService,
                                  ObjectMapper objectMapper) {
         this.pctClient = pctClient;
+        this.vitoClient = vitoClient;
         this.mvumoClient = mvumoClient;
         this.documentClient = documentClient;
         this.varapiClient = varapiClient;
@@ -100,6 +104,31 @@ public class TeleconsultController {
         try {
             telemedicineGovernanceService.assertGovernedMutate();
             String normalizedPurpose = telemedicineGovernanceService.normalizePurposeOfUse(purposeOfUse);
+            // Teleconsult requests must reference a real person anchor — validate the
+            // patient against VITO (the identity SoR) before creating any referral.
+            String requestedPatientId = val(body, "patientId", "patient_id");
+            if (requestedPatientId != null && !requestedPatientId.isBlank()) {
+                try {
+                    com.fasterxml.jackson.databind.JsonNode patient = vitoClient.getPatient(requestedPatientId.trim());
+                    if (patient == null || patient.isNull()) {
+                        return ResponseEntity.unprocessableEntity().body(Map.of(
+                                "error", Map.of("code", "PATIENT_NOT_FOUND",
+                                        "message", "The referenced patient does not exist in the patient registry."),
+                                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                    }
+                } catch (org.springframework.web.client.HttpClientErrorException.NotFound nf) {
+                    return ResponseEntity.unprocessableEntity().body(Map.of(
+                            "error", Map.of("code", "PATIENT_NOT_FOUND",
+                                    "message", "The referenced patient does not exist in the patient registry."),
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                } catch (Exception vitoDown) {
+                    // Fail closed: never create clinical referrals against an unverifiable identity.
+                    return ResponseEntity.status(503).body(Map.of(
+                            "error", Map.of("code", "VITO_UNAVAILABLE",
+                                    "message", "The patient registry is temporarily unavailable. Please try again shortly."),
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                }
+            }
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("encounter_id", val(body, "encounterId", "encounter_id"));
             payload.put("patient_id", val(body, "patientId", "patient_id"));

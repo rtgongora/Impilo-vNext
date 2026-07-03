@@ -16,6 +16,7 @@ import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MvumoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.RtcGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
@@ -40,6 +41,7 @@ class TeleconsultControllerTest {
     private NotificationServiceClient notificationClient;
 
     private TelemedicineGovernanceService governanceService;
+    private VitoServiceClient vitoClient;
     private TeleconsultController controller;
     private ObjectMapper objectMapper;
 
@@ -58,8 +60,12 @@ class TeleconsultControllerTest {
         analyticsClient = Mockito.mock(AnalyticsPipelineServiceClient.class);
         rtcClient = Mockito.mock(RtcGatewayServiceClient.class);
         governanceService = Mockito.mock(TelemedicineGovernanceService.class);
+        vitoClient = Mockito.mock(VitoServiceClient.class);
+        // Default: patient exists in VITO so existing createSession tests pass the intake guard.
+        Mockito.when(vitoClient.getPatient(Mockito.anyString()))
+                .thenReturn(objectMapper.createObjectNode().put("id", "known"));
         controller = new TeleconsultController(
-                pctClient, mvumoClient, documentClient, varapiClient, tusoClient, coverageClient,
+                pctClient, vitoClient, mvumoClient, documentClient, varapiClient, tusoClient, coverageClient,
                 notificationClient, fhirGatewayClient, costaClient, analyticsClient, rtcClient,
                 governanceService, objectMapper
         );
@@ -132,6 +138,39 @@ class TeleconsultControllerTest {
         assertNotNull(response.getBody());
         Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
         assertEquals("TELEMEDICINE_GOVERNANCE_INVALID", error.get("code"));
+        Mockito.verifyNoInteractions(pctClient);
+    }
+
+    @Test
+    void createSessionRejectsUnknownPatient() {
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
+        Mockito.when(vitoClient.getPatient("ghost-patient")).thenReturn(null);
+
+        var response = controller.createSession(
+                "req-v1", "corr-v1", "tenant-a", "TREATMENT", "fac-1", "provider-1",
+                Map.of("patientId", "ghost-patient", "reason", "Need consult"));
+
+        assertEquals(422, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("PATIENT_NOT_FOUND", error.get("code"));
+        Mockito.verifyNoInteractions(pctClient);
+    }
+
+    @Test
+    void createSessionFailsClosedWhenVitoUnavailable() {
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
+        Mockito.when(vitoClient.getPatient("patient-1"))
+                .thenThrow(new RuntimeException("connection refused"));
+
+        var response = controller.createSession(
+                "req-v2", "corr-v2", "tenant-a", "TREATMENT", "fac-1", "provider-1",
+                Map.of("patientId", "patient-1", "reason", "Need consult"));
+
+        assertEquals(503, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("VITO_UNAVAILABLE", error.get("code"));
         Mockito.verifyNoInteractions(pctClient);
     }
 
