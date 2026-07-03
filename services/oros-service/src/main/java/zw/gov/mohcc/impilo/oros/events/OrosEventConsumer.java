@@ -282,7 +282,10 @@ public class OrosEventConsumer {
             result.setResultId(UUID.randomUUID());
             result.setOrderId(orderId);
             result.setKind(ResultKind.IMAGING);
-            result.setSummary(reportSummary);
+            // summary column is jsonb — encode the free-text report summary the
+            // same way the REST result path does (plain strings fail the insert).
+            result.setSummary(objectMapper.writeValueAsString(
+                    reportSummary != null ? reportSummary : "Imaging study available"));
             result.setDocIds(studyUid != null ? "[\"" + studyUid + "\"]" : null);
             result.setCritical(critical);
             result.setReportedBy("PACS-SYSTEM");
