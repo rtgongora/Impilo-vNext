@@ -1,7 +1,7 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: bash scripts/full-boot/resolve-image-digests.sh
 # Chart-native digest pinning: Helm renders registry/repo@sha256 for each runtime service.
-generated_at: '2026-07-03T08:14:20.200698+00:00'
+generated_at: '2026-07-03T11:01:30.135701+00:00'
 source_tag: preview
 registry: 127.0.0.1:5000
 digest_pin_count: 96
@@ -182,7 +182,7 @@ fullBootServices:
       digest: sha256:aae4282725219aaa8e4ec4d74e1c9164b31919f63868b65f9c950b23295adeec
   oros-service:
     image:
-      digest: sha256:878312e8ff6ed7df84c669e6a44cd140aaf1282b31b9eb68bad7174f248dde98
+      digest: sha256:54ee85f58517e9541f0e6cd2d8853c478be198ec3b07d685c0fcb399139a438d
   pacs-adapter-service:
     image:
       digest: sha256:99b5e6b0b77345d9ad05b9e9ebf1b761c6ccc613ec7d95230674911c77319bcf

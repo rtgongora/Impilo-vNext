@@ -337,7 +337,7 @@
     },
     "oros-service": {
       "service": "oros-service",
-      "registry_digest": "sha256:878312e8ff6ed7df84c669e6a44cd140aaf1282b31b9eb68bad7174f248dde98",
+      "registry_digest": "sha256:54ee85f58517e9541f0e6cd2d8853c478be198ec3b07d685c0fcb399139a438d",
       "digest_pinned": true
     },
     "pacs-adapter-service": {
@@ -506,5 +506,5 @@
       "digest_pinned": true
     }
   },
-  "digest_pin_generated_at": "2026-07-03T08:14:20.200698+00:00"
+  "digest_pin_generated_at": "2026-07-03T11:01:30.135701+00:00"
 }
