@@ -108,24 +108,40 @@ public class TeleconsultController {
             // patient against VITO (the identity SoR) before creating any referral.
             String requestedPatientId = val(body, "patientId", "patient_id");
             if (requestedPatientId != null && !requestedPatientId.isBlank()) {
+                // Mirror PatientController's dual lookup: client-registry profile
+                // (CPID) first, legacy health-id entity second.
+                String lookupId = requestedPatientId.trim();
+                boolean found = false;
+                boolean upstreamErrored = false;
                 try {
-                    com.fasterxml.jackson.databind.JsonNode patient = vitoClient.getPatient(requestedPatientId.trim());
-                    if (patient == null || patient.isNull()) {
-                        return ResponseEntity.unprocessableEntity().body(Map.of(
-                                "error", Map.of("code", "PATIENT_NOT_FOUND",
-                                        "message", "The referenced patient does not exist in the patient registry."),
-                                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-                    }
+                    com.fasterxml.jackson.databind.JsonNode profile = vitoClient.getClientRegistryProfile(lookupId);
+                    found = profile != null && !profile.isNull();
                 } catch (org.springframework.web.client.HttpClientErrorException.NotFound nf) {
-                    return ResponseEntity.unprocessableEntity().body(Map.of(
-                            "error", Map.of("code", "PATIENT_NOT_FOUND",
-                                    "message", "The referenced patient does not exist in the patient registry."),
-                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-                } catch (Exception vitoDown) {
+                    // fall through to the legacy path
+                } catch (Exception e) {
+                    upstreamErrored = true;
+                }
+                if (!found) {
+                    try {
+                        com.fasterxml.jackson.databind.JsonNode patient = vitoClient.getPatient(lookupId);
+                        found = patient != null && !patient.isNull();
+                    } catch (org.springframework.web.client.HttpClientErrorException.NotFound nf) {
+                        // definitively unknown on this path
+                    } catch (Exception e) {
+                        upstreamErrored = true;
+                    }
+                }
+                if (!found && upstreamErrored) {
                     // Fail closed: never create clinical referrals against an unverifiable identity.
                     return ResponseEntity.status(503).body(Map.of(
                             "error", Map.of("code", "VITO_UNAVAILABLE",
                                     "message", "The patient registry is temporarily unavailable. Please try again shortly."),
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                }
+                if (!found) {
+                    return ResponseEntity.unprocessableEntity().body(Map.of(
+                            "error", Map.of("code", "PATIENT_NOT_FOUND",
+                                    "message", "The referenced patient does not exist in the patient registry."),
                             "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
                 }
             }

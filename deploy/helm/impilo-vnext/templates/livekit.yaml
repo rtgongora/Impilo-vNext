@@ -45,6 +45,9 @@ spec:
       labels:
         app: livekit
     spec:
+      # The Service named "livekit" injects LIVEKIT_PORT=tcp://... service-link
+      # env, which livekit-server parses as its --port flag and crashes.
+      enableServiceLinks: false
       containers:
         - name: livekit
           image: "{{ .Values.livekit.image.repository }}:{{ .Values.livekit.image.tag }}"
