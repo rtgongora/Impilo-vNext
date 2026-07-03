@@ -131,6 +131,22 @@ minio:
       cpu: 500m
       memory: 512Mi
 
+orthanc:
+  enabled: true
+  image:
+    # docker.io is unreachable from the preview VM; the gcr mirror carries the
+    # jodogne images (orthanc-plugins ships the DICOMweb plugin).
+    repository: mirror.gcr.io/jodogne/orthanc-plugins
+    tag: "1.12.4"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+
 hapiFhir:
   enabled: true
   image:
@@ -226,3 +242,12 @@ fullBootServices:
       # Diagnostic rider for the silent import row-approve 403 (task #9):
       # surfaces the authorization decision path in pod logs. Preview-only.
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: "DEBUG"
+  # Kafka listener opt-ins — the estate default is auto-startup=false; these
+  # services' event loops are journey-load-bearing (PACS study → OROS imaging
+  # result; PACS ingest events). Rollback = remove the env line.
+  oros-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  pacs-adapter-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"

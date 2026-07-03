@@ -79,6 +79,10 @@ function specialEnv(serviceId) {
   if (serviceId === "vito-service") {
     return { VITO_HMAC_PEPPER: "preview-vito-hmac-pepper-change-me-0123456789" };
   }
+  if (serviceId === "pacs-adapter-service") {
+    // Chart-deployed Orthanc (templates/orthanc.yaml) is the preview DICOM backend.
+    return { ORTHANC_BASE_URL: "http://orthanc:8042" };
+  }
   if (serviceId === "dispatch-service") {
     return {
       DISPATCH_SECURITY_OAUTH2_ENABLED: "false",

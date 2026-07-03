@@ -131,6 +131,9 @@ const BFF_DOWNSTREAM_EXCLUDED = {
 /** Fixed URLs not tied to a single fullBootServices entry. */
 const FIXED_ENV = {
   FHIR_BASE_URL: "http://hapi-fhir:8090/fhir",
+  // Chart-deployed Orthanc (templates/orthanc.yaml) — DICOM upload/viewer proxy.
+  ORTHANC_BASE_URL: "http://orthanc:8042",
+  ORTHANC_DICOMWEB_URL: "http://orthanc:8042/dicom-web",
   ONE_UI_SHELL_BASE_URL: "http://one-ui-shell:3000",
   IMPILO_BFF_FACILITIES_MODE: "live",
   IMPILO_BFF_PROVIDER_HUBS_MODE: "live",

@@ -41,6 +41,9 @@ kafka:
 minio:
   enabled: false
 
+orthanc:
+  enabled: false
+
 envoy:
   enabled: false
 

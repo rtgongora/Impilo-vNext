@@ -97,19 +97,25 @@ spec:
             - name: REDIS_PORT
               value: {{ $.Values.global.redis.port | quote }}
             {{- end }}
-            {{- /* When cluster Kafka is enabled, wire outbox services unless explicitly disabled per service. */}}
+            {{- /* When cluster Kafka is enabled, wire outbox services unless explicitly disabled per service.
+                   Listener auto-startup defaults OFF; services opt in via fullBootServices.<id>.env
+                   (the guard prevents a duplicate env key when they do). */}}
             {{- if and $.Values.kafka.enabled (or (not (hasKey ($svc.kafka | default dict) "enabled")) $svc.kafka.enabled) }}
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: {{ $.Values.global.kafka.bootstrapServers | quote }}
+            {{- if not (hasKey ($svc.env | default dict) "SPRING_KAFKA_LISTENER_AUTO_STARTUP") }}
             - name: SPRING_KAFKA_LISTENER_AUTO_STARTUP
               value: "false"
+            {{- end }}
             - name: MANAGEMENT_HEALTH_KAFKA_ENABLED
               value: "false"
             {{- else }}
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "127.0.0.1:9092"
+            {{- if not (hasKey ($svc.env | default dict) "SPRING_KAFKA_LISTENER_AUTO_STARTUP") }}
             - name: SPRING_KAFKA_LISTENER_AUTO_STARTUP
               value: "false"
+            {{- end }}
             - name: MANAGEMENT_HEALTH_KAFKA_ENABLED
               value: "false"
             - name: SPRING_AUTOCONFIGURE_EXCLUDE
