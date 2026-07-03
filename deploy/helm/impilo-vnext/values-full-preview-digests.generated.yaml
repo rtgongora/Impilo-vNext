@@ -1,7 +1,7 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: bash scripts/full-boot/resolve-image-digests.sh
 # Chart-native digest pinning: Helm renders registry/repo@sha256 for each runtime service.
-generated_at: '2026-07-03T00:38:19.523545+00:00'
+generated_at: '2026-07-03T04:19:50.249236+00:00'
 source_tag: preview
 registry: 127.0.0.1:5000
 digest_pin_count: 96
@@ -191,7 +191,7 @@ fullBootServices:
       digest: sha256:ff08beb3c1f7a3bc0dd1d945731d4bf73ccddfb9a5fb92beffce9e011ac725f8
   pct-service:
     image:
-      digest: sha256:95b302905e9b2154594f6f0be44823a21f37e10e2cc9a714a6a51cdb3f04c137
+      digest: sha256:fe5d662c672932fac4f411086c0fbe68473d62288cac8d2e408a5d659f679729
   pharmacy-elmis-adapter:
     image:
       digest: sha256:f6a56892dae7014b5f6958df5d31d7ab3c408e55856539ea9d69deba33f62f6a
@@ -272,7 +272,7 @@ fullBootServices:
       digest: sha256:2b8ce6f6c17d79dd1f6804d077392c010d624c707bf26060bcd0910f31da21e6
   vashandi-workforce-service:
     image:
-      digest: sha256:a7d65e8e3f4ca4a726a6114d97c7e03f1ffba5b6fd71f2efaeae7b66d9591f81
+      digest: sha256:7f949d727ca1deca59a6defc1c5df9657c4687a61d3bda28169001ef5ed0e5e3
   vito-service:
     image:
       digest: sha256:850fba0816ba45de4887325eb7ce05465bd813934eb444eed74b8d90da919a93
@@ -292,4 +292,4 @@ images:
   experienceBff:
     digest: sha256:19ad82e0b410b7234bd06a81dd363d49d4984fa38cc7c0b5550ce5613d064b18
   oneUiShell:
-    digest: sha256:18162ff152c6c954b65c00ca2aacea986d8573d5dece48265a462b3928ecf190
+    digest: sha256:2154c0a05e06b9b1bf64f00007ff28cf480aa4c269c57e1c3b5d2e191ef43533

@@ -18,7 +18,7 @@
 |--------|-------|
 | Total discovered | 151 |
 | Required full boot | 22 |
-| Image pass / fail | 1 / 0 |
+| Image pass / fail | 3 / 0 |
 | Helm ready / missing / partial | 22 / 0 / 0 |
 | Deployed in full boot | 103 |
 | Pods ready / total | 103 / 103 |
