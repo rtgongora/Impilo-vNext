@@ -281,12 +281,24 @@ public class OrosEventConsumer {
             result.setReportedBy("PACS-SYSTEM");
             resultRepository.save(result);
 
-            // Transition order if applicable
+            // Transition order if applicable. A PACS study arriving on a
+            // not-yet-started order implies acquisition happened outside the
+            // system (no modality worklist integration) — walk the legal
+            // coarse transitions instead of stranding the order at PLACED
+            // with a result attached (mirrors ResultService.postResult).
             OrderStatus currentStatus = order.getStatus();
+            if (currentStatus == OrderStatus.PLACED) {
+                order.setStatus(OrderStatus.ACCEPTED);
+                currentStatus = order.getStatus();
+            }
+            if (currentStatus == OrderStatus.ACCEPTED || currentStatus == OrderStatus.SCHEDULED) {
+                order.setStatus(OrderStatus.IN_PROGRESS);
+                currentStatus = order.getStatus();
+            }
             if (currentStatus == OrderStatus.IN_PROGRESS || currentStatus == OrderStatus.PARTIAL_RESULT) {
                 order.setStatus(OrderStatus.RESULT_AVAILABLE);
-                orderRepository.save(order);
             }
+            orderRepository.save(order);
 
             // Complete imaging worksteps
             completeWorkstep(orderId, WorkstepType.IMAGING_REPORTING);
