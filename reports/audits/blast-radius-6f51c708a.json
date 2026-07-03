@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-07-02T05:24:06.928Z",
+  "base_ref": "HEAD~1",
+  "head_commit": "6f51c708ac4943e24830f18b6ba24c4b5976e2af",
+  "short_sha": "6f51c708a",
+  "changed_file_count": 24,
+  "changed_files": [
+    "config/full-boot-service-classification.yml",
+    "deploy/helm/impilo-vnext/values-full-preview-runtime.generated.yaml",
+    "docs/architecture/FULL_VNEXT_SERVICE_CATALOG.md",
+    "docs/architecture/VNEXT_API_CONTRACT_CATALOG.md",
+    "docs/architecture/VNEXT_DOCTRINE_COMPLIANCE_MATRIX.md",
+    "docs/architecture/VNEXT_DOCTRINE_INDEX.md",
+    "docs/architecture/VNEXT_SEVEN_PLANE_ARCHITECTURE.md",
+    "docs/environment/FULL_BOOT_INFRASTRUCTURE_DEPENDENCY_MATRIX.md",
+    "docs/environment/FULL_BUILD_MATRIX.md",
+    "docs/environment/FULL_CONTAINERIZATION_MATRIX.md",
+    "docs/environment/FULL_HELM_DEPLOYABILITY_MATRIX.md",
+    "docs/environment/IMAGE_STRATEGY_RECLASSIFICATION_PLAN.md",
+    "docs/environment/JAVA_SERVICE_IMAGE_STRATEGY_REVIEW.md",
+    "docs/frontend/BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md",
+    "docs/frontend/FRONTEND_IMPLEMENTATION_STATUS.md",
+    "reports/full-boot/build-targets.json",
+    "reports/full-boot/build-targets.tsv",
+    "reports/full-boot/discovery-summary.json",
+    "reports/full-boot/full-boot-runtime-report.json",
+    "reports/full-boot/full-boot-runtime-report.md",
+    "reports/full-boot/image-strategy-targets.json",
+    "reports/full-boot/non-runtime-components.json",
+    "reports/full-boot/registry-inventory-contract.json",
+    "reports/full-boot/repo-deployable-candidate-files.txt"
+  ],
+  "areas": [],
+  "change_class": "G",
+  "change_classes": [
+    "G",
+    "I"
+  ],
+  "full_boot_required": true,
+  "targeted_deploy_allowed": false,
+  "direct_services": [],
+  "expanded_services": [],
+  "images_to_build": [],
+  "pipeline_only": "change-safety,security",
+  "expansion_threshold": 10,
+  "refusal_reasons": [
+    "Change class G+I requires full boot"
+  ],
+  "rationale": [
+    "Registry or classification metadata changed",
+    "Helm/deploy/infrastructure configuration changed"
+  ]
+}

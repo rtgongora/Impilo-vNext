@@ -1,7 +1,7 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: bash scripts/full-boot/resolve-image-digests.sh
 # Chart-native digest pinning: Helm renders registry/repo@sha256 for each runtime service.
-generated_at: '2026-07-02T19:58:32.933986+00:00'
+generated_at: '2026-07-03T00:38:19.523545+00:00'
 source_tag: preview
 registry: 127.0.0.1:5000
 digest_pin_count: 96
@@ -62,7 +62,7 @@ fullBootServices:
       digest: sha256:d2fb1431793d8ae3bd9e7546bc0f71039461fafe770c68f5c60e4195e2ef55c4
   data-governance-service:
     image:
-      digest: sha256:e53d9ebc9245e2678efcf1d19cfb8d223fde1479ce60a8fe9af88f0a2efe892f
+      digest: sha256:c99f32396f041e40fb426776529513cf77d7849354a55973da5d758d97996d7b
   data-ingestion-service:
     image:
       digest: sha256:ff2057b2453655de5c141bc1b40d65719f341c0286d432c09597912060a0a721
@@ -143,7 +143,7 @@ fullBootServices:
       digest: sha256:32627b12065ae0813a898c6ab6967e938238962c301408bb32d3fc7bb3defaa8
   msika-flow-service:
     image:
-      digest: sha256:500fd5d94a183bf97ba5fab8fa9e7c309ef02ed76726b352ba0d666504d49174
+      digest: sha256:0d99b31b296a72ee10fb6c548c5990693ce433a4d4f8239e1e89b24d165a140a
   msika-service:
     image:
       digest: sha256:0fab19a783ad9639ea03edd97cb25cf9e9e56c5b4ba369047800f0d6d2a19093
@@ -263,7 +263,7 @@ fullBootServices:
       digest: sha256:9a71669125729e70900ad51bbf088fd47fd62940f5f1fe4c9ce613e5b62e3024
   tuso-service:
     image:
-      digest: sha256:c81d875457522b320c72a71525475151c8e49a66983800af87f0c0803c4c249d
+      digest: sha256:38157470305ab398f051402c931e939013791877843a5be3c855b4028075b2a3
   ubomi-service:
     image:
       digest: sha256:890c7e5de9e70db0d3d3e124c9c94e895fe0542427e97da558c2153bf6718e58
@@ -290,6 +290,6 @@ fullBootServices:
       digest: sha256:b9abc32bf0f81c1419bc4595257977bbb37b19b470d0f5e7984bd551a5fe80ab
 images:
   experienceBff:
-    digest: sha256:5ff3a5b709c62e968e50becf8c1727a67cb60a7f833c3b733270c51b684e2a4e
+    digest: sha256:19ad82e0b410b7234bd06a81dd363d49d4984fa38cc7c0b5550ce5613d064b18
   oneUiShell:
     digest: sha256:18162ff152c6c954b65c00ca2aacea986d8573d5dece48265a462b3928ecf190
