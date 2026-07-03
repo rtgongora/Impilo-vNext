@@ -269,6 +269,8 @@ fullBootServices:
     enabled: true
     port: 8113
     database: pacs_adapter
+    env:
+      ORTHANC_BASE_URL: http://orthanc:8042
   patient-safety-service:
     enabled: true
     port: 8202
