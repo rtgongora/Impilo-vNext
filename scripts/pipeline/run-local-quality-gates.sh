@@ -40,16 +40,46 @@ pipeline_run_phase security "Secret/security checks" 1 \
 pipeline_run_phase static "Static checks" 1 \
   bash scripts/test/run-static-checks.sh
 
-# 5. Frontend
-if [[ "${PIPELINE_SKIP_FRONTEND:-0}" != "1" ]]; then
-  pipeline_run_phase frontend "Frontend checks" 1 \
-    bash scripts/test/run-frontend-checks.sh
-fi
-
-# 6. Backend
-if [[ "${PIPELINE_SKIP_BACKEND:-0}" != "1" ]]; then
-  pipeline_run_phase backend "Backend checks" 1 \
-    bash scripts/test/run-backend-checks.sh
+# 5+6. Frontend + Backend — the two dominant phases (~4 min npm, ~5 min maven).
+# They touch disjoint trees (ui/ vs services/) and distinct log files, so they
+# run concurrently by default; PIPELINE_CONCURRENT_CORE=0 restores sequential.
+if [[ "${PIPELINE_CONCURRENT_CORE:-1}" == "1" \
+      && "${PIPELINE_SKIP_FRONTEND:-0}" != "1" \
+      && "${PIPELINE_SKIP_BACKEND:-0}" != "1" ]]; then
+  echo ""
+  echo "========== PHASE: Frontend + Backend checks (concurrent) =========="
+  bash scripts/test/run-frontend-checks.sh >"$PIPELINE_LOG_DIR/frontend.log" 2>&1 &
+  _fe_pid=$!
+  bash scripts/test/run-backend-checks.sh >"$PIPELINE_LOG_DIR/backend.log" 2>&1 &
+  _be_pid=$!
+  _fe_rc=0; _be_rc=0
+  wait "$_fe_pid" || _fe_rc=$?
+  wait "$_be_pid" || _be_rc=$?
+  # Summary bookkeeping must happen in the parent shell — background jobs
+  # cannot mutate the pipeline's pass/fail arrays.
+  if [[ "$_fe_rc" -eq 0 ]]; then
+    pipeline_phase_pass "Frontend checks"; echo "PASS  Frontend checks"
+  else
+    echo "FAIL  Frontend checks (see $PIPELINE_LOG_DIR/frontend.log)"
+    tail -n 30 "$PIPELINE_LOG_DIR/frontend.log" 2>/dev/null || true
+    pipeline_phase_fail "Frontend checks"
+  fi
+  if [[ "$_be_rc" -eq 0 ]]; then
+    pipeline_phase_pass "Backend checks"; echo "PASS  Backend checks"
+  else
+    echo "FAIL  Backend checks (see $PIPELINE_LOG_DIR/backend.log)"
+    tail -n 30 "$PIPELINE_LOG_DIR/backend.log" 2>/dev/null || true
+    pipeline_phase_fail "Backend checks"
+  fi
+else
+  if [[ "${PIPELINE_SKIP_FRONTEND:-0}" != "1" ]]; then
+    pipeline_run_phase frontend "Frontend checks" 1 \
+      bash scripts/test/run-frontend-checks.sh
+  fi
+  if [[ "${PIPELINE_SKIP_BACKEND:-0}" != "1" ]]; then
+    pipeline_run_phase backend "Backend checks" 1 \
+      bash scripts/test/run-backend-checks.sh
+  fi
 fi
 
 # 7. Core transaction completion evidence (blocks metric fraud)
