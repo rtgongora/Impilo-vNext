@@ -33,7 +33,7 @@
 | developer-portal-service | YES | aligned | sha256:21326f2e889d | sha256:21326f2e889d | sha256:21326f2e889d | 127.0.0.1:5000/impilo/developer-portal-service@sha256:21326f2e889d3518425a2cae16e950e3eaaf5de5f27240d8b49eb9743004ddcd |
 | dispatch-service | YES | aligned | sha256:db1a6ff561fa | sha256:db1a6ff561fa | sha256:db1a6ff561fa | 127.0.0.1:5000/impilo/dispatch-service@sha256:db1a6ff561fa6172dd4f88facef70e49e1d0d3e36fc782aeecdd0741b4d0cbcb |
 | document-service | YES | aligned | sha256:ff1096505baf | sha256:ff1096505baf | sha256:ff1096505baf | 127.0.0.1:5000/impilo/document-service@sha256:ff1096505bafc4de8900c91f7af7be938da3bda760a3b43b16104c54166c0ae9 |
-| experience-bff | YES | aligned | sha256:69a9c408e0d5 | sha256:69a9c408e0d5 | sha256:69a9c408e0d5 | 127.0.0.1:5000/impilo/experience-bff@sha256:69a9c408e0d5977f3e02e59bd2670aa2e6427d9e238abbc668dce71ac3f121e1 |
+| experience-bff | YES | aligned | sha256:bac0ee6d44a3 | sha256:bac0ee6d44a3 | sha256:bac0ee6d44a3 | 127.0.0.1:5000/impilo/experience-bff@sha256:bac0ee6d44a37fcc8b3f656aa2c8b577da5bb9d2f56d5723aeb98bddee6f6f51 |
 | fhir-gateway-service | YES | aligned | sha256:3178001d30d0 | sha256:3178001d30d0 | sha256:3178001d30d0 | 127.0.0.1:5000/impilo/fhir-gateway-service@sha256:3178001d30d0ff59edc07ccc56d04239c4f4e4210a9e19e8cee2c78fa62c4373 |
 | forms-service | YES | aligned | sha256:6813f4002668 | sha256:6813f4002668 | sha256:6813f4002668 | 127.0.0.1:5000/impilo/forms-service@sha256:6813f4002668d30298226d189c6ad7d02fcaa20a7a53697eab763e2c849fc529 |
 | general-ledger-service | YES | aligned | sha256:2724b38e5bdc | sha256:2724b38e5bdc | sha256:2724b38e5bdc | 127.0.0.1:5000/impilo/general-ledger-service@sha256:2724b38e5bdc329d0ea2ce255e5bdbdbfc7aeac69d253f857ee1a724644185ed |

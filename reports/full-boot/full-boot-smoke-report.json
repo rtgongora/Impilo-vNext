@@ -284,6 +284,12 @@
       "available": 1,
       "healthy": true
     },
+    "livekit": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "llm-orchestration-service": {
       "replicas": 1,
       "ready": 1,
@@ -629,7 +635,7 @@
   },
   "missing_deployments": [],
   "unhealthy_deployments": [],
-  "runtime_pods_count": 104,
+  "runtime_pods_count": 105,
   "verify_pods_ignored": 0,
   "crashloop": [],
   "pending": [],

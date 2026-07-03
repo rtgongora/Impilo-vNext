@@ -94,6 +94,7 @@
     "landela-adapter-service",
     "learning-service",
     "live-service",
+    "livekit",
     "llm-orchestration-service",
     "madi-service",
     "minio",
@@ -158,8 +159,8 @@
     "postgres",
     "redis"
   ],
-  "full_boot_pods_total": 104,
-  "full_boot_pods_ready": 104,
+  "full_boot_pods_total": 105,
+  "full_boot_pods_ready": 105,
   "full_boot_pods_crashloop": 0,
   "full_boot_pods_pending": 0,
   "healthy_required_estimate": 22,
