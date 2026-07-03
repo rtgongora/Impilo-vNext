@@ -224,7 +224,7 @@ python3 "$(dirname "$0")/lib/minimal-dicom.py" "$DCM" \
   "$STUDY_UID" "$STUDY_UID.1" "$STUDY_UID.1.1" "$CPID" "Walkin^${RUN_TAG}" "ACC-$RUN_TAG" >/dev/null
 build_hdrs
 ORTHANC_RESP=$(curl -s -X POST "$PREVIEW_URL/internal/v1/pacs/instances/dicom" \
-  -H "Content-Type: application/dicom" "${HDRS[@]}" --data-binary "@$DCM")
+  -H "Content-Type: application/dicom" -H "Idempotency-Key: $RUN_TAG-dicom" "${HDRS[@]}" --data-binary "@$DCM")
 ORTHANC_STATUS=$(echo "$ORTHANC_RESP" | jqpy "print(d.get('Status',''))" 2>/dev/null || echo "")
 [[ "$ORTHANC_STATUS" == "Success" || "$ORTHANC_STATUS" == "AlreadyStored" ]] \
   || fail "Orthanc DICOM ingest failed: $(echo "$ORTHANC_RESP" | head -c 300)"
@@ -235,18 +235,18 @@ ok "DICOM instance stored in Orthanc (study $STUDY_UID)"
 PACS_IP="$(kubectl get svc pacs-adapter-service -n "${FULL_BOOT_NAMESPACE:-impilo-full-preview}" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || echo pacs-adapter-service)"
 STUDY=$(kubectl exec -n "${FULL_BOOT_NAMESPACE:-impilo-full-preview}" deploy/experience-bff -- curl -sS -X POST \
   "http://${PACS_IP}:8113/internal/v1/imaging-studies" \
-  -H "Content-Type: application/json" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-register" \
   -H "X-Tenant-ID: $TENANT_ID" -H "X-Pod-ID: pod-e2e" \
   -H "X-Request-ID: $(cat /proc/sys/kernel/random/uuid)" -H "X-Correlation-ID: $RUN_TAG" \
   -H "X-Actor-ID: $ANCHOR" -H "X-Actor-Type: PROVIDER" \
-  -d "{\"tenantId\":\"$TENANT_ID\",\"patientCpid\":\"$CPID\",\"studyUid\":\"$STUDY_UID\",\"modality\":\"OT\",\"description\":\"Scenario A chest x-ray\",\"orosOrderId\":\"$IMG_ORDER\",\"accessionNumber\":\"ACC-$RUN_TAG\",\"encounterRef\":\"$ENC_ID\",\"facilityId\":\"$FACILITY_ID\"}")
+  -d "{\"tenantId\":\"$TENANT_ID\",\"patientCpid\":\"$CPID\",\"studyUid\":\"$STUDY_UID\",\"modality\":\"OT\",\"studyDate\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"description\":\"Scenario A chest x-ray\",\"orosOrderId\":\"$IMG_ORDER\",\"accessionNumber\":\"ACC-$RUN_TAG\",\"encounterRef\":\"$ENC_ID\",\"facilityId\":\"$FACILITY_ID\"}")
 STUDY_ID=$(echo "$STUDY" | jqpy "print(d.get('id',''))")
 [[ -n "$STUDY_ID" ]] || fail "pacs study registration failed: $(echo "$STUDY" | head -c 300)"
 ok "pacs study registered: id=$STUDY_ID (correlated to $IMG_ORDER)"
 
 kubectl exec -n "${FULL_BOOT_NAMESPACE:-impilo-full-preview}" deploy/experience-bff -- curl -sS -X POST \
   "http://${PACS_IP}:8113/internal/v1/imaging-studies/$STUDY_ID/forward" \
-  -H "Content-Type: application/json" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-forward" \
   -H "X-Tenant-ID: $TENANT_ID" -H "X-Pod-ID: pod-e2e" \
   -H "X-Request-ID: $(cat /proc/sys/kernel/random/uuid)" -H "X-Correlation-ID: $RUN_TAG" \
   -H "X-Actor-ID: $ANCHOR" -H "X-Actor-Type: PROVIDER" -d '{}' >/dev/null \
@@ -254,7 +254,7 @@ kubectl exec -n "${FULL_BOOT_NAMESPACE:-impilo-full-preview}" deploy/experience-
 
 SYNC=$(kubectl exec -n "${FULL_BOOT_NAMESPACE:-impilo-full-preview}" deploy/experience-bff -- curl -sS -X POST \
   "http://${PACS_IP}:8113/internal/v1/imaging-studies/$STUDY_ID/sync-hierarchy" \
-  -H "Content-Type: application/json" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-sync" \
   -H "X-Tenant-ID: $TENANT_ID" -H "X-Pod-ID: pod-e2e" \
   -H "X-Request-ID: $(cat /proc/sys/kernel/random/uuid)" -H "X-Correlation-ID: $RUN_TAG" \
   -H "X-Actor-ID: $ANCHOR" -H "X-Actor-Type: PROVIDER" -d '{}')
@@ -263,7 +263,7 @@ echo "  sync: $(echo "$SYNC" | head -c 160)"
 build_hdrs
 REPORT=$(curl -s -X POST "$PREVIEW_URL/internal/v1/imaging/studies/$STUDY_ID/report-links" \
   -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-report" "${HDRS[@]}" \
-  -d "{\"reportText\":\"No acute cardiopulmonary abnormality. Scenario A verification report.\",\"reportingProviderId\":\"$PROVIDER_ID\"}")
+  -d "{\"reportRef\":\"scenario-a-report-$RUN_TAG\",\"reportText\":\"No acute cardiopulmonary abnormality. Scenario A verification report.\",\"reportingProviderRef\":\"$PROVIDER_ID\",\"reportStatus\":\"AVAILABLE\"}")
 REPORT_ID=$(echo "$REPORT" | jqpy "
 data=d.get('data') or d
 print(data.get('id','') if isinstance(data,dict) else '')")

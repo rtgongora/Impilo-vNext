@@ -225,7 +225,14 @@ public class OrosEventConsumer {
      *
      * @param message the Kafka message payload (JSON)
      */
-    @KafkaListener(topics = {"pacs.imaging_study", "pacs.study.available"}, groupId = "oros-service")
+    // Topic set covers every route the PACS adapter actually publishes on:
+    // imaging.study.received (legacy imaging-pipeline contract) and
+    // impilo.pacs.imaging_study (v1.1 registry topic). The historical
+    // pacs.imaging_study/pacs.study.available names never matched a producer —
+    // the imaging result loop was silently dead until these were added.
+    @KafkaListener(topics = {"pacs.imaging_study", "pacs.study.available",
+            "imaging.study.received", "imaging.study.correlated", "impilo.pacs.imaging_study"},
+            groupId = "oros-service")
     @Transactional
     public void consumePacsStudy(String message) {
         try {
