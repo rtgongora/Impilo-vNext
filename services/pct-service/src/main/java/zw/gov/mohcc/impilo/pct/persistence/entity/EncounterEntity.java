@@ -40,6 +40,9 @@ public class EncounterEntity {
     @Column(name = "workspace_id")
     private UUID workspaceId;
 
+    @Column(name = "shift_id")
+    private String shiftId;
+
     @Column(name = "assigned_provider_id")
     private String assignedProviderId;
 
@@ -118,6 +121,9 @@ public class EncounterEntity {
 
     public UUID getWorkspaceId() { return workspaceId; }
     public void setWorkspaceId(UUID workspaceId) { this.workspaceId = workspaceId; }
+
+    public String getShiftId() { return shiftId; }
+    public void setShiftId(String shiftId) { this.shiftId = shiftId; }
 
     public String getAssignedProviderId() { return assignedProviderId; }
     public void setAssignedProviderId(String assignedProviderId) { this.assignedProviderId = assignedProviderId; }

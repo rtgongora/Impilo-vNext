@@ -93,6 +93,23 @@ public class EncounterService {
                                           String triageCategory,
                                           String pathwayRef,
                                           String protocolRef) {
+        return startEncounter(journeyId, encounterType, encounterContext, entryPoint, modality,
+                virtualMode, careSetting, priority, triageCategory, pathwayRef, protocolRef, null);
+    }
+
+    @Transactional
+    public EncounterEntity startEncounter(String journeyId,
+                                          String encounterType,
+                                          String encounterContext,
+                                          String entryPoint,
+                                          String modality,
+                                          String virtualMode,
+                                          String careSetting,
+                                          String priority,
+                                          String triageCategory,
+                                          String pathwayRef,
+                                          String protocolRef,
+                                          String shiftId) {
         TrustContext ctx = TrustContextHolder.require();
 
         JourneyEntity journey = journeyRepository.findByJourneyId(journeyId)
@@ -121,6 +138,7 @@ public class EncounterService {
         encounter.setProtocolRef(normalizeOptionalReference(protocolRef));
         encounter.setStatus("STARTED");
         encounter.setAssignedProviderId(ctx.actorId());
+        encounter.setShiftId(shiftId != null && !shiftId.isBlank() ? shiftId.trim() : null);
         encounter.setStartedAt(OffsetDateTime.now());
 
         encounter = encounterRepository.save(encounter);
@@ -149,6 +167,7 @@ public class EncounterService {
         payload.put("pathwayRef", encounter.getPathwayRef());
         payload.put("protocolRef", encounter.getProtocolRef());
         payload.put("assignedProvider", ctx.actorId());
+        payload.put("shiftId", encounter.getShiftId());
         payload.put("workspaceId", ctx.workspaceId() != null ? ctx.workspaceId().toString() : null);
         payload.put("facilityId", ctx.facilityId().toString());
         payload.put("startedAt", encounter.getStartedAt().toString());

@@ -21,5 +21,6 @@ public record StartEncounterRequest(
         String priority,
         String triageCategory,
         String pathwayRef,
-        String protocolRef
+        String protocolRef,
+        String shiftId
 ) {}

@@ -82,6 +82,37 @@ class EncounterServiceTest {
     }
 
     @Test
+    void startEncounterStoresShiftLinkWhenProvided() {
+        UUID tenantId = UUID.randomUUID();
+        TrustContext context = new TrustContext(
+                tenantId, "provider-1", "PROVIDER", "TREATMENT", null,
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), null, AccessMode.INTERNAL);
+
+        JourneyEntity journey = new JourneyEntity();
+        journey.setJourneyId("J-S1");
+        journey.setPatientCpid("CPID-S1");
+        journey.setState(JourneyState.QUEUED);
+
+        when(journeyRepository.findByJourneyId("J-S1")).thenReturn(Optional.of(journey));
+        when(encounterRepository.findByTenantIdAndJourneyId(tenantId, "J-S1")).thenReturn(List.of());
+        when(encounterRepository.save(any(EncounterEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        try (MockedStatic<TrustContextHolder> holder = mockStatic(TrustContextHolder.class)) {
+            holder.when(TrustContextHolder::require).thenReturn(context);
+
+            EncounterEntity withShift = encounterService.startEncounter(
+                    "J-S1", "CONSULTATION", "outpatient", "walk_in", "in_person", null,
+                    "facility", "routine", null, null, null, "  shift-evt-42  ");
+            assertThat(withShift.getShiftId()).isEqualTo("shift-evt-42");
+
+            EncounterEntity withoutShift = encounterService.startEncounter(
+                    "J-S1", "CONSULTATION", "outpatient", "walk_in", "in_person", null,
+                    "facility", "routine", null, null, null);
+            assertThat(withoutShift.getShiftId()).isNull();
+        }
+    }
+
+    @Test
     void startEncounterRejectsInvalidEntryPoint() {
         UUID tenantId = UUID.randomUUID();
         TrustContext context = new TrustContext(

@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.pct.api.dto.StartEncounterRequest;
 import zw.gov.mohcc.impilo.pct.api.dto.UpdateEncounterPathwayProtocolRequest;
 import zw.gov.mohcc.impilo.pct.core.EncounterService;
@@ -57,8 +58,11 @@ public class EncounterController {
     @PostMapping("/journeys/{id}/encounter/start")
     public ResponseEntity<ApiResponse<EncounterEntity>> startEncounter(
             @PathVariable String id,
+            @RequestHeader(value = CompanionHeaders.SHIFT_ID, required = false) String shiftIdHeader,
             @Valid @RequestBody StartEncounterRequest request) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        String shiftId = shiftIdHeader != null && !shiftIdHeader.isBlank() ? shiftIdHeader : request.shiftId();
 
         EncounterEntity encounter = encounterService.startEncounter(
                 id,
@@ -71,7 +75,8 @@ public class EncounterController {
                 request.priority(),
                 request.triageCategory(),
                 request.pathwayRef(),
-                request.protocolRef());
+                request.protocolRef(),
+                shiftId);
 
         return ResponseEntity.ok(ApiResponse.ok(encounter, correlationId));
     }
