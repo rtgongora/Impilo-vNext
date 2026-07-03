@@ -91,6 +91,37 @@ public class CoverageServiceClient {
         }
     }
 
+    /** Files a claim at the coverage SoR; returns the cv_claim id. */
+    public UUID submitClaim(HttpServletRequest inbound, UUID coverageId, String facilityId,
+                            String providerId, String encounterId, String claimType,
+                            String lineItemsJson, java.math.BigDecimal totalAmount) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("coverageId", coverageId);
+        body.put("facilityId", facilityId);
+        body.put("providerId", providerId);
+        body.put("encounterId", encounterId);
+        body.put("claimType", claimType);
+        body.put("lineItems", lineItemsJson);
+        body.put("totalAmount", totalAmount);
+
+        ResponseEntity<String> response = coverageRestClient.post()
+                .uri("/internal/v1/coverage/claims")
+                .headers(h -> copyTrustHeaders(inbound, h))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .retrieve()
+                .toEntity(String.class);
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new IllegalStateException("Coverage claim submission failed: HTTP " + response.getStatusCode());
+        }
+        try {
+            JsonNode node = objectMapper.readTree(response.getBody());
+            return UUID.fromString(node.path("id").asText());
+        } catch (Exception e) {
+            throw new IllegalStateException("Coverage claim response parse failed", e);
+        }
+    }
+
     private static void copyTrustHeaders(HttpServletRequest inbound, org.springframework.http.HttpHeaders target) {
         if (inbound == null) {
             return;

@@ -78,6 +78,44 @@ public class ClaimController {
     }
 
     /**
+     * Scriptable payer adjudication step: marks a SUBMITTED claim ADJUDICATED
+     * with the approved amount. Complements the MUSHEX-event-driven path in
+     * CoverageEventConsumer for environments without a live payer feed.
+     */
+    @PostMapping("/{id}/adjudicate")
+    @Transactional
+    public ResponseEntity<ClaimResponse> adjudicateClaim(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader("X-Pod-ID") String podId,
+            @RequestHeader("X-Correlation-ID") String correlationId,
+            @PathVariable UUID id,
+            @RequestBody(required = false) java.util.Map<String, Object> body) {
+        UUID tid = UUID.fromString(tenantId);
+        return claimRepository.findByIdAndTenantId(id, tid)
+                .map(claim -> {
+                    if (!"SUBMITTED".equals(claim.getStatus())) {
+                        return ResponseEntity.status(HttpStatus.CONFLICT).<ClaimResponse>build();
+                    }
+                    java.math.BigDecimal approved = body != null && body.get("approved_amount") != null
+                            ? new java.math.BigDecimal(body.get("approved_amount").toString())
+                            : claim.getTotalAmount();
+                    claim.markAdjudicated(approved,
+                            "{\"decision\":\"APPROVED\",\"source\":\"payer_adjudicate_endpoint\"}");
+                    claimRepository.save(claim);
+                    java.util.LinkedHashMap<String, Object> payload = new java.util.LinkedHashMap<>();
+                    payload.put("claim_id", claim.getId().toString());
+                    payload.put("approved_amount", approved.toPlainString());
+                    payload.put("status", claim.getStatus());
+                    UUID corr = CorrelationIds.fromHeader(correlationId);
+                    payload.put("meta", CoverageEventService.meta(corr));
+                    eventService.emitClaimSubmitted(claim.getId(), corr, tid, podId,
+                            claim.getCoverageId(), payload);
+                    return ResponseEntity.ok(toResponse(claim));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
      * Claim status query endpoint (internal).
      */
     @GetMapping("/{id}")

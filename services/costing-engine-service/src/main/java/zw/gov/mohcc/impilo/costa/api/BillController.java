@@ -111,9 +111,10 @@ public class BillController {
     }
 
     @PostMapping("/{id}/finalize")
-    public ResponseEntity<ApiResponse<BillHeaderEntity>> finalizeBill(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<BillHeaderEntity>> finalizeBill(@PathVariable String id,
+            jakarta.servlet.http.HttpServletRequest servletRequest) {
         var ctx = TrustContextHolder.require();
-        BillHeaderEntity bill = billService.finalize(id);
+        BillHeaderEntity bill = billService.finalize(id, servletRequest);
         return ResponseEntity.ok(ApiResponse.ok(bill, ctx.correlationId().toString()));
     }
 

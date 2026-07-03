@@ -329,6 +329,11 @@ public class BillService {
 
     @Transactional
     public BillHeaderEntity finalize(String billId) {
+        return finalize(billId, null);
+    }
+
+    @Transactional
+    public BillHeaderEntity finalize(String billId, jakarta.servlet.http.HttpServletRequest inbound) {
         BillHeaderEntity bill = billHeaderRepository.findById(billId)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found: " + billId));
 
@@ -353,6 +358,31 @@ public class BillService {
         publishEvent("BILL", billId, "BILL_FINALIZED", finalizedPayload, ctx.tenantId());
 
         operationalFinanceService.onBillFinalized(bill);
+
+        // File the payer claim at the coverage SoR when coverage was applied
+        // and the insurer owes a share. Non-blocking: claim failures must not
+        // strand a FINAL bill, but they are surfaced on coverage_status.
+        if (inbound != null && bill.getCoverageMemberId() != null
+                && bill.getInsurerPayable() != null
+                && bill.getInsurerPayable().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            try {
+                String lineItems = objectMapper.writeValueAsString(
+                        billLineRepository.findByBillIdAndVoidedFalse(billId));
+                java.util.UUID claimId = coverageServiceClient.submitClaim(
+                        inbound, bill.getCoverageMemberId(),
+                        bill.getFacilityId() != null ? bill.getFacilityId().toString() : "unknown",
+                        ctx.actorId(), bill.getEncounterId(), "MEDICAL",
+                        lineItems, bill.getInsurerPayable());
+                bill.setCoverageStatus("CLAIM_SUBMITTED:" + claimId);
+                bill = billHeaderRepository.save(bill);
+                log.info("Coverage claim {} filed for bill {} (insurer {})",
+                        claimId, billId, bill.getInsurerPayable());
+            } catch (Exception e) {
+                bill.setCoverageStatus("CLAIM_FAILED:" + e.getMessage());
+                bill = billHeaderRepository.save(bill);
+                log.warn("Coverage claim submission failed for bill {}: {}", billId, e.getMessage());
+            }
+        }
 
         try {
             patientAccountService.recordBillFinalized(bill);
