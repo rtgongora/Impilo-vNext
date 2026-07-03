@@ -83,6 +83,18 @@ function specialEnv(serviceId) {
     // Chart-deployed Orthanc (templates/orthanc.yaml) is the preview DICOM backend.
     return { ORTHANC_BASE_URL: "http://orthanc:8042" };
   }
+  if (serviceId === "rtc-gateway-service") {
+    // Chart-deployed LiveKit (templates/livekit.yaml). Client URL is the
+    // browser-facing ws endpoint on the public host (hostPort 7880); media
+    // needs 7881/tcp + 7882/udp open at the VM firewall.
+    return {
+      LIVEKIT_ENABLED: "true",
+      LIVEKIT_URL: "http://livekit:7880",
+      LIVEKIT_CLIENT_URL: "ws://41.57.127.235:7880",
+      LIVEKIT_API_KEY: "impilo-preview-key",
+      LIVEKIT_API_SECRET: "impilo-preview-livekit-secret-change-me-0123456789",
+    };
+  }
   if (serviceId === "dispatch-service") {
     return {
       DISPATCH_SECURITY_OAUTH2_ENABLED: "false",

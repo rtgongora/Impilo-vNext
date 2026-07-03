@@ -131,6 +131,24 @@ minio:
       cpu: 500m
       memory: 512Mi
 
+livekit:
+  enabled: true
+  image:
+    # docker.io unreachable from the preview VM; mirror carries livekit-server.
+    repository: mirror.gcr.io/livekit/livekit-server
+    tag: "v1.8.4"
+    pullPolicy: IfNotPresent
+  # Preview-only credentials (committed by convention like other preview secrets).
+  apiKey: "impilo-preview-key"
+  apiSecret: "impilo-preview-livekit-secret-change-me-0123456789"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
 orthanc:
   enabled: true
   image:

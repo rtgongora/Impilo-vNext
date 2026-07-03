@@ -1,0 +1,98 @@
+{{- if .Values.livekit.enabled }}
+# LiveKit SFU — preview video backend for rtc-gateway-service.
+# Preview-scoped: dev API key/secret committed in values (never production key
+# management), single node, ephemeral state. Browser media requires the VM
+# firewall to allow 7880/7881 TCP + 7882/UDP (signal ws + ICE-TCP + ICE-UDP);
+# ICE advertises global.publicHost via node_ip.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: livekit-config
+  namespace: {{ .Release.Namespace }}
+data:
+  livekit.yaml: |
+    port: 7880
+    bind_addresses:
+      - ""
+    keys:
+      {{ .Values.livekit.apiKey }}: {{ .Values.livekit.apiSecret }}
+    rtc:
+      tcp_port: 7881
+      udp_port: 7882
+      use_external_ip: false
+      node_ip: {{ .Values.global.publicHost | quote }}
+    room:
+      empty_timeout: 900
+      max_participants: 8
+    logging:
+      level: info
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livekit
+  namespace: {{ .Release.Namespace }}
+spec:
+  strategy:
+    type: {{ .Values.global.deploymentStrategy | default "Recreate" }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: livekit
+  template:
+    metadata:
+      labels:
+        app: livekit
+    spec:
+      containers:
+        - name: livekit
+          image: "{{ .Values.livekit.image.repository }}:{{ .Values.livekit.image.tag }}"
+          imagePullPolicy: {{ .Values.livekit.image.pullPolicy }}
+          args: ["--config", "/etc/livekit/livekit.yaml"]
+          ports:
+            - containerPort: 7880
+              hostPort: 7880
+              protocol: TCP
+            - containerPort: 7881
+              hostPort: 7881
+              protocol: TCP
+            - containerPort: 7882
+              hostPort: 7882
+              protocol: UDP
+          volumeMounts:
+            - name: livekit-config
+              mountPath: /etc/livekit/livekit.yaml
+              subPath: livekit.yaml
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 7880
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 7880
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.livekit.resources | nindent 12 }}
+      volumes:
+        - name: livekit-config
+          configMap:
+            name: livekit-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: livekit
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: livekit
+  ports:
+    - name: http
+      port: 7880
+      targetPort: 7880
+{{- end }}
