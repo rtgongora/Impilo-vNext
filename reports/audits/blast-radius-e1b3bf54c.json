@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-07-03T03:36:46.606Z",
+  "base_ref": "HEAD~1",
+  "head_commit": "e1b3bf54c610aaaa92c76bea37b9d50a26364272",
+  "short_sha": "e1b3bf54c",
+  "changed_file_count": 1,
+  "changed_files": [
+    "deploy/helm/impilo-vnext/values-full-preview.yaml"
+  ],
+  "areas": [],
+  "change_class": "G",
+  "change_classes": [
+    "G"
+  ],
+  "full_boot_required": true,
+  "targeted_deploy_allowed": false,
+  "direct_services": [],
+  "expanded_services": [],
+  "images_to_build": [],
+  "pipeline_only": "change-safety,security",
+  "expansion_threshold": 10,
+  "refusal_reasons": [
+    "Change class G requires full boot"
+  ],
+  "rationale": [
+    "Helm/deploy/infrastructure configuration changed"
+  ]
+}

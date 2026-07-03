@@ -1,12 +1,14 @@
 {
-  "generated_at": "2026-07-02T18:32:52.384082+00:00",
-  "tag_sha": "preview-7e8d636f8",
+  "generated_at": "2026-07-03T03:51:14.170885+00:00",
+  "tag_sha": "preview-e1b3bf54c",
   "doctrine": "runtime_image_strategy_required",
   "mode": "only",
   "only_services": [
+    "pct-service",
+    "vashandi-workforce-service",
     "one-ui-shell"
   ],
-  "selected_target_count": 1,
+  "selected_target_count": 3,
   "total_components": 151,
   "runtime_image_required_count": 22,
   "dockerfile_count": 1,
@@ -18,32 +20,56 @@
   "not_required_count": 28,
   "unknown_needs_review_count": 0,
   "missing_required_image_strategy_count": 0,
-  "image_build_pass_count": 1,
+  "image_build_pass_count": 3,
   "image_build_fail_count": 0,
   "blocking_failure_count": 0,
   "advisory_count": 0,
-  "pass": 1,
+  "pass": 3,
   "fail": 0,
   "skip": 0,
   "official_validated": 0,
   "missing_required_image_strategy": 0,
   "required_fail": 0,
   "per_service": {
-    "one-ui-shell": "pass"
+    "one-ui-shell": "pass",
+    "pct-service": "pass_shared_template",
+    "vashandi-workforce-service": "pass_shared_template"
   },
   "build_records": {
     "one-ui-shell": {
       "service": "one-ui-shell",
-      "source_commit": "7e8d636f87ee7ab89720f6dfb26adb2944609a82",
+      "source_commit": "e1b3bf54c610aaaa92c76bea37b9d50a26364272",
       "image_tag": "preview",
-      "image_tag_sha": "preview-7e8d636f8",
-      "cache_bust": "7e8d636f87ee7ab89720f6dfb26adb2944609a82:4a65f27ae6eb32cd",
-      "local_docker_image_id": "sha256:c727a62816a42e4d39aab296cda7e90aca338e991033b779b89572157c747a27",
-      "registry_digest": "impilo/one-ui-shell@sha256:c727a62816a42e4d39aab296cda7e90aca338e991033b779b89572157c747a27",
-      "build_timestamp": "2026-07-02T18:32:50.637760+00:00",
+      "image_tag_sha": "preview-e1b3bf54c",
+      "cache_bust": "e1b3bf54c610aaaa92c76bea37b9d50a26364272:fd3d90cc2265bb19",
+      "local_docker_image_id": "sha256:479e234ffcebca47ef1e4f7915b6747918d790d5b4878d27507d7dbf4453078b",
+      "registry_digest": "impilo/one-ui-shell@sha256:479e234ffcebca47ef1e4f7915b6747918d790d5b4878d27507d7dbf4453078b",
+      "build_timestamp": "2026-07-03T03:51:12.065770+00:00",
       "build_status": "pass",
       "ui_bundle_hash": "0eb16afaa770fa99"
+    },
+    "pct-service": {
+      "service": "pct-service",
+      "source_commit": "e1b3bf54c610aaaa92c76bea37b9d50a26364272",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-e1b3bf54c",
+      "cache_bust": "e1b3bf54c610aaaa92c76bea37b9d50a26364272",
+      "local_docker_image_id": "sha256:3b0c47c11865033c53e6ff81e112ce902426722a4ab694cbe3c86d18193c7002",
+      "registry_digest": "impilo/pct-service@sha256:3b0c47c11865033c53e6ff81e112ce902426722a4ab694cbe3c86d18193c7002",
+      "build_timestamp": "2026-07-03T03:51:12.065770+00:00",
+      "build_status": "pass_shared_template"
+    },
+    "vashandi-workforce-service": {
+      "service": "vashandi-workforce-service",
+      "source_commit": "e1b3bf54c610aaaa92c76bea37b9d50a26364272",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-e1b3bf54c",
+      "cache_bust": "e1b3bf54c610aaaa92c76bea37b9d50a26364272",
+      "local_docker_image_id": "sha256:02dc3feaaa5f9d69eec2c009293221814574f213a8fd0cf80b7845de3cdfd57e",
+      "registry_digest": "impilo/vashandi-workforce-service@sha256:02dc3feaaa5f9d69eec2c009293221814574f213a8fd0cf80b7845de3cdfd57e",
+      "build_timestamp": "2026-07-03T03:51:12.065770+00:00",
+      "build_status": "pass_shared_template"
     }
   },
-  "source_commit": "7e8d636f87ee7ab89720f6dfb26adb2944609a82"
+  "source_commit": "e1b3bf54c610aaaa92c76bea37b9d50a26364272"
 }
