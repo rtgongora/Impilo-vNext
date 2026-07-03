@@ -83,6 +83,12 @@ public class CostaServiceClient {
     /**
      * Finalize a bill (APPROVED → FINAL).
      */
+    public JsonNode applyCoverage(String billId) {
+        String url = baseUrl + "/costa/v1/bills/" + billId + "/apply-coverage";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode finalizeBill(String billId) {
         String url = baseUrl + "/costa/v1/bills/" + billId + "/finalize";
         log.info("COSTA: Finalizing bill {}", billId);

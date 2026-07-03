@@ -207,6 +207,25 @@ public class FinanceController {
      * COSTA creates the local PaymentEntity; MusheX auto-creates the
      * PaymentIntentEntity when the bill.finalized event arrives.
      */
+    @PostMapping("/billing/{id}/apply-coverage")
+    public ResponseEntity<Map<String, Object>> applyCoverage(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode bill = costaClient.applyCoverage(id);
+            if (bill == null) {
+                return upstreamFailure("COSTA_UNAVAILABLE", "No apply-coverage payload returned", requestId, correlationId);
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", toBillingResource(bill),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("COSTA apply-coverage failed for bill {}: {}", id, e.getMessage());
+            return upstreamFailure("COSTA_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
     @PostMapping("/billing/{id}/payment")
     public ResponseEntity<Map<String, Object>> createPaymentIntent(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -536,6 +555,13 @@ public class FinanceController {
                 ? bill.get("totalCost").asDouble() : 0.0);
         attrs.put("totalCharge", bill != null && bill.has("totalCharge")
                 ? bill.get("totalCharge").asDouble() : 0.0);
+        // Coverage split — the shortfall UX needs the payer/patient breakdown.
+        attrs.put("patientPayable", bill != null && bill.has("patientPayable")
+                ? bill.get("patientPayable").asDouble() : 0.0);
+        attrs.put("insurerPayable", bill != null && bill.has("insurerPayable")
+                ? bill.get("insurerPayable").asDouble() : 0.0);
+        attrs.put("coverageStatus", textOrEmpty(bill, "coverageStatus"));
+        attrs.put("coveragePlanCode", textOrEmpty(bill, "coveragePlanCode"));
 
         return resource;
     }
