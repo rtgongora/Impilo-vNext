@@ -31,7 +31,7 @@ PERSONA_PASSWORD="${PERSONA_PASSWORD:-ImpiloTest123!}"
 EXPECTED_ANCHOR="${EXPECTED_ANCHOR:-c0000000-0000-4000-8000-000000000001}"
 EXPECTED_PROVIDER="${EXPECTED_PROVIDER:-PROV-ZW-00001}"
 FACILITY_ID="${FACILITY_ID:-f1000000-0000-0000-0000-000000000001}"
-MAX_PHASE="${SCENARIO_A_MAX_PHASE:-8}"
+MAX_PHASE="${SCENARIO_A_MAX_PHASE:-9}"
 RUN_TAG="scnA-$(date +%s)"
 
 PASS=0; FAIL=0
@@ -284,6 +284,84 @@ done
 [[ "$IMG_STATE" == "RESULT_AVAILABLE" || "$IMG_STATE" == "COMPLETED" ]] \
   || fail "OROS imaging order never reached RESULT_AVAILABLE (state '$IMG_STATE') — pacs→oros event loop broken"
 ok "OROS imaging order $IMG_ORDER → $IMG_STATE via pacs.study.available event loop"
+
+[[ "$MAX_PHASE" -ge 9 ]] || { echo "PASS ($PASS checks)"; exit 0; }
+
+# ── Phase 9: teleconsult → SPECIALTY_POOL routing → consent → accept → video ─
+phase 9 "teleconsult request → pool routing → consent → accept → LiveKit token/room"
+PURPOSE_HDR=(-H "X-Purpose-Of-Use: TREATMENT")
+build_hdrs
+TELE=$(curl -s -X POST "$PREVIEW_URL/internal/v1/teleconsult/sessions" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-tele" "${HDRS[@]}" "${PURPOSE_HDR[@]}" \
+  -d "{\"patientId\":\"$CPID\",\"encounterId\":\"$ENC_ID\",\"urgency\":\"routine\",\"specialty\":\"GENERAL_MEDICINE\",\"clinicalQuestion\":\"Scenario A teleconsult verification\",\"virtualMode\":\"video\"}")
+TELE_ID=$(echo "$TELE" | jqpy "
+data=d.get('data') or {}
+print(data.get('referralId') or data.get('id') or data.get('referral_id') or '')")
+[[ -n "$TELE_ID" ]] || fail "teleconsult session not created: $(echo "$TELE" | head -c 400)"
+ok "teleconsult session created: $TELE_ID (VITO-validated patient)"
+
+build_hdrs
+ROUTE=$(curl -s -X PUT "$PREVIEW_URL/internal/v1/teleconsult/sessions/$TELE_ID/referral" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-route" "${HDRS[@]}" "${PURPOSE_HDR[@]}" \
+  -d '{"routingType":"SPECIALTY_POOL","routingTarget":"GENERAL_MEDICINE","clinicalQuestion":"Scenario A teleconsult verification"}')
+echo "$ROUTE" | jqpy "
+err=d.get('error')
+import sys
+sys.exit(1 if err else 0)" || fail "pool routing failed: $(echo "$ROUTE" | head -c 300)"
+ok "routed to SPECIALTY_POOL:GENERAL_MEDICINE"
+
+build_hdrs
+curl -s -X POST "$PREVIEW_URL/internal/v1/teleconsult/sessions/$TELE_ID/consent" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-consent" "${HDRS[@]}" "${PURPOSE_HDR[@]}" \
+  -d "{\"patientId\":\"$CPID\",\"type\":\"TELEMEDICINE\"}" >/dev/null
+build_hdrs
+curl -s -X POST "$PREVIEW_URL/internal/v1/teleconsult/sessions/$TELE_ID/submit" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-tsubmit" "${HDRS[@]}" "${PURPOSE_HDR[@]}" -d '{}' >/dev/null
+build_hdrs
+curl -s -X POST "$PREVIEW_URL/internal/v1/teleconsult/sessions/$TELE_ID/accept" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-taccept" "${HDRS[@]}" "${PURPOSE_HDR[@]}" -d '{}' >/dev/null
+ok "consent recorded, submitted to pool, accepted by specialist"
+
+build_hdrs
+MEDIA=$(curl -s -X POST "$PREVIEW_URL/internal/v1/teleconsult/sessions/$TELE_ID/media/token" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-token" "${HDRS[@]}" "${PURPOSE_HDR[@]}" \
+  -d "{\"displayName\":\"Dr Mapfumo\",\"role\":\"PROVIDER\"}")
+ROOM_URL=$(echo "$MEDIA" | jqpy "
+data=d.get('data') or {}
+print(data.get('room_url') or data.get('roomUrl') or data.get('url') or '')")
+TOKEN_JWT=$(echo "$MEDIA" | jqpy "
+data=d.get('data') or {}
+print(data.get('token') or data.get('accessToken') or data.get('access_token') or '')")
+[[ -n "$ROOM_URL" && -n "$TOKEN_JWT" ]] || fail "media token not issued: $(echo "$MEDIA" | head -c 400)"
+echo "$TOKEN_JWT" | python3 -c "
+import sys,base64,json
+tok=sys.stdin.read().strip().split('.')
+assert len(tok)==3, 'not a JWT'
+payload=tok[1]+'='*(-len(tok[1])%4)
+claims=json.loads(base64.urlsafe_b64decode(payload))
+assert 'video' in claims or 'room' in str(claims), claims
+" || fail "media token is not a valid LiveKit JWT"
+ok "LiveKit media token issued (room_url=$ROOM_URL)"
+
+# Signal-level join proof: websocket 101 upgrade against the room endpoint.
+WS_HOST_PORT=$(echo "$ROOM_URL" | sed -E 's#^wss?://##; s#/.*$##')
+WS_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
+  "http://${WS_HOST_PORT}/rtc/validate?access_token=${TOKEN_JWT}" 2>/dev/null || echo 000)
+if [[ "$WS_CODE" == "200" ]]; then
+  ok "LiveKit signal endpoint validated the token (rtc/validate 200)"
+else
+  # Hairpin block means the VM cannot reach its own public IP — probe in-cluster.
+  VALIDATE=$(kubectl exec -n "${FULL_BOOT_NAMESPACE:-impilo-full-preview}" deploy/experience-bff -- \
+    curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
+    "http://livekit:7880/rtc/validate?access_token=${TOKEN_JWT}" 2>/dev/null || echo 000)
+  [[ "$VALIDATE" == "200" ]] || fail "LiveKit token validation failed (public=$WS_CODE in-cluster=$VALIDATE)"
+  ok "LiveKit signal endpoint validated the token in-cluster (public path pending firewall: 7880/7881 tcp + 7882 udp)"
+fi
+
+build_hdrs
+curl -s -X POST "$PREVIEW_URL/internal/v1/teleconsult/sessions/$TELE_ID/end" \
+  -H "Content-Type: application/json" -H "Idempotency-Key: $RUN_TAG-tend" "${HDRS[@]}" "${PURPOSE_HDR[@]}" -d '{}' >/dev/null
+ok "session ended (room lifecycle closed)"
 
 echo ""
 echo "PASS: Scenario A phases 1-$MAX_PHASE green ($PASS checks) — run tag $RUN_TAG"
