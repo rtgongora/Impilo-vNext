@@ -213,7 +213,10 @@ public class MarketplaceController {
                     line.put("unitPrice", item.get("unitPrice").decimalValue());
                 }
                 if (item.hasNonNull("description")) {
-                    line.put("metadata", item.get("description").asText());
+                    // mf_order_lines.metadata is a Postgres json column — a bare
+                    // string is rejected ("invalid input syntax for type json").
+                    line.put("metadata", MAPPER.createObjectNode()
+                            .put("description", item.get("description").asText()).toString());
                 }
             });
         }
@@ -233,6 +236,25 @@ public class MarketplaceController {
                     "Unable to create marketplace order while msika-flow-service is unavailable",
                     requestId, correlationId);
         }
+    }
+
+    /** Line metadata may be a JSON object string ({"description":...}) or legacy plain text. */
+    private static String lineDescription(JsonNode metadata) {
+        if (metadata == null || metadata.isMissingNode() || metadata.isNull()) {
+            return "";
+        }
+        String raw = metadata.asText("");
+        if (raw.startsWith("{")) {
+            try {
+                JsonNode parsed = MAPPER.readTree(raw);
+                if (parsed.hasNonNull("description")) {
+                    return parsed.get("description").asText();
+                }
+            } catch (Exception ignored) {
+                // fall through to raw text
+            }
+        }
+        return raw;
     }
 
     /** msika-flow wraps payloads as {success, data, error, correlationId}; returns the data node. */
@@ -257,8 +279,7 @@ public class MarketplaceController {
             view.get("lines").forEach(line -> {
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("productId", line.path("msikaCoreCode").asText(""));
-                item.put("description", line.path("metadata").isMissingNode() || line.path("metadata").isNull()
-                        ? "" : line.path("metadata").asText(""));
+                item.put("description", lineDescription(line.path("metadata")));
                 item.put("quantity", line.path("qty").asInt(0));
                 item.put("unitPrice", line.path("unitPrice").isNumber() ? line.get("unitPrice").decimalValue() : 0);
                 items.add(item);

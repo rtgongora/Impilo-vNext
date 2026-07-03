@@ -64,6 +64,8 @@ class MarketplaceControllerTest {
         assertEquals(true, msikaFlow.lastBody.contains("\"msikaCoreCode\":\"MSK-001\""));
         assertEquals(true, msikaFlow.lastBody.contains("\"qty\":3"));
         assertEquals(true, msikaFlow.lastBody.contains("\"idempotencyKey\":\"idem-1\""));
+        // metadata must be a JSON object string, not bare text (json column downstream).
+        assertEquals(true, msikaFlow.lastBody.contains("\"metadata\":\"{\\\"description\\\":\\\"Gauze\\\"}\""));
 
         @SuppressWarnings("unchecked")
         Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
