@@ -50,17 +50,21 @@ public class PharmacyConsumer {
 
     private final ConsumptionPostingService consumptionPostingService;
     private final ObjectMapper objectMapper;
+    private final zw.gov.mohcc.impilo.inventory.persistence.repository.StoreRepository storeRepository;
 
     /**
      * Constructs the PharmacyConsumer with required dependencies.
      *
      * @param consumptionPostingService service for posting consumption events
      * @param objectMapper              Jackson mapper for JSON deserialization
+     * @param storeRepository           store lookup for non-UUID pharmacy store codes
      */
     public PharmacyConsumer(ConsumptionPostingService consumptionPostingService,
-                            ObjectMapper objectMapper) {
+                            ObjectMapper objectMapper,
+                            zw.gov.mohcc.impilo.inventory.persistence.repository.StoreRepository storeRepository) {
         this.consumptionPostingService = consumptionPostingService;
         this.objectMapper = objectMapper;
+        this.storeRepository = storeRepository;
     }
 
     /**
@@ -115,9 +119,28 @@ public class PharmacyConsumer {
             try {
                 LocalDate expiry = expiryStr != null ? LocalDate.parse(expiryStr) : null;
 
+                // Pharmacy-service store ids are local codes ("DEFAULT"), not Dura
+                // store UUIDs — resolve to the facility's PHARMACY store when the
+                // id is not a UUID (Dura owns store identity).
+                UUID storeUuid;
+                try {
+                    storeUuid = UUID.fromString(storeId);
+                } catch (IllegalArgumentException notAUuid) {
+                    storeUuid = storeRepository
+                            .findByFacilityIdAndStoreType(UUID.fromString(facilityId),
+                                    zw.gov.mohcc.impilo.inventory.domain.StoreType.PHARMACY)
+                            .stream().findFirst()
+                            .map(zw.gov.mohcc.impilo.inventory.persistence.entity.StoreEntity::getStoreId)
+                            .orElse(null);
+                    if (storeUuid == null) {
+                        log.warn("No PHARMACY store for facility {} — cannot post consumption", facilityId);
+                        return;
+                    }
+                }
+
                 consumptionPostingService.postPharmacyConsumption(
                         UUID.fromString(facilityId),
-                        UUID.fromString(storeId),
+                        storeUuid,
                         itemCode,
                         batch,
                         expiry,

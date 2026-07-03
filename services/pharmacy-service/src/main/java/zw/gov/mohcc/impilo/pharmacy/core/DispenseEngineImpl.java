@@ -220,6 +220,7 @@ public class DispenseEngineImpl implements DispenseEngine {
                         "PATIENT_DISPENSE",
                         "DISPENSE_ORDER",
                         orderId.toString());
+                publishStockMovementRequested(order, item, ctx.tenantId(), ctx.actorId());
             }
         }
 
@@ -262,6 +263,7 @@ public class DispenseEngineImpl implements DispenseEngine {
                         "PATIENT_DISPENSE",
                         "DISPENSE_ORDER",
                         orderId.toString());
+                publishStockMovementRequested(order, item, ctx.tenantId(), ctx.actorId());
             }
         }
 
@@ -373,6 +375,25 @@ public class DispenseEngineImpl implements DispenseEngine {
     /**
      * Write a domain event to the transactional outbox.
      */
+    /**
+     * Emits the Dura (inventory-service) consumption contract — the consumer for
+     * pharmacy.stock.movement.requested existed but nothing ever published it,
+     * so facility dispensing never decremented sovereign stock (backlog ③).
+     */
+    private void publishStockMovementRequested(DispenseOrderEntity order, DispenseItemEntity item, UUID tenantId, String actorId) {
+        Map<String, Object> movement = new LinkedHashMap<>();
+        movement.put("tenantId", tenantId != null ? tenantId.toString() : null);
+        movement.put("facilityId", order.getFacilityId() != null ? order.getFacilityId().toString() : null);
+        movement.put("storeId", order.getStoreId() != null ? order.getStoreId() : "DEFAULT");
+        movement.put("itemCode", item.getDrugCode());
+        movement.put("batch", item.getBatchNumber());
+        movement.put("expiry", item.getExpiryDate() != null ? item.getExpiryDate().toString() : null);
+        movement.put("qty", item.getQtyDispensed());
+        movement.put("orderId", order.getId() != null ? order.getId().toString() : null);
+        movement.put("actorId", actorId);
+        publishEvent("DISPENSE_ORDER", order.getId().toString(), "STOCK_MOVEMENT_REQUESTED", movement, tenantId);
+    }
+
     private void publishEvent(String aggregateType, String aggregateId,
                                String eventType, Object payload, UUID tenantId) {
         try {

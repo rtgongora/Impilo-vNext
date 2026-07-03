@@ -262,10 +262,28 @@ fullBootServices:
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: "DEBUG"
   # Kafka listener opt-ins — the estate default is auto-startup=false; these
   # services' event loops are journey-load-bearing (PACS study → OROS imaging
-  # result; PACS ingest events). Rollback = remove the env line.
+  # result; PCT encounter → COSTA draft bill; MusheX status → COSTA settlement;
+  # pharmacy dispense → Dura stock). Rollback = remove the env line.
   oros-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
   pacs-adapter-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  costing-engine-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+      MUSHEX_BASE_URL: http://mushex-service:8102
+      COVERAGE_BASE_URL: http://coverage-service:8140
+  mushex-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  coverage-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  inventory-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  pharmacy-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"

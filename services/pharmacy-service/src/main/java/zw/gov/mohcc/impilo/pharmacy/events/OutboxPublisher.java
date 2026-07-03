@@ -143,6 +143,8 @@ public class OutboxPublisher {
 
             case "DISPENSE_CANCELLED" -> "pharmacy.dispense.cancelled";
 
+            case "STOCK_MOVEMENT_REQUESTED" -> "pharmacy.stock.movement.requested";
+
             case "STOCK_MOVEMENT_RECORDED",
                  "STOCK_REVERSAL_RECORDED",
                  "RETURN_RECORDED",
