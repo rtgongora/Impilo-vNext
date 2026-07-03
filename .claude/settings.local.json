@@ -48,7 +48,30 @@
       "Bash(npx tsc:*)",
       "Bash(NEXT_PUBLIC_BFF_URL=http://localhost:8160 npx vitest run src/lib/__tests__/api-client.test.ts src/lib/__tests__/operational-context.test.ts src/components/navigation/ExperienceSidebar.test.tsx)",
       "Bash(grep -v \"node_modules\\\\|^--$\")",
-      "Bash(NEXT_PUBLIC_BFF_URL=http://localhost:8160 npx vitest run src/components/navigation/ExperienceSidebar.test.tsx)"
+      "Bash(NEXT_PUBLIC_BFF_URL=http://localhost:8160 npx vitest run src/components/navigation/ExperienceSidebar.test.tsx)",
+      "Bash(node scripts/route-parity-check.mjs)",
+      "Bash(node scripts/no-stub-guard.mjs)",
+      "Bash(REPO_PATH=/opt/impilo/repos/Impilo-vNext bash scripts/guard/check-product-truth.sh)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"TSC_EXIT=$?\")",
+      "Bash(grep -E \"tsx|ts$\")",
+      "Bash(xargs cat)",
+      "Bash(grep -E \"\\\\.tsx?$\")",
+      "Bash(node scripts/guard/mobile-no-mocks.mjs)",
+      "Bash(node scripts/guard/mobile-service-wiring.mjs)",
+      "Bash(grep -E \"\\\\.\\(tsx?|json\\)$\")",
+      "Bash(node scripts/guard/mobile-service-parity.mjs)",
+      "Bash(grep -v \"mutate\\\\|handle\\\\|set\\\\|function\\\\|router\\\\|navigate\\\\|href\\\\|\\(\\) => {$\")",
+      "Bash(awk -F'[=,]' '{t+=$2; f+=$4; e+=$6; s+=$8} END {print \"total=\"t\" failures=\"f\" errors=\"e\" skipped=\"s}')",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'feat\\(notification\\): autonomous worker scheduler so pending notifications dispatch at runtime *)",
+      "Bash(git commit -m 'feat\\(notification\\): reconcile delivery receipts into notification status *)",
+      "Bash(git commit -m 'fix\\(bff\\): count DELIVERED notifications in comms dashboard sent-today *)",
+      "Bash(git pull *)",
+      "Bash(git push *)",
+      "Bash(git -c rebase.autoStash=true pull --rebase)",
+      "Bash(npx vitest *)"
     ]
   }
 }
