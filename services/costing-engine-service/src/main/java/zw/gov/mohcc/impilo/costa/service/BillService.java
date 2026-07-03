@@ -45,6 +45,9 @@ public class BillService {
     private final ObjectMapper objectMapper;
     private final PatientAccountService patientAccountService;
 
+    private final zw.gov.mohcc.impilo.costa.integration.CoverageServiceClient coverageServiceClient;
+    private final zw.gov.mohcc.impilo.costa.domain.repository.InsurancePlanRepository insurancePlanRepository;
+
     public BillService(BillHeaderRepository billHeaderRepository,
                        BillLineRepository billLineRepository,
                        BillPartyRepository billPartyRepository,
@@ -56,7 +59,9 @@ public class BillService {
                        ChargingRuleEngine chargingRuleEngine,
                        ExemptionEngine exemptionEngine,
                        ObjectMapper objectMapper,
-                       PatientAccountService patientAccountService) {
+                       PatientAccountService patientAccountService,
+                       zw.gov.mohcc.impilo.costa.integration.CoverageServiceClient coverageServiceClient,
+                       zw.gov.mohcc.impilo.costa.domain.repository.InsurancePlanRepository insurancePlanRepository) {
         this.billHeaderRepository = billHeaderRepository;
         this.billLineRepository = billLineRepository;
         this.billPartyRepository = billPartyRepository;
@@ -68,6 +73,8 @@ public class BillService {
         this.chargingRuleEngine = chargingRuleEngine;
         this.exemptionEngine = exemptionEngine;
         this.objectMapper = objectMapper;
+        this.coverageServiceClient = coverageServiceClient;
+        this.insurancePlanRepository = insurancePlanRepository;
         this.patientAccountService = patientAccountService;
     }
 
@@ -193,6 +200,73 @@ public class BillService {
 
         recalculateTotals(bill);
         recomputePartySplit(bill);
+        return billHeaderRepository.save(bill);
+    }
+
+    /**
+     * Applies the patient's medical-aid coverage to the bill (Scenario B/D):
+     * resolves the member's ACTIVE coverage at the coverage SoR, verifies
+     * eligibility, maps the plan code onto COSTA's mirrored insurance plan,
+     * and recomputes the payer/patient split via the existing exemption
+     * machinery. Ineligible/uncovered members get an explicit INELIGIBLE
+     * status and a 100% patient split — the Scenario D failure paths.
+     */
+    @Transactional
+    public BillHeaderEntity applyCoverage(String billId, jakarta.servlet.http.HttpServletRequest inbound) {
+        BillHeaderEntity bill = billHeaderRepository.findById(billId)
+                .orElseThrow(() -> new IllegalArgumentException("Bill not found: " + billId));
+        EncounterEntity encounter = bill.getEncounterId() != null
+                ? encounterRepository.findById(bill.getEncounterId()).orElse(null) : null;
+        if (encounter == null || encounter.getPatientCpid() == null || encounter.getPatientCpid().isBlank()) {
+            throw new IllegalStateException("Bill has no encounter/patient to check coverage for: " + billId);
+        }
+        TrustContext ctx = TrustContextHolder.require();
+        bill.setCoverageCheckedAt(OffsetDateTime.now());
+
+        zw.gov.mohcc.impilo.costa.integration.CoverageServiceClient.MemberCoverage member =
+                coverageServiceClient.findActiveMemberCoverage(inbound, encounter.getPatientCpid());
+        if (member == null) {
+            return recordIneligible(bill, encounter, "NO_COVER");
+        }
+        bill.setCoverageMemberId(member.coverageId());
+        bill.setCoveragePlanCode(member.planCode());
+
+        zw.gov.mohcc.impilo.costa.integration.CoverageServiceClient.Eligibility eligibility =
+                coverageServiceClient.checkEligibility(inbound, member.coverageId(), encounter.getPatientCpid());
+        if (!eligibility.eligible()) {
+            return recordIneligible(bill, encounter, eligibility.resultMessage());
+        }
+
+        InsurancePlanEntity plan = insurancePlanRepository
+                .findByTenantIdAndPlanCodeAndStatus(ctx.tenantId(), member.planCode(), "ACTIVE")
+                .orElse(null);
+        if (plan == null) {
+            return recordIneligible(bill, encounter, "PLAN_NOT_CONFIGURED:" + member.planCode());
+        }
+
+        encounter.setInsurancePlanId(plan.getId());
+        encounterRepository.save(encounter);
+        bill.setCoverageStatus("ELIGIBLE");
+        recalculateTotals(bill);
+        recomputePartySplit(bill);
+        bill = billHeaderRepository.save(bill);
+
+        publishEvent("BILL", billId, "BILL_COVERAGE_APPLIED",
+                Map.of("billId", billId, "planCode", member.planCode(),
+                        "insurerPayable", bill.getInsurerPayable(), "patientPayable", bill.getPatientPayable()),
+                ctx.tenantId());
+        log.info("Coverage applied to bill {}: plan={} insurer={} patient={}",
+                billId, member.planCode(), bill.getInsurerPayable(), bill.getPatientPayable());
+        return bill;
+    }
+
+    private BillHeaderEntity recordIneligible(BillHeaderEntity bill, EncounterEntity encounter, String reason) {
+        bill.setCoverageStatus("INELIGIBLE:" + (reason == null || reason.isBlank() ? "UNKNOWN" : reason));
+        encounter.setInsurancePlanId(null);
+        encounterRepository.save(encounter);
+        recalculateTotals(bill);
+        recomputePartySplit(bill);
+        log.info("Coverage NOT applied to bill {}: {}", bill.getBillId(), bill.getCoverageStatus());
         return billHeaderRepository.save(bill);
     }
 

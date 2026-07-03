@@ -19,4 +19,17 @@ public class ImpiloIntegrationProperties {
     public void setMushexBaseUrl(String mushexBaseUrl) {
         this.mushexBaseUrl = mushexBaseUrl;
     }
+
+    /**
+     * Base URL for coverage-service (member coverage, eligibility, claims). No trailing slash.
+     */
+    private String coverageBaseUrl = "http://localhost:8140";
+
+    public String getCoverageBaseUrl() {
+        return coverageBaseUrl;
+    }
+
+    public void setCoverageBaseUrl(String coverageBaseUrl) {
+        this.coverageBaseUrl = coverageBaseUrl;
+    }
 }

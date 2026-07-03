@@ -125,6 +125,14 @@ public class BillController {
                 .body(ApiResponse.ok(invoice, ctx.correlationId().toString()));
     }
 
+    @PostMapping("/{id}/apply-coverage")
+    public ResponseEntity<ApiResponse<BillHeaderEntity>> applyCoverage(@PathVariable String id,
+                                                                       jakarta.servlet.http.HttpServletRequest servletRequest) {
+        var ctx = TrustContextHolder.require();
+        BillHeaderEntity bill = billService.applyCoverage(id, servletRequest);
+        return ResponseEntity.ok(ApiResponse.ok(bill, ctx.correlationId().toString()));
+    }
+
     @PostMapping("/{id}/create-payment-intent")
     public ResponseEntity<ApiResponse<PaymentEntity>> createPaymentIntent(@PathVariable String id,
                                                                           @Valid @RequestBody PaymentIntentRequest request,

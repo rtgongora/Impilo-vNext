@@ -120,6 +120,27 @@ public class BillHeaderEntity {
     public void setTotalDiscount(BigDecimal totalDiscount) { this.totalDiscount = totalDiscount; }
     public BigDecimal getTotalPayable() { return totalPayable; }
     public void setTotalPayable(BigDecimal totalPayable) { this.totalPayable = totalPayable; }
+    @Column(name = "coverage_plan_code", length = 64)
+    private String coveragePlanCode;
+
+    @Column(name = "coverage_member_id")
+    private UUID coverageMemberId;
+
+    @Column(name = "coverage_status", length = 64)
+    private String coverageStatus;
+
+    @Column(name = "coverage_checked_at")
+    private OffsetDateTime coverageCheckedAt;
+
+    public String getCoveragePlanCode() { return coveragePlanCode; }
+    public void setCoveragePlanCode(String coveragePlanCode) { this.coveragePlanCode = coveragePlanCode; }
+    public UUID getCoverageMemberId() { return coverageMemberId; }
+    public void setCoverageMemberId(UUID coverageMemberId) { this.coverageMemberId = coverageMemberId; }
+    public String getCoverageStatus() { return coverageStatus; }
+    public void setCoverageStatus(String coverageStatus) { this.coverageStatus = coverageStatus; }
+    public OffsetDateTime getCoverageCheckedAt() { return coverageCheckedAt; }
+    public void setCoverageCheckedAt(OffsetDateTime coverageCheckedAt) { this.coverageCheckedAt = coverageCheckedAt; }
+
     public BigDecimal getPatientPayable() { return patientPayable; }
     public void setPatientPayable(BigDecimal patientPayable) { this.patientPayable = patientPayable; }
     public BigDecimal getInsurerPayable() { return insurerPayable; }

@@ -13,4 +13,11 @@ public class CostaOutboundHttpConfig {
                 .baseUrl(properties.getMushexBaseUrl().replaceAll("/$", ""))
                 .build();
     }
+
+    @Bean(name = "coverageRestClient")
+    RestClient coverageRestClient(RestClient.Builder builder, ImpiloIntegrationProperties properties) {
+        return builder
+                .baseUrl(properties.getCoverageBaseUrl().replaceAll("/$", ""))
+                .build();
+    }
 }

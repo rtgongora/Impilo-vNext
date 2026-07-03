@@ -77,6 +77,7 @@ springdoc:
 impilo:
   integrations:
     mushex-base-url: ${MUSHEX_BASE_URL:http://localhost:8102}
+    coverage-base-url: ${COVERAGE_BASE_URL:http://localhost:8140}
 
 costa:
   outbox:
