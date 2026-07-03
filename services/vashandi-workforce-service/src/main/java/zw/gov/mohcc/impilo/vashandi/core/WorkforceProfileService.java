@@ -77,8 +77,7 @@ public class WorkforceProfileService {
     @Transactional
     public VashandiDtos.ReconcileProfileResponse reconcile(UUID tenantId, VashandiDtos.ReconcileProfileRequest request)
             throws Exception {
-        WorkforceProfileEntity profile = profileRepository.findByTenantIdAndId(tenantId, request.profileId())
-                .orElseThrow(() -> new IllegalArgumentException("profile not found"));
+        WorkforceProfileEntity profile = resolveOrCreateProfile(tenantId, request);
 
         IntegrationCheckResult varapi = varapiClient.fetchProfessionalStatus(profile.getProviderWorkerId());
         IntegrationCheckResult hsc = governanceClient.fetchHscEmploymentSummary(profile.getHealthId());
@@ -111,5 +110,65 @@ public class WorkforceProfileService {
                 List.of(varapi, hsc, fundo),
                 profile
         );
+    }
+
+    /**
+     * Reconcile is an upsert seam: callers that mirror governance assignments
+     * (e.g. the experience BFF facility staff-assignment flow) only hold a
+     * provider-worker id / health id — a first-time provider has no Vashandi
+     * profile yet. Resolve by id, then provider-worker id, then health id;
+     * create a minimal profile when the request carries an external identity.
+     */
+    private WorkforceProfileEntity resolveOrCreateProfile(UUID tenantId,
+                                                          VashandiDtos.ReconcileProfileRequest request)
+            throws Exception {
+        if (request.profileId() != null) {
+            return profileRepository.findByTenantIdAndId(tenantId, request.profileId())
+                    .orElseThrow(() -> new IllegalArgumentException("profile not found"));
+        }
+        String providerWorkerId = trimToNull(request.providerWorkerId());
+        String healthId = trimToNull(request.healthId());
+        if (providerWorkerId == null && healthId == null) {
+            throw new IllegalArgumentException("profile not found");
+        }
+        if (providerWorkerId != null) {
+            Optional<WorkforceProfileEntity> byWorker =
+                    profileRepository.findByTenantIdAndProviderWorkerId(tenantId, providerWorkerId);
+            if (byWorker.isPresent()) {
+                return byWorker.get();
+            }
+        }
+        if (healthId != null && !healthId.equals(providerWorkerId)) {
+            Optional<WorkforceProfileEntity> byHealth =
+                    profileRepository.findByTenantIdAndHealthId(tenantId, healthId);
+            if (byHealth.isPresent()) {
+                return byHealth.get();
+            }
+        }
+        // Some callers only know the provider-worker id and pass it in both
+        // fields; adopt the real person anchor from VARAPI when available.
+        String resolvedHealthId = healthId != null && !healthId.equals(providerWorkerId) ? healthId : null;
+        if (resolvedHealthId == null && providerWorkerId != null) {
+            resolvedHealthId = varapiClient.findProvider(providerWorkerId)
+                    .map(p -> {
+                        Object v = p.getOrDefault("impiloHealthId", p.get("healthId"));
+                        return v != null ? v.toString() : null;
+                    })
+                    .orElse(null);
+        }
+        return create(tenantId, new VashandiDtos.CreateWorkforceProfileRequest(
+                resolvedHealthId,
+                providerWorkerId,
+                trimToNull(request.keycloakUserId()),
+                null,
+                null,
+                providerWorkerId != null ? "provider" : "worker",
+                null,
+                null,
+                "active"));
+    }
+
+    private static String trimToNull(String s) {
+        return s == null || s.isBlank() ? null : s.trim();
     }
 }

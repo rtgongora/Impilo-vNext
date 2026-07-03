@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.vashandi.api;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.vashandi.core.WorkforceContextService;
 import zw.gov.mohcc.impilo.vashandi.core.WorkforceImportBridgeService;
 import zw.gov.mohcc.impilo.vashandi.core.WorkforceProfileService;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.WorkforceProfileEntity;
@@ -9,6 +10,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -17,11 +19,14 @@ public class VashandiWorkforceController {
 
     private final WorkforceProfileService profileService;
     private final WorkforceImportBridgeService importBridgeService;
+    private final WorkforceContextService workforceContextService;
 
     public VashandiWorkforceController(WorkforceProfileService profileService,
-                                       WorkforceImportBridgeService importBridgeService) {
+                                       WorkforceImportBridgeService importBridgeService,
+                                       WorkforceContextService workforceContextService) {
         this.profileService = profileService;
         this.importBridgeService = importBridgeService;
+        this.workforceContextService = workforceContextService;
     }
 
     @GetMapping
@@ -45,6 +50,19 @@ public class VashandiWorkforceController {
     public VashandiDtos.ReconcileProfileResponse reconcile(@RequestBody VashandiDtos.ReconcileProfileRequest request)
             throws Exception {
         return profileService.reconcile(tenantId(), request);
+    }
+
+    /**
+     * Session-context read-model for the experience BFF session contract.
+     * Resolves the caller's workforce profile by health id (person anchor),
+     * falling back to provider-worker id; unknown actors get the same shape
+     * with a no_workforce_profile resolution state (anti-enumeration).
+     */
+    @GetMapping("/session-context")
+    public Map<String, Object> sessionContext(
+            @RequestParam(value = "healthId", required = false) String healthId,
+            @RequestParam(value = "providerWorkerId", required = false) String providerWorkerId) {
+        return workforceContextService.sessionContext(tenantId(), healthId, providerWorkerId);
     }
 
     @PostMapping("/import-bridge")

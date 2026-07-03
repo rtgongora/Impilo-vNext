@@ -10,6 +10,8 @@ import zw.gov.mohcc.impilo.vashandi.persistence.entity.AttendanceEventEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.WorkforceAssignmentEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.WorkforceProfileEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.AttendanceEventRepository;
+import zw.gov.mohcc.impilo.vashandi.persistence.repository.LeaveAvailabilityRepository;
+import zw.gov.mohcc.impilo.vashandi.persistence.repository.ShiftRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceAssignmentRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceMembershipRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceProfileRepository;
@@ -36,13 +38,18 @@ class WorkforceContextServiceTest {
     WorkforceMembershipRepository membershipRepository;
     @Mock
     AttendanceEventRepository attendanceRepository;
+    @Mock
+    ShiftRepository shiftRepository;
+    @Mock
+    LeaveAvailabilityRepository leaveAvailabilityRepository;
 
     WorkforceContextService service;
 
     @BeforeEach
     void setUp() {
         service = new WorkforceContextService(
-                profileRepository, assignmentRepository, membershipRepository, attendanceRepository);
+                profileRepository, assignmentRepository, membershipRepository, attendanceRepository,
+                shiftRepository, leaveAvailabilityRepository);
     }
 
     @Test

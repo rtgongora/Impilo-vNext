@@ -65,10 +65,41 @@ class WorkforceProfileServiceTest {
                 .thenReturn(IntegrationCheckResult.live("fundo", Map.of("cpd", "current")));
 
         VashandiDtos.ReconcileProfileResponse response = service.reconcile(
-                tenant, new VashandiDtos.ReconcileProfileRequest(profileId));
+                tenant, new VashandiDtos.ReconcileProfileRequest(profileId, null, null, null));
 
         assertThat(response.status()).isEqualTo("pending_backend");
         verify(profileRepository).save(any(WorkforceProfileEntity.class));
         verify(outboxWriter).publish(any(), anyString(), anyString(), anyString(), anyString(), anyString(), any());
+    }
+
+    @Test
+    void reconcile_createsProfileForFirstTimeProviderWorker() throws Exception {
+        UUID tenant = UUID.randomUUID();
+
+        when(profileRepository.findByTenantIdAndProviderWorkerId(tenant, "PROV-ZW-00009"))
+                .thenReturn(Optional.empty());
+        when(varapiClient.findProvider("PROV-ZW-00009"))
+                .thenReturn(Optional.of(Map.of("impiloHealthId", "c0000000-0000-4000-8000-000000000009")));
+        when(profileRepository.save(any(WorkforceProfileEntity.class))).thenAnswer(inv -> {
+            WorkforceProfileEntity p = inv.getArgument(0);
+            if (p.getId() == null) {
+                p.setId(UUID.randomUUID());
+            }
+            return p;
+        });
+        when(varapiClient.fetchProfessionalStatus("PROV-ZW-00009"))
+                .thenReturn(IntegrationCheckResult.live("varapi", Map.of("status", "active")));
+        when(governanceClient.fetchHscEmploymentSummary("c0000000-0000-4000-8000-000000000009"))
+                .thenReturn(IntegrationCheckResult.live("workforce-governance", Map.of()));
+        when(fundoClient.fetchTrainingEvidence("PROV-ZW-00009"))
+                .thenReturn(IntegrationCheckResult.live("fundo", Map.of()));
+
+        VashandiDtos.ReconcileProfileResponse response = service.reconcile(
+                tenant, new VashandiDtos.ReconcileProfileRequest(
+                        null, "PROV-ZW-00009", "PROV-ZW-00009", null));
+
+        assertThat(response.status()).isEqualTo("completed");
+        assertThat(response.profile().getProviderWorkerId()).isEqualTo("PROV-ZW-00009");
+        assertThat(response.profile().getHealthId()).isEqualTo("c0000000-0000-4000-8000-000000000009");
     }
 }

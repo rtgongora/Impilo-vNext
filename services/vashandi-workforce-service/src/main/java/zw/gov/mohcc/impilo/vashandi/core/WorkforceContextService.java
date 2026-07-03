@@ -6,16 +6,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.vashandi.api.VashandiDtos;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.AttendanceEventEntity;
+import zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveAvailabilityEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.WorkforceAssignmentEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.WorkforceMembershipEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.WorkforceProfileEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.AttendanceEventRepository;
+import zw.gov.mohcc.impilo.vashandi.persistence.repository.LeaveAvailabilityRepository;
+import zw.gov.mohcc.impilo.vashandi.persistence.repository.ShiftRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceAssignmentRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceMembershipRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceProfileRepository;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,15 +47,21 @@ public class WorkforceContextService {
     private final WorkforceAssignmentRepository assignmentRepository;
     private final WorkforceMembershipRepository membershipRepository;
     private final AttendanceEventRepository attendanceRepository;
+    private final ShiftRepository shiftRepository;
+    private final LeaveAvailabilityRepository leaveAvailabilityRepository;
 
     public WorkforceContextService(WorkforceProfileRepository profileRepository,
                                    WorkforceAssignmentRepository assignmentRepository,
                                    WorkforceMembershipRepository membershipRepository,
-                                   AttendanceEventRepository attendanceRepository) {
+                                   AttendanceEventRepository attendanceRepository,
+                                   ShiftRepository shiftRepository,
+                                   LeaveAvailabilityRepository leaveAvailabilityRepository) {
         this.profileRepository = profileRepository;
         this.assignmentRepository = assignmentRepository;
         this.membershipRepository = membershipRepository;
         this.attendanceRepository = attendanceRepository;
+        this.shiftRepository = shiftRepository;
+        this.leaveAvailabilityRepository = leaveAvailabilityRepository;
     }
 
     /**
@@ -130,6 +143,82 @@ public class WorkforceContextService {
                 latest.getEventTime(),
                 latest.getFacilityId(),
                 supervisorConfirmed);
+    }
+
+    /**
+     * Session-context read-model consumed by the experience BFF
+     * ({@code VashandiSessionContextResolver}) when building the session
+     * experience contract. Anti-enumeration: an unknown actor yields the same
+     * shape with a {@code no_workforce_profile} resolution state, never a 404.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> sessionContext(UUID tenantId, String healthId, String providerWorkerId) {
+        Optional<WorkforceProfileEntity> profileOpt = Optional.empty();
+        if (healthId != null && !healthId.isBlank()) {
+            profileOpt = profileRepository.findByTenantIdAndHealthId(tenantId, healthId);
+        }
+        if (profileOpt.isEmpty() && providerWorkerId != null && !providerWorkerId.isBlank()) {
+            profileOpt = profileRepository.findByTenantIdAndProviderWorkerId(tenantId, providerWorkerId);
+        }
+
+        Map<String, Object> ctx = new LinkedHashMap<>();
+        if (profileOpt.isEmpty()) {
+            ctx.put("vashandiWorkforceProfileId", null);
+            ctx.put("currentWorkforceStatus", null);
+            ctx.put("currentAssignments", List.of());
+            ctx.put("activeRosteredShifts", List.of());
+            ctx.put("attendanceStatus", null);
+            ctx.put("leaveAvailabilityStatus", null);
+            ctx.put("workforceAccessRisks", List.of());
+            ctx.put("vashandiFriendlyResolutionState", "no_workforce_profile");
+            return ctx;
+        }
+
+        WorkforceProfileEntity profile = profileOpt.get();
+        UUID profileId = profile.getId();
+
+        List<VashandiDtos.WorkContextAssignment> assignments =
+                assignmentRepository.findByTenantIdAndWorkforceProfileIdAndStatusIn(
+                                tenantId, profileId, ACTIVE_STATUSES)
+                        .stream()
+                        .map(this::toAssignment)
+                        .toList();
+
+        VashandiDtos.WorkContextCheckIn checkIn = resolveCheckIn(tenantId, profileId);
+
+        ctx.put("vashandiWorkforceProfileId", profileId.toString());
+        ctx.put("currentWorkforceStatus", profile.getCurrentStatus());
+        ctx.put("currentAssignments", assignments);
+        ctx.put("activeRosteredShifts", activeRosteredShifts(tenantId, profileId));
+        ctx.put("attendanceStatus", checkIn.state());
+        ctx.put("leaveAvailabilityStatus", currentLeaveStatus(tenantId, profileId));
+        ctx.put("workforceAccessRisks", List.of());
+        ctx.put("vashandiFriendlyResolutionState", assignments.isEmpty() ? "no_active_assignment" : null);
+        return ctx;
+    }
+
+    private List<Map<String, Object>> activeRosteredShifts(UUID tenantId, UUID profileId) {
+        OffsetDateTime now = OffsetDateTime.now();
+        return shiftRepository.findByTenantIdAndWorkforceProfileIdAndStartTimeBetweenOrderByStartTimeAsc(
+                        tenantId, profileId, now.minusHours(12), now.plusHours(24))
+                .stream()
+                .map(s -> {
+                    Map<String, Object> shift = new LinkedHashMap<String, Object>();
+                    shift.put("shiftId", s.getId() != null ? s.getId().toString() : null);
+                    shift.put("startTime", s.getStartTime() != null ? s.getStartTime().toString() : null);
+                    shift.put("endTime", s.getEndTime() != null ? s.getEndTime().toString() : null);
+                    shift.put("rosterId", s.getRosterId() != null ? s.getRosterId().toString() : null);
+                    return shift;
+                })
+                .toList();
+    }
+
+    private String currentLeaveStatus(UUID tenantId, UUID profileId) {
+        LocalDate today = LocalDate.now();
+        List<LeaveAvailabilityEntity> current = leaveAvailabilityRepository
+                .findByTenantIdAndWorkforceProfileIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                        tenantId, profileId, "approved", today, today);
+        return current.isEmpty() ? "available" : "on_leave";
     }
 
     private VashandiDtos.WorkContextAssignment toAssignment(WorkforceAssignmentEntity a) {

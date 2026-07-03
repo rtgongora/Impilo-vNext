@@ -28,7 +28,12 @@ public final class VashandiDtos {
     ) {
     }
 
-    public record ReconcileProfileRequest(UUID profileId) {
+    public record ReconcileProfileRequest(
+            UUID profileId,
+            String providerWorkerId,
+            String healthId,
+            String keycloakUserId
+    ) {
     }
 
     public record ReconcileProfileResponse(
