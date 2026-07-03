@@ -61,8 +61,21 @@ public class ResultService {
         result.setReportedBy(ctx.actorId());
         result = resultRepository.save(result);
 
-        // Transition order to RESULT_AVAILABLE if currently IN_PROGRESS or PARTIAL_RESULT
+        // A result arriving on a not-yet-started order implies the intermediate
+        // fulfilment steps happened outside the system (walk-in facility lab with
+        // no LIMS feed) — walk the LEGAL transitions rather than leaving an
+        // incoherent PLACED-order-with-results state. Every hop still goes
+        // through the state machine (guarded + audited); illegal jumps remain
+        // impossible.
         OrderStatus current = order.getStatus();
+        if (current == OrderStatus.PLACED) {
+            order = stateMachine.transition(order, OrderStatus.ACCEPTED);
+            current = order.getStatus();
+        }
+        if (current == OrderStatus.ACCEPTED || current == OrderStatus.SCHEDULED) {
+            order = stateMachine.transition(order, OrderStatus.IN_PROGRESS);
+            current = order.getStatus();
+        }
         if (current == OrderStatus.IN_PROGRESS || current == OrderStatus.PARTIAL_RESULT) {
             stateMachine.transition(order, OrderStatus.RESULT_AVAILABLE);
         }
