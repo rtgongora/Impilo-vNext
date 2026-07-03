@@ -57,22 +57,15 @@ public class CostaEventConsumer {
             }
 
             String billId = text(event, "billId");
-            String tenantId = text(event, "tenantId");
-            BigDecimal amount = event.has("totalAmount")
-                ? new BigDecimal(event.get("totalAmount").asText())
-                : BigDecimal.ZERO;
-            String currency = event.has("currency") ? text(event, "currency") : "USD";
-            String facilityId = text(event, "facilityId");
 
-            // Create a payment intent for the finalized bill
-            String idempotencyKey = "COSTA_BILL:" + billId;
-            intentService.createIntent(
-                SourceType.COSTA_BILL, billId, amount, currency,
-                facilityId != null ? UUID.fromString(facilityId) : null,
-                idempotencyKey, null
-            );
-
-            log.info("Created payment intent for COSTA bill {}", billId);
+            // Intent creation moved to COSTA's synchronous handoff
+            // (PaymentIntegrationService -> MushexPaymentIntentClient): this
+            // consumer could never work — the BILL_FINALIZED payload lacked
+            // the fields it read (amount resolved to 0, facility to null) and
+            // TrustContextHolder.require() throws on the Kafka thread. It
+            // would also double-bill the FULL bill (not the patient
+            // shortfall) once listeners were enabled. Kept as an observer.
+            log.info("costa.bill.finalized observed for bill {} (intent creation is COSTA-driven)", billId);
 
             markProcessed(eventId, "COSTA");
             ack.acknowledge();

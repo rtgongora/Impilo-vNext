@@ -267,9 +267,16 @@ public class BillService {
         bill = billHeaderRepository.save(bill);
 
         TrustContext ctx = TrustContextHolder.require();
-        publishEvent("BILL", billId, "BILL_FINALIZED",
-                Map.of("billId", billId, "totalPayable", bill.getTotalPayable()),
-                ctx.tenantId());
+        Map<String, Object> finalizedPayload = new java.util.LinkedHashMap<>();
+        finalizedPayload.put("eventId", "COSTA_BILL_FINALIZED:" + billId);
+        finalizedPayload.put("billId", billId);
+        finalizedPayload.put("tenantId", ctx.tenantId() != null ? ctx.tenantId().toString() : null);
+        finalizedPayload.put("facilityId", bill.getFacilityId() != null ? bill.getFacilityId().toString() : null);
+        finalizedPayload.put("currency", bill.getCurrency());
+        finalizedPayload.put("totalPayable", bill.getTotalPayable());
+        finalizedPayload.put("patientPayable", bill.getPatientPayable());
+        finalizedPayload.put("insurerPayable", bill.getInsurerPayable());
+        publishEvent("BILL", billId, "BILL_FINALIZED", finalizedPayload, ctx.tenantId());
 
         operationalFinanceService.onBillFinalized(bill);
 

@@ -127,9 +127,10 @@ public class BillController {
 
     @PostMapping("/{id}/create-payment-intent")
     public ResponseEntity<ApiResponse<PaymentEntity>> createPaymentIntent(@PathVariable String id,
-                                                                          @Valid @RequestBody PaymentIntentRequest request) {
+                                                                          @Valid @RequestBody PaymentIntentRequest request,
+                                                                          jakarta.servlet.http.HttpServletRequest servletRequest) {
         var ctx = TrustContextHolder.require();
-        PaymentEntity payment = paymentService.createPaymentIntent(id, request.paymentType(), request.amount());
+        PaymentEntity payment = paymentService.createPaymentIntent(id, request.paymentType(), request.amount(), servletRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(payment, ctx.correlationId().toString()));
     }

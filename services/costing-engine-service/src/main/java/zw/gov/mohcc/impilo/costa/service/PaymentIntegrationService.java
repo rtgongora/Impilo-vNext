@@ -50,6 +50,8 @@ public class PaymentIntegrationService {
     private final InvoiceLineRepository invoiceLineRepository;
     private final PaymentAllocationService paymentAllocationService;
 
+    private final zw.gov.mohcc.impilo.costa.integration.MushexPaymentIntentClient mushexPaymentIntentClient;
+
     public PaymentIntegrationService(BillHeaderRepository billHeaderRepository,
                                      EncounterRepository encounterRepository,
                                      PaymentRepository paymentRepository,
@@ -62,7 +64,8 @@ public class PaymentIntegrationService {
                                      PatientAccountService patientAccountService,
                                      BillLineRepository billLineRepository,
                                      InvoiceLineRepository invoiceLineRepository,
-                                     PaymentAllocationService paymentAllocationService) {
+                                     PaymentAllocationService paymentAllocationService,
+            zw.gov.mohcc.impilo.costa.integration.MushexPaymentIntentClient mushexPaymentIntentClient) {
         this.billHeaderRepository = billHeaderRepository;
         this.encounterRepository = encounterRepository;
         this.paymentRepository = paymentRepository;
@@ -76,6 +79,7 @@ public class PaymentIntegrationService {
         this.billLineRepository = billLineRepository;
         this.invoiceLineRepository = invoiceLineRepository;
         this.paymentAllocationService = paymentAllocationService;
+        this.mushexPaymentIntentClient = mushexPaymentIntentClient;
     }
 
     public List<PaymentEntity> getPaymentsForBill(String billId) {
@@ -178,6 +182,19 @@ public class PaymentIntegrationService {
 
     @Transactional
     public PaymentEntity createPaymentIntent(String billId, PaymentType paymentType, BigDecimal amount) {
+        return createPaymentIntent(billId, paymentType, amount, null);
+    }
+
+    /**
+     * Creates the COSTA payment record AND the corresponding MusheX payment
+     * intent in one step, persisting the intent id so MusheX status events
+     * (mushex.payment.status.changed) can find their payment — without the
+     * linkage the status consumer's lookup always missed and the money loop
+     * never closed.
+     */
+    @Transactional
+    public PaymentEntity createPaymentIntent(String billId, PaymentType paymentType, BigDecimal amount,
+                                             jakarta.servlet.http.HttpServletRequest inboundRequest) {
         BillHeaderEntity bill = billHeaderRepository.findById(billId)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found: " + billId));
 
@@ -189,13 +206,33 @@ public class PaymentIntegrationService {
         payment.setStatus(PaymentStatus.PENDING);
         payment = paymentRepository.save(payment);
 
+        // Sovereign rail handoff — fail loud: a payment record without a rail
+        // intent is exactly the dormant state this integration replaces.
+        String metadata = "{\"costa_payment_id\":\"" + payment.getId()
+                + "\",\"patient_cpid\":\"" + String.valueOf(getPatientCpid(bill)) + "\"}";
+        zw.gov.mohcc.impilo.costa.integration.MushexPaymentIntentClient.MushexIntentCreated intent = mushexPaymentIntentClient.createPaymentIntent(
+                inboundRequest,
+                "COSTA_BILL",
+                billId,
+                amount.toPlainString(),
+                bill.getCurrency(),
+                bill.getFacilityId() != null ? bill.getFacilityId().toString() : null,
+                "COSTA_PAYMENT:" + payment.getId(),
+                metadata);
+        payment.setMushexPaymentIntentId(intent.intentId());
+        payment = paymentRepository.save(payment);
+
         TrustContext ctx = TrustContextHolder.require();
         Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("eventId", "COSTA_PAYMENT_INTENT:" + payment.getId());
+        payload.put("tenantId", ctx.tenantId() != null ? ctx.tenantId().toString() : null);
         payload.put("billId", billId);
         payload.put("paymentId", payment.getId());
+        payload.put("mushexIntentId", intent.intentId());
         payload.put("amount", amount);
         payload.put("currency", bill.getCurrency());
         payload.put("paymentType", paymentType.name());
+        payload.put("facilityId", bill.getFacilityId() != null ? bill.getFacilityId().toString() : null);
         payload.put("patientCpid", getPatientCpid(bill));
 
         publishEvent("PAYMENT", payment.getId().toString(), "PAYMENT_INTENT_CREATED", payload, ctx.tenantId());
