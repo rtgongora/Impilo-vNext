@@ -10,7 +10,10 @@ metadata:
   name: orthanc-config
   namespace: {{ .Release.Namespace }}
 data:
-  preview.json: |
+  # Replaces the image's /etc/orthanc/orthanc.json entirely — Orthanc treats a
+  # key defined in two config files as a fatal error, and the image default
+  # defines nearly every key we need to change.
+  orthanc.json: |
     {
       "Name": "impilo-preview",
       "AuthenticationEnabled": false,
@@ -20,7 +23,9 @@ data:
       "HttpPort": 8042,
       "DicomPort": 4242,
       "StorageDirectory": "/var/lib/orthanc/db",
-      "IndexDirectory": "/var/lib/orthanc/db"
+      "IndexDirectory": "/var/lib/orthanc/db",
+      "Plugins": ["/usr/local/share/orthanc/plugins/libOrthancDicomWeb.so"],
+      "DicomWeb": { "Enable": true, "Root": "/dicom-web/" }
     }
 ---
 apiVersion: apps/v1
@@ -49,8 +54,8 @@ spec:
             - containerPort: 4242
           volumeMounts:
             - name: orthanc-config
-              mountPath: /etc/orthanc/preview.json
-              subPath: preview.json
+              mountPath: /etc/orthanc/orthanc.json
+              subPath: orthanc.json
             - name: orthanc-storage
               mountPath: /var/lib/orthanc/db
           readinessProbe:
