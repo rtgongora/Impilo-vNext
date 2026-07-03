@@ -39,13 +39,19 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, TrustContextFilter trustContextFilter,
-            @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri) throws Exception {
+            @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri,
+            @Value("${impilo.security.disable-oauth-for-tests:false}") boolean disableOauthForTests) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
-            .authorizeHttpRequests(auth -> auth
+            .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // Same convention as pct-service: environments that front all traffic with
+        // Envoy ext_authz (preview/tests) may disable the in-service OAuth layer;
+        // the trust-context filter still enforces trust headers.
+        if (!disableOauthForTests) {
+            http.authorizeHttpRequests(auth -> auth
                 // Actuator — health probes and metrics
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 // API documentation
@@ -54,11 +60,10 @@ public class SecurityConfig {
                 // All OROS business endpoints require authentication
                 .requestMatchers("/v1/**").authenticated()
                 // Everything else requires authentication
-                .anyRequest().authenticated()
-            );
-
-        if (issuerUri != null && !issuerUri.isBlank()) {
-            http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
+                .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
+        } else {
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         }
 
         return http.build();
