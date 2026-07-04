@@ -45,6 +45,11 @@ class AppointmentServiceTest {
                 UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
     }
 
+    @org.junit.jupiter.api.AfterEach
+    void tearDown() {
+        TrustContextHolder.clear();
+    }
+
     @Test
     void createCitizen_persistsRequestedAppointmentAndEmitsOutbox() {
         AppointmentEntity saved = new AppointmentEntity();
@@ -130,6 +135,76 @@ class AppointmentServiceTest {
         // Check-in ends at queue entry: the encounter starts when the provider
         // begins service, never at the front desk.
         verify(pctClient, never()).startEncounter(any(), any(), anyMap());
+    }
+
+    @Test
+    void noShow_setsNoShowStatus() {
+        UUID appointmentId = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeee0001");
+
+        AppointmentEntity entity = new AppointmentEntity();
+        entity.setId(appointmentId);
+        entity.setTenantId(TENANT_ID);
+        entity.setPatientCpid("CPID-ZW-00001");
+        entity.setStatus(AppointmentStatus.CONFIRMED);
+        entity.setStartTime(Instant.parse("2026-06-15T09:00:00Z"));
+        entity.setEndTime(Instant.parse("2026-06-15T09:30:00Z"));
+        when(appointmentRepository.findByIdAndTenantId(appointmentId, TENANT_ID))
+                .thenReturn(Optional.of(entity));
+        when(appointmentRepository.save(any(AppointmentEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        AppointmentResponse response = service.noShow(appointmentId);
+
+        assertThat(response.status()).isEqualTo("NO_SHOW");
+        assertThat(entity.getStatus()).isEqualTo(AppointmentStatus.NO_SHOW);
+        // No-show never touches the PCT queue chain from the booking side
+        verify(pctClient, never()).startJourney(any(), anyMap());
+    }
+
+    @Test
+    void reschedule_setsRescheduledStatusAndNewTimes() {
+        UUID appointmentId = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeee0002");
+
+        AppointmentEntity entity = new AppointmentEntity();
+        entity.setId(appointmentId);
+        entity.setTenantId(TENANT_ID);
+        entity.setPatientCpid("CPID-ZW-00001");
+        entity.setStatus(AppointmentStatus.SCHEDULED);
+        entity.setStartTime(Instant.parse("2026-06-15T09:00:00Z"));
+        entity.setEndTime(Instant.parse("2026-06-15T09:30:00Z"));
+        when(appointmentRepository.findByIdAndTenantId(appointmentId, TENANT_ID))
+                .thenReturn(Optional.of(entity));
+        when(appointmentRepository.save(any(AppointmentEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        AppointmentResponse response = service.reschedule(
+                appointmentId, "2026-07-01T11:00:00Z", "2026-07-01T11:45:00Z");
+
+        assertThat(response.status()).isEqualTo("RESCHEDULED");
+        assertThat(entity.getStatus()).isEqualTo(AppointmentStatus.RESCHEDULED);
+        assertThat(entity.getStartTime()).isEqualTo(Instant.parse("2026-07-01T11:00:00Z"));
+        assertThat(entity.getEndTime()).isEqualTo(Instant.parse("2026-07-01T11:45:00Z"));
+    }
+
+    @Test
+    void reschedule_withoutEndTime_defaultsToThirtyMinuteSlot() {
+        UUID appointmentId = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeee0003");
+
+        AppointmentEntity entity = new AppointmentEntity();
+        entity.setId(appointmentId);
+        entity.setTenantId(TENANT_ID);
+        entity.setPatientCpid("CPID-ZW-00001");
+        entity.setStatus(AppointmentStatus.CONFIRMED);
+        when(appointmentRepository.findByIdAndTenantId(appointmentId, TENANT_ID))
+                .thenReturn(Optional.of(entity));
+        when(appointmentRepository.save(any(AppointmentEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.reschedule(appointmentId, "2026-07-01T14:00:00Z", null);
+
+        assertThat(entity.getStatus()).isEqualTo(AppointmentStatus.RESCHEDULED);
+        assertThat(entity.getStartTime()).isEqualTo(Instant.parse("2026-07-01T14:00:00Z"));
+        assertThat(entity.getEndTime()).isEqualTo(Instant.parse("2026-07-01T14:30:00Z"));
     }
 
     @Test

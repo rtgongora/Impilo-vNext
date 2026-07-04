@@ -329,6 +329,46 @@ class QueueEngineTest {
         }
 
         @Test
+        @DisplayName("updateItemStatus to NO_SHOW emits QUEUE_ITEM_UPDATED outbox event with newStatus NO_SHOW")
+        void noShowEmitsOutboxEventWithNewStatus() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                UUID itemId = UUID.randomUUID();
+                QueueItemEntity item = new QueueItemEntity();
+                item.setId(itemId);
+                item.setQueueId(QUEUE_ID);
+                item.setJourneyId("J-TEST-001");
+                item.setPatientCpid("CPID-001");
+                item.setTokenNumber(9);
+                item.setStatus(QueueItemStatus.CALLED);
+
+                JourneyEntity journey = createJourney("J-TEST-001");
+
+                when(queueItemRepository.findById(itemId)).thenReturn(Optional.of(item));
+                when(journeyRepository.findByJourneyId("J-TEST-001")).thenReturn(Optional.of(journey));
+                when(journeyStateMachine.transition(any(), any())).thenReturn(journey);
+                when(queueItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+                queueEngine.updateItemStatus(itemId, QueueItemStatus.NO_SHOW);
+
+                // The notification-service consumer maps newStatus NO_SHOW to
+                // QUEUE_CITIZEN_NO_SHOW — a missing/renamed field silently kills
+                // the patient message, so the payload contract is pinned here.
+                ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+                verify(outboxRepository).save(captor.capture());
+                EventOutboxEntity event = captor.getValue();
+                assertThat(event.getEventType()).isEqualTo("QUEUE_ITEM_UPDATED");
+                assertThat(event.getPayload())
+                        .contains("\"eventType\":\"QUEUE_ITEM_UPDATED\"")
+                        .contains("\"previousStatus\":\"CALLED\"")
+                        .contains("\"newStatus\":\"NO_SHOW\"")
+                        .contains("\"tenantId\":\"" + TENANT_ID + "\"")
+                        .contains("\"patientCpid\":\"CPID-001\"");
+            }
+        }
+
+        @Test
         @DisplayName("updateItemStatus writes a QUEUE_ITEM_UPDATED outbox event with previous and new status")
         void statusChangeEmitsOutboxEvent() {
             try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
