@@ -150,6 +150,9 @@ class QueueEngineTest {
                 expectedItem.setId(UUID.randomUUID());
                 expectedItem.setQueueId(QUEUE_ID);
                 expectedItem.setJourneyId("J-URGENT");
+                // patient_cpid is NOT NULL on real rows and callNext's outbox
+                // payload includes it — a fixture without it NPEs in Map.of
+                expectedItem.setPatientCpid("CPID-URGENT");
                 expectedItem.setPriority(5);
                 expectedItem.setTokenNumber(3);
                 expectedItem.setStatus(QueueItemStatus.WAITING);

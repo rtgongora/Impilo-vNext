@@ -90,6 +90,10 @@ class AppointmentServiceTest {
         entity.setPatientCpid("CPID-ZW-00001");
         entity.setFacilityId(42L);
         entity.setStatus(AppointmentStatus.CONFIRMED);
+        // checkIn publishes appointment.booked with scheduledAt = startTime;
+        // a fixture without times NPEs inside publishBookedEvent
+        entity.setStartTime(Instant.parse("2026-06-15T09:00:00Z"));
+        entity.setEndTime(Instant.parse("2026-06-15T09:30:00Z"));
         when(appointmentRepository.findByIdAndTenantId(appointmentId, TENANT_ID))
                 .thenReturn(Optional.of(entity));
         when(appointmentRepository.save(any(AppointmentEntity.class)))
@@ -137,6 +141,8 @@ class AppointmentServiceTest {
         entity.setTenantId(TENANT_ID);
         entity.setPatientCpid("CPID-ZW-00001");
         entity.setStatus(AppointmentStatus.CONFIRMED);
+        entity.setStartTime(Instant.parse("2026-06-15T09:00:00Z"));
+        entity.setEndTime(Instant.parse("2026-06-15T09:30:00Z"));
         when(appointmentRepository.findByIdAndTenantId(appointmentId, TENANT_ID))
                 .thenReturn(Optional.of(entity));
         when(appointmentRepository.save(any(AppointmentEntity.class)))
