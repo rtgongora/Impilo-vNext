@@ -29,6 +29,13 @@ data:
     room:
       empty_timeout: 900
       max_participants: 8
+    # Push room/participant/track/egress lifecycle events to rtc-gateway, which
+    # verifies the HS256-signed webhook (api_key selects the signing key from
+    # `keys` above) and translates events onto the impilo.rtc.* outbox.
+    webhook:
+      urls:
+        - {{ .Values.livekit.webhookUrl | default "http://rtc-gateway-service:8196/internal/v1/rtc/webhooks/livekit" }}
+      api_key: {{ .Values.livekit.apiKey }}
     logging:
       level: info
 {{- end }}
