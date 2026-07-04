@@ -49,7 +49,7 @@
 | jobs-service | YES | aligned | sha256:8ecaf6f31f95 | sha256:8ecaf6f31f95 | sha256:8ecaf6f31f95 | 127.0.0.1:5000/impilo/jobs-service@sha256:8ecaf6f31f9554209fab10bca50e36faae417df4a3816968eaae2da879c40293 |
 | khuluma-service | YES | aligned | sha256:e4ee412f6973 | sha256:e4ee412f6973 | sha256:9dc9937a3ada | 127.0.0.1:5000/impilo/khuluma-service@sha256:e4ee412f69738f3c3ad0d37c0250dcf461f0e0140177fec7f19f2bffc4d804b2 |
 | landela-adapter-service | YES | aligned | sha256:54d455676609 | sha256:54d455676609 | sha256:54d455676609 | 127.0.0.1:5000/impilo/landela-adapter-service@sha256:54d455676609cca4b85622b42544a268db2b83e5077563e40def8406d665225e |
-| learning-service | YES | aligned | sha256:00cf29977678 | sha256:00cf29977678 | sha256:00cf29977678 | 127.0.0.1:5000/impilo/learning-service@sha256:00cf2997767870f289a0447b2bf7cf035d72f9d2b0c3a1c63f7073d3f7b3564c |
+| learning-service | YES | aligned | sha256:937e059a24fd | sha256:937e059a24fd | sha256:937e059a24fd | 127.0.0.1:5000/impilo/learning-service@sha256:937e059a24fdb27d3fbf37571e4de75b630abf3bad5bfc3b87c3efee9b09ac67 |
 | live-service | YES | aligned | sha256:5842a457ff57 | sha256:5842a457ff57 | sha256:5842a457ff57 | 127.0.0.1:5000/impilo/live-service@sha256:5842a457ff57f0563a5220181d30299b591d115a276451ec88f978be49608da3 |
 | llm-orchestration-service | YES | aligned | sha256:6e67b8cce6cb | sha256:6e67b8cce6cb | sha256:6e67b8cce6cb | 127.0.0.1:5000/impilo/llm-orchestration-service@sha256:6e67b8cce6cb5b61c74d4c6107133cddd1bb76007cd269d352c8dbd07adec42c |
 | madi-service | YES | aligned | sha256:1979e8e3071a | sha256:1979e8e3071a | sha256:1979e8e3071a | 127.0.0.1:5000/impilo/madi-service@sha256:1979e8e3071a341a2b702d3f04cec5fbd5af7855f8ad95612dc336f493be18a4 |
@@ -97,7 +97,7 @@
 | tshepo-offline-service | YES | aligned | sha256:9a7166912572 | sha256:9a7166912572 | sha256:9a7166912572 | 127.0.0.1:5000/impilo/tshepo-offline-service@sha256:9a71669125729e70900ad51bbf088fd47fd62940f5f1fe4c9ce613e5b62e3024 |
 | tuso-service | YES | aligned | sha256:38157470305a | sha256:38157470305a | sha256:38157470305a | 127.0.0.1:5000/impilo/tuso-service@sha256:38157470305ab398f051402c931e939013791877843a5be3c855b4028075b2a3 |
 | ubomi-service | YES | aligned | sha256:890c7e5de9e7 | sha256:890c7e5de9e7 | sha256:890c7e5de9e7 | 127.0.0.1:5000/impilo/ubomi-service@sha256:890c7e5de9e70db0d3d3e124c9c94e895fe0542427e97da558c2153bf6718e58 |
-| varapi-service | YES | aligned | sha256:2b8ce6f6c17d | sha256:2b8ce6f6c17d | sha256:2b8ce6f6c17d | 127.0.0.1:5000/impilo/varapi-service@sha256:2b8ce6f6c17d79dd1f6804d077392c010d624c707bf26060bcd0910f31da21e6 |
+| varapi-service | YES | aligned | sha256:d849db697a0c | sha256:d849db697a0c | sha256:d849db697a0c | 127.0.0.1:5000/impilo/varapi-service@sha256:d849db697a0c15ef3a2fd183b63812d1c87b7edb9dd5e3cf7ab3e1fa04edc1e4 |
 | vashandi-workforce-service | YES | aligned | sha256:7f949d727ca1 | sha256:7f949d727ca1 | sha256:7f949d727ca1 | 127.0.0.1:5000/impilo/vashandi-workforce-service@sha256:7f949d727ca1deca59a6defc1c5df9657c4687a61d3bda28169001ef5ed0e5e3 |
 | vito-service | YES | aligned | sha256:850fba0816ba | sha256:850fba0816ba | sha256:850fba0816ba | 127.0.0.1:5000/impilo/vito-service@sha256:850fba0816ba45de4887325eb7ce05465bd813934eb444eed74b8d90da919a93 |
 | wellness-service | YES | aligned | sha256:2c2e9916a521 | sha256:2c2e9916a521 | sha256:2c2e9916a521 | 127.0.0.1:5000/impilo/wellness-service@sha256:2c2e9916a52161b0ebfb143eba14c9a5b4f698c4370deb088118c05c124d66ff |

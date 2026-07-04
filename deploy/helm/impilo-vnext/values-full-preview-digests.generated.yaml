@@ -1,7 +1,7 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: bash scripts/full-boot/resolve-image-digests.sh
 # Chart-native digest pinning: Helm renders registry/repo@sha256 for each runtime service.
-generated_at: '2026-07-04T03:18:29.313053+00:00'
+generated_at: '2026-07-04T04:52:15.634970+00:00'
 source_tag: preview
 registry: 127.0.0.1:5000
 digest_pin_count: 96
@@ -128,7 +128,7 @@ fullBootServices:
       digest: sha256:54d455676609cca4b85622b42544a268db2b83e5077563e40def8406d665225e
   learning-service:
     image:
-      digest: sha256:00cf2997767870f289a0447b2bf7cf035d72f9d2b0c3a1c63f7073d3f7b3564c
+      digest: sha256:937e059a24fdb27d3fbf37571e4de75b630abf3bad5bfc3b87c3efee9b09ac67
   live-service:
     image:
       digest: sha256:5842a457ff57f0563a5220181d30299b591d115a276451ec88f978be49608da3
@@ -269,7 +269,7 @@ fullBootServices:
       digest: sha256:890c7e5de9e70db0d3d3e124c9c94e895fe0542427e97da558c2153bf6718e58
   varapi-service:
     image:
-      digest: sha256:2b8ce6f6c17d79dd1f6804d077392c010d624c707bf26060bcd0910f31da21e6
+      digest: sha256:d849db697a0c15ef3a2fd183b63812d1c87b7edb9dd5e3cf7ab3e1fa04edc1e4
   vashandi-workforce-service:
     image:
       digest: sha256:7f949d727ca1deca59a6defc1c5df9657c4687a61d3bda28169001ef5ed0e5e3
