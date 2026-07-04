@@ -111,7 +111,7 @@ export interface QueueEscalationInfo {
  * are null unless the item was escalated). Returns null when not escalated.
  */
 export function getQueueEscalation(entry: QueueEntryResource): QueueEscalationInfo | null {
-  const attrs = entry.attributes as QueueEntryAttributes;
+  const attrs = (entry.attributes ?? {}) as QueueEntryAttributes;
   const escalatedAt =
     readString(attrs, ["escalatedAt", "escalated_at"]) ||
     readString(entry as unknown as Record<string, unknown>, ["escalatedAt", "escalated_at"]);
