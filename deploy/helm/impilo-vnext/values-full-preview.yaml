@@ -306,3 +306,13 @@ fullBootServices:
     env:
       # CPD writeback: consume impilo.learning.certificate.issued.v1.
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  live-service:
+    env:
+      # RTC media truth: consume impilo.rtc.session/participant events so the LiveKit
+      # room lifecycle drives live-event state (SCHEDULED→LIVE→ENDED) + attendance.
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  khuluma-service:
+    env:
+      # RTC media truth: consume impilo.rtc.* events so call participant state and
+      # call end follow the actual media room (khuluma_call_events audit + ACTIVE→ENDED).
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
