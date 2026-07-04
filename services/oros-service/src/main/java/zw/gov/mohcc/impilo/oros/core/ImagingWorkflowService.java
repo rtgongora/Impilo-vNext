@@ -9,7 +9,9 @@ import zw.gov.mohcc.impilo.oros.domain.ImagingWorkflowState;
 import zw.gov.mohcc.impilo.oros.domain.OrderType;
 import zw.gov.mohcc.impilo.oros.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity;
+import zw.gov.mohcc.impilo.oros.persistence.entity.OrderItemEntity;
 import zw.gov.mohcc.impilo.oros.persistence.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.oros.persistence.repository.OrderItemRepository;
 import zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -38,15 +40,18 @@ public class ImagingWorkflowService {
     private static final Logger log = LoggerFactory.getLogger(ImagingWorkflowService.class);
 
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
     private final zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration;
 
     public ImagingWorkflowService(OrderRepository orderRepository,
+                                  OrderItemRepository orderItemRepository,
                                   EventOutboxRepository outboxRepository,
                                   ObjectMapper objectMapper,
                                   zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration) {
         this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
         this.butanoIntegration = butanoIntegration;
@@ -121,11 +126,23 @@ public class ImagingWorkflowService {
         return linked;
     }
 
-    /** Best-effort modality hint from the order's first imaging item (null if unavailable). */
-    private String firstItemModality(OrderEntity order) {
-        // Modality lives on order items; not loaded here — return null so ImagingStudy omits it
-        // rather than guessing. (A future enhancement can join the item modality.)
-        return null;
+    /**
+     * Best-effort modality hint from the order's first imaging item carrying one (null if none).
+     * Used for FHIR ImagingStudy modality and DICOM MWL scheduled-procedure-step modality; callers
+     * must tolerate null rather than guess.
+     */
+    public String firstItemModality(OrderEntity order) {
+        try {
+            return orderItemRepository.findByOrderId(order.getOrderId()).stream()
+                    .map(OrderItemEntity::getModality)
+                    .filter(m -> m != null && !m.isBlank())
+                    .findFirst()
+                    .map(m -> m.trim().toUpperCase(java.util.Locale.ROOT))
+                    .orElse(null);
+        } catch (Exception e) {
+            log.warn("Could not resolve item modality for orderId={}: {}", order.getOrderId(), e.getMessage());
+            return null;
+        }
     }
 
     private OrderEntity doTransition(OrderEntity order, ImagingWorkflowState target, String reason) {

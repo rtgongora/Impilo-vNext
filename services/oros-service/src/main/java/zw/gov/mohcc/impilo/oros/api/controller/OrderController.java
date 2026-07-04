@@ -211,7 +211,9 @@ public class OrderController {
 
         OrderEntity order = imagingWorkflowService.schedule(orderId, request.scheduledAt(), request.note());
         // Publish a DICOM MWL item for the scheduled procedure step (gated; OFF by default).
-        mwlPublisherRouter.publish(order, null);
+        // Modality is resolved from the order's items so the SPS carries the real machine type
+        // (falls back to "OT" inside the dataset builder only when no item declares one).
+        mwlPublisherRouter.publish(order, imagingWorkflowService.firstItemModality(order));
         return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
     }
 
