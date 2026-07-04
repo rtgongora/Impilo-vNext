@@ -100,7 +100,7 @@ ok "PATIENT refused (HTTP $DENY_CODE)"
 # ── 4. PROVIDER starts recording → egress ACTIVE ─────────────────────────────
 step "4. PROVIDER starts recording (consent-gated)"
 act_hdrs "$ANCHOR" "$TOKEN"
-REC=$(svc_curl POST "$RTC/internal/v1/rtc/sessions/$TID/recording/start" HDRS \
+REC=$(svc_curl POST "$RTC/internal/v1/rtc/sessions/$TID/recording/start" \
   "{\"startedBy\":\"$ANCHOR\",\"startedByRole\":\"PROVIDER\"}")
 echo "  start: $(echo "$REC" | head -c 200)"
 echo "$REC" | grep -qiE "egress|REQUESTED|ACTIVE" || fail "recording start failed: $(echo "$REC" | head -c 400)"
@@ -110,7 +110,7 @@ sleep 30
 
 step "5. stop recording → egress finalizes → webhook completes the row"
 act_hdrs "$ANCHOR" "$TOKEN"
-svc_curl POST "$RTC/internal/v1/rtc/sessions/$TID/recording/stop" HDRS '{}' >/dev/null
+svc_curl POST "$RTC/internal/v1/rtc/sessions/$TID/recording/stop" '{}' >/dev/null
 REC_ROW=""
 for i in $(seq 1 24); do
   REC_ROW=$(rpsql "SELECT status || '|' || COALESCE(storage_bucket,'') || '|' || COALESCE(storage_key,'')
@@ -127,7 +127,7 @@ ok "recording COMPLETE → s3://$BUCKET/$KEY"
 # ── 6. Artifact adoption + physical playback proof ───────────────────────────
 step "6. document-service adopts the artifact → signed-url fetch"
 act_hdrs "$ANCHOR" "$TOKEN"
-REG=$(svc_curl POST "$DOCS/v1/internal/objects/register-external" HDRS \
+REG=$(svc_curl POST "$DOCS/v1/internal/objects/register-external" \
   "{\"bucket\":\"$BUCKET\",\"key\":\"$KEY\",\"contentType\":\"video/mp4\",\"ownerService\":\"PCT\",\"title\":\"Recording proof $RUN\"}")
 OBJ_ID=$(echo "$REG" | jq1 "
 x=d.get('data') or d
@@ -137,7 +137,7 @@ print(a.get('objectId') or a.get('id') or x.get('id') or '')")
 ok "artifact catalogued as object $OBJ_ID"
 
 act_hdrs "$ANCHOR" "$TOKEN"
-SIGNED=$(svc_curl GET "$DOCS/v1/internal/objects/$OBJ_ID/signed-url" HDRS)
+SIGNED=$(svc_curl GET "$DOCS/v1/internal/objects/$OBJ_ID/signed-url")
 URL=$(echo "$SIGNED" | jq1 "
 x=d.get('data') or d
 a=x.get('attributes', x) if isinstance(x,dict) else {}
