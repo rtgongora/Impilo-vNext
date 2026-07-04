@@ -123,21 +123,45 @@ print(ent.get('verificationDigest') or ent.get('verification_digest') or '')")
 [[ -n "$CERT_NUM" ]] || fail "certificate not issued: $(echo "$CERT" | head -c 400)"
 ok "certificate $CERT_NUM issued (digest ${DIGEST:0:16}...)"
 
-# ── 6. CPD writeback to VARAPI (Kafka loop) ──────────────────────────────────
+# ── 6. CPD writeback to VARAPI (Kafka loop + governed acceptance) ────────────
+# Fundo never awards points: the certificate event lands a PENDING candidate in
+# varapi; a council/registry actor accepts it into an IN_PROGRESS CPD cycle and
+# only then do points post to the summary. We prove the whole governed loop.
 step "6. CPD writeback via impilo.learning.certificate.issued.v1"
-CPD_OK=""
+VARAPI="http://varapi-service:8083"
+vpsql() { kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d varapi -tAc "$1"; }
+
+# 6a. candidate landed (proves learning→Kafka→varapi consumer)
+CANDIDATE_ID=""
 for i in $(seq 1 12); do
-  CPD=$(svc_curl GET "http://varapi-service:8083/v1/internal/providers/$PROVIDER_ID/cpd/summary")
-  CPD_OK=$(echo "$CPD" | jqpy "
-data=d.get('data') or d
-import json as j
-s=j.dumps(data)
-print('yes' if ('$COURSE_CODE' in s or (isinstance(data,dict) and (data.get('totalPoints') or data.get('total_points') or 0))) else '')" 2>/dev/null || echo "")
-  [[ -n "$CPD_OK" ]] && break
+  CANDIDATE_ID=$(vpsql "SELECT id FROM varapi.fundo_cpd_candidates WHERE external_ref='$CERT_NUM'" | tr -d '[:space:]')
+  [[ -n "$CANDIDATE_ID" ]] && break
   sleep 5
 done
-[[ -n "$CPD_OK" ]] || fail "CPD summary never reflected the certificate — learning→varapi loop broken: $(echo "$CPD" | head -c 300)"
-ok "VARAPI CPD summary reflects the certificate"
+[[ -n "$CANDIDATE_ID" ]] || fail "no fundo_cpd_candidates row for $CERT_NUM — learning→varapi Kafka loop broken"
+ok "CPD candidate $CANDIDATE_ID landed in varapi (PENDING, governed)"
+
+# 6b. ensure an IN_PROGRESS CPD cycle exists for the provider
+SUMMARY=$(svc_curl GET "$VARAPI/v1/internal/providers/$PROVIDER_ID/cpd/summary")
+CYCLE_STATUS=$(echo "$SUMMARY" | jqpy "print((d.get('data') or {}).get('status') or '')")
+if [[ "$CYCLE_STATUS" != "IN_PROGRESS" ]]; then
+  YEAR=$(date +%Y)
+  svc_curl POST "$VARAPI/v1/internal/providers/$PROVIDER_ID/cpd/cycles" \
+    "{\"cycleName\":\"CPD $YEAR\",\"startDate\":\"$YEAR-01-01\",\"endDate\":\"$YEAR-12-31\",\"requiredPoints\":50}" >/dev/null
+  ok "CPD cycle CPD $YEAR opened for $PROVIDER_ID"
+fi
+
+# 6c. council/registry acceptance → points post
+svc_curl POST "$VARAPI/v1/internal/provider-council/fundo-cpd-candidates/$CANDIDATE_ID/accept" "{}" >/dev/null || true
+CAND_STATE=$(vpsql "SELECT verification_state FROM varapi.fundo_cpd_candidates WHERE id=$CANDIDATE_ID" | tr -d '[:space:]')
+[[ "$CAND_STATE" == "ACCEPTED" ]] || fail "candidate $CANDIDATE_ID not ACCEPTED (state=$CAND_STATE)"
+ok "candidate ACCEPTED by council/registry actor"
+
+# 6d. summary reflects earned points
+CPD=$(svc_curl GET "$VARAPI/v1/internal/providers/$PROVIDER_ID/cpd/summary")
+EARNED=$(echo "$CPD" | jqpy "print((d.get('data') or {}).get('earnedPoints') or 0)")
+[[ "$EARNED" -gt 0 ]] || fail "CPD summary shows no earned points after acceptance: $(echo "$CPD" | head -c 300)"
+ok "VARAPI CPD summary reflects the certificate (earnedPoints=$EARNED)"
 
 # ── 7. Notification dispatch through the real provider (⑤) ───────────────────
 step "7. notification dispatched via NOTIFICATION_SERVICE"
