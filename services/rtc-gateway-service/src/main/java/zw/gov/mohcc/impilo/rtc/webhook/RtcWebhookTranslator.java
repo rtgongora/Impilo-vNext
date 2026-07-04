@@ -6,7 +6,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import zw.gov.mohcc.impilo.rtc.RtcGatewayProperties;
 import zw.gov.mohcc.impilo.rtc.RtcOutboxPublisher;
+import zw.gov.mohcc.impilo.rtc.model.RtcParticipantRecord;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionRecord;
+import zw.gov.mohcc.impilo.rtc.persistence.RtcParticipantPersistence;
 import zw.gov.mohcc.impilo.rtc.persistence.RtcRecordingPersistence;
 import zw.gov.mohcc.impilo.rtc.persistence.RtcSessionPersistence;
 import zw.gov.mohcc.impilo.rtc.persistence.RtcTelemetryPersistence;
@@ -42,17 +44,20 @@ public class RtcWebhookTranslator {
     private final RtcSessionPersistence sessions;
     private final RtcTelemetryPersistence telemetry;
     private final RtcRecordingPersistence recordings;
+    private final RtcParticipantPersistence participants;
     private final RtcOutboxPublisher outboxPublisher;
     private final RtcGatewayProperties properties;
 
     public RtcWebhookTranslator(RtcSessionPersistence sessions,
                                 RtcTelemetryPersistence telemetry,
                                 RtcRecordingPersistence recordings,
+                                RtcParticipantPersistence participants,
                                 RtcOutboxPublisher outboxPublisher,
                                 RtcGatewayProperties properties) {
         this.sessions = sessions;
         this.telemetry = telemetry;
         this.recordings = recordings;
+        this.participants = participants;
         this.outboxPublisher = outboxPublisher;
         this.properties = properties;
     }
@@ -98,12 +103,16 @@ public class RtcWebhookTranslator {
             }
             case "participant_joined" -> {
                 telemetry.recordParticipantJoined(session.id(), identity, occurredAt, event.path("participant"));
+                // Lobby roster: an admitted participant that actually joined is CONNECTED
+                // (no-op when the session mode does not track lobby participants).
+                participants.updateState(session.id(), identity, RtcParticipantRecord.STATE_CONNECTED);
                 publish(session, eventId, EVT_PARTICIPANT_JOINED, occurredAt, identity, null);
             }
             case "participant_left" -> {
                 String disconnectReason = event.path("participant").path("disconnectReason").asText(null);
                 telemetry.recordParticipantLeft(session.id(), identity, occurredAt,
                         disconnectReason, event.path("participant"));
+                participants.updateState(session.id(), identity, RtcParticipantRecord.STATE_LEFT);
                 publish(session, eventId, EVT_PARTICIPANT_LEFT, occurredAt, identity,
                         disconnectReason == null ? null : Map.of("disconnectReason", disconnectReason));
             }

@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import zw.gov.mohcc.impilo.rtc.RtcGatewayProperties;
 import zw.gov.mohcc.impilo.rtc.RtcOutboxPublisher;
+import zw.gov.mohcc.impilo.rtc.model.RtcParticipantRecord;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionRecord;
+import zw.gov.mohcc.impilo.rtc.persistence.InMemoryRtcParticipantPersistence;
 import zw.gov.mohcc.impilo.rtc.persistence.InMemoryRtcSessionPersistence;
 import zw.gov.mohcc.impilo.rtc.persistence.RtcRecordingPersistence;
 import zw.gov.mohcc.impilo.rtc.persistence.RtcTelemetryPersistence;
@@ -33,6 +35,7 @@ class RtcWebhookTranslatorTest {
     private static final String ROOM = "impilo-telemedicine-session-1";
 
     private InMemoryRtcSessionPersistence sessions;
+    private InMemoryRtcParticipantPersistence participants;
     private RtcTelemetryPersistence telemetry;
     private RtcRecordingPersistence recordings;
     private RtcOutboxPublisher outbox;
@@ -46,13 +49,14 @@ class RtcWebhookTranslatorTest {
                 "PROVISIONED", "TELEMEDICINE", "PCT", "encounter:enc-1",
                 "patient-1", "provider-1", "enc-1", "ref-1", "consent-1", "rtc:" + ROOM,
                 Map.of(), Map.of(), Instant.now(), Instant.now()));
+        participants = new InMemoryRtcParticipantPersistence();
         telemetry = mock(RtcTelemetryPersistence.class);
         when(telemetry.insertEventIfNew(any(), any(), anyString(), any(), any(), any(), any())).thenReturn(true);
         recordings = mock(RtcRecordingPersistence.class);
         outbox = mock(RtcOutboxPublisher.class);
         RtcGatewayProperties properties = new RtcGatewayProperties();
         properties.getRecording().getS3().setBucket("impilo-recordings");
-        translator = new RtcWebhookTranslator(sessions, telemetry, recordings, outbox, properties);
+        translator = new RtcWebhookTranslator(sessions, telemetry, recordings, participants, outbox, properties);
     }
 
     @Test
@@ -80,6 +84,37 @@ class RtcWebhookTranslatorTest {
         verify(telemetry).recordParticipantJoined(eq("session-1"), eq("patient-1"), any(Instant.class), any());
         Map<String, Object> payload = capturePayload(RtcWebhookTranslator.EVT_PARTICIPANT_JOINED);
         assertEquals("patient-1", payload.get("participantIdentity"));
+    }
+
+    @Test
+    void participantJoinedMarksLobbyRowConnected() throws Exception {
+        participants.upsert(new RtcParticipantRecord(
+                "session-1", "patient-1", "Patient", "PATIENT",
+                RtcParticipantRecord.STATE_ADMITTED, "FULL", Instant.now(), Instant.now(), "provider-1", null));
+
+        translator.handle(event("participant_joined", "EV_30", "patient-1"));
+
+        assertEquals(RtcParticipantRecord.STATE_CONNECTED,
+                participants.find("session-1", "patient-1").orElseThrow().state());
+    }
+
+    @Test
+    void participantLeftMarksLobbyRowLeft() throws Exception {
+        participants.upsert(new RtcParticipantRecord(
+                "session-1", "patient-1", "Patient", "PATIENT",
+                RtcParticipantRecord.STATE_CONNECTED, "FULL", Instant.now(), Instant.now(), "provider-1", null));
+
+        translator.handle(event("participant_left", "EV_31", "patient-1"));
+
+        assertEquals(RtcParticipantRecord.STATE_LEFT,
+                participants.find("session-1", "patient-1").orElseThrow().state());
+    }
+
+    @Test
+    void participantJoinedWithoutLobbyRowIsANoOpForRoster() throws Exception {
+        translator.handle(event("participant_joined", "EV_32", "stranger-1"));
+
+        assertEquals(0, participants.findBySession("session-1").size());
     }
 
     @Test

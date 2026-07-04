@@ -9,10 +9,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import io.micrometer.core.instrument.MeterRegistry;
 import zw.gov.mohcc.impilo.rtc.model.RtcParticipant;
+import zw.gov.mohcc.impilo.rtc.model.RtcParticipantRecord;
 import zw.gov.mohcc.impilo.rtc.model.RtcParticipantTokenRequest;
+import zw.gov.mohcc.impilo.rtc.model.RtcParticipantView;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionProvisionRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionRecord;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionResponse;
+import zw.gov.mohcc.impilo.rtc.model.RtcSessionResult;
+import zw.gov.mohcc.impilo.rtc.model.RtcWaitingResponse;
+import zw.gov.mohcc.impilo.rtc.persistence.RtcParticipantPersistence;
 import zw.gov.mohcc.impilo.rtc.persistence.RtcSessionPersistence;
 import zw.gov.mohcc.impilo.sessiontemplates.SessionMode;
 import zw.gov.mohcc.impilo.sessiontemplates.SessionTemplate;
@@ -20,6 +25,7 @@ import zw.gov.mohcc.impilo.sessiontemplates.SessionTemplateRegistry;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -53,9 +59,19 @@ public class RtcGatewayService {
                     "SUPPORT", "MODERATOR",
                     "INTERPRETER", "SPEAKER"));
 
+    static final String EVT_PARTICIPANT_WAITING = "impilo.rtc.participant.waiting.v1";
+    static final String EVT_PARTICIPANT_ADMITTED = "impilo.rtc.participant.admitted.v1";
+    static final String EVT_PARTICIPANT_DENIED = "impilo.rtc.participant.denied.v1";
+
+    static final String MEDIA_PROFILE_FULL = "FULL";
+    static final String MEDIA_PROFILE_AUDIO_ONLY = "AUDIO_ONLY";
+
+    private static final String LOBBY_NONE = "NONE";
+
     private final RtcGatewayProperties properties;
     private final LiveKitTokenService tokenService;
     private final RtcSessionPersistence sessions;
+    private final RtcParticipantPersistence participants;
     private final RtcOutboxPublisher outboxPublisher;
     private final MeterRegistry meterRegistry;
     private final SessionTemplateRegistry templates;
@@ -64,18 +80,20 @@ public class RtcGatewayService {
     public RtcGatewayService(RtcGatewayProperties properties,
                              LiveKitTokenService tokenService,
                              RtcSessionPersistence sessions,
+                             RtcParticipantPersistence participants,
                              RtcOutboxPublisher outboxPublisher,
                              MeterRegistry meterRegistry,
                              SessionTemplateRegistry templates) {
         this.properties = properties;
         this.tokenService = tokenService;
         this.sessions = sessions;
+        this.participants = participants;
         this.outboxPublisher = outboxPublisher;
         this.meterRegistry = meterRegistry;
         this.templates = templates;
     }
 
-    public RtcSessionResponse provision(RtcSessionProvisionRequest request) {
+    public RtcSessionResult provision(RtcSessionProvisionRequest request) {
         try {
             validateProvisioningRequest(request);
 
@@ -89,13 +107,20 @@ public class RtcGatewayService {
 
             SessionMode mode = resolveMode(request.sessionType());
             SessionTemplate template = templateFor(mode);
+            // Validate the requesting participant's grant + media profile before
+            // any side effects (room creation, session save).
+            SessionTemplate.TokenGrantProfile grant = template == null
+                    ? null
+                    : resolveGrant(mode, template, request.participant().role());
+            String mediaProfile = template == null
+                    ? null
+                    : resolveMediaProfile(grant, request.participant().mediaProfile());
             String roomName = roomName(request, template);
             if (!properties.getGateway().isDevModeEnabled()) {
                 tokenService.assertLiveKitConfigured();
                 createLiveKitRoom(roomName, template);
             }
 
-            LiveKitTokenService.TokenResult token = issueTemplateToken(roomName, mode, template, request.participant());
             RtcSessionRecord record = new RtcSessionRecord(
                     request.sessionId(),
                     request.tenantId(),
@@ -126,7 +151,7 @@ public class RtcGatewayService {
             }
             outboxPublisher.append("RtcSession", record.id(), "RTC_SESSION_PROVISIONED", sessionPayload(record));
             meterRegistry.counter("impilo_rtc_session_provisioned_total", "provider", provider()).increment();
-            return toResponse(record, token);
+            return issueGatedToken(record, template, grant, mediaProfile, request.participant());
         } catch (RuntimeException ex) {
             meterRegistry.counter("impilo_rtc_session_provision_failed_total",
                     "provider", provider(),
@@ -142,28 +167,90 @@ public class RtcGatewayService {
     }
 
     /** Idempotent re-provision: issue this participant a token for the already-provisioned room. */
-    private RtcSessionResponse joinExisting(RtcSessionRecord existing, RtcSessionProvisionRequest request) {
+    private RtcSessionResult joinExisting(RtcSessionRecord existing, RtcSessionProvisionRequest request) {
         if (request.tenantId() != null && !request.tenantId().equals(existing.tenantId())) {
             throw new IllegalArgumentException("Session belongs to a different tenant");
         }
         if ("ENDED".equals(existing.status())) {
             throw new IllegalArgumentException("Session has ended; provision a new session");
         }
-        SessionMode mode = modeOf(existing);
-        LiveKitTokenService.TokenResult token =
-                issueTemplateToken(existing.roomName(), mode, templateFor(mode), request.participant());
-        meterRegistry.counter("impilo_rtc_token_issued_total", "provider", existing.provider()).increment();
-        return toResponse(existing, token);
+        RtcSessionResult result = gatedTokenFor(existing, request.participant());
+        if (result instanceof RtcSessionResponse) {
+            meterRegistry.counter("impilo_rtc_token_issued_total", "provider", existing.provider()).increment();
+        }
+        return result;
     }
 
-    public RtcSessionResponse issueToken(String sessionId, RtcParticipantTokenRequest request) {
+    public RtcSessionResult issueToken(String sessionId, RtcParticipantTokenRequest request) {
         RtcSessionRecord record = sessions.findById(sessionId)
                 .orElseThrow(() -> new RtcNotFoundException("RTC session not found"));
-        SessionMode mode = modeOf(record);
-        LiveKitTokenService.TokenResult token =
-                issueTemplateToken(record.roomName(), mode, templateFor(mode), request.participant());
-        meterRegistry.counter("impilo_rtc_token_issued_total", "provider", record.provider()).increment();
-        return toResponse(record, token);
+        RtcSessionResult result = gatedTokenFor(record, request.participant());
+        if (result instanceof RtcSessionResponse) {
+            meterRegistry.counter("impilo_rtc_token_issued_total", "provider", record.provider()).increment();
+        }
+        return result;
+    }
+
+    /**
+     * Token refresh mints a normal template-TTL token but never bypasses the
+     * lobby: only ADMITTED/CONNECTED (or previously admitted LEFT) identities
+     * get a token; WAITING/DENIED keep receiving their lobby status body.
+     * Identical gate to {@link #issueToken}.
+     */
+    public RtcSessionResult refreshToken(String sessionId, RtcParticipantTokenRequest request) {
+        return issueToken(sessionId, request);
+    }
+
+    // ── Waiting-room lobby (rtc.session_participants) ────────────────
+
+    /** Admit a lobby participant; idempotent — an already-admitted identity is returned as-is. */
+    public RtcParticipantView admit(String sessionId, String identity, String actor) {
+        RtcSessionRecord session = sessions.findById(sessionId)
+                .orElseThrow(() -> new RtcNotFoundException("RTC session not found"));
+        RtcParticipantRecord existing = participants.find(sessionId, identity).orElse(null);
+        if (existing != null && existing.tokenEligible()) {
+            return RtcParticipantView.of(existing);
+        }
+        RtcParticipantRecord admitted = participants.upsert(new RtcParticipantRecord(
+                sessionId, identity,
+                existing == null ? null : existing.displayName(),
+                existing == null ? null : existing.role(),
+                RtcParticipantRecord.STATE_ADMITTED,
+                existing == null ? null : existing.mediaProfile(),
+                existing == null ? Instant.now() : existing.requestedAt(),
+                Instant.now(), blankToNull(actor), null));
+        publishParticipantEvent(session, EVT_PARTICIPANT_ADMITTED, admitted,
+                admitted.admittedBy() == null ? Map.of() : Map.of("admittedBy", admitted.admittedBy()));
+        meterRegistry.counter("impilo_rtc_participant_admitted_total", "provider", session.provider()).increment();
+        return RtcParticipantView.of(admitted);
+    }
+
+    /** Deny a lobby participant; idempotent — an already-denied identity is returned as-is. */
+    public RtcParticipantView deny(String sessionId, String identity, String reason) {
+        RtcSessionRecord session = sessions.findById(sessionId)
+                .orElseThrow(() -> new RtcNotFoundException("RTC session not found"));
+        RtcParticipantRecord existing = participants.find(sessionId, identity).orElse(null);
+        if (existing != null && RtcParticipantRecord.STATE_DENIED.equals(existing.state())) {
+            return RtcParticipantView.of(existing);
+        }
+        RtcParticipantRecord denied = participants.upsert(new RtcParticipantRecord(
+                sessionId, identity,
+                existing == null ? null : existing.displayName(),
+                existing == null ? null : existing.role(),
+                RtcParticipantRecord.STATE_DENIED,
+                existing == null ? null : existing.mediaProfile(),
+                existing == null ? Instant.now() : existing.requestedAt(),
+                null, null, blankToNull(reason)));
+        publishParticipantEvent(session, EVT_PARTICIPANT_DENIED, denied,
+                denied.deniedReason() == null ? Map.of() : Map.of("reason", denied.deniedReason()));
+        meterRegistry.counter("impilo_rtc_participant_denied_total", "provider", session.provider()).increment();
+        return RtcParticipantView.of(denied);
+    }
+
+    public List<RtcParticipantView> listParticipants(String sessionId) {
+        sessions.findById(sessionId)
+                .orElseThrow(() -> new RtcNotFoundException("RTC session not found"));
+        return participants.findBySession(sessionId).stream().map(RtcParticipantView::of).toList();
     }
 
     public Map<String, Object> opsHealth() {
@@ -228,13 +315,125 @@ public class RtcGatewayService {
         }
     }
 
-    private LiveKitTokenService.TokenResult issueTemplateToken(String roomName, SessionMode mode,
-                                                               SessionTemplate template, RtcParticipant participant) {
+    /** Resolve grant + media profile for a persisted session, then run the lobby gate. */
+    private RtcSessionResult gatedTokenFor(RtcSessionRecord record, RtcParticipant participant) {
+        SessionMode mode = modeOf(record);
+        SessionTemplate template = templateFor(mode);
+        SessionTemplate.TokenGrantProfile grant = template == null
+                ? null
+                : resolveGrant(mode, template, participant.role());
+        String mediaProfile = template == null
+                ? null
+                : resolveMediaProfile(grant, participant.mediaProfile());
+        return issueGatedToken(record, template, grant, mediaProfile, participant);
+    }
+
+    /**
+     * Template-driven lobby gate in front of token minting. Behaviour is entirely
+     * template-driven (lobbyBehaviour WAITING_ROOM/KNOCK both gate): roomAdmin
+     * grants bypass the lobby and are auto-ADMITTED; everyone else must be
+     * ADMITTED (by a roomAdmin) before a token is minted — until then they get
+     * a WAITING (or DENIED) status body and a participant row in the lobby.
+     */
+    private RtcSessionResult issueGatedToken(RtcSessionRecord record, SessionTemplate template,
+                                             SessionTemplate.TokenGrantProfile grant, String mediaProfile,
+                                             RtcParticipant participant) {
         if (template == null) {
-            return tokenService.issueParticipantToken(roomName, participant);
+            return toResponse(record, tokenService.issueParticipantToken(record.roomName(), participant), null);
         }
-        SessionTemplate.TokenGrantProfile grant = resolveGrant(mode, template, participant.role());
-        return tokenService.issueParticipantToken(roomName, participant, grant, template.tokenTtlSeconds());
+        if (!LOBBY_NONE.equals(lobbyOf(template))) {
+            if (grant.isRoomAdmin()) {
+                autoAdmit(record, participant, mediaProfile);
+            } else {
+                RtcSessionResult lobbyOutcome = lobbyGate(record, participant, mediaProfile);
+                if (lobbyOutcome != null) {
+                    return lobbyOutcome;
+                }
+            }
+        }
+        LiveKitTokenService.TokenResult token = tokenService.issueParticipantToken(
+                record.roomName(), participant, grant, template.tokenTtlSeconds(), mediaProfile);
+        return toResponse(record, token, mediaProfile);
+    }
+
+    /**
+     * Lobby state check for non-roomAdmin roles.
+     *
+     * @return the WAITING/DENIED body, or null when the identity is admitted
+     *         (ADMITTED/CONNECTED, or LEFT — previously admitted, may reconnect)
+     *         and the caller should mint the token.
+     */
+    private RtcSessionResult lobbyGate(RtcSessionRecord record, RtcParticipant participant, String mediaProfile) {
+        RtcParticipantRecord existing = participants.find(record.id(), participant.identity()).orElse(null);
+        if (existing != null && RtcParticipantRecord.STATE_DENIED.equals(existing.state())) {
+            return RtcWaitingResponse.denied(record.id(), participant.identity());
+        }
+        if (existing != null && existing.tokenEligible()) {
+            return null;
+        }
+        if (existing == null) {
+            // First transition to WAITING: persist the row and emit the lobby
+            // event exactly once — subsequent polls return WAITING silently.
+            RtcParticipantRecord row = participants.upsert(new RtcParticipantRecord(
+                    record.id(), participant.identity(), participant.displayName(), participant.role(),
+                    RtcParticipantRecord.STATE_WAITING, mediaProfile, Instant.now(), null, null, null));
+            publishParticipantEvent(record, EVT_PARTICIPANT_WAITING, row, Map.of());
+            meterRegistry.counter("impilo_rtc_participant_waiting_total", "provider", record.provider()).increment();
+        }
+        return RtcWaitingResponse.waiting(record.id(), participant.identity());
+    }
+
+    /** roomAdmin grants bypass the lobby and are recorded as ADMITTED for the lobby roster. */
+    private void autoAdmit(RtcSessionRecord record, RtcParticipant participant, String mediaProfile) {
+        RtcParticipantRecord existing = participants.find(record.id(), participant.identity()).orElse(null);
+        if (existing != null && existing.tokenEligible()) {
+            return;
+        }
+        participants.upsert(new RtcParticipantRecord(
+                record.id(), participant.identity(), participant.displayName(), participant.role(),
+                RtcParticipantRecord.STATE_ADMITTED, mediaProfile,
+                existing == null ? Instant.now() : existing.requestedAt(),
+                Instant.now(), "ROOM_ADMIN_AUTO", null));
+    }
+
+    /**
+     * FULL | AUDIO_ONLY. An explicit request wins; otherwise roles whose grant
+     * sets audioOnlyDefault (e.g. TELEMEDICINE INTERPRETER) default to AUDIO_ONLY.
+     */
+    private String resolveMediaProfile(SessionTemplate.TokenGrantProfile grant, String requested) {
+        if (requested != null && !requested.isBlank()) {
+            String normalized = requested.trim().toUpperCase(Locale.ROOT);
+            if (!MEDIA_PROFILE_FULL.equals(normalized) && !MEDIA_PROFILE_AUDIO_ONLY.equals(normalized)) {
+                throw new IllegalArgumentException(
+                        "Unknown mediaProfile '" + requested + "' — expected FULL or AUDIO_ONLY");
+            }
+            return normalized;
+        }
+        return Boolean.TRUE.equals(grant.audioOnlyDefault()) ? MEDIA_PROFILE_AUDIO_ONLY : MEDIA_PROFILE_FULL;
+    }
+
+    private String lobbyOf(SessionTemplate template) {
+        String lobby = template.lobbyBehaviour();
+        return lobby == null || lobby.isBlank() ? LOBBY_NONE : lobby.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private void publishParticipantEvent(RtcSessionRecord session, String eventType,
+                                         RtcParticipantRecord participant, Map<String, Object> extras) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("sessionId", session.id());
+        payload.put("sessionMode", session.sessionMode());
+        payload.put("owningService", session.owningService());
+        payload.put("owningRef", session.owningRef());
+        payload.put("identity", participant.identity());
+        payload.put("displayName", participant.displayName());
+        payload.put("role", participant.role());
+        payload.put("eventId", UUID.randomUUID().toString());
+        payload.putAll(extras);
+        outboxPublisher.append("RtcSession", session.id(), eventType, payload);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     /**
@@ -267,6 +466,11 @@ public class RtcGatewayService {
     }
 
     private RtcSessionResponse toResponse(RtcSessionRecord record, LiveKitTokenService.TokenResult token) {
+        return toResponse(record, token, null);
+    }
+
+    private RtcSessionResponse toResponse(RtcSessionRecord record, LiveKitTokenService.TokenResult token,
+                                          String mediaProfile) {
         return new RtcSessionResponse(
                 record.id(),
                 record.provider(),
@@ -277,7 +481,8 @@ public class RtcGatewayService {
                 record.status(),
                 record.channel(),
                 record.capabilities(),
-                record.mediaPolicy()
+                record.mediaPolicy(),
+                mediaProfile
         );
     }
 

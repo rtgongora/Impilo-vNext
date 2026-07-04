@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,6 +40,17 @@ public class LiveKitTokenService {
     /** Template-driven token: grants come from the session mode's TokenGrantProfile. */
     public TokenResult issueParticipantToken(String roomName, RtcParticipant participant,
                                              SessionTemplate.TokenGrantProfile grant, long ttlSeconds) {
+        return issueParticipantToken(roomName, participant, grant, ttlSeconds, null);
+    }
+
+    /**
+     * Template-driven token with a media profile. AUDIO_ONLY narrows the publish
+     * grant to the microphone source via the LiveKit {@code canPublishSources}
+     * video-grant claim; FULL (or null) leaves all sources allowed.
+     */
+    public TokenResult issueParticipantToken(String roomName, RtcParticipant participant,
+                                             SessionTemplate.TokenGrantProfile grant, long ttlSeconds,
+                                             String mediaProfile) {
         if (grant == null) {
             throw new IllegalArgumentException(
                     "Role " + participant.role() + " has no token grant profile for this session");
@@ -56,6 +68,9 @@ public class LiveKitTokenService {
         videoGrant.put("canPublish", grant.canPublish());
         videoGrant.put("canSubscribe", grant.canSubscribe());
         videoGrant.put("canPublishData", grant.canPublishData());
+        if (grant.canPublish() && "AUDIO_ONLY".equals(mediaProfile)) {
+            videoGrant.put("canPublishSources", List.of("microphone"));
+        }
         if (grant.isRoomAdmin()) {
             videoGrant.put("roomAdmin", true);
         }

@@ -15,10 +15,12 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.rtc.model.RtcParticipantTokenRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcRecordingStartRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionProvisionRequest;
-import zw.gov.mohcc.impilo.rtc.model.RtcSessionResponse;
+import zw.gov.mohcc.impilo.rtc.model.RtcSessionResult;
+import zw.gov.mohcc.impilo.rtc.model.RtcWaitingResponse;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/internal/v1/rtc")
@@ -36,7 +38,10 @@ public class RtcController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody RtcSessionProvisionRequest body) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(envelope(service.provision(body), requestId, correlationId));
+        RtcSessionResult result = service.provision(body);
+        // Lobby-gated participants get 200 + WAITING/DENIED; a minted session/token stays 201.
+        HttpStatus status = result instanceof RtcWaitingResponse ? HttpStatus.OK : HttpStatus.CREATED;
+        return ResponseEntity.status(status).body(envelope(result, requestId, correlationId));
     }
 
     @GetMapping("/sessions/{sessionId}")
@@ -54,6 +59,47 @@ public class RtcController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @Valid @RequestBody RtcParticipantTokenRequest body) {
         return ResponseEntity.ok(envelope(service.issueToken(sessionId, body), requestId, correlationId));
+    }
+
+    /** Refresh = same lobby gate as token issuance; never bypasses WAITING/DENIED. */
+    @PostMapping("/sessions/{sessionId}/participants/token/refresh")
+    public ResponseEntity<Map<String, Object>> refreshToken(
+            @PathVariable String sessionId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @Valid @RequestBody RtcParticipantTokenRequest body) {
+        return ResponseEntity.ok(envelope(service.refreshToken(sessionId, body), requestId, correlationId));
+    }
+
+    @GetMapping("/sessions/{sessionId}/participants")
+    public ResponseEntity<Map<String, Object>> listParticipants(
+            @PathVariable String sessionId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ResponseEntity.ok(dataEnvelope(service.listParticipants(sessionId), requestId, correlationId));
+    }
+
+    @PostMapping("/sessions/{sessionId}/participants/{identity}/admit")
+    public ResponseEntity<Map<String, Object>> admitParticipant(
+            @PathVariable String sessionId,
+            @PathVariable String identity,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        String actor = actorId != null && !actorId.isBlank() ? actorId : bodyActor(body);
+        return ResponseEntity.ok(dataEnvelope(service.admit(sessionId, identity, actor), requestId, correlationId));
+    }
+
+    @PostMapping("/sessions/{sessionId}/participants/{identity}/deny")
+    public ResponseEntity<Map<String, Object>> denyParticipant(
+            @PathVariable String sessionId,
+            @PathVariable String identity,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        String reason = body == null ? null : Objects.toString(body.get("reason"), null);
+        return ResponseEntity.ok(dataEnvelope(service.deny(sessionId, identity, reason), requestId, correlationId));
     }
 
     @GetMapping("/ops/health")
@@ -117,8 +163,12 @@ public class RtcController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error("RTC_INVALID_REQUEST", ex.getMessage()));
     }
 
-    private Map<String, Object> envelope(RtcSessionResponse data, String requestId, String correlationId) {
+    private Map<String, Object> envelope(RtcSessionResult data, String requestId, String correlationId) {
         return dataEnvelope(data, requestId, correlationId);
+    }
+
+    private static String bodyActor(Map<String, Object> body) {
+        return body == null ? null : Objects.toString(body.get("actor"), null);
     }
 
     private Map<String, Object> dataEnvelope(Object data, String requestId, String correlationId) {
