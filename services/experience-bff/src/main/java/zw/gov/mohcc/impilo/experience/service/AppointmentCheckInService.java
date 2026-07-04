@@ -6,6 +6,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.scheduling.AppointmentCommsWorkflowService;
@@ -61,9 +64,23 @@ public class AppointmentCheckInService {
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
 
-            UUID facilityUuid = UUID.fromString(facilityId.trim());
-            JsonNode queues = pctClient.listQueues(facilityUuid, null);
-            UUID queueUuid = findScheduledQueueId(queues);
+            // Appointments store TUSO numeric facility ids; PCT queues are keyed
+            // by the platform facility UUID. Prefer a UUID on the appointment,
+            // fall back to the caller's X-Facility-ID operational context, and
+            // when neither resolves proceed without a queue rather than failing
+            // the whole check-in (the missing link is reported explicitly).
+            UUID facilityUuid = parseUuidOrNull(facilityId);
+            if (facilityUuid == null) {
+                facilityUuid = facilityUuidFromRequestContext();
+            }
+            UUID queueUuid = null;
+            if (facilityUuid != null) {
+                JsonNode queues = pctClient.listQueues(facilityUuid, null);
+                queueUuid = findScheduledQueueId(queues);
+            } else {
+                log.warn("No PCT facility UUID resolvable for appointment {} (facility ref {}); checking in without queue",
+                        appointmentId, facilityId);
+            }
 
             JsonNode checkedIn;
             try {
@@ -120,6 +137,9 @@ public class AppointmentCheckInService {
             if (queueUuid != null) {
                 meta.put("queue_id", queueUuid.toString());
             }
+            // Explicit truth: a check-in without a queue placement must be
+            // visible, never silent.
+            meta.put("queue_linked", queueTokenId != null);
 
             appointmentComms.onAppointmentCheckedIn(checkedIn);
 
@@ -143,24 +163,22 @@ public class AppointmentCheckInService {
         }
     }
 
+    /**
+     * Pick the queue for a scheduled check-in: an APPOINTMENT-type queue when
+     * the facility has one (PCT QueueType.APPOINTMENT exists for exactly this),
+     * else the walk-in queue, else the facility's first queue.
+     */
     private static UUID findScheduledQueueId(JsonNode queues) {
         if (queues == null || !queues.isArray()) {
             return null;
         }
-        for (JsonNode queue : queues) {
-            String queueType = textOr(queue, "queueType");
-            if (queueType == null) {
-                queueType = textOr(queue, "queue_type");
-            }
-            if (queueType != null && queueType.toUpperCase().contains("WALK")) {
-                String queueId = textOr(queue, "queueId");
-                if (queueId == null) {
-                    queueId = textOr(queue, "queue_id");
-                }
-                if (queueId != null) {
-                    return UUID.fromString(queueId);
-                }
-            }
+        UUID byType = findQueueIdByTypeKeyword(queues, "APPOINTMENT");
+        if (byType != null) {
+            return byType;
+        }
+        UUID walkIn = findQueueIdByTypeKeyword(queues, "WALK");
+        if (walkIn != null) {
+            return walkIn;
         }
         if (queues.size() > 0) {
             JsonNode first = queues.get(0);
@@ -170,6 +188,39 @@ public class AppointmentCheckInService {
             }
         }
         return null;
+    }
+
+    private static UUID findQueueIdByTypeKeyword(JsonNode queues, String keyword) {
+        for (JsonNode queue : queues) {
+            String queueType = firstNonBlank(textOr(queue, "queueType"), textOr(queue, "queue_type"));
+            if (queueType != null && queueType.toUpperCase().contains(keyword)) {
+                String queueId = firstNonBlank(textOr(queue, "queueId"), textOr(queue, "queue_id"));
+                if (queueId != null) {
+                    return UUID.fromString(queueId);
+                }
+            }
+        }
+        return null;
+    }
+
+    private static UUID parseUuidOrNull(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(raw.trim());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private static UUID facilityUuidFromRequestContext() {
+        ServletRequestAttributes attrs =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attrs == null) {
+            return null;
+        }
+        return parseUuidOrNull(attrs.getRequest().getHeader(CompanionHeaders.FACILITY_ID));
     }
 
     private static String textOr(JsonNode node, String field) {

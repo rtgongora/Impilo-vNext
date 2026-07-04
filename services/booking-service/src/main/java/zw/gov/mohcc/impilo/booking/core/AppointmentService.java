@@ -167,6 +167,20 @@ public class AppointmentService {
         return AppointmentResponse.from(appointmentRepository.save(entity));
     }
 
+    /**
+     * Check a patient in against an appointment: start a PCT journey (carrying
+     * appointment provenance) and enqueue it into the given queue.
+     *
+     * <p>PCT journey facility resolution relies on the {@code X-Facility-ID}
+     * trust header: the local {@code facilityId} is a TUSO numeric id, not the
+     * platform facility UUID PCT expects, so it is deliberately not sent.
+     * The clinical encounter is NOT started here — check-in ends at queue
+     * entry; the encounter starts when the provider begins service from the
+     * queue. When the journey or queue link cannot be established the
+     * appointment still checks in, but with the honest
+     * {@code CHECKED_IN_NO_QUEUE} state instead of silently dropping the
+     * queue placement.</p>
+     */
     @Transactional
     public AppointmentResponse checkIn(UUID id, UUID queueId) {
         TrustContext ctx = TrustContextHolder.require();
@@ -174,30 +188,32 @@ public class AppointmentService {
 
         Map<String, Object> journeyPayload = new LinkedHashMap<>();
         journeyPayload.put("patientCpid", entity.getPatientCpid());
-        journeyPayload.put("facilityId", entity.getFacilityId());
         journeyPayload.put("appointmentId", entity.getId().toString());
         Map<String, Object> journey = pctClient.startJourney(ctx, journeyPayload);
 
-        Object journeyId = journey.get("id");
+        // PCT journeys are keyed by "journeyId" (a ULID string). The former
+        // "id" lookup was always null, so check-ins never actually enqueued.
+        Object journeyId = journey.get("journeyId") != null ? journey.get("journeyId") : journey.get("id");
+        boolean queueLinked = false;
         if (journeyId != null && queueId != null) {
             Map<String, Object> enqueuePayload = new LinkedHashMap<>();
             enqueuePayload.put("journeyId", journeyId.toString());
+            enqueuePayload.put("priority", 3); // routine scheduled arrival on the 1-5 scale
             Map<String, Object> queueItem = pctClient.enqueue(ctx, queueId, enqueuePayload);
             Object tokenId = queueItem.get("id");
             if (tokenId != null) {
                 entity.setQueueTokenId(UUID.fromString(tokenId.toString()));
-            }
-            Map<String, Object> encounterPayload = new LinkedHashMap<>();
-            encounterPayload.put("appointmentId", entity.getId().toString());
-            Map<String, Object> encounter = pctClient.startEncounter(ctx, UUID.fromString(journeyId.toString()), encounterPayload);
-            Object encounterId = encounter.get("id");
-            if (encounterId != null) {
-                entity.setEncounterId(UUID.fromString(encounterId.toString()));
+                queueLinked = true;
             }
         }
 
+        if (!queueLinked) {
+            log.warn("Appointment {} checked in without a queue link (journeyId={}, queueId={})",
+                    id, journeyId, queueId);
+        }
+
         entity.setStatus(AppointmentStatus.CHECKED_IN);
-        entity.setCheckInStatus("CHECKED_IN");
+        entity.setCheckInStatus(queueLinked ? "CHECKED_IN" : "CHECKED_IN_NO_QUEUE");
         entity = appointmentRepository.save(entity);
         publishBookedEvent(entity);
         return AppointmentResponse.from(entity);
