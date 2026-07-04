@@ -49,7 +49,7 @@
 | jobs-service | YES | aligned | sha256:8ecaf6f31f95 | sha256:8ecaf6f31f95 | sha256:8ecaf6f31f95 | 127.0.0.1:5000/impilo/jobs-service@sha256:8ecaf6f31f9554209fab10bca50e36faae417df4a3816968eaae2da879c40293 |
 | khuluma-service | YES | aligned | sha256:e4ee412f6973 | sha256:e4ee412f6973 | sha256:9dc9937a3ada | 127.0.0.1:5000/impilo/khuluma-service@sha256:e4ee412f69738f3c3ad0d37c0250dcf461f0e0140177fec7f19f2bffc4d804b2 |
 | landela-adapter-service | YES | aligned | sha256:54d455676609 | sha256:54d455676609 | sha256:54d455676609 | 127.0.0.1:5000/impilo/landela-adapter-service@sha256:54d455676609cca4b85622b42544a268db2b83e5077563e40def8406d665225e |
-| learning-service | YES | aligned | sha256:937e059a24fd | sha256:937e059a24fd | sha256:937e059a24fd | 127.0.0.1:5000/impilo/learning-service@sha256:937e059a24fdb27d3fbf37571e4de75b630abf3bad5bfc3b87c3efee9b09ac67 |
+| learning-service | YES | aligned | sha256:2b0fed4b677d | sha256:2b0fed4b677d | sha256:2b0fed4b677d | 127.0.0.1:5000/impilo/learning-service@sha256:2b0fed4b677da6a16376e9a90d1c7a52e995012621f7b98650ce4c6a88413cc8 |
 | live-service | YES | aligned | sha256:5842a457ff57 | sha256:5842a457ff57 | sha256:5842a457ff57 | 127.0.0.1:5000/impilo/live-service@sha256:5842a457ff57f0563a5220181d30299b591d115a276451ec88f978be49608da3 |
 | llm-orchestration-service | YES | aligned | sha256:6e67b8cce6cb | sha256:6e67b8cce6cb | sha256:6e67b8cce6cb | 127.0.0.1:5000/impilo/llm-orchestration-service@sha256:6e67b8cce6cb5b61c74d4c6107133cddd1bb76007cd269d352c8dbd07adec42c |
 | madi-service | YES | aligned | sha256:1979e8e3071a | sha256:1979e8e3071a | sha256:1979e8e3071a | 127.0.0.1:5000/impilo/madi-service@sha256:1979e8e3071a341a2b702d3f04cec5fbd5af7855f8ad95612dc336f493be18a4 |

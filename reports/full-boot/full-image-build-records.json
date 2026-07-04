@@ -247,7 +247,7 @@
     },
     "learning-service": {
       "service": "learning-service",
-      "registry_digest": "sha256:937e059a24fdb27d3fbf37571e4de75b630abf3bad5bfc3b87c3efee9b09ac67",
+      "registry_digest": "sha256:2b0fed4b677da6a16376e9a90d1c7a52e995012621f7b98650ce4c6a88413cc8",
       "digest_pinned": true
     },
     "live-service": {
@@ -506,5 +506,5 @@
       "digest_pinned": true
     }
   },
-  "digest_pin_generated_at": "2026-07-04T04:52:15.634970+00:00"
+  "digest_pin_generated_at": "2026-07-04T05:19:34.784545+00:00"
 }
