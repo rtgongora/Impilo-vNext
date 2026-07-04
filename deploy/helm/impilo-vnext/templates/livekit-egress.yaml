@@ -1,0 +1,127 @@
+# LiveKit Egress — room-composite recording worker for rtc-gateway recordings.
+# Coordinates with livekit-server over the in-chart redis bus (both configs
+# carry redis: address redis:6379). Artifacts land in the in-chart MinIO
+# (s3-compatible; request-level S3 target is sent by rtc-gateway on every
+# StartRoomCompositeEgress, the s3 block below is the worker-side fallback).
+# livekit runs hostNetwork, but its in-cluster Service `livekit` still
+# resolves — ws_url dials the SFU through it on 7880.
+# No Service: egress only dials out (redis, livekit ws, minio).
+{{- define "impilo.livekitEgressConfig" -}}
+api_key: {{ .Values.livekit.apiKey }}
+api_secret: {{ .Values.livekit.apiSecret }}
+ws_url: ws://livekit:7880
+redis:
+  address: redis:6379
+s3:
+  access_key: {{ .Values.previewSecrets.minioRootUser }}
+  secret: {{ .Values.previewSecrets.minioRootPassword }}
+  endpoint: http://minio:9000
+  bucket: {{ .Values.livekitEgress.bucket | default "impilo-recordings" }}
+  force_path_style: true
+  region: us-east-1
+logging:
+  level: info
+{{- end }}
+{{- $egress := .Values.livekitEgress | default dict }}
+{{- if and .Values.livekit.enabled $egress.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: livekit-egress-config
+  namespace: {{ .Release.Namespace }}
+data:
+  egress.yaml: |
+    {{- include "impilo.livekitEgressConfig" . | nindent 4 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livekit-egress
+  namespace: {{ .Release.Namespace }}
+spec:
+  strategy:
+    type: {{ .Values.global.deploymentStrategy | default "Recreate" }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: livekit-egress
+  template:
+    metadata:
+      labels:
+        app: livekit-egress
+      annotations:
+        # Roll the pod when the egress config changes — egress reads config at
+        # startup only. Hashes the rendered config (not this template file, to
+        # avoid recursive include).
+        checksum/config: {{ include "impilo.livekitEgressConfig" . | sha256sum }}
+    spec:
+      # A Service named like an env prefix would inject *_PORT service-link env
+      # that confuses config parsing — same hygiene as the livekit deployment.
+      enableServiceLinks: false
+      containers:
+        - name: livekit-egress
+          image: "{{ .Values.livekitEgress.image.repository }}:{{ .Values.livekitEgress.image.tag }}"
+          imagePullPolicy: {{ .Values.livekitEgress.image.pullPolicy }}
+          env:
+            - name: EGRESS_CONFIG_FILE
+              value: /etc/egress/egress.yaml
+          volumeMounts:
+            - name: egress-config
+              mountPath: /etc/egress/egress.yaml
+              subPath: egress.yaml
+            # Room-composite rendering runs headless Chrome; the container
+            # default 64Mi /dev/shm starves it.
+            - name: dshm
+              mountPath: /dev/shm
+          resources:
+            {{- toYaml .Values.livekitEgress.resources | nindent 12 }}
+      volumes:
+        - name: egress-config
+          configMap:
+            name: livekit-egress-config
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 512Mi
+---
+# One-shot bucket init: recordings need the target bucket to exist before the
+# first egress uploads. Runs after install/upgrade; idempotent (--ignore-existing).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: livekit-egress-bucket-init
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 10
+  template:
+    metadata:
+      labels:
+        app: livekit-egress-bucket-init
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: "{{ .Values.livekitEgress.bucketInitImage | default "mirror.gcr.io/minio/mc:RELEASE.2025-08-13T08-35-41Z" }}"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - >-
+              mc alias set m http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
+              && mc mb --ignore-existing m/{{ .Values.livekitEgress.bucket | default "impilo-recordings" }}
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-preview-credentials
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-preview-credentials
+                  key: MINIO_ROOT_PASSWORD
+{{- end }}

@@ -15,6 +15,10 @@ data:
       - ""
     keys:
       {{ .Values.livekit.apiKey }}: {{ .Values.livekit.apiSecret }}
+    # Redis is REQUIRED for egress coordination: livekit-server dispatches
+    # StartEgress requests to egress workers over the shared redis bus.
+    redis:
+      address: redis:6379
     rtc:
       tcp_port: 7881
       udp_port: 7882

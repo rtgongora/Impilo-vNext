@@ -153,6 +153,25 @@ livekit:
       cpu: "1"
       memory: 1Gi
 
+# LiveKit Egress worker — room-composite recordings requested by rtc-gateway,
+# uploaded to the in-chart MinIO bucket. v1.8.x pairs with livekit-server 1.8.4.
+livekitEgress:
+  enabled: true
+  bucket: impilo-recordings
+  image:
+    # docker.io unreachable from the preview VM; mirror carries livekit/egress.
+    repository: mirror.gcr.io/livekit/egress
+    tag: "v1.8.6"
+    pullPolicy: IfNotPresent
+  # Egress is CPU-heavy (headless-Chrome compositing + encoding).
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
 orthanc:
   enabled: true
   image:
@@ -306,6 +325,18 @@ fullBootServices:
     env:
       # CPD writeback: consume impilo.learning.certificate.issued.v1.
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  rtc-gateway-service:
+    env:
+      # Recording lifecycle: template-driven policy gates in RtcRecordingService
+      # (rtc.gateway.recording-enabled / egress-enabled stay false by default;
+      # preview opts in). S3 creds mirror previewSecrets.minioRootUser/Password —
+      # LiveKit egress file_outputs carry the request-level S3 target.
+      RTC_RECORDING_ENABLED: "true"
+      RTC_EGRESS_ENABLED: "true"
+      RTC_RECORDING_S3_ACCESS_KEY: "impilo-preview"
+      RTC_RECORDING_S3_SECRET_KEY: "preview-minio-change-me"
+      RTC_RECORDING_S3_ENDPOINT: "http://minio:9000"
+      RTC_RECORDING_BUCKET: "impilo-recordings"
   live-service:
     env:
       # RTC media truth: consume impilo.rtc.session/participant events so the LiveKit
