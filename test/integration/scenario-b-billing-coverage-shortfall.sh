@@ -52,6 +52,15 @@ PLAN_ID=$(kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d coverage -t
 [[ -n "$PLAN_ID" ]] || fail "COV-MOHCC-CORE plan not present at coverage SoR"
 ok "plan COV-MOHCC-CORE present ($PLAN_ID)"
 
+# MusheX verifies the payee facility's credential before creating intents —
+# ensure the facility holds an ACTIVE credential (idempotent).
+CRED_IP="$(kubectl get svc credential-verification-service -n "$NS" -o jsonpath='{.spec.clusterIP}')"
+CRED_ACTIVE=$(svc_curl GET "http://$CRED_IP:8094/v1/internal/mushex/facilities/$FACILITY_ID/credential-active?tenantId=$TENANT_ID"   | jqpy "print(str(d.get('active',False)).lower())")
+if [[ "$CRED_ACTIVE" != "true" ]]; then
+  svc_curl POST "http://$CRED_IP:8094/v1/internal/credentials"     "{\"subjectType\":\"FACILITY\",\"subjectId\":\"$FACILITY_ID\",\"subjectName\":\"Harare Central Hospital\",\"credentialType\":\"FACILITY_OPERATING_LICENCE\",\"title\":\"Facility operating licence (preview)\",\"issuedBy\":\"MoHCC (preview seed)\",\"validFrom\":\"2026-01-01\"}" >/dev/null
+fi
+ok "facility payee credential ACTIVE"
+
 # Register a real patient at VITO through the BFF, then enrol THEM in coverage.
 PATIENT=$(svc_curl POST "http://experience-bff:8160/internal/v1/patients" \
   "{\"given_name\":\"ScnB\",\"family_name\":\"$RUN\",\"date_of_birth\":\"1985-03-11\",\"sex\":\"MALE\",\"facility_id\":\"$FACILITY_ID\"}")
@@ -149,7 +158,7 @@ print(data.get('mushexPaymentIntentId') or '')")
 ok "COSTA payment $PAYMENT_ID linked to MusheX intent $MUSHEX_INTENT"
 
 ATTEMPT=$(svc_curl POST "http://$MUSHEX_IP:8102/mushex/v1/payment-intents/$MUSHEX_INTENT/attempts" \
-  '{"rail":"CARD","adapterType":"SANDBOX"}')
+  "{\"idempotencyKey\":\"$RUN-attempt\",\"reason\":\"scenario-b shortfall card capture\"}")
 ADAPTER_REF=$(echo "$ATTEMPT" | jqpy "
 data=d.get('data') or d
 print(data.get('adapterRef') or data.get('attemptId') or data.get('id') or '')")
@@ -164,7 +173,7 @@ for i in $(seq 1 12); do
     | jqpy "
 rows=(d.get('data') or d) if isinstance(d,dict) else d
 rows=rows if isinstance(rows,list) else []
-match=[p for p in rows if p.get('id')=='$PAYMENT_ID']
+match=[p for p in rows if str(p.get('id'))==str('$PAYMENT_ID')]
 print(match[0].get('status','') if match else '')")
   [[ "$PAY_STATUS" == "PAID" ]] && break
   sleep 5
@@ -174,15 +183,26 @@ ok "COSTA payment PAID via mushex.payment.status.changed event loop"
 
 # ── 6. Scenario D failure path: un-enrolled patient ──────────────────────────
 step "6. failure path: no cover → INELIGIBLE, 100% patient"
-ENC2=$(svc_curl POST "http://$COSTA_IP:8101/costa/v1/encounters" \
-  "{\"patientCpid\":\"uncovered-$RUN\",\"encounterType\":\"OUTPATIENT\",\"facilityId\":\"$FACILITY_ID\"}")
-COSTA_ENC2=$(echo "$ENC2" | jqpy "
-data=d.get('data') or d
-print(data.get('encounterId') or data.get('id') or '')")
-BILL2=$(svc_curl POST "http://$COSTA_IP:8101/costa/v1/bills/draft" \
-  "{\"encounterId\":\"$COSTA_ENC2\",\"billType\":\"PATIENT\"}" | jqpy "
-data=d.get('data') or d
-print(data.get('billId') or '')")
+# Un-enrolled patient through the same real journey.
+PATIENT2=$(svc_curl POST "http://experience-bff:8160/internal/v1/patients" \
+  "{\"given_name\":\"NoCover\",\"family_name\":\"$RUN\",\"date_of_birth\":\"1992-09-20\",\"sex\":\"FEMALE\",\"facility_id\":\"$FACILITY_ID\"}")
+CPID2=$(echo "$PATIENT2" | jqpy "
+data=d.get('data') or {}
+attrs=data.get('attributes', data)
+print(attrs.get('cpid') or attrs.get('patient_id') or data.get('id') or '')")
+QUEUE2=$(svc_curl POST "http://experience-bff:8160/internal/v1/queue/entries" \
+  "{\"patient_id\":\"$CPID2\",\"patient_cpid\":\"$CPID2\",\"facility_id\":\"$FACILITY_ID\",\"queue_type\":\"FIFO\"}")
+JOURNEY2=$(echo "$QUEUE2" | jqpy "print((d.get('meta') or {}).get('journey_id',''))")
+svc_curl POST "http://experience-bff:8160/internal/v1/encounters" \
+  "{\"patient_id\":\"$CPID2\",\"journey_id\":\"$JOURNEY2\",\"encounter_type\":\"CONSULTATION\",\"entry_point\":\"walk_in\"}" >/dev/null
+BILL2=""
+for i in $(seq 1 12); do
+  BILL2=$(kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d costing_engine -tAc \
+    "SELECT b.bill_id FROM costa_bill_headers b JOIN costa_encounters e ON b.encounter_id=e.encounter_id WHERE e.pct_journey_id='$JOURNEY2' LIMIT 1;" | tr -d '[:space:]')
+  [[ -n "$BILL2" ]] && break
+  sleep 5
+done
+[[ -n "$BILL2" ]] || fail "no auto bill for uncovered journey $JOURNEY2"
 svc_curl POST "http://$COSTA_IP:8101/costa/v1/bills/$BILL2/lines" \
   '{"msikaCode":"CONSULT-GP","description":"GP consultation","kind":"SERVICE","qty":1}' >/dev/null
 NOCOV=$(svc_curl POST "http://$COSTA_IP:8101/costa/v1/bills/$BILL2/apply-coverage" "")
