@@ -42,6 +42,15 @@ public class RtcGatewayService {
     public RtcSessionResponse provision(RtcSessionProvisionRequest request) {
         try {
             validateProvisioningRequest(request);
+
+            // Provision is idempotent per sessionId: concurrent first-media-token
+            // requests from different participants must both succeed — the loser
+            // of the insert race joins the winner's room.
+            RtcSessionRecord existing = sessions.findById(request.sessionId()).orElse(null);
+            if (existing != null) {
+                return joinExisting(existing, request);
+            }
+
             String roomName = roomName(request);
             if (!properties.getGateway().isDevModeEnabled()) {
                 tokenService.assertLiveKitConfigured();
@@ -66,7 +75,13 @@ public class RtcGatewayService {
                     Instant.now(),
                     Instant.now()
             );
-            sessions.save(record);
+            try {
+                sessions.save(record);
+            } catch (org.springframework.dao.DataIntegrityViolationException raced) {
+                RtcSessionRecord winner = sessions.findById(request.sessionId())
+                        .orElseThrow(() -> raced);
+                return joinExisting(winner, request);
+            }
             outboxPublisher.append("RtcSession", record.id(), "RTC_SESSION_PROVISIONED", sessionPayload(record));
             meterRegistry.counter("impilo_rtc_session_provisioned_total", "provider", provider()).increment();
             return toResponse(record, token);
@@ -82,6 +97,20 @@ public class RtcGatewayService {
         RtcSessionRecord record = sessions.findById(sessionId)
                 .orElseThrow(() -> new RtcNotFoundException("RTC session not found"));
         return toResponse(record, null);
+    }
+
+    /** Idempotent re-provision: issue this participant a token for the already-provisioned room. */
+    private RtcSessionResponse joinExisting(RtcSessionRecord existing, RtcSessionProvisionRequest request) {
+        if (request.tenantId() != null && !request.tenantId().equals(existing.tenantId())) {
+            throw new IllegalArgumentException("Session belongs to a different tenant");
+        }
+        if ("ENDED".equals(existing.status())) {
+            throw new IllegalArgumentException("Session has ended; provision a new session");
+        }
+        LiveKitTokenService.TokenResult token =
+                tokenService.issueParticipantToken(existing.roomName(), request.participant());
+        meterRegistry.counter("impilo_rtc_token_issued_total", "provider", existing.provider()).increment();
+        return toResponse(existing, token);
     }
 
     public RtcSessionResponse issueToken(String sessionId, RtcParticipantTokenRequest request) {
