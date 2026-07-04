@@ -7,6 +7,9 @@ import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
+import io.minio.StatObjectArgs;
+import io.minio.StatObjectResponse;
+import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
 import org.springframework.stereotype.Component;
 
@@ -81,6 +84,26 @@ public class MinioObjectStorageProvider implements ObjectStorageProvider {
                     .build());
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate signed URL: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public ObjectStat statObject(String bucket, String objectKey) {
+        try {
+            StatObjectResponse stat = minioClient.statObject(StatObjectArgs.builder()
+                    .bucket(bucket)
+                    .object(objectKey)
+                    .build());
+            return new ObjectStat(stat.size(), stat.contentType());
+        } catch (ErrorResponseException e) {
+            String code = e.errorResponse() != null ? e.errorResponse().code() : null;
+            if ("NoSuchKey".equals(code) || "NoSuchObject".equals(code)
+                    || "NoSuchBucket".equals(code) || "ResourceNotFound".equals(code)) {
+                return null;
+            }
+            throw new RuntimeException("Failed to stat object: " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to stat object: " + e.getMessage(), e);
         }
     }
 

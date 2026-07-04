@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.docstore.core.ocr.OcrService;
 import zw.gov.mohcc.impilo.docstore.core.ObjectStorageService;
 import zw.gov.mohcc.impilo.docstore.core.signature.SignatureService;
 import zw.gov.mohcc.impilo.docstore.dto.ObjectResponse;
+import zw.gov.mohcc.impilo.docstore.dto.RegisterExternalObjectRequest;
 import zw.gov.mohcc.impilo.docstore.dto.SignedUrlResponse;
 import zw.gov.mohcc.impilo.docstore.dto.StoreObjectRequest;
 import zw.gov.mohcc.impilo.docstore.persistence.entity.ObjectEntity;
@@ -33,6 +34,7 @@ import java.util.UUID;
  *
  * Endpoints:
  *   POST   /v1/internal/objects               — upload a new object
+ *   POST   /v1/internal/objects/register-external — adopt an externally written MinIO object
  *   GET    /v1/internal/objects/{objectId}     — retrieve object metadata
  *   GET    /v1/internal/objects/{objectId}/signed-url — generate pre-signed download URL
  *   GET    /v1/internal/objects/{objectId}/download   — proxy download through this service
@@ -88,6 +90,42 @@ public class ObjectController {
             log.error("Upload failed: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("UPLOAD_FAILED", "Failed to store object", 500, correlationId));
+        }
+    }
+
+    /**
+     * Adopt an externally written MinIO object into the catalogue.
+     *
+     * The binary was written directly to object storage by another platform
+     * component (e.g. rtc-gateway recording egress). Registration verifies the
+     * object exists (statObject), then creates the same metadata row multipart
+     * ingest does, so the artifact gets signed-url playback and audit.
+     *
+     * Idempotent: a bucket+key that is already catalogued returns the existing
+     * object with 200 instead of creating a duplicate (201 on first adoption).
+     */
+    @PostMapping(value = "/register-external", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<ObjectResponse>> registerExternal(
+            @RequestBody RegisterExternalObjectRequest request) {
+        String correlationId = getCorrelationId();
+
+        try {
+            ObjectStorageService.RegisterExternalResult result = storageService.registerExternal(request);
+            return ResponseEntity.status(result.created() ? HttpStatus.CREATED : HttpStatus.OK)
+                    .body(ApiResponse.ok(result.response(), correlationId));
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Validation error during external registration: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("VALIDATION_FAILED", e.getMessage(), 400, correlationId));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("NOT_FOUND", e.getMessage(), 404, correlationId));
+        } catch (Exception e) {
+            log.error("External registration failed: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("REGISTER_EXTERNAL_FAILED",
+                            "Failed to register external object", 500, correlationId));
         }
     }
 

@@ -13,6 +13,9 @@ public interface ObjectRepository extends JpaRepository<ObjectEntity, Long> {
 
     Optional<ObjectEntity> findByObjectIdAndDeletedAtIsNull(UUID objectId);
 
+    /** Storage-location lookup used for idempotent external registration (bucket + key). */
+    Optional<ObjectEntity> findFirstByBucketAndObjectKeyAndDeletedAtIsNull(String bucket, String objectKey);
+
     Optional<ObjectEntity> findByObjectId(UUID objectId);
 
     List<ObjectEntity> findByHashSha256AndDeletedAtIsNull(String hashSha256);

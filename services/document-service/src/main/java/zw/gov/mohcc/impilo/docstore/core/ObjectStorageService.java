@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.docstore.core.scan.ScanService;
 import zw.gov.mohcc.impilo.docstore.core.storage.ObjectStorageProvider;
 import zw.gov.mohcc.impilo.docstore.core.storage.ObjectStorageProviderRouter;
 import zw.gov.mohcc.impilo.docstore.dto.ObjectResponse;
+import zw.gov.mohcc.impilo.docstore.dto.RegisterExternalObjectRequest;
 import zw.gov.mohcc.impilo.docstore.dto.ScanResult;
 import zw.gov.mohcc.impilo.docstore.dto.SignedUrlResponse;
 import zw.gov.mohcc.impilo.docstore.dto.StoreObjectRequest;
@@ -112,33 +113,22 @@ public class ObjectStorageService {
             log.info("Stored object {} in {}: bucket={}, key={}, size={}, sha256={}",
                     objectId, storageProvider.providerType(), bucket, providerStorageKey, content.length, sha256);
 
-            // Persist metadata
-            ObjectEntity entity = new ObjectEntity();
-            entity.setObjectId(objectId);
-            entity.setTenantId(ctx.tenantId());
-            entity.setBucket(bucket);
-            entity.setObjectKey(providerStorageKey);
-            entity.setOriginalFilename(filename);
-            entity.setMimeType(request.mimeType());
-            entity.setFileSizeBytes(content.length);
-            entity.setHashSha256(sha256);
-            entity.setCreatedBy(ctx.actorId() != null ? ctx.actorId() : "system");
-            entity.setMetadata(serializeMetadata(augmentMetadata(request.metadata(), storageProvider.providerType())));
-
             // Run antivirus scan
+            String scanStatus;
+            String scanResultText;
             if (properties.getScan().isEnabled()) {
                 ScanResult scanResult = scanService.scan(objectId, content);
-                entity.setScanStatus(scanResult.status());
-                entity.setScanResult(scanResult.result());
+                scanStatus = scanResult.status();
+                scanResultText = scanResult.result();
             } else {
-                entity.setScanStatus("SKIPPED");
-                entity.setScanResult("Scanning disabled");
+                scanStatus = "SKIPPED";
+                scanResultText = "Scanning disabled";
             }
 
-            entity = objectRepository.save(entity);
-
-            // Publish outbox event (legacy + v1.1 dual emit via DocumentOutboxPublisher)
-            publishDocumentStoredEvent(objectId, request, content.length, sha256, ctx);
+            // Persist metadata + publish document.stored (shared with external registration)
+            ObjectEntity entity = catalogueObject(objectId, bucket, providerStorageKey, filename,
+                    request.mimeType(), content.length, sha256, request.metadata(),
+                    scanStatus, scanResultText, storageProvider.providerType(), ctx);
 
             return toResponse(entity);
 
@@ -146,6 +136,66 @@ public class ObjectStorageService {
             log.error("Failed to store object: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to store object: " + e.getMessage(), e);
         }
+    }
+
+    /** Result of an external registration — whether the catalogue row was newly created. */
+    public record RegisterExternalResult(ObjectResponse response, boolean created) {
+    }
+
+    /**
+     * Adopt an object that already exists in MinIO (written by another platform
+     * component, e.g. an rtc-gateway recording egress) into the catalogue.
+     *
+     * Verifies the object exists in storage (statObject — fails with
+     * {@link NoSuchElementException} when absent), then creates the metadata row
+     * through the same cataloguing path multipart ingest uses. Idempotent on the
+     * storage location: a bucket+key that is already catalogued returns the
+     * existing object instead of duplicating it.
+     */
+    @Transactional
+    public RegisterExternalResult registerExternal(RegisterExternalObjectRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        validateRegisterExternal(request, ctx);
+
+        Optional<ObjectEntity> existing = objectRepository
+                .findFirstByBucketAndObjectKeyAndDeletedAtIsNull(request.bucket(), request.key());
+        if (existing.isPresent()) {
+            log.info("External object {}/{} already catalogued as {} — returning existing entry",
+                    request.bucket(), request.key(), existing.get().getObjectId());
+            return new RegisterExternalResult(toResponse(existing.get()), false);
+        }
+
+        ObjectStorageProvider storageProvider = storageProviderRouter.activeProvider();
+        ObjectStorageProvider.ObjectStat stat = storageProvider.statObject(request.bucket(), request.key());
+        if (stat == null) {
+            throw new NoSuchElementException(
+                    "Object not found in storage: " + request.bucket() + "/" + request.key());
+        }
+
+        long sizeBytes = stat.sizeBytes() >= 0 ? stat.sizeBytes()
+                : request.sizeBytes() != null ? request.sizeBytes() : 0L;
+        String filename = request.title() != null && !request.title().isBlank()
+                ? request.title()
+                : filenameFromKey(request.key());
+        String sha256 = request.sha256() != null && !request.sha256().isBlank() ? request.sha256() : "";
+
+        Map<String, String> metadata = new LinkedHashMap<>();
+        if (request.tags() != null) {
+            metadata.putAll(request.tags());
+        }
+        metadata.put("ownerService", request.ownerService());
+        metadata.put("source", "EXTERNAL_REGISTRATION");
+
+        UUID objectId = UUID.randomUUID();
+        log.info("Registering external object {} at {}/{} (owner={}, size={})",
+                objectId, request.bucket(), request.key(), request.ownerService(), sizeBytes);
+
+        ObjectEntity entity = catalogueObject(objectId, request.bucket(), request.key(), filename,
+                request.contentType(), sizeBytes, sha256, metadata,
+                "SKIPPED", "Externally written object — content not scanned at registration",
+                storageProvider.providerType(), ctx);
+
+        return new RegisterExternalResult(toResponse(entity), true);
     }
 
     /**
@@ -268,6 +318,61 @@ public class ObjectStorageService {
 
     // --- Private helpers ---
 
+    /**
+     * Single cataloguing path shared by multipart ingest and external registration:
+     * persists the metadata row and publishes the {@code document.stored} outbox event.
+     */
+    private ObjectEntity catalogueObject(UUID objectId, String bucket, String storageKey, String filename,
+                                         String mimeType, long fileSizeBytes, String sha256,
+                                         Map<String, String> metadata, String scanStatus, String scanResult,
+                                         String providerType, TrustContext ctx) {
+        ObjectEntity entity = new ObjectEntity();
+        entity.setObjectId(objectId);
+        entity.setTenantId(ctx.tenantId());
+        entity.setBucket(bucket);
+        entity.setObjectKey(storageKey);
+        entity.setOriginalFilename(filename);
+        entity.setMimeType(mimeType);
+        entity.setFileSizeBytes(fileSizeBytes);
+        entity.setHashSha256(sha256);
+        entity.setCreatedBy(ctx.actorId() != null ? ctx.actorId() : "system");
+        Map<String, String> augmented = augmentMetadata(metadata, providerType);
+        entity.setMetadata(serializeMetadata(augmented));
+        entity.setScanStatus(scanStatus);
+        entity.setScanResult(scanResult);
+
+        entity = objectRepository.save(entity);
+
+        // Publish outbox event (legacy + v1.1 dual emit via DocumentOutboxPublisher)
+        publishDocumentStoredEvent(objectId, mimeType, fileSizeBytes, sha256, augmented, ctx);
+
+        return entity;
+    }
+
+    private void validateRegisterExternal(RegisterExternalObjectRequest request, TrustContext ctx) {
+        if (ctx.tenantId() == null) {
+            throw new IllegalArgumentException("X-Tenant-ID header is required for external registration");
+        }
+        if (request.bucket() == null || request.bucket().isBlank()) {
+            throw new IllegalArgumentException("bucket is required");
+        }
+        if (request.key() == null || request.key().isBlank()) {
+            throw new IllegalArgumentException("key is required");
+        }
+        if (request.contentType() == null || request.contentType().isBlank()) {
+            throw new IllegalArgumentException("contentType is required");
+        }
+        if (request.ownerService() == null || request.ownerService().isBlank()) {
+            throw new IllegalArgumentException("ownerService is required");
+        }
+    }
+
+    private static String filenameFromKey(String key) {
+        int slash = key.lastIndexOf('/');
+        String tail = slash >= 0 && slash < key.length() - 1 ? key.substring(slash + 1) : key;
+        return tail.isBlank() ? key : tail;
+    }
+
     private void validateFileSize(MultipartFile file) {
         long maxBytes = (long) properties.getMaxFileSizeMb() * 1024 * 1024;
         if (file.getSize() > maxBytes) {
@@ -349,20 +454,21 @@ public class ObjectStorageService {
         );
     }
 
-    private void publishDocumentStoredEvent(UUID objectId, StoreObjectRequest request,
-                                            int fileSizeBytes, String sha256, TrustContext ctx) {
+    private void publishDocumentStoredEvent(UUID objectId, String mimeType,
+                                            long fileSizeBytes, String sha256,
+                                            Map<String, String> metadata, TrustContext ctx) {
         try {
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("document_id", objectId.toString());
             payload.put("tenant_id", ctx.tenantId().toString());
-            payload.put("content_type", request.mimeType());
+            payload.put("content_type", mimeType);
             payload.put("file_size_bytes", fileSizeBytes);
             payload.put("hash_sha256", sha256);
-            String patientCpid = metadataFirst(request.metadata(), "patient_cpid", "patientCpid");
+            String patientCpid = metadataFirst(metadata, "patient_cpid", "patientCpid");
             if (patientCpid != null) {
                 payload.put("patient_cpid", patientCpid);
             }
-            String encounterId = metadataFirst(request.metadata(), "encounter_id", "encounterId");
+            String encounterId = metadataFirst(metadata, "encounter_id", "encounterId");
             if (encounterId != null) {
                 payload.put("encounter_id", encounterId);
             }
