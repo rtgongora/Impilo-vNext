@@ -10,13 +10,18 @@ import {
   Loader2,
   Snowflake,
   Lock,
+  PackageX,
+  RefreshCw,
 } from "lucide-react";
 import {
   useDuraCommodities,
   useDuraNearExpiryBatches,
   useDuraRecalls,
   useDuraColdChainExcursions,
+  useDuraStockouts,
+  useDuraExternalSync,
 } from "@/hooks/queries/useDura";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 /**
  * Dura — Stock & Supply operations surface.
@@ -25,13 +30,24 @@ import {
  * commodity catalogue search, near-expiry batches, open recalls, and open
  * cold-chain excursions.
  */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default function DuraStockPage() {
   const [query, setQuery] = useState("");
+  const [manualFacilityId, setManualFacilityId] = useState("");
+
+  const facility = useFacilityStore((s) => s.facility);
+  // Dura stock is keyed by facility UUID; the session facility context is used
+  // when it carries one, otherwise the operator can enter it explicitly.
+  const contextFacilityId = facility?.id && UUID_RE.test(facility.id) ? facility.id : "";
+  const facilityId = contextFacilityId || (UUID_RE.test(manualFacilityId) ? manualFacilityId : "");
 
   const commodities = useDuraCommodities(query ? { q: query } : undefined);
   const nearExpiry = useDuraNearExpiryBatches(90);
   const recalls = useDuraRecalls("OPEN");
   const excursions = useDuraColdChainExcursions("OPEN");
+  const stockouts = useDuraStockouts(facilityId || undefined);
+  const externalSync = useDuraExternalSync();
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
@@ -159,6 +175,88 @@ export default function DuraStockPage() {
                 <li key={e.excursionId} className="flex items-center justify-between">
                   <span className="text-slate-700">{e.temperature}&deg;C</span>
                   <span className="rounded bg-sky-50 px-2 py-0.5 text-xs text-sky-700">{e.breach}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Stockouts */}
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 flex items-center gap-2 text-base font-medium text-slate-800">
+            <PackageX className="h-5 w-5 text-red-500" /> Stockouts
+          </h2>
+          {!facilityId ? (
+            <div className="space-y-2 py-2 text-sm text-slate-500">
+              <p>Stockouts are per facility. No facility UUID in the current context — enter one to query.</p>
+              <input
+                value={manualFacilityId}
+                onChange={(e) => setManualFacilityId(e.target.value.trim())}
+                placeholder="Facility UUID…"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+          ) : stockouts.isLoading ? (
+            <Loading />
+          ) : stockouts.isError ? (
+            <Empty message="Stockout query failed — inventory-service unavailable." />
+          ) : !stockouts.data || stockouts.data.length === 0 ? (
+            <Empty message="No stocked-out items at this facility." />
+          ) : (
+            <ul className="space-y-2 text-sm">
+              {stockouts.data.slice(0, 20).map((s) => (
+                <li key={s.id} className="flex items-center justify-between">
+                  <span className="text-slate-700">
+                    {s.itemCode}
+                    {s.batch ? ` · ${s.batch}` : ""}
+                  </span>
+                  <span className="rounded bg-red-50 px-2 py-0.5 text-xs text-red-700">
+                    on hand {s.qtyOnHand}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* eLMIS / NatPharm sync status */}
+        <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 flex items-center gap-2 text-base font-medium text-slate-800">
+            <RefreshCw className="h-5 w-5 text-slate-500" /> eLMIS / NatPharm sync
+          </h2>
+          <p className="mb-3 text-xs text-slate-500">
+            Dura is the native stock truth; eLMIS/NatPharm are external adapters. Pharmacy
+            dispense sync is a recorded deferred seam — no sync success is shown unless a real
+            sync happened.
+          </p>
+          {externalSync.isLoading ? (
+            <Loading />
+          ) : externalSync.isError ? (
+            <Empty message="Sync status unavailable — inventory-service unreachable." />
+          ) : !externalSync.data || externalSync.data.length === 0 ? (
+            <Empty message="No external sync activity recorded." />
+          ) : (
+            <ul className="space-y-2 text-sm">
+              {externalSync.data.slice(0, 20).map((s) => (
+                <li key={s.syncId} className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate text-slate-700">
+                    {s.externalSystem} · {s.entityType} · {s.entityRef}
+                  </span>
+                  <span
+                    className={`shrink-0 rounded px-2 py-0.5 text-xs ${
+                      s.status === "SYNCED"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : s.status === "FAILED"
+                          ? "bg-red-50 text-red-700"
+                          : "bg-amber-50 text-amber-700"
+                    }`}
+                    title={s.lastError ?? undefined}
+                  >
+                    {s.status}
+                    {s.attempts > 0 ? ` · ${s.attempts} att.` : ""}
+                  </span>
                 </li>
               ))}
             </ul>
