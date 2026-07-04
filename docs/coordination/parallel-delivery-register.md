@@ -70,8 +70,10 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - **Assigned**: Cursor worker agent (run by Fable session per user instruction) · **Branch**: `cursor/ui-pipeline-gaps` · **Worktree**: `/home/user/wt-cursor-ui` · **Base**: `769296629` (WS-P2-A tip)
 - **Owned**: `ui/one-ui-shell` useQueue/scheduling surfaces, `ui/pct-web` queue pages, citizen inbox rendering
 - **Forbidden**: routes.ts, app-registry.ts, api-client core, package locks, Java, mocks for missing endpoints
-- **Deliverable**: escalate action w/ mandatory reason dialog + escalated badges; honest `queue_linked`/`CHECKED_IN_NO_QUEUE` check-in states; QUEUE_CITIZEN_* inbox rendering
-- **Status**: ASSIGNED (agent running 2026-07-04) · **Blockers**: none
+- **Delivered** (6 commits, rebased on WS-P2-A tip `1340a9d39`, head `fe1d9a8fb`): escalate action with mandatory-reason dialog + escalated badges on one-ui-shell `/queue` board and pct-web `(ops)/queues` (target-queue select on pct-web); honest check-in states (`queue_linked` banners, persistent `CHECKED_IN_NO_QUEUE` badge, no fabricated tokens anywhere); citizen inbox repaired — it was shape-broken (expected `attributes` envelope, BFF returns flat `NotificationResponse`) so NO notifications ever rendered; rewired to existing hooks + template-key labels for all QUEUE_CITIZEN_*/APPOINTMENT_CITIZEN_* keys, no fabricated body text
+- **Evidence**: worker gates green (type-check/lint/build both apps, 54/54 vitest); coordinator re-ran post-rebase: type-check shell=0, pct-web=0, touched-page vitest 5/5; diff review: 12 UI files, zero forbidden touches, lockfiles unchanged
+- **Status**: GATES_PASSED · **Merge readiness**: YES (stacks on WS-P2-A) · **Blockers**: none
+- **Follow-ups surfaced for backend owners**: (a) notifications list API exposes `templateKey` only — no rendered subject/body/vars, so inbox rows can't show token numbers until the API returns rendered content; (b) pre-existing shape seam: BFF `GET /internal/v1/queue/entries?facility_id=` without `queue_type` returns queue definitions (flat) where the shell expects entry rows — pre-dates this work, defensively handled in new code only
 
 ## WS-P3-A — PCT gaps: discharge countersign + prescribing hook
 - **Priority**: P1 · **Risk class**: AMBER
