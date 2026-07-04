@@ -35,6 +35,16 @@ export function isPublicPath(pathname: string): boolean {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Collapse duplicate slashes before anything else: with a live session the
+  // request reaches the app, and Next's client router replaceState treats
+  // "//path" as protocol-relative ("http://path") and throws SecurityError
+  // on hydration (real-user report: pasted deep link with a doubled slash).
+  if (pathname.includes("//")) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace(/\/{2,}/g, "/");
+    return NextResponse.redirect(url);
+  }
+
   if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
