@@ -52,6 +52,9 @@ interface BillingDetailResource {
     facilityId?: string;
     totalCost?: number;
     totalCharge?: number;
+    patientPayable?: number;
+    insurerPayable?: number;
+    coverageStatus?: string;
     lineItems?: BillLineItem[];
     parties?: BillParty[];
     [key: string]: unknown;
@@ -199,6 +202,13 @@ export default function BillingDetailPage() {
       setRefundReason("");
     },
   });
+  const applyCoverage = useMutation({
+    mutationFn: () =>
+      apiClient.post(`/internal/v1/finance/billing/${id}/apply-coverage`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["finance-billing", id] });
+    },
+  });
   const bill = data?.data;
   const payments: PaymentResource[] = paymentsData?.data ?? [];
   const refunds: RefundResource[] = refundsData?.data ?? [];
@@ -226,12 +236,19 @@ export default function BillingDetailPage() {
     { href: "/finance/billing", label: "Billing List", icon: Receipt, tone: "secondary" as const },
   ].filter((value): value is NonNullable<typeof value> => Boolean(value));
 
-  // Default FULL payment amount to bill's totalPayable
+  // Default payment amount: patient shortfall when coverage split the bill
+  // (REMAINDER of patientPayable), otherwise the full totalPayable.
+  const insurerShare = bill?.attributes.insurerPayable ?? 0;
+  const patientShare = bill?.attributes.patientPayable ?? bill?.attributes.amount ?? 0;
   useEffect(() => {
-    if (bill && paymentType === "FULL" && !paymentAmount) {
+    if (!bill || paymentAmount) return;
+    if (insurerShare > 0 && paymentType === "FULL") {
+      setPaymentType("REMAINDER");
+      setPaymentAmount(patientShare.toFixed(2));
+    } else if (paymentType === "FULL") {
       setPaymentAmount(bill.attributes.amount.toFixed(2));
     }
-  }, [bill, paymentType, paymentAmount]);
+  }, [bill, paymentType, paymentAmount, insurerShare, patientShare]);
 
   return (
     <AppLayout>
@@ -362,6 +379,69 @@ export default function BillingDetailPage() {
                       minimumFractionDigits: 2,
                     })}
                   </p>
+                </div>
+              </div>
+
+              {/* Coverage split — payer vs patient responsibility */}
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-medium text-muted-foreground">Coverage</p>
+                    {bill.attributes.coverageStatus ? (
+                      <span
+                        className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${
+                          bill.attributes.coverageStatus.startsWith("ELIGIBLE") ||
+                          bill.attributes.coverageStatus.startsWith("CLAIM_SUBMITTED")
+                            ? "bg-green-100 text-green-700"
+                            : bill.attributes.coverageStatus.startsWith("INELIGIBLE") ||
+                                bill.attributes.coverageStatus.startsWith("CLAIM_FAILED")
+                              ? "bg-red-100 text-danger"
+                              : "bg-neutral-100 text-muted-foreground"
+                        }`}
+                      >
+                        {bill.attributes.coverageStatus.split(":")[0].replace(/_/g, " ")}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">not checked</span>
+                    )}
+                  </div>
+                  {!["FINAL", "VOID"].includes(status) && (
+                    <button
+                      onClick={() => applyCoverage.mutate()}
+                      disabled={applyCoverage.isPending}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-primary-soft rounded-lg hover:bg-primary/10 disabled:opacity-50 transition-colors"
+                    >
+                      {applyCoverage.isPending
+                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        : <CheckCircle className="w-3.5 h-3.5" />}
+                      Apply Coverage
+                    </button>
+                  )}
+                </div>
+                {applyCoverage.isError && (
+                  <p className="mb-2 text-xs text-red-600">
+                    Coverage check failed — the patient may have no active cover for this facility.
+                  </p>
+                )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-lg bg-background p-3">
+                    <p className="text-xs text-muted-foreground">Insurer Payable</p>
+                    <p className="text-sm font-mono font-semibold text-foreground">
+                      {bill.attributes.currency}{" "}
+                      {(bill.attributes.insurerPayable ?? 0).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-background p-3">
+                    <p className="text-xs text-muted-foreground">Patient Payable</p>
+                    <p className="text-sm font-mono font-semibold text-primary">
+                      {bill.attributes.currency}{" "}
+                      {(bill.attributes.patientPayable ?? bill.attributes.amount).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
