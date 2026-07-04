@@ -108,6 +108,7 @@ public class QueueEngine {
         writeOutbox("QUEUE_ITEM", item.getId().toString(), "QUEUE_ITEM_ENQUEUED", toJson(Map.of(
                 "queueId", queueId.toString(),
                 "journeyId", journeyId,
+                "patientCpid", item.getPatientCpid(),
                 "tokenNumber", tokenNumber,
                 "priority", priority)));
 
@@ -151,6 +152,7 @@ public class QueueEngine {
         writeOutbox("QUEUE_ITEM", item.getId().toString(), "QUEUE_ITEM_CALLED", toJson(Map.of(
                 "queueId", queueId.toString(),
                 "journeyId", item.getJourneyId(),
+                "patientCpid", item.getPatientCpid(),
                 "tokenNumber", item.getTokenNumber(),
                 "calledBy", ctx.actorId())));
 
@@ -185,6 +187,7 @@ public class QueueEngine {
         QueueItemEntity item = queueItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Queue item not found: " + itemId));
         String journeyId = item.getJourneyId();
+        QueueItemStatus previousStatus = item.getStatus();
 
         item.setStatus(newStatus);
 
@@ -192,6 +195,16 @@ public class QueueEngine {
             case CALLED -> {
                 item.setCalledBy(ctx.actorId());
                 item.setCalledAt(OffsetDateTime.now());
+            }
+            case IN_TRIAGE -> {
+                // Pulling a patient into triage is a call: record the caller
+                // unless the item was already CALLED. Journey-level triage
+                // truth stays with TriageService (journey → TRIAGED on
+                // completion); the queue item merely tracks occupancy.
+                if (item.getCalledAt() == null) {
+                    item.setCalledBy(ctx.actorId());
+                    item.setCalledAt(OffsetDateTime.now());
+                }
             }
             case IN_SERVICE -> {
                 item.setServiceStartedAt(OffsetDateTime.now());
@@ -221,6 +234,18 @@ public class QueueEngine {
         }
 
         item = queueItemRepository.save(item);
+
+        // Every status transition is auditable and consumable downstream
+        // (pct.queue.item.updated); silent state changes are forbidden.
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("queueId", item.getQueueId().toString());
+        payload.put("journeyId", journeyId);
+        payload.put("patientCpid", item.getPatientCpid());
+        payload.put("tokenNumber", item.getTokenNumber());
+        payload.put("previousStatus", previousStatus != null ? previousStatus.name() : null);
+        payload.put("newStatus", newStatus.name());
+        payload.put("actorId", ctx.actorId());
+        writeOutbox("QUEUE_ITEM", item.getId().toString(), "QUEUE_ITEM_UPDATED", toJson(payload));
 
         log.info("Queue item {} updated to status {}", itemId, newStatus);
 
@@ -258,6 +283,7 @@ public class QueueEngine {
         newItem.setId(UUID.randomUUID());
         newItem.setQueueId(targetQueueId);
         newItem.setJourneyId(oldItem.getJourneyId());
+        newItem.setPatientCpid(oldItem.getPatientCpid());
         newItem.setTenantId(ctx.tenantId());
         newItem.setFacilityId(oldItem.getFacilityId());
         newItem.setTokenNumber(maxToken + 1);
@@ -271,6 +297,7 @@ public class QueueEngine {
                 "fromQueueId", oldItem.getQueueId().toString(),
                 "toQueueId", targetQueueId.toString(),
                 "journeyId", oldItem.getJourneyId(),
+                "patientCpid", newItem.getPatientCpid(),
                 "oldItemId", oldItem.getId().toString(),
                 "newItemId", newItem.getId().toString(),
                 "newTokenNumber", newItem.getTokenNumber())));

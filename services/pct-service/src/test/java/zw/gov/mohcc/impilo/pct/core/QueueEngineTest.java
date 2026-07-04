@@ -12,6 +12,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.pct.domain.JourneyState;
 import zw.gov.mohcc.impilo.pct.domain.QueueItemStatus;
+import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.JourneyEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.QueueItemEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
@@ -220,6 +221,61 @@ class QueueEngineTest {
         }
 
         @Test
+        @DisplayName("updateItemStatus to IN_TRIAGE records caller and leaves journey untouched (BFF triage regression)")
+        void statusToInTriageRecordsCallerWithoutJourneyTransition() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                UUID itemId = UUID.randomUUID();
+                QueueItemEntity item = new QueueItemEntity();
+                item.setId(itemId);
+                item.setQueueId(QUEUE_ID);
+                item.setJourneyId("J-TEST-001");
+                item.setStatus(QueueItemStatus.WAITING);
+
+                when(queueItemRepository.findById(itemId)).thenReturn(Optional.of(item));
+                when(queueItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+                // The BFF triage action sends the literal status string; this is the
+                // regression guard for the former 500 (enum had no IN_TRIAGE value).
+                QueueItemStatus parsed = QueueItemStatus.valueOf("IN_TRIAGE");
+                QueueItemEntity result = queueEngine.updateItemStatus(itemId, parsed);
+
+                assertThat(result.getStatus()).isEqualTo(QueueItemStatus.IN_TRIAGE);
+                assertThat(result.getCalledBy()).isEqualTo(ACTOR_ID);
+                assertThat(result.getCalledAt()).isNotNull();
+                verify(journeyStateMachine, never()).transition(any(), any());
+            }
+        }
+
+        @Test
+        @DisplayName("updateItemStatus to IN_TRIAGE preserves an existing CALLED timestamp")
+        void statusToInTriageKeepsExistingCallRecord() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                UUID itemId = UUID.randomUUID();
+                OffsetDateTime originalCallTime = OffsetDateTime.now().minusMinutes(5);
+                QueueItemEntity item = new QueueItemEntity();
+                item.setId(itemId);
+                item.setQueueId(QUEUE_ID);
+                item.setJourneyId("J-TEST-001");
+                item.setStatus(QueueItemStatus.CALLED);
+                item.setCalledBy("earlier-actor");
+                item.setCalledAt(originalCallTime);
+
+                when(queueItemRepository.findById(itemId)).thenReturn(Optional.of(item));
+                when(queueItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+                QueueItemEntity result = queueEngine.updateItemStatus(itemId, QueueItemStatus.IN_TRIAGE);
+
+                assertThat(result.getStatus()).isEqualTo(QueueItemStatus.IN_TRIAGE);
+                assertThat(result.getCalledBy()).isEqualTo("earlier-actor");
+                assertThat(result.getCalledAt()).isEqualTo(originalCallTime);
+            }
+        }
+
+        @Test
         @DisplayName("updateItemStatus to COMPLETED sets completedAt timestamp")
         void statusToCompletedSetsTimestamp() {
             try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
@@ -270,6 +326,39 @@ class QueueEngineTest {
         }
 
         @Test
+        @DisplayName("updateItemStatus writes a QUEUE_ITEM_UPDATED outbox event with previous and new status")
+        void statusChangeEmitsOutboxEvent() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                UUID itemId = UUID.randomUUID();
+                QueueItemEntity item = new QueueItemEntity();
+                item.setId(itemId);
+                item.setQueueId(QUEUE_ID);
+                item.setJourneyId("J-TEST-001");
+                item.setPatientCpid("CPID-001");
+                item.setTokenNumber(4);
+                item.setStatus(QueueItemStatus.IN_SERVICE);
+
+                when(queueItemRepository.findById(itemId)).thenReturn(Optional.of(item));
+                when(queueItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+                queueEngine.updateItemStatus(itemId, QueueItemStatus.COMPLETED);
+
+                ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+                verify(outboxRepository).save(captor.capture());
+                EventOutboxEntity event = captor.getValue();
+                assertThat(event.getEventType()).isEqualTo("QUEUE_ITEM_UPDATED");
+                assertThat(event.getAggregateId()).isEqualTo(itemId.toString());
+                assertThat(event.getPayload())
+                        .contains("\"previousStatus\":\"IN_SERVICE\"")
+                        .contains("\"newStatus\":\"COMPLETED\"")
+                        .contains("\"patientCpid\":\"CPID-001\"")
+                        .contains("\"actorId\":\"" + ACTOR_ID + "\"");
+            }
+        }
+
+        @Test
         @DisplayName("updateItemStatus throws when item not found")
         void updateStatusThrowsWhenNotFound() {
             try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
@@ -302,6 +391,7 @@ class QueueEngineTest {
                 oldItem.setId(itemId);
                 oldItem.setQueueId(QUEUE_ID);
                 oldItem.setJourneyId("J-TEST-001");
+                oldItem.setPatientCpid("CPID-001");
                 oldItem.setTenantId(TENANT_ID);
                 oldItem.setFacilityId(FACILITY_ID);
                 oldItem.setPriority(3);
@@ -317,6 +407,9 @@ class QueueEngineTest {
                 assertThat(newItem).isNotNull();
                 assertThat(newItem.getQueueId()).isEqualTo(targetQueueId);
                 assertThat(newItem.getJourneyId()).isEqualTo("J-TEST-001");
+                // patient_cpid is NOT NULL in pct_queue_items — a transfer that
+                // drops it fails the DB constraint (regression guard)
+                assertThat(newItem.getPatientCpid()).isEqualTo("CPID-001");
                 assertThat(newItem.getTokenNumber()).isEqualTo(11);
                 assertThat(newItem.getPriority()).isEqualTo(3);
                 assertThat(newItem.getStatus()).isEqualTo(QueueItemStatus.WAITING);
