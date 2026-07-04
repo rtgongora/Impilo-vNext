@@ -34,16 +34,19 @@ public class FundoCertificateService {
     private final EnrolmentRepository enrolmentRepository;
     private final CourseRepository courseRepository;
     private final FundoOutboxAppender outbox;
+    private final FundoNotificationIntentWriter notifications;
 
     public FundoCertificateService(
             CertificateRepository certificateRepository,
             EnrolmentRepository enrolmentRepository,
             CourseRepository courseRepository,
-            FundoOutboxAppender outbox) {
+            FundoOutboxAppender outbox,
+            FundoNotificationIntentWriter notifications) {
         this.certificateRepository = certificateRepository;
         this.enrolmentRepository = enrolmentRepository;
         this.courseRepository = courseRepository;
         this.outbox = outbox;
+        this.notifications = notifications;
     }
 
     @Transactional
@@ -102,6 +105,14 @@ public class FundoCertificateService {
         issuedPayload.put("verificationDigest", cert.getVerificationDigest());
         outbox.append("FundoCertificate", cert.getId().toString(),
                 FundoNativeEventTypes.CERTIFICATE_ISSUED, issuedPayload);
+
+        notifications.record(
+                tenantId, cert.getSubjectType(), cert.getSubjectId(),
+                "learning.certificate.issued",
+                "Certificate issued: " + cert.getTitle(),
+                "Your certificate \"" + cert.getTitle() + "\" (" + cert.getCertificateNumber()
+                        + ") has been issued.",
+                "IN_APP", cert.getValidUntil(), issuedPayload);
 
         return new CertificateIssueResult(toView(cert), false);
     }
