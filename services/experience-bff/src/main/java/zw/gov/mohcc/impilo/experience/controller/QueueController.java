@@ -479,15 +479,21 @@ public class QueueController {
         return null;
     }
 
+    /**
+     * Map a symbolic priority to PCT's 1–5 scale (5 = most urgent), matching
+     * the triage-derived scale in PCT's RoutingEngine ({@code priority = 6 − acuity}).
+     * The former 100/50/-10/0 mapping let a walk-in marked EMERGENCY outrank
+     * every triage-scored patient in the same queue.
+     */
     private static int parseQueuePriority(String priority) {
         if (priority == null || priority.isBlank()) {
-            return 0;
+            return 3;
         }
         return switch (priority.trim().toUpperCase()) {
-            case "EMERGENCY" -> 100;
-            case "URGENT" -> 50;
-            case "LOW" -> -10;
-            default -> 0;
+            case "EMERGENCY" -> 5;
+            case "URGENT" -> 4;
+            case "LOW" -> 1;
+            default -> 3;
         };
     }
 

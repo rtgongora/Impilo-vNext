@@ -10,12 +10,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Map;
 import java.util.UUID;
 
+import org.mockito.ArgumentCaptor;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class QueueControllerTest {
@@ -121,6 +125,71 @@ class QueueControllerTest {
         assertEquals(502, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertEquals("PCT_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+    }
+
+    @Test
+    void triageEntryForwardsInTriageStatusToPct() {
+        // Regression: BFF sends the literal IN_TRIAGE status; PCT's QueueItemStatus
+        // must accept it (this transition used to 500 on the PCT side).
+        PctServiceClient pctClient = mock(PctServiceClient.class);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode item = mapper.createObjectNode();
+        item.put("status", "IN_TRIAGE");
+        when(pctClient.updateQueueItemStatus(any(UUID.class), eq("IN_TRIAGE"))).thenReturn(item);
+        QueueController controller = newController(pctClient);
+
+        var response = controller.triageEntry(
+                "11111111-1111-1111-1111-111111111111",
+                "req-1",
+                "corr-1",
+                "idem-1",
+                Map.of()
+        );
+
+        assertEquals(200, response.getStatusCode().value());
+        verify(pctClient).updateQueueItemStatus(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"), "IN_TRIAGE");
+    }
+
+    @Test
+    void createEntryMapsSymbolicPriorityToPctTriageScale() throws Exception {
+        // EMERGENCY must land on PCT's 1–5 scale (5 = most urgent), not the old 100.
+        PctServiceClient pctClient = mock(PctServiceClient.class);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode journey = mapper.createObjectNode();
+        journey.put("journeyId", "42");
+        when(pctClient.startJourney(anyString(), any(UUID.class), any(), any())).thenReturn(journey);
+
+        var queueArray = mapper.createArrayNode();
+        var queueDef = queueArray.addObject();
+        queueDef.put("queueType", "WALK_IN");
+        queueDef.put("queueId", "11111111-1111-1111-1111-111111111111");
+        when(pctClient.listQueues(any(UUID.class), any())).thenReturn(queueArray);
+
+        ObjectNode item = mapper.createObjectNode();
+        item.put("id", "22222222-2222-2222-2222-222222222222");
+        when(pctClient.enqueue(any(UUID.class), anyString(), anyInt())).thenReturn(item);
+
+        QueueController controller = newController(pctClient);
+
+        var response = controller.createEntry(
+                "tenant-1",
+                "pod-1",
+                "req-1",
+                "corr-1",
+                "idem-1",
+                Map.of(
+                        "patient_id", "a1000000-0000-0000-0000-000000000001",
+                        "facility_id", "f1000000-0000-0000-0000-000000000001",
+                        "queue_type", "WALK_IN",
+                        "priority", "EMERGENCY"
+                )
+        );
+
+        assertEquals(201, response.getStatusCode().value());
+        ArgumentCaptor<Integer> priorityCaptor = ArgumentCaptor.forClass(Integer.class);
+        verify(pctClient).enqueue(any(UUID.class), anyString(), priorityCaptor.capture());
+        assertEquals(5, priorityCaptor.getValue());
     }
 
     @Test
