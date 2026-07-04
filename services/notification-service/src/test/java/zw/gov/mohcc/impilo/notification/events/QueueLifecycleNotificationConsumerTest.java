@@ -1,22 +1,34 @@
 package zw.gov.mohcc.impilo.notification.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.notification.api.dto.NotifyRequest;
 import zw.gov.mohcc.impilo.notification.service.NotifyService;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 class QueueLifecycleNotificationConsumerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private NotifyService notifyService;
     private QueueLifecycleNotificationConsumer consumer;
 
     @BeforeEach
     void setUp() {
-        consumer = new QueueLifecycleNotificationConsumer(mock(NotifyService.class), objectMapper);
+        notifyService = mock(NotifyService.class);
+        consumer = new QueueLifecycleNotificationConsumer(notifyService, objectMapper);
+    }
+
+    private static ConsumerRecord<String, String> record(String json) {
+        return new ConsumerRecord<>("pct.queue.item.updated", 0, 0L, null, json);
     }
 
     @Test
@@ -99,5 +111,46 @@ class QueueLifecycleNotificationConsumerTest {
                 "{\"eventType\":\"QUEUE_ITEM_CALLED\",\"tenantId\":\"t1\"}"))).isNull();
         assertThat(consumer.toNotifyRequest(objectMapper.readTree(
                 "{\"patientCpid\":\"CPID-001\"}"))).isNull();
+    }
+
+    // ── Full onQueueItemEvent listener path ──
+
+    @Test
+    void onQueueItemEvent_enqueuesWithRequestContextCarryingTheEventTenantId() {
+        consumer.onQueueItemEvent(record("""
+                {"eventType":"QUEUE_ITEM_CALLED","tenantId":"tenant-away-pod",
+                 "patientCpid":"CPID-001","tokenNumber":12}
+                """));
+
+        ArgumentCaptor<NotifyRequest> requestCaptor = ArgumentCaptor.forClass(NotifyRequest.class);
+        ArgumentCaptor<RequestContext> ctxCaptor = ArgumentCaptor.forClass(RequestContext.class);
+        verify(notifyService).enqueue(requestCaptor.capture(), ctxCaptor.capture());
+
+        // Tenant isolation: the notification is written under the EVENT's
+        // tenant, never a consumer-local default.
+        assertThat(ctxCaptor.getValue().tenantId()).isEqualTo("tenant-away-pod");
+        assertThat(requestCaptor.getValue().templateKey()).isEqualTo("QUEUE_CITIZEN_CALLED");
+        assertThat(requestCaptor.getValue().recipient()).isEqualTo("CPID-001");
+    }
+
+    @Test
+    void onQueueItemEvent_skipsEventsWithMissingTenantId() {
+        consumer.onQueueItemEvent(record("""
+                {"eventType":"QUEUE_ITEM_CALLED","patientCpid":"CPID-001","tokenNumber":12}
+                """));
+        consumer.onQueueItemEvent(record("""
+                {"eventType":"QUEUE_ITEM_CALLED","tenantId":"","patientCpid":"CPID-001"}
+                """));
+
+        verify(notifyService, never()).enqueue(any(), any());
+    }
+
+    @Test
+    void onQueueItemEvent_neverThrowsOnMalformedPayload() {
+        // At-least-once Kafka delivery: a poison message must be swallowed,
+        // not re-thrown into the listener container.
+        consumer.onQueueItemEvent(record("this is not json"));
+
+        verify(notifyService, never()).enqueue(any(), any());
     }
 }
