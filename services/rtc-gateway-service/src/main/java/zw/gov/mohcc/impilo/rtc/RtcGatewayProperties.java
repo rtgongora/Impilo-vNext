@@ -7,6 +7,7 @@ public class RtcGatewayProperties {
     private Gateway gateway = new Gateway();
     private Livekit livekit = new Livekit();
     private Webhook webhook = new Webhook();
+    private Recording recording = new Recording();
 
     public Gateway getGateway() {
         return gateway;
@@ -30,6 +31,88 @@ public class RtcGatewayProperties {
 
     public void setWebhook(Webhook webhook) {
         this.webhook = webhook;
+    }
+
+    public Recording getRecording() {
+        return recording;
+    }
+
+    public void setRecording(Recording recording) {
+        this.recording = recording;
+    }
+
+    /**
+     * Recording (egress) artifact target. LiveKit room-composite egress needs the
+     * S3 destination on every StartRoomCompositeEgress request; preview wires the
+     * in-chart MinIO here (RTC_RECORDING_S3_* / RTC_RECORDING_BUCKET env).
+     */
+    public static class Recording {
+        private S3 s3 = new S3();
+
+        public S3 getS3() {
+            return s3;
+        }
+
+        public void setS3(S3 s3) {
+            this.s3 = s3;
+        }
+
+        public static class S3 {
+            private String accessKey = "";
+            private String secretKey = "";
+            private String endpoint = "";
+            private String bucket = "impilo-recordings";
+            private String region = "us-east-1";
+            private boolean forcePathStyle = true;
+
+            public String getAccessKey() {
+                return accessKey;
+            }
+
+            public void setAccessKey(String accessKey) {
+                this.accessKey = accessKey;
+            }
+
+            public String getSecretKey() {
+                return secretKey;
+            }
+
+            public void setSecretKey(String secretKey) {
+                this.secretKey = secretKey;
+            }
+
+            public String getEndpoint() {
+                return endpoint;
+            }
+
+            public void setEndpoint(String endpoint) {
+                this.endpoint = endpoint;
+            }
+
+            public String getBucket() {
+                return bucket;
+            }
+
+            public void setBucket(String bucket) {
+                this.bucket = bucket;
+            }
+
+            public String getRegion() {
+                return region;
+            }
+
+            public void setRegion(String region) {
+                this.region = region;
+            }
+
+            public boolean isForcePathStyle() {
+                return forcePathStyle;
+            }
+
+            public void setForcePathStyle(boolean forcePathStyle) {
+                this.forcePathStyle = forcePathStyle;
+            }
+        }
     }
 
     public static class Webhook {
@@ -136,6 +219,8 @@ public class RtcGatewayProperties {
         private String apiSecret = "";
         private String createRoomPath = "/twirp/livekit.RoomService/CreateRoom";
         private String deleteRoomPath = "/twirp/livekit.RoomService/DeleteRoom";
+        private String startRoomCompositeEgressPath = "/twirp/livekit.Egress/StartRoomCompositeEgress";
+        private String stopEgressPath = "/twirp/livekit.Egress/StopEgress";
         private int defaultEmptyTimeoutSeconds = 900;
         private int maxParticipants = 8;
 
@@ -193,6 +278,22 @@ public class RtcGatewayProperties {
 
         public void setDeleteRoomPath(String deleteRoomPath) {
             this.deleteRoomPath = deleteRoomPath;
+        }
+
+        public String getStartRoomCompositeEgressPath() {
+            return startRoomCompositeEgressPath;
+        }
+
+        public void setStartRoomCompositeEgressPath(String startRoomCompositeEgressPath) {
+            this.startRoomCompositeEgressPath = startRoomCompositeEgressPath;
+        }
+
+        public String getStopEgressPath() {
+            return stopEgressPath;
+        }
+
+        public void setStopEgressPath(String stopEgressPath) {
+            this.stopEgressPath = stopEgressPath;
         }
 
         public int getDefaultEmptyTimeoutSeconds() {

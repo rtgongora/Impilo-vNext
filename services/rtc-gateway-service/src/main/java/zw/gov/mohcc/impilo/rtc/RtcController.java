@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.rtc.model.RtcParticipantTokenRequest;
+import zw.gov.mohcc.impilo.rtc.model.RtcRecordingStartRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionProvisionRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionResponse;
 
@@ -23,9 +24,11 @@ import java.util.Map;
 @RequestMapping("/internal/v1/rtc")
 public class RtcController {
     private final RtcGatewayService service;
+    private final RtcRecordingService recordingService;
 
-    public RtcController(RtcGatewayService service) {
+    public RtcController(RtcGatewayService service, RtcRecordingService recordingService) {
         this.service = service;
+        this.recordingService = recordingService;
     }
 
     @PostMapping("/sessions")
@@ -72,6 +75,33 @@ public class RtcController {
         return ResponseEntity.ok(envelope(service.end(sessionId), requestId, correlationId));
     }
 
+    @PostMapping("/sessions/{sessionId}/recording/start")
+    public ResponseEntity<Map<String, Object>> startRecording(
+            @PathVariable String sessionId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @Valid @RequestBody RtcRecordingStartRequest body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(dataEnvelope(recordingService.start(sessionId, body), requestId, correlationId));
+    }
+
+    @PostMapping("/sessions/{sessionId}/recording/stop")
+    public ResponseEntity<Map<String, Object>> stopRecording(
+            @PathVariable String sessionId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> ignored) {
+        return ResponseEntity.ok(dataEnvelope(recordingService.stop(sessionId), requestId, correlationId));
+    }
+
+    @GetMapping("/sessions/{sessionId}/recordings")
+    public ResponseEntity<Map<String, Object>> listRecordings(
+            @PathVariable String sessionId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ResponseEntity.ok(dataEnvelope(recordingService.list(sessionId), requestId, correlationId));
+    }
+
     @ExceptionHandler(RtcNotFoundException.class)
     public ResponseEntity<Map<String, Object>> notFound(RtcNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error("RTC_SESSION_NOT_FOUND", ex.getMessage()));
@@ -88,6 +118,10 @@ public class RtcController {
     }
 
     private Map<String, Object> envelope(RtcSessionResponse data, String requestId, String correlationId) {
+        return dataEnvelope(data, requestId, correlationId);
+    }
+
+    private Map<String, Object> dataEnvelope(Object data, String requestId, String correlationId) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("data", data);
         out.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));

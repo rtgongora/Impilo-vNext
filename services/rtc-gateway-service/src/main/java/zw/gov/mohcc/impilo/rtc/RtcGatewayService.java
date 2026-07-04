@@ -110,6 +110,7 @@ public class RtcGatewayService {
                     request.providerId(),
                     request.encounterId(),
                     request.referralId(),
+                    request.consentReference(),
                     "rtc:" + roomName,
                     capabilities(),
                     mediaPolicy(template),

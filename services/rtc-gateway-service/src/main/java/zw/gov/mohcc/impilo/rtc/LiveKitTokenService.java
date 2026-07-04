@@ -95,6 +95,32 @@ public class LiveKitTokenService {
         return sign(claims);
     }
 
+    /**
+     * Admin token for the Egress twirp API: starting/stopping a room egress
+     * requires the {@code roomRecord} grant (roomAdmin alone is not enough).
+     */
+    public String issueRoomRecordToken(String roomName) {
+        if (properties.getGateway().isDevModeEnabled() && !properties.getLivekit().isEnabled()) {
+            return "dev-rtc-record-token";
+        }
+        assertLiveKitConfigured();
+        Map<String, Object> videoGrant = new LinkedHashMap<>();
+        if (roomName != null && !roomName.isBlank()) {
+            videoGrant.put("room", roomName);
+        }
+        videoGrant.put("roomAdmin", true);
+        videoGrant.put("roomRecord", true);
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .issuer(properties.getLivekit().getApiKey())
+                .subject("impilo-rtc-gateway")
+                .expirationTime(Date.from(Instant.now().plusSeconds(300)))
+                .notBeforeTime(Date.from(Instant.now().minusSeconds(5)))
+                .jwtID(UUID.randomUUID().toString())
+                .claim("video", videoGrant)
+                .build();
+        return sign(claims);
+    }
+
     public void assertLiveKitConfigured() {
         if (!properties.getLivekit().isEnabled()) {
             throw new IllegalStateException("LiveKit provider is disabled");

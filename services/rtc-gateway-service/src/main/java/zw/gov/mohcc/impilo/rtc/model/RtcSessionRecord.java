@@ -17,6 +17,7 @@ public record RtcSessionRecord(
         String providerId,
         String encounterId,
         String referralId,
+        String consentReference,
         String channel,
         Map<String, Boolean> capabilities,
         Map<String, Object> mediaPolicy,
@@ -27,7 +28,7 @@ public record RtcSessionRecord(
         return new RtcSessionRecord(
                 id, tenantId, provider, roomName, roomUrl, nextStatus,
                 sessionMode, owningService, owningRef,
-                patientId, providerId, encounterId, referralId, channel,
+                patientId, providerId, encounterId, referralId, consentReference, channel,
                 capabilities, mediaPolicy, createdAt, Instant.now());
     }
 }

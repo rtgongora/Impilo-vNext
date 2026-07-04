@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import zw.gov.mohcc.impilo.rtc.RtcGatewayProperties;
 import zw.gov.mohcc.impilo.rtc.RtcOutboxPublisher;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionRecord;
+import zw.gov.mohcc.impilo.rtc.persistence.RtcRecordingPersistence;
 import zw.gov.mohcc.impilo.rtc.persistence.RtcSessionPersistence;
 import zw.gov.mohcc.impilo.rtc.persistence.RtcTelemetryPersistence;
 
@@ -39,14 +41,20 @@ public class RtcWebhookTranslator {
 
     private final RtcSessionPersistence sessions;
     private final RtcTelemetryPersistence telemetry;
+    private final RtcRecordingPersistence recordings;
     private final RtcOutboxPublisher outboxPublisher;
+    private final RtcGatewayProperties properties;
 
     public RtcWebhookTranslator(RtcSessionPersistence sessions,
                                 RtcTelemetryPersistence telemetry,
-                                RtcOutboxPublisher outboxPublisher) {
+                                RtcRecordingPersistence recordings,
+                                RtcOutboxPublisher outboxPublisher,
+                                RtcGatewayProperties properties) {
         this.sessions = sessions;
         this.telemetry = telemetry;
+        this.recordings = recordings;
         this.outboxPublisher = outboxPublisher;
+        this.properties = properties;
     }
 
     /**
@@ -103,20 +111,73 @@ public class RtcWebhookTranslator {
                     publish(session, eventId, EVT_TRACK_PUBLISHED, occurredAt, identity, trackExtras(event));
             case "track_unpublished" ->
                     publish(session, eventId, EVT_TRACK_UNPUBLISHED, occurredAt, identity, trackExtras(event));
-            case "egress_started" ->
-                    publish(session, eventId, EVT_RECORDING_STARTED, occurredAt, identity, egressExtras(event));
-            case "egress_updated" ->
-                    publish(session, eventId, EVT_RECORDING_UPDATED, occurredAt, identity, egressExtras(event));
-            case "egress_ended" -> {
-                String eventType = egressFailed(event) ? EVT_RECORDING_FAILED : EVT_RECORDING_AVAILABLE;
-                publish(session, eventId, eventType, occurredAt, identity, egressExtras(event));
-            }
+            case "egress_started" -> handleEgressStarted(session, eventId, occurredAt, identity, event);
+            case "egress_updated" -> handleEgressUpdated(session, eventId, occurredAt, identity, event);
+            case "egress_ended" -> handleEgressEnded(session, eventId, occurredAt, identity, event);
             default -> {
                 log.debug("Unmapped LiveKit webhook event '{}' — recorded raw only", type);
                 return Outcome.IGNORED;
             }
         }
         return Outcome.PROCESSED;
+    }
+
+    // ── Recording lifecycle (rtc.recordings + impilo.rtc.recording.* events) ──
+    // The recordings-table update and the enriched event payload live together
+    // here so downstream consumers and the recordings API never diverge.
+
+    private void handleEgressStarted(RtcSessionRecord session, String eventId,
+                                     Instant occurredAt, String identity, JsonNode event) {
+        String egressId = egressId(event);
+        if (egressId != null) {
+            // Upsert: the webhook can beat the StartRoomCompositeEgress response commit.
+            recordings.markActive(session.id(), egressId);
+        }
+        publish(session, eventId, EVT_RECORDING_STARTED, occurredAt, identity, egressExtras(event));
+    }
+
+    private void handleEgressUpdated(RtcSessionRecord session, String eventId,
+                                     Instant occurredAt, String identity, JsonNode event) {
+        String egressId = egressId(event);
+        Long sizeBytes = fileSizeBytes(event);
+        Integer durationSeconds = fileDurationSeconds(event);
+        if (egressId != null && (sizeBytes != null || durationSeconds != null)) {
+            recordings.updateProgress(egressId, sizeBytes, durationSeconds);
+        }
+        Map<String, Object> extras = egressExtras(event);
+        if (sizeBytes != null) {
+            extras.put("sizeBytes", sizeBytes);
+        }
+        if (durationSeconds != null) {
+            extras.put("durationSeconds", durationSeconds);
+        }
+        publish(session, eventId, EVT_RECORDING_UPDATED, occurredAt, identity, extras);
+    }
+
+    private void handleEgressEnded(RtcSessionRecord session, String eventId,
+                                   Instant occurredAt, String identity, JsonNode event) {
+        boolean failed = egressFailed(event);
+        String egressId = egressId(event);
+        String storageKey = fileStorageKey(event);
+        Long sizeBytes = fileSizeBytes(event);
+        Integer durationSeconds = fileDurationSeconds(event);
+        // The webhook payload carries no bucket; the gateway's configured target is the truth.
+        String storageBucket = storageKey == null ? null : properties.getRecording().getS3().getBucket();
+        if (egressId != null) {
+            recordings.markEnded(session.id(), egressId, failed ? "FAILED" : "COMPLETE",
+                    storageBucket, storageKey, sizeBytes, durationSeconds, occurredAt);
+        }
+        Map<String, Object> extras = egressExtras(event);
+        putIfPresent(extras, "storageBucket", storageBucket);
+        putIfPresent(extras, "storageKey", storageKey);
+        if (durationSeconds != null) {
+            extras.put("durationSeconds", durationSeconds);
+        }
+        if (sizeBytes != null) {
+            extras.put("sizeBytes", sizeBytes);
+        }
+        publish(session, eventId, failed ? EVT_RECORDING_FAILED : EVT_RECORDING_AVAILABLE,
+                occurredAt, identity, extras);
     }
 
     private void publish(RtcSessionRecord session, String eventId, String eventType,
@@ -155,6 +216,54 @@ public class RtcWebhookTranslator {
         putIfPresent(extras, "egressStatus", egress.path("status").asText(null));
         putIfPresent(extras, "egressError", egress.path("error").asText(null));
         return extras;
+    }
+
+    private static String egressId(JsonNode event) {
+        String id = event.path("egressInfo").path("egressId").asText(null);
+        return id == null || id.isBlank() ? null : id;
+    }
+
+    /**
+     * First file result of the egress, wherever this LiveKit version put it:
+     * egressInfo.fileResults[0] (current), egressInfo.file (legacy), or
+     * egressInfo.result.file. Missing → MissingNode (all path() calls safe).
+     */
+    private static JsonNode fileResult(JsonNode event) {
+        JsonNode egress = event.path("egressInfo");
+        JsonNode results = egress.path("fileResults");
+        if (results.isArray() && results.size() > 0) {
+            return results.get(0);
+        }
+        JsonNode file = egress.path("file");
+        if (file.isObject()) {
+            return file;
+        }
+        return egress.path("result").path("file");
+    }
+
+    private static String fileStorageKey(JsonNode event) {
+        JsonNode file = fileResult(event);
+        String filename = file.path("filename").asText(null);
+        if (filename == null || filename.isBlank()) {
+            filename = file.path("filepath").asText(null);
+        }
+        return filename == null || filename.isBlank() ? null : filename;
+    }
+
+    private static Long fileSizeBytes(JsonNode event) {
+        long size = fileResult(event).path("size").asLong(0);
+        return size > 0 ? size : null;
+    }
+
+    /** LiveKit reports duration in nanoseconds (int64, often JSON-encoded as a string). */
+    private static Integer fileDurationSeconds(JsonNode event) {
+        long duration = fileResult(event).path("duration").asLong(0);
+        if (duration <= 0) {
+            return null;
+        }
+        // Defensive: > ~11.5 days in seconds means the value is nanoseconds.
+        long seconds = duration > 1_000_000L ? duration / 1_000_000_000L : duration;
+        return (int) Math.max(1, seconds);
     }
 
     private static boolean egressFailed(JsonNode event) {

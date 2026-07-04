@@ -54,6 +54,14 @@ rtc:
     egress-enabled: ${RTC_EGRESS_ENABLED:false}
     require-consent-reference-for-media: ${RTC_REQUIRE_CONSENT_REFERENCE_FOR_MEDIA:true}
     allow-emergency-without-consent: ${RTC_ALLOW_EMERGENCY_WITHOUT_CONSENT:true}
+  recording:
+    s3:
+      access-key: ${RTC_RECORDING_S3_ACCESS_KEY:}
+      secret-key: ${RTC_RECORDING_S3_SECRET_KEY:}
+      endpoint: ${RTC_RECORDING_S3_ENDPOINT:}
+      bucket: ${RTC_RECORDING_BUCKET:impilo-recordings}
+      region: ${RTC_RECORDING_S3_REGION:us-east-1}
+      force-path-style: ${RTC_RECORDING_S3_FORCE_PATH_STYLE:true}
   livekit:
     enabled: ${LIVEKIT_ENABLED:false}
     url: ${LIVEKIT_URL:}
@@ -62,5 +70,7 @@ rtc:
     api-secret: ${LIVEKIT_API_SECRET:}
     create-room-path: ${LIVEKIT_CREATE_ROOM_PATH:/twirp/livekit.RoomService/CreateRoom}
     delete-room-path: ${LIVEKIT_DELETE_ROOM_PATH:/twirp/livekit.RoomService/DeleteRoom}
+    start-room-composite-egress-path: ${LIVEKIT_START_ROOM_COMPOSITE_EGRESS_PATH:/twirp/livekit.Egress/StartRoomCompositeEgress}
+    stop-egress-path: ${LIVEKIT_STOP_EGRESS_PATH:/twirp/livekit.Egress/StopEgress}
     default-empty-timeout-seconds: ${LIVEKIT_EMPTY_TIMEOUT_SECONDS:900}
     max-participants: ${LIVEKIT_MAX_PARTICIPANTS:8}

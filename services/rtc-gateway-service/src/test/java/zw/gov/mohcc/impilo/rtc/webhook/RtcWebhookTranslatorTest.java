@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import zw.gov.mohcc.impilo.rtc.RtcGatewayProperties;
 import zw.gov.mohcc.impilo.rtc.RtcOutboxPublisher;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionRecord;
 import zw.gov.mohcc.impilo.rtc.persistence.InMemoryRtcSessionPersistence;
+import zw.gov.mohcc.impilo.rtc.persistence.RtcRecordingPersistence;
 import zw.gov.mohcc.impilo.rtc.persistence.RtcTelemetryPersistence;
 
 import java.time.Instant;
@@ -32,6 +34,7 @@ class RtcWebhookTranslatorTest {
 
     private InMemoryRtcSessionPersistence sessions;
     private RtcTelemetryPersistence telemetry;
+    private RtcRecordingPersistence recordings;
     private RtcOutboxPublisher outbox;
     private RtcWebhookTranslator translator;
 
@@ -41,12 +44,15 @@ class RtcWebhookTranslatorTest {
         sessions.save(new RtcSessionRecord(
                 "session-1", "tenant-1", "LIVEKIT", ROOM, "wss://livekit.test",
                 "PROVISIONED", "TELEMEDICINE", "PCT", "encounter:enc-1",
-                "patient-1", "provider-1", "enc-1", "ref-1", "rtc:" + ROOM,
+                "patient-1", "provider-1", "enc-1", "ref-1", "consent-1", "rtc:" + ROOM,
                 Map.of(), Map.of(), Instant.now(), Instant.now()));
         telemetry = mock(RtcTelemetryPersistence.class);
         when(telemetry.insertEventIfNew(any(), any(), anyString(), any(), any(), any(), any())).thenReturn(true);
+        recordings = mock(RtcRecordingPersistence.class);
         outbox = mock(RtcOutboxPublisher.class);
-        translator = new RtcWebhookTranslator(sessions, telemetry, outbox);
+        RtcGatewayProperties properties = new RtcGatewayProperties();
+        properties.getRecording().getS3().setBucket("impilo-recordings");
+        translator = new RtcWebhookTranslator(sessions, telemetry, recordings, outbox, properties);
     }
 
     @Test
@@ -143,6 +149,46 @@ class RtcWebhookTranslatorTest {
 
         Map<String, Object> payload = capturePayload(RtcWebhookTranslator.EVT_RECORDING_FAILED);
         assertEquals("EGRESS_FAILED", payload.get("egressStatus"));
+    }
+
+    @Test
+    void egressStartedMarksRecordingRowActive() throws Exception {
+        translator.handle(egressEvent("egress_started", "EV_20", "EGRESS_ACTIVE"));
+
+        verify(recordings).markActive("session-1", "EG_1");
+        capturePayload(RtcWebhookTranslator.EVT_RECORDING_STARTED);
+    }
+
+    @Test
+    void egressEndedCompletesRecordingAndEnrichesAvailableEvent() throws Exception {
+        JsonNode event = MAPPER.readTree("""
+                {"event":"egress_ended","id":"EV_21","createdAt":1750000000,
+                 "egressInfo":{"egressId":"EG_1","roomName":"%s","status":"EGRESS_COMPLETE",
+                   "fileResults":[{"filename":"recordings/%s-1750000000.mp4",
+                                   "size":"1048576","duration":"30000000000"}]}}
+                """.formatted(ROOM, ROOM));
+
+        translator.handle(event);
+
+        verify(recordings).markEnded(eq("session-1"), eq("EG_1"), eq("COMPLETE"),
+                eq("impilo-recordings"), eq("recordings/" + ROOM + "-1750000000.mp4"),
+                eq(1048576L), eq(30), any(Instant.class));
+        Map<String, Object> payload = capturePayload(RtcWebhookTranslator.EVT_RECORDING_AVAILABLE);
+        assertCommonEnvelope(payload, "EV_21");
+        assertEquals("EG_1", payload.get("egressId"));
+        assertEquals("impilo-recordings", payload.get("storageBucket"));
+        assertEquals("recordings/" + ROOM + "-1750000000.mp4", payload.get("storageKey"));
+        assertEquals(30, payload.get("durationSeconds"));
+        assertEquals(1048576L, payload.get("sizeBytes"));
+    }
+
+    @Test
+    void failedEgressEndMarksRecordingFailed() throws Exception {
+        translator.handle(egressEvent("egress_ended", "EV_22", "EGRESS_FAILED"));
+
+        verify(recordings).markEnded(eq("session-1"), eq("EG_1"), eq("FAILED"),
+                isNull(), isNull(), isNull(), isNull(), any(Instant.class));
+        capturePayload(RtcWebhookTranslator.EVT_RECORDING_FAILED);
     }
 
     @Test

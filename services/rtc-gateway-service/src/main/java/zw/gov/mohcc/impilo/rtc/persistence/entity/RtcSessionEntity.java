@@ -57,6 +57,9 @@ public class RtcSessionEntity {
     @Column(name = "referral_id")
     private String referralId;
 
+    @Column(name = "consent_reference")
+    private String consentReference;
+
     @Column(name = "channel")
     private String channel;
 
@@ -91,6 +94,7 @@ public class RtcSessionEntity {
         entity.setProviderId(record.providerId());
         entity.setEncounterId(record.encounterId());
         entity.setReferralId(record.referralId());
+        entity.setConsentReference(record.consentReference());
         entity.setChannel(record.channel());
         entity.setCapabilities(record.capabilities());
         entity.setMediaPolicy(record.mediaPolicy());
@@ -114,6 +118,7 @@ public class RtcSessionEntity {
                 providerId,
                 encounterId,
                 referralId,
+                consentReference,
                 channel,
                 capabilities,
                 mediaPolicy,
@@ -157,6 +162,8 @@ public class RtcSessionEntity {
     public void setEncounterId(String encounterId) { this.encounterId = encounterId; }
     public String getReferralId() { return referralId; }
     public void setReferralId(String referralId) { this.referralId = referralId; }
+    public String getConsentReference() { return consentReference; }
+    public void setConsentReference(String consentReference) { this.consentReference = consentReference; }
     public String getChannel() { return channel; }
     public void setChannel(String channel) { this.channel = channel; }
     public Map<String, Boolean> getCapabilities() { return capabilities; }
