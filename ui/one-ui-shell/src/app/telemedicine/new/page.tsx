@@ -19,6 +19,13 @@ import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useCreateTelemedicineSession } from "@/hooks/queries/useTelemedicine";
+
+function toLocalDateTimeValue(date: Date) {
+  const offset = date.getTimezoneOffset();
+  const adjusted = new Date(date.getTime() - offset * 60_000);
+  return adjusted.toISOString().slice(0, 16);
+}
 
 const URGENCY_LEVELS = [
   { id: "ROUTINE", label: "Routine", color: "bg-green-100 text-green-700" },
@@ -67,6 +74,7 @@ export default function NewTeleconsultPage() {
   const patientId = searchParams.get("patientId") || "";
   const encounterId = searchParams.get("encounterId") || "";
 
+  const createSession = useCreateTelemedicineSession();
   const [activeStep, setActiveStep] = useState<Step>("letter");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -76,6 +84,7 @@ export default function NewTeleconsultPage() {
   // Form state
   const [urgency, setUrgency] = useState("ROUTINE");
   const [specialty, setSpecialty] = useState("");
+  const [scheduledAt, setScheduledAt] = useState(() => toLocalDateTimeValue(new Date(Date.now() + 60 * 60 * 1000)));
   const [referralLetter, setReferralLetter] = useState("");
   const [presentingProblems, setPresentingProblems] = useState("");
   const [clinicalQuestion, setClinicalQuestion] = useState("");
@@ -96,14 +105,15 @@ export default function NewTeleconsultPage() {
 
   async function ensureSessionId(): Promise<string> {
     if (sessionId) return sessionId;
-    const res = await apiClient.post<{ data: { id: string } }>("/internal/v1/teleconsult/sessions", {
-      patientId,
-      encounterId,
-      facilityId: facility?.id,
+    const res = await createSession.mutateAsync({
+      patient_id: patientId,
+      encounter_id: encounterId || undefined,
+      facility_id: facility?.id,
       urgency,
-      specialty,
-      purposeOfUse,
-      sessionProvider: "EXTERNAL_MANAGED",
+      specialty: specialty || undefined,
+      purpose_of_use: purposeOfUse,
+      session_provider: "EXTERNAL_MANAGED",
+      scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
     });
     const sid = res.data.id;
     setSessionId(sid);
@@ -230,6 +240,17 @@ export default function NewTeleconsultPage() {
                 <option value="">Select...</option>
                 {SPECIALTIES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
+            </div>
+
+            <div className="px-3 pt-2">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-1.5">Scheduled time</p>
+              <input
+                type="datetime-local"
+                aria-label="Scheduled time"
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
+                className="w-full text-xs border border-border rounded-md px-2 py-1.5"
+              />
             </div>
 
             <div className="px-3 pt-2">

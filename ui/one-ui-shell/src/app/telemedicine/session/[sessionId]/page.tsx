@@ -3,9 +3,10 @@
 /**
  * Teleconsult Session Workspace — 3-pane layout (Stage 5).
  *
- * LEFT:   Communication (chat, audio/video buttons, call log)
- * CENTER: Response note draft (structured form, auto-save indicator)
- * RIGHT:  Patient info (summary, referral, attachments, timeline)
+ * No call:     LEFT communication · CENTER response-note draft · RIGHT patient info.
+ * Call active: the CENTER pane becomes the video stage (front and centre —
+ *              consult layout, PiP local preview); the response-note form moves
+ *              to a collapsible right-side tab alongside the patient info.
  *
  * Also handles Stage 6 (submit response) and Stage 7 (completion note).
  */
@@ -15,13 +16,15 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, CheckCircle2, FileText, Loader2, Lock,
-  Mic, Phone, PhoneOff, Send, Shield, User,
+  Mic, PanelRightClose, PanelRightOpen, Phone, PhoneOff, Send, Shield, User,
   Video, VideoOff, Activity,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { AdaptiveSessionRoom } from "@/components/session/AdaptiveSessionRoom";
+import { LowBandwidthToggle } from "@/components/session/LowBandwidthToggle";
 import { TelemedicineRtcHealthPanel } from "@/components/telemedicine/TelemedicineRtcHealthPanel";
 import { TelemedicineLiveSessionEmbed } from "@/components/live/TelemedicineLiveSessionEmbed";
+import { WaitingRoomAdmitControl } from "@/components/telemedicine/WaitingRoomAdmitControl";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useTelemedicineMediaToken } from "@/hooks/queries/useTelemedicine";
@@ -54,6 +57,13 @@ export default function TeleconsultSessionPage() {
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [fetchedRoomUrl, setFetchedRoomUrl] = useState("");
   const [fetchedToken, setFetchedToken] = useState("");
+  /** Audio-first: request AUDIO_ONLY media profile + pause remote video subscriptions. */
+  const [audioOnly, setAudioOnly] = useState(false);
+  /** Call explicitly ended by the provider (keeps credentials, returns layout to notes). */
+  const [callEnded, setCallEnded] = useState(false);
+  // Right pane during a call: response note / patient info tab + collapse.
+  const [rightTab, setRightTab] = useState<"note" | "patient">("note");
+  const [rightCollapsed, setRightCollapsed] = useState(false);
   const mediaTokenM = useTelemedicineMediaToken();
   const callTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -112,6 +122,7 @@ export default function TeleconsultSessionPage() {
         sessionId,
         displayName: user?.displayName || user?.email || "Participant",
         role: "PROVIDER",
+        mediaProfile: audioOnly ? "AUDIO_ONLY" : "FULL",
       });
       const payload = (res.data ?? res) as Record<string, unknown>;
       const room = String(payload.room_url ?? payload.roomUrl ?? "");
@@ -212,6 +223,9 @@ export default function TeleconsultSessionPage() {
   const impiloLiveJoinPath = String(session?.impiloLiveJoinPath ?? attributes.impiloLiveJoinPath ?? "");
   const consentGranted = Boolean(session?.consentToken ?? attributes.consentReference ?? attributes.consentReference);
 
+  /** Video is front and centre while a call is live (governed media held and not ended). */
+  const callFront = hasGovernedMedia && !callEnded;
+
   async function ensureGovernedMedia() {
     if (hasGovernedMedia || mediaTokenM.isPending) return true;
     try {
@@ -219,6 +233,7 @@ export default function TeleconsultSessionPage() {
         sessionId,
         displayName: user?.displayName || user?.email || "Participant",
         role: "PROVIDER",
+        mediaProfile: audioOnly ? "AUDIO_ONLY" : "FULL",
       });
       const payload = (res.data ?? res) as Record<string, unknown>;
       const room = String(payload.room_url ?? payload.roomUrl ?? "");
@@ -228,6 +243,10 @@ export default function TeleconsultSessionPage() {
         setFetchedToken(token);
         setMediaError(null);
         return true;
+      }
+      if (String(payload.status ?? "").toUpperCase() === "WAITING") {
+        setMediaError("The session gatekeeper placed this join in the waiting room. Retry shortly.");
+        return false;
       }
       setMediaError("RTC gateway returned no governed room credentials.");
       return false;
@@ -325,6 +344,150 @@ export default function TeleconsultSessionPage() {
     );
   }
 
+  // ── Shared panes (rendered center when no call; right-side tab during a call) ──
+  const responseNotePane = (
+    <>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <FileText className="w-4 h-4 text-muted-foreground" /> Response Note
+        </h3>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          {lastSaved && <span>Saved {lastSaved}</span>}
+          <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <label className="block">
+          <span className="text-xs font-medium text-muted-foreground">Clinical interpretation & response *</span>
+          <textarea value={responseNote} onChange={(e) => setResponseNote(e.target.value)} rows={6}
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
+            placeholder="Thank you for this referral. On review of the clinical information provided...&#10;&#10;Impression: ...&#10;Recommendations: ..." />
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="text-xs font-medium text-muted-foreground">Working / final diagnosis</span>
+            <input value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)}
+              className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="ICD-11 or free text..." />
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium text-muted-foreground">Red flags</span>
+            <input value={redFlags} onChange={(e) => setRedFlags(e.target.value)}
+              className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="Danger signs to watch for..." />
+          </label>
+        </div>
+
+        <label className="block">
+          <span className="text-xs font-medium text-muted-foreground">Action plan *</span>
+          <textarea value={actionPlan} onChange={(e) => setActionPlan(e.target.value)} rows={3}
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
+            placeholder="1. Continue current management&#10;2. Add ...&#10;3. Monitor for ..." />
+        </label>
+
+        <label className="block">
+          <span className="text-xs font-medium text-muted-foreground">Orders (one per line)</span>
+          <textarea value={orders} onChange={(e) => setOrders(e.target.value)} rows={3}
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
+            placeholder="FBC + differential&#10;Chest X-ray PA&#10;Start Amoxicillin 500mg TDS x 5 days" />
+        </label>
+
+        <label className="block">
+          <span className="text-xs font-medium text-muted-foreground">Follow-up instructions</span>
+          <input value={followUp} onChange={(e) => setFollowUp(e.target.value)}
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
+            placeholder="Review in 1 week, or sooner if deterioration..." />
+        </label>
+
+        {!isResponded && (
+          <button onClick={handleSubmitResponse} disabled={submittingResponse || !responseNote.trim()}
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-40 transition-colors">
+            {submittingResponse ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {submittingResponse ? "Submitting..." : "Submit Response Package"}
+          </button>
+        )}
+        {isResponded && (
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4" /> Response submitted. {!isClosed && "Waiting for referrer to close the loop."}
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  const patientInfoPane = (
+    <>
+      {/* Patient summary */}
+      <div className="p-3 border-b">
+        <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Patient</h4>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center">
+            <User className="w-4 h-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground">{(session?.patientId as string)?.substring(0, 12) || "Patient"}</p>
+            <p className="text-[10px] text-muted-foreground">Click to view chart</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Referral info */}
+      <div className="p-3 border-b">
+        <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Referral</h4>
+        <div className="space-y-1.5 text-xs">
+          <div className="flex justify-between"><span className="text-muted-foreground">Urgency</span><span className="font-medium">{(session?.urgency as string) || "—"}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Specialty</span><span className="font-medium">{(session?.specialty as string) || "—"}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Routing</span><span className="font-medium">{(session?.routingType as string) || "—"}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Stage</span><span className="font-medium">{(session?.stage as number) || "—"}</span></div>
+        </div>
+      </div>
+
+      {/* Consent */}
+      <div className="p-3 border-b">
+        <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Consent</h4>
+        {Boolean(session?.consentToken) ? (
+          <div className="flex items-center gap-1.5 text-xs text-green-700">
+            <Shield className="w-3.5 h-3.5" /> Verified
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">Pending</p>
+        )}
+      </div>
+
+      {/* Referral letter excerpt */}
+      {Boolean(session?.referralLetter) && (
+        <div className="p-3 border-b">
+          <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Referral Letter</h4>
+          <p className="text-xs text-muted-foreground line-clamp-6">{session?.referralLetter as string}</p>
+        </div>
+      )}
+
+      {/* Timeline */}
+      <div className="p-3">
+        <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Timeline</h4>
+        <div className="space-y-2">
+          {[
+            session?.createdAt && { label: "Created", time: session.createdAt as string, icon: Activity },
+            session?.submittedAt && { label: "Submitted", time: session.submittedAt as string, icon: Send },
+            session?.acceptedAt && { label: "Accepted", time: session.acceptedAt as string, icon: CheckCircle2 },
+            session?.respondedAt && { label: "Responded", time: session.respondedAt as string, icon: FileText },
+            session?.closedAt && { label: "Closed", time: session.closedAt as string, icon: Lock },
+          ].filter(Boolean).map((event) => {
+            const ev = event as { label: string; time: string; icon: React.ElementType };
+            const Icon = ev.icon;
+            return (
+              <div key={ev.label} className="flex items-center gap-2 text-xs">
+                <Icon className="w-3 h-3 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground">{ev.label}</span>
+                <span className="text-muted-foreground ml-auto">{new Date(ev.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+
   // ── 3-Pane Session Workspace ──
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -375,11 +538,20 @@ export default function TeleconsultSessionPage() {
               consentGranted={consentGranted}
             />
           </div>
+          {/* Waiting room (patients/caregivers requesting to join) */}
+          <WaitingRoomAdmitControl sessionId={sessionId} />
+
           {/* Call controls */}
           <div className="p-3 border-b flex items-center justify-center gap-2">
             <button onClick={async () => {
+              if (callActive) {
+                setCallActive(false);
+                setVideoActive(false);
+                setCallEnded(true);
+                return;
+              }
               const ready = hasGovernedMedia || await ensureGovernedMedia();
-              if (ready) { setCallActive(!callActive); setVideoActive(false); }
+              if (ready) { setCallEnded(false); setCallActive(true); setVideoActive(false); }
             }}
               disabled={mediaTokenM.isPending}
               className={`p-2.5 rounded-full transition-colors ${callActive ? "bg-red-500 text-white" : "bg-green-100 text-green-700 hover:bg-green-200"}`}
@@ -387,8 +559,12 @@ export default function TeleconsultSessionPage() {
               {callActive ? <PhoneOff className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
             </button>
             <button onClick={async () => {
+              if (videoActive) {
+                setVideoActive(false);
+                return;
+              }
               const ready = hasGovernedMedia || await ensureGovernedMedia();
-              if (ready) { setVideoActive(!videoActive); if (!callActive) setCallActive(true); }
+              if (ready) { setCallEnded(false); setVideoActive(true); if (!callActive) setCallActive(true); }
             }}
               disabled={mediaTokenM.isPending}
               className={`p-2.5 rounded-full transition-colors ${videoActive ? "bg-red-500 text-white" : "bg-blue-100 text-primary-hover hover:bg-blue-200"}`}
@@ -398,37 +574,20 @@ export default function TeleconsultSessionPage() {
             <button className="p-2.5 rounded-full bg-neutral-100 text-muted-foreground hover:bg-neutral-100" title="Voice note">
               <Mic className="w-5 h-5" />
             </button>
+            <LowBandwidthToggle audioOnly={audioOnly} onAudioOnlyChange={setAudioOnly} />
           </div>
 
-          {/* Video preview */}
-          <div className="h-40 bg-neutral-900 flex flex-col items-center justify-center text-muted-foreground text-xs gap-2 px-3">
-            {hasGovernedMedia ? (
-              <AdaptiveSessionRoom
-                layout="consult"
-                localPreviewPolicy="pip"
-                controls={{ microphone: true, camera: true, leave: true, settings: false }}
-                serverUrl={mediaRoomUrl}
-                token={mediaToken}
-                videoEnabled={videoActive}
-                onConnected={() => {
-                  setCallActive(true);
-                  setMediaError(null);
-                }}
-                onDisconnected={() => {
-                  setCallActive(false);
-                  setVideoActive(false);
-                }}
-                onError={(message) => setMediaError(message)}
-              />
-            ) : (
-              <>
-                <Video className="w-8 h-8 opacity-60" />
-                <span className="text-center text-muted-foreground">
-                  Live media is blocked until the Telemedicine service returns a governed room and scoped token.
-                </span>
-              </>
-            )}
-          </div>
+          {/* Pre-call placeholder — during a live call the video is front and centre. */}
+          {!callFront && (
+            <div className="h-40 bg-neutral-900 flex flex-col items-center justify-center text-muted-foreground text-xs gap-2 px-3">
+              <Video className="w-8 h-8 opacity-60" />
+              <span className="text-center text-muted-foreground">
+                {callEnded && hasGovernedMedia
+                  ? "Call ended. Start audio or video again to reopen the live stage."
+                  : "Live media is blocked until the Telemedicine service returns a governed room and scoped token."}
+              </span>
+            </div>
+          )}
           {mediaError ? (
             <div className="mx-3 mt-2 rounded-md border border-amber-300 bg-warning-soft p-2 text-[11px] text-warning-foreground">
               {mediaError} Continue governed teleconsult workflow via notes/messages while support stabilizes media.
@@ -474,146 +633,99 @@ export default function TeleconsultSessionPage() {
           </div>
         </div>
 
-        {/* ═══ CENTER PANE — Response Note Draft ═══ */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-w-0">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <FileText className="w-4 h-4 text-muted-foreground" /> Response Note
-            </h3>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {lastSaved && <span>Saved {lastSaved}</span>}
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+        {/* ═══ CENTER PANE — video front and centre during a call; response note otherwise ═══ */}
+        {callFront ? (
+          <div className="flex-1 min-w-0 flex flex-col p-3 gap-2">
+            <div className="flex items-center justify-between shrink-0">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Video className="w-4 h-4 text-primary" /> Live consultation
+              </h3>
+              {callActive && <span className="text-xs text-green-600 font-mono">{formatTime(callDuration)}</span>}
+            </div>
+            <div className="flex-1 min-h-0" data-testid="session-video-stage">
+              <AdaptiveSessionRoom
+                layout="consult"
+                localPreviewPolicy="pip"
+                controls={{ microphone: true, camera: true, leave: true, settings: false }}
+                serverUrl={mediaRoomUrl}
+                token={mediaToken}
+                videoEnabled={videoActive && !audioOnly}
+                audioOnly={audioOnly}
+                onAudioOnlyChange={setAudioOnly}
+                onConnected={() => {
+                  setCallActive(true);
+                  setMediaError(null);
+                }}
+                onDisconnected={() => {
+                  setCallActive(false);
+                  setVideoActive(false);
+                  setCallEnded(true);
+                }}
+                onError={(message) => setMediaError(message)}
+              />
             </div>
           </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-w-0">
+            {responseNotePane}
+          </div>
+        )}
 
-          <div className="space-y-3">
-            <label className="block">
-              <span className="text-xs font-medium text-muted-foreground">Clinical interpretation & response *</span>
-              <textarea value={responseNote} onChange={(e) => setResponseNote(e.target.value)} rows={6}
-                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
-                placeholder="Thank you for this referral. On review of the clinical information provided...&#10;&#10;Impression: ...&#10;Recommendations: ..." />
-            </label>
-
-            <div className="grid grid-cols-2 gap-3">
-              <label className="block">
-                <span className="text-xs font-medium text-muted-foreground">Working / final diagnosis</span>
-                <input value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="ICD-11 or free text..." />
-              </label>
-              <label className="block">
-                <span className="text-xs font-medium text-muted-foreground">Red flags</span>
-                <input value={redFlags} onChange={(e) => setRedFlags(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder="Danger signs to watch for..." />
-              </label>
-            </div>
-
-            <label className="block">
-              <span className="text-xs font-medium text-muted-foreground">Action plan *</span>
-              <textarea value={actionPlan} onChange={(e) => setActionPlan(e.target.value)} rows={3}
-                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
-                placeholder="1. Continue current management&#10;2. Add ...&#10;3. Monitor for ..." />
-            </label>
-
-            <label className="block">
-              <span className="text-xs font-medium text-muted-foreground">Orders (one per line)</span>
-              <textarea value={orders} onChange={(e) => setOrders(e.target.value)} rows={3}
-                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
-                placeholder="FBC + differential&#10;Chest X-ray PA&#10;Start Amoxicillin 500mg TDS x 5 days" />
-            </label>
-
-            <label className="block">
-              <span className="text-xs font-medium text-muted-foreground">Follow-up instructions</span>
-              <input value={followUp} onChange={(e) => setFollowUp(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
-                placeholder="Review in 1 week, or sooner if deterioration..." />
-            </label>
-
-            {!isResponded && (
-              <button onClick={handleSubmitResponse} disabled={submittingResponse || !responseNote.trim()}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover disabled:opacity-40 transition-colors">
-                {submittingResponse ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                {submittingResponse ? "Submitting..." : "Submit Response Package"}
+        {/* ═══ RIGHT PANE — info (tabbed + collapsible while a call is live) ═══ */}
+        {callFront ? (
+          rightCollapsed ? (
+            <div className="w-10 border-l bg-card flex flex-col items-center py-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setRightCollapsed(false)}
+                title="Open side panel"
+                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-background"
+              >
+                <PanelRightOpen className="w-4 h-4" />
               </button>
-            )}
-            {isResponded && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" /> Response submitted. {!isClosed && "Waiting for referrer to close the loop."}
+            </div>
+          ) : (
+            <div className="w-80 border-l bg-card flex flex-col shrink-0 min-h-0" data-testid="session-side-panel">
+              <div className="flex items-center border-b shrink-0">
+                <button
+                  type="button"
+                  data-testid="right-tab-note"
+                  onClick={() => setRightTab("note")}
+                  className={`px-3 py-2 text-xs font-medium border-b-2 ${
+                    rightTab === "note" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Response note
+                </button>
+                <button
+                  type="button"
+                  data-testid="right-tab-patient"
+                  onClick={() => setRightTab("patient")}
+                  className={`px-3 py-2 text-xs font-medium border-b-2 ${
+                    rightTab === "patient" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Patient
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRightCollapsed(true)}
+                  title="Collapse side panel"
+                  className="ml-auto mr-2 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-background"
+                >
+                  <PanelRightClose className="w-4 h-4" />
+                </button>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* ═══ RIGHT PANE — Information ═══ */}
-        <div className="w-72 border-l bg-card overflow-y-auto shrink-0">
-          {/* Patient summary */}
-          <div className="p-3 border-b">
-            <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Patient</h4>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center">
-                <User className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">{(session?.patientId as string)?.substring(0, 12) || "Patient"}</p>
-                <p className="text-[10px] text-muted-foreground">Click to view chart</p>
+              <div className="flex-1 overflow-y-auto min-h-0">
+                {rightTab === "note" ? <div className="p-4 space-y-4">{responseNotePane}</div> : patientInfoPane}
               </div>
             </div>
+          )
+        ) : (
+          <div className="w-72 border-l bg-card overflow-y-auto shrink-0">
+            {patientInfoPane}
           </div>
-
-          {/* Referral info */}
-          <div className="p-3 border-b">
-            <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Referral</h4>
-            <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between"><span className="text-muted-foreground">Urgency</span><span className="font-medium">{(session?.urgency as string) || "—"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Specialty</span><span className="font-medium">{(session?.specialty as string) || "—"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Routing</span><span className="font-medium">{(session?.routingType as string) || "—"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Stage</span><span className="font-medium">{(session?.stage as number) || "—"}</span></div>
-            </div>
-          </div>
-
-          {/* Consent */}
-          <div className="p-3 border-b">
-            <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Consent</h4>
-            {Boolean(session?.consentToken) ? (
-              <div className="flex items-center gap-1.5 text-xs text-green-700">
-                <Shield className="w-3.5 h-3.5" /> Verified
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">Pending</p>
-            )}
-          </div>
-
-          {/* Referral letter excerpt */}
-          {Boolean(session?.referralLetter) && (
-            <div className="p-3 border-b">
-              <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Referral Letter</h4>
-              <p className="text-xs text-muted-foreground line-clamp-6">{session?.referralLetter as string}</p>
-            </div>
-          )}
-
-          {/* Timeline */}
-          <div className="p-3">
-            <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Timeline</h4>
-            <div className="space-y-2">
-              {[
-                session?.createdAt && { label: "Created", time: session.createdAt as string, icon: Activity },
-                session?.submittedAt && { label: "Submitted", time: session.submittedAt as string, icon: Send },
-                session?.acceptedAt && { label: "Accepted", time: session.acceptedAt as string, icon: CheckCircle2 },
-                session?.respondedAt && { label: "Responded", time: session.respondedAt as string, icon: FileText },
-                session?.closedAt && { label: "Closed", time: session.closedAt as string, icon: Lock },
-              ].filter(Boolean).map((event) => {
-                const ev = event as { label: string; time: string; icon: React.ElementType };
-                const Icon = ev.icon;
-                return (
-                  <div key={ev.label} className="flex items-center gap-2 text-xs">
-                    <Icon className="w-3 h-3 text-muted-foreground shrink-0" />
-                    <span className="text-muted-foreground">{ev.label}</span>
-                    <span className="text-muted-foreground ml-auto">{new Date(ev.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -44,6 +44,14 @@ vi.mock("@/components/telemedicine/TelemedicineRtcHealthPanel", () => ({
   TelemedicineRtcHealthPanel: () => <div data-testid="telemedicine-rtc-health-panel" />,
 }));
 
+vi.mock("@/components/telemedicine/WaitingRoomAdmitControl", () => ({
+  WaitingRoomAdmitControl: () => <div data-testid="waiting-room-admit-control" />,
+}));
+
+vi.mock("@/components/session/AdaptiveSessionRoom", () => ({
+  AdaptiveSessionRoom: () => <div data-testid="adaptive-session-room" />,
+}));
+
 vi.mock("@/hooks/queries/useTelemedicine", () => ({
   useTelemedicineSessions: () => ({
     data: {
@@ -149,5 +157,53 @@ describe("TelemedicineSessionPage", () => {
     });
 
     expect(await screen.findByText("CLOSED")).toBeInTheDocument();
+  }, 30000);
+
+  it("keeps the response note in the centre when no call is live", async () => {
+    render(<TelemedicineSessionPage />);
+
+    expect(await screen.findByText("Response Note")).toBeInTheDocument();
+    expect(screen.queryByTestId("session-video-stage")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("right-tab-note")).not.toBeInTheDocument();
+    // Waiting-room control is mounted regardless of call state.
+    expect(screen.getByTestId("waiting-room-admit-control")).toBeInTheDocument();
+  });
+
+  it("puts the video front and centre during a live call and moves the note to a right-side tab", async () => {
+    const user = userEvent.setup();
+    get.mockImplementation((path: string) => {
+      if (path === "/internal/v1/teleconsult/sessions/session-1") {
+        return Promise.resolve({
+          data: {
+            id: "session-1",
+            patientId: "patient-1",
+            urgency: "Routine",
+            specialty: "GENERAL_MEDICINE",
+            routingType: "SPECIALTY_POOL",
+            stage: 5,
+            status: "ACTIVE",
+            consentToken: "consent-1",
+            createdAt: "2026-07-05T08:00:00.000Z",
+          },
+        });
+      }
+      return Promise.resolve({ data: [] });
+    });
+
+    render(<TelemedicineSessionPage />);
+
+    // ACTIVE session auto-issues governed media on load → video takes the centre pane.
+    expect(await screen.findByTestId("session-video-stage")).toBeInTheDocument();
+    expect(screen.getByTestId("adaptive-session-room")).toBeInTheDocument();
+
+    // Response note now lives in the right-side tab (default tab) …
+    expect(screen.getByTestId("session-side-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("right-tab-note")).toBeInTheDocument();
+    expect(screen.getByText("Response Note")).toBeInTheDocument();
+
+    // … alongside the patient info tab.
+    await user.click(screen.getByTestId("right-tab-patient"));
+    expect(screen.getByText("Referral")).toBeInTheDocument();
+    expect(screen.queryByText("Response Note")).not.toBeInTheDocument();
   }, 30000);
 });

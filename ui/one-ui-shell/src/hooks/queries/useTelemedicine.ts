@@ -33,14 +33,17 @@ interface CreateTelemedicineSessionPayload {
   encounter_id?: string;
   patient_id: string;
   provider_id?: string;
-  facility_id: string;
+  facility_id?: string;
   referral_id?: string;
-  session_type: string;
+  session_type?: string;
   scheduled_at?: string;
   notes?: string;
   session_provider?: string;
   purpose_of_use?: string;
   consent_reference?: string;
+  /** Teleconsult referral composer fields (BFF create accepts them alongside scheduling fields). */
+  urgency?: string;
+  specialty?: string;
 }
 
 type SessionsResponse = ApiResponse<TelemedicineSession[]>;
@@ -127,24 +130,116 @@ export function useCreateTelemedicineSession() {
   );
 }
 
+/** Participant roles the RTC media-token endpoint accepts. */
+export type TelemedicineMediaRole = "PROVIDER" | "PATIENT" | "CAREGIVER" | "INTERPRETER";
+/** Media profile requested for the token (AUDIO_ONLY = audio-first / low bandwidth). */
+export type TelemedicineMediaProfile = "FULL" | "AUDIO_ONLY";
+
+/**
+ * Media-token response payload. Two shapes share this type:
+ *   granted  → { room_url, token, mediaProfile? }
+ *   gated    → { status: "WAITING" | "DENIED", sessionId, identity }
+ * Patients poll while WAITING (the provider admits from the waiting room).
+ */
+export interface TelemedicineMediaTokenPayload {
+  room_url?: string;
+  roomUrl?: string;
+  token?: string;
+  accessToken?: string;
+  channel?: string;
+  mediaProfile?: TelemedicineMediaProfile | string;
+  status?: "WAITING" | "DENIED" | string;
+  sessionId?: string;
+  identity?: string;
+}
+
+export interface TelemedicineMediaTokenVariables {
+  sessionId: string;
+  displayName?: string;
+  role?: TelemedicineMediaRole;
+  mediaProfile?: TelemedicineMediaProfile;
+}
+
 export function useTelemedicineMediaToken() {
   return useMutation<
-    ApiResponse<{
-      room_url?: string;
-      roomUrl?: string;
-      token?: string;
-      accessToken?: string;
-      channel?: string;
-      status?: string;
-    }>,
+    ApiResponse<TelemedicineMediaTokenPayload>,
     unknown,
-    { sessionId: string; role?: string; displayName?: string }
+    TelemedicineMediaTokenVariables
+  >({
+    mutationFn: ({ sessionId, role, displayName, mediaProfile }) =>
+      apiClient.post(
+        `/internal/v1/teleconsult/sessions/${encodeURIComponent(sessionId)}/media/token`,
+        { role, displayName, mediaProfile },
+      ),
+  });
+}
+
+/** Refresh an expiring media token; returns the same grant/gated shapes as issue. */
+export function useTelemedicineMediaTokenRefresh() {
+  return useMutation<
+    ApiResponse<TelemedicineMediaTokenPayload>,
+    unknown,
+    { sessionId: string; displayName?: string; role?: TelemedicineMediaRole }
   >({
     mutationFn: ({ sessionId, role, displayName }) =>
       apiClient.post(
-        `/internal/v1/teleconsult/sessions/${encodeURIComponent(sessionId)}/media/token`,
+        `/internal/v1/teleconsult/sessions/${encodeURIComponent(sessionId)}/media/token/refresh`,
         { role, displayName },
       ),
+  });
+}
+
+export interface TelemedicineWaitingRoomEntry {
+  identity: string;
+  displayName: string;
+  role: string;
+  state: string;
+  requestedAt: string;
+}
+
+type WaitingRoomResponse = ApiResponse<{ waiting: TelemedicineWaitingRoomEntry[] }>;
+
+/** Provider-only waiting room list; polls while the session page is open. */
+export function useTelemedicineWaitingRoom(
+  sessionId: string | null | undefined,
+  options?: { enabled?: boolean; refetchIntervalMs?: number },
+) {
+  return useQuery<WaitingRoomResponse>({
+    queryKey: ["telemedicine-waiting-room", sessionId ?? null],
+    enabled: Boolean(sessionId) && (options?.enabled ?? true),
+    refetchInterval: options?.refetchIntervalMs ?? 5_000,
+    queryFn: () =>
+      apiClient.get<WaitingRoomResponse>(
+        `/internal/v1/teleconsult/sessions/${encodeURIComponent(String(sessionId))}/waiting-room`,
+      ),
+  });
+}
+
+export function useAdmitTelemedicineParticipant(sessionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<unknown>, unknown, { identity: string }>({
+    mutationFn: ({ identity }) =>
+      apiClient.post(
+        `/internal/v1/teleconsult/sessions/${encodeURIComponent(sessionId)}/admit`,
+        { identity },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["telemedicine-waiting-room", sessionId] });
+    },
+  });
+}
+
+export function useDenyTelemedicineParticipant(sessionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<unknown>, unknown, { identity: string; reason?: string }>({
+    mutationFn: ({ identity, reason }) =>
+      apiClient.post(
+        `/internal/v1/teleconsult/sessions/${encodeURIComponent(sessionId)}/deny`,
+        { identity, reason },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["telemedicine-waiting-room", sessionId] });
+    },
   });
 }
 
