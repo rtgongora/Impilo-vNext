@@ -12,6 +12,11 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
   flyway:
     enabled: false
+  # No Kafka broker in tests — keep the impilo.rtc.* listener containers out of the context
+  # (same convention as live-service's test profile).
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
 
 impilo:
   security:

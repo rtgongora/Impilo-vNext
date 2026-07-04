@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.khuluma.realtime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.stereotype.Component;
@@ -21,9 +22,14 @@ public class WsTokenValidator {
 
     private static final Logger log = LoggerFactory.getLogger(WsTokenValidator.class);
 
-    private final JwtDecoder jwtDecoder;
+    /**
+     * Resolved lazily: the servlet runtime always auto-configures a {@link JwtDecoder} from the
+     * OAuth2 resource-server properties, but non-web contexts (e.g. {@code web-application-type=none}
+     * test slices) have none — there the validator stays fail-closed and rejects every token.
+     */
+    private final ObjectProvider<JwtDecoder> jwtDecoder;
 
-    public WsTokenValidator(JwtDecoder jwtDecoder) {
+    public WsTokenValidator(ObjectProvider<JwtDecoder> jwtDecoder) {
         this.jwtDecoder = jwtDecoder;
     }
 
@@ -38,9 +44,14 @@ public class WsTokenValidator {
         if (token == null || token.isBlank()) {
             return null;
         }
+        JwtDecoder decoder = jwtDecoder.getIfAvailable();
+        if (decoder == null) {
+            log.warn("WS token rejected: no JwtDecoder configured (fail-closed)");
+            return null;
+        }
         Jwt jwt;
         try {
-            jwt = jwtDecoder.decode(token.trim());
+            jwt = decoder.decode(token.trim());
         } catch (Exception e) {
             log.debug("WS token rejected: {}", e.getMessage());
             return null;

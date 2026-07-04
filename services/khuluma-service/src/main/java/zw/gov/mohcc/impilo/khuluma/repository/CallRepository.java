@@ -9,4 +9,7 @@ import java.util.UUID;
 public interface CallRepository extends JpaRepository<CallEntity, UUID> {
 
     Optional<CallEntity> findByCallIdAndTenantId(UUID callId, UUID tenantId);
+
+    /** Media-truth resolution: impilo.rtc.* events carry the rtc session id stored on the call. */
+    Optional<CallEntity> findFirstByRtcSessionIdOrderByInitiatedAtDesc(String rtcSessionId);
 }

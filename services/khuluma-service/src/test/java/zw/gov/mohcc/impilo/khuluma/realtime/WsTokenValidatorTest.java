@@ -23,7 +23,16 @@ class WsTokenValidatorTest {
     @Mock private JwtDecoder decoder;
 
     private WsTokenValidator validator() {
-        return new WsTokenValidator(decoder);
+        return new WsTokenValidator(new StaticObjectProvider(decoder));
+    }
+
+    /** Minimal ObjectProvider stub — the runtime resolves the decoder lazily. */
+    private record StaticObjectProvider(JwtDecoder decoder)
+            implements org.springframework.beans.factory.ObjectProvider<JwtDecoder> {
+        @Override public JwtDecoder getObject() { return decoder; }
+        @Override public JwtDecoder getIfAvailable() { return decoder; }
+        @Override public JwtDecoder getIfUnique() { return decoder; }
+        @Override public JwtDecoder getObject(Object... args) { return decoder; }
     }
 
     private Jwt jwtWith(Map<String, Object> claims) {
@@ -64,6 +73,12 @@ class WsTokenValidatorTest {
     void blank_token_is_rejected_without_decoding() {
         assertThat(validator().validate(null)).isNull();
         assertThat(validator().validate("  ")).isNull();
+    }
+
+    @Test
+    void missing_decoder_rejects_fail_closed() {
+        WsTokenValidator noDecoder = new WsTokenValidator(new StaticObjectProvider(null));
+        assertThat(noDecoder.validate("anything")).isNull();
     }
 
     @Test

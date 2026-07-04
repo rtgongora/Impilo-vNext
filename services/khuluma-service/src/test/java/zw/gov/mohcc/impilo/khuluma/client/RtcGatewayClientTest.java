@@ -30,6 +30,8 @@ class RtcGatewayClientTest {
         server.expect(requestTo("http://rtc-test:8195/internal/v1/rtc/sessions"))
                 .andExpect(method(org.springframework.http.HttpMethod.POST))
                 .andExpect(jsonPath("$.sessionType").value("VIDEO"))
+                .andExpect(jsonPath("$.owningService").value("KHULUMA"))
+                .andExpect(jsonPath("$.owningRef").value("call-1"))
                 .andExpect(jsonPath("$.consentReference").value("khuluma-call:call-1"))
                 .andExpect(jsonPath("$.participant.identity").value("provider-a"))
                 .andRespond(withSuccess("""

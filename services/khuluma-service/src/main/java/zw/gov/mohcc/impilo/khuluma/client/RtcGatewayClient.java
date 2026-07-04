@@ -74,6 +74,11 @@ public class RtcGatewayClient {
         req.put("providerId", providerId);
         req.put("purposeOfUse", purposeOfUse != null ? purposeOfUse : "CARE_COORDINATION");
         req.put("sessionType", "VIDEO".equalsIgnoreCase(callType) ? "VIDEO" : "AUDIO");
+        // Stamp ownership explicitly: AUDIO/VIDEO resolve to the TELEMEDICINE template whose
+        // owningService is PCT — without this, impilo.rtc.* events for khuluma calls would be
+        // mis-attributed and the KHULUMA media-truth consumer would never see them.
+        req.put("owningService", "KHULUMA");
+        req.put("owningRef", sessionId);
         req.put("consentReference",
                 consentReference != null && !consentReference.isBlank() ? consentReference : "khuluma-call:" + sessionId);
         req.put("participant", participant);
