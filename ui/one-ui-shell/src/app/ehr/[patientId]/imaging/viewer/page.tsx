@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -19,6 +19,7 @@ import dynamic from "next/dynamic";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useImagingViewerLaunchContext, useLaunchImagingViewer } from "@/hooks/queries/useImaging";
+import { useLaunchOrderViewer } from "@/hooks/queries/useDiagnosticsOrders";
 import { apiClient } from "@/lib/api-client";
 import { applyWindowLevelToRgba, decodeNativeGrayscaleForWl } from "@/lib/dicom/nativeWindowLevel";
 import { resolveImagingViewerEngine } from "@/lib/imaging/resolveViewerEngine";
@@ -58,11 +59,13 @@ function approximateDisplayWl(windowCenter: number, windowWidth: number): { brig
 export default function DicomViewerPage() {
   const params = useParams<{ patientId: string }>();
   const search = useSearchParams();
+  const router = useRouter();
   const patientId = params.patientId;
   const studyUid = search.get("studyUid") ?? "";
   const initialSeriesUid = search.get("seriesUid");
   const governedStudyId = search.get("governedStudyId");
   const requestedViewerType = search.get("viewerType");
+  const orderId = search.get("orderId");
   const ohifBaseUrl =
     process.env.NEXT_PUBLIC_OHIF_BASE_URL ??
     (process.env.NODE_ENV === "development" ? "http://localhost:3005" : "");
@@ -97,6 +100,45 @@ export default function DicomViewerPage() {
       },
     });
   }, [governedStudyId, patientId, launchViewer, requestedViewerType]);
+
+  // Order-context launch: resolve orderId → linked study via the governed diagnostics viewer
+  // endpoint (policy-gated + audited), then redirect to the canonical studyUid URL. Orders
+  // without a linked study get an honest message instead of a blank viewer.
+  const orderViewerMut = useLaunchOrderViewer();
+  const orderResolveAttempted = useRef(false);
+  const [orderResolveError, setOrderResolveError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!orderId || studyUid || orderResolveAttempted.current) return;
+    orderResolveAttempted.current = true;
+    orderViewerMut.mutate(
+      { orderId },
+      {
+        onSuccess: (ctx) => {
+          const resolvedStudyUid = typeof ctx?.studyUid === "string" ? ctx.studyUid : undefined;
+          const resolvedGovernedId =
+            typeof ctx?.governedStudyId === "string" ? ctx.governedStudyId : undefined;
+          if (resolvedStudyUid) {
+            router.replace(
+              `/ehr/${encodeURIComponent(patientId)}/imaging/viewer?studyUid=${encodeURIComponent(
+                resolvedStudyUid,
+              )}${resolvedGovernedId ? `&governedStudyId=${encodeURIComponent(resolvedGovernedId)}` : ""}`,
+            );
+          } else {
+            setOrderResolveError(
+              "This order has no linked imaging study yet. The study appears here once the exam is performed and reconciled.",
+            );
+          }
+        },
+        onError: (err) => {
+          const message =
+            err instanceof Error && err.message
+              ? err.message
+              : "Could not resolve the imaging study for this order.";
+          setOrderResolveError(message);
+        },
+      },
+    );
+  }, [orderId, studyUid, patientId, router, orderViewerMut]);
 
   const { data: seriesJson, isLoading: loadingSeries, error: seriesError } = useQuery({
     queryKey: ["dicomweb-series", studyUid],
@@ -449,7 +491,21 @@ export default function DicomViewerPage() {
           </div>
         )}
 
-        {!studyUid && (
+        {!studyUid && orderId && !orderResolveError && (
+          <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Resolving linked imaging study for order{" "}
+            <span className="font-mono text-foreground">{orderId}</span>…
+          </div>
+        )}
+
+        {!studyUid && orderId && orderResolveError && (
+          <div className="rounded-2xl border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
+            {orderResolveError}
+          </div>
+        )}
+
+        {!studyUid && !orderId && (
           <div className="rounded-2xl border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
             Missing <code className="font-mono">studyUid</code> query parameter. Open this viewer from the imaging
             workspace with a valid DICOM Study Instance UID.

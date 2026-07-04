@@ -65,8 +65,22 @@ public class DiagnosticsExperienceController {
             String studyId = study.path("id").asText();
             JsonNode session = pacsClient.launchViewerSession(studyId,
                     Map.of("viewerType", "DICOMWEB_STACK", "contextRef", orderId));
+            // Launch context: session + the identifiers the in-app viewer needs. viewerUrl is the
+            // governed in-app viewer route (never a raw PACS URL).
+            String patientCpid = study.path("patientCpid").asText(
+                    order.path("patientCpid").asText(null));
+            java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+            data.put("session", session);
+            data.put("studyUid", studyUid);
+            data.put("governedStudyId", studyId);
+            data.put("patientCpid", patientCpid);
+            if (patientCpid != null && !patientCpid.isBlank()) {
+                data.put("viewerUrl", "/ehr/" + java.net.URLEncoder.encode(patientCpid, java.nio.charset.StandardCharsets.UTF_8)
+                        + "/imaging/viewer?studyUid=" + java.net.URLEncoder.encode(studyUid, java.nio.charset.StandardCharsets.UTF_8)
+                        + "&governedStudyId=" + java.net.URLEncoder.encode(studyId, java.nio.charset.StandardCharsets.UTF_8));
+            }
             return ResponseEntity.ok(Map.of(
-                    "data", session != null ? session : com.fasterxml.jackson.databind.node.NullNode.getInstance(),
+                    "data", data,
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Viewer launch failed for order {}: {}", orderId, e.getMessage());
