@@ -100,6 +100,33 @@ export function getQueueReason(entry: QueueEntryResource) {
   return readString(entry.attributes as QueueEntryAttributes, ["reason", "notes"]);
 }
 
+export interface QueueEscalationInfo {
+  escalatedAt: string;
+  escalatedBy: string;
+  reason: string;
+}
+
+/**
+ * Escalation facts from PCT queue items (escalatedAt/escalatedBy/escalationReason
+ * are null unless the item was escalated). Returns null when not escalated.
+ */
+export function getQueueEscalation(entry: QueueEntryResource): QueueEscalationInfo | null {
+  const attrs = entry.attributes as QueueEntryAttributes;
+  const escalatedAt =
+    readString(attrs, ["escalatedAt", "escalated_at"]) ||
+    readString(entry as unknown as Record<string, unknown>, ["escalatedAt", "escalated_at"]);
+  if (!escalatedAt) return null;
+  return {
+    escalatedAt,
+    escalatedBy:
+      readString(attrs, ["escalatedBy", "escalated_by"]) ||
+      readString(entry as unknown as Record<string, unknown>, ["escalatedBy", "escalated_by"]),
+    reason:
+      readString(attrs, ["escalationReason", "escalation_reason"]) ||
+      readString(entry as unknown as Record<string, unknown>, ["escalationReason", "escalation_reason"]),
+  };
+}
+
 export function getQueuePriorityMeta(priority: unknown) {
   const key = String(priority ?? "");
   return QUEUE_PRIORITY_STYLES[key] ?? {
