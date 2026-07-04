@@ -37,6 +37,9 @@ public class JourneyEntity {
     @Column(name = "referral_id")
     private String referralId;
 
+    @Column(name = "appointment_id")
+    private UUID appointmentId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -73,6 +76,9 @@ public class JourneyEntity {
 
     public String getReferralSource() { return referralSource; }
     public void setReferralSource(String referralSource) { this.referralSource = referralSource; }
+
+    public UUID getAppointmentId() { return appointmentId; }
+    public void setAppointmentId(UUID appointmentId) { this.appointmentId = appointmentId; }
 
     public String getReferralId() { return referralId; }
     public void setReferralId(String referralId) { this.referralId = referralId; }

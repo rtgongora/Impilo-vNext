@@ -14,10 +14,14 @@ import java.util.UUID;
  * @param facilityId   the facility where the journey begins
  * @param referralSource the source of referral, if applicable (e.g. OPD, EMERGENCY, REFERRAL)
  * @param referralId   the referral document identifier, if applicable
+ * @param appointmentId the booking appointment that produced this journey,
+ *                      if the visit was scheduled (distinguishes scheduled
+ *                      check-ins from walk-ins)
  */
 public record StartJourneyRequest(
         @NotBlank String patientCpid,
         UUID facilityId,
         String referralSource,
-        String referralId
+        String referralId,
+        UUID appointmentId
 ) {}

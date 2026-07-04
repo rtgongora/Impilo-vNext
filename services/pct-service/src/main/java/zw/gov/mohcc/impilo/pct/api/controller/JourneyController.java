@@ -65,7 +65,8 @@ public class JourneyController {
                 request.facilityId() != null ? request.facilityId() : ctx.facilityId(),
                 request.patientCpid(),
                 request.referralSource(),
-                request.referralId());
+                request.referralId(),
+                request.appointmentId());
 
         return ResponseEntity.ok(ApiResponse.ok(journey, correlationId));
     }

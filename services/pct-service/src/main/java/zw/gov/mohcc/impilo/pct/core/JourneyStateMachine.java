@@ -194,6 +194,18 @@ public class JourneyStateMachine {
     @Transactional
     public JourneyEntity createJourney(UUID facilityId, String patientCpid,
                                        String referralSource, String referralId) {
+        return createJourney(facilityId, patientCpid, referralSource, referralId, null);
+    }
+
+    /**
+     * Create a journey with optional appointment provenance. A non-null
+     * {@code appointmentId} marks the journey as a scheduled check-in from a
+     * booking-service appointment rather than a walk-in.
+     */
+    @Transactional
+    public JourneyEntity createJourney(UUID facilityId, String patientCpid,
+                                       String referralSource, String referralId,
+                                       UUID appointmentId) {
         TrustContext ctx = TrustContextHolder.require();
 
         JourneyEntity journey = new JourneyEntity();
@@ -204,6 +216,7 @@ public class JourneyStateMachine {
         journey.setState(JourneyState.ARRIVED);
         journey.setReferralSource(referralSource);
         journey.setReferralId(referralId);
+        journey.setAppointmentId(appointmentId);
         journey.setCreatedAt(OffsetDateTime.now());
         journey.setUpdatedAt(OffsetDateTime.now());
 
@@ -217,6 +230,7 @@ public class JourneyStateMachine {
         payload.put("state", JourneyState.ARRIVED.name());
         payload.put("referralSource", referralSource);
         payload.put("referralId", referralId);
+        payload.put("appointmentId", appointmentId != null ? appointmentId.toString() : null);
         payload.put("createdAt", journey.getCreatedAt().toString());
         writeOutbox("JOURNEY", journey.getJourneyId(), "JOURNEY_CREATED", toJson(payload));
 
