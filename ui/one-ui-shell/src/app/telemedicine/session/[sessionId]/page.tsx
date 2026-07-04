@@ -19,7 +19,7 @@ import {
   Video, VideoOff, Activity,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
-import { LiveKitConsultRoom } from "@/components/telemedicine/LiveKitConsultRoom";
+import { AdaptiveSessionRoom } from "@/components/session/AdaptiveSessionRoom";
 import { TelemedicineRtcHealthPanel } from "@/components/telemedicine/TelemedicineRtcHealthPanel";
 import { TelemedicineLiveSessionEmbed } from "@/components/live/TelemedicineLiveSessionEmbed";
 import { apiClient } from "@/lib/api-client";
@@ -403,7 +403,10 @@ export default function TeleconsultSessionPage() {
           {/* Video preview */}
           <div className="h-40 bg-neutral-900 flex flex-col items-center justify-center text-muted-foreground text-xs gap-2 px-3">
             {hasGovernedMedia ? (
-              <LiveKitConsultRoom
+              <AdaptiveSessionRoom
+                layout="consult"
+                localPreviewPolicy="pip"
+                controls={{ microphone: true, camera: true, leave: true, settings: false }}
                 serverUrl={mediaRoomUrl}
                 token={mediaToken}
                 videoEnabled={videoActive}

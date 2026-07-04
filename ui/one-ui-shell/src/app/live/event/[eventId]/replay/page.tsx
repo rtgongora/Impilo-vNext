@@ -6,7 +6,8 @@ import { useParams } from "next/navigation";
 import { Clapperboard, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { LiveKitConsultRoom, normalizeLiveKitServerUrl } from "@/components/telemedicine/LiveKitConsultRoom";
+import { AdaptiveSessionRoom } from "@/components/session/AdaptiveSessionRoom";
+import { normalizeLiveKitServerUrl } from "@/lib/session/livekit-url";
 import {
   useLiveEvent,
   useLiveParticipant,
@@ -65,7 +66,9 @@ export default function LiveEventReplayPage() {
           </div>
         ) : hasLiveKitReplay && replay?.replayAccessToken ? (
           <div className="rounded-2xl border border-border overflow-hidden min-h-[420px] bg-neutral-900">
-            <LiveKitConsultRoom
+            <AdaptiveSessionRoom
+              layout="stage"
+              audience
               serverUrl={liveKitUrl}
               token={replay.replayAccessToken}
               videoEnabled

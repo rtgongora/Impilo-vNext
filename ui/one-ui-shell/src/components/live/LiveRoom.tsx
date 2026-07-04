@@ -12,7 +12,7 @@ import {
   HelpCircle,
   BarChart2,
 } from "lucide-react";
-import { LiveKitConsultRoom } from "@/components/telemedicine/LiveKitConsultRoom";
+import { AdaptiveSessionRoom } from "@/components/session/AdaptiveSessionRoom";
 import {
   useLiveChat,
   useLiveEvent,
@@ -50,6 +50,9 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
   const { data: event, isLoading: eventLoading } = useLiveEvent(eventId);
   const isBroadcast =
     event?.mode === "PUBLIC_BROADCAST" || event?.mode === "EMERGENCY_BRIEFING";
+  // Presenters (activated providers) publish; everyone else in a broadcast is a viewer.
+  const userCanPublish = role === "PRESENTER";
+  const audience = isBroadcast && !userCanPublish;
   const joinRoom = useLiveJoinRoom();
   const leaveAttendance = useLiveAttendanceLeave();
   const trackMinutes = useLiveTrackMinutes();
@@ -185,10 +188,15 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
               </Link>
             </div>
           ) : (
-            <LiveKitConsultRoom
+            <AdaptiveSessionRoom
+              layout={isBroadcast ? "stage" : "speaker"}
+              audience={audience}
               serverUrl={roomToken.roomUrl}
               token={roomToken.accessToken}
               videoEnabled={!lowBandwidth}
+              audioOnly={lowBandwidth}
+              onAudioOnlyChange={setLowBandwidth}
+              controls={{ microphone: !audience, camera: !audience, screenShare: false, leave: true }}
               onError={() => undefined}
             />
           )}

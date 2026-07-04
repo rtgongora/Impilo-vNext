@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PhoneOff, Loader2, ShieldAlert } from "lucide-react";
-import { LiveKitConsultRoom } from "@/components/telemedicine/LiveKitConsultRoom";
+import { AdaptiveSessionRoom } from "@/components/session/AdaptiveSessionRoom";
 import type { CallResponse } from "@/hooks/queries/useComms";
 
 /**
@@ -50,7 +50,9 @@ export function CommsCallModal({
 
         <div className="aspect-video w-full overflow-hidden rounded-md bg-neutral-900">
           {hasMedia ? (
-            <LiveKitConsultRoom
+            <AdaptiveSessionRoom
+              layout="consult"
+              controls={{ microphone: true, camera: true, leave: true }}
               serverUrl={call.roomUrl ?? ""}
               token={call.accessToken ?? ""}
               videoEnabled={isVideo}
