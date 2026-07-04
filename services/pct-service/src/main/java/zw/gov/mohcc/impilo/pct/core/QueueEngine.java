@@ -106,6 +106,8 @@ public class QueueEngine {
         }
 
         writeOutbox("QUEUE_ITEM", item.getId().toString(), "QUEUE_ITEM_ENQUEUED", toJson(Map.of(
+                "eventType", "QUEUE_ITEM_ENQUEUED",
+                "tenantId", ctx.tenantId().toString(),
                 "queueId", queueId.toString(),
                 "journeyId", journeyId,
                 "patientCpid", item.getPatientCpid(),
@@ -150,6 +152,8 @@ public class QueueEngine {
         item = queueItemRepository.save(item);
 
         writeOutbox("QUEUE_ITEM", item.getId().toString(), "QUEUE_ITEM_CALLED", toJson(Map.of(
+                "eventType", "QUEUE_ITEM_CALLED",
+                "tenantId", ctx.tenantId().toString(),
                 "queueId", queueId.toString(),
                 "journeyId", item.getJourneyId(),
                 "patientCpid", item.getPatientCpid(),
@@ -238,6 +242,8 @@ public class QueueEngine {
         // Every status transition is auditable and consumable downstream
         // (pct.queue.item.updated); silent state changes are forbidden.
         Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("eventType", "QUEUE_ITEM_UPDATED");
+        payload.put("tenantId", ctx.tenantId().toString());
         payload.put("queueId", item.getQueueId().toString());
         payload.put("journeyId", journeyId);
         payload.put("patientCpid", item.getPatientCpid());
@@ -294,6 +300,8 @@ public class QueueEngine {
         newItem = queueItemRepository.save(newItem);
 
         writeOutbox("QUEUE_ITEM", newItem.getId().toString(), "QUEUE_ITEM_TRANSFERRED", toJson(Map.of(
+                "eventType", "QUEUE_ITEM_TRANSFERRED",
+                "tenantId", ctx.tenantId().toString(),
                 "fromQueueId", oldItem.getQueueId().toString(),
                 "toQueueId", targetQueueId.toString(),
                 "journeyId", oldItem.getJourneyId(),
@@ -356,6 +364,8 @@ public class QueueEngine {
         item = queueItemRepository.save(item);
 
         Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("eventType", "QUEUE_ITEM_ESCALATED");
+        payload.put("tenantId", ctx.tenantId().toString());
         payload.put("queueId", item.getQueueId().toString());
         payload.put("fromQueueId", fromQueueId.toString());
         payload.put("journeyId", item.getJourneyId());
