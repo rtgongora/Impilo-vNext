@@ -223,25 +223,43 @@ test.describe("Session media core — two-party LiveKit join (live preview)", ()
     await startVideo(pageA, "provider A");
     await startVideo(pageB, "provider B");
 
-    // TrackSubscribed proof: each context renders BOTH participant tiles with
-    // live <video> elements — the remote one only exists if subscription of the
-    // other side's published track succeeded end-to-end (signal + SRTP media).
+    // TrackSubscribed proof: each context must know BOTH participants' camera
+    // tracks. The legacy 160px strip paginates GridLayout to one tile per page
+    // ("1 of 2" pager), so count tiles OR the pager total — either proves the
+    // remote track reached the layout (i.e., subscription succeeded).
+    const seesBothParticipants = async (page: Page) => {
+      const tiles = await page.locator(".lk-participant-tile").count();
+      if (tiles >= 2) return true;
+      const pager = await page.getByText(/\bof\s+2\b/).count();
+      return tiles >= 1 && pager >= 1;
+    };
     for (const [label, page] of [
       ["provider A", pageA],
       ["provider B", pageB],
     ] as const) {
       await expect
-        .poll(async () => page.locator(".lk-participant-tile").count(), {
-          message: `${label}: waiting for local+remote participant tiles`,
+        .poll(() => seesBothParticipants(page), {
+          message: `${label}: waiting for both participants' tracks in the layout`,
           timeout: 90_000,
         })
-        .toBeGreaterThanOrEqual(2);
+        .toBe(true);
       await expect
         .poll(async () => page.locator(".lk-participant-tile video").count(), {
-          message: `${label}: waiting for live video elements in tiles`,
+          message: `${label}: waiting for a live video element`,
           timeout: 60_000,
         })
-        .toBeGreaterThanOrEqual(2);
+        .toBeGreaterThanOrEqual(1);
+    }
+
+    // Sustain: the historic failure mode was PEER_CONNECTION_DISCONNECTED at
+    // ~15-20s (ICE consent expiry over broken paths). Hold the call well past
+    // that window and require both rooms to still see each other.
+    await pageA.waitForTimeout(45_000);
+    for (const [label, page] of [
+      ["provider A", pageA],
+      ["provider B", pageB],
+    ] as const) {
+      expect(await seesBothParticipants(page), `${label}: media dropped during sustain window`).toBe(true);
     }
 
     await contextA.close();
