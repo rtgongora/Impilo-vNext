@@ -1,0 +1,34 @@
+{{- if .Values.livekit.enabled }}
+# LiveKit server config — separate template so the Deployment can hash it
+# (checksum/config) and roll the pod on config-only changes; livekit reads
+# config at startup only.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: livekit-config
+  namespace: {{ .Release.Namespace }}
+data:
+  livekit.yaml: |
+    port: 7880
+    bind_addresses:
+      - ""
+    keys:
+      {{ .Values.livekit.apiKey }}: {{ .Values.livekit.apiSecret }}
+    rtc:
+      tcp_port: 7881
+      udp_port: 7882
+      # Advertise the node's real interfaces (host candidates). External
+      # browsers are blocked upstream anyway: the preview serves plain http
+      # and getUserMedia requires a secure context, so no internet client can
+      # publish media until TLS lands on the ingress. When TLS arrives,
+      # revisit the public candidate (use_external_ip/node_ip) — the router
+      # hairpin drops sustained UDP for LAN/VM clients, so the public-only
+      # posture must not return without TURN or a dual-candidate path.
+      use_external_ip: false
+    room:
+      empty_timeout: 900
+      max_participants: 8
+    logging:
+      level: info
+{{- end }}

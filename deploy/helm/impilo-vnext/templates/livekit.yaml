@@ -8,35 +8,7 @@
 # (use_external_ip) for internet clients behind the router NAT. The previous
 # CNI+hostPort setup pushed RTP through conntrack DNAT, which dropped sustained
 # UDP flows (PEER_CONNECTION_DISCONNECTED ~20s after join).
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: livekit-config
-  namespace: {{ .Release.Namespace }}
-data:
-  livekit.yaml: |
-    port: 7880
-    bind_addresses:
-      - ""
-    keys:
-      {{ .Values.livekit.apiKey }}: {{ .Values.livekit.apiSecret }}
-    rtc:
-      tcp_port: 7881
-      udp_port: 7882
-      # Advertise the node's real interfaces (host candidates). External
-      # browsers are blocked upstream anyway: the preview serves plain http
-      # and getUserMedia requires a secure context, so no internet client can
-      # publish media until TLS lands on the ingress. When TLS arrives,
-      # revisit the public candidate (use_external_ip/node_ip) — the router
-      # hairpin drops sustained UDP for LAN/VM clients, so the public-only
-      # posture must not return without TURN or a dual-candidate path.
-      use_external_ip: false
-    room:
-      empty_timeout: 900
-      max_participants: 8
-    logging:
-      level: info
+# Server config lives in livekit-config.yaml (hashed below for pod rolls).
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -54,6 +26,10 @@ spec:
     metadata:
       labels:
         app: livekit
+      annotations:
+        # Roll the pod when the ConfigMap changes — livekit reads config at
+        # startup only, and a data-only change never restarts the pod.
+        checksum/config: {{ include (print $.Template.BasePath "/livekit-config.yaml") . | sha256sum }}
     spec:
       # The Service named "livekit" injects LIVEKIT_PORT=tcp://... service-link
       # env, which livekit-server parses as its --port flag and crashes.
