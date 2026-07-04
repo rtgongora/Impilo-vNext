@@ -192,6 +192,24 @@ public class PctServiceClient {
     }
 
     /**
+     * Escalate a queue item (urgency bump, mandatory reason, optional target queue).
+     */
+    public JsonNode escalateQueueItem(UUID itemId, String reason, UUID targetQueueId, Integer priority) {
+        String url = baseUrl + "/v1/queue-items/" + itemId + "/escalate";
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("reason", reason);
+        if (targetQueueId != null) {
+            body.put("targetQueueId", targetQueueId.toString());
+        }
+        if (priority != null) {
+            body.put("priority", priority);
+        }
+        log.info("PCT: Escalating queue item {} (target queue {})", itemId, targetQueueId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Start a clinical encounter within a journey.
      *
      * @param journeyId     the PCT journey ID

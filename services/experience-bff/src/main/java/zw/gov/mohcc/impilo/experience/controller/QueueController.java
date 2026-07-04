@@ -343,6 +343,49 @@ public class QueueController {
     }
 
     /**
+     * Escalate a queue entry: mandatory reason, optional target queue and priority.
+     * PCT bumps urgency (floor 5 on the 1–5 scale) and records who/why; when a
+     * target queue is given the item is transferred with the escalation attached.
+     */
+    @PostMapping("/entries/{id}/escalate")
+    public ResponseEntity<Map<String, Object>> escalateEntry(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        String reason = strVal(body, "reason");
+        if (reason == null || reason.isBlank()) {
+            return validation("reason is required to escalate a queue entry");
+        }
+        String targetQueueId = strVal(body, "target_queue_id", "targetQueueId");
+        String priorityRaw = strVal(body, "priority");
+        try {
+            UUID target = targetQueueId != null && !targetQueueId.isBlank()
+                    ? UUID.fromString(targetQueueId.trim()) : null;
+            Integer priority = priorityRaw != null && !priorityRaw.isBlank()
+                    ? Integer.valueOf(priorityRaw.trim()) : null;
+            JsonNode data = pctClient.escalateQueueItem(UUID.fromString(id), reason, target, priority);
+            if (data != null) {
+                publishQueueAuditToTshepo(id, "ESCALATE", "ESCALATED",
+                        "reason=" + reason + (target != null ? "; target_queue_id=" + target : ""));
+                return ResponseEntity.ok(Map.of(
+                        "data", data,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+        } catch (IllegalArgumentException e) {
+            return validation("invalid escalate payload: " + e.getMessage());
+        } catch (Exception e) {
+            log.debug("PCT unavailable for queue escalation: {}", e.getMessage());
+            return upstreamUnavailable("PCT_UNAVAILABLE",
+                    "Queue escalation is unavailable because pct-service could not be reached",
+                    requestId, correlationId);
+        }
+        return upstreamUnavailable("PCT_UNAVAILABLE",
+                "Queue escalation is unavailable because pct-service returned no payload",
+                requestId, correlationId);
+    }
+
+    /**
      * Voluntary leave / left without completing service — maps to PCT {@code LEFT} when upstream is available.
      */
     @PostMapping("/entries/{id}/abandon")

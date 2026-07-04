@@ -193,6 +193,67 @@ class QueueControllerTest {
     }
 
     @Test
+    void escalateEntryForwardsReasonAndTargetToPct() {
+        PctServiceClient pctClient = mock(PctServiceClient.class);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode item = mapper.createObjectNode();
+        item.put("priority", 5);
+        when(pctClient.escalateQueueItem(any(UUID.class), anyString(), any(), any())).thenReturn(item);
+        QueueController controller = newController(pctClient);
+
+        var response = controller.escalateEntry(
+                "11111111-1111-1111-1111-111111111111",
+                "req-1",
+                "corr-1",
+                Map.of(
+                        "reason", "Deteriorating vitals",
+                        "target_queue_id", "33333333-3333-3333-3333-333333333333"
+                )
+        );
+
+        assertEquals(200, response.getStatusCode().value());
+        verify(pctClient).escalateQueueItem(
+                UUID.fromString("11111111-1111-1111-1111-111111111111"),
+                "Deteriorating vitals",
+                UUID.fromString("33333333-3333-3333-3333-333333333333"),
+                null);
+    }
+
+    @Test
+    void escalateEntryRequiresReason() {
+        QueueController controller = newController();
+
+        var response = controller.escalateEntry(
+                "11111111-1111-1111-1111-111111111111",
+                "req-1",
+                "corr-1",
+                Map.of()
+        );
+
+        assertEquals(400, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("VALIDATION", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+    }
+
+    @Test
+    void escalateEntryFailsCleanWhenPctUnavailable() {
+        PctServiceClient pctClient = mock(PctServiceClient.class);
+        when(pctClient.escalateQueueItem(any(UUID.class), anyString(), any(), any()))
+                .thenThrow(new RuntimeException("pct down"));
+        QueueController controller = newController(pctClient);
+
+        var response = controller.escalateEntry(
+                "11111111-1111-1111-1111-111111111111",
+                "req-1",
+                "corr-1",
+                Map.of("reason", "Deteriorating vitals")
+        );
+
+        assertEquals(502, response.getStatusCode().value());
+        assertEquals("PCT_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+    }
+
+    @Test
     void statusUpdateFailsCleanWhenPctUnavailable_neverFabricatesLocalSuccess() {
         PctServiceClient pctClient = mock(PctServiceClient.class);
         when(pctClient.updateQueueItemStatus(any(UUID.class), anyString()))

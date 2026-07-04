@@ -423,4 +423,99 @@ class QueueEngineTest {
             }
         }
     }
+
+    @Nested
+    @DisplayName("Escalation Operations")
+    class EscalationOperations {
+
+        @Test
+        @DisplayName("escalateItem bumps priority to at least 5, records reason/actor, emits QUEUE_ITEM_ESCALATED")
+        void escalateInPlace() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                UUID itemId = UUID.randomUUID();
+                QueueItemEntity item = new QueueItemEntity();
+                item.setId(itemId);
+                item.setQueueId(QUEUE_ID);
+                item.setJourneyId("J-TEST-001");
+                item.setPatientCpid("CPID-001");
+                item.setTokenNumber(7);
+                item.setPriority(2);
+                item.setStatus(QueueItemStatus.WAITING);
+
+                when(queueItemRepository.findById(itemId)).thenReturn(Optional.of(item));
+                when(queueItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+                QueueItemEntity result = queueEngine.escalateItem(
+                        itemId, "Deteriorating vitals in waiting area", null, null);
+
+                assertThat(result.getPriority()).isEqualTo(5); // max(2 + 2, 5)
+                assertThat(result.getStatus()).isEqualTo(QueueItemStatus.WAITING); // still callable
+                assertThat(result.getEscalatedAt()).isNotNull();
+                assertThat(result.getEscalatedBy()).isEqualTo(ACTOR_ID);
+                assertThat(result.getEscalationReason()).isEqualTo("Deteriorating vitals in waiting area");
+
+                ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+                verify(outboxRepository).save(captor.capture());
+                assertThat(captor.getValue().getEventType()).isEqualTo("QUEUE_ITEM_ESCALATED");
+                assertThat(captor.getValue().getPayload())
+                        .contains("\"reason\":\"Deteriorating vitals in waiting area\"")
+                        .contains("\"patientCpid\":\"CPID-001\"");
+            }
+        }
+
+        @Test
+        @DisplayName("escalateItem with target queue transfers the item and carries the escalation")
+        void escalateWithTransfer() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                UUID itemId = UUID.randomUUID();
+                UUID targetQueueId = UUID.randomUUID();
+                QueueItemEntity item = new QueueItemEntity();
+                item.setId(itemId);
+                item.setQueueId(QUEUE_ID);
+                item.setJourneyId("J-TEST-001");
+                item.setPatientCpid("CPID-001");
+                item.setPriority(4);
+                item.setStatus(QueueItemStatus.WAITING);
+
+                when(queueItemRepository.findById(itemId)).thenReturn(Optional.of(item));
+                when(queueItemRepository.findMaxTokenNumberByQueueId(targetQueueId)).thenReturn(0);
+                when(queueItemRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+                QueueItemEntity result = queueEngine.escalateItem(
+                        itemId, "Needs emergency workspace", targetQueueId, null);
+
+                assertThat(result.getQueueId()).isEqualTo(targetQueueId);
+                assertThat(result.getPatientCpid()).isEqualTo("CPID-001");
+                assertThat(result.getPriority()).isEqualTo(6); // max(4 + 2, 5)
+                assertThat(result.getStatus()).isEqualTo(QueueItemStatus.WAITING);
+                assertThat(result.getEscalatedAt()).isNotNull();
+                assertThat(result.getEscalationReason()).isEqualTo("Needs emergency workspace");
+                // Old item ended TRANSFERRED
+                assertThat(item.getStatus()).isEqualTo(QueueItemStatus.TRANSFERRED);
+
+                // Two outbox events: QUEUE_ITEM_TRANSFERRED + QUEUE_ITEM_ESCALATED
+                ArgumentCaptor<EventOutboxEntity> captor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+                verify(outboxRepository, times(2)).save(captor.capture());
+                assertThat(captor.getAllValues())
+                        .extracting(EventOutboxEntity::getEventType)
+                        .containsExactly("QUEUE_ITEM_TRANSFERRED", "QUEUE_ITEM_ESCALATED");
+            }
+        }
+
+        @Test
+        @DisplayName("escalateItem rejects a blank reason")
+        void escalateRequiresReason() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                assertThatThrownBy(() -> queueEngine.escalateItem(UUID.randomUUID(), "  ", null, null))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("reason is required");
+            }
+        }
+    }
 }

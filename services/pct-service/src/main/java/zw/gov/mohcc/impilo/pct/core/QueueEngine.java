@@ -309,6 +309,70 @@ public class QueueEngine {
     }
 
     /**
+     * Escalate a queue item: raise its urgency, record who/why, and
+     * optionally move it to a target queue (e.g. emergency workspace).
+     *
+     * <p>Priority is bumped to {@code max(current + 2, 5)} unless an explicit
+     * override is given — escalation always strictly increases urgency and
+     * lands at least at the top of the 1–5 triage-derived scale. The item's
+     * status is left untouched so it remains eligible for {@code callNext};
+     * escalation is urgency + visibility, not a lifecycle transition.</p>
+     *
+     * @param itemId           the queue item to escalate
+     * @param reason           mandatory operational reason (audited, may be shown to staff)
+     * @param targetQueueId    optional destination queue; when different from the
+     *                         current queue the item is transferred and the new item
+     *                         carries the escalation
+     * @param priorityOverride optional explicit priority; when null the default bump applies
+     * @return the live (possibly transferred) queue item
+     * @throws IllegalArgumentException if the item is not found or reason is blank
+     */
+    @Transactional
+    public QueueItemEntity escalateItem(UUID itemId, String reason,
+                                        UUID targetQueueId, Integer priorityOverride) {
+        TrustContext ctx = TrustContextHolder.require();
+
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Escalation reason is required");
+        }
+
+        QueueItemEntity item = queueItemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("Queue item not found: " + itemId));
+
+        UUID fromQueueId = item.getQueueId();
+        int newPriority = priorityOverride != null
+                ? priorityOverride
+                : Math.max(item.getPriority() + 2, 5);
+
+        if (targetQueueId != null && !targetQueueId.equals(fromQueueId)) {
+            // Move to the target queue first; the transferred item carries the escalation.
+            item = transferItem(itemId, targetQueueId);
+        }
+
+        item.setPriority(newPriority);
+        item.setEscalatedAt(OffsetDateTime.now());
+        item.setEscalatedBy(ctx.actorId());
+        item.setEscalationReason(reason);
+        item = queueItemRepository.save(item);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("queueId", item.getQueueId().toString());
+        payload.put("fromQueueId", fromQueueId.toString());
+        payload.put("journeyId", item.getJourneyId());
+        payload.put("patientCpid", item.getPatientCpid());
+        payload.put("tokenNumber", item.getTokenNumber());
+        payload.put("priority", newPriority);
+        payload.put("reason", reason);
+        payload.put("escalatedBy", ctx.actorId());
+        writeOutbox("QUEUE_ITEM", item.getId().toString(), "QUEUE_ITEM_ESCALATED", toJson(payload));
+
+        log.info("Escalated queue item {} (queue {} -> {}, priority {}): {}",
+                itemId, fromQueueId, item.getQueueId(), newPriority, reason);
+
+        return item;
+    }
+
+    /**
      * Compute real-time statistics for a queue.
      *
      * <p>Returns a map containing:</p>

@@ -54,6 +54,15 @@ public class QueueItemEntity {
     @Column(name = "completed_at")
     private OffsetDateTime completedAt;
 
+    @Column(name = "escalated_at")
+    private OffsetDateTime escalatedAt;
+
+    @Column(name = "escalated_by")
+    private String escalatedBy;
+
+    @Column(name = "escalation_reason")
+    private String escalationReason;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -108,5 +117,14 @@ public class QueueItemEntity {
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+
+    public OffsetDateTime getEscalatedAt() { return escalatedAt; }
+    public void setEscalatedAt(OffsetDateTime escalatedAt) { this.escalatedAt = escalatedAt; }
+
+    public String getEscalatedBy() { return escalatedBy; }
+    public void setEscalatedBy(String escalatedBy) { this.escalatedBy = escalatedBy; }
+
+    public String getEscalationReason() { return escalationReason; }
+    public void setEscalationReason(String escalationReason) { this.escalationReason = escalationReason; }
 
 }
