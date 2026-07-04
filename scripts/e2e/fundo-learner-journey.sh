@@ -55,14 +55,15 @@ ok "course selected: $COURSE_CODE ($COURSE_ID)"
 DETAIL=$(svc_curl GET "$LEARN/catalog/$COURSE_ID")
 echo "$DETAIL" | jqpy "
 data=d.get('data') or {}
-assert data.get('id'), 'no detail'" || fail "course detail failed"
+course=data.get('course') or data
+assert course.get('id'), 'no detail'" || fail "course detail failed"
 STRUCTURE=$(svc_curl GET "$LEARN/courses/$COURSE_ID/structure")
 LESSON_IDS=$(echo "$STRUCTURE" | jqpy "
 data=d.get('data') or {}
-mods=data.get('modules') or data.get('items') or []
+mods=data.get('modules') or data.get('items') or (data.get('structure') or {}).get('modules') or []
 out=[]
 for m in mods:
-    for l in (m.get('lessons') or []):
+    for l in (m.get('lessons') or m.get('items') or []):
         out.append(l.get('id'))
 print(' '.join(x for x in out if x))")
 ok "structure loaded ($(echo $LESSON_IDS | wc -w | tr -d ' ') lessons)"
@@ -73,18 +74,21 @@ ENROL=$(svc_curl POST "$LEARN/enrolments" \
   "{\"courseId\":\"$COURSE_ID\",\"subjectType\":\"PROVIDER\",\"subjectId\":\"$PROVIDER_ID\",\"enrolmentType\":\"SELF\"}")
 ENROLMENT_ID=$(echo "$ENROL" | jqpy "
 data=d.get('data') or {}
-print(data.get('id') or data.get('enrolmentId') or '')")
+ent=data.get('enrolment') or data
+print(ent.get('id') or ent.get('enrolmentId') or '')")
 [[ -n "$ENROLMENT_ID" ]] || fail "enrolment failed: $(echo "$ENROL" | head -c 300)"
 svc_curl POST "$LEARN/enrolments/$ENROLMENT_ID/start" "{}" >/dev/null
 ok "enrolled + started: $ENROLMENT_ID"
 
 # ── 3. Lessons + progress ────────────────────────────────────────────────────
 step "3. lessons + progress"
+# Each lesson row must reach 100% — the aggregate reconciler then completes
+# the enrolment (COURSE_COMPLETED outbox → CPD/notification loops).
 for LID in $LESSON_IDS; do
   svc_curl POST "$LEARN/lessons/$LID/open" \
     "{\"enrolmentId\":\"$ENROLMENT_ID\",\"subjectType\":\"PROVIDER\",\"subjectId\":\"$PROVIDER_ID\"}" >/dev/null || true
   svc_curl POST "$LEARN/progress" \
-    "{\"enrolmentId\":\"$ENROLMENT_ID\",\"lessonId\":\"$LID\",\"status\":\"COMPLETED\",\"subjectType\":\"PROVIDER\",\"subjectId\":\"$PROVIDER_ID\"}" >/dev/null || true
+    "{\"enrolmentId\":\"$ENROLMENT_ID\",\"lessonId\":\"$LID\",\"progressPercent\":100}" >/dev/null
 done
 PROGRESS=$(svc_curl GET "$LEARN/progress?enrolmentId=$ENROLMENT_ID")
 ok "progress recorded: $(echo "$PROGRESS" | head -c 120)..."
@@ -94,7 +98,7 @@ step "4. assessment attempt"
 ASSESSMENTS=$(svc_curl GET "$LEARN/courses/$COURSE_ID/assessments")
 ASSESSMENT_ID=$(echo "$ASSESSMENTS" | jqpy "
 data=d.get('data') or {}
-items=data.get('items') or (data if isinstance(data,list) else [])
+items=data.get('items') or data.get('assessments') or (data if isinstance(data,list) else [])
 print(items[0]['id'] if items else '')")
 if [[ -n "$ASSESSMENT_ID" ]]; then
   ATTEMPT=$(svc_curl POST "$LEARN/assessments/$ASSESSMENT_ID/attempts" \
@@ -110,10 +114,12 @@ step "5. certificate issuance"
 CERT=$(svc_curl POST "$LEARN/enrolments/$ENROLMENT_ID/certificate" "{}")
 CERT_NUM=$(echo "$CERT" | jqpy "
 data=d.get('data') or {}
-print(data.get('certificateNumber') or data.get('certificate_number') or '')")
+ent=data.get('certificate') or data
+print(ent.get('certificateNumber') or ent.get('certificate_number') or '')")
 DIGEST=$(echo "$CERT" | jqpy "
 data=d.get('data') or {}
-print(data.get('verificationDigest') or data.get('verification_digest') or '')")
+ent=data.get('certificate') or data
+print(ent.get('verificationDigest') or ent.get('verification_digest') or '')")
 [[ -n "$CERT_NUM" ]] || fail "certificate not issued: $(echo "$CERT" | head -c 400)"
 ok "certificate $CERT_NUM issued (digest ${DIGEST:0:16}...)"
 
