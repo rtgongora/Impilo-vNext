@@ -180,6 +180,64 @@ public class PacsServiceClient {
         return extractData(response);
     }
 
+    // ── Facility imaging capability + modality registry ─────────────────────
+
+    public JsonNode listFacilityCapabilities(String deploymentMode) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/imaging-facilities");
+        Optional.ofNullable(deploymentMode)
+                .filter(s -> !s.isBlank())
+                .ifPresent(m -> b.queryParam("deploymentMode", m));
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(b.encode().toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getFacilityCapability(String facilityId) {
+        String url = baseUrl + "/internal/v1/imaging-facilities/" + facilityId + "/capability";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode upsertFacilityCapability(String facilityId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/imaging-facilities/" + facilityId + "/capability";
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.PUT, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode facilityImagingReadiness(String facilityId) {
+        String url = baseUrl + "/internal/v1/imaging-facilities/" + facilityId + "/readiness";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listFacilityModalities(String facilityId, boolean includeInactive) {
+        String url = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/internal/v1/imaging-facilities/" + facilityId + "/modalities")
+                .queryParam("includeInactive", includeInactive)
+                .encode().toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode registerFacilityModality(String facilityId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/imaging-facilities/" + facilityId + "/modalities";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode updateFacilityModality(String facilityId, Long modalityId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/imaging-facilities/" + facilityId + "/modalities/" + modalityId;
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.PUT, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode deactivateFacilityModality(String facilityId, Long modalityId) {
+        String url = baseUrl + "/internal/v1/imaging-facilities/" + facilityId + "/modalities/" + modalityId + "/deactivate";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, HttpEntity.EMPTY, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
