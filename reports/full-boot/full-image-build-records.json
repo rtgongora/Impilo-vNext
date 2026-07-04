@@ -107,12 +107,12 @@
     },
     "costing-engine-service": {
       "service": "costing-engine-service",
-      "registry_digest": "sha256:79c814abb8cc62c3075f0bffd135d021051bf3517db037f80d0c80cbdbd9dc25",
+      "registry_digest": "sha256:01e201e28a35a8c9b2764f0bd38ddd8dacb86bd75a120bce493dcaba0b788b9a",
       "digest_pinned": true
     },
     "coverage-service": {
       "service": "coverage-service",
-      "registry_digest": "sha256:06e534c09f582e5cb95ee60a7844fa4b501218c9e93960089c5b78cef53688b4",
+      "registry_digest": "sha256:4912fe29f0cbd84992bc641c3c71a52ab7800401f9f088a2281b0ef4987faaba",
       "digest_pinned": true
     },
     "credential-verification-service": {
@@ -167,7 +167,7 @@
     },
     "experience-bff": {
       "service": "experience-bff",
-      "registry_digest": "sha256:bac0ee6d44a37fcc8b3f656aa2c8b577da5bb9d2f56d5723aeb98bddee6f6f51",
+      "registry_digest": "sha256:b1f731aa07d81bba08552c8716f17da34ea00742cb0c4f4665f678219919f9d4",
       "digest_pinned": true
     },
     "fhir-gateway-service": {
@@ -222,7 +222,7 @@
     },
     "inventory-service": {
       "service": "inventory-service",
-      "registry_digest": "sha256:02d3edfd2ff1ba2d5c8d8f713bf41d86695bb739aa4eec0ec439473c0b44acb8",
+      "registry_digest": "sha256:6eca51373fe33735df83379086fb50e963284b20a93e0255bc40c414907a58f6",
       "digest_pinned": true
     },
     "iot-ingestion-service": {
@@ -287,7 +287,7 @@
     },
     "mushex-service": {
       "service": "mushex-service",
-      "registry_digest": "sha256:331ea20cb37bd8582543000b8b7268b81933e79a822c5213dd265a748141b9a1",
+      "registry_digest": "sha256:640d1fc36a4d0a69a19b57940dac93318342b3827cff0362032990b21d5e1e2e",
       "digest_pinned": true
     },
     "mvumo-service": {
@@ -506,5 +506,5 @@
       "digest_pinned": true
     }
   },
-  "digest_pin_generated_at": "2026-07-03T13:06:37.117401+00:00"
+  "digest_pin_generated_at": "2026-07-04T03:18:29.313053+00:00"
 }

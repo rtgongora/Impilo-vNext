@@ -1,7 +1,7 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: bash scripts/full-boot/resolve-image-digests.sh
 # Chart-native digest pinning: Helm renders registry/repo@sha256 for each runtime service.
-generated_at: '2026-07-03T13:06:37.117401+00:00'
+generated_at: '2026-07-04T03:18:29.313053+00:00'
 source_tag: preview
 registry: 127.0.0.1:5000
 digest_pin_count: 96
@@ -47,10 +47,10 @@ fullBootServices:
       digest: sha256:bca140691df112d2cee11fe8d369e4400298784f7b45b70ee048309ac79f0395
   costing-engine-service:
     image:
-      digest: sha256:79c814abb8cc62c3075f0bffd135d021051bf3517db037f80d0c80cbdbd9dc25
+      digest: sha256:01e201e28a35a8c9b2764f0bd38ddd8dacb86bd75a120bce493dcaba0b788b9a
   coverage-service:
     image:
-      digest: sha256:06e534c09f582e5cb95ee60a7844fa4b501218c9e93960089c5b78cef53688b4
+      digest: sha256:4912fe29f0cbd84992bc641c3c71a52ab7800401f9f088a2281b0ef4987faaba
   credential-verification-service:
     image:
       digest: sha256:9aec7a626052224ac887b07f9ed9c91f572b0137f8e734a00216dd903beb7f51
@@ -113,7 +113,7 @@ fullBootServices:
       digest: sha256:62d73fd7be3e1da5d086e85b217dc23af0f6b0e8be2fa5ccb65b4cf2d05a77d0
   inventory-service:
     image:
-      digest: sha256:02d3edfd2ff1ba2d5c8d8f713bf41d86695bb739aa4eec0ec439473c0b44acb8
+      digest: sha256:6eca51373fe33735df83379086fb50e963284b20a93e0255bc40c414907a58f6
   iot-ingestion-service:
     image:
       digest: sha256:f468fbced00d48ff3c346c053720925f456998e922e3c7b359c96f076dff4878
@@ -152,7 +152,7 @@ fullBootServices:
       digest: sha256:49466a77ad369c931e9b839fa34094f3159d1096baf8298bcddc5b22bbadaf10
   mushex-service:
     image:
-      digest: sha256:331ea20cb37bd8582543000b8b7268b81933e79a822c5213dd265a748141b9a1
+      digest: sha256:640d1fc36a4d0a69a19b57940dac93318342b3827cff0362032990b21d5e1e2e
   mvumo-service:
     image:
       digest: sha256:4d645c9c5ef9b92d463e02b90625648ac807da61e2334e24dde532331b5d8fee
@@ -290,6 +290,6 @@ fullBootServices:
       digest: sha256:b9abc32bf0f81c1419bc4595257977bbb37b19b470d0f5e7984bd551a5fe80ab
 images:
   experienceBff:
-    digest: sha256:bac0ee6d44a37fcc8b3f656aa2c8b577da5bb9d2f56d5723aeb98bddee6f6f51
+    digest: sha256:b1f731aa07d81bba08552c8716f17da34ea00742cb0c4f4665f678219919f9d4
   oneUiShell:
     digest: sha256:3472d00fd1a8583f7611454afb7af70d4b99083b92029b28d48e5917a349936b
