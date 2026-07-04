@@ -32,7 +32,7 @@
 | data-warehouse-service | YES | aligned | sha256:3370e81abd66 | sha256:3370e81abd66 | sha256:3370e81abd66 | 127.0.0.1:5000/impilo/data-warehouse-service@sha256:3370e81abd663d7b2c97ad715791db63b144fd5fbff70a54b1a7bbf566b68155 |
 | developer-portal-service | YES | aligned | sha256:21326f2e889d | sha256:21326f2e889d | sha256:21326f2e889d | 127.0.0.1:5000/impilo/developer-portal-service@sha256:21326f2e889d3518425a2cae16e950e3eaaf5de5f27240d8b49eb9743004ddcd |
 | dispatch-service | YES | aligned | sha256:db1a6ff561fa | sha256:db1a6ff561fa | sha256:db1a6ff561fa | 127.0.0.1:5000/impilo/dispatch-service@sha256:db1a6ff561fa6172dd4f88facef70e49e1d0d3e36fc782aeecdd0741b4d0cbcb |
-| document-service | YES | aligned | sha256:ff1096505baf | sha256:ff1096505baf | sha256:ff1096505baf | 127.0.0.1:5000/impilo/document-service@sha256:ff1096505bafc4de8900c91f7af7be938da3bda760a3b43b16104c54166c0ae9 |
+| document-service | YES | aligned | sha256:547892732576 | sha256:547892732576 | sha256:547892732576 | 127.0.0.1:5000/impilo/document-service@sha256:547892732576e5e1a37b1557bda000c73be5e9acc66ce917621a95724e568476 |
 | experience-bff | YES | aligned | sha256:785a6935a8a0 | sha256:785a6935a8a0 | sha256:785a6935a8a0 | 127.0.0.1:5000/impilo/experience-bff@sha256:785a6935a8a06fd1cfd483994508cd90d179d95a1d648d62ad76297440d7f72b |
 | fhir-gateway-service | YES | aligned | sha256:3178001d30d0 | sha256:3178001d30d0 | sha256:3178001d30d0 | 127.0.0.1:5000/impilo/fhir-gateway-service@sha256:3178001d30d0ff59edc07ccc56d04239c4f4e4210a9e19e8cee2c78fa62c4373 |
 | forms-service | YES | aligned | sha256:6813f4002668 | sha256:6813f4002668 | sha256:6813f4002668 | 127.0.0.1:5000/impilo/forms-service@sha256:6813f4002668d30298226d189c6ad7d02fcaa20a7a53697eab763e2c849fc529 |
@@ -50,7 +50,7 @@
 | khuluma-service | YES | aligned | sha256:cc2bab30bc64 | sha256:cc2bab30bc64 | sha256:cc2bab30bc64 | 127.0.0.1:5000/impilo/khuluma-service@sha256:cc2bab30bc64ff7cbd0cda6c670dd370a31e5877a92f0f7b484f558a52cacef5 |
 | landela-adapter-service | YES | aligned | sha256:54d455676609 | sha256:54d455676609 | sha256:54d455676609 | 127.0.0.1:5000/impilo/landela-adapter-service@sha256:54d455676609cca4b85622b42544a268db2b83e5077563e40def8406d665225e |
 | learning-service | YES | aligned | sha256:2b0fed4b677d | sha256:2b0fed4b677d | sha256:2b0fed4b677d | 127.0.0.1:5000/impilo/learning-service@sha256:2b0fed4b677da6a16376e9a90d1c7a52e995012621f7b98650ce4c6a88413cc8 |
-| live-service | YES | aligned | sha256:7032862691e6 | sha256:7032862691e6 | sha256:7032862691e6 | 127.0.0.1:5000/impilo/live-service@sha256:7032862691e633531f92e21bc0140ea231145daf1329caf7ac66e0fcfb657fdc |
+| live-service | YES | aligned | sha256:785f179a661f | sha256:785f179a661f | sha256:785f179a661f | 127.0.0.1:5000/impilo/live-service@sha256:785f179a661ffb80ede6d02950c2af25f0365ddf2b8e36fa8e5caa932ecb46d2 |
 | llm-orchestration-service | YES | aligned | sha256:6e67b8cce6cb | sha256:6e67b8cce6cb | sha256:6e67b8cce6cb | 127.0.0.1:5000/impilo/llm-orchestration-service@sha256:6e67b8cce6cb5b61c74d4c6107133cddd1bb76007cd269d352c8dbd07adec42c |
 | madi-service | YES | aligned | sha256:1979e8e3071a | sha256:1979e8e3071a | sha256:1979e8e3071a | 127.0.0.1:5000/impilo/madi-service@sha256:1979e8e3071a341a2b702d3f04cec5fbd5af7855f8ad95612dc336f493be18a4 |
 | msika-apps-service | YES | aligned | sha256:32627b12065a | sha256:32627b12065a | sha256:32627b12065a | 127.0.0.1:5000/impilo/msika-apps-service@sha256:32627b12065ae0813a898c6ab6967e938238962c301408bb32d3fc7bb3defaa8 |
@@ -79,7 +79,7 @@
 | referral-service | YES | aligned | sha256:ed5d81925d0e | sha256:ed5d81925d0e | sha256:ed5d81925d0e | 127.0.0.1:5000/impilo/referral-service@sha256:ed5d81925d0ef3871536f2550aa499fdbd7610ca4f6259b31c83bb3ce3875fcf |
 | reporting-service | YES | aligned | sha256:524011508b02 | sha256:524011508b02 | sha256:524011508b02 | 127.0.0.1:5000/impilo/reporting-service@sha256:524011508b029cc9ced78ddb9c635f2b2e4a4075207196d49288a6ae71a504f6 |
 | rito-quality-safety-service | YES | aligned | sha256:3fee05b5b572 | sha256:3fee05b5b572 | sha256:3fee05b5b572 | 127.0.0.1:5000/impilo/rito-quality-safety-service@sha256:3fee05b5b57202b62ee13fbca180f60c7128cd106b600053849ba5ac0b191d18 |
-| rtc-gateway-service | YES | aligned | sha256:f0d29da190e2 | sha256:f0d29da190e2 | sha256:f0d29da190e2 | 127.0.0.1:5000/impilo/rtc-gateway-service@sha256:f0d29da190e2ebe05d93d887ab3fb114f605bfd1009a850ad47fd9458fec0ab5 |
+| rtc-gateway-service | YES | aligned | sha256:9084cba10d8c | sha256:9084cba10d8c | sha256:9084cba10d8c | 127.0.0.1:5000/impilo/rtc-gateway-service@sha256:9084cba10d8c231c6f76154fde4269742f5e8b53b69f2ab2dcfd3555fb3f39fc |
 | rules-service | YES | aligned | sha256:f66515f237a0 | sha256:f66515f237a0 | sha256:f66515f237a0 | 127.0.0.1:5000/impilo/rules-service@sha256:f66515f237a0d548a1b9d42ea4e259174dab4756703d87fd10313c9c12866305 |
 | scheduling-service | YES | aligned | sha256:4d21b4afdd2e | sha256:4d21b4afdd2e | sha256:4d21b4afdd2e | 127.0.0.1:5000/impilo/scheduling-service@sha256:4d21b4afdd2e55f91b8690709cd735dd99d48ba58385e41200be592646b17b7a |
 | schema-registry-service | YES | aligned | sha256:73574230fac2 | sha256:73574230fac2 | sha256:73574230fac2 | 127.0.0.1:5000/impilo/schema-registry-service@sha256:73574230fac2f760d6a4f16818cfd782ac8d9b747596573a31a78c535e9fa56e |

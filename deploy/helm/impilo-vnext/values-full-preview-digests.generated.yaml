@@ -1,7 +1,7 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: bash scripts/full-boot/resolve-image-digests.sh
 # Chart-native digest pinning: Helm renders registry/repo@sha256 for each runtime service.
-generated_at: '2026-07-04T11:50:17.348347+00:00'
+generated_at: '2026-07-04T21:14:29.504032+00:00'
 source_tag: preview
 registry: 127.0.0.1:5000
 digest_pin_count: 96
@@ -80,7 +80,7 @@ fullBootServices:
       digest: sha256:db1a6ff561fa6172dd4f88facef70e49e1d0d3e36fc782aeecdd0741b4d0cbcb
   document-service:
     image:
-      digest: sha256:ff1096505bafc4de8900c91f7af7be938da3bda760a3b43b16104c54166c0ae9
+      digest: sha256:547892732576e5e1a37b1557bda000c73be5e9acc66ce917621a95724e568476
   fhir-gateway-service:
     image:
       digest: sha256:3178001d30d0ff59edc07ccc56d04239c4f4e4210a9e19e8cee2c78fa62c4373
@@ -131,7 +131,7 @@ fullBootServices:
       digest: sha256:2b0fed4b677da6a16376e9a90d1c7a52e995012621f7b98650ce4c6a88413cc8
   live-service:
     image:
-      digest: sha256:7032862691e633531f92e21bc0140ea231145daf1329caf7ac66e0fcfb657fdc
+      digest: sha256:785f179a661ffb80ede6d02950c2af25f0365ddf2b8e36fa8e5caa932ecb46d2
   llm-orchestration-service:
     image:
       digest: sha256:6e67b8cce6cb5b61c74d4c6107133cddd1bb76007cd269d352c8dbd07adec42c
@@ -215,7 +215,7 @@ fullBootServices:
       digest: sha256:3fee05b5b57202b62ee13fbca180f60c7128cd106b600053849ba5ac0b191d18
   rtc-gateway-service:
     image:
-      digest: sha256:f0d29da190e2ebe05d93d887ab3fb114f605bfd1009a850ad47fd9458fec0ab5
+      digest: sha256:9084cba10d8c231c6f76154fde4269742f5e8b53b69f2ab2dcfd3555fb3f39fc
   rules-service:
     image:
       digest: sha256:f66515f237a0d548a1b9d42ea4e259174dab4756703d87fd10313c9c12866305

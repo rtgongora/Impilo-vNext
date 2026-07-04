@@ -162,7 +162,7 @@
     },
     "document-service": {
       "service": "document-service",
-      "registry_digest": "sha256:ff1096505bafc4de8900c91f7af7be938da3bda760a3b43b16104c54166c0ae9",
+      "registry_digest": "sha256:547892732576e5e1a37b1557bda000c73be5e9acc66ce917621a95724e568476",
       "digest_pinned": true
     },
     "experience-bff": {
@@ -252,7 +252,7 @@
     },
     "live-service": {
       "service": "live-service",
-      "registry_digest": "sha256:7032862691e633531f92e21bc0140ea231145daf1329caf7ac66e0fcfb657fdc",
+      "registry_digest": "sha256:785f179a661ffb80ede6d02950c2af25f0365ddf2b8e36fa8e5caa932ecb46d2",
       "digest_pinned": true
     },
     "llm-orchestration-service": {
@@ -387,7 +387,7 @@
     },
     "rtc-gateway-service": {
       "service": "rtc-gateway-service",
-      "registry_digest": "sha256:f0d29da190e2ebe05d93d887ab3fb114f605bfd1009a850ad47fd9458fec0ab5",
+      "registry_digest": "sha256:9084cba10d8c231c6f76154fde4269742f5e8b53b69f2ab2dcfd3555fb3f39fc",
       "digest_pinned": true
     },
     "rules-service": {
@@ -506,5 +506,5 @@
       "digest_pinned": true
     }
   },
-  "digest_pin_generated_at": "2026-07-04T11:50:17.348347+00:00"
+  "digest_pin_generated_at": "2026-07-04T21:14:29.504032+00:00"
 }
