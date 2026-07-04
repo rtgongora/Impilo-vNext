@@ -40,21 +40,27 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - **Deliverable**: bill→applyCoverage(split)→shortfall intent→PAID→receipt spec
 - **Status**: PROPOSED · **Blockers**: none
 
-## WS-P2-A — Queue triage-transition fix + escalate action
+## WS-P2-A — Queue/Booking journey (EXPANDED per user 2026-07-04: Booking → Appointment → Check-in → Queue → Care Start → Updates)
 - **Priority**: P1 · **Risk class**: AMBER
-- **Assigned**: Claude worker B (not yet dispatched)
-- **Base**: anchor @ `d44bb6022` · **Branch**: `fable/e2e-intelligent-queues` · **Worktree**: `../wt-fable-queues`
-- **Owned**: `services/pct-service/**/Queue*`, `domain/QueueItemStatus.java`, `services/experience-bff/**/QueueController.java`, `ui/one-ui-shell/src/hooks/queries/useQueue.ts`, `ui/pct-web` queue pages; additive pct migration if needed
-- **Forbidden**: shift logic (PCT/TUSO/Vashandi — serialized R2), `TusoIntegration` materialisation contract, trust context, global nav
-- **Deliverable**: dead `IN_TRIAGE` transition fixed (BFF `QueueController.java:294-302` vs enum); queue-item ESCALATE end-to-end with outbox event + audit
-- **Gates**: `QueueEngineTest`, BFF `QueueControllerTest`, e2e `pct-queue-*.spec.ts`, repro test flipped green
-- **Status**: PROPOSED · **Blockers**: none
+- **Assigned**: Claude Worker B = the Fable session itself (user decision: Worker B is primary implementer)
+- **Base**: anchor @ `d44bb6022` · **Branch**: `fable/e2e-queue-booking-appointment-coordination` · **Worktree**: `/home/user/wt-fable-queue-booking`
+- **Owned**: pct queue/journey lifecycle, booking `AppointmentService.checkIn`, BFF Queue/AppointmentCheckIn controllers+clients, notification-service queue consumer + `V011` templates, additive pct migrations `V030`/`V031`
+- **Forbidden (respected)**: shift logic (R2), TUSO materialisation contract, trust context, global nav, W0 telemedicine core, Kafka topic renames
+- **Delivered** (7 commits, `79e2fdfbd..769296629`):
+  - `IN_TRIAGE` 500 fixed; transition outbox events (no silent state changes); transfer CPID NOT-NULL bug fixed
+  - BFF priority normalized to PCT 1–5 scale; IN_TRIAGE contract test
+  - Queue-level escalation end-to-end (V030, reason mandatory, optional transfer, Tshepo audit, `QUEUE_ITEM_ESCALATED`)
+  - Journey appointment provenance (V031); **repaired the dead appointment check-in → queue chain** (booking read wrong JSON key so no check-in ever enqueued; TUSO numeric facility id vs PCT UUID fixed via trust-header resolution; dead encounter-at-check-in removed; `CHECKED_IN_NO_QUEUE`/`queue_linked` explicit states)
+  - Queue lifecycle patient notifications: `pct.queue.item.updated` → notification-service → Mvumo-gated neutral IN_APP messages (`QUEUE_CITIZEN_*`)
+  - `docs/architecture/queue-management-journey.md` (state model, repairs, gap register, demo script)
+- **Evidence**: `mvn test` green for pct-service, booking-service, notification-service AND experience-bff (full modules). Coordinator `git diff --stat` review passed: 24 files, 1150+/36−, all within lease (pct, booking, notification, BFF, docs; additive migrations V030/V031/V011 only; zero W0/shared-core/config/nav touches)
+- **Status**: GATES_PASSED · **Merge readiness**: YES — recommend as first branch into the integration branch once a second workstream passes gates · **Blockers**: none
 
-## WS-P2-B — IN_TRIAGE repro test
+## WS-P2-B — Queue regression hardening (Zen Coder Max)
 - **Priority**: P1 · **Risk class**: GREEN (tests only)
-- **Assigned**: Zen Coder Max · **Branch**: `zen/test-hardening-pipelines`
-- **Deliverable**: failing repro of BFF→PCT `IN_TRIAGE` 500
-- **Status**: PROPOSED · **Blockers**: none
+- **Assigned**: Zen Coder Max · **Branch**: `zen/test-hardening-pipelines` (base on top of WS-P2-A branch)
+- **Deliverable (updated)**: IN_TRIAGE regression is now covered by Worker B; Zen focus shifts to booking→check-in→queue integration specs, no-show/reschedule flows, notification event assertions, queue-to-PCT handoff IT, and honest virtual-queue gap tests
+- **Status**: PROPOSED · **Blockers**: dispatch pending
 
 ## WS-P3-A — PCT gaps: discharge countersign + prescribing hook
 - **Priority**: P1 · **Risk class**: AMBER
@@ -116,6 +122,10 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 | R3 | `mushex CostaEventConsumer.onBillFinalized` double-bill hazard remediation (`CostaEventConsumer.java:60-68`) | RED |
 
 ## Decisions log
+- 2026-07-04 · User expanded P2 into the full Booking→Appointment→Check-in→Queue→Care-Start→Updates journey and made this session (Worker B) primary implementer; Fable retains coordination.
+- 2026-07-04 · Worker B found and repaired three silently-dead production paths: appointment check-in never enqueued (wrong JSON key + facility id type mismatch), queue transfer violated the CPID NOT NULL constraint, and queue status transitions emitted no events. Recorded here because they invalidate prior assumptions that "physical queue is fully wired" — it is now.
+- 2026-07-04 · Queue notification channel decision: IN_APP inbox only via notification-service (Mvumo-gated); Khuluma confirmed to be a conversation hub, not a notifier; `inpatient.discharge.followup_requested` remains an unconsumed contract stub (gap noted for P3).
+- 2026-07-04 · Virtual queue engine remains MISSING (routing metadata ≠ queue engine); queue-side handoff contract requested from W0 owner documented in `docs/architecture/queue-management-journey.md`.
 - 2026-07-04 · Anchor tip verified `d44bb6022`; remembered `e101a2701` nonexistent — superseded.
 - 2026-07-04 · Fundo remote branches declared superseded by HEAD native LMS; do-not-merge.
 - 2026-07-04 · P5 telemedicine core declared leased to the in-flight W0 anchor session; peripheral work blocked pending boundary confirmation.
