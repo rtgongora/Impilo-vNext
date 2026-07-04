@@ -61,8 +61,9 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - **Assigned**: Zen worker agent (run by Fable session per user instruction) · **Branch**: `zen/test-hardening-pipelines` · **Worktree**: `/home/user/wt-zen-tests` · **Base**: `769296629` (WS-P2-A tip)
 - **Owned**: test files only in pct-service, booking-service, notification-service (+BFF tests if needed)
 - **Forbidden**: production code, migrations, configs, scripts/guard
-- **Deliverable**: appointment-provenance IT, no-show/reschedule coverage, queue→encounter handoff IT, Mvumo-blocked + tenant-propagation notification tests, honest virtual-queue gap test
-- **Status**: ASSIGNED (agent running 2026-07-04) · **Blockers**: none
+- **Delivered** (5 commits `04629eb5d..e0729b16f`, rebased on WS-P2-A tip `1340a9d39`): `AppointmentProvenanceJourneyIT` (appointment_id persisted + outboxed + queueable), no-show/reschedule coverage (booking + pct outbox contract), queue→encounter handoff IT with full outbox-chain assertions, `NotifyServicePreferenceGateTest` (Mvumo deny → CANCELLED + preference_blocked event; fail-open on empty), consumer tenant-context + malformed-payload tests, `VirtualQueueGapIT` (teleconsult creates zero queue items — deliberate tripwire for when virtual queues land)
+- **Evidence**: coordinator-verified `mvn -pl pct-service,booking-service,notification-service test` → `MVN_EXIT=0` (pct 143, notification 53, booking 21 tests); diff review: 7 files, tests only
+- **Status**: GATES_PASSED · **Merge readiness**: YES (stacks cleanly on WS-P2-A) · **Blockers**: none
 
 ## WS-P2-C — Queue/check-in/inbox UI surfacing (Cursor Ultra)
 - **Priority**: P1 · **Risk class**: GREEN/AMBER (UI only)
@@ -132,6 +133,7 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 | R3 | `mushex CostaEventConsumer.onBillFinalized` double-bill hazard remediation (`CostaEventConsumer.java:60-68`) | RED |
 
 ## Decisions log
+- 2026-07-04 · **Gate-integrity incident (resolved)**: Worker B's original full-suite gates piped Maven through `tail`, reporting tail's exit code — two fixture regressions (callNext CPID, checkIn startTime) shipped red. Caught by the Zen worker via pristine-HEAD verification; fixture repair cherry-picked onto WS-P2-A (`1340a9d39`), all gates re-run with true `MVN_EXIT` capture: pct/booking/notification/experience-bff all 0. New rule: no piped exit codes in gate commands; coordinator re-runs every worker's gate before push.
 - 2026-07-04 · User expanded P2 into the full Booking→Appointment→Check-in→Queue→Care-Start→Updates journey and made this session (Worker B) primary implementer; Fable retains coordination.
 - 2026-07-04 · Worker B found and repaired three silently-dead production paths: appointment check-in never enqueued (wrong JSON key + facility id type mismatch), queue transfer violated the CPID NOT NULL constraint, and queue status transitions emitted no events. Recorded here because they invalidate prior assumptions that "physical queue is fully wired" — it is now.
 - 2026-07-04 · Queue notification channel decision: IN_APP inbox only via notification-service (Mvumo-gated); Khuluma confirmed to be a conversation hub, not a notifier; `inpatient.discharge.followup_requested` remains an unconsumed contract stub (gap noted for P3).
