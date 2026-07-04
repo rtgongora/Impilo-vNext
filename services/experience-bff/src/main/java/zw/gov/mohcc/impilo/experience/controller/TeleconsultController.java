@@ -584,7 +584,7 @@ public class TeleconsultController {
     }
 
     /** Admit a waiting participant and tell the patient the session is ready. */
-    @PostMapping("/sessions/{id}/waiting-room/admit")
+    @PostMapping({"/sessions/{id}/admit", "/sessions/{id}/waiting-room/admit"})
     public ResponseEntity<Map<String, Object>> admitWaitingParticipant(
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -626,7 +626,7 @@ public class TeleconsultController {
     }
 
     /** Deny a waiting participant ({identity, reason?}). */
-    @PostMapping("/sessions/{id}/waiting-room/deny")
+    @PostMapping({"/sessions/{id}/deny", "/sessions/{id}/waiting-room/deny"})
     public ResponseEntity<Map<String, Object>> denyWaitingParticipant(
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
