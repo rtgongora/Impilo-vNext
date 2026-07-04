@@ -75,7 +75,10 @@ public class CoverageServiceClient {
 
         ResponseEntity<String> response = coverageRestClient.post()
                 .uri("/internal/v1/coverage/eligibility/check")
-                .headers(h -> copyTrustHeaders(inbound, h))
+                .headers(h -> {
+                    copyTrustHeaders(inbound, h);
+                    h.set("Idempotency-Key", "costa-elig:" + coverageId + ":" + UUID.randomUUID());
+                })
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
                 .retrieve()
@@ -106,7 +109,11 @@ public class CoverageServiceClient {
 
         ResponseEntity<String> response = coverageRestClient.post()
                 .uri("/internal/v1/coverage/claims")
-                .headers(h -> copyTrustHeaders(inbound, h))
+                .headers(h -> {
+                    copyTrustHeaders(inbound, h);
+                    // Deterministic per encounter+coverage: a retried claim files once.
+                    h.set("Idempotency-Key", "costa-claim:" + coverageId + ":" + encounterId);
+                })
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
                 .retrieve()
