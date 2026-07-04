@@ -86,7 +86,7 @@ step "3. lessons + progress"
 # the enrolment (COURSE_COMPLETED outbox → CPD/notification loops).
 for LID in $LESSON_IDS; do
   svc_curl POST "$LEARN/lessons/$LID/open" \
-    "{\"enrolmentId\":\"$ENROLMENT_ID\",\"subjectType\":\"PROVIDER\",\"subjectId\":\"$PROVIDER_ID\"}" >/dev/null || true
+    "{\"enrolmentId\":\"$ENROLMENT_ID\",\"subjectType\":\"PROVIDER\",\"subjectId\":\"$PROVIDER_ID\"}" >/dev/null
   svc_curl POST "$LEARN/progress" \
     "{\"enrolmentId\":\"$ENROLMENT_ID\",\"lessonId\":\"$LID\",\"progressPercent\":100}" >/dev/null
 done
@@ -164,16 +164,27 @@ EARNED=$(echo "$CPD" | jqpy "print((d.get('data') or {}).get('earnedPoints') or 
 ok "VARAPI CPD summary reflects the certificate (earnedPoints=$EARNED)"
 
 # ── 7. Notification dispatch through the real provider (⑤) ───────────────────
+# Issuance records a PENDING intent in lrn_learning_notification; the dispatcher
+# (30s poll in preview) delivers it via notification-service POST /internal/v1/notify
+# and marks it SENT. We assert both ends of the hop.
 step "7. notification dispatched via NOTIFICATION_SERVICE"
-DISPATCH=""
-for i in $(seq 1 6); do
-  DISPATCH=$(kubectl logs -n "$NS" deploy/learning-service --since=10m 2>/dev/null \
-    | grep -iE "NOTIFICATION_SERVICE|dispatched.*notification|processed .* intents" | tail -1)
-  [[ -n "$DISPATCH" ]] && break
+lpsql() { kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d learning -tAc "$1"; }
+INTENT_STATE=""
+for i in $(seq 1 18); do
+  INTENT_STATE=$(lpsql "SELECT status FROM lrn_learning_notification
+    WHERE event_code='learning.certificate.issued' AND metadata_json LIKE '%$CERT_NUM%'" | tr -d '[:space:]')
+  [[ "$INTENT_STATE" == "SENT" ]] && break
   sleep 10
 done
-[[ -n "$DISPATCH" ]] || fail "no notification dispatch evidence in learning-service logs"
-ok "dispatch evidence: ${DISPATCH:0:140}"
+[[ -n "$INTENT_STATE" ]] || fail "no notification intent recorded for $CERT_NUM"
+[[ "$INTENT_STATE" == "SENT" ]] || fail "notification intent stuck in $INTENT_STATE (dispatch to notification-service failed)"
+ok "learning intent SENT via NOTIFICATION_SERVICE provider"
+
+NS_ROW=$(kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d notification -tAc \
+  "SELECT status FROM ns_notifications WHERE template_key='learning.certificate.issued'
+   AND to_addr='$PROVIDER_ID' ORDER BY created_at DESC LIMIT 1" 2>/dev/null | tr -d '[:space:]')
+[[ -n "$NS_ROW" ]] || fail "no ns_notifications row in notification-service for $PROVIDER_ID"
+ok "notification-service enqueued the message (status=$NS_ROW)"
 
 echo ""
 echo "PASS: Scenario C (Fundo learner journey) green ($PASS checks) — run tag $RUN"
