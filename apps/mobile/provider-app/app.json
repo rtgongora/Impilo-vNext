@@ -20,7 +20,8 @@
       "bundleIdentifier": "zw.gov.impilo.provider",
       "buildNumber": "1",
       "infoPlist": {
-        "NSCameraUsageDescription": "Used for scanning patient IDs and capturing clinical images.",
+        "NSCameraUsageDescription": "Used for telemedicine video consultations, scanning patient IDs, and capturing clinical images.",
+        "NSMicrophoneUsageDescription": "Used for telemedicine audio and video consultations.",
         "NSLocationWhenInUseUsageDescription": "Used to record outreach visit locations.",
         "NSFaceIDUsageDescription": "Used for biometric authentication."
       }
@@ -39,12 +40,22 @@
         "USE_BIOMETRIC",
         "USE_FINGERPRINT",
         "INTERNET",
-        "ACCESS_NETWORK_STATE"
+        "ACCESS_NETWORK_STATE",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS"
       ]
     },
     "plugins": [
       "expo-web-browser",
       "expo-secure-store",
+      "@livekit/react-native-expo-plugin",
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Used for telemedicine video consultations, scanning patient IDs, and capturing clinical images.",
+          "microphonePermission": "Used for telemedicine audio and video consultations."
+        }
+      ],
       [
         "expo-build-properties",
         {

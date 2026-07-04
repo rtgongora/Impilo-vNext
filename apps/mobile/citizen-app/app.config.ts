@@ -82,7 +82,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-secure-store",
     "expo-sqlite",
     "@livekit/react-native-expo-plugin",
-    "@config-plugins/react-native-webrtc",
+    [
+      "@config-plugins/react-native-webrtc",
+      {
+        cameraPermission:
+          "Used for telehealth video consultations and to scan QR codes for health records.",
+        microphonePermission:
+          "Used for telehealth audio and video consultations.",
+      },
+    ],
     [
       "expo-build-properties",
       {

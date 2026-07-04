@@ -35,6 +35,7 @@
     "@impilo/mobile-nompilo": "workspace:*",
     "@impilo/mobile-registry": "workspace:*",
     "@impilo/mobile-offline": "workspace:*",
+    "@impilo/mobile-session": "workspace:*",
     "@impilo/mobile-timeline": "workspace:*",
     "@impilo/mobile-trust": "workspace:*",
     "@livekit/react-native": "^2.11.0",

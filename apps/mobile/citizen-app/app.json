@@ -20,7 +20,7 @@
       "bundleIdentifier": "zw.gov.impilo.citizen",
       "buildNumber": "1",
       "infoPlist": {
-        "NSCameraUsageDescription": "Used to scan QR codes for health records.",
+        "NSCameraUsageDescription": "Used for telehealth video consultations and to scan QR codes for health records.",
         "NSPhotoLibraryUsageDescription": "Used to upload profile photos and documents.",
         "NSFaceIDUsageDescription": "Used for biometric authentication.",
         "NSMicrophoneUsageDescription": "Used for telehealth video consultations."
@@ -40,12 +40,21 @@
         "USE_FINGERPRINT",
         "INTERNET",
         "ACCESS_NETWORK_STATE",
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS"
       ]
     },
     "plugins": [
       "expo-web-browser",
       "expo-secure-store",
+      "@livekit/react-native-expo-plugin",
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Used for telehealth video consultations and to scan QR codes for health records.",
+          "microphonePermission": "Used for telehealth audio and video consultations."
+        }
+      ],
       [
         "expo-build-properties",
         {
