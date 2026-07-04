@@ -94,6 +94,7 @@ Classification:
 | `services/experience-bff/src/main/java/.../MobileGovernanceController.java` forced LIVE summary and silent empty fallback | synthetic success | remediated-in-this-pass | now fail-closes with typed `502` when upstream governance/notifications are unavailable. |
 | `services/experience-bff/src/main/java/.../PublicHealthController.java` missing weekly/outbreak/field writes represented by UI intent | unknown-review-required | remediated-in-this-pass | weekly IDSR, outbreak create, and field-operation write routes are now wired to surveillance upstreams with typed `502` fail-close behavior on dependency failure (no synthetic success). |
 | `ui/experience/src/app/reports/page.tsx` and `ui/one-ui-shell/src/app/reports/page.tsx` national KPI cards | demo fixture | remediated-in-this-pass | DHIS2 cards now read governed warehouse `national-kpis` gold stats; tabs without governed datasets still render explicit unavailable states; synthetic KPI values removed. |
+| `services/pharmacy-elmis-adapter/src/main/java/.../core/DispenseSyncService.java` `triggerSync` | stubbed external sync | unknown-review-required | deferred seam (P4 Dura board): persists a `RUNNING` `DispenseSyncEntity` and performs **no synchronization** — no transition to `COMPLETED`/`FAILED`, no eLMIS call. Must not be presented as working dispense-sync; real sync requires external eLMIS/NatPharm connector work. Native Dura stock truth is unaffected (`inventory-service` ledger is real; `inventory-elmis-adapter` is fail-closed honest). |
 
 ## Mandatory Remediation Rules
 
