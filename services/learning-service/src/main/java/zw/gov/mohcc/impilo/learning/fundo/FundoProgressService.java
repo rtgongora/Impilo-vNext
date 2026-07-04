@@ -177,13 +177,18 @@ public class FundoProgressService {
                     return p;
                 });
         OffsetDateTime now = OffsetDateTime.now();
-        if (row.getStartedAt() == null) {
+        boolean newlyStarted = row.getStartedAt() == null;
+        if (newlyStarted) {
             row.setStartedAt(now);
             row.setStatus("STARTED");
-            emit(FundoNativeEventTypes.PROGRESS_STARTED, row, enrolment, "STARTED");
         }
         row.setLastAccessedAt(now);
+        // Save before emitting: a freshly created row has no id until persisted,
+        // and emit() keys the outbox record on row.getId().
         progressRepository.save(row);
+        if (newlyStarted) {
+            emit(FundoNativeEventTypes.PROGRESS_STARTED, row, enrolment, "STARTED");
+        }
 
         if ("ENROLLED".equals(enrolment.getStatus())) {
             enrolment.setStatus("IN_PROGRESS");
