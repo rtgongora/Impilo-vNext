@@ -87,6 +87,13 @@ public class CoverageEventService {
     }
 
     @Transactional
+    public void emitClaimAdjudicated(UUID claimId, UUID correlationId, UUID tenantId, String podId,
+                                     UUID coverageId, Map<String, Object> payload) {
+        emit("CLAIM", claimId.toString(), TOPICS.eventType("claim", "adjudicated"),
+                correlationId, tenantId, podId, coverageId.toString(), "MEMBER_COVERAGE", payload);
+    }
+
+    @Transactional
     public void emitRemittanceCreated(UUID remittanceId, UUID correlationId, UUID tenantId, String podId,
                                       String subjectId, Map<String, Object> payload) {
         emit("REMITTANCE", remittanceId.toString(), TOPICS.eventType("remittance", "created"),

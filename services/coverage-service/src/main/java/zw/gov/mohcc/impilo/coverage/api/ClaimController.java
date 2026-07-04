@@ -108,7 +108,7 @@ public class ClaimController {
                     payload.put("status", claim.getStatus());
                     UUID corr = CorrelationIds.fromHeader(correlationId);
                     payload.put("meta", CoverageEventService.meta(corr));
-                    eventService.emitClaimSubmitted(claim.getId(), corr, tid, podId,
+                    eventService.emitClaimAdjudicated(claim.getId(), corr, tid, podId,
                             claim.getCoverageId(), payload);
                     return ResponseEntity.ok(toResponse(claim));
                 })
