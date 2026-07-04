@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.varapi.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -44,6 +46,7 @@ public class FundoCpdCandidateEntity {
     @Column(name = "linked_cpd_event_id")
     private Long linkedCpdEventId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "raw_payload", columnDefinition = "JSONB")
     private String rawPayload;
 
