@@ -203,6 +203,9 @@ public class ImagingStudyService {
         study.setAccessionNumber(request.getAccessionNumber());
         study.setEncounterRef(request.getEncounterRef());
         study.setFacilityId(request.getFacilityId());
+        if (request.getSourceType() != null && !request.getSourceType().isBlank()) {
+            study.setSourceType(request.getSourceType().trim().toUpperCase(java.util.Locale.ROOT));
+        }
         study.setCreatedAt(OffsetDateTime.now());
         study.setUpdatedAt(OffsetDateTime.now());
 
