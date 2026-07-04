@@ -42,9 +42,12 @@ public class ImagingStudyController {
     private static final Logger log = LoggerFactory.getLogger(ImagingStudyController.class);
 
     private final ImagingStudyService imagingStudyService;
+    private final zw.gov.mohcc.impilo.pacs.core.ImagingStudyExceptionService exceptionService;
 
-    public ImagingStudyController(ImagingStudyService imagingStudyService) {
+    public ImagingStudyController(ImagingStudyService imagingStudyService,
+                                  zw.gov.mohcc.impilo.pacs.core.ImagingStudyExceptionService exceptionService) {
         this.imagingStudyService = imagingStudyService;
+        this.exceptionService = exceptionService;
     }
 
     @GetMapping
@@ -188,6 +191,56 @@ public class ImagingStudyController {
     @PostMapping("/ops/failed-writebacks/retry-all")
     public ResponseEntity<Map<String, Object>> retryAllFailedWritebacks() {
         return ResponseEntity.ok(imagingStudyService.retryAllFailedWritebacks());
+    }
+
+    /** Reconciliation exceptions queue (status filter: OPEN | RESOLVED | DISMISSED; default all). */
+    @GetMapping("/ops/exceptions")
+    public ResponseEntity<List<zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingStudyExceptionEntity>> listExceptions(
+            @RequestParam(name = "status", required = false) String status) {
+        return ResponseEntity.ok(exceptionService.listExceptions(tenantId(), status));
+    }
+
+    @GetMapping("/{id}/exceptions")
+    public ResponseEntity<List<zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingStudyExceptionEntity>> listStudyExceptions(
+            @PathVariable Long id) {
+        imagingStudyService.getStudy(id);
+        return ResponseEntity.ok(exceptionService.listForStudy(id));
+    }
+
+    /** Auditable exception resolution: action + note + actor are persisted and emitted as events. */
+    @PostMapping("/ops/exceptions/{exceptionId}/resolve")
+    public ResponseEntity<zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingStudyExceptionEntity> resolveException(
+            @PathVariable Long exceptionId,
+            @RequestBody Map<String, Object> body) {
+        String action = body.get("action") != null ? String.valueOf(body.get("action")) : null;
+        String note = body.get("note") != null ? String.valueOf(body.get("note")) : null;
+        boolean dismiss = Boolean.parseBoolean(String.valueOf(body.getOrDefault("dismiss", "false")));
+        try {
+            return ResponseEntity.ok(exceptionService.resolve(exceptionId, action, note, dismiss, actorId()));
+        } catch (IllegalArgumentException e) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        } catch (IllegalStateException e) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
+    }
+
+    private static java.util.UUID tenantId() {
+        TrustContext trust = TrustContextHolder.get();
+        if (trust != null && trust.tenantId() != null) {
+            return trust.tenantId();
+        }
+        zw.gov.mohcc.impilo.companion.context.RequestContext ctx =
+                zw.gov.mohcc.impilo.companion.context.RequestContextHolder.get();
+        if (ctx != null && ctx.tenantId() != null && !ctx.tenantId().isBlank()) {
+            try {
+                return java.util.UUID.fromString(ctx.tenantId().trim());
+            } catch (IllegalArgumentException e) {
+                return java.util.UUID.nameUUIDFromBytes(
+                        ctx.tenantId().trim().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+        }
+        throw new org.springframework.web.server.ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Tenant context required");
     }
 
     private static String actorId() {

@@ -49,6 +49,7 @@ class ImagingStudyServiceAnnotationTest {
     @Mock private ImagingReportLinkRepository reportLinkRepository;
     @Mock private ImagingOrderLinkRepository orderLinkRepository;
     @Mock private ImagingAnnotationRepository annotationRepository;
+    @Mock private ImagingStudyExceptionService exceptionService;
 
     private ImagingStudyService service;
 
@@ -69,7 +70,8 @@ class ImagingStudyServiceAnnotationTest {
                 accessAuditRepository,
                 reportLinkRepository,
                 orderLinkRepository,
-                annotationRepository);
+                annotationRepository,
+                exceptionService);
     }
 
     @Test

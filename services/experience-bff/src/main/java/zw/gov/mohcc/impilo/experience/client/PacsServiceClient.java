@@ -180,6 +180,29 @@ public class PacsServiceClient {
         return extractData(response);
     }
 
+    public JsonNode opsExceptions(String status) {
+        UriComponentsBuilder b = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/internal/v1/imaging-studies/ops/exceptions");
+        Optional.ofNullable(status)
+                .filter(s -> !s.isBlank())
+                .ifPresent(s -> b.queryParam("status", s));
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(b.encode().toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listStudyExceptions(String studyId) {
+        String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/exceptions";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode resolveException(Long exceptionId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/imaging-studies/ops/exceptions/" + exceptionId + "/resolve";
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Facility imaging capability + modality registry ─────────────────────
 
     public JsonNode listFacilityCapabilities(String deploymentMode) {
