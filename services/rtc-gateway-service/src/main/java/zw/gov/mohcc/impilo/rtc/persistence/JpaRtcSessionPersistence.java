@@ -29,6 +29,11 @@ public class JpaRtcSessionPersistence implements RtcSessionPersistence {
     }
 
     @Override
+    public Optional<RtcSessionRecord> findByRoomName(String roomName) {
+        return repository.findFirstByRoomName(roomName).map(RtcSessionEntity::toRecord);
+    }
+
+    @Override
     public int countAll() {
         return (int) repository.count();
     }

@@ -17,6 +17,8 @@ public record RtcSessionProvisionRequest(
         String purposeOfUse,
         String consentReference,
         String sessionType,
+        String owningService,
+        String owningRef,
         @NotNull @Valid RtcParticipant participant,
         Map<String, Object> attributes
 ) {

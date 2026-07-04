@@ -1,42 +1,78 @@
 package zw.gov.mohcc.impilo.rtc;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import io.micrometer.core.instrument.MeterRegistry;
+import zw.gov.mohcc.impilo.rtc.model.RtcParticipant;
 import zw.gov.mohcc.impilo.rtc.model.RtcParticipantTokenRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionProvisionRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionRecord;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionResponse;
 import zw.gov.mohcc.impilo.rtc.persistence.RtcSessionPersistence;
+import zw.gov.mohcc.impilo.sessiontemplates.SessionMode;
+import zw.gov.mohcc.impilo.sessiontemplates.SessionTemplate;
+import zw.gov.mohcc.impilo.sessiontemplates.SessionTemplateRegistry;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class RtcGatewayService {
+
+    private static final Logger log = LoggerFactory.getLogger(RtcGatewayService.class);
+
+    /**
+     * Wire values that legitimately reach sessionType today but are media kinds,
+     * not session modes (khuluma + PCT send VIDEO/AUDIO). They resolve to the
+     * TELEMEDICINE default quietly; anything else unknown logs a warn.
+     */
+    private static final Set<String> LEGACY_MEDIA_SESSION_TYPES = Set.of("VIDEO", "AUDIO");
+
+    /**
+     * Legacy caller roles mapped onto template roles per mode, kept so existing
+     * callers (khuluma HOST calls, live-service event roles) do not break while
+     * they migrate to the template role vocabulary. Every hit logs a deprecation warn.
+     */
+    private static final Map<SessionMode, Map<String, String>> LEGACY_ROLE_ALIASES = Map.of(
+            SessionMode.TELEMEDICINE, Map.of(
+                    "HOST", "PROVIDER"),
+            SessionMode.LIVE_EVENT, Map.of(
+                    "PRESENTER", "SPEAKER",
+                    "ATTENDEE", "AUDIENCE",
+                    "COHOST", "HOST",
+                    "ADMIN", "HOST",
+                    "SUPPORT", "MODERATOR",
+                    "INTERPRETER", "SPEAKER"));
+
     private final RtcGatewayProperties properties;
     private final LiveKitTokenService tokenService;
     private final RtcSessionPersistence sessions;
     private final RtcOutboxPublisher outboxPublisher;
     private final MeterRegistry meterRegistry;
+    private final SessionTemplateRegistry templates;
     private final RestTemplate restTemplate = new RestTemplate();
 
     public RtcGatewayService(RtcGatewayProperties properties,
                              LiveKitTokenService tokenService,
                              RtcSessionPersistence sessions,
                              RtcOutboxPublisher outboxPublisher,
-                             MeterRegistry meterRegistry) {
+                             MeterRegistry meterRegistry,
+                             SessionTemplateRegistry templates) {
         this.properties = properties;
         this.tokenService = tokenService;
         this.sessions = sessions;
         this.outboxPublisher = outboxPublisher;
         this.meterRegistry = meterRegistry;
+        this.templates = templates;
     }
 
     public RtcSessionResponse provision(RtcSessionProvisionRequest request) {
@@ -51,13 +87,15 @@ public class RtcGatewayService {
                 return joinExisting(existing, request);
             }
 
-            String roomName = roomName(request);
+            SessionMode mode = resolveMode(request.sessionType());
+            SessionTemplate template = templateFor(mode);
+            String roomName = roomName(request, template);
             if (!properties.getGateway().isDevModeEnabled()) {
                 tokenService.assertLiveKitConfigured();
-                createLiveKitRoom(roomName);
+                createLiveKitRoom(roomName, template);
             }
 
-            LiveKitTokenService.TokenResult token = tokenService.issueParticipantToken(roomName, request.participant());
+            LiveKitTokenService.TokenResult token = issueTemplateToken(roomName, mode, template, request.participant());
             RtcSessionRecord record = new RtcSessionRecord(
                     request.sessionId(),
                     request.tenantId(),
@@ -65,13 +103,16 @@ public class RtcGatewayService {
                     roomName,
                     roomUrl(roomName),
                     "PROVISIONED",
+                    mode.name(),
+                    owningService(request, template),
+                    request.owningRef(),
                     request.patientId(),
                     request.providerId(),
                     request.encounterId(),
                     request.referralId(),
                     "rtc:" + roomName,
                     capabilities(),
-                    mediaPolicy(),
+                    mediaPolicy(template),
                     Instant.now(),
                     Instant.now()
             );
@@ -107,8 +148,9 @@ public class RtcGatewayService {
         if ("ENDED".equals(existing.status())) {
             throw new IllegalArgumentException("Session has ended; provision a new session");
         }
+        SessionMode mode = modeOf(existing);
         LiveKitTokenService.TokenResult token =
-                tokenService.issueParticipantToken(existing.roomName(), request.participant());
+                issueTemplateToken(existing.roomName(), mode, templateFor(mode), request.participant());
         meterRegistry.counter("impilo_rtc_token_issued_total", "provider", existing.provider()).increment();
         return toResponse(existing, token);
     }
@@ -116,7 +158,9 @@ public class RtcGatewayService {
     public RtcSessionResponse issueToken(String sessionId, RtcParticipantTokenRequest request) {
         RtcSessionRecord record = sessions.findById(sessionId)
                 .orElseThrow(() -> new RtcNotFoundException("RTC session not found"));
-        LiveKitTokenService.TokenResult token = tokenService.issueParticipantToken(record.roomName(), request.participant());
+        SessionMode mode = modeOf(record);
+        LiveKitTokenService.TokenResult token =
+                issueTemplateToken(record.roomName(), mode, templateFor(mode), request.participant());
         meterRegistry.counter("impilo_rtc_token_issued_total", "provider", record.provider()).increment();
         return toResponse(record, token);
     }
@@ -149,6 +193,78 @@ public class RtcGatewayService {
         return toResponse(ended, null);
     }
 
+    // ── Session-template resolution ─────────────────────────────────
+
+    /** Wire sessionType → SessionMode; unknown/blank defaults to TELEMEDICINE (backward compat). */
+    private SessionMode resolveMode(String sessionType) {
+        SessionMode mode = SessionMode.fromWire(sessionType);
+        if (mode != null) {
+            return mode;
+        }
+        if (sessionType != null && !sessionType.isBlank()) {
+            String normalized = sessionType.trim().toUpperCase(Locale.ROOT);
+            if (LEGACY_MEDIA_SESSION_TYPES.contains(normalized)) {
+                log.debug("Legacy media sessionType '{}' — defaulting session mode to TELEMEDICINE", sessionType);
+            } else {
+                log.warn("Unknown sessionType '{}' — defaulting session mode to TELEMEDICINE", sessionType);
+            }
+        }
+        return SessionMode.TELEMEDICINE;
+    }
+
+    private SessionMode modeOf(RtcSessionRecord record) {
+        SessionMode mode = SessionMode.fromWire(record.sessionMode());
+        return mode != null ? mode : SessionMode.TELEMEDICINE;
+    }
+
+    /** Registry is fail-closed so this cannot return null, but stay defensive. */
+    private SessionTemplate templateFor(SessionMode mode) {
+        try {
+            return templates.get(mode);
+        } catch (RuntimeException ex) {
+            log.error("Session template lookup failed for mode {} — falling back to property defaults", mode, ex);
+            return null;
+        }
+    }
+
+    private LiveKitTokenService.TokenResult issueTemplateToken(String roomName, SessionMode mode,
+                                                               SessionTemplate template, RtcParticipant participant) {
+        if (template == null) {
+            return tokenService.issueParticipantToken(roomName, participant);
+        }
+        SessionTemplate.TokenGrantProfile grant = resolveGrant(mode, template, participant.role());
+        return tokenService.issueParticipantToken(roomName, participant, grant, template.tokenTtlSeconds());
+    }
+
+    /**
+     * Template grant for the participant role. Frontends cannot bypass token policy:
+     * a role without a grant profile in the mode's template is refused outright.
+     */
+    private SessionTemplate.TokenGrantProfile resolveGrant(SessionMode mode, SessionTemplate template, String role) {
+        SessionTemplate.TokenGrantProfile grant = template.grantFor(role);
+        if (grant != null) {
+            return grant;
+        }
+        String normalized = role == null ? "" : role.trim().toUpperCase(Locale.ROOT);
+        String alias = LEGACY_ROLE_ALIASES.getOrDefault(mode, Map.of()).get(normalized);
+        if (alias != null) {
+            SessionTemplate.TokenGrantProfile aliased = template.grantFor(alias);
+            if (aliased != null) {
+                log.warn("Deprecated role '{}' for session mode {} — mapped to template role '{}'. "
+                        + "Callers should migrate to template roles.", role, mode, alias);
+                return aliased;
+            }
+        }
+        throw new IllegalArgumentException("Role " + role + " not permitted for session mode " + mode);
+    }
+
+    private String owningService(RtcSessionProvisionRequest request, SessionTemplate template) {
+        if (request.owningService() != null && !request.owningService().isBlank()) {
+            return request.owningService();
+        }
+        return template != null ? template.owningService() : null;
+    }
+
     private RtcSessionResponse toResponse(RtcSessionRecord record, LiveKitTokenService.TokenResult token) {
         return new RtcSessionResponse(
                 record.id(),
@@ -164,16 +280,24 @@ public class RtcGatewayService {
         );
     }
 
-    private void createLiveKitRoom(String roomName) {
+    private void createLiveKitRoom(String roomName, SessionTemplate template) {
+        restTemplate.postForEntity(
+                liveKitUrl(properties.getLivekit().getCreateRoomPath()),
+                new HttpEntity<>(createRoomBody(roomName, template), liveKitHeaders(roomName)),
+                Map.class
+        );
+    }
+
+    /** Twirp CreateRoom body; max participants comes from the mode template when it caps (>0). */
+    Map<String, Object> createRoomBody(String roomName, SessionTemplate template) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("name", roomName);
         body.put("emptyTimeout", properties.getLivekit().getDefaultEmptyTimeoutSeconds());
-        body.put("maxParticipants", properties.getLivekit().getMaxParticipants());
-        restTemplate.postForEntity(
-                liveKitUrl(properties.getLivekit().getCreateRoomPath()),
-                new HttpEntity<>(body, liveKitHeaders(roomName)),
-                Map.class
-        );
+        int maxParticipants = template != null && template.maxParticipants() > 0
+                ? template.maxParticipants()
+                : properties.getLivekit().getMaxParticipants();
+        body.put("maxParticipants", maxParticipants);
+        return body;
     }
 
     private void deleteLiveKitRoom(String roomName) {
@@ -221,12 +345,15 @@ public class RtcGatewayService {
         return url;
     }
 
-    private String roomName(RtcSessionProvisionRequest request) {
+    private String roomName(RtcSessionProvisionRequest request, SessionTemplate template) {
         String raw = request.sessionId() == null || request.sessionId().isBlank()
                 ? UUID.randomUUID().toString()
                 : request.sessionId();
         String normalized = raw.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9-]", "-");
-        return properties.getGateway().getRoomPrefix() + "-" + normalized;
+        String prefix = template != null
+                ? template.effectiveRoomPrefix()
+                : properties.getGateway().getRoomPrefix();
+        return prefix + "-" + normalized;
     }
 
     private String provider() {
@@ -275,13 +402,15 @@ public class RtcGatewayService {
         return out;
     }
 
-    private Map<String, Object> mediaPolicy() {
+    private Map<String, Object> mediaPolicy(SessionTemplate template) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("recordingAllowed", properties.getGateway().isRecordingEnabled());
         out.put("egressAllowed", properties.getGateway().isEgressEnabled());
-        out.put("tokenTtlSeconds", properties.getGateway().getTokenTtlSeconds());
+        out.put("tokenTtlSeconds", template != null
+                ? template.tokenTtlSeconds()
+                : properties.getGateway().getTokenTtlSeconds());
         out.put("failClosed", properties.getGateway().isFailClosed());
-        out.put("clinicalWorkflowOwner", "PCT");
+        out.put("clinicalWorkflowOwner", template != null ? template.owningService() : "PCT");
         return out;
     }
 
@@ -321,6 +450,9 @@ public class RtcGatewayService {
         payload.put("tenantId", record.tenantId());
         payload.put("status", record.status());
         payload.put("roomName", record.roomName());
+        payload.put("sessionMode", record.sessionMode());
+        payload.put("owningService", record.owningService());
+        payload.put("owningRef", record.owningRef());
         payload.put("patientId", record.patientId());
         payload.put("providerId", record.providerId());
         payload.put("encounterId", record.encounterId());

@@ -36,6 +36,15 @@ public class RtcSessionEntity {
     @Column(name = "status", nullable = false, length = 32)
     private String status;
 
+    @Column(name = "session_mode", length = 32)
+    private String sessionMode;
+
+    @Column(name = "owning_service", length = 32)
+    private String owningService;
+
+    @Column(name = "owning_ref", length = 128)
+    private String owningRef;
+
     @Column(name = "patient_id")
     private String patientId;
 
@@ -75,6 +84,9 @@ public class RtcSessionEntity {
         entity.setRoomName(record.roomName());
         entity.setRoomUrl(record.roomUrl());
         entity.setStatus(record.status());
+        entity.setSessionMode(record.sessionMode());
+        entity.setOwningService(record.owningService());
+        entity.setOwningRef(record.owningRef());
         entity.setPatientId(record.patientId());
         entity.setProviderId(record.providerId());
         entity.setEncounterId(record.encounterId());
@@ -95,6 +107,9 @@ public class RtcSessionEntity {
                 roomName,
                 roomUrl,
                 status,
+                sessionMode,
+                owningService,
+                owningRef,
                 patientId,
                 providerId,
                 encounterId,
@@ -128,6 +143,12 @@ public class RtcSessionEntity {
     public void setRoomUrl(String roomUrl) { this.roomUrl = roomUrl; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getSessionMode() { return sessionMode; }
+    public void setSessionMode(String sessionMode) { this.sessionMode = sessionMode; }
+    public String getOwningService() { return owningService; }
+    public void setOwningService(String owningService) { this.owningService = owningService; }
+    public String getOwningRef() { return owningRef; }
+    public void setOwningRef(String owningRef) { this.owningRef = owningRef; }
     public String getPatientId() { return patientId; }
     public void setPatientId(String patientId) { this.patientId = patientId; }
     public String getProviderId() { return providerId; }

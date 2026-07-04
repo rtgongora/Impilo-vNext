@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class RtcGatewayProperties {
     private Gateway gateway = new Gateway();
     private Livekit livekit = new Livekit();
+    private Webhook webhook = new Webhook();
 
     public Gateway getGateway() {
         return gateway;
@@ -21,6 +22,26 @@ public class RtcGatewayProperties {
 
     public void setLivekit(Livekit livekit) {
         this.livekit = livekit;
+    }
+
+    public Webhook getWebhook() {
+        return webhook;
+    }
+
+    public void setWebhook(Webhook webhook) {
+        this.webhook = webhook;
+    }
+
+    public static class Webhook {
+        private boolean enabled = true;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
     }
 
     public static class Gateway {

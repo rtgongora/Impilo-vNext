@@ -10,6 +10,9 @@ public record RtcSessionRecord(
         String roomName,
         String roomUrl,
         String status,
+        String sessionMode,
+        String owningService,
+        String owningRef,
         String patientId,
         String providerId,
         String encounterId,
@@ -23,6 +26,7 @@ public record RtcSessionRecord(
     public RtcSessionRecord withStatus(String nextStatus) {
         return new RtcSessionRecord(
                 id, tenantId, provider, roomName, roomUrl, nextStatus,
+                sessionMode, owningService, owningRef,
                 patientId, providerId, encounterId, referralId, channel,
                 capabilities, mediaPolicy, createdAt, Instant.now());
     }

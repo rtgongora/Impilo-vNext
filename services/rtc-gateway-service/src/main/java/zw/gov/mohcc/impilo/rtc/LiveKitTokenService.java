@@ -8,6 +8,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.rtc.model.RtcParticipant;
+import zw.gov.mohcc.impilo.sessiontemplates.SessionTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -24,8 +25,26 @@ public class LiveKitTokenService {
         this.properties = properties;
     }
 
+    /**
+     * Legacy hard-coded grant path (OBSERVER cannot publish, everyone else can).
+     * Kept for callers without a session template; template-resolved callers use
+     * {@link #issueParticipantToken(String, RtcParticipant, SessionTemplate.TokenGrantProfile, long)}.
+     */
     public TokenResult issueParticipantToken(String roomName, RtcParticipant participant) {
-        Instant expiresAt = Instant.now().plusSeconds(Math.max(60, properties.getGateway().getTokenTtlSeconds()));
+        SessionTemplate.TokenGrantProfile legacy = new SessionTemplate.TokenGrantProfile(
+                canPublish(participant.role()), true, true, null, null, null);
+        return issueParticipantToken(roomName, participant, legacy, properties.getGateway().getTokenTtlSeconds());
+    }
+
+    /** Template-driven token: grants come from the session mode's TokenGrantProfile. */
+    public TokenResult issueParticipantToken(String roomName, RtcParticipant participant,
+                                             SessionTemplate.TokenGrantProfile grant, long ttlSeconds) {
+        if (grant == null) {
+            throw new IllegalArgumentException(
+                    "Role " + participant.role() + " has no token grant profile for this session");
+        }
+        long effectiveTtl = ttlSeconds > 0 ? ttlSeconds : properties.getGateway().getTokenTtlSeconds();
+        Instant expiresAt = Instant.now().plusSeconds(Math.max(60, effectiveTtl));
         if (properties.getGateway().isDevModeEnabled() && !properties.getLivekit().isEnabled()) {
             String token = "dev-rtc-token-" + UUID.randomUUID().toString().replace("-", "");
             return new TokenResult(token, expiresAt);
@@ -34,9 +53,15 @@ public class LiveKitTokenService {
         Map<String, Object> videoGrant = new LinkedHashMap<>();
         videoGrant.put("room", roomName);
         videoGrant.put("roomJoin", true);
-        videoGrant.put("canPublish", canPublish(participant.role()));
-        videoGrant.put("canSubscribe", true);
-        videoGrant.put("canPublishData", true);
+        videoGrant.put("canPublish", grant.canPublish());
+        videoGrant.put("canSubscribe", grant.canSubscribe());
+        videoGrant.put("canPublishData", grant.canPublishData());
+        if (grant.isRoomAdmin()) {
+            videoGrant.put("roomAdmin", true);
+        }
+        if (grant.isHidden()) {
+            videoGrant.put("hidden", true);
+        }
 
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .issuer(properties.getLivekit().getApiKey())

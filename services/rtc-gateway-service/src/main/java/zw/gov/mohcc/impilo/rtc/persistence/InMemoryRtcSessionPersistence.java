@@ -23,6 +23,13 @@ public class InMemoryRtcSessionPersistence implements RtcSessionPersistence {
     }
 
     @Override
+    public Optional<RtcSessionRecord> findByRoomName(String roomName) {
+        return sessions.values().stream()
+                .filter(s -> s.roomName() != null && s.roomName().equals(roomName))
+                .findFirst();
+    }
+
+    @Override
     public int countAll() {
         return sessions.size();
     }

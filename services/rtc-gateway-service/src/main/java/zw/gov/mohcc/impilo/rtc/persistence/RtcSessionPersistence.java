@@ -10,5 +10,7 @@ public interface RtcSessionPersistence {
 
     Optional<RtcSessionRecord> findById(String id);
 
+    Optional<RtcSessionRecord> findByRoomName(String roomName);
+
     int countAll();
 }

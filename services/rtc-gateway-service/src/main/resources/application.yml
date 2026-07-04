@@ -42,6 +42,8 @@ springdoc:
 rtc:
   outbox:
     poll-interval-ms: ${RTC_OUTBOX_POLL_MS:2000}
+  webhook:
+    enabled: ${RTC_WEBHOOK_ENABLED:true}
   gateway:
     provider: ${RTC_PROVIDER:LIVEKIT}
     fail-closed: ${RTC_FAIL_CLOSED:true}
