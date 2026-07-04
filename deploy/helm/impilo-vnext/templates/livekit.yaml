@@ -2,8 +2,12 @@
 # LiveKit SFU — preview video backend for rtc-gateway-service.
 # Preview-scoped: dev API key/secret committed in values (never production key
 # management), single node, ephemeral state. Browser media requires the VM
-# firewall to allow 7880/7881 TCP + 7882/UDP (signal ws + ICE-TCP + ICE-UDP);
-# ICE advertises global.publicHost via node_ip.
+# firewall to allow 7880/7881 TCP + 7882/UDP (signal ws + ICE-TCP + ICE-UDP).
+# Runs on the HOST network: ICE then advertises the node's real interfaces
+# (LAN clients connect directly) plus the STUN-discovered public IP
+# (use_external_ip) for internet clients behind the router NAT. The previous
+# CNI+hostPort setup pushed RTP through conntrack DNAT, which dropped sustained
+# UDP flows (PEER_CONNECTION_DISCONNECTED ~20s after join).
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -20,8 +24,7 @@ data:
     rtc:
       tcp_port: 7881
       udp_port: 7882
-      use_external_ip: false
-      node_ip: {{ .Values.global.publicHost | quote }}
+      use_external_ip: true
     room:
       empty_timeout: 900
       max_participants: 8
@@ -48,6 +51,10 @@ spec:
       # The Service named "livekit" injects LIVEKIT_PORT=tcp://... service-link
       # env, which livekit-server parses as its --port flag and crashes.
       enableServiceLinks: false
+      # Host network: WebRTC media must not traverse CNI/hostPort conntrack
+      # DNAT (it destabilizes sustained UDP flows and breaks ICE candidates).
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: livekit
           image: "{{ .Values.livekit.image.repository }}:{{ .Values.livekit.image.tag }}"
@@ -55,13 +62,10 @@ spec:
           args: ["--config", "/etc/livekit/livekit.yaml"]
           ports:
             - containerPort: 7880
-              hostPort: 7880
               protocol: TCP
             - containerPort: 7881
-              hostPort: 7881
               protocol: TCP
             - containerPort: 7882
-              hostPort: 7882
               protocol: UDP
           volumeMounts:
             - name: livekit-config
