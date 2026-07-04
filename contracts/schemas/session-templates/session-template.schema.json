@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.zw/schemas/session-templates/session-template.schema.json",
+  "title": "Impilo Session Template",
+  "description": "Doctrine-as-data for one adaptive real-time session mode. Bundled into libs/session-templates (Java) and mirrored in contracts/impilo-live.ts (TS). Templates version with code: changing behaviour means changing this document AND riding the same gates+deploy cycle as its interpreters.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sessionMode",
+    "owningService",
+    "liveModes",
+    "roles",
+    "defaultLayout",
+    "joinFlow",
+    "lobbyBehaviour",
+    "tokenTtlSeconds",
+    "maxParticipants",
+    "recording",
+    "chat",
+    "moderationRequired",
+    "screenShareRoles",
+    "resourceSharing",
+    "auditDepth",
+    "telemetry",
+    "postSessionActions",
+    "khulumaNotificationKeys",
+    "mobileParity",
+    "fallbackRules"
+  ],
+  "properties": {
+    "sessionMode": {
+      "enum": ["MEETING", "LIVE_EVENT", "LEARNING_LIVE", "LEARNING_RECORDING", "TELEMEDICINE"]
+    },
+    "owningService": {
+      "description": "Workflow owner (SoR for the session's business object).",
+      "enum": ["KHULUMA", "LIVE", "FUNDO", "PCT"]
+    },
+    "liveModes": {
+      "description": "live-service LiveMode values this session mode maps onto (empty for non-live modes).",
+      "type": "array",
+      "items": {
+        "enum": [
+          "CLINICAL_SESSION",
+          "PROFESSIONAL_MEETING",
+          "WEBINAR_CPD",
+          "PUBLIC_BROADCAST",
+          "HYBRID_EVENT",
+          "EMERGENCY_BRIEFING"
+        ]
+      }
+    },
+    "roles": {
+      "description": "Allowed participant roles → media token grant profile. rtc-gateway refuses tokens for roles absent here.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["canPublish", "canSubscribe", "canPublishData"],
+        "properties": {
+          "canPublish": { "type": "boolean" },
+          "canSubscribe": { "type": "boolean" },
+          "canPublishData": { "type": "boolean" },
+          "roomAdmin": { "type": "boolean", "default": false },
+          "hidden": { "type": "boolean", "default": false },
+          "audioOnlyDefault": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    "defaultLayout": {
+      "enum": ["grid", "speaker", "stage", "classroom", "consult", "player"]
+    },
+    "joinFlow": {
+      "enum": ["DIRECT", "LOBBY", "REGISTRATION", "SCHEDULED_CHECKIN"]
+    },
+    "lobbyBehaviour": {
+      "enum": ["NONE", "WAITING_ROOM", "KNOCK"]
+    },
+    "tokenTtlSeconds": { "type": "integer", "minimum": 60, "maximum": 86400 },
+    "maxParticipants": {
+      "description": "Per-room cap passed to the media provider on room create (0 = provider default).",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "roomPrefix": {
+      "description": "Media room name prefix; defaults to impilo-<sessionMode-lowercase>.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "recording": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defaultOn", "whoCanStart", "consentRequired", "artifactOwner"],
+      "properties": {
+        "defaultOn": { "type": "boolean" },
+        "whoCanStart": { "type": "array", "items": { "type": "string" } },
+        "consentRequired": { "type": "boolean" },
+        "sensitivityClass": { "enum": ["GENERAL", "PROFESSIONAL", "CLINICAL"], "default": "GENERAL" },
+        "artifactOwner": {
+          "description": "Service that adopts the recording artifact after egress.",
+          "enum": ["LIVE", "FUNDO", "KHULUMA", "PCT"]
+        }
+      }
+    },
+    "chat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "moderated"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "moderated": { "type": "boolean" },
+        "persistence": { "enum": ["NONE", "SESSION", "CONVERSATION"], "default": "SESSION" }
+      }
+    },
+    "moderationRequired": { "type": "boolean" },
+    "screenShareRoles": { "type": "array", "items": { "type": "string" } },
+    "resourceSharing": { "type": "boolean" },
+    "auditDepth": { "enum": ["BASIC", "FULL", "CLINICAL"] },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["participantStats"],
+      "properties": {
+        "participantStats": { "type": "boolean" },
+        "qualityEvents": { "type": "boolean", "default": false }
+      }
+    },
+    "postSessionActions": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "REPLAY_PUBLISH",
+          "LMS_ASSET",
+          "ATTENDANCE_MAP",
+          "BILLING_ENRICH",
+          "CERT_ELIGIBILITY",
+          "SUMMARY",
+          "FOLLOW_UP"
+        ]
+      }
+    },
+    "khulumaNotificationKeys": {
+      "description": "notification-service template keys this mode may emit (registered as a national-pod batch).",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9.-]+$" }
+    },
+    "mobileParity": { "enum": ["FULL", "JOIN_CAPABLE", "VIEW_ONLY", "NONE"] },
+    "fallbackRules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["audioFirstAllowed", "reconnectGraceSeconds"],
+      "properties": {
+        "audioFirstAllowed": { "type": "boolean" },
+        "reconnectGraceSeconds": { "type": "integer", "minimum": 0, "maximum": 3600 },
+        "sipFallback": { "type": "boolean", "default": false }
+      }
+    },
+    "completionCriteriaRef": {
+      "description": "Learning modes: the owning service's completion-rule set evaluated post-session (Fundo lrn_completion_rule).",
+      "type": ["string", "null"]
+    }
+  }
+}

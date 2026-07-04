@@ -1,0 +1,42 @@
+{
+  "sessionMode": "MEETING",
+  "owningService": "KHULUMA",
+  "liveModes": ["PROFESSIONAL_MEETING"],
+  "roles": {
+    "HOST": { "canPublish": true, "canSubscribe": true, "canPublishData": true, "roomAdmin": true },
+    "COHOST": { "canPublish": true, "canSubscribe": true, "canPublishData": true, "roomAdmin": true },
+    "PARTICIPANT": { "canPublish": true, "canSubscribe": true, "canPublishData": true },
+    "OBSERVER": { "canPublish": false, "canSubscribe": true, "canPublishData": true },
+    "GUEST": { "canPublish": true, "canSubscribe": true, "canPublishData": true }
+  },
+  "defaultLayout": "grid",
+  "joinFlow": "LOBBY",
+  "lobbyBehaviour": "KNOCK",
+  "tokenTtlSeconds": 7200,
+  "maxParticipants": 50,
+  "roomPrefix": "impilo-meet",
+  "recording": {
+    "defaultOn": false,
+    "whoCanStart": ["HOST", "COHOST"],
+    "consentRequired": false,
+    "sensitivityClass": "PROFESSIONAL",
+    "artifactOwner": "KHULUMA"
+  },
+  "chat": { "enabled": true, "moderated": false, "persistence": "CONVERSATION" },
+  "moderationRequired": false,
+  "screenShareRoles": ["HOST", "COHOST", "PARTICIPANT"],
+  "resourceSharing": true,
+  "auditDepth": "BASIC",
+  "telemetry": { "participantStats": true, "qualityEvents": false },
+  "postSessionActions": ["SUMMARY", "FOLLOW_UP"],
+  "khulumaNotificationKeys": [
+    "khuluma.meeting.invite",
+    "khuluma.meeting.admission-requested",
+    "khuluma.meeting.starting-soon",
+    "khuluma.meeting.action-item-assigned",
+    "khuluma.meeting.recording-ready"
+  ],
+  "mobileParity": "JOIN_CAPABLE",
+  "fallbackRules": { "audioFirstAllowed": true, "reconnectGraceSeconds": 120 },
+  "completionCriteriaRef": null
+}

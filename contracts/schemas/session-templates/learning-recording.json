@@ -1,0 +1,37 @@
+{
+  "sessionMode": "LEARNING_RECORDING",
+  "owningService": "FUNDO",
+  "liveModes": [],
+  "roles": {
+    "LEARNER": { "canPublish": false, "canSubscribe": false, "canPublishData": false },
+    "FACILITATOR": { "canPublish": false, "canSubscribe": false, "canPublishData": false }
+  },
+  "defaultLayout": "player",
+  "joinFlow": "DIRECT",
+  "lobbyBehaviour": "NONE",
+  "tokenTtlSeconds": 3600,
+  "maxParticipants": 0,
+  "roomPrefix": "impilo-learn-replay",
+  "recording": {
+    "defaultOn": false,
+    "whoCanStart": [],
+    "consentRequired": false,
+    "sensitivityClass": "PROFESSIONAL",
+    "artifactOwner": "FUNDO"
+  },
+  "chat": { "enabled": false, "moderated": false, "persistence": "NONE" },
+  "moderationRequired": false,
+  "screenShareRoles": [],
+  "resourceSharing": true,
+  "auditDepth": "FULL",
+  "telemetry": { "participantStats": false },
+  "postSessionActions": ["ATTENDANCE_MAP", "CERT_ELIGIBILITY"],
+  "khulumaNotificationKeys": [
+    "learning.recording.published",
+    "learning.completion.achieved",
+    "learning.certificate.issued"
+  ],
+  "mobileParity": "FULL",
+  "fallbackRules": { "audioFirstAllowed": false, "reconnectGraceSeconds": 0 },
+  "completionCriteriaRef": "lrn_completion_rule"
+}

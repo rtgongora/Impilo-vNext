@@ -108,3 +108,74 @@ export interface NompiloLiveComposerAssistResponse {
   routePath?: string;
   summary?: string;
 }
+
+/* ── Adaptive Session Suite: session-mode engine ─────────────────────────────
+ * SessionMode is the cross-service key for the adaptive real-time suite;
+ * LiveMode remains live-service's internal refinement. The JSON documents in
+ * contracts/schemas/session-templates/ are the source of truth — these types
+ * mirror session-template.schema.json for web/mobile consumers.
+ */
+
+export type SessionMode =
+  | "MEETING"
+  | "LIVE_EVENT"
+  | "LEARNING_LIVE"
+  | "LEARNING_RECORDING"
+  | "TELEMEDICINE";
+
+export type SessionOwningService = "KHULUMA" | "LIVE" | "FUNDO" | "PCT";
+
+export type SessionLayout = "grid" | "speaker" | "stage" | "classroom" | "consult" | "player";
+
+export type SessionJoinFlow = "DIRECT" | "LOBBY" | "REGISTRATION" | "SCHEDULED_CHECKIN";
+
+export type SessionLobbyBehaviour = "NONE" | "WAITING_ROOM" | "KNOCK";
+
+export interface SessionTokenGrantProfile {
+  canPublish: boolean;
+  canSubscribe: boolean;
+  canPublishData: boolean;
+  roomAdmin?: boolean;
+  hidden?: boolean;
+  audioOnlyDefault?: boolean;
+}
+
+export interface SessionTemplate {
+  sessionMode: SessionMode;
+  owningService: SessionOwningService;
+  liveModes: LiveMode[];
+  roles: Record<string, SessionTokenGrantProfile>;
+  defaultLayout: SessionLayout;
+  joinFlow: SessionJoinFlow;
+  lobbyBehaviour: SessionLobbyBehaviour;
+  tokenTtlSeconds: number;
+  maxParticipants: number;
+  roomPrefix?: string;
+  recording: {
+    defaultOn: boolean;
+    whoCanStart: string[];
+    consentRequired: boolean;
+    sensitivityClass?: "GENERAL" | "PROFESSIONAL" | "CLINICAL";
+    artifactOwner: SessionOwningService;
+  };
+  chat: { enabled: boolean; moderated: boolean; persistence?: "NONE" | "SESSION" | "CONVERSATION" };
+  moderationRequired: boolean;
+  screenShareRoles: string[];
+  resourceSharing: boolean;
+  auditDepth: "BASIC" | "FULL" | "CLINICAL";
+  telemetry: { participantStats: boolean; qualityEvents?: boolean };
+  postSessionActions: string[];
+  khulumaNotificationKeys: string[];
+  mobileParity: "FULL" | "JOIN_CAPABLE" | "VIEW_ONLY" | "NONE";
+  fallbackRules: { audioFirstAllowed: boolean; reconnectGraceSeconds: number; sipFallback?: boolean };
+  completionCriteriaRef?: string | null;
+}
+
+/** SessionMode ↔ LiveMode doctrine mapping (mirrors the template documents). */
+export const SESSION_MODE_LIVE_MODES: Record<SessionMode, LiveMode[]> = {
+  MEETING: ["PROFESSIONAL_MEETING"],
+  LIVE_EVENT: ["PUBLIC_BROADCAST", "HYBRID_EVENT", "EMERGENCY_BRIEFING"],
+  LEARNING_LIVE: ["WEBINAR_CPD"],
+  LEARNING_RECORDING: [],
+  TELEMEDICINE: ["CLINICAL_SESSION"],
+};

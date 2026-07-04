@@ -1,0 +1,41 @@
+{
+  "sessionMode": "TELEMEDICINE",
+  "owningService": "PCT",
+  "liveModes": ["CLINICAL_SESSION"],
+  "roles": {
+    "PROVIDER": { "canPublish": true, "canSubscribe": true, "canPublishData": true, "roomAdmin": true },
+    "PATIENT": { "canPublish": true, "canSubscribe": true, "canPublishData": true },
+    "CAREGIVER": { "canPublish": true, "canSubscribe": true, "canPublishData": true },
+    "INTERPRETER": { "canPublish": true, "canSubscribe": true, "canPublishData": true, "audioOnlyDefault": true },
+    "SUPERVISOR": { "canPublish": true, "canSubscribe": true, "canPublishData": true },
+    "OBSERVER": { "canPublish": false, "canSubscribe": true, "canPublishData": false, "hidden": true }
+  },
+  "defaultLayout": "consult",
+  "joinFlow": "LOBBY",
+  "lobbyBehaviour": "WAITING_ROOM",
+  "tokenTtlSeconds": 3600,
+  "maxParticipants": 8,
+  "roomPrefix": "impilo-telemedicine",
+  "recording": {
+    "defaultOn": false,
+    "whoCanStart": ["PROVIDER"],
+    "consentRequired": true,
+    "sensitivityClass": "CLINICAL",
+    "artifactOwner": "PCT"
+  },
+  "chat": { "enabled": true, "moderated": false, "persistence": "SESSION" },
+  "moderationRequired": false,
+  "screenShareRoles": ["PROVIDER", "SUPERVISOR"],
+  "resourceSharing": true,
+  "auditDepth": "CLINICAL",
+  "telemetry": { "participantStats": true, "qualityEvents": true },
+  "postSessionActions": ["BILLING_ENRICH", "SUMMARY", "FOLLOW_UP"],
+  "khulumaNotificationKeys": [
+    "rtc.telemedicine.patient-waiting",
+    "rtc.telemedicine.session-ready",
+    "rtc.telemedicine.appointment-reminder"
+  ],
+  "mobileParity": "FULL",
+  "fallbackRules": { "audioFirstAllowed": true, "reconnectGraceSeconds": 120, "sipFallback": false },
+  "completionCriteriaRef": null
+}

@@ -1,0 +1,42 @@
+{
+  "sessionMode": "LIVE_EVENT",
+  "owningService": "LIVE",
+  "liveModes": ["PUBLIC_BROADCAST", "HYBRID_EVENT", "EMERGENCY_BRIEFING"],
+  "roles": {
+    "HOST": { "canPublish": true, "canSubscribe": true, "canPublishData": true, "roomAdmin": true },
+    "PRODUCER": { "canPublish": true, "canSubscribe": true, "canPublishData": true, "roomAdmin": true, "hidden": true },
+    "MODERATOR": { "canPublish": false, "canSubscribe": true, "canPublishData": true, "roomAdmin": true },
+    "SPEAKER": { "canPublish": true, "canSubscribe": true, "canPublishData": true },
+    "AUDIENCE": { "canPublish": false, "canSubscribe": true, "canPublishData": false }
+  },
+  "defaultLayout": "stage",
+  "joinFlow": "REGISTRATION",
+  "lobbyBehaviour": "NONE",
+  "tokenTtlSeconds": 14400,
+  "maxParticipants": 500,
+  "roomPrefix": "impilo-live",
+  "recording": {
+    "defaultOn": true,
+    "whoCanStart": ["HOST", "PRODUCER"],
+    "consentRequired": false,
+    "sensitivityClass": "GENERAL",
+    "artifactOwner": "LIVE"
+  },
+  "chat": { "enabled": true, "moderated": true, "persistence": "SESSION" },
+  "moderationRequired": true,
+  "screenShareRoles": ["HOST", "PRODUCER", "SPEAKER"],
+  "resourceSharing": true,
+  "auditDepth": "BASIC",
+  "telemetry": { "participantStats": true, "qualityEvents": true },
+  "postSessionActions": ["REPLAY_PUBLISH", "CERT_ELIGIBILITY", "SUMMARY"],
+  "khulumaNotificationKeys": [
+    "live.event.registration-confirmed",
+    "live.event.starting-soon",
+    "live.event.replay-published",
+    "live.event.speaker-approved",
+    "live.event.announcement"
+  ],
+  "mobileParity": "JOIN_CAPABLE",
+  "fallbackRules": { "audioFirstAllowed": true, "reconnectGraceSeconds": 60 },
+  "completionCriteriaRef": null
+}

@@ -1,0 +1,41 @@
+{
+  "sessionMode": "LEARNING_LIVE",
+  "owningService": "FUNDO",
+  "liveModes": ["WEBINAR_CPD"],
+  "roles": {
+    "FACILITATOR": { "canPublish": true, "canSubscribe": true, "canPublishData": true, "roomAdmin": true },
+    "COFACILITATOR": { "canPublish": true, "canSubscribe": true, "canPublishData": true, "roomAdmin": true },
+    "LEARNER": { "canPublish": true, "canSubscribe": true, "canPublishData": true },
+    "SUPERVISOR": { "canPublish": false, "canSubscribe": true, "canPublishData": true },
+    "OBSERVER": { "canPublish": false, "canSubscribe": true, "canPublishData": false, "hidden": true }
+  },
+  "defaultLayout": "classroom",
+  "joinFlow": "SCHEDULED_CHECKIN",
+  "lobbyBehaviour": "NONE",
+  "tokenTtlSeconds": 10800,
+  "maxParticipants": 100,
+  "roomPrefix": "impilo-learn",
+  "recording": {
+    "defaultOn": true,
+    "whoCanStart": ["FACILITATOR", "COFACILITATOR"],
+    "consentRequired": false,
+    "sensitivityClass": "PROFESSIONAL",
+    "artifactOwner": "FUNDO"
+  },
+  "chat": { "enabled": true, "moderated": true, "persistence": "SESSION" },
+  "moderationRequired": false,
+  "screenShareRoles": ["FACILITATOR", "COFACILITATOR", "LEARNER"],
+  "resourceSharing": true,
+  "auditDepth": "FULL",
+  "telemetry": { "participantStats": true, "qualityEvents": true },
+  "postSessionActions": ["REPLAY_PUBLISH", "LMS_ASSET", "ATTENDANCE_MAP", "CERT_ELIGIBILITY"],
+  "khulumaNotificationKeys": [
+    "learning.session.reminder",
+    "learning.session.attendance-recorded",
+    "learning.completion.achieved",
+    "learning.recording.published"
+  ],
+  "mobileParity": "FULL",
+  "fallbackRules": { "audioFirstAllowed": true, "reconnectGraceSeconds": 120 },
+  "completionCriteriaRef": "lrn_completion_rule"
+}

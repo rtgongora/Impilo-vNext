@@ -173,6 +173,7 @@
         <module>../libs/federation-connector</module>
         <module>../libs/tech-companion-harness</module>
         <module>../libs/tech-companion-mock</module>
+        <module>../libs/session-templates</module>
         <!-- Shared Kernel Java (v1.1 event envelope, audit ledger) -->
         <!-- duplicate module declaration removed -->
         <!-- Ops Instrumentation (structured logging, golden signals, health checks) -->
