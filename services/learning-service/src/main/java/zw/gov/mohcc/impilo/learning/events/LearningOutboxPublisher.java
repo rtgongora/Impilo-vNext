@@ -160,6 +160,16 @@ public class LearningOutboxPublisher {
                 String payload = event.getPayloadJson();
 
                 kafkaTemplate.send(topic, key, payload);
+                // Per-event-type fan-out for events whose type IS a topic-shaped
+                // contract with dedicated consumers (varapi's CPD listener reads
+                // impilo.learning.certificate.issued.v1 — nothing ever published
+                // there, so the CPD loop was dead by construction). Dual-emit so
+                // aggregate consumers of the default topic keep working.
+                if (event.getEventType() != null
+                        && event.getEventType().startsWith("impilo.learning.")
+                        && !event.getEventType().equals(topic)) {
+                    kafkaTemplate.send(event.getEventType(), key, payload);
+                }
 
                 event.setPublishedAt(OffsetDateTime.now());
                 outboxRepository.save(event);
