@@ -132,6 +132,13 @@ public class LedgerServiceImpl implements LedgerService {
         publishOutboxEvent("LEDGER_EVENT", event.getEventId().toString(),
                 "LEDGER_EVENT_CREATED", event, tenantId);
 
+        // 7. Emit post-movement stock-level telemetry and, when an outflow has
+        //    exhausted usable stock for the item at this store, a stockout-risk
+        //    event. Both ride the same transactional outbox — no extra I/O paths,
+        //    no events on reads, and idempotent duplicates return before this point.
+        publishStockLevelTelemetrySnapshot(tenantId, event);
+        evaluateStockoutRisk(tenantId, event);
+
         return event;
     }
 
@@ -245,6 +252,50 @@ public class LedgerServiceImpl implements LedgerService {
             publishOutboxEvent("ON_HAND", onHandKey(event), "INVENTORY_STOCK_LEVEL_TELEMETRY", payload, tenantId);
         } catch (Exception e) {
             log.warn("Failed to write stock level telemetry outbox for event {}: {}", event.getEventId(), e.getMessage());
+        }
+    }
+
+    /**
+     * Emit a {@code STOCKOUT_RISK} outbox event when a stock outflow leaves the
+     * item with no remaining stock at the store (summed across all batches).
+     *
+     * <p>Only triggered by negative movements — receipts, positive adjustments,
+     * and reads never emit. The event rides the transactional outbox and routes
+     * to {@code inventory.stockout.risk}.</p>
+     */
+    private void evaluateStockoutRisk(UUID tenantId, LedgerEventEntity event) {
+        if (event.getQtyDelta() >= 0) {
+            return;
+        }
+        try {
+            int totalOnHand = onHandRepository
+                    .findByFacilityIdAndStoreIdAndItemCode(
+                            event.getFacilityId(), event.getStoreId(), event.getItemCode())
+                    .stream()
+                    .mapToInt(OnHandEntity::getQtyOnHand)
+                    .sum();
+            if (totalOnHand > 0) {
+                return;
+            }
+
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("tenant_id", tenantId.toString());
+            payload.put("facility_id", event.getFacilityId().toString());
+            payload.put("store_id", event.getStoreId().toString());
+            payload.put("item_code", event.getItemCode());
+            payload.put("qty_on_hand", totalOnHand);
+            payload.put("event_type", event.getEventType() != null ? event.getEventType().name() : null);
+            payload.put("ref_type", event.getRefType());
+            payload.put("ref_id", event.getRefId());
+            payload.put("ledger_event_id", event.getEventId().toString());
+            payload.put("as_of", OffsetDateTime.now().toString());
+
+            publishOutboxEvent("ON_HAND", onHandKey(event), "STOCKOUT_RISK", payload, tenantId);
+            log.warn("Stockout risk: facility={}, store={}, item={}, totalOnHand={}, triggeringEvent={}",
+                    event.getFacilityId(), event.getStoreId(), event.getItemCode(),
+                    totalOnHand, event.getEventId());
+        } catch (Exception e) {
+            log.warn("Failed to evaluate stockout risk for event {}: {}", event.getEventId(), e.getMessage());
         }
     }
 
