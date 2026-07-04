@@ -1,0 +1,6 @@
+Combined journey proof — journeys-20260704-073328
+estate: 26a5cd5fda7a956f4fb9428c3406867338b3e618
+
+PASS  scenario-a — PASS: Scenario A phases 1-9 green (24 checks) — run tag scnA-1783143208
+PASS  scenario-b — PASS: Scenario B green (12 checks) — run tag scnB-1783143222
+PASS  scenario-c — PASS: Scenario C (Fundo learner journey) green (12 checks) — run tag scnC-1783143241
