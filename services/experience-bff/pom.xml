@@ -95,6 +95,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Session-template doctrine registry (adaptive session suite) -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>session-templates</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>
             <artifactId>shared-core</artifactId>
