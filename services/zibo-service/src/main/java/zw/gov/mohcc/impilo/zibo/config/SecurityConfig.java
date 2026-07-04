@@ -53,6 +53,11 @@ public class SecurityConfig {
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 // All ZIBO business endpoints require authentication
                 .requestMatchers("/v1/**").authenticated()
+                // The error dispatch must be permitted: without this, any controller
+                // exception re-enters the chain as an unauthenticated /error request
+                // and Http403ForbiddenEntryPoint masks the real failure as an
+                // empty-body 403 (the "silent 403" defect).
+                .requestMatchers("/error").permitAll()
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             );

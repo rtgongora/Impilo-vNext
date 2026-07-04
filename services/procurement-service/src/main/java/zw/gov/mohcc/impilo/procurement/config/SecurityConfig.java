@@ -34,7 +34,13 @@ public class SecurityConfig {
                     "/actuator/health", "/actuator/health/**", "/actuator/info",
                     "/actuator/prometheus", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
                     "/internal/v1/health", "/internal/v1/test-command"
-            ).permitAll().anyRequest().authenticated()).oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()));
+            ).permitAll()
+            // The error dispatch must be permitted: without this, any controller
+            // exception re-enters the chain as an unauthenticated /error request
+            // and Http403ForbiddenEntryPoint masks the real failure as an
+            // empty-body 403 (the "silent 403" defect).
+            .requestMatchers("/error").permitAll()
+            .anyRequest().authenticated()).oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()));
         } else {
             http.authorizeHttpRequests(a -> a.anyRequest().permitAll());
         }

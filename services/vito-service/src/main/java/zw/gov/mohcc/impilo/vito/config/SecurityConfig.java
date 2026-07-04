@@ -55,6 +55,11 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 .requestMatchers("/v1/client-registry/**").permitAll()
+                // The error dispatch must be permitted: without this, any controller
+                // exception re-enters the chain as an unauthenticated /error request
+                // and Http403ForbiddenEntryPoint masks the real failure as an
+                // empty-body 403 (the "silent 403" defect).
+                .requestMatchers("/error").permitAll()
                 .anyRequest().authenticated());
         return http.build();
     }
@@ -71,6 +76,11 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                // The error dispatch must be permitted: without this, any controller
+                // exception re-enters the chain as an unauthenticated /error request
+                // and Http403ForbiddenEntryPoint masks the real failure as an
+                // empty-body 403 (the "silent 403" defect).
+                .requestMatchers("/error").permitAll()
                 .anyRequest().authenticated()
             );
 

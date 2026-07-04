@@ -88,6 +88,11 @@ public class SecurityConfig {
                             // Site-registry ops (fine-grained via method security)
                             .requestMatchers("/internal/v1/site-registry/**").authenticated()
 
+                            // The error dispatch must be permitted: without this, any controller
+                            // exception re-enters the chain as an unauthenticated /error request
+                            // and Http403ForbiddenEntryPoint masks the real failure as an
+                            // empty-body 403 (the "silent 403" defect).
+                            .requestMatchers("/error").permitAll()
                             .anyRequest().authenticated()
                     )
                     .oauth2ResourceServer(oauth2 -> oauth2

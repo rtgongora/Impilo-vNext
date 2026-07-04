@@ -30,6 +30,11 @@ public class SecurityConfig {
                 // Key management and certificate endpoints: admin only
                 .requestMatchers("/v1/keys/**").hasAnyRole("ADMIN", "KEY_ADMIN")
                 .requestMatchers("/v1/certificates/**").hasAnyRole("ADMIN", "KEY_ADMIN")
+                // The error dispatch must be permitted: without this, any controller
+                // exception re-enters the chain as an unauthenticated /error request
+                // and Http403ForbiddenEntryPoint masks the real failure as an
+                // empty-body 403 (the "silent 403" defect).
+                .requestMatchers("/error").permitAll()
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )

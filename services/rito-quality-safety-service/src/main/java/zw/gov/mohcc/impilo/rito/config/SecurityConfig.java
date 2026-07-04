@@ -47,6 +47,11 @@ public class SecurityConfig {
                                     "/internal/v1/health"
                             ).permitAll()
                             .requestMatchers("/internal/v1/rito/**").authenticated()
+                            // The error dispatch must be permitted: without this, any controller
+                            // exception re-enters the chain as an unauthenticated /error request
+                            // and Http403ForbiddenEntryPoint masks the real failure as an
+                            // empty-body 403 (the "silent 403" defect).
+                            .requestMatchers("/error").permitAll()
                             .anyRequest().authenticated())
                     .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         } else {

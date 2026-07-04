@@ -29,6 +29,11 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 // OpenAPI
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                // The error dispatch must be permitted: without this, any controller
+                // exception re-enters the chain as an unauthenticated /error request
+                // and Http403ForbiddenEntryPoint masks the real failure as an
+                // empty-body 403 (the "silent 403" defect).
+                .requestMatchers("/error").permitAll()
                 // Everything else requires JWT
                 .anyRequest().authenticated()
             )
