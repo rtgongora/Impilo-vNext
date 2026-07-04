@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-04T10:08:06Z",
-  "commit": "91f6daeb2",
+  "generated_at": "2026-07-04T12:32:01Z",
+  "commit": "d44bb6022",
   "public_generation": "105/105 deployments ready (namespace impilo-full-preview); helm enabled 94/94 microservices (wave\u22640)",
   "coverage_summary": "runtime 94/94 k8s microservices | registry runtime lanes 104 | non-runtime validate 47/47",
   "runtime": {
@@ -28,7 +28,7 @@
     "total": 4,
     "has_public_ingress": false
   },
-  "public_ingress_count": 4,
+  "public_ingress_count": 7,
   "single_public_stack": true,
   "reason": "ok"
 }

@@ -10,7 +10,7 @@
       "image_tag_sha": "preview-e1b3bf54c",
       "cache_bust": "e1b3bf54c610aaaa92c76bea37b9d50a26364272:fd3d90cc2265bb19",
       "local_docker_image_id": "sha256:479e234ffcebca47ef1e4f7915b6747918d790d5b4878d27507d7dbf4453078b",
-      "registry_digest": "sha256:ca6cdd123fd8925cacee8bb81d8169c7335ba262dcb8c5c8909e41972ecfe9a1",
+      "registry_digest": "sha256:7e7ecf72553aa0f6e28fcae49be3a9cffea1b18b899836c6d099d17727143750",
       "build_timestamp": "2026-07-03T03:51:12.065770+00:00",
       "build_status": "pass",
       "ui_bundle_hash": "0eb16afaa770fa99",
@@ -167,7 +167,7 @@
     },
     "experience-bff": {
       "service": "experience-bff",
-      "registry_digest": "sha256:b1f731aa07d81bba08552c8716f17da34ea00742cb0c4f4665f678219919f9d4",
+      "registry_digest": "sha256:785a6935a8a06fd1cfd483994508cd90d179d95a1d648d62ad76297440d7f72b",
       "digest_pinned": true
     },
     "fhir-gateway-service": {
@@ -237,7 +237,7 @@
     },
     "khuluma-service": {
       "service": "khuluma-service",
-      "registry_digest": "sha256:e4ee412f69738f3c3ad0d37c0250dcf461f0e0140177fec7f19f2bffc4d804b2",
+      "registry_digest": "sha256:cc2bab30bc64ff7cbd0cda6c670dd370a31e5877a92f0f7b484f558a52cacef5",
       "digest_pinned": true
     },
     "landela-adapter-service": {
@@ -252,7 +252,7 @@
     },
     "live-service": {
       "service": "live-service",
-      "registry_digest": "sha256:5842a457ff57f0563a5220181d30299b591d115a276451ec88f978be49608da3",
+      "registry_digest": "sha256:7032862691e633531f92e21bc0140ea231145daf1329caf7ac66e0fcfb657fdc",
       "digest_pinned": true
     },
     "llm-orchestration-service": {
@@ -387,7 +387,7 @@
     },
     "rtc-gateway-service": {
       "service": "rtc-gateway-service",
-      "registry_digest": "sha256:4d5057d4889b4533ed35a364d13e9326dc419169d0997b3152d28da564ab428b",
+      "registry_digest": "sha256:f0d29da190e2ebe05d93d887ab3fb114f605bfd1009a850ad47fd9458fec0ab5",
       "digest_pinned": true
     },
     "rules-service": {
@@ -506,5 +506,5 @@
       "digest_pinned": true
     }
   },
-  "digest_pin_generated_at": "2026-07-04T09:59:59.904047+00:00"
+  "digest_pin_generated_at": "2026-07-04T11:50:17.348347+00:00"
 }
