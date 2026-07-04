@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.live.media;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import zw.gov.mohcc.impilo.live.integration.DocumentServiceClient;
 import zw.gov.mohcc.impilo.live.integration.RtcGatewayClient;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -9,15 +10,19 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class RtcGatewayMediaProvider implements LiveMediaProvider {
 
     private static final Logger log = LoggerFactory.getLogger(RtcGatewayMediaProvider.class);
 
     private final RtcGatewayClient rtcGatewayClient;
+    private final DocumentServiceClient documentServiceClient;
 
-    public RtcGatewayMediaProvider(RtcGatewayClient rtcGatewayClient) {
+    public RtcGatewayMediaProvider(RtcGatewayClient rtcGatewayClient,
+                                   DocumentServiceClient documentServiceClient) {
         this.rtcGatewayClient = rtcGatewayClient;
+        this.documentServiceClient = documentServiceClient;
     }
 
     @Override
@@ -113,20 +118,59 @@ public class RtcGatewayMediaProvider implements LiveMediaProvider {
 
     @Override
     public String startRecording(String roomId) {
-        return "rtc-recording-" + roomId;
+        TrustContext ctx = TrustContextHolder.get();
+        Map<String, Object> request = new LinkedHashMap<>();
+        request.put("startedBy", ctx != null && ctx.actorId() != null ? ctx.actorId() : "live-service");
+        request.put("startedByRole", ctx != null && ctx.actorType() != null ? ctx.actorType() : "SERVICE");
+        Map<String, Object> data = unwrap(rtcGatewayClient.startRecording(ctx, roomId, request));
+        String recordingRef = str(data, "recordingId", str(data, "egressId", null));
+        if (recordingRef == null) {
+            log.warn("RTC recording start for room {} returned no recordingId/egressId", roomId);
+        }
+        return recordingRef;
     }
 
     @Override
     public void stopRecording(String roomId, String recordingRef) {
-        log.info("Recording stopped roomId={} ref={}", roomId, recordingRef);
+        rtcGatewayClient.stopRecording(TrustContextHolder.get(), roomId);
+        log.info("RTC recording stop requested roomId={} ref={}", roomId, recordingRef);
     }
 
+    /**
+     * Playback for rtc-gateway recordings is a time-limited signed URL minted by
+     * document-service for the catalogued artifact. The recordingRef is the
+     * document object id stamped onto the session by the replay pipeline; refs
+     * that are not document object ids (recording still processing, or legacy
+     * fabricated refs) have no playable artifact yet.
+     */
     @Override
     public String getPlaybackUrl(String roomId, String recordingRef) {
-        if (recordingRef == null || recordingRef.isBlank()) {
+        UUID documentObjectId = uuidOrNull(recordingRef);
+        if (documentObjectId == null) {
+            log.debug("Recording ref '{}' for room {} is not a catalogued document object — no playback URL",
+                    recordingRef, roomId);
             return null;
         }
-        return "replay://" + roomId + "/" + recordingRef;
+        TrustContext ctx = TrustContextHolder.get();
+        Map<String, Object> data = unwrap(documentServiceClient.getSignedUrl(
+                ctx != null ? ctx.tenantId() : null, documentObjectId.toString()));
+        return str(data, "url", null);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> unwrap(Map<String, Object> response) {
+        return response.get("data") instanceof Map<?, ?> raw ? (Map<String, Object>) raw : response;
+    }
+
+    private static UUID uuidOrNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(value.trim());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private static String str(Map<String, Object> map, String key, String fallback) {

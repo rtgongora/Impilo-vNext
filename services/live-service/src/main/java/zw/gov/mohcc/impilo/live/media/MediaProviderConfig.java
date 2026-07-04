@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import zw.gov.mohcc.impilo.live.integration.DocumentServiceClient;
 import zw.gov.mohcc.impilo.live.integration.RtcGatewayClient;
 
 @Configuration
@@ -15,9 +16,10 @@ public class MediaProviderConfig {
     @Bean
     public LiveMediaProvider liveMediaProvider(
             @Value("${live.media.provider:local-dev}") String provider,
-            RtcGatewayClient rtcGatewayClient) {
+            RtcGatewayClient rtcGatewayClient,
+            DocumentServiceClient documentServiceClient) {
         if ("rtc-gateway".equalsIgnoreCase(provider)) {
-            return new RtcGatewayMediaProvider(rtcGatewayClient);
+            return new RtcGatewayMediaProvider(rtcGatewayClient, documentServiceClient);
         }
         // Loud, not silent: the local-dev provider issues a non-production token
         // ("DEV-TOKEN-NOT-FOR-PRODUCTION"). Set live.media.provider=rtc-gateway in real envs.

@@ -207,11 +207,22 @@ public class LiveEventService {
 
     @Transactional
     public LiveEventEntity publishReplay(UUID tenantId, UUID eventId, String updatedBy) {
+        return publishReplay(tenantId, eventId, updatedBy, Map.of());
+    }
+
+    /**
+     * Publish the replay with extra payload merged into the emitted
+     * {@code impilo.live.replay.published.v1} event (e.g. documentObjectId and
+     * durationSeconds of the recording artifact backing the replay).
+     */
+    @Transactional
+    public LiveEventEntity publishReplay(UUID tenantId, UUID eventId, String updatedBy,
+                                         Map<String, Object> extraPayload) {
         LiveEventEntity event = get(tenantId, eventId);
         stateMachine.transition(event, LiveEventStatus.PUBLISHED_REPLAY, updatedBy);
         event.setUpdatedAt(OffsetDateTime.now());
         LiveEventEntity saved = eventRepository.save(event);
-        emitEvent(saved, "impilo.live.replay.published.v1");
+        emitEvent(saved, "impilo.live.replay.published.v1", extraPayload);
         return saved;
     }
 
@@ -261,12 +272,19 @@ public class LiveEventService {
     }
 
     private void emitEvent(LiveEventEntity event, String eventType) {
+        emitEvent(event, eventType, Map.of());
+    }
+
+    private void emitEvent(LiveEventEntity event, String eventType, Map<String, Object> extraPayload) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("eventId", event.getId().toString());
         payload.put("title", event.getTitle());
         payload.put("status", event.getStatus());
         payload.put("contextType", event.getContextType());
         payload.put("facilityId", event.getFacilityId());
+        if (extraPayload != null) {
+            payload.putAll(extraPayload);
+        }
         emitter.emit(event.getTenantId(), "LIVE_EVENT", event.getId().toString(),
                 eventType, "LIVE_EVENT", event.getId().toString(), payload);
     }

@@ -48,6 +48,24 @@ public class RtcGatewayClient {
         return exchange(ctx, HttpMethod.POST, baseUrl + "/internal/v1/rtc/sessions/" + sessionId + "/end", Map.of());
     }
 
+    /** Start a recording egress for the session ({startedBy, startedByRole, layout?}). */
+    public Map<String, Object> startRecording(TrustContext ctx, String sessionId, Map<String, Object> request) {
+        return exchange(ctx, HttpMethod.POST,
+                baseUrl + "/internal/v1/rtc/sessions/" + sessionId + "/recording/start", request);
+    }
+
+    /** Stop the active recording egress for the session. */
+    public Map<String, Object> stopRecording(TrustContext ctx, String sessionId) {
+        return exchange(ctx, HttpMethod.POST,
+                baseUrl + "/internal/v1/rtc/sessions/" + sessionId + "/recording/stop", Map.of());
+    }
+
+    /** List recording artifacts ({egressId, status, storageBucket, storageKey, documentObjectId, ...}). */
+    public Map<String, Object> listRecordings(TrustContext ctx, String sessionId) {
+        return exchange(ctx, HttpMethod.GET,
+                baseUrl + "/internal/v1/rtc/sessions/" + sessionId + "/recordings", null);
+    }
+
     private Map<String, Object> exchange(TrustContext ctx, HttpMethod method, String url, Object body) {
         try {
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(

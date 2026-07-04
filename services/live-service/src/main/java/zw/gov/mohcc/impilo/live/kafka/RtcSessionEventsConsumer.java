@@ -8,6 +8,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import zw.gov.mohcc.impilo.live.core.AttendanceService;
 import zw.gov.mohcc.impilo.live.core.LiveEventService;
+import zw.gov.mohcc.impilo.live.core.ReplayService;
 import zw.gov.mohcc.impilo.live.domain.LiveEventStatus;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventAttendanceEntity;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventEntity;
@@ -27,6 +28,8 @@ import java.util.UUID;
  *   <li>{@code session.finished} → LIVE event goes ENDED</li>
  *   <li>{@code participant.joined/left} → attendance intervals via {@link AttendanceService}
  *       (the attendance system of record; join is a natural-key upsert)</li>
+ *   <li>{@code recording.available} → replay pipeline via {@link ReplayService}: egress
+ *       artifact adopted into document-service, ENDED → PROCESSING_REPLAY → PUBLISHED_REPLAY</li>
  * </ul>
  *
  * <p>Sessions are resolved by {@code live_event_sessions.provider_room_id = payload.sessionId}:
@@ -54,17 +57,20 @@ public class RtcSessionEventsConsumer {
     private final LiveEventRepository eventRepository;
     private final LiveEventService eventService;
     private final AttendanceService attendanceService;
+    private final ReplayService replayService;
 
     public RtcSessionEventsConsumer(ObjectMapper objectMapper,
                                     LiveEventSessionRepository sessionRepository,
                                     LiveEventRepository eventRepository,
                                     LiveEventService eventService,
-                                    AttendanceService attendanceService) {
+                                    AttendanceService attendanceService,
+                                    ReplayService replayService) {
         this.objectMapper = objectMapper;
         this.sessionRepository = sessionRepository;
         this.eventRepository = eventRepository;
         this.eventService = eventService;
         this.attendanceService = attendanceService;
+        this.replayService = replayService;
     }
 
     @KafkaListener(
@@ -162,23 +168,35 @@ public class RtcSessionEventsConsumer {
         });
     }
 
+    /**
+     * {@code recording.available} → the egress artifact in MinIO becomes the replay
+     * source: {@link ReplayService#onRecordingAvailable} registers it with
+     * document-service, stamps {@code recording_ref}, and drives
+     * ENDED → PROCESSING_REPLAY → PUBLISHED_REPLAY.
+     */
     @KafkaListener(
             topics = "${live.rtc.recording-available-topic:impilo.rtc.recording.available.v1}",
             groupId = "${spring.kafka.consumer.group-id:live-service}")
     public void onRecordingAvailable(String payload) {
-        // TODO(W1): wire recording.available into ReplayService (attach egress artifact as the
-        // replay source, transition ENDED -> PROCESSING_REPLAY/PUBLISHED_REPLAY). For W0 we only
-        // acknowledge media truth in the log.
-        try {
-            JsonNode n = objectMapper.readTree(payload);
-            if (!isLiveOwned(n)) {
+        handle(payload, "recording.available", (n, resolved) -> {
+            LiveEventSessionEntity session = resolved.session();
+            if (session == null) {
+                // owningRef fallback resolved the event but not the session row; without a
+                // session there is nowhere to stamp recording_ref — skip (redelivery-safe).
+                log.warn("RTC recording.available for event {} without a resolvable session row — skipped",
+                        resolved.event().getId());
                 return;
             }
-            log.info("RTC recording available for session {} (egress={}) — replay wiring lands in W1",
+            replayService.onRecordingAvailable(resolved.event(), session, RTC_ACTOR,
+                    new ReplayService.RecordingAvailable(
+                            text(n, "egressId"),
+                            text(n, "storageBucket"),
+                            text(n, "storageKey"),
+                            longOrNull(n, "durationSeconds"),
+                            longOrNull(n, "sizeBytes")));
+            log.info("RTC recording available for session {} (egress={}) — replay pipeline invoked",
                     text(n, "sessionId"), text(n, "egressId"));
-        } catch (Exception e) {
-            log.warn("Failed to handle impilo.rtc.recording.available.v1: {}", e.getMessage());
-        }
+        });
     }
 
     // ── internals ───────────────────────────────────────────────────────────
@@ -267,5 +285,20 @@ public class RtcSessionEventsConsumer {
     private static String text(JsonNode n, String field) {
         JsonNode v = n.path(field);
         return v.isMissingNode() || v.isNull() || v.asText().isBlank() ? null : v.asText();
+    }
+
+    private static Long longOrNull(JsonNode n, String field) {
+        JsonNode v = n.path(field);
+        if (v.isMissingNode() || v.isNull()) {
+            return null;
+        }
+        if (v.isNumber()) {
+            return v.asLong();
+        }
+        try {
+            return Long.parseLong(v.asText().trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

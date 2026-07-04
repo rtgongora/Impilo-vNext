@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.live.core.AttendanceService;
 import zw.gov.mohcc.impilo.live.core.LiveEventService;
+import zw.gov.mohcc.impilo.live.core.ReplayService;
 import zw.gov.mohcc.impilo.live.domain.LiveEventStatus;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventAttendanceEntity;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventEntity;
@@ -41,13 +42,14 @@ class RtcSessionEventsConsumerTest {
     @Mock private LiveEventRepository eventRepository;
     @Mock private LiveEventService eventService;
     @Mock private AttendanceService attendanceService;
+    @Mock private ReplayService replayService;
 
     private RtcSessionEventsConsumer consumer;
 
     @BeforeEach
     void setUp() {
         consumer = new RtcSessionEventsConsumer(new ObjectMapper(),
-                sessionRepository, eventRepository, eventService, attendanceService);
+                sessionRepository, eventRepository, eventService, attendanceService, replayService);
     }
 
     // ── session.started ──────────────────────────────────────────────────────
@@ -234,12 +236,58 @@ class RtcSessionEventsConsumerTest {
                 .doesNotThrowAnyException();
     }
 
+    // ── recording.available (W1 replay pipeline) ─────────────────────────────
+
     @Test
-    void recordingAvailable_isLogOnlyForNow() {
-        assertThatCode(() -> consumer.onRecordingAvailable(
-                payload("impilo.rtc.recording.available.v1", "LIVE", null)))
+    void recordingAvailable_invokesReplayPipelineWithParsedArtifact() {
+        LiveEventSessionEntity session = sessionRow();
+        LiveEventEntity event = event(LiveEventStatus.ENDED);
+        stubResolution(session, event);
+
+        consumer.onRecordingAvailable(recordingPayload("LIVE"));
+
+        ArgumentCaptor<ReplayService.RecordingAvailable> recording =
+                ArgumentCaptor.forClass(ReplayService.RecordingAvailable.class);
+        verify(replayService).onRecordingAvailable(
+                org.mockito.ArgumentMatchers.same(event),
+                org.mockito.ArgumentMatchers.same(session),
+                org.mockito.ArgumentMatchers.eq(RtcSessionEventsConsumer.RTC_ACTOR),
+                recording.capture());
+        assertThat(recording.getValue().egressId()).isEqualTo("egress-9");
+        assertThat(recording.getValue().storageBucket()).isEqualTo("impilo-recordings");
+        assertThat(recording.getValue().storageKey()).isEqualTo("rtc/sessions/" + RTC_SESSION_ID + "/egress-9.mp4");
+        assertThat(recording.getValue().durationSeconds()).isEqualTo(1800L);
+        assertThat(recording.getValue().sizeBytes()).isEqualTo(52000000L);
+    }
+
+    @Test
+    void recordingAvailable_ignoresOtherOwningServicesSilently() {
+        consumer.onRecordingAvailable(recordingPayload("PCT"));
+
+        verifyNoInteractions(replayService, eventService, attendanceService, eventRepository);
+    }
+
+    @Test
+    void recordingAvailable_withoutSessionRow_isSkipped() {
+        // owningRef fallback resolves the event but there is no session row to stamp.
+        when(sessionRepository.findFirstByProviderRoomIdOrderByCreatedAtDesc(RTC_SESSION_ID))
+                .thenReturn(Optional.empty());
+        when(eventRepository.findById(EVENT_ID))
+                .thenReturn(Optional.of(event(LiveEventStatus.ENDED)));
+
+        consumer.onRecordingAvailable(recordingPayload("LIVE", EVENT_ID.toString()));
+
+        verifyNoInteractions(replayService);
+    }
+
+    @Test
+    void recordingAvailable_replayServiceFailure_isSwallowedNotThrown() {
+        stubResolution(sessionRow(), event(LiveEventStatus.ENDED));
+        org.mockito.Mockito.doThrow(new IllegalStateException("Invalid live event transition"))
+                .when(replayService).onRecordingAvailable(any(), any(), anyString(), any());
+
+        assertThatCode(() -> consumer.onRecordingAvailable(recordingPayload("LIVE")))
                 .doesNotThrowAnyException();
-        verifyNoInteractions(eventService, attendanceService);
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
@@ -274,6 +322,22 @@ class RtcSessionEventsConsumerTest {
                 """.formatted(RTC_SESSION_ID, owningService,
                 owningRef == null ? "\"owningRef\":null," : "\"owningRef\":\"" + owningRef + "\",",
                 type);
+    }
+
+    private static String recordingPayload(String owningService) {
+        return recordingPayload(owningService, null);
+    }
+
+    private static String recordingPayload(String owningService, String owningRef) {
+        return """
+                {"sessionId":"%s","sessionMode":"LIVE_EVENT","owningService":"%s",%s
+                 "roomName":"impilo-live-room","egressId":"egress-9",
+                 "storageBucket":"impilo-recordings","storageKey":"rtc/sessions/%s/egress-9.mp4",
+                 "durationSeconds":1800,"sizeBytes":52000000,"eventId":"evt-3",
+                 "occurredAt":"2026-07-04T11:00:00Z","type":"impilo.rtc.recording.available.v1"}
+                """.formatted(RTC_SESSION_ID, owningService,
+                owningRef == null ? "\"owningRef\":null," : "\"owningRef\":\"" + owningRef + "\",",
+                RTC_SESSION_ID);
     }
 
     private static String participantPayload(String type, String owningService, String identity) {
