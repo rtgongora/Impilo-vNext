@@ -58,9 +58,19 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 
 ## WS-P2-B — Queue regression hardening (Zen Coder Max)
 - **Priority**: P1 · **Risk class**: GREEN (tests only)
-- **Assigned**: Zen Coder Max · **Branch**: `zen/test-hardening-pipelines` (base on top of WS-P2-A branch)
-- **Deliverable (updated)**: IN_TRIAGE regression is now covered by Worker B; Zen focus shifts to booking→check-in→queue integration specs, no-show/reschedule flows, notification event assertions, queue-to-PCT handoff IT, and honest virtual-queue gap tests
-- **Status**: PROPOSED · **Blockers**: dispatch pending
+- **Assigned**: Zen worker agent (run by Fable session per user instruction) · **Branch**: `zen/test-hardening-pipelines` · **Worktree**: `/home/user/wt-zen-tests` · **Base**: `769296629` (WS-P2-A tip)
+- **Owned**: test files only in pct-service, booking-service, notification-service (+BFF tests if needed)
+- **Forbidden**: production code, migrations, configs, scripts/guard
+- **Deliverable**: appointment-provenance IT, no-show/reschedule coverage, queue→encounter handoff IT, Mvumo-blocked + tenant-propagation notification tests, honest virtual-queue gap test
+- **Status**: ASSIGNED (agent running 2026-07-04) · **Blockers**: none
+
+## WS-P2-C — Queue/check-in/inbox UI surfacing (Cursor Ultra)
+- **Priority**: P1 · **Risk class**: GREEN/AMBER (UI only)
+- **Assigned**: Cursor worker agent (run by Fable session per user instruction) · **Branch**: `cursor/ui-pipeline-gaps` · **Worktree**: `/home/user/wt-cursor-ui` · **Base**: `769296629` (WS-P2-A tip)
+- **Owned**: `ui/one-ui-shell` useQueue/scheduling surfaces, `ui/pct-web` queue pages, citizen inbox rendering
+- **Forbidden**: routes.ts, app-registry.ts, api-client core, package locks, Java, mocks for missing endpoints
+- **Deliverable**: escalate action w/ mandatory reason dialog + escalated badges; honest `queue_linked`/`CHECKED_IN_NO_QUEUE` check-in states; QUEUE_CITIZEN_* inbox rendering
+- **Status**: ASSIGNED (agent running 2026-07-04) · **Blockers**: none
 
 ## WS-P3-A — PCT gaps: discharge countersign + prescribing hook
 - **Priority**: P1 · **Risk class**: AMBER
