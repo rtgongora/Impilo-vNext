@@ -46,18 +46,29 @@ public class NotificationServiceLearningProvider implements LearningNotification
         }
         try {
             String url = trimSlash(baseUrl) + "/internal/v1/notify";
+            // Body matches notification-service NotifyRequest: {channel, to, templateKey,
+            // variables}. title/message travel as template variables.
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("channel", intent.channelPreference() == null ? "IN_APP" : intent.channelPreference());
-            body.put("title", intent.title());
-            body.put("message", intent.message());
-            body.put("recipientId", intent.subjectId());
-            body.put("eventCode", intent.eventCode());
-            body.put("metadata", intent.metadata() == null ? Map.of() : intent.metadata());
+            body.put("to", intent.subjectId());
+            body.put("templateKey", intent.eventCode());
+            Map<String, String> variables = new LinkedHashMap<>();
+            variables.put("title", intent.title() == null ? "" : intent.title());
+            variables.put("message", intent.message() == null ? "" : intent.message());
+            body.put("variables", variables);
 
+            // /internal/v1/** is a v1.1 path: the companion V11HeaderFilter requires the
+            // mandatory header set and IdempotencyFilter requires Idempotency-Key on POST.
+            // The dispatcher runs on a scheduled thread (no inbound request context), so
+            // headers are synthesized here; the intent id keys idempotent redelivery.
             HttpHeaders headers = new HttpHeaders();
             if (intent.tenantId() != null) {
                 headers.set("X-Tenant-ID", intent.tenantId().toString());
             }
+            headers.set("X-Pod-ID", "learning-service");
+            headers.set("X-Request-ID", java.util.UUID.randomUUID().toString());
+            headers.set("X-Correlation-ID", intent.id().toString());
+            headers.set("Idempotency-Key", "learning-notify:" + intent.id());
             restTemplate.postForEntity(url, new HttpEntity<>(body, headers), String.class);
             return DeliveryOutcome.sent("delivered via notification-service");
         } catch (Exception ex) {
