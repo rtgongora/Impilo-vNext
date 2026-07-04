@@ -327,6 +327,13 @@ fullBootServices:
     env:
       # CPD writeback: consume impilo.learning.certificate.issued.v1.
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  document-service:
+    env:
+      # Artifact SoR must reach the in-chart MinIO — the localhost default
+      # broke recording adoption (register-external) and any real storage IO.
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: impilo-preview
+      MINIO_SECRET_KEY: preview-minio-change-me
   rtc-gateway-service:
     env:
       # Recording lifecycle: template-driven policy gates in RtcRecordingService
