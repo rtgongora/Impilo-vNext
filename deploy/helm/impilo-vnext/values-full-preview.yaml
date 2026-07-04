@@ -290,3 +290,15 @@ fullBootServices:
   pharmacy-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  learning-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+      # ⑤ Fundo notification flip: dispatch through the real notification-service
+      # instead of the default STUB provider.
+      LEARNING_NOTIFICATION_PROVIDER: NOTIFICATION_SERVICE
+      LEARNING_NOTIFICATION_BASE_URL: http://notification-service:8200
+      LEARNING_NOTIFICATION_DISPATCH_POLL_MS: "30000"
+  varapi-service:
+    env:
+      # CPD writeback: consume impilo.learning.certificate.issued.v1.
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"

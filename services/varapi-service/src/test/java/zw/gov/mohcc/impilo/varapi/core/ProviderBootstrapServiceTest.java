@@ -81,6 +81,28 @@ class ProviderBootstrapServiceTest {
         TrustContextHolder.clear();
     }
 
+    @org.junit.jupiter.api.Test
+    void bulkPreload_forbiddenForNonAdminActor() {
+        TrustContextHolder.set(new TrustContext(
+                tenantId, "citizen-1", "CITIZEN", "TREATMENT", "device",
+                correlationId, null, null, null, AccessMode.INTERNAL));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+                        service.bulkPreload(new BulkPreloadRequest(java.util.List.of())))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("national-admin");
+    }
+
+    @org.junit.jupiter.api.Test
+    void claimProfile_forbiddenWhenClaimantIsNotTheActor() {
+        TrustContextHolder.set(new TrustContext(
+                tenantId, UUID.randomUUID().toString(), "PROVIDER", "TREATMENT", "device",
+                correlationId, null, null, null, AccessMode.INTERNAL));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+                        service.claimProfile("some-token", UUID.randomUUID()))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("claimed by the authenticated person");
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /** Make providerRepository.save assign an incrementing id and echo the entity. */

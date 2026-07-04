@@ -48,8 +48,9 @@ import java.util.UUID;
  * <p>Policy is enforced at the Tshepo ext_authz path (the routes are
  * ext_authz-gated). Authorisation that the caller is a national-admin / org rep
  * (preload) or the legitimate claimant (claim) is specced to track P:
- * TODO(policy PROVIDER-PRELOAD-ADMIN): only national-admin/org-rep may bulk-preload.
- * TODO(policy PROVIDER-SELF-CLAIM): claim requires claimantHealthId == authenticated actor.</p>
+ * Enforced in-service: PROVIDER-PRELOAD-ADMIN (bulk preload requires
+ * national-admin/org-rep/system capacity) and PROVIDER-SELF-CLAIM (claim
+ * requires claimantHealthId == authenticated actor; SYSTEM excepted).</p>
  */
 @Service
 public class ProviderBootstrapService {
@@ -95,6 +96,15 @@ public class ProviderBootstrapService {
     @Transactional
     public BulkPreloadResponse bulkPreload(BulkPreloadRequest request) {
         TrustContext ctx = TrustContextHolder.require();
+        // Policy PROVIDER-PRELOAD-ADMIN: only national-admin / organisation-rep
+        // capacities may bulk-preload provider skeletons (defense-in-depth
+        // behind the ext_authz gate).
+        String actorType = ctx.actorType() != null ? ctx.actorType().trim().toUpperCase(java.util.Locale.ROOT) : "";
+        if (!java.util.Set.of("SYSTEM", "NATIONAL_ADMIN", "ORG_REPRESENTATIVE", "OPERATOR", "REGISTRY_ADMIN").contains(actorType)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "Bulk preload requires national-admin or organisation-representative capacity");
+        }
         UUID batchId = UUID.randomUUID();
         List<BulkPreloadResponse.PreloadResult> results = new ArrayList<>();
         int created = 0, skipped = 0, failed = 0;
@@ -235,6 +245,18 @@ public class ProviderBootstrapService {
         TrustContext ctx = TrustContextHolder.require();
         if (claimantHealthId == null) {
             throw new IllegalArgumentException("claimantHealthId is required");
+        }
+        // Policy PROVIDER-SELF-CLAIM: a profile may only be claimed BY the
+        // person it anchors — the claimant health id must be the authenticated
+        // actor. SYSTEM (governed migrations) and REGISTRY_ADMIN (assisted
+        // claims at a registry desk) are excepted; the single-use token remains
+        // the possession factor in those flows.
+        String claimActorType = ctx.actorType() != null ? ctx.actorType().trim().toUpperCase(java.util.Locale.ROOT) : "";
+        if (!java.util.Set.of("SYSTEM", "REGISTRY_ADMIN").contains(claimActorType)
+                && (ctx.actorId() == null || !claimantHealthId.toString().equalsIgnoreCase(ctx.actorId().trim()))) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "A provider profile may only be claimed by the authenticated person it belongs to");
         }
 
         ProviderClaimTokenEntity token = loadRedeemableToken(ctx.tenantId(), rawToken)
