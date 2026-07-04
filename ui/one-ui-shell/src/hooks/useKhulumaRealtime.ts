@@ -3,14 +3,15 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { commsKeys } from "@/hooks/queries/useComms";
+import { subscribeKhulumaRealtime, type RealtimeFrame } from "@/lib/realtime/khuluma-socket";
 
 /**
- * Optional realtime client for the Khuluma gateway (the SSE/WS endpoint built in W1.3). When
- * `NEXT_PUBLIC_KHULUMA_WS` is set (a BFF/Envoy-proxied path that injects the trust headers the
- * gateway's companion filter requires — browsers cannot set them directly), this opens a WebSocket
- * and turns inbound frames into TanStack-Query invalidations + incoming-call callbacks. When the
- * env var is absent it is a no-op and the Comms Hub still works via REST refetch — realtime is a
- * pure enhancement, never a hard dependency.
+ * Optional realtime client for the Khuluma gateway. Rides the SHARED
+ * per-tab transport (src/lib/realtime/khuluma-socket.ts) so CommsHub and the
+ * session shells never open competing sockets. When neither
+ * `NEXT_PUBLIC_KHULUMA_WS` nor `NEXT_PUBLIC_KHULUMA_SSE` is set this is a
+ * no-op and the Comms Hub still works via REST refetch — realtime is a pure
+ * enhancement, never a hard dependency.
  */
 export interface IncomingCall {
   callId: string;
@@ -26,26 +27,13 @@ interface RealtimeOptions {
 
 export function useKhulumaRealtime({ enabled, onIncomingCall }: RealtimeOptions) {
   const queryClient = useQueryClient();
-  const wsRef = useRef<WebSocket | null>(null);
   const callbackRef = useRef(onIncomingCall);
   callbackRef.current = onIncomingCall;
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
-    const url = process.env.NEXT_PUBLIC_KHULUMA_WS?.trim();
-    if (!url) return;
 
-    let stopped = false;
-    let attempt = 0;
-    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const handleFrame = (raw: string) => {
-      let frame: Record<string, unknown>;
-      try {
-        frame = JSON.parse(raw) as Record<string, unknown>;
-      } catch {
-        return;
-      }
+    const handleFrame = (frame: RealtimeFrame) => {
       const eventType = String(frame.event_type ?? "");
       const conversationId = frame.conversation_id ? String(frame.conversation_id) : null;
 
@@ -67,34 +55,6 @@ export function useKhulumaRealtime({ enabled, onIncomingCall }: RealtimeOptions)
       }
     };
 
-    const connect = () => {
-      if (stopped) return;
-      try {
-        const ws = new WebSocket(url);
-        wsRef.current = ws;
-        ws.onmessage = (ev) => handleFrame(String(ev.data));
-        ws.onopen = () => {
-          attempt = 0;
-        };
-        ws.onclose = () => {
-          wsRef.current = null;
-          if (stopped) return;
-          attempt += 1;
-          reconnectTimer = setTimeout(connect, Math.min(30_000, 1000 * 2 ** Math.min(attempt, 5)));
-        };
-        ws.onerror = () => ws.close();
-      } catch {
-        attempt += 1;
-        reconnectTimer = setTimeout(connect, Math.min(30_000, 2000 * attempt));
-      }
-    };
-
-    connect();
-    return () => {
-      stopped = true;
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      wsRef.current?.close();
-      wsRef.current = null;
-    };
+    return subscribeKhulumaRealtime(handleFrame);
   }, [enabled, queryClient]);
 }
