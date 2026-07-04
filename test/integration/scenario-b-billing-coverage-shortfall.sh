@@ -137,7 +137,7 @@ ok "claim ADJUDICATED for $INSURER"
 # ── 5. Shortfall card payment: COSTA intent → MusheX SANDBOX capture ─────────
 step "5. shortfall payment (COSTA intent -> MusheX sandbox capture -> PAID)"
 INTENT=$(svc_curl POST "http://$COSTA_IP:8101/costa/v1/bills/$BILL_ID/create-payment-intent" \
-  "{\"paymentType\":\"CARD\",\"amount\":$PATIENT}")
+  "{\"paymentType\":\"REMAINDER\",\"amount\":$PATIENT}")
 PAYMENT_ID=$(echo "$INTENT" | jqpy "
 data=d.get('data') or d
 print(data.get('id') or '')")

@@ -278,6 +278,9 @@ fullBootServices:
   mushex-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+      # Intent creation verifies payee credentials — default pointed at localhost.
+      CREDENTIAL_BASE_URL: http://credential-verification-service:8094
+      CREDENTIAL_VERIFICATION_BASE_URL: http://credential-verification-service:8094
   coverage-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
