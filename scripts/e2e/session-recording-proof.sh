@@ -29,10 +29,10 @@ base_hdrs() { HDRS=(-H "Content-Type: application/json" -H "X-Tenant-ID: $TENANT
   -H "X-Request-ID: $(cat /proc/sys/kernel/random/uuid)" -H "X-Correlation-ID: $RUN"); }
 act_hdrs() { base_hdrs; HDRS+=(-H "X-Actor-ID: $1" -H "X-Actor-Type: PROVIDER" -H "X-Purpose-Of-Use: TREATMENT" \
   -H "X-Facility-ID: $FACILITY_ID" -H "Authorization: Bearer $2"); }
-svc_curl() { # svc_curl <method> <url> <headers-array-name> [body] — via BFF pod (cluster network)
-  local method="$1" url="$2"; shift 2
+svc_curl() { # svc_curl <method> <url> [body] — via BFF pod, using the global HDRS array
+  local method="$1" url="$2" body="${3:-}"
   kubectl exec -n "$NS" deploy/experience-bff -- curl -sS -X "$method" "$url" "${HDRS[@]}" \
-    -H "Idempotency-Key: $RUN-$(cat /proc/sys/kernel/random/uuid | cut -c1-8)" ${1:+-d "$1"}
+    -H "Idempotency-Key: $RUN-$(cat /proc/sys/kernel/random/uuid | cut -c1-8)" ${body:+-d "$body"}
 }
 
 # ── 1. Provision a governed teleconsult (consented, pool-accepted) ───────────

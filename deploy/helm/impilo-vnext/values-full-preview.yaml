@@ -163,13 +163,15 @@ livekitEgress:
     repository: mirror.gcr.io/livekit/egress
     tag: "v1.8.6"
     pullPolicy: IfNotPresent
-  # Egress is CPU-heavy (headless-Chrome compositing + encoding).
+  # Egress is CPU-heavy (headless-Chrome compositing + encoding). Room
+  # composite requires 4 CPUs by egress's own admission control ("not enough
+  # cpu for some egress types" at 2); the VM has 32 cores.
   resources:
     requests:
-      cpu: 500m
+      cpu: "1"
       memory: 1Gi
     limits:
-      cpu: "2"
+      cpu: "4"
       memory: 2Gi
 
 orthanc:
