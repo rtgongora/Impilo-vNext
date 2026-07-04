@@ -36,6 +36,32 @@ svc_curl() { # svc_curl <method> <url> [json-body]
     ${body:+-d "$body"}
 }
 
+# ── 0. Estate prerequisite: comms-hub template ───────────────────────────────
+# The comms hub renders strictly from registered templates (template governance
+# is a national-pod authority). Idempotently self-provision the certificate
+# template, mirroring scenario-B's facility-credential self-provisioning.
+step "0. notification template learning.certificate.issued"
+NOTIFY="http://notification-service:8200"
+nat_curl() { # national-pod variant of svc_curl (template governance requires it)
+  local method="$1" url="$2" body="${3:-}"
+  kubectl exec -n "$NS" deploy/experience-bff -- curl -sS -o /dev/null -w "%{http_code}" -X "$method" "$url" \
+    -H "Content-Type: application/json" \
+    -H "X-Tenant-ID: $TENANT_ID" -H "X-Pod-ID: national" \
+    -H "X-Request-ID: $(cat /proc/sys/kernel/random/uuid)" -H "X-Correlation-ID: $RUN" \
+    -H "Idempotency-Key: $RUN-$(cat /proc/sys/kernel/random/uuid | cut -c1-8)" \
+    ${body:+-d "$body"}
+}
+TPL_CODE=$(nat_curl GET "$NOTIFY/internal/v1/templates/learning.certificate.issued")
+if [[ "$TPL_CODE" == "404" ]]; then
+  CREATE_CODE=$(nat_curl POST "$NOTIFY/internal/v1/templates" \
+    '{"key":"learning.certificate.issued","channel":"IN_APP","subject":"{{title}}","body":"{{message}}"}')
+  [[ "$CREATE_CODE" == "201" ]] || fail "template creation failed (HTTP $CREATE_CODE)"
+  ok "template registered (national pod)"
+else
+  [[ "$TPL_CODE" == "200" ]] || fail "template lookup failed (HTTP $TPL_CODE)"
+  ok "template already registered"
+fi
+
 # ── 1. Catalog → CPD-eligible course ─────────────────────────────────────────
 step "1. catalog → CPD-eligible course"
 CATALOG=$(svc_curl GET "$LEARN/catalog?limit=25")
@@ -180,11 +206,18 @@ done
 [[ "$INTENT_STATE" == "SENT" ]] || fail "notification intent stuck in $INTENT_STATE (dispatch to notification-service failed)"
 ok "learning intent SENT via NOTIFICATION_SERVICE provider"
 
-NS_ROW=$(kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d notification -tAc \
-  "SELECT status FROM ns_notifications WHERE template_key='learning.certificate.issued'
-   AND to_addr='$PROVIDER_ID' ORDER BY created_at DESC LIMIT 1" 2>/dev/null | tr -d '[:space:]')
+NS_ROW=""
+for i in $(seq 1 12); do
+  NS_ROW=$(kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d notification -tAc \
+    "SELECT status FROM ns_notifications WHERE template_key='learning.certificate.issued'
+     AND to_addr='$PROVIDER_ID' ORDER BY created_at DESC LIMIT 1" 2>/dev/null | tr -d '[:space:]')
+  [[ "$NS_ROW" == "SENT" || "$NS_ROW" == "DELIVERED" || "$NS_ROW" == "FAILED" ]] && break
+  sleep 5
+done
 [[ -n "$NS_ROW" ]] || fail "no ns_notifications row in notification-service for $PROVIDER_ID"
-ok "notification-service enqueued the message (status=$NS_ROW)"
+[[ "$NS_ROW" == "SENT" || "$NS_ROW" == "DELIVERED" ]] \
+  || fail "comms-hub delivery did not complete (status=$NS_ROW)"
+ok "notification-service delivered the message (status=$NS_ROW)"
 
 echo ""
 echo "PASS: Scenario C (Fundo learner journey) green ($PASS checks) — run tag $RUN"
