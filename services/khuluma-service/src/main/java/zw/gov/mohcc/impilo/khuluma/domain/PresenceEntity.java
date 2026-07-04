@@ -51,10 +51,17 @@ public class PresenceEntity {
     @Column(name = "duty_status", nullable = false, length = 16)
     private String dutyStatus = "OFF_DUTY";
 
+    /** Optional clinical specialty key (V007) — drives specialty-scoped ON_CALL routing. */
+    @Column(name = "specialty", length = 128)
+    private String specialty;
+
     public PresenceEntity() {}
 
     public String getDutyStatus() { return dutyStatus; }
     public void setDutyStatus(String dutyStatus) { this.dutyStatus = dutyStatus; }
+
+    public String getSpecialty() { return specialty; }
+    public void setSpecialty(String specialty) { this.specialty = specialty; }
 
     public UUID getPresenceId() { return presenceId; }
     public void setPresenceId(UUID presenceId) { this.presenceId = presenceId; }

@@ -16,10 +16,12 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.AnalyticsPipelineServiceClient;
+import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.CoverageServiceClient;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
+import zw.gov.mohcc.impilo.experience.client.KhulumaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MvumoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
@@ -43,9 +45,17 @@ import java.util.*;
 public class TeleconsultController {
 
     private static final Logger log = LoggerFactory.getLogger(TeleconsultController.class);
-    private static final Set<String> UNSUPPORTED_ROUTING_TYPES = Set.of("ON_CALL", "POOL", "NATIONAL_POOL");
+    private static final Set<String> UNSUPPORTED_ROUTING_TYPES = Set.of("POOL", "NATIONAL_POOL");
     private static final Set<String> TEAM_ROUTING_TYPES = Set.of("TEAM", "SPECIALTY_POOL");
     private static final Set<String> PRACTITIONER_ROUTING_TYPES = Set.of("PRACTITIONER", "PROVIDER");
+    private static final String ON_CALL_ROUTING_TYPE = "ON_CALL";
+    private static final Set<String> ALLOWED_PARTICIPANT_ROLES =
+            Set.of("PROVIDER", "PATIENT", "CAREGIVER", "INTERPRETER", "SUPERVISOR", "OBSERVER");
+    private static final Set<String> ALLOWED_MEDIA_PROFILES = Set.of("FULL", "AUDIO_ONLY");
+    /** Dedupe window for the provider-facing patient-waiting notification (per session+identity). */
+    private static final long WAITING_NOTIFICATION_TTL_MS = 5 * 60 * 1000L;
+
+    private final Map<String, Long> waitingNotificationSentAt = new java.util.concurrent.ConcurrentHashMap<>();
 
     private final PctServiceClient pctClient;
     private final MvumoServiceClient mvumoClient;
@@ -60,6 +70,8 @@ public class TeleconsultController {
     private final RtcGatewayServiceClient rtcClient;
     private final TelemedicineGovernanceService telemedicineGovernanceService;
     private final VitoServiceClient vitoClient;
+    private final BookingServiceClient bookingClient;
+    private final KhulumaServiceClient khulumaClient;
     private final ObjectMapper objectMapper;
 
     public TeleconsultController(PctServiceClient pctClient,
@@ -74,6 +86,8 @@ public class TeleconsultController {
                                  CostaServiceClient costaClient,
                                  AnalyticsPipelineServiceClient analyticsClient,
                                  RtcGatewayServiceClient rtcClient,
+                                 BookingServiceClient bookingClient,
+                                 KhulumaServiceClient khulumaClient,
                                  TelemedicineGovernanceService telemedicineGovernanceService,
                                  ObjectMapper objectMapper) {
         this.pctClient = pctClient;
@@ -88,6 +102,8 @@ public class TeleconsultController {
         this.costaClient = costaClient;
         this.analyticsClient = analyticsClient;
         this.rtcClient = rtcClient;
+        this.bookingClient = bookingClient;
+        this.khulumaClient = khulumaClient;
         this.telemedicineGovernanceService = telemedicineGovernanceService;
         this.objectMapper = objectMapper;
     }
@@ -165,12 +181,17 @@ public class TeleconsultController {
                 return upstreamFailure("PCT_UNAVAILABLE", "No teleconsult session payload returned", requestId, correlationId);
             }
             emitTelemedicineNotification("TELECONSULT_REQUESTED", created, actorId, "A teleconsult request is waiting for specialist review.");
+            JsonNode responsePayload = created;
+            String scheduledAt = val(body, "scheduledAt", "scheduled_at");
+            if (scheduledAt != null && !scheduledAt.isBlank()) {
+                responsePayload = scheduleTeleconsultAppointment(created, scheduledAt.trim(), facilityId, actorId, body);
+            }
             telemedicineGovernanceService.audit(
                     tenantId, correlationId, normalizedPurpose, facilityId,
                     "TELEMEDICINE_SESSION_CREATED", "POST:teleconsult/sessions", "SUCCESS",
                     actorId, "PROVIDER", val(body, "patientId", "patient_id"), "TeleconsultSession",
-                    extractId(created), Map.of("mode", "virtual"));
-            return ok(created, requestId, correlationId, HttpStatus.CREATED);
+                    extractId(created), Map.of("mode", "virtual", "scheduled", scheduledAt != null && !scheduledAt.isBlank()));
+            return ok(responsePayload, requestId, correlationId, HttpStatus.CREATED);
         } catch (ResponseStatusException e) {
             HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
             return error(status == null ? HttpStatus.BAD_REQUEST : status,
@@ -297,6 +318,11 @@ public class TeleconsultController {
             if (submitValidation != null) {
                 return submitValidation.toResponse(requestId, correlationId);
             }
+            ResponseEntity<Map<String, Object>> onCallFailure = resolveOnCallRoutingIfNeeded(
+                    id, referral, tenantId, correlationId, purposeOfUse, facilityId, actorId, requestId);
+            if (onCallFailure != null) {
+                return onCallFailure;
+            }
             var submitted = pctClient.submitReferral(id);
             if (submitted == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No referral submit payload returned", requestId, correlationId);
@@ -386,15 +412,62 @@ public class TeleconsultController {
             }
             String identity = defaultString(actorId, val(body, "identity", "participantId"));
             String displayName = defaultString(val(body, "displayName", "display_name"), identity);
-            String role = defaultString(val(body, "role", "participantRole"),
-                    patientId != null && patientId.equals(identity) ? "PATIENT" : "PROVIDER");
+            String requestedRole = val(body, "role", "participantRole");
+            String role;
+            if (requestedRole != null && !requestedRole.isBlank()) {
+                role = requestedRole.trim().toUpperCase(Locale.ROOT);
+                if (!ALLOWED_PARTICIPANT_ROLES.contains(role)) {
+                    return error(HttpStatus.BAD_REQUEST, "INVALID_PARTICIPANT_ROLE",
+                            "role must be one of " + ALLOWED_PARTICIPANT_ROLES, requestId, correlationId);
+                }
+            } else {
+                // Backward compat: default PROVIDER unless the caller identity is the referral patient.
+                role = patientId != null && patientId.equals(identity) ? "PATIENT" : "PROVIDER";
+            }
+            ValidationError mediaProfileValidation = validateMediaProfile(val(body, "mediaProfile", "media_profile"));
+            if (mediaProfileValidation != null) {
+                return mediaProfileValidation.toResponse(requestId, correlationId);
+            }
+            String mediaProfile = normalizedMediaProfile(val(body, "mediaProfile", "media_profile"));
+
+            if ("PATIENT".equals(role)) {
+                ResponseEntity<Map<String, Object>> patientGovernanceError = assertPatientTokenGovernance(
+                        id, patientId, identity, normalizedPurpose,
+                        tenantId, correlationId, facilityId, actorId, requestId);
+                if (patientGovernanceError != null) {
+                    return patientGovernanceError;
+                }
+            }
 
             JsonNode rtcSession = provisionRtcSessionIfNeeded(
-                    id, tenantId, normalizedPurpose, facilityId, referral, patientId, encounterId, identity, displayName, role);
+                    id, tenantId, normalizedPurpose, facilityId, referral, patientId, encounterId,
+                    identity, displayName, role, mediaProfile);
 
             Map<String, Object> tokenBody = Map.of(
-                    "participant", Map.of("identity", identity, "displayName", displayName, "role", role));
+                    "participant", participantMap(identity, displayName, role, mediaProfile));
             JsonNode tokenResponse = rtcClient.issueParticipantToken(id, tokenBody);
+
+            String gateStatus = waitingRoomGateStatus(tokenResponse);
+            if (gateStatus != null) {
+                // Frozen RTC contract: token issuance may answer WAITING/DENIED instead of a
+                // token — pass it through so the web client can poll until admitted.
+                if ("WAITING".equals(gateStatus) && "PATIENT".equals(role)) {
+                    notifyProviderPatientWaiting(id, identity, referral);
+                }
+                Map<String, Object> gated = new LinkedHashMap<>();
+                gated.put("referralId", id);
+                gated.put("status", gateStatus);
+                gated.put("sessionId", tokenResponse.path("sessionId").asText(id));
+                gated.put("identity", tokenResponse.path("identity").asText(identity));
+                if (tokenResponse.hasNonNull("reason")) {
+                    gated.put("reason", tokenResponse.get("reason").asText());
+                }
+                telemedicineGovernanceService.audit(
+                        tenantId, correlationId, normalizedPurpose, facilityId,
+                        "TELEMEDICINE_RTC_TOKEN_" + gateStatus, "POST:teleconsult/media/token", "SUCCESS",
+                        actorId, role, patientId, "TeleconsultSession", id, Map.of("provider", "rtc-gateway"));
+                return ok(gated, requestId, correlationId, HttpStatus.OK);
+            }
 
             Map<String, Object> media = new LinkedHashMap<>();
             mergeRtcFields(media, rtcSession);
@@ -412,6 +485,237 @@ public class TeleconsultController {
             return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         } catch (Exception e) {
             return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    /**
+     * Refresh an RTC media token (provider or admitted participant). Straight passthrough to
+     * rtc-gateway; WAITING/DENIED statuses are passed through like {@code media/token}.
+     */
+    @PostMapping("/sessions/{id}/media/token/refresh")
+    public ResponseEntity<Map<String, Object>> refreshMediaToken(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            String normalizedPurpose = telemedicineGovernanceService.normalizePurposeOfUse(purposeOfUse);
+            String identity = defaultString(actorId, val(body, "identity", "participantId"));
+            String displayName = defaultString(val(body, "displayName", "display_name"), identity);
+            String requestedRole = val(body, "role", "participantRole");
+            String role = null;
+            if (requestedRole != null && !requestedRole.isBlank()) {
+                role = requestedRole.trim().toUpperCase(Locale.ROOT);
+                if (!ALLOWED_PARTICIPANT_ROLES.contains(role)) {
+                    return error(HttpStatus.BAD_REQUEST, "INVALID_PARTICIPANT_ROLE",
+                            "role must be one of " + ALLOWED_PARTICIPANT_ROLES, requestId, correlationId);
+                }
+            }
+            ValidationError mediaProfileValidation = validateMediaProfile(val(body, "mediaProfile", "media_profile"));
+            if (mediaProfileValidation != null) {
+                return mediaProfileValidation.toResponse(requestId, correlationId);
+            }
+            String mediaProfile = normalizedMediaProfile(val(body, "mediaProfile", "media_profile"));
+
+            Map<String, Object> participant = participantMap(identity, displayName,
+                    role == null ? "PROVIDER" : role, mediaProfile);
+            JsonNode tokenResponse = rtcClient.refreshParticipantToken(id, Map.of("participant", participant));
+
+            String gateStatus = waitingRoomGateStatus(tokenResponse);
+            Map<String, Object> media = new LinkedHashMap<>();
+            if (gateStatus != null) {
+                media.put("status", gateStatus);
+                media.put("sessionId", tokenResponse.path("sessionId").asText(id));
+                media.put("identity", tokenResponse.path("identity").asText(identity));
+            } else {
+                mergeRtcFields(media, tokenResponse);
+                media.put("status", "READY");
+            }
+            media.put("referralId", id);
+
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, normalizedPurpose, facilityId,
+                    "TELEMEDICINE_RTC_TOKEN_REFRESHED", "POST:teleconsult/media/token/refresh", "SUCCESS",
+                    actorId, role == null ? "PROVIDER" : role, null, "TeleconsultSession", id,
+                    Map.of("provider", "rtc-gateway"));
+            return ok(media, requestId, correlationId, HttpStatus.OK);
+        } catch (ResponseStatusException e) {
+            HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
+            return error(status == null ? HttpStatus.BAD_REQUEST : status,
+                    "TELEMEDICINE_GOVERNANCE_INVALID",
+                    e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
+                    requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    /**
+     * Waiting-room view for the provider console — RTC participants in WAITING state.
+     * Caller must pass the existing telemedicine governance gate (provider-grade PDP policy);
+     * a per-referral "is assigned provider" assertion is a seam noted in the module docs.
+     */
+    @GetMapping("/sessions/{id}/waiting-room")
+    public ResponseEntity<Map<String, Object>> waitingRoom(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            telemedicineGovernanceService.assertGovernedRead();
+            ArrayNode waiting = filterWaitingParticipants(rtcClient.listParticipants(id));
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("sessionId", id);
+            data.put("waiting", waiting);
+            return ok(data, requestId, correlationId, HttpStatus.OK);
+        } catch (ResponseStatusException e) {
+            HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
+            return error(status == null ? HttpStatus.FORBIDDEN : status,
+                    "TELEMEDICINE_GOVERNANCE_INVALID",
+                    e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
+                    requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    /** Admit a waiting participant and tell the patient the session is ready. */
+    @PostMapping("/sessions/{id}/waiting-room/admit")
+    public ResponseEntity<Map<String, Object>> admitWaitingParticipant(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            String identity = val(body, "identity", "participantId");
+            if (identity == null || identity.isBlank()) {
+                return error(HttpStatus.BAD_REQUEST, "MISSING_IDENTITY",
+                        "identity is required", requestId, correlationId);
+            }
+            JsonNode admitted = rtcClient.admitParticipant(id, identity.trim(), Map.of());
+            sendSessionNotification("rtc.telemedicine.session-ready", identity.trim(), id,
+                    "Session ready", "Your teleconsultation is ready — you have been admitted to the session.");
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_WAITING_ROOM_ADMITTED", "POST:teleconsult/waiting-room/admit", "SUCCESS",
+                    actorId, "PROVIDER", identity.trim(), "TeleconsultSession", id, Map.of());
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("sessionId", id);
+            data.put("identity", identity.trim());
+            data.put("state", admitted != null && admitted.hasNonNull("state")
+                    ? admitted.get("state").asText() : "ADMITTED");
+            return ok(data, requestId, correlationId, HttpStatus.OK);
+        } catch (ResponseStatusException e) {
+            HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
+            return error(status == null ? HttpStatus.FORBIDDEN : status,
+                    "TELEMEDICINE_GOVERNANCE_INVALID",
+                    e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
+                    requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    /** Deny a waiting participant ({identity, reason?}). */
+    @PostMapping("/sessions/{id}/waiting-room/deny")
+    public ResponseEntity<Map<String, Object>> denyWaitingParticipant(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            String identity = val(body, "identity", "participantId");
+            if (identity == null || identity.isBlank()) {
+                return error(HttpStatus.BAD_REQUEST, "MISSING_IDENTITY",
+                        "identity is required", requestId, correlationId);
+            }
+            String reason = val(body, "reason");
+            Map<String, Object> denyBody = new LinkedHashMap<>();
+            if (reason != null && !reason.isBlank()) {
+                denyBody.put("reason", reason);
+            }
+            JsonNode denied = rtcClient.denyParticipant(id, identity.trim(), denyBody);
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_WAITING_ROOM_DENIED", "POST:teleconsult/waiting-room/deny", "SUCCESS",
+                    actorId, "PROVIDER", identity.trim(), "TeleconsultSession", id,
+                    reason == null ? Map.of() : Map.of("reason", reason));
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("sessionId", id);
+            data.put("identity", identity.trim());
+            data.put("state", denied != null && denied.hasNonNull("state")
+                    ? denied.get("state").asText() : "DENIED");
+            return ok(data, requestId, correlationId, HttpStatus.OK);
+        } catch (ResponseStatusException e) {
+            HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
+            return error(status == null ? HttpStatus.FORBIDDEN : status,
+                    "TELEMEDICINE_GOVERNANCE_INVALID",
+                    e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
+                    requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    /**
+     * Provider console aggregate — one round-trip for the console shell: referral detail,
+     * waiting-room, recordings and encounter linkage.
+     *
+     * <p>Seam: billingStatus is intentionally omitted — COSTA exposes no cheap bill-by-encounter
+     * read on this path; the console fetches billing lazily via the finance endpoints.</p>
+     */
+    @GetMapping("/sessions/{id}/console")
+    public ResponseEntity<Map<String, Object>> providerConsole(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            telemedicineGovernanceService.assertGovernedRead();
+            JsonNode referral = pctClient.getReferral(id);
+            if (referral == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No teleconsult session payload returned", requestId, correlationId);
+            }
+            Map<String, Object> console = new LinkedHashMap<>();
+            console.put("referral", normalizeReferralPayload(referral));
+            try {
+                console.put("waitingRoom", filterWaitingParticipants(rtcClient.listParticipants(id)));
+            } catch (Exception ex) {
+                log.debug("Console waiting-room lookup failed for {}: {}", id, ex.getMessage());
+                console.put("waitingRoom", objectMapper.createArrayNode());
+            }
+            try {
+                JsonNode recordings = rtcClient.listRecordings(id);
+                console.put("recordings", recordings != null && recordings.isArray()
+                        ? recordings : objectMapper.createArrayNode());
+            } catch (Exception ex) {
+                log.debug("Console recordings lookup failed for {}: {}", id, ex.getMessage());
+                console.put("recordings", objectMapper.createArrayNode());
+            }
+            console.put("encounterId", referral.path("encounterId").asText(
+                    referral.path("encounter_id").asText(null)));
+            return ok(console, requestId, correlationId, HttpStatus.OK);
+        } catch (ResponseStatusException e) {
+            HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
+            return error(status == null ? HttpStatus.FORBIDDEN : status,
+                    "TELEMEDICINE_GOVERNANCE_INVALID",
+                    e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
+                    requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -883,6 +1187,15 @@ public class TeleconsultController {
             }
             return null;
         }
+        if (ON_CALL_ROUTING_TYPE.equals(routingType)) {
+            // ON_CALL target is a specialty key; the concrete provider is resolved from the
+            // khuluma on-call roster at submit time.
+            if (routingTarget.trim().length() < 3) {
+                return new ValidationError(HttpStatus.BAD_REQUEST, "INVALID_ROUTING_TARGET",
+                        "ON_CALL routing target must identify a specialty key");
+            }
+            return null;
+        }
         if ("WORKSPACE".equals(routingType)) {
             try {
                 UUID workspaceId = UUID.fromString(routingTarget.trim());
@@ -1337,7 +1650,8 @@ public class TeleconsultController {
                                                  String encounterId,
                                                  String identity,
                                                  String displayName,
-                                                 String role) {
+                                                 String role,
+                                                 String mediaProfile) {
         try {
             JsonNode existing = rtcClient.getSession(sessionId);
             if (existing != null && !existing.isNull()) {
@@ -1361,8 +1675,299 @@ public class TeleconsultController {
         provision.put("consentReference", referral.path("consentReference").asText(
                 referral.path("consent_reference").asText(null)));
         provision.put("sessionType", "TELECONSULT");
-        provision.put("participant", Map.of("identity", identity, "displayName", displayName, "role", role));
+        provision.put("participant", participantMap(identity, displayName, role, mediaProfile));
         return rtcClient.provisionSession(provision);
+    }
+
+    /**
+     * ON_CALL routing resolution (submit path): the stored routing target is a specialty key;
+     * look up the khuluma specialty-scoped on-call roster, pick the first on-call provider,
+     * rewrite the referral routing to that PRACTITIONER (mirroring practitioner routing) and
+     * notify them. No on-call provider is an honest 422 NO_ON_CALL_PROVIDER.
+     *
+     * @return an error response when submission must halt, otherwise {@code null}.
+     */
+    private ResponseEntity<Map<String, Object>> resolveOnCallRoutingIfNeeded(
+            String id, JsonNode referral, String tenantId, String correlationId, String purposeOfUse,
+            String facilityId, String actorId, String requestId) {
+        JsonNode routingNode = referral == null ? null : parseRoutingTarget(referral.path("routingTarget"));
+        if (routingNode == null || !routingNode.isObject()) {
+            return null;
+        }
+        String routingType = normalizedRoutingType(routingNode.path("type").asText(null));
+        if (!ON_CALL_ROUTING_TYPE.equals(routingType)) {
+            return null;
+        }
+        String specialty = routingNode.hasNonNull("target_ref")
+                ? routingNode.path("target_ref").asText("")
+                : routingNode.path("target").asText("");
+        JsonNode roster;
+        try {
+            roster = khulumaClient.onCallRoster(tenantId, specialty);
+        } catch (Exception ex) {
+            log.warn("Khuluma on-call roster lookup failed for referral {}: {}", id, ex.getMessage());
+            return error(HttpStatus.BAD_GATEWAY, "KHULUMA_UNAVAILABLE",
+                    "On-call roster lookup failed", requestId, correlationId);
+        }
+        String provider = null;
+        if (roster != null && roster.isArray()) {
+            for (JsonNode entry : roster) {
+                String actor = entry.path("actorId").asText("");
+                if (!actor.isBlank()) {
+                    provider = actor;
+                    break;
+                }
+            }
+        }
+        if (provider == null) {
+            return error(HttpStatus.UNPROCESSABLE_ENTITY, "NO_ON_CALL_PROVIDER",
+                    "No on-call provider is available"
+                            + (specialty == null || specialty.isBlank() ? "" : " for specialty " + specialty),
+                    requestId, correlationId);
+        }
+        Map<String, Object> update = new LinkedHashMap<>();
+        update.put("stage", 5);
+        update.put("routing_target", Map.of("type", "PRACTITIONER", "target_ref", provider));
+        pctClient.updateReferralStage(id, update);
+        sendSessionNotification("TELECONSULT_REQUESTED", provider, id,
+                "On-call teleconsult assigned",
+                "You have been assigned an on-call teleconsult referral " + id + ".");
+        telemedicineGovernanceService.audit(
+                tenantId, correlationId, purposeOfUse, facilityId,
+                "TELEMEDICINE_ON_CALL_ROUTED", "POST:teleconsult/submit", "SUCCESS",
+                actorId, "PROVIDER", extractPatient(referral), "TeleconsultReferral", id,
+                Map.of("specialty", defaultString(specialty, ""), "provider", provider));
+        return null;
+    }
+
+    private Map<String, Object> participantMap(String identity, String displayName, String role, String mediaProfile) {
+        Map<String, Object> participant = new LinkedHashMap<>();
+        participant.put("identity", identity);
+        participant.put("displayName", displayName);
+        participant.put("role", role);
+        if (mediaProfile != null) {
+            participant.put("mediaProfile", mediaProfile);
+        }
+        return participant;
+    }
+
+    private ValidationError validateMediaProfile(String rawMediaProfile) {
+        if (rawMediaProfile == null || rawMediaProfile.isBlank()) {
+            return null;
+        }
+        String normalized = rawMediaProfile.trim().toUpperCase(Locale.ROOT);
+        if (!ALLOWED_MEDIA_PROFILES.contains(normalized)) {
+            return new ValidationError(HttpStatus.BAD_REQUEST, "INVALID_MEDIA_PROFILE",
+                    "mediaProfile must be one of " + ALLOWED_MEDIA_PROFILES);
+        }
+        return null;
+    }
+
+    private String normalizedMediaProfile(String rawMediaProfile) {
+        if (rawMediaProfile == null || rawMediaProfile.isBlank()) {
+            return null;
+        }
+        return rawMediaProfile.trim().toUpperCase(Locale.ROOT);
+    }
+
+    /**
+     * Governance for PATIENT-role media tokens.
+     *
+     * <p>When the referral carries a patient anchor (CPID), the caller identity must equal it —
+     * a PATIENT token is only issuable to the referral's own patient. When no patient anchor is
+     * derivable, the current governance model cannot assert caller↔patient linkage at the BFF
+     * (identity-plane subject-relationship lookup is a noted seam), so we fail closed to
+     * purpose-of-use TREATMENT and write an explicit audit event for the unverified linkage.</p>
+     *
+     * @return an error response when the request must be rejected, otherwise {@code null}.
+     */
+    private ResponseEntity<Map<String, Object>> assertPatientTokenGovernance(
+            String sessionId, String referralPatient, String identity, String normalizedPurpose,
+            String tenantId, String correlationId, String facilityId, String actorId, String requestId) {
+        if (referralPatient != null && !referralPatient.isBlank()) {
+            if (identity == null || !referralPatient.equals(identity)) {
+                telemedicineGovernanceService.audit(
+                        tenantId, correlationId, normalizedPurpose, facilityId,
+                        "TELEMEDICINE_PATIENT_TOKEN_DENIED", "POST:teleconsult/media/token", "DENIED",
+                        actorId, "PATIENT", referralPatient, "TeleconsultSession", sessionId,
+                        Map.of("reason", "caller identity does not match referral patient"));
+                return error(HttpStatus.FORBIDDEN, "PATIENT_IDENTITY_MISMATCH",
+                        "A PATIENT-role media token may only be requested by the referral's patient",
+                        requestId, correlationId);
+            }
+            return null;
+        }
+        if (!"TREATMENT".equals(normalizedPurpose)) {
+            return error(HttpStatus.FORBIDDEN, "PATIENT_LINKAGE_UNVERIFIED",
+                    "PATIENT-role media tokens require purpose-of-use TREATMENT when the referral "
+                            + "carries no patient anchor", requestId, correlationId);
+        }
+        telemedicineGovernanceService.audit(
+                tenantId, correlationId, normalizedPurpose, facilityId,
+                "TELEMEDICINE_PATIENT_TOKEN_LINKAGE_UNVERIFIED", "POST:teleconsult/media/token", "SUCCESS",
+                actorId, "PATIENT", null, "TeleconsultSession", sessionId,
+                Map.of("reason", "referral has no derivable patient anchor; allowed under TREATMENT"));
+        return null;
+    }
+
+    /**
+     * WAITING/DENIED gate detection per the frozen RTC contract: a token response without a
+     * token/room credential and a WAITING or DENIED status means the participant is being held
+     * at the waiting-room gate.
+     */
+    private String waitingRoomGateStatus(JsonNode tokenResponse) {
+        if (tokenResponse == null || tokenResponse.isNull()) {
+            return null;
+        }
+        if (tokenResponse.hasNonNull("accessToken") || tokenResponse.hasNonNull("token")
+                || tokenResponse.hasNonNull("access_token") || tokenResponse.hasNonNull("roomUrl")
+                || tokenResponse.hasNonNull("room_url")) {
+            return null;
+        }
+        String status = tokenResponse.path("status").asText("").trim().toUpperCase(Locale.ROOT);
+        return "WAITING".equals(status) || "DENIED".equals(status) ? status : null;
+    }
+
+    /**
+     * Notify the referral's provider that a patient is waiting. The BFF cannot observe the RTC
+     * participant-waiting Kafka event, so this fires when a PATIENT token request returns
+     * WAITING; a short in-memory TTL cache dedupes the poll loop (per BFF instance — repeats
+     * across instances/restarts are accepted and noted).
+     */
+    private void notifyProviderPatientWaiting(String sessionId, String identity, JsonNode referral) {
+        try {
+            String recipient = extractProviderRef(referral);
+            if (recipient == null || recipient.isBlank()) {
+                return;
+            }
+            long now = System.currentTimeMillis();
+            String dedupeKey = sessionId + ":" + defaultString(identity, "unknown");
+            Long lastSent = waitingNotificationSentAt.get(dedupeKey);
+            if (lastSent != null && now - lastSent < WAITING_NOTIFICATION_TTL_MS) {
+                return;
+            }
+            waitingNotificationSentAt.put(dedupeKey, now);
+            waitingNotificationSentAt.entrySet().removeIf(e -> now - e.getValue() > WAITING_NOTIFICATION_TTL_MS);
+            sendSessionNotification("rtc.telemedicine.patient-waiting", recipient, sessionId,
+                    "Patient waiting",
+                    "A patient is waiting in the teleconsult waiting room for session " + sessionId + ".");
+        } catch (Exception ex) {
+            log.warn("Telemedicine patient-waiting notification failed: {}", ex.getMessage());
+        }
+    }
+
+    /** Best-effort IN_APP notification on a session template key; never fails the request. */
+    private void sendSessionNotification(String templateKey, String recipient, String sessionId,
+                                         String title, String message) {
+        try {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("templateKey", templateKey);
+            body.put("channel", "IN_APP");
+            body.put("to", recipient);
+            body.put("variables", Map.of(
+                    "sessionId", sessionId,
+                    "title", title,
+                    "message", message));
+            notificationClient.sendNotification(body);
+        } catch (Exception ex) {
+            log.warn("Telemedicine notification '{}' emission failed: {}", templateKey, ex.getMessage());
+        }
+    }
+
+    private String extractProviderRef(JsonNode referral) {
+        if (referral == null) {
+            return null;
+        }
+        for (String key : new String[]{"assignedProviderId", "assigned_provider_id",
+                "providerId", "provider_id", "referrerId", "referrer_id"}) {
+            if (referral.hasNonNull(key)) {
+                String value = referral.get(key).asText("");
+                if (!value.isBlank()) {
+                    return value;
+                }
+            }
+        }
+        return null;
+    }
+
+    private ArrayNode filterWaitingParticipants(JsonNode participants) {
+        ArrayNode waiting = objectMapper.createArrayNode();
+        if (participants != null && participants.isArray()) {
+            for (JsonNode participant : participants) {
+                if ("WAITING".equalsIgnoreCase(participant.path("state").asText(""))) {
+                    waiting.add(participant);
+                }
+            }
+        }
+        return waiting;
+    }
+
+    /**
+     * Scheduled teleconsult: create the booking-service appointment (type TELECONSULT, tagged
+     * with the referral id in {@code notes} — the appointment aggregate has no dedicated
+     * external-ref field), write the appointment linkage back onto the referral, and send the
+     * booking confirmation notification.
+     *
+     * <p>Seams (honest): PCT's referral stage update ignores unknown keys, so the
+     * {@code appointment_id} written on the referral PUT is forward-wiring only until PCT grows
+     * the column — the durable link lives on the appointment's notes tag. notification-service's
+     * NotifyRequest has no scheduledAt, so a time-of-appointment reminder cannot be scheduled —
+     * we send an immediate confirmation on the reminder template instead.</p>
+     */
+    private JsonNode scheduleTeleconsultAppointment(JsonNode created, String scheduledAt,
+                                                    String facilityHeader, String actorId,
+                                                    Map<String, Object> body) {
+        String referralId = extractId(created);
+        String facilityRef = firstNonBlank(facilityHeader, val(body, "facilityId", "facility_id"));
+        ObjectNode enriched = created != null && created.isObject()
+                ? ((ObjectNode) created).deepCopy()
+                : objectMapper.createObjectNode();
+        enriched.put("scheduledAt", scheduledAt);
+        if (facilityRef == null || facilityRef.isBlank()) {
+            log.warn("Scheduled teleconsult {} skipped booking: no facility reference", referralId);
+            enriched.put("appointmentError", "FACILITY_REQUIRED");
+            return enriched;
+        }
+        try {
+            Map<String, Object> appointment = new LinkedHashMap<>();
+            appointment.put("patient_cpid", extractPatient(created) != null
+                    ? extractPatient(created) : val(body, "patientId", "patient_id"));
+            appointment.put("facility_id", facilityRef);
+            appointment.put("provider_id", actorId);
+            appointment.put("appointment_type", "TELECONSULT");
+            appointment.put("scheduled_at", scheduledAt);
+            appointment.put("reason", val(body, "clinicalQuestion", "reason"));
+            appointment.put("notes", "teleconsult:referral:" + referralId);
+            JsonNode appt = bookingClient.createAppointment(appointment);
+            String appointmentId = appt != null && appt.hasNonNull("id") ? appt.get("id").asText() : null;
+            if (appointmentId == null || appointmentId.isBlank()) {
+                enriched.put("appointmentError", "BOOKING_UNAVAILABLE");
+                return enriched;
+            }
+            enriched.put("appointmentId", appointmentId);
+            try {
+                Map<String, Object> referralUpdate = new LinkedHashMap<>();
+                referralUpdate.put("stage", 1);
+                referralUpdate.put("appointment_id", appointmentId);
+                referralUpdate.put("scheduled_at", scheduledAt);
+                pctClient.updateReferralStage(referralId, referralUpdate);
+            } catch (Exception ex) {
+                log.warn("Referral {} appointment linkage writeback failed: {}", referralId, ex.getMessage());
+            }
+            String patientRef = extractPatient(created);
+            if (patientRef == null || patientRef.isBlank()) {
+                patientRef = val(body, "patientId", "patient_id");
+            }
+            if (patientRef != null && !patientRef.isBlank()) {
+                sendSessionNotification("rtc.telemedicine.appointment-reminder", patientRef, referralId,
+                        "Teleconsultation scheduled",
+                        "Your teleconsultation is scheduled for " + scheduledAt + ".");
+            }
+        } catch (Exception ex) {
+            log.warn("Scheduled teleconsult {} booking failed: {}", referralId, ex.getMessage());
+            enriched.put("appointmentError", "BOOKING_UNAVAILABLE");
+        }
+        return enriched;
     }
 
     private void mergeRtcFields(Map<String, Object> target, JsonNode node) {

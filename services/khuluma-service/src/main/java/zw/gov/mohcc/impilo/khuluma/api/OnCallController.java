@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/** Vashandi duty / on-call presence API (Phase 5 / W7, G-KH-04). */
+/** Vashandi duty / on-call presence API (Phase 5 / W7, G-KH-04; specialty scoping in W2). */
 @RestController
 @RequestMapping("/internal/v1/khuluma")
 public class OnCallController {
@@ -27,13 +27,19 @@ public class OnCallController {
             @RequestHeader(value = "X-Actor-Type", required = false) String actorType,
             @RequestBody Map<String, Object> body) {
         Object d = body.get("dutyStatus");
-        PresenceEntity p = service.setDuty(tenantId, actorId, actorType, d == null ? null : d.toString());
+        Object s = body.get("specialty");
+        PresenceEntity p = service.setDuty(tenantId, actorId, actorType,
+                d == null ? null : d.toString(),
+                s == null ? null : s.toString());
         return ResponseEntity.ok(Map.of("data", view(p)));
     }
 
     @GetMapping("/on-call")
-    public ResponseEntity<Map<String, Object>> roster(@RequestHeader("X-Tenant-ID") UUID tenantId) {
-        return ResponseEntity.ok(Map.of("data", service.onCallRoster(tenantId).stream().map(OnCallController::view).toList()));
+    public ResponseEntity<Map<String, Object>> roster(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @RequestParam(required = false) String specialty) {
+        return ResponseEntity.ok(Map.of("data",
+                service.onCallRoster(tenantId, specialty).stream().map(OnCallController::view).toList()));
     }
 
     private static Map<String, Object> view(PresenceEntity p) {
@@ -41,6 +47,7 @@ public class OnCallController {
         v.put("actorId", p.getActorId());
         v.put("actorType", p.getActorType());
         v.put("dutyStatus", p.getDutyStatus());
+        v.put("specialty", p.getSpecialty());
         return v;
     }
 }

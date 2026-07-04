@@ -9,7 +9,9 @@ import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.experience.client.AnalyticsPipelineServiceClient;
+import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
+import zw.gov.mohcc.impilo.experience.client.KhulumaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.CoverageServiceClient;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
@@ -39,6 +41,8 @@ class TeleconsultControllerTest {
     private AnalyticsPipelineServiceClient analyticsClient;
     private RtcGatewayServiceClient rtcClient;
     private NotificationServiceClient notificationClient;
+    private BookingServiceClient bookingClient;
+    private KhulumaServiceClient khulumaClient;
 
     private TelemedicineGovernanceService governanceService;
     private VitoServiceClient vitoClient;
@@ -59,6 +63,8 @@ class TeleconsultControllerTest {
         costaClient = Mockito.mock(CostaServiceClient.class);
         analyticsClient = Mockito.mock(AnalyticsPipelineServiceClient.class);
         rtcClient = Mockito.mock(RtcGatewayServiceClient.class);
+        bookingClient = Mockito.mock(BookingServiceClient.class);
+        khulumaClient = Mockito.mock(KhulumaServiceClient.class);
         governanceService = Mockito.mock(TelemedicineGovernanceService.class);
         vitoClient = Mockito.mock(VitoServiceClient.class);
         // Default: patient exists in VITO so existing createSession tests pass the intake guard.
@@ -67,7 +73,7 @@ class TeleconsultControllerTest {
         controller = new TeleconsultController(
                 pctClient, vitoClient, mvumoClient, documentClient, varapiClient, tusoClient, coverageClient,
                 notificationClient, fhirGatewayClient, costaClient, analyticsClient, rtcClient,
-                governanceService, objectMapper
+                bookingClient, khulumaClient, governanceService, objectMapper
         );
     }
 
@@ -328,5 +334,289 @@ class TeleconsultControllerTest {
         assertEquals("rtc-token-abc", data.get("token"));
         Mockito.verify(rtcClient).provisionSession(any());
         Mockito.verify(rtcClient).issueParticipantToken(eq("ref-rtc-1"), any());
+    }
+
+    // ── W2: participant roles, waiting-room, console, scheduling, ON_CALL ──
+
+    private ObjectNode consentedReferral(String id, String patientCpid, String providerId) {
+        ObjectNode referral = objectMapper.createObjectNode();
+        referral.put("id", id);
+        if (patientCpid != null) {
+            referral.put("patientCpid", patientCpid);
+        }
+        if (providerId != null) {
+            referral.put("providerId", providerId);
+        }
+        referral.put("consentStatus", "GRANTED");
+        return referral;
+    }
+
+    @Test
+    void issueMediaToken_rejectsUnknownParticipantRole() {
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
+        Mockito.when(pctClient.getReferral("ref-role-1")).thenReturn(consentedReferral("ref-role-1", "CPID-9", null));
+
+        var response = controller.issueMediaToken(
+                "ref-role-1", "req-r", "corr-r", "tenant-a", "TREATMENT", "fac-1", "provider-9",
+                Map.of("role", "HACKER"));
+
+        assertEquals(400, response.getStatusCode().value());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("INVALID_PARTICIPANT_ROLE", error.get("code"));
+        Mockito.verifyNoInteractions(rtcClient);
+    }
+
+    @Test
+    void issueMediaToken_rejectsUnknownMediaProfile() {
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
+        Mockito.when(pctClient.getReferral("ref-mp-1")).thenReturn(consentedReferral("ref-mp-1", "CPID-9", null));
+
+        var response = controller.issueMediaToken(
+                "ref-mp-1", "req-mp", "corr-mp", "tenant-a", "TREATMENT", "fac-1", "provider-9",
+                Map.of("mediaProfile", "VIDEO_4K"));
+
+        assertEquals(400, response.getStatusCode().value());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("INVALID_MEDIA_PROFILE", error.get("code"));
+        Mockito.verifyNoInteractions(rtcClient);
+    }
+
+    @Test
+    void issueMediaToken_passesWaitingThroughAndNotifiesProviderWithDedupe() {
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
+        Mockito.when(pctClient.getReferral("ref-wait-1"))
+                .thenReturn(consentedReferral("ref-wait-1", "CPID-9", "prov-1"));
+        Mockito.when(rtcClient.getSession("ref-wait-1")).thenReturn(objectMapper.createObjectNode());
+        ObjectNode waiting = objectMapper.createObjectNode();
+        waiting.put("status", "WAITING");
+        waiting.put("sessionId", "ref-wait-1");
+        waiting.put("identity", "CPID-9");
+        Mockito.when(rtcClient.issueParticipantToken(eq("ref-wait-1"), any())).thenReturn(waiting);
+
+        var response = controller.issueMediaToken(
+                "ref-wait-1", "req-w", "corr-w", "tenant-a", "TREATMENT", "fac-1", "CPID-9",
+                Map.of("role", "PATIENT", "mediaProfile", "AUDIO_ONLY"));
+
+        assertEquals(200, response.getStatusCode().value());
+        Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
+        assertEquals("WAITING", data.get("status"));
+        assertEquals("ref-wait-1", data.get("sessionId"));
+        assertEquals("CPID-9", data.get("identity"));
+        // patient-waiting notification to the referral provider
+        Mockito.verify(notificationClient).sendNotification(Mockito.argThat(body ->
+                "rtc.telemedicine.patient-waiting".equals(body.get("templateKey"))
+                        && "prov-1".equals(body.get("to"))));
+
+        // second poll while still WAITING → deduped, no second notification
+        controller.issueMediaToken(
+                "ref-wait-1", "req-w2", "corr-w2", "tenant-a", "TREATMENT", "fac-1", "CPID-9",
+                Map.of("role", "PATIENT"));
+        Mockito.verify(notificationClient, Mockito.times(1)).sendNotification(any());
+    }
+
+    @Test
+    void issueMediaToken_patientRoleIdentityMismatchIsForbidden() {
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
+        Mockito.when(pctClient.getReferral("ref-gov-1"))
+                .thenReturn(consentedReferral("ref-gov-1", "CPID-9", "prov-1"));
+
+        var response = controller.issueMediaToken(
+                "ref-gov-1", "req-g", "corr-g", "tenant-a", "TREATMENT", "fac-1", "intruder-1",
+                Map.of("role", "PATIENT"));
+
+        assertEquals(403, response.getStatusCode().value());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("PATIENT_IDENTITY_MISMATCH", error.get("code"));
+        Mockito.verifyNoInteractions(rtcClient);
+    }
+
+    @Test
+    void issueMediaToken_patientRoleWithoutPatientAnchorRequiresTreatment() {
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("OPERATIONS");
+        Mockito.when(pctClient.getReferral("ref-gov-2"))
+                .thenReturn(consentedReferral("ref-gov-2", null, "prov-1"));
+
+        var response = controller.issueMediaToken(
+                "ref-gov-2", "req-g2", "corr-g2", "tenant-a", "OPERATIONS", "fac-1", "caller-1",
+                Map.of("role", "PATIENT"));
+
+        assertEquals(403, response.getStatusCode().value());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("PATIENT_LINKAGE_UNVERIFIED", error.get("code"));
+        Mockito.verifyNoInteractions(rtcClient);
+    }
+
+    @Test
+    void refreshMediaToken_passesRefreshedTokenThrough() {
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
+        ObjectNode refreshed = objectMapper.createObjectNode();
+        refreshed.put("accessToken", "rtc-token-refreshed");
+        Mockito.when(rtcClient.refreshParticipantToken(eq("ref-rf-1"), any())).thenReturn(refreshed);
+
+        var response = controller.refreshMediaToken(
+                "ref-rf-1", "req-rf", "corr-rf", "tenant-a", "TREATMENT", "fac-1", "provider-9",
+                Map.of());
+
+        assertEquals(200, response.getStatusCode().value());
+        Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
+        assertEquals("rtc-token-refreshed", data.get("token"));
+        assertEquals("READY", data.get("status"));
+        Mockito.verify(rtcClient).refreshParticipantToken(eq("ref-rf-1"), any());
+    }
+
+    @Test
+    void waitingRoom_listsOnlyWaitingParticipants() {
+        var participants = objectMapper.createArrayNode();
+        participants.add(objectMapper.createObjectNode().put("identity", "CPID-9").put("state", "WAITING"));
+        participants.add(objectMapper.createObjectNode().put("identity", "prov-1").put("state", "ADMITTED"));
+        Mockito.when(rtcClient.listParticipants("ref-wr-1")).thenReturn(participants);
+
+        var response = controller.waitingRoom("ref-wr-1", "req-wr", "corr-wr");
+
+        assertEquals(200, response.getStatusCode().value());
+        Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
+        JsonNode waiting = (JsonNode) data.get("waiting");
+        assertEquals(1, waiting.size());
+        assertEquals("CPID-9", waiting.get(0).get("identity").asText());
+    }
+
+    @Test
+    void admitWaitingParticipant_admitsAndNotifiesPatient() {
+        Mockito.when(rtcClient.admitParticipant(eq("ref-adm-1"), eq("CPID-9"), any()))
+                .thenReturn(objectMapper.createObjectNode().put("state", "ADMITTED"));
+
+        var response = controller.admitWaitingParticipant(
+                "ref-adm-1", "req-a", "corr-a", "tenant-a", "TREATMENT", "fac-1", "prov-1",
+                Map.of("identity", "CPID-9"));
+
+        assertEquals(200, response.getStatusCode().value());
+        Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
+        assertEquals("ADMITTED", data.get("state"));
+        Mockito.verify(rtcClient).admitParticipant(eq("ref-adm-1"), eq("CPID-9"), any());
+        Mockito.verify(notificationClient).sendNotification(Mockito.argThat(body ->
+                "rtc.telemedicine.session-ready".equals(body.get("templateKey"))
+                        && "CPID-9".equals(body.get("to"))));
+    }
+
+    @Test
+    void denyWaitingParticipant_deniesWithReason() {
+        Mockito.when(rtcClient.denyParticipant(eq("ref-den-1"), eq("CPID-9"), any()))
+                .thenReturn(objectMapper.createObjectNode().put("state", "DENIED"));
+
+        var response = controller.denyWaitingParticipant(
+                "ref-den-1", "req-d", "corr-d", "tenant-a", "TREATMENT", "fac-1", "prov-1",
+                Map.of("identity", "CPID-9", "reason", "Wrong session"));
+
+        assertEquals(200, response.getStatusCode().value());
+        Mockito.verify(rtcClient).denyParticipant(eq("ref-den-1"), eq("CPID-9"),
+                Mockito.argThat(body -> "Wrong session".equals(body.get("reason"))));
+        Mockito.verifyNoInteractions(notificationClient);
+    }
+
+    @Test
+    void providerConsole_composesReferralWaitingRoomRecordingsAndEncounter() {
+        ObjectNode referral = consentedReferral("ref-con-1", "CPID-9", "prov-1");
+        referral.put("encounterId", "enc-77");
+        Mockito.when(pctClient.getReferral("ref-con-1")).thenReturn(referral);
+        var participants = objectMapper.createArrayNode();
+        participants.add(objectMapper.createObjectNode().put("identity", "CPID-9").put("state", "WAITING"));
+        Mockito.when(rtcClient.listParticipants("ref-con-1")).thenReturn(participants);
+        var recordings = objectMapper.createArrayNode();
+        recordings.add(objectMapper.createObjectNode().put("recordingId", "rec-1"));
+        Mockito.when(rtcClient.listRecordings("ref-con-1")).thenReturn(recordings);
+
+        var response = controller.providerConsole("ref-con-1", "req-c", "corr-c");
+
+        assertEquals(200, response.getStatusCode().value());
+        Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
+        assertNotNull(data.get("referral"));
+        assertEquals(1, ((JsonNode) data.get("waitingRoom")).size());
+        assertEquals("rec-1", ((JsonNode) data.get("recordings")).get(0).get("recordingId").asText());
+        assertEquals("enc-77", data.get("encounterId"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void createSession_withScheduledAtCreatesBookingAndTagsReferral() {
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
+        ObjectNode created = objectMapper.createObjectNode();
+        created.put("id", "ref-sch-1");
+        created.put("patientCpid", "CPID-1");
+        Mockito.when(pctClient.createReferral(any())).thenReturn(created);
+        Mockito.when(bookingClient.createAppointment(any()))
+                .thenReturn(objectMapper.createObjectNode().put("id", "appt-1"));
+
+        var response = controller.createSession(
+                "req-s", "corr-s", "tenant-a", "TREATMENT", "55", "provider-1",
+                Map.of("patientId", "CPID-1", "clinicalQuestion", "Follow-up review",
+                        "scheduledAt", "2026-07-10T09:00:00Z"));
+
+        assertEquals(201, response.getStatusCode().value());
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertEquals("appt-1", data.get("appointmentId").asText());
+
+        ArgumentCaptor<Map<String, Object>> apptCaptor = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(bookingClient).createAppointment(apptCaptor.capture());
+        assertEquals("TELECONSULT", apptCaptor.getValue().get("appointment_type"));
+        assertEquals("2026-07-10T09:00:00Z", apptCaptor.getValue().get("scheduled_at"));
+        assertEquals("teleconsult:referral:ref-sch-1", apptCaptor.getValue().get("notes"));
+
+        Mockito.verify(pctClient).updateReferralStage(eq("ref-sch-1"), Mockito.argThat(update ->
+                "appt-1".equals(update.get("appointment_id"))));
+        Mockito.verify(notificationClient).sendNotification(Mockito.argThat(body ->
+                "rtc.telemedicine.appointment-reminder".equals(body.get("templateKey"))
+                        && "CPID-1".equals(body.get("to"))));
+    }
+
+    @Test
+    void submit_onCallRoutingResolvesProviderFromKhulumaRoster() {
+        ObjectNode referral = consentedReferral("ref-oc-1", "CPID-1", null);
+        ObjectNode routing = objectMapper.createObjectNode();
+        routing.put("type", "ON_CALL");
+        routing.put("target_ref", "CARDIOLOGY");
+        referral.set("routingTarget", routing);
+        Mockito.when(pctClient.getReferral("ref-oc-1")).thenReturn(referral);
+        var roster = objectMapper.createArrayNode();
+        roster.add(objectMapper.createObjectNode().put("actorId", "prov-9").put("dutyStatus", "ON_CALL"));
+        Mockito.when(khulumaClient.onCallRoster("tenant-a", "CARDIOLOGY")).thenReturn(roster);
+        ObjectNode submitted = objectMapper.createObjectNode();
+        submitted.put("id", "ref-oc-1");
+        submitted.put("status", "SUBMITTED");
+        submitted.put("patientCpid", "CPID-1");
+        Mockito.when(pctClient.submitReferral("ref-oc-1")).thenReturn(submitted);
+
+        var response = controller.submitReferral(
+                "ref-oc-1", "req-oc", "corr-oc", "tenant-a", "TREATMENT", "fac-1", "actor-1");
+
+        assertEquals(200, response.getStatusCode().value());
+        Mockito.verify(pctClient).updateReferralStage(eq("ref-oc-1"), Mockito.argThat(update -> {
+            Object target = update.get("routing_target");
+            return target instanceof Map<?, ?> t
+                    && "PRACTITIONER".equals(t.get("type"))
+                    && "prov-9".equals(t.get("target_ref"));
+        }));
+        Mockito.verify(pctClient).submitReferral("ref-oc-1");
+        Mockito.verify(notificationClient).sendNotification(Mockito.argThat(body ->
+                "prov-9".equals(body.get("to"))));
+    }
+
+    @Test
+    void submit_onCallWithoutAvailableProviderIsHonest422() {
+        ObjectNode referral = consentedReferral("ref-oc-2", "CPID-1", null);
+        ObjectNode routing = objectMapper.createObjectNode();
+        routing.put("type", "ON_CALL");
+        routing.put("target_ref", "ONCOLOGY");
+        referral.set("routingTarget", routing);
+        Mockito.when(pctClient.getReferral("ref-oc-2")).thenReturn(referral);
+        Mockito.when(khulumaClient.onCallRoster("tenant-a", "ONCOLOGY"))
+                .thenReturn(objectMapper.createArrayNode());
+
+        var response = controller.submitReferral(
+                "ref-oc-2", "req-oc2", "corr-oc2", "tenant-a", "TREATMENT", "fac-1", "actor-1");
+
+        assertEquals(422, response.getStatusCode().value());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("NO_ON_CALL_PROVIDER", error.get("code"));
+        Mockito.verify(pctClient, Mockito.never()).submitReferral(any());
     }
 }
