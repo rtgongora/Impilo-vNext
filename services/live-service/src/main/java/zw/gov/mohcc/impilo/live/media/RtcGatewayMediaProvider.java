@@ -35,6 +35,11 @@ public class RtcGatewayMediaProvider implements LiveMediaProvider {
         request.put("providerId", context.participantId());
         request.put("facilityId", context.facilityId());
         request.put("sessionType", "LIVE_EVENT");
+        // Stamp ownership so impilo.rtc.* consumers can filter (LIVE) and resolve (event id).
+        request.put("owningService", "LIVE");
+        if (context.eventId() != null) {
+            request.put("owningRef", context.eventId().toString());
+        }
         request.put("attributes", context.attributes() != null ? context.attributes() : Map.of());
         Map<String, Object> participant = new LinkedHashMap<>();
         participant.put("identity", context.participantId());

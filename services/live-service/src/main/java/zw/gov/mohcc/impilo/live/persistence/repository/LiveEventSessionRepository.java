@@ -14,4 +14,7 @@ public interface LiveEventSessionRepository extends JpaRepository<LiveEventSessi
     List<LiveEventSessionEntity> findByEventIdOrderByCreatedAtDesc(UUID eventId);
 
     Optional<LiveEventSessionEntity> findFirstByEventIdAndEndedAtIsNullOrderByCreatedAtDesc(UUID eventId);
+
+    /** Media-truth resolution: rtc-gateway events carry the rtc session id we stored as provider_room_id. */
+    Optional<LiveEventSessionEntity> findFirstByProviderRoomIdOrderByCreatedAtDesc(String providerRoomId);
 }
