@@ -467,7 +467,7 @@
     },
     "tuso-service": {
       "service": "tuso-service",
-      "registry_digest": "sha256:38157470305ab398f051402c931e939013791877843a5be3c855b4028075b2a3",
+      "registry_digest": "sha256:6bee827fdaa3796ba7efd9a29c207d07f46215ccc4e2c55daeb69053697c9881",
       "digest_pinned": true
     },
     "ubomi-service": {
@@ -506,5 +506,5 @@
       "digest_pinned": true
     }
   },
-  "digest_pin_generated_at": "2026-07-04T05:56:49.161909+00:00"
+  "digest_pin_generated_at": "2026-07-04T06:25:23.621008+00:00"
 }

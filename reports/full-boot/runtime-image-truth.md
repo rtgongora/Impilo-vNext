@@ -95,7 +95,7 @@
 | tshepo-identity-service | YES | aligned | sha256:47a204941582 | sha256:47a204941582 | sha256:47a204941582 | 127.0.0.1:5000/impilo/tshepo-identity-service@sha256:47a204941582aaceba96a6fb0d48ddd649f6e8ec99f7a3826f8a0fd34beeb681 |
 | tshepo-keys-service | YES | aligned | sha256:bef0005cb084 | sha256:bef0005cb084 | sha256:bef0005cb084 | 127.0.0.1:5000/impilo/tshepo-keys-service@sha256:bef0005cb0844142d528088a49a3c24a68873348c918f6e0dabb04bd512a8507 |
 | tshepo-offline-service | YES | aligned | sha256:9a7166912572 | sha256:9a7166912572 | sha256:9a7166912572 | 127.0.0.1:5000/impilo/tshepo-offline-service@sha256:9a71669125729e70900ad51bbf088fd47fd62940f5f1fe4c9ce613e5b62e3024 |
-| tuso-service | YES | aligned | sha256:38157470305a | sha256:38157470305a | sha256:38157470305a | 127.0.0.1:5000/impilo/tuso-service@sha256:38157470305ab398f051402c931e939013791877843a5be3c855b4028075b2a3 |
+| tuso-service | YES | aligned | sha256:6bee827fdaa3 | sha256:6bee827fdaa3 | sha256:6bee827fdaa3 | 127.0.0.1:5000/impilo/tuso-service@sha256:6bee827fdaa3796ba7efd9a29c207d07f46215ccc4e2c55daeb69053697c9881 |
 | ubomi-service | YES | aligned | sha256:890c7e5de9e7 | sha256:890c7e5de9e7 | sha256:890c7e5de9e7 | 127.0.0.1:5000/impilo/ubomi-service@sha256:890c7e5de9e70db0d3d3e124c9c94e895fe0542427e97da558c2153bf6718e58 |
 | varapi-service | YES | aligned | sha256:d849db697a0c | sha256:d849db697a0c | sha256:d849db697a0c | 127.0.0.1:5000/impilo/varapi-service@sha256:d849db697a0c15ef3a2fd183b63812d1c87b7edb9dd5e3cf7ab3e1fa04edc1e4 |
 | vashandi-workforce-service | YES | aligned | sha256:7f949d727ca1 | sha256:7f949d727ca1 | sha256:7f949d727ca1 | 127.0.0.1:5000/impilo/vashandi-workforce-service@sha256:7f949d727ca1deca59a6defc1c5df9657c4687a61d3bda28169001ef5ed0e5e3 |
