@@ -67,7 +67,7 @@
 | observability-service | YES | aligned | sha256:184e6b6006db | sha256:184e6b6006db | sha256:184e6b6006db | 127.0.0.1:5000/impilo/observability-service@sha256:184e6b6006dbdb28f83d6d5f6fddadd8f8e568ffc4077a7026b906defa52f1e6 |
 | offline-edge-service | YES | aligned | sha256:761b3440ceae | sha256:761b3440ceae | sha256:761b3440ceae | 127.0.0.1:5000/impilo/offline-edge-service@sha256:761b3440ceaeea6f976c071e5c9bab9ef4407e354330277520044cdb684ca395 |
 | offline-sync-service | YES | aligned | sha256:aae428272521 | sha256:aae428272521 | sha256:aae428272521 | 127.0.0.1:5000/impilo/offline-sync-service@sha256:aae4282725219aaa8e4ec4d74e1c9164b31919f63868b65f9c950b23295adeec |
-| one-ui-shell | YES | aligned | sha256:3472d00fd1a8 | sha256:3472d00fd1a8 | sha256:3472d00fd1a8 | 127.0.0.1:5000/impilo/one-ui-shell@sha256:3472d00fd1a8583f7611454afb7af70d4b99083b92029b28d48e5917a349936b |
+| one-ui-shell | YES | aligned | sha256:ca6cdd123fd8 | sha256:ca6cdd123fd8 | sha256:ca6cdd123fd8 | 127.0.0.1:5000/impilo/one-ui-shell@sha256:ca6cdd123fd8925cacee8bb81d8169c7335ba262dcb8c5c8909e41972ecfe9a1 |
 | oros-service | YES | aligned | sha256:54ee85f58517 | sha256:54ee85f58517 | sha256:54ee85f58517 | 127.0.0.1:5000/impilo/oros-service@sha256:54ee85f58517e9541f0e6cd2d8853c478be198ec3b07d685c0fcb399139a438d |
 | pacs-adapter-service | YES | aligned | sha256:99b5e6b0b773 | sha256:99b5e6b0b773 | sha256:99b5e6b0b773 | 127.0.0.1:5000/impilo/pacs-adapter-service@sha256:99b5e6b0b77345d9ad05b9e9ebf1b761c6ccc613ec7d95230674911c77319bcf |
 | patient-safety-service | YES | aligned | sha256:ff08beb3c1f7 | sha256:ff08beb3c1f7 | sha256:2ec8f3396b9d | 127.0.0.1:5000/impilo/patient-safety-service@sha256:ff08beb3c1f7a3bc0dd1d945731d4bf73ccddfb9a5fb92beffce9e011ac725f8 |
