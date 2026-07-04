@@ -1,0 +1,61 @@
+# Provider telemedicine — waiting-room + admit + call-screen smoke.
+#
+# Lane: dev-client (requires an EAS development build — LiveKit/WebRTC native
+# modules are not present in Expo Go). Media itself is asserted UI-level only
+# (governed connected-status text), not at the RTC track level.
+#
+# Preconditions: seeded provider session with at least one telemedicine
+# session in SCHEDULED/WAITING/IN_PROGRESS and a client waiting to be admitted
+# (citizen-telehealth-waiting-room.yaml can produce the waiting client).
+appId: zw.gov.impilo.provider
+tags:
+  - dev-client
+---
+- launchApp
+
+# App boot
+- extendedWaitUntil:
+    visible: "Initializing Impilo Provider..."
+    timeout: 60000
+- extendedWaitUntil:
+    id: "provider-tabs"
+    timeout: 120000
+
+# Navigate: Tools → Telehealth tab
+- tapOn: "Tools"
+- tapOn:
+    id: "tools-tab-telemedicine"
+- assertVisible:
+    id: "telemedicine-screen"
+
+# Waiting-room section renders per active session
+- extendedWaitUntil:
+    id: "telemedicine-waiting-room"
+    timeout: 30000
+
+# Admit the waiting client
+- extendedWaitUntil:
+    id: "telemedicine-admit-button"
+    timeout: 30000
+- tapOn:
+    id: "telemedicine-admit-button"
+
+# Join the session → full-screen call
+- tapOn: "Join"
+- extendedWaitUntil:
+    id: "telemedicine-call-screen"
+    timeout: 30000
+
+# Media asserted UI-level only: governed LiveKit connected status text
+- extendedWaitUntil:
+    text: "LiveKit media connected through Impilo RTC Gateway."
+    timeout: 60000
+
+# End the call with an optional note
+- tapOn:
+    id: "end-session-btn"
+- tapOn:
+    id: "confirm-end-call"
+- extendedWaitUntil:
+    id: "telemedicine-screen"
+    timeout: 30000

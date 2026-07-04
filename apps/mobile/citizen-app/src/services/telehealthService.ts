@@ -90,3 +90,92 @@ export async function joinSession(
 export async function endSession(id: string, notes?: string): Promise<void> {
   await apiClient.post(`${V1}/sessions/${encodeURIComponent(id)}/end`, { notes });
 }
+
+/* ── Governed RTC media token (shared teleconsult contract) ──
+ *
+ * The mobile citizen BFF surface (/internal/v1/mobile/citizen/telehealth/*)
+ * does not expose media-token / waiting-room routes, so the app calls the
+ * shared /internal/v1/teleconsult/* contract directly — the api client
+ * injects the same trust headers either way.
+ */
+
+const TELECONSULT_V1 = "/internal/v1/teleconsult";
+
+export type MediaTokenStatus = "READY" | "WAITING" | "DENIED";
+
+export interface MediaTokenResult {
+  status: MediaTokenStatus;
+  roomUrl?: string;
+  token?: string;
+  /** Optional human-readable reason returned with a DENIED decision. */
+  reason?: string;
+}
+
+export interface MediaTokenRequest {
+  displayName: string;
+  role: "PATIENT" | "PROVIDER";
+  mediaProfile?: "AUDIO_ONLY" | "AUDIO_VIDEO";
+}
+
+interface MediaTokenEnvelope {
+  data?: MediaTokenRow;
+}
+
+interface MediaTokenRow {
+  status?: string;
+  room_url?: string;
+  roomUrl?: string;
+  token?: string;
+  accessToken?: string;
+  access_token?: string;
+  reason?: string;
+  denied_reason?: string;
+}
+
+export function normalizeMediaTokenPayload(payload: MediaTokenEnvelope | MediaTokenRow | null | undefined): MediaTokenResult {
+  const row: MediaTokenRow = ((payload as MediaTokenEnvelope | undefined)?.data ?? payload ?? {}) as MediaTokenRow;
+  const status = String(row.status ?? "").toUpperCase();
+  if (status === "DENIED") {
+    return { status: "DENIED", reason: row.reason ?? row.denied_reason };
+  }
+  if (status === "WAITING") {
+    return { status: "WAITING" };
+  }
+  const roomUrl = row.room_url ?? row.roomUrl;
+  const token = row.token ?? row.accessToken ?? row.access_token;
+  if (roomUrl && token) {
+    return { status: "READY", roomUrl, token };
+  }
+  // No decision and no credentials yet — treat as still waiting so callers keep polling.
+  return { status: "WAITING" };
+}
+
+function mediaTokenBody(request: MediaTokenRequest): Record<string, unknown> {
+  return {
+    displayName: request.displayName,
+    role: request.role,
+    ...(request.mediaProfile ? { mediaProfile: request.mediaProfile } : {}),
+  };
+}
+
+export async function requestSessionMediaToken(
+  id: string,
+  request: MediaTokenRequest
+): Promise<MediaTokenResult> {
+  const response = await apiClient.post<MediaTokenEnvelope>(
+    `${TELECONSULT_V1}/sessions/${encodeURIComponent(id)}/media/token`,
+    mediaTokenBody(request)
+  );
+  return normalizeMediaTokenPayload(response.data);
+}
+
+export async function refreshSessionMediaToken(
+  id: string,
+  request: MediaTokenRequest
+): Promise<MediaTokenResult> {
+  const response = await apiClient.post<MediaTokenEnvelope>(
+    `${TELECONSULT_V1}/sessions/${encodeURIComponent(id)}/media/token/refresh`,
+    mediaTokenBody(request)
+  );
+  return normalizeMediaTokenPayload(response.data);
+}

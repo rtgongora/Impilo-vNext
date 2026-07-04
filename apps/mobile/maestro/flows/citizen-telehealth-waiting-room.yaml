@@ -1,0 +1,62 @@
+# Citizen telehealth — waiting-room stage smoke.
+#
+# Lane: dev-client (requires an EAS development build — LiveKit/WebRTC native
+# modules are not present in Expo Go). Media itself is asserted UI-level only
+# (waiting-room surface + connected status text once admitted), not at the
+# RTC track level.
+#
+# Preconditions: seeded citizen session with at least one telehealth session
+# in SCHEDULED/IN_PROGRESS. Admission is provider-driven, so this flow only
+# proves the waiting-room surface; run provider-telemedicine-waiting-admit.yaml
+# for the admit half of the journey.
+appId: zw.gov.impilo.citizen
+tags:
+  - dev-client
+---
+- launchApp
+
+# App boot
+- extendedWaitUntil:
+    visible: "Initializing Impilo Health..."
+    timeout: 60000
+- extendedWaitUntil:
+    id: "citizen-tabs"
+    timeout: 120000
+
+# Navigate: Care tab → telehealth list
+- tapOn: "Care"
+- assertVisible:
+    id: "telehealth-list-screen"
+
+# Open the first joinable session card ("Join" for SCHEDULED, "Rejoin" for IN_PROGRESS)
+- tapOn: "Join"
+- assertVisible:
+    id: "telehealth-session-screen"
+
+# Join → waiting room stage (device check + guidance + consent line)
+- tapOn:
+    id: "join-session"
+- extendedWaitUntil:
+    id: "telehealth-waiting-room"
+    timeout: 30000
+- assertVisible:
+    id: "telehealth-audio-only-toggle"
+
+# Ask to join → governed WAITING status surfaces with friendly copy
+- tapOn:
+    id: "prejoin-join"
+- extendedWaitUntil:
+    id: "telehealth-waiting-status"
+    timeout: 30000
+
+# If/when the provider admits (see provider flow), the call stage appears with
+# the governed connected-status text; asserted here as an optional tail so the
+# flow passes standalone while a provider is not admitting.
+- runFlow:
+    when:
+      visible:
+        id: "telehealth-in-call"
+    commands:
+      - extendedWaitUntil:
+          text: "LiveKit media connected through Impilo RTC Gateway."
+          timeout: 60000

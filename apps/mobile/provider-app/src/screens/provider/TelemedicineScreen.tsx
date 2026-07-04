@@ -1,7 +1,8 @@
 /**
  * TelemedicineScreen — Video/audio consultation participation.
  *
- * Manages telemedicine session lifecycle: join → in-progress → end.
+ * Lists sessions with a per-session governed waiting room (admit/deny) and
+ * hands the active call over to TelemedicineCallScreen.
  */
 
 import React, { useState, useCallback, useEffect } from "react";
@@ -17,34 +18,25 @@ import {
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
-import { useChannel } from "@impilo/mobile-messaging";
 import { useAuth } from "@impilo/mobile-auth";
 import { useAppStore } from "../../stores/appStore";
 import type { TelemedicineSession } from "../../types";
 import {
-  endProviderTelemedicineSession,
+  admitTelemedicineParticipant,
+  denyTelemedicineParticipant,
+  fetchTelemedicineWaitingRoom,
   joinProviderTelemedicineSession,
   listProviderTelemedicineSessions,
-  sendProviderTelemedicineSignal,
+  type WaitingRoomParticipant,
 } from "../../services/telemedicineService";
-import { LiveKitMobileConsultRoom } from "./LiveKitMobileConsultRoom";
+import { TelemedicineCallScreen } from "./TelemedicineCallScreen";
 
-export function mapChannelHealth(status: string | undefined): {
-  label: string;
-  variant: "primary" | "warning" | "secondary" | "destructive";
-} {
-  const value = String(status ?? "").toLowerCase();
-  if (value === "connected" || value === "open" || value === "ready") {
-    return { label: "Realtime connected", variant: "primary" };
-  }
-  if (value === "connecting" || value === "reconnecting") {
-    return { label: "Realtime reconnecting", variant: "warning" };
-  }
-  if (value === "error" || value === "closed" || value === "offline") {
-    return { label: "Realtime unavailable", variant: "destructive" };
-  }
-  return { label: "Realtime unknown", variant: "secondary" };
-}
+export { mapChannelHealth } from "./TelemedicineCallScreen";
+
+const WAITING_ROOM_POLL_MS = 10_000;
+
+/** Sessions whose waiting room is worth watching. */
+const WAITING_ROOM_STATUSES = new Set(["SCHEDULED", "WAITING", "IN_PROGRESS"]);
 
 export function TelemedicineScreen() {
   const auth = useAuth();
@@ -53,10 +45,14 @@ export function TelemedicineScreen() {
   const [activeSession, setActiveSession] = useState<TelemedicineSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
-  const [micMuted, setMicMuted] = useState(false);
-  const [videoEnabled, setVideoEnabled] = useState(true);
-  const [sendingSignal, setSendingSignal] = useState<"delay" | "nudge" | "support" | null>(null);
+  const [waitingRooms, setWaitingRooms] = useState<Record<string, WaitingRoomParticipant[]>>({});
+  const [admissionBusy, setAdmissionBusy] = useState<string | null>(null);
+  const [admissionNotice, setAdmissionNotice] = useState<string | null>(null);
+
+  const providerDisplayName =
+    [auth.user?.given_name, auth.user?.family_name].filter(Boolean).join(" ") ||
+    auth.user?.preferred_username ||
+    "Impilo provider";
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
@@ -77,6 +73,38 @@ export function TelemedicineScreen() {
     loadSessions();
   }, [loadSessions]);
 
+  const refreshWaitingRooms = useCallback(async (candidates: TelemedicineSession[]) => {
+    const watchable = candidates.filter((session) => session.id && WAITING_ROOM_STATUSES.has(session.status));
+    if (watchable.length === 0) return;
+    const entries = await Promise.all(
+      watchable.map(async (session) => {
+        try {
+          return [session.id, await fetchTelemedicineWaitingRoom(session.id)] as const;
+        } catch {
+          // Waiting room is best-effort; keep the previous snapshot on failure.
+          return null;
+        }
+      })
+    );
+    setWaitingRooms((prev) => {
+      const next = { ...prev };
+      for (const entry of entries) {
+        if (entry) next[entry[0]] = entry[1];
+      }
+      return next;
+    });
+  }, []);
+
+  // Poll the governed waiting room for watchable sessions every 10s.
+  useEffect(() => {
+    if (activeSession || sessions.length === 0) return;
+    void refreshWaitingRooms(sessions);
+    const interval = setInterval(() => {
+      void refreshWaitingRooms(sessions);
+    }, WAITING_ROOM_POLL_MS);
+    return () => clearInterval(interval);
+  }, [sessions, activeSession, refreshWaitingRooms]);
+
   const handleJoin = useCallback(async (session: TelemedicineSession) => {
     if (!session.id) {
       setError("Cannot join session: missing identifier.");
@@ -85,149 +113,49 @@ export function TelemedicineScreen() {
     try {
       const next = await joinProviderTelemedicineSession(session.id);
       setActiveSession(next);
-      if (!next.channelId) {
-        setSessionNotice("Session joined, but realtime channel is missing. Use async notes and retry reconnect.");
-      } else {
-        setSessionNotice(null);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to join session");
     }
   }, []);
 
-  const handleEnd = useCallback(async () => {
-    if (!activeSession) return;
+  const handleAdmit = useCallback(async (session: TelemedicineSession, participant: WaitingRoomParticipant) => {
+    setAdmissionBusy(participant.identity);
+    setError(null);
     try {
-      await endProviderTelemedicineSession(activeSession.id);
-      setActiveSession(null);
-      loadSessions();
+      await admitTelemedicineParticipant(session.id, participant.identity);
+      setAdmissionNotice(`${participant.displayName ?? participant.identity} admitted to the consult.`);
+      await refreshWaitingRooms([session]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to end session");
+      setError(err instanceof Error ? err.message : "Failed to admit participant");
+    } finally {
+      setAdmissionBusy(null);
     }
-  }, [activeSession, loadSessions]);
+  }, [refreshWaitingRooms]);
 
-  const postSessionSignal = useCallback(
-    async (kind: "delay" | "nudge" | "support") => {
-      if (!activeSession?.id) return;
-      setSendingSignal(kind);
-      try {
-        await sendProviderTelemedicineSignal(activeSession.id, kind);
-        setSessionNotice(
-          kind === "delay"
-            ? "Delay notice sent to client."
-            : kind === "nudge"
-              ? "No-show nudge sent to client."
-              : "Support escalation sent."
-        );
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to send teleconsult signal");
-      } finally {
-        setSendingSignal(null);
-      }
-    },
-    [activeSession?.id]
-  );
-
-  // Real-time signaling for active session
-  const { status: channelStatus } = useChannel(
-    activeSession?.channelId ? `telehealth:${activeSession.channelId}` : "",
-    {
-      onMessage: (event) => {
-        if (event.type === "session_ended" || event.type === "telemedicine.session.completed") {
-          setActiveSession(null);
-          loadSessions();
-        } else if (event.type === "telemedicine.session.client_not_joined") {
-          setSessionNotice("Client has not joined yet. A no-show nudge has been sent.");
-        } else if (event.type === "telemedicine.session.waiting_room.entered") {
-          setSessionNotice("Client is waiting in the telemedicine room.");
-        } else if (event.type === "telemedicine.session.provider_late") {
-          setSessionNotice("Provider delay notification was sent to client.");
-        } else if (event.type === "telemedicine.session.support_requested") {
-          setSessionNotice("Join support requested. Escalation to helpdesk has been raised.");
-        }
-      },
+  const handleDeny = useCallback(async (session: TelemedicineSession, participant: WaitingRoomParticipant) => {
+    setAdmissionBusy(participant.identity);
+    setError(null);
+    try {
+      await denyTelemedicineParticipant(session.id, participant.identity, "Provider declined admission");
+      setAdmissionNotice(`${participant.displayName ?? participant.identity} was not admitted.`);
+      await refreshWaitingRooms([session]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to deny participant");
+    } finally {
+      setAdmissionBusy(null);
     }
-  );
-  const channelHealth = mapChannelHealth(channelStatus);
+  }, [refreshWaitingRooms]);
 
   if (activeSession) {
     return (
-      <Screen>
-        <Header title="Telemedicine Session" />
-        <View testID="telemedicine-active" style={styles.container}>
-          <Card>
-            <CardBody>
-              <View style={styles.activeSessionCenter}>
-                <Badge variant="primary">IN PROGRESS</Badge>
-                <View style={styles.channelBadge}>
-                  <Badge variant={channelHealth.variant}>{channelHealth.label}</Badge>
-                </View>
-                <View testID="video-container" style={styles.videoContainer}>
-                  <LiveKitMobileConsultRoom
-                    serverUrl={activeSession.roomUrl}
-                    token={activeSession.sessionToken}
-                    videoEnabled={videoEnabled}
-                    micMuted={micMuted}
-                    onConnected={() => setSessionNotice("LiveKit media connected through Impilo RTC Gateway.")}
-                    onDisconnected={() => setSessionNotice("LiveKit media disconnected. Clinical notes remain available.")}
-                    onError={(message) => setSessionNotice(message)}
-                  />
-                </View>
-                <View style={styles.actionRow}>
-                  <Button
-                    title={videoEnabled ? "Disable Video" : "Enable Video"}
-                    variant="outline"
-                    onPress={() => setVideoEnabled((prev) => !prev)}
-                    testID="toggle-video-btn"
-                  />
-                  <Button
-                    title={micMuted ? "Unmute Mic" : "Mute Mic"}
-                    variant="outline"
-                    onPress={() => setMicMuted((prev) => !prev)}
-                    testID="toggle-mic-btn"
-                  />
-                  <Button
-                    title="End Session"
-                    variant="destructive"
-                    onPress={handleEnd}
-                    testID="end-session-btn"
-                  />
-                </View>
-                <View style={styles.signalRow}>
-                  <Button
-                    title="Client Nudge"
-                    variant="outline"
-                    disabled={sendingSignal !== null}
-                    onPress={() => postSessionSignal("nudge")}
-                    testID="signal-nudge-btn"
-                  />
-                  <Button
-                    title="Delay Notice"
-                    variant="outline"
-                    disabled={sendingSignal !== null}
-                    onPress={() => postSessionSignal("delay")}
-                    testID="signal-delay-btn"
-                  />
-                  <Button
-                    title="Request Support"
-                    variant="outline"
-                    disabled={sendingSignal !== null}
-                    onPress={() => postSessionSignal("support")}
-                    testID="signal-support-btn"
-                  />
-                </View>
-                <Text style={styles.noticeText}>{`Realtime channel: ${channelStatus}`}</Text>
-                {sessionNotice ? <Text style={styles.noticeText}>{sessionNotice}</Text> : null}
-                {activeSession.sessionToken ? null : (
-                  <Text style={styles.noticeWarning}>
-                    Session token missing. Continue with async notes while support resolves media session setup.
-                  </Text>
-                )}
-              </View>
-            </CardBody>
-          </Card>
-        </View>
-      </Screen>
+      <TelemedicineCallScreen
+        session={activeSession}
+        displayName={providerDisplayName}
+        onEnded={() => {
+          setActiveSession(null);
+          loadSessions();
+        }}
+      />
     );
   }
 
@@ -235,6 +163,7 @@ export function TelemedicineScreen() {
     <Screen>
       <Header title="Telemedicine" />
       <ScrollView testID="telemedicine-screen" style={styles.container}>
+        {admissionNotice ? <Text style={styles.noticeText}>{admissionNotice}</Text> : null}
         {loading ? (
           <LoadingSpinner size="md" />
         ) : error ? (
@@ -242,28 +171,76 @@ export function TelemedicineScreen() {
         ) : sessions.length === 0 ? (
           <EmptyState title="No scheduled sessions" message="Telemedicine sessions will appear here" />
         ) : (
-          sessions.map((session) => (
-            <Card key={session.id}>
-              <CardBody>
-                <View testID={`session-${session.id}`} style={styles.sessionRow}>
-                  <View>
-                    <Badge variant="secondary">{session.status}</Badge>
-                    <Text style={styles.scheduledText}>
-                      {`Scheduled: ${new Date(session.scheduledAt).toLocaleString()}`}
-                    </Text>
+          sessions.map((session) => {
+            const waiting = waitingRooms[session.id] ?? [];
+            return (
+              <Card key={session.id}>
+                <CardBody>
+                  <View testID={`session-${session.id}`} style={styles.sessionRow}>
+                    <View>
+                      <Badge variant="secondary">{session.status}</Badge>
+                      <Text style={styles.scheduledText}>
+                        {`Scheduled: ${new Date(session.scheduledAt).toLocaleString()}`}
+                      </Text>
+                    </View>
+                    {session.status === "SCHEDULED" || session.status === "WAITING" || session.status === "IN_PROGRESS" ? (
+                      <Button
+                        title="Join"
+                        variant="primary"
+                        onPress={() => handleJoin(session)}
+                        testID={`join-session-${session.id}`}
+                      />
+                    ) : null}
                   </View>
-                  {session.status === "SCHEDULED" || session.status === "WAITING" ? (
-                    <Button
-                      title="Join"
-                      variant="primary"
-                      onPress={() => handleJoin(session)}
-                      testID={`join-session-${session.id}`}
-                    />
+                  {WAITING_ROOM_STATUSES.has(session.status) ? (
+                    <View style={styles.waitingRoomSection} testID="telemedicine-waiting-room">
+                      <Text style={styles.waitingRoomTitle}>Waiting room</Text>
+                      {waiting.length === 0 ? (
+                        <Text style={styles.waitingRoomEmpty}>No one is waiting to be admitted.</Text>
+                      ) : (
+                        waiting.map((participant) => (
+                          <View
+                            key={participant.identity}
+                            style={styles.waitingRow}
+                            testID={`telemedicine-waiting-${participant.identity}`}
+                          >
+                            <View style={styles.waitingInfo}>
+                              <Text style={styles.waitingName}>
+                                {participant.displayName ?? participant.identity}
+                              </Text>
+                              {participant.waitingSince ? (
+                                <Text style={styles.waitingSince}>
+                                  {`Waiting since ${new Date(participant.waitingSince).toLocaleTimeString()}`}
+                                </Text>
+                              ) : null}
+                            </View>
+                            <View style={styles.waitingActions}>
+                              <Button
+                                title="Admit"
+                                variant="primary"
+                                size="sm"
+                                disabled={admissionBusy !== null}
+                                onPress={() => handleAdmit(session, participant)}
+                                testID="telemedicine-admit-button"
+                              />
+                              <Button
+                                title="Deny"
+                                variant="outline"
+                                size="sm"
+                                disabled={admissionBusy !== null}
+                                onPress={() => handleDeny(session, participant)}
+                                testID="telemedicine-deny-button"
+                              />
+                            </View>
+                          </View>
+                        ))
+                      )}
+                    </View>
                   ) : null}
-                </View>
-              </CardBody>
-            </Card>
-          ))
+                </CardBody>
+              </Card>
+            );
+          })
         )}
       </ScrollView>
     </Screen>
@@ -274,58 +251,6 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
   },
-  activeSessionCenter: {
-    alignItems: "center",
-    paddingVertical: 48,
-  },
-  videoContainer: {
-    width: "100%",
-    height: 300,
-    backgroundColor: "#1F2937",
-    borderRadius: 12,
-    marginVertical: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  videoText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-  },
-  mediaText: {
-    color: "#D1D5DB",
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 8,
-    paddingHorizontal: 12,
-  },
-  actionRow: {
-    flexDirection: "row",
-    gap: 12,
-    justifyContent: "center",
-    flexWrap: "wrap",
-  },
-  signalRow: {
-    flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap",
-    justifyContent: "center",
-    marginTop: 8,
-  },
-  channelBadge: {
-    marginTop: 8,
-  },
-  noticeText: {
-    fontSize: 13,
-    color: "#374151",
-    marginTop: 12,
-    textAlign: "center",
-  },
-  noticeWarning: {
-    fontSize: 12,
-    color: "#92400E",
-    marginTop: 8,
-    textAlign: "center",
-  },
   sessionRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -334,5 +259,48 @@ const styles = StyleSheet.create({
   scheduledText: {
     fontSize: 14,
     marginTop: 4,
+  },
+  noticeText: {
+    fontSize: 13,
+    color: "#374151",
+    marginBottom: 8,
+  },
+  waitingRoomSection: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+    gap: 8,
+  },
+  waitingRoomTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  waitingRoomEmpty: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
+  waitingRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
+  waitingInfo: {
+    flex: 1,
+  },
+  waitingName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  waitingSince: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  waitingActions: {
+    flexDirection: "row",
+    gap: 8,
   },
 });

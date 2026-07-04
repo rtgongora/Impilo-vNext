@@ -1,8 +1,12 @@
 /**
- * TelehealthSessionScreen — Active teleconsult session with join/end flow.
+ * TelehealthSessionScreen — Active teleconsult session with a governed
+ * waiting-room stage (device check → ask to join → provider admits) before
+ * the call, and a post-consult stage after it ends.
+ *
+ * Stages: DETAILS → WAITING_ROOM → IN_CALL → POST_CONSULT
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import {
   Screen,
@@ -13,13 +17,24 @@ import {
   Button,
   Badge,
   TextField,
-  LoadingSpinner,
   ErrorState,
 } from "@impilo/mobile-design-system";
-import { joinSession, endSession, fetchSession } from "../../services/telehealthService";
+import { AdaptiveSessionRoomNative, PreJoinNative, type PreJoinChoices } from "@impilo/mobile-session";
+import {
+  joinSession,
+  endSession,
+  fetchSession,
+  requestSessionMediaToken,
+  refreshSessionMediaToken,
+  type MediaTokenRequest,
+} from "../../services/telehealthService";
 import { useChannel } from "@impilo/mobile-messaging";
+import { useAuth } from "@impilo/mobile-auth";
 import type { TelehealthSession } from "../../types";
-import { LiveKitMobileConsultRoom } from "./LiveKitMobileConsultRoom";
+
+const WAITING_ROOM_POLL_MS = 5000;
+
+type SessionStage = "DETAILS" | "WAITING_ROOM" | "IN_CALL" | "POST_CONSULT";
 
 interface TelehealthSessionScreenProps {
   session: TelehealthSession;
@@ -27,10 +42,19 @@ interface TelehealthSessionScreenProps {
 }
 
 export function TelehealthSessionScreen({ session: initialSession, onBack }: TelehealthSessionScreenProps) {
+  const auth = useAuth();
   const [session, setSession] = useState<TelehealthSession>(initialSession);
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [stage, setStage] = useState<SessionStage>(
+    initialSession.status === "COMPLETED" ? "POST_CONSULT" : "DETAILS"
+  );
+  const [mediaRoomUrl, setMediaRoomUrl] = useState<string | null>(null);
+  const [mediaToken, setMediaToken] = useState<string | null>(null);
   const [sessionChannel, setSessionChannel] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
+  const [isRequestingToken, setIsRequestingToken] = useState(false);
+  const [waitingForAdmission, setWaitingForAdmission] = useState(false);
+  const [deniedMessage, setDeniedMessage] = useState<string | null>(null);
+  const [audioOnly, setAudioOnly] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [endNotes, setEndNotes] = useState("");
@@ -39,6 +63,18 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
   const [supportNotice, setSupportNotice] = useState<string | null>(null);
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [micMuted, setMicMuted] = useState(false);
+  const requestInFlight = useRef(false);
+
+  const displayName =
+    [auth.user?.given_name, auth.user?.family_name].filter(Boolean).join(" ") ||
+    auth.user?.preferred_username ||
+    "Impilo client";
+
+  const mediaTokenRequest = useCallback((): MediaTokenRequest => ({
+    displayName,
+    role: "PATIENT",
+    ...(audioOnly ? { mediaProfile: "AUDIO_ONLY" as const } : {}),
+  }), [displayName, audioOnly]);
 
   // Real-time channel for session events
   const channel = useChannel(sessionChannel ?? `telehealth-${session.id}`, {
@@ -52,20 +88,72 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
       } else if (event.type === "telemedicine.session.completed" || event.type === "session_ended") {
         setSupportNotice("Your teleconsultation has ended. Follow-up steps are available in Impilo.");
         setSession((prev) => ({ ...prev, status: "COMPLETED" }));
-        setSessionToken(null);
+        setMediaToken(null);
+        setWaitingForAdmission(false);
+        setStage("POST_CONSULT");
       }
     },
   });
 
-  // Elapsed timer when in session
+  // Elapsed timer while in the call
   useEffect(() => {
-    if (session.status === "IN_PROGRESS" && sessionToken) {
+    if (stage === "IN_CALL" && mediaToken) {
       const interval = setInterval(() => {
         setElapsed((prev) => prev + 1);
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [session.status, sessionToken]);
+  }, [stage, mediaToken]);
+
+  const applyMediaTokenResult = useCallback(
+    (result: { status: string; roomUrl?: string; token?: string; reason?: string }) => {
+      if (result.status === "READY" && result.token) {
+        setMediaRoomUrl(result.roomUrl ?? session.roomUrl ?? null);
+        setMediaToken(result.token);
+        setWaitingForAdmission(false);
+        setDeniedMessage(null);
+        setStage("IN_CALL");
+        return;
+      }
+      if (result.status === "DENIED") {
+        setWaitingForAdmission(false);
+        setDeniedMessage(
+          result.reason
+            ? `Your provider could not admit you to this consult: ${result.reason}. Please rebook or contact your care team — nothing is lost.`
+            : "Your provider could not admit you to this consult right now. Please rebook or contact your care team — nothing is lost."
+        );
+        return;
+      }
+      // WAITING — stay in the waiting room and keep polling.
+      setWaitingForAdmission(true);
+    },
+    [session.roomUrl]
+  );
+
+  const requestToken = useCallback(async () => {
+    if (requestInFlight.current) return;
+    requestInFlight.current = true;
+    setIsRequestingToken(true);
+    setError(null);
+    try {
+      const result = await requestSessionMediaToken(session.id, mediaTokenRequest());
+      applyMediaTokenResult(result);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      requestInFlight.current = false;
+      setIsRequestingToken(false);
+    }
+  }, [session.id, mediaTokenRequest, applyMediaTokenResult]);
+
+  // Waiting-room poll: while the provider has not admitted us, re-request every 5s.
+  useEffect(() => {
+    if (stage !== "WAITING_ROOM" || !waitingForAdmission) return;
+    const interval = setInterval(() => {
+      void requestToken();
+    }, WAITING_ROOM_POLL_MS);
+    return () => clearInterval(interval);
+  }, [stage, waitingForAdmission, requestToken]);
 
   const handleJoin = useCallback(async () => {
     setIsJoining(true);
@@ -73,14 +161,39 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
     try {
       const result = await joinSession(session.id);
       setSession(result.session);
-      setSessionToken(result.token);
-      setSessionChannel(result.channel);
+      if (result.channel) setSessionChannel(result.channel);
+      setStage("WAITING_ROOM");
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setIsJoining(false);
     }
   }, [session.id]);
+
+  const handlePreJoinConfirm = useCallback(
+    (choices: PreJoinChoices) => {
+      setMicMuted(!choices.micEnabled);
+      setVideoEnabled(choices.cameraEnabled && !audioOnly);
+      void requestToken();
+    },
+    [audioOnly, requestToken]
+  );
+
+  const handleRefreshMedia = useCallback(async () => {
+    setError(null);
+    try {
+      const result = await refreshSessionMediaToken(session.id, mediaTokenRequest());
+      if (result.status === "READY" && result.token) {
+        setMediaRoomUrl(result.roomUrl ?? mediaRoomUrl);
+        setMediaToken(result.token);
+        setSupportNotice("Media connection refreshed.");
+      } else {
+        setSupportNotice("Could not refresh the media connection yet. Please try again shortly.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
+  }, [session.id, mediaTokenRequest, mediaRoomUrl]);
 
   const handleEnd = useCallback(async () => {
     setIsEnding(true);
@@ -89,8 +202,9 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
       await endSession(session.id, endNotes || undefined);
       const updated = await fetchSession(session.id);
       setSession(updated);
-      setSessionToken(null);
+      setMediaToken(null);
       setShowEndForm(false);
+      setStage("POST_CONSULT");
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
@@ -110,7 +224,7 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
         title="Teleconsultation"
         leftElement={
           <Button
-            title={"\u2190 Back"}
+            title={"← Back"}
             variant="ghost"
             size="sm"
             onPress={onBack}
@@ -140,13 +254,13 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
               <Text style={styles.infoTextSecondary}>
                 {`Scheduled: ${new Date(session.scheduledAt).toLocaleString()}`}
               </Text>
-              {session.status === "IN_PROGRESS" && sessionToken ? (
+              {stage === "IN_CALL" && mediaToken ? (
                 <Text style={styles.durationText}>
                   {`Duration: ${formatTime(elapsed)}`}
                 </Text>
               ) : null}
               {channel.isConnected ? (
-                <Text style={styles.connectedText}>{"\u25CF Connected to session channel"}</Text>
+                <Text style={styles.connectedText}>{"● Connected to session channel"}</Text>
               ) : null}
             </View>
           </CardBody>
@@ -160,39 +274,83 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
           </Card>
         ) : null}
 
-        {/* Active session area */}
-        {sessionToken ? (
+        {/* Waiting room: device check + plain-language guidance before the call */}
+        {stage === "WAITING_ROOM" ? (
+          <Card>
+            <CardHeader title="Waiting Room" />
+            <CardBody>
+              <View testID="telehealth-waiting-room" style={styles.waitingRoom}>
+                <PreJoinNative
+                  key={audioOnly ? "audio-only" : "audio-video"}
+                  title="Check your camera and microphone"
+                  joinLabel={isRequestingToken ? "Asking to join..." : waitingForAdmission ? "Ask again" : "Ask to join"}
+                  joinDisabled={isRequestingToken || !!deniedMessage}
+                  initialCameraEnabled={!audioOnly}
+                  onJoin={handlePreJoinConfirm}
+                />
+                <Button
+                  title={audioOnly ? "Audio only: on" : "Audio only: off"}
+                  variant="outline"
+                  onPress={() => {
+                    setAudioOnly((prev) => !prev);
+                  }}
+                  testID="telehealth-audio-only-toggle"
+                />
+                <Text style={styles.waitingCopyTitle}>Who joins this consult</Text>
+                <Text style={styles.waitingCopy}>
+                  {`Only you and Dr. ${session.providerName} (plus anyone your provider explicitly invites) can join this secure session.`}
+                </Text>
+                <Text style={styles.waitingCopyTitle}>What happens next</Text>
+                <Text style={styles.waitingCopy}>
+                  When you ask to join, your provider sees you in their waiting room and admits you when they are ready. You do not need to do anything else — keep this screen open.
+                </Text>
+                <Text style={styles.consentLine}>
+                  By joining you consent to this governed teleconsultation. No recording happens without your explicit consent, and your data stays inside Impilo.
+                </Text>
+                {waitingForAdmission && !deniedMessage ? (
+                  <View style={styles.waitingStatus} testID="telehealth-waiting-status">
+                    <Text style={styles.waitingStatusText}>
+                      {"You're in the waiting room. Your provider will admit you shortly — hang tight."}
+                    </Text>
+                  </View>
+                ) : null}
+                {deniedMessage ? (
+                  <View style={styles.deniedBox} testID="telehealth-denied">
+                    <Text style={styles.deniedText}>{deniedMessage}</Text>
+                  </View>
+                ) : null}
+              </View>
+            </CardBody>
+          </Card>
+        ) : null}
+
+        {/* Active call */}
+        {stage === "IN_CALL" && mediaToken ? (
           <Card>
             <CardBody>
-              <View testID="active-session-area" style={styles.activeSessionArea}>
-                <Text style={styles.activeSessionText}>
-                  {session.roomUrl && sessionToken
-                    ? session.sessionType === "VIDEO"
-                      ? "Governed RTC video room ready"
-                      : session.sessionType === "AUDIO"
-                        ? "Governed RTC audio room ready"
-                        : "Secure telehealth chat ready"
-                    : "Media room not available yet"}
-                </Text>
-                {session.roomUrl && sessionToken ? (
-                  <LiveKitMobileConsultRoom
-                    serverUrl={session.roomUrl}
-                    token={sessionToken}
-                    videoEnabled={videoEnabled}
-                    micMuted={micMuted}
-                    onConnected={() => setSupportNotice("LiveKit media connected through Impilo RTC Gateway.")}
-                    onDisconnected={() => setSupportNotice("LiveKit media disconnected. Your teleconsult remains open.")}
-                    onError={(message) => setSupportNotice(message)}
-                  />
-                ) : (
-                  <Text style={styles.mediaInfoText}>
-                    Live media is blocked until Impilo returns a governed room and scoped token.
-                  </Text>
-                )}
+              <View testID="telehealth-in-call" style={styles.activeSessionArea}>
+                <AdaptiveSessionRoomNative
+                  serverUrl={mediaRoomUrl ?? session.roomUrl}
+                  token={mediaToken}
+                  layout="consult"
+                  audioOnly={audioOnly}
+                  videoEnabled={videoEnabled}
+                  micMuted={micMuted}
+                  showReconnectBanner
+                  onConnected={() => setSupportNotice("LiveKit media connected through Impilo RTC Gateway.")}
+                  onDisconnected={() => setSupportNotice("LiveKit media disconnected. Your teleconsult remains open.")}
+                  onError={(message) => setSupportNotice(message)}
+                />
               </View>
 
               {/* Session controls */}
               <View style={styles.controlsRow}>
+                <Button
+                  title={audioOnly ? "Audio only: on" : "Audio only: off"}
+                  variant="outline"
+                  onPress={() => setAudioOnly((prev) => !prev)}
+                  testID="telehealth-audio-only-toggle-call"
+                />
                 <Button
                   title={videoEnabled ? "Disable Video" : "Enable Video"}
                   variant="outline"
@@ -204,6 +362,12 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
                   variant="outline"
                   onPress={() => setMicMuted((prev) => !prev)}
                   testID="toggle-mic-btn"
+                />
+                <Button
+                  title="Refresh Media"
+                  variant="outline"
+                  onPress={handleRefreshMedia}
+                  testID="refresh-media-btn"
                 />
                 <Button
                   title="End Session"
@@ -249,7 +413,7 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
         ) : null}
 
         {/* Pre-session: Join button */}
-        {!sessionToken && (session.status === "SCHEDULED" || session.status === "IN_PROGRESS") ? (
+        {stage === "DETAILS" && (session.status === "SCHEDULED" || session.status === "IN_PROGRESS") ? (
           <View style={styles.joinContainer}>
             <Button
               title={isJoining ? "Joining..." : "Join Session"}
@@ -262,20 +426,27 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
           </View>
         ) : null}
 
-        {/* Post-session summary */}
-        {session.status === "COMPLETED" ? (
+        {/* Post-consult: thank-you + follow-up */}
+        {stage === "POST_CONSULT" ? (
           <Card>
-            <CardHeader title="Session Summary" />
+            <CardHeader title="Thank you" />
             <CardBody>
-              <Text style={styles.summaryText}>
-                {`Started: ${session.startedAt ? new Date(session.startedAt).toLocaleString() : "N/A"}`}
-              </Text>
-              <Text style={styles.summaryText}>
-                {`Ended: ${session.endedAt ? new Date(session.endedAt).toLocaleString() : "N/A"}`}
-              </Text>
-              {session.notes ? (
-                <Text style={styles.summaryText}>{`Notes: ${session.notes}`}</Text>
-              ) : null}
+              <View testID="telehealth-post-consult" style={styles.postConsult}>
+                <Text style={styles.postConsultTitle}>Your teleconsultation has ended.</Text>
+                <Text style={styles.summaryText}>
+                  {`Started: ${session.startedAt ? new Date(session.startedAt).toLocaleString() : "N/A"}`}
+                </Text>
+                <Text style={styles.summaryText}>
+                  {`Ended: ${session.endedAt ? new Date(session.endedAt).toLocaleString() : "N/A"}`}
+                </Text>
+                <Text style={styles.waitingCopyTitle}>Follow-up</Text>
+                <Text style={styles.summaryText} testID="telehealth-followup">
+                  {session.notes
+                    ? `Notes from this session: ${session.notes}`
+                    : "Any prescriptions, referrals, or follow-up appointments from this consult will appear in your Impilo timeline shortly."}
+                </Text>
+                <Button title="Back to Telehealth" variant="outline" onPress={onBack} testID="post-consult-back" />
+              </View>
             </CardBody>
           </Card>
         ) : null}
@@ -320,30 +491,52 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#009739",
   },
-  activeSessionArea: {
-    backgroundColor: "#111827",
-    borderRadius: 12,
-    height: 300,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
+  waitingRoom: {
+    gap: 12,
   },
-  activeSessionText: {
-    color: "white",
-    fontSize: 16,
+  waitingCopyTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#111827",
+    marginTop: 4,
   },
-  mediaInfoText: {
-    color: "#D1D5DB",
+  waitingCopy: {
+    fontSize: 13,
+    color: "#374151",
+  },
+  consentLine: {
     fontSize: 12,
-    marginTop: 8,
-    marginBottom: 12,
-    textAlign: "center",
-    paddingHorizontal: 12,
+    color: "#6B7280",
+    fontStyle: "italic",
+  },
+  waitingStatus: {
+    backgroundColor: "#EFF6FF",
+    borderRadius: 8,
+    padding: 12,
+  },
+  waitingStatusText: {
+    fontSize: 13,
+    color: "#1E40AF",
+  },
+  deniedBox: {
+    backgroundColor: "#FEF3C7",
+    borderRadius: 8,
+    padding: 12,
+  },
+  deniedText: {
+    fontSize: 13,
+    color: "#92400E",
+  },
+  activeSessionArea: {
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 16,
   },
   controlsRow: {
     flexDirection: "row",
     gap: 8,
     justifyContent: "center",
+    flexWrap: "wrap",
   },
   formContainer: {
     gap: 12,
@@ -354,6 +547,14 @@ const styles = StyleSheet.create({
   },
   joinContainer: {
     alignItems: "center",
+  },
+  postConsult: {
+    gap: 8,
+  },
+  postConsultTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#111827",
   },
   summaryText: {
     fontSize: 14,

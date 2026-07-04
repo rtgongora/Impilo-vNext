@@ -98,6 +98,161 @@ export async function sendProviderTelemedicineSignal(
   });
 }
 
+/* ── Waiting room + governed RTC media token (shared teleconsult contract) ──
+ *
+ * The mobile provider BFF surface (/internal/v1/mobile/provider/telemedicine/*)
+ * only exposes list/create/join/end — it has no waiting-room, admit/deny, or
+ * media-token routes. Those live on the shared /internal/v1/teleconsult/*
+ * contract (same one the web shell uses), so the app calls them directly —
+ * the api client injects the same trust headers either way.
+ */
+
+const TELECONSULT_V1 = "/internal/v1/teleconsult";
+
+export interface WaitingRoomParticipant {
+  identity: string;
+  displayName?: string;
+  waitingSince?: string;
+}
+
+type WaitingRoomRow = {
+  identity?: string;
+  participantId?: string;
+  participant_id?: string;
+  id?: string;
+  displayName?: string;
+  display_name?: string;
+  name?: string;
+  waitingSince?: string;
+  waiting_since?: string;
+  requestedAt?: string;
+  requested_at?: string;
+  joinedAt?: string;
+  joined_at?: string;
+};
+
+type WaitingRoomEnvelope = WaitingRoomRow[] | {
+  waiting?: WaitingRoomRow[];
+  participants?: WaitingRoomRow[];
+  items?: WaitingRoomRow[];
+};
+
+export async function fetchTelemedicineWaitingRoom(sessionId: string): Promise<WaitingRoomParticipant[]> {
+  const response = await apiClient.get<{ data?: WaitingRoomEnvelope }>(
+    `${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/waiting-room`
+  );
+  const root = (response.data?.data ?? response.data ?? []) as WaitingRoomEnvelope;
+  const list = root as { waiting?: WaitingRoomRow[]; participants?: WaitingRoomRow[]; items?: WaitingRoomRow[] };
+  const rows: WaitingRoomRow[] = Array.isArray(root)
+    ? root
+    : Array.isArray(list.waiting)
+      ? list.waiting
+      : Array.isArray(list.participants)
+        ? list.participants
+        : Array.isArray(list.items)
+          ? list.items
+          : [];
+  return rows
+    .map((row) => ({
+      identity: String(row.identity ?? row.participantId ?? row.participant_id ?? row.id ?? ""),
+      displayName: value(row.displayName ?? row.display_name ?? row.name),
+      waitingSince: value(
+        row.waitingSince ?? row.waiting_since ?? row.requestedAt ?? row.requested_at ?? row.joinedAt ?? row.joined_at
+      ),
+    }))
+    .filter((participant) => participant.identity.length > 0);
+}
+
+export async function admitTelemedicineParticipant(sessionId: string, identity: string): Promise<void> {
+  await apiClient.post(
+    `${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/admit`,
+    { identity }
+  );
+}
+
+export async function denyTelemedicineParticipant(
+  sessionId: string,
+  identity: string,
+  reason?: string
+): Promise<void> {
+  await apiClient.post(
+    `${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/deny`,
+    { identity, ...(reason ? { reason } : {}) }
+  );
+}
+
+export type MediaTokenStatus = "READY" | "WAITING" | "DENIED";
+
+export interface MediaTokenResult {
+  status: MediaTokenStatus;
+  roomUrl?: string;
+  token?: string;
+  reason?: string;
+}
+
+export interface ProviderMediaTokenRequest {
+  displayName: string;
+  mediaProfile?: "AUDIO_ONLY" | "AUDIO_VIDEO";
+}
+
+type MediaTokenRow = {
+  status?: string;
+  room_url?: string;
+  roomUrl?: string;
+  token?: string;
+  accessToken?: string;
+  access_token?: string;
+  reason?: string;
+  denied_reason?: string;
+};
+
+export function normalizeMediaTokenPayload(payload: { data?: MediaTokenRow } | MediaTokenRow | null | undefined): MediaTokenResult {
+  const row: MediaTokenRow = ((payload as { data?: MediaTokenRow } | undefined)?.data ?? payload ?? {}) as MediaTokenRow;
+  const status = String(row.status ?? "").toUpperCase();
+  if (status === "DENIED") {
+    return { status: "DENIED", reason: row.reason ?? row.denied_reason };
+  }
+  if (status === "WAITING") {
+    return { status: "WAITING" };
+  }
+  const roomUrl = row.room_url ?? row.roomUrl;
+  const token = row.token ?? row.accessToken ?? row.access_token;
+  if (roomUrl && token) {
+    return { status: "READY", roomUrl, token };
+  }
+  return { status: "WAITING" };
+}
+
+function providerMediaTokenBody(request: ProviderMediaTokenRequest): Record<string, unknown> {
+  return {
+    displayName: request.displayName,
+    role: "PROVIDER",
+    ...(request.mediaProfile ? { mediaProfile: request.mediaProfile } : {}),
+  };
+}
+
+export async function requestProviderTelemedicineMediaToken(
+  sessionId: string,
+  request: ProviderMediaTokenRequest
+): Promise<MediaTokenResult> {
+  const response = await apiClient.post<{ data?: MediaTokenRow }>(
+    `${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/media/token`,
+    providerMediaTokenBody(request)
+  );
+  return normalizeMediaTokenPayload(response.data);
+}
+
+export async function refreshProviderTelemedicineMediaToken(
+  sessionId: string,
+  request: ProviderMediaTokenRequest
+): Promise<MediaTokenResult> {
+  const response = await apiClient.post<{ data?: MediaTokenRow }>(
+    `${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/media/token/refresh`,
+    providerMediaTokenBody(request)
+  );
+  return normalizeMediaTokenPayload(response.data);
+}
+
 function value(input: unknown): string | undefined {
   if (input === null || input === undefined) return undefined;
   const out = String(input);
