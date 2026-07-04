@@ -203,3 +203,28 @@ Statuses: `implemented` · `partially implemented` · `existing-surfaced` · `bl
 | 25 | Governance blocks unauthorised clinical group creation | implemented (by honest absence) | Groups page states creation is governance-gated and disabled until backend exists — fail-closed truthful UX |
 | 26 | Diaspora member gated by privilege/jurisdiction | blocked-policy-or-migration | HO-4; capability model documented in substrate |
 | 27 | Audit log records identity exposure/case-notes access/join | partially implemented | Session joins audited via rtc events (W0); identity-exposure audit absent (HO-4) |
+
+## 9. Wave 6 evidence (final)
+
+Branch `cursor/e2e-telemedicine-virtual-hospitals`, based on anchor `d44bb6022`.
+
+Commits:
+
+| Commit | Wave | Content |
+|---|---|---|
+| `099acd69c` | 0 | This capability map + W0 lease boundary |
+| `cbe205cb1` | 1–2 | Config substrate: `virtual-hospitals.ts` (21 institutions), `session-modes.ts` (10 modes), `privacy.ts` (6 levels), `clinical-groups.ts` (15 types, fail-closed creation), `pinning.ts`, hooks, `PrivacyBadge`, 3 lib test files |
+| `6b18ff33a` | 1–5 | 7 pages under `/work/telemedicine` (hub, VH directory + detail, routing, groups, session-modes, operations) + 5 page test files |
+| `dd87c9d7e` | 6 | Operations page test |
+
+Gates run (all green, 2026-07-04):
+
+- `tsc --noEmit` — pass
+- `eslint` scoped to owned files — 0 errors/warnings
+- `vitest` `src/app/work/telemedicine` + `src/lib/telemedicine` — 10 files, 49 tests passed
+- `npm run test:no-stubs` — OK (736 pages; only pre-existing `landela` legacy warning, unrelated)
+- `npm run test:routes` — 682/682 (additive routes don't participate in parity)
+- `git diff --check` — clean
+
+Conflict scans: anchor advanced `d44bb6022 → 3411d6ca2` during the stream; zero file
+overlap with this branch's namespaces at every scan. No W0-owned file modified.
