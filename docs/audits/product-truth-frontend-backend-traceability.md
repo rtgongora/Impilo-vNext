@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-06-30T18:45:42.873Z
-> Web surfaces: **719** | Mobile screens: **193**
+> Generated: 2026-07-05T08:10:40.297Z
+> Web surfaces: **742** | Mobile screens: **204**
 
 ## Web routes (one-ui-shell)
 
@@ -95,6 +95,7 @@
 | /home/appointments | My Appointments | home | yes | no | yes | yes | yes | — |
 | /home/appointments/[appointmentId] | Appointment Details | home | yes | no | yes | yes | yes | — |
 | /citizen | Citizen Services | home | yes | no | yes | yes | yes | — |
+| /citizen/my-care | My Care | home | yes | no | yes | no | yes | — |
 | /citizen/health-id/qr | My Health ID QR | home | yes | no | yes | no | yes | — |
 | /citizen/health-id/request | Request Health ID | home | yes | no | yes | yes | yes | — |
 | /citizen/id-recovery | ID Recovery | home | yes | no | yes | no | yes | — |
@@ -114,7 +115,8 @@
 | /share/claim | Claim Shared Documents | home | yes | no | yes | yes | no | — |
 | /collaboration/access | Provider collaboration access | home | yes | no | yes | yes | yes | — |
 | /facility | Select Facility | facility | yes | no | yes | no | yes | — |
-| /facility/[id] | Facility Details | facility | yes | no | yes | no | yes | — |
+| /facility/[id] | Facility Details | facility | yes | no | yes | yes | yes | — |
+| /facility/[id]/configuration | Facility Configuration | facility | yes | no | yes | yes | yes | — |
 | /workspace | Select Workspace | workspace | yes | no | yes | yes | yes | — |
 | /workspace/[id] | Workspace Details | workspace | yes | no | yes | no | yes | — |
 | /shift | Start Shift | shift | yes | no | yes | yes | yes | — |
@@ -129,6 +131,7 @@
 | /scheduling/bookings/config | Booking Configuration | queue | yes | no | yes | yes | yes | — |
 | /communication | Khuluma — Communication Hub | queue | yes | no | yes | yes | yes | — |
 | /communication/secure-messaging | Khuluma — Secure Messaging | queue | yes | no | yes | yes | yes | — |
+| /communication/approvals | Khuluma — Comms Approval Queue | queue | yes | no | yes | yes | yes | — |
 | /work/comms | Khuluma — Comms Hub | queue | yes | no | yes | yes | yes | — |
 | /my/comms | Khuluma — Messages | home | yes | no | yes | yes | yes | — |
 | /queue | Patient Queue | queue | yes | no | yes | yes | yes | — |
@@ -182,6 +185,9 @@
 | /admin/policies | Policy Management | admin | yes | no | yes | yes | yes | — |
 | /admin/audit | Audit Trail | admin | yes | no | yes | no | yes | — |
 | /admin/audit/[id] | Audit Entry | admin | yes | no | yes | no | yes | — |
+| /admin/facility-imports | Facility Import Batches | admin | yes | no | yes | yes | yes | — |
+| /admin/facility-imports/[runId] | Facility Import Batch | admin | yes | no | yes | yes | yes | — |
+| /admin/facility-imports/[runId]/review | Facility Import Review | admin | yes | no | yes | yes | yes | — |
 | /admin/consent | Consent Management | admin | yes | no | yes | no | yes | — |
 | /admin/devices | Device Management | admin | yes | no | yes | no | yes | — |
 | /admin/keys | Key Management | admin | yes | no | yes | no | yes | — |
@@ -189,7 +195,7 @@
 | /admin/tenants | Tenant Management | admin | yes | no | yes | no | yes | — |
 | /admin/break-glass | Break Glass Log | admin | yes | no | yes | yes | yes | — |
 | /admin/beds | Bed & Ward Admin | admin | yes | no | yes | yes | yes | — |
-| /admin/queues | Queue Configuration | admin | yes | no | yes | no | yes | — |
+| /admin/queues | Queue Configuration | admin | yes | no | yes | yes | yes | — |
 | /admin/data-export | Data Export | admin | yes | no | yes | yes | yes | — |
 | /admin/data-governance | Data Governance | admin | yes | no | yes | yes | yes | — |
 | /admin/clinical-curation | Clinical Knowledge Curation | admin | yes | no | yes | yes | yes | — |
@@ -318,6 +324,9 @@
 | /telemedicine/new | New Teleconsultation | queue | yes | no | yes | yes | yes | — |
 | /telemedicine/session/[sessionId] | Teleconsult Session | queue | yes | no | yes | yes | yes | — |
 | /telemedicine/analytics | Telemedicine Analytics | queue | yes | no | yes | yes | yes | — |
+| /work/telemedicine/groups | Clinical Groups | queue | yes | no | yes | no | yes | — |
+| /work/telemedicine/virtual-hospitals | Virtual Hospitals | queue | yes | no | yes | no | yes | — |
+| /work/telemedicine/virtual-hospitals/[id] | Virtual Hospital | queue | yes | no | yes | no | yes | — |
 | /provider/activate | Activate Provider Role | auth | yes | no | yes | no | yes | — |
 | /provider/status | Provider Status | auth | yes | no | yes | no | yes | — |
 | /wellness | Wellness Hub | wellness | yes | no | yes | yes | yes | — |
@@ -437,7 +446,7 @@
 | /learning/catalog | Impilo Fundo Catalogue | professional | yes | no | yes | no | yes | — |
 | /learning/courses/[courseId] | Impilo Fundo Course | professional | yes | no | yes | yes | yes | — |
 | /learning/my-learning | My Learning | professional | yes | no | yes | no | yes | — |
-| /learning/enrolments/[enrolmentId] | Enrolment Player | professional | yes | no | yes | no | yes | — |
+| /learning/enrolments/[enrolmentId] | Enrolment Player | professional | yes | no | yes | yes | yes | — |
 | /learning/enrolments/[enrolmentId]/lessons/[lessonId] | Lesson Player | professional | yes | no | yes | no | yes | — |
 | /learning/pathways | Learning Pathways | professional | yes | no | yes | no | yes | — |
 | /learning/pathways/[pathwayId] | Pathway Detail | professional | yes | no | yes | no | yes | — |
@@ -447,7 +456,7 @@
 | /learning/attempts/[attemptId] | Attempt Result | professional | yes | no | yes | no | yes | — |
 | /learning/certificates | Certificates | professional | yes | no | yes | no | yes | — |
 | /learning/certificates/[certificateId] | Certificate Detail | professional | yes | no | yes | no | yes | — |
-| /learning/cpd | CPD Evidence | professional | yes | no | yes | no | yes | — |
+| /learning/cpd | CPD Evidence | professional | yes | no | yes | yes | yes | — |
 | /learning/reports | Learning Reports | professional | yes | no | yes | no | yes | — |
 | /learning/reports/cohorts | Cohort Report | professional | yes | no | yes | no | yes | — |
 | /learning/reports/courses | Course Report | professional | yes | no | yes | no | yes | — |
@@ -498,15 +507,6 @@
 | /nhume/fleet | Fleet & Asset Management | operations | yes | no | yes | yes | yes | — |
 | /nhume/fleet/[assetId] | Fleet Asset | operations | yes | no | yes | yes | yes | — |
 | /nhume/couriers | Drivers & Couriers | operations | yes | no | yes | yes | yes | — |
-| /nhume/couriers/[courierId] | Courier Profile | operations | yes | no | yes | yes | yes | — |
-| /nhume/policies | Delivery Policies | operations | yes | no | yes | yes | yes | — |
-| /nhume/autonomous | Autonomous Delivery | operations | yes | no | yes | yes | yes | — |
-| /nhume/analytics | Nhume Analytics | operations | yes | no | yes | yes | yes | — |
-| /nhume/custody/[deliveryId] | Chain of Custody | operations | yes | no | yes | yes | yes | — |
-| /nhume/track/[deliveryId] | Track Delivery | home | yes | no | yes | yes | yes | — |
-| /madi | Madi Blood Services | operations | yes | no | yes | no | yes | — |
-| /madi/donor | My Donor Hub | home | yes | no | yes | yes | yes | — |
-| /madi/donor/register | Become a Donor | home | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 
@@ -529,6 +529,7 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/discover/ProviderDiscoveryScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/emergency/SosScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/emergency/TrackEmergencyScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/learning/LearningClassroomScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/live/EventDiscussionSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/live/LiveDiscoverScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/live/LiveEventScreen.tsx | 0 | no |
@@ -610,12 +611,14 @@
 | provider-app | apps/mobile/provider-app/src/screens/ProviderActivationScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/SelectFacilityScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/SelectWorkspaceScreen.tsx | 1 | no |
+| provider-app | apps/mobile/provider-app/src/screens/budgets/BudgetSummaryScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/courier/CourierDashboardScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/courier/CourierProofScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/equipment/EquipmentSearchScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/equipment/EquipmentToolsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/equipment/MaintenanceTasksScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/equipment/ReportEquipmentFaultScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/learning/LearningClassroomScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/live/ProviderLiveHubScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/madi/MadiCentralBankScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/madi/MadiDriveCaptureScreen.tsx | 0 | yes |
@@ -629,9 +632,11 @@
 | provider-app | apps/mobile/provider-app/src/screens/outreach/FollowUpScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/outreach/HouseholdListScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/outreach/OutreachDashboardScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/outreach/PlaceModeDashboardScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/outreach/ScreeningScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/APGARScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ActivityFeedScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/AdaptiveEncounterCockpit.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx | 0 | yes |
 | provider-app | apps/mobile/provider-app/src/screens/provider/AssistedCommunicationPreferencesScreen.tsx | 0 | yes |
 | provider-app | apps/mobile/provider-app/src/screens/provider/BedManagementScreen.tsx | 0 | no |
@@ -640,6 +645,7 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ConfirmDeathScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/ControlTowerScreen.tsx | 0 | yes |
 | provider-app | apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/CriticalEventScreen.tsx | 1 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DaidzaiFieldMissionScreen.tsx | 0 | no |
@@ -649,8 +655,11 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/DischargeClearanceScreen.tsx | 1 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/EdVisitScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/EncounterFormsPanel.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/FacilityAdminScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/FacilityRegulatorsScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/FacilitySetupScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/FinanceOverviewScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/FundoLearningShellScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/HealthOsAppsScreen.tsx | 0 | no |
@@ -676,6 +685,7 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/ProviderDashboardScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ProviderSocialScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/PublicHealthFieldTasksScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/QueueDefinitionsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ReferralPanel.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ReportsScreen.tsx | 0 | no |
@@ -685,6 +695,7 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/ShiftHandoffScreen.tsx | 1 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/SpecialtyWorkspacePanel.tsx | 0 | yes |
 | provider-app | apps/mobile/provider-app/src/screens/provider/SystemStatusScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/TelemedicineCallScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/TelemedicineScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/TheatreProcedureScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/TraumaScreen.tsx | 0 | no |
@@ -701,7 +712,3 @@
 | provider-app | apps/mobile/provider-app/src/screens/rito/MySafetyCasesScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/rito/ReportSafetyScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/supervisor/EscalationsScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/supervisor/InventoryScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/supervisor/StockScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/supervisor/SupervisorDashboardScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/supervisor/TeamOverviewScreen.tsx | 0 | no |

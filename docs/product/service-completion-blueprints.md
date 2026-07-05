@@ -1,6 +1,6 @@
 # Service Completion Blueprints
 
-> Generated: 2026-06-30T18:45:42.873Z
+> Generated: 2026-07-05T08:10:40.297Z
 > End-to-end product expectation per service for mature vNext.
 
 Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and tests required.
@@ -864,16 +864,16 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 ## inventory-service
 
-**Product names:** Inventory
+**Product names:** Dura, Inventory
 **Plane/domain:** clinical / care-delivery
 **Current status:** real
 
 ### Primary personas
 - Operators and domain users for care-delivery plane capabilities
-- Standard governed service consumer
+- Sovereign boundary: **DURA**
 
 ### Main workflows
-- List/search Inventory records
+- List/search Dura records
 - Create and update governed transactions with TSHEPO authz
 - Detail view with audit trail and status transitions where applicable
 
