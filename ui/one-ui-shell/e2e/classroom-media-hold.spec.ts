@@ -48,6 +48,24 @@ async function loginAndOpenClassroom(
   }
   await page.goto(`${PREVIEW_ORIGIN}/learning/sessions/${SESSION_ID}/classroom`);
   await acceptPoliciesIfGated(page);
+  // The work shell may open the Switch Context dialog over the classroom —
+  // resolve it like a real user: professional profile, then the seeded facility.
+  const switchHeading = page.getByRole("heading", { name: /switch context/i }).first();
+  if (await switchHeading.isVisible().catch(() => false)) {
+    const professional = page.getByRole("button", { name: /professional profile/i }).first();
+    if (await professional.isVisible().catch(() => false)) {
+      await professional.click();
+    }
+    await switchHeading.waitFor({ state: "hidden", timeout: 10_000 }).catch(() => {});
+  }
+  const facilityOption = page.getByText(/harare central/i).first();
+  if (await facilityOption.isVisible().catch(() => false)) {
+    await facilityOption.click();
+  }
+  // Ensure we are actually on the classroom after any context redirects.
+  if (!page.url().includes("/classroom")) {
+    await page.goto(`${PREVIEW_ORIGIN}/learning/sessions/${SESSION_ID}/classroom`);
+  }
   return page;
 }
 
