@@ -8,15 +8,18 @@ import zw.gov.mohcc.impilo.vashandi.integration.IntegrationCheckResult;
 import zw.gov.mohcc.impilo.vashandi.integration.TusoIntegrationClient;
 import zw.gov.mohcc.impilo.vashandi.integration.VarapiIntegrationClient;
 import zw.gov.mohcc.impilo.vashandi.integration.WorkforceGovernanceIntegrationClient;
+import zw.gov.mohcc.impilo.vashandi.persistence.entity.TrainingRequirementEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.WorkforceAssignmentEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.WorkforceProfileEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.LeaveAvailabilityRepository;
+import zw.gov.mohcc.impilo.vashandi.persistence.repository.TrainingRequirementRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceAssignmentRepository;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceProfileRepository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -29,6 +32,7 @@ public class WorkforceEligibilityService {
     private final WorkforceGovernanceIntegrationClient governanceClient;
     private final TusoIntegrationClient tusoClient;
     private final FundoIntegrationClient fundoClient;
+    private final TrainingRequirementRepository trainingRequirementRepository;
 
     public WorkforceEligibilityService(WorkforceProfileRepository profileRepository,
                                        WorkforceAssignmentRepository assignmentRepository,
@@ -36,7 +40,8 @@ public class WorkforceEligibilityService {
                                        VarapiIntegrationClient varapiClient,
                                        WorkforceGovernanceIntegrationClient governanceClient,
                                        TusoIntegrationClient tusoClient,
-                                       FundoIntegrationClient fundoClient) {
+                                       FundoIntegrationClient fundoClient,
+                                       TrainingRequirementRepository trainingRequirementRepository) {
         this.profileRepository = profileRepository;
         this.assignmentRepository = assignmentRepository;
         this.leaveRepository = leaveRepository;
@@ -44,6 +49,7 @@ public class WorkforceEligibilityService {
         this.governanceClient = governanceClient;
         this.tusoClient = tusoClient;
         this.fundoClient = fundoClient;
+        this.trainingRequirementRepository = trainingRequirementRepository;
     }
 
     public VashandiDtos.WorkforceEligibilityResult evaluate(WorkforceAssignmentEntity assignment, String opaDecisionId) {
@@ -61,6 +67,31 @@ public class WorkforceEligibilityService {
         checks.add(fundoClient.fetchTrainingEvidence(profile.getProviderWorkerId()));
         if (assignment.getFacilityId() != null) {
             checks.add(tusoClient.validateFacility(assignment.getFacilityId()));
+        }
+
+        // Fundo training-gate (PO-20260629-01, G-FU-02 enforcement half): evaluate the
+        // governed role→course requirements with graduated levels. Only runs when the
+        // role actually has active requirements — no mapping, no gate, no new block.
+        String trainingGateDecision = null;
+        List<String> trainingGateBlocking = List.of();
+        List<TrainingRequirementEntity> trainingRequirements = assignment.getRoleTemplateId() == null
+                ? List.of()
+                : trainingRequirementRepository.findByTenantIdAndRoleTemplateIdAndActiveTrue(
+                        assignment.getTenantId(), assignment.getRoleTemplateId());
+        if (!trainingRequirements.isEmpty()) {
+            List<String> codeLevels = trainingRequirements.stream()
+                    .map(r -> r.getCourseCode() + ":" + r.getEnforcementLevel())
+                    .toList();
+            IntegrationCheckResult gate = fundoClient.fetchTrainingGate(
+                    profile.getProviderWorkerId(), codeLevels);
+            checks.add(gate);
+            Map<String, Object> gatePayload = gate.payload().orElse(Map.of());
+            Object decision = gatePayload.get("decision");
+            trainingGateDecision = decision == null ? null : decision.toString();
+            Object blocking = gatePayload.get("blocking");
+            if (blocking instanceof List<?> list) {
+                trainingGateBlocking = list.stream().map(String::valueOf).toList();
+            }
         }
 
         boolean onLeave = leaveRepository
@@ -97,6 +128,26 @@ public class WorkforceEligibilityService {
         if ("suspended".equals(profile.getCurrentStatus()) || "offboarded".equals(profile.getCurrentStatus())) {
             return new VashandiDtos.WorkforceEligibilityResult(
                     assignment.getId(), "denied", opaDecisionId, checks, "worker not eligible");
+        }
+
+        // Graduated training-gate enforcement (PO decision): BLOCK denies, CONDITIONAL
+        // withholds activation pending an explicit governance override (re-levelling the
+        // requirement), ADVISE allows with an audited warning in the message.
+        if ("BLOCK".equals(trainingGateDecision)) {
+            return new VashandiDtos.WorkforceEligibilityResult(
+                    assignment.getId(), "denied", opaDecisionId, checks,
+                    "required training incomplete (hard requirement): " + String.join(", ", trainingGateBlocking));
+        }
+        if ("CONDITIONAL".equals(trainingGateDecision)) {
+            return new VashandiDtos.WorkforceEligibilityResult(
+                    assignment.getId(), "conditional_training", opaDecisionId, checks,
+                    "required training incomplete (soft requirement — governance override needed): "
+                            + String.join(", ", trainingGateBlocking));
+        }
+        if ("ADVISE".equals(trainingGateDecision)) {
+            return new VashandiDtos.WorkforceEligibilityResult(
+                    assignment.getId(), "allowed", opaDecisionId, checks,
+                    "eligible (training advisory: outstanding advisory learning — see fundo-training-gate check)");
         }
 
         return new VashandiDtos.WorkforceEligibilityResult(

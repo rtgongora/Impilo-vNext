@@ -14,6 +14,9 @@ import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -49,6 +52,34 @@ public class FundoIntegrationClient {
 
     public Optional<Map<String, Object>> getCpdSummary(String providerWorkerId) {
         return fetchTrainingEvidence(providerWorkerId).payload();
+    }
+
+    /**
+     * Evaluate the graduated Fundo training-gate for a set of required courses.
+     * Each requirement is passed as {@code CODE:LEVEL} (PO-20260629-01); the response
+     * carries a {@code decision} of ALLOW / ADVISE / CONDITIONAL / BLOCK which the
+     * caller (WorkforceEligibilityService) enforces — Fundo only reports satisfaction.
+     */
+    public IntegrationCheckResult fetchTrainingGate(String providerWorkerId, List<String> courseCodeLevels) {
+        if (providerWorkerId == null || providerWorkerId.isBlank()) {
+            return IntegrationCheckResult.degraded("fundo-training-gate", "provider_worker_id required");
+        }
+        if (courseCodeLevels == null || courseCodeLevels.isEmpty()) {
+            return IntegrationCheckResult.live("fundo-training-gate",
+                    Map.of("decision", "ALLOW", "satisfied", true, "requirements", List.of()));
+        }
+        try {
+            String codes = URLEncoder.encode(String.join(",", courseCodeLevels), StandardCharsets.UTF_8);
+            String url = baseUrl + "/v1/internal/fundo/learners/" + providerWorkerId
+                    + "/training-gate?courseCodes=" + codes;
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, new HttpEntity<>(buildTrustHeaders()),
+                    new ParameterizedTypeReference<>() {});
+            return IntegrationCheckResult.live("fundo-training-gate", response.getBody());
+        } catch (RestClientException ex) {
+            log.warn("Fundo training-gate unavailable for provider {}: {}", providerWorkerId, ex.getMessage());
+            return IntegrationCheckResult.degraded("fundo-training-gate", ex.getMessage());
+        }
     }
 
     private HttpHeaders buildTrustHeaders() {
