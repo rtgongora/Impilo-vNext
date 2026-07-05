@@ -53,14 +53,27 @@ async function loginAndOpenClassroom(
   // lifetime: whenever the dialog appears, close it (the classroom itself
   // does not require a work-session context to join the live room).
   const dismissSwitchContext = async () => {
+    // The dialog is the work-context demand — satisfy it like a real user:
+    // Start Work Session → pick the seeded facility → confirm whatever step
+    // follows. Closing it is futile (the guard re-opens it).
     const heading = page.getByRole("heading", { name: /switch context/i }).first();
     if (await heading.isVisible().catch(() => false)) {
-      const close = page.getByRole("button", { name: /^close$/i }).first();
-      await close.evaluate((el) => (el as HTMLButtonElement).click()).catch(() => {});
+      const startWork = page.getByRole("button", { name: /start work session/i }).first();
+      if (await startWork.isVisible().catch(() => false)) {
+        await startWork.evaluate((el) => (el as HTMLButtonElement).click()).catch(() => {});
+        await page.waitForTimeout(800);
+      }
     }
     const facilityOption = page.getByText(/harare central/i).first();
     if (await facilityOption.isVisible().catch(() => false)) {
-      await facilityOption.click().catch(() => {});
+      await facilityOption.evaluate((el) => (el as HTMLElement).click()).catch(() => {});
+      await page.waitForTimeout(500);
+    }
+    for (const label of [/^(start|confirm|continue|enter)( session| work)?$/i]) {
+      const btn = page.getByRole("button", { name: label }).first();
+      if (await btn.isVisible().catch(() => false)) {
+        await btn.evaluate((el) => (el as HTMLButtonElement).click()).catch(() => {});
+      }
     }
   };
   const watchdog = setInterval(() => void dismissSwitchContext(), 2_000);
