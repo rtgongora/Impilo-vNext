@@ -64,6 +64,9 @@ impilo:
     notification-base-url: ${NOTIFICATION_BASE_URL:http://localhost:8200}
     live-base-url: ${LIVE_BASE_URL:http://localhost:8380}
     rtc-gateway-base-url: ${RTC_GATEWAY_BASE_URL:http://localhost:8195}
+    # HMAC secret for meeting invite links (W5). Unset → random per-boot secret (links do not
+    # survive restarts or verify across replicas); MUST be set in multi-replica/prod estates.
+    meeting-invite-secret: ${KHULUMA_MEETING_INVITE_SECRET:}
     # Realtime gateway (SSE + WebSocket) multi-instance fan-out via Redis pub/sub.
     realtime:
       redis-enabled: ${KHULUMA_REALTIME_REDIS_ENABLED:true}
