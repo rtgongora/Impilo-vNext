@@ -166,11 +166,10 @@ ok "media asset adopted: $ASSET_ID"
 # ── 6. Learner playback ref (signed URL) ─────────────────────────────────────
 step "6. enrolment-gated playback ref resolves to a servable artifact"
 act_hdrs "$ANCHOR" "$TOKEN"
-PLAY=$(curl -s "$LEARN/media/$ASSET_ID/playback-ref?enrolmentId=$ENROLMENT_ID" "${HDRS[@]}")
+PLAY=$(curl -s "$LEARN/media/$ASSET_ID/playback?enrolmentId=$ENROLMENT_ID" "${HDRS[@]}")
 PLAY_URL=$(echo "$PLAY" | jq1 "
 x=d.get('data') or {}
-a=x.get('asset') or x
-print(a.get('playbackUrl') or a.get('signedUrl') or a.get('url') or '')")
+print(x.get('playbackUrl') or (x.get('asset') or {}).get('playbackUrl') or '')")
 [[ -n "$PLAY_URL" ]] || fail "playback-ref did not resolve: $(echo "$PLAY" | head -c 400)"
 BYTES=$(kubectl exec -n "$NS" deploy/experience-bff -- curl -sS -o /dev/null -w "%{size_download}" "$PLAY_URL" 2>/dev/null || echo 0)
 [[ "${BYTES:-0}" -gt 100000 ]] || fail "signed artifact fetch too small ($BYTES bytes)"

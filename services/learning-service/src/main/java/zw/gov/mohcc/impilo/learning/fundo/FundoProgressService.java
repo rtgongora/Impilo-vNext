@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.learning.persistence.entity.CourseLessonEntity;
@@ -27,12 +29,15 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.EnrolmentRepository;
 @Service
 public class FundoProgressService {
 
+    private static final Logger log = LoggerFactory.getLogger(FundoProgressService.class);
+
     private final EnrolmentRepository enrolmentRepository;
     private final CourseProgressRepository progressRepository;
     private final CourseModuleRepository moduleRepository;
     private final CourseLessonRepository lessonRepository;
     private final FundoOutboxAppender outbox;
     private final FundoCompletionPolicyService completionPolicy;
+    private final FundoCertificateService certificateService;
 
     public FundoProgressService(
             EnrolmentRepository enrolmentRepository,
@@ -40,13 +45,15 @@ public class FundoProgressService {
             CourseModuleRepository moduleRepository,
             CourseLessonRepository lessonRepository,
             FundoOutboxAppender outbox,
-            FundoCompletionPolicyService completionPolicy) {
+            FundoCompletionPolicyService completionPolicy,
+            FundoCertificateService certificateService) {
         this.enrolmentRepository = enrolmentRepository;
         this.progressRepository = progressRepository;
         this.moduleRepository = moduleRepository;
         this.lessonRepository = lessonRepository;
         this.outbox = outbox;
         this.completionPolicy = completionPolicy;
+        this.certificateService = certificateService;
     }
 
     /**
@@ -178,6 +185,18 @@ public class FundoProgressService {
         }
         outbox.append("FundoEnrolment", enrolment.getId().toString(),
                 FundoNativeEventTypes.COURSE_COMPLETED, completedPayload);
+        // Rule-governed completions (WATCH_THRESHOLD, FACILITATOR_CONFIRM, …)
+        // issue the certificate as a completion side-effect — the attendance
+        // path has its own explicit issuance and legacy no-rules completions
+        // keep their existing behaviour (certificate flows own it).
+        if (outcome.hasRules()) {
+            try {
+                certificateService.issueForEnrolment(tenantId, enrolment.getId());
+            } catch (IllegalStateException ex) {
+                log.info("Certificate not issued for rule-completed enrolment {}: {}",
+                        enrolment.getId(), ex.getMessage());
+            }
+        }
         return true;
     }
 
