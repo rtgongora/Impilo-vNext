@@ -8,7 +8,8 @@
  */
 
 import { useState } from "react";
-import { Inbox, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Inbox, Loader2, ScanLine } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useResultsInbox } from "@/hooks/queries/useDiagnosticsOrders";
@@ -51,6 +52,7 @@ export default function ResultsInboxPage() {
                   <th className="px-4 py-2">Accession</th>
                   <th className="px-4 py-2">Lifecycle</th>
                   <th className="px-4 py-2">Updated</th>
+                  <th className="px-4 py-2">Images</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -62,6 +64,23 @@ export default function ResultsInboxPage() {
                     <td className="px-4 py-3">{o.imagingState ?? o.status}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {o.updatedAt ? new Date(o.updatedAt).toLocaleString() : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {o.orderType === "IMAGING" && o.patientCpid ? (
+                        <Link
+                          href={`/ehr/${encodeURIComponent(o.patientCpid)}/imaging/viewer?${
+                            o.studyUid
+                              ? `studyUid=${encodeURIComponent(o.studyUid)}`
+                              : `orderId=${encodeURIComponent(o.orderId)}`
+                          }`}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                          data-testid="results-inbox-view-images"
+                        >
+                          <ScanLine className="h-3.5 w-3.5" /> View images
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </td>
                   </tr>
                 ))}

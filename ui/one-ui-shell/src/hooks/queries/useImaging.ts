@@ -175,6 +175,167 @@ export function useRetryAllImagingWritebacks() {
   });
 }
 
+/**
+ * Facility imaging capability + modality registry (Wave 1/2 backend surfaced via
+ * `/internal/v1/imaging/facilities`). Technical fields (AE titles, hosts, ports…) are
+ * redacted by the BFF for non-technical actors, so shapes stay permissive here.
+ */
+export interface FacilityImagingCapability {
+  id?: number;
+  facilityId?: string;
+  facilityName?: string | null;
+  deploymentMode?: string;
+  operationalStatus?: string | null;
+  configurationStatus?: string | null;
+  goLiveReadiness?: string | null;
+  pacsAvailable?: boolean;
+  localGatewayAvailable?: boolean;
+  dicomwebAvailable?: boolean;
+  dimseAvailable?: boolean;
+  mwlSupported?: boolean;
+  cstoreReceiveSupported?: boolean;
+  mppsSupported?: boolean;
+  storeForwardSupported?: boolean;
+  localCacheSupported?: boolean;
+  manualImportSupported?: boolean;
+  digitisationBridgeSupported?: boolean;
+  viewerAvailable?: boolean;
+  reportingAvailable?: boolean;
+  internetStatus?: string | null;
+  supportedModalities?: string | null;
+  lastHeartbeatAt?: string | null;
+  [key: string]: unknown;
+}
+
+export interface ImagingModality {
+  id?: number;
+  facilityId?: string;
+  modalityType?: string;
+  name?: string | null;
+  vendor?: string | null;
+  model?: string | null;
+  operationalStatus?: string | null;
+  active?: boolean;
+  /** Technical fields — present only for technical/admin actors (BFF redacts otherwise). */
+  aeTitle?: string | null;
+  host?: string | null;
+  port?: number | null;
+  supportsWorklist?: boolean;
+  supportsDicomStorage?: boolean;
+  supportsMpps?: boolean;
+  supportsDicomweb?: boolean;
+  lastSeenAt?: string | null;
+  [key: string]: unknown;
+}
+
+export interface ImagingStudyException {
+  id: number;
+  studyId?: number | null;
+  exceptionType?: string;
+  status?: string;
+  detail?: string | null;
+  raisedBy?: string | null;
+  createdAt?: string | null;
+  resolvedAt?: string | null;
+  resolvedBy?: string | null;
+  resolutionAction?: string | null;
+  resolutionNote?: string | null;
+  [key: string]: unknown;
+}
+
+export function useFacilityImagingCapabilities(deploymentMode?: string | null) {
+  return useQuery<ApiResponse<FacilityImagingCapability[]>>({
+    queryKey: ["imaging-facility-capabilities", deploymentMode ?? null],
+    queryFn: () => {
+      const searchParams = new URLSearchParams();
+      if (deploymentMode) searchParams.set("deployment_mode", deploymentMode);
+      const qs = searchParams.toString();
+      return apiClient.get<ApiResponse<FacilityImagingCapability[]>>(
+        `/internal/v1/imaging/facilities${qs ? `?${qs}` : ""}`,
+      );
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useFacilityImagingCapability(facilityId?: string | null) {
+  return useQuery<ApiResponse<FacilityImagingCapability>>({
+    queryKey: ["imaging-facility-capability", facilityId ?? null],
+    queryFn: () =>
+      apiClient.get<ApiResponse<FacilityImagingCapability>>(
+        `/internal/v1/imaging/facilities/${encodeURIComponent(facilityId!)}/capability`,
+      ),
+    enabled: !!facilityId,
+    staleTime: 30_000,
+    retry: false,
+  });
+}
+
+export function useFacilityImagingReadiness(facilityId?: string | null) {
+  return useQuery<ApiResponse<Record<string, unknown>>>({
+    queryKey: ["imaging-facility-readiness", facilityId ?? null],
+    queryFn: () =>
+      apiClient.get<ApiResponse<Record<string, unknown>>>(
+        `/internal/v1/imaging/facilities/${encodeURIComponent(facilityId!)}/readiness`,
+      ),
+    enabled: !!facilityId,
+    staleTime: 30_000,
+    retry: false,
+  });
+}
+
+export function useFacilityImagingModalities(facilityId?: string | null, activeOnly?: boolean) {
+  return useQuery<ApiResponse<ImagingModality[]>>({
+    queryKey: ["imaging-facility-modalities", facilityId ?? null, activeOnly ?? null],
+    queryFn: () => {
+      const searchParams = new URLSearchParams();
+      if (activeOnly != null) searchParams.set("active_only", String(activeOnly));
+      const qs = searchParams.toString();
+      return apiClient.get<ApiResponse<ImagingModality[]>>(
+        `/internal/v1/imaging/facilities/${encodeURIComponent(facilityId!)}/modalities${qs ? `?${qs}` : ""}`,
+      );
+    },
+    enabled: !!facilityId,
+    staleTime: 30_000,
+    retry: false,
+  });
+}
+
+export function useImagingOpsExceptions(status?: string | null) {
+  return useQuery<ApiResponse<ImagingStudyException[]>>({
+    queryKey: ["imaging-ops-exceptions", status ?? null],
+    queryFn: () => {
+      const searchParams = new URLSearchParams();
+      if (status) searchParams.set("status", status);
+      const qs = searchParams.toString();
+      return apiClient.get<ApiResponse<ImagingStudyException[]>>(
+        `/internal/v1/imaging/ops/exceptions${qs ? `?${qs}` : ""}`,
+      );
+    },
+    staleTime: 15_000,
+  });
+}
+
+/** Body forwarded through the BFF to the PACS adapter resolve endpoint. */
+export interface ResolveImagingExceptionPayload {
+  action: string;
+  note?: string;
+  dismiss?: boolean;
+  [key: string]: unknown;
+}
+
+export function useResolveImagingException() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<unknown>, unknown, { exceptionId: number; body: ResolveImagingExceptionPayload }>({
+    mutationFn: ({ exceptionId, body }) =>
+      apiClient.post<ApiResponse<unknown>>(`/internal/v1/imaging/ops/exceptions/${exceptionId}/resolve`, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["imaging-ops-exceptions"] });
+      void queryClient.invalidateQueries({ queryKey: ["imaging-ops-status"] });
+    },
+  });
+}
+
 export interface ImagingAnnotationPayload {
   annotationType?: string;
   note?: string;
