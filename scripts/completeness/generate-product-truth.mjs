@@ -830,6 +830,13 @@ const SURFACE_ALLOWLIST_PREFIXES = [
   '/admin/keys',
   '/admin/federation',
   '/admin/sidecar-retirement',
+  // Telemedicine operating-model doctrine shells: clinical group taxonomy and
+  // virtual-hospital capability orientation rendered from checked-in doctrine
+  // data (src/lib/telemedicine/{clinical-groups,session-modes,virtual-hospitals}.ts)
+  // — same static-orientation class as /platform/all-features. If these become
+  // live registries they must gain sovereign BFF backing and leave this list.
+  '/work/telemedicine/groups',
+  '/work/telemedicine/virtual-hospitals',
 ];
 
 function isAllowlistedShellRoute(routePath) {
