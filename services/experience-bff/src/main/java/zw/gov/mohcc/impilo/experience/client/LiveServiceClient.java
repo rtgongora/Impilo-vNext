@@ -126,6 +126,51 @@ public class LiveServiceClient {
         return post(baseUrl + API + "/room/" + eventId + "/process-replay", Map.of(), "processReplay");
     }
 
+    // ── Backstage (crew / approved speakers) ─────────────────────────
+
+    public JsonNode joinBackstage(String eventId, Map<String, Object> body) {
+        return post(baseUrl + API + "/room/" + eventId + "/backstage/join", body, "joinBackstage");
+    }
+
+    public JsonNode backstageToken(String eventId, Map<String, Object> body) {
+        return post(baseUrl + API + "/room/" + eventId + "/backstage/token", body, "backstageToken");
+    }
+
+    // ── Stage management (LIVE_EVENT modes) ──────────────────────────
+
+    public JsonNode requestStage(String eventId, Map<String, Object> body) {
+        return post(baseUrl + API + "/stage/" + eventId + "/requests", body, "requestStage");
+    }
+
+    public JsonNode listStageRequests(String eventId, String status) {
+        UriComponentsBuilder builder =
+                UriComponentsBuilder.fromHttpUrl(baseUrl + API + "/stage/" + eventId + "/requests");
+        if (status != null && !status.isBlank()) {
+            builder.queryParam("status", status);
+        }
+        return get(builder.toUriString(), "listStageRequests");
+    }
+
+    public JsonNode approveStageRequest(String eventId, String requestId) {
+        return post(baseUrl + API + "/stage/" + eventId + "/requests/" + requestId + "/approve",
+                Map.of(), "approveStageRequest");
+    }
+
+    public JsonNode denyStageRequest(String eventId, String requestId) {
+        return post(baseUrl + API + "/stage/" + eventId + "/requests/" + requestId + "/deny",
+                Map.of(), "denyStageRequest");
+    }
+
+    public JsonNode demoteStageParticipant(String eventId, String participantId) {
+        return post(baseUrl + API + "/stage/" + eventId + "/participants/" + participantId + "/demote",
+                Map.of(), "demoteStageParticipant");
+    }
+
+    public JsonNode getStageRole(String eventId, String participantId) {
+        return get(baseUrl + API + "/stage/" + eventId + "/participants/" + participantId + "/role",
+                "getStageRole");
+    }
+
     public JsonNode publishReplay(String eventId) {
         return post(baseUrl + API + "/room/" + eventId + "/publish-replay", Map.of(), "publishReplay");
     }
@@ -151,6 +196,14 @@ public class LiveServiceClient {
 
     public JsonNode listChat(String eventId) {
         return get(baseUrl + API + "/interactions/" + eventId + "/chat", "listChat");
+    }
+
+    public JsonNode postAnnouncement(String eventId, Map<String, Object> body) {
+        return post(baseUrl + API + "/interactions/" + eventId + "/announcements", body, "postAnnouncement");
+    }
+
+    public JsonNode listAnnouncements(String eventId) {
+        return get(baseUrl + API + "/interactions/" + eventId + "/announcements", "listAnnouncements");
     }
 
     public JsonNode createPoll(String eventId, Map<String, Object> body) {

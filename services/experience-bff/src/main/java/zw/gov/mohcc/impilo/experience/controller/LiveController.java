@@ -202,6 +202,82 @@ public class LiveController {
         return proxy(() -> client.processReplay(eventId), requestId, correlationId, false);
     }
 
+    // ── Backstage (crew / approved speakers; live-service enforces the grant) ──
+
+    @PostMapping("/room/{eventId}/backstage/join")
+    public ResponseEntity<Map<String, Object>> joinBackstage(
+            @PathVariable String eventId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.joinBackstage(eventId, body), requestId, correlationId, true);
+    }
+
+    @PostMapping("/room/{eventId}/backstage/token")
+    public ResponseEntity<Map<String, Object>> backstageToken(
+            @PathVariable String eventId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.backstageToken(eventId, body), requestId, correlationId, false);
+    }
+
+    // ── Stage management (crew decisions ride the forwarded X-Actor-ID) ──
+
+    @PostMapping("/stage/{eventId}/requests")
+    public ResponseEntity<Map<String, Object>> requestStage(
+            @PathVariable String eventId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.requestStage(eventId, body), requestId, correlationId, true);
+    }
+
+    @GetMapping("/stage/{eventId}/requests")
+    public ResponseEntity<Map<String, Object>> listStageRequests(
+            @PathVariable String eventId,
+            @RequestParam(required = false) String status,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.listStageRequests(eventId, status), requestId, correlationId, false);
+    }
+
+    @PostMapping("/stage/{eventId}/requests/{stageRequestId}/approve")
+    public ResponseEntity<Map<String, Object>> approveStageRequest(
+            @PathVariable String eventId,
+            @PathVariable String stageRequestId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.approveStageRequest(eventId, stageRequestId), requestId, correlationId, false);
+    }
+
+    @PostMapping("/stage/{eventId}/requests/{stageRequestId}/deny")
+    public ResponseEntity<Map<String, Object>> denyStageRequest(
+            @PathVariable String eventId,
+            @PathVariable String stageRequestId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.denyStageRequest(eventId, stageRequestId), requestId, correlationId, false);
+    }
+
+    @PostMapping("/stage/{eventId}/participants/{participantId}/demote")
+    public ResponseEntity<Map<String, Object>> demoteStageParticipant(
+            @PathVariable String eventId,
+            @PathVariable String participantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.demoteStageParticipant(eventId, participantId), requestId, correlationId, false);
+    }
+
+    @GetMapping("/stage/{eventId}/participants/{participantId}/role")
+    public ResponseEntity<Map<String, Object>> getStageRole(
+            @PathVariable String eventId,
+            @PathVariable String participantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.getStageRole(eventId, participantId), requestId, correlationId, false);
+    }
+
     @PostMapping("/room/{eventId}/publish-replay")
     public ResponseEntity<Map<String, Object>> publishReplay(
             @PathVariable String eventId,
@@ -253,6 +329,23 @@ public class LiveController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return proxy(() -> client.listChat(eventId), requestId, correlationId, false);
+    }
+
+    @PostMapping("/interactions/{eventId}/announcements")
+    public ResponseEntity<Map<String, Object>> postAnnouncement(
+            @PathVariable String eventId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.postAnnouncement(eventId, body), requestId, correlationId, true);
+    }
+
+    @GetMapping("/interactions/{eventId}/announcements")
+    public ResponseEntity<Map<String, Object>> listAnnouncements(
+            @PathVariable String eventId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.listAnnouncements(eventId), requestId, correlationId, false);
     }
 
     @PostMapping("/interactions/{eventId}/polls")
