@@ -18,6 +18,10 @@ import java.util.*;
 @Service
 public class ImportBatchService {
 
+    static final String HSC_IMPORT_TYPE = "hsc_employment_records";
+    static final String EC_NUMBER_COLUMN = "ec_number";
+    static final String OUTCOME_INVALID_EC_NUMBER = "invalid_ec_number";
+
     private static final Map<String, List<String>> REQUIRED_COLUMNS = Map.of(
             "organisation_users", List.of("email", "full_name", "role_template"),
             "hsc_employment_records", List.of("provider_worker_id", "employment_status", "post_title"),
@@ -58,7 +62,8 @@ public class ImportBatchService {
             Map<String, String> row = rows.get(i);
             ImportRowEntity rowEntity = new ImportRowEntity();
             rowEntity.init(batch.getId(), i + 1, writeJson(row));
-            String outcome = determineOutcome(row, required, seen, importType);
+            String ecIssue = mapEcNumber(importType, row, rowEntity);
+            String outcome = ecIssue != null ? ecIssue : determineOutcome(row, required, seen, importType);
             rowEntity.setOutcome(outcome);
             rowEntity.setValidationStatus(outcome.startsWith("invalid") ? "invalid" : "validated");
             rowEntity.setPrecheckStatus("precheck_pending");
@@ -183,6 +188,37 @@ public class ImportBatchService {
                 "supportedFormats", List.of("csv", "json"),
                 "xlsxContract", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         );
+    }
+
+    /**
+     * Maps the optional {@code ec_number} column on HSC employment imports.
+     *
+     * <p>A present-but-malformed EC number is an explicit {@code invalid_ec_number}
+     * outcome (surfaced as an {@link ImportExceptionEntity} by the caller), never a
+     * silent drop. A valid EC number is canonicalised into the row's normalized
+     * payload so downstream reconciliation writes the canonical key to
+     * {@code wgv_hsc_employment.ec_number}. Absent/blank EC is allowed — the column
+     * is optional for legacy HSC extracts.</p>
+     *
+     * @return the invalid outcome code, or {@code null} when the row is acceptable
+     */
+    private String mapEcNumber(String importType, Map<String, String> row, ImportRowEntity rowEntity) {
+        if (!HSC_IMPORT_TYPE.equals(importType) || !row.containsKey(EC_NUMBER_COLUMN)) {
+            return null;
+        }
+        String raw = row.get(EC_NUMBER_COLUMN);
+        String canonical = EcNumbers.canonicalise(raw);
+        if (canonical == null) {
+            return null; // column present but blank — EC stays optional
+        }
+        if (!EcNumbers.isValid(canonical)) {
+            return OUTCOME_INVALID_EC_NUMBER;
+        }
+        if (!canonical.equals(raw)) {
+            row.put(EC_NUMBER_COLUMN, canonical);
+            rowEntity.setNormalizedPayloadJson(writeJson(row));
+        }
+        return null;
     }
 
     private String determineOutcome(Map<String, String> row, List<String> required, Set<String> seen, String importType) {

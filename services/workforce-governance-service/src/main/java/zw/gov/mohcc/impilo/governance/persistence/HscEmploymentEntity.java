@@ -23,6 +23,14 @@ public class HscEmploymentEntity {
     @Column(name = "provider_worker_id", nullable = false)
     private String providerWorkerId;
 
+    /**
+     * Health Service Commission EC number (Channel B public-workforce matching key).
+     * Deliberately NOT unique — duplicate EC numbers are an honest CONFLICT signal
+     * surfaced by the employment match API.
+     */
+    @Column(name = "ec_number", length = 32)
+    private String ecNumber;
+
     @Column(name = "linked_health_id")
     private String linkedHealthId;
 
@@ -95,6 +103,8 @@ public class HscEmploymentEntity {
     public UUID getTenantId() { return tenantId; }
     public String getProviderWorkerId() { return providerWorkerId; }
     public void setProviderWorkerId(String providerWorkerId) { this.providerWorkerId = providerWorkerId; touch(); }
+    public String getEcNumber() { return ecNumber; }
+    public void setEcNumber(String ecNumber) { this.ecNumber = ecNumber; touch(); }
     public String getLinkedHealthId() { return linkedHealthId; }
     public void setLinkedHealthId(String linkedHealthId) { this.linkedHealthId = linkedHealthId; touch(); }
     public UUID getEmployerOrganisationId() { return employerOrganisationId; }
