@@ -1,7 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AdaptiveSessionRoom } from "./AdaptiveSessionRoom";
-import { LiveKitConsultRoom } from "../telemedicine/LiveKitConsultRoom";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Keep the LiveKit runtime out of jsdom — render structural stand-ins that
@@ -117,20 +116,3 @@ describe("AdaptiveSessionRoom", () => {
   });
 });
 
-describe("LiveKitConsultRoom (deprecated alias)", () => {
-  it("still renders the legacy grid room", () => {
-    render(<LiveKitConsultRoom {...BASE_PROPS} />);
-    expect(screen.getByTestId("livekit-room")).toBeInTheDocument();
-    expect(screen.getByTestId("grid-layout")).toBeInTheDocument();
-    expect(screen.getByTestId("livekit-room").getAttribute("data-server-url")).toBe(
-      "wss://livekit.example"
-    );
-  });
-
-  it("keeps the legacy waiting state when the token is missing", () => {
-    render(<LiveKitConsultRoom serverUrl="wss://livekit.example" token="" videoEnabled />);
-    expect(
-      screen.getByText("Waiting for governed LiveKit server URL and scoped media token.")
-    ).toBeInTheDocument();
-  });
-});

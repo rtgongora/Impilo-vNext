@@ -5,7 +5,7 @@ import { Track } from "livekit-client";
 
 /**
  * Equal-tile grid — the default adaptive session stage (small meetings,
- * consults without a dedicated focus, legacy LiveKitConsultRoom behaviour).
+ * consults without a dedicated focus, legacy pre-suite grid behaviour).
  */
 export function GridStageLayout() {
   const tracks = useTracks(

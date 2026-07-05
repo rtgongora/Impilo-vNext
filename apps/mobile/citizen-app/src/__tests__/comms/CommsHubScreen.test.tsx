@@ -36,10 +36,6 @@ vi.mock("react-native", async () => {
   };
 });
 
-vi.mock("../../screens/telehealth/LiveKitMobileConsultRoom", () => ({
-  LiveKitMobileConsultRoom: () => null,
-}));
-
 const svc = vi.hoisted(() => ({
   fetchInbox: vi.fn(),
   fetchConversation: vi.fn(),

@@ -2,14 +2,14 @@
  * CommsHubScreen — native Khuluma Comms Hub for the citizen app.
  *
  * Inbox + conversation + realtime-ready send/read, with a 1:1 call surface that reuses
- * LiveKitMobileConsultRoom over the canonical self-hosted LiveKit (rtc-gateway token from the BFF).
+ * AdaptiveSessionRoomNative over the canonical self-hosted LiveKit (rtc-gateway token from the BFF).
  * Backed entirely by /internal/v1/mobile/khuluma/** — no mock data. Incoming-call push (mobile
  * realtime) is surfaced via the IncomingCallSheet; the accept/decline + media flow is fully wired.
  */
 
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, StyleSheet } from "react-native";
-import { LiveKitMobileConsultRoom } from "../telehealth/LiveKitMobileConsultRoom";
+import { AdaptiveSessionRoomNative } from "@impilo/mobile-session";
 import {
   fetchInbox,
   fetchConversation,
@@ -166,11 +166,14 @@ export const CommsHubScreen: React.FC = () => {
       <View testID="comms-call" style={styles.callContainer}>
         <Text style={styles.callTitle}>{isVideo ? "Video" : "Audio"} call · {activeCall.call.status}</Text>
         {hasMedia ? (
-          <LiveKitMobileConsultRoom
+          <AdaptiveSessionRoomNative
             serverUrl={activeCall.call.roomUrl ?? undefined}
             token={activeCall.call.accessToken ?? undefined}
             videoEnabled={isVideo}
             micMuted={false}
+            layout="consult"
+            unavailableMessage="Live media is blocked until Impilo returns a governed LiveKit server URL and scoped token."
+            invalidEndpointMessage="Continue with secure chat/notes and request support."
           />
         ) : (
           <Text style={styles.muted}>
