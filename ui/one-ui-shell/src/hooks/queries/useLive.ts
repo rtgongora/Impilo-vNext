@@ -196,7 +196,13 @@ export function useLiveRoomToken(eventId: string, enabled = true) {
     queryKey: liveQueryKeys.roomToken(eventId, participantId),
     queryFn: () => liveApi.getRoomToken(eventId, body),
     enabled: Boolean(eventId) && Boolean(participantId) && enabled,
-    staleTime: 30_000,
+    // A media token must be STABLE for the page lifetime: every refetch mints
+    // a new JWT and a changed token prop makes LiveKitRoom disconnect/reconnect
+    // (observed as a 30s join/leave churn loop). Explicit refresh flows own
+    // renewal; TTLs are template-driven and outlive any session page.
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: 1,
   });
 }
