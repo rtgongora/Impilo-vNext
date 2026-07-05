@@ -142,6 +142,12 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - **Follow-up (hardening, non-blocking)**: `BillService.getBillsForEncounter` tenant filter is in-memory and fail-open on null tenant — push down into the repository query.
 - **Status**: GATES_PASSED · merged into `integration/fable-seven-pipeline-delivery-2026-07-04` (round 2, `f8830a8c3`, PUSHED); combined round-2 gate green: backend=0, type-check=0, cross-stream vitest 15/15
 
+## WS-P7-B — Fundo learning defect waves D1–D8 (external session) — GATES_PASSED
+- **Branch**: `cursor/e2e-fundo-learning` @ `c1abd6e76` · 13 work commits · properly contains anchor tip `f4381a841` (W3 merged in by the stream)
+- **Coordinator review 2026-07-04**: PASSED. 43 files +2100/−80. Lease-clean (no rtc/live/khuluma/session-templates/helm/nav/api-client). Single migration `vashandi V005__training_requirement` verified: additive new table, next-in-sequence, ownership doctrinally correct (Vashandi owns role→course requirement, learning-service owns satisfaction via existing FundoTrainingGateService, Tshepo/OPA owns decision). Zero overlap with integration rounds 1–2. Honesty verified: no-fabricated-KPIs dashboard fix, honest "required" bucket, honest preceptor sign-off, defect register doc. Delivers: CPD candidate accept/reject council surface (varapi), governed training requirements + eligibility gate (vashandi + BFF proxy + UI), placement sign-off with outbox events, live-linkage derivation fix, IT baseline repair.
+- **Coordinator gates (independent)**: backend `mvn -pl learning,varapi,vashandi,experience-bff -am test` = 0; type-check one-ui-shell = 0; vitest learning/registry/vashandi surfaces 42/42 (16 files).
+- **Status**: GATES_PASSED · merged into integration round 3 (`1c685f89e`) pending combined gate
+
 ## Unregistered branches detected on origin (2026-07-04 fetch)
 - `cursor/e2e-pacs-imaging-integration` — based on anchor `d44bb6022` ✓; 35 files +3398 (imaging capability/modality registry/reconciliation queue UI + viewer fix); quick forbidden-file grep clean. Not registered before pushing — needs a workstream entry, owner, and gate evidence before merge consideration.
 - `cursor/e2e-pct-care-tracker` — **stale base**: merge-base with anchor is `98d43b1cd`, not `d44bb6022`; 20 files +1217 (countersign surfacing, medications panel, gap register doc). Needs rebase onto current anchor + registration + gates before merge consideration.
