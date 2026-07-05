@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-07-05T08:10:40.297Z
+> Generated: 2026-07-05T08:32:58.245Z
 > Branch: `claude/hungry-lewin-5f02da`
 
 ## Executive summary
@@ -12,7 +12,7 @@
 | Shared libraries | 12 |
 | Frontend surfaces (routes) | 742 |
 | Mobile screens | 204 |
-| BFF route handlers | 2661 |
+| BFF route handlers | 2665 |
 | OpenAPI contracts | 106 |
 | Services with DB persistence | 96 |
 | **Phase 6 complete (user-facing + documented internal)** | **96** |

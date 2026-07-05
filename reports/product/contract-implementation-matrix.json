@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-30T18:40:46.865Z",
+  "generatedAt": "2026-07-05T08:38:21.002Z",
   "counts": {
-    "totalOpenApiOperations": 4756,
+    "totalOpenApiOperations": 4790,
     "totalAsyncChannels": 84,
-    "implemented": 4809,
+    "implemented": 4843,
     "partial": 0,
     "missing": 8,
     "unownedContract": 23,
@@ -3991,7 +3991,7 @@
         "costing-engine-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/costing-engine-service/src/main/java/zw/gov/mohcc/impilo/costa/api/finance/CostCenterController.java",
+      "serviceHandler": "services/costing-engine-service/src/main/java/zw/gov/mohcc/impilo/costa/api/BudgetGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -5151,6 +5151,448 @@
       ],
       "implStatus": "implemented",
       "serviceHandler": "services/credential-verification-service/src/main/java/zw/gov/mohcc/impilo/credential/api/controller/v11/CredentialV11ProbeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_get_root",
+      "method": "GET",
+      "path": "/",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DisasterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post_root",
+      "method": "POST",
+      "path": "/",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DisasterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_get_health",
+      "method": "GET",
+      "path": "/health",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DaidzaiHealthController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_get_incidents",
+      "method": "GET",
+      "path": "/incidents",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post_incidents",
+      "method": "POST",
+      "path": "/incidents",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_get_incidents_id",
+      "method": "GET",
+      "path": "/incidents/{id}",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post_incidents_id_death-outcome",
+      "method": "POST",
+      "path": "/incidents/{id}/death-outcome",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post_incidents_id_dispatch",
+      "method": "POST",
+      "path": "/incidents/{id}/dispatch",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post_incidents_id_handoff",
+      "method": "POST",
+      "path": "/incidents/{id}/handoff",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post_incidents_id_mission-events",
+      "method": "POST",
+      "path": "/incidents/{id}/mission-events",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_get_incidents_id_missions",
+      "method": "GET",
+      "path": "/incidents/{id}/missions",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_get_incidents_id_resources",
+      "method": "GET",
+      "path": "/incidents/{id}/resources",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post_incidents_id_resources",
+      "method": "POST",
+      "path": "/incidents/{id}/resources",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_delete_internal_v1",
+      "method": "DELETE",
+      "path": "/internal/v1",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DaidzaiHealthController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_get_internal_v1",
+      "method": "GET",
+      "path": "/internal/v1",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DaidzaiHealthController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_patch_internal_v1",
+      "method": "PATCH",
+      "path": "/internal/v1",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DaidzaiHealthController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post_internal_v1",
+      "method": "POST",
+      "path": "/internal/v1",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DaidzaiHealthController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_put_internal_v1",
+      "method": "PUT",
+      "path": "/internal/v1",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DaidzaiHealthController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_delete_internal_v1_daidzai",
+      "method": "DELETE",
+      "path": "/internal/v1/daidzai",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_get_internal_v1_daidzai",
+      "method": "GET",
+      "path": "/internal/v1/daidzai",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_patch_internal_v1_daidzai",
+      "method": "PATCH",
+      "path": "/internal/v1/daidzai",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post_internal_v1_daidzai",
+      "method": "POST",
+      "path": "/internal/v1/daidzai",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_put_internal_v1_daidzai",
+      "method": "PUT",
+      "path": "/internal/v1/daidzai",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_delete_internal_v1_daidzai_disasters",
+      "method": "DELETE",
+      "path": "/internal/v1/daidzai/disasters",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DisasterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_get_internal_v1_daidzai_disasters",
+      "method": "GET",
+      "path": "/internal/v1/daidzai/disasters",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DisasterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_patch_internal_v1_daidzai_disasters",
+      "method": "PATCH",
+      "path": "/internal/v1/daidzai/disasters",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DisasterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post_internal_v1_daidzai_disasters",
+      "method": "POST",
+      "path": "/internal/v1/daidzai/disasters",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DisasterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_put_internal_v1_daidzai_disasters",
+      "method": "PUT",
+      "path": "/internal/v1/daidzai/disasters",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DisasterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post_requests",
+      "method": "POST",
+      "path": "/requests",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_get_requests_id",
+      "method": "GET",
+      "path": "/requests/{id}",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post_requests_id_triage",
+      "method": "POST",
+      "path": "/requests/{id}/triage",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post__id_close",
+      "method": "POST",
+      "path": "/{id}/close",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DisasterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_get__id_sites",
+      "method": "GET",
+      "path": "/{id}/sites",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DisasterController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "daidzai.openapi.yaml",
+      "operationId": "daidzai_post__id_sites",
+      "method": "POST",
+      "path": "/{id}/sites",
+      "summary": "Documented from daidzai-service handler (Wave 2 contract sync)",
+      "modules": [
+        "daidzai-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DisasterController.java",
       "stubPattern": null
     },
     {
@@ -9219,7 +9661,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CommerceFlowController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityConfigurationController.java",
       "stubPattern": null
     },
     {
@@ -9934,7 +10376,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityImportController.java",
       "stubPattern": null
     },
     {
@@ -9947,7 +10389,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BookingController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityImportController.java",
       "stubPattern": null
     },
     {
@@ -10038,7 +10480,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BookingRoutingController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityConfigurationController.java",
       "stubPattern": null
     },
     {
@@ -10051,7 +10493,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BookingRoutingController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityConfigurationController.java",
       "stubPattern": null
     },
     {
@@ -11689,7 +12131,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AppointmentCommsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityConfigurationController.java",
       "stubPattern": null
     },
     {
@@ -11728,7 +12170,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CommsTemplateController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityConfigurationController.java",
       "stubPattern": null
     },
     {
@@ -13821,7 +14263,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FinanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java",
       "stubPattern": null
     },
     {
@@ -18046,7 +18488,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LearningController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ExtensionController.java",
       "stubPattern": null
     },
     {
@@ -22648,7 +23090,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityImportController.java",
       "stubPattern": null
     },
     {
@@ -22661,7 +23103,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BookingController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityImportController.java",
       "stubPattern": null
     },
     {
@@ -23311,7 +23753,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityImportController.java",
       "stubPattern": null
     },
     {
@@ -23350,7 +23792,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BookingController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityImportController.java",
       "stubPattern": null
     },
     {
@@ -24442,7 +24884,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/RitoPersonaController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/QueueController.java",
       "stubPattern": null
     },
     {
@@ -28316,7 +28758,7 @@
         "inventory-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/inventory-service/src/main/java/zw/gov/mohcc/impilo/inventory/api/controller/OnHandController.java",
+      "serviceHandler": "services/inventory-service/src/main/java/zw/gov/mohcc/impilo/inventory/api/controller/DuraBatchController.java",
       "stubPattern": null
     },
     {
@@ -28771,7 +29213,7 @@
         "inventory-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/inventory-service/src/main/java/zw/gov/mohcc/impilo/inventory/api/controller/HandoverController.java",
+      "serviceHandler": "services/inventory-service/src/main/java/zw/gov/mohcc/impilo/inventory/api/controller/DuraBatchController.java",
       "stubPattern": null
     },
     {
@@ -29109,7 +29551,7 @@
         "inventory-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/inventory-service/src/main/java/zw/gov/mohcc/impilo/inventory/api/controller/OnHandController.java",
+      "serviceHandler": "services/inventory-service/src/main/java/zw/gov/mohcc/impilo/inventory/api/controller/DuraBatchController.java",
       "stubPattern": null
     },
     {
@@ -29148,7 +29590,7 @@
         "inventory-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/inventory-service/src/main/java/zw/gov/mohcc/impilo/inventory/api/controller/ReconcileController.java",
+      "serviceHandler": "services/inventory-service/src/main/java/zw/gov/mohcc/impilo/inventory/api/controller/DuraColdChainController.java",
       "stubPattern": null
     },
     {
@@ -43318,7 +43760,7 @@
         "pacs-adapter-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pacs-adapter-service/src/main/java/zw/gov/mohcc/impilo/pacs/api/controller/ImagingStudyController.java",
+      "serviceHandler": "services/pacs-adapter-service/src/main/java/zw/gov/mohcc/impilo/pacs/api/controller/FacilityImagingCapabilityController.java",
       "stubPattern": null
     },
     {
@@ -45125,7 +45567,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/ReferralController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/FormResponseController.java",
       "stubPattern": null
     },
     {
@@ -62530,7 +62972,7 @@
         "live-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "live-service:outbox-or-kafka"
+      "serviceHandler": "live-service:kafka-listener"
     },
     {
       "contract": "impilo-live.asyncapi.yaml",
@@ -62541,7 +62983,7 @@
         "live-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "live-service:outbox-or-kafka"
+      "serviceHandler": "live-service:kafka-listener"
     },
     {
       "contract": "impilo-live.asyncapi.yaml",
@@ -62552,7 +62994,7 @@
         "live-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "live-service:outbox-or-kafka"
+      "serviceHandler": "live-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",

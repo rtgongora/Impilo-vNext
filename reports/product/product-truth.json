@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-05T08:10:40.297Z",
+  "generatedAt": "2026-07-05T08:32:58.245Z",
   "branch": "claude/hungry-lewin-5f02da",
   "registryDrift": {
     "unregisteredModules": [],
@@ -9,7 +9,7 @@
     "totalServices": 96,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2661,
+    "bffRouteCount": 2665,
     "contractCount": 106,
     "byProductStatus": {
       "internal-only": 25,
@@ -41,15 +41,15 @@
       "userFacingRealProven": 4
     },
     "capabilities": {
-      "totalCapabilities": 4073,
+      "totalCapabilities": 4075,
       "byDisposition": {
-        "real": 3500,
-        "partial": 155,
+        "real": 3502,
+        "partial": 156,
         "real-proven": 210,
-        "fixture": 208
+        "fixture": 207
       },
       "provenCapabilities": 210,
-      "fixtureCapabilities": 208
+      "fixtureCapabilities": 207
     }
   },
   "services": [
@@ -2872,7 +2872,7 @@
         "contractOperations": 26,
         "contractViolations": 0,
         "bffClients": 22,
-        "uiReferences": 163,
+        "uiReferences": 165,
         "mobileReferences": 139,
         "tests": 4
       },
@@ -3013,15 +3013,15 @@
         "entities": 0,
         "repositories": 2,
         "serviceLayer": 45,
-        "controllers": 289,
-        "routes": 2661,
+        "controllers": 290,
+        "routes": 2665,
         "stubRoutes": 0,
         "contractOperations": 1538,
         "contractViolations": 0,
         "bffClients": 0,
-        "uiReferences": 188,
+        "uiReferences": 190,
         "mobileReferences": 82,
-        "tests": 196
+        "tests": 197
       },
       "dimensions": {
         "database": "real",
@@ -8343,7 +8343,7 @@
         "contractOperations": 8,
         "contractViolations": 0,
         "bffClients": 4,
-        "uiReferences": 101,
+        "uiReferences": 103,
         "mobileReferences": 19,
         "tests": 5
       },

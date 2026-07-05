@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-07-05T08:10:40.288Z",
+  "generatedAt": "2026-07-05T08:32:58.236Z",
   "summary": {
-    "totalCapabilities": 4073,
+    "totalCapabilities": 4075,
     "byDisposition": {
-      "real": 3500,
-      "partial": 155,
+      "real": 3502,
+      "partial": 156,
       "real-proven": 210,
-      "fixture": 208
+      "fixture": 207
     },
     "provenCapabilities": 210,
-    "fixtureCapabilities": 208
+    "fixtureCapabilities": 207
   },
   "capabilities": [
     {
@@ -14609,6 +14609,27 @@
       "frontendPaths": [
         "/ehr/[patientId]/documents"
       ]
+    },
+    {
+      "id": "experience-bff::clinical-groups",
+      "service": "experience-bff",
+      "capability": "clinical-groups",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/clinical-groups"
+      ],
+      "frontendPaths": []
     },
     {
       "id": "experience-bff::clinical-knowledge",
@@ -38015,6 +38036,31 @@
       "frontendPaths": []
     },
     {
+      "id": "experience-bff::telemedicine/operating-model",
+      "service": "experience-bff",
+      "capability": "telemedicine/operating-model",
+      "disposition": "partial",
+      "proven": false,
+      "backendRoutes": 1,
+      "stubRoutes": 0,
+      "methods": [
+        "ALL"
+      ],
+      "frontendSurfaces": 3,
+      "frontendFixtures": 3,
+      "bffProxied": 1,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/internal/v1/telemedicine/operating-model"
+      ],
+      "frontendPaths": [
+        "/work/telemedicine/groups",
+        "/work/telemedicine/virtual-hospitals",
+        "/work/telemedicine/virtual-hospitals/[id]"
+      ]
+    },
+    {
       "id": "experience-bff::telemedicine/operations",
       "service": "experience-bff",
       "capability": "telemedicine/operations",
@@ -39372,6 +39418,28 @@
       "contractUnowned": 0,
       "samplePaths": [
         "/{templateId}/versions"
+      ],
+      "frontendPaths": []
+    },
+    {
+      "id": "experience-bff::virtual-hospitals",
+      "service": "experience-bff",
+      "capability": "virtual-hospitals",
+      "disposition": "real",
+      "proven": false,
+      "backendRoutes": 2,
+      "stubRoutes": 0,
+      "methods": [
+        "GET"
+      ],
+      "frontendSurfaces": 0,
+      "frontendFixtures": 0,
+      "bffProxied": 2,
+      "contractOps": 0,
+      "contractUnowned": 0,
+      "samplePaths": [
+        "/virtual-hospitals",
+        "/virtual-hospitals/{id}"
       ],
       "frontendPaths": []
     },
@@ -45026,27 +45094,6 @@
         "/telemedicine/analytics",
         "/work/telemedicine/operations",
         "/work/telemedicine"
-      ]
-    },
-    {
-      "id": "frontend:telemedicine::telemedicine/operating-model",
-      "service": "frontend:telemedicine",
-      "capability": "telemedicine/operating-model",
-      "disposition": "fixture",
-      "proven": false,
-      "backendRoutes": 0,
-      "stubRoutes": 0,
-      "methods": [],
-      "frontendSurfaces": 3,
-      "frontendFixtures": 3,
-      "bffProxied": 0,
-      "contractOps": 0,
-      "contractUnowned": 0,
-      "samplePaths": [],
-      "frontendPaths": [
-        "/work/telemedicine/groups",
-        "/work/telemedicine/virtual-hospitals",
-        "/work/telemedicine/virtual-hospitals/[id]"
       ]
     },
     {
