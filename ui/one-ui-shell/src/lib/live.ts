@@ -79,6 +79,39 @@ export interface LiveRoomToken {
   accessToken: string;
   provider: string;
   channel: string;
+  /** Server-resolved effective role the token was minted for (LIVE_EVENT modes). */
+  role?: string | null;
+}
+
+/** Server-resolved participation tier for a LIVE_EVENT room (never client-asserted). */
+export type LiveStageTier = "HOST" | "PRODUCER" | "MODERATOR" | "SPEAKER" | "AUDIENCE";
+
+export type LiveStageRequestStatus = "REQUESTED" | "APPROVED" | "DENIED" | "DEMOTED" | string;
+
+export interface LiveStageRequest {
+  id: string;
+  eventId: string;
+  participantId: string;
+  participantType: string;
+  status: LiveStageRequestStatus;
+  requestedAt?: string;
+  decidedBy?: string | null;
+  decidedAt?: string | null;
+}
+
+export interface LiveStageRole {
+  eventId: string;
+  participantId: string;
+  tier: LiveStageTier;
+  /** Whether this event's mode is stage-managed (LIVE_EVENT session template). */
+  stageManaged: boolean;
+  stageRequest?: {
+    id: string;
+    status: LiveStageRequestStatus;
+    requestedAt?: string;
+    decidedBy?: string | null;
+    decidedAt?: string | null;
+  } | null;
 }
 
 export interface LiveRoomSession {
@@ -140,6 +173,8 @@ export interface LiveChatMessage {
   participantType: string;
   message: string;
   status: string;
+  /** CHAT (default) or ANNOUNCEMENT. */
+  kind?: string;
   moderatedBy?: string | null;
   createdAt?: string;
 }
@@ -406,6 +441,69 @@ export const liveApi = {
 
   getMediaHealth: async (eventId: string) =>
     unwrapLiveData<LiveMediaHealth>(await apiClient.get(`${BASE}/room/${eventId}/media-health`)),
+
+  // Backstage (crew / approved speakers)
+  joinBackstage: async (eventId: string, body: LiveJoinRoomPayload) =>
+    unwrapLiveData<LiveRoomSession & { backstageRoomId?: string }>(
+      await apiClient.post(`${BASE}/room/${eventId}/backstage/join`, body),
+    ),
+
+  getBackstageToken: async (eventId: string, body: LiveRoomTokenPayload) =>
+    unwrapLiveData<LiveRoomToken>(
+      await apiClient.post(`${BASE}/room/${eventId}/backstage/token`, body),
+    ),
+
+  // Stage management (LIVE_EVENT modes; role escalation is server-side)
+  requestStage: async (eventId: string, body: { participantId: string; participantType: string }) =>
+    unwrapLiveData<LiveStageRequest>(
+      await apiClient.post(`${BASE}/stage/${eventId}/requests`, body),
+    ),
+
+  listStageRequests: async (eventId: string, status?: string) =>
+    unwrapLiveData<LiveStageRequest[]>(
+      await apiClient.get(
+        `${BASE}/stage/${eventId}/requests${status ? `?status=${encodeURIComponent(status)}` : ""}`,
+      ),
+    ),
+
+  approveStageRequest: async (eventId: string, requestId: string) =>
+    unwrapLiveData<LiveStageRequest>(
+      await apiClient.post(`${BASE}/stage/${eventId}/requests/${requestId}/approve`, {}),
+    ),
+
+  denyStageRequest: async (eventId: string, requestId: string) =>
+    unwrapLiveData<LiveStageRequest>(
+      await apiClient.post(`${BASE}/stage/${eventId}/requests/${requestId}/deny`, {}),
+    ),
+
+  demoteStageParticipant: async (eventId: string, participantId: string) =>
+    unwrapLiveData<Record<string, unknown>>(
+      await apiClient.post(
+        `${BASE}/stage/${eventId}/participants/${encodeURIComponent(participantId)}/demote`,
+        {},
+      ),
+    ),
+
+  getMyStageRole: async (eventId: string, participantId: string) =>
+    unwrapLiveData<LiveStageRole>(
+      await apiClient.get(
+        `${BASE}/stage/${eventId}/participants/${encodeURIComponent(participantId)}/role`,
+      ),
+    ),
+
+  // Announcements (crew broadcast; rides chat kind=ANNOUNCEMENT)
+  postAnnouncement: async (
+    eventId: string,
+    body: { participantId: string; participantType: string; message: string },
+  ) =>
+    unwrapLiveData<LiveChatMessage>(
+      await apiClient.post(`${BASE}/interactions/${eventId}/announcements`, body),
+    ),
+
+  listAnnouncements: async (eventId: string) =>
+    unwrapLiveData<LiveChatMessage[]>(
+      await apiClient.get(`${BASE}/interactions/${eventId}/announcements`),
+    ),
 
   getReplay: async (eventId: string) =>
     unwrapLiveData<LiveReplayInfo>(await apiClient.get(`${BASE}/room/${eventId}/replay`)),

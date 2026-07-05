@@ -46,6 +46,13 @@ export const liveQueryKeys = {
     [...liveQueryKeys.all, "room-token", eventId, participantId] as const,
   replay: (eventId: string) => [...liveQueryKeys.all, "replay", eventId] as const,
   mediaHealth: (eventId: string) => [...liveQueryKeys.all, "media-health", eventId] as const,
+  stageRole: (eventId: string, participantId: string) =>
+    [...liveQueryKeys.all, "stage", eventId, "role", participantId] as const,
+  stageRequests: (eventId: string, status?: string) =>
+    [...liveQueryKeys.all, "stage", eventId, "requests", status ?? "all"] as const,
+  backstageToken: (eventId: string, participantId: string) =>
+    [...liveQueryKeys.all, "backstage-token", eventId, participantId] as const,
+  announcements: (eventId: string) => [...liveQueryKeys.all, "announcements", eventId] as const,
 };
 
 function invalidateLive(qc: ReturnType<typeof useQueryClient>) {
@@ -250,6 +257,127 @@ export function useLiveMediaHealth(eventId: string) {
     queryFn: () => liveApi.getMediaHealth(eventId),
     enabled: Boolean(eventId),
     staleTime: 30_000,
+  });
+}
+
+// ---- Stage management (LIVE_EVENT modes) ----------------------------------
+
+/**
+ * Server-resolved role tier for the current participant. Polls while enabled
+ * so an in-room audience member sees their promotion (approve) or demotion
+ * without a reload — the changed tier flips the token role key, which
+ * re-mints the media token.
+ */
+export function useLiveStageRole(eventId: string, enabled = true) {
+  const { participantId } = useLiveParticipant();
+  return useQuery({
+    queryKey: liveQueryKeys.stageRole(eventId, participantId),
+    queryFn: () => liveApi.getMyStageRole(eventId, participantId),
+    enabled: Boolean(eventId) && Boolean(participantId) && enabled,
+    refetchInterval: 5_000,
+    staleTime: 3_000,
+  });
+}
+
+export function useLiveStageRequests(eventId: string, status?: string, enabled = true) {
+  return useQuery({
+    queryKey: liveQueryKeys.stageRequests(eventId, status),
+    queryFn: () => liveApi.listStageRequests(eventId, status),
+    enabled: Boolean(eventId) && enabled,
+    refetchInterval: 5_000,
+  });
+}
+
+function invalidateStage(qc: ReturnType<typeof useQueryClient>, eventId: string) {
+  qc.invalidateQueries({ queryKey: [...liveQueryKeys.all, "stage", eventId] });
+}
+
+export function useLiveRequestStage() {
+  const qc = useQueryClient();
+  const { participantId, participantType } = useLiveParticipant();
+  return useMutation({
+    mutationFn: (eventId: string) =>
+      liveApi.requestStage(eventId, { participantId, participantType }),
+    onSuccess: (_data, eventId) => invalidateStage(qc, eventId),
+  });
+}
+
+export function useLiveApproveStage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ eventId, requestId }: { eventId: string; requestId: string }) =>
+      liveApi.approveStageRequest(eventId, requestId),
+    onSuccess: (_data, { eventId }) => invalidateStage(qc, eventId),
+  });
+}
+
+export function useLiveDenyStage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ eventId, requestId }: { eventId: string; requestId: string }) =>
+      liveApi.denyStageRequest(eventId, requestId),
+    onSuccess: (_data, { eventId }) => invalidateStage(qc, eventId),
+  });
+}
+
+export function useLiveDemoteParticipant() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ eventId, participantId }: { eventId: string; participantId: string }) =>
+      liveApi.demoteStageParticipant(eventId, participantId),
+    onSuccess: (_data, { eventId }) => invalidateStage(qc, eventId),
+  });
+}
+
+// ---- Backstage --------------------------------------------------------------
+
+export function useLiveBackstageJoin() {
+  const qc = useQueryClient();
+  const { participantId, participantType } = useLiveParticipant();
+  return useMutation({
+    mutationFn: (eventId: string) =>
+      liveApi.joinBackstage(eventId, { participantId, participantType }),
+    onSuccess: (_data, eventId) => {
+      qc.invalidateQueries({ queryKey: liveQueryKeys.mediaHealth(eventId) });
+    },
+  });
+}
+
+export function useLiveBackstageToken(eventId: string, enabled = true) {
+  const { participantId } = useLiveParticipant();
+  return useQuery({
+    queryKey: liveQueryKeys.backstageToken(eventId, participantId),
+    queryFn: () => liveApi.getBackstageToken(eventId, { participantId }),
+    enabled: Boolean(eventId) && Boolean(participantId) && enabled,
+    // Same stability rule as the main room token: refetch = reconnect churn.
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 1,
+  });
+}
+
+// ---- Announcements ----------------------------------------------------------
+
+export function useLiveAnnouncements(eventId: string, enabled = true) {
+  return useQuery({
+    queryKey: liveQueryKeys.announcements(eventId),
+    queryFn: () => liveApi.listAnnouncements(eventId),
+    enabled: Boolean(eventId) && enabled,
+    refetchInterval: 10_000,
+  });
+}
+
+export function useLivePostAnnouncement() {
+  const qc = useQueryClient();
+  const { participantId, participantType } = useLiveParticipant();
+  return useMutation({
+    mutationFn: ({ eventId, message }: { eventId: string; message: string }) =>
+      liveApi.postAnnouncement(eventId, { participantId, participantType, message }),
+    onSuccess: (_data, { eventId }) => {
+      qc.invalidateQueries({ queryKey: liveQueryKeys.announcements(eventId) });
+      qc.invalidateQueries({ queryKey: liveQueryKeys.chat(eventId) });
+    },
   });
 }
 
