@@ -48,38 +48,11 @@ async function loginAndOpenClassroom(
   }
   await page.goto(`${PREVIEW_ORIGIN}/learning/sessions/${SESSION_ID}/classroom`);
   await acceptPoliciesIfGated(page);
-  // The work shell can open the Switch Context dialog over the classroom at
-  // any point after activation — run a dismissal watchdog for the page's
-  // lifetime: whenever the dialog appears, close it (the classroom itself
-  // does not require a work-session context to join the live room).
-  const dismissSwitchContext = async () => {
-    // The dialog is the work-context demand — satisfy it like a real user:
-    // Start Work Session → pick the seeded facility → confirm whatever step
-    // follows. Closing it is futile (the guard re-opens it).
-    const heading = page.getByRole("heading", { name: /switch context/i }).first();
-    if (await heading.isVisible().catch(() => false)) {
-      const startWork = page.getByRole("button", { name: /start work session/i }).first();
-      if (await startWork.isVisible().catch(() => false)) {
-        await startWork.evaluate((el) => (el as HTMLButtonElement).click()).catch(() => {});
-        await page.waitForTimeout(800);
-      }
-    }
-    const facilityOption = page.getByText(/harare central/i).first();
-    if (await facilityOption.isVisible().catch(() => false)) {
-      await facilityOption.evaluate((el) => (el as HTMLElement).click()).catch(() => {});
-      await page.waitForTimeout(500);
-    }
-    for (const label of [/^(start|confirm|continue|enter)( session| work)?$/i]) {
-      const btn = page.getByRole("button", { name: label }).first();
-      if (await btn.isVisible().catch(() => false)) {
-        await btn.evaluate((el) => (el as HTMLButtonElement).click()).catch(() => {});
-      }
-    }
-  };
-  const watchdog = setInterval(() => void dismissSwitchContext(), 2_000);
-  page.on("close", () => clearInterval(watchdog));
-  await dismissSwitchContext();
-  // Ensure we are actually on the classroom after any context redirects.
+  // The work shell may open the Switch Context dialog over the classroom.
+  // Leave it alone: it is an overlay, not a gate — the classroom mounts and
+  // joins the live room regardless (proven against LiveKit server logs).
+  // Interacting with it navigates INTO the work-session flow and unmounts
+  // the classroom. Only guard against stray redirects off the classroom URL.
   if (!page.url().includes("/classroom")) {
     await page.goto(`${PREVIEW_ORIGIN}/learning/sessions/${SESSION_ID}/classroom`);
   }
