@@ -77,10 +77,11 @@ async function mintRoomToken(
   eventId: string,
   role: string,
   key: string,
+  participantId?: string,
 ) {
   const res = await request.post(`${PREVIEW_ORIGIN}/internal/v1/live/room/${eventId}/token`, {
     headers: actorHeaders(auth, key),
-    data: { participantId: auth.anchor, role },
+    data: { participantId: participantId ?? auth.anchor, role },
   });
   expect(res.ok(), `room token (${role}): ${res.status()}`).toBeTruthy();
   const body = await res.json();
@@ -165,7 +166,9 @@ test.describe("Live event stage promotion (orchestrated)", () => {
     const contextA = await browser.newContext();
     const pageA = await loginAndOpen(contextA, MEDIA_PERSONA_A.email, `/live/event/${eventId}/backstage`);
     await expect(pageA.getByTestId("speaker-queue")).toBeVisible({ timeout: 60_000 });
-    const approve = pageA.getByTestId(`approve-${b.anchor}`);
+    // The stage request is keyed by the participant id the web resolved
+    // (provider id when linked, anchor otherwise) — match any pending approve.
+    const approve = pageA.locator('[data-testid^="approve-"]').first();
     await expect(approve).toBeVisible({ timeout: 30_000 });
     await approve.click();
 
@@ -174,8 +177,11 @@ test.describe("Live event stage promotion (orchestrated)", () => {
     await expect
       .poll(
         async () => {
+          // The browser resolved B's participant id to the linked provider id
+          // (PROV-ZW-00007) — the approval is keyed to it, so the promoted
+          // token must be minted under the same identity.
           const promoted = await mintRoomToken(
-              request, b, eventId, "SPEAKER", `${run}-promoted-${Date.now()}`);
+              request, b, eventId, "SPEAKER", `${run}-promoted-${Date.now()}`, "PROV-ZW-00007");
           return promoted.role === "SPEAKER"
             && decodeVideoGrant(promoted.accessToken).canPublish === true;
         },
