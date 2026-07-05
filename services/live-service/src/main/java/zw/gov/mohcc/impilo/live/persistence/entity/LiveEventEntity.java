@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.live.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -119,6 +121,7 @@ public class LiveEventEntity {
     @Column(length = 16)
     private String language;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "accessibility_options", columnDefinition = "jsonb")
     private String accessibilityOptions;
 
@@ -161,6 +164,7 @@ public class LiveEventEntity {
     @Column(columnDefinition = "TEXT")
     private String objectives;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "moderation_settings", columnDefinition = "jsonb")
     private String moderationSettings;
 
