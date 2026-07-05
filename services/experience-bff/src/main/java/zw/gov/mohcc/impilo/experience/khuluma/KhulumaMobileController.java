@@ -107,6 +107,33 @@ public class KhulumaMobileController {
         return relay(khuluma.post("/conversations/" + id + "/meeting/end", objectMapper.createObjectNode()));
     }
 
+    // ── W5 MEETING: mobile is JOIN_CAPABLE (template mobileParity) — join + lobby-wait +
+    // detail + hand/reactions + invite resolve. Notes/agenda editing, cohost management and
+    // lobby moderation stay web-only (parity note in the meeting screen).
+
+    @GetMapping("/conversations/{id}/meeting")
+    public ResponseEntity<JsonNode> meetingDetail(@PathVariable String id) {
+        return relay(khuluma.get("/conversations/" + id + "/meeting", Map.of()));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/hand")
+    public ResponseEntity<JsonNode> raiseHand(@PathVariable String id, @RequestBody JsonNode body) {
+        policy.requireCommsActor();
+        return relay(khuluma.post("/conversations/" + id + "/meeting/hand", body));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/reactions")
+    public ResponseEntity<JsonNode> react(@PathVariable String id, @RequestBody JsonNode body) {
+        policy.requireCommsActor();
+        return relay(khuluma.post("/conversations/" + id + "/meeting/reactions", body));
+    }
+
+    @PostMapping("/meetings/invites/resolve")
+    public ResponseEntity<JsonNode> resolveInvite(@RequestBody JsonNode body) {
+        policy.requireCallActor();
+        return relay(khuluma.post("/meetings/invites/resolve", body));
+    }
+
     @PostMapping("/meetings/from-event")
     public ResponseEntity<JsonNode> meetingFromEvent(@RequestBody JsonNode body) {
         policy.requireCommsActor();

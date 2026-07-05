@@ -153,6 +153,92 @@ public class KhulumaBffController {
         return relay(khuluma.post("/conversations/" + id + "/meeting/end", objectMapper.createObjectNode()));
     }
 
+    // ── meeting lobby / cohosts / hand / reactions (W5 MEETING) ────────────────
+
+    @GetMapping("/conversations/{id}/meeting")
+    public ResponseEntity<JsonNode> meetingDetail(@PathVariable String id) {
+        return relay(khuluma.get("/conversations/" + id + "/meeting", Map.of()));
+    }
+
+    @GetMapping("/conversations/{id}/meeting/lobby")
+    public ResponseEntity<JsonNode> meetingLobby(@PathVariable String id) {
+        return relay(khuluma.get("/conversations/" + id + "/meeting/lobby", Map.of()));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/lobby/admit")
+    public ResponseEntity<JsonNode> admitToMeeting(@PathVariable String id, @RequestBody JsonNode body) {
+        policy.requireCallActor();
+        return relay(khuluma.post("/conversations/" + id + "/meeting/lobby/admit", body));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/lobby/deny")
+    public ResponseEntity<JsonNode> denyFromMeeting(@PathVariable String id, @RequestBody JsonNode body) {
+        policy.requireCallActor();
+        return relay(khuluma.post("/conversations/" + id + "/meeting/lobby/deny", body));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/cohosts")
+    public ResponseEntity<JsonNode> assignCohost(@PathVariable String id, @RequestBody JsonNode body) {
+        policy.requireCallActor();
+        return relay(khuluma.post("/conversations/" + id + "/meeting/cohosts", body));
+    }
+
+    @DeleteMapping("/conversations/{id}/meeting/cohosts/{actorId}")
+    public ResponseEntity<JsonNode> revokeCohost(@PathVariable String id, @PathVariable String actorId) {
+        policy.requireCallActor();
+        return relay(khuluma.delete("/conversations/" + id + "/meeting/cohosts/" + actorId));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/hand")
+    public ResponseEntity<JsonNode> raiseHand(@PathVariable String id, @RequestBody JsonNode body) {
+        policy.requireCommsActor();
+        return relay(khuluma.post("/conversations/" + id + "/meeting/hand", body));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/reactions")
+    public ResponseEntity<JsonNode> react(@PathVariable String id, @RequestBody JsonNode body) {
+        policy.requireCommsActor();
+        return relay(khuluma.post("/conversations/" + id + "/meeting/reactions", body));
+    }
+
+    // ── meeting action items ────────────────────────────────────────────────────
+
+    @GetMapping("/conversations/{id}/meeting/action-items")
+    public ResponseEntity<JsonNode> listActionItems(@PathVariable String id) {
+        return relay(khuluma.get("/conversations/" + id + "/meeting/action-items", Map.of()));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/action-items")
+    public ResponseEntity<JsonNode> createActionItem(@PathVariable String id, @RequestBody JsonNode body) {
+        policy.requireCommsActor();
+        return relay(khuluma.post("/conversations/" + id + "/meeting/action-items", body));
+    }
+
+    @RequestMapping(value = "/conversations/{id}/meeting/action-items/{itemId}",
+            method = {RequestMethod.PATCH, RequestMethod.PUT})
+    public ResponseEntity<JsonNode> updateActionItem(@PathVariable String id, @PathVariable String itemId,
+                                                     @RequestBody JsonNode body) {
+        policy.requireCommsActor();
+        // PUT on the wire: SimpleClientHttpRequestFactory cannot send PATCH.
+        return relay(khuluma.put("/conversations/" + id + "/meeting/action-items/" + itemId, body));
+    }
+
+    // ── meeting invite links ────────────────────────────────────────────────────
+
+    @PostMapping("/conversations/{id}/meeting/invite-links")
+    public ResponseEntity<JsonNode> mintInvite(@PathVariable String id,
+                                               @RequestBody(required = false) JsonNode body) {
+        policy.requireCallActor();
+        return relay(khuluma.post("/conversations/" + id + "/meeting/invite-links",
+                body != null ? body : objectMapper.createObjectNode()));
+    }
+
+    @PostMapping("/meetings/invites/resolve")
+    public ResponseEntity<JsonNode> resolveInvite(@RequestBody JsonNode body) {
+        policy.requireCallActor();
+        return relay(khuluma.post("/meetings/invites/resolve", body));
+    }
+
     // ── notifications (delegate to notification-service) ───────────────────────
 
     @GetMapping("/notifications")

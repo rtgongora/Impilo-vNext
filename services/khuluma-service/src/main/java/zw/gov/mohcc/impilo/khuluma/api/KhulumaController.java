@@ -335,7 +335,10 @@ public class KhulumaController {
                         req.assigneeDisplayName(), parseDate(req.dueDate()))));
     }
 
-    @PatchMapping("/conversations/{id}/meeting/action-items/{itemId}")
+    // PATCH-or-PUT: the BFF's SimpleClientHttpRequestFactory cannot send PATCH, so PUT is the
+    // service-to-service wire verb; semantics are partial update either way.
+    @RequestMapping(value = "/conversations/{id}/meeting/action-items/{itemId}",
+            method = {RequestMethod.PATCH, RequestMethod.PUT})
     public ResponseEntity<ActionItemResponse> updateActionItem(@PathVariable UUID id, @PathVariable UUID itemId,
                                                                @RequestBody ActionItemRequest req) {
         ActorContext ctx = contextResolver.resolve();
