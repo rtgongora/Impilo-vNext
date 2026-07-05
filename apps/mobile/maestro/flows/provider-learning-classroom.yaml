@@ -1,0 +1,63 @@
+# Provider learning — facilitator-capable live classroom smoke (W3 LEARNING_LIVE).
+#
+# Lane: dev-client (requires an EAS development build — LiveKit/WebRTC native
+# modules are not present in Expo Go). Media is asserted UI-level only (the
+# governed classroom connected-status text), not at the RTC track level.
+#
+# Preconditions: seeded provider session with at least one Fundo scheduled
+# learning session in LIVE mode (liveEventId present). The provider joins as
+# PRESENTER (facilitator) by default; attendance is read from the shared
+# learning attendance route. Classroom media renders the shared session room
+# in the "grid" layout (classroom ≈ grid on mobile).
+appId: zw.gov.impilo.provider
+tags:
+  - dev-client
+---
+- launchApp
+
+# App boot
+- extendedWaitUntil:
+    visible: "Initializing Impilo Provider..."
+    timeout: 60000
+- extendedWaitUntil:
+    id: "provider-tabs"
+    timeout: 120000
+
+# Navigate: Tools → Learning tab (Fundo shell)
+- tapOn: "Tools"
+- tapOn:
+    id: "tools-tab-learning"
+
+# Live sessions section on the learning home
+- extendedWaitUntil:
+    id: "provider-live-sessions"
+    timeout: 30000
+
+# Open the first live session → classroom SESSION_INFO stage with attendance line
+- tapOn:
+    id: "provider-live-session-.*"
+- assertVisible:
+    id: "provider-classroom-info"
+- assertVisible:
+    id: "provider-classroom-attendance"
+
+# Join (facilitator by default) → IN_CLASS with governed classroom media
+- tapOn:
+    id: "provider-classroom-join"
+- extendedWaitUntil:
+    id: "provider-classroom-in-class"
+    timeout: 60000
+- extendedWaitUntil:
+    text: "Connected to the governed classroom through Impilo RTC Gateway."
+    timeout: 60000
+
+# End-class honesty note is visible while in class
+- assertVisible: "Leaving exits this device only. Ending the class for everyone is done from the live event host controls (web studio), which also closes attendance capture."
+
+# Leave → AFTER stage with attendance summary
+- tapOn:
+    id: "provider-classroom-leave"
+- assertVisible:
+    id: "provider-classroom-after"
+- tapOn:
+    id: "provider-classroom-done"

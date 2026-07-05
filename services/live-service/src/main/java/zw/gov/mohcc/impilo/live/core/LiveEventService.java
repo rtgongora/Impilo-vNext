@@ -1,16 +1,25 @@
 package zw.gov.mohcc.impilo.live.core;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.live.domain.LiveEventStatus;
 import zw.gov.mohcc.impilo.live.domain.LiveMode;
 import zw.gov.mohcc.impilo.live.domain.OwningService;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventEntity;
+import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventPollEntity;
+import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventPollResponseEntity;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventRoleAssignmentEntity;
+import zw.gov.mohcc.impilo.live.persistence.repository.LiveEventPollRepository;
+import zw.gov.mohcc.impilo.live.persistence.repository.LiveEventPollResponseRepository;
 import zw.gov.mohcc.impilo.live.persistence.repository.LiveEventRepository;
 import zw.gov.mohcc.impilo.live.persistence.repository.LiveEventRoleAssignmentRepository;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,25 +28,36 @@ import java.util.UUID;
 @Service
 public class LiveEventService {
 
+    private static final Logger log = LoggerFactory.getLogger(LiveEventService.class);
+
     private final LiveEventRepository eventRepository;
     private final LiveEventRoleAssignmentRepository roleRepository;
     private final LiveEventStateMachine stateMachine;
     private final LiveEventEmitter emitter;
     private final LiveIntegrationOrchestrator integrationOrchestrator;
     private final LiveGovernanceGuard governanceGuard;
+    private final LiveEventPollRepository pollRepository;
+    private final LiveEventPollResponseRepository pollResponseRepository;
+    private final ObjectMapper objectMapper;
 
     public LiveEventService(LiveEventRepository eventRepository,
                             LiveEventRoleAssignmentRepository roleRepository,
                             LiveEventStateMachine stateMachine,
                             LiveEventEmitter emitter,
                             LiveIntegrationOrchestrator integrationOrchestrator,
-                            LiveGovernanceGuard governanceGuard) {
+                            LiveGovernanceGuard governanceGuard,
+                            LiveEventPollRepository pollRepository,
+                            LiveEventPollResponseRepository pollResponseRepository,
+                            ObjectMapper objectMapper) {
         this.eventRepository = eventRepository;
         this.roleRepository = roleRepository;
         this.stateMachine = stateMachine;
         this.emitter = emitter;
         this.integrationOrchestrator = integrationOrchestrator;
         this.governanceGuard = governanceGuard;
+        this.pollRepository = pollRepository;
+        this.pollResponseRepository = pollResponseRepository;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -192,7 +212,66 @@ public class LiveEventService {
         event.setUpdatedAt(OffsetDateTime.now());
         LiveEventEntity saved = eventRepository.save(event);
         emitEvent(saved, "impilo.live.event.ended.v1");
+        emitPollResults(saved);
         return saved;
+    }
+
+    /**
+     * W3: on event end, publish the aggregated poll results
+     * ({@code impilo.live.poll.results.v1}) so learning-side consumers can bridge
+     * interaction truth without querying live-service. Emitted only when the
+     * event had polls; failures never block the ENDED transition.
+     */
+    private void emitPollResults(LiveEventEntity event) {
+        try {
+            List<LiveEventPollEntity> polls =
+                    pollRepository.findByEventIdOrderByCreatedAtDesc(event.getId());
+            if (polls.isEmpty()) {
+                return;
+            }
+            List<Map<String, Object>> pollViews = new ArrayList<>();
+            for (LiveEventPollEntity poll : polls) {
+                List<LiveEventPollResponseEntity> responses =
+                        pollResponseRepository.findByPollId(poll.getId());
+                Map<String, Integer> counts = new LinkedHashMap<>();
+                for (String option : parseOptions(poll.getOptions())) {
+                    counts.put(option, 0);
+                }
+                for (LiveEventPollResponseEntity response : responses) {
+                    counts.merge(response.getSelectedOption(), 1, Integer::sum);
+                }
+                Map<String, Object> view = new LinkedHashMap<>();
+                view.put("pollId", poll.getId().toString());
+                view.put("question", poll.getQuestion());
+                view.put("options", parseOptions(poll.getOptions()));
+                view.put("counts", counts);
+                view.put("totalResponses", responses.size());
+                pollViews.add(view);
+            }
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("eventId", event.getId().toString());
+            payload.put("polls", pollViews);
+            emitter.emit(event.getTenantId(), "LIVE_EVENT", event.getId().toString(),
+                    "impilo.live.poll.results.v1", "LIVE_EVENT", event.getId().toString(), payload);
+        } catch (Exception e) {
+            log.warn("Failed to emit poll results for ended event {}: {}", event.getId(), e.getMessage());
+        }
+    }
+
+    private List<String> parseOptions(String optionsJson) {
+        List<String> options = new ArrayList<>();
+        if (optionsJson == null || optionsJson.isBlank()) {
+            return options;
+        }
+        try {
+            JsonNode node = objectMapper.readTree(optionsJson);
+            if (node.isArray()) {
+                node.forEach(o -> options.add(o.isTextual() ? o.asText() : o.toString()));
+            }
+        } catch (Exception e) {
+            log.debug("Unparseable poll options '{}' — treated as empty", optionsJson);
+        }
+        return options;
     }
 
     @Transactional

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { PageShell } from "@/components/PageShell";
 import { useFundoCourseAssessments, useFundoEnrolment, useFundoEnrolmentProgress, useIssueFundoCertificate, useStartFundoEnrolment } from "@/hooks/queries/useFundoLms";
 import { useFundoCourseStructure } from "@/hooks/queries/useFundoCatalog";
+import { CourseLiveSessionsSection } from "@/components/learning/live/CourseLiveSessionsSection";
 
 type AnyRecord = Record<string, unknown>;
 
@@ -64,6 +65,7 @@ export default function EnrolmentPlayerPage() {
             Issue certificate
           </button>
         </div>
+        {courseId ? <CourseLiveSessionsSection courseId={courseId} /> : null}
         <div className="rounded border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">Progress</p>
           <p className="text-lg font-semibold text-foreground">{percent}%</p>

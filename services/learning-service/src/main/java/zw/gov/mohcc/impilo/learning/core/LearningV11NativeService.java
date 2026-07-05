@@ -1342,12 +1342,16 @@ public class LearningV11NativeService {
             }
         }
 
+        // V027: first-class live-linkage columns, dual-written with the metadata_json
+        // keys above for backward compatibility.
+        String sessionMode = resolveSessionMode(body.get("sessionMode"), liveEventId);
         jdbcTemplate.update(
                 """
                 insert into lrn_scheduled_learning_session (
                   id, tenant_id, course_id, cohort_id, title, session_type, starts_at, ends_at,
-                  facilitator, location_ref, metadata_json, created_by, created_at
-                ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
+                  facilitator, location_ref, metadata_json, session_mode, live_event_id, join_path,
+                  created_by, created_at
+                ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
                 """,
                 id,
                 tenantId,
@@ -1360,15 +1364,35 @@ public class LearningV11NativeService {
                 nullableString(body.get("facilitator")),
                 nullableString(body.get("locationRef")),
                 writeJson(metadata.isEmpty() ? body.getOrDefault("metadata", Map.of()) : metadata),
+                sessionMode,
+                liveEventId == null ? null : UUID.fromString(liveEventId),
+                impiloLiveJoinPath,
                 actorId);
 
         Map<String, Object> session = new LinkedHashMap<>();
         session.put("id", id.toString());
+        session.put("sessionMode", sessionMode);
+        session.put("liveEventId", liveEventId);
+        session.put("joinPath", impiloLiveJoinPath);
         if (liveEventId != null) {
             session.put("impiloLiveEventId", liveEventId);
             session.put("impiloLiveJoinPath", impiloLiveJoinPath);
         }
         return Map.of("session", session);
+    }
+
+    private static final java.util.Set<String> SESSION_MODES =
+            java.util.Set.of("LIVE", "RECORDED", "HYBRID", "IN_PERSON");
+
+    /** Explicit valid sessionMode wins; a scheduled Impilo Live event implies LIVE; else IN_PERSON. */
+    private static String resolveSessionMode(Object requested, String liveEventId) {
+        if (requested != null) {
+            String normalized = requested.toString().trim().toUpperCase();
+            if (SESSION_MODES.contains(normalized)) {
+                return normalized;
+            }
+        }
+        return liveEventId != null ? "LIVE" : "IN_PERSON";
     }
 
     private boolean shouldScheduleImpiloLive(String sessionType, Map<String, Object> body) {
@@ -1386,7 +1410,8 @@ public class LearningV11NativeService {
     public Map<String, Object> listScheduledSessions(UUID tenantId, int limit) {
         List<Map<String, Object>> rows = jdbcTemplate.query(
                 """
-                select id, course_id, cohort_id, title, session_type, starts_at, ends_at, facilitator, location_ref, metadata_json, created_at
+                select id, course_id, cohort_id, title, session_type, starts_at, ends_at, facilitator, location_ref,
+                       metadata_json, session_mode, live_event_id, join_path, created_at
                 from lrn_scheduled_learning_session
                 where tenant_id = ?
                 order by starts_at asc
@@ -1399,6 +1424,9 @@ public class LearningV11NativeService {
                     row.put("cohortId", rs.getObject("cohort_id") == null ? null : rs.getObject("cohort_id", UUID.class).toString());
                     row.put("title", rs.getString("title"));
                     row.put("sessionType", rs.getString("session_type"));
+                    row.put("sessionMode", rs.getString("session_mode"));
+                    row.put("liveEventId", rs.getObject("live_event_id") == null ? null : rs.getObject("live_event_id", UUID.class).toString());
+                    row.put("joinPath", rs.getString("join_path"));
                     row.put("startsAt", str(rs, "starts_at"));
                     row.put("endsAt", str(rs, "ends_at"));
                     row.put("facilitator", rs.getString("facilitator"));

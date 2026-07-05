@@ -32,18 +32,21 @@ public class FundoProgressService {
     private final CourseModuleRepository moduleRepository;
     private final CourseLessonRepository lessonRepository;
     private final FundoOutboxAppender outbox;
+    private final FundoCompletionPolicyService completionPolicy;
 
     public FundoProgressService(
             EnrolmentRepository enrolmentRepository,
             CourseProgressRepository progressRepository,
             CourseModuleRepository moduleRepository,
             CourseLessonRepository lessonRepository,
-            FundoOutboxAppender outbox) {
+            FundoOutboxAppender outbox,
+            FundoCompletionPolicyService completionPolicy) {
         this.enrolmentRepository = enrolmentRepository;
         this.progressRepository = progressRepository;
         this.moduleRepository = moduleRepository;
         this.lessonRepository = lessonRepository;
         this.outbox = outbox;
+        this.completionPolicy = completionPolicy;
     }
 
     /**
@@ -122,21 +125,60 @@ public class FundoProgressService {
         if (update.lessonId() == null && update.moduleId() == null
                 && "COMPLETED".equals(row.getStatus())
                 && !"COMPLETED".equals(enrolment.getStatus())) {
-            enrolment.setStatus("COMPLETED");
-            enrolment.setCompletedAt(now);
-            enrolmentChanged = true;
-            outbox.append("FundoEnrolment", enrolment.getId().toString(),
-                    FundoNativeEventTypes.COURSE_COMPLETED,
-                    Map.of(
-                            "tenantId", enrolment.getTenantId().toString(),
-                            "subjectType", enrolment.getSubjectType(),
-                            "subjectId", enrolment.getSubjectId(),
-                            "courseId", enrolment.getCourseId().toString(),
-                            "enrolmentId", enrolment.getId().toString()));
+            if (completeIfEligible(tenantId, enrolment, now, "PROGRESS_AGGREGATE")) {
+                enrolmentChanged = false; // completeIfEligible already saved the enrolment
+            }
         }
         if (enrolmentChanged) enrolmentRepository.save(enrolment);
 
         return toView(row);
+    }
+
+    /**
+     * Attempt the enrolment COMPLETED transition, honouring configured completion
+     * rules (W3). Courses with no {@code lrn_completion_rule} rows keep the legacy
+     * behaviour (unconditional completion when the trigger fires). Courses with
+     * rules complete only when the policy is satisfied; either way, an additive
+     * {@code learning.completion.evaluated} event records the policy outcome.
+     *
+     * @return true when the enrolment transitioned to COMPLETED (and was saved).
+     */
+    @Transactional
+    public boolean completeIfEligible(UUID tenantId, EnrolmentEntity enrolment, OffsetDateTime now, String trigger) {
+        if ("COMPLETED".equals(enrolment.getStatus())) {
+            return false;
+        }
+        FundoCompletionPolicyService.PolicyOutcome outcome = completionPolicy.evaluate(tenantId, enrolment);
+        if (outcome.hasRules()) {
+            Map<String, Object> evaluated = new LinkedHashMap<>();
+            evaluated.put("tenantId", enrolment.getTenantId().toString());
+            evaluated.put("enrolmentId", enrolment.getId().toString());
+            evaluated.put("courseId", enrolment.getCourseId().toString());
+            evaluated.put("subjectType", enrolment.getSubjectType());
+            evaluated.put("subjectId", enrolment.getSubjectId());
+            evaluated.put("trigger", trigger);
+            evaluated.putAll(outcome.toPayload());
+            outbox.append("FundoEnrolment", enrolment.getId().toString(),
+                    FundoNativeEventTypes.COMPLETION_EVALUATED, evaluated);
+            if (!outcome.complete()) {
+                return false;
+            }
+        }
+        enrolment.setStatus("COMPLETED");
+        enrolment.setCompletedAt(now);
+        enrolmentRepository.save(enrolment);
+        Map<String, Object> completedPayload = new LinkedHashMap<>();
+        completedPayload.put("tenantId", enrolment.getTenantId().toString());
+        completedPayload.put("subjectType", enrolment.getSubjectType());
+        completedPayload.put("subjectId", enrolment.getSubjectId());
+        completedPayload.put("courseId", enrolment.getCourseId().toString());
+        completedPayload.put("enrolmentId", enrolment.getId().toString());
+        if (outcome.hasRules()) {
+            completedPayload.put("completionPolicy", outcome.toPayload());
+        }
+        outbox.append("FundoEnrolment", enrolment.getId().toString(),
+                FundoNativeEventTypes.COURSE_COMPLETED, completedPayload);
+        return true;
     }
 
     @Transactional(readOnly = true)
@@ -253,17 +295,7 @@ public class FundoProgressService {
             emit(FundoNativeEventTypes.PROGRESS_COMPLETED, aggregate, enrolment, "COMPLETED");
         }
         if ("COMPLETED".equals(aggregate.getStatus()) && !"COMPLETED".equals(enrolment.getStatus())) {
-            enrolment.setStatus("COMPLETED");
-            enrolment.setCompletedAt(now);
-            enrolmentRepository.save(enrolment);
-            outbox.append("FundoEnrolment", enrolment.getId().toString(),
-                    FundoNativeEventTypes.COURSE_COMPLETED,
-                    Map.of(
-                            "tenantId", enrolment.getTenantId().toString(),
-                            "subjectType", enrolment.getSubjectType(),
-                            "subjectId", enrolment.getSubjectId(),
-                            "courseId", enrolment.getCourseId().toString(),
-                            "enrolmentId", enrolment.getId().toString()));
+            completeIfEligible(tenantId, enrolment, now, "LESSON_RECONCILE");
         }
     }
 

@@ -9,12 +9,18 @@ import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventAttendanceEntity;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventEntity;
 import zw.gov.mohcc.impilo.live.persistence.repository.LiveEventAttendanceRepository;
 
+import org.mockito.ArgumentCaptor;
+
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -84,6 +90,54 @@ class AttendanceServiceTest {
 
         assertThat(result.getLiveWatchMinutes()).isEqualTo(35);
         assertThat(result.isEligibleForCpd()).isTrue();
+    }
+
+    // ── W3: attendance.updated emission (webhook-accurate minutes snapshot) ──
+
+    @Test
+    void trackMinutes_emitsAttendanceUpdatedWithWatchMinutesPayload() {
+        LiveEventEntity event = cpdEvent(30);
+        LiveEventAttendanceEntity attendance = attendanceWithMinutes(0, 0);
+        when(eventService.get(TENANT_ID, EVENT_ID)).thenReturn(event);
+        when(attendanceRepository.findByEventIdAndParticipantId(EVENT_ID, "PROV-1"))
+                .thenReturn(Optional.of(attendance));
+        when(attendanceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        attendanceService.trackMinutes(TENANT_ID, EVENT_ID, "PROV-1", 35, 5);
+
+        ArgumentCaptor<Map<String, Object>> payload = payloadCaptor();
+        verify(emitter).emit(eq(TENANT_ID), eq("LIVE_ATTENDANCE"), anyString(),
+                eq("impilo.live.attendance.updated.v1"), eq("LIVE_EVENT"), eq(EVENT_ID.toString()),
+                payload.capture());
+        assertThat(payload.getValue())
+                .containsEntry("participantId", "PROV-1")
+                .containsEntry("eventId", EVENT_ID.toString())
+                .containsEntry("liveWatchMinutes", 35)
+                .containsEntry("replayWatchMinutes", 5)
+                .containsEntry("totalWatchMinutes", 40);
+    }
+
+    @Test
+    void leave_emitsLeftAndUpdatedEvents() {
+        LiveEventEntity event = cpdEvent(30);
+        LiveEventAttendanceEntity attendance = attendanceWithMinutes(45, 0);
+        attendance.setJoinedAt(java.time.OffsetDateTime.now().minusMinutes(10));
+        when(eventService.get(TENANT_ID, EVENT_ID)).thenReturn(event);
+        when(attendanceRepository.findByEventIdAndParticipantId(EVENT_ID, "PROV-1"))
+                .thenReturn(Optional.of(attendance));
+        when(attendanceRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        attendanceService.leave(TENANT_ID, EVENT_ID, "PROV-1");
+
+        verify(emitter).emit(eq(TENANT_ID), eq("LIVE_ATTENDANCE"), anyString(),
+                eq("impilo.live.attendance.left.v1"), eq("LIVE_EVENT"), eq(EVENT_ID.toString()), any());
+        verify(emitter).emit(eq(TENANT_ID), eq("LIVE_ATTENDANCE"), anyString(),
+                eq("impilo.live.attendance.updated.v1"), eq("LIVE_EVENT"), eq(EVENT_ID.toString()), any());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ArgumentCaptor<Map<String, Object>> payloadCaptor() {
+        return ArgumentCaptor.forClass((Class<Map<String, Object>>) (Class<?>) Map.class);
     }
 
     private static LiveEventEntity cpdEvent(int thresholdMinutes) {

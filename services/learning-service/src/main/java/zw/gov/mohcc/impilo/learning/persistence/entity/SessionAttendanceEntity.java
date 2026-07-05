@@ -50,6 +50,14 @@ public class SessionAttendanceEntity {
     @Column(name = "recorded_by", length = 255)
     private String recordedBy;
 
+    /**
+     * Webhook-accurate total watch minutes from Impilo Live (V027). Absolute value —
+     * live-service tracks the running totals, so redelivered events overwrite rather
+     * than accumulate. NULL for manual/code check-ins that carry no media truth.
+     */
+    @Column(name = "watch_minutes")
+    private Integer watchMinutes;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -84,6 +92,8 @@ public class SessionAttendanceEntity {
     public void setCheckInMethod(String checkInMethod) { this.checkInMethod = checkInMethod; }
     public String getRecordedBy() { return recordedBy; }
     public void setRecordedBy(String recordedBy) { this.recordedBy = recordedBy; }
+    public Integer getWatchMinutes() { return watchMinutes; }
+    public void setWatchMinutes(Integer watchMinutes) { this.watchMinutes = watchMinutes; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }

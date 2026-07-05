@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 import zw.gov.mohcc.impilo.learning.core.LearningV11NativeService;
+import zw.gov.mohcc.impilo.learning.fundo.FundoCompletionPolicyService;
 import zw.gov.mohcc.impilo.learning.fundo.FundoLiveCompletionService;
 
 @RestController
@@ -26,11 +28,14 @@ public class FundoStudioController {
 
     private final LearningV11NativeService service;
     private final FundoLiveCompletionService liveCompletionService;
+    private final FundoCompletionPolicyService completionPolicyService;
 
     public FundoStudioController(LearningV11NativeService service,
-                                 FundoLiveCompletionService liveCompletionService) {
+                                 FundoLiveCompletionService liveCompletionService,
+                                 FundoCompletionPolicyService completionPolicyService) {
         this.service = service;
         this.liveCompletionService = liveCompletionService;
+        this.completionPolicyService = completionPolicyService;
     }
 
     @GetMapping("/studio/dashboard")
@@ -155,6 +160,31 @@ public class FundoStudioController {
     @PostMapping("/sessions/live-completion")
     public ResponseEntity<Map<String, Object>> recordLiveCompletion(@RequestBody Map<String, Object> body) {
         return ok(liveCompletionService.recordLiveCompletion(tenantId(), body));
+    }
+
+    // ---- W3: configurable completion rules (lrn_completion_rule) ----
+
+    @GetMapping("/courses/{courseId}/completion-rules")
+    public ResponseEntity<Map<String, Object>> listCompletionRules(@PathVariable String courseId) {
+        return ok(completionPolicyService.listRules(tenantId(), UUID.fromString(courseId)));
+    }
+
+    @PostMapping("/courses/{courseId}/completion-rules")
+    public ResponseEntity<Map<String, Object>> upsertCompletionRule(
+            @PathVariable String courseId,
+            @RequestBody Map<String, Object> body) {
+        return ok(completionPolicyService.upsertRule(tenantId(), UUID.fromString(courseId), actorId(), body));
+    }
+
+    @DeleteMapping("/completion-rules/{ruleId}")
+    public ResponseEntity<Map<String, Object>> deleteCompletionRule(@PathVariable String ruleId) {
+        return ok(completionPolicyService.deleteRule(tenantId(), UUID.fromString(ruleId)));
+    }
+
+    /** FACILITATOR_CONFIRM completion-rule marker (idempotent). */
+    @PostMapping("/enrolments/{enrolmentId}/facilitator-confirm")
+    public ResponseEntity<Map<String, Object>> facilitatorConfirm(@PathVariable String enrolmentId) {
+        return ok(completionPolicyService.facilitatorConfirm(tenantId(), UUID.fromString(enrolmentId), actorId()));
     }
 
     private ResponseEntity<Map<String, Object>> ok(Object data) {
