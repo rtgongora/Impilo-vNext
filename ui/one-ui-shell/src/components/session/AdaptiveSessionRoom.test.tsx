@@ -81,10 +81,12 @@ describe("AdaptiveSessionRoom", () => {
     expect(screen.getByTestId("session-local-pip")).toBeInTheDocument();
   });
 
-  it("audioOnly disables camera at connect", () => {
+  it("never publishes at connect — the room mounts silent and PostConnectPublisher owns enabling", () => {
+    // Publishing during connect stalls publisher negotiation (15s
+    // NegotiationError churn); tracks are enabled only after RoomEvent.Connected.
     render(<AdaptiveSessionRoom {...BASE_PROPS} audioOnly />);
     expect(screen.getByTestId("livekit-room").getAttribute("data-video")).toBe("false");
-    expect(screen.getByTestId("livekit-room").getAttribute("data-audio")).toBe("true");
+    expect(screen.getByTestId("livekit-room").getAttribute("data-audio")).toBe("false");
   });
 
   it("recording badge is hidden when the room is not recording", () => {

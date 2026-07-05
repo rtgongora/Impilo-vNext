@@ -153,14 +153,18 @@ export function AdaptiveSessionRoom({
       serverUrl={normalizedServerUrl}
       token={token}
       connect
-      audio={audioEnabled && !subscribeOnly}
-      video={videoEnabled && !audioOnly && !subscribeOnly}
+      audio={false}
+      video={false}
       options={roomOptions}
       onConnected={onConnected}
       onDisconnected={onDisconnected}
       onError={(error) => onError?.(error.message)}
       className="h-full w-full rounded-md overflow-hidden bg-neutral-900 text-white"
     >
+      <PostConnectPublisher
+        audio={audioEnabled && !subscribeOnly}
+        video={videoEnabled && !audioOnly && !subscribeOnly}
+      />
       <AudioOnlyController audioOnly={audioOnly} />
       <div className="relative h-full w-full flex flex-col">
         <div className="flex items-center justify-between gap-2 px-2 py-1 text-[10px] text-emerald-100 bg-emerald-950/60">
@@ -208,6 +212,39 @@ function SessionStage({
     default:
       return <GridStageLayout />;
   }
+}
+
+/**
+ * Publish AFTER the signalling connection is established, never during it.
+ * Publishing at connect time (LiveKitRoom audio/video mount props) stalls the
+ * publisher peer-connection negotiation against the estate's LiveKit server
+ * (livekit-client 2.19 fast-connect vs server 1.8.x): the room loops through
+ * 15s NegotiationError → resume cycles and tracks never confirm. The
+ * telemedicine surface always published post-connect (user gesture) and is
+ * stable; this generalizes that proven path to every session mode.
+ */
+function PostConnectPublisher({ audio, video }: { audio: boolean; video: boolean }) {
+  const room = useRoomContext();
+
+  useEffect(() => {
+    if (!room) return;
+    let cancelled = false;
+    const publish = () => {
+      if (cancelled) return;
+      if (audio) void room.localParticipant?.setMicrophoneEnabled(true).catch(() => undefined);
+      if (video) void room.localParticipant?.setCameraEnabled(true).catch(() => undefined);
+    };
+    if (room.state === "connected") {
+      publish();
+    }
+    room.on(RoomEvent.Connected, publish);
+    return () => {
+      cancelled = true;
+      room.off(RoomEvent.Connected, publish);
+    };
+  }, [room, audio, video]);
+
+  return null;
 }
 
 /**
