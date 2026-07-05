@@ -60,6 +60,7 @@
 | `observability-service` | integration | Observability canonical records |
 | `offline-edge-service` | integration | Offline Edge canonical records |
 | `offline-sync-service` | integration | Offline Sync canonical records |
+| `organization-registry-service` | registry | Organization registry (NEW organizations, `source=NATIVE`), authorized representatives, Channel-C delegated onboarding claims. Wave-1 dual-SoR: `wgv_organisation` (workforce-governance) remains SoR for existing governance links; org-registry holds a one-way `WGV_MIRROR` copy with `source_ref` back-pointer — see `docs/architecture/organization-registry-adoption.md`. Must not own facility (tuso), provider professional (varapi), or HSC employment (workforce-governance) truth. |
 | `oros-service` | clinical | Oros canonical records |
 | `pacs-adapter-service` | clinical | Pacs Adapter canonical records |
 | `pct-service` | clinical | Pct canonical records; **encounter form responses** (structured data-entry responses, resolver decisions, extraction provenance). Must not own form definitions — those are forms-service. |
