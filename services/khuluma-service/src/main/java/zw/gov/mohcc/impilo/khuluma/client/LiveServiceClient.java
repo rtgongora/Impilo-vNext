@@ -45,6 +45,21 @@ public class LiveServiceClient {
         }
     }
 
+    /** A live event read (scheduling surface for the meeting detail view). */
+    public record EventResult(boolean available, String eventId, String title, String status,
+                              String startTime, String endTime, String error) {
+        public static EventResult unavailable(String error) {
+            return new EventResult(false, null, null, null, null, null, error);
+        }
+    }
+
+    /** Result of a room join: the live session + the rtc-gateway session backing the media room. */
+    public record JoinRoomResult(boolean available, String liveSessionId, String rtcSessionId, String error) {
+        public static JoinRoomResult unavailable(String error) {
+            return new JoinRoomResult(false, null, null, error);
+        }
+    }
+
     /** A participant's media join for a meeting. */
     public record RoomTokenResult(boolean available, String roomId, String roomUrl, String accessToken,
                                   String provider, String channel, String error) {
@@ -57,6 +72,17 @@ public class LiveServiceClient {
     public CreateEventResult createEvent(String title, String mode, String eventType,
                                          String owningEntityId, String organiserType, String organiserId,
                                          Integer maxParticipants) {
+        return createEvent(title, mode, eventType, owningEntityId, organiserType, organiserId,
+                maxParticipants, null);
+    }
+
+    /**
+     * Create a virtual meeting / live event, optionally scheduled: {@code scheduledAt} maps to the
+     * live event's {@code startTime} (live-service is the scheduling SoR; Khuluma only passes through).
+     */
+    public CreateEventResult createEvent(String title, String mode, String eventType,
+                                         String owningEntityId, String organiserType, String organiserId,
+                                         Integer maxParticipants, String scheduledAt) {
         Map<String, Object> req = new LinkedHashMap<>();
         req.put("title", title);
         req.put("mode", mode != null ? mode : "VIRTUAL");
@@ -69,6 +95,9 @@ public class LiveServiceClient {
         if (maxParticipants != null) {
             req.put("maxParticipants", maxParticipants);
         }
+        if (scheduledAt != null && !scheduledAt.isBlank()) {
+            req.put("startTime", scheduledAt);
+        }
         JsonNode body = post(EVENTS, req);
         if (body == null) {
             return CreateEventResult.unavailable("live-service unavailable");
@@ -76,14 +105,41 @@ public class LiveServiceClient {
         return new CreateEventResult(true, text(body, "id"), text(body, "status"), null);
     }
 
-    /** Ensure the room exists for an event (idempotent provisioning of the media session). */
-    public void joinRoom(String eventId, String participantId, String participantType, String role) {
+    /** Read a live event (title/status/schedule) — best-effort for the meeting detail surface. */
+    public EventResult getEvent(String eventId) {
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                    URI.create(baseUrl + EVENTS + "/" + eventId), JsonNode.class);
+            JsonNode payload = response.getBody();
+            JsonNode body = payload != null && payload.has("data") && !payload.get("data").isNull()
+                    ? payload.get("data") : payload;
+            if (body == null) {
+                return EventResult.unavailable("live-service returned no event");
+            }
+            return new EventResult(true, text(body, "id"), text(body, "title"), text(body, "status"),
+                    text(body, "startTime"), text(body, "endTime"), null);
+        } catch (RestClientException ex) {
+            log.warn("live-service GET event {} failed: {}", eventId, ex.getMessage());
+            return EventResult.unavailable(ex.getMessage());
+        }
+    }
+
+    /**
+     * Ensure the room exists for an event (idempotent provisioning of the media session) and
+     * report the rtc-gateway session id ({@code providerRoomId}) backing it, so Khuluma can run
+     * the MEETING lobby (admit/deny/token) directly against rtc-gateway.
+     */
+    public JoinRoomResult joinRoom(String eventId, String participantId, String participantType, String role) {
         Map<String, Object> req = new LinkedHashMap<>();
         req.put("participantId", participantId);
         req.put("participantType", participantType != null ? participantType : "PROVIDER");
         req.put("role", role != null ? role : "ATTENDEE");
         req.put("consentGranted", true);
-        post(ROOM + "/" + eventId + "/join", req);
+        JsonNode body = post(ROOM + "/" + eventId + "/join", req);
+        if (body == null) {
+            return JoinRoomResult.unavailable("live-service unavailable");
+        }
+        return new JoinRoomResult(true, text(body, "sessionId"), text(body, "providerRoomId"), null);
     }
 
     /** Mint this participant's media token for the meeting (real LiveKit token via live-service). */

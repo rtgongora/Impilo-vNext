@@ -86,7 +86,11 @@ public class RtcGatewayClient {
         return exchange("POST", PREFIX + "/sessions", req, "provision");
     }
 
-    /** Mint a fresh participant token for an already-provisioned session. */
+    /**
+     * Mint a fresh participant token for an already-provisioned session. For lobby-gated
+     * templates (MEETING KNOCK) the result may carry {@code status=WAITING|DENIED} with no
+     * token — the caller must treat that as a lobby outcome, not an error.
+     */
     public RtcSessionResult issueToken(String sessionId, String identity, String displayName, String role) {
         Map<String, Object> participant = new LinkedHashMap<>();
         participant.put("identity", identity);
@@ -94,6 +98,62 @@ public class RtcGatewayClient {
         participant.put("role", role != null ? role : "HOST");
         Map<String, Object> req = Map.of("participant", participant);
         return exchange("POST", PREFIX + "/sessions/" + sessionId + "/participants/token", req, "token");
+    }
+
+    /** One lobby-tracked participant of an rtc session (rtc.session_participants row). */
+    public record RtcLobbyParticipant(String identity, String displayName, String role, String state,
+                                      String requestedAt, String admittedAt, String admittedBy,
+                                      String deniedReason) {}
+
+    /** Admit a WAITING lobby participant (idempotent on the gateway side). */
+    public boolean admit(String sessionId, String identity, String decidedBy) {
+        return lobbyDecision(sessionId, identity, "admit",
+                decidedBy == null ? Map.of() : Map.of("actor", decidedBy));
+    }
+
+    /** Deny a WAITING lobby participant (idempotent on the gateway side). */
+    public boolean deny(String sessionId, String identity, String reason) {
+        return lobbyDecision(sessionId, identity, "deny",
+                reason == null ? Map.of() : Map.of("reason", reason));
+    }
+
+    private boolean lobbyDecision(String sessionId, String identity, String op, Map<String, Object> body) {
+        try {
+            URI uri = URI.create(baseUrl + PREFIX + "/sessions/" + sessionId + "/participants/"
+                    + java.net.URLEncoder.encode(identity, java.nio.charset.StandardCharsets.UTF_8) + "/" + op);
+            RequestEntity<Object> entity = RequestEntity.post(uri)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body);
+            restTemplate.exchange(entity, JsonNode.class);
+            return true;
+        } catch (RestClientException ex) {
+            log.warn("rtc-gateway lobby {} failed for session {} identity {}: {}",
+                    op, sessionId, identity, ex.getMessage());
+            return false;
+        }
+    }
+
+    /** The gateway's live lobby roster for a session; empty on gateway failure (degrade honestly). */
+    public java.util.List<RtcLobbyParticipant> listParticipants(String sessionId) {
+        try {
+            URI uri = URI.create(baseUrl + PREFIX + "/sessions/" + sessionId + "/participants");
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(uri, JsonNode.class);
+            JsonNode data = response.getBody() != null ? response.getBody().get("data") : null;
+            if (data == null || !data.isArray()) {
+                return java.util.List.of();
+            }
+            java.util.List<RtcLobbyParticipant> out = new java.util.ArrayList<>();
+            for (JsonNode row : data) {
+                out.add(new RtcLobbyParticipant(
+                        text(row, "identity"), text(row, "displayName"), text(row, "role"),
+                        text(row, "state"), text(row, "requestedAt"), text(row, "admittedAt"),
+                        text(row, "admittedBy"), text(row, "deniedReason")));
+            }
+            return out;
+        } catch (RestClientException ex) {
+            log.warn("rtc-gateway list participants failed for session {}: {}", sessionId, ex.getMessage());
+            return java.util.List.of();
+        }
     }
 
     private RtcSessionResult exchange(String method, String path, Object body, String op) {
