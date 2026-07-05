@@ -54,7 +54,7 @@ async function loginAndOpenClassroom(
   if (await switchHeading.isVisible().catch(() => false)) {
     const professional = page.getByRole("button", { name: /professional profile/i }).first();
     if (await professional.isVisible().catch(() => false)) {
-      await professional.click();
+      await professional.evaluate((el) => (el as HTMLButtonElement).click()).catch(() => {});
     }
     await switchHeading.waitFor({ state: "hidden", timeout: 10_000 }).catch(() => {});
   }
