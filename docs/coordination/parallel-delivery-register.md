@@ -213,7 +213,7 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - Branch `fable/iatg-h-doctrine` @ `6d3f7702e` PUSHED · 6 commits · Status: GATES_PASSED (docs-only diff verified; canonical closing doctrine paragraph restored by coordinator)
 
 ## IATG-WS-D — Channel B EC matching + trust composition
-- Branch `fable/iatg-d-channel-b` · worktree `/home/user/wt-iatg-d` · agent running 2026-07-05 · Status: ASSIGNED
+- Branch `fable/iatg-d-channel-b` @ `4a170266b` PUSHED · 7 commits, 16 files · Status: GATES_PASSED (coordinator gate EXIT=0: governance 24 + BFF 761 tests; lease clean; EC numbers masked everywhere with serialization proofs; CONFLICT never leaks other person's Health ID; four-block trust profile with per-block honest degradation; no provider creation in Wave 1 — providerCreationRequired flag)
 
 ## IATG-WS-F — provider self-service claim/recovery
 - Branch `fable/iatg-f-provider-claim` · worktree `/home/user/wt-iatg-f` · agent running 2026-07-05 · Status: ASSIGNED
