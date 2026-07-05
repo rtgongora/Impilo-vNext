@@ -162,8 +162,13 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - **Integration**: merged as round 5; the two anticipated collisions (`PctServiceClient.java` escalation-vs-provenance methods, EHR encounter page billing-vs-forms panels) auto-resolved cleanly by git (different regions); combined round-5 gate green: backend=0, type-check=0, collision-file vitest 39/39 (13 files); round 5 PUSHED @ `0054a7ced`
 - **Status**: GATES_PASSED
 
-## Unregistered branches detected on origin (2026-07-04 fetch)
-- `cursor/e2e-pacs-imaging-integration` — based on anchor `d44bb6022` ✓; 35 files +3398 (imaging capability/modality registry/reconciliation queue UI + viewer fix); quick forbidden-file grep clean. Not registered before pushing — needs a workstream entry, owner, and gate evidence before merge consideration. LAST REMAINING unreviewed pipeline branch (P6).
+## WS-P6-B — PACS imaging integration (external session) — GATES_PASSED (CONDITIONAL)
+- **Branch**: `cursor/e2e-pacs-imaging-integration` @ `5786a8f01` · 9 commits · base `d44bb6022` (anchor ancestor); zero overlap with integration rounds 1–5 AND with anchor W1–W3
+- **Coordinator review 2026-07-04**: PASSED. 36 files. Closes the audit's P6 headline gap: per-facility `ImagingDeploymentMode` (PACS/VNA, gateway, machines-only, manual, digitisation-bridge, referral-only, offline-sync, none) + modality/machine registry in pacs-adapter (V006/V007 additive, sequential); auditable study-reconciliation exception queue (no silent patient attachment); real modality carried into MWL + FHIR ImagingStudy; order-context viewer-launch fix; honest doc correction (critical-result notify is DEFAULT-OFF, not missing). No config/flag flips — MWL/outbound stay default-OFF. **Ownership note**: facility imaging capability lives in pacs-adapter (imaging-deployment config), NOT TUSO — deliberate; revisit if TUSO claims general facility capability truth.
+- **Coordinator gates (independent)**: pacs-adapter + experience-bff `-am test` = 0; type-check = 0; imaging vitest 3/3.
+- **⚠ CONDITION (environment limitation)**: oros-service CANNOT be built/tested in the coordination container — `maven.dcm4che.org` is 403-blocked by the environment network policy (only `.lastUpdated` failure markers in the local repo). The branch's oros changes (modality carry in `OrderController`/`ImagingWorkflowService` + 2 test classes) are small/additive but UNVERIFIED here. **Anchor merge of any tree containing this branch requires a green oros-service suite in an environment with dcm4che access (W0 preview lane or CI).** Fix available: allowlist `maven.dcm4che.org` in the environment network policy, then coordinator re-runs and clears this condition.
+- **Integration**: merged as round 6 (`31704a270`), conflict-free, no migration dupes; combined round-6 gate pending
+- **Status**: GATES_PASSED (CONDITIONAL on oros verification)
 
 ## Serialized queue (coordinator-gated, one at a time; not yet scheduled)
 | ID | Item | Class |
