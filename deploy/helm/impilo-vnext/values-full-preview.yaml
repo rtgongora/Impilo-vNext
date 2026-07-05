@@ -371,3 +371,7 @@ fullBootServices:
       # W5 MEETING invite links: stable HMAC secret so links survive pod restarts.
       # Preview-only value — production must source this from a real secret store.
       KHULUMA_MEETING_INVITE_SECRET: "preview-khuluma-meeting-invite-secret-2026"
+      # W5 MEETING media: khuluma schedules the meeting's live event and drives the
+      # rtc lobby — localhost defaults would silently degrade meetings to no-media.
+      LIVE_BASE_URL: http://live-service:8380
+      RTC_GATEWAY_BASE_URL: http://rtc-gateway-service:8196
