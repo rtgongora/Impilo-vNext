@@ -187,3 +187,30 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - 2026-07-04 · Fundo remote branches declared superseded by HEAD native LMS; do-not-merge.
 - 2026-07-04 · P5 telemedicine core declared leased to the in-flight W0 anchor session; peripheral work blocked pending boundary confirmation.
 - 2026-07-04 · Integration branch deferred until ≥2 workstreams pass gates (board §9).
+
+---
+
+# IATG PROGRAM — Identity, Access and Trust Governance (Wave 1, opened 2026-07-05)
+
+**Plan**: user-approved (plan mode). Doctrine: Platform Origin → Country Operation → National Admins; Health-ID-first/Provider-ID-second; Channels A/B/C; honest registries; granular trust; adjudication. **Global invariant: `services/tshepo-service/**` untouched program-wide** (ext_authz frozen; pre-existing fail-open defects flagged for a future RED wave).
+**Base**: anchor `74c22f480` (W0 advanced past our seven-pipeline merge; IATG surfaces verified untouched by the advance).
+**Fixed decisions**: org-registry port **8153**; Flyway pre-assignments — governance V005/V006 (A), V007 (D), V008 (G) ⇒ **governance merge order A→D→G mandatory**; varapi V017/V018 (C); tuso V016 (E); tshepo-authz V031 (A); workflow V003 (G); org-registry V001–V003 (B). BFF single-owner file map in `docs/registry/iatg-wave1-leases.md` (WS-H deliverable).
+**Schedule**: Batch 0 WS-A (RED, merges first) ∥ Batch 1 WS-B/C/E/H (parallel) → Batch 2 WS-D/F (after C) → Batch 3 WS-G (after D).
+
+## IATG-WS-A — Platform Origin + Country Operation + two-person (RED serialized-merge)
+- Branch `fable/iatg-a-platform-origin` · worktree `/home/user/wt-iatg-a` · agent running 2026-07-05 · Status: ASSIGNED
+
+## IATG-WS-B — organization-registry-service (new, 8153)
+- Branch `fable/iatg-b-org-registry` · worktree `/home/user/wt-iatg-b` · agent running · Status: ASSIGNED
+
+## IATG-WS-C — varapi trust + channel typing (frozen trust-API contract for D/F)
+- Branch `fable/iatg-c-varapi-trust` · worktree `/home/user/wt-iatg-c` · agent running · Status: ASSIGNED
+
+## IATG-WS-E — tuso facility source legitimacy
+- Branch `fable/iatg-e-tuso-legitimacy` · worktree `/home/user/wt-iatg-e` · agent running · Status: ASSIGNED
+
+## IATG-WS-H — doctrine + lease docs (GREEN)
+- Branch `fable/iatg-h-doctrine` · worktree `/home/user/wt-iatg-h` · agent running · Status: ASSIGNED
+
+## IATG-WS-D / WS-F / WS-G — Batch 2/3
+- PENDING dispatch (D+F after WS-C review/merge; G merges after D). Contracts frozen in plan.
