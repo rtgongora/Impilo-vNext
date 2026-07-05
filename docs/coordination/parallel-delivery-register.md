@@ -135,6 +135,13 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - **Caveat (recorded)**: the virtual-hospital directory is registry-plane truth parked in the experience layer — acceptable ONLY as the explicitly-labeled seed spec for backend handoff HO-2. The eventual backend substrate is a new AMBER workstream; the UI file is a spec input, never the system of record.
 - **Status**: GATES_PASSED · **Merge readiness**: YES — via integration branch per board policy §9; NOT direct-to-anchor without explicit user instruction
 
+## WS-P1-D — COSTA/MusheX/Coverage journey closure (external session) — GATES_PASSED
+- **Branch**: `cursor/e2e-costa-mushex-coverage` @ `8f59c4616` · 11 commits · base `98d43b1cd` (genuine anchor ancestor, pre-W2-close)
+- **Coordinator review 2026-07-04**: PASSED. 23 files; mushex touched by a QUARANTINE TEST ONLY (`CostaEventConsumerBillFinalizedQuarantineTest` pins the R3 double-bill hazard without changing serialized production code); no payment rails, Kafka production code, GL, migrations, or forbidden files; `docs/registry/mock-and-stub-register.md` updated. Zero file overlap with the integration branch AND with anchor `98d43b1cd..f4381a841`. Content verified: server-derived shortfall from `patientPayable` with `amount_source` meta + fail-closed `NOTHING_PAYABLE`; read-only tenant-scoped bills-by-encounter; encounter billing status surfaced in clinical EHR context (closes the audit's headline P1 gap); wallet coverage-split fix. Delivers WS-P1-A items 1–2 and WS-P1-B — those drafted workstreams are superseded and closed.
+- **Coordinator gates (independent)**: backend `mvn -pl costing-engine,mushex,experience-bff -am test` = 0; type-check one-ui-shell = 0; vitest touched surfaces 15/15 (6 files).
+- **Follow-up (hardening, non-blocking)**: `BillService.getBillsForEncounter` tenant filter is in-memory and fail-open on null tenant — push down into the repository query.
+- **Status**: GATES_PASSED · merged into `integration/fable-seven-pipeline-delivery-2026-07-04` (round 2, `f8830a8c3`) pending combined gate
+
 ## Unregistered branches detected on origin (2026-07-04 fetch)
 - `cursor/e2e-pacs-imaging-integration` — based on anchor `d44bb6022` ✓; 35 files +3398 (imaging capability/modality registry/reconciliation queue UI + viewer fix); quick forbidden-file grep clean. Not registered before pushing — needs a workstream entry, owner, and gate evidence before merge consideration.
 - `cursor/e2e-pct-care-tracker` — **stale base**: merge-base with anchor is `98d43b1cd`, not `d44bb6022`; 20 files +1217 (countersign surfacing, medications panel, gap register doc). Needs rebase onto current anchor + registration + gates before merge consideration.
