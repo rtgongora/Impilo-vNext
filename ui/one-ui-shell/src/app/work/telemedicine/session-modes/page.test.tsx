@@ -76,4 +76,23 @@ describe("/work/telemedicine/session-modes", () => {
     await user.click(screen.getByRole("button", { name: /emergency advisory mode/i }));
     expect(screen.getAllByText("Emergency access").length).toBeGreaterThan(0);
   });
+
+  it("explains all six identity-visibility levels with honest enforcement status", () => {
+    renderWithQuery(<SessionModesPage />);
+
+    expect(screen.getByText(/identity visibility & privacy badges/i)).toBeInTheDocument();
+    for (const label of [
+      "Full identity",
+      "Care-team limited",
+      "Pseudonymised",
+      "De-identified",
+      "Emergency access",
+      "Sensitive / restricted case",
+    ]) {
+      expect(screen.getAllByText(label).length).toBeGreaterThan(0);
+    }
+    // None of the levels is policy-enforced yet — every card must say so
+    expect(screen.getAllByText(/declared only — not yet enforced/i)).toHaveLength(6);
+    expect(screen.queryByText(/^policy-enforced$/)).not.toBeInTheDocument();
+  });
 });

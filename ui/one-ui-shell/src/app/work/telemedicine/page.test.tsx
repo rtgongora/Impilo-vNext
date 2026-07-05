@@ -38,8 +38,11 @@ describe("/work/telemedicine hub", () => {
 
   it("links into the real teleconsult request flow", () => {
     renderWithQuery(<TelemedicineOperatingModelPage />);
-    const cta = screen.getByRole("link", { name: /new teleconsult request/i });
-    expect(cta).toHaveAttribute("href", "/telemedicine/new");
+    const ctas = screen.getAllByRole("link", { name: /new teleconsult request/i });
+    expect(ctas.length).toBeGreaterThan(0);
+    for (const cta of ctas) {
+      expect(cta).toHaveAttribute("href", "/telemedicine/new");
+    }
   });
 
   it("shows honest empty states without a facility context or pins", async () => {
@@ -48,6 +51,25 @@ describe("/work/telemedicine hub", () => {
       screen.getByText(/select a facility context to see its teleconsult backlog/i),
     ).toBeInTheDocument();
     expect(await screen.findByText(/nothing pinned yet/i)).toBeInTheDocument();
+  });
+
+  it("links encounter-mode capabilities to real existing routes only", () => {
+    renderWithQuery(<TelemedicineOperatingModelPage />);
+    expect(
+      screen.getByText(/encounter mode — documents like a physical encounter/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Imaging worklist" })).toHaveAttribute(
+      "href",
+      "/imaging/worklist",
+    );
+    expect(screen.getByRole("link", { name: "Coverage / medical aid" })).toHaveAttribute(
+      "href",
+      "/coverage",
+    );
+    // The orders/prescribing-from-session gap is stated, not faked
+    expect(
+      screen.getByText(/prescribing from inside a teleconsult session itself is not wired yet/i),
+    ).toBeInTheDocument();
   });
 
   it("reports governance coverage from the config substrate (never fake ops metrics)", () => {

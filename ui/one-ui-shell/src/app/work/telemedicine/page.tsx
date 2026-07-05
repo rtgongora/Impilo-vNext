@@ -280,6 +280,52 @@ export default function TelemedicineOperatingModelPage() {
           </p>
         </Link>
       </section>
+
+      {/* Encounter mode — the real surfaces a telemedicine encounter uses */}
+      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="mb-1 flex items-center gap-2 text-base font-semibold text-slate-800">
+          <ShieldCheck className="h-5 w-5 text-teal-600" /> Encounter mode — documents like a
+          physical encounter
+        </h2>
+        <p className="mb-4 text-sm text-slate-500">
+          A telemedicine encounter uses the same real clinical surfaces as a physical one.
+          Patient-scoped charting (notes, orders, prescriptions, results, care plans, teleconsults)
+          opens from the patient&apos;s EHR workspace once a patient is in context; these are the
+          live entry points.
+        </p>
+        <ul className="grid grid-cols-2 gap-2 text-sm md:grid-cols-4">
+          {ENCOUNTER_CAPABILITIES.map(({ href, label }) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="block rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700 transition hover:border-teal-300 hover:text-teal-700"
+              >
+                {label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs text-slate-400">
+          Placing orders or prescribing from inside a teleconsult session itself is not wired yet —
+          documented as a gap in the session-mode governance matrix, not faked here.
+        </p>
+      </section>
     </div>
   );
 }
+
+/** Real, existing routes only — each verified to have a page in this workspace. */
+const ENCOUNTER_CAPABILITIES: Array<{ href: string; label: string }> = [
+  { href: "/clinical", label: "Clinical workspace" },
+  { href: "/telemedicine", label: "Teleconsult sessions" },
+  { href: "/scheduling", label: "Scheduling" },
+  { href: "/queue", label: "Queues" },
+  { href: "/imaging/worklist", label: "Imaging worklist" },
+  { href: "/lab", label: "Laboratory" },
+  { href: "/pharmacy", label: "Pharmacy" },
+  { href: "/consent", label: "Consent" },
+  { href: "/coverage", label: "Coverage / medical aid" },
+  { href: "/emergency", label: "Emergency" },
+  { href: "/telemedicine/analytics", label: "Teleconsult analytics" },
+  { href: "/telemedicine/new", label: "New teleconsult request" },
+];

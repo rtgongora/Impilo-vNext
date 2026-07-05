@@ -29,7 +29,7 @@ import {
   SESSION_MODE_STATUS_LABELS,
   type ClinicalSessionMode,
 } from "@/lib/telemedicine/session-modes";
-import { PRIVACY_LEVELS } from "@/lib/telemedicine/privacy";
+import { PRIVACY_LEVELS, PRIVACY_LEVEL_ORDER } from "@/lib/telemedicine/privacy";
 import { PrivacyBadge } from "@/components/telemedicine/PrivacyBadge";
 import { useSessionTemplateDetail, useSessionTemplateModes } from "@/hooks/queries/useSessionModes";
 
@@ -121,6 +121,40 @@ export default function SessionModesPage() {
         {/* Mode detail */}
         <ModeDetail mode={selected} />
       </div>
+
+      {/* Identity visibility doctrine — all six levels in one place */}
+      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="mb-1 text-base font-semibold text-slate-800">
+          Identity visibility &amp; privacy badges
+        </h2>
+        <p className="mb-4 text-sm text-slate-500">
+          Every session surface must show which of these six levels applies. The badge declares
+          the intended level; enforcement is Tshepo/OPA policy work (handoff HO-4) and is shown
+          honestly per level below.
+        </p>
+        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {PRIVACY_LEVEL_ORDER.map((level) => {
+            const descriptor = PRIVACY_LEVELS[level];
+            return (
+              <li key={level} className="rounded-md border border-slate-200 p-3">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <PrivacyBadge level={level} />
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+                      descriptor.policyEnforced
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : "border-amber-200 bg-amber-50 text-amber-700"
+                    }`}
+                  >
+                    {descriptor.policyEnforced ? "policy-enforced" : "declared only — not yet enforced"}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">{descriptor.description}</p>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
       <footer className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs text-slate-500">
         Adding governed templates for the planned modes (MDT, case presentation, case notes
