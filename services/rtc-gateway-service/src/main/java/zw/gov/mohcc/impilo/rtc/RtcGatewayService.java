@@ -50,14 +50,26 @@ public class RtcGatewayService {
      */
     private static final Map<SessionMode, Map<String, String>> LEGACY_ROLE_ALIASES = Map.of(
             SessionMode.TELEMEDICINE, Map.of(
-                    "HOST", "PROVIDER"),
+                    "HOST", "PROVIDER",
+                    // live-service CLINICAL_SESSION rooms join with the live vocabulary
+                    "PRESENTER", "PROVIDER",
+                    "ATTENDEE", "OBSERVER"),
             SessionMode.LIVE_EVENT, Map.of(
                     "PRESENTER", "SPEAKER",
                     "ATTENDEE", "AUDIENCE",
                     "COHOST", "HOST",
                     "ADMIN", "HOST",
                     "SUPPORT", "MODERATOR",
-                    "INTERPRETER", "SPEAKER"));
+                    "INTERPRETER", "SPEAKER"),
+            // Fundo webinars ride live-service's PRESENTER/ATTENDEE join vocabulary;
+            // in a classroom the attendee is a LEARNER (publish-granted), not audience.
+            SessionMode.LEARNING_LIVE, Map.of(
+                    "PRESENTER", "FACILITATOR",
+                    "ATTENDEE", "LEARNER"),
+            // khuluma/live professional meetings joining through the live room path.
+            SessionMode.MEETING, Map.of(
+                    "PRESENTER", "HOST",
+                    "ATTENDEE", "PARTICIPANT"));
 
     static final String EVT_PARTICIPANT_WAITING = "impilo.rtc.participant.waiting.v1";
     static final String EVT_PARTICIPANT_ADMITTED = "impilo.rtc.participant.admitted.v1";
