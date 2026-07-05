@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CheckCircle2, Circle, ExternalLink, FileText, Play, Wrench } from "lucide-react";
+import { LessonMediaPlayer } from "@/components/learning/player/LessonMediaPlayer";
 
 type LessonRecord = Record<string, unknown>;
 
@@ -139,7 +140,20 @@ function PracticalTaskLesson({ body, taskRef }: { body: string; taskRef: string 
   );
 }
 
-export function FundoLessonContent({ lesson }: { lesson: LessonRecord }) {
+export interface FundoLessonContentProps {
+  lesson: LessonRecord;
+  /**
+   * Enrolment context (W4): when present, VIDEO lessons with a governed media
+   * asset (adopted live replay / authored recording) render through the
+   * CoursePlayer with signed-URL playback and watch-progress tracking. Without
+   * it — or when the lesson has no asset — the legacy contentRef rendering
+   * (iframe / native video) is kept unchanged.
+   */
+  enrolmentId?: string;
+  courseId?: string;
+}
+
+export function FundoLessonContent({ lesson, enrolmentId, courseId }: FundoLessonContentProps) {
   const contentType = String(lesson.contentType ?? "TEXT");
   const contentFormat = String(lesson.contentFormat ?? "PLAIN_TEXT");
   const body = String(lesson.contentBody ?? "");
@@ -177,7 +191,19 @@ export function FundoLessonContent({ lesson }: { lesson: LessonRecord }) {
               {body || ref || "Open external resource"} <ExternalLink className="h-3.5 w-3.5" />
             </a>
           ) : null}
-          {contentType === "VIDEO" ? <VideoLesson refUrl={ref || body} title={title} /> : null}
+          {contentType === "VIDEO" ? (
+            lesson.id && enrolmentId ? (
+              <LessonMediaPlayer
+                lessonId={String(lesson.id)}
+                enrolmentId={enrolmentId}
+                courseId={courseId}
+                title={title}
+                fallback={<VideoLesson refUrl={ref || body} title={title} />}
+              />
+            ) : (
+              <VideoLesson refUrl={ref || body} title={title} />
+            )
+          ) : null}
           {contentType === "PRACTICAL_TASK" ? <PracticalTaskLesson body={body} taskRef={ref} /> : null}
           {!["TEXT", "DOCUMENT", "LINK", "VIDEO", "PRACTICAL_TASK"].includes(contentType) ? (
             <p className="text-sm text-foreground">{body || ref || "Unsupported lesson type."}</p>

@@ -36,7 +36,7 @@ export default function LessonPlayerPage() {
           <p className="text-sm text-muted-foreground">Lesson ID: {lessonId}</p>
           <p className="mt-2 text-xs text-muted-foreground" data-testid="fundo-lesson-progress">Current progress: {currentPercent}%</p>
           <div className="mt-3 rounded border border-border bg-background p-3">
-            <FundoLessonContent lesson={currentLesson} />
+            <FundoLessonContent lesson={currentLesson} enrolmentId={enrolmentId} courseId={courseId || undefined} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <button

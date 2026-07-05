@@ -7,6 +7,7 @@ import { Clapperboard, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { AdaptiveSessionRoom } from "@/components/session/AdaptiveSessionRoom";
+import { SessionReplayPlayer } from "@/components/learning/player/SessionReplayPlayer";
 import { normalizeLiveKitServerUrl } from "@/lib/session/livekit-url";
 import {
   useLiveEvent,
@@ -74,6 +75,14 @@ export default function LiveEventReplayPage() {
               videoEnabled
             />
           </div>
+        ) : isPublished && replay?.playbackUrl?.startsWith("http") ? (
+          // W4: recording-pipeline replays carry a signed document-service URL —
+          // play it in the shared recorded-media player (watch minutes tracked
+          // by this page's existing unmount flush above).
+          <SessionReplayPlayer
+            playbackUrl={replay.playbackUrl}
+            title={event?.title ? `Replay — ${event.title}` : undefined}
+          />
         ) : isPublished && replay?.playbackUrl ? (
           <div className="rounded-2xl border border-violet-200 bg-violet-50 p-6">
             <p className="text-sm font-medium text-violet-900">Replay is ready</p>
