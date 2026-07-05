@@ -1,0 +1,6 @@
+PASS  telemedicine
+PASS  recording-pipeline
+PASS  learning-live
+PASS  learning-recording
+PASS  meeting
+PASS  live-event
