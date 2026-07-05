@@ -45,6 +45,7 @@
       ]
     },
     "plugins": [
+      "expo-video",
       "expo-web-browser",
       "expo-secure-store",
       "@livekit/react-native-expo-plugin",

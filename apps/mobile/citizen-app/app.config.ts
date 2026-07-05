@@ -78,6 +78,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
   },
   plugins: [
+    // NOTE: this array REPLACES app.json plugins wholesale — expo-video must be
+    // wired here too (LEARNING_RECORDING W4 course player).
+    "expo-video",
     "expo-web-browser",
     "expo-secure-store",
     "expo-sqlite",

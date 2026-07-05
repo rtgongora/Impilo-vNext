@@ -15,10 +15,12 @@ import {
   type LearningSession,
 } from "../../services/learningSessionsService";
 import { LearningClassroomScreen } from "../learning/LearningClassroomScreen";
+import { CoursePlayerScreen, type CoursePlayerEnrolment } from "../learning/CoursePlayerScreen";
 
 export function FundoLearningScreen() {
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
   const [classroomSession, setClassroomSession] = useState<LearningSession | null>(null);
+  const [playerEnrolment, setPlayerEnrolment] = useState<CoursePlayerEnrolment | null>(null);
   const auth = useAuth();
   const authUser = auth.user as { sub?: string } | undefined;
   const subjectType = "USER_HEALTH_ID";
@@ -50,6 +52,19 @@ export function FundoLearningScreen() {
     );
   }
 
+  if (playerEnrolment) {
+    return <CoursePlayerScreen enrolment={playerEnrolment} onBack={() => setPlayerEnrolment(null)} />;
+  }
+
+  // Active enrolments carry recorded lessons (adopted live replays) — the
+  // course player surfaces them with watch progress (W4 LEARNING_RECORDING).
+  const snapshot = (myLearning.data ?? {}) as Record<string, unknown>;
+  const continueLearning = ([] as Array<Record<string, unknown>>)
+    .concat(Array.isArray(snapshot.inProgress) ? (snapshot.inProgress as Array<Record<string, unknown>>) : [])
+    .concat(Array.isArray(snapshot.enrolled) ? (snapshot.enrolled as Array<Record<string, unknown>>) : [])
+    .filter((e) => e.id && e.courseId)
+    .slice(0, 5);
+
   return (
     <Screen>
       <Header title="Fundo Learning" subtitle="Citizen learning, wellness education, and certificates" />
@@ -74,6 +89,33 @@ export function FundoLearningScreen() {
             </Card>
           ))}
         </View>
+
+        {continueLearning.length > 0 ? (
+          <View testID="learning-continue" style={styles.liveSessions}>
+            <Text style={styles.sectionLabel}>Continue learning</Text>
+            {continueLearning.map((enrolment) => (
+              <TouchableOpacity
+                key={String(enrolment.id)}
+                testID={`learning-continue-${String(enrolment.id)}`}
+                onPress={() =>
+                  setPlayerEnrolment({
+                    id: String(enrolment.id),
+                    courseId: String(enrolment.courseId),
+                    title: String(enrolment.courseTitle ?? "Course"),
+                  })
+                }
+              >
+                <Card style={styles.courseCard}>
+                  <CardBody>
+                    <Text style={styles.courseTitle}>{String(enrolment.courseTitle ?? "Course")}</Text>
+                    <Text style={styles.courseMeta}>{String(enrolment.status ?? "IN_PROGRESS")}</Text>
+                    <Text style={styles.enrolHint}>Tap to open recorded lessons</Text>
+                  </CardBody>
+                </Card>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : null}
 
         {(sessions.data ?? []).length > 0 ? (
           <View testID="learning-live-sessions" style={styles.liveSessions}>
