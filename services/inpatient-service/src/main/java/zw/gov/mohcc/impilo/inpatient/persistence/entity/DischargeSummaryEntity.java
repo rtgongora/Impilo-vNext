@@ -60,6 +60,21 @@ public class DischargeSummaryEntity {
     @Column(name = "fhir_composition_json")
     private String fhirCompositionJson;
 
+    @Column(name = "countersign_required", nullable = false)
+    private boolean countersignRequired = false;
+
+    @Column(name = "authored_by")
+    private String authoredBy;
+
+    @Column(name = "countersigned_by")
+    private String countersignedBy;
+
+    @Column(name = "countersigned_at")
+    private OffsetDateTime countersignedAt;
+
+    @Column(name = "countersign_attestation")
+    private String countersignAttestation;
+
     @Column(name = "finalised_by")
     private String finalisedBy;
 
@@ -112,6 +127,16 @@ public class DischargeSummaryEntity {
     public void setReferralsJson(String v) { this.referralsJson = v; }
     public String getFhirCompositionJson() { return fhirCompositionJson; }
     public void setFhirCompositionJson(String v) { this.fhirCompositionJson = v; }
+    public boolean isCountersignRequired() { return countersignRequired; }
+    public void setCountersignRequired(boolean v) { this.countersignRequired = v; }
+    public String getAuthoredBy() { return authoredBy; }
+    public void setAuthoredBy(String v) { this.authoredBy = v; }
+    public String getCountersignedBy() { return countersignedBy; }
+    public void setCountersignedBy(String v) { this.countersignedBy = v; }
+    public OffsetDateTime getCountersignedAt() { return countersignedAt; }
+    public void setCountersignedAt(OffsetDateTime v) { this.countersignedAt = v; }
+    public String getCountersignAttestation() { return countersignAttestation; }
+    public void setCountersignAttestation(String v) { this.countersignAttestation = v; }
     public String getFinalisedBy() { return finalisedBy; }
     public void setFinalisedBy(String v) { this.finalisedBy = v; }
     public OffsetDateTime getFinalisedAt() { return finalisedAt; }

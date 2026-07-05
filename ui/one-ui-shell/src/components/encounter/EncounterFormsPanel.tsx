@@ -19,6 +19,7 @@ import type {
   FormValues,
 } from "@/lib/clinical-forms/types";
 import {
+  useCountersignFormResponse,
   useEncounterFormResolution,
   useEncounterFormResponses,
   useFormCatalog,
@@ -56,10 +57,15 @@ export function EncounterFormsPanel(props: EncounterFormsPanelProps) {
   const catalog = useFormCatalog();
   const responses = useEncounterFormResponses(encounterId);
   const submit = useSubmitEncounterForm(encounterId);
+  const countersign = useCountersignFormResponse(encounterId);
 
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedKey, setSubmittedKey] = useState<string | null>(null);
+  const [countersignFor, setCountersignFor] = useState<string | null>(null);
+  const [attestation, setAttestation] = useState("");
+  const [countersignedIds, setCountersignedIds] = useState<string[]>([]);
+  const [countersignError, setCountersignError] = useState<string | null>(null);
 
   const definitionsByKey = useMemo(() => {
     const map = new Map<string, ClinicalFormDefinition>();
@@ -149,12 +155,75 @@ export function EncounterFormsPanel(props: EncounterFormsPanelProps) {
               Documented this encounter
             </h5>
             <ul className="space-y-0.5">
-              {responses.data!.data.map((r) => (
-                <li key={r.responseId} className="text-[11px] text-foreground flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-green-700" /> {r.formKey} — {r.status}
-                </li>
-              ))}
+              {responses.data!.data.map((r) => {
+                const countersignable =
+                  r.countersignRequired &&
+                  (r.status === "SUBMITTED" || r.status === "AMENDED") &&
+                  !countersignedIds.includes(r.responseId);
+                return (
+                  <li key={r.responseId} className="text-[11px] text-foreground space-y-1">
+                    <span className="flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-green-700" /> {r.formKey} — {r.status}
+                      {countersignedIds.includes(r.responseId) && (
+                        <span className="text-green-700 font-medium">· countersigned</span>
+                      )}
+                      {countersignable && (
+                        <button
+                          type="button"
+                          data-testid={`countersign-open-${r.responseId}`}
+                          onClick={() => {
+                            setCountersignError(null);
+                            setAttestation("");
+                            setCountersignFor(countersignFor === r.responseId ? null : r.responseId);
+                          }}
+                          className="ml-1 rounded border border-primary/40 px-1.5 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/5"
+                        >
+                          Countersign
+                        </button>
+                      )}
+                    </span>
+                    {countersignFor === r.responseId && (
+                      <span className="flex items-center gap-1 pl-4" data-testid="countersign-inline-form">
+                        <input
+                          value={attestation}
+                          onChange={(e) => setAttestation(e.target.value)}
+                          placeholder="Attestation (e.g. reviewed and agreed)"
+                          aria-label="Countersign attestation"
+                          className="w-48 rounded border border-border px-1.5 py-0.5 text-[10px]"
+                        />
+                        <button
+                          type="button"
+                          disabled={countersign.isPending}
+                          onClick={async () => {
+                            setCountersignError(null);
+                            try {
+                              await countersign.mutateAsync({
+                                responseId: r.responseId,
+                                attestation: attestation || undefined,
+                              });
+                              setCountersignedIds((ids) => [...ids, r.responseId]);
+                              setCountersignFor(null);
+                            } catch (e) {
+                              setCountersignError(
+                                e instanceof Error ? e.message : "Countersign was rejected by the server",
+                              );
+                            }
+                          }}
+                          className="rounded bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground disabled:opacity-50"
+                        >
+                          {countersign.isPending ? "Signing…" : "Confirm"}
+                        </button>
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
+            {countersignError && (
+              <p className="text-[11px] text-red-700 flex items-center gap-1" role="alert">
+                <AlertTriangle className="w-3 h-3" /> {countersignError}
+              </p>
+            )}
           </div>
         )}
       </div>

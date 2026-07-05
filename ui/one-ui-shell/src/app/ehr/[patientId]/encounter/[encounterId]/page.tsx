@@ -38,6 +38,7 @@ import { EncounterCareChainRail } from "@/components/encounter/EncounterCareChai
 import { EncounterLabOrdersPanel } from "@/components/encounter/EncounterLabOrdersPanel";
 import { EncounterImagingOrdersPanel } from "@/components/encounter/EncounterImagingOrdersPanel";
 import { EncounterLinkedImagingStudiesPanel } from "@/components/encounter/EncounterLinkedImagingStudiesPanel";
+import { EncounterMedicationsPanel } from "@/components/encounter/EncounterMedicationsPanel";
 import { EncounterDischargePanel } from "@/components/encounter/EncounterDischargePanel";
 import { EncounterBillingPanel } from "@/components/encounter/EncounterBillingPanel";
 import { EncounterVitalsGuidance } from "@/components/clinical/EncounterVitalsGuidance";
@@ -456,6 +457,7 @@ export default function EncounterPage() {
                   disabled={!isActive}
                 />
                 <EncounterLinkedImagingStudiesPanel patientId={patientId} encounterId={encounterId} />
+                <EncounterMedicationsPanel patientId={patientId} encounterId={encounterId} />
                 <EncounterDischargePanel
                   patientId={patientId}
                   encounterId={encounterId}

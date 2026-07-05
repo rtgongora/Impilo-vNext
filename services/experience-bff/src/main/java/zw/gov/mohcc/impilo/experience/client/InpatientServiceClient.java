@@ -620,6 +620,13 @@ public class InpatientServiceClient {
         return response.getBody();
     }
 
+    public JsonNode countersignDischargeSummary(String encounterId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/discharge-summary/" + encounterId + "/countersign";
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, body == null ? Map.of() : body, JsonNode.class);
+        return response.getBody();
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

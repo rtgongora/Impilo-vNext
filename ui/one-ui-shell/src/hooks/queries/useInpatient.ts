@@ -227,6 +227,10 @@ export interface DischargeSummary {
   follow_up?: string | null;
   referrals?: string | null;
   fhir_composition?: string | null;
+  countersign_required?: boolean;
+  authored_by?: string | null;
+  countersigned_by?: string | null;
+  countersigned_at?: string | null;
   finalised_by?: string | null;
   finalised_at?: string | null;
 }
@@ -264,6 +268,25 @@ export function useFinaliseDischargeSummary() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["inpatient-discharge-summary"] });
       void queryClient.invalidateQueries({ queryKey: ["inpatient-admissions"] });
+    },
+  });
+}
+
+/** Countersign a discharge summary that requires supervisor countersignature before finalisation. */
+export function useCountersignDischargeSummary() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<DischargeSummary>,
+    unknown,
+    { encounterId: string; attestation?: string }
+  >({
+    mutationFn: ({ encounterId, attestation }) =>
+      apiClient.post<ApiResponse<DischargeSummary>>(
+        `/internal/v1/inpatient/discharge-summary/${encounterId}/countersign`,
+        attestation ? { attestation } : {},
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["inpatient-discharge-summary"] });
     },
   });
 }

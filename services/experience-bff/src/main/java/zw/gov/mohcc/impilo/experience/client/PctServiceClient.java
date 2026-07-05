@@ -1349,6 +1349,11 @@ public class PctServiceClient {
                 baseUrl + "/v1/encounters/" + encounterId + "/form-responses", JsonNode.class));
     }
 
+    public JsonNode listEncounterFormExtractions(String encounterId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/encounters/" + encounterId + "/form-extractions", JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

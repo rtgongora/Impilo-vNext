@@ -117,6 +117,16 @@ class InpatientControllerTest {
         assertEquals("FINALISED", ((JsonNode) response.getBody().get("data")).path("status").asText());
     }
 
+    @Test
+    void countersignDischargeSummary_returnsCountersignedRow() {
+        InpatientController controller = new InpatientController(new StubInpatientClient());
+        ResponseEntity<Map<String, Object>> response = controller.countersignDischargeSummary(
+                "enc-1", "req-d", "corr-d", Map.of("attestation", "Reviewed and agreed"));
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("supervisor-1",
+                ((JsonNode) response.getBody().get("data")).path("countersigned_by").asText());
+    }
+
     private static final class StubInpatientClient extends InpatientServiceClient {
         StubInpatientClient() {
             super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints(), mapper);
@@ -189,6 +199,15 @@ class InpatientControllerTest {
         @Override
         public JsonNode finaliseDischargeSummary(String encounterId) {
             return mapper.createObjectNode().put("encounter_id", encounterId).put("status", "FINALISED");
+        }
+
+        @Override
+        public JsonNode countersignDischargeSummary(String encounterId, Map<String, Object> body) {
+            return mapper.createObjectNode()
+                    .put("encounter_id", encounterId)
+                    .put("status", "DRAFT")
+                    .put("countersign_required", true)
+                    .put("countersigned_by", "supervisor-1");
         }
     }
 }

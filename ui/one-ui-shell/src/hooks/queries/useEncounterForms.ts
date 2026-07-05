@@ -75,6 +75,7 @@ export interface ResolveParams {
 }
 
 const RESPONSES_KEY = (encounterId: string) => ["encounter-form-responses", encounterId] as const;
+const EXTRACTIONS_KEY = (encounterId: string) => ["encounter-form-extractions", encounterId] as const;
 
 /** Resolve the mandatory/recommended/optional/prohibited/countersign form set for an encounter. */
 export function useEncounterFormResolution(
@@ -98,6 +99,36 @@ export function useFormCatalog() {
   return useQuery({
     queryKey: ["forms-catalog"],
     queryFn: () => apiClient.get<ApiResponse<FormCatalogEntry[]>>("/internal/v1/extensions/forms/catalog"),
+  });
+}
+
+/** One extraction provenance row — where a form answer was routed and its honest status. */
+export interface FormExtractedResource {
+  extractedId: string;
+  responseId: string;
+  resourceType: string;
+  routeTarget: string;
+  /** CONFIRMED | ROUTED | PENDING | FAILED */
+  status: string;
+  externalRef?: string | null;
+  localRef?: string | null;
+  failureReason?: string | null;
+  resourcePayload?: string | null;
+  createdAt?: string;
+}
+
+/**
+ * Extraction provenance for the encounter: problems/care-plans written in PCT, OROS orders
+ * (incl. medication requests) ROUTED or FAILED, BUTANO observations PENDING the SHR bridge.
+ */
+export function useEncounterFormExtractions(encounterId: string | undefined) {
+  return useQuery({
+    queryKey: EXTRACTIONS_KEY(encounterId ?? ""),
+    enabled: Boolean(encounterId),
+    queryFn: () =>
+      apiClient.get<ApiResponse<FormExtractedResource[]>>(
+        `/internal/v1/encounters/${encodeURIComponent(encounterId!)}/form-extractions`,
+      ),
   });
 }
 
@@ -142,7 +173,10 @@ export function useSubmitFormResponse(encounterId: string) {
         `/internal/v1/form-responses/${encodeURIComponent(responseId)}/submit`,
         { attestation },
       ),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: RESPONSES_KEY(encounterId) }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: RESPONSES_KEY(encounterId) });
+      void qc.invalidateQueries({ queryKey: EXTRACTIONS_KEY(encounterId) });
+    },
   });
 }
 
@@ -154,7 +188,10 @@ export function useCountersignFormResponse(encounterId: string) {
         `/internal/v1/form-responses/${encodeURIComponent(responseId)}/countersign`,
         { attestation },
       ),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: RESPONSES_KEY(encounterId) }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: RESPONSES_KEY(encounterId) });
+      void qc.invalidateQueries({ queryKey: EXTRACTIONS_KEY(encounterId) });
+    },
   });
 }
 
@@ -177,6 +214,9 @@ export function useSubmitEncounterForm(encounterId: string) {
         {},
       );
     },
-    onSuccess: () => void qc.invalidateQueries({ queryKey: RESPONSES_KEY(encounterId) }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: RESPONSES_KEY(encounterId) });
+      void qc.invalidateQueries({ queryKey: EXTRACTIONS_KEY(encounterId) });
+    },
   });
 }

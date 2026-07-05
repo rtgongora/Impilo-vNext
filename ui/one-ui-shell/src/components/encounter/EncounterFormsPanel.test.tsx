@@ -4,6 +4,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { ClinicalFormPatientContext } from "@/lib/clinical-forms/types";
 
 const submitMutate = vi.fn().mockResolvedValue({ data: { responseId: "r1", status: "SUBMITTED" } });
+const countersignMutate = vi.fn().mockResolvedValue({ data: { responseId: "r2", status: "SUBMITTED" } });
 
 const state = {
   resolution: {
@@ -41,13 +42,16 @@ const triageDefinition = JSON.stringify({
   sections: [{ id: "s", title: "Section", fields: [{ id: "reason", linkId: "reason", label: "Reason", kind: "text" }] }],
 });
 
+const responsesState: { data: { data: Array<Record<string, unknown>> } } = { data: { data: [] } };
+
 vi.mock("@/hooks/queries/useEncounterForms", () => ({
   useEncounterFormResolution: () => state.resolution,
   useFormCatalog: () => ({
     data: { data: [{ formKey: "impilo.opd.triage.v1", name: "OPD Triage", version: 1, formSchemaVersionId: "v1", requiresCountersign: false, definitionJson: triageDefinition }] },
   }),
-  useEncounterFormResponses: () => ({ data: { data: [] } }),
+  useEncounterFormResponses: () => responsesState,
   useSubmitEncounterForm: () => ({ mutateAsync: submitMutate, isPending: false }),
+  useCountersignFormResponse: () => ({ mutateAsync: countersignMutate, isPending: false }),
 }));
 
 // Render the real DAK form with a deterministic submit affordance.
@@ -85,7 +89,11 @@ function renderPanel() {
 }
 
 describe("EncounterFormsPanel", () => {
-  beforeEach(() => submitMutate.mockClear());
+  beforeEach(() => {
+    submitMutate.mockClear();
+    countersignMutate.mockClear();
+    responsesState.data = { data: [] };
+  });
 
   it("groups resolved forms and shows a prohibited form greyed with its reason", () => {
     renderPanel();
@@ -106,5 +114,43 @@ describe("EncounterFormsPanel", () => {
     await user.click(submitBtn);
     expect(submitMutate).toHaveBeenCalledWith({ formKey: "impilo.opd.triage.v1", answers: { reason: "fever" } });
     expect(await screen.findByText(/Submitted and recorded/)).toBeInTheDocument();
+  });
+
+  it("offers a countersign action for submitted countersign-required responses and records it", async () => {
+    responsesState.data = {
+      data: [
+        { responseId: "r2", formKey: "impilo.rx.v1", status: "SUBMITTED", countersignRequired: true },
+        { responseId: "r3", formKey: "impilo.opd.triage.v1", status: "SUBMITTED", countersignRequired: false },
+      ],
+    };
+    const user = userEvent.setup();
+    renderPanel();
+
+    // Only the countersign-required response offers the action.
+    expect(screen.getByTestId("countersign-open-r2")).toBeInTheDocument();
+    expect(screen.queryByTestId("countersign-open-r3")).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId("countersign-open-r2"));
+    await user.type(screen.getByLabelText("Countersign attestation"), "Reviewed and agreed");
+    await user.click(screen.getByRole("button", { name: "Confirm" }));
+
+    expect(countersignMutate).toHaveBeenCalledWith({
+      responseId: "r2",
+      attestation: "Reviewed and agreed",
+    });
+    expect(await screen.findByText(/countersigned/)).toBeInTheDocument();
+  });
+
+  it("shows the server rejection honestly when a countersign is refused", async () => {
+    responsesState.data = {
+      data: [{ responseId: "r2", formKey: "impilo.rx.v1", status: "SUBMITTED", countersignRequired: true }],
+    };
+    countersignMutate.mockRejectedValueOnce(new Error("Response already countersigned"));
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByTestId("countersign-open-r2"));
+    await user.click(screen.getByRole("button", { name: "Confirm" }));
+    expect(await screen.findByText(/already countersigned/)).toBeInTheDocument();
   });
 });

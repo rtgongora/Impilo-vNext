@@ -68,6 +68,20 @@ class EncounterFormsControllerTest {
         assertEquals("42", meta.get("encounter_id"));
     }
 
+    @Test
+    void listExtractionsForEncounter_proxiesProvenanceRows() {
+        StubPctClient pct = new StubPctClient();
+        ResponseEntity<Map<String, Object>> response =
+                controller(pct).listExtractionsForEncounter("42", "req-5", "corr-5");
+        assertEquals(200, response.getStatusCode().value());
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertTrue(data.isArray());
+        assertEquals("MEDICATION_REQUEST", data.get(0).get("resourceType").asText());
+        assertEquals("ROUTED", data.get(0).get("status").asText());
+        Map<?, ?> meta = (Map<?, ?>) response.getBody().get("meta");
+        assertEquals("42", meta.get("encounter_id"));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -96,6 +110,17 @@ class EncounterFormsControllerTest {
 
         @Override public JsonNode listEncounterFormResponses(String encounterId) {
             return mapper.createArrayNode();
+        }
+
+        @Override public JsonNode listEncounterFormExtractions(String encounterId) {
+            com.fasterxml.jackson.databind.node.ArrayNode arr = mapper.createArrayNode();
+            arr.addObject()
+                    .put("extractedId", "x-1")
+                    .put("resourceType", "MEDICATION_REQUEST")
+                    .put("routeTarget", "OROS")
+                    .put("status", "ROUTED")
+                    .put("externalRef", "ord-123");
+            return arr;
         }
     }
 }
