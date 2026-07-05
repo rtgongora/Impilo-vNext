@@ -20,6 +20,8 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierSystem;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityImportRowEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityImportRunEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityLegitimacySource;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityLegitimacyStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityContactRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityGeoRepository;
@@ -61,6 +63,7 @@ public class FacilityMasterImportService {
     private final FacilityGeoRepository geoRepository;
     private final FacilityImportRunRepository importRunRepository;
     private final FacilityImportRowRepository importRowRepository;
+    private final FacilitySourceLegitimacyService sourceLegitimacyService;
     private final ObjectMapper objectMapper;
 
     public FacilityMasterImportService(
@@ -70,6 +73,7 @@ public class FacilityMasterImportService {
             FacilityGeoRepository geoRepository,
             FacilityImportRunRepository importRunRepository,
             FacilityImportRowRepository importRowRepository,
+            FacilitySourceLegitimacyService sourceLegitimacyService,
             ObjectMapper objectMapper) {
         this.facilityRepository = facilityRepository;
         this.identifierRepository = identifierRepository;
@@ -77,6 +81,7 @@ public class FacilityMasterImportService {
         this.geoRepository = geoRepository;
         this.importRunRepository = importRunRepository;
         this.importRowRepository = importRowRepository;
+        this.sourceLegitimacyService = sourceLegitimacyService;
         this.objectMapper = objectMapper;
     }
 
@@ -160,6 +165,10 @@ public class FacilityMasterImportService {
             putIfPresent(raw, "date_opened", cell(f, idx, "date_opened"));
             putIfPresent(raw, "date_closed", cell(f, idx, "date_closed"));
             putIfPresent(raw, "comments", cell(f, idx, "comments"));
+            // HPA legal-registration carriers (present only in packs that include HPA columns).
+            // Preserved so source-legitimacy stamping can derive an HPA_LEGAL verdict per row.
+            putIfPresent(raw, "hpa_registration_number", cell(f, idx, "hpa_registration_number"));
+            putIfPresent(raw, "hpa_status", cell(f, idx, "hpa_status"));
             records.add(new FacilityMasterImportDtos.MasterFacilitySeedRecord(
                     correlationUid,
                     cell(f, idx, "facility_code"),
@@ -253,6 +262,7 @@ public class FacilityMasterImportService {
                 upsertIdentifier(facility, FacilityIdentifierSystem.IMPORT_SOURCE_ROW_ID, record.facilityUid());
                 upsertContact(facility, record.contactPhoneE164());
                 upsertGeo(facility, record);
+                stampSourceLegitimacy(facility, record, decision.resolvedCode(), ctx);
 
                 if (isNew) {
                     created++;
@@ -717,6 +727,7 @@ public class FacilityMasterImportService {
     @Transactional
     public FacilityImportRowDtos.ApplyApprovedResponse applyApproved(Long runId, List<Long> rowIds) {
         FacilityImportRunEntity run = requireRun(runId);
+        TrustContext ctx = TrustContextHolder.require();
         String actor = reviewer();
         List<FacilityImportRowEntity> approved =
                 importRowRepository.findByImportRunIdAndDecisionStatus(runId, FacilityImportRowEntity.DS_APPROVED_FOR_IMPORT);
@@ -741,6 +752,7 @@ public class FacilityMasterImportService {
             upsertIdentifier(facility, FacilityIdentifierSystem.IMPORT_SOURCE_ROW_ID, record.facilityUid());
             upsertContact(facility, record.contactPhoneE164());
             upsertGeo(facility, record);
+            stampSourceLegitimacy(facility, record, row.getFacilityCode(), ctx);
 
             row.setResultFacilityId(facility.getId());
             String prev = row.getDecisionStatus();
@@ -1135,6 +1147,91 @@ public class FacilityMasterImportService {
         geoRepository.save(geo);
     }
 
+    /**
+     * Stamp honest per-source legitimacy for an imported facility (WS-E):
+     * <ul>
+     *   <li>Every imported facility → {@code PLATFORM_OPERATIONAL / PENDING_VERIFICATION}
+     *       (import is not verification; platform access is not granted by the import).</li>
+     *   <li>Row carries an HPA registration number → {@code HPA_LEGAL} with the status derived
+     *       from the pack's {@code hpa_status} field when derivable, else
+     *       {@code PENDING_VERIFICATION}.</li>
+     *   <li>MoHCC-code-only rows (no HPA number) → {@code MINISTRY_OPERATIONAL /
+     *       REGISTERED_CURRENT} with {@code allowed_on_platform=true} — the national master list
+     *       is the Ministry's own operational recognition.</li>
+     * </ul>
+     * Best-effort: stamping never fails the import row (the legitimacy service logs and absorbs).
+     */
+    private void stampSourceLegitimacy(FacilityEntity facility,
+                                       FacilityMasterImportDtos.MasterFacilitySeedRecord record,
+                                       String resolvedCode,
+                                       TrustContext ctx) {
+        String correlationId = ctx.correlationId() != null ? ctx.correlationId().toString() : null;
+        sourceLegitimacyService.stampFromImport(facility,
+                FacilityLegitimacySource.PLATFORM_OPERATIONAL,
+                FacilityLegitimacyStatus.PENDING_VERIFICATION,
+                false,
+                SOURCE_LABEL,
+                "Imported from national master pack; platform operational verification pending",
+                ctx.actorId(), ctx.tenantId(), correlationId);
+
+        String hpaNumber = hpaRegistrationNumber(record);
+        if (hpaNumber != null) {
+            FacilityLegitimacyStatus hpaStatus = hpaStatusFromPack(record);
+            sourceLegitimacyService.stampFromImport(facility,
+                    FacilityLegitimacySource.HPA_LEGAL,
+                    hpaStatus,
+                    hpaStatus == FacilityLegitimacyStatus.REGISTERED_CURRENT,
+                    FacilityIdentifierSystem.HPA_REGISTRATION_NUMBER + ":" + hpaNumber,
+                    "HPA registration carried on master pack row (" + SOURCE_LABEL + ")",
+                    ctx.actorId(), ctx.tenantId(), correlationId);
+        } else if (!isBlank(resolvedCode)) {
+            sourceLegitimacyService.stampFromImport(facility,
+                    FacilityLegitimacySource.MINISTRY_OPERATIONAL,
+                    FacilityLegitimacyStatus.REGISTERED_CURRENT,
+                    true,
+                    FacilityIdentifierSystem.NATIONAL_FACILITY_CODE + ":" + resolvedCode.trim(),
+                    "Recognised on the MoHCC national master facility list (" + SOURCE_LABEL + ")",
+                    ctx.actorId(), ctx.tenantId(), correlationId);
+        }
+    }
+
+    /** HPA registration number carried on the row's raw source values, or null. */
+    private static String hpaRegistrationNumber(FacilityMasterImportDtos.MasterFacilitySeedRecord record) {
+        if (record.rawValues() == null) {
+            return null;
+        }
+        for (String key : List.of("hpa_registration_number", "hpa_number", "hpa_reg_no", "hpa_registration")) {
+            Object v = record.rawValues().get(key);
+            if (v != null && !String.valueOf(v).isBlank()) {
+                return String.valueOf(v).trim();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Derive the HPA verdict from pack fields when possible; anything not clearly derivable is
+     * honestly {@code PENDING_VERIFICATION} (never assumed current).
+     */
+    private static FacilityLegitimacyStatus hpaStatusFromPack(
+            FacilityMasterImportDtos.MasterFacilitySeedRecord record) {
+        Object raw = record.rawValues() != null ? record.rawValues().get("hpa_status") : null;
+        if (raw == null || String.valueOf(raw).isBlank()) {
+            return FacilityLegitimacyStatus.PENDING_VERIFICATION;
+        }
+        String s = String.valueOf(raw).trim().toUpperCase().replace(' ', '_').replace('-', '_');
+        return switch (s) {
+            case "REGISTERED", "REGISTERED_CURRENT", "CURRENT", "ACTIVE", "VALID" ->
+                    FacilityLegitimacyStatus.REGISTERED_CURRENT;
+            case "EXPIRED", "LAPSED" -> FacilityLegitimacyStatus.EXPIRED;
+            case "SUSPENDED" -> FacilityLegitimacyStatus.SUSPENDED;
+            case "NOT_COMPLIANT", "NON_COMPLIANT", "KNOWN_NOT_COMPLIANT" ->
+                    FacilityLegitimacyStatus.KNOWN_NOT_COMPLIANT;
+            case "NOT_FOUND" -> FacilityLegitimacyStatus.NOT_FOUND;
+            default -> FacilityLegitimacyStatus.PENDING_VERIFICATION;
+        };
+    }
+
     private Optional<FacilityEntity> findByMasterUid(String facilityUid) {
         return identifierRepository.findBySystemAndValue(MASTER_FACILITY_UID_SYSTEM, facilityUid)
                 .map(FacilityIdentifierEntity::getFacility);
@@ -1224,7 +1321,42 @@ public class FacilityMasterImportService {
         summary.put("records_acceptable_missing", acceptableMissing);
         summary.put("records_failed", failedRows);
         summary.put("warnings_emitted", warnings);
+        summary.put("legitimacy_stamps", buildLegitimacyStampSummary(byUid, results, importedOutcomes));
         return summary;
+    }
+
+    /**
+     * Per-source legitimacy stamp counts for import-eligible rows (WS-E). In a dry run these are
+     * the stamps that WOULD be written; in a real run they mirror what was stamped — so the
+     * dry-run quality report makes the legitimacy consequences of an import visible up front.
+     */
+    private static Map<String, Object> buildLegitimacyStampSummary(
+            Map<String, FacilityMasterImportDtos.MasterFacilitySeedRecord> byUid,
+            List<FacilityMasterImportDtos.FacilityMasterImportRowResult> results,
+            Set<String> importedOutcomes) {
+        long platformPending = 0;
+        long hpaLegal = 0;
+        long ministryOperational = 0;
+        for (FacilityMasterImportDtos.FacilityMasterImportRowResult result : results) {
+            if (!importedOutcomes.contains(result.outcome())) {
+                continue;
+            }
+            FacilityMasterImportDtos.MasterFacilitySeedRecord record = byUid.get(result.facilityUid());
+            if (record == null) {
+                continue;
+            }
+            platformPending++;
+            if (hpaRegistrationNumber(record) != null) {
+                hpaLegal++;
+            } else if (!isBlank(record.facilityCode())) {
+                ministryOperational++;
+            }
+        }
+        Map<String, Object> legitimacy = new LinkedHashMap<>();
+        legitimacy.put("platform_operational_pending_verification", platformPending);
+        legitimacy.put("hpa_legal", hpaLegal);
+        legitimacy.put("ministry_operational_registered_current", ministryOperational);
+        return legitimacy;
     }
 
     private static long countByFlag(

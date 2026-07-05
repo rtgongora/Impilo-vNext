@@ -46,6 +46,7 @@ class FacilityImportReviewServiceTest {
     @Mock private FacilityGeoRepository geoRepository;
     @Mock private FacilityImportRunRepository importRunRepository;
     @Mock private FacilityImportRowRepository importRowRepository;
+    @Mock private FacilitySourceLegitimacyService sourceLegitimacyService;
 
     private FacilityMasterImportService service;
     private final UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -53,7 +54,8 @@ class FacilityImportReviewServiceTest {
     @BeforeEach
     void setUp() {
         service = new FacilityMasterImportService(facilityRepository, identifierRepository,
-                contactRepository, geoRepository, importRunRepository, importRowRepository, new ObjectMapper());
+                contactRepository, geoRepository, importRunRepository, importRowRepository,
+                sourceLegitimacyService, new ObjectMapper());
         TrustContextHolder.set(new TrustContext(tenantId, "reviewer-1", "ADMIN", "SYSTEM_ADMINISTRATION",
                 null, UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
         FacilityImportRunEntity run = new FacilityImportRunEntity();
