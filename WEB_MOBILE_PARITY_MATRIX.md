@@ -2,6 +2,14 @@
 
 > **Authoritative detail:** [docs/frontend/WEB_MOBILE_SURFACING_PARITY.md](docs/frontend/WEB_MOBILE_SURFACING_PARITY.md) (parity sweep 2026-05-28).
 
+> **Runtime proof (2026-07-05):** every mobile status below is a *code/parity*
+> claim, not a runtime claim. As of the WS-M truth wave, both apps are
+> **NOT_PROVEN** at runtime — no APK has been built or executed with recorded
+> evidence (in-container Android SDK install is proxy-blocked; typecheck and
+> unit tests are green). Runtime status, blockers, and the VM/CI proof paths
+> live in [docs/mobile/mobile-runtime-truth-report.md](docs/mobile/mobile-runtime-truth-report.md);
+> per-app verdicts there supersede any implied runtime confidence here.
+
 Legend: `Complete`, `Partial`, `Missing`, `N/A`
 
 | Capability | Web | Citizen app | Provider app | Notes |
