@@ -1,0 +1,117 @@
+package zw.gov.mohcc.impilo.experience.controller;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestTemplate;
+import zw.gov.mohcc.impilo.experience.client.PlatformOriginGovernanceClient;
+import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
+
+import java.util.Map;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+class PlatformOriginControllerTest {
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Test
+    void listCountryOperationsReturnsBadGatewayWhenGovernanceUnavailable() {
+        PlatformOriginController controller = new PlatformOriginController(new FailingClient());
+
+        var response = controller.listCountryOperations("req-1", "corr-1");
+
+        assertEquals(502, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("PLATFORM_ORIGIN_UNAVAILABLE",
+                ((Map<?, ?>) response.getBody().get("error")).get("code"));
+    }
+
+    @Test
+    void initiateCountryOperationReturnsBadGatewayWhenGovernanceUnavailable() {
+        PlatformOriginController controller = new PlatformOriginController(new FailingClient());
+
+        var response = controller.initiateCountryOperation(
+                Map.of("tenantId", UUID.randomUUID().toString(), "isoCountryCode", "ZW"),
+                "req-2", "corr-2");
+
+        assertEquals(502, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("PLATFORM_ORIGIN_UNAVAILABLE",
+                ((Map<?, ?>) response.getBody().get("error")).get("code"));
+    }
+
+    @Test
+    void approveAndExecuteFailClosedWhenGovernanceUnavailable() {
+        PlatformOriginController controller = new PlatformOriginController(new FailingClient());
+        UUID actionId = UUID.randomUUID();
+
+        assertEquals(502, controller.approve(actionId, Map.of(), "req-3", "corr-3")
+                .getStatusCode().value());
+        assertEquals(502, controller.execute(actionId, "req-4", "corr-4")
+                .getStatusCode().value());
+        assertEquals(502, controller.initiateRevocation(UUID.randomUUID(), UUID.randomUUID(),
+                null, "req-5", "corr-5").getStatusCode().value());
+    }
+
+    @Test
+    void successfulProxyWrapsDataWithMeta() throws Exception {
+        JsonNode data = objectMapper.readTree("[{\"isoCountryCode\":\"ZW\"}]");
+        PlatformOriginController controller = new PlatformOriginController(new StubClient(data));
+
+        var response = controller.listCountryOperations("req-6", "corr-6");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(data, response.getBody().get("data"));
+        assertEquals("req-6", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
+    }
+
+    private static final class FailingClient extends PlatformOriginGovernanceClient {
+        private FailingClient() {
+            super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints());
+        }
+
+        @Override
+        public JsonNode listCountryOperations() {
+            throw new IllegalStateException("governance unavailable");
+        }
+
+        @Override
+        public JsonNode initiateCountryOperation(Map<String, Object> body) {
+            throw new IllegalStateException("governance unavailable");
+        }
+
+        @Override
+        public JsonNode approveAction(UUID accessRequestId, Map<String, Object> body) {
+            throw new IllegalStateException("governance unavailable");
+        }
+
+        @Override
+        public JsonNode executeAction(UUID accessRequestId) {
+            throw new IllegalStateException("governance unavailable");
+        }
+
+        @Override
+        public JsonNode initiateRevocation(UUID countryOperationId, UUID appointmentId,
+                                           Map<String, Object> body) {
+            throw new IllegalStateException("governance unavailable");
+        }
+    }
+
+    private static final class StubClient extends PlatformOriginGovernanceClient {
+        private final JsonNode data;
+
+        private StubClient(JsonNode data) {
+            super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints());
+            this.data = data;
+        }
+
+        @Override
+        public JsonNode listCountryOperations() {
+            return data;
+        }
+    }
+}
