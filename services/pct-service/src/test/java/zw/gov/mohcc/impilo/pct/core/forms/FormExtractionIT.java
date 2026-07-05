@@ -29,7 +29,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
@@ -296,6 +298,68 @@ class FormExtractionIT {
         assertThat(outboxRepository.findAll()).noneMatch(e ->
                 "pct.form.medication.requested".equals(e.getEventType())
                         && e.getPayload().contains(responseId));
+    }
+
+    @Test
+    void medicationRequest_flatFormCompanionLinkIds_assembleTheDosagePayload() throws Exception {
+        // Flat DAK forms capture drug/dose/route as separate fields; the mapping's companionLinkIds
+        // stitch the sibling answers into one medication request payload.
+        String flatMappings = """
+                {"mappings":[
+                  {"linkId":"drug","resourceType":"MEDICATION_REQUEST","routeTarget":"OROS","orderCategory":"medication",
+                   "companionLinkIds":{"dose":"dose","route":"route","frequency":"frequency"}}
+                ]}""";
+        FormCatalogEntry flatRx = new FormCatalogEntry("schema-rx-flat", "impilo.test.prescribe.flat", "Prescribe",
+                null, 1, "ver-rx-flat-1", "PUBLISHED", "MEDICATION_REQUEST", List.of("OUTPATIENT"), List.of(),
+                List.of(), List.of(), List.of("outpatient"), "PRESCRIBE", "OPTIONAL", List.of("PHYSICIAN"),
+                null, null, "ALL", null, List.of(), List.of(), false, true, "STANDARD", "{}", flatMappings);
+        when(formsCatalogIntegration.fetchCatalog()).thenReturn(List.of(flatRx));
+
+        String createBody = mapper.writeValueAsString(Map.of(
+                "encounterId", encounterId, "formKey", "impilo.test.prescribe.flat",
+                "answers", Map.of("drug", "Amoxicillin", "dose", "500 mg", "route", "PO", "frequency", "TDS")));
+        MvcResult created = mockMvc.perform(trust(post("/v1/forms/responses"))
+                        .contentType(MediaType.APPLICATION_JSON).content(createBody))
+                .andExpect(status().isCreated()).andReturn();
+        String responseId = mapper.readTree(created.getResponse().getContentAsString())
+                .get("data").get("responseId").asText();
+        mockMvc.perform(trust(post("/v1/forms/responses/" + responseId + "/submit"))
+                .contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isOk());
+
+        FormExtractedResourceEntity rx = byType(
+                extractedRepository.findByResponseId(UUID.fromString(responseId)), "MEDICATION_REQUEST");
+        assertThat(rx.getStatus()).isEqualTo("ROUTED");
+        assertThat(rx.getResourcePayload())
+                .contains("Amoxicillin").contains("500 mg").contains("\"route\":\"PO\"").contains("TDS");
+    }
+
+    @Test
+    void encounterFormExtractions_endpoint_returnsProvenanceForTheCockpit() throws Exception {
+        String createBody = mapper.writeValueAsString(Map.of(
+                "encounterId", encounterId, "formKey", "impilo.test.consult",
+                "answers", Map.of("primaryDiagnosis", "Malaria", "labOrder", "FBC")));
+        MvcResult created = mockMvc.perform(trust(post("/v1/forms/responses"))
+                        .contentType(MediaType.APPLICATION_JSON).content(createBody))
+                .andExpect(status().isCreated()).andReturn();
+        String responseId = mapper.readTree(created.getResponse().getContentAsString())
+                .get("data").get("responseId").asText();
+        mockMvc.perform(trust(post("/v1/forms/responses/" + responseId + "/submit"))
+                .contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isOk());
+
+        MvcResult listed = mockMvc.perform(trust(
+                        get("/v1/encounters/" + encounterId + "/form-extractions")))
+                .andExpect(status().isOk()).andReturn();
+        JsonNode data = mapper.readTree(listed.getResponse().getContentAsString()).get("data");
+        assertThat(data.isArray()).isTrue();
+        assertThat(data.size()).isEqualTo(2);
+        List<String> types = new java.util.ArrayList<>();
+        data.forEach(n -> types.add(n.get("resourceType").asText()));
+        assertThat(types).containsExactlyInAnyOrder("CONDITION", "SERVICE_REQUEST");
+
+        // A different encounter has no extractions — tenant/encounter scoping.
+        mockMvc.perform(trust(get("/v1/encounters/999999/form-extractions")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isEmpty());
     }
 
     private static FormExtractedResourceEntity byType(List<FormExtractedResourceEntity> rows, String type) {

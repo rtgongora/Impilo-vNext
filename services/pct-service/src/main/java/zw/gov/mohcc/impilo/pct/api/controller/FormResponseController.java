@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import zw.gov.mohcc.impilo.pct.core.forms.FormExtractionService;
 import zw.gov.mohcc.impilo.pct.core.forms.FormResponseService;
+import zw.gov.mohcc.impilo.pct.persistence.entity.FormExtractedResourceEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.FormResponseEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
@@ -27,9 +29,12 @@ import java.util.UUID;
 public class FormResponseController {
 
     private final FormResponseService responseService;
+    private final FormExtractionService extractionService;
 
-    public FormResponseController(FormResponseService responseService) {
+    public FormResponseController(FormResponseService responseService,
+                                  FormExtractionService extractionService) {
         this.responseService = responseService;
+        this.extractionService = extractionService;
     }
 
     @PostMapping("/forms/responses")
@@ -99,6 +104,24 @@ public class FormResponseController {
                     HttpStatus.FORBIDDEN.value(), correlationId));
         }
         return ResponseEntity.ok(ApiResponse.ok(responseService.listForEncounter(encounterId), correlationId));
+    }
+
+    /**
+     * Extraction provenance for the encounter — where each form-extracted resource was routed
+     * (PCT problem/care-plan, OROS order incl. medication requests, BUTANO observation) and its
+     * honest status (CONFIRMED / ROUTED / PENDING / FAILED). Read-only cockpit surface.
+     */
+    @GetMapping("/encounters/{encounterId}/form-extractions")
+    public ResponseEntity<ApiResponse<List<FormExtractedResourceEntity>>> listExtractionsForEncounter(
+            @PathVariable String encounterId) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        ResponseEntity<ApiResponse<FormResponseEntity>> denied = clinicalReadGuard(correlationId);
+        if (denied != null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(
+                    "VISIBILITY_CLINICAL_DENIED", "Form extractions are not permitted for the current visibility profile.",
+                    HttpStatus.FORBIDDEN.value(), correlationId));
+        }
+        return ResponseEntity.ok(ApiResponse.ok(extractionService.listForEncounter(encounterId), correlationId));
     }
 
     private ResponseEntity<ApiResponse<FormResponseEntity>> clinicalReadGuard(String correlationId) {

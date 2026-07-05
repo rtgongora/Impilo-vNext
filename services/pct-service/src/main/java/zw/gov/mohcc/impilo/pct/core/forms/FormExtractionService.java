@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.pct.core.clinical.CarePlanService;
 import zw.gov.mohcc.impilo.pct.core.clinical.ProblemService;
 import zw.gov.mohcc.impilo.pct.integration.FormsCatalogIntegration;
@@ -15,10 +16,13 @@ import zw.gov.mohcc.impilo.pct.persistence.entity.FormResponseEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.FormExtractedResourceRepository;
 import zw.gov.mohcc.impilo.pct.persistence.repository.FormResponseRepository;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Extracts structured clinical resources from a submitted form response, driven by the locked definition's
@@ -59,6 +63,23 @@ public class FormExtractionService implements FormExtractionHook {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Extraction provenance for every form response on an encounter — the honest routing record the
+     * cockpit shows (CONFIRMED problem/care-plan writes, ROUTED/FAILED OROS orders incl. medication
+     * requests, PENDING BUTANO observations). Tenant-scoped; read-only.
+     */
+    @Transactional(readOnly = true)
+    public List<FormExtractedResourceEntity> listForEncounter(String encounterId) {
+        TrustContext ctx = TrustContextHolder.require();
+        List<UUID> responseIds = responseRepository
+                .findByTenantIdAndEncounterIdOrderByCreatedAtDesc(ctx.tenantId(), encounterId)
+                .stream().map(FormResponseEntity::getResponseId).toList();
+        if (responseIds.isEmpty()) {
+            return List.of();
+        }
+        return extractedRepository.findByTenantIdAndResponseIdInOrderByCreatedAtDesc(ctx.tenantId(), responseIds);
+    }
+
     @Override
     public void extract(FormResponseEntity r) {
         // Idempotent: never double-extract the same response.
@@ -86,7 +107,7 @@ public class FormExtractionService implements FormExtractionHook {
                     case "CONDITION" -> extractCondition(r, m, linkId, value);
                     case "CARE_PLAN" -> extractCarePlan(r, m, linkId, value);
                     case "SERVICE_REQUEST" -> extractServiceRequest(r, m, linkId, value);
-                    case "MEDICATION_REQUEST" -> extractMedicationRequest(r, m, linkId, value);
+                    case "MEDICATION_REQUEST" -> extractMedicationRequest(r, m, linkId, value, answers);
                     case "OBSERVATION", "PROCEDURE" -> extractObservation(r, m, linkId, value, resourceType);
                     case "SAFETY_EVENT" -> extractSafetyEvent(r, m, linkId, value);
                     default -> log.debug("Unmapped resource type {} for linkId {}", resourceType, linkId);
@@ -168,9 +189,12 @@ public class FormExtractionService implements FormExtractionHook {
      * prescribing permissions configurable and auditable rather than a hard-coded cadre split.</p>
      *
      * <p>The answer may be a plain drug code/name, or an object carrying structured dosage fields
-     * ({@code drug|code, dose, route, frequency, duration, quantity, instructions}).</p>
+     * ({@code drug|code, dose, route, frequency, duration, quantity, instructions}). For flat
+     * DAK-rendered forms (one answer per field), a mapping may declare {@code companionLinkIds}
+     * naming the sibling answers ({@code dose}, {@code route}, …) captured as separate fields.</p>
      */
-    private void extractMedicationRequest(FormResponseEntity r, Map<String, Object> m, String linkId, JsonNode value) {
+    private void extractMedicationRequest(FormResponseEntity r, Map<String, Object> m, String linkId,
+                                          JsonNode value, JsonNode answers) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("subject_cpid", r.getSubjectCpid());
         payload.put("category", firstNonBlank(str(m.get("orderCategory")), "medication"));
@@ -185,6 +209,21 @@ public class FormExtractionService implements FormExtractionHook {
             putIfPresent(payload, "instructions", text(value, "instructions"));
         } else {
             payload.put("code", value.asText());
+        }
+        // Flat-form dosage companions: mapping lists sibling linkIds whose answers complete the request.
+        Object companions = m.get("companionLinkIds");
+        if (companions instanceof Map<?, ?> companionMap) {
+            for (Map.Entry<?, ?> c : companionMap.entrySet()) {
+                String field = str(c.getKey());
+                String companionLinkId = str(c.getValue());
+                if (field == null || companionLinkId == null || payload.containsKey(field)) {
+                    continue;
+                }
+                JsonNode companionValue = answers.get(companionLinkId);
+                if (companionValue != null && !companionValue.isNull()) {
+                    putIfPresent(payload, field, companionValue.asText());
+                }
+            }
         }
         payload.put("requested_by", r.getSubmittedBy());
         payload.put("encounter_id", r.getEncounterId());

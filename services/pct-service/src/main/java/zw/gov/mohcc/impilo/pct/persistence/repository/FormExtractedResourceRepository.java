@@ -13,4 +13,6 @@ public interface FormExtractedResourceRepository extends JpaRepository<FormExtra
     List<FormExtractedResourceEntity> findByResponseId(UUID responseId);
 
     List<FormExtractedResourceEntity> findByStatusIn(List<String> statuses);
+
+    List<FormExtractedResourceEntity> findByTenantIdAndResponseIdInOrderByCreatedAtDesc(UUID tenantId, List<UUID> responseIds);
 }
