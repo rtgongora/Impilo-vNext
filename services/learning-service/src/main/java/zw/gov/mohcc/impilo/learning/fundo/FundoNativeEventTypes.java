@@ -39,4 +39,8 @@ public final class FundoNativeEventTypes {
     /** Clinical placement lifecycle (A6, D6 audit-gap closure). */
     public static final String PLACEMENT_CREATED              = "impilo.learning.placement.created.v1";
     public static final String PLACEMENT_SIGNED_OFF           = "impilo.learning.placement.signed_off.v1";
+    /** Recorded-media lifecycle (LEARNING_RECORDING W4). */
+    public static final String MEDIA_REPLAY_ADOPTED           = "impilo.learning.media.replay_adopted.v1";
+    public static final String MEDIA_ATTACHED                 = "impilo.learning.media.attached.v1";
+    public static final String MEDIA_WATCH_MILESTONE          = "impilo.learning.media.watch_milestone.v1";
 }
