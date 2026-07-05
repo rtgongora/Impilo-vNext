@@ -163,7 +163,15 @@ public class ReplayService {
         if (session.getPlaybackUrlRef() != null && !session.getPlaybackUrlRef().isBlank()) {
             event = eventService.get(tenantId, eventId);
             if (LiveEventStatus.PROCESSING_REPLAY.name().equals(event.getStatus())) {
-                eventService.publishReplay(tenantId, eventId, updatedBy);
+                // Carry the catalogued artifact on the published event — downstream
+                // owners (Fundo media adoption) key on documentObjectId; a bare
+                // publish is invisible to them.
+                Map<String, Object> replayPayload = new LinkedHashMap<>();
+                if (session.getRecordingRef() != null && !session.getRecordingRef().isBlank()) {
+                    replayPayload.put("documentObjectId", session.getRecordingRef());
+                }
+                replayPayload.put("sessionId", session.getId().toString());
+                eventService.publishReplay(tenantId, eventId, updatedBy, replayPayload);
             }
         }
         return replayMap(eventService.get(tenantId, eventId), session);

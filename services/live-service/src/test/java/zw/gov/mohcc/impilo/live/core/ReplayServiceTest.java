@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -61,7 +62,9 @@ class ReplayServiceTest {
             event.setStatus(LiveEventStatus.PROCESSING_REPLAY.name());
             return event;
         });
-        when(eventService.publishReplay(tenantId, eventId, "host")).thenAnswer(inv -> {
+        // processReplay publishes WITH the artifact payload (documentObjectId)
+        // so downstream owners (Fundo adoption) can key on it.
+        when(eventService.publishReplay(eq(tenantId), eq(eventId), eq("host"), anyMap())).thenAnswer(inv -> {
             event.setStatus(LiveEventStatus.PUBLISHED_REPLAY.name());
             return event;
         });
@@ -71,7 +74,7 @@ class ReplayServiceTest {
         assertThat(result.get("status")).isEqualTo(LiveEventStatus.PUBLISHED_REPLAY.name());
         assertThat(result.get("playbackUrl")).isEqualTo("dev-replay://localhost/live/room-1/rec");
         verify(eventService).beginReplayProcessing(tenantId, eventId, "host");
-        verify(eventService).publishReplay(tenantId, eventId, "host");
+        verify(eventService).publishReplay(eq(tenantId), eq(eventId), eq("host"), anyMap());
     }
 
     @Test
