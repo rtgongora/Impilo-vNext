@@ -1,7 +1,10 @@
 package zw.gov.mohcc.impilo.live.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.live.integration.RtcGatewayClient;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventAnalyticsSnapshotEntity;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventAttendanceEntity;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventEntity;
@@ -13,6 +16,8 @@ import zw.gov.mohcc.impilo.live.persistence.repository.LiveEventFeedbackReposito
 import zw.gov.mohcc.impilo.live.persistence.repository.LiveEventPollRepository;
 import zw.gov.mohcc.impilo.live.persistence.repository.LiveEventQuestionRepository;
 import zw.gov.mohcc.impilo.live.persistence.repository.LiveEventRegistrationRepository;
+import zw.gov.mohcc.impilo.live.persistence.repository.LiveEventSessionRepository;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -27,6 +32,18 @@ import java.util.UUID;
 @Service
 public class AnalyticsService {
 
+    private static final Logger log = LoggerFactory.getLogger(AnalyticsService.class);
+
+    /** rtc stats fields captured as media_* snapshot metrics (numeric aggregates only). */
+    private static final Map<String, String> MEDIA_METRICS = Map.of(
+            "distinctParticipants", "media_distinct_participants",
+            "totalJoins", "media_total_joins",
+            "activeParticipants", "media_active_participants",
+            "avgDurationSeconds", "media_avg_duration_seconds",
+            "maxDurationSeconds", "media_max_duration_seconds",
+            "abnormalDisconnects", "media_abnormal_disconnects",
+            "peakParticipants", "media_peak_participants");
+
     private final LiveEventService eventService;
     private final LiveEventAnalyticsSnapshotRepository snapshotRepository;
     private final LiveEventRegistrationRepository registrationRepository;
@@ -35,6 +52,8 @@ public class AnalyticsService {
     private final LiveEventQuestionRepository questionRepository;
     private final LiveEventPollRepository pollRepository;
     private final LiveEventFeedbackRepository feedbackRepository;
+    private final LiveEventSessionRepository sessionRepository;
+    private final RtcGatewayClient rtcGatewayClient;
 
     public AnalyticsService(LiveEventService eventService,
                             LiveEventAnalyticsSnapshotRepository snapshotRepository,
@@ -43,7 +62,9 @@ public class AnalyticsService {
                             LiveEventChatMessageRepository chatRepository,
                             LiveEventQuestionRepository questionRepository,
                             LiveEventPollRepository pollRepository,
-                            LiveEventFeedbackRepository feedbackRepository) {
+                            LiveEventFeedbackRepository feedbackRepository,
+                            LiveEventSessionRepository sessionRepository,
+                            RtcGatewayClient rtcGatewayClient) {
         this.eventService = eventService;
         this.snapshotRepository = snapshotRepository;
         this.registrationRepository = registrationRepository;
@@ -52,6 +73,8 @@ public class AnalyticsService {
         this.questionRepository = questionRepository;
         this.pollRepository = pollRepository;
         this.feedbackRepository = feedbackRepository;
+        this.sessionRepository = sessionRepository;
+        this.rtcGatewayClient = rtcGatewayClient;
     }
 
     @Transactional
@@ -66,6 +89,46 @@ public class AnalyticsService {
         if (event.getCpdPoints() != null) {
             saveMetric(eventId, "cpd_points", event.getCpdPoints());
         }
+        captureMediaQualityMetrics(eventId);
+    }
+
+    /**
+     * Media-quality aggregates from rtc-gateway's session stats API (webhook
+     * telemetry over HTTP — the rtc schema is never read cross-database).
+     * Best-effort: a missing room or unreachable gateway degrades to the
+     * engagement metrics alone, never fails the snapshot.
+     */
+    private void captureMediaQualityMetrics(UUID eventId) {
+        String roomId = sessionRepository.findByEventIdOrderByCreatedAtDesc(eventId).stream()
+                .map(s -> s.getProviderRoomId())
+                .filter(id -> id != null && !id.isBlank())
+                .findFirst()
+                .orElse(null);
+        if (roomId == null) {
+            return;
+        }
+        try {
+            Map<String, Object> response = rtcGatewayClient.getSessionStats(TrustContextHolder.get(), roomId);
+            Map<String, Object> stats = response.get("data") instanceof Map<?, ?> raw
+                    ? castStats(raw) : response;
+            int captured = 0;
+            for (Map.Entry<String, String> mapping : MEDIA_METRICS.entrySet()) {
+                if (stats.get(mapping.getKey()) instanceof Number number) {
+                    saveMetric(eventId, mapping.getValue(), BigDecimal.valueOf(number.doubleValue()));
+                    captured++;
+                }
+            }
+            if (captured == 0) {
+                log.debug("No media stats available for event {} (rtc session {})", eventId, roomId);
+            }
+        } catch (RuntimeException ex) {
+            log.warn("Media stats enrichment skipped for event {}: {}", eventId, ex.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> castStats(Map<?, ?> raw) {
+        return (Map<String, Object>) raw;
     }
 
     @Transactional(readOnly = true)

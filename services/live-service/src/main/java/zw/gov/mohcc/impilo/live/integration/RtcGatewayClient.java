@@ -48,6 +48,12 @@ public class RtcGatewayClient {
         return exchange(ctx, HttpMethod.POST, baseUrl + "/internal/v1/rtc/sessions/" + sessionId + "/end", Map.of());
     }
 
+    /** Media-quality aggregates from rtc webhook telemetry (participant_stats). */
+    public Map<String, Object> getSessionStats(TrustContext ctx, String sessionId) {
+        return exchange(ctx, HttpMethod.GET,
+                baseUrl + "/internal/v1/rtc/sessions/" + sessionId + "/stats", null);
+    }
+
     /** Start a recording egress for the session ({startedBy, startedByRole, layout?}). */
     public Map<String, Object> startRecording(TrustContext ctx, String sessionId, Map<String, Object> request) {
         return exchange(ctx, HttpMethod.POST,
