@@ -48,20 +48,24 @@ async function loginAndOpenClassroom(
   }
   await page.goto(`${PREVIEW_ORIGIN}/learning/sessions/${SESSION_ID}/classroom`);
   await acceptPoliciesIfGated(page);
-  // The work shell may open the Switch Context dialog over the classroom —
-  // resolve it like a real user: professional profile, then the seeded facility.
-  const switchHeading = page.getByRole("heading", { name: /switch context/i }).first();
-  if (await switchHeading.isVisible().catch(() => false)) {
-    const professional = page.getByRole("button", { name: /professional profile/i }).first();
-    if (await professional.isVisible().catch(() => false)) {
-      await professional.evaluate((el) => (el as HTMLButtonElement).click()).catch(() => {});
+  // The work shell can open the Switch Context dialog over the classroom at
+  // any point after activation — run a dismissal watchdog for the page's
+  // lifetime: whenever the dialog appears, close it (the classroom itself
+  // does not require a work-session context to join the live room).
+  const dismissSwitchContext = async () => {
+    const heading = page.getByRole("heading", { name: /switch context/i }).first();
+    if (await heading.isVisible().catch(() => false)) {
+      const close = page.getByRole("button", { name: /^close$/i }).first();
+      await close.evaluate((el) => (el as HTMLButtonElement).click()).catch(() => {});
     }
-    await switchHeading.waitFor({ state: "hidden", timeout: 10_000 }).catch(() => {});
-  }
-  const facilityOption = page.getByText(/harare central/i).first();
-  if (await facilityOption.isVisible().catch(() => false)) {
-    await facilityOption.click();
-  }
+    const facilityOption = page.getByText(/harare central/i).first();
+    if (await facilityOption.isVisible().catch(() => false)) {
+      await facilityOption.click().catch(() => {});
+    }
+  };
+  const watchdog = setInterval(() => void dismissSwitchContext(), 2_000);
+  page.on("close", () => clearInterval(watchdog));
+  await dismissSwitchContext();
   // Ensure we are actually on the classroom after any context redirects.
   if (!page.url().includes("/classroom")) {
     await page.goto(`${PREVIEW_ORIGIN}/learning/sessions/${SESSION_ID}/classroom`);
