@@ -67,6 +67,7 @@ class FundoNativeLmsIT {
     @Autowired private AssessmentRepository assessmentRepository;
     @Autowired private AssessmentQuestionRepository questionRepository;
     @Autowired private LearningOutboxRepository outboxRepository;
+    @Autowired private zw.gov.mohcc.impilo.learning.persistence.repository.ScheduledLearningSessionRepository sessionRepository;
 
     @Autowired private FundoCatalogService catalogService;
     @Autowired private FundoCourseStructureService structureService;
@@ -248,6 +249,32 @@ class FundoNativeLmsIT {
             List<Map<String, Object>> lessons = cast(modules.get(0).get("lessons"));
             assertThat(lessons).hasSize(2);
             assertThat(lessons.get(0).get("title")).isEqualTo("Lesson 1.1");
+        }
+
+        @Test
+        @DisplayName("D4: impiloLiveEventId derived from linked scheduled sessions, absent otherwise")
+        void liveLinkageIsHonest() {
+            Map<String, Object> unlinked = structureService.getStructure(TENANT, courseA.getId()).orElseThrow();
+            assertThat(unlinked).doesNotContainKey("impiloLiveEventId");
+
+            UUID liveEventId = UUID.randomUUID();
+            var session = new zw.gov.mohcc.impilo.learning.persistence.entity.ScheduledLearningSessionEntity();
+            session.setTenantId(TENANT);
+            session.setCourseId(courseA.getId());
+            session.setTitle("Course A live webinar");
+            session.setSessionType("VIRTUAL_CLASS");
+            session.setSessionMode("LIVE");
+            session.setStartsAt(OffsetDateTime.now().plusDays(1));
+            session.setEndsAt(OffsetDateTime.now().plusDays(1).plusHours(2));
+            session.setLiveEventId(liveEventId);
+            session.setJoinPath("/live/event/" + liveEventId);
+            session.setCreatedBy("test");
+            sessionRepository.save(session);
+
+            Map<String, Object> structure = structureService.getStructure(TENANT, courseA.getId()).orElseThrow();
+            assertThat(structure.get("impiloLiveEventId")).isEqualTo(liveEventId.toString());
+            assertThat(structure.get("impiloLiveJoinPath")).isEqualTo("/live/event/" + liveEventId);
+            assertThat(structure.get("impiloLiveSessionId")).isEqualTo(session.getId().toString());
         }
     }
 
