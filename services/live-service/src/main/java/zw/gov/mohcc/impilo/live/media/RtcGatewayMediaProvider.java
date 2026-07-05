@@ -39,7 +39,10 @@ public class RtcGatewayMediaProvider implements LiveMediaProvider {
         request.put("patientId", context.participantId());
         request.put("providerId", context.participantId());
         request.put("facilityId", context.facilityId());
-        request.put("sessionType", "LIVE_EVENT");
+        // SessionMode carried by LiveRoomService from the event's LiveMode —
+        // determines which session-template grant taxonomy governs the room.
+        Object sessionMode = context.attributes() != null ? context.attributes().get("sessionMode") : null;
+        request.put("sessionType", sessionMode != null ? sessionMode.toString() : "LIVE_EVENT");
         // Stamp ownership so impilo.rtc.* consumers can filter (LIVE) and resolve (event id).
         request.put("owningService", "LIVE");
         if (context.eventId() != null) {

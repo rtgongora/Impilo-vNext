@@ -78,6 +78,22 @@ public enum LiveMode {
     }
 
     /**
+     * The platform SessionMode this LiveMode refines (session-template contract).
+     * Drives which token-grant taxonomy the RTC Gateway applies to the room:
+     * a WEBINAR_CPD classroom grants FACILITATOR/LEARNER publish rights, while
+     * a broadcast's AUDIENCE tier is subscribe-only. LiveMode stays the
+     * live-service-internal refinement; SessionMode is the cross-service key.
+     */
+    public String sessionMode() {
+        return switch (this) {
+            case CLINICAL_SESSION -> "TELEMEDICINE";
+            case PROFESSIONAL_MEETING -> "MEETING";
+            case WEBINAR_CPD -> "LEARNING_LIVE";
+            case PUBLIC_BROADCAST, HYBRID_EVENT, EMERGENCY_BRIEFING -> "LIVE_EVENT";
+        };
+    }
+
+    /**
      * Best-effort migration mapping from the legacy free-form {@code eventType} + {@code contextType}
      * + {@code organiserType} triad to a canonical mode. Used to backfill and to keep the legacy
      * create path working without a hard contract break.

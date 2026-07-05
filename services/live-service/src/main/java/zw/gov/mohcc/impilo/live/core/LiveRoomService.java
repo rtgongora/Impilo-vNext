@@ -53,7 +53,7 @@ public class LiveRoomService {
         MediaRoomContext ctx = new MediaRoomContext(
                 tenantId, eventId, session.getId(), participantId, role,
                 event.getFacilityId(), session.getProviderRoomId(),
-                mediaProvider.providerType(), Map.of());
+                mediaProvider.providerType(), sessionModeAttributes(event));
         if (session.getProviderRoomId() == null) {
             MediaRoomContext provisioned = mediaProvider.provisionRoom(ctx);
             session.setProviderRoomId(provisioned.providerRoomId());
@@ -72,8 +72,25 @@ public class LiveRoomService {
         MediaRoomContext ctx = new MediaRoomContext(
                 tenantId, eventId, session.getId(), participantId, role,
                 event.getFacilityId(), session.getProviderRoomId(),
-                session.getProviderType(), Map.of());
+                session.getProviderType(), sessionModeAttributes(event));
         return mediaProvider.issueToken(ctx);
+    }
+
+    /**
+     * Carry the event's platform SessionMode to the media provider so the room
+     * is provisioned against the right session-template taxonomy (a Fundo
+     * webinar is a LEARNING_LIVE classroom, not a broadcast; a professional
+     * meeting is a MEETING). Absent/unknown modes fall back to LIVE_EVENT in
+     * the provider.
+     */
+    private Map<String, Object> sessionModeAttributes(LiveEventEntity event) {
+        zw.gov.mohcc.impilo.live.domain.LiveMode mode;
+        try {
+            mode = zw.gov.mohcc.impilo.live.domain.LiveMode.fromString(event.getMode());
+        } catch (IllegalArgumentException e) {
+            mode = null;
+        }
+        return mode == null ? Map.of() : Map.of("sessionMode", mode.sessionMode());
     }
 
     @Transactional
