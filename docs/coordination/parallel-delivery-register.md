@@ -148,6 +148,13 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - **Coordinator gates (independent)**: backend `mvn -pl learning,varapi,vashandi,experience-bff -am test` = 0; type-check one-ui-shell = 0; vitest learning/registry/vashandi surfaces 42/42 (16 files).
 - **Status**: GATES_PASSED · merged into integration round 3 (`1c685f89e`, PUSHED); combined round-3 gate green: backend=0, type-check=0
 
+## WS-P4-C — Dura commodities stream (external session) — GATES_PASSED
+- **Branch**: `cursor/e2e-dura-commodities` @ `8d165ce64` · 7 commits · base `3411d6ca2` (anchor ancestor); zero overlap with anchor W1–W3
+- **Coordinator review 2026-07-04**: PASSED. 10 files +1054/−9, exactly the WS-P4-A/B board scope: low-stock telemetry wired (verified additive-only in `LedgerServiceImpl` — post-movement, outflow-only STOCKOUT_RISK, fail-safe, same transactional outbox; posting semantics untouched), the three missing test suites (`PharmacyConsumerTest`, `DuraPctControllerTest`, `LedgerServiceImplTelemetryTest`), pharmacy-elmis stub recorded in mock-and-stub register, eLMIS/NatPharm sync-status BFF proxy, stockouts/sync/balance/ledger on the Dura ops page. PharmacyConsumer touched by TEST only; no migrations; no connector behavior changes. WS-P4-A/B drafts superseded and closed.
+- **Coordinator gates (independent)**: backend `mvn -pl inventory-service,experience-bff -am test` = 0; type-check one-ui-shell = 0; vitest dura/hooks surfaces 97/97 (14 files).
+- **Integration**: merged as round 4 (`77d55abe6`); expected union conflict in `mock-and-stub-register.md` (finance + dura both appended) resolved keeping all entries; pending combined gate
+- **Status**: GATES_PASSED
+
 ## Unregistered branches detected on origin (2026-07-04 fetch)
 - `cursor/e2e-pacs-imaging-integration` — based on anchor `d44bb6022` ✓; 35 files +3398 (imaging capability/modality registry/reconciliation queue UI + viewer fix); quick forbidden-file grep clean. Not registered before pushing — needs a workstream entry, owner, and gate evidence before merge consideration.
 - `cursor/e2e-pct-care-tracker` — **stale base**: merge-base with anchor is `98d43b1cd`, not `d44bb6022`; 20 files +1217 (countersign surfacing, medications panel, gap register doc). Needs rebase onto current anchor + registration + gates before merge consideration.
