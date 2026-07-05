@@ -198,10 +198,10 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 **Schedule**: Batch 0 WS-A (RED, merges first) ∥ Batch 1 WS-B/C/E/H (parallel) → Batch 2 WS-D/F (after C) → Batch 3 WS-G (after D).
 
 ## IATG-WS-A — Platform Origin + Country Operation + two-person (RED serialized-merge)
-- Branch `fable/iatg-a-platform-origin` · worktree `/home/user/wt-iatg-a` · agent running 2026-07-05 · Status: ASSIGNED
+- Branch `fable/iatg-a-platform-origin` @ `80aebbf6f` PUSHED · 8 commits, 24 files +2162/−2 · Status: GATES_PASSED (coordinator gate EXIT=0 across governance+authz+BFF; lease verified: zero tshepo-service/bootstrap-schema/admingovernance touches; N-of-M enforced with legacy path preserved; Keycloak roles added with NO bypass linkage). WATCH ITEM for integration: governance TrustContextFilter extended to /internal/v1/* — WS-D's match endpoint lands under it.
 
 ## IATG-WS-B — organization-registry-service (new, 8153)
-- Branch `fable/iatg-b-org-registry` · worktree `/home/user/wt-iatg-b` · agent running · Status: ASSIGNED
+- Branch `fable/iatg-b-org-registry` @ `091e4c952` PUSHED · 7 commits · Status: GATES_PASSED (coordinator gate EXIT=0 org-registry+BFF; module packaging proven; BFF exactly the 3 permitted files; dual-SoR-with-mirror adoption doc + registry/port/SoR entries delivered)
 
 ## IATG-WS-C — varapi trust + channel typing
 - Branch `fable/iatg-c-varapi-trust` @ `e05e607c3` PUSHED · 8 commits · Status: GATES_PASSED (coordinator gate EXIT=0 at HEAD, 156 tests; lease-clean; trust-API contract frozen for D/F; council numbers proven absent from responses)
@@ -219,7 +219,7 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - Branch `fable/iatg-f-provider-claim` · worktree `/home/user/wt-iatg-f` · agent running 2026-07-05 · Status: ASSIGNED
 
 ## IATG-WS-G — adjudication
-- PENDING dispatch (merges after WS-D; buildable earlier)
+- Branch `fable/iatg-g-adjudication` · worktree `/home/user/wt-iatg-g` · agent running 2026-07-05 · Status: ASSIGNED (merges after WS-D per Flyway V008>V007)
 
 ## WS-M — Mobile Runtime Truth Wave (user-approved plan, parallel to IATG)
 - Branch `fable/mobile-runtime-truth` · worktree `/home/user/wt-mobile-truth` · agent running 2026-07-05 · Status: ASSIGNED
