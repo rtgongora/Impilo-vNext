@@ -1785,16 +1785,43 @@ public class TeleconsultController {
             String sessionId, String referralPatient, String identity, String normalizedPurpose,
             String tenantId, String correlationId, String facilityId, String actorId, String requestId) {
         if (referralPatient != null && !referralPatient.isBlank()) {
-            if (identity == null || !referralPatient.equals(identity)) {
+            // The referral anchor is a CPID while the caller identity is a health
+            // anchor — compare in both spaces. Direct anchor match covers referrals
+            // that carry an anchor; otherwise resolve the caller's patient record
+            // via VITO and compare CPIDs.
+            if (referralPatient.equals(identity)) {
+                return null;
+            }
+            String callerPatient = resolveCallerPatientAnchor(actorId);
+            if (callerPatient != null && referralPatient.equals(callerPatient)) {
+                return null;
+            }
+            if (callerPatient != null) {
+                // Verified linkage AND verified mismatch — hard deny.
                 telemedicineGovernanceService.audit(
                         tenantId, correlationId, normalizedPurpose, facilityId,
                         "TELEMEDICINE_PATIENT_TOKEN_DENIED", "POST:teleconsult/media/token", "DENIED",
                         actorId, "PATIENT", referralPatient, "TeleconsultSession", sessionId,
-                        Map.of("reason", "caller identity does not match referral patient"));
+                        Map.of("reason", "caller's patient record does not match the referral patient",
+                                "callerPatient", callerPatient));
                 return error(HttpStatus.FORBIDDEN, "PATIENT_IDENTITY_MISMATCH",
                         "A PATIENT-role media token may only be requested by the referral's patient",
                         requestId, correlationId);
             }
+            // Linkage unverifiable (no caller↔patient link on this identity plane):
+            // fail toward the WAITING ROOM, not open media — the token request still
+            // lands the caller in the lobby and the provider's admit is the human
+            // verification. Requires TREATMENT purpose; fully audited.
+            if (!"TREATMENT".equals(normalizedPurpose)) {
+                return error(HttpStatus.FORBIDDEN, "PATIENT_LINKAGE_UNVERIFIED",
+                        "PATIENT-role media tokens require purpose-of-use TREATMENT when the caller's "
+                                + "patient linkage cannot be verified", requestId, correlationId);
+            }
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, normalizedPurpose, facilityId,
+                    "TELEMEDICINE_PATIENT_TOKEN_LINKAGE_UNVERIFIED", "POST:teleconsult/media/token", "SUCCESS",
+                    actorId, "PATIENT", referralPatient, "TeleconsultSession", sessionId,
+                    Map.of("reason", "caller patient linkage unverifiable; admitted to waiting room only"));
             return null;
         }
         if (!"TREATMENT".equals(normalizedPurpose)) {
@@ -1808,6 +1835,36 @@ public class TeleconsultController {
                 actorId, "PATIENT", null, "TeleconsultSession", sessionId,
                 Map.of("reason", "referral has no derivable patient anchor; allowed under TREATMENT"));
         return null;
+    }
+
+    /**
+     * Resolve the caller's patient anchor (CPID) from their health anchor via VITO.
+     * Null when no linkage is derivable — the caller then only reaches the waiting room.
+     */
+    private String resolveCallerPatientAnchor(String actorId) {
+        if (actorId == null || actorId.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode identity = vitoClient.resolveIdentity(actorId);
+            if (identity == null || identity.isNull()) {
+                return null;
+            }
+            JsonNode node = identity.has("data") ? identity.get("data") : identity;
+            JsonNode attrs = node.has("attributes") ? node.get("attributes") : node;
+            for (String field : new String[]{"cpid", "patient_id", "patientId"}) {
+                if (attrs.hasNonNull(field)) {
+                    return attrs.get(field).asText();
+                }
+                if (node.hasNonNull(field)) {
+                    return node.get(field).asText();
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            log.debug("Caller patient-anchor resolution failed for {}: {}", actorId, e.getMessage());
+            return null;
+        }
     }
 
     /**

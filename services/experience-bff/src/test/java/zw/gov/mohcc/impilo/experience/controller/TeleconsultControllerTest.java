@@ -415,10 +415,13 @@ class TeleconsultControllerTest {
     }
 
     @Test
-    void issueMediaToken_patientRoleIdentityMismatchIsForbidden() {
+    void issueMediaToken_patientRoleVerifiedMismatchIsForbidden() {
         Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
         Mockito.when(pctClient.getReferral("ref-gov-1"))
                 .thenReturn(consentedReferral("ref-gov-1", "CPID-9", "prov-1"));
+        // The caller's health anchor resolves to a DIFFERENT patient — verified mismatch.
+        Mockito.when(vitoClient.resolveIdentity("intruder-1"))
+                .thenReturn(objectMapper.createObjectNode().put("cpid", "CPID-OTHER"));
 
         var response = controller.issueMediaToken(
                 "ref-gov-1", "req-g", "corr-g", "tenant-a", "TREATMENT", "fac-1", "intruder-1",
@@ -428,6 +431,46 @@ class TeleconsultControllerTest {
         Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
         assertEquals("PATIENT_IDENTITY_MISMATCH", error.get("code"));
         Mockito.verifyNoInteractions(rtcClient);
+    }
+
+    @Test
+    void issueMediaToken_patientRoleVerifiedMatchProceeds() {
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
+        Mockito.when(pctClient.getReferral("ref-gov-2"))
+                .thenReturn(consentedReferral("ref-gov-2", "CPID-9", "prov-1"));
+        Mockito.when(vitoClient.resolveIdentity("patient-anchor-1"))
+                .thenReturn(objectMapper.createObjectNode().put("cpid", "CPID-9"));
+        Mockito.when(rtcClient.issueParticipantToken(any(), any()))
+                .thenReturn(objectMapper.createObjectNode()
+                        .put("room_url", "ws://livekit:7880").put("token", "jwt"));
+
+        var response = controller.issueMediaToken(
+                "ref-gov-2", "req-g2", "corr-g2", "tenant-a", "TREATMENT", "fac-1", "patient-anchor-1",
+                Map.of("role", "PATIENT"));
+
+        assertEquals(200, response.getStatusCode().value());
+    }
+
+    @Test
+    void issueMediaToken_patientRoleUnverifiableLinkageReachesTheLobbyOnly() {
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
+        Mockito.when(pctClient.getReferral("ref-gov-3"))
+                .thenReturn(consentedReferral("ref-gov-3", "CPID-9", "prov-1"));
+        // No caller↔patient linkage derivable (VITO has no record for the anchor).
+        Mockito.when(vitoClient.resolveIdentity("unlinked-1")).thenReturn(null);
+        // The rtc lobby holds the un-admitted patient at WAITING (frozen contract).
+        Mockito.when(rtcClient.issueParticipantToken(any(), any()))
+                .thenReturn(objectMapper.createObjectNode().put("status", "WAITING"));
+
+        var response = controller.issueMediaToken(
+                "ref-gov-3", "req-g3", "corr-g3", "tenant-a", "TREATMENT", "fac-1", "unlinked-1",
+                Map.of("role", "PATIENT"));
+
+        assertEquals(200, response.getStatusCode().value());
+        Mockito.verify(governanceService).audit(
+                any(), any(), any(), any(),
+                Mockito.eq("TELEMEDICINE_PATIENT_TOKEN_LINKAGE_UNVERIFIED"),
+                any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
