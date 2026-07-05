@@ -101,6 +101,12 @@ public class LiveSessionIntegration {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        // live-service enforces the full v1.1 companion header set; this call
+        // originates service-side, so the mandatory identifiers are synthesized
+        // when the inbound context can't supply them.
+        headers.set(CompanionHeaders.POD_ID, "learning-service");
+        headers.set(CompanionHeaders.REQUEST_ID, java.util.UUID.randomUUID().toString());
+        headers.set("Idempotency-Key", "learning-live-schedule:" + java.util.UUID.randomUUID());
         RequestContext ctx = RequestContextHolder.get();
         if (ctx != null) {
             if (ctx.tenantId() != null) {
@@ -109,9 +115,11 @@ public class LiveSessionIntegration {
             if (ctx.principal() != null && ctx.principal().getName() != null) {
                 headers.set(CompanionHeaders.ACTOR_ID, ctx.principal().getName());
             }
-            if (ctx.correlationId() != null) {
-                headers.set(CompanionHeaders.CORRELATION_ID, ctx.correlationId());
-            }
+            headers.set(CompanionHeaders.CORRELATION_ID,
+                    ctx.correlationId() != null ? ctx.correlationId()
+                            : java.util.UUID.randomUUID().toString());
+        } else {
+            headers.set(CompanionHeaders.CORRELATION_ID, java.util.UUID.randomUUID().toString());
         }
         return headers;
     }
