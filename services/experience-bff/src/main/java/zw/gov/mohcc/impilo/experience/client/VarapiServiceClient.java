@@ -323,4 +323,85 @@ public class VarapiServiceClient {
                 restTemplate.postForEntity(url, new HttpEntity<>(body != null ? body : Map.of()), JsonNode.class);
         return response.getBody();
     }
+
+    // ── Provider self-claim / recovery glue (IATG WS-F) ───────────────────────
+
+    /**
+     * Preview what a bootstrap claim token would claim (read-only, token in
+     * the body so it stays out of access logs). 404 for any non-redeemable
+     * token — Varapi never leaks why.
+     */
+    public JsonNode claimPreview(Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/providers/bootstrap/claim/preview";
+        log.info("VARAPI: previewing provider claim token");
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return response.getBody();
+    }
+
+    /**
+     * Redeem a bootstrap claim token onto the claimant's own Health ID.
+     * Downstream burn is atomic and single-use; 409s propagate to the caller.
+     */
+    public JsonNode claim(Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/providers/bootstrap/claim";
+        log.info("VARAPI: claiming provider profile for claimant");
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return response.getBody();
+    }
+
+    /**
+     * Initiate provider profile recovery (recover-not-reissue): issues a
+     * single-use recovery token bound to the person's EXISTING profile.
+     */
+    public JsonNode recoveryInitiate(Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/providers/recovery/initiate";
+        log.info("VARAPI: initiating provider profile recovery");
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return response.getBody();
+    }
+
+    /**
+     * Complete provider profile recovery: atomically redeems the recovery
+     * token and re-links the login to the SAME providerPublicId.
+     */
+    public JsonNode recoveryComplete(Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/providers/recovery/complete";
+        log.info("VARAPI: completing provider profile recovery");
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return response.getBody();
+    }
+
+    /**
+     * Record a verification attempt on a provider's trust ledger (WS-C trust
+     * API — HTTP contract: {type, source, ref, outcome, confidence}). The ref
+     * MUST arrive pre-masked from the experience layer.
+     */
+    public JsonNode recordVerificationAttempt(String providerId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/providers/"
+                + URLEncoder.encode(providerId, StandardCharsets.UTF_8) + "/verification-attempts";
+        log.info("VARAPI: recording verification attempt for provider={}", providerId);
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return response.getBody();
+    }
+
+    /**
+     * Resolve a council registration number to its provider reference
+     * (anti-enumeration: a miss is an empty resolution, not a 404).
+     */
+    public JsonNode resolveCouncilNumber(String registrationNumber, String councilCode) {
+        StringBuilder sb = new StringBuilder(baseUrl)
+                .append("/v1/internal/providers/resolve-council-number?registrationNumber=")
+                .append(URLEncoder.encode(registrationNumber, StandardCharsets.UTF_8));
+        if (councilCode != null && !councilCode.isBlank()) {
+            sb.append("&councilCode=").append(URLEncoder.encode(councilCode, StandardCharsets.UTF_8));
+        }
+        log.info("VARAPI: resolving council registration number");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(sb.toString(), JsonNode.class);
+        return extractData(response);
+    }
 }
