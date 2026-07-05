@@ -221,7 +221,7 @@ public class KhulumaController {
                 : req.participants().stream()
                     .map(p -> new ConversationService.NewParticipant(p.actorId(), p.actorType(), p.displayName(), p.role()))
                     .toList();
-        MeetingResult result = meetingService.create(ctx, req.title(), participants);
+        MeetingResult result = meetingService.create(ctx, req.title(), participants, req.scheduledAt());
         return ResponseEntity.status(HttpStatus.CREATED).body(new MeetingResponse(
                 result.conversationId(), result.eventId(), result.available(), null, null, null, result.error()));
     }
@@ -248,12 +248,14 @@ public class KhulumaController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /** Lobby-aware join: READY carries a token; WAITING/DENIED are KNOCK-lobby outcomes (poll again). */
     @PostMapping("/conversations/{id}/meeting/join")
-    public ResponseEntity<MeetingResponse> joinMeeting(@PathVariable UUID id) {
+    public ResponseEntity<MeetingJoinResponse> joinMeeting(@PathVariable UUID id) {
         ActorContext ctx = contextResolver.resolve();
         MeetingJoin join = meetingService.join(ctx, id);
-        return ResponseEntity.ok(new MeetingResponse(join.conversationId(), join.eventId(),
-                join.mediaAvailable(), join.roomUrl(), join.accessToken(), join.provider(), join.error()));
+        return ResponseEntity.ok(new MeetingJoinResponse(join.conversationId(), join.eventId(),
+                join.status(), join.role(), join.rtcSessionId(), join.mediaAvailable(),
+                join.roomUrl(), join.accessToken(), join.provider(), join.error()));
     }
 
     @PostMapping("/conversations/{id}/meeting/end")
@@ -261,6 +263,119 @@ public class KhulumaController {
         ActorContext ctx = contextResolver.resolve();
         meetingService.end(ctx, id);
         return ResponseEntity.accepted().build();
+    }
+
+    // ── meeting lobby (host/cohost moderation over the rtc KNOCK waiting-room) ─
+
+    @GetMapping("/conversations/{id}/meeting/lobby")
+    public ResponseEntity<List<AdmissionResponse>> meetingLobby(@PathVariable UUID id) {
+        ActorContext ctx = contextResolver.resolve();
+        return ResponseEntity.ok(meetingService.lobby(ctx, id).stream().map(AdmissionResponse::of).toList());
+    }
+
+    @PostMapping("/conversations/{id}/meeting/lobby/admit")
+    public ResponseEntity<AdmissionResponse> admitToMeeting(@PathVariable UUID id,
+                                                            @RequestBody LobbyDecisionRequest req) {
+        ActorContext ctx = contextResolver.resolve();
+        return ResponseEntity.ok(AdmissionResponse.of(meetingService.admit(ctx, id, req.actorId())));
+    }
+
+    @PostMapping("/conversations/{id}/meeting/lobby/deny")
+    public ResponseEntity<AdmissionResponse> denyFromMeeting(@PathVariable UUID id,
+                                                             @RequestBody LobbyDecisionRequest req) {
+        ActorContext ctx = contextResolver.resolve();
+        return ResponseEntity.ok(AdmissionResponse.of(meetingService.deny(ctx, id, req.actorId(), req.reason())));
+    }
+
+    // ── co-hosts, raise-hand, reactions ────────────────────────────────────────
+
+    @PostMapping("/conversations/{id}/meeting/cohosts")
+    public ResponseEntity<Void> assignCohost(@PathVariable UUID id, @RequestBody CohostRequest req) {
+        ActorContext ctx = contextResolver.resolve();
+        meetingService.setCohost(ctx, id, req.actorId(), true);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/conversations/{id}/meeting/cohosts/{actorId}")
+    public ResponseEntity<Void> revokeCohost(@PathVariable UUID id, @PathVariable String actorId) {
+        ActorContext ctx = contextResolver.resolve();
+        meetingService.setCohost(ctx, id, actorId, false);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/conversations/{id}/meeting/hand")
+    public ResponseEntity<Void> raiseHand(@PathVariable UUID id, @RequestBody RaiseHandRequest req) {
+        ActorContext ctx = contextResolver.resolve();
+        meetingService.raiseHand(ctx, id, req.raised() == null || req.raised());
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/conversations/{id}/meeting/reactions")
+    public ResponseEntity<Void> react(@PathVariable UUID id, @RequestBody ReactionRequest req) {
+        ActorContext ctx = contextResolver.resolve();
+        meetingService.react(ctx, id, req.reaction());
+        return ResponseEntity.accepted().build();
+    }
+
+    // ── action items ───────────────────────────────────────────────────────────
+
+    @GetMapping("/conversations/{id}/meeting/action-items")
+    public ResponseEntity<List<ActionItemResponse>> listActionItems(@PathVariable UUID id) {
+        ActorContext ctx = contextResolver.resolve();
+        return ResponseEntity.ok(meetingService.listActionItems(ctx, id).stream()
+                .map(ActionItemResponse::of).toList());
+    }
+
+    @PostMapping("/conversations/{id}/meeting/action-items")
+    public ResponseEntity<ActionItemResponse> createActionItem(@PathVariable UUID id,
+                                                               @RequestBody ActionItemRequest req) {
+        ActorContext ctx = contextResolver.resolve();
+        return ResponseEntity.status(HttpStatus.CREATED).body(ActionItemResponse.of(
+                meetingService.createActionItem(ctx, id, req.description(), req.assigneeId(),
+                        req.assigneeDisplayName(), parseDate(req.dueDate()))));
+    }
+
+    @PatchMapping("/conversations/{id}/meeting/action-items/{itemId}")
+    public ResponseEntity<ActionItemResponse> updateActionItem(@PathVariable UUID id, @PathVariable UUID itemId,
+                                                               @RequestBody ActionItemRequest req) {
+        ActorContext ctx = contextResolver.resolve();
+        return ResponseEntity.ok(ActionItemResponse.of(
+                meetingService.updateActionItem(ctx, id, itemId, req.status(), req.description(),
+                        req.assigneeId(), req.assigneeDisplayName(), parseDate(req.dueDate()))));
+    }
+
+    // ── invite links + meeting detail ──────────────────────────────────────────
+
+    @PostMapping("/conversations/{id}/meeting/invite-links")
+    public ResponseEntity<InviteResponse> mintInvite(@PathVariable UUID id,
+                                                     @RequestBody(required = false) InviteMintRequest req) {
+        ActorContext ctx = contextResolver.resolve();
+        var invite = meetingService.createInvite(ctx, id,
+                req != null ? req.role() : null, req != null ? req.ttlSeconds() : null);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new InviteResponse(invite.token(), invite.expiresAt().toString(), invite.role()));
+    }
+
+    /** Resolve an invite token for the AUTHENTICATED caller: joins them and returns the meeting handle. */
+    @PostMapping("/meetings/invites/resolve")
+    public ResponseEntity<InviteResolveResponse> resolveInvite(@RequestBody InviteResolveRequest req) {
+        ActorContext ctx = contextResolver.resolve();
+        MeetingResult result = meetingService.resolveInvite(ctx, req.token());
+        return ResponseEntity.ok(new InviteResolveResponse(result.conversationId(), result.eventId()));
+    }
+
+    @GetMapping("/conversations/{id}/meeting")
+    public ResponseEntity<MeetingDetailResponse> meetingDetail(@PathVariable UUID id) {
+        ActorContext ctx = contextResolver.resolve();
+        MeetingService.MeetingDetail detail = meetingService.detail(ctx, id);
+        return ResponseEntity.ok(new MeetingDetailResponse(detail.conversationId(), detail.eventId(),
+                detail.title(), detail.eventStatus(), detail.scheduledAt(), detail.endTime(),
+                detail.hostId(), detail.cohostIds(),
+                detail.attendance().stream().map(AdmissionResponse::of).toList()));
+    }
+
+    private static java.time.LocalDate parseDate(String date) {
+        return date == null || date.isBlank() ? null : java.time.LocalDate.parse(date.trim());
     }
 
     // ── helpers ─────────────────────────────────────────────────────────────

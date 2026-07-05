@@ -35,6 +35,12 @@ public class KhulumaExceptionHandler {
         return error(HttpStatus.UNAUTHORIZED, "unauthorized", ex.getMessage());
     }
 
+    @ExceptionHandler(zw.gov.mohcc.impilo.khuluma.core.MeetingMediaUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> mediaUnavailable(
+            zw.gov.mohcc.impilo.khuluma.core.MeetingMediaUnavailableException ex) {
+        return error(HttpStatus.SERVICE_UNAVAILABLE, "media_unavailable", ex.getMessage());
+    }
+
     private ResponseEntity<Map<String, Object>> error(HttpStatus status, String code, String message) {
         return ResponseEntity.status(status).body(Map.of("error", Map.of(
                 "code", code, "message", message == null ? code : message)));

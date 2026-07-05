@@ -49,9 +49,24 @@ public final class KhulumaDtos {
 
     public record SignalRequest(String signalType, Map<String, Object> detail) {}
 
-    public record CreateMeetingRequest(String title, List<ParticipantInput> participants) {}
+    public record CreateMeetingRequest(String title, List<ParticipantInput> participants, String scheduledAt) {}
 
     public record MeetingFromEventRequest(String eventId, String title, List<ParticipantInput> participants) {}
+
+    public record LobbyDecisionRequest(String actorId, String reason) {}
+
+    public record CohostRequest(String actorId) {}
+
+    public record RaiseHandRequest(Boolean raised) {}
+
+    public record ReactionRequest(String reaction) {}
+
+    public record ActionItemRequest(String description, String assigneeId, String assigneeDisplayName,
+                                    String dueDate, String status) {}
+
+    public record InviteMintRequest(String role, Long ttlSeconds) {}
+
+    public record InviteResolveRequest(String token) {}
 
     // ── responses ─────────────────────────────────────────────────────────────
 
@@ -153,6 +168,41 @@ public final class KhulumaDtos {
 
     public record MeetingResponse(String conversationId, String eventId, boolean mediaAvailable,
                                   String roomUrl, String accessToken, String provider, String error) {}
+
+    /** Lobby-aware join outcome: {@code status} READY|WAITING|DENIED|UNAVAILABLE. */
+    public record MeetingJoinResponse(String conversationId, String eventId, String status, String role,
+                                      String rtcSessionId, boolean mediaAvailable, String roomUrl,
+                                      String accessToken, String provider, String error) {}
+
+    public record AdmissionResponse(String actorId, String actorType, String displayName, String role,
+                                    String status, String requestedAt, String decidedBy, String decidedAt,
+                                    String deniedReason, String joinedAt, String leftAt) {
+        public static AdmissionResponse of(zw.gov.mohcc.impilo.khuluma.domain.MeetingAdmissionEntity a) {
+            return new AdmissionResponse(a.getActorId(), a.getActorType(), a.getDisplayName(),
+                    a.getMeetingRole(), a.getStatus(), str(a.getRequestedAt()), a.getDecidedBy(),
+                    str(a.getDecidedAt()), a.getDeniedReason(), str(a.getJoinedAt()), str(a.getLeftAt()));
+        }
+    }
+
+    public record ActionItemResponse(String actionItemId, String conversationId, String description,
+                                     String assigneeId, String assigneeDisplayName, String dueDate,
+                                     String status, String createdBy, String createdAt, String updatedAt) {
+        public static ActionItemResponse of(zw.gov.mohcc.impilo.khuluma.domain.MeetingActionItemEntity i) {
+            return new ActionItemResponse(str(i.getActionItemId()), str(i.getConversationId()),
+                    i.getDescription(), i.getAssigneeId(), i.getAssigneeDisplayName(),
+                    str(i.getDueDate()), i.getStatus(), i.getCreatedBy(),
+                    str(i.getCreatedAt()), str(i.getUpdatedAt()));
+        }
+    }
+
+    public record InviteResponse(String token, String expiresAt, String role) {}
+
+    public record InviteResolveResponse(String conversationId, String eventId) {}
+
+    public record MeetingDetailResponse(String conversationId, String eventId, String title,
+                                        String eventStatus, String scheduledAt, String endTime,
+                                        String hostId, List<String> cohostIds,
+                                        List<AdmissionResponse> attendance) {}
 
     private static String str(Object o) {
         return o != null ? o.toString() : null;
