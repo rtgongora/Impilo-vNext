@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Calendar, Radio, User } from "lucide-react";
+import { Calendar, Clapperboard, Radio, User } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { LiveNompiloAssistPanel } from "@/components/live/LiveNompiloAssistPanel";
@@ -12,9 +12,12 @@ import {
   useLiveMyRegistrations,
   useLiveParticipant,
   useLiveRegister,
+  useLiveStageRole,
   useScheduleLiveEvent,
   useLiveStartRoom,
 } from "@/hooks/queries/useLive";
+
+const BROADCAST_MODES = new Set(["PUBLIC_BROADCAST", "EMERGENCY_BRIEFING", "HYBRID_EVENT"]);
 
 export default function LiveEventDetailPage() {
   const params = useParams();
@@ -29,6 +32,14 @@ export default function LiveEventDetailPage() {
   const myReg = registrations.find((r) => r.eventId === eventId);
   const isLive = event?.status === "LIVE";
   const isEnded = event?.status === "ENDED";
+
+  // Role-aware CTAs: server-resolved tier (crew → producer console, approved
+  // speaker → join stage, everyone else → watch/register).
+  const isBroadcast = BROADCAST_MODES.has(event?.mode ?? "");
+  const { data: stageRole } = useLiveStageRole(eventId, isBroadcast && !isEnded);
+  const tier = stageRole?.tier;
+  const isCrew = tier === "HOST" || tier === "PRODUCER";
+  const isSpeaker = tier === "SPEAKER";
 
   if (isLoading) {
     return (
@@ -86,13 +97,24 @@ export default function LiveEventDetailPage() {
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                {isLive || myReg ? (
+                {isCrew ? (
+                  <Link
+                    href={`/live/event/${eventId}/backstage`}
+                    className="inline-flex items-center gap-1 rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-white"
+                    data-testid="cta-backstage"
+                  >
+                    <Clapperboard className="h-4 w-4" />
+                    Producer console
+                  </Link>
+                ) : null}
+                {isLive || myReg || isCrew || isSpeaker ? (
                   <Link
                     href={`/live/event/${eventId}/room`}
                     className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-2 text-sm font-medium text-white"
+                    data-testid="cta-room"
                   >
                     <Radio className="h-4 w-4" />
-                    {isLive ? "Join live" : "Enter room"}
+                    {isSpeaker ? "Join stage" : isLive ? "Join live" : "Enter room"}
                   </Link>
                 ) : !isEnded ? (
                   <button
@@ -130,7 +152,7 @@ export default function LiveEventDetailPage() {
                   </button>
                 ) : null}
 
-                {event.status === "SCHEDULED" ? (
+                {event.status === "SCHEDULED" && (!isBroadcast || isCrew) ? (
                   <button
                     type="button"
                     onClick={() => startRoom.mutate(eventId)}
