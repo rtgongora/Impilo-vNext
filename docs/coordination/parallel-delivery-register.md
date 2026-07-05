@@ -216,7 +216,13 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - Branch `fable/iatg-d-channel-b` @ `4a170266b` PUSHED · 7 commits, 16 files · Status: GATES_PASSED (coordinator gate EXIT=0: governance 24 + BFF 761 tests; lease clean; EC numbers masked everywhere with serialization proofs; CONFLICT never leaks other person's Health ID; four-block trust profile with per-block honest degradation; no provider creation in Wave 1 — providerCreationRequired flag)
 
 ## IATG-WS-F — provider self-service claim/recovery
-- Branch `fable/iatg-f-provider-claim` · worktree `/home/user/wt-iatg-f` · agent running 2026-07-05 · Status: ASSIGNED
+- Branch `fable/iatg-f-provider-claim` @ `70980a4d7` PUSHED · 5 commits · Status: GATES_PASSED (coordinator gates: mvn=0, type-check=0, vitest=0; varapi adds-only verified by name-status; recover-not-reissue with same-providerPublicId integrity guard; EC evidence flag-gated 501 until WS-D wiring enabled; honest 501s for document/org-invitation)
+
+## IATG INTEGRATION — COMPLETE 2026-07-05
+- Branch `integration/fable-iatg-wave1-2026-07-05` @ `fdf3b1f46` PUSHED. All NINE branches merged conflict-free in mandated order (A→B→C→E→H→D→F→G→M) off anchor `74c22f480`.
+- **Program invariants verified on merged tree**: `services/tshepo-service/**` touches = 0 across 171 files (+14,893/−37); governance Flyway perfect sequence V005→V008; zero migration duplicates in any touched service; WS-A TrustContextFilter × WS-D/WS-G endpoint interaction proven by green governance suite on the merged tree.
+- **Combined gates (coordinator-run, real exit codes)**: backend `mvn -pl governance,varapi,tuso,workflow,org-registry,tshepo-authz,experience-bff -am test` = 0 with zero [ERROR]; one-ui-shell type-check = 0; citizen/auth vitest = 0; mobile typecheck = 0.
+- **ANCHOR-MERGE RECOMMENDATION: READY** — awaiting explicit user authorization. Contents: complete IATG Wave 1 (Platform Origin→Country Operation→National Admins with two-person enforcement; organization-registry-service:8153; provider trust/channels/registry-status; Channel-B EC matching + four-block trust profile; tuso per-source legitimacy; provider claim/recovery journey; adjudication definitions + append-only decision records; doctrine + leases + demo script) + WS-M mobile truth fixes (client-id mismatch, network security config, scheme fix, Maestro flows, CI gate, VM runbook — statuses honestly NOT_PROVEN pending VM evidence).
 
 ## IATG-WS-G — adjudication
 - Branch `fable/iatg-g-adjudication` @ `ba43c320e` PUSHED · 4 commits · Status: GATES_PASSED (coordinator gate EXIT=0; engine untouched — SQL seed + tests only; append-only enforced at trigger/service/test layers; controller tolerates both TrustContextFilter registrations). MERGE CONSTRAINT: after WS-D (governance V008 > V007).
