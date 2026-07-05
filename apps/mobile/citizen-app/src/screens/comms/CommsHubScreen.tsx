@@ -22,14 +22,13 @@ import {
   declineCall,
   endCall,
   createMeeting,
-  joinMeeting,
   endMeeting,
-  meetingToCall,
   type CommsConversationSummary,
   type CommsConversationDetail,
   type CommsMessage,
   type CommsCall,
 } from "../../services/khulumaCommsService";
+import { MeetingScreen } from "./MeetingScreen";
 
 export const CommsHubScreen: React.FC = () => {
   const [conversations, setConversations] = useState<CommsConversationSummary[]>([]);
@@ -42,6 +41,8 @@ export const CommsHubScreen: React.FC = () => {
   const [activeCall, setActiveCall] = useState<
     { call: CommsCall; direction: "incoming" | "outgoing"; kind: "call" | "meeting" } | null
   >(null);
+  // W5: meetings render the dedicated join-capable MeetingScreen (KNOCK lobby + grid room).
+  const [activeMeeting, setActiveMeeting] = useState<{ conversationId: string; title: string | null } | null>(null);
   const [incoming, setIncoming] = useState<CommsCall | null>(null);
 
   const loadInbox = useCallback(async () => {
@@ -118,9 +119,12 @@ export const CommsHubScreen: React.FC = () => {
 
   const handleStartMeeting = useCallback(async () => {
     if (!selectedId || !detail) return;
+    if (detail.type === "MEETING") {
+      setActiveMeeting({ conversationId: selectedId, title: detail.title ?? "Meeting" });
+      return;
+    }
     const meeting = await createMeeting(detail.title ?? "Meeting", participantCallees());
-    const joined = await joinMeeting(meeting.conversationId);
-    setActiveCall({ call: meetingToCall(joined), direction: "outgoing", kind: "meeting" });
+    setActiveMeeting({ conversationId: meeting.conversationId, title: detail.title ?? "Meeting" });
   }, [selectedId, detail, participantCallees]);
 
   const handleAccept = useCallback(async () => {
@@ -144,6 +148,16 @@ export const CommsHubScreen: React.FC = () => {
     await ending.catch(() => undefined);
     setActiveCall(null);
   }, [activeCall]);
+
+  if (activeMeeting) {
+    return (
+      <MeetingScreen
+        conversationId={activeMeeting.conversationId}
+        title={activeMeeting.title}
+        onLeave={() => setActiveMeeting(null)}
+      />
+    );
+  }
 
   if (activeCall) {
     const isVideo = activeCall.call.callType === "VIDEO";

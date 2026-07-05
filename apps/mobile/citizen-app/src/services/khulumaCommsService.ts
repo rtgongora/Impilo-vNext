@@ -146,6 +146,10 @@ export interface CommsMeeting {
   accessToken: string | null;
   provider: string | null;
   error: string | null;
+  /** W5 KNOCK lobby outcome on meeting joins: READY | WAITING | DENIED | UNAVAILABLE. */
+  status?: "READY" | "WAITING" | "DENIED" | "UNAVAILABLE" | null;
+  /** MEETING template role the token was minted for (HOST|COHOST|PARTICIPANT|OBSERVER). */
+  role?: string | null;
 }
 
 export async function createMeeting(
@@ -166,6 +170,25 @@ export async function joinMeeting(conversationId: string): Promise<CommsMeeting>
 
 export async function endMeeting(conversationId: string): Promise<void> {
   await apiClient.post(`${V1}/conversations/${encodeURIComponent(conversationId)}/meeting/end`, {});
+}
+
+/** Raise/lower the caller's hand in a meeting (governed realtime event, audited khuluma-side). */
+export async function raiseHand(conversationId: string, raised: boolean): Promise<void> {
+  await apiClient.post(`${V1}/conversations/${encodeURIComponent(conversationId)}/meeting/hand`, { raised });
+}
+
+/** Send an emoji reaction to a meeting (governed realtime event). */
+export async function sendMeetingReaction(conversationId: string, reaction: string): Promise<void> {
+  await apiClient.post(`${V1}/conversations/${encodeURIComponent(conversationId)}/meeting/reactions`, { reaction });
+}
+
+/** Resolve an HMAC meeting invite token for the authenticated user → the meeting handle. */
+export async function resolveMeetingInvite(token: string): Promise<{ conversationId: string; eventId: string | null }> {
+  const response = await apiClient.post<{ conversationId: string; eventId: string | null }>(
+    `${V1}/meetings/invites/resolve`,
+    { token },
+  );
+  return response.data;
 }
 
 /** Compose with Impilo Live: attach (idempotently) a Khuluma discussion to an existing live event. */

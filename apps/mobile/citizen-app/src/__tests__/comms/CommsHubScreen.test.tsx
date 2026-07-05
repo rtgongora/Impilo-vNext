@@ -53,6 +53,9 @@ const svc = vi.hoisted(() => ({
   createMeeting: vi.fn(),
   joinMeeting: vi.fn(),
   endMeeting: vi.fn(),
+  raiseHand: vi.fn(),
+  sendMeetingReaction: vi.fn(),
+  resolveMeetingInvite: vi.fn(),
   meetingToCall: vi.fn((m: { conversationId: string; eventId: string | null }) => ({
     callId: m.eventId ?? m.conversationId,
     conversationId: m.conversationId,
@@ -69,6 +72,11 @@ const svc = vi.hoisted(() => ({
 }));
 
 vi.mock("../../services/khulumaCommsService", () => svc);
+
+// MeetingScreen renders the shared native session room — keep LiveKit out of jsdom.
+vi.mock("@impilo/mobile-session", () => ({
+  AdaptiveSessionRoomNative: () => null,
+}));
 
 import { CommsHubScreen } from "../../screens/comms/CommsHubScreen";
 
@@ -161,7 +169,7 @@ describe("CommsHubScreen", () => {
     expect(svc.startCall).toHaveBeenCalledWith("c1", "VIDEO", expect.any(Array));
   });
 
-  it("creates and joins a virtual meeting, opening the media room", async () => {
+  it("creates a virtual meeting and opens the join-capable MeetingScreen (W5)", async () => {
     mounted = renderScreen();
     await flush();
     act(() => byTestId(mounted!.container, "conversation-c1").dispatchEvent(new MouseEvent("click", { bubbles: true })));
@@ -170,8 +178,23 @@ describe("CommsHubScreen", () => {
     act(() => byTestId(mounted!.container, "start-meeting").dispatchEvent(new MouseEvent("click", { bubbles: true })));
     await flush();
     expect(svc.createMeeting).toHaveBeenCalledWith("Dr B", expect.any(Array));
+    // MeetingScreen owns the join (KNOCK lobby): it knocks on mount for the new meeting.
     expect(svc.joinMeeting).toHaveBeenCalledWith("m-1");
-    // The active-call (meeting) surface renders.
-    expect(byTestId(mounted.container, "comms-call")).toBeTruthy();
+    // READY join (token present) → the meeting room surface renders.
+    expect(byTestId(mounted.container, "meeting-room")).toBeTruthy();
+  });
+
+  it("a WAITING join keeps the participant in the meeting lobby", async () => {
+    svc.joinMeeting.mockResolvedValue({
+      conversationId: "m-1", eventId: "ev-1", status: "WAITING", role: "PARTICIPANT",
+      mediaAvailable: false, roomUrl: null, accessToken: null, provider: null, error: null,
+    });
+    mounted = renderScreen();
+    await flush();
+    act(() => byTestId(mounted!.container, "conversation-c1").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    await flush();
+    act(() => byTestId(mounted!.container, "start-meeting").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    await flush();
+    expect(byTestId(mounted.container, "meeting-waiting")).toBeTruthy();
   });
 });
