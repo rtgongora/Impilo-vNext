@@ -55,6 +55,7 @@
 | `observability-service` | `observability-service` | integration | platform-ops | — | Observability canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `offline-edge-service` | `offline-edge-service` | integration | platform-ops | — | Offline Edge canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `offline-sync-service` | `offline-sync-service` | integration | interoperability | — | Offline Sync canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
+| `organization-registry-service` | `organization-registry-service` | registry | registry-spine | — | organization registry, authorized representatives, Channel-C onboarding claims (port 8153) | tshepo-authz-service | experience-bff, integration-hub | must-not-own-facility-registry, must-not-own-provider-professional-registry, must-not-own-hsc-employment, must-not-own-identity-assurance-policy |
 | `oros-service` | `oros-service` | clinical | care-delivery | — | Oros canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
 | `pacs-adapter-service` | `pacs-adapter-service` | clinical | care-delivery | — | Pacs Adapter canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
 | `pct-service` | `pct-service` | clinical | care-delivery | — | Pct canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
@@ -88,3 +89,16 @@
 | `workflow-service` | `workflow-service` | integration | interoperability | — | Workflow canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `workforce-governance-service` | `workforce-governance-service` | enterprise | workforce-operations | — | Workforce Governance canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy |
 | `zibo-service` | `zibo-service` | registry | terminology | ZIBO | Zibo canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-authorize-access-decisions, must-not-own-clinical-encounters |
+
+## Trust-dimension ownership (Access Governance Doctrine)
+
+Per [`docs/doctrine/identity-access-trust-governance.md`](../doctrine/identity-access-trust-governance.md) §9,
+each granular trust block has exactly one owning system of record:
+
+| Trust dimension | Owning service |
+|---|---|
+| Identity trust (Health ID verified, biographic, contact) | `identity-assurance-service` |
+| Professional trust (council registration, qualification, cadre, scope, licence) | `varapi-service` |
+| Employment trust (EC matched, HSC/MoHCC matched, posting, supervisor) | `workforce-governance-service` |
+| Operational trust (facility assignment, workspace, shift context) | `vashandi-workforce-service` |
+| Trust profile **composition** (read-side assembly of the four blocks) | `experience-bff` — explicitly **NON-SoR**: composition only, owns no trust facts |

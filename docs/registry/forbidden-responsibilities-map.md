@@ -55,6 +55,7 @@
 | `observability-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `offline-edge-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `offline-sync-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
+| `organization-registry-service` | registry | must-not-own-facility-registry, must-not-own-provider-professional-registry, must-not-own-hsc-employment, must-not-own-identity-assurance-policy |
 | `oros-service` | clinical | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
 | `pacs-adapter-service` | clinical | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
 | `pct-service` | clinical | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
@@ -88,3 +89,11 @@
 | `workflow-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `workforce-governance-service` | enterprise | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy |
 | `zibo-service` | registry | must-not-authorize-access-decisions, must-not-own-clinical-encounters |
+
+## Global rules
+
+- **No service may treat council numbers, EC numbers, or national identifiers as platform
+  identity — matching evidence only.** External registry and employment numbers are used
+  to match persons to source records and to evidence claims; they are never a primary key
+  for platform identity or professional participation
+  ([Access Governance Doctrine §4](../doctrine/identity-access-trust-governance.md)).
