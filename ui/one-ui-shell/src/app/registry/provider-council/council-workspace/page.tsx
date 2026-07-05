@@ -20,6 +20,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { CouncilLearningEvidencePanel } from "@/components/learning/CouncilLearningEvidencePanel";
+import { FundoCpdCandidatePanel } from "@/components/registry/FundoCpdCandidatePanel";
 import {
   councilQueueReviewBucket,
   type CouncilApplicationRow,
@@ -179,6 +180,7 @@ export default function CouncilWorkspacePage() {
   const searchParams = useSearchParams();
   const councilId = searchParams.get("councilId") ?? undefined;
   const providerPublicId = searchParams.get("providerPublicId") ?? undefined;
+  const providerId = searchParams.get("providerId") ?? undefined;
   const workflowStates =
     searchParams.get("workflowStates") ??
     "SUBMITTED,UNDER_ADMIN_REVIEW,AWAITING_PAYMENT,READY_FOR_REVIEW";
@@ -222,12 +224,29 @@ export default function CouncilWorkspacePage() {
           Use <code className="bg-neutral-100 px-1 rounded">?councilId=&lt;id&gt;</code> and optional{" "}
           <code className="bg-neutral-100 px-1 rounded">workflowStates=</code> (comma-separated). Add{" "}
           <code className="bg-neutral-100 px-1 rounded">providerPublicId=</code> to surface learning-service
-          completion evidence for a provider.
+          completion evidence for a provider, and <code className="bg-neutral-100 px-1 rounded">providerId=</code>{" "}
+          (registry numeric key) to review that provider&apos;s Fundo CPD candidates.
         </p>
 
         <div className="mb-6">
           <CouncilLearningEvidencePanel providerPublicId={providerPublicId} />
         </div>
+
+        {providerId ? (
+          <section
+            className="mb-6 rounded-lg border border-border bg-card p-4"
+            data-testid="council-fundo-cpd-review"
+          >
+            <h2 className="mb-1 text-sm font-semibold text-foreground">
+              Fundo CPD candidates — council decision
+            </h2>
+            <p className="mb-3 text-xs text-muted-foreground">
+              CPD-eligible Fundo completions awaiting council verification for provider #{providerId}.
+              Accepting records a governed CPD event in the Varapi ledger; rejecting requires a reason.
+            </p>
+            <FundoCpdCandidatePanel providerId={providerId} canDecide />
+          </section>
+        ) : null}
 
         {!councilId ? (
           <div className="rounded-lg border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">

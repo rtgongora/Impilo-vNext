@@ -6,23 +6,21 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, Brain, Loader2 } from "lucide-react";
+import { ArrowLeft, Brain } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { IntelligenceResultPanel } from "@/components/intelligence/IntelligenceResultPanel";
 import { PageShell } from "@/components/PageShell";
 import { useIntelligenceQuery } from "@/hooks/useIntelligence";
 import { CouncilObligationPaymentPanel } from "@/components/registry/CouncilObligationPaymentPanel";
-import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
-import { REGISTRY_ENTITY_COLUMNS } from "@/lib/json-api/generic-table-columns";
-import { useFundoCpdCandidates, useProviderCouncilObligations } from "@/hooks/queries/useProviderCouncil";
+import { FundoCpdCandidatePanel } from "@/components/registry/FundoCpdCandidatePanel";
+import { useProviderCouncilObligations } from "@/hooks/queries/useProviderCouncil";
 import { useSearchParams } from "next/navigation";
 
 export default function ProviderCouncilSelfServicePage() {
   const searchParams = useSearchParams();
   const providerId = searchParams.get("providerId") ?? undefined;
   const { data: obligations, isLoading: loadOb } = useProviderCouncilObligations(providerId);
-  const { data: fundo, isLoading: loadFd } = useFundoCpdCandidates(providerId);
   const { run: runIntel, loading: intelLoading } = useIntelligenceQuery();
   const [intelBrief, setIntelBrief] = useState<Record<string, unknown> | null>(null);
 
@@ -126,13 +124,11 @@ export default function ProviderCouncilSelfServicePage() {
           </section>
           <section className="rounded-lg border border-border bg-card p-4">
             <h2 className="text-sm font-semibold text-foreground mb-2">Fundo CPD candidates</h2>
-            {loadFd ? (
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Loader2 className="w-4 h-4 animate-spin" /> Loading…
-              </div>
-            ) : (
-              <JsonApiDataTable data={fundo ?? []} columns={REGISTRY_ENTITY_COLUMNS} emptyTitle="No CPD candidates" />
-            )}
+            <p className="mb-3 text-xs text-muted-foreground">
+              Verification state of your CPD-eligible Fundo completions. Accept/reject decisions are
+              made by council staff in the council workspace — this view is read-only.
+            </p>
+            <FundoCpdCandidatePanel providerId={providerId} />
           </section>
         </div>
       </PageShell>
