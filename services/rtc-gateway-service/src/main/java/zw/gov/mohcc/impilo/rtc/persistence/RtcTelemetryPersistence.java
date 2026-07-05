@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * JDBC persistence for LiveKit webhook telemetry (rtc.session_events +
@@ -88,6 +90,50 @@ public class RtcTelemetryPersistence {
                             + "VALUES (?, ?, ?, ?, ?::jsonb)",
                     sessionId, identity, timestamp(leftAt), disconnectReason, json(payload));
         }
+    }
+
+    /** One participant_stats interval, as consumed by the session stats aggregation. */
+    public record ParticipantStatRow(
+            String identity,
+            Instant joinedAt,
+            Instant leftAt,
+            Integer durationSeconds,
+            String connectionQuality,
+            String disconnectReason
+    ) {
+    }
+
+    /** Session lifecycle columns maintained by the webhook translator. */
+    public record SessionLifecycle(Instant startedAt, Instant endedAt, Integer peakParticipants) {
+    }
+
+    /** All participant intervals observed for a session (webhook media truth). */
+    public List<ParticipantStatRow> findParticipantStats(String sessionId) {
+        return jdbc.query(
+                "SELECT identity, joined_at, left_at, duration_seconds, connection_quality, disconnect_reason "
+                        + "FROM rtc.participant_stats WHERE session_id = ? ORDER BY joined_at NULLS LAST, id",
+                (rs, i) -> new ParticipantStatRow(
+                        rs.getString("identity"),
+                        instant(rs.getTimestamp("joined_at")),
+                        instant(rs.getTimestamp("left_at")),
+                        (Integer) rs.getObject("duration_seconds"),
+                        rs.getString("connection_quality"),
+                        rs.getString("disconnect_reason")),
+                sessionId);
+    }
+
+    public Optional<SessionLifecycle> findSessionLifecycle(String sessionId) {
+        return jdbc.query(
+                "SELECT started_at, ended_at, peak_participants FROM rtc.rtc_sessions WHERE id = ?",
+                (rs, i) -> new SessionLifecycle(
+                        instant(rs.getTimestamp("started_at")),
+                        instant(rs.getTimestamp("ended_at")),
+                        (Integer) rs.getObject("peak_participants")),
+                sessionId).stream().findFirst();
+    }
+
+    private static Instant instant(Timestamp ts) {
+        return ts == null ? null : ts.toInstant();
     }
 
     private String json(JsonNode payload) {
