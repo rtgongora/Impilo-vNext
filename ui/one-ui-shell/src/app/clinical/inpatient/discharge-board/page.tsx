@@ -8,6 +8,7 @@ import { WorkspaceEmptyState } from "@/components/workspace/WorkspaceEmptyState"
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
 import {
   useAdmissions,
+  useCountersignDischargeSummary,
   useDischargeSummary,
   useFinaliseDischargeSummary,
   type DischargeSummary,
@@ -41,6 +42,8 @@ function attr(row: Record<string, unknown>, ...keys: string[]): string | null {
 function DischargeSummaryPanel({ encounterId }: { encounterId: string }) {
   const { data, isLoading } = useDischargeSummary(encounterId);
   const finalise = useFinaliseDischargeSummary();
+  const countersign = useCountersignDischargeSummary();
+  const [attestation, setAttestation] = useState("");
   const summary = (data?.data ?? null) as DischargeSummary | null;
 
   if (isLoading) {
@@ -60,6 +63,9 @@ function DischargeSummaryPanel({ encounterId }: { encounterId: string }) {
   }
 
   const finalised = summary.status === "FINALISED";
+  const countersignRequired = summary.countersign_required === true;
+  const countersigned = Boolean(summary.countersigned_by);
+  const countersignPending = countersignRequired && !countersigned;
 
   return (
     <div className="space-y-2">
@@ -71,18 +77,60 @@ function DischargeSummaryPanel({ encounterId }: { encounterId: string }) {
           <span className="font-medium">Diagnosis:</span> {summary.discharge_diagnosis}
         </div>
       )}
+      {countersignRequired && (
+        <div className="text-sm" data-testid="discharge-countersign-status">
+          <span className="font-medium">Countersignature:</span>{" "}
+          {countersigned ? (
+            <span className="text-green-700">countersigned by {summary.countersigned_by}</span>
+          ) : (
+            <span className="text-amber-700">required — not yet countersigned</span>
+          )}
+        </div>
+      )}
+      {countersignPending && !finalised && (
+        <div className="flex flex-wrap items-center gap-2" data-testid="discharge-countersign-form">
+          <input
+            value={attestation}
+            onChange={(e) => setAttestation(e.target.value)}
+            placeholder="Attestation (e.g. reviewed and agreed)"
+            aria-label="Countersign attestation"
+            className="w-64 rounded border border-slate-300 px-2 py-1 text-sm"
+          />
+          <button
+            type="button"
+            disabled={countersign.isPending}
+            onClick={() => countersign.mutate({ encounterId, attestation: attestation || undefined })}
+            className="rounded border border-slate-900 px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-50"
+          >
+            {countersign.isPending ? "Countersigning…" : "Countersign summary"}
+          </button>
+        </div>
+      )}
+      {countersign.isError && (
+        <p className="text-sm text-red-600">
+          Countersign was rejected — the author cannot countersign their own summary, and a summary
+          can only be countersigned once.
+        </p>
+      )}
       {finalise.isError && (
         <p className="text-sm text-red-600">
-          Discharge is blocked — one or more clearances are still pending. Clear or waive them first.
+          Discharge is blocked — pending clearances or a missing required countersignature. Resolve
+          them first; the summary is never silently finalised.
         </p>
       )}
       <button
         type="button"
-        disabled={finalised || finalise.isPending}
+        disabled={finalised || finalise.isPending || countersignPending}
         onClick={() => finalise.mutate({ encounterId })}
         className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
       >
-        {finalised ? "Finalised" : finalise.isPending ? "Finalising…" : "Finalise discharge summary"}
+        {finalised
+          ? "Finalised"
+          : countersignPending
+            ? "Countersignature required before finalise"
+            : finalise.isPending
+              ? "Finalising…"
+              : "Finalise discharge summary"}
       </button>
     </div>
   );

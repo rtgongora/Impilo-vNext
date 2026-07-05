@@ -95,4 +95,75 @@ describe("InpatientDischargeBoardPage", () => {
       expect(screen.getByText("Discharge board unavailable")).toBeInTheDocument(),
     );
   });
+
+  it("blocks finalise while a required countersignature is missing and countersigns via the BFF", async () => {
+    get.mockImplementation((path: string) => {
+      if (path.startsWith("/internal/v1/inpatient/admissions")) {
+        return Promise.resolve({
+          data: [{ id: "ADM-1", subject_cpid: "CPID-ZW-1", status: "ADMITTED", encounter_id: "ENC-1" }],
+        });
+      }
+      return Promise.resolve({
+        data: {
+          id: "ds-1",
+          encounter_id: "ENC-1",
+          status: "DRAFT",
+          discharge_diagnosis: "Pneumonia",
+          countersign_required: true,
+          countersigned_by: null,
+        },
+      });
+    });
+    post.mockResolvedValue({ data: { status: "DRAFT", countersigned_by: "supervisor-1" } });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText("Patient CPID-ZW-1")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Discharge summary" }));
+
+    // Finalise must be disabled and labelled honestly while countersign is missing.
+    const blocked = await screen.findByRole("button", {
+      name: "Countersignature required before finalise",
+    });
+    expect(blocked).toBeDisabled();
+    expect(screen.getByText("required — not yet countersigned")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Countersign attestation"), {
+      target: { value: "Reviewed and agreed" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Countersign summary" }));
+    await waitFor(() =>
+      expect(post).toHaveBeenCalledWith(
+        "/internal/v1/inpatient/discharge-summary/ENC-1/countersign",
+        { attestation: "Reviewed and agreed" },
+      ),
+    );
+  });
+
+  it("shows countersigned state and enables finalise once countersigned", async () => {
+    get.mockImplementation((path: string) => {
+      if (path.startsWith("/internal/v1/inpatient/admissions")) {
+        return Promise.resolve({
+          data: [{ id: "ADM-1", subject_cpid: "CPID-ZW-1", status: "ADMITTED", encounter_id: "ENC-1" }],
+        });
+      }
+      return Promise.resolve({
+        data: {
+          id: "ds-1",
+          encounter_id: "ENC-1",
+          status: "DRAFT",
+          countersign_required: true,
+          countersigned_by: "supervisor-1",
+        },
+      });
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText("Patient CPID-ZW-1")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Discharge summary" }));
+
+    await waitFor(() =>
+      expect(screen.getByText("countersigned by supervisor-1")).toBeInTheDocument(),
+    );
+    expect(screen.getByRole("button", { name: "Finalise discharge summary" })).toBeEnabled();
+  });
 });
