@@ -236,12 +236,39 @@ public class FinanceController {
         try {
             String paymentType = body.getOrDefault("paymentType", "FULL");
             String amount = body.get("amount");
+            String amountSource = "CALLER";
             if (amount == null || amount.isBlank()) {
-                return validationFailure("MISSING_AMOUNT", "amount is required", requestId, correlationId);
+                // Server-derived amount from the bill's coverage split: REMAINDER pays
+                // the patient shortfall (patientPayable); FULL pays totalPayable. This
+                // stops callers having to re-derive the shortfall client-side.
+                JsonNode costaData = costaClient.getBill(id);
+                JsonNode bill = costaData != null && costaData.has("bill") ? costaData.get("bill") : costaData;
+                if (bill == null) {
+                    return upstreamFailure("COSTA_UNAVAILABLE", "Unable to load bill for amount derivation",
+                            requestId, correlationId);
+                }
+                double derived = "REMAINDER".equals(paymentType)
+                        ? (bill.has("patientPayable") ? bill.get("patientPayable").asDouble(0.0) : 0.0)
+                        : (bill.has("totalPayable") ? bill.get("totalPayable").asDouble(0.0) : 0.0);
+                if (derived <= 0.0) {
+                    return validationFailure("NOTHING_PAYABLE",
+                            "No payable amount could be derived from the bill for paymentType " + paymentType
+                                    + "; supply an explicit amount if this is intentional",
+                            requestId, correlationId);
+                }
+                amount = java.math.BigDecimal.valueOf(derived)
+                        .setScale(2, java.math.RoundingMode.HALF_UP).toPlainString();
+                amountSource = "REMAINDER".equals(paymentType)
+                        ? "SERVER_DERIVED_PATIENT_PAYABLE" : "SERVER_DERIVED_TOTAL_PAYABLE";
             }
             JsonNode result = costaClient.createPaymentIntent(id, paymentType, amount);
             ObjectNode resource = toPaymentResource(result);
-            return ResponseEntity.status(201).body(Map.of("data", resource));
+            return ResponseEntity.status(201).body(Map.of(
+                    "data", resource,
+                    "meta", Map.of(
+                            "request_id", requestId,
+                            "correlation_id", correlationId,
+                            "amount_source", amountSource)));
         } catch (Exception e) {
             log.error("Failed to create payment intent for bill {}: {}", id, e.getMessage());
             return upstreamFailure("COSTA_UNAVAILABLE", "Unable to create payment intent", requestId, correlationId);
