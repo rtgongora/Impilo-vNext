@@ -269,6 +269,18 @@
         "clientRole": false
       },
       {
+        "name": "PLATFORM_ORIGIN_ADMINISTRATOR",
+        "description": "Platform Origin administrator: initiates and approves two-person platform actions (country operations, national appointments)",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "NATIONAL_ADMINISTRATOR",
+        "description": "National administrator appointed via Platform Origin: reads country operations and own-country national appointments",
+        "composite": false,
+        "clientRole": false
+      },
+      {
         "name": "CLINICIAN",
         "description": "Generic clinician \u2014 maps to CLINICAL_ROLES in BFF",
         "composite": false,
