@@ -14,15 +14,33 @@
 import Link from "next/link";
 import { Loader2, Pill } from "lucide-react";
 import { usePrescriptions } from "@/hooks/queries/usePharmacy";
+import { useEncounterFormExtractions } from "@/hooks/queries/useEncounterForms";
 
 interface EncounterMedicationsPanelProps {
   patientId: string;
   encounterId: string;
 }
 
+function medicationLabel(payload: string | null | undefined): string {
+  if (!payload) return "Medication request";
+  try {
+    const p = JSON.parse(payload) as Record<string, unknown>;
+    const parts = [p.display ?? p.code, p.dose, p.route, p.frequency].filter(
+      (v) => typeof v === "string" && v.length > 0,
+    );
+    return parts.length > 0 ? parts.join(" · ") : "Medication request";
+  } catch {
+    return "Medication request";
+  }
+}
+
 export function EncounterMedicationsPanel({ patientId, encounterId }: EncounterMedicationsPanelProps) {
   const { data, isLoading, isError } = usePrescriptions({ patientId });
   const prescriptions = data?.data ?? [];
+  const extractions = useEncounterFormExtractions(encounterId);
+  const medicationRequests = (extractions.data?.data ?? []).filter(
+    (e) => e.resourceType === "MEDICATION_REQUEST",
+  );
 
   return (
     <section
@@ -47,6 +65,37 @@ export function EncounterMedicationsPanel({ patientId, encounterId }: EncounterM
         structured <span className="font-medium">PRESCRIBE</span> forms (cadre-gated, countersign-aware);
         their medication requests route via OROS to pharmacy.
       </p>
+
+      {medicationRequests.length > 0 && (
+        <div className="mt-3" data-testid="encounter-medication-requests">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Medication requests from this encounter
+          </h4>
+          <ul className="mt-1 space-y-1 text-sm text-foreground">
+            {medicationRequests.map((req) => (
+              <li
+                key={req.extractedId}
+                className="flex items-start justify-between gap-2 rounded-lg bg-background px-3 py-2"
+              >
+                <span>{medicationLabel(req.resourcePayload)}</span>
+                <span className="text-right text-xs">
+                  {req.status === "ROUTED" ? (
+                    <span className="font-medium text-emerald-700">
+                      ROUTED to pharmacy{req.externalRef ? ` · order ${req.externalRef}` : ""}
+                    </span>
+                  ) : req.status === "FAILED" ? (
+                    <span className="font-medium text-red-700">
+                      FAILED — not received by OROS (order contract divergence, tracked R1)
+                    </span>
+                  ) : (
+                    <span className="font-medium uppercase text-muted-foreground">{req.status}</span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
