@@ -351,6 +351,11 @@ fullBootServices:
       RTC_RECORDING_BUCKET: "impilo-recordings"
   live-service:
     env:
+      # Real media sessions: without this the LocalDevMediaProvider mints
+      # dev tokens and no rtc room ever exists (classroom joins were theatre).
+      LIVE_MEDIA_PROVIDER: rtc-gateway
+      RTC_GATEWAY_BASE_URL: http://rtc-gateway-service:8196
+      DOCUMENT_SERVICE_BASE_URL: http://document-service:8093
       # RTC media truth: consume impilo.rtc.session/participant events so the LiveKit
       # room lifecycle drives live-event state (SCHEDULED→LIVE→ENDED) + attendance.
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
