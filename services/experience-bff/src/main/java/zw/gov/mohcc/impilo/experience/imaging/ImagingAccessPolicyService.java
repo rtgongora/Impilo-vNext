@@ -31,6 +31,34 @@ public class ImagingAccessPolicyService {
             "ROLE_DEVELOPER"
     );
 
+    /** Roles allowed to see raw networking (hosts, ports, AE titles) and mutate imaging infrastructure config. */
+    private static final Set<String> TECHNICAL_ADMIN_AUTHORITIES = Set.of(
+            "ROLE_FACILITY_ADMIN",
+            "ROLE_SYSTEM_ADMIN",
+            "ROLE_DEVELOPER"
+    );
+
+    public boolean isTechnicalImagingAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return false;
+        }
+        return auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(TECHNICAL_ADMIN_AUTHORITIES::contains);
+    }
+
+    public void requireTechnicalImagingAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required for imaging administration");
+        }
+        if (!isTechnicalImagingAdmin()) {
+            log.warn("Imaging admin access denied for principal={} — missing technical/admin role", auth.getName());
+            throw new AccessDeniedException("Technical/admin role required for imaging infrastructure configuration");
+        }
+    }
+
     public void requireClinicalImagingActor() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {

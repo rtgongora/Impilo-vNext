@@ -36,6 +36,7 @@ import static org.mockito.Mockito.*;
 class ImagingWorkflowServiceTest {
 
     @Mock private OrderRepository orderRepository;
+    @Mock private zw.gov.mohcc.impilo.oros.persistence.repository.OrderItemRepository orderItemRepository;
     @Mock private EventOutboxRepository outboxRepository;
     @Mock private zw.gov.mohcc.impilo.oros.integration.ButanoIntegration butanoIntegration;
 
@@ -48,7 +49,8 @@ class ImagingWorkflowServiceTest {
     @BeforeEach
     void setUp() {
         ObjectMapper objectMapper = OrosTestObjectMapper.create();
-        service = new ImagingWorkflowService(orderRepository, outboxRepository, objectMapper, butanoIntegration);
+        service = new ImagingWorkflowService(
+                orderRepository, orderItemRepository, outboxRepository, objectMapper, butanoIntegration);
     }
 
     private TrustContext ctx() {
@@ -181,5 +183,27 @@ class ImagingWorkflowServiceTest {
             assertThat(result.getImagingState()).isEqualTo(ImagingWorkflowState.SCHEDULED);
             assertThat(result.getScheduledAt()).isEqualTo(when);
         }
+    }
+
+    @Test
+    @DisplayName("firstItemModality resolves the first item modality, normalized to upper case")
+    void firstItemModalityResolvesFromItems() {
+        OrderEntity order = imagingOrder(ImagingWorkflowState.SCHEDULED);
+        var itemNoModality = new zw.gov.mohcc.impilo.oros.persistence.entity.OrderItemEntity();
+        var itemCt = new zw.gov.mohcc.impilo.oros.persistence.entity.OrderItemEntity();
+        itemCt.setModality(" ct ");
+        when(orderItemRepository.findByOrderId(ORDER_ID))
+                .thenReturn(java.util.List.of(itemNoModality, itemCt));
+
+        assertThat(service.firstItemModality(order)).isEqualTo("CT");
+    }
+
+    @Test
+    @DisplayName("firstItemModality returns null (never guesses) when no item declares a modality")
+    void firstItemModalityNullWhenAbsent() {
+        OrderEntity order = imagingOrder(ImagingWorkflowState.SCHEDULED);
+        when(orderItemRepository.findByOrderId(ORDER_ID)).thenReturn(java.util.List.of());
+
+        assertThat(service.firstItemModality(order)).isNull();
     }
 }

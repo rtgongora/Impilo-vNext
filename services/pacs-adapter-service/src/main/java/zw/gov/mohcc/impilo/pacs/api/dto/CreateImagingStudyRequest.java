@@ -42,6 +42,14 @@ public class CreateImagingStudyRequest {
     /** Optional facility / site (Tuso site id or URI). */
     private String facilityId;
 
+    /**
+     * Optional ingest source honesty marker: {@code DICOM} (default, network ingest),
+     * {@code MANUAL_IMPORT} (CD/USB/workstation), {@code DIGITISED} (analogue via
+     * digitisation bridge), {@code DOWNTIME_CAPTURE}. Manual/digitised studies must go
+     * through reconciliation before clinical attachment.
+     */
+    private String sourceType;
+
     public UUID getTenantId() { return tenantId; }
     public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
 
@@ -74,4 +82,7 @@ public class CreateImagingStudyRequest {
 
     public String getFacilityId() { return facilityId; }
     public void setFacilityId(String facilityId) { this.facilityId = facilityId; }
+
+    public String getSourceType() { return sourceType; }
+    public void setSourceType(String sourceType) { this.sourceType = sourceType; }
 }

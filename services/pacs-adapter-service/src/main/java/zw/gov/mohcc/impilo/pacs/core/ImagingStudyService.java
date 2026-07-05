@@ -81,6 +81,7 @@ public class ImagingStudyService {
     private final ViewerEnginePolicy viewerEnginePolicy;
     private final ObjectProvider<PacsOutboxPublisher> outboxPublisherProvider;
     private final boolean allowPlaceholderOrthancForward;
+    private final ImagingStudyExceptionService exceptionService;
 
     public ImagingStudyService(
             ImagingStudyRepository studyRepository,
@@ -97,7 +98,8 @@ public class ImagingStudyService {
             ImagingAccessAuditRepository accessAuditRepository,
             ImagingReportLinkRepository reportLinkRepository,
             ImagingOrderLinkRepository orderLinkRepository,
-            ImagingAnnotationRepository annotationRepository) {
+            ImagingAnnotationRepository annotationRepository,
+            ImagingStudyExceptionService exceptionService) {
         this.studyRepository = studyRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
@@ -113,6 +115,7 @@ public class ImagingStudyService {
         this.reportLinkRepository = reportLinkRepository;
         this.orderLinkRepository = orderLinkRepository;
         this.annotationRepository = annotationRepository;
+        this.exceptionService = exceptionService;
     }
 
     public List<ImagingStudyEntity> listStudies() {
@@ -203,6 +206,9 @@ public class ImagingStudyService {
         study.setAccessionNumber(request.getAccessionNumber());
         study.setEncounterRef(request.getEncounterRef());
         study.setFacilityId(request.getFacilityId());
+        if (request.getSourceType() != null && !request.getSourceType().isBlank()) {
+            study.setSourceType(request.getSourceType().trim().toUpperCase(java.util.Locale.ROOT));
+        }
         study.setCreatedAt(OffsetDateTime.now());
         study.setUpdatedAt(OffsetDateTime.now());
 
@@ -212,6 +218,9 @@ public class ImagingStudyService {
         if (study.getOrosOrderId() == null || study.getOrosOrderId().isBlank()) {
             appendImagingPipelineOutbox(study, ImagingPipelineKafkaContracts.STUDY_UNMATCHED);
         }
+        // Reconciliation doctrine: ambiguous or manual-path studies raise explicit exception rows
+        // (no order, no accession, manual import / digitised / downtime capture) — never silent.
+        exceptionService.raiseForRegisteredStudy(study);
 
         log.info("Imaging study registered: studyUid={}, modality={}, patient={}",
                 study.getStudyUid(), study.getModality(), study.getPatientCpid());
@@ -228,11 +237,19 @@ public class ImagingStudyService {
 
         appendStudyCorrelatedOutbox(study);
         appendStudyAvailableOutbox(study);
+        exceptionService.resolveOrderExceptionsOnCorrelation(study, currentActorId());
 
         log.info("Imaging study correlated to OROS order: studyId={}, orderId={}",
                 study.getId(), study.getOrosOrderId());
 
         return study;
+    }
+
+    private static String currentActorId() {
+        zw.gov.mohcc.impilo.shared.auth.TrustContext trust =
+                zw.gov.mohcc.impilo.shared.auth.TrustContextHolder.get();
+        return trust != null && trust.actorId() != null && !trust.actorId().isBlank()
+                ? trust.actorId() : null;
     }
 
     @Transactional

@@ -226,6 +226,45 @@ public class ImagingExperienceController {
         return ResponseEntity.ok(envelope(raw));
     }
 
+    /** Reconciliation exceptions queue (status: OPEN | RESOLVED | DISMISSED; default all). */
+    @GetMapping("/ops/exceptions")
+    public ResponseEntity<Map<String, Object>> opsExceptions(
+            HttpServletRequest request,
+            @RequestParam(name = "status", required = false) String status) {
+        imagingGovernanceService.assertGovernedRead();
+        JsonNode raw = pacsServiceClient.opsExceptions(status);
+        audit(request, "IMAGING_OPS_EXCEPTIONS", "GET:imaging/ops/exceptions", "SUCCESS",
+                "imaging_ops", "exceptions", Map.of("status", status != null ? status : ""));
+        return ResponseEntity.ok(envelope(raw));
+    }
+
+    @GetMapping("/studies/{studyId}/exceptions")
+    public ResponseEntity<Map<String, Object>> listStudyExceptions(
+            HttpServletRequest request,
+            @PathVariable String studyId,
+            @RequestParam(name = "chart_patient_cpid", required = false) String chartPatientCpid) {
+        imagingGovernanceService.assertGovernedRead();
+        JsonNode study = pacsServiceClient.getStudy(studyId);
+        imagingAccessPolicyService.assertStudyMatchesPatient(study, chartPatientCpid);
+        JsonNode raw = pacsServiceClient.listStudyExceptions(studyId);
+        audit(request, "IMAGING_STUDY_EXCEPTIONS", "GET:imaging/study/exceptions", "SUCCESS",
+                "imaging_study", studyId, Map.of());
+        return ResponseEntity.ok(envelope(raw));
+    }
+
+    /** Auditable exception resolution — action/note/dismiss are recorded against the actor. */
+    @PostMapping("/ops/exceptions/{exceptionId}/resolve")
+    public ResponseEntity<Map<String, Object>> resolveException(
+            HttpServletRequest request,
+            @PathVariable Long exceptionId,
+            @RequestBody Map<String, Object> body) {
+        imagingGovernanceService.assertGovernedMutate();
+        JsonNode raw = pacsServiceClient.resolveException(exceptionId, body);
+        audit(request, "IMAGING_EXCEPTION_RESOLVED", "POST:imaging/ops/exceptions/resolve", "SUCCESS",
+                "imaging_exception", String.valueOf(exceptionId), Map.copyOf(body));
+        return ResponseEntity.ok(envelope(raw));
+    }
+
     @PostMapping("/studies/{studyId}/report-links")
     public ResponseEntity<Map<String, Object>> linkReport(
             HttpServletRequest request,
