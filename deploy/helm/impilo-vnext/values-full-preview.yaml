@@ -323,6 +323,9 @@ fullBootServices:
       LEARNING_NOTIFICATION_PROVIDER: NOTIFICATION_SERVICE
       LEARNING_NOTIFICATION_BASE_URL: http://notification-service:8200
       LEARNING_NOTIFICATION_DISPATCH_POLL_MS: "30000"
+      # LEARNING_LIVE: schedule Fundo webinars on the in-chart Impilo Live —
+      # the localhost default silently no-ops LiveSessionIntegration.
+      LEARNING_LIVE_BASE_URL: http://live-service:8380
   varapi-service:
     env:
       # CPD writeback: consume impilo.learning.certificate.issued.v1.
