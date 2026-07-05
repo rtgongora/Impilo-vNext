@@ -84,6 +84,32 @@ export function useTransferQueueEntry() {
   });
 }
 
+export interface EscalateQueueEntryInput {
+  id: string;
+  /** Mandatory operational reason — BFF rejects blank reasons with 400 VALIDATION. */
+  reason: string;
+  /** Optional destination queue (e.g. emergency workspace). */
+  targetQueueId?: string;
+  /** Optional explicit priority override on the PCT 1–5 scale. */
+  priority?: number;
+}
+
+export function useEscalateQueueEntry() {
+  const queryClient = useQueryClient();
+  return useMutation<QueueEntryResponse, unknown, EscalateQueueEntryInput>({
+    mutationFn: ({ id, reason, targetQueueId, priority }) =>
+      apiClient.post<QueueEntryResponse>(`/internal/v1/queue/entries/${id}/escalate`, {
+        reason,
+        ...(targetQueueId ? { target_queue_id: targetQueueId } : {}),
+        ...(priority != null ? { priority } : {}),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["queue-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["queue-stats"] });
+    },
+  });
+}
+
 export function useAbandonQueueEntry() {
   const queryClient = useQueryClient();
   return useMutation<QueueEntryResponse, unknown, { id: string }>({

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import QueuePage from "./page";
@@ -7,6 +7,7 @@ import QueuePage from "./page";
 const push = vi.fn();
 const callMutate = vi.fn();
 const mutationMutate = vi.fn();
+const escalateMutate = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
@@ -72,12 +73,30 @@ vi.mock("@/hooks/queries/useQueue", () => ({
             triageCategory: "YELLOW",
           },
         },
+        {
+          id: "entry-4",
+          attributes: {
+            patientId: "patient-4",
+            patientName: "Rudo Chikafu",
+            status: "WAITING",
+            priority: 1,
+            queuedAt: "2026-04-08T09:30:00.000Z",
+            triageCategory: "RED",
+            escalatedAt: "2026-04-08T09:35:00.000Z",
+            escalatedBy: "actor-77",
+            escalationReason: "Deteriorating vitals in the waiting area",
+          },
+        },
       ],
     },
     isLoading: false,
   }),
   useCallPatient: () => ({
     mutate: callMutate,
+    isPending: false,
+  }),
+  useEscalateQueueEntry: () => ({
+    mutate: escalateMutate,
     isPending: false,
   }),
 }));
@@ -114,6 +133,7 @@ describe("QueuePage", () => {
     push.mockReset();
     callMutate.mockReset();
     mutationMutate.mockReset();
+    escalateMutate.mockReset();
     callMutate.mockImplementation(
       (_payload: { id: string }, options?: { onSuccess?: () => void }) => options?.onSuccess?.(),
     );
@@ -130,12 +150,46 @@ describe("QueuePage", () => {
     expect(screen.getByText("Needs attention")).toBeInTheDocument();
     expect(screen.getByText("Full queue board")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Start encounter handoff" }));
+    await user.click(screen.getAllByRole("button", { name: "Start encounter handoff" })[0]);
 
     expect(callMutate).toHaveBeenCalledWith(
       { id: "entry-1" },
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     );
     expect(push).toHaveBeenCalledWith("/ehr/patient-1?entry=queue");
+  });
+
+  it("shows the Escalated badge with the escalation reason for escalated entries", () => {
+    render(<QueuePage />);
+
+    const badges = screen.getAllByTitle(
+      "Escalated: Deteriorating vitals in the waiting area",
+    );
+    expect(badges.length).toBeGreaterThan(0);
+    expect(badges[0]).toHaveTextContent(/Escalated/);
+  });
+
+  it("requires a reason before escalating and submits it to the escalate mutation", async () => {
+    const user = userEvent.setup();
+
+    render(<QueuePage />);
+
+    await user.click(screen.getAllByRole("button", { name: /Escalate/ })[0]);
+
+    const dialog = screen.getByRole("dialog", { name: "Escalate queue entry" });
+    const submit = within(dialog).getByRole("button", { name: "Escalate" });
+    expect(submit).toBeDisabled();
+
+    await user.type(
+      within(dialog).getByLabelText("Reason (required)"),
+      "Chest pain reported at reception",
+    );
+    expect(submit).toBeEnabled();
+    await user.click(submit);
+
+    expect(escalateMutate).toHaveBeenCalledWith(
+      { id: "entry-1", reason: "Chest pain reported at reception" },
+      expect.objectContaining({ onSuccess: expect.any(Function), onError: expect.any(Function) }),
+    );
   });
 });

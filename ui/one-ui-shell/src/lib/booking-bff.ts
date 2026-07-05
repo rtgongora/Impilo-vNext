@@ -56,6 +56,11 @@ export interface AppointmentRecord {
   encounterId?: string;
   teleconsultSessionId?: string;
   reason?: string;
+  /**
+   * Booking-service check-in truth: "CHECKED_IN" when queue placement succeeded,
+   * "CHECKED_IN_NO_QUEUE" when the patient checked in but is NOT in any queue.
+   */
+  checkInStatus?: string;
 }
 
 export interface CreateBookingPayload {
@@ -213,6 +218,7 @@ export function normalizeAppointment(row: unknown, index = 0): AppointmentRecord
       attrs.sessionId ??
       attrs.session_id) as string | undefined,
     reason: (attrs.reason ?? attrs.notes) as string | undefined,
+    checkInStatus: (attrs.checkInStatus ?? attrs.check_in_status) as string | undefined,
   };
 }
 

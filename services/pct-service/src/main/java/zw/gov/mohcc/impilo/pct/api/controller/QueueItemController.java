@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.pct.api.dto.EscalateQueueItemRequest;
 import zw.gov.mohcc.impilo.pct.api.dto.QueueItemStatusRequest;
 import zw.gov.mohcc.impilo.pct.api.dto.TransferQueueItemRequest;
 import zw.gov.mohcc.impilo.pct.core.QueueEngine;
@@ -49,6 +50,26 @@ public class QueueItemController {
 
         QueueItemStatus newStatus = QueueItemStatus.valueOf(request.status().toUpperCase());
         QueueItemEntity item = queueEngine.updateItemStatus(itemId, newStatus);
+
+        return ResponseEntity.ok(ApiResponse.ok(item, correlationId));
+    }
+
+    /**
+     * Escalate a queue item: bump urgency, record reason, optionally
+     * transfer to a target queue.
+     *
+     * @param itemId  the queue item to escalate
+     * @param request the escalation request (reason mandatory)
+     * @return the live (possibly transferred) queue item
+     */
+    @PostMapping("/{itemId}/escalate")
+    public ResponseEntity<ApiResponse<QueueItemEntity>> escalateItem(
+            @PathVariable UUID itemId,
+            @Valid @RequestBody EscalateQueueItemRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        QueueItemEntity item = queueEngine.escalateItem(
+                itemId, request.reason(), request.targetQueueId(), request.priority());
 
         return ResponseEntity.ok(ApiResponse.ok(item, correlationId));
     }

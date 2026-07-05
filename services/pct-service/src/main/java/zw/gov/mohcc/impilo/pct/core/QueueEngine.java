@@ -106,8 +106,11 @@ public class QueueEngine {
         }
 
         writeOutbox("QUEUE_ITEM", item.getId().toString(), "QUEUE_ITEM_ENQUEUED", toJson(Map.of(
+                "eventType", "QUEUE_ITEM_ENQUEUED",
+                "tenantId", ctx.tenantId().toString(),
                 "queueId", queueId.toString(),
                 "journeyId", journeyId,
+                "patientCpid", item.getPatientCpid(),
                 "tokenNumber", tokenNumber,
                 "priority", priority)));
 
@@ -149,8 +152,11 @@ public class QueueEngine {
         item = queueItemRepository.save(item);
 
         writeOutbox("QUEUE_ITEM", item.getId().toString(), "QUEUE_ITEM_CALLED", toJson(Map.of(
+                "eventType", "QUEUE_ITEM_CALLED",
+                "tenantId", ctx.tenantId().toString(),
                 "queueId", queueId.toString(),
                 "journeyId", item.getJourneyId(),
+                "patientCpid", item.getPatientCpid(),
                 "tokenNumber", item.getTokenNumber(),
                 "calledBy", ctx.actorId())));
 
@@ -185,6 +191,7 @@ public class QueueEngine {
         QueueItemEntity item = queueItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Queue item not found: " + itemId));
         String journeyId = item.getJourneyId();
+        QueueItemStatus previousStatus = item.getStatus();
 
         item.setStatus(newStatus);
 
@@ -192,6 +199,16 @@ public class QueueEngine {
             case CALLED -> {
                 item.setCalledBy(ctx.actorId());
                 item.setCalledAt(OffsetDateTime.now());
+            }
+            case IN_TRIAGE -> {
+                // Pulling a patient into triage is a call: record the caller
+                // unless the item was already CALLED. Journey-level triage
+                // truth stays with TriageService (journey → TRIAGED on
+                // completion); the queue item merely tracks occupancy.
+                if (item.getCalledAt() == null) {
+                    item.setCalledBy(ctx.actorId());
+                    item.setCalledAt(OffsetDateTime.now());
+                }
             }
             case IN_SERVICE -> {
                 item.setServiceStartedAt(OffsetDateTime.now());
@@ -221,6 +238,20 @@ public class QueueEngine {
         }
 
         item = queueItemRepository.save(item);
+
+        // Every status transition is auditable and consumable downstream
+        // (pct.queue.item.updated); silent state changes are forbidden.
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("eventType", "QUEUE_ITEM_UPDATED");
+        payload.put("tenantId", ctx.tenantId().toString());
+        payload.put("queueId", item.getQueueId().toString());
+        payload.put("journeyId", journeyId);
+        payload.put("patientCpid", item.getPatientCpid());
+        payload.put("tokenNumber", item.getTokenNumber());
+        payload.put("previousStatus", previousStatus != null ? previousStatus.name() : null);
+        payload.put("newStatus", newStatus.name());
+        payload.put("actorId", ctx.actorId());
+        writeOutbox("QUEUE_ITEM", item.getId().toString(), "QUEUE_ITEM_UPDATED", toJson(payload));
 
         log.info("Queue item {} updated to status {}", itemId, newStatus);
 
@@ -258,6 +289,7 @@ public class QueueEngine {
         newItem.setId(UUID.randomUUID());
         newItem.setQueueId(targetQueueId);
         newItem.setJourneyId(oldItem.getJourneyId());
+        newItem.setPatientCpid(oldItem.getPatientCpid());
         newItem.setTenantId(ctx.tenantId());
         newItem.setFacilityId(oldItem.getFacilityId());
         newItem.setTokenNumber(maxToken + 1);
@@ -268,9 +300,12 @@ public class QueueEngine {
         newItem = queueItemRepository.save(newItem);
 
         writeOutbox("QUEUE_ITEM", newItem.getId().toString(), "QUEUE_ITEM_TRANSFERRED", toJson(Map.of(
+                "eventType", "QUEUE_ITEM_TRANSFERRED",
+                "tenantId", ctx.tenantId().toString(),
                 "fromQueueId", oldItem.getQueueId().toString(),
                 "toQueueId", targetQueueId.toString(),
                 "journeyId", oldItem.getJourneyId(),
+                "patientCpid", newItem.getPatientCpid(),
                 "oldItemId", oldItem.getId().toString(),
                 "newItemId", newItem.getId().toString(),
                 "newTokenNumber", newItem.getTokenNumber())));
@@ -279,6 +314,72 @@ public class QueueEngine {
                 itemId, oldItem.getQueueId(), targetQueueId, newItem.getTokenNumber());
 
         return newItem;
+    }
+
+    /**
+     * Escalate a queue item: raise its urgency, record who/why, and
+     * optionally move it to a target queue (e.g. emergency workspace).
+     *
+     * <p>Priority is bumped to {@code max(current + 2, 5)} unless an explicit
+     * override is given — escalation always strictly increases urgency and
+     * lands at least at the top of the 1–5 triage-derived scale. The item's
+     * status is left untouched so it remains eligible for {@code callNext};
+     * escalation is urgency + visibility, not a lifecycle transition.</p>
+     *
+     * @param itemId           the queue item to escalate
+     * @param reason           mandatory operational reason (audited, may be shown to staff)
+     * @param targetQueueId    optional destination queue; when different from the
+     *                         current queue the item is transferred and the new item
+     *                         carries the escalation
+     * @param priorityOverride optional explicit priority; when null the default bump applies
+     * @return the live (possibly transferred) queue item
+     * @throws IllegalArgumentException if the item is not found or reason is blank
+     */
+    @Transactional
+    public QueueItemEntity escalateItem(UUID itemId, String reason,
+                                        UUID targetQueueId, Integer priorityOverride) {
+        TrustContext ctx = TrustContextHolder.require();
+
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Escalation reason is required");
+        }
+
+        QueueItemEntity item = queueItemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("Queue item not found: " + itemId));
+
+        UUID fromQueueId = item.getQueueId();
+        int newPriority = priorityOverride != null
+                ? priorityOverride
+                : Math.max(item.getPriority() + 2, 5);
+
+        if (targetQueueId != null && !targetQueueId.equals(fromQueueId)) {
+            // Move to the target queue first; the transferred item carries the escalation.
+            item = transferItem(itemId, targetQueueId);
+        }
+
+        item.setPriority(newPriority);
+        item.setEscalatedAt(OffsetDateTime.now());
+        item.setEscalatedBy(ctx.actorId());
+        item.setEscalationReason(reason);
+        item = queueItemRepository.save(item);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("eventType", "QUEUE_ITEM_ESCALATED");
+        payload.put("tenantId", ctx.tenantId().toString());
+        payload.put("queueId", item.getQueueId().toString());
+        payload.put("fromQueueId", fromQueueId.toString());
+        payload.put("journeyId", item.getJourneyId());
+        payload.put("patientCpid", item.getPatientCpid());
+        payload.put("tokenNumber", item.getTokenNumber());
+        payload.put("priority", newPriority);
+        payload.put("reason", reason);
+        payload.put("escalatedBy", ctx.actorId());
+        writeOutbox("QUEUE_ITEM", item.getId().toString(), "QUEUE_ITEM_ESCALATED", toJson(payload));
+
+        log.info("Escalated queue item {} (queue {} -> {}, priority {}): {}",
+                itemId, fromQueueId, item.getQueueId(), newPriority, reason);
+
+        return item;
     }
 
     /**

@@ -13,6 +13,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  AlertTriangle,
   ArrowLeft,
   CalendarDays,
   Plus,
@@ -41,6 +42,7 @@ import {
   useCheckInAppointment,
   useConfirmAppointment,
   useCreateAppointment,
+  type AppointmentCheckInMeta,
 } from "@/hooks/queries/useAppointments";
 import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
@@ -64,12 +66,15 @@ interface AppointmentResource {
     notes: string | null;
     tuso_booking_id: string | null;
     created_at: string;
+    check_in_status?: string | null;
+    queue_token_id?: string | null;
   };
 }
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   SCHEDULED: { label: "Scheduled", className: "bg-primary-soft text-primary" },
   CONFIRMED: { label: "Confirmed", className: "bg-green-100 text-green-700" },
+  CHECKED_IN: { label: "Checked in", className: "bg-emerald-100 text-primary-hover" },
   CANCELLED: { label: "Cancelled", className: "bg-neutral-100 text-muted-foreground" },
   COMPLETED: { label: "Completed", className: "bg-purple-100 text-warning-foreground" },
 };
@@ -103,6 +108,12 @@ function getWeekDays(weekStart: Date): Date[] {
 
 function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function checkInStatusOf(attrs: AppointmentResource["attributes"]): string | null {
+  return (attrs.check_in_status ??
+    ((attrs as Record<string, unknown>).checkInStatus as string | undefined) ??
+    null);
 }
 
 function getMonday(d: Date): Date {
@@ -146,6 +157,7 @@ export default function SchedulingPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [actionPending, setActionPending] = useState<string | null>(null);
+  const [checkInOutcome, setCheckInOutcome] = useState<{ id: string; queueLinked: boolean } | null>(null);
 
   // Patient search state
   const [patientSearch, setPatientSearch] = useState("");
@@ -289,8 +301,13 @@ export default function SchedulingPage() {
 
   async function handleCheckIn(id: string, patientId?: string | null) {
     setActionPending(id);
+    setCheckInOutcome(null);
     try {
-      await checkInAppointment.mutateAsync(id);
+      const response = await checkInAppointment.mutateAsync(id);
+      // Honest queue truth: the BFF meta says whether a queue placement was
+      // actually created. Never fabricate a token that isn't in the response.
+      const meta = (response?.meta ?? {}) as AppointmentCheckInMeta;
+      setCheckInOutcome({ id, queueLinked: meta.queue_linked === true });
       if (!patientId) {
         fetchAppointments();
       }
@@ -663,6 +680,14 @@ export default function SchedulingPage() {
                               Resource booked
                             </span>
                           )}
+                          {checkInStatusOf(a) === "CHECKED_IN_NO_QUEUE" && (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-800"
+                              title="The patient checked in but no queue placement was created"
+                            >
+                              <AlertTriangle className="w-3 h-3" /> Checked in — NOT in queue
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           {scheduledDate && (
@@ -727,6 +752,21 @@ export default function SchedulingPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Honest check-in outcome — driven by the BFF queue_linked meta */}
+                  {checkInOutcome?.id === appt.id &&
+                    (checkInOutcome.queueLinked ? (
+                      <div className="mt-3 flex items-center gap-1.5 rounded-lg border border-success/25 bg-success-soft px-3 py-2 text-xs text-green-800">
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                        Checked in — patient placed in the facility queue.
+                      </div>
+                    ) : (
+                      <div className="mt-3 flex items-center gap-1.5 rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-xs text-amber-800">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        Checked in — NOT in queue. No queue placement was created for this
+                        check-in; add the patient from the Patient Queue board.
+                      </div>
+                    ))}
                 </div>
               );
             })}

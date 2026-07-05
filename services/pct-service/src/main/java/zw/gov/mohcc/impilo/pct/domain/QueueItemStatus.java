@@ -6,6 +6,9 @@ package zw.gov.mohcc.impilo.pct.domain;
  * <ul>
  *   <li>{@link #WAITING} — patient is in the queue awaiting service</li>
  *   <li>{@link #CALLED} — patient has been called but not yet in service</li>
+ *   <li>{@link #IN_TRIAGE} — patient is undergoing triage assessment while
+ *       still owned by the queue; expected next states are WAITING (re-queued
+ *       with triage-derived priority), IN_SERVICE, or TRANSFERRED</li>
  *   <li>{@link #IN_SERVICE} — patient is currently being attended to</li>
  *   <li>{@link #PAUSED} — service paused (e.g. awaiting lab results)</li>
  *   <li>{@link #COMPLETED} — service completed for this queue stop</li>
@@ -17,6 +20,7 @@ package zw.gov.mohcc.impilo.pct.domain;
 public enum QueueItemStatus {
     WAITING,
     CALLED,
+    IN_TRIAGE,
     IN_SERVICE,
     PAUSED,
     COMPLETED,

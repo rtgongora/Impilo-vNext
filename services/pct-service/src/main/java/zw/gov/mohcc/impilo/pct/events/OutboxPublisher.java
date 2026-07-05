@@ -155,7 +155,7 @@ public class OutboxPublisher {
 
             case "QUEUE_ITEM_CREATED", "QUEUE_ITEM_UPDATED",
                  "QUEUE_ITEM_ENQUEUED", "QUEUE_ITEM_CALLED",
-                 "QUEUE_ITEM_TRANSFERRED" -> "pct.queue.item.updated";
+                 "QUEUE_ITEM_TRANSFERRED", "QUEUE_ITEM_ESCALATED" -> "pct.queue.item.updated";
 
             case "ENCOUNTER_STARTED" -> "pct.encounter.started";
             case "ENCOUNTER_COMPLETED" -> "pct.encounter.completed";

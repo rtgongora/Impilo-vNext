@@ -5,7 +5,7 @@
  * Route: /queue | pageTitle: "Patient Queue"
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -16,13 +16,15 @@ import {
   AlertTriangle,
   XCircle,
   ArrowRightLeft,
+  ArrowUpCircle,
   PlayCircle,
   ClipboardCheck,
   PauseCircle,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useQueueEntries, useCallPatient } from "@/hooks/queries/useQueue";
+import { useQueueEntries, useCallPatient, useEscalateQueueEntry } from "@/hooks/queries/useQueue";
+import { getQueueEscalation } from "@/lib/queue-workflows";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -62,11 +64,42 @@ const STATUS_STYLES: Record<string, string> = {
   CANCELLED: "bg-neutral-100 text-muted-foreground",
 };
 
+const ESCALATABLE_STATUSES = ["WAITING", "CALLED", "IN_PROGRESS", "IN_SERVICE", "SEEN", "PAUSED"];
+
+function escalationErrorMessage(err: unknown): string {
+  if (err && typeof err === "object" && "error" in err) {
+    const e = (err as { error?: { message?: string } }).error;
+    if (e?.message) return e.message;
+  }
+  if (err instanceof Error && err.message) return err.message;
+  return "Escalation failed. The queue service may be unavailable — please try again.";
+}
+
+function EscalatedBadge({ entry }: { entry: { attributes: Record<string, unknown> } }) {
+  const escalation = getQueueEscalation(entry as Parameters<typeof getQueueEscalation>[0]);
+  if (!escalation) return null;
+  const time = new Date(escalation.escalatedAt);
+  const timeLabel = Number.isNaN(time.getTime()) ? escalation.escalatedAt : time.toLocaleTimeString();
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-danger"
+      title={escalation.reason ? `Escalated: ${escalation.reason}` : "Escalated"}
+    >
+      <ArrowUpCircle className="h-3 w-3" />
+      Escalated {timeLabel}
+    </span>
+  );
+}
+
 export default function QueuePage() {
   const router = useRouter();
   const facility = useFacilityStore((s) => s.facility);
   const { data, isLoading } = useQueueEntries({ facilityId: facility?.id });
   const callPatient = useCallPatient();
+  const escalateEntry = useEscalateQueueEntry();
+  const [escalateTarget, setEscalateTarget] = useState<{ id: string; patientName: string } | null>(null);
+  const [escalateReason, setEscalateReason] = useState("");
+  const [escalateError, setEscalateError] = useState<string | null>(null);
   const { isQueueManager } = useRoleGroup();
   const queryClient = useQueryClient();
 
@@ -118,6 +151,30 @@ export default function QueuePage() {
         onSuccess: () => {
           router.push(`/ehr/${patientId}?entry=queue`);
         },
+      },
+    );
+  }
+
+  function openEscalate(entry: (typeof entries)[number]) {
+    const patientName =
+      ((entry.attributes as Record<string, unknown>).patientName as string) ??
+      entry.attributes.patientId;
+    setEscalateReason("");
+    setEscalateError(null);
+    setEscalateTarget({ id: entry.id, patientName });
+  }
+
+  function handleEscalateSubmit() {
+    if (!escalateTarget || !escalateReason.trim()) return;
+    setEscalateError(null);
+    escalateEntry.mutate(
+      { id: escalateTarget.id, reason: escalateReason.trim() },
+      {
+        onSuccess: () => {
+          setEscalateTarget(null);
+          setEscalateReason("");
+        },
+        onError: (err) => setEscalateError(escalationErrorMessage(err)),
       },
     );
   }
@@ -334,6 +391,7 @@ export default function QueuePage() {
                                 }`}>
                                   {entry.attributes.status}
                                 </span>
+                                <EscalatedBadge entry={entry} />
                               </div>
                             </div>
 
@@ -346,6 +404,15 @@ export default function QueuePage() {
                                   className="rounded-xl border border-danger/28 bg-card px-3 py-2 text-xs font-medium text-rose-600 transition-colors hover:bg-danger-soft disabled:opacity-50"
                                 >
                                   Mark No-show
+                                </button>
+                              )}
+                              {ESCALATABLE_STATUSES.includes(entry.attributes.status) && (
+                                <button
+                                  onClick={() => openEscalate(entry)}
+                                  disabled={escalateEntry.isPending}
+                                  className="rounded-xl border border-warning/35 bg-card px-3 py-2 text-xs font-medium text-warning-foreground transition-colors hover:bg-warning-soft disabled:opacity-50"
+                                >
+                                  Escalate
                                 </button>
                               )}
                             </div>
@@ -417,11 +484,14 @@ export default function QueuePage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span
-                          className={`inline-block px-2 py-0.5 text-xs rounded-full ${statusStyle}`}
-                        >
-                          {entry.attributes.status}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span
+                            className={`inline-block px-2 py-0.5 text-xs rounded-full ${statusStyle}`}
+                          >
+                            {entry.attributes.status}
+                          </span>
+                          <EscalatedBadge entry={entry} />
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
                         <div className="flex items-center gap-1">
@@ -478,12 +548,94 @@ export default function QueuePage() {
                             Resume
                           </button>
                         )}
+                        {ESCALATABLE_STATUSES.includes(entry.attributes.status) && (
+                          <button
+                            onClick={() => openEscalate(entry)}
+                            disabled={escalateEntry.isPending}
+                            className="ml-1 px-2 py-1.5 text-warning-foreground hover:bg-warning-soft text-xs font-medium rounded-md transition-colors inline-flex items-center gap-1"
+                            title="Escalate this queue entry (reason required)"
+                          >
+                            <ArrowUpCircle className="w-3.5 h-3.5" />
+                            Escalate
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
                 })}
               </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Escalate dialog — mandatory reason, fail-closed against the BFF */}
+        {escalateTarget && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Escalate queue entry"
+          >
+            <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning-soft text-warning-foreground">
+                  <ArrowUpCircle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Escalate queue entry</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {escalateTarget.patientName} will be bumped to the top of the urgency scale.
+                    The reason is recorded in the audit trail and never shown to the patient.
+                  </p>
+                </div>
+              </div>
+
+              <label className="mt-4 block text-xs font-medium text-muted-foreground" htmlFor="escalate-reason">
+                Reason (required)
+              </label>
+              <textarea
+                id="escalate-reason"
+                value={escalateReason}
+                onChange={(e) => setEscalateReason(e.target.value)}
+                rows={3}
+                placeholder="e.g. Deteriorating vitals observed in the waiting area"
+                className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                autoFocus
+              />
+
+              {escalateError && (
+                <p className="mt-2 rounded-lg border border-danger/28 bg-danger-soft px-3 py-2 text-xs text-red-800">
+                  {escalateError}
+                </p>
+              )}
+
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setEscalateTarget(null);
+                    setEscalateReason("");
+                    setEscalateError(null);
+                  }}
+                  disabled={escalateEntry.isPending}
+                  className="rounded-lg border border-border px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-background disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEscalateSubmit}
+                  disabled={escalateEntry.isPending || !escalateReason.trim()}
+                  className="inline-flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
+                >
+                  {escalateEntry.isPending ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" /> Escalating...
+                    </>
+                  ) : (
+                    "Escalate"
+                  )}
+                </button>
               </div>
             </div>
           </div>

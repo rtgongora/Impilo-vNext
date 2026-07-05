@@ -40,6 +40,12 @@ export default function QueuesPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Escalate dialog state — reason is mandatory, target queue optional.
+  const [escalateItem, setEscalateItem] = useState<QueueItem | null>(null);
+  const [escalateReason, setEscalateReason] = useState("");
+  const [escalateTargetQueueId, setEscalateTargetQueueId] = useState("");
+  const [escalateError, setEscalateError] = useState<string | null>(null);
+
   const loadQueues = useCallback(async () => {
     try {
       setLoading(true);
@@ -124,6 +130,44 @@ export default function QueuesPage() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update status");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openEscalate = (item: QueueItem) => {
+    setEscalateReason("");
+    setEscalateTargetQueueId("");
+    setEscalateError(null);
+    setEscalateItem(item);
+  };
+
+  const handleEscalate = async () => {
+    if (!escalateItem || !escalateReason.trim()) return;
+    setActionLoading(true);
+    setEscalateError(null);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      await pctApi.escalateQueueItem(escalateItem.id, {
+        reason: escalateReason.trim(),
+        ...(escalateTargetQueueId ? { targetQueueId: escalateTargetQueueId } : {}),
+      });
+      setSuccessMessage(
+        `Escalated token #${escalateItem.tokenNumber}${
+          escalateTargetQueueId
+            ? ` to ${queues.find((q) => q.id === escalateTargetQueueId)?.name ?? "target queue"}`
+            : ""
+        }.`,
+      );
+      setEscalateItem(null);
+      setEscalateReason("");
+      setEscalateTargetQueueId("");
+      await loadQueueItems();
+      await loadQueues();
+    } catch (err) {
+      setEscalateError(err instanceof Error ? err.message : "Failed to escalate queue item");
     } finally {
       setActionLoading(false);
     }
@@ -327,9 +371,23 @@ export default function QueuesPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`badge ${STATUS_COLORS[item.status]}`}>
-                        {item.status}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className={`badge ${STATUS_COLORS[item.status]}`}>
+                          {item.status}
+                        </span>
+                        {item.escalatedAt && (
+                          <span
+                            className="badge bg-red-100 text-red-800"
+                            title={
+                              item.escalationReason
+                                ? `Escalated: ${item.escalationReason}`
+                                : "Escalated"
+                            }
+                          >
+                            Escalated {new Date(item.escalatedAt).toLocaleTimeString()}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-neutral-500 text-xs">
                       {new Date(item.enqueuedAt).toLocaleTimeString()}
@@ -353,6 +411,18 @@ export default function QueuesPage() {
                           Cancel
                         </button>
                       )}
+                      {(item.status === "WAITING" ||
+                        item.status === "CALLED" ||
+                        item.status === "IN_SERVICE") && (
+                        <button
+                          onClick={() => openEscalate(item)}
+                          disabled={actionLoading}
+                          className="ml-2 text-xs text-orange-600 hover:text-orange-700 font-medium"
+                          title="Escalate this queue item (reason required)"
+                        >
+                          Escalate
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -368,6 +438,92 @@ export default function QueuesPage() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Escalate dialog — mandatory reason, optional target queue */}
+      {escalateItem && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Escalate queue item"
+        >
+          <div className="card w-full max-w-md p-5">
+            <h3 className="text-sm font-semibold text-neutral-900">
+              Escalate token #{escalateItem.tokenNumber}
+            </h3>
+            <p className="mt-1 text-xs text-neutral-500">
+              Escalation bumps urgency to the top of the scale and records who escalated and
+              why. Optionally move the patient to another queue at the same time.
+            </p>
+
+            <label
+              className="mt-4 block text-xs font-medium text-neutral-600"
+              htmlFor="escalate-reason"
+            >
+              Reason (required)
+            </label>
+            <textarea
+              id="escalate-reason"
+              value={escalateReason}
+              onChange={(e) => setEscalateReason(e.target.value)}
+              rows={3}
+              placeholder="e.g. Deteriorating vitals observed in the waiting area"
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+              autoFocus
+            />
+
+            <label
+              className="mt-3 block text-xs font-medium text-neutral-600"
+              htmlFor="escalate-target-queue"
+            >
+              Move to queue (optional)
+            </label>
+            <select
+              id="escalate-target-queue"
+              value={escalateTargetQueueId}
+              onChange={(e) => setEscalateTargetQueueId(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+            >
+              <option value="">Keep in current queue</option>
+              {queues
+                .filter((q) => q.id !== escalateItem.queueId)
+                .map((q) => (
+                  <option key={q.id} value={q.id}>
+                    {q.name}
+                  </option>
+                ))}
+            </select>
+
+            {escalateError && (
+              <p className="mt-3 rounded-lg bg-danger-soft border border-danger/28 px-3 py-2 text-xs text-red-800">
+                {escalateError}
+              </p>
+            )}
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setEscalateItem(null);
+                  setEscalateReason("");
+                  setEscalateTargetQueueId("");
+                  setEscalateError(null);
+                }}
+                disabled={actionLoading}
+                className="rounded-lg border border-neutral-300 px-4 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEscalate}
+                disabled={actionLoading || !escalateReason.trim()}
+                className="btn-primary text-xs"
+              >
+                {actionLoading ? "Escalating..." : "Escalate"}
+              </button>
+            </div>
           </div>
         </div>
       )}

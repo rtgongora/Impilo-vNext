@@ -132,6 +132,10 @@ export interface QueueItem {
   calledAt: string | null;
   serviceStartedAt: string | null;
   completedAt: string | null;
+  /** Escalation facts — null unless the item has been escalated. */
+  escalatedAt?: string | null;
+  escalatedBy?: string | null;
+  escalationReason?: string | null;
 }
 
 export interface QueueStatusUpdateRequest {
@@ -141,6 +145,15 @@ export interface QueueStatusUpdateRequest {
 export interface QueueTransferRequest {
   targetQueueId: string;
   reason: string;
+}
+
+export interface QueueEscalateRequest {
+  /** Mandatory operational reason — PCT rejects blank reasons. */
+  reason: string;
+  /** Optional destination queue (e.g. emergency workspace). */
+  targetQueueId?: string;
+  /** Optional explicit priority override on the 1–5 scale. */
+  priority?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -415,6 +428,12 @@ export const pctApi = {
     apiClient.post<QueueItem>(
       `${V1}/queue-items/${encodeURIComponent(itemId)}/transfer`,
       { targetQueueId, reason },
+    ),
+
+  escalateQueueItem: (itemId: string, request: QueueEscalateRequest) =>
+    apiClient.post<QueueItem>(
+      `${V1}/queue-items/${encodeURIComponent(itemId)}/escalate`,
+      request,
     ),
 
   // -- Encounters --

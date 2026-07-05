@@ -29,6 +29,15 @@ export interface AppointmentCheckInMeta {
   patient_id?: string;
   journey_id?: string;
   core_transaction_id?: string;
+  encounter_id?: string;
+  queue_id?: string;
+  queue_token_id?: string;
+  /**
+   * Explicit truth from the BFF check-in response: false means the patient
+   * was checked in but NOT placed in any queue (CHECKED_IN_NO_QUEUE).
+   */
+  queue_linked?: boolean;
+  booking_status?: string;
 }
 
 type AppointmentsResponse = ApiResponse<AppointmentResource[]>;
