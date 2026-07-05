@@ -95,7 +95,22 @@ public final class LiveDtos {
             String roomUrl,
             String accessToken,
             String provider,
-            String channel
+            String channel,
+            /** Server-resolved effective role the token was minted for (LIVE_EVENT modes). */
+            String role
+    ) {}
+
+    /** Audience→stage promotion request (LIVE_EVENT modes). */
+    public record StageRequestPayload(
+            String participantId,
+            String participantType
+    ) {}
+
+    /** Host/producer broadcast message; rides the chat vocabulary as kind=ANNOUNCEMENT. */
+    public record AnnouncementRequest(
+            String participantId,
+            String participantType,
+            String message
     ) {}
 
     public record QuestionRequest(
