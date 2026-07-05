@@ -24,7 +24,7 @@
 | Payment confirmation / receipt | ✅ (sandbox) | `mushex PaymentIntentService.recordPayment` → `ReceiptService` (idempotent per intent); status loop back via `mushex.payment.status.changed` → `costa PaymentIntegrationService.handlePaymentStatusUpdate` |
 | Reconciliation / ledger / GL | ✅ | `mushex ReconciliationService` (statement import, 1% tolerance match), BFF triple-match compose; `general-ledger-service GlKafkaIntegrationListener` posts journals from `costa.bill.finalized` + `mushex.payment.status.changed` |
 | Clinical billing visibility | ❌→✅ this workstream | Was: no billing panel in the EHR encounter journey (only aggregate `EncounterCareChainRail` counters behind FINANCE-role endpoints) |
-| Patient-facing billing | 🟡 | `/finance/my-account`, `/citizen/wallet/payments` (one-ui-shell); mobile citizen `GET /internal/v1/mobile/citizen/costa/charges/pending`; **mobile provider finance routes referenced in app code do not exist in the BFF** |
+| Patient-facing billing | 🟡 | `/finance/my-account`, `/citizen/wallet/payments` (one-ui-shell); mobile citizen `GET /internal/v1/mobile/citizen/costa/charges/pending`; **mobile provider finance routes referenced in app code do not exist in the BFF**. Fixed in this workstream: the wallet payments card queried COSTA with invalid status `INVOICED` (card was permanently unavailable) — now queries `FINAL` and the page shows the coverage split (coverage pays / patient shortfall / coverage status) with real COSTA statuses |
 | Audit / reporting | ✅ | `costa /costa/v1/audit/bill/{id}`; outbox events on every lifecycle step; `FinancialReportsBffController` |
 
 ## 2. Classification detail
@@ -139,7 +139,9 @@
    short-circuits after draft. Owned by the teleconsult/W-lane; flagged, not patched here
    (W0/W2 telemedicine surface is leased).
 3. `V17` `costa_bill_id` dead column — wire write-back or drop (additive migration), low priority.
-4. Payment-intent amount derivation inside COSTA itself (sovereign side) — BFF now derives, but
+4. Payment-intent amount derivation inside COSTA itself (sovereign side) — the BFF now derives
+   the amount when callers omit it (`REMAINDER` → `patientPayable`, `FULL` → `totalPayable`,
+   zero-payable rejected with `NOTHING_PAYABLE`, `amount_source` surfaced in meta), but
    COSTA still accepts arbitrary caller amounts on `/costa/v1/bills/{id}/create-payment-intent`.
    Consider a `REMAINDER` server-side enforcement in COSTA (needs Worker A / coordinator sign-off).
 5. Mobile provider finance endpoints referenced by the provider app do not exist in the BFF.
