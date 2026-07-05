@@ -63,6 +63,29 @@ public class RtcWebhookTranslator {
     }
 
     /**
+     * Resolve the governed session for a LiveKit room, tolerating the
+     * provision-commit race: LiveKit (v1.13+) emits room_started at room
+     * creation, which can land while the provisioning transaction that
+     * inserts the rtc_sessions row is still open. A short bounded retry
+     * closes that sub-second visibility window; a genuinely unknown room
+     * still falls through to raw-only recording.
+     */
+    private RtcSessionRecord resolveSession(String roomName) {
+        for (int attempt = 0; ; attempt++) {
+            RtcSessionRecord session = sessions.findByRoomName(roomName).orElse(null);
+            if (session != null || attempt >= 3) {
+                return session;
+            }
+            try {
+                Thread.sleep(700);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
+        }
+    }
+
+    /**
      * @return outcome for the HTTP layer: PROCESSED, DUPLICATE, UNKNOWN_ROOM, or IGNORED.
      */
     public Outcome handle(JsonNode event) {
@@ -76,9 +99,7 @@ public class RtcWebhookTranslator {
         String identity = event.path("participant").path("identity").asText(null);
         Instant occurredAt = occurredAt(event);
 
-        RtcSessionRecord session = roomName == null
-                ? null
-                : sessions.findByRoomName(roomName).orElse(null);
+        RtcSessionRecord session = roomName == null ? null : resolveSession(roomName);
 
         boolean inserted = telemetry.insertEventIfNew(
                 session == null ? null : session.id(),
