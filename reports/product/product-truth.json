@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-30T18:45:42.873Z",
-  "branch": "claude/crazy-merkle-3ad1a1",
+  "generatedAt": "2026-07-05T08:12:59.262Z",
+  "branch": "claude/vigorous-grothendieck-165d2f",
   "registryDrift": {
     "unregisteredModules": [],
     "missingOnDiskModules": []
@@ -9,8 +9,8 @@
     "totalServices": 96,
     "totalLibraries": 12,
     "totalUiWorkspaces": 24,
-    "bffRouteCount": 2551,
-    "contractCount": 105,
+    "bffRouteCount": 2661,
+    "contractCount": 106,
     "byProductStatus": {
       "internal-only": 25,
       "real": 71
@@ -41,14 +41,14 @@
       "userFacingRealProven": 4
     },
     "capabilities": {
-      "totalCapabilities": 3892,
+      "totalCapabilities": 4072,
       "byDisposition": {
-        "real": 3324,
-        "partial": 154,
-        "real-proven": 207,
+        "real": 3500,
+        "partial": 155,
+        "real-proven": 210,
         "fixture": 207
       },
-      "provenCapabilities": 207,
+      "provenCapabilities": 210,
       "fixtureCapabilities": 207
     }
   },
@@ -200,7 +200,7 @@
         "contractOperations": 3,
         "contractViolations": 0,
         "bffClients": 4,
-        "uiReferences": 2,
+        "uiReferences": 3,
         "mobileReferences": 0,
         "tests": 1
       },
@@ -226,6 +226,7 @@
       ],
       "uiPaths": [
         "ui/one-ui-shell/src/app/telemedicine/analytics/page.tsx",
+        "ui/one-ui-shell/src/app/work/telemedicine/operations/page.tsx",
         "ui/one-ui-shell/src/hooks/queries/useTelemedicineAnalytics.ts"
       ],
       "mobilePaths": [],
@@ -500,9 +501,9 @@
         "stubRoutes": 0,
         "contractOperations": 54,
         "contractViolations": 0,
-        "bffClients": 11,
-        "uiReferences": 42,
-        "mobileReferences": 22,
+        "bffClients": 12,
+        "uiReferences": 43,
+        "mobileReferences": 23,
         "tests": 5
       },
       "dimensions": {
@@ -528,6 +529,7 @@
         "MarketplaceController→inline",
         "ProcedureWorkflowController→inline",
         "SchedulingController→inline",
+        "TeleconsultController→inline",
         "CitizenAppointmentController→inline",
         "CitizenBookingController→inline",
         "booking→yml-base-url"
@@ -542,6 +544,7 @@
         "ui/one-ui-shell/src/app/home/bookings/new/page.tsx",
         "ui/one-ui-shell/src/app/home/bookings/page.test.tsx",
         "ui/one-ui-shell/src/app/home/bookings/page.tsx",
+        "ui/one-ui-shell/src/app/home/notifications/page.tsx",
         "ui/one-ui-shell/src/app/home/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/bookings/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/page.test.tsx",
@@ -551,8 +554,7 @@
         "ui/one-ui-shell/src/app/operations/facility-operations/resources/page.tsx",
         "ui/one-ui-shell/src/app/organization-admin/staffing/page.tsx",
         "ui/one-ui-shell/src/app/queue/scheduled/page.tsx",
-        "ui/one-ui-shell/src/app/scheduling/booking-requests/page.test.tsx",
-        "ui/one-ui-shell/src/app/scheduling/booking-requests/page.tsx"
+        "ui/one-ui-shell/src/app/scheduling/booking-requests/page.test.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/integration/BackendIntegration.test.tsx",
@@ -748,8 +750,8 @@
         "contractOperations": 16,
         "contractViolations": 0,
         "bffClients": 9,
-        "uiReferences": 35,
-        "mobileReferences": 27,
+        "uiReferences": 37,
+        "mobileReferences": 28,
         "tests": 4
       },
       "dimensions": {
@@ -792,12 +794,12 @@
         "ui/one-ui-shell/src/app/operations/butano/page.tsx",
         "ui/one-ui-shell/src/app/operations/page.tsx",
         "ui/one-ui-shell/src/app/production-command-centre/page.tsx",
+        "ui/one-ui-shell/src/components/encounter/EncounterMedicationsPanel.test.tsx",
         "ui/one-ui-shell/src/components/intelligent/SmartEncounterFlow.tsx",
         "ui/one-ui-shell/src/components/navigation/ExperienceSidebar.tsx",
         "ui/one-ui-shell/src/components/shell/ShellFileExplorer.tsx",
         "ui/one-ui-shell/src/config/serviceBranding.test.ts",
-        "ui/one-ui-shell/src/config/serviceBranding.ts",
-        "ui/one-ui-shell/src/features/core-transaction/fixtures/core-transactions.ts"
+        "ui/one-ui-shell/src/config/serviceBranding.ts"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/social/socialService.test.ts",
@@ -882,7 +884,7 @@
         "contractOperations": 12,
         "contractViolations": 0,
         "bffClients": 8,
-        "uiReferences": 21,
+        "uiReferences": 25,
         "mobileReferences": 8,
         "tests": 5
       },
@@ -912,6 +914,8 @@
       ],
       "uiPaths": [
         "ui/one-ui-shell/src/app/api/mobile/provider/hubs/[hub]/route.ts",
+        "ui/one-ui-shell/src/app/communication/approvals/page.test.tsx",
+        "ui/one-ui-shell/src/app/communication/approvals/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/oversight/page.tsx",
         "ui/one-ui-shell/src/app/omnichannel/page.tsx",
         "ui/one-ui-shell/src/app/pages/page.tsx",
@@ -926,11 +930,9 @@
         "ui/one-ui-shell/src/components/public-health/publicHealthCampaignKpis.ts",
         "ui/one-ui-shell/src/data/workSurfaceModules.ts",
         "ui/one-ui-shell/src/features/production-command-centre/tile-registry.ts",
+        "ui/one-ui-shell/src/hooks/queries/__tests__/useCommsApproval.test.tsx",
         "ui/one-ui-shell/src/hooks/queries/useCampaigns.ts",
-        "ui/one-ui-shell/src/hooks/queries/useOmnichannel.ts",
-        "ui/one-ui-shell/src/hooks/queries/usePublicHealth.ts",
-        "ui/one-ui-shell/src/lib/registry-service-module-refs.ts",
-        "ui/one-ui-shell/src/lib/routes.ts"
+        "ui/one-ui-shell/src/hooks/queries/useCommsApproval.ts"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/PersonalFlow.test.tsx",
@@ -1108,7 +1110,7 @@
         "contractViolations": 0,
         "bffClients": 11,
         "uiReferences": 27,
-        "mobileReferences": 7,
+        "mobileReferences": 9,
         "tests": 3
       },
       "dimensions": {
@@ -1164,9 +1166,11 @@
         "provider-app:apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/AssistedCommunicationPreferencesScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/screens/provider/FacilitySetupScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/MessagingScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/ProfessionalChannelsHubScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/ProfessionalSettingsHubScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/services/facilitySetupService.ts",
         "provider-app:apps/mobile/provider-app/src/services/professionalChannelsHubService.ts"
       ],
       "mockStubHits": [],
@@ -1349,8 +1353,8 @@
         "stubRoutes": 0,
         "contractOperations": 78,
         "contractViolations": 0,
-        "bffClients": 19,
-        "uiReferences": 59,
+        "bffClients": 20,
+        "uiReferences": 65,
         "mobileReferences": 39,
         "tests": 2
       },
@@ -1371,6 +1375,7 @@
       "bffClients": [
         "CommunityServiceClient",
         "CommunityController→inline",
+        "DeathPathwayController→inline",
         "FacilityController→inline",
         "LiveComposerController→inline",
         "MobileCitizenController→inline",
@@ -1406,10 +1411,10 @@
         "ui/one-ui-shell/src/app/madi/drives/page.tsx",
         "ui/one-ui-shell/src/app/madi/page.tsx",
         "ui/one-ui-shell/src/app/nhume/deliveries/new/page.tsx",
+        "ui/one-ui-shell/src/app/professional/request-access/page.tsx",
         "ui/one-ui-shell/src/app/registry/clients/new/page.tsx",
         "ui/one-ui-shell/src/app/scheduling/bookings/config/page.tsx",
-        "ui/one-ui-shell/src/app/social/page.tsx",
-        "ui/one-ui-shell/src/app/wellness/clubs/page.tsx"
+        "ui/one-ui-shell/src/app/social/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/App.tsx",
@@ -1578,19 +1583,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 14,
-        "entities": 122,
-        "repositories": 50,
-        "serviceLayer": 25,
-        "controllers": 23,
-        "routes": 132,
+        "migrations": 20,
+        "entities": 171,
+        "repositories": 64,
+        "serviceLayer": 37,
+        "controllers": 28,
+        "routes": 182,
         "stubRoutes": 0,
         "contractOperations": 101,
         "contractViolations": 0,
-        "bffClients": 17,
-        "uiReferences": 35,
-        "mobileReferences": 3,
-        "tests": 19
+        "bffClients": 20,
+        "uiReferences": 46,
+        "mobileReferences": 7,
+        "tests": 30
       },
       "dimensions": {
         "database": "real",
@@ -1610,12 +1615,14 @@
         "CostaServiceClient",
         "CostaIntelBffController→CostaServiceClient",
         "CoverageRegistrationPreviewController→CostaServiceClient",
+        "EncounterController→CostaServiceClient",
         "FinanceBillingWorkspaceController→CostaServiceClient",
         "FinanceController→CostaServiceClient",
         "FinanceFacilityBffController→CostaServiceClient",
         "FinancialBudgetsBffController→CostaServiceClient",
         "FinancialDocumentFinanceBffController→CostaServiceClient",
         "FinancialReportsBffController→CostaServiceClient",
+        "ManagedBudgetBffController→CostaServiceClient",
         "MobileProviderExtendedController→CostaServiceClient",
         "PatientAccountFinanceBffController→CostaServiceClient",
         "PaymentPlanFinanceBffController→CostaServiceClient",
@@ -1623,9 +1630,17 @@
         "ServiceAccessDecisionFinanceBffController→CostaServiceClient",
         "TeleconsultController→CostaServiceClient",
         "MobileDischargeController→CostaServiceClient",
-        "MobileEncounterController→CostaServiceClient"
+        "MobileEncounterController→CostaServiceClient",
+        "CitizenCostaController→CostaServiceClient"
       ],
       "uiPaths": [
+        "ui/one-ui-shell/src/app/budgets/[budgetId]/page.tsx",
+        "ui/one-ui-shell/src/app/budgets/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/payments/page.tsx",
+        "ui/one-ui-shell/src/app/ehr/[patientId]/discharge/page.test.tsx",
+        "ui/one-ui-shell/src/app/ehr/[patientId]/discharge/page.tsx",
+        "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.test.tsx",
+        "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/charge-sheet/page.test.tsx",
         "ui/one-ui-shell/src/app/enterprise/charge-sheet/page.tsx",
         "ui/one-ui-shell/src/app/finance/commerce-integrations/page.tsx",
@@ -1638,19 +1653,16 @@
         "ui/one-ui-shell/src/app/finance/page.tsx",
         "ui/one-ui-shell/src/app/finance/reports/page.tsx",
         "ui/one-ui-shell/src/app/finance/service-access/page.tsx",
-        "ui/one-ui-shell/src/app/finance/tariffs/page.test.tsx",
-        "ui/one-ui-shell/src/app/finance/tariffs/page.tsx",
-        "ui/one-ui-shell/src/app/finance/workspace/page.tsx",
-        "ui/one-ui-shell/src/components/billing/ServiceAccessPaymentPanel.tsx",
-        "ui/one-ui-shell/src/components/clinical/ClinicalFinanceContextStrip.tsx",
-        "ui/one-ui-shell/src/components/encounter/EncounterCareChainRail.tsx",
-        "ui/one-ui-shell/src/components/enterprise/ConsumablesCostPanel.tsx",
-        "ui/one-ui-shell/src/components/enterprise/EnterpriseResourceDashboard.tsx"
+        "ui/one-ui-shell/src/app/finance/tariffs/page.test.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/FinanceSection.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/services/financeService.costa.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/FinanceSection.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/services/financeService.ts"
+        "citizen-app:apps/mobile/citizen-app/src/services/financeService.ts",
+        "provider-app:apps/mobile/provider-app/src/screens/budgets/BudgetSummaryScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/services/budgetService.ts",
+        "packages:apps/mobile/packages/mobile-registry/src/wiring.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -1718,12 +1730,12 @@
         "repositories": 18,
         "serviceLayer": 5,
         "controllers": 13,
-        "routes": 60,
+        "routes": 61,
         "stubRoutes": 0,
         "contractOperations": 56,
         "contractViolations": 0,
-        "bffClients": 12,
-        "uiReferences": 64,
+        "bffClients": 14,
+        "uiReferences": 73,
         "mobileReferences": 16,
         "tests": 7
       },
@@ -1746,6 +1758,8 @@
         "AppealsExperienceController→inline",
         "CoverageController→inline",
         "CoverageRegistrationPreviewController→inline",
+        "EncounterController→inline",
+        "FinanceController→inline",
         "MobileCitizenController→inline",
         "PatientController→inline",
         "ProviderFinancingController→inline",
@@ -1757,12 +1771,16 @@
       ],
       "uiPaths": [
         "ui/one-ui-shell/src/app/api/mobile/provider/hubs/[hub]/route.ts",
+        "ui/one-ui-shell/src/app/citizen/wallet/payments/page.test.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/payments/page.tsx",
         "ui/one-ui-shell/src/app/coverage/contracts/page.tsx",
         "ui/one-ui-shell/src/app/coverage/enroll/page.tsx",
         "ui/one-ui-shell/src/app/coverage/member/page.tsx",
         "ui/one-ui-shell/src/app/coverage/page.test.tsx",
         "ui/one-ui-shell/src/app/coverage/page.tsx",
+        "ui/one-ui-shell/src/app/ehr/[patientId]/discharge/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/oversight/page.tsx",
+        "ui/one-ui-shell/src/app/finance/billing/[id]/page.tsx",
         "ui/one-ui-shell/src/app/finance/commerce-integrations/page.test.tsx",
         "ui/one-ui-shell/src/app/finance/commerce-integrations/page.tsx",
         "ui/one-ui-shell/src/app/finance/costa/page.tsx",
@@ -1771,11 +1789,7 @@
         "ui/one-ui-shell/src/app/finance/remittances/page.test.tsx",
         "ui/one-ui-shell/src/app/finance/remittances/page.tsx",
         "ui/one-ui-shell/src/app/home/bookings/new/page.tsx",
-        "ui/one-ui-shell/src/app/home/page.tsx",
-        "ui/one-ui-shell/src/app/learning/catalog/__tests__/page.test.tsx",
-        "ui/one-ui-shell/src/app/learning/courses/[courseId]/__tests__/page.test.tsx",
-        "ui/one-ui-shell/src/app/learning/studio/analytics/page.tsx",
-        "ui/one-ui-shell/src/app/marketplace/apps/admin/installations/page.tsx"
+        "ui/one-ui-shell/src/app/home/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/CoverageSection.test.tsx",
@@ -1860,7 +1874,7 @@
         "contractOperations": 0,
         "contractViolations": 0,
         "bffClients": 3,
-        "uiReferences": 13,
+        "uiReferences": 16,
         "mobileReferences": 7,
         "tests": 4
       },
@@ -1896,7 +1910,10 @@
         "ui/one-ui-shell/src/app/work/daidzai/missions/page.tsx",
         "ui/one-ui-shell/src/app/work/daidzai/page.test.tsx",
         "ui/one-ui-shell/src/app/work/daidzai/page.tsx",
-        "ui/one-ui-shell/src/lib/routes.ts"
+        "ui/one-ui-shell/src/config/serviceBranding.test.ts",
+        "ui/one-ui-shell/src/config/serviceBranding.ts",
+        "ui/one-ui-shell/src/lib/routes.ts",
+        "ui/one-ui-shell/src/lib/telemedicine/virtual-hospitals.ts"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/screens/emergency/SosScreen.tsx",
@@ -2085,7 +2102,7 @@
         "contractOperations": 11,
         "contractViolations": 0,
         "bffClients": 3,
-        "uiReferences": 22,
+        "uiReferences": 23,
         "mobileReferences": 0,
         "tests": 9
       },
@@ -2114,6 +2131,7 @@
         "ui/one-ui-shell/src/app/dags/page.tsx",
         "ui/one-ui-shell/src/app/dags/policy/page.tsx",
         "ui/one-ui-shell/src/app/intelligence/page.tsx",
+        "ui/one-ui-shell/src/app/professional/request-access/page.tsx",
         "ui/one-ui-shell/src/components/administration-governance/GovernanceActionResult.tsx",
         "ui/one-ui-shell/src/components/administration-governance/OnboardFlowWizard.tsx",
         "ui/one-ui-shell/src/components/administration-governance/OnboardReviewSubmit.tsx",
@@ -2127,8 +2145,7 @@
         "ui/one-ui-shell/src/lib/__tests__/phase6-service-completion-golden-thread.test.ts",
         "ui/one-ui-shell/src/lib/admin-governance/api/accessRequestsApi.ts",
         "ui/one-ui-shell/src/lib/administration-governance/route-registry.ts",
-        "ui/one-ui-shell/src/lib/administration-governance/tiles.ts",
-        "ui/one-ui-shell/src/lib/registry-service-module-refs.ts"
+        "ui/one-ui-shell/src/lib/administration-governance/tiles.ts"
       ],
       "mobilePaths": [],
       "mockStubHits": [],
@@ -2204,7 +2221,7 @@
         "bffClients": 8,
         "uiReferences": 9,
         "mobileReferences": 0,
-        "tests": 4
+        "tests": 5
       },
       "dimensions": {
         "database": "real",
@@ -2712,8 +2729,8 @@
         "contractOperations": 32,
         "contractViolations": 0,
         "bffClients": 18,
-        "uiReferences": 75,
-        "mobileReferences": 28,
+        "uiReferences": 80,
+        "mobileReferences": 34,
         "tests": 3
       },
       "dimensions": {
@@ -2752,6 +2769,7 @@
       ],
       "uiPaths": [
         "ui/one-ui-shell/src/app/clinical/page.tsx",
+        "ui/one-ui-shell/src/app/communication/approvals/page.tsx",
         "ui/one-ui-shell/src/app/core-transaction/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/lab-worklist/page.test.tsx",
         "ui/one-ui-shell/src/app/diagnostics/lab-worklist/page.tsx",
@@ -2769,20 +2787,19 @@
         "ui/one-ui-shell/src/app/nhume/deliveries/[deliveryId]/page.tsx",
         "ui/one-ui-shell/src/app/nhume/deliveries/new/page.tsx",
         "ui/one-ui-shell/src/app/nhume/dispatcher/page.tsx",
-        "ui/one-ui-shell/src/app/nhume/fleet/page.tsx",
-        "ui/one-ui-shell/src/app/nhume/map/page.tsx"
+        "ui/one-ui-shell/src/app/nhume/fleet/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsHubScreen.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/EventDiscussionSection.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/learning/LearningClassroomScreen.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/IdRecoverySection.interaction.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/telehealth/TelehealthWaitingRoom.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/NhumeTrackingScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/emergency/SosScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/ProductionReadinessJourneyScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/emergencyService.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/nhumeService.ts",
-        "provider-app:apps/mobile/provider-app/src/__tests__/provider/AdminRegistryHubScreen.test.tsx",
-        "provider-app:apps/mobile/provider-app/src/__tests__/services/daidzaiFieldService.test.ts"
+        "citizen-app:apps/mobile/citizen-app/src/services/nhumeService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -2850,14 +2867,14 @@
         "repositories": 5,
         "serviceLayer": 6,
         "controllers": 2,
-        "routes": 16,
+        "routes": 17,
         "stubRoutes": 0,
         "contractOperations": 26,
         "contractViolations": 0,
-        "bffClients": 20,
-        "uiReferences": 154,
-        "mobileReferences": 132,
-        "tests": 3
+        "bffClients": 22,
+        "uiReferences": 162,
+        "mobileReferences": 139,
+        "tests": 4
       },
       "dimensions": {
         "database": "real",
@@ -2887,10 +2904,12 @@
         "ProcedureWorkflowController→inline",
         "PublicHealthController→inline",
         "SearchController→inline",
+        "SessionTemplateController→inline",
         "ShellFileCatalogController→inline",
         "StructuredHistoryController→inline",
         "SummaryProxyController→inline",
         "TeleconsultController→inline",
+        "CitizenCostaController→inline",
         "CitizenRecordsController→inline",
         "ProviderDeveloperHubController→inline",
         "RegistryIntakeController→inline"
@@ -2922,12 +2941,12 @@
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsService.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/EventDiscussionSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/integration/BackendIntegration.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/learning/LearningClassroomScreen.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/marketplace/MarketplaceFlow.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/messaging/MessagingFlow.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/FinanceSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/IdRecoverySection.interaction.test.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/PersonalFlow.test.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/WalletSection.test.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/PersonalFlow.test.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -2994,15 +3013,15 @@
         "entities": 0,
         "repositories": 2,
         "serviceLayer": 45,
-        "controllers": 280,
-        "routes": 2551,
+        "controllers": 289,
+        "routes": 2661,
         "stubRoutes": 0,
         "contractOperations": 1538,
         "contractViolations": 0,
         "bffClients": 0,
-        "uiReferences": 183,
-        "mobileReferences": 70,
-        "tests": 186
+        "uiReferences": 188,
+        "mobileReferences": 82,
+        "tests": 196
       },
       "dimensions": {
         "database": "real",
@@ -3031,6 +3050,7 @@
         "ui/one-ui-shell/src/app/admin/sidecar-retirement/page.tsx",
         "ui/one-ui-shell/src/app/admin/system-monitor/page.tsx",
         "ui/one-ui-shell/src/app/clinical/control-tower/page.tsx",
+        "ui/one-ui-shell/src/app/communication/approvals/page.tsx",
         "ui/one-ui-shell/src/app/core-transaction/page.tsx",
         "ui/one-ui-shell/src/app/coverage/page.tsx",
         "ui/one-ui-shell/src/app/dags/policy/page.tsx",
@@ -3038,11 +3058,11 @@
         "ui/one-ui-shell/src/app/diagnostics/critical-queue/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/lab-worklist/page.tsx",
         "ui/one-ui-shell/src/app/diagnostics/orders/page.tsx",
-        "ui/one-ui-shell/src/app/diagnostics/procedure-worklist/page.tsx",
-        "ui/one-ui-shell/src/app/diagnostics/results-inbox/page.tsx"
+        "ui/one-ui-shell/src/app/diagnostics/procedure-worklist/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/walletService.test.ts",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/services/financeService.costa.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/social/socialService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/screens/crvs/UbomiCrvsScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/marketplace/HealthOsAppsScreen.tsx",
@@ -3050,8 +3070,7 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/rito/FeedbackScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/rito/TrackFeedbackScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/social/CommunitiesScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/social/SocialFeedScreen.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/screens/social/CommunitiesScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -3213,19 +3232,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 1,
+        "migrations": 2,
         "entities": 3,
         "repositories": 3,
         "serviceLayer": 2,
         "controllers": 1,
-        "routes": 8,
+        "routes": 10,
         "stubRoutes": 0,
         "contractOperations": 14,
         "contractViolations": 0,
-        "bffClients": 6,
-        "uiReferences": 33,
-        "mobileReferences": 2,
-        "tests": 2
+        "bffClients": 7,
+        "uiReferences": 39,
+        "mobileReferences": 10,
+        "tests": 3
       },
       "dimensions": {
         "database": "real",
@@ -3243,6 +3262,7 @@
       "contractFile": "forms.openapi.yaml",
       "bffClients": [
         "FormsServiceClient",
+        "EncounterFormsController→inline",
         "ExtensionController→inline",
         "FinanceController→inline",
         "SearchController→inline",
@@ -3253,6 +3273,7 @@
         "ui/one-ui-shell/src/app/clinical-tools/forms/page.tsx",
         "ui/one-ui-shell/src/app/clinical-tools/page.tsx",
         "ui/one-ui-shell/src/app/clinical-tools/rules/page.tsx",
+        "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.test.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx",
         "ui/one-ui-shell/src/app/finance/mushex-platform/page.test.tsx",
         "ui/one-ui-shell/src/app/inventory/stock-management/page.tsx",
@@ -3268,12 +3289,19 @@
         "ui/one-ui-shell/src/components/ehr/CadreHistoryForm.tsx",
         "ui/one-ui-shell/src/components/ehr/EncounterDocumentsSheet.tsx",
         "ui/one-ui-shell/src/components/ehr/sections/OutcomeSection.tsx",
-        "ui/one-ui-shell/src/components/encounter/AdaptiveEncounterCockpit.tsx",
-        "ui/one-ui-shell/src/components/encounter/StructuredEncounterForms.tsx"
+        "ui/one-ui-shell/src/components/encounter/AdaptiveEncounterCockpit.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/services/learningSessionsService.ts",
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/BackendIntegration.test.tsx",
-        "provider-app:apps/mobile/provider-app/src/services/formService.ts"
+        "provider-app:apps/mobile/provider-app/src/__tests__/provider/EncounterFormsPanel.test.tsx",
+        "provider-app:apps/mobile/provider-app/src/screens/provider/EncounterFormsPanel.tsx",
+        "provider-app:apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/screens/provider/FacilitySetupScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/services/encounterFormsService.test.ts",
+        "provider-app:apps/mobile/provider-app/src/services/encounterFormsService.ts",
+        "provider-app:apps/mobile/provider-app/src/services/formService.ts",
+        "provider-app:apps/mobile/provider-app/src/services/learningSessionsService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -3449,7 +3477,7 @@
         "contractViolations": 0,
         "bffClients": 10,
         "uiReferences": 141,
-        "mobileReferences": 12,
+        "mobileReferences": 14,
         "tests": 5
       },
       "dimensions": {
@@ -3501,16 +3529,16 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/telehealth/TelehealthWaitingRoom.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/MarketplaceStoreSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/NompiloGuidanceSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletOverviewSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/WellnessJourneysSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/telehealth/TelehealthSessionScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/nompiloGuidanceService.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/personHealthWalletService.ts",
-        "provider-app:apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/equipment/EquipmentToolsScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx"
+        "provider-app:apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -3914,18 +3942,18 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 18,
+        "migrations": 19,
         "entities": 37,
         "repositories": 36,
         "serviceLayer": 8,
         "controllers": 7,
-        "routes": 111,
+        "routes": 112,
         "stubRoutes": 0,
         "contractOperations": 14,
         "contractViolations": 0,
         "bffClients": 15,
         "uiReferences": 55,
-        "mobileReferences": 12,
+        "mobileReferences": 13,
         "tests": 14
       },
       "dimensions": {
@@ -3988,10 +4016,10 @@
         "provider-app:apps/mobile/provider-app/src/screens/provider/APGARScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/InpatientScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/ShiftHandoffScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/WardAlertsScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/services/demoJourneyService.ts"
+        "provider-app:apps/mobile/provider-app/src/screens/provider/WardAlertsScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -4232,10 +4260,11 @@
       "domain": "care-delivery",
       "plane": "clinical",
       "productNames": [
+        "Dura",
         "Inventory"
       ],
-      "sovereign": false,
-      "sovereignGroup": null,
+      "sovereign": true,
+      "sovereignGroup": "DURA",
       "registryStatus": {
         "production": "baseline-assessed",
         "implementation": "implemented-or-partial",
@@ -4262,19 +4291,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 4,
-        "entities": 22,
-        "repositories": 14,
-        "serviceLayer": 12,
-        "controllers": 10,
-        "routes": 52,
+        "migrations": 11,
+        "entities": 55,
+        "repositories": 29,
+        "serviceLayer": 21,
+        "controllers": 19,
+        "routes": 115,
         "stubRoutes": 0,
         "contractOperations": 73,
         "contractViolations": 0,
-        "bffClients": 10,
-        "uiReferences": 59,
-        "mobileReferences": 17,
-        "tests": 6
+        "bffClients": 11,
+        "uiReferences": 90,
+        "mobileReferences": 26,
+        "tests": 18
       },
       "dimensions": {
         "database": "real",
@@ -4293,6 +4322,7 @@
       "bffClients": [
         "InventoryServiceClient",
         "BloodReadController→inline",
+        "DuraBffController→inline",
         "InventoryController→inline",
         "InventoryElmisSupplyBffController→inline",
         "InventorySupplyBffController→inline",
@@ -4307,7 +4337,11 @@
         "ui/one-ui-shell/src/app/admin/data-export/page.tsx",
         "ui/one-ui-shell/src/app/admin/keys/page.tsx",
         "ui/one-ui-shell/src/app/admin/page.tsx",
+        "ui/one-ui-shell/src/app/clinical/dictation/page.tsx",
+        "ui/one-ui-shell/src/app/ehr/[patientId]/medications/page.tsx",
+        "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/procedures/[episodeId]/page.tsx",
+        "ui/one-ui-shell/src/app/ehr/[patientId]/vitals/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/charge-sheet/page.test.tsx",
         "ui/one-ui-shell/src/app/enterprise/charge-sheet/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/page.tsx",
@@ -4318,23 +4352,19 @@
         "ui/one-ui-shell/src/app/inventory/movements/page.tsx",
         "ui/one-ui-shell/src/app/inventory/page.test.tsx",
         "ui/one-ui-shell/src/app/inventory/page.tsx",
-        "ui/one-ui-shell/src/app/inventory/reconciliation/page.tsx",
-        "ui/one-ui-shell/src/app/inventory/requisitions/page.test.tsx",
-        "ui/one-ui-shell/src/app/inventory/requisitions/page.tsx",
-        "ui/one-ui-shell/src/app/inventory/stock/page.tsx",
-        "ui/one-ui-shell/src/app/inventory/stock-management/page.tsx"
+        "ui/one-ui-shell/src/app/inventory/reconciliation/page.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/config.ts",
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/ProgramsScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/telehealth/TelehealthSessionScreen.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/services/coverageCommandService.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/marketplaceStoreService.ts",
         "provider-app:apps/mobile/provider-app/src/__tests__/integration/BackendIntegration.test.tsx",
         "provider-app:apps/mobile/provider-app/src/__tests__/supervisor/InventoryScreen.test.tsx",
+        "provider-app:apps/mobile/provider-app/src/config.ts",
         "provider-app:apps/mobile/provider-app/src/navigation/SupervisorTabs.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/madi/MadiCentralBankScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/PharmacyHubScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/ProviderDashboardScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/supervisor/InventoryScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/supervisor/StockScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/services/demoJourneyService.ts"
+        "provider-app:apps/mobile/provider-app/src/screens/madi/MadiCentralBankScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -4710,19 +4740,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 26,
-        "entities": 47,
-        "repositories": 47,
-        "serviceLayer": 27,
+        "migrations": 28,
+        "entities": 48,
+        "repositories": 48,
+        "serviceLayer": 28,
         "controllers": 27,
-        "routes": 166,
+        "routes": 170,
         "stubRoutes": 0,
         "contractOperations": 218,
         "contractViolations": 0,
         "bffClients": 6,
-        "uiReferences": 132,
-        "mobileReferences": 32,
-        "tests": 34
+        "uiReferences": 152,
+        "mobileReferences": 42,
+        "tests": 37
       },
       "dimensions": {
         "database": "real",
@@ -4769,16 +4799,16 @@
         "ui/one-ui-shell/src/app/learning/admin/providers/page.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/learning/LearningClassroomScreen.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/learning/LearningSessionsService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/navigation/citizenServiceNavigation.ts",
+        "citizen-app:apps/mobile/citizen-app/src/screens/learning/LearningClassroomScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/marketplace/FundoLearningScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/marketplace/HealthOsAppsScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/social/SocialFeedScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/fundoLearningService.test.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/fundoLearningService.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/fundoLearningSummary.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/nompiloGuidanceService.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/socialService.ts"
+        "citizen-app:apps/mobile/citizen-app/src/services/fundoLearningService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -4862,9 +4892,9 @@
         "contractOperations": 61,
         "contractViolations": 0,
         "bffClients": 2,
-        "uiReferences": 295,
-        "mobileReferences": 67,
-        "tests": 5
+        "uiReferences": 345,
+        "mobileReferences": 90,
+        "tests": 9
       },
       "dimensions": {
         "database": "real",
@@ -4893,6 +4923,7 @@
         "ui/one-ui-shell/src/app/admin/system-monitor/page.tsx",
         "ui/one-ui-shell/src/app/beds/page.tsx",
         "ui/one-ui-shell/src/app/citizen/inpatient/[admissionRef]/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/my-care/page.tsx",
         "ui/one-ui-shell/src/app/citizen/page.tsx",
         "ui/one-ui-shell/src/app/citizen/visit/[transactionId]/page.tsx",
         "ui/one-ui-shell/src/app/citizen/wallet/comms/page.tsx",
@@ -4903,20 +4934,19 @@
         "ui/one-ui-shell/src/app/clinical/control-tower/page.test.tsx",
         "ui/one-ui-shell/src/app/clinical/control-tower/page.tsx",
         "ui/one-ui-shell/src/app/clinical/inpatient/admissions/[admissionId]/page.tsx",
-        "ui/one-ui-shell/src/app/clinical/inpatient/admissions/page.tsx",
-        "ui/one-ui-shell/src/app/clinical/inpatient/nursing/page.tsx"
+        "ui/one-ui-shell/src/app/clinical/inpatient/admissions/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsHubScreen.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsService.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/EventDiscussionSection.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/learning/LearningClassroomScreen.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/learning/LearningSessionsService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/FinanceSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/IdRecoverySection.interaction.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/coverageCommandService.test.ts",
-        "citizen-app:apps/mobile/citizen-app/src/__tests__/setup.ts",
-        "citizen-app:apps/mobile/citizen-app/src/main.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/navigation/citizenServiceNavigation.ts",
-        "citizen-app:apps/mobile/citizen-app/src/screens/NhumeTrackingScreen.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/services/financeService.costa.test.ts",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/setup.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -5343,7 +5373,7 @@
         "contractOperations": 84,
         "contractViolations": 0,
         "bffClients": 10,
-        "uiReferences": 31,
+        "uiReferences": 33,
         "mobileReferences": 3,
         "tests": 10
       },
@@ -5382,6 +5412,7 @@
         "ui/one-ui-shell/src/app/marketplace/ops/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/orders/[id]/page.test.tsx",
         "ui/one-ui-shell/src/app/marketplace/orders/[id]/page.tsx",
+        "ui/one-ui-shell/src/app/marketplace/orders/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/pickup/page.test.tsx",
         "ui/one-ui-shell/src/app/marketplace/pickup/page.tsx",
@@ -5392,8 +5423,7 @@
         "ui/one-ui-shell/src/app/marketplace/vendor/orders/page.test.tsx",
         "ui/one-ui-shell/src/app/marketplace/vendor/orders/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/vendor/page.tsx",
-        "ui/one-ui-shell/src/hooks/queries/useCommerceFlow.ts",
-        "ui/one-ui-shell/src/hooks/queries/useCommercePickup.ts"
+        "ui/one-ui-shell/src/hooks/queries/useCommerceFlow.ts"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/MarketplaceStoreSection.tsx",
@@ -5471,7 +5501,7 @@
         "contractOperations": 61,
         "contractViolations": 0,
         "bffClients": 21,
-        "uiReferences": 54,
+        "uiReferences": 56,
         "mobileReferences": 10,
         "tests": 6
       },
@@ -5527,12 +5557,12 @@
         "ui/one-ui-shell/src/app/marketplace/cart/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/catalog/page.test.tsx",
         "ui/one-ui-shell/src/app/marketplace/catalog/page.tsx",
+        "ui/one-ui-shell/src/app/marketplace/orders/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/pickup/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/seller/listings/new/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/seller/listings/page.tsx",
-        "ui/one-ui-shell/src/app/marketplace/seller/moderation/page.tsx",
-        "ui/one-ui-shell/src/app/marketplace/seller/page.tsx"
+        "ui/one-ui-shell/src/app/marketplace/seller/moderation/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/navigation/citizenServiceNavigation.ts",
@@ -5730,10 +5760,10 @@
         "stubRoutes": 0,
         "contractOperations": 75,
         "contractViolations": 0,
-        "bffClients": 12,
-        "uiReferences": 100,
-        "mobileReferences": 21,
-        "tests": 19
+        "bffClients": 13,
+        "uiReferences": 105,
+        "mobileReferences": 23,
+        "tests": 20
       },
       "dimensions": {
         "database": "real",
@@ -5751,6 +5781,7 @@
       "contractFile": "mushex.openapi.yaml",
       "bffClients": [
         "MushexServiceClient",
+        "EncounterController→inline",
         "FinanceController→inline",
         "FinanceLedgerController→inline",
         "FinanceMushexPlatformController→inline",
@@ -5764,8 +5795,11 @@
         "mushex→yml-base-url"
       ],
       "uiPaths": [
+        "ui/one-ui-shell/src/app/budgets/[budgetId]/page.tsx",
+        "ui/one-ui-shell/src/app/budgets/page.tsx",
         "ui/one-ui-shell/src/app/citizen/wallet/page.test.tsx",
         "ui/one-ui-shell/src/app/citizen/wallet/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/wallet/payments/page.test.tsx",
         "ui/one-ui-shell/src/app/citizen/wallet/payments/page.tsx",
         "ui/one-ui-shell/src/app/coverage/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/charge-sheet/page.tsx",
@@ -5780,22 +5814,19 @@
         "ui/one-ui-shell/src/app/finance/costa/page.test.tsx",
         "ui/one-ui-shell/src/app/finance/costa/page.tsx",
         "ui/one-ui-shell/src/app/finance/ledger/page.test.tsx",
-        "ui/one-ui-shell/src/app/finance/ledger/page.tsx",
-        "ui/one-ui-shell/src/app/finance/mushex-platform/cards/[cardId]/page.test.tsx",
-        "ui/one-ui-shell/src/app/finance/mushex-platform/cards/[cardId]/page.tsx",
-        "ui/one-ui-shell/src/app/finance/mushex-platform/page.test.tsx"
+        "ui/one-ui-shell/src/app/finance/ledger/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/FinanceSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/WalletSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/walletService.test.ts",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/services/financeService.costa.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/navigation/citizenServiceNavigation.ts",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/FinanceSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/MarketplaceStoreSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletOverviewSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/WalletSection.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/services/coverageCommandService.ts",
-        "citizen-app:apps/mobile/citizen-app/src/services/financeService.ts"
+        "citizen-app:apps/mobile/citizen-app/src/services/coverageCommandService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -6327,7 +6358,7 @@
         "bffClients": 5,
         "uiReferences": 51,
         "mobileReferences": 23,
-        "tests": 1
+        "tests": 2
       },
       "dimensions": {
         "database": "real",
@@ -6445,7 +6476,7 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 10,
+        "migrations": 11,
         "entities": 7,
         "repositories": 6,
         "serviceLayer": 5,
@@ -6455,9 +6486,9 @@
         "contractOperations": 33,
         "contractViolations": 0,
         "bffClients": 25,
-        "uiReferences": 66,
+        "uiReferences": 73,
         "mobileReferences": 24,
-        "tests": 5
+        "tests": 7
       },
       "dimensions": {
         "database": "real",
@@ -6511,16 +6542,16 @@
         "ui/one-ui-shell/src/app/citizen/wallet/comms/page.tsx",
         "ui/one-ui-shell/src/app/citizen/wallet/page.test.tsx",
         "ui/one-ui-shell/src/app/clinical/page.tsx",
+        "ui/one-ui-shell/src/app/communication/approvals/page.tsx",
         "ui/one-ui-shell/src/app/coverage/page.tsx",
+        "ui/one-ui-shell/src/app/home/notifications/page.test.tsx",
         "ui/one-ui-shell/src/app/home/notifications/page.tsx",
         "ui/one-ui-shell/src/app/home/page.tsx",
         "ui/one-ui-shell/src/app/home/preferences/page.tsx",
         "ui/one-ui-shell/src/app/id-services/page.tsx",
         "ui/one-ui-shell/src/app/learning/notifications/__tests__/page.test.tsx",
         "ui/one-ui-shell/src/app/learning/notifications/page.tsx",
-        "ui/one-ui-shell/src/app/learning/page.tsx",
-        "ui/one-ui-shell/src/app/learning/studio/publish/__tests__/page.test.tsx",
-        "ui/one-ui-shell/src/app/learning/studio/publish/page.tsx"
+        "ui/one-ui-shell/src/app/learning/page.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/EventDiscussionSection.test.tsx",
@@ -6900,8 +6931,8 @@
         "contractOperations": 58,
         "contractViolations": 0,
         "bffClients": 13,
-        "uiReferences": 74,
-        "mobileReferences": 17,
+        "uiReferences": 78,
+        "mobileReferences": 19,
         "tests": 33
       },
       "dimensions": {
@@ -6963,9 +6994,9 @@
         "provider-app:apps/mobile/provider-app/src/navigation/providerServiceNavigation.ts",
         "provider-app:apps/mobile/provider-app/src/screens/provider/DiagnosticsScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/screens/provider/FacilitySetupScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/LabOrderPanel.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/services/diagnosticsService.ts"
+        "provider-app:apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -7028,19 +7059,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 5,
-        "entities": 11,
-        "repositories": 10,
-        "serviceLayer": 2,
-        "controllers": 2,
-        "routes": 27,
+        "migrations": 7,
+        "entities": 15,
+        "repositories": 13,
+        "serviceLayer": 4,
+        "controllers": 3,
+        "routes": 39,
         "stubRoutes": 0,
         "contractOperations": 46,
         "contractViolations": 0,
         "bffClients": 0,
-        "uiReferences": 14,
+        "uiReferences": 15,
         "mobileReferences": 7,
-        "tests": 5
+        "tests": 7
       },
       "dimensions": {
         "database": "real",
@@ -7067,6 +7098,7 @@
         "ui/one-ui-shell/src/components/encounter/forms/AlliedHealthForms.tsx",
         "ui/one-ui-shell/src/components/imaging/DwvNativeViewer.tsx",
         "ui/one-ui-shell/src/data/workSurfaceModules.ts",
+        "ui/one-ui-shell/src/hooks/queries/useImaging.ts",
         "ui/one-ui-shell/src/lib/facility-work-cluster.ts",
         "ui/one-ui-shell/src/lib/registry-service-module-refs.ts",
         "ui/one-ui-shell/src/lib/shell/__tests__/search-hit-routing.test.ts",
@@ -7259,19 +7291,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 22,
-        "entities": 46,
-        "repositories": 36,
-        "serviceLayer": 18,
-        "controllers": 22,
-        "routes": 156,
+        "migrations": 31,
+        "entities": 53,
+        "repositories": 43,
+        "serviceLayer": 22,
+        "controllers": 25,
+        "routes": 178,
         "stubRoutes": 0,
         "contractOperations": 120,
         "contractViolations": 0,
-        "bffClients": 44,
-        "uiReferences": 447,
-        "mobileReferences": 107,
-        "tests": 19
+        "bffClients": 47,
+        "uiReferences": 485,
+        "mobileReferences": 123,
+        "tests": 24
       },
       "dimensions": {
         "database": "real",
@@ -7289,6 +7321,7 @@
       "contractFile": "pct.openapi.yaml",
       "bffClients": [
         "PctServiceClient",
+        "AdminFacilityQueueController→PctServiceClient",
         "AllergiesController→PctServiceClient",
         "CareEmergencyInpatientController→PctServiceClient",
         "ClinicalDepthController→PctServiceClient",
@@ -7301,6 +7334,7 @@
         "EdWorkflowController→PctServiceClient",
         "EhrPatientSummaryController→PctServiceClient",
         "EncounterController→PctServiceClient",
+        "EncounterFormsController→PctServiceClient",
         "FacilityModeController→PctServiceClient",
         "FacilityOperationsAggregateController→PctServiceClient",
         "GrowthController→PctServiceClient",
@@ -7320,6 +7354,7 @@
         "MobileDiagnosisController→PctServiceClient",
         "MobileDischargeController→PctServiceClient",
         "MobileEncounterController→PctServiceClient",
+        "MobileFormController→PctServiceClient",
         "MobileReferralController→PctServiceClient",
         "MobileSupervisorController→PctServiceClient",
         "MobileTaskController→PctServiceClient",
@@ -7343,29 +7378,29 @@
         "ui/one-ui-shell/src/app/admin/comms-ops/page.tsx",
         "ui/one-ui-shell/src/app/admin/data-export/page.test.tsx",
         "ui/one-ui-shell/src/app/admin/data-export/page.tsx",
+        "ui/one-ui-shell/src/app/admin/facility-imports/[runId]/page.tsx",
+        "ui/one-ui-shell/src/app/admin/facility-imports/[runId]/review/page.tsx",
         "ui/one-ui-shell/src/app/admin/page.tsx",
         "ui/one-ui-shell/src/app/admin/queues/page.tsx",
         "ui/one-ui-shell/src/app/admin/sidecar-retirement/page.test.tsx",
         "ui/one-ui-shell/src/app/beds/page.test.tsx",
         "ui/one-ui-shell/src/app/beds/page.tsx",
+        "ui/one-ui-shell/src/app/citizen/my-care/page.tsx",
         "ui/one-ui-shell/src/app/citizen/visit/[transactionId]/page.test.tsx",
         "ui/one-ui-shell/src/app/citizen/wallet/timeline/page.tsx",
-        "ui/one-ui-shell/src/app/clinical/control-tower/page.test.tsx",
-        "ui/one-ui-shell/src/app/clinical/control-tower/page.tsx",
-        "ui/one-ui-shell/src/app/clinical/emergency/[visitId]/page.tsx",
-        "ui/one-ui-shell/src/app/clinical/emergency/page.test.tsx"
+        "ui/one-ui-shell/src/app/clinical/control-tower/page.test.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/PersonalFlow.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/coverageCommandService.test.ts",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/services/financeService.costa.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/screens/NetworkStatusBar.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/AppointmentsSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/ClaimSharedDocumentsScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/CoverageSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/DelegatedPickupScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/PersonalScreen.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/personal/QueueStatusSection.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/personal/RecordSharingScreen.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/screens/personal/QueueStatusSection.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -7532,8 +7567,8 @@
         "contractOperations": 52,
         "contractViolations": 0,
         "bffClients": 12,
-        "uiReferences": 80,
-        "mobileReferences": 14,
+        "uiReferences": 86,
+        "mobileReferences": 15,
         "tests": 9
       },
       "dimensions": {
@@ -7901,8 +7936,8 @@
         "contractOperations": 11,
         "contractViolations": 0,
         "bffClients": 15,
-        "uiReferences": 82,
-        "mobileReferences": 23,
+        "uiReferences": 91,
+        "mobileReferences": 26,
         "tests": 1
       },
       "dimensions": {
@@ -7959,16 +7994,16 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/page.test.tsx"
       ],
       "mobilePaths": [
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/learning/LearningSessionsService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/PersonalFlow.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/BookingsSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/PersonalScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/ReferralsSection.tsx",
         "citizen-app:apps/mobile/citizen-app/src/screens/personal/WellnessJourneysSection.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/screens/telehealth/TelehealthSessionScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/clinicalRecordsService.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/services/clinicalRecordsService.ts",
-        "citizen-app:apps/mobile/citizen-app/src/types/index.ts",
-        "provider-app:apps/mobile/provider-app/src/__tests__/integration/BackendIntegration.test.tsx",
-        "provider-app:apps/mobile/provider-app/src/__tests__/integration/ClinicalWriteJourneyContracts.test.ts"
+        "citizen-app:apps/mobile/citizen-app/src/types/index.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -8041,8 +8076,8 @@
         "contractOperations": 5,
         "contractViolations": 0,
         "bffClients": 7,
-        "uiReferences": 41,
-        "mobileReferences": 5,
+        "uiReferences": 43,
+        "mobileReferences": 6,
         "tests": 8
       },
       "dimensions": {
@@ -8077,6 +8112,7 @@
         "ui/one-ui-shell/src/app/diagnostics/reporting/page.tsx",
         "ui/one-ui-shell/src/app/ehr/[patientId]/investigations/page.tsx",
         "ui/one-ui-shell/src/app/enterprise/oversight/page.tsx",
+        "ui/one-ui-shell/src/app/facility/[id]/configuration/page.test.tsx",
         "ui/one-ui-shell/src/app/finance/commerce-integrations/page.tsx",
         "ui/one-ui-shell/src/app/finance/reports/page.tsx",
         "ui/one-ui-shell/src/app/home/page.tsx",
@@ -8087,10 +8123,10 @@
         "ui/one-ui-shell/src/app/operations/vito/biometrics/page.tsx",
         "ui/one-ui-shell/src/app/organization-admin/page.tsx",
         "ui/one-ui-shell/src/app/pharmacy/transaction-journey/page.tsx",
-        "ui/one-ui-shell/src/app/reports/page.tsx",
-        "ui/one-ui-shell/src/app/workspace/aggregate/page.tsx"
+        "ui/one-ui-shell/src/app/reports/page.tsx"
       ],
       "mobilePaths": [
+        "provider-app:apps/mobile/provider-app/src/screens/outreach/PlaceModeDashboardScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/SystemStatusScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/rito/ReportSafetyScreen.tsx",
@@ -8168,7 +8204,7 @@
         "contractOperations": 41,
         "contractViolations": 0,
         "bffClients": 4,
-        "uiReferences": 18,
+        "uiReferences": 19,
         "mobileReferences": 11,
         "tests": 6
       },
@@ -8208,6 +8244,7 @@
         "ui/one-ui-shell/src/app/work/daidzai/disasters/page.tsx",
         "ui/one-ui-shell/src/app/work/daidzai/page.tsx",
         "ui/one-ui-shell/src/app/work/facility/rito/page.tsx",
+        "ui/one-ui-shell/src/components/branding/ServiceLogo.test.tsx",
         "ui/one-ui-shell/src/config/serviceBranding.ts",
         "ui/one-ui-shell/src/hooks/queries/useMsikaStore.ts",
         "ui/one-ui-shell/src/lib/routes.ts"
@@ -8296,19 +8333,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 1,
+        "migrations": 4,
         "entities": 2,
         "repositories": 2,
-        "serviceLayer": 2,
-        "controllers": 1,
-        "routes": 6,
+        "serviceLayer": 3,
+        "controllers": 2,
+        "routes": 15,
         "stubRoutes": 0,
         "contractOperations": 8,
         "contractViolations": 0,
         "bffClients": 4,
-        "uiReferences": 75,
-        "mobileReferences": 15,
-        "tests": 1
+        "uiReferences": 101,
+        "mobileReferences": 19,
+        "tests": 5
       },
       "dimensions": {
         "database": "real",
@@ -8360,9 +8397,9 @@
         "citizen-app:apps/mobile/citizen-app/src/screens/telehealth/TelehealthSessionScreen.tsx",
         "citizen-app:apps/mobile/citizen-app/src/services/telehealthService.ts",
         "provider-app:apps/mobile/provider-app/src/__tests__/messaging/Telemedicine.test.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/ProviderDashboardScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/SystemStatusScreen.tsx"
+        "provider-app:apps/mobile/provider-app/src/__tests__/messaging/TelemedicineWaitingRoom.test.ts",
+        "provider-app:apps/mobile/provider-app/src/__tests__/provider/TelemedicineCallScreen.test.tsx",
+        "provider-app:apps/mobile/provider-app/src/__tests__/provider/TelemedicineWaitingRoomSection.test.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -8434,8 +8471,8 @@
         "stubRoutes": 0,
         "contractOperations": 10,
         "contractViolations": 0,
-        "bffClients": 13,
-        "uiReferences": 48,
+        "bffClients": 17,
+        "uiReferences": 51,
         "mobileReferences": 4,
         "tests": 4
       },
@@ -8455,14 +8492,18 @@
       "contractFile": "rules.openapi.yaml",
       "bffClients": [
         "RulesServiceClient",
+        "AdminFacilityConfigurationController→inline",
+        "AdminFacilityImportController→inline",
         "AiGovernanceController→inline",
         "AuthSessionController→inline",
         "ClinicalKnowledgeController→inline",
         "ExtensionController→inline",
+        "LearningController→inline",
         "MobileGovernanceController→inline",
         "OmnichannelController→inline",
         "PublicHealthController→inline",
         "RitoController→inline",
+        "SessionTemplateController→inline",
         "TeleconsultController→inline",
         "TrustAdminController→inline",
         "ProviderProfessionalSettingsHubController→inline",
@@ -8487,8 +8528,8 @@
         "ui/one-ui-shell/src/app/omnichannel/page.tsx",
         "ui/one-ui-shell/src/app/scheduling/bookings/config/page.tsx",
         "ui/one-ui-shell/src/app/terms/page.tsx",
-        "ui/one-ui-shell/src/components/EHRLayout.tsx",
-        "ui/one-ui-shell/src/components/billing/ServiceAccessPaymentPanel.tsx"
+        "ui/one-ui-shell/src/app/work/telemedicine/groups/page.tsx",
+        "ui/one-ui-shell/src/components/EHRLayout.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
@@ -8567,8 +8608,8 @@
         "contractOperations": 9,
         "contractViolations": 0,
         "bffClients": 7,
-        "uiReferences": 57,
-        "mobileReferences": 111,
+        "uiReferences": 60,
+        "mobileReferences": 112,
         "tests": 1
       },
       "dimensions": {
@@ -8624,9 +8665,9 @@
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/FinanceSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/PersonalFlow.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/WalletSection.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/services/financeService.costa.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/social/socialService.test.ts",
-        "citizen-app:apps/mobile/citizen-app/src/__tests__/telehealth/TelehealthFlow.test.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/comms/CommsHubScreen.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/telehealth/TelehealthFlow.test.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -8793,7 +8834,7 @@
         "contractOperations": 7,
         "contractViolations": 0,
         "bffClients": 35,
-        "uiReferences": 420,
+        "uiReferences": 430,
         "mobileReferences": 59,
         "tests": 6
       },
@@ -9048,7 +9089,7 @@
         "contractViolations": 0,
         "bffClients": 1,
         "uiReferences": 7,
-        "mobileReferences": 111,
+        "mobileReferences": 112,
         "tests": 2
       },
       "dimensions": {
@@ -9085,9 +9126,9 @@
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/FinanceSection.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/PersonalFlow.test.tsx",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/WalletSection.test.tsx",
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/services/financeService.costa.test.ts",
         "citizen-app:apps/mobile/citizen-app/src/__tests__/social/socialService.test.ts",
-        "citizen-app:apps/mobile/citizen-app/src/__tests__/telehealth/TelehealthFlow.test.tsx",
-        "citizen-app:apps/mobile/citizen-app/src/screens/comms/CommsHubScreen.tsx"
+        "citizen-app:apps/mobile/citizen-app/src/__tests__/telehealth/TelehealthFlow.test.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -9160,7 +9201,7 @@
         "contractOperations": 54,
         "contractViolations": 0,
         "bffClients": 6,
-        "uiReferences": 68,
+        "uiReferences": 71,
         "mobileReferences": 28,
         "tests": 2
       },
@@ -9290,8 +9331,8 @@
         "stubRoutes": 0,
         "contractOperations": 19,
         "contractViolations": 0,
-        "bffClients": 27,
-        "uiReferences": 132,
+        "bffClients": 28,
+        "uiReferences": 146,
         "mobileReferences": 38,
         "tests": 3
       },
@@ -9321,6 +9362,7 @@
         "FinanceController→inline",
         "HealthIntelligenceController→inline",
         "HealthOsMarketplaceController→inline",
+        "ImagingFacilityExperienceController→inline",
         "MobileProviderExtendedController→inline",
         "NompiloGuidanceController→inline",
         "OmnichannelController→inline",
@@ -9442,9 +9484,9 @@
         "stubRoutes": 0,
         "contractOperations": 55,
         "contractViolations": 0,
-        "bffClients": 8,
+        "bffClients": 9,
         "uiReferences": 32,
-        "mobileReferences": 4,
+        "mobileReferences": 10,
         "tests": 8
       },
       "dimensions": {
@@ -9463,6 +9505,7 @@
       "contractFile": "surveillance.openapi.yaml",
       "bffClients": [
         "SurveillanceServiceClient",
+        "DeathPathwayController→inline",
         "IndawoPlaceModeController→inline",
         "PublicHealthController→inline",
         "CitizenPublicHealthController→inline",
@@ -9494,10 +9537,16 @@
         "ui/one-ui-shell/src/components/public-health/publicHealthAlertMetrics.ts"
       ],
       "mobilePaths": [
+        "provider-app:apps/mobile/provider-app/src/__tests__/provider/PlaceModeDashboardScreen.test.tsx",
+        "provider-app:apps/mobile/provider-app/src/__tests__/services/deathPathwayService.test.ts",
+        "provider-app:apps/mobile/provider-app/src/screens/outreach/PlaceModeDashboardScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/ProfessionalChannelsHubScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/PublicHealthFieldTasksScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/services/demoJourneyService.ts"
+        "provider-app:apps/mobile/provider-app/src/services/deathPathwayService.ts",
+        "provider-app:apps/mobile/provider-app/src/services/demoJourneyService.ts",
+        "provider-app:apps/mobile/provider-app/src/services/placeModeService.test.ts",
+        "provider-app:apps/mobile/provider-app/src/services/placeModeService.ts"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -9682,7 +9731,7 @@
         "isTrustPlane": true
       },
       "counts": {
-        "migrations": 29,
+        "migrations": 30,
         "entities": 13,
         "repositories": 13,
         "serviceLayer": 12,
@@ -9951,7 +10000,7 @@
         "contractOperations": 27,
         "contractViolations": 0,
         "bffClients": 2,
-        "uiReferences": 41,
+        "uiReferences": 42,
         "mobileReferences": 8,
         "tests": 9
       },
@@ -9985,6 +10034,7 @@
         "ui/one-ui-shell/src/app/id-services/page.tsx",
         "ui/one-ui-shell/src/app/operations/vito/page.tsx",
         "ui/one-ui-shell/src/app/professional/page.tsx",
+        "ui/one-ui-shell/src/app/professional/request-access/page.tsx",
         "ui/one-ui-shell/src/app/provider/activate/page.tsx",
         "ui/one-ui-shell/src/app/provider/status/page.tsx",
         "ui/one-ui-shell/src/app/registry/page.test.tsx",
@@ -9992,8 +10042,7 @@
         "ui/one-ui-shell/src/app/registry/provider-council/ProviderCouncilWorkflow.test.tsx",
         "ui/one-ui-shell/src/components/ZoneNavigation.tsx",
         "ui/one-ui-shell/src/components/citizen/IdentityAssuranceBanner.tsx",
-        "ui/one-ui-shell/src/components/intelligent/WorkspaceContextSwitcher.tsx",
-        "ui/one-ui-shell/src/config/serviceBranding.ts"
+        "ui/one-ui-shell/src/components/intelligent/WorkspaceContextSwitcher.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/personal/identityRegistryService.test.ts",
@@ -10427,19 +10476,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 12,
-        "entities": 45,
-        "repositories": 45,
-        "serviceLayer": 15,
-        "controllers": 19,
-        "routes": 94,
+        "migrations": 15,
+        "entities": 47,
+        "repositories": 47,
+        "serviceLayer": 17,
+        "controllers": 22,
+        "routes": 124,
         "stubRoutes": 0,
         "contractOperations": 90,
         "contractViolations": 0,
-        "bffClients": 17,
-        "uiReferences": 34,
-        "mobileReferences": 5,
-        "tests": 18
+        "bffClients": 19,
+        "uiReferences": 44,
+        "mobileReferences": 8,
+        "tests": 24
       },
       "dimensions": {
         "database": "real",
@@ -10457,6 +10506,8 @@
       "contractFile": "tuso.openapi.yaml",
       "bffClients": [
         "TusoServiceClient",
+        "AdminFacilityConfigurationController→TusoServiceClient",
+        "AdminFacilityImportController→TusoServiceClient",
         "AdminWardController→TusoServiceClient",
         "BookingRoutingController→TusoServiceClient",
         "FacilityController→TusoServiceClient",
@@ -10475,11 +10526,17 @@
         "tuso→yml-base-url"
       ],
       "uiPaths": [
+        "ui/one-ui-shell/src/app/admin/facility-imports/[runId]/page.tsx",
+        "ui/one-ui-shell/src/app/admin/facility-imports/page.tsx",
+        "ui/one-ui-shell/src/app/admin/queues/page.tsx",
         "ui/one-ui-shell/src/app/developer/api-catalog/page.tsx",
         "ui/one-ui-shell/src/app/developer/sandbox/page.tsx",
         "ui/one-ui-shell/src/app/facility/[id]/cockpit/page.tsx",
+        "ui/one-ui-shell/src/app/facility/[id]/configuration/page.test.tsx",
+        "ui/one-ui-shell/src/app/facility/[id]/configuration/page.tsx",
         "ui/one-ui-shell/src/app/facility/[id]/control-tower/page.tsx",
         "ui/one-ui-shell/src/app/facility/[id]/departments/page.tsx",
+        "ui/one-ui-shell/src/app/facility/[id]/page.tsx",
         "ui/one-ui-shell/src/app/facility/[id]/setup/page.tsx",
         "ui/one-ui-shell/src/app/learning/admin/providers/page.tsx",
         "ui/one-ui-shell/src/app/marketplace/catalog/page.tsx",
@@ -10488,17 +10545,14 @@
         "ui/one-ui-shell/src/app/registry/page.tsx",
         "ui/one-ui-shell/src/app/scheduling/page.tsx",
         "ui/one-ui-shell/src/app/tuso/page.tsx",
-        "ui/one-ui-shell/src/components/facility/FacilityDigitalReadinessOrchestrationPanel.tsx",
-        "ui/one-ui-shell/src/components/facility-mode/SetupChecklist.tsx",
-        "ui/one-ui-shell/src/components/facility-mode/SetupWizard.tsx",
-        "ui/one-ui-shell/src/components/facility-mode/types.ts",
-        "ui/one-ui-shell/src/components/facility-mode/useFacilityMode.ts",
-        "ui/one-ui-shell/src/components/workspace-ops/WorkspaceContextOrchestrationRail.tsx",
-        "ui/one-ui-shell/src/config/serviceBranding.ts"
+        "ui/one-ui-shell/src/components/admin/FacilityImportRowBrowser.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/navigation/providerServiceNavigation.ts",
         "provider-app:apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/screens/provider/FacilitySetupScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/screens/provider/QueueDefinitionsScreen.tsx",
+        "provider-app:apps/mobile/provider-app/src/services/queueService.ts",
         "packages:apps/mobile/packages/mobile-registry/src/registry.ts",
         "packages:apps/mobile/packages/mobile-registry/src/types.ts",
         "packages:apps/mobile/packages/mobile-registry/src/wiring.ts"
@@ -10564,7 +10618,7 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 2,
+        "migrations": 3,
         "entities": 4,
         "repositories": 4,
         "serviceLayer": 3,
@@ -10576,7 +10630,7 @@
         "bffClients": 4,
         "uiReferences": 12,
         "mobileReferences": 9,
-        "tests": 2
+        "tests": 4
       },
       "dimensions": {
         "database": "real",
@@ -10696,7 +10750,7 @@
         "bffClients": 22,
         "uiReferences": 28,
         "mobileReferences": 6,
-        "tests": 15
+        "tests": 16
       },
       "dimensions": {
         "database": "real",
@@ -10836,7 +10890,7 @@
         "stubRoutes": 0,
         "contractOperations": 160,
         "contractViolations": 0,
-        "bffClients": 29,
+        "bffClients": 30,
         "uiReferences": 84,
         "mobileReferences": 8,
         "tests": 34
@@ -10866,6 +10920,7 @@
         "MobileProviderExtendedController→VitoServiceClient",
         "PatientController→VitoServiceClient",
         "PatientShareBffController→VitoServiceClient",
+        "TeleconsultController→VitoServiceClient",
         "VitoBiometricBffController→VitoServiceClient",
         "VitoCardsBffController→VitoServiceClient",
         "VitoClientRegistryBffController→VitoServiceClient",
@@ -10993,7 +11048,7 @@
         "contractOperations": 86,
         "contractViolations": 0,
         "bffClients": 9,
-        "uiReferences": 72,
+        "uiReferences": 75,
         "mobileReferences": 33,
         "tests": 5
       },
@@ -11127,8 +11182,8 @@
         "contractOperations": 11,
         "contractViolations": 0,
         "bffClients": 30,
-        "uiReferences": 189,
-        "mobileReferences": 28,
+        "uiReferences": 195,
+        "mobileReferences": 35,
         "tests": 2
       },
       "dimensions": {
@@ -11200,16 +11255,16 @@
         "ui/one-ui-shell/src/app/ehr/[patientId]/emergency/page.tsx"
       ],
       "mobilePaths": [
+        "provider-app:apps/mobile/provider-app/src/__tests__/provider/AdaptiveEncounterCockpit.test.tsx",
         "provider-app:apps/mobile/provider-app/src/__tests__/provider/Diagnostics.test.tsx",
+        "provider-app:apps/mobile/provider-app/src/__tests__/provider/EncounterFormsPanel.test.tsx",
         "provider-app:apps/mobile/provider-app/src/__tests__/provider/EncounterWorkflow.test.tsx",
         "provider-app:apps/mobile/provider-app/src/components/ProfessionalHubBody.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/LoginScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/madi/MadiReactionReportScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx",
         "provider-app:apps/mobile/provider-app/src/screens/provider/AssistedCommunicationPreferencesScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx",
-        "provider-app:apps/mobile/provider-app/src/screens/provider/DischargeClearanceScreen.tsx"
+        "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx"
       ],
       "mockStubHits": [],
       "securityPlaceholderHits": [],
@@ -11384,19 +11439,19 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 4,
-        "entities": 11,
-        "repositories": 11,
-        "serviceLayer": 11,
-        "controllers": 8,
-        "routes": 52,
+        "migrations": 5,
+        "entities": 12,
+        "repositories": 12,
+        "serviceLayer": 12,
+        "controllers": 9,
+        "routes": 57,
         "stubRoutes": 0,
         "contractOperations": 35,
         "contractViolations": 0,
         "bffClients": 3,
-        "uiReferences": 42,
+        "uiReferences": 45,
         "mobileReferences": 8,
-        "tests": 8
+        "tests": 9
       },
       "dimensions": {
         "database": "real",
@@ -11429,6 +11484,7 @@
         "ui/one-ui-shell/src/app/work/vashandi/leave-availability/page.tsx",
         "ui/one-ui-shell/src/app/work/vashandi/page.tsx",
         "ui/one-ui-shell/src/app/work/vashandi/rosters/page.tsx",
+        "ui/one-ui-shell/src/app/work/vashandi/training-requirements/page.tsx",
         "ui/one-ui-shell/src/app/work/vashandi/workforce/[id]/page.tsx",
         "ui/one-ui-shell/src/app/work/vashandi/workforce/page.tsx",
         "ui/one-ui-shell/src/components/vashandi/AccessRiskTable.tsx",
@@ -11436,8 +11492,7 @@
         "ui/one-ui-shell/src/components/vashandi/CheckInOutPanel.tsx",
         "ui/one-ui-shell/src/components/vashandi/EligibilityCheckPanel.tsx",
         "ui/one-ui-shell/src/components/vashandi/VashandiFriendlyBlockedState.tsx",
-        "ui/one-ui-shell/src/components/vashandi/VashandiShell.tsx",
-        "ui/one-ui-shell/src/components/workspace/ContextRail.tsx"
+        "ui/one-ui-shell/src/components/vashandi/VashandiShell.tsx"
       ],
       "mobilePaths": [
         "provider-app:apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
@@ -11511,7 +11566,7 @@
         "isTrustPlane": false
       },
       "counts": {
-        "migrations": 6,
+        "migrations": 7,
         "entities": 14,
         "repositories": 14,
         "serviceLayer": 11,
@@ -11520,10 +11575,10 @@
         "stubRoutes": 0,
         "contractOperations": 42,
         "contractViolations": 0,
-        "bffClients": 7,
-        "uiReferences": 22,
-        "mobileReferences": 11,
-        "tests": 17
+        "bffClients": 8,
+        "uiReferences": 36,
+        "mobileReferences": 13,
+        "tests": 18
       },
       "dimensions": {
         "database": "real",
@@ -11544,6 +11599,7 @@
         "EquipmentOperationsBffController→inline",
         "MarketplaceStorefrontController→inline",
         "NompiloGuidanceController→inline",
+        "TeleconsultController→inline",
         "KhulumaBffController→inline",
         "KhulumaMobileController→inline",
         "khuluma→yml-base-url"
@@ -11553,10 +11609,14 @@
         "ui/one-ui-shell/src/app/admin/comms-ops/page.tsx",
         "ui/one-ui-shell/src/app/citizen/wallet/comms/page.tsx",
         "ui/one-ui-shell/src/app/citizen/wallet/page.tsx",
+        "ui/one-ui-shell/src/app/communication/approvals/page.tsx",
         "ui/one-ui-shell/src/app/facility/[id]/setup/page.tsx",
         "ui/one-ui-shell/src/app/my/comms/page.tsx",
         "ui/one-ui-shell/src/app/operations/equipment/iot/page.tsx",
         "ui/one-ui-shell/src/app/work/comms/page.tsx",
+        "ui/one-ui-shell/src/app/work/telemedicine/groups/page.tsx",
+        "ui/one-ui-shell/src/app/work/telemedicine/session-modes/page.test.tsx",
+        "ui/one-ui-shell/src/app/work/telemedicine/session-modes/page.tsx",
         "ui/one-ui-shell/src/components/comms/CommsCallModal.tsx",
         "ui/one-ui-shell/src/components/comms/CommsHub.test.tsx",
         "ui/one-ui-shell/src/components/comms/CommsHub.tsx",
@@ -11564,11 +11624,7 @@
         "ui/one-ui-shell/src/components/comms/EventDiscussionPanel.tsx",
         "ui/one-ui-shell/src/components/facility-mode/SetupWizard.tsx",
         "ui/one-ui-shell/src/components/facility-mode/types.ts",
-        "ui/one-ui-shell/src/components/intelligent/NompiloContextualGuidance.test.tsx",
-        "ui/one-ui-shell/src/components/intelligent/NompiloContextualGuidance.tsx",
-        "ui/one-ui-shell/src/hooks/queries/useComms.ts",
-        "ui/one-ui-shell/src/hooks/queries/useMsikaStore.ts",
-        "ui/one-ui-shell/src/hooks/queries/useNompilo.ts"
+        "ui/one-ui-shell/src/components/intelligent/NompiloContextualGuidance.test.tsx"
       ],
       "mobilePaths": [
         "citizen-app:apps/mobile/citizen-app/src/__tests__/comms/CommsHubScreen.test.tsx",
@@ -14008,6 +14064,7 @@
       ],
       "backingSignals": [
         "apiClient-dynamic",
+        "auth-keycloak",
         "shell-composition",
         "navigation-hub"
       ],
@@ -15763,7 +15820,6 @@
       "zone": "home",
       "pageFile": "ui/one-ui-shell/src/app/home/notifications/page.tsx",
       "bffPaths": [
-        "/internal/v1/notifications",
         "/internal/v1/notifications/read-all",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience"
@@ -16611,6 +16667,54 @@
       "hardcodedDataHints": 0,
       "readsRealData": true,
       "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/citizen/my-care",
+      "pageTitle": "My Care",
+      "zone": "home",
+      "pageFile": "ui/one-ui-shell/src/app/citizen/my-care/page.tsx",
+      "bffPaths": [
+        "/internal/v1/citizen/health-summary"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
       "gaps": []
@@ -17542,6 +17646,7 @@
       "zone": "facility",
       "pageFile": "ui/one-ui-shell/src/app/facility/[id]/page.tsx",
       "bffPaths": [
+        "/internal/v1/admin/facility-import-runs",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience"
       ],
@@ -17586,12 +17691,71 @@
           "pattern": "json-stringify-render"
         }
       ],
-      "hasMutation": false,
+      "hasMutation": true,
       "hasPersistHint": true,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
       "readsRealData": true,
-      "writesRealData": false,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/facility/[id]/configuration",
+      "pageTitle": "Facility Configuration",
+      "zone": "facility",
+      "pageFile": "ui/one-ui-shell/src/app/facility/[id]/configuration/page.tsx",
+      "bffPaths": [
+        "/internal/v1/admin/facilities",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
       "gaps": []
@@ -18397,6 +18561,66 @@
       "backingSignals": [
         "apiClient-dynamic",
         "auth-keycloak"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/communication/approvals",
+      "pageTitle": "Khuluma — Comms Approval Queue",
+      "zone": "queue",
+      "pageFile": "ui/one-ui-shell/src/app/communication/approvals/page.tsx",
+      "bffPaths": [
+        "/internal/v1/comms/approval-queue",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "inline-bff-reference",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [
@@ -19804,9 +20028,9 @@
         "/internal/v1/triage",
         "/internal/v1/encounters",
         "/internal/v1/referrals",
+        "/internal/v1/extensions/forms/catalog",
         "/internal/v1/clinical/rules/evaluate",
-        "/internal/v1/clinical/cds/summary",
-        "/internal/v1/clinical/audit/overrides"
+        "/internal/v1/clinical/cds/summary"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -19843,6 +20067,10 @@
         },
         {
           "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/clinical-forms/clinical-form-renderer/useClinicalFormDraft.ts",
           "pattern": "json-stringify-render"
         }
       ],
@@ -20911,9 +21139,9 @@
         "/internal/v1/imaging/ops/failed-correlations",
         "/internal/v1/imaging/ops/failed-writebacks",
         "/internal/v1/imaging/ops/failed-writebacks/retry-all",
-        "/internal/v1/clinical/rules/evaluate",
-        "/internal/v1/clinical/cds/summary",
-        "/internal/v1/clinical/audit/overrides"
+        "/internal/v1/diagnostics/orders/draft",
+        "/internal/v1/diagnostics/reconcile-summary",
+        "/internal/v1/diagnostics/critical-unacknowledged"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -21432,6 +21660,183 @@
       "gaps": []
     },
     {
+      "path": "/admin/facility-imports",
+      "pageTitle": "Facility Import Batches",
+      "zone": "admin",
+      "pageFile": "ui/one-ui-shell/src/app/admin/facility-imports/page.tsx",
+      "bffPaths": [
+        "/internal/v1/admin/facility-import-runs",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/admin/facility-imports/[runId]",
+      "pageTitle": "Facility Import Batch",
+      "zone": "admin",
+      "pageFile": "ui/one-ui-shell/src/app/admin/facility-imports/[runId]/page.tsx",
+      "bffPaths": [
+        "/internal/v1/admin/facility-import-runs",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/admin/facility-imports/[runId]/review",
+      "pageTitle": "Facility Import Review",
+      "zone": "admin",
+      "pageFile": "ui/one-ui-shell/src/app/admin/facility-imports/[runId]/review/page.tsx",
+      "bffPaths": [
+        "/internal/v1/admin/facility-import-runs",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useDelegationStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/lib/shell/live-notification.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": true,
+      "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": true,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
       "path": "/admin/consent",
       "pageTitle": "Consent Management",
       "zone": "admin",
@@ -21859,17 +22264,20 @@
       "zone": "admin",
       "pageFile": "ui/one-ui-shell/src/app/admin/queues/page.tsx",
       "bffPaths": [
+        "/internal/v1/admin/facilities",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience"
       ],
       "backingSignals": [
         "apiClient-dynamic",
-        "domain-client",
-        "inline-bff-reference",
         "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
         {
           "file": "ui/one-ui-shell/src/lib/api-client.ts",
           "pattern": "json-stringify-render"
@@ -21880,10 +22288,6 @@
         },
         {
           "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
-          "pattern": "json-stringify-render"
-        },
-        {
-          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
           "pattern": "json-stringify-render"
         },
         {
@@ -21903,12 +22307,12 @@
           "pattern": "json-stringify-render"
         }
       ],
-      "hasMutation": false,
+      "hasMutation": true,
       "hasPersistHint": true,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
       "readsRealData": true,
-      "writesRealData": false,
+      "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
       "gaps": []
@@ -24184,10 +24588,6 @@
       "gatewayPaths": [],
       "mockStubHits": [
         {
-          "file": "ui/one-ui-shell/src/hooks/queries/useMarketplace.ts",
-          "pattern": "json-stringify-render"
-        },
-        {
           "file": "ui/one-ui-shell/src/lib/api-client.ts",
           "pattern": "json-stringify-render"
         },
@@ -24253,10 +24653,6 @@
       "gatewayPaths": [],
       "mockStubHits": [
         {
-          "file": "ui/one-ui-shell/src/hooks/queries/useMarketplace.ts",
-          "pattern": "json-stringify-render"
-        },
-        {
           "file": "ui/one-ui-shell/src/lib/api-client.ts",
           "pattern": "json-stringify-render"
         },
@@ -24318,10 +24714,6 @@
       ],
       "gatewayPaths": [],
       "mockStubHits": [
-        {
-          "file": "ui/one-ui-shell/src/hooks/queries/useMarketplace.ts",
-          "pattern": "json-stringify-render"
-        },
         {
           "file": "ui/one-ui-shell/src/lib/api-client.ts",
           "pattern": "json-stringify-render"
@@ -24387,10 +24779,6 @@
       ],
       "gatewayPaths": [],
       "mockStubHits": [
-        {
-          "file": "ui/one-ui-shell/src/hooks/queries/useMarketplace.ts",
-          "pattern": "json-stringify-render"
-        },
         {
           "file": "ui/one-ui-shell/src/lib/api-client.ts",
           "pattern": "json-stringify-render"
@@ -24699,10 +25087,6 @@
       "gatewayPaths": [],
       "mockStubHits": [
         {
-          "file": "ui/one-ui-shell/src/hooks/queries/useMarketplace.ts",
-          "pattern": "json-stringify-render"
-        },
-        {
           "file": "ui/one-ui-shell/src/lib/api-client.ts",
           "pattern": "json-stringify-render"
         },
@@ -24762,10 +25146,6 @@
       ],
       "gatewayPaths": [],
       "mockStubHits": [
-        {
-          "file": "ui/one-ui-shell/src/hooks/queries/useMarketplace.ts",
-          "pattern": "json-stringify-render"
-        },
         {
           "file": "ui/one-ui-shell/src/lib/api-client.ts",
           "pattern": "json-stringify-render"
@@ -29685,7 +30065,8 @@
       "zone": "queue",
       "pageFile": "ui/one-ui-shell/src/app/telemedicine/new/page.tsx",
       "bffPaths": [
-        "/internal/v1/teleconsult/sessions",
+        "/internal/v1/teleconsult/ops/rtc-health",
+        "/internal/v1/teleconsult/ops/sla",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience"
       ],
@@ -29860,6 +30241,68 @@
       "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/telemedicine/groups",
+      "pageTitle": "Clinical Groups",
+      "zone": "queue",
+      "pageFile": "ui/one-ui-shell/src/app/work/telemedicine/groups/page.tsx",
+      "bffPaths": [],
+      "backingSignals": [],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "hasMutation": false,
+      "hasPersistHint": false,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": true,
+      "gaps": []
+    },
+    {
+      "path": "/work/telemedicine/virtual-hospitals",
+      "pageTitle": "Virtual Hospitals",
+      "zone": "queue",
+      "pageFile": "ui/one-ui-shell/src/app/work/telemedicine/virtual-hospitals/page.tsx",
+      "bffPaths": [],
+      "backingSignals": [],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "hasMutation": false,
+      "hasPersistHint": false,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": true,
+      "gaps": []
+    },
+    {
+      "path": "/work/telemedicine/virtual-hospitals/[id]",
+      "pageTitle": "Virtual Hospital",
+      "zone": "queue",
+      "pageFile": "ui/one-ui-shell/src/app/work/telemedicine/virtual-hospitals/[id]/page.tsx",
+      "bffPaths": [],
+      "backingSignals": [],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/telemedicine/pinning.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": false,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": true,
       "gaps": []
     },
     {
@@ -32810,7 +33253,8 @@
         "/internal/v1/session/experience"
       ],
       "backingSignals": [
-        "apiClient-dynamic"
+        "apiClient-dynamic",
+        "navigation-hub"
       ],
       "gatewayPaths": [],
       "mockStubHits": [
@@ -33436,6 +33880,11 @@
       "zone": "lab",
       "pageFile": "ui/one-ui-shell/src/app/imaging/facility/page.tsx",
       "bffPaths": [
+        "/internal/v1/imaging/ops/status",
+        "/internal/v1/imaging/ops/unmatched-studies",
+        "/internal/v1/imaging/ops/failed-correlations",
+        "/internal/v1/imaging/ops/failed-writebacks",
+        "/internal/v1/imaging/ops/failed-writebacks/retry-all",
         "/internal/v1/identity/linked-ids",
         "/internal/v1/session/experience"
       ],
@@ -37000,7 +37449,9 @@
         "/internal/v1/learning/v11/reports/overview",
         "/internal/v1/learning/v11/enrolments",
         "/internal/v1/learning/v11/progress",
-        "/internal/v1/live"
+        "/internal/v1/live",
+        "/internal/v1/learning/v11/facilitators",
+        "/internal/v1/learning/v11/venues"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -37104,7 +37555,9 @@
         "/internal/v1/learning/v11/metadata/languages",
         "/internal/v1/learning/v11/reports/overview",
         "/internal/v1/learning/v11/enrolments",
-        "/internal/v1/learning/v11/progress"
+        "/internal/v1/learning/v11/progress",
+        "/internal/v1/learning/v11/facilitators",
+        "/internal/v1/learning/v11/venues"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -37138,11 +37591,11 @@
         }
       ],
       "hasMutation": true,
-      "hasPersistHint": false,
+      "hasPersistHint": true,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
       "readsRealData": true,
-      "writesRealData": false,
+      "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
       "gaps": []
@@ -37621,7 +38074,8 @@
         "/internal/v1/learning/v11/metadata/languages",
         "/internal/v1/learning/v11/reports/overview",
         "/internal/v1/learning/v11/enrolments",
-        "/internal/v1/learning/v11/progress"
+        "/internal/v1/learning/v11/progress",
+        "/internal/v1/registry/provider-council/reviews"
       ],
       "backingSignals": [
         "apiClient-dynamic",
@@ -37656,11 +38110,11 @@
         }
       ],
       "hasMutation": true,
-      "hasPersistHint": false,
+      "hasPersistHint": true,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
       "readsRealData": true,
-      "writesRealData": false,
+      "writesRealData": true,
       "completeVsCosmetic": false,
       "allowlistedShell": false,
       "gaps": []
@@ -44072,6 +44526,52 @@
       ],
       "hasMutation": false,
       "hasPersistHint": true,
+      "deadActionHints": 0,
+      "hardcodedDataHints": 0,
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": false,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/dura",
+      "pageTitle": "Dura — Stock & Supply",
+      "zone": "operations",
+      "pageFile": "ui/one-ui-shell/src/app/work/dura/page.tsx",
+      "bffPaths": [],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [
+        {
+          "file": "ui/one-ui-shell/src/lib/api-client.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useAuthStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShellStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useFacilityStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useShiftStore.ts",
+          "pattern": "json-stringify-render"
+        },
+        {
+          "file": "ui/one-ui-shell/src/hooks/useWorkspaceStore.ts",
+          "pattern": "json-stringify-render"
+        }
+      ],
+      "hasMutation": false,
+      "hasPersistHint": false,
       "deadActionHints": 0,
       "hardcodedDataHints": 0,
       "readsRealData": true,
@@ -52623,6 +53123,53 @@
       "gaps": []
     },
     {
+      "path": "/budgets/[budgetId]",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/budgets/[budgetId]/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/budgets",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/budgets/page.tsx",
+      "bffPaths": [
+        "/internal/v1/finance/budgets/managed",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
       "path": "/clinical/emergency/[visitId]",
       "pageTitle": "(unregistered)",
       "zone": "unregistered",
@@ -53251,6 +53798,70 @@
       "gaps": []
     },
     {
+      "path": "/learning/sessions/[sessionId]/classroom",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/learning/sessions/[sessionId]/classroom/page.tsx",
+      "bffPaths": [
+        "/internal/v1/live",
+        "/internal/v1/learning/v11/facilitators",
+        "/internal/v1/learning/v11/venues"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/learning/sessions/[sessionId]",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/learning/sessions/[sessionId]/page.tsx",
+      "bffPaths": [
+        "/internal/v1/learning/v11/facilitators",
+        "/internal/v1/learning/v11/venues"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/learning/sessions",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/learning/sessions/page.tsx",
+      "bffPaths": [
+        "/internal/v1/learning/v11/facilitators",
+        "/internal/v1/learning/v11/venues"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
       "path": "/learning/spaces/[spaceId]",
       "pageTitle": "(unregistered)",
       "zone": "unregistered",
@@ -53276,6 +53887,8 @@
       "zone": "unregistered",
       "pageFile": "ui/one-ui-shell/src/app/learning/students/[studentId]/page.tsx",
       "bffPaths": [
+        "/internal/v1/learning/v11/facilitators",
+        "/internal/v1/learning/v11/venues",
         "/internal/v1/learning/v11/admissions/applications",
         "/internal/v1/learning/v11/students"
       ],
@@ -53442,6 +54055,56 @@
       "gaps": []
     },
     {
+      "path": "/my/telehealth/[sessionId]",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/my/telehealth/[sessionId]/page.tsx",
+      "bffPaths": [
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience",
+        "/internal/v1/teleconsult/ops/rtc-health",
+        "/internal/v1/teleconsult/ops/sla"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-client",
+        "inline-bff-reference",
+        "auth-keycloak",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/my/telehealth",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/my/telehealth/page.tsx",
+      "bffPaths": [
+        "/internal/v1/teleconsult/ops/rtc-health",
+        "/internal/v1/teleconsult/ops/sla",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "auth-keycloak",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
       "path": "/professional",
       "pageTitle": "(unregistered)",
       "zone": "unregistered",
@@ -53456,6 +54119,30 @@
         "apiClient-dynamic",
         "domain-client",
         "inline-bff-reference",
+        "auth-keycloak",
+        "navigation-hub"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/professional/request-access",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/professional/request-access/page.tsx",
+      "bffPaths": [
+        "/internal/v1/admin-governance",
+        "/internal/v1/identity/linked-ids",
+        "/internal/v1/identity/affiliations",
+        "/internal/v1/session/experience"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
         "auth-keycloak",
         "navigation-hub"
       ],
@@ -53570,6 +54257,108 @@
       "backingSignals": [
         "apiClient-dynamic",
         "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/telemedicine/operations",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/work/telemedicine/operations/page.tsx",
+      "bffPaths": [
+        "/internal/v1/teleconsult/ops/rtc-health",
+        "/internal/v1/teleconsult/ops/sla",
+        "/internal/v1/telemedicine/events"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/telemedicine",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/work/telemedicine/page.tsx",
+      "bffPaths": [
+        "/internal/v1/teleconsult/ops/rtc-health",
+        "/internal/v1/teleconsult/ops/sla",
+        "/internal/v1/telemedicine/events"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/telemedicine/routing",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/work/telemedicine/routing/page.tsx",
+      "bffPaths": [],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/telemedicine/session-modes",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/work/telemedicine/session-modes/page.tsx",
+      "bffPaths": [
+        "/internal/v1/session-templates"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "inline-bff-reference"
+      ],
+      "gatewayPaths": [],
+      "mockStubHits": [],
+      "readsRealData": true,
+      "writesRealData": false,
+      "completeVsCosmetic": true,
+      "allowlistedShell": false,
+      "gaps": []
+    },
+    {
+      "path": "/work/vashandi/training-requirements",
+      "pageTitle": "(unregistered)",
+      "zone": "unregistered",
+      "pageFile": "ui/one-ui-shell/src/app/work/vashandi/training-requirements/page.tsx",
+      "bffPaths": [
+        "/internal/v1/vashandi",
+        "/internal/v1/session/experience",
+        "/internal/v1/identity/linked-ids"
+      ],
+      "backingSignals": [
+        "apiClient-dynamic",
+        "domain-hook-module"
       ],
       "gatewayPaths": [],
       "mockStubHits": [],
@@ -53701,6 +54490,13 @@
     {
       "app": "citizen-app",
       "screen": "apps/mobile/citizen-app/src/screens/emergency/TrackEmergencyScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "citizen-app",
+      "screen": "apps/mobile/citizen-app/src/screens/learning/LearningClassroomScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
       "readsRealData": false
@@ -54294,6 +55090,13 @@
     },
     {
       "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/budgets/BudgetSummaryScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
       "screen": "apps/mobile/provider-app/src/screens/courier/CourierDashboardScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
@@ -54330,6 +55133,13 @@
     {
       "app": "provider-app",
       "screen": "apps/mobile/provider-app/src/screens/equipment/ReportEquipmentFaultScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/learning/LearningClassroomScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
       "readsRealData": false
@@ -54435,6 +55245,13 @@
     },
     {
       "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/outreach/PlaceModeDashboardScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
       "screen": "apps/mobile/provider-app/src/screens/outreach/ScreeningScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
@@ -54450,6 +55267,13 @@
     {
       "app": "provider-app",
       "screen": "apps/mobile/provider-app/src/screens/provider/ActivityFeedScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/provider/AdaptiveEncounterCockpit.tsx",
       "bffPaths": [],
       "mockStubHits": [],
       "readsRealData": false
@@ -54522,6 +55346,18 @@
     },
     {
       "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/provider/ControlTowerScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [
+        {
+          "file": "apps/mobile/provider-app/src/screens/provider/ControlTowerScreen.tsx",
+          "pattern": "mock-data-var"
+        }
+      ],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
       "screen": "apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
@@ -54589,6 +55425,13 @@
     },
     {
       "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/provider/EncounterFormsPanel.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
       "screen": "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
@@ -54597,6 +55440,20 @@
     {
       "app": "provider-app",
       "screen": "apps/mobile/provider-app/src/screens/provider/FacilityAdminScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/provider/FacilityRegulatorsScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/provider/FacilitySetupScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
       "readsRealData": false
@@ -54787,6 +55644,13 @@
     },
     {
       "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/provider/QueueDefinitionsScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
       "screen": "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
@@ -54853,6 +55717,13 @@
     {
       "app": "provider-app",
       "screen": "apps/mobile/provider-app/src/screens/provider/SystemStatusScreen.tsx",
+      "bffPaths": [],
+      "mockStubHits": [],
+      "readsRealData": false
+    },
+    {
+      "app": "provider-app",
+      "screen": "apps/mobile/provider-app/src/screens/provider/TelemedicineCallScreen.tsx",
       "bffPaths": [],
       "mockStubHits": [],
       "readsRealData": false

@@ -1,7 +1,7 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-06-30T18:45:42.873Z
-> Branch: `claude/crazy-merkle-3ad1a1`
+> Generated: 2026-07-05T08:12:59.262Z
+> Branch: `claude/vigorous-grothendieck-165d2f`
 
 ## Executive summary
 
@@ -10,10 +10,10 @@
 | Total services audited | 96 |
 | Backend services | 96 |
 | Shared libraries | 12 |
-| Frontend surfaces (routes) | 719 |
-| Mobile screens | 193 |
-| BFF route handlers | 2551 |
-| OpenAPI contracts | 105 |
+| Frontend surfaces (routes) | 742 |
+| Mobile screens | 204 |
+| BFF route handlers | 2661 |
+| OpenAPI contracts | 106 |
 | Services with DB persistence | 96 |
 | **Phase 6 complete (user-facing + documented internal)** | **96** |
 | User-facing services with `real` code present (file-existence axis) | 71 / 71 |
