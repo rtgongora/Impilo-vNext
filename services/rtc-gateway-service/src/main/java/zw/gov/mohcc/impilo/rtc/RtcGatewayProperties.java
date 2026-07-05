@@ -135,6 +135,12 @@ public class RtcGatewayProperties {
         private String roomPrefix = "impilo-telemedicine";
         private boolean recordingEnabled = false;
         private boolean egressEnabled = false;
+        /**
+         * RTMP stream-out (room-composite egress with stream outputs). OFF by
+         * default: the estate has no restream target infrastructure yet — the
+         * API is landed behind this flag as an honest seam.
+         */
+        private boolean streamOutEnabled = false;
         private boolean requireConsentReferenceForMedia = true;
         private boolean allowEmergencyWithoutConsent = true;
 
@@ -192,6 +198,14 @@ public class RtcGatewayProperties {
 
         public void setEgressEnabled(boolean egressEnabled) {
             this.egressEnabled = egressEnabled;
+        }
+
+        public boolean isStreamOutEnabled() {
+            return streamOutEnabled;
+        }
+
+        public void setStreamOutEnabled(boolean streamOutEnabled) {
+            this.streamOutEnabled = streamOutEnabled;
         }
 
         public boolean isRequireConsentReferenceForMedia() {

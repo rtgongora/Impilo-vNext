@@ -58,4 +58,20 @@ class LiveKitEgressClientTest {
         assertTrue(filepath.startsWith("recordings/impilo-live-event-1-"));
         assertTrue(filepath.endsWith(".mp4"));
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void startRoomCompositeStreamBodyCarriesRtmpOutputsAndNoFileOutput() {
+        Map<String, Object> body = client().startRoomCompositeStreamBody(
+                "impilo-live-event-1", "stage", List.of("rtmp://target/live", "rtmps://backup/live"));
+
+        assertEquals("impilo-live-event-1", body.get("room_name"));
+        assertEquals("stage", body.get("layout"));
+        assertNull(body.get("file_outputs"));
+
+        List<Map<String, Object>> outputs = (List<Map<String, Object>>) body.get("stream_outputs");
+        assertEquals(1, outputs.size());
+        assertEquals("rtmp", outputs.get(0).get("protocol"));
+        assertEquals(List.of("rtmp://target/live", "rtmps://backup/live"), outputs.get(0).get("urls"));
+    }
 }

@@ -52,6 +52,8 @@ rtc:
     room-prefix: ${RTC_ROOM_PREFIX:impilo-telemedicine}
     recording-enabled: ${RTC_RECORDING_ENABLED:false}
     egress-enabled: ${RTC_EGRESS_ENABLED:false}
+    # RTMP stream-out API (honest seam: no restream target infra in the estate yet)
+    stream-out-enabled: ${RTC_STREAM_OUT_ENABLED:false}
     require-consent-reference-for-media: ${RTC_REQUIRE_CONSENT_REFERENCE_FOR_MEDIA:true}
     allow-emergency-without-consent: ${RTC_ALLOW_EMERGENCY_WITHOUT_CONSENT:true}
   recording:

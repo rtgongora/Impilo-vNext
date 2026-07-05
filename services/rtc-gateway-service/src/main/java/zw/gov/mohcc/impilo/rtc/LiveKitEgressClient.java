@@ -55,6 +55,41 @@ public class LiveKitEgressClient {
         return new EgressStart(egressId, filepath);
     }
 
+    /**
+     * Room-composite egress with RTMP stream outputs (no file artifact).
+     * Used by the flagged stream-out API; the estate carries no restream
+     * target infra yet, so callers own the URL provenance.
+     */
+    public EgressStart startRoomCompositeStream(String roomName, String layout, List<String> rtmpUrls) {
+        Map<String, Object> body = startRoomCompositeStreamBody(roomName, layout, rtmpUrls);
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                liveKitUrl(properties.getLivekit().getStartRoomCompositeEgressPath()),
+                new HttpEntity<>(body, headers(roomName)),
+                Map.class);
+        String egressId = egressId(response.getBody());
+        if (egressId == null) {
+            throw new IllegalStateException("LiveKit stream egress start returned no egressId for room " + roomName);
+        }
+        log.info("Started room-composite stream egress {} for room {} ({} rtmp target(s))",
+                egressId, roomName, rtmpUrls.size());
+        return new EgressStart(egressId, null);
+    }
+
+    /** Twirp StartRoomCompositeEgress body with stream (RTMP) outputs instead of file outputs. */
+    Map<String, Object> startRoomCompositeStreamBody(String roomName, String layout, List<String> rtmpUrls) {
+        Map<String, Object> streamOutput = new LinkedHashMap<>();
+        streamOutput.put("protocol", "rtmp");
+        streamOutput.put("urls", rtmpUrls);
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("room_name", roomName);
+        if (layout != null && !layout.isBlank()) {
+            body.put("layout", layout);
+        }
+        body.put("stream_outputs", List.of(streamOutput));
+        return body;
+    }
+
     public void stopEgress(String egressId) {
         restTemplate.postForEntity(
                 liveKitUrl(properties.getLivekit().getStopEgressPath()),

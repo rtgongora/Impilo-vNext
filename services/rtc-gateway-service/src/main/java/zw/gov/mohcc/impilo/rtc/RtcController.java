@@ -16,6 +16,7 @@ import zw.gov.mohcc.impilo.rtc.model.RtcParticipantTokenRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcRecordingStartRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionProvisionRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcSessionResult;
+import zw.gov.mohcc.impilo.rtc.model.RtcStreamStartRequest;
 import zw.gov.mohcc.impilo.rtc.model.RtcWaitingResponse;
 
 import java.util.LinkedHashMap;
@@ -27,10 +28,15 @@ import java.util.Objects;
 public class RtcController {
     private final RtcGatewayService service;
     private final RtcRecordingService recordingService;
+    private final RtcSessionStatsService statsService;
+    private final RtcStreamOutService streamOutService;
 
-    public RtcController(RtcGatewayService service, RtcRecordingService recordingService) {
+    public RtcController(RtcGatewayService service, RtcRecordingService recordingService,
+                         RtcSessionStatsService statsService, RtcStreamOutService streamOutService) {
         this.service = service;
         this.recordingService = recordingService;
+        this.statsService = statsService;
+        this.streamOutService = streamOutService;
     }
 
     @PostMapping("/sessions")
@@ -146,6 +152,36 @@ public class RtcController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return ResponseEntity.ok(dataEnvelope(recordingService.list(sessionId), requestId, correlationId));
+    }
+
+    /** Media-quality aggregates from webhook telemetry (participant_stats) — internal analytics seam. */
+    @GetMapping("/sessions/{sessionId}/stats")
+    public ResponseEntity<Map<String, Object>> sessionStats(
+            @PathVariable String sessionId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ResponseEntity.ok(dataEnvelope(statsService.stats(sessionId), requestId, correlationId));
+    }
+
+    /** RTMP stream-out (flag-gated; rtc.gateway.stream-out-enabled=false by default). */
+    @PostMapping("/sessions/{sessionId}/stream/start")
+    public ResponseEntity<Map<String, Object>> startStream(
+            @PathVariable String sessionId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @Valid @RequestBody RtcStreamStartRequest body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(dataEnvelope(streamOutService.start(sessionId, body), requestId, correlationId));
+    }
+
+    @PostMapping("/sessions/{sessionId}/stream/stop")
+    public ResponseEntity<Map<String, Object>> stopStream(
+            @PathVariable String sessionId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        String egressId = body == null ? null : Objects.toString(body.get("egressId"), null);
+        return ResponseEntity.ok(dataEnvelope(streamOutService.stop(sessionId, egressId), requestId, correlationId));
     }
 
     @ExceptionHandler(RtcNotFoundException.class)
