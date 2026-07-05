@@ -41,15 +41,21 @@ class RtcCallEventsConsumerTest {
     @Mock private CallParticipantRepository callParticipants;
     @Mock private CallEventRepository callEvents;
     @Mock private CallService callService;
+    @Mock private zw.gov.mohcc.impilo.khuluma.repository.MeetingAdmissionRepository meetingAdmissions;
 
     private RtcCallEventsConsumer consumer;
 
     @BeforeEach
     void setUp() {
         consumer = new RtcCallEventsConsumer(new ObjectMapper(),
-                calls, callParticipants, callEvents, callService);
+                calls, callParticipants, callEvents, callService, meetingAdmissions);
         lenient().when(callParticipants.save(any())).thenAnswer(inv -> inv.getArgument(0));
         lenient().when(callEvents.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        // Attendance stamping probes the meeting mirror for every participant event; the
+        // call-flow tests are not meetings, so the mirror lookup finds nothing.
+        lenient().when(meetingAdmissions.findByRtcSessionIdAndActorId(anyString(), anyString()))
+                .thenReturn(Optional.empty());
+        lenient().when(meetingAdmissions.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
 
     // ── participant.joined ───────────────────────────────────────────────────
@@ -93,6 +99,31 @@ class RtcCallEventsConsumerTest {
         consumer.onParticipantJoined(joinedPayload("LIVE", "provider-b"));
         consumer.onParticipantJoined(joinedPayload("PCT", "provider-b"));
 
+        verifyNoInteractions(calls, callParticipants, callEvents, callService);
+    }
+
+    // ── meeting attendance proxy (LIVE-owned MEETING rooms) ──────────────────
+
+    @Test
+    void participantJoined_stampsMeetingAttendance_forLiveOwnedMeetingSession() {
+        zw.gov.mohcc.impilo.khuluma.domain.MeetingAdmissionEntity admission =
+                new zw.gov.mohcc.impilo.khuluma.domain.MeetingAdmissionEntity();
+        admission.setTenantId(TENANT_ID);
+        admission.setConversationId(UUID.randomUUID());
+        admission.setActorId("provider-b");
+        admission.setRtcSessionId(RTC_SESSION_ID);
+        admission.setStatus("ADMITTED");
+        when(meetingAdmissions.findByRtcSessionIdAndActorId(RTC_SESSION_ID, "provider-b"))
+                .thenReturn(Optional.of(admission));
+
+        consumer.onParticipantJoined(joinedPayload("LIVE", "provider-b"));
+        assertThat(admission.getJoinedAt()).isNotNull();
+        assertThat(admission.getLeftAt()).isNull();
+        verify(meetingAdmissions).save(admission);
+
+        consumer.onParticipantLeft(leftPayload("LIVE", "provider-b"));
+        assertThat(admission.getLeftAt()).isNotNull();
+        // Call-side state is untouched — LIVE-owned events never reach the call resolver.
         verifyNoInteractions(calls, callParticipants, callEvents, callService);
     }
 
