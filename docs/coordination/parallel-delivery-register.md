@@ -5,7 +5,7 @@ Companion to [`seven-pipeline-parallel-delivery-board.md`](seven-pipeline-parall
 The coordinator updates this file on every assignment, evidence submission, status change, and merge decision.
 
 **Anchor**: `claude/web-session-anchor-nnnkf6` @ `d44bb6022` (verified 2026-07-04; remembered tip `e101a2701` not found — superseded).
-**Integration branch**: not yet cut. Planned: `integration/fable-seven-pipeline-delivery-2026-07-04` (cut only when ≥2 workstreams pass gates).
+**Integration branch**: `integration/fable-seven-pipeline-delivery-2026-07-04` @ `9d180f2f1`, PUSHED 2026-07-04. Cut from anchor tip `f4381a841` (anchor advanced d44bb6022→f4381a841 with W0's W1–W3 waves; zero file overlap with staged branches verified; session-template contract unchanged). Contains: queue stack (fable `1340a9d39` → zen `e0729b16f` → cursor-ui `fe1d9a8fb`, merged via cursor tip) + telemedicine virtual-hospitals (`494cf0663`). Both merges conflict-free; no Flyway version collisions (pct V030/V031, notification V011 unique). **Combined gates on the integrated tree, coordinator-run with real exit codes**: backend `mvn -pl pct,booking,notification,experience-bff -am test` = 0; type-check one-ui-shell = 0, pct-web = 0; combined vitest (queue, scheduling, notifications, telemedicine) = 76/76 across 22 files. **Anchor-merge recommendation: READY** — awaiting explicit user authorization for anchor merge (board policy: coordinator recommends, does not merge to anchor unilaterally).
 
 Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUBMITTED` → `GATES_PASSED` → `MERGED_TO_INTEGRATION` → `DONE` | `BLOCKED` | `QUARANTINED`
 
