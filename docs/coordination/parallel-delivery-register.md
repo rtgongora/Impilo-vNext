@@ -127,6 +127,16 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 
 ---
 
+## WS-P5-B — Telemedicine virtual hospitals (external session) — AWAITING ARTIFACTS
+- **Claimed**: branch `cursor/e2e-telemedicine-virtual-hospitals`, worktree `/opt/impilo/repos/wt-cursor-telemedicine-virtual-hospitals`, base `d44bb6022`, HEAD `494cf0663`, 6 local commits, unpushed
+- **Coordinator finding 2026-07-04**: NOT INSPECTABLE — worktree path absent from this environment, branch on neither local nor origin, commit `494cf0663` not in the object database. The work exists only in the originating session's machine.
+- **Decision**: push authorization is NOT sight-unseen. Pushing a branch is safe (a push is not a merge) — the owning session must `git push -u origin cursor/e2e-telemedicine-virtual-hospitals` (or ship a `git bundle`) so the coordinator can review. Review will be strict RED-lease screening: any touch on `services/rtc-gateway-service`, `services/live-service`, khuluma RTC consumers, `libs/session-templates`, `contracts/schemas/session-templates`, LiveKit helm/preview values, or the W0 session-mode contract ⇒ QUARANTINE and safe-part extraction. Virtual-hospital routing (the ON_CALL/POOL/NATIONAL_POOL/UNIT 501s) was explicitly pending W0 boundary confirmation — that confirmation still has not happened.
+- **Status**: BLOCKED (awaiting push/bundle) · **Merge readiness**: NO
+
+## Unregistered branches detected on origin (2026-07-04 fetch)
+- `cursor/e2e-pacs-imaging-integration` — based on anchor `d44bb6022` ✓; 35 files +3398 (imaging capability/modality registry/reconciliation queue UI + viewer fix); quick forbidden-file grep clean. Not registered before pushing — needs a workstream entry, owner, and gate evidence before merge consideration.
+- `cursor/e2e-pct-care-tracker` — **stale base**: merge-base with anchor is `98d43b1cd`, not `d44bb6022`; 20 files +1217 (countersign surfacing, medications panel, gap register doc). Needs rebase onto current anchor + registration + gates before merge consideration.
+
 ## Serialized queue (coordinator-gated, one at a time; not yet scheduled)
 | ID | Item | Class |
 |---|---|---|
