@@ -73,6 +73,25 @@ export interface AdaptiveSessionRoomProps {
   children?: ReactNode;
 }
 
+/**
+ * Read the canPublish video grant straight from the governed media token.
+ * Attempting to publish on a subscribe-only token stalls the publisher
+ * peer-connection negotiation (observed as a 15s NegotiationError/rejoin
+ * loop), so publish intent must be gated BEFORE the room connects — the
+ * grant is authoritative and available synchronously in the JWT payload.
+ */
+function canPublishFromToken(token: string): boolean {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return true;
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const claims = JSON.parse(atob(normalized)) as { video?: { canPublish?: boolean } };
+    return claims.video?.canPublish !== false;
+  } catch {
+    return true; // unreadable token: leave behaviour unchanged, server still enforces
+  }
+}
+
 export function AdaptiveSessionRoom({
   serverUrl,
   token,
@@ -96,6 +115,8 @@ export function AdaptiveSessionRoom({
   const normalizedServerUrl = normalizeLiveKitServerUrl(serverUrl);
   const hasCredentials = Boolean(normalizedServerUrl && token);
   const isSupported = isSupportedLiveKitServerUrl(normalizedServerUrl);
+  const tokenAllowsPublish = useMemo(() => canPublishFromToken(token), [token]);
+  const subscribeOnly = audience || !tokenAllowsPublish;
 
   const roomOptions = useMemo<RoomOptions>(
     () => ({ adaptiveStream: true, dynacast: true }),
@@ -132,8 +153,8 @@ export function AdaptiveSessionRoom({
       serverUrl={normalizedServerUrl}
       token={token}
       connect
-      audio={audioEnabled && !audience}
-      video={videoEnabled && !audioOnly && !audience}
+      audio={audioEnabled && !subscribeOnly}
+      video={videoEnabled && !audioOnly && !subscribeOnly}
       options={roomOptions}
       onConnected={onConnected}
       onDisconnected={onDisconnected}
@@ -151,9 +172,9 @@ export function AdaptiveSessionRoom({
         </div>
         {headerSlot}
         <ReconnectBanner />
-        <SessionStage layout={layout} localPreviewPolicy={audience ? "hidden" : localPreviewPolicy} />
+        <SessionStage layout={layout} localPreviewPolicy={subscribeOnly ? "hidden" : localPreviewPolicy} />
         {footerSlot}
-        <SessionControlBar controls={controls} audience={audience} />
+        <SessionControlBar controls={controls} audience={subscribeOnly} />
         {overlaySlot ? (
           <div className="pointer-events-none absolute inset-0 z-20 [&>*]:pointer-events-auto">
             {overlaySlot}

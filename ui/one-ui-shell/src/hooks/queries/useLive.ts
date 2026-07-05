@@ -189,11 +189,16 @@ export function useLiveJoinRoom() {
   });
 }
 
-export function useLiveRoomToken(eventId: string, enabled = true) {
+export function useLiveRoomToken(eventId: string, enabled = true, roleOverride?: string) {
   const { participantId, role } = useLiveParticipant();
-  const body: LiveRoomTokenPayload = { participantId, role };
+  // The default PRESENTER/ATTENDEE vocabulary maps to broadcast tiers
+  // (ATTENDEE → AUDIENCE is subscribe-only). Surfaces whose session mode has
+  // its own role taxonomy (classroom FACILITATOR/LEARNER) must override, or
+  // participants receive canPublish:false tokens and cannot speak.
+  const effectiveRole = roleOverride ?? role;
+  const body: LiveRoomTokenPayload = { participantId, role: effectiveRole };
   return useQuery({
-    queryKey: liveQueryKeys.roomToken(eventId, participantId),
+    queryKey: [...liveQueryKeys.roomToken(eventId, participantId), effectiveRole],
     queryFn: () => liveApi.getRoomToken(eventId, body),
     enabled: Boolean(eventId) && Boolean(participantId) && enabled,
     // A media token must be STABLE for the page lifetime: every refetch mints

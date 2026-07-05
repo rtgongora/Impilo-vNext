@@ -121,7 +121,12 @@ export function ClassroomShell({ sessionId }: { sessionId: string }) {
 
   const { data: roomToken, isLoading: tokenLoading, error: tokenError } = useLiveRoomToken(
     liveEventId ?? "",
-    Boolean(liveEventId) && Boolean(joinRoom.isSuccess || event?.status === "LIVE")
+    Boolean(liveEventId) && Boolean(joinRoom.isSuccess || event?.status === "LIVE"),
+    // Classroom roles come from the session record (facilitator directory),
+    // NOT from providerActivated. The LEARNING_LIVE template grants both
+    // FACILITATOR and LEARNER publish rights; the default ATTENDEE→AUDIENCE
+    // mapping would hand learners a subscribe-only token.
+    isFacilitator ? "FACILITATOR" : "LEARNER"
   );
 
   const { data: chat = [] } = useLiveChat(liveEventId ?? "");
