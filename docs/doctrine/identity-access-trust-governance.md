@@ -373,19 +373,24 @@ and honest status change; history is never rewritten.
 ## Closing doctrine paragraph
 
 > Impilo vNext shall not depend on a single perfect register to bootstrap the health
-> workforce and service-delivery estate. It shall ingest the regulators' legal registers,
-> the public employer's workforce and posting records, and the verified claims of
-> onboarded organizations as distinct evidence streams, each recorded with its own source,
-> status, and date, and none silently overriding another. Where sources agree, trust is
-> composed; where sources are silent, status is honest; where sources conflict, the
-> conflict is adjudicated by accountable national authority and the decision is recorded
-> with its reason, scope, and expiry. No actor is invented to make onboarding convenient,
-> no actor is erased because a register is stale, and no external number — council,
-> employment, or national — is ever mistaken for the platform's own governed identity.
-> The platform's obligation is to state, at all times and to every authorized consumer,
-> what it knows, who says so, how current that knowledge is, and what it has decided to
-> allow in consequence — and to make every such decision reversible by governance and
-> visible to audit.
+> workforce and service-delivery estate. The platform shall support multi-channel
+> onboarding using regulatory truth, government operational truth, and delegated
+> organizational claims. Every provider, facility, and organization shall receive a
+> confidential platform digital identity, while external identifiers such as council
+> numbers, EC numbers, and facility registration numbers shall be treated as matching
+> evidence rather than the platform identity itself. Personal Health ID remains the
+> primary human identity; Provider ID is a secondary professional identity linked to
+> the person and activated according to verified professional, employment, facility,
+> and workspace context.
+
+The elaborated operating consequences of this paragraph: distinct evidence streams are
+recorded with their own source, status, and date, none silently overriding another;
+where sources agree, trust is composed; where sources are silent, status is honest;
+where sources conflict, the conflict is adjudicated by accountable national authority
+and the decision is recorded with its reason, scope, and expiry. No actor is invented
+to make onboarding convenient, no actor is erased because a register is stale, and no
+external number — council, employment, or national — is ever mistaken for the
+platform's own governed identity.
 
 ---
 
