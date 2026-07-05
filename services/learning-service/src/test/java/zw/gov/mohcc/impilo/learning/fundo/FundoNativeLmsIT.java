@@ -498,6 +498,37 @@ class FundoNativeLmsIT {
         }
 
         @Test
+        @DisplayName("Required bucket holds mandatory/assigned outstanding learning only — never plain overdue-optional")
+        void requiredBucketIsHonest() {
+            CourseEntity mandatoryCourse = newCourse(
+                    "FUNDO-CTX-MAND", "Mandatory refresher", "PUBLISHED", "ORIENTATION", true, false);
+            courseRepository.save(mandatoryCourse);
+
+            // Mandatory course, self-enrolled, outstanding → required.
+            enrolmentService.create(new FundoEnrolmentService.EnrolmentRequest(
+                    TENANT, "PROVIDER", "REQ-1", mandatoryCourse.getId(), null, "SELF", null, null));
+            // Optional course assigned by orchestration, outstanding → required.
+            enrolmentService.create(new FundoEnrolmentService.EnrolmentRequest(
+                    TENANT, "PROVIDER", "REQ-1", courseA.getId(), null, "ASSIGNED", "supervisor-1", null));
+            // Optional self-enrolment overdue → overdue but NOT required.
+            enrolmentService.create(new FundoEnrolmentService.EnrolmentRequest(
+                    TENANT, "PROVIDER", "REQ-1", courseB.getId(), null, "SELF", null,
+                    OffsetDateTime.now().minusDays(3)));
+
+            Map<String, Object> dashboard = learnerJourneyService.myLearning(TENANT, "PROVIDER", "REQ-1");
+            List<Map<String, Object>> required = cast(dashboard.get("required"));
+            List<Map<String, Object>> overdue = cast(dashboard.get("overdue"));
+
+            assertThat(required).hasSize(2);
+            assertThat(required)
+                    .extracting(r -> (String) r.get("courseCode"))
+                    .containsExactlyInAnyOrder("FUNDO-CTX-MAND", courseA.getCode());
+            assertThat(overdue)
+                    .extracting(r -> (String) r.get("courseCode"))
+                    .containsExactly(courseB.getCode());
+        }
+
+        @Test
         @DisplayName("Overview and assessment reports return native rollups")
         void reportsReturnData() {
             Map<String, Object> overview = reportService.overview(TENANT);
