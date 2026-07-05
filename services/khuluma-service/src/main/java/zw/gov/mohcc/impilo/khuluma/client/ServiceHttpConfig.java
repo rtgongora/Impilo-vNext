@@ -34,11 +34,22 @@ public class ServiceHttpConfig {
             String tenantId = tc != null && tc.tenantId() != null ? tc.tenantId().toString()
                     : (rc != null ? rc.tenantId() : null);
             putIfAbsent(headers, CompanionHeaders.TENANT_ID, tenantId);
-            putIfAbsent(headers, CompanionHeaders.POD_ID, rc != null ? rc.podId() : null);
+            // Synthesize the mandatory identifiers when the call originates service-side
+            // (Kafka/scheduler threads carry no RequestContext) — downstream companion
+            // filters fail-closed on MISSING_REQUIRED_HEADER otherwise.
+            putIfAbsent(headers, CompanionHeaders.POD_ID,
+                    rc != null && rc.podId() != null && !rc.podId().isBlank() ? rc.podId() : "khuluma-service");
             putIfAbsent(headers, CompanionHeaders.REQUEST_ID,
                     rc != null && rc.requestId() != null ? rc.requestId() : UUID.randomUUID().toString());
             putIfAbsent(headers, CompanionHeaders.CORRELATION_ID,
                     rc != null && rc.correlationId() != null ? rc.correlationId() : UUID.randomUUID().toString());
+            // Downstream v1.1 IdempotencyFilter requires Idempotency-Key on every
+            // POST/PUT/PATCH to /internal/v1/**. Khuluma commands are already idempotent
+            // at the domain layer, so a fresh key per outbound attempt is correct (and a
+            // stable key would wrongly replay across distinct commands).
+            if (isCommand(request.getMethod())) {
+                putIfAbsent(headers, CompanionHeaders.IDEMPOTENCY_KEY, "khuluma:" + UUID.randomUUID());
+            }
             if (tc != null) {
                 putIfAbsent(headers, CompanionHeaders.ACTOR_ID, tc.actorId());
                 putIfAbsent(headers, CompanionHeaders.ACTOR_TYPE, tc.actorType());
@@ -48,6 +59,12 @@ public class ServiceHttpConfig {
             }
             return execution.execute(request, body);
         };
+    }
+
+    private static boolean isCommand(org.springframework.http.HttpMethod method) {
+        return org.springframework.http.HttpMethod.POST.equals(method)
+                || org.springframework.http.HttpMethod.PUT.equals(method)
+                || org.springframework.http.HttpMethod.PATCH.equals(method);
     }
 
     private static void putIfAbsent(org.springframework.http.HttpHeaders headers, String name, String value) {
