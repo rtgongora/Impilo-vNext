@@ -62,6 +62,16 @@ public class DuraBffController {
         return ResponseEntity.ok(inventory.duraColdChainExcursions(status));
     }
 
+    /**
+     * eLMIS/NatPharm external sync states (read-only). Backed by the real
+     * Dura sync state machine; an empty list is an honest "no sync activity"
+     * answer, not a failure.
+     */
+    @GetMapping("/external-sync")
+    public ResponseEntity<JsonNode> externalSync(@RequestParam(required = false) String status) {
+        return ResponseEntity.ok(inventory.duraExternalSyncStates(status));
+    }
+
     @GetMapping("/pct/availability")
     public ResponseEntity<JsonNode> pctAvailability(
             @RequestParam UUID facilityId,

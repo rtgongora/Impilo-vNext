@@ -70,6 +70,63 @@ export interface DuraExcursion {
   status: string;
 }
 
+/** Materialised on-hand projection row (inventory-service `OnHandDto`). */
+export interface DuraOnHandRow {
+  id: string;
+  facilityId: string;
+  storeId: string;
+  binId?: string | null;
+  itemCode: string;
+  batch?: string | null;
+  expiry?: string | null;
+  qtyOnHand: number;
+  updatedAt?: string | null;
+}
+
+/** Stockout rows share the on-hand projection shape (qtyOnHand ≤ 0). */
+export type DuraStockoutRow = DuraOnHandRow;
+
+interface Paged<T> {
+  items: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+}
+
+export interface DuraLedgerEvent {
+  eventId: string;
+  facilityId: string;
+  storeId: string;
+  binId?: string | null;
+  itemCode: string;
+  batch?: string | null;
+  expiry?: string | null;
+  qtyDelta: number;
+  uom?: string | null;
+  eventType: string;
+  reason?: string | null;
+  refType?: string | null;
+  refId?: string | null;
+  actorId?: string | null;
+  createdAt?: string | null;
+}
+
+export interface DuraExternalSyncState {
+  syncId: string;
+  externalSystem: "ELMIS" | "NATPHARM" | string;
+  entityType: string;
+  entityRef: string;
+  externalRef?: string | null;
+  status: "PENDING" | "SYNCED" | "FAILED" | "RETRY" | string;
+  attempts: number;
+  lastError?: string | null;
+  createdAt?: string | null;
+  lastAttemptAt?: string | null;
+  syncedAt?: string | null;
+}
+
 // ── Hooks ─────────────────────────────────────────────────────────
 
 export function useDuraCategories(programmeArea?: string) {
@@ -130,6 +187,85 @@ export function useDuraColdChainExcursions(status?: string) {
     queryFn: () =>
       apiClient
         .get<Envelope<DuraExcursion[]>>(`/internal/v1/dura/cold-chain/excursions${q({ status })}`)
+        .then((r) => r.data ?? []),
+  });
+}
+
+/**
+ * Stockouts (on-hand ≤ 0) for a facility. Backed by
+ * `/internal/v1/inventory/on-hand/stockouts` → inventory-service
+ * `/v1/onhand/stockouts` (materialised on-hand projection derived from the
+ * append-only ledger). Disabled until a facility UUID is available.
+ */
+export function useDuraStockouts(facilityId?: string) {
+  return useQuery({
+    queryKey: ["dura-stockouts", facilityId],
+    enabled: Boolean(facilityId),
+    queryFn: () =>
+      apiClient
+        .get<Envelope<DuraStockoutRow[]>>(
+          `/internal/v1/inventory/on-hand/stockouts${q({ facilityId })}`,
+        )
+        .then((r) => r.data ?? []),
+  });
+}
+
+/**
+ * Facility stock balance (ledger-derived on-hand projection, paginated).
+ * Backed by `/internal/v1/inventory/on-hand` → inventory-service `/v1/onhand`.
+ */
+export function useDuraOnHand(facilityId?: string, opts?: { itemCode?: string; size?: number }) {
+  return useQuery({
+    queryKey: ["dura-on-hand", facilityId, opts],
+    enabled: Boolean(facilityId),
+    queryFn: () =>
+      apiClient
+        .get<Envelope<Paged<DuraOnHandRow>>>(
+          `/internal/v1/inventory/on-hand${q({
+            facilityId,
+            itemCode: opts?.itemCode,
+            size: opts?.size ?? 20,
+          })}`,
+        )
+        .then((r) => r.data?.items ?? []),
+  });
+}
+
+/**
+ * Append-only stock ledger events (movement history, newest page first from
+ * the service default sort). Backed by `/internal/v1/inventory/ledger` →
+ * inventory-service `/v1/ledger`. Every balance shown in the UI derives from
+ * these movements — this is the audit surface for stock truth.
+ */
+export function useDuraLedger(facilityId?: string, opts?: { itemCode?: string; size?: number }) {
+  return useQuery({
+    queryKey: ["dura-ledger", facilityId, opts],
+    enabled: Boolean(facilityId),
+    queryFn: () =>
+      apiClient
+        .get<Envelope<Paged<DuraLedgerEvent>>>(
+          `/internal/v1/inventory/ledger${q({
+            facilityId,
+            itemCode: opts?.itemCode,
+            size: opts?.size ?? 20,
+          })}`,
+        )
+        .then((r) => r.data?.items ?? []),
+  });
+}
+
+/**
+ * eLMIS/NatPharm external sync states from the real Dura sync state machine
+ * (`/internal/v1/dura/external-sync`). An empty list means no sync activity —
+ * the pharmacy-eLMIS dispense sync adapter is a recorded deferred seam, so
+ * absence of activity is the honest state, not an error.
+ */
+export function useDuraExternalSync(status?: string) {
+  return useQuery({
+    queryKey: ["dura-external-sync", status],
+    queryFn: () =>
+      apiClient
+        .get<Envelope<DuraExternalSyncState[]>>(`/internal/v1/dura/external-sync${q({ status })}`)
         .then((r) => r.data ?? []),
   });
 }

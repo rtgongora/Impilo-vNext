@@ -242,6 +242,14 @@ public class InventoryServiceClient {
         return getJson(b.toUriString());
     }
 
+    public JsonNode duraExternalSyncStates(String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/dura/external-sync");
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        return getJson(b.toUriString());
+    }
+
     public JsonNode duraPctAvailability(UUID facilityId, UUID storeId, String itemCode) {
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/dura/pct/availability")
                 .queryParam("facilityId", facilityId)
