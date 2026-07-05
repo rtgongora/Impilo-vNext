@@ -155,9 +155,15 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - **Integration**: merged as round 4 (`77d55abe6`, PUSHED); union conflict in `mock-and-stub-register.md` resolved keeping all entries; combined round-4 gate green: backend=0, type-check=0
 - **Status**: GATES_PASSED
 
+## WS-P3-B — PCT care-tracker gaps (external session) — GATES_PASSED
+- **Branch**: `cursor/e2e-pct-care-tracker` @ `97169ab03` · 13 commits · base `98d43b1cd` (stale but benign: zero overlap with anchor W2/W3 advance, verified)
+- **Coordinator review 2026-07-04**: PASSED. 27 files. Serialized items respected: R1 pinned by `OrosIntegrationContractTest` (documents the pct-vs-inpatient OROS payload mismatch, changes neither contract); prescribing routed through the EXISTING form-extraction→OROS seam via seeded `MEDICATION_REQUEST` form (countersign-gated); CadreEngine matrices + `JourneyState` untouched. Discharge-summary countersign gate: inpatient `V019` additive/next-in-sequence; different-actor rule; single-shot signature invalidated by draft edits; policy-configurable requirement (no hardcoded cadre split). UI: countersign actions, medications panel, extraction-provenance/routing status, discharge draft editor. Closes WS-P3-A scope items 1–2 (drafted workstream superseded).
+- **Coordinator gates (independent)**: backend `mvn -pl pct,inpatient,experience-bff -am test` = 0; type-check = 0; vitest encounter/discharge surfaces 36/36 (10 files).
+- **Integration**: merged as round 5; the two anticipated collisions (`PctServiceClient.java` escalation-vs-provenance methods, EHR encounter page billing-vs-forms panels) auto-resolved cleanly by git (different regions); combined round-5 gate pending
+- **Status**: GATES_PASSED
+
 ## Unregistered branches detected on origin (2026-07-04 fetch)
-- `cursor/e2e-pacs-imaging-integration` — based on anchor `d44bb6022` ✓; 35 files +3398 (imaging capability/modality registry/reconciliation queue UI + viewer fix); quick forbidden-file grep clean. Not registered before pushing — needs a workstream entry, owner, and gate evidence before merge consideration.
-- `cursor/e2e-pct-care-tracker` — **stale base**: merge-base with anchor is `98d43b1cd`, not `d44bb6022`; 20 files +1217 (countersign surfacing, medications panel, gap register doc). Needs rebase onto current anchor + registration + gates before merge consideration.
+- `cursor/e2e-pacs-imaging-integration` — based on anchor `d44bb6022` ✓; 35 files +3398 (imaging capability/modality registry/reconciliation queue UI + viewer fix); quick forbidden-file grep clean. Not registered before pushing — needs a workstream entry, owner, and gate evidence before merge consideration. LAST REMAINING unreviewed pipeline branch (P6).
 
 ## Serialized queue (coordinator-gated, one at a time; not yet scheduled)
 | ID | Item | Class |
