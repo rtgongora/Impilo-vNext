@@ -117,6 +117,20 @@ public class RtcSessionEventsConsumer {
                 session.setHealthStatus("ENDED");
                 sessionRepository.save(session);
             }
+            // Recording artifacts can arrive BEFORE the room finishes (facilitator
+            // stops recording mid-session): the recording.available handler
+            // registers them but cannot publish while the event is LIVE. Run the
+            // replay pipeline on end so both arrival orders converge on
+            // PUBLISHED_REPLAY. Guarded on a registered artifact so unrecorded
+            // classes end honestly in ENDED, not a phantom PROCESSING_REPLAY.
+            if (session != null && session.getRecordingRef() != null && !session.getRecordingRef().isBlank()) {
+                try {
+                    replayService.onSessionEnd(event.getTenantId(), event.getId(), RTC_ACTOR, session);
+                } catch (RuntimeException ex) {
+                    log.warn("Replay pipeline on session end failed for event {}: {}",
+                            event.getId(), ex.getMessage());
+                }
+            }
         });
     }
 
