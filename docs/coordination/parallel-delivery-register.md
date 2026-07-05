@@ -152,7 +152,7 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - **Branch**: `cursor/e2e-dura-commodities` @ `8d165ce64` · 7 commits · base `3411d6ca2` (anchor ancestor); zero overlap with anchor W1–W3
 - **Coordinator review 2026-07-04**: PASSED. 10 files +1054/−9, exactly the WS-P4-A/B board scope: low-stock telemetry wired (verified additive-only in `LedgerServiceImpl` — post-movement, outflow-only STOCKOUT_RISK, fail-safe, same transactional outbox; posting semantics untouched), the three missing test suites (`PharmacyConsumerTest`, `DuraPctControllerTest`, `LedgerServiceImplTelemetryTest`), pharmacy-elmis stub recorded in mock-and-stub register, eLMIS/NatPharm sync-status BFF proxy, stockouts/sync/balance/ledger on the Dura ops page. PharmacyConsumer touched by TEST only; no migrations; no connector behavior changes. WS-P4-A/B drafts superseded and closed.
 - **Coordinator gates (independent)**: backend `mvn -pl inventory-service,experience-bff -am test` = 0; type-check one-ui-shell = 0; vitest dura/hooks surfaces 97/97 (14 files).
-- **Integration**: merged as round 4 (`77d55abe6`); expected union conflict in `mock-and-stub-register.md` (finance + dura both appended) resolved keeping all entries; pending combined gate
+- **Integration**: merged as round 4 (`77d55abe6`, PUSHED); union conflict in `mock-and-stub-register.md` resolved keeping all entries; combined round-4 gate green: backend=0, type-check=0
 - **Status**: GATES_PASSED
 
 ## Unregistered branches detected on origin (2026-07-04 fetch)
