@@ -180,8 +180,16 @@ public class ProviderCouncilInternalController {
     }
 
     @GetMapping("/fundo-cpd-candidates")
-    public ResponseEntity<List<FundoCpdCandidateEntity>> listFundoCandidates(@RequestParam Long providerId) {
-        return ResponseEntity.ok(fundoCpdGovernanceService.listForProvider(providerId));
+    public ResponseEntity<List<FundoCpdCandidateEntity>> listFundoCandidates(
+            @RequestParam(required = false) Long providerId,
+            @RequestParam(required = false) String providerPublicId) {
+        if (providerId != null) {
+            return ResponseEntity.ok(fundoCpdGovernanceService.listForProvider(providerId));
+        }
+        if (providerPublicId != null && !providerPublicId.isBlank()) {
+            return ResponseEntity.ok(fundoCpdGovernanceService.listForProviderPublicId(providerPublicId));
+        }
+        return ResponseEntity.badRequest().build();
     }
 
     @PostMapping("/fundo-cpd-candidates/{candidateId}/accept")

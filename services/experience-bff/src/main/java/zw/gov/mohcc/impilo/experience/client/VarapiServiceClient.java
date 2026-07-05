@@ -216,6 +216,14 @@ public class VarapiServiceClient {
         return response.getBody();
     }
 
+    /** Fundo-linked CPD candidates keyed by the provider public identifier. */
+    public JsonNode getFundoCpdCandidatesByPublicId(String providerPublicId) {
+        String url = baseUrl + "/v1/internal/provider-council/fundo-cpd-candidates?providerPublicId="
+                + URLEncoder.encode(providerPublicId, StandardCharsets.UTF_8);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
     /** Per-council regulatory JSON configuration (Varapi V009). */
     public JsonNode getCouncilRegulatoryConfig(long councilId) {
         String url = baseUrl + "/v1/internal/provider-council/council-regulatory-config?councilId=" + councilId;
