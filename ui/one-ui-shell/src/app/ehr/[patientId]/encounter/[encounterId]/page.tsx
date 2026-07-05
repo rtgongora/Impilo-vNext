@@ -175,6 +175,8 @@ export default function EncounterPage() {
   const [noteError, setNoteError] = useState<string | null>(null);
 
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [closedBillId, setClosedBillId] = useState<string | null>(null);
+  const [encounterClosed, setEncounterClosed] = useState(false);
   const [pathwayRef, setPathwayRef] = useState("");
   const [protocolRef, setProtocolRef] = useState("");
   const [pathwaySaved, setPathwaySaved] = useState(false);
@@ -369,8 +371,14 @@ export default function EncounterPage() {
     closeEncounter.mutate(
       { id: encounterId },
       {
-        onSuccess: () => {
-          router.push(`/ehr/${patientId}`);
+        onSuccess: (result) => {
+          // The BFF creates a COSTA bill draft on close and returns its id in
+          // meta.costa_bill_id. Surface it instead of navigating away blind.
+          const billIdFromMeta =
+            (result as { meta?: { costa_bill_id?: string } })?.meta?.costa_bill_id ?? null;
+          setClosedBillId(billIdFromMeta);
+          setEncounterClosed(true);
+          setShowCloseConfirm(false);
         },
       },
     );
@@ -1167,8 +1175,42 @@ export default function EncounterPage() {
               </div>
             )}
 
+            {/* Post-close confirmation with billing continuity */}
+            {encounterClosed && (
+              <div className="bg-card rounded-lg border border-green-200 p-6 text-center">
+                <CheckCircle2 className="w-10 h-10 text-green-500 mx-auto mb-2" />
+                <h3 className="text-base font-semibold text-foreground mb-1">Encounter Closed</h3>
+                {closedBillId ? (
+                  <div className="mb-3 p-3 rounded-lg bg-success-soft border border-success/25">
+                    <p className="text-sm text-primary-hover flex items-center justify-center gap-2">
+                      <Receipt className="w-4 h-4" />
+                      A billing draft has been created for this encounter.
+                    </p>
+                    <Link
+                      href={`/finance/billing/${closedBillId}?patientId=${patientId}&encounterId=${encounterId}&source=encounter`}
+                      className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 text-xs font-medium text-primary-hover bg-emerald-100 rounded-lg hover:bg-emerald-200 transition-colors"
+                    >
+                      <Receipt className="w-3 h-3" />
+                      View Bill
+                    </Link>
+                  </div>
+                ) : (
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    No billing draft was reported for this closure. The billing panel above shows the
+                    current billing state for this encounter.
+                  </p>
+                )}
+                <button
+                  onClick={() => router.push(`/ehr/${patientId}`)}
+                  className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors"
+                >
+                  Back to Patient Chart
+                </button>
+              </div>
+            )}
+
             {/* Close Encounter â€” clinical staff only */}
-            {isActive && isClinical && (
+            {isActive && isClinical && !encounterClosed && (
               <div className="bg-card rounded-lg border border-border p-5">
                 {!showCloseConfirm ? (
                   <button

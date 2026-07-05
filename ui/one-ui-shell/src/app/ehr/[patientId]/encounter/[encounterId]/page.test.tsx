@@ -1,7 +1,16 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import EncounterPage from "./page";
+
+const { closeMutate } = vi.hoisted(() => ({
+  closeMutate: vi.fn(
+    (
+      _vars: unknown,
+      opts?: { onSuccess?: (result: unknown) => void },
+    ) => opts?.onSuccess?.({ data: {}, meta: { costa_bill_id: "bill-77" } }),
+  ),
+}));
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ patientId: "patient-1", encounterId: "enc-1" }),
@@ -74,7 +83,7 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
     },
     isLoading: false,
   }),
-  useCloseEncounter: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
+  useCloseEncounter: () => ({ mutate: closeMutate, isPending: false, isError: false }),
   useUpdateEncounterPathwayProtocol: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
 }));
 vi.mock("@tanstack/react-query", () => ({
@@ -98,5 +107,19 @@ describe("EncounterPage", () => {
     expect(screen.getByText("Specialist responses are back and should be reviewed before closure.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Visit Outcome" })).toHaveAttribute("href", "/ehr/patient-1/discharge?encounterId=enc-1");
     expect(screen.getByTestId("encounter-lab-orders-panel")).toBeInTheDocument();
+  });
+
+  it("surfaces the COSTA bill draft after closing the encounter", () => {
+    render(<EncounterPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Close Encounter/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Confirm Close/i }));
+
+    expect(screen.getByText("Encounter Closed")).toBeInTheDocument();
+    expect(screen.getByText(/A billing draft has been created/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /View Bill/i })).toHaveAttribute(
+      "href",
+      "/finance/billing/bill-77?patientId=patient-1&encounterId=enc-1&source=encounter",
+    );
   });
 });

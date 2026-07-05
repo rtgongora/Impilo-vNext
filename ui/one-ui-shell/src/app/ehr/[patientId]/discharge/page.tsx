@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
+import { EncounterBillingPanel } from "@/components/encounter/EncounterBillingPanel";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters, type EncounterResource } from "@/hooks/queries/useEncounters";
@@ -175,6 +176,7 @@ export default function VisitOutcomePage() {
           </div>
         ) : submitted ? (
           /* Post-completion */
+          <div className="space-y-6">
           <div className="bg-card rounded-lg border border-green-200 p-8 text-center">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
             <h3 className="text-lg font-semibold text-foreground mb-1">Encounter Completed</h3>
@@ -218,6 +220,10 @@ export default function VisitOutcomePage() {
                 Patient Chart
               </button>
             </div>
+          </div>
+          {/* Live billing status for the just-completed encounter (bill draft,
+              coverage split, shortfall) — read-only, from COSTA via the BFF. */}
+          <EncounterBillingPanel patientId={patientId} encounterId={targetEncounter.id} />
           </div>
         ) : (
           <div className="space-y-6">
@@ -275,6 +281,10 @@ export default function VisitOutcomePage() {
                 Use Encounter for the live clinical workspace, Notes for narrative closure, Orders for unfinished downstream work, and Chart for cross-surface continuity after completion.
               </p>
             </div>
+
+            {/* Billing state before closure: shows accumulated bills, coverage
+                split, and shortfall so the outcome step is financially honest. */}
+            <EncounterBillingPanel patientId={patientId} encounterId={targetEncounter.id} />
             {/* Disposition Selection — Lovable-aligned visual grid */}
             <div className="bg-card rounded-lg border border-border p-5">
               <div className="flex items-center gap-2 mb-4">
