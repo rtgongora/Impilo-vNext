@@ -103,7 +103,7 @@ class MeetingServiceTest {
 
         meetingService.create(a, "Planning", List.of(), "2026-07-10T09:00:00Z");
 
-        verify(liveService).createEvent(eq("Planning"), eq("VIRTUAL"), eq("MEETING"), anyString(),
+        verify(liveService).createEvent(eq("Planning"), eq("PROFESSIONAL_MEETING"), eq("MEETING"), anyString(),
                 eq("PROVIDER"), eq("provider-a"), anyInt(), eq("2026-07-10T09:00:00Z"));
     }
 

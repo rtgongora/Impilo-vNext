@@ -96,8 +96,10 @@ public class MeetingService {
         ConversationEntity conv = conversations.create(ctx, "MEETING", title, null, participants, null);
         int max = (participants != null ? participants.size() : 0) + 1;
 
+        // LiveMode is live-service doctrine: meetings are PROFESSIONAL_MEETING
+        // (maps to the MEETING session template at the RTC gateway).
         LiveServiceClient.CreateEventResult event = liveService.createEvent(
-                title != null ? title : "Meeting", "VIRTUAL", "MEETING",
+                title != null ? title : "Meeting", "PROFESSIONAL_MEETING", "MEETING",
                 conv.getConversationId().toString(), ctx.actorType(), ctx.actorId(), max, scheduledAt);
 
         if (event.available() && event.eventId() != null) {

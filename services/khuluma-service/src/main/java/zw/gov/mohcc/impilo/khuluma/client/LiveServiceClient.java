@@ -85,7 +85,7 @@ public class LiveServiceClient {
                                          Integer maxParticipants, String scheduledAt) {
         Map<String, Object> req = new LinkedHashMap<>();
         req.put("title", title);
-        req.put("mode", mode != null ? mode : "VIRTUAL");
+        req.put("mode", mode != null ? mode : "PROFESSIONAL_MEETING");
         req.put("eventType", eventType != null ? eventType : "MEETING");
         req.put("owningService", "khuluma-service");
         req.put("owningEntityId", owningEntityId);

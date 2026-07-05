@@ -30,11 +30,11 @@ class LiveServiceClientTest {
                 .andExpect(jsonPath("$.owningService").value("khuluma-service"))
                 .andExpect(jsonPath("$.owningEntityId").value("conv-1"))
                 .andExpect(jsonPath("$.eventType").value("MEETING"))
-                .andExpect(jsonPath("$.mode").value("VIRTUAL"))
+                .andExpect(jsonPath("$.mode").value("PROFESSIONAL_MEETING"))
                 .andRespond(withSuccess("{\"id\":\"ev-1\",\"status\":\"DRAFT\"}", MediaType.APPLICATION_JSON));
 
         LiveServiceClient.CreateEventResult result =
-                client.createEvent("Daily standup", "VIRTUAL", "MEETING", "conv-1", "PROVIDER", "prov-a", 5);
+                client.createEvent("Daily standup", "PROFESSIONAL_MEETING", "MEETING", "conv-1", "PROVIDER", "prov-a", 5);
 
         assertThat(result.available()).isTrue();
         assertThat(result.eventId()).isEqualTo("ev-1");
