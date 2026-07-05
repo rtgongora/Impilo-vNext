@@ -129,7 +129,7 @@ class WalletOverviewServiceTest {
     void outstandingBillsEmitSettleBillNextActionWithCount() {
         wireHappyDefaults();
         ArrayNode bills = mapper.createArrayNode();
-        bills.add(mapper.createObjectNode().put("id", "BILL-1").put("status", "INVOICED"));
+        bills.add(mapper.createObjectNode().put("id", "BILL-1").put("status", "FINAL"));
         when(costaClient.listBills(anyInt(), anyInt(), anyString())).thenReturn(bills);
 
         Map<String, Object> data = service().buildOverview("CPID-1");
@@ -137,6 +137,17 @@ class WalletOverviewServiceTest {
         Map<?, ?> payments = (Map<?, ?>) data.get("payments");
         assertThat(payments.get("outstandingCount")).isEqualTo(1);
         assertThat(actionCodes(data)).contains("SETTLE_BILL");
+    }
+
+    @Test
+    void outstandingBillsAreQueriedWithAValidCostaBillStatus() {
+        wireHappyDefaults();
+
+        service().buildOverview("CPID-1");
+
+        // "INVOICED" is not a COSTA BillStatus; querying with it made this card
+        // permanently unavailable. The wallet must ask for FINAL bills.
+        org.mockito.Mockito.verify(costaClient).listBills(anyInt(), anyInt(), org.mockito.ArgumentMatchers.eq("FINAL"));
     }
 
     @Test

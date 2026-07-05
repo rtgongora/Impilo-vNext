@@ -225,8 +225,11 @@ public class WalletOverviewService {
         Map<String, Object> card = new LinkedHashMap<>();
         card.put("_source", "costa (billing) + mushex (payments)");
         try {
-            // Outstanding = bills issued but not yet settled. Costa scopes to the trust context.
-            JsonNode outstanding = costaClient.listBills(0, 20, "INVOICED");
+            // Outstanding = finalized bills awaiting settlement. Costa scopes to the trust
+            // context. "FINAL" is the COSTA BillStatus at which the coverage split is settled
+            // and the patient shortfall is known ("INVOICED" is not a valid BillStatus and
+            // previously made this card permanently unavailable).
+            JsonNode outstanding = costaClient.listBills(0, 20, "FINAL");
             card.put("outstanding", outstanding);
             card.put("outstandingCount", countItems(outstanding));
         } catch (Exception e) {
