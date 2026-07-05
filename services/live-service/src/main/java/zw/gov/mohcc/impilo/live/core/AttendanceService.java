@@ -64,6 +64,9 @@ public class AttendanceService {
         evaluateEligibility(attendance, event);
         LiveEventAttendanceEntity saved = attendanceRepository.save(attendance);
         emit(saved, event, "impilo.live.attendance.left.v1");
+        // W3: watch minutes changed — publish the webhook-accurate snapshot for
+        // downstream attendance mapping (learning-service LiveAttendanceConsumer).
+        emit(saved, event, "impilo.live.attendance.updated.v1");
         return saved;
     }
 
@@ -78,7 +81,10 @@ public class AttendanceService {
         attendance.setReplayWatchMinutes(replayMinutes);
         attendance.setTotalWatchMinutes(liveMinutes + replayMinutes);
         evaluateEligibility(attendance, event);
-        return attendanceRepository.save(attendance);
+        LiveEventAttendanceEntity saved = attendanceRepository.save(attendance);
+        // W3: watch minutes changed — publish the webhook-accurate snapshot.
+        emit(saved, event, "impilo.live.attendance.updated.v1");
+        return saved;
     }
 
     public void evaluateEligibility(LiveEventAttendanceEntity attendance, LiveEventEntity event) {
@@ -115,7 +121,11 @@ public class AttendanceService {
         payload.put("attendanceId", attendance.getId().toString());
         payload.put("eventId", attendance.getEventId().toString());
         payload.put("participantId", attendance.getParticipantId());
+        payload.put("participantType", attendance.getParticipantType());
         payload.put("liveWatchMinutes", attendance.getLiveWatchMinutes());
+        payload.put("replayWatchMinutes", attendance.getReplayWatchMinutes());
+        payload.put("totalWatchMinutes", attendance.getTotalWatchMinutes());
+        payload.put("completionStatus", attendance.getCompletionStatus());
         payload.put("eligibleForCpd", attendance.isEligibleForCpd());
         payload.put("eligibleForCertificate", attendance.isEligibleForCertificate());
         emitter.emit(event.getTenantId(), "LIVE_ATTENDANCE", attendance.getId().toString(),

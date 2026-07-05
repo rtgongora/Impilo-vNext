@@ -749,6 +749,12 @@ public class LearningController {
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
     }
 
+    /**
+     * Sessions list — thin passthrough. Since W3 the upstream items also carry the
+     * live-linkage join fields {@code sessionMode} / {@code liveEventId} /
+     * {@code joinPath} (V027 columns), which flow through this envelope unmodified
+     * so the shell can render a Join CTA for LIVE sessions.
+     */
     @GetMapping("/v11/sessions")
     public ResponseEntity<Map<String, Object>> listSessions(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -762,6 +768,33 @@ public class LearningController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestBody Map<String, Object> body) {
         JsonNode n = learningClient.postV11("sessions", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    // ---- W3: configurable completion rules + facilitator confirmation ----
+
+    @GetMapping("/v11/courses/{courseId}/completion-rules")
+    public ResponseEntity<Map<String, Object>> listCompletionRules(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String courseId) {
+        JsonNode n = learningClient.getV11("courses/" + courseId + "/completion-rules", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/courses/{courseId}/completion-rules")
+    public ResponseEntity<Map<String, Object>> upsertCompletionRule(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String courseId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("courses/" + courseId + "/completion-rules", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/enrolments/{enrolmentId}/facilitator-confirm")
+    public ResponseEntity<Map<String, Object>> facilitatorConfirm(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String enrolmentId) {
+        JsonNode n = learningClient.postV11("enrolments/" + enrolmentId + "/facilitator-confirm", Map.of());
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
     }
 

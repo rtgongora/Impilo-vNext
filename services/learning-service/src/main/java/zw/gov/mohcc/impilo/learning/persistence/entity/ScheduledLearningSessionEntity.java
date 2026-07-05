@@ -62,6 +62,21 @@ public class ScheduledLearningSessionEntity {
     @Column(name = "metadata_json", columnDefinition = "TEXT")
     private String metadataJson;
 
+    /**
+     * Delivery mode (V027): LIVE / RECORDED / HYBRID / IN_PERSON. Defaults to
+     * IN_PERSON; sessions scheduled with an Impilo Live webinar are LIVE.
+     */
+    @Column(name = "session_mode", nullable = false, length = 32)
+    private String sessionMode = "IN_PERSON";
+
+    /** Impilo Live event id (V027); dual-written with metadata_json.impiloLiveEventId. */
+    @Column(name = "live_event_id")
+    private UUID liveEventId;
+
+    /** Experience-shell join path (V027); dual-written with metadata_json.impiloLiveJoinPath. */
+    @Column(name = "join_path", length = 512)
+    private String joinPath;
+
     @Column(name = "created_by", nullable = false, length = 255)
     private String createdBy;
 
@@ -72,6 +87,7 @@ public class ScheduledLearningSessionEntity {
     void prePersist() {
         if (id == null) id = UUID.randomUUID();
         if (createdAt == null) createdAt = OffsetDateTime.now();
+        if (sessionMode == null) sessionMode = "IN_PERSON";
     }
 
     public UUID getId() { return id; }
@@ -100,6 +116,12 @@ public class ScheduledLearningSessionEntity {
     public void setVenueId(UUID venueId) { this.venueId = venueId; }
     public String getMetadataJson() { return metadataJson; }
     public void setMetadataJson(String metadataJson) { this.metadataJson = metadataJson; }
+    public String getSessionMode() { return sessionMode; }
+    public void setSessionMode(String sessionMode) { this.sessionMode = sessionMode; }
+    public UUID getLiveEventId() { return liveEventId; }
+    public void setLiveEventId(UUID liveEventId) { this.liveEventId = liveEventId; }
+    public String getJoinPath() { return joinPath; }
+    public void setJoinPath(String joinPath) { this.joinPath = joinPath; }
     public String getCreatedBy() { return createdBy; }
     public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

@@ -12,6 +12,11 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   flyway:
     enabled: false
+  kafka:
+    listener:
+      # Keep @KafkaListener containers (LiveAttendanceConsumer) from trying to
+      # connect to a broker in tests — consumer logic is unit-tested directly.
+      auto-startup: false
 
 learning:
   security:

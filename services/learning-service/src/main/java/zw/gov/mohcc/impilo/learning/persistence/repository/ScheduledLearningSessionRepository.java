@@ -15,4 +15,9 @@ public interface ScheduledLearningSessionRepository
     List<ScheduledLearningSessionEntity> findByTenantIdOrderByStartsAtDesc(UUID tenantId, Pageable pageable);
 
     List<ScheduledLearningSessionEntity> findByTenantIdAndCohortIdOrderByStartsAtAsc(UUID tenantId, UUID cohortId);
+
+    /** Live-linkage resolution (V027): Impilo Live event id → scheduled session. */
+    Optional<ScheduledLearningSessionEntity> findFirstByLiveEventIdOrderByCreatedAtDesc(UUID liveEventId);
+
+    List<ScheduledLearningSessionEntity> findByTenantIdAndCourseId(UUID tenantId, UUID courseId);
 }

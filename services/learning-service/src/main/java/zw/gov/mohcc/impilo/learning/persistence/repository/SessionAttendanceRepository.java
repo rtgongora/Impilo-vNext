@@ -12,4 +12,8 @@ public interface SessionAttendanceRepository extends JpaRepository<SessionAttend
 
     Optional<SessionAttendanceEntity> findBySessionIdAndSubjectTypeAndSubjectId(
             UUID sessionId, String subjectType, String subjectId);
+
+    List<SessionAttendanceEntity> findBySessionIdInAndSubjectId(List<UUID> sessionIds, String subjectId);
+
+    List<SessionAttendanceEntity> findBySessionId(UUID sessionId);
 }

@@ -71,6 +71,14 @@ public class EnrolmentEntity {
     @Column(name = "facility_id")
     private UUID facilityId;
 
+    /** FACILITATOR_CONFIRM completion-rule marker (V028). */
+    @Column(name = "facilitator_confirmed_at")
+    private OffsetDateTime facilitatorConfirmedAt;
+
+    /** Actor who confirmed (V028); audit companion to facilitatorConfirmedAt. */
+    @Column(name = "facilitator_confirmed_by", length = 255)
+    private String facilitatorConfirmedBy;
+
     @PrePersist
     void prePersist() {
         if (id == null) id = UUID.randomUUID();
@@ -112,4 +120,8 @@ public class EnrolmentEntity {
     public void setLearningSpaceId(UUID learningSpaceId) { this.learningSpaceId = learningSpaceId; }
     public UUID getFacilityId() { return facilityId; }
     public void setFacilityId(UUID facilityId) { this.facilityId = facilityId; }
+    public OffsetDateTime getFacilitatorConfirmedAt() { return facilitatorConfirmedAt; }
+    public void setFacilitatorConfirmedAt(OffsetDateTime facilitatorConfirmedAt) { this.facilitatorConfirmedAt = facilitatorConfirmedAt; }
+    public String getFacilitatorConfirmedBy() { return facilitatorConfirmedBy; }
+    public void setFacilitatorConfirmedBy(String facilitatorConfirmedBy) { this.facilitatorConfirmedBy = facilitatorConfirmedBy; }
 }

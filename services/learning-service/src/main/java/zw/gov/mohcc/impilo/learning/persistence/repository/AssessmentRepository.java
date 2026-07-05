@@ -9,4 +9,5 @@ import zw.gov.mohcc.impilo.learning.persistence.entity.AssessmentEntity;
 public interface AssessmentRepository extends JpaRepository<AssessmentEntity, UUID> {
     Optional<AssessmentEntity> findByTenantIdAndId(UUID tenantId, UUID id);
     List<AssessmentEntity> findByTenantIdAndCourseIdAndStatus(UUID tenantId, UUID courseId, String status);
+    List<AssessmentEntity> findByTenantIdAndCourseId(UUID tenantId, UUID courseId);
 }
