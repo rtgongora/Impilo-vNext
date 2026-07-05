@@ -63,6 +63,30 @@ public class LiveInteractionController {
         return interactionService.listChat(tenantId, eventId);
     }
 
+    /**
+     * Host/producer broadcast (kind=ANNOUNCEMENT on the chat vocabulary).
+     * The crew check runs against the trusted actor header when present —
+     * a body-asserted participantId alone cannot impersonate the crew.
+     */
+    @PostMapping("/{eventId}/announcements")
+    public ResponseEntity<LiveEventChatMessageEntity> postAnnouncement(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @PathVariable UUID eventId,
+            @RequestBody LiveDtos.AnnouncementRequest req) {
+        String publisher = actorId != null && !actorId.isBlank() ? actorId : req.participantId();
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                interactionService.postAnnouncement(tenantId, eventId, publisher,
+                        req.participantType(), req.message()));
+    }
+
+    @GetMapping("/{eventId}/announcements")
+    public List<LiveEventChatMessageEntity> listAnnouncements(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID eventId) {
+        return interactionService.listAnnouncements(tenantId, eventId);
+    }
+
     @PostMapping("/{eventId}/polls")
     public ResponseEntity<LiveEventPollEntity> createPoll(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,

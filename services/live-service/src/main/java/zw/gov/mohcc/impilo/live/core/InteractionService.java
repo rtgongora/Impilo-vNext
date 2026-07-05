@@ -6,11 +6,19 @@ import zw.gov.mohcc.impilo.live.persistence.entity.*;
 import zw.gov.mohcc.impilo.live.persistence.repository.*;
 
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class InteractionService {
+
+    /** Chat message kinds — announcements ride the moderated-chat vocabulary. */
+    public static final String KIND_CHAT = "CHAT";
+    public static final String KIND_ANNOUNCEMENT = "ANNOUNCEMENT";
+
+    static final String EVT_ANNOUNCEMENT_PUBLISHED = "impilo.live.announcement.published.v1";
 
     private final LiveEventService eventService;
     private final LiveEventQuestionRepository questionRepository;
@@ -19,6 +27,8 @@ public class InteractionService {
     private final LiveEventPollResponseRepository pollResponseRepository;
     private final LiveEventResourceRepository resourceRepository;
     private final LiveEventFeedbackRepository feedbackRepository;
+    private final StageService stageService;
+    private final LiveEventEmitter emitter;
 
     public InteractionService(LiveEventService eventService,
                               LiveEventQuestionRepository questionRepository,
@@ -26,7 +36,9 @@ public class InteractionService {
                               LiveEventPollRepository pollRepository,
                               LiveEventPollResponseRepository pollResponseRepository,
                               LiveEventResourceRepository resourceRepository,
-                              LiveEventFeedbackRepository feedbackRepository) {
+                              LiveEventFeedbackRepository feedbackRepository,
+                              StageService stageService,
+                              LiveEventEmitter emitter) {
         this.eventService = eventService;
         this.questionRepository = questionRepository;
         this.chatRepository = chatRepository;
@@ -34,6 +46,50 @@ public class InteractionService {
         this.pollResponseRepository = pollResponseRepository;
         this.resourceRepository = resourceRepository;
         this.feedbackRepository = feedbackRepository;
+        this.stageService = stageService;
+        this.emitter = emitter;
+    }
+
+    /**
+     * Host/producer broadcast message: persists as a chat message of
+     * kind=ANNOUNCEMENT (visible even while ordinary chat is disabled) and
+     * fans out impilo.live.announcement.published.v1 for registrant
+     * notification. Crew authority is resolved server-side.
+     */
+    @Transactional
+    public LiveEventChatMessageEntity postAnnouncement(UUID tenantId, UUID eventId,
+                                                       String participantId, String participantType,
+                                                       String message) {
+        LiveEventEntity event = eventService.get(tenantId, eventId);
+        stageService.assertCrew(event, participantId);
+        if (message == null || message.isBlank()) {
+            throw new IllegalArgumentException("Announcement message must not be blank");
+        }
+        LiveEventChatMessageEntity announcement = new LiveEventChatMessageEntity();
+        announcement.setEventId(eventId);
+        announcement.setParticipantId(participantId);
+        announcement.setParticipantType(participantType != null ? participantType : "PROVIDER");
+        announcement.setMessage(message);
+        announcement.setStatus("VISIBLE");
+        announcement.setKind(KIND_ANNOUNCEMENT);
+        LiveEventChatMessageEntity saved = chatRepository.save(announcement);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("eventId", eventId.toString());
+        payload.put("title", event.getTitle());
+        payload.put("messageId", saved.getId().toString());
+        payload.put("message", message);
+        payload.put("publishedBy", participantId);
+        emitter.emit(tenantId, "LIVE_EVENT", eventId.toString(),
+                EVT_ANNOUNCEMENT_PUBLISHED, "LIVE_EVENT", eventId.toString(), payload);
+        return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public List<LiveEventChatMessageEntity> listAnnouncements(UUID tenantId, UUID eventId) {
+        eventService.get(tenantId, eventId);
+        return chatRepository.findByEventIdAndKindAndStatusOrderByCreatedAtDesc(
+                eventId, KIND_ANNOUNCEMENT, "VISIBLE");
     }
 
     @Transactional

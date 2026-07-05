@@ -27,6 +27,10 @@ public class LiveEventChatMessageEntity {
     @Column(nullable = false, length = 32)
     private String status = "VISIBLE";
 
+    /** CHAT (default) or ANNOUNCEMENT — announcements ride the chat vocabulary. */
+    @Column(nullable = false, length = 24)
+    private String kind = "CHAT";
+
     @Column(name = "moderated_by")
     private String moderatedBy;
 
@@ -50,6 +54,8 @@ public class LiveEventChatMessageEntity {
     public void setMessage(String message) { this.message = message; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getKind() { return kind; }
+    public void setKind(String kind) { this.kind = kind; }
     public String getModeratedBy() { return moderatedBy; }
     public void setModeratedBy(String moderatedBy) { this.moderatedBy = moderatedBy; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

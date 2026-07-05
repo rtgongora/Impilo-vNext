@@ -13,4 +13,7 @@ public interface LiveEventChatMessageRepository extends JpaRepository<LiveEventC
     List<LiveEventChatMessageEntity> findByEventIdAndStatusOrderByCreatedAtAsc(UUID eventId, String status);
 
     List<LiveEventChatMessageEntity> findByEventIdOrderByCreatedAtAsc(UUID eventId);
+
+    List<LiveEventChatMessageEntity> findByEventIdAndKindAndStatusOrderByCreatedAtDesc(
+            UUID eventId, String kind, String status);
 }
