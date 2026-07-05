@@ -135,8 +135,11 @@ livekit:
   enabled: true
   image:
     # docker.io unreachable from the preview VM; mirror carries livekit-server.
+    # v1.13.x pairs with livekit-client 2.19 (protocol 17): older servers never
+    # acknowledge the client's offer IDs, so every publisher negotiation "times
+    # out" after 15s and all rooms churn through NegotiationError/resume cycles.
     repository: mirror.gcr.io/livekit/livekit-server
-    tag: "v1.8.4"
+    tag: "v1.13.3"
     pullPolicy: IfNotPresent
   # Preview-only credentials (committed by convention like other preview secrets).
   apiKey: "impilo-preview-key"
@@ -154,14 +157,14 @@ livekit:
       memory: 1Gi
 
 # LiveKit Egress worker — room-composite recordings requested by rtc-gateway,
-# uploaded to the in-chart MinIO bucket. v1.8.x pairs with livekit-server 1.8.4.
+# uploaded to the in-chart MinIO bucket. v1.13.0 pairs with livekit-server 1.13.x.
 livekitEgress:
   enabled: true
   bucket: impilo-recordings
   image:
     # docker.io unreachable from the preview VM; mirror carries livekit/egress.
     repository: mirror.gcr.io/livekit/egress
-    tag: "v1.8.6"
+    tag: "v1.13.0"
     pullPolicy: IfNotPresent
   # Egress is CPU-heavy (headless-Chrome compositing + encoding). Room
   # composite requires 4 CPUs by egress's own admission control ("not enough
