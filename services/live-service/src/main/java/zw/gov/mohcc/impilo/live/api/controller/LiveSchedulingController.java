@@ -111,6 +111,17 @@ public class LiveSchedulingController {
         e.setRecordingPolicy(replay ? "ALLOWED" : "DISABLED");
         e.setRecordingAllowed(replay);
         e.setCreatedBy(actorId != null ? actorId : "fundo");
+        // organiser_id is NOT NULL; service-to-service scheduling (Fundo) may
+        // carry no actor — the lead trainer organises, else the caller, else
+        // the owning service itself.
+        String organiser = req.trainerIds() != null && !req.trainerIds().isEmpty()
+                ? req.trainerIds().get(0)
+                : (actorId != null ? actorId : "fundo");
+        e.setOrganiserId(organiser);
+        if (e.getOrganiserType() == null || e.getOrganiserType().isBlank()) {
+            e.setOrganiserType(req.trainerIds() != null && !req.trainerIds().isEmpty()
+                    ? "PROVIDER" : "SERVICE");
+        }
 
         List<RoleAssignment> roles = new ArrayList<>();
         addAll(roles, req.trainerIds(), "PROVIDER", "PRESENTER");
