@@ -27,7 +27,7 @@ class LiveServiceClientTest {
 
         server.expect(requestTo("http://live-test:8380/internal/v1/live/events"))
                 .andExpect(method(org.springframework.http.HttpMethod.POST))
-                .andExpect(jsonPath("$.owningService").value("khuluma-service"))
+                .andExpect(jsonPath("$.owningService").value("KHULUMA"))
                 .andExpect(jsonPath("$.owningEntityId").value("conv-1"))
                 .andExpect(jsonPath("$.eventType").value("MEETING"))
                 .andExpect(jsonPath("$.mode").value("PROFESSIONAL_MEETING"))

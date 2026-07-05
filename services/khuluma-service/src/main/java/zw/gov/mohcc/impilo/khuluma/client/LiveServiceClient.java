@@ -87,7 +87,9 @@ public class LiveServiceClient {
         req.put("title", title);
         req.put("mode", mode != null ? mode : "PROFESSIONAL_MEETING");
         req.put("eventType", eventType != null ? eventType : "MEETING");
-        req.put("owningService", "khuluma-service");
+        // Canonical owning-service key — matches the rtc-gateway owningService
+        // convention (consumers filter on KHULUMA) and live's OwningService enum.
+        req.put("owningService", "KHULUMA");
         req.put("owningEntityId", owningEntityId);
         req.put("organiserType", organiserType != null ? organiserType : "PROVIDER");
         req.put("organiserId", organiserId);

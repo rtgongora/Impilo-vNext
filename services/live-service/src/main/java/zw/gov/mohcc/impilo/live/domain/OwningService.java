@@ -22,6 +22,8 @@ public enum OwningService {
     PUBLIC_HEALTH,
     CITIZEN_ENGAGEMENT,
     ENTERPRISE,
+    /** Khuluma comms hub — professional meetings composed over a live event. */
+    KHULUMA,
     STANDALONE_IMPILO_LIVE;
 
     public static OwningService fromString(String value) {
@@ -43,6 +45,7 @@ public enum OwningService {
             case PUBLIC_HEALTH -> "PUBLIC_HEALTH";
             case CITIZEN_ENGAGEMENT -> "CITIZEN_ENGAGEMENT";
             case ENTERPRISE -> "ENTERPRISE";
+            case KHULUMA -> "KHULUMA";
             case STANDALONE_IMPILO_LIVE -> "IMPILO_LIVE";
         };
     }
