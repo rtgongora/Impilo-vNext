@@ -93,7 +93,7 @@ ok "learner $LEARNER_ID enrolled: $ENROLMENT_ID"
 
 # ── 3. Classroom media hold (facilitator + learner, real browsers) ──────────
 step "3. classroom media hold (real browsers, ~100s)"
-HOLD_LOG=$(mktemp)
+HOLD_LOG="${TMPDIR:-/tmp}/w3-classroom-hold-$RUN.log"
 (cd "$(dirname "$0")/../../ui/one-ui-shell" && \
   PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL="$PREVIEW_URL" PREVIEW_SANDBOX_E2E=1 \
   CLASSROOM_SESSION_ID="$SESSION_ID" CLASSROOM_HOLD_MS=100000 \
@@ -106,10 +106,10 @@ for i in $(seq 1 40); do
   [[ "${ATTEND:-0}" -ge 2 ]] && break
   sleep 5
 done
-[[ "${ATTEND:-0}" -ge 2 ]] || { kill $HOLD_PID 2>/dev/null; tail -25 "$HOLD_LOG"; fail "live attendance never recorded both participants"; }
+[[ "${ATTEND:-0}" -ge 2 ]] || { kill $HOLD_PID 2>/dev/null || true; tail -40 "$HOLD_LOG" || true; fail "live attendance never recorded both participants (got ${ATTEND:-0})"; }
 ok "live_event_attendance has $ATTEND participants (server-side truth)"
 
-wait $HOLD_PID || { tail -25 "$HOLD_LOG"; fail "classroom hold failed"; }
+wait $HOLD_PID || { tail -40 "$HOLD_LOG" || true; fail "classroom hold failed"; }
 ok "hold complete — browsers left the room"
 
 # ── 4. Event-driven completion chain ─────────────────────────────────────────
