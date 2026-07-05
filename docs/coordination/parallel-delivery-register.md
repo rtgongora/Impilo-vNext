@@ -219,7 +219,7 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 - Branch `fable/iatg-f-provider-claim` · worktree `/home/user/wt-iatg-f` · agent running 2026-07-05 · Status: ASSIGNED
 
 ## IATG-WS-G — adjudication
-- Branch `fable/iatg-g-adjudication` · worktree `/home/user/wt-iatg-g` · agent running 2026-07-05 · Status: ASSIGNED (merges after WS-D per Flyway V008>V007)
+- Branch `fable/iatg-g-adjudication` @ `ba43c320e` PUSHED · 4 commits · Status: GATES_PASSED (coordinator gate EXIT=0; engine untouched — SQL seed + tests only; append-only enforced at trigger/service/test layers; controller tolerates both TrustContextFilter registrations). MERGE CONSTRAINT: after WS-D (governance V008 > V007).
 
 ## WS-M — Mobile Runtime Truth Wave — GATES_PASSED (in-container phase), runtime pending VM
 - Branch `fable/mobile-runtime-truth` @ `b744f4cc` PUSHED · 9 commits · coordinator-verified: lease clean (mobile-scoped incl. ci.yml mobile job only), typecheck=0, mobile tests=0, yaml=0
