@@ -36,4 +36,7 @@ public final class FundoNativeEventTypes {
     public static final String PROVIDER_ACCREDITED            = "impilo.learning.provider.accredited.v1";
     /** Additive W3 event: completion-policy outcome at every completion-transition attempt. */
     public static final String COMPLETION_EVALUATED           = "impilo.learning.completion.evaluated.v1";
+    /** Clinical placement lifecycle (A6, D6 audit-gap closure). */
+    public static final String PLACEMENT_CREATED              = "impilo.learning.placement.created.v1";
+    public static final String PLACEMENT_SIGNED_OFF           = "impilo.learning.placement.signed_off.v1";
 }

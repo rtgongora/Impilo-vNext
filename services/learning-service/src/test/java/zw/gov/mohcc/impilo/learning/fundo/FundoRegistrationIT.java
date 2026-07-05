@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.learning.fundo;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.learning.integration.MoodleWebServiceClient;
 import zw.gov.mohcc.impilo.learning.persistence.entity.CourseEntity;
+import zw.gov.mohcc.impilo.learning.persistence.entity.FacilitatorEntity;
 import zw.gov.mohcc.impilo.learning.persistence.repository.CourseRepository;
+import zw.gov.mohcc.impilo.learning.persistence.repository.FacilitatorRepository;
+import zw.gov.mohcc.impilo.learning.persistence.repository.LearningOutboxRepository;
 
 /** A6 — registration (reuses enrolment) + placement sign-off + graduation, against H2. */
 @SpringBootTest
@@ -27,6 +31,8 @@ class FundoRegistrationIT {
     @Autowired private FundoStudentService students;
     @Autowired private FundoRegistrationService registration;
     @Autowired private CourseRepository courseRepository;
+    @Autowired private FacilitatorRepository facilitatorRepository;
+    @Autowired private LearningOutboxRepository outboxRepository;
     @MockBean private MoodleWebServiceClient moodleWebServiceClient;
 
     @SuppressWarnings("unchecked")
@@ -51,12 +57,43 @@ class FundoRegistrationIT {
         assertThat(reg.get("enrolmentId")).isNotNull();
         assertThat(((List<?>) registration.listRegistrations(TENANT, studentId).get("items"))).hasSize(1);
 
-        // placement + sign-off
-        Map<String, Object> placement = registration.createPlacement(TENANT, studentId, "registrar", Map.of("title", "District rotation"));
+        // placement + sign-off — D5: only the assigned preceptor may sign off.
+        FacilitatorEntity preceptor = new FacilitatorEntity();
+        preceptor.setTenantId(TENANT);
+        preceptor.setDisplayName("Sr. Moyo");
+        preceptor.setFacilitatorKind("PRECEPTOR");
+        preceptor.setSubjectType("PRACTITIONER");
+        preceptor.setSubjectId("preceptor-1");
+        facilitatorRepository.save(preceptor);
+
+        Map<String, Object> placement = registration.createPlacement(TENANT, studentId, "registrar", Map.of(
+                "title", "District rotation",
+                "preceptorFacilitatorId", preceptor.getId().toString()));
         String placementId = (String) placement.get("id");
+
+        // A non-preceptor actor is denied.
+        assertThatThrownBy(() -> registration.signoffPlacement(TENANT, placementId, "registrar", Map.of()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("not the assigned preceptor");
+
+        // A placement without an assigned preceptor cannot be signed off at all.
+        Map<String, Object> unassigned = registration.createPlacement(TENANT, studentId, "registrar", Map.of("title", "Unassigned rotation"));
+        String unassignedId = (String) unassigned.get("id");
+        assertThatThrownBy(() -> registration.signoffPlacement(TENANT, unassignedId, "preceptor-1", Map.of()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("no assigned preceptor");
+
         Map<String, Object> signed = registration.signoffPlacement(TENANT, placementId, "preceptor-1", Map.of("signoffStatus", "SIGNED_OFF", "signoffNotes", "Competent"));
         assertThat(signed.get("signoffStatus")).isEqualTo("SIGNED_OFF");
         assertThat(signed.get("signedOffBy")).isEqualTo("preceptor-1");
+
+        // D6: placement lifecycle is audited via the outbox.
+        List<String> placementEvents = outboxRepository.findAll().stream()
+                .filter(e -> "FundoPlacement".equals(e.getAggregateType()))
+                .map(e -> e.getEventType())
+                .toList();
+        assertThat(placementEvents)
+                .contains(FundoNativeEventTypes.PLACEMENT_CREATED, FundoNativeEventTypes.PLACEMENT_SIGNED_OFF);
 
         // graduate
         Map<String, Object> grad = registration.graduate(TENANT, studentId, "registrar", Map.of());
@@ -67,7 +104,7 @@ class FundoRegistrationIT {
         Map<String, Object> record = registration.academicRecord(TENANT, studentId);
         assertThat(record.get("status")).isEqualTo("GRADUATED");
         assertThat(((List<?>) record.get("registrations"))).hasSize(1);
-        assertThat(((List<?>) record.get("placements"))).hasSize(1);
+        assertThat(((List<?>) record.get("placements"))).hasSize(2);
         assertThat(((List<?>) record.get("graduation"))).hasSize(1);
     }
 }
