@@ -24,8 +24,8 @@ ok()   { PASS=$((PASS+1)); echo "  ok: $*"; }
 fail() { echo "  FAIL: $*" >&2; exit 1; }
 step() { echo ""; echo "== $*"; }
 jq1()  { python3 -c "import json,sys; d=json.load(sys.stdin); $1"; }
-lpsql() { kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d learning -tAc "$1"; }
-vpsql() { kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d live -tAc "$1"; }
+lpsql() { kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d learning -tAc "$1" 2>/dev/null || true; }
+vpsql() { kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d live -tAc "$1" 2>/dev/null || true; }
 
 base_hdrs() { HDRS=(-H "Content-Type: application/json" -H "X-Tenant-ID: $TENANT_ID" -H "X-Pod-ID: pod-e2e" \
   -H "X-Request-ID: $(cat /proc/sys/kernel/random/uuid)" -H "X-Correlation-ID: $RUN"); }
@@ -102,7 +102,7 @@ HOLD_PID=$!
 
 ATTEND=""
 for i in $(seq 1 40); do
-  ATTEND=$(vpsql "SELECT count(*) FROM live_event_attendance WHERE event_id='$LIVE_EVENT_ID'" 2>/dev/null | tr -d '[:space:]')
+  ATTEND=$(vpsql "SELECT count(*) FROM live.live_event_attendance WHERE event_id='$LIVE_EVENT_ID'" 2>/dev/null | tr -d '[:space:]')
   [[ "${ATTEND:-0}" -ge 2 ]] && break
   sleep 5
 done
@@ -116,7 +116,7 @@ ok "hold complete — browsers left the room"
 step "4. room finish → event ENDED → attendance mapped → policy → COMPLETED"
 EVENT_STATE=""
 for i in $(seq 1 30); do
-  EVENT_STATE=$(vpsql "SELECT status FROM live_events WHERE id='$LIVE_EVENT_ID'" | tr -d '[:space:]')
+  EVENT_STATE=$(vpsql "SELECT status FROM live.live_events WHERE id='$LIVE_EVENT_ID'" | tr -d '[:space:]')
   [[ "$EVENT_STATE" == "ENDED" || "$EVENT_STATE" == "PROCESSING_REPLAY" || "$EVENT_STATE" == "PUBLISHED_REPLAY" ]] && break
   sleep 5
 done
