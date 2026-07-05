@@ -103,22 +103,35 @@ test.describe("Live event stage promotion (orchestrated)", () => {
     const a = await apiLogin(request, MEDIA_PERSONA_A.email);
     const b = await apiLogin(request, MEDIA_PERSONA_B.email);
 
-    const createRes = await request.post(`${PREVIEW_ORIGIN}/internal/v1/live/public-broadcasts`, {
+    // The PUBLIC_HEALTH scheduling path refuses orphan events (MISSING_OWNING_ENTITY,
+    // by doctrine) — a proof broadcast is a standalone Impilo Live event.
+    const createRes = await request.post(`${PREVIEW_ORIGIN}/internal/v1/live/events`, {
       headers: actorHeaders(a, `${run}-create`),
       data: {
         title: `Stage proof broadcast ${run}`,
         description: "W6 stage-flow orchestrated proof",
+        mode: "PUBLIC_BROADCAST",
+        eventType: "BROADCAST",
+        owningService: "STANDALONE_IMPILO_LIVE",
+        organiserType: "PROVIDER",
+        organiserId: "PROV-ZW-00001",
+        registrationRequired: false,
         audienceScope: "NATIONAL",
         commentModerationPolicy: "MODERATED",
         replayAllowed: false,
-        officialSpeakerIds: [],
-        moderatorIds: [],
       },
     });
     expect(createRes.ok(), `broadcast create: ${createRes.status()}`).toBeTruthy();
     const created = await createRes.json();
     const eventId = created.id ?? created.data?.id;
     expect(eventId, "live event id").toBeTruthy();
+
+    // Generic-created events start in DRAFT — schedule before going live.
+    const scheduleRes = await request.post(
+      `${PREVIEW_ORIGIN}/internal/v1/live/events/${eventId}/schedule`,
+      { headers: actorHeaders(a, `${run}-schedule`), data: {} },
+    );
+    expect(scheduleRes.ok(), `schedule: ${scheduleRes.status()}`).toBeTruthy();
 
     const startRes = await request.post(`${PREVIEW_ORIGIN}/internal/v1/live/room/${eventId}/start`, {
       headers: actorHeaders(a, `${run}-start`),
