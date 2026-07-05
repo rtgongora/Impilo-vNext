@@ -96,6 +96,25 @@ public class ProviderEntity {
     @Column(name = "active_flag")
     private Boolean activeFlag = true;
 
+    /**
+     * Platform trust ladder position ({@code ProviderTrustLevel} name). Additive IATG
+     * Wave-1 axis; only mutated through {@code ProviderTrustService} transitions.
+     */
+    @Column(name = "trust_level", length = 40)
+    private String trustLevel;
+
+    /** How this provider entered the platform ({@code OnboardingChannel} name). */
+    @Column(name = "onboarding_channel", length = 20)
+    private String onboardingChannel;
+
+    /**
+     * Honest registry answer ({@code ProviderRegistryStatus} name) — additive fifth
+     * status axis; the legacy four axes (status, licenceStatus,
+     * professionalStandingStatus, activeFlag) are untouched until Wave 2.
+     */
+    @Column(name = "registry_status", length = 40)
+    private String registryStatus;
+
     @Column(name = "effective_from")
     private LocalDate effectiveFrom;
 
@@ -250,6 +269,15 @@ public class ProviderEntity {
 
     public Boolean getActiveFlag() { return activeFlag; }
     public void setActiveFlag(Boolean activeFlag) { this.activeFlag = activeFlag; }
+
+    public String getTrustLevel() { return trustLevel; }
+    public void setTrustLevel(String trustLevel) { this.trustLevel = trustLevel; }
+
+    public String getOnboardingChannel() { return onboardingChannel; }
+    public void setOnboardingChannel(String onboardingChannel) { this.onboardingChannel = onboardingChannel; }
+
+    public String getRegistryStatus() { return registryStatus; }
+    public void setRegistryStatus(String registryStatus) { this.registryStatus = registryStatus; }
 
     public LocalDate getEffectiveFrom() { return effectiveFrom; }
     public void setEffectiveFrom(LocalDate effectiveFrom) { this.effectiveFrom = effectiveFrom; }
