@@ -1,0 +1,82 @@
+{
+  "formKey": "impilo.medication.request.v1",
+  "name": "Medication Request (Prescription)",
+  "description": "Structured medication request from the encounter cockpit. Cadre-gated by the PRESCRIBE workflow (competence/training-based, not a hard cadre split); countersign-required so the OROS medication order is only routed after a supervisor countersignature. Exemplar.",
+  "formType": "MEDICATION_REQUEST",
+  "careSettings": ["OUTPATIENT", "INPATIENT", "EMERGENCY", "TELEMEDICINE"],
+  "careStages": ["CONSULTATION", "REVIEW", "WARD_ROUND"],
+  "specialties": ["GENERAL", "MEDICINE"],
+  "encounterTypes": ["OPD", "INPATIENT", "WARD_ROUND", "EMERGENCY", "TELEMEDICINE"],
+  "encounterContexts": ["outpatient", "inpatient", "emergency", "telemedicine"],
+  "requiredWorkflow": "PRESCRIBE",
+  "obligationDefault": "OPTIONAL",
+  "permittedCadres": ["PHYSICIAN", "CLINICAL_OFFICER", "NURSE_PRESCRIBER"],
+  "sexApplicability": "ALL",
+  "requiresCountersign": true,
+  "offlineCapable": false,
+  "sensitivity": "STANDARD",
+  "governanceAuthor": "MOHCC",
+  "sourceGuideline": "EDLIZ (exemplar subset)",
+  "publish": true,
+  "resourceMappings": {
+    "mappings": [
+      {
+        "linkId": "drug",
+        "resourceType": "MEDICATION_REQUEST",
+        "routeTarget": "OROS",
+        "orderCategory": "medication",
+        "companionLinkIds": {
+          "dose": "dose",
+          "route": "route",
+          "frequency": "frequency",
+          "duration": "duration",
+          "quantity": "quantity",
+          "instructions": "instructions"
+        }
+      }
+    ]
+  },
+  "definition": {
+    "id": "impilo.medication.request.v1",
+    "version": "1.0.0",
+    "title": "Medication Request (Prescription)",
+    "description": "Structured medication request routed to pharmacy via OROS after countersignature.",
+    "healthDomain": "GENERAL",
+    "programme": "GENERAL",
+    "encounterTypes": ["OPD", "INPATIENT", "WARD_ROUND", "EMERGENCY", "TELEMEDICINE"],
+    "sexApplicability": "ALL",
+    "providerRoles": ["DOCTOR", "CLINICAL_OFFICER", "NURSE_PRESCRIBER"],
+    "offlineCapable": false,
+    "audit": {"dataCustodian": "MOHCC", "sensitivity": "STANDARD"},
+    "sections": [
+      {
+        "id": "medication",
+        "title": "Medication",
+        "fields": [
+          {"id": "drug", "linkId": "drug", "label": "Medicine (name or EDLIZ code)", "kind": "text", "validation": {"required": true}},
+          {"id": "dose", "linkId": "dose", "label": "Dose", "kind": "text", "validation": {"required": true}},
+          {"id": "route", "linkId": "route", "label": "Route", "kind": "coded_single", "options": [
+            {"code": "PO", "display": "Oral"},
+            {"code": "IV", "display": "Intravenous"},
+            {"code": "IM", "display": "Intramuscular"},
+            {"code": "SC", "display": "Subcutaneous"},
+            {"code": "TOP", "display": "Topical"},
+            {"code": "INH", "display": "Inhaled"},
+            {"code": "PR", "display": "Rectal"}
+          ], "validation": {"required": true}},
+          {"id": "frequency", "linkId": "frequency", "label": "Frequency (e.g. TDS)", "kind": "text", "validation": {"required": true}},
+          {"id": "duration", "linkId": "duration", "label": "Duration (e.g. 5 days)", "kind": "text"},
+          {"id": "quantity", "linkId": "quantity", "label": "Quantity to dispense", "kind": "text"}
+        ]
+      },
+      {
+        "id": "guidance",
+        "title": "Instructions",
+        "fields": [
+          {"id": "instructions", "linkId": "instructions", "label": "Patient instructions", "kind": "text"},
+          {"id": "indication", "linkId": "indication", "label": "Indication", "kind": "text"}
+        ]
+      }
+    ]
+  }
+}
