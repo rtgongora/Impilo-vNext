@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-05T08:32:58.245Z",
+  "generatedAt": "2026-07-05T08:45:15.463Z",
   "branch": "claude/hungry-lewin-5f02da",
   "registryDrift": {
     "unregisteredModules": [],
@@ -1871,7 +1871,7 @@
         "controllers": 3,
         "routes": 22,
         "stubRoutes": 0,
-        "contractOperations": 0,
+        "contractOperations": 34,
         "contractViolations": 0,
         "bffClients": 3,
         "uiReferences": 16,

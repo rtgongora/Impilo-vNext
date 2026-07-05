@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-07-05T08:32:58.245Z
+> Generated: 2026-07-05T08:45:15.463Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 

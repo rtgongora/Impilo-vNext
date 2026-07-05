@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-07-05T08:32:58.245Z
+> Generated: 2026-07-05T08:45:15.463Z
 > Branch: `claude/hungry-lewin-5f02da`
 
 ## Executive summary

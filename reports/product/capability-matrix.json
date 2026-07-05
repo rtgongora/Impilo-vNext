@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-05T08:32:58.236Z",
+  "generatedAt": "2026-07-05T08:45:15.454Z",
   "summary": {
     "totalCapabilities": 4075,
     "byDisposition": {
@@ -29,7 +29,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 188,
-      "contractOps": 188,
+      "contractOps": 195,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1",
@@ -137,7 +137,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 5,
-      "contractOps": 90,
+      "contractOps": 91,
       "contractUnowned": 0,
       "samplePaths": [
         "/health"
@@ -2018,7 +2018,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 3,
-      "contractOps": 7,
+      "contractOps": 8,
       "contractUnowned": 0,
       "samplePaths": [
         "/{id}/close"
@@ -6972,7 +6972,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 5,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/daidzai"
@@ -6993,7 +6993,7 @@
       "frontendSurfaces": 1,
       "frontendFixtures": 1,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 5,
       "contractUnowned": 0,
       "samplePaths": [
         "/internal/v1/daidzai/disasters"
@@ -7038,7 +7038,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 6,
-      "contractOps": 2,
+      "contractOps": 5,
       "contractUnowned": 0,
       "samplePaths": [
         "/incidents",
@@ -7060,7 +7060,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 0,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/incidents/{id}/death-outcome"
@@ -7081,7 +7081,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/incidents/{id}/dispatch"
@@ -7102,7 +7102,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/incidents/{id}/handoff"
@@ -7123,7 +7123,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/incidents/{id}/mission-events"
@@ -7144,7 +7144,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/incidents/{id}/missions"
@@ -7166,7 +7166,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 2,
-      "contractOps": 0,
+      "contractOps": 2,
       "contractUnowned": 0,
       "samplePaths": [
         "/incidents/{id}/resources"
@@ -7188,7 +7188,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 7,
-      "contractOps": 4,
+      "contractOps": 6,
       "contractUnowned": 0,
       "samplePaths": [
         "/requests",
@@ -7210,7 +7210,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 1,
-      "contractOps": 0,
+      "contractOps": 1,
       "contractUnowned": 0,
       "samplePaths": [
         "/requests/{id}/triage"
@@ -7232,7 +7232,7 @@
       "frontendSurfaces": 0,
       "frontendFixtures": 0,
       "bffProxied": 2,
-      "contractOps": 7,
+      "contractOps": 9,
       "contractUnowned": 0,
       "samplePaths": [
         "/{id}/sites"
