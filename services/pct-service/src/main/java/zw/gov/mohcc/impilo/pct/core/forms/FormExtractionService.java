@@ -86,6 +86,7 @@ public class FormExtractionService implements FormExtractionHook {
                     case "CONDITION" -> extractCondition(r, m, linkId, value);
                     case "CARE_PLAN" -> extractCarePlan(r, m, linkId, value);
                     case "SERVICE_REQUEST" -> extractServiceRequest(r, m, linkId, value);
+                    case "MEDICATION_REQUEST" -> extractMedicationRequest(r, m, linkId, value);
                     case "OBSERVATION", "PROCEDURE" -> extractObservation(r, m, linkId, value, resourceType);
                     case "SAFETY_EVENT" -> extractSafetyEvent(r, m, linkId, value);
                     default -> log.debug("Unmapped resource type {} for linkId {}", resourceType, linkId);
@@ -151,6 +152,55 @@ public class FormExtractionService implements FormExtractionHook {
             record(r, m, linkId, "SERVICE_REQUEST", "OROS", "FAILED", null, null, payload);
         } else {
             record(r, m, linkId, "SERVICE_REQUEST", "OROS", "ROUTED", orderId, null, payload);
+        }
+    }
+
+    /**
+     * PRESCRIBE seam: a medication request extracted from a structured PRESCRIBE form, routed to
+     * OROS through the SAME {@link OrosIntegration#submitOrder} wire call used for service requests
+     * (the {@code /v1/orders} contract shape is NOT changed here — R1 contract unification stays
+     * serialized with the Fable coordinator). OROS classifies {@code category=medication} orders as
+     * PHARMACY and hands off to pharmacy-service via {@code oros.order.placed}; PCT keeps provenance.
+     *
+     * <p>Governance rides the existing form machinery: cadre/scope gating via FormScopeEngine
+     * (requiredWorkflow=PRESCRIBE), and review/countersign where the form catalog requires it —
+     * extraction (and therefore the medication order) is deferred until countersignature. This keeps
+     * prescribing permissions configurable and auditable rather than a hard-coded cadre split.</p>
+     *
+     * <p>The answer may be a plain drug code/name, or an object carrying structured dosage fields
+     * ({@code drug|code, dose, route, frequency, duration, quantity, instructions}).</p>
+     */
+    private void extractMedicationRequest(FormResponseEntity r, Map<String, Object> m, String linkId, JsonNode value) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("subject_cpid", r.getSubjectCpid());
+        payload.put("category", firstNonBlank(str(m.get("orderCategory")), "medication"));
+        if (value.isObject()) {
+            payload.put("code", firstNonBlank(text(value, "code"), text(value, "drug")));
+            putIfPresent(payload, "display", firstNonBlank(text(value, "display"), text(value, "drug")));
+            putIfPresent(payload, "dose", text(value, "dose"));
+            putIfPresent(payload, "route", text(value, "route"));
+            putIfPresent(payload, "frequency", text(value, "frequency"));
+            putIfPresent(payload, "duration", text(value, "duration"));
+            putIfPresent(payload, "quantity", text(value, "quantity"));
+            putIfPresent(payload, "instructions", text(value, "instructions"));
+        } else {
+            payload.put("code", value.asText());
+        }
+        payload.put("requested_by", r.getSubmittedBy());
+        payload.put("encounter_id", r.getEncounterId());
+        payload.put("note", "From form " + r.getFormKey() + " field " + linkId);
+
+        Map<String, Object> result = orosIntegration.submitOrder(r.getJourneyId(), toJson(payload));
+        String orderId = result == null ? null : str(result.get("orderId"));
+        if (orderId == null || orderId.isBlank()) {
+            record(r, m, linkId, "MEDICATION_REQUEST", "OROS", "FAILED", null, null, payload);
+        } else {
+            record(r, m, linkId, "MEDICATION_REQUEST", "OROS", "ROUTED", orderId, null, payload);
+            // Auditable prescribing trace: who requested which medicine in which encounter.
+            Map<String, Object> event = new LinkedHashMap<>(payload);
+            event.put("oros_order_id", orderId);
+            event.put("responseId", r.getResponseId().toString());
+            writeOutbox(r, "pct.form.medication.requested", event);
         }
     }
 
@@ -283,6 +333,17 @@ public class FormExtractionService implements FormExtractionHook {
 
     private static String str(Object o) {
         return o == null ? null : o.toString();
+    }
+
+    private static String text(JsonNode node, String field) {
+        JsonNode v = node.get(field);
+        return v == null || v.isNull() ? null : v.asText();
+    }
+
+    private static void putIfPresent(Map<String, Object> target, String key, String value) {
+        if (value != null && !value.isBlank()) {
+            target.put(key, value);
+        }
     }
 
     private static String upper(String s) {
