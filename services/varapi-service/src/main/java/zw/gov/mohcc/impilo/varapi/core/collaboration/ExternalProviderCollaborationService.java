@@ -31,11 +31,22 @@ import java.util.regex.Pattern;
 @Service
 public class ExternalProviderCollaborationService {
 
-    public static final String TRUST_SELF_ASSERTED = "SELF_ASSERTED";
-    public static final String TRUST_COUNCIL_FORMAT = "COUNCIL_NUMBER_FORMAT_VALID";
-    public static final String TRUST_COUNCIL_FOUND = "COUNCIL_NUMBER_FOUND";
-    public static final String TRUST_COUNCIL_IDENTITY = "COUNCIL_AND_IDENTITY_MATCH";
-    public static final String TRUST_FULLY_LINKED = "FULLY_LINKED_OR_ONBOARDED";
+    // External 5-level ladder, aliased onto the shared platform trust enum
+    // (zw.gov.mohcc.impilo.varapi.enums.ProviderTrustLevel). String values are
+    // IDENTICAL to the historical literals, so the persisted
+    // external_provider_access_profile.trust_level column and all wire payloads
+    // are untouched; ProviderTrustLevel.fromExternalLabel maps these onto the
+    // platform ladder.
+    public static final String TRUST_SELF_ASSERTED =
+            zw.gov.mohcc.impilo.varapi.enums.ProviderTrustLevel.EXTERNAL_SELF_ASSERTED;
+    public static final String TRUST_COUNCIL_FORMAT =
+            zw.gov.mohcc.impilo.varapi.enums.ProviderTrustLevel.EXTERNAL_COUNCIL_NUMBER_FORMAT_VALID;
+    public static final String TRUST_COUNCIL_FOUND =
+            zw.gov.mohcc.impilo.varapi.enums.ProviderTrustLevel.EXTERNAL_COUNCIL_NUMBER_FOUND;
+    public static final String TRUST_COUNCIL_IDENTITY =
+            zw.gov.mohcc.impilo.varapi.enums.ProviderTrustLevel.EXTERNAL_COUNCIL_AND_IDENTITY_MATCH;
+    public static final String TRUST_FULLY_LINKED =
+            zw.gov.mohcc.impilo.varapi.enums.ProviderTrustLevel.EXTERNAL_FULLY_LINKED_OR_ONBOARDED;
 
     private final ExternalProviderAccessProfileRepository profileRepository;
     private final ExternalProviderVerificationAttemptRepository verificationRepository;
