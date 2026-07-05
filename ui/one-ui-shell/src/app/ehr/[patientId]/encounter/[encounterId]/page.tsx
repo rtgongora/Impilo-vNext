@@ -39,6 +39,7 @@ import { EncounterLabOrdersPanel } from "@/components/encounter/EncounterLabOrde
 import { EncounterImagingOrdersPanel } from "@/components/encounter/EncounterImagingOrdersPanel";
 import { EncounterLinkedImagingStudiesPanel } from "@/components/encounter/EncounterLinkedImagingStudiesPanel";
 import { EncounterDischargePanel } from "@/components/encounter/EncounterDischargePanel";
+import { EncounterBillingPanel } from "@/components/encounter/EncounterBillingPanel";
 import { EncounterVitalsGuidance } from "@/components/clinical/EncounterVitalsGuidance";
 import {
   ActiveDataEntryLayout,
@@ -453,6 +454,12 @@ export default function EncounterPage() {
                   disabled={!isActive}
                 />
               </>
+            )}
+
+            {/* Billing visibility stays available on closed encounters too:
+                bills are typically created at close/discharge time. */}
+            {!structuredFormFocus && (
+              <EncounterBillingPanel patientId={patientId} encounterId={encounterId} />
             )}
 
             <ClinicalReviewHeader
