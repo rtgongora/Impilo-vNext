@@ -156,20 +156,20 @@ not edited by this stream): `/learning/reports/dashboards`,
 `/learning/studio/delivery`. `/work/fundo/admin/*` pages are governance navigation shells
 (`ScopedAdministrationSurface`), not Fundo API surfaces.
 
-## 3. Defect register (found in Wave 0, candidates for fix waves)
+## 3. Defect register (found in Wave 0; final status after fix waves)
 
-| # | Defect | Layer | Wave |
-|---|---|---|---|
-| D1 | Hub "required" KPI mis-derived from overdue fallback | UI | 1 |
-| D2 | Orchestration rail enrolment count reads wrong response shape (`{items}`) | UI | 1 |
-| D3 | My-learning renders 4 of 9 backend buckets (recommended/assigned/cancelled/cpdEligible dropped) | UI | 1 |
-| D4 | Course live embed reads `structure.impiloLiveEventId` never populated by backend | UI+backend seam | 5 |
-| D5 | Placement sign-off has no preceptor authorization check | backend | 7 |
-| D6 | Placement lifecycle emits no outbox events (audit gap) | backend | 7 |
-| D7 | CPD council accept/reject hooks exist with no UI surface | UI | 3 |
-| D8 | Vashandi eligibility ignores `trainingReadiness` content | backend (vashandi) | 4 |
-| D9 | `mvn test`/`verify` silently skip all 18 IT classes (no failsafe) | build | gate hygiene |
-| D10 | Attendance never drives completion in the Fundo session track | backend | 5 |
+| # | Defect | Layer | Wave | Status |
+|---|---|---|---|---|
+| D1 | Hub "required" KPI mis-derived from overdue fallback | UI | 1 | **FIXED** (`ad7f7f845`, `ddd9714f8`) — honest `required` bucket added server-side |
+| D2 | Orchestration rail enrolment count reads wrong response shape (`{items}`) | UI | 1 | **FIXED** (`ddd9714f8`) |
+| D3 | My-learning renders 4 of 9 backend buckets (recommended/assigned/cancelled/cpdEligible dropped) | UI | 1 | **FIXED** (`ddd9714f8`) — all buckets rendered with badges |
+| D4 | Course live embed reads `structure.impiloLiveEventId` never populated by backend | UI+backend seam | 5 | **FIXED** (`26f9dafb6`) — derived from V027 live-linked scheduled sessions |
+| D5 | Placement sign-off has no preceptor authorization check | backend | 7 | **FIXED** (`fd0a31789`) — assigned-preceptor-only, unassigned placements rejected |
+| D6 | Placement lifecycle emits no outbox events (audit gap) | backend | 7 | **FIXED** (`fd0a31789`) — `placement.{created,signed_off}.v1` emitted |
+| D7 | CPD council accept/reject hooks exist with no UI surface | UI | 3 | **FIXED** (`84370015a`, `4f6f887fe`) — council workspace decisions + learner-visible state |
+| D8 | Vashandi eligibility ignores `trainingReadiness` content | backend (vashandi) | 4 | **FIXED** (`65357d0ff`–`11a9ed6e6`) — governed role→course mapping + graduated training-gate enforcement |
+| D9 | `mvn test`/`verify` silently skip all 18 IT classes (no failsafe) | build | gate hygiene | **MITIGATED** — schema.sql fix landed, IT baseline green; failsafe plugin adoption left to build owners (flagged) |
+| D10 | Attendance never drives completion in the Fundo session track | backend | 5 | **FIXED upstream** — anchor W3 (`dd756570d`) landed completion rules + webhook attendance; merged into this stream |
 
 ## 4. W0 handoff register (no-touch respected)
 
