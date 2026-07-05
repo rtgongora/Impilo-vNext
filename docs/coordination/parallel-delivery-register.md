@@ -203,14 +203,24 @@ Status vocabulary: `PROPOSED` → `ASSIGNED` → `IN_PROGRESS` → `EVIDENCE_SUB
 ## IATG-WS-B — organization-registry-service (new, 8153)
 - Branch `fable/iatg-b-org-registry` · worktree `/home/user/wt-iatg-b` · agent running · Status: ASSIGNED
 
-## IATG-WS-C — varapi trust + channel typing (frozen trust-API contract for D/F)
-- Branch `fable/iatg-c-varapi-trust` · worktree `/home/user/wt-iatg-c` · agent running · Status: ASSIGNED
+## IATG-WS-C — varapi trust + channel typing
+- Branch `fable/iatg-c-varapi-trust` @ `e05e607c3` PUSHED · 8 commits · Status: GATES_PASSED (coordinator gate EXIT=0 at HEAD, 156 tests; lease-clean; trust-API contract frozen for D/F; council numbers proven absent from responses)
 
 ## IATG-WS-E — tuso facility source legitimacy
-- Branch `fable/iatg-e-tuso-legitimacy` · worktree `/home/user/wt-iatg-e` · agent running · Status: ASSIGNED
+- Branch `fable/iatg-e-tuso-legitimacy` @ `03bb2fba8` PUSHED · 4 commits · Status: GATES_PASSED (coordinator gate EXIT=0; lease-clean; GOVERNMENT_OPERATIONAL_EXCEPTION requires reason; doctrine example encoded as test; status-history append skipped — NOT NULL constraint would fabricate regulatory entries, previous values ride outbox events instead)
 
 ## IATG-WS-H — doctrine + lease docs (GREEN)
-- Branch `fable/iatg-h-doctrine` · worktree `/home/user/wt-iatg-h` · agent running · Status: ASSIGNED
+- Branch `fable/iatg-h-doctrine` @ `6d3f7702e` PUSHED · 6 commits · Status: GATES_PASSED (docs-only diff verified; canonical closing doctrine paragraph restored by coordinator)
 
-## IATG-WS-D / WS-F / WS-G — Batch 2/3
-- PENDING dispatch (D+F after WS-C review/merge; G merges after D). Contracts frozen in plan.
+## IATG-WS-D — Channel B EC matching + trust composition
+- Branch `fable/iatg-d-channel-b` · worktree `/home/user/wt-iatg-d` · agent running 2026-07-05 · Status: ASSIGNED
+
+## IATG-WS-F — provider self-service claim/recovery
+- Branch `fable/iatg-f-provider-claim` · worktree `/home/user/wt-iatg-f` · agent running 2026-07-05 · Status: ASSIGNED
+
+## IATG-WS-G — adjudication
+- PENDING dispatch (merges after WS-D; buildable earlier)
+
+## WS-M — Mobile Runtime Truth Wave (user-approved plan, parallel to IATG)
+- Branch `fable/mobile-runtime-truth` · worktree `/home/user/wt-mobile-truth` · agent running 2026-07-05 · Status: ASSIGNED
+- Scope: build truth (SDK attempt in-container), preview connectivity fixes (network security config for http://41.57.127.235, scheme mismatch, eas alignment), credential-parameterized Maestro login/journey flows, CI gate + APK artifacts, scripts/mobile/runtime-truth.sh VM runbook, honest truth report (status ceiling BUILDS_ONLY until VM evidence). Leases: apps/mobile, docs/mobile, scripts/mobile, ci.yml mobile jobs, parity matrix. Runtime proof executes on the user's VM against the preview VM.
