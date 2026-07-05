@@ -81,6 +81,37 @@ public class WorkforceGovernanceClient {
         return response.getBody().path("data");
     }
 
+    /**
+     * EC-number employment match (IATG Wave-1, Channel B):
+     * POST /internal/v1/workforce-governance/employment/match with
+     * {@code {ecNumber, healthId?, nationalId?, surname?}} →
+     * {@code {matchStatus: MATCHED_BOTH|MATCHED_EMPLOYMENT_ONLY|NOT_FOUND|CONFLICT, ...}}.
+     *
+     * <p>Trust headers are forwarded by the shared interceptor; a fresh
+     * {@code Idempotency-Key} is minted per call because the match is a
+     * read-shaped command — replaying a stale stored result would be dishonest.
+     * Returns {@code null} when governance is unavailable.</p>
+     */
+    public JsonNode matchEmployment(Object request) {
+        try {
+            String url = trimSlash(baseUrl) + "/internal/v1/workforce-governance/employment/match";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Idempotency-Key", java.util.UUID.randomUUID().toString());
+            String json = request instanceof String s ? s : objectMapper.writeValueAsString(request);
+            ResponseEntity<JsonNode> response =
+                    restTemplate.postForEntity(url, new HttpEntity<>(json, headers), JsonNode.class);
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                log.warn("Governance employment match failed: {}", response.getStatusCode());
+                return null;
+            }
+            return response.getBody().path("data");
+        } catch (Exception e) {
+            log.warn("Governance employment match error: {}", e.getMessage());
+            return null;
+        }
+    }
+
     public JsonNode postJson(String relativePath, Object body) {
         try {
             String url = trimSlash(baseUrl) + relativePath;

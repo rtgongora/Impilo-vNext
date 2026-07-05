@@ -1,0 +1,24 @@
+package zw.gov.mohcc.impilo.orgregistry.persistence.entity;
+
+/**
+ * Canonical organization classes for the national organization registry.
+ */
+public enum OrgType {
+    GOVERNMENT_HEALTH_SERVICE,
+    PUBLIC_HEALTH_AUTHORITY,
+    LOCAL_AUTHORITY,
+    STATUTORY_REGULATOR,
+    PROFESSIONAL_COUNCIL,
+    PUBLIC_FACILITY_GROUP,
+    PRIVATE_PROVIDER_GROUP,
+    MISSION_FAITH_BASED,
+    NGO_IMPLEMENTING_PARTNER,
+    ACADEMIC_TRAINING,
+    INSURER_MEDICAL_AID,
+    LABORATORY_NETWORK,
+    IMAGING_RADIOLOGY,
+    PHARMACY_COMMODITY,
+    EMERGENCY_AMBULANCE,
+    TECHNOLOGY_PARTNER,
+    OTHER
+}

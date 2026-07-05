@@ -53,4 +53,16 @@ describe("ProviderRoleActivationRail", () => {
     render(<ProviderRoleActivationRail />);
     expect(screen.getByText(/Citizen session/)).toBeInTheDocument();
   });
+
+  it("links the no-provider branch to the claim/recovery journey", () => {
+    mockUseLinkedIds.mockReturnValue({
+      data: { data: { attributes: {} } },
+      isLoading: false,
+      isError: false,
+    });
+    render(<ProviderRoleActivationRail />);
+    expect(
+      screen.getByRole("link", { name: /Claim or recover your provider profile/i }),
+    ).toHaveAttribute("href", "/citizen/provider-claim");
+  });
 });

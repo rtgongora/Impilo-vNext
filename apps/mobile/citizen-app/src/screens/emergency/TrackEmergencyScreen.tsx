@@ -65,11 +65,11 @@ export function TrackEmergencyScreen({ requestId }: { requestId: string }) {
             <CardBody>
               <Text style={styles.section}>Response timeline</Text>
               {missions.length === 0 ? (
-                <EmptyState message="No updates yet. You'll see each step here as the team acts." />
+                <EmptyState title="No updates yet" description="You'll see each step here as the team acts." />
               ) : (
                 missions.map((m) => (
                   <View key={m.id} style={styles.event}>
-                    <Badge label={STATUS_LABEL[m.status ?? ""] ?? m.status ?? ""} tone="info" />
+                    <Badge label={STATUS_LABEL[m.status ?? ""] ?? m.status ?? ""} variant="info" />
                     {m.occurredAt ? <Text style={styles.meta}>{new Date(m.occurredAt).toLocaleString()}</Text> : null}
                   </View>
                 ))

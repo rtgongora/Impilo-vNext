@@ -748,6 +748,14 @@ jobs:
           ./gradlew assembleDebug --no-daemon
           cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/citizen-debug.apk"
 
+      - name: Upload citizen debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: citizen-debug-apk
+          path: ${{ runner.temp }}/citizen-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Prebuild + build provider debug APK
         working-directory: apps/mobile/provider-app
         env:
@@ -758,6 +766,17 @@ jobs:
           ./gradlew assembleDebug --no-daemon
           cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/provider-debug.apk"
 
+      - name: Upload provider debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-debug-apk
+          path: ${{ runner.temp }}/provider-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      # Unauthenticated smokes. Flows tagged `auth` (login/journey) are
+      # excluded here — they need real preview credentials and a reachable
+      # preview stack, and run in the guarded step below instead.
       - name: Run Maestro flows on emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -771,7 +790,43 @@ jobs:
             adb wait-for-device
             adb install -r "$RUNNER_TEMP/citizen-debug.apk"
             adb install -r "$RUNNER_TEMP/provider-debug.apk"
-            maestro test apps/mobile/maestro/flows
+            maestro test --exclude-tags auth apps/mobile/maestro/flows
+
+      # OPTIONAL login/journey flows against the live preview environment.
+      # Runs only when the repo secret MAESTRO_PREVIEW_CREDENTIALS is set.
+      # Secret format: newline-separated KEY=VALUE pairs, e.g.
+      #   MAESTRO_CITIZEN_USERNAME=...
+      #   MAESTRO_CITIZEN_PASSWORD=...
+      #   MAESTRO_PROVIDER_USERNAME=...
+      #   MAESTRO_PROVIDER_PASSWORD=...
+      #   MAESTRO_PROVIDER_ID=...
+      #   MAESTRO_PATIENT_QUERY=...
+      # Maestro forwards MAESTRO_-prefixed env vars into the flows; nothing
+      # is ever echoed or committed. Requires the preview stack
+      # (41.57.127.235) to be reachable from the runner.
+      - name: Run Maestro login/journey flows (preview credentials)
+        if: ${{ secrets.MAESTRO_PREVIEW_CREDENTIALS != '' }}
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          MAESTRO_PREVIEW_CREDENTIALS: ${{ secrets.MAESTRO_PREVIEW_CREDENTIALS }}
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
+          disable-animations: true
+          script: |
+            adb wait-for-device
+            adb install -r "$RUNNER_TEMP/citizen-debug.apk"
+            adb install -r "$RUNNER_TEMP/provider-debug.apk"
+            printf '%s\n' "$MAESTRO_PREVIEW_CREDENTIALS" > "$RUNNER_TEMP/maestro-preview.env"
+            set -a
+            # shellcheck disable=SC1090
+            . "$RUNNER_TEMP/maestro-preview.env"
+            set +a
+            rm -f "$RUNNER_TEMP/maestro-preview.env"
+            maestro test --include-tags auth apps/mobile/maestro/flows
 
   security-scan:
     name: Security Scan

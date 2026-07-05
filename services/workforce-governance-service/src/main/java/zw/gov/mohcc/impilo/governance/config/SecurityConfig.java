@@ -40,7 +40,9 @@ public class SecurityConfig {
     public FilterRegistrationBean<TrustContextFilter> trustContextFilter(ObjectMapper objectMapper) {
         FilterRegistrationBean<TrustContextFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(new TrustContextFilter(objectMapper));
-        registration.addUrlPatterns("/v1/*");
+        // /internal/v1/* covers the Platform Origin governance API (IATG WS-A),
+        // matching the RateLimitFilter registration in SecurityBaselineConfig.
+        registration.addUrlPatterns("/v1/*", "/internal/v1/*");
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
         return registration;
     }

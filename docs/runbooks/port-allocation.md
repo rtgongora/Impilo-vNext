@@ -53,6 +53,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | **8150** | `indawo-service` |
 | **8151** | `connector-fhir-adapter` |
 | **8152** | `national-data-repository-service` |
+| **8153** | `organization-registry-service` |
 | 8097 | `product-registry-service` |
 
 ---
@@ -218,6 +219,7 @@ See `oros-interop-adapters.md`. These bind only when the corresponding adapter f
 
 | Date | Change |
 |------|--------|
+| 2026-07-05 | Added **8153** `organization-registry-service` (organization registry SoR — organizations, authorized representatives, Channel-C claims); BFF `organization-registry-base-url` default. |
 | 2026-06-19 | Added **8167** `vashandi-workforce-service` (operational workforce SoR); BFF `vashandi-base-url` default. |
 | 2026-04-12 | Added **8161** `wellness-service` (citizen wellness + Health Connect); BFF `wellness-base-url` default. |
 | 2026-04-11 | Phase A0: unique defaults, BFF alignment, compose + manifest sync. |

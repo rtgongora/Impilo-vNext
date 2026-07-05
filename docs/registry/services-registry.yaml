@@ -2962,6 +2962,39 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: organization-registry-service
+    maven_module: organization-registry-service
+    primary_plane: registry
+    plane: registry
+    domain: organization-registry
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: 8153
+    product_names:
+      - Organization Registry
+    owner_team: TBD
+    system_of_record_for:
+      - Organization registry
+      - Authorized representatives
+      - Channel-C delegated onboarding claims
+    consumes_from:
+      - tshepo-authz-service
+    exposes_to:
+      - experience-bff
+      - workforce-governance-service  # one-way wgv_organisation mirror pushed into this service's internal API
+    forbidden_responsibilities:
+      - must-not-own-facility-registry-as-source-of-truth  # tuso
+      - must-not-own-provider-professional-registry-as-source-of-truth  # varapi
+      - must-not-own-hsc-employment-as-source-of-truth  # workforce-governance
+      - must-not-own-identity-assurance-policy
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: khuluma-service
     maven_module: khuluma-service
     primary_plane: experience

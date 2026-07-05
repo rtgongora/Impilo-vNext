@@ -80,6 +80,15 @@ export function ProviderRoleActivationRail({
           <div>
             <p className="font-medium text-foreground">Citizen session</p>
             <p>No active Provider ID is linked to this Health ID. Wellness and citizen journeys remain available.</p>
+            <p className="mt-1">
+              Are you a health professional?{" "}
+              <Link
+                href="/citizen/provider-claim"
+                className="font-medium text-primary underline hover:text-primary-hover"
+              >
+                Claim or recover your provider profile
+              </Link>
+            </p>
           </div>
         </div>
       </section>

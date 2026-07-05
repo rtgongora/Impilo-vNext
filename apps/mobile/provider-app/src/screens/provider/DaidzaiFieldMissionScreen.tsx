@@ -75,7 +75,7 @@ export function DaidzaiFieldMissionScreen() {
       ) : error ? (
         <ErrorState message={error} onRetry={() => void load()} />
       ) : items.length === 0 ? (
-        <EmptyState message="No incoming incidents." />
+        <EmptyState title="No incoming incidents" />
       ) : (
         <ScrollView
           contentContainerStyle={styles.body}
@@ -86,7 +86,7 @@ export function DaidzaiFieldMissionScreen() {
               <CardBody>
                 <View style={styles.head}>
                   <Text style={styles.ref}>{inc.incidentReference ?? inc.id}</Text>
-                  {inc.triageCategory ? <Badge label={inc.triageCategory} tone="danger" /> : null}
+                  {inc.triageCategory ? <Badge label={inc.triageCategory} variant="error" /> : null}
                 </View>
                 <Text style={styles.meta}>
                   {inc.emergencyCategory} · {inc.severity} · {inc.status}

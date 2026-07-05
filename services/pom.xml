@@ -69,6 +69,8 @@
         <module>inventory-service</module>
         <module>inventory-elmis-adapter</module>
         <module>product-registry-service</module>
+        <!-- Organization Registry — canonical organizations, authorized representatives, Channel-C claims -->
+        <module>organization-registry-service</module>
         <module>mushex-service</module>
         <module>mushe-wallet-service</module>
         <module>costing-engine-service</module>

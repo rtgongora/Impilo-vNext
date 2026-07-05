@@ -16,13 +16,16 @@ public class AccessRequestService {
     private final AccessRequestRepository repository;
     private final GovernanceEventService governanceEventService;
     private final ObjectMapper objectMapper;
+    private final TwoPersonApprovalService twoPersonApprovalService;
 
     public AccessRequestService(AccessRequestRepository repository,
                                 GovernanceEventService governanceEventService,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper,
+                                TwoPersonApprovalService twoPersonApprovalService) {
         this.repository = repository;
         this.governanceEventService = governanceEventService;
         this.objectMapper = objectMapper;
+        this.twoPersonApprovalService = twoPersonApprovalService;
     }
 
     @Transactional
@@ -64,6 +67,11 @@ public class AccessRequestService {
     @Transactional
     public AccessRequestEntity transition(UUID id, String newStatus, String notes, String actorId) {
         AccessRequestEntity entity = get(id);
+        // Two-person rule: an APPROVED transition on a request with non-empty
+        // approvals_required needs N distinct non-initiator approvals recorded
+        // first. Null/empty approvals_required keeps the legacy single-approver
+        // path completely unchanged.
+        twoPersonApprovalService.assertTransitionAllowed(entity, newStatus);
         entity.setStatus(newStatus);
         appendTrail(entity, Map.of("event", "access_request." + newStatus.toLowerCase(Locale.ROOT), "by", actorId, "notes", notes != null ? notes : ""));
         entity = repository.save(entity);

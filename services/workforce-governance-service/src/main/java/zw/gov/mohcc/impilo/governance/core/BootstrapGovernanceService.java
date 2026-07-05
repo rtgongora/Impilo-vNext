@@ -16,15 +16,18 @@ public class BootstrapGovernanceService {
     private final BootstrapStateRepository bootstrapStateRepository;
     private final BootstrapAccountRepository bootstrapAccountRepository;
     private final OrganisationRepository organisationRepository;
+    private final CountryOperationRepository countryOperationRepository;
     private final ObjectMapper objectMapper;
 
     public BootstrapGovernanceService(BootstrapStateRepository bootstrapStateRepository,
                                       BootstrapAccountRepository bootstrapAccountRepository,
                                       OrganisationRepository organisationRepository,
+                                      CountryOperationRepository countryOperationRepository,
                                       ObjectMapper objectMapper) {
         this.bootstrapStateRepository = bootstrapStateRepository;
         this.bootstrapAccountRepository = bootstrapAccountRepository;
         this.organisationRepository = organisationRepository;
+        this.countryOperationRepository = countryOperationRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -37,6 +40,42 @@ public class BootstrapGovernanceService {
                 "activeNationalAdminExists", activeNationalAdminExists,
                 "recoveryMode", entity.isRecoveryMode()
         );
+    }
+
+    /**
+     * Read-through only (IATG WS-A): the tenant's bootstrap state alongside its
+     * country operation, without initialising or mutating anything. Existing
+     * bootstrap behavior ({@link #state(UUID)} and lifecycle methods) is unchanged.
+     */
+    public Map<String, Object> stateWithCountryOperation(UUID tenantId) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        BootstrapStateEntity entity = bootstrapStateRepository.findByTenantId(tenantId).orElse(null);
+        if (entity != null) {
+            out.put("bootstrapOpen", entity.isBootstrapOpen());
+            out.put("bootstrapClosedAt",
+                    entity.getBootstrapClosedAt() != null ? entity.getBootstrapClosedAt().toString() : null);
+            out.put("activeNationalAdminExists",
+                    entity.getActiveNationalAdminUserId() != null && !entity.getActiveNationalAdminUserId().isBlank());
+            out.put("recoveryMode", entity.isRecoveryMode());
+        } else {
+            out.put("bootstrapOpen", true);
+            out.put("bootstrapClosedAt", null);
+            out.put("activeNationalAdminExists", false);
+            out.put("recoveryMode", false);
+        }
+        out.put("countryOperation", countryOperationRepository.findByTenantId(tenantId)
+                .map(op -> {
+                    Map<String, Object> summary = new LinkedHashMap<>();
+                    summary.put("id", op.getId().toString());
+                    summary.put("isoCountryCode", op.getIsoCountryCode());
+                    summary.put("displayName", op.getDisplayName());
+                    summary.put("status", op.getStatus());
+                    summary.put("sovereignOrganisationId",
+                            op.getSovereignOrganisationId() != null ? op.getSovereignOrganisationId().toString() : null);
+                    return (Object) summary;
+                })
+                .orElse(null));
+        return out;
     }
 
     @Transactional

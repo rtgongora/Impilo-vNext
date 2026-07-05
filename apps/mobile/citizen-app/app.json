@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "impilo.citizen",
+    "scheme": "impilo-citizen",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",

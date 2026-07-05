@@ -58,8 +58,12 @@ public class ProviderBootstrapService {
     private static final Logger log = LoggerFactory.getLogger(ProviderBootstrapService.class);
 
     private static final String ORIGIN_BULK_PRELOAD = "BULK_PRELOAD";
-    private static final String LIFECYCLE_PRELOADED = "PRELOADED";
-    private static final String LIFECYCLE_CLAIMED = "CLAIMED";
+    // Typed lifecycle constants (string values identical to the historical untyped
+    // literals — no stored data changes).
+    private static final String LIFECYCLE_PRELOADED =
+            zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus.PRELOADED.name();
+    private static final String LIFECYCLE_CLAIMED =
+            zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus.CLAIMED.name();
     /** Preloaded skeletons are not yet operational; status gates them out of active use. */
     private static final String STATUS_PRELOADED = "INACTIVE";
     private static final String STATUS_ACTIVE = "ACTIVE";
@@ -186,6 +190,9 @@ public class ProviderBootstrapService {
         provider.setLifecycleStatus(LIFECYCLE_PRELOADED);
         provider.setActiveFlag(false);
         provider.setBootstrapOrigin(ORIGIN_BULK_PRELOAD);
+        // IATG Wave-1 axes: a fresh skeleton is honestly self-asserted and unverified.
+        provider.setTrustLevel(zw.gov.mohcc.impilo.varapi.enums.ProviderTrustLevel.SELF_ASSERTED.name());
+        provider.setRegistryStatus(zw.gov.mohcc.impilo.varapi.enums.ProviderRegistryStatus.PENDING_VERIFICATION.name());
         provider.setPreloadBatchId(batchId);
         provider.setVersion(1);
         provider.setCreatedBy(ctx.actorId());
@@ -297,6 +304,16 @@ public class ProviderBootstrapService {
         provider.setLifecycleStatus(LIFECYCLE_CLAIMED);
         provider.setStatus(STATUS_ACTIVE);
         provider.setActiveFlag(true);
+        // Channel typing at claim, derived from preload/bootstrap provenance
+        // (BULK_PRELOAD -> WORKFORCE_B, COUNCIL_IMPORT -> REGULATORY_A,
+        // SELF_REGISTERED -> SELF). Never overwrites an already-set channel.
+        if (provider.getOnboardingChannel() == null) {
+            zw.gov.mohcc.impilo.varapi.enums.OnboardingChannel channel =
+                    zw.gov.mohcc.impilo.varapi.enums.OnboardingChannel.fromBootstrapOrigin(provider.getBootstrapOrigin());
+            if (channel != null) {
+                provider.setOnboardingChannel(channel.name());
+            }
+        }
         provider.setUpdatedBy(ctx.actorId());
         provider = providerRepository.save(provider);
 

@@ -37,10 +37,10 @@
       "channel": "preview",
       "env": {
         "EXPO_PUBLIC_ENV": "preview",
-        "EXPO_PUBLIC_API_BASE_URL": "https://api-preview.impilo.gov.zw",
-        "EXPO_PUBLIC_KEYCLOAK_URL": "https://auth-preview.impilo.gov.zw",
+        "EXPO_PUBLIC_API_BASE_URL": "http://41.57.127.235",
+        "EXPO_PUBLIC_KEYCLOAK_URL": "http://41.57.127.235:8480",
         "EXPO_PUBLIC_KEYCLOAK_REALM": "impilo",
-        "EXPO_PUBLIC_KEYCLOAK_CLIENT_ID": "citizen-app",
+        "EXPO_PUBLIC_KEYCLOAK_CLIENT_ID": "impilo-mobile-citizen",
         "EXPO_PUBLIC_APP_VARIANT": "preview",
         "EXPO_PUBLIC_APP_NAME": "Impilo Citizen Preview"
       },

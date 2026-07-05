@@ -15,6 +15,8 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierSystem;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityImportRowEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityLegitimacySource;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityLegitimacyStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityContactRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityGeoRepository;
@@ -37,6 +39,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
@@ -59,6 +62,8 @@ class FacilityMasterImportServiceTest {
     private FacilityImportRunRepository importRunRepository;
     @Mock
     private FacilityImportRowRepository importRowRepository;
+    @Mock
+    private FacilitySourceLegitimacyService sourceLegitimacyService;
 
     private FacilityMasterImportService service;
     private final UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -72,6 +77,7 @@ class FacilityMasterImportServiceTest {
                 geoRepository,
                 importRunRepository,
                 importRowRepository,
+                sourceLegitimacyService,
                 new ObjectMapper());
         TrustContextHolder.set(new TrustContext(
                 tenantId,
@@ -596,6 +602,115 @@ class FacilityMasterImportServiceTest {
         assertThat(second.latitude()).isNull();
         assertThat(second.longitude()).isNull();
         assertThat(second.status()).isNull();
+    }
+
+    // ── WS-E: per-source legitimacy stamping during master-pack import ───────────────────────
+
+    @Test
+    void nonDryRunImportStampsPlatformPendingAndMinistryOperationalLegitimacy() {
+        var record = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-legit", "ZWLEG1", "Legit Clinic", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4,
+                -17.8, 31.0, null, "2024-07-23");
+        when(identifierRepository.findBySystemAndValue(
+                FacilityMasterImportService.MASTER_FACILITY_UID_SYSTEM, "mhf-legit")).thenReturn(Optional.empty());
+        when(facilityRepository.findByTenantIdAndFacilityCode(tenantId, "ZWLEG1")).thenReturn(Optional.empty());
+        when(facilityRepository.save(any(FacilityEntity.class))).thenAnswer(inv -> {
+            FacilityEntity f = inv.getArgument(0);
+            if (f.getId() == null) {
+                f.setId(401L);
+            }
+            return f;
+        });
+        when(geoRepository.findByFacilityId(any())).thenReturn(Optional.empty());
+
+        service.importPack(new FacilityMasterImportDtos.FacilityMasterImportRequest(
+                false, false, false, List.of(record)));
+
+        // Every imported facility: platform verification pending, honestly NOT platform-allowed yet.
+        verify(sourceLegitimacyService).stampFromImport(any(FacilityEntity.class),
+                eq(FacilityLegitimacySource.PLATFORM_OPERATIONAL),
+                eq(FacilityLegitimacyStatus.PENDING_VERIFICATION),
+                eq(false), any(), any(), eq("tester"), eq(tenantId), any());
+        // MoHCC-code-only row: Ministry operational recognition, allowed on platform.
+        verify(sourceLegitimacyService).stampFromImport(any(FacilityEntity.class),
+                eq(FacilityLegitimacySource.MINISTRY_OPERATIONAL),
+                eq(FacilityLegitimacyStatus.REGISTERED_CURRENT),
+                eq(true), eq(FacilityIdentifierSystem.NATIONAL_FACILITY_CODE + ":ZWLEG1"),
+                any(), eq("tester"), eq(tenantId), any());
+        verify(sourceLegitimacyService, never()).stampFromImport(any(),
+                eq(FacilityLegitimacySource.HPA_LEGAL), any(), anyBoolean(),
+                any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void rowCarryingHpaRegistrationIsStampedAsHpaLegalWithDerivedStatus() {
+        var record = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-hpa", "ZWHPA1", "HPA Clinic", "Harare", "Harare",
+                "CLINIC", "PRIVATE", "Urban", "Primary", "Open", 4,
+                -17.8, 31.0, null, "2024-07-23",
+                java.util.Map.of("hpa_registration_number", "HPA-555", "hpa_status", "Expired"));
+        when(identifierRepository.findBySystemAndValue(
+                FacilityMasterImportService.MASTER_FACILITY_UID_SYSTEM, "mhf-hpa")).thenReturn(Optional.empty());
+        when(facilityRepository.findByTenantIdAndFacilityCode(tenantId, "ZWHPA1")).thenReturn(Optional.empty());
+        when(facilityRepository.save(any(FacilityEntity.class))).thenAnswer(inv -> {
+            FacilityEntity f = inv.getArgument(0);
+            if (f.getId() == null) {
+                f.setId(402L);
+            }
+            return f;
+        });
+        when(geoRepository.findByFacilityId(any())).thenReturn(Optional.empty());
+
+        service.importPack(new FacilityMasterImportDtos.FacilityMasterImportRequest(
+                false, false, false, List.of(record)));
+
+        // HPA verdict derived from pack fields (Expired -> EXPIRED, not platform-allowing).
+        verify(sourceLegitimacyService).stampFromImport(any(FacilityEntity.class),
+                eq(FacilityLegitimacySource.HPA_LEGAL),
+                eq(FacilityLegitimacyStatus.EXPIRED),
+                eq(false), eq(FacilityIdentifierSystem.HPA_REGISTRATION_NUMBER + ":HPA-555"),
+                any(), eq("tester"), eq(tenantId), any());
+        // HPA-carrying rows are NOT ministry-code-only rows.
+        verify(sourceLegitimacyService, never()).stampFromImport(any(),
+                eq(FacilityLegitimacySource.MINISTRY_OPERATIONAL), any(), eq(true),
+                any(), any(), any(), any(), any());
+        // Platform verification pending is still stamped for every imported facility.
+        verify(sourceLegitimacyService).stampFromImport(any(FacilityEntity.class),
+                eq(FacilityLegitimacySource.PLATFORM_OPERATIONAL),
+                eq(FacilityLegitimacyStatus.PENDING_VERIFICATION),
+                eq(false), any(), any(), eq("tester"), eq(tenantId), any());
+    }
+
+    @Test
+    void dryRunReportsLegitimacyStampCountsWithoutWritingAnyStamp() {
+        var plain = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-dry1", "ZWDRY1", "Dry Clinic", "Harare", "Harare",
+                "CLINIC", "GOVERNMENT", "Urban", "Primary", "Open", 4,
+                -17.8, 31.0, null, "2024-07-23");
+        var withHpa = new FacilityMasterImportDtos.MasterFacilitySeedRecord(
+                "mhf-dry2", "ZWDRY2", "Dry HPA Clinic", "Harare", "Harare",
+                "CLINIC", "PRIVATE", "Urban", "Primary", "Open", 4,
+                -17.8, 31.0, null, "2024-07-23",
+                java.util.Map.of("hpa_registration_number", "HPA-777"));
+        when(identifierRepository.findBySystemAndValue(any(), any())).thenReturn(Optional.empty());
+        when(facilityRepository.findByTenantIdAndFacilityCode(any(), any())).thenReturn(Optional.empty());
+
+        var response = service.importPack(new FacilityMasterImportDtos.FacilityMasterImportRequest(
+                true, false, false, List.of(plain, withHpa)));
+
+        // The dry-run quality report makes the planned stamps visible up front...
+        @SuppressWarnings("unchecked")
+        var legitimacy = (java.util.Map<String, Object>) response.qualitySummary().get("legitimacy_stamps");
+        assertThat(legitimacy).isNotNull();
+        assertThat(((Number) legitimacy.get("platform_operational_pending_verification")).longValue()).isEqualTo(2L);
+        assertThat(((Number) legitimacy.get("hpa_legal")).longValue()).isEqualTo(1L);
+        assertThat(((Number) legitimacy.get("ministry_operational_registered_current")).longValue()).isEqualTo(1L);
+
+        // ...without writing anything.
+        verify(sourceLegitimacyService, never()).stampFromImport(any(), any(), any(),
+                anyBoolean(), any(), any(), any(), any(), any());
+        verify(facilityRepository, never()).save(any());
     }
 
     private static FacilityMasterImportDtos.MasterFacilitySeedRecord sampleRecord() {

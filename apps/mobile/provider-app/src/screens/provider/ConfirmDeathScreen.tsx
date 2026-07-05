@@ -139,7 +139,7 @@ export function ConfirmDeathScreen() {
               <CardBody>
                 <Text style={styles.caseTitle}>{c.patientCpid ?? "Unidentified"}</Text>
                 <Text style={styles.meta}>{c.placeOfDeathContext ?? "—"} · {c.certificationStatus ?? "NOT_STARTED"}</Text>
-                {c.coronerReferralRequired ? <Badge label="Coroner referral required" tone="warning" /> : null}
+                {c.coronerReferralRequired ? <Badge label="Coroner referral required" variant="warning" /> : null}
               </CardBody>
             </Card>
           ))

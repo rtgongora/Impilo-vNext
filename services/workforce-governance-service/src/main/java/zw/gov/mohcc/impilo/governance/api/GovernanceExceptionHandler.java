@@ -36,4 +36,21 @@ public class GovernanceExceptionHandler {
         body.put("error", error);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
+
+    /**
+     * Illegal lifecycle transitions (e.g. two-person rule not yet satisfied,
+     * executing a non-APPROVED platform action) are caller-resolvable conflicts,
+     * not server faults — surface as HTTP 409 rather than a generic 500.
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(IllegalStateException ex) {
+        log.debug("Governance state conflict: {}", ex.getMessage());
+        Map<String, Object> error = new LinkedHashMap<>();
+        error.put("code", "INVALID_STATE");
+        error.put("message", ex.getMessage() != null ? ex.getMessage() : "Invalid state");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("success", false);
+        body.put("error", error);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
 }

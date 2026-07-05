@@ -144,7 +144,8 @@ export function PatientLookupScreen() {
             <Text style={styles.emptySubtitle}>Try a different name, NID, or CPID</Text>
           </View>
         ) : (
-          patients.map((patient) => (
+          <View testID="patient-search-results">
+          {patients.map((patient) => (
             <View key={patient.id} style={styles.patientCard} testID={`patient-${patient.id}`}>
               <View style={styles.patientCardInner}>
                 <Avatar
@@ -197,7 +198,8 @@ export function PatientLookupScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-          ))
+          ))}
+          </View>
         )}
 
         {!showRegistration && patients.length === 0 && (
