@@ -10,7 +10,7 @@
       "image_tag_sha": "preview-e1b3bf54c",
       "cache_bust": "e1b3bf54c610aaaa92c76bea37b9d50a26364272:fd3d90cc2265bb19",
       "local_docker_image_id": "sha256:479e234ffcebca47ef1e4f7915b6747918d790d5b4878d27507d7dbf4453078b",
-      "registry_digest": "sha256:7e7ecf72553aa0f6e28fcae49be3a9cffea1b18b899836c6d099d17727143750",
+      "registry_digest": "sha256:6c152da94b9f832d4c3cfc134eac0afc0cc7908f7c9e3ba270e6d2b6eae5ccc4",
       "build_timestamp": "2026-07-03T03:51:12.065770+00:00",
       "build_status": "pass",
       "ui_bundle_hash": "0eb16afaa770fa99",
@@ -167,7 +167,7 @@
     },
     "experience-bff": {
       "service": "experience-bff",
-      "registry_digest": "sha256:785a6935a8a06fd1cfd483994508cd90d179d95a1d648d62ad76297440d7f72b",
+      "registry_digest": "sha256:cf96a36e968dcb3c1ccda3de5bf69e18339fc3eb9165997c1a41c6923e45329d",
       "digest_pinned": true
     },
     "fhir-gateway-service": {
@@ -237,7 +237,7 @@
     },
     "khuluma-service": {
       "service": "khuluma-service",
-      "registry_digest": "sha256:cc2bab30bc64ff7cbd0cda6c670dd370a31e5877a92f0f7b484f558a52cacef5",
+      "registry_digest": "sha256:64d87f976b9dea45ec66275cff5c36a09b7c1713794a8df2b4a8a0bed8d88f5e",
       "digest_pinned": true
     },
     "landela-adapter-service": {
@@ -387,7 +387,7 @@
     },
     "rtc-gateway-service": {
       "service": "rtc-gateway-service",
-      "registry_digest": "sha256:9084cba10d8c231c6f76154fde4269742f5e8b53b69f2ab2dcfd3555fb3f39fc",
+      "registry_digest": "sha256:c5c6768ac042183af812f537a6d77103d16fe1a124ffff28e085f98c464bc1ee",
       "digest_pinned": true
     },
     "rules-service": {
@@ -506,5 +506,5 @@
       "digest_pinned": true
     }
   },
-  "digest_pin_generated_at": "2026-07-04T21:14:29.504032+00:00"
+  "digest_pin_generated_at": "2026-07-05T01:05:43.600544+00:00"
 }

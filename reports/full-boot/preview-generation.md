@@ -1,7 +1,7 @@
 # Public Preview Generation
 
-- Generated: 2026-07-04T21:21:37Z
-- Commit: `3e85cf162`
+- Generated: 2026-07-05T01:15:59Z
+- Commit: `5f68ca1ee`
 - Active public generation: **106/106 deployments ready (namespace impilo-full-preview); helm enabled 94/94 microservices (wave≤0)**
 - Coverage: **runtime 94/94 k8s microservices | registry runtime lanes 104 | non-runtime validate 47/47**
 - Full stack public ingress: yes
