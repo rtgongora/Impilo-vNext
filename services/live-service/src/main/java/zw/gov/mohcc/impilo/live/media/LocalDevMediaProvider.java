@@ -19,9 +19,10 @@ public class LocalDevMediaProvider implements LiveMediaProvider {
 
     @Override
     public MediaRoomContext provisionRoom(MediaRoomContext context) {
+        Object suffix = context.attributes() != null ? context.attributes().get("sessionIdSuffix") : null;
         String roomId = context.providerRoomId() != null
                 ? context.providerRoomId()
-                : "dev-room-" + context.eventId();
+                : "dev-room-" + context.eventId() + (suffix != null ? suffix.toString() : "");
         MediaRoomContext provisioned = new MediaRoomContext(
                 context.tenantId(),
                 context.eventId(),

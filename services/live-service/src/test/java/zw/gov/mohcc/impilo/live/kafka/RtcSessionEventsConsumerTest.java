@@ -212,6 +212,27 @@ class RtcSessionEventsConsumerTest {
         verify(attendanceService, never()).leave(any(), any(), anyString());
     }
 
+    // ── backstage child rooms (W6) ───────────────────────────────────────────
+
+    @Test
+    void backstageSession_neverDrivesEventLifecycleOrAttendance() {
+        // owningService=LIVE + owningRef=eventId like the main room, but the
+        // '-backstage' session id marks it as the linked child room: a producer
+        // warming up backstage must not flip a SCHEDULED event LIVE.
+        String backstage = """
+                {"sessionId":"%s-backstage","sessionMode":"LIVE_EVENT","owningService":"LIVE",
+                 "owningRef":"%s","roomName":"impilo-live-%s-backstage",
+                 "occurredAt":"2026-07-04T10:00:00Z"}
+                """.formatted(RTC_SESSION_ID, EVENT_ID, RTC_SESSION_ID);
+
+        consumer.onSessionStarted(backstage);
+        consumer.onSessionFinished(backstage);
+        consumer.onParticipantJoined(backstage);
+
+        verifyNoInteractions(eventService, attendanceService, replayService);
+        verifyNoInteractions(sessionRepository, eventRepository);
+    }
+
     // ── resilience ───────────────────────────────────────────────────────────
 
     @Test

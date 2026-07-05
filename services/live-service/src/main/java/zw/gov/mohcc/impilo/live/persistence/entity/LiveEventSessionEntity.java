@@ -21,6 +21,10 @@ public class LiveEventSessionEntity {
     @Column(name = "provider_room_id")
     private String providerRoomId;
 
+    /** rtc session id of the linked '-backstage' child room (LIVE_EVENT modes). */
+    @Column(name = "backstage_room_id")
+    private String backstageRoomId;
+
     @Column(name = "stream_key_ref")
     private String streamKeyRef;
 
@@ -55,6 +59,8 @@ public class LiveEventSessionEntity {
     public void setProviderType(String providerType) { this.providerType = providerType; }
     public String getProviderRoomId() { return providerRoomId; }
     public void setProviderRoomId(String providerRoomId) { this.providerRoomId = providerRoomId; }
+    public String getBackstageRoomId() { return backstageRoomId; }
+    public void setBackstageRoomId(String backstageRoomId) { this.backstageRoomId = backstageRoomId; }
     public String getStreamKeyRef() { return streamKeyRef; }
     public void setStreamKeyRef(String streamKeyRef) { this.streamKeyRef = streamKeyRef; }
     public String getPlaybackUrlRef() { return playbackUrlRef; }

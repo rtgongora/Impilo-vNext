@@ -33,22 +33,36 @@ public class RtcGatewayMediaProvider implements LiveMediaProvider {
     @Override
     public MediaRoomContext provisionRoom(MediaRoomContext context) {
         TrustContext ctx = TrustContextHolder.get();
+        Map<String, Object> attributes = context.attributes() != null ? context.attributes() : Map.of();
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("tenantId", context.tenantId().toString());
-        request.put("sessionId", context.sessionId().toString());
+        // Linked child rooms (backstage) provision under a suffixed session id —
+        // rtc-gateway derives the '-backstage' room name from it.
+        Object suffix = attributes.get("sessionIdSuffix");
+        request.put("sessionId", context.sessionId().toString() + (suffix != null ? suffix.toString() : ""));
         request.put("patientId", context.participantId());
         request.put("providerId", context.participantId());
         request.put("facilityId", context.facilityId());
         // SessionMode carried by LiveRoomService from the event's LiveMode —
         // determines which session-template grant taxonomy governs the room.
-        Object sessionMode = context.attributes() != null ? context.attributes().get("sessionMode") : null;
+        Object sessionMode = attributes.get("sessionMode");
         request.put("sessionType", sessionMode != null ? sessionMode.toString() : "LIVE_EVENT");
         // Stamp ownership so impilo.rtc.* consumers can filter (LIVE) and resolve (event id).
         request.put("owningService", "LIVE");
         if (context.eventId() != null) {
             request.put("owningRef", context.eventId().toString());
         }
-        request.put("attributes", context.attributes() != null ? context.attributes() : Map.of());
+        // Child-room linkage: rtc validates the parent exists (same tenant).
+        Object parentSessionId = attributes.get("parentSessionId");
+        if (parentSessionId != null) {
+            request.put("parentSessionId", parentSessionId.toString());
+        }
+        // Event capacity → LiveKit room max_participants (rtc clamps sensibly).
+        Object maxParticipants = attributes.get("maxParticipants");
+        if (maxParticipants instanceof Number number && number.intValue() > 0) {
+            request.put("maxParticipants", number.intValue());
+        }
+        request.put("attributes", attributes);
         Map<String, Object> participant = new LinkedHashMap<>();
         participant.put("identity", context.participantId());
         participant.put("role", context.participantRole());

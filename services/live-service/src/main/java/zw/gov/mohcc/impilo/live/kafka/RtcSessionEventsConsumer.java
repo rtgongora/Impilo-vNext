@@ -229,6 +229,14 @@ public class RtcSessionEventsConsumer {
             if (!isLiveOwned(n)) {
                 return; // other services' sessions — ignore silently per contract
             }
+            if (isBackstageSession(n)) {
+                // Backstage child rooms share owningRef with the main event but
+                // must never drive its lifecycle/attendance: a producer opening
+                // backstage would otherwise flip a SCHEDULED event LIVE.
+                log.debug("RTC {} for backstage session '{}' — ignored for event lifecycle",
+                        kind, text(n, "sessionId"));
+                return;
+            }
             Resolved resolved = resolve(n);
             if (resolved == null) {
                 log.warn("RTC {} for unknown live session '{}' (owningRef={}) — skipped",
@@ -244,6 +252,12 @@ public class RtcSessionEventsConsumer {
 
     private boolean isLiveOwned(JsonNode n) {
         return OWNER_LIVE.equalsIgnoreCase(text(n, "owningService"));
+    }
+
+    /** Backstage child rooms provision under '<mainSessionId>-backstage'. */
+    private boolean isBackstageSession(JsonNode n) {
+        String sessionId = text(n, "sessionId");
+        return sessionId != null && sessionId.endsWith("-backstage");
     }
 
     /**

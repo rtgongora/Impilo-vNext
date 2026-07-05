@@ -44,9 +44,35 @@ public class LiveRoomController {
             @RequestBody LiveDtos.RoomTokenRequest req) {
         var result = roomService.token(tenantId, eventId, req.participantId(),
                 req.role() != null ? req.role() : "ATTENDEE");
+        return tokenResponse(result);
+    }
+
+    /** Backstage child room for pre-stage speakers (crew / approved speakers only). */
+    @PostMapping("/{eventId}/backstage/join")
+    public ResponseEntity<Map<String, Object>> joinBackstage(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID eventId,
+            @RequestBody LiveDtos.JoinRoomRequest req) {
+        LiveEventSessionEntity session = roomService.joinBackstage(
+                tenantId, eventId, req.participantId(), req.participantType());
+        Map<String, Object> body = sessionMap(session);
+        body.put("backstageRoomId", session.getBackstageRoomId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    }
+
+    @PostMapping("/{eventId}/backstage/token")
+    public LiveDtos.RoomTokenResponse backstageToken(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID eventId,
+            @RequestBody LiveDtos.RoomTokenRequest req) {
+        return tokenResponse(roomService.backstageToken(tenantId, eventId, req.participantId()));
+    }
+
+    private LiveDtos.RoomTokenResponse tokenResponse(zw.gov.mohcc.impilo.live.core.LiveRoomService.RoomToken result) {
+        var token = result.token();
         return new LiveDtos.RoomTokenResponse(
-                result.roomId(), result.roomUrl(), result.accessToken(),
-                result.provider(), result.channel());
+                token.roomId(), token.roomUrl(), token.accessToken(),
+                token.provider(), token.channel(), result.role());
     }
 
     @PostMapping("/{eventId}/start")
