@@ -385,6 +385,24 @@ public class InpatientController {
         }
     }
 
+    @PostMapping("/discharge-summary/{encounterId}/countersign")
+    public ResponseEntity<Map<String, Object>> countersignDischargeSummary(
+            @PathVariable String encounterId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.countersignDischargeSummary(encounterId, body),
+                    "Inpatient countersignDischargeSummary");
+            return ResponseEntity.ok(Map.of("data", data,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient countersignDischargeSummary", e);
+        }
+    }
+
     private static Map<String, Object> normalizeTransferBody(Map<String, Object> body) {
         Map<String, Object> normalized = new LinkedHashMap<>();
         if (body == null) {
