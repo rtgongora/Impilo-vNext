@@ -169,6 +169,19 @@ pools, clinical groups, case presentations, audit sessions (see handoffs §7); a
 6. **HO-6 → Fable register**: helm `webhookUrl` port 8196 vs rtc-gateway 8195 already flagged
    on the board (§7 liaison, risk #9); not touched here.
 
+### Gate classification (2026-07-05)
+
+`/work/telemedicine/groups`, `/work/telemedicine/virtual-hospitals`, and
+`/work/telemedicine/virtual-hospitals/[id]` are **static-by-design orientation surfaces**:
+they render the checked-in doctrine substrate (`src/lib/telemedicine/*`) that is itself the
+seed spec for HO-2/HO-5, and they stay fail-closed (no fake queues, rosters, or metrics)
+until that coordinator-gated backend exists. Accordingly they are registered in
+`ui/one-ui-shell/src/lib/routes.ts` for nav/zone metadata and allowlisted as static shells
+in `scripts/completeness/generate-product-truth.mjs` (`SURFACE_ALLOWLIST_PREFIXES`).
+**Exit condition**: when HO-2 (virtual service-delivery entity registry) and HO-5
+(ClinicalGroup model) ship with experience-bff backing, wire the pages to the live APIs and
+remove the two allowlist entries — the product-truth gate then enforces real backing.
+
 ## 8. Acceptance journey register (Wave 6 keeps this honest)
 
 Statuses: `implemented` · `partially implemented` · `existing-surfaced` · `blocked-W0-lease` ·
