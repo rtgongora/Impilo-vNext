@@ -49,6 +49,18 @@ public class BillController {
         return ResponseEntity.ok(ApiResponse.ok(paged, ctx.correlationId().toString()));
     }
 
+    /**
+     * Read-only bills-by-encounter lookup (clinical billing visibility seam).
+     * Tenant-scoped; newest first.
+     */
+    @GetMapping("/by-encounter/{encounterId}")
+    public ResponseEntity<ApiResponse<List<BillHeaderEntity>>> getBillsForEncounter(
+            @PathVariable String encounterId) {
+        var ctx = TrustContextHolder.require();
+        List<BillHeaderEntity> bills = billService.getBillsForEncounter(ctx.tenantId(), encounterId);
+        return ResponseEntity.ok(ApiResponse.ok(bills, ctx.correlationId().toString()));
+    }
+
     @PostMapping("/draft")
     public ResponseEntity<ApiResponse<BillHeaderEntity>> createDraft(@RequestBody BillDraftRequest request) {
         var ctx = TrustContextHolder.require();

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.ClinicalKnowledgePlatformClient;
+import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
 
@@ -27,10 +28,13 @@ public class EncounterController {
 
     private final PctServiceClient pctClient;
     private final ClinicalKnowledgePlatformClient clinicalClient;
+    private final CostaServiceClient costaClient;
 
-    public EncounterController(PctServiceClient pctClient, ClinicalKnowledgePlatformClient clinicalClient) {
+    public EncounterController(PctServiceClient pctClient, ClinicalKnowledgePlatformClient clinicalClient,
+                               CostaServiceClient costaClient) {
         this.pctClient = pctClient;
         this.clinicalClient = clinicalClient;
+        this.costaClient = costaClient;
     }
 
     public record CreateEncounterRequest(
@@ -210,6 +214,14 @@ public class EncounterController {
             Map<String, Object> meta = new LinkedHashMap<>(Map.of(
                     "request_id", requestId,
                     "correlation_id", correlationId));
+            // Encounter→bill trigger for the standard web close path (parity with the
+            // mobile close path). Draft-only and non-blocking: COSTA owns billing truth
+            // and dedupes per encounter (existing DRAFT/ACCUMULATING bill is returned,
+            // never duplicated), so repeated close requests cannot double-bill.
+            String costaBillId = createBillDraftBestEffort(String.valueOf(encId));
+            if (costaBillId != null) {
+                meta.put("costa_bill_id", costaBillId);
+            }
             return ResponseEntity.ok(Map.of(
                     "data", pct,
                     "meta", meta));
@@ -221,6 +233,145 @@ public class EncounterController {
             log.warn("PCT completeEncounter failed: {}", e.getMessage());
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
+    }
+
+    /**
+     * Read-only billing visibility for a clinical encounter (Health OS: billing is
+     * part of the care journey). Composes COSTA bills + payments for the encounter
+     * into honest, derived states — never fabricates billing data and fail-closes
+     * with {@code BILLING_UNAVAILABLE} when COSTA is unreachable.
+     *
+     * <p>Visibility only: all billing mutations remain on the FINANCE-role
+     * {@code /internal/v1/finance/**} surface.</p>
+     */
+    @GetMapping("/{id}/billing")
+    public ResponseEntity<Map<String, Object>> getEncounterBilling(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        String encounterId = id.trim();
+        try {
+            JsonNode bills = costaClient.getBillsByEncounter(encounterId);
+            List<Map<String, Object>> billResources = new ArrayList<>();
+            String overallState = "NOT_BILLED";
+            if (bills != null && bills.isArray()) {
+                for (JsonNode bill : bills) {
+                    billResources.add(toEncounterBillResource(bill));
+                }
+                for (Map<String, Object> resource : billResources) {
+                    if (!"VOIDED".equals(resource.get("state"))) {
+                        overallState = String.valueOf(resource.get("state"));
+                        break;
+                    }
+                }
+            }
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("encounter_id", encounterId);
+            data.put("billing_state", overallState);
+            data.put("bills", billResources);
+            return ResponseEntity.ok(Map.of(
+                    "data", data,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("Encounter billing composition failed for {}: {}", encounterId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "BILLING_UNAVAILABLE",
+                            "message", "Billing status is currently unavailable for this encounter"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    /** Maps a COSTA bill (+ its payments) to an honest clinical billing resource. */
+    private Map<String, Object> toEncounterBillResource(JsonNode bill) {
+        Map<String, Object> resource = new LinkedHashMap<>();
+        String billId = textOrNull(bill, "billId");
+        String status = textOrNull(bill, "status");
+        double totalPayable = doubleOrZero(bill, "totalPayable");
+        double insurerPayable = doubleOrZero(bill, "insurerPayable");
+        double patientPayable = doubleOrZero(bill, "patientPayable");
+        double subsidyPayable = doubleOrZero(bill, "subsidyPayable");
+
+        resource.put("bill_id", billId);
+        resource.put("status", status);
+        resource.put("bill_type", textOrNull(bill, "billType"));
+        resource.put("currency", textOrNull(bill, "currency"));
+        resource.put("total_charge", doubleOrZero(bill, "totalCharge"));
+        resource.put("total_payable", totalPayable);
+        resource.put("insurer_payable", insurerPayable);
+        resource.put("patient_payable", patientPayable);
+        resource.put("subsidy_payable", subsidyPayable);
+        resource.put("write_off", doubleOrZero(bill, "writeOff"));
+        resource.put("coverage_status", textOrNull(bill, "coverageStatus"));
+        resource.put("coverage_plan_code", textOrNull(bill, "coveragePlanCode"));
+        resource.put("created_at", textOrNull(bill, "createdAt"));
+        resource.put("finalized_at", textOrNull(bill, "finalizedAt"));
+
+        double paidTotal = 0.0;
+        boolean anyPaymentPending = false;
+        List<Map<String, Object>> paymentResources = new ArrayList<>();
+        if (billId != null) {
+            try {
+                JsonNode payments = costaClient.getBillPayments(billId);
+                if (payments != null && payments.isArray()) {
+                    for (JsonNode payment : payments) {
+                        String paymentStatus = textOrNull(payment, "status");
+                        double paidAmount = doubleOrZero(payment, "paidAmount");
+                        if ("PAID".equals(paymentStatus)) {
+                            paidTotal += paidAmount > 0 ? paidAmount : doubleOrZero(payment, "amount");
+                        } else if ("PENDING".equals(paymentStatus) || "AUTHORIZED".equals(paymentStatus)) {
+                            anyPaymentPending = true;
+                        }
+                        Map<String, Object> p = new LinkedHashMap<>();
+                        p.put("id", textOrNull(payment, "id"));
+                        p.put("payment_type", textOrNull(payment, "paymentType"));
+                        p.put("amount", doubleOrZero(payment, "amount"));
+                        p.put("paid_amount", paidAmount);
+                        p.put("status", paymentStatus);
+                        p.put("mushex_intent_id", textOrNull(payment, "mushexPaymentIntentId"));
+                        p.put("paid_at", textOrNull(payment, "paidAt"));
+                        paymentResources.add(p);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Payments lookup failed for bill {}: {}", billId, e.getMessage());
+                resource.put("payments_state", "UNAVAILABLE");
+            }
+        }
+        resource.put("payments", paymentResources);
+        resource.put("state", deriveBillState(status, patientPayable, paidTotal, anyPaymentPending));
+        return resource;
+    }
+
+    /**
+     * Honest, data-derived billing state. States mirror the finance doctrine
+     * vocabulary; no state may claim payment success that the data does not show.
+     */
+    private static String deriveBillState(String status, double patientPayable,
+                                          double paidTotal, boolean anyPaymentPending) {
+        if (status == null) return "UNAVAILABLE";
+        return switch (status) {
+            case "VOID" -> "VOIDED";
+            case "DRAFT", "ACCUMULATING" -> "BILLING_PENDING";
+            case "APPROVAL_PENDING", "APPROVED" -> "BILL_GENERATED";
+            case "FINAL" -> {
+                if (patientPayable <= 0) yield "COVERED";
+                if (paidTotal >= patientPayable) yield "PAID";
+                if (anyPaymentPending) yield "PAYMENT_PENDING";
+                yield "SHORTFALL_DUE";
+            }
+            default -> status;
+        };
+    }
+
+    private static String textOrNull(JsonNode node, String field) {
+        if (node == null || !node.has(field) || node.get(field).isNull()) return null;
+        String value = node.get(field).asText("");
+        return value.isEmpty() ? null : value;
+    }
+
+    private static double doubleOrZero(JsonNode node, String field) {
+        if (node == null || !node.has(field) || node.get(field).isNull()) return 0.0;
+        return node.get(field).asDouble(0.0);
     }
 
     @PostMapping("/{id}/pathway/sessions")
@@ -332,6 +483,11 @@ public class EncounterController {
                 copyIfPresent(body, meta, "follow_up_instructions", "followUpInstructions");
                 copyIfPresent(body, meta, "patient_instructions", "patientInstructions");
             }
+            // Same draft-only, non-blocking bill trigger as the mobile discharge path.
+            String costaBillId = createBillDraftBestEffort(id.trim());
+            if (costaBillId != null) {
+                meta.put("costa_bill_id", costaBillId);
+            }
             return ResponseEntity.ok(Map.of("data", discharge, "meta", meta));
         } catch (NumberFormatException ex) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -340,6 +496,24 @@ public class EncounterController {
         } catch (Exception ex) {
             return upstreamFailure("PCT_UNAVAILABLE", ex.getMessage(), requestId, correlationId);
         }
+    }
+
+    /**
+     * Best-effort COSTA bill draft for a completed/discharged encounter.
+     * Never blocks the clinical action: billing failure is logged, not surfaced
+     * as a clinical error. Idempotency lives in COSTA ({@code BillService.createDraft}
+     * returns the existing active bill for the encounter instead of duplicating).
+     */
+    private String createBillDraftBestEffort(String encounterId) {
+        try {
+            JsonNode billData = costaClient.createBillDraft(encounterId, "ENCOUNTER");
+            if (billData != null && billData.has("billId")) {
+                return billData.get("billId").asText();
+            }
+        } catch (Exception e) {
+            log.warn("COSTA bill draft from web encounter close/discharge failed (non-blocking): {}", e.getMessage());
+        }
+        return null;
     }
 
     private static String extractEncounterId(JsonNode pctEncounter) {

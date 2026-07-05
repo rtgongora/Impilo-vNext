@@ -181,6 +181,17 @@ public class CostaServiceClient {
     }
 
     /**
+     * List bills referencing an encounter (read-only clinical billing visibility).
+     */
+    public JsonNode getBillsByEncounter(String encounterId) {
+        String enc = UriUtils.encodePathSegment(encounterId, StandardCharsets.UTF_8);
+        String url = baseUrl + "/costa/v1/bills/by-encounter/" + enc;
+        log.info("COSTA: Listing bills for encounter={}", encounterId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Get a single bill with its lines and parties.
      */
     public JsonNode getBill(String billId) {

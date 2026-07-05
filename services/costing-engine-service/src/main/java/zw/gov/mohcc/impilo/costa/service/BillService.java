@@ -419,6 +419,18 @@ public class BillService {
     }
 
     /**
+     * All bills referencing an encounter, tenant-scoped, newest first.
+     * Read-only composition seam for clinical billing visibility.
+     */
+    public List<BillHeaderEntity> getBillsForEncounter(UUID tenantId, String encounterId) {
+        return billHeaderRepository.findByEncounterId(encounterId).stream()
+                .filter(b -> tenantId == null || tenantId.equals(b.getTenantId()))
+                .sorted(java.util.Comparator.comparing(BillHeaderEntity::getCreatedAt,
+                        java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())))
+                .toList();
+    }
+
+    /**
      * Find the active (DRAFT or ACCUMULATING) bill for an encounter.
      * Returns the first matching bill, or null if none exists.
      */

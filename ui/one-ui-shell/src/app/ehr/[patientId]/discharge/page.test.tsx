@@ -54,4 +54,26 @@ describe("VisitOutcomePage", () => {
       );
     });
   });
+
+  it("surfaces the COSTA bill draft link when the BFF returns costa_bill_id in meta", async () => {
+    postMock.mockResolvedValueOnce({
+      data: { attributes: {} },
+      meta: { costa_bill_id: "bill-meta-9" },
+    });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <VisitOutcomePage />
+      </QueryClientProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Discharge/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Complete Encounter/ }));
+
+    expect(await screen.findByText(/A billing draft has been created/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /View Bill/i })).toHaveAttribute(
+      "href",
+      "/finance/billing/bill-meta-9?patientId=patient-1&encounterId=enc-2&source=discharge"
+    );
+  });
 });

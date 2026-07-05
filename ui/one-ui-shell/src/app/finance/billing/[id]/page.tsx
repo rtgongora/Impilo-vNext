@@ -177,14 +177,26 @@ export default function BillingDetailPage() {
   const billAction = useBillAction(id);
   const queryClient = useQueryClient();
   const createPayment = useMutation({
-    mutationFn: (body: { paymentType: string; amount: string }) =>
-      apiClient.post(`/internal/v1/finance/billing/${id}/payment`, body),
+    mutationFn: (body: { paymentType: string; amount?: string; method?: string }) => {
+      // Blank amount for FULL/REMAINDER → the BFF derives it from the bill's
+      // coverage split (REMAINDER = patient shortfall, FULL = total payable).
+      const payload: Record<string, string> = { paymentType: body.paymentType };
+      if (body.amount) payload.amount = body.amount;
+      if (body.method) payload.method = body.method;
+      return apiClient.post<{ data: unknown; meta?: { amount_source?: string } }>(
+        `/internal/v1/finance/billing/${id}/payment`,
+        payload,
+      );
+    },
     onSuccess: () => {
       refetchPayments();
       queryClient.invalidateQueries({ queryKey: ["finance-billing", id] });
       setPaymentAmount("");
     },
   });
+  const paymentAmountSource = (createPayment.data as { meta?: { amount_source?: string } } | undefined)
+    ?.meta?.amount_source;
+  const serverDerivableType = paymentType === "FULL" || paymentType === "REMAINDER";
   const cancelPayment = useMutation({
     mutationFn: (paymentId: string) =>
       apiClient.post(`/internal/v1/finance/billing/${id}/payments/${paymentId}/cancel`),
@@ -543,12 +555,19 @@ export default function BillingDetailPage() {
                             type="number"
                             step="0.01"
                             min="0.01"
-                            placeholder="Amount"
+                            placeholder={serverDerivableType ? "Amount (auto if blank)" : "Amount"}
                             value={paymentAmount}
                             onChange={(e) => setPaymentAmount(e.target.value)}
                             className="px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-primary/40 w-36"
                           />
                         </div>
+                        {serverDerivableType && !paymentAmount && (
+                          <p className="text-[11px] text-muted-foreground">
+                            Leave the amount blank to charge the bill&apos;s own figure:{" "}
+                            {paymentType === "REMAINDER" ? "the patient shortfall" : "the total payable"} is
+                            derived server-side from the coverage split.
+                          </p>
+                        )}
                         {/* Payment method selector — Mushe + all channels */}
                         <div>
                           <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Payment Method</p>
@@ -577,8 +596,8 @@ export default function BillingDetailPage() {
                           </div>
                         </div>
                         <button
-                          onClick={() => createPayment.mutate({ paymentType, amount: paymentAmount, method: paymentMethod } as { paymentType: string; amount: string; method?: string })}
-                          disabled={createPayment.isPending || !paymentAmount}
+                          onClick={() => createPayment.mutate({ paymentType, amount: paymentAmount || undefined, method: paymentMethod })}
+                          disabled={createPayment.isPending || (!paymentAmount && !serverDerivableType)}
                           className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
                         >
                           {createPayment.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
@@ -589,7 +608,14 @@ export default function BillingDetailPage() {
                         <p className="mt-2 text-xs text-red-600">Failed to create payment.</p>
                       )}
                       {createPayment.isSuccess && (
-                        <p className="mt-2 text-xs text-green-600">Payment recorded successfully.</p>
+                        <p className="mt-2 text-xs text-green-600">
+                          Payment intent recorded.
+                          {paymentAmountSource === "SERVER_DERIVED_PATIENT_PAYABLE"
+                            ? " Amount derived from the patient shortfall on the bill."
+                            : paymentAmountSource === "SERVER_DERIVED_TOTAL_PAYABLE"
+                              ? " Amount derived from the bill's total payable."
+                              : ""}
+                        </p>
                       )}
                     </div>
                   </div>
