@@ -102,6 +102,62 @@ class KhulumaBffControllerTest {
     }
 
     @Test
+    void joinMeeting_relaysLobbyWaitingOutcome() throws Exception {
+        authenticateAs("ROLE_PATIENT");
+        khuluma.next = new KhulumaServiceClient.Result(200, MAPPER.readTree(
+                "{\"conversationId\":\"c-9\",\"status\":\"WAITING\",\"role\":\"PARTICIPANT\",\"accessToken\":null}"));
+
+        ResponseEntity<JsonNode> response = controller.joinMeeting("c-9");
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody().get("status").asText()).isEqualTo("WAITING");
+    }
+
+    @Test
+    void meetingLobbyModeration_requiresAuthenticatedActor_andRelays() throws Exception {
+        // Unauthenticated admit is refused before any downstream call.
+        assertThatThrownBy(() -> controller.admitToMeeting("c-9", MAPPER.createObjectNode()))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("401");
+
+        authenticateAs("ROLE_CLINICIAN");
+        khuluma.next = new KhulumaServiceClient.Result(200,
+                MAPPER.readTree("{\"actorId\":\"provider-b\",\"status\":\"ADMITTED\"}"));
+        ResponseEntity<JsonNode> admitted =
+                controller.admitToMeeting("c-9", MAPPER.readTree("{\"actorId\":\"provider-b\"}"));
+        assertThat(admitted.getBody().get("status").asText()).isEqualTo("ADMITTED");
+
+        // Downstream host-only denial (403) is relayed faithfully.
+        khuluma.next = new KhulumaServiceClient.Result(403,
+                MAPPER.readTree("{\"error\":{\"code\":\"forbidden\"}}"));
+        assertThat(controller.denyFromMeeting("c-9", MAPPER.createObjectNode()).getStatusCode().value())
+                .isEqualTo(403);
+    }
+
+    @Test
+    void actionItems_inviteLinks_andDetail_relay() throws Exception {
+        authenticateAs("ROLE_CLINICIAN");
+        khuluma.next = new KhulumaServiceClient.Result(201,
+                MAPPER.readTree("{\"actionItemId\":\"ai-1\",\"status\":\"OPEN\"}"));
+        assertThat(controller.createActionItem("c-9", MAPPER.readTree("{\"description\":\"do x\"}"))
+                .getStatusCode().value()).isEqualTo(201);
+
+        khuluma.next = new KhulumaServiceClient.Result(200,
+                MAPPER.readTree("{\"actionItemId\":\"ai-1\",\"status\":\"DONE\"}"));
+        assertThat(controller.updateActionItem("c-9", "ai-1", MAPPER.readTree("{\"status\":\"DONE\"}"))
+                .getBody().get("status").asText()).isEqualTo("DONE");
+
+        khuluma.next = new KhulumaServiceClient.Result(201,
+                MAPPER.readTree("{\"token\":\"abc.def\",\"role\":\"MEMBER\"}"));
+        assertThat(controller.mintInvite("c-9", null).getBody().get("token").asText()).isEqualTo("abc.def");
+
+        khuluma.next = new KhulumaServiceClient.Result(200,
+                MAPPER.readTree("{\"conversationId\":\"c-9\",\"eventId\":\"ev-9\",\"scheduledAt\":\"2026-07-10T09:00:00Z\"}"));
+        assertThat(controller.meetingDetail("c-9").getBody().get("scheduledAt").asText())
+                .isEqualTo("2026-07-10T09:00:00Z");
+    }
+
+    @Test
     void notifications_delegateToNotificationService() {
         ResponseEntity<JsonNode> response = controller.notifications("user-1");
         assertThat(response.getStatusCode().value()).isEqualTo(200);
