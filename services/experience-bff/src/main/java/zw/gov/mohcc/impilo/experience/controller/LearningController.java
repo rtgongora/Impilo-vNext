@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.LearningServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 
@@ -26,16 +29,19 @@ public class LearningController {
 
     private final LearningServiceClient learningClient;
     private final NotificationServiceClient notificationClient;
+    private final DocumentServiceClient documentClient;
     private final RestTemplate restTemplate;
     private final String llmBaseUrl;
 
     public LearningController(
             LearningServiceClient learningClient,
             NotificationServiceClient notificationClient,
+            DocumentServiceClient documentClient,
             RestTemplate serviceRestTemplate,
             @org.springframework.beans.factory.annotation.Value("${impilo.services.llm-orchestration-base-url:http://localhost:8265}") String llmBaseUrl) {
         this.learningClient = learningClient;
         this.notificationClient = notificationClient;
+        this.documentClient = documentClient;
         this.restTemplate = serviceRestTemplate;
         this.llmBaseUrl = llmBaseUrl;
     }
@@ -278,6 +284,147 @@ public class LearningController {
             @PathVariable String lessonId,
             @RequestBody Map<String, Object> body) {
         JsonNode n = learningClient.postV11("lessons/" + lessonId + "/open", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    // ── recorded media / course player (LEARNING_RECORDING W4) ──────────────
+
+    /**
+     * Enrolment-gated playback URL for a media asset. learning-service enforces
+     * the enrolment membership (tenant + course) and returns the typed storage
+     * reference; when the asset is a DOCUMENT_OBJECT this endpoint exchanges the
+     * object id for a time-limited signed URL against document-service (the
+     * artifact SoR — learning never mints URLs). Legacy EXTERNAL_URL assets
+     * return their URL as-is.
+     */
+    @GetMapping("/v11/media/{assetId}/playback")
+    public ResponseEntity<Map<String, Object>> mediaPlayback(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String assetId,
+            @RequestParam String enrolmentId) {
+        JsonNode asset = learningClient.getV11(
+                "media/" + assetId + "/playback-ref", Map.of("enrolmentId", enrolmentId));
+        if (asset == null || asset.path("asset").isMissingNode() || asset.path("asset").isNull()) {
+            return ResponseEntity.notFound().build();
+        }
+        JsonNode a = asset.path("asset");
+        ObjectNode data = JsonNodeFactory.instance.objectNode();
+        data.set("asset", a);
+        String storageKind = a.path("storageKind").asText("");
+        String storageRef = a.path("storageRef").asText("");
+        if ("DOCUMENT_OBJECT".equals(storageKind) && !storageRef.isBlank()) {
+            try {
+                JsonNode signed = documentClient.getSignedUrl(UUID.fromString(storageRef));
+                if (signed != null && !signed.path("url").asText("").isBlank()) {
+                    data.put("playbackUrl", signed.path("url").asText());
+                    data.put("expiresAt", signed.path("expiresAt").asText(null));
+                } else {
+                    data.putNull("playbackUrl");
+                    data.put("playbackUnavailableReason", "SIGNED_URL_UNAVAILABLE");
+                }
+            } catch (Exception e) {
+                data.putNull("playbackUrl");
+                data.put("playbackUnavailableReason", "SIGNED_URL_UNAVAILABLE");
+            }
+        } else if (!storageRef.isBlank()) {
+            // Legacy authored asset with a directly usable URL.
+            data.put("playbackUrl", storageRef);
+        } else {
+            data.putNull("playbackUrl");
+            data.put("playbackUnavailableReason", "NO_STORAGE_REF");
+        }
+        return ResponseEntity.ok(Map.of("data", data));
+    }
+
+    @PostMapping("/v11/media/{assetId}/watch-progress")
+    public ResponseEntity<Map<String, Object>> upsertMediaWatchProgress(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String assetId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("media/" + assetId + "/watch-progress", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/media/{assetId}/watch-progress")
+    public ResponseEntity<Map<String, Object>> getMediaWatchProgress(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String assetId,
+            @RequestParam String enrolmentId) {
+        JsonNode n = learningClient.getV11(
+                "media/" + assetId + "/watch-progress", Map.of("enrolmentId", enrolmentId));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/media/{assetId}/chapters")
+    public ResponseEntity<Map<String, Object>> listMediaChapters(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String assetId) {
+        JsonNode n = learningClient.getV11("media/" + assetId + "/chapters", Map.of());
+        return ResponseEntity.ok(Map.of("data",
+                n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/media/{assetId}/chapters")
+    public ResponseEntity<Map<String, Object>> createMediaChapter(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String assetId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("media/" + assetId + "/chapters", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/media/{assetId}/bookmarks")
+    public ResponseEntity<Map<String, Object>> listMediaBookmarks(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String assetId,
+            @RequestParam String enrolmentId) {
+        JsonNode n = learningClient.getV11(
+                "media/" + assetId + "/bookmarks", Map.of("enrolmentId", enrolmentId));
+        return ResponseEntity.ok(Map.of("data",
+                n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/media/{assetId}/bookmarks")
+    public ResponseEntity<Map<String, Object>> createMediaBookmark(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String assetId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("media/" + assetId + "/bookmarks", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @DeleteMapping("/v11/media/bookmarks/{bookmarkId}")
+    public ResponseEntity<Map<String, Object>> deleteMediaBookmark(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String bookmarkId,
+            @RequestParam String enrolmentId) {
+        JsonNode n = learningClient.deleteV11(
+                "media/bookmarks/" + bookmarkId, Map.of("enrolmentId", enrolmentId));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/lessons/{lessonId}/media")
+    public ResponseEntity<Map<String, Object>> lessonMedia(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String lessonId) {
+        JsonNode n = learningClient.getV11("lessons/" + lessonId + "/media", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/media/replay-queue")
+    public ResponseEntity<Map<String, Object>> mediaReplayQueue(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId) {
+        JsonNode n = learningClient.getV11("media/replay-queue", Map.of());
+        return ResponseEntity.ok(Map.of("data",
+                n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/media/{assetId}/attach")
+    public ResponseEntity<Map<String, Object>> attachMediaAsset(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String assetId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("media/" + assetId + "/attach", body);
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
     }
 

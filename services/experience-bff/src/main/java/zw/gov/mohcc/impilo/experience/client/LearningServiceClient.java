@@ -287,6 +287,29 @@ public class LearningServiceClient {
         }
     }
 
+    public JsonNode deleteV11(String relativePath, Map<String, Object> queryParams) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(
+                trim(props.getBaseUrl()) + "/internal/v1/learning/v11/" + relativePath);
+        if (queryParams != null) {
+            queryParams.forEach((k, v) -> {
+                if (v != null && !v.toString().isBlank()) {
+                    b.queryParam(k, v);
+                }
+            });
+        }
+        try {
+            ResponseEntity<JsonNode> res = restTemplate.exchange(
+                    b.toUriString(), HttpMethod.DELETE, HttpEntity.EMPTY, JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning v11 DELETE {} failed: {}", relativePath, e.getMessage());
+            return null;
+        }
+    }
+
     private static JsonNode unwrapData(JsonNode root) {
         if (root != null && root.has("data") && !root.get("data").isNull()) {
             return root.get("data");
