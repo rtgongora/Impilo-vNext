@@ -1,0 +1,71 @@
+# Provider journey smoke — login → provider activation → facility/workspace
+# context → work home → patient search → results → encounter surface.
+#
+# Env (Maestro auto-injects shell env vars prefixed with MAESTRO_):
+#   MAESTRO_PROVIDER_USERNAME / MAESTRO_PROVIDER_PASSWORD — see provider-login.yaml
+#   MAESTRO_PROVIDER_ID    — Provider ID to activate (e.g. PRV-2024-00147);
+#                            emitted as x-provider-id on subsequent calls
+#   MAESTRO_PATIENT_QUERY  — name/NID/CPID of a SEEDED patient in the target
+#                            environment (patient search must return >=1 hit)
+#
+# Preconditions: preview stack reachable; at least one facility returned by
+# GET /internal/v1/facilities and one workspace for it; a seeded, searchable
+# patient. Encounter start itself needs a PCT journey id, so this smoke
+# asserts the encounter surface (Encounter tab) rather than creating one.
+appId: zw.gov.impilo.provider
+tags:
+  - auth
+  - journey
+---
+# Real Keycloak PKCE login (fresh state)
+- runFlow: provider-login.yaml
+
+# Activate provider identity (Health OS §6)
+- tapOn:
+    id: "provider-id-input"
+- inputText: ${MAESTRO_PROVIDER_ID}
+- hideKeyboard
+- tapOn:
+    id: "activate-provider-button"
+
+# Facility context
+- extendedWaitUntil:
+    id: "select-facility-screen"
+    timeout: 120000
+- tapOn:
+    id: "select-facility-.*"
+    index: 0
+
+# Workspace context
+- extendedWaitUntil:
+    id: "select-workspace-screen"
+    timeout: 120000
+- tapOn:
+    id: "select-workspace-.*"
+    index: 0
+
+# Work home (tab shell)
+- extendedWaitUntil:
+    id: "provider-tabs"
+    timeout: 120000
+
+# Patient search
+- tapOn: "Patients"
+- assertVisible:
+    id: "patient-lookup-screen"
+- tapOn:
+    id: "patient-search-input"
+- inputText: ${MAESTRO_PATIENT_QUERY}
+- hideKeyboard
+- tapOn:
+    id: "patient-search-btn"
+
+# A seeded patient must come back (open the results list)
+- extendedWaitUntil:
+    id: "patient-search-results"
+    timeout: 60000
+
+# Encounter-relevant surface
+- tapOn: "Encounter"
+- assertVisible:
+    id: "encounter-screen"
