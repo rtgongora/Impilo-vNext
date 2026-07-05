@@ -125,11 +125,14 @@ export async function provisionTeleconsultSession(request: APIRequestContext) {
 export async function installMediaHostRewrite(context: BrowserContext) {
   if (!REWRITE.includes("=")) return;
   const [from, to] = REWRITE.split("=");
-  await context.route("**/media/token", async (route) => {
+  const rewrite = async (route: import("@playwright/test").Route) => {
     const response = await route.fetch();
     const text = (await response.text()).replaceAll(from, to);
     await route.fulfill({ response, body: text });
-  });
+  };
+  // Teleconsult media tokens + live-room tokens (classroom, live events).
+  await context.route("**/media/token", rewrite);
+  await context.route("**/room/*/token", rewrite);
 }
 
 export async function acceptPoliciesIfGated(page: Page) {

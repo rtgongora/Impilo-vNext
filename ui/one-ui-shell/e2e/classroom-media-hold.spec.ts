@@ -93,7 +93,7 @@ test.describe("Classroom media hold (orchestrated)", () => {
   });
 
   test("facilitator + learner hold classroom media", async ({ browser }) => {
-    test.setTimeout(HOLD_MS + 240_000);
+    test.setTimeout(HOLD_MS + 420_000);
 
     const contextA = await browser.newContext({ permissions: ["camera", "microphone"] });
     const contextB = await browser.newContext({ permissions: ["camera", "microphone"] });
@@ -104,17 +104,19 @@ test.describe("Classroom media hold (orchestrated)", () => {
     const pageB = await loginAndOpenClassroom(contextB, MEDIA_PERSONA_B.email);
 
     // The classroom shell joins the live event room on entry; wait until each
-    // page renders LiveKit participant tiles for both parties.
+    // page renders the media stage with both parties' camera feeds. The
+    // classroom uses FocusLayout + Carousel (no .lk-participant-tile grid),
+    // so assert on the stage testid + rendered <video> elements: local
+    // preview + remote feed = 2 video elements per page.
     for (const [label, page] of [["facilitator", pageA], ["learner", pageB]] as const) {
       await expect
         .poll(
           async () => {
-            const tiles = await page.locator(".lk-participant-tile").count();
-            if (tiles >= 2) return true;
-            const pager = await page.getByText(/\bof\s+2\b/).count();
-            return tiles >= 1 && pager >= 1;
+            const stage = await page.getByTestId("classroom-stage").count();
+            const videos = await page.locator("video").count();
+            return stage >= 1 && videos >= 2;
           },
-          { message: `${label}: waiting for both participants in the classroom`, timeout: 120_000 },
+          { message: `${label}: waiting for both participants in the classroom`, timeout: 150_000 },
         )
         .toBe(true);
     }
