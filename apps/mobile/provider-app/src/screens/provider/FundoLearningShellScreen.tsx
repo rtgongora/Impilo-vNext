@@ -22,6 +22,12 @@ import {
   submitAssessmentAttempt,
   summarizeCpdCredits,
 } from "../../services/fundoLearningService";
+import {
+  isJoinableLiveSession,
+  listSessions,
+  type LearningSession,
+} from "../../services/learningSessionsService";
+import { LearningClassroomScreen } from "../learning/LearningClassroomScreen";
 
 type AnyRecord = Record<string, unknown>;
 type Stage = "home" | "catalog" | "pathways" | "course" | "lesson" | "assessment";
@@ -30,6 +36,7 @@ export function FundoLearningShellScreen() {
   const auth = useAuth();
   const { isOnline, appsFocus, learningSubjectType, learningSubjectId } = useAppStore();
   const [stage, setStage] = useState<Stage>("home");
+  const [classroomSession, setClassroomSession] = useState<LearningSession | null>(null);
   const [activeCourseId, setActiveCourseId] = useState<string>("");
   const [activePathwayId, setActivePathwayId] = useState<string>("");
   const [activeLessonId, setActiveLessonId] = useState<string>("");
@@ -59,6 +66,11 @@ export function FundoLearningShellScreen() {
     queryKey: ["mobile-fundo", "pathways"],
     queryFn: fetchPathways,
     enabled: stage === "pathways" || stage === "home",
+  });
+  const liveSessions = useQuery({
+    queryKey: ["mobile-fundo", "sessions"],
+    queryFn: () => listSessions(),
+    enabled: stage === "home",
   });
   const course = useQuery({
     queryKey: ["mobile-fundo", "course", activeCourseId],
@@ -124,6 +136,17 @@ export function FundoLearningShellScreen() {
     }
   }, [appsFocus, stage]);
 
+  // Render-swap navigation (same pattern as TelemedicineScreen → TelemedicineCallScreen):
+  // an active classroom session takes over the full screen.
+  if (classroomSession) {
+    return (
+      <LearningClassroomScreen
+        session={classroomSession}
+        onBack={() => setClassroomSession(null)}
+      />
+    );
+  }
+
   return (
     <Screen>
       <Header title="Fundo Learning (Provider)" />
@@ -168,6 +191,27 @@ export function FundoLearningShellScreen() {
               )}
             </CardBody>
           </Card>
+        ) : null}
+
+        {stage === "home" && (liveSessions.data ?? []).length > 0 ? (
+          <View style={styles.section} testID="provider-live-sessions">
+            <Text style={styles.title}>Live sessions</Text>
+            {(liveSessions.data ?? []).slice(0, 5).map((session) => (
+              <Pressable
+                key={session.id}
+                style={styles.item}
+                testID={`provider-live-session-${session.id}`}
+                onPress={() => setClassroomSession(session)}
+              >
+                <Text style={styles.itemTitle}>{session.title}</Text>
+                <Text style={styles.itemMeta}>
+                  {session.sessionMode} •{" "}
+                  {session.startsAt ? new Date(session.startsAt).toLocaleString() : "Schedule TBC"}
+                  {isJoinableLiveSession(session) ? " • joinable" : ""}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         ) : null}
 
         {stage === "pathways" ? (

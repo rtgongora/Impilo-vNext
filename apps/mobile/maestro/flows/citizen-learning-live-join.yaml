@@ -1,0 +1,58 @@
+# Citizen learning — live classroom join smoke (W3 LEARNING_LIVE).
+#
+# Lane: dev-client (requires an EAS development build — LiveKit/WebRTC native
+# modules are not present in Expo Go). Media is asserted UI-level only (the
+# governed classroom connected-status text), not at the RTC track level.
+#
+# Preconditions: seeded citizen session with at least one Fundo scheduled
+# learning session in LIVE mode (liveEventId present) whose Impilo Live event
+# is LIVE/SCHEDULED. Classroom media renders the shared session room in the
+# "grid" layout (classroom ≈ grid on mobile).
+appId: zw.gov.impilo.citizen
+tags:
+  - dev-client
+---
+- launchApp
+
+# App boot
+- extendedWaitUntil:
+    visible: "Initializing Impilo Health..."
+    timeout: 60000
+- extendedWaitUntil:
+    id: "citizen-tabs"
+    timeout: 120000
+
+# Navigate: Services tab → Apps → Fundo learning
+- tapOn: "Services"
+- tapOn:
+    id: "marketplace-tab-apps"
+- tapOn: "Open Fundo learning"
+
+# Live sessions section on the learning home
+- extendedWaitUntil:
+    id: "learning-live-sessions"
+    timeout: 30000
+
+# Open the first live session → classroom SESSION_INFO stage
+- tapOn: "Tap to open the live classroom"
+- assertVisible:
+    id: "learning-classroom-info"
+
+# Join → IN_CLASS stage with governed classroom media (grid layout)
+- tapOn:
+    id: "learning-classroom-join"
+- extendedWaitUntil:
+    id: "learning-classroom-in-class"
+    timeout: 60000
+- extendedWaitUntil:
+    text: "Connected to the governed classroom through Impilo RTC Gateway."
+    timeout: 60000
+
+# Leave → AFTER stage with the honest attendance note
+- tapOn:
+    id: "learning-classroom-leave"
+- assertVisible:
+    id: "learning-classroom-after"
+- assertVisible: "Your attendance was recorded when you joined this live classroom. Course progress and any CPD/certificate outcomes are processed by Fundo and will appear in your learning record."
+- tapOn:
+    id: "learning-classroom-done"

@@ -9,9 +9,16 @@ import {
   fetchCitizenLearningSnapshot,
   normalizeCitizenLearningSnapshot,
 } from "../../services/fundoLearningService";
+import {
+  isJoinableLiveSession,
+  listSessions,
+  type LearningSession,
+} from "../../services/learningSessionsService";
+import { LearningClassroomScreen } from "../learning/LearningClassroomScreen";
 
 export function FundoLearningScreen() {
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
+  const [classroomSession, setClassroomSession] = useState<LearningSession | null>(null);
   const auth = useAuth();
   const authUser = auth.user as { sub?: string } | undefined;
   const subjectType = "USER_HEALTH_ID";
@@ -25,8 +32,23 @@ export function FundoLearningScreen() {
     queryKey: ["citizen-fundo", "catalog"],
     queryFn: fetchCitizenLearningCatalog,
   });
+  // Scheduled/live classroom sessions ride a dedicated v11 endpoint — the
+  // my-learning snapshot does not carry sessions, so this is its own cheap query.
+  const sessions = useQuery({
+    queryKey: ["citizen-fundo", "sessions"],
+    queryFn: () => listSessions(),
+  });
 
   const summary = normalizeCitizenLearningSnapshot((myLearning.data ?? {}) as Record<string, unknown>);
+
+  if (classroomSession) {
+    return (
+      <LearningClassroomScreen
+        session={classroomSession}
+        onBack={() => setClassroomSession(null)}
+      />
+    );
+  }
 
   return (
     <Screen>
@@ -52,6 +74,35 @@ export function FundoLearningScreen() {
             </Card>
           ))}
         </View>
+
+        {(sessions.data ?? []).length > 0 ? (
+          <View testID="learning-live-sessions" style={styles.liveSessions}>
+            <Text style={styles.sectionLabel}>Live sessions</Text>
+            {(sessions.data ?? []).slice(0, 5).map((session) => {
+              const joinable = isJoinableLiveSession(session);
+              return (
+                <TouchableOpacity
+                  key={session.id}
+                  testID={`learning-live-session-${session.id}`}
+                  onPress={() => setClassroomSession(session)}
+                >
+                  <Card style={styles.courseCard}>
+                    <CardBody>
+                      <Text style={styles.courseTitle}>{session.title}</Text>
+                      <Text style={styles.courseMeta}>
+                        {session.sessionMode} •{" "}
+                        {session.startsAt ? new Date(session.startsAt).toLocaleString() : "Schedule TBC"}
+                      </Text>
+                      <Text style={styles.enrolHint}>
+                        {joinable ? "Tap to open the live classroom" : "Tap for session details"}
+                      </Text>
+                    </CardBody>
+                  </Card>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : null}
 
         <Text style={styles.sectionLabel}>Recommended catalogue</Text>
         {(catalog.data ?? []).slice(0, 8).map((course) => {
@@ -104,6 +155,7 @@ const styles = StyleSheet.create({
   metricValue: { fontSize: 22, fontWeight: "700", color: "#065F46", textAlign: "center" },
   metricLabel: { fontSize: 11, color: "#6B7280", textAlign: "center" },
   sectionLabel: { marginTop: 4, fontSize: 12, fontWeight: "700", color: "#6B7280", textTransform: "uppercase" },
+  liveSessions: { gap: 8 },
   courseCard: { marginBottom: 8 },
   courseTitle: { fontSize: 14, fontWeight: "600", color: "#0F172A" },
   courseMeta: { marginTop: 2, fontSize: 12, color: "#64748B" },
