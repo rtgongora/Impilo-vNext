@@ -140,7 +140,11 @@ export default function VisitOutcomePage() {
         patient_instructions: fullInstructions || undefined,
         discharged_by: user?.id ?? "system",
       });
-      const resultBillId = (result?.data as { attributes?: { costa_bill_id?: string } })?.attributes?.costa_bill_id;
+      // The BFF returns the COSTA draft bill id in response meta (web path);
+      // older payloads carried it in data.attributes — accept both.
+      const resultBillId =
+        ((result as { meta?: { costa_bill_id?: string } })?.meta?.costa_bill_id) ??
+        (result?.data as { attributes?: { costa_bill_id?: string } })?.attributes?.costa_bill_id;
       if (resultBillId) setBillId(resultBillId);
       setSubmitted(true);
     } catch {
