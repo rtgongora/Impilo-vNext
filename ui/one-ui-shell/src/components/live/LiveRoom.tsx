@@ -1,30 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  FileText,
-  Headphones,
-  Loader2,
-  LogOut,
-  MessageSquare,
-  HelpCircle,
-  BarChart2,
-} from "lucide-react";
+import { Headphones, Loader2, LogOut } from "lucide-react";
 import { AdaptiveSessionRoom } from "@/components/session/AdaptiveSessionRoom";
+import { LiveAudienceEngagementRail } from "@/components/live/LiveAudienceEngagementRail";
 import {
-  useLiveChat,
   useLiveEvent,
   useLiveJoinRoom,
   useLiveParticipant,
-  useLivePolls,
-  useLivePostChat,
-  useLiveQuestions,
-  useLiveResources,
-  useLiveRespondPoll,
   useLiveRoomToken,
-  useLiveSubmitQuestion,
+  useLiveStageRole,
   useLiveAttendanceLeave,
   useLiveTrackMinutes,
 } from "@/hooks/queries/useLive";
@@ -33,47 +20,38 @@ interface LiveRoomProps {
   eventId: string;
 }
 
-type SideTab = "chat" | "qna" | "polls" | "resources";
-
-function parsePollOptions(raw: string): string[] {
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.map(String) : [];
-  } catch {
-    return [];
-  }
-}
+/** Modes riding the LIVE_EVENT session template (stage-managed broadcasts). */
+const BROADCAST_MODES = new Set(["PUBLIC_BROADCAST", "EMERGENCY_BRIEFING", "HYBRID_EVENT"]);
+/** Tiers whose template grant can publish to the stage. */
+const PUBLISH_TIERS = new Set(["HOST", "PRODUCER", "SPEAKER"]);
 
 export function LiveRoom({ eventId }: LiveRoomProps) {
   const router = useRouter();
   const { participantId, participantType, role } = useLiveParticipant();
   const { data: event, isLoading: eventLoading } = useLiveEvent(eventId);
-  const isBroadcast =
-    event?.mode === "PUBLIC_BROADCAST" || event?.mode === "EMERGENCY_BRIEFING";
-  // Presenters (activated providers) publish; everyone else in a broadcast is a viewer.
-  const userCanPublish = role === "PRESENTER";
-  const audience = isBroadcast && !userCanPublish;
+  const isBroadcast = BROADCAST_MODES.has(event?.mode ?? "");
+
+  // Server-resolved role tier: the backend clamps token roles to this tier,
+  // so the UI variant (stage vs audience) mirrors what the token will grant.
+  // Polled — an approve/demote in the producer console flips the tier here,
+  // which changes the token query key and re-mints the media token.
+  const { data: stageRole } = useLiveStageRole(eventId, isBroadcast);
+  const tier = isBroadcast ? stageRole?.tier ?? "AUDIENCE" : undefined;
+  const canPublish = isBroadcast ? PUBLISH_TIERS.has(tier ?? "") : role === "PRESENTER";
+  const audience = !canPublish;
+
   const joinRoom = useLiveJoinRoom();
   const leaveAttendance = useLiveAttendanceLeave();
   const trackMinutes = useLiveTrackMinutes();
   const { data: roomToken, isLoading: tokenLoading, error: tokenError } = useLiveRoomToken(
     eventId,
     Boolean(joinRoom.isSuccess || event?.status === "LIVE"),
+    // Broadcast modes speak the template vocabulary; the server clamps to the
+    // resolved tier anyway — this only keeps the requested role honest.
+    isBroadcast ? tier : undefined,
   );
 
-  const { data: chat = [] } = useLiveChat(eventId);
-  const { data: questions = [] } = useLiveQuestions(eventId);
-  const { data: polls = [] } = useLivePolls(eventId);
-  const { data: resources = [] } = useLiveResources(eventId);
-
-  const postChat = useLivePostChat();
-  const submitQuestion = useLiveSubmitQuestion();
-  const respondPoll = useLiveRespondPoll();
-
-  const [tab, setTab] = useState<SideTab>("chat");
   const [lowBandwidth, setLowBandwidth] = useState(false);
-  const [chatDraft, setChatDraft] = useState("");
-  const [questionDraft, setQuestionDraft] = useState("");
   const [watchStartedAt] = useState(() => Date.now());
   const [joined, setJoined] = useState(false);
 
@@ -84,7 +62,7 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
     async function liveApiJoin() {
       await joinRoom.mutateAsync({
         eventId,
-        body: { participantId, participantType, role },
+        body: { participantId, participantType, role: isBroadcast ? tier : role },
       });
       if (!cancelled) setJoined(true);
     }
@@ -93,12 +71,6 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- join once per room mount
   }, [eventId, participantId]);
-
-  const activePoll = useMemo(
-    () => polls.find((p) => p.status === "ACTIVE") ?? polls[0],
-    [polls],
-  );
-  const pollOptions = activePoll ? parsePollOptions(activePoll.options) : [];
 
   async function handleLeave() {
     const elapsedMinutes = Math.max(1, Math.round((Date.now() - watchStartedAt) / 60_000));
@@ -112,33 +84,6 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
     router.push(`/live/event/${eventId}`);
   }
 
-  async function handleSendChat() {
-    const message = chatDraft.trim();
-    if (!message) return;
-    await postChat.mutateAsync({
-      eventId,
-      body: { participantId, participantType, message },
-    });
-    setChatDraft("");
-  }
-
-  async function handleSubmitQuestion() {
-    const questionText = questionDraft.trim();
-    if (!questionText) return;
-    await submitQuestion.mutateAsync({
-      eventId,
-      body: { participantId, participantType, questionText, anonymousAllowed: false },
-    });
-    setQuestionDraft("");
-  }
-
-  const tabs: Array<{ id: SideTab; label: string; icon: typeof MessageSquare }> = [
-    { id: "chat", label: "Chat", icon: MessageSquare },
-    { id: "qna", label: "Q&A", icon: HelpCircle },
-    { id: "polls", label: "Polls", icon: BarChart2 },
-    { id: "resources", label: "Resources", icon: FileText },
-  ];
-
   return (
     <div className="flex flex-col lg:flex-row gap-4 min-h-[70vh]">
       <div className="flex-1 flex flex-col rounded-2xl border border-border bg-neutral-900 overflow-hidden min-h-[360px]">
@@ -146,7 +91,11 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
           <div>
             <p className="font-medium text-white">{event?.title ?? "Live session"}</p>
             {isBroadcast ? (
-              <p className="text-xs text-amber-300 mt-0.5">Public broadcast · moderated viewer mode</p>
+              <p className="text-xs text-amber-300 mt-0.5" data-testid="room-tier">
+                {audience
+                  ? "Public broadcast · moderated viewer mode"
+                  : `On stage · ${tier?.toLowerCase() ?? "speaker"}`}
+              </p>
             ) : null}
             <p className="text-xs text-muted-foreground">{event?.status ?? "…"}</p>
           </div>
@@ -188,6 +137,9 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
               </Link>
             </div>
           ) : (
+            // AdaptiveSessionRoom is additionally grant-aware: a subscribe-only
+            // token (canPublish=false in the JWT) renders without publish
+            // controls regardless of what this component computed.
             <AdaptiveSessionRoom
               layout={isBroadcast ? "stage" : "speaker"}
               audience={audience}
@@ -196,157 +148,24 @@ export function LiveRoom({ eventId }: LiveRoomProps) {
               videoEnabled={!lowBandwidth}
               audioOnly={lowBandwidth}
               onAudioOnlyChange={setLowBandwidth}
-              controls={{ microphone: !audience, camera: !audience, screenShare: false, leave: true }}
+              controls={{
+                microphone: !audience,
+                camera: !audience,
+                screenShare: !audience && isBroadcast,
+                leave: true,
+              }}
               onError={() => undefined}
             />
           )}
         </div>
       </div>
 
-      <aside className="w-full lg:w-96 flex flex-col rounded-2xl border border-border bg-card overflow-hidden">
-        <div className="flex border-b border-border">
-          {tabs.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setTab(id)}
-              className={`flex-1 inline-flex items-center justify-center gap-1 px-2 py-2.5 text-xs font-medium ${
-                tab === id
-                  ? "border-b-2 border-violet-600 text-violet-700 bg-violet-50"
-                  : "text-muted-foreground hover:bg-background"
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex-1 overflow-auto p-3 text-sm">
-          {tab === "chat" ? (
-            <div className="space-y-3">
-              <ul className="space-y-2 max-h-64 overflow-auto">
-                {chat.map((msg) => (
-                  <li key={msg.id} className="rounded-lg bg-background px-2 py-1.5 text-xs">
-                    <span className="text-muted-foreground">{msg.participantType}: </span>
-                    {msg.message}
-                  </li>
-                ))}
-                {chat.length === 0 ? (
-                  <li className="text-xs text-muted-foreground">No messages yet.</li>
-                ) : null}
-              </ul>
-              {event?.chatEnabled !== false ? (
-                <div className="flex gap-2">
-                  <input
-                    value={chatDraft}
-                    onChange={(e) => setChatDraft(e.target.value)}
-                    placeholder="Type a message…"
-                    className="flex-1 rounded-lg border border-border px-2 py-1.5 text-sm"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") void handleSendChat();
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSendChat}
-                    disabled={postChat.isPending}
-                    className="rounded-lg bg-violet-600 px-3 py-1.5 text-sm text-white"
-                  >
-                    Send
-                  </button>
-                </div>
-              ) : (
-                <p className="text-xs text-warning-foreground">Chat is disabled for this event.</p>
-              )}
-            </div>
-          ) : null}
-
-          {tab === "qna" ? (
-            <div className="space-y-3">
-              <ul className="space-y-2 max-h-64 overflow-auto">
-                {questions.map((q) => (
-                  <li key={q.id} className="rounded-lg bg-background px-2 py-1.5 text-xs">
-                    <p>{q.questionText}</p>
-                    <p className="text-muted-foreground mt-1">{q.upvotes} upvotes · {q.status}</p>
-                  </li>
-                ))}
-                {questions.length === 0 ? (
-                  <li className="text-xs text-muted-foreground">No questions yet.</li>
-                ) : null}
-              </ul>
-              {event?.qnaEnabled !== false ? (
-                <div className="flex gap-2">
-                  <input
-                    value={questionDraft}
-                    onChange={(e) => setQuestionDraft(e.target.value)}
-                    placeholder="Ask a question…"
-                    className="flex-1 rounded-lg border border-border px-2 py-1.5 text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSubmitQuestion}
-                    disabled={submitQuestion.isPending}
-                    className="rounded-lg bg-violet-600 px-3 py-1.5 text-sm text-white"
-                  >
-                    Ask
-                  </button>
-                </div>
-              ) : (
-                <p className="text-xs text-warning-foreground">Q&amp;A is disabled for this event.</p>
-              )}
-            </div>
-          ) : null}
-
-          {tab === "polls" ? (
-            <div className="space-y-3">
-              {activePoll ? (
-                <>
-                  <p className="font-medium text-foreground">{activePoll.question}</p>
-                  <div className="space-y-2">
-                    {pollOptions.map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() =>
-                          respondPoll.mutate({
-                            eventId,
-                            pollId: activePoll.id,
-                            body: { participantId, selectedOption: option },
-                          })
-                        }
-                        disabled={respondPoll.isPending}
-                        className="w-full rounded-lg border border-border px-3 py-2 text-left text-sm hover:border-violet-300 hover:bg-violet-50"
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <p className="text-xs text-muted-foreground">No active polls.</p>
-              )}
-            </div>
-          ) : null}
-
-          {tab === "resources" ? (
-            <ul className="space-y-2">
-              {resources.map((res) => (
-                <li key={res.id} className="rounded-lg border border-border p-2 text-xs">
-                  <p className="font-medium text-foreground">{res.title}</p>
-                  <p className="text-muted-foreground">{res.resourceType}</p>
-                  {res.fileId ? (
-                    <p className="text-violet-700 mt-1">File: {res.fileId}</p>
-                  ) : null}
-                </li>
-              ))}
-              {resources.length === 0 ? (
-                <li className="text-xs text-muted-foreground">No shared resources yet.</li>
-              ) : null}
-            </ul>
-          ) : null}
-        </div>
-      </aside>
+      <LiveAudienceEngagementRail
+        eventId={eventId}
+        event={event}
+        stageRole={stageRole}
+        showStageRequest={isBroadcast && audience}
+      />
     </div>
   );
 }
