@@ -12,6 +12,8 @@ import zw.gov.mohcc.impilo.learning.persistence.entity.CourseLessonEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.CourseModuleEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.CourseProgressEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.EnrolmentEntity;
+import zw.gov.mohcc.impilo.learning.persistence.entity.MediaAssetEntity;
+import zw.gov.mohcc.impilo.learning.persistence.entity.MediaWatchProgressEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.ScheduledLearningSessionEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.SessionAttendanceEntity;
 import zw.gov.mohcc.impilo.learning.persistence.repository.AssessmentAttemptRepository;
@@ -21,6 +23,8 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.CourseLessonRepositor
 import zw.gov.mohcc.impilo.learning.persistence.repository.CourseModuleRepository;
 import zw.gov.mohcc.impilo.learning.persistence.repository.CourseProgressRepository;
 import zw.gov.mohcc.impilo.learning.persistence.repository.EnrolmentRepository;
+import zw.gov.mohcc.impilo.learning.persistence.repository.MediaAssetRepository;
+import zw.gov.mohcc.impilo.learning.persistence.repository.MediaWatchProgressRepository;
 import zw.gov.mohcc.impilo.learning.persistence.repository.ScheduledLearningSessionRepository;
 import zw.gov.mohcc.impilo.learning.persistence.repository.SessionAttendanceRepository;
 
@@ -56,6 +60,8 @@ class FundoCompletionPolicyServiceTest {
     @Mock private CourseLessonRepository lessonRepository;
     @Mock private CourseProgressRepository progressRepository;
     @Mock private EnrolmentRepository enrolmentRepository;
+    @Mock private MediaAssetRepository mediaAssetRepository;
+    @Mock private MediaWatchProgressRepository watchProgressRepository;
 
     private FundoCompletionPolicyService policy;
     private EnrolmentEntity enrolment;
@@ -64,7 +70,7 @@ class FundoCompletionPolicyServiceTest {
     void setUp() {
         policy = new FundoCompletionPolicyService(ruleRepository, sessionRepository, attendanceRepository,
                 assessmentRepository, attemptRepository, moduleRepository, lessonRepository,
-                progressRepository, enrolmentRepository);
+                progressRepository, enrolmentRepository, mediaAssetRepository, watchProgressRepository);
         enrolment = new EnrolmentEntity();
         enrolment.setId(UUID.randomUUID());
         enrolment.setTenantId(TENANT);
@@ -214,16 +220,91 @@ class FundoCompletionPolicyServiceTest {
         assertThat(policy.evaluate(TENANT, enrolment).complete()).isTrue();
     }
 
-    // ── WATCH_THRESHOLD (honest W4 placeholder) ──────────────────────────────
+    // ── WATCH_THRESHOLD (W4: real watch-progress evaluation) ─────────────────
 
     @Test
-    void watchThreshold_honestlyEvaluatesFalseUntilW4() {
-        stubRules(rule("WATCH_THRESHOLD", new BigDecimal("30"), true));
+    void watchThreshold_failsWithoutCourseBoundVideoAssets() {
+        stubRules(rule("WATCH_THRESHOLD", new BigDecimal("90"), true));
+        when(mediaAssetRepository.findByTenantIdAndCourseId(TENANT, COURSE)).thenReturn(List.of());
 
         FundoCompletionPolicyService.PolicyOutcome outcome = policy.evaluate(TENANT, enrolment);
 
         assertThat(outcome.complete()).isFalse();
         assertThat(outcome.missing()).containsExactly("WATCH_THRESHOLD");
+    }
+
+    @Test
+    void watchThreshold_failsBelowThresholdAndPassesAtThreshold() {
+        stubRules(rule("WATCH_THRESHOLD", new BigDecimal("90"), true));
+        MediaAssetEntity asset = videoAsset();
+        when(mediaAssetRepository.findByTenantIdAndCourseId(TENANT, COURSE)).thenReturn(List.of(asset));
+
+        stubWatch(asset.getId(), 45);
+        assertThat(policy.evaluate(TENANT, enrolment).complete()).isFalse();
+
+        stubWatch(asset.getId(), 90);
+        assertThat(policy.evaluate(TENANT, enrolment).complete()).isTrue();
+    }
+
+    @Test
+    void watchThreshold_nullThresholdDefaultsTo90Percent() {
+        stubRules(rule("WATCH_THRESHOLD", null, true));
+        MediaAssetEntity asset = videoAsset();
+        when(mediaAssetRepository.findByTenantIdAndCourseId(TENANT, COURSE)).thenReturn(List.of(asset));
+
+        stubWatch(asset.getId(), 89);
+        assertThat(policy.evaluate(TENANT, enrolment).complete()).isFalse();
+
+        stubWatch(asset.getId(), 90);
+        assertThat(policy.evaluate(TENANT, enrolment).complete()).isTrue();
+    }
+
+    @Test
+    void watchThreshold_requiresEveryCourseVideoAsset() {
+        stubRules(rule("WATCH_THRESHOLD", new BigDecimal("80"), true));
+        MediaAssetEntity watched = videoAsset();
+        MediaAssetEntity unwatched = videoAsset();
+        when(mediaAssetRepository.findByTenantIdAndCourseId(TENANT, COURSE))
+                .thenReturn(List.of(watched, unwatched));
+        stubWatch(watched.getId(), 100);
+        when(watchProgressRepository.findByEnrolmentIdAndAssetId(enrolment.getId(), unwatched.getId()))
+                .thenReturn(Optional.empty());
+
+        FundoCompletionPolicyService.PolicyOutcome outcome = policy.evaluate(TENANT, enrolment);
+
+        assertThat(outcome.complete()).isFalse();
+        assertThat(outcome.missing()).containsExactly("WATCH_THRESHOLD");
+    }
+
+    @Test
+    void watchThreshold_ignoresNonVideoAssets() {
+        stubRules(rule("WATCH_THRESHOLD", new BigDecimal("90"), true));
+        MediaAssetEntity video = videoAsset();
+        MediaAssetEntity slides = videoAsset();
+        slides.setMediaType("SLIDE_DECK"); // never watched, must not block
+        when(mediaAssetRepository.findByTenantIdAndCourseId(TENANT, COURSE))
+                .thenReturn(List.of(video, slides));
+        stubWatch(video.getId(), 95);
+
+        assertThat(policy.evaluate(TENANT, enrolment).complete()).isTrue();
+    }
+
+    private MediaAssetEntity videoAsset() {
+        MediaAssetEntity a = new MediaAssetEntity();
+        a.setId(UUID.randomUUID());
+        a.setTenantId(TENANT);
+        a.setCourseId(COURSE);
+        a.setMediaType("VIDEO");
+        return a;
+    }
+
+    private void stubWatch(UUID assetId, int percent) {
+        MediaWatchProgressEntity row = new MediaWatchProgressEntity();
+        row.setEnrolmentId(enrolment.getId());
+        row.setAssetId(assetId);
+        row.setPercent(percent);
+        when(watchProgressRepository.findByEnrolmentIdAndAssetId(enrolment.getId(), assetId))
+                .thenReturn(Optional.of(row));
     }
 
     // ── AND semantics / optional rules ───────────────────────────────────────

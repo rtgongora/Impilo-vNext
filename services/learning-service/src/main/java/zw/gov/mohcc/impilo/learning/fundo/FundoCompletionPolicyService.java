@@ -21,6 +21,8 @@ import zw.gov.mohcc.impilo.learning.persistence.entity.CourseLessonEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.CourseModuleEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.CourseProgressEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.EnrolmentEntity;
+import zw.gov.mohcc.impilo.learning.persistence.entity.MediaAssetEntity;
+import zw.gov.mohcc.impilo.learning.persistence.entity.MediaWatchProgressEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.ScheduledLearningSessionEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.SessionAttendanceEntity;
 import zw.gov.mohcc.impilo.learning.persistence.repository.AssessmentAttemptRepository;
@@ -30,6 +32,8 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.CourseLessonRepositor
 import zw.gov.mohcc.impilo.learning.persistence.repository.CourseModuleRepository;
 import zw.gov.mohcc.impilo.learning.persistence.repository.CourseProgressRepository;
 import zw.gov.mohcc.impilo.learning.persistence.repository.EnrolmentRepository;
+import zw.gov.mohcc.impilo.learning.persistence.repository.MediaAssetRepository;
+import zw.gov.mohcc.impilo.learning.persistence.repository.MediaWatchProgressRepository;
 import zw.gov.mohcc.impilo.learning.persistence.repository.ScheduledLearningSessionRepository;
 import zw.gov.mohcc.impilo.learning.persistence.repository.SessionAttendanceRepository;
 
@@ -62,9 +66,13 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.SessionAttendanceRepo
  *       is set (written by {@code POST /v11/enrolments/{id}/facilitator-confirm}).</li>
  *   <li>{@code LESSON_PROGRESS} — the legacy all-required-lessons-COMPLETED rule
  *       in explicit form; a course with no required lessons satisfies it vacuously.</li>
- *   <li>{@code WATCH_THRESHOLD} — honest placeholder: replay/watch progress is not
- *       wired until W4, so the rule always evaluates FALSE (logged). Configuring it
- *       as required intentionally blocks completion until W4 lands.</li>
+ *   <li>{@code WATCH_THRESHOLD} — {@code threshold_value} is a PERCENT (default
+ *       90): every VIDEO media asset bound to the course
+ *       ({@code lrn_media_asset.course_id}, W4 replay adoption) must have a
+ *       {@code lrn_media_watch_progress} row for the enrolment at or above the
+ *       threshold. A course with NO course-bound video assets evaluates FALSE —
+ *       the rule demands watching something that does not exist yet (mirrors
+ *       ATTENDANCE_THRESHOLD's no-live-sessions honesty).</li>
  * </ul>
  */
 @Service
@@ -86,6 +94,8 @@ public class FundoCompletionPolicyService {
     private final CourseLessonRepository lessonRepository;
     private final CourseProgressRepository progressRepository;
     private final EnrolmentRepository enrolmentRepository;
+    private final MediaAssetRepository mediaAssetRepository;
+    private final MediaWatchProgressRepository watchProgressRepository;
 
     public FundoCompletionPolicyService(
             CompletionRuleRepository ruleRepository,
@@ -96,7 +106,9 @@ public class FundoCompletionPolicyService {
             CourseModuleRepository moduleRepository,
             CourseLessonRepository lessonRepository,
             CourseProgressRepository progressRepository,
-            EnrolmentRepository enrolmentRepository) {
+            EnrolmentRepository enrolmentRepository,
+            MediaAssetRepository mediaAssetRepository,
+            MediaWatchProgressRepository watchProgressRepository) {
         this.ruleRepository = ruleRepository;
         this.sessionRepository = sessionRepository;
         this.attendanceRepository = attendanceRepository;
@@ -106,6 +118,8 @@ public class FundoCompletionPolicyService {
         this.lessonRepository = lessonRepository;
         this.progressRepository = progressRepository;
         this.enrolmentRepository = enrolmentRepository;
+        this.mediaAssetRepository = mediaAssetRepository;
+        this.watchProgressRepository = watchProgressRepository;
     }
 
     /**
@@ -159,13 +173,7 @@ public class FundoCompletionPolicyService {
                     type -> "FINAL_ASSESSMENT".equalsIgnoreCase(type) || "POST_TEST".equalsIgnoreCase(type));
             case "FACILITATOR_CONFIRM" -> enrolment.getFacilitatorConfirmedAt() != null;
             case "LESSON_PROGRESS" -> allRequiredLessonsCompleted(enrolment);
-            case "WATCH_THRESHOLD" -> {
-                // Honest placeholder: replay watch progress lands in W4. Until then the
-                // rule can never be satisfied — do not silently pretend it passed.
-                log.info("WATCH_THRESHOLD completion rule for course {} evaluated FALSE — "
-                        + "watch progress wiring is deferred to W4", enrolment.getCourseId());
-                yield false;
-            }
+            case "WATCH_THRESHOLD" -> watchThresholdMet(tenantId, enrolment, rule.getThresholdValue());
             default -> {
                 log.warn("Unknown completion rule type '{}' for course {} — treated as unmet",
                         rule.getRuleType(), enrolment.getCourseId());
@@ -198,6 +206,35 @@ public class FundoCompletionPolicyService {
                 .mapToInt(a -> a.getWatchMinutes() == null ? 0 : a.getWatchMinutes())
                 .sum();
         return totalMinutes >= threshold.intValue();
+    }
+
+    /**
+     * WATCH_THRESHOLD (W4): every VIDEO asset bound to the course must be watched
+     * to at least {@code threshold} percent (default
+     * {@link FundoMediaWatchService#DEFAULT_WATCH_THRESHOLD_PERCENT}) by the
+     * enrolment. No course-bound video assets → FALSE (nothing to watch yet).
+     */
+    private boolean watchThresholdMet(UUID tenantId, EnrolmentEntity enrolment, BigDecimal threshold) {
+        int requiredPercent = threshold != null && threshold.compareTo(BigDecimal.ZERO) > 0
+                ? threshold.intValue()
+                : FundoMediaWatchService.DEFAULT_WATCH_THRESHOLD_PERCENT;
+        List<MediaAssetEntity> videoAssets = mediaAssetRepository
+                .findByTenantIdAndCourseId(tenantId, enrolment.getCourseId()).stream()
+                .filter(a -> "VIDEO".equalsIgnoreCase(a.getMediaType()))
+                .toList();
+        if (videoAssets.isEmpty()) {
+            log.info("WATCH_THRESHOLD for course {} evaluated FALSE — no course-bound video assets",
+                    enrolment.getCourseId());
+            return false;
+        }
+        for (MediaAssetEntity asset : videoAssets) {
+            Optional<MediaWatchProgressEntity> row = watchProgressRepository
+                    .findByEnrolmentIdAndAssetId(enrolment.getId(), asset.getId());
+            if (row.isEmpty() || row.get().getPercent() < requiredPercent) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean passedAttemptExists(UUID tenantId, EnrolmentEntity enrolment,
