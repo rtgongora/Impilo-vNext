@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +24,19 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Builds + finalises the inpatient discharge summary, GATED on discharge-clearance completion. The
- * native summary (med reconciliation, discharge meds, follow-up, referrals) is the inpatient SoR; on
- * finalisation a FHIR Composition projection is emitted toward Butano/SHR and a post-discharge follow-up
- * is REQUESTED from Khuluma (request, never send). Discharge cannot finalise while any clearance is
- * PENDING — enforcing the checklist gate.
+ * Builds + finalises the inpatient discharge summary, GATED on discharge-clearance completion AND —
+ * when required — a supervisor countersignature. The native summary (med reconciliation, discharge
+ * meds, follow-up, referrals) is the inpatient SoR; on finalisation a FHIR Composition projection is
+ * emitted toward Butano/SHR and a post-discharge follow-up is REQUESTED from Khuluma (request, never
+ * send). Discharge cannot finalise while any clearance is PENDING — enforcing the checklist gate.
+ *
+ * <p>Countersign semantics mirror the PCT form-level countersignature: the countersigner must be a
+ * different actor from the draft author, a countersign is single-shot, and editing the draft after a
+ * countersign invalidates it (a signature attests specific content). Whether a summary requires a
+ * countersignature is policy-driven and configurable — either declared on the draft payload
+ * ({@code countersignRequired}) or defaulted from
+ * {@code impilo.inpatient.discharge-summary.countersign-required-default} — deliberately NOT a
+ * hard-coded cadre split.</p>
  */
 @Service
 public class DischargeSummaryService {
@@ -38,15 +47,19 @@ public class DischargeSummaryService {
     private final DischargeClearanceRepository clearanceRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final boolean countersignRequiredDefault;
 
     public DischargeSummaryService(DischargeSummaryRepository summaryRepository,
                                    DischargeClearanceRepository clearanceRepository,
                                    EventOutboxRepository outboxRepository,
-                                   ObjectMapper objectMapper) {
+                                   ObjectMapper objectMapper,
+                                   @Value("${impilo.inpatient.discharge-summary.countersign-required-default:false}")
+                                   boolean countersignRequiredDefault) {
         this.summaryRepository = summaryRepository;
         this.clearanceRepository = clearanceRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.countersignRequiredDefault = countersignRequiredDefault;
     }
 
     private UUID tenant() {
@@ -80,7 +93,85 @@ public class DischargeSummaryService {
         s.setFollowUpJson(jsonOf(body.get("followUp")));
         s.setReferralsJson(jsonOf(body.get("referrals")));
         s.setStatus("DRAFT");
+        s.setAuthoredBy(TrustContextHolder.require().actorId());
+        s.setCountersignRequired(resolveCountersignRequired(body, s));
+
+        // A countersignature attests specific content — editing the draft after countersign
+        // invalidates the signature and it must be re-obtained before finalisation.
+        if (s.getCountersignedBy() != null) {
+            Map<String, Object> invalidated = new LinkedHashMap<>();
+            invalidated.put("encounter_id", s.getEncounterId().toString());
+            invalidated.put("subject_cpid", s.getSubjectCpid());
+            invalidated.put("previous_countersigned_by", s.getCountersignedBy());
+            invalidated.put("invalidated_by", TrustContextHolder.require().actorId());
+            s.setCountersignedBy(null);
+            s.setCountersignedAt(null);
+            s.setCountersignAttestation(null);
+            s = summaryRepository.save(s);
+            emit("DISCHARGE_SUMMARY", s.getSummaryId().toString(),
+                    "inpatient.discharge.summary_countersign_invalidated", invalidated);
+        } else {
+            s = summaryRepository.save(s);
+        }
+        return row(s);
+    }
+
+    /**
+     * Countersign requirement is sticky-true: once a summary requires countersignature, a later
+     * draft save cannot silently drop it. It can be declared on the payload or defaulted by config.
+     */
+    private boolean resolveCountersignRequired(Map<String, Object> body, DischargeSummaryEntity s) {
+        if (s.isCountersignRequired()) {
+            return true;
+        }
+        Object declared = body.containsKey("countersignRequired")
+                ? body.get("countersignRequired") : body.get("countersign_required");
+        if (declared != null) {
+            return Boolean.parseBoolean(String.valueOf(declared));
+        }
+        return countersignRequiredDefault;
+    }
+
+    /**
+     * Countersign the discharge summary — mirrors PCT form-response countersign semantics:
+     * single-shot, must be a different actor from the draft author, only meaningful while the
+     * summary still requires it and is not yet finalised. Auditable via the outbox event.
+     */
+    @Transactional
+    public Map<String, Object> countersign(UUID encounterId, String attestation) {
+        DischargeSummaryEntity s = summaryRepository.findByTenantIdAndEncounterId(tenant(), encounterId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No discharge summary"));
+        if ("FINALISED".equals(s.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Discharge summary already finalised — countersign before finalisation");
+        }
+        if (!s.isCountersignRequired()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Discharge summary does not require countersignature");
+        }
+        if (s.getCountersignedBy() != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Discharge summary already countersigned");
+        }
+        String actor = TrustContextHolder.require().actorId();
+        if (actor != null && actor.equals(s.getAuthoredBy())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Author cannot countersign their own discharge summary");
+        }
+        s.setCountersignedBy(actor);
+        s.setCountersignedAt(OffsetDateTime.now());
+        s.setCountersignAttestation(attestation);
         s = summaryRepository.save(s);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("encounter_id", s.getEncounterId().toString());
+        payload.put("subject_cpid", s.getSubjectCpid());
+        payload.put("authored_by", s.getAuthoredBy());
+        payload.put("countersigned_by", actor);
+        payload.put("countersigned_at", s.getCountersignedAt().toString());
+        emit("DISCHARGE_SUMMARY", s.getSummaryId().toString(),
+                "inpatient.discharge.summary_countersigned", payload);
+
+        log.info("INPATIENT: discharge summary countersigned for encounter {} by {}", encounterId, actor);
         return row(s);
     }
 
@@ -116,6 +207,13 @@ public class DischargeSummaryService {
         if (!pending.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Discharge blocked — clearances pending: " + String.join(", ", pending));
+        }
+
+        // Countersign gate: a summary that requires countersignature can never be marked
+        // final without a valid (current) countersignature.
+        if (s.isCountersignRequired() && s.getCountersignedBy() == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Discharge blocked — summary requires countersignature before finalisation");
         }
 
         String composition = buildFhirComposition(s);
@@ -197,6 +295,10 @@ public class DischargeSummaryService {
         m.put("follow_up", s.getFollowUpJson());
         m.put("referrals", s.getReferralsJson());
         m.put("fhir_composition", s.getFhirCompositionJson());
+        m.put("countersign_required", s.isCountersignRequired());
+        m.put("authored_by", s.getAuthoredBy());
+        m.put("countersigned_by", s.getCountersignedBy());
+        m.put("countersigned_at", s.getCountersignedAt());
         m.put("finalised_by", s.getFinalisedBy());
         m.put("finalised_at", s.getFinalisedAt());
         return m;

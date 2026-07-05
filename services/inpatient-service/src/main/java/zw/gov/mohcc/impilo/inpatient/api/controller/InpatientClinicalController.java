@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.inpatient.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.inpatient.core.ClinicalPayloadMapper;
 import zw.gov.mohcc.impilo.inpatient.core.InpatientClinicalService;
 
 import java.util.List;
@@ -308,5 +309,13 @@ public class InpatientClinicalController {
     @PostMapping("/discharge-summary/{encounterId}/finalise")
     public Map<String, Object> finaliseDischargeSummary(@PathVariable UUID encounterId) {
         return dischargeSummaryService.finalise(encounterId);
+    }
+
+    @PostMapping("/discharge-summary/{encounterId}/countersign")
+    public Map<String, Object> countersignDischargeSummary(@PathVariable UUID encounterId,
+                                                           @RequestBody(required = false) Map<String, Object> body) {
+        String attestation = body == null ? null
+                : ClinicalPayloadMapper.str(body, "attestation", "attestation_note", "attestationNote");
+        return dischargeSummaryService.countersign(encounterId, attestation);
     }
 }
