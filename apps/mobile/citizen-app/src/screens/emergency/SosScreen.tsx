@@ -4,7 +4,7 @@
  */
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { Screen, Header, Card, CardBody, Button, TextField, ErrorState, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, Card, CardBody, Button, TextField, ErrorState } from "@impilo/mobile-design-system";
 import { createSos, type CreateSosInput } from "../../services/emergencyService";
 
 const CATEGORIES = ["MEDICAL", "CARDIAC", "RESPIRATORY", "TRAUMA", "OBSTETRIC", "MENTAL_HEALTH", "OTHER"];
@@ -51,14 +51,28 @@ export function SosScreen({ onTrack }: { onTrack?: (requestId: string) => void }
             <Text style={styles.label}>What kind of emergency?</Text>
             <View style={styles.chips}>
               {CATEGORIES.map((c) => (
-                <Badge key={c} label={c.replace(/_/g, " ")} tone={c === category ? "danger" : "neutral"} onPress={() => setCategory(c)} />
+                <Button
+                  key={c}
+                  title={c.replace(/_/g, " ")}
+                  size="sm"
+                  variant={c === category ? "destructive" : "outline"}
+                  onPress={() => setCategory(c)}
+                  testID={`sos-category-${c.toLowerCase()}`}
+                />
               ))}
             </View>
 
             <Text style={styles.label}>How serious is it?</Text>
             <View style={styles.chips}>
               {["CRITICAL", "HIGH", "MODERATE", "LOW"].map((s) => (
-                <Badge key={s} label={s} tone={s === severity ? "danger" : "neutral"} onPress={() => setSeverity(s)} />
+                <Button
+                  key={s}
+                  title={s}
+                  size="sm"
+                  variant={s === severity ? "destructive" : "outline"}
+                  onPress={() => setSeverity(s)}
+                  testID={`sos-severity-${s.toLowerCase()}`}
+                />
               ))}
             </View>
 
@@ -69,7 +83,7 @@ export function SosScreen({ onTrack }: { onTrack?: (requestId: string) => void }
 
             <Button
               title={submitting ? "Sending SOS…" : "Send SOS now"}
-              variant="danger"
+              variant="destructive"
               loading={submitting}
               disabled={submitting}
               onPress={send}
