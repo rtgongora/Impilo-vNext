@@ -45,6 +45,9 @@ public class RtcSessionEntity {
     @Column(name = "owning_ref", length = 128)
     private String owningRef;
 
+    @Column(name = "parent_session_id")
+    private String parentSessionId;
+
     @Column(name = "patient_id")
     private String patientId;
 
@@ -90,6 +93,7 @@ public class RtcSessionEntity {
         entity.setSessionMode(record.sessionMode());
         entity.setOwningService(record.owningService());
         entity.setOwningRef(record.owningRef());
+        entity.setParentSessionId(record.parentSessionId());
         entity.setPatientId(record.patientId());
         entity.setProviderId(record.providerId());
         entity.setEncounterId(record.encounterId());
@@ -114,6 +118,7 @@ public class RtcSessionEntity {
                 sessionMode,
                 owningService,
                 owningRef,
+                parentSessionId,
                 patientId,
                 providerId,
                 encounterId,
@@ -154,6 +159,8 @@ public class RtcSessionEntity {
     public void setOwningService(String owningService) { this.owningService = owningService; }
     public String getOwningRef() { return owningRef; }
     public void setOwningRef(String owningRef) { this.owningRef = owningRef; }
+    public String getParentSessionId() { return parentSessionId; }
+    public void setParentSessionId(String parentSessionId) { this.parentSessionId = parentSessionId; }
     public String getPatientId() { return patientId; }
     public void setPatientId(String patientId) { this.patientId = patientId; }
     public String getProviderId() { return providerId; }

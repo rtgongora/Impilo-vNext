@@ -179,7 +179,7 @@ class RtcRecordingServiceTest {
         String prefix = "LIVE_EVENT".equals(mode) ? "impilo-live-" : "impilo-telemedicine-";
         return new RtcSessionRecord(
                 sessionId, "tenant-1", "LIVEKIT", prefix + sessionId, "wss://livekit.test",
-                "PROVISIONED", mode, "PCT", "encounter:enc-1",
+                "PROVISIONED", mode, "PCT", "encounter:enc-1", null,
                 "patient-1", "provider-1", "enc-1", "ref-1", consentReference,
                 "rtc:" + prefix + sessionId, Map.of(), Map.of(), Instant.now(), Instant.now());
     }

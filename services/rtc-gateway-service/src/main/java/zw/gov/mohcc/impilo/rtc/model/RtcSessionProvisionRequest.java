@@ -19,6 +19,10 @@ public record RtcSessionProvisionRequest(
         String sessionType,
         String owningService,
         String owningRef,
+        /** Linked child rooms (e.g. a live event's backstage) point at their main session. */
+        String parentSessionId,
+        /** Per-session room capacity; overrides the mode template's maxParticipants when > 0. */
+        Integer maxParticipants,
         @NotNull @Valid RtcParticipant participant,
         Map<String, Object> attributes
 ) {

@@ -222,10 +222,64 @@ class RtcGatewayServiceTest {
     @Test
     void createRoomBodyUsesTemplateMaxParticipants() {
         Map<String, Object> body = service.createRoomBody(
-                "impilo-live-x", templates.get(SessionMode.LIVE_EVENT));
+                "impilo-live-x", templates.get(SessionMode.LIVE_EVENT), null);
 
         assertEquals(500, body.get("maxParticipants"));
         assertEquals("impilo-live-x", body.get("name"));
+    }
+
+    @Test
+    void createRoomBodyPrefersRequestedCapacityOverTemplate() {
+        Map<String, Object> body = service.createRoomBody(
+                "impilo-live-x", templates.get(SessionMode.LIVE_EVENT), 120);
+
+        assertEquals(120, body.get("maxParticipants"));
+    }
+
+    @Test
+    void createRoomBodyIgnoresNonPositiveRequestedCapacity() {
+        Map<String, Object> body = service.createRoomBody(
+                "impilo-live-x", templates.get(SessionMode.LIVE_EVENT), 0);
+
+        assertEquals(500, body.get("maxParticipants"));
+    }
+
+    @Test
+    void provisionPersistsValidatedParentSessionLink() {
+        service.provision(request()); // parent: session-1
+
+        service.provision(new RtcSessionProvisionRequest(
+                "tenant-1", "session-1-backstage", null, null, "producer-1", "producer-1",
+                "facility-1", "OPERATIONS", null, "LIVE_EVENT",
+                "LIVE", "event-77", "session-1", 20,
+                new RtcParticipant("producer-1", "Producer", "PRODUCER"),
+                Map.of()));
+
+        var child = sessions.findById("session-1-backstage").orElseThrow();
+        assertEquals("session-1", child.parentSessionId());
+        assertTrue(child.roomName().endsWith("-backstage"));
+    }
+
+    @Test
+    void provisionRejectsUnknownParentSession() {
+        assertThrows(IllegalArgumentException.class, () -> service.provision(new RtcSessionProvisionRequest(
+                "tenant-1", "orphan-backstage", null, null, "producer-1", "producer-1",
+                "facility-1", "OPERATIONS", null, "LIVE_EVENT",
+                "LIVE", "event-77", "no-such-session", null,
+                new RtcParticipant("producer-1", "Producer", "PRODUCER"),
+                Map.of())));
+    }
+
+    @Test
+    void provisionRejectsCrossTenantParentSession() {
+        service.provision(request()); // tenant-1, session-1
+
+        assertThrows(IllegalArgumentException.class, () -> service.provision(new RtcSessionProvisionRequest(
+                "tenant-2", "session-1-backstage", null, null, "producer-1", "producer-1",
+                "facility-1", "OPERATIONS", null, "LIVE_EVENT",
+                "LIVE", "event-77", "session-1", null,
+                new RtcParticipant("producer-1", "Producer", "PRODUCER"),
+                Map.of())));
     }
 
     @Test
@@ -233,7 +287,7 @@ class RtcGatewayServiceTest {
         service.provision(new RtcSessionProvisionRequest(
                 "tenant-1", "session-6", null, null, "patient-1", "provider-1",
                 "facility-1", "TREATMENT", "consent-1", "TELEMEDICINE",
-                "PCT", "encounter:enc-9",
+                "PCT", "encounter:enc-9", null, null,
                 new RtcParticipant("provider-1", "Provider", "PROVIDER"),
                 Map.of()));
 
@@ -572,6 +626,8 @@ class RtcGatewayServiceTest {
                 "TREATMENT",
                 consentReference,
                 sessionType,
+                null,
+                null,
                 null,
                 null,
                 participant,

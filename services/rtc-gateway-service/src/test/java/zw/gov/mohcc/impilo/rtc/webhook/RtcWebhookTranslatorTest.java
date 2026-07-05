@@ -46,7 +46,7 @@ class RtcWebhookTranslatorTest {
         sessions = new InMemoryRtcSessionPersistence();
         sessions.save(new RtcSessionRecord(
                 "session-1", "tenant-1", "LIVEKIT", ROOM, "wss://livekit.test",
-                "PROVISIONED", "TELEMEDICINE", "PCT", "encounter:enc-1",
+                "PROVISIONED", "TELEMEDICINE", "PCT", "encounter:enc-1", null,
                 "patient-1", "provider-1", "enc-1", "ref-1", "consent-1", "rtc:" + ROOM,
                 Map.of(), Map.of(), Instant.now(), Instant.now()));
         participants = new InMemoryRtcParticipantPersistence();

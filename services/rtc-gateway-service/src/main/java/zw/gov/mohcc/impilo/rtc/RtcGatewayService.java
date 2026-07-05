@@ -127,10 +127,11 @@ public class RtcGatewayService {
             String mediaProfile = template == null
                     ? null
                     : resolveMediaProfile(grant, request.participant().mediaProfile());
+            String parentSessionId = resolveParentSession(request);
             String roomName = roomName(request, template);
             if (!properties.getGateway().isDevModeEnabled()) {
                 tokenService.assertLiveKitConfigured();
-                createLiveKitRoom(roomName, template);
+                createLiveKitRoom(roomName, template, request.maxParticipants());
             }
 
             RtcSessionRecord record = new RtcSessionRecord(
@@ -143,6 +144,7 @@ public class RtcGatewayService {
                     mode.name(),
                     owningService(request, template),
                     request.owningRef(),
+                    parentSessionId,
                     request.patientId(),
                     request.providerId(),
                     request.encounterId(),
@@ -498,24 +500,55 @@ public class RtcGatewayService {
         );
     }
 
-    private void createLiveKitRoom(String roomName, SessionTemplate template) {
+    private void createLiveKitRoom(String roomName, SessionTemplate template, Integer requestedMaxParticipants) {
         restTemplate.postForEntity(
                 liveKitUrl(properties.getLivekit().getCreateRoomPath()),
-                new HttpEntity<>(createRoomBody(roomName, template), liveKitHeaders(roomName)),
+                new HttpEntity<>(createRoomBody(roomName, template, requestedMaxParticipants), liveKitHeaders(roomName)),
                 Map.class
         );
     }
 
-    /** Twirp CreateRoom body; max participants comes from the mode template when it caps (>0). */
-    Map<String, Object> createRoomBody(String roomName, SessionTemplate template) {
+    /**
+     * Twirp CreateRoom body. Room capacity resolution: an explicit per-session
+     * capacity (the owning workflow's truth, e.g. a live event's registration
+     * cap) wins; otherwise the mode template's maxParticipants when it caps
+     * (>0); otherwise the property default.
+     */
+    Map<String, Object> createRoomBody(String roomName, SessionTemplate template, Integer requestedMaxParticipants) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("name", roomName);
         body.put("emptyTimeout", properties.getLivekit().getDefaultEmptyTimeoutSeconds());
-        int maxParticipants = template != null && template.maxParticipants() > 0
+        int templateMax = template != null && template.maxParticipants() > 0
                 ? template.maxParticipants()
                 : properties.getLivekit().getMaxParticipants();
+        int maxParticipants = requestedMaxParticipants != null && requestedMaxParticipants > 0
+                ? requestedMaxParticipants
+                : templateMax;
+        if (requestedMaxParticipants != null && requestedMaxParticipants > templateMax) {
+            log.info("Room {} capacity {} exceeds the mode template default {} — using the requested capacity",
+                    roomName, requestedMaxParticipants, templateMax);
+        }
         body.put("maxParticipants", maxParticipants);
         return body;
+    }
+
+    /**
+     * Validate the parent link on provision: a declared parent must exist and
+     * belong to the same tenant — fail-closed so a child room can never attach
+     * to another tenant's session.
+     */
+    private String resolveParentSession(RtcSessionProvisionRequest request) {
+        String parentId = blankToNull(request.parentSessionId());
+        if (parentId == null) {
+            return null;
+        }
+        RtcSessionRecord parent = sessions.findById(parentId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "parentSessionId " + parentId + " does not reference a known RTC session"));
+        if (request.tenantId() != null && !request.tenantId().equals(parent.tenantId())) {
+            throw new IllegalArgumentException("Parent session belongs to a different tenant");
+        }
+        return parent.id();
     }
 
     private void deleteLiveKitRoom(String roomName) {
@@ -671,6 +704,7 @@ public class RtcGatewayService {
         payload.put("sessionMode", record.sessionMode());
         payload.put("owningService", record.owningService());
         payload.put("owningRef", record.owningRef());
+        payload.put("parentSessionId", record.parentSessionId());
         payload.put("patientId", record.patientId());
         payload.put("providerId", record.providerId());
         payload.put("encounterId", record.encounterId());
