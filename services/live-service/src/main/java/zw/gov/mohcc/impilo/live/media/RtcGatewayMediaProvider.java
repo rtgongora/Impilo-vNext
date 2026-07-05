@@ -71,9 +71,12 @@ public class RtcGatewayMediaProvider implements LiveMediaProvider {
     @Override
     public MediaTokenResult issueToken(MediaRoomContext context) {
         TrustContext ctx = TrustContextHolder.get();
+        // rtc-gateway's token contract wraps the caller in a participant object.
+        Map<String, Object> participant = new LinkedHashMap<>();
+        participant.put("identity", context.participantId());
+        participant.put("role", context.participantRole());
         Map<String, Object> request = new LinkedHashMap<>();
-        request.put("identity", context.participantId());
-        request.put("role", context.participantRole());
+        request.put("participant", participant);
         Map<String, Object> response = rtcGatewayClient.issueToken(ctx, context.providerRoomId(), request);
         @SuppressWarnings("unchecked")
         Map<String, Object> data = response.get("data") instanceof Map<?, ?> raw
