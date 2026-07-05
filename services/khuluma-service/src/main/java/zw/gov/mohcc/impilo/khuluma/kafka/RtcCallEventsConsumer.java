@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.khuluma.domain.CallParticipantEntity;
 import zw.gov.mohcc.impilo.khuluma.repository.CallEventRepository;
 import zw.gov.mohcc.impilo.khuluma.repository.CallParticipantRepository;
 import zw.gov.mohcc.impilo.khuluma.repository.CallRepository;
+import zw.gov.mohcc.impilo.khuluma.repository.MeetingAdmissionRepository;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -55,17 +56,20 @@ public class RtcCallEventsConsumer {
     private final CallParticipantRepository callParticipants;
     private final CallEventRepository callEvents;
     private final CallService callService;
+    private final MeetingAdmissionRepository meetingAdmissions;
 
     public RtcCallEventsConsumer(ObjectMapper objectMapper,
                                  CallRepository calls,
                                  CallParticipantRepository callParticipants,
                                  CallEventRepository callEvents,
-                                 CallService callService) {
+                                 CallService callService,
+                                 MeetingAdmissionRepository meetingAdmissions) {
         this.objectMapper = objectMapper;
         this.calls = calls;
         this.callParticipants = callParticipants;
         this.callEvents = callEvents;
         this.callService = callService;
+        this.meetingAdmissions = meetingAdmissions;
     }
 
     @KafkaListener(
@@ -107,6 +111,7 @@ public class RtcCallEventsConsumer {
             topics = "${impilo.khuluma.rtc.participant-joined-topic:impilo.rtc.participant.joined.v1}",
             groupId = "${spring.kafka.consumer.group-id:khuluma-service}")
     public void onParticipantJoined(String payload) {
+        stampMeetingAttendance(payload, true);
         handle(payload, "participant.joined", (n, call) -> {
             String identity = text(n, "participantIdentity");
             if (identity == null) {
@@ -137,6 +142,7 @@ public class RtcCallEventsConsumer {
             topics = "${impilo.khuluma.rtc.participant-left-topic:impilo.rtc.participant.left.v1}",
             groupId = "${spring.kafka.consumer.group-id:khuluma-service}")
     public void onParticipantLeft(String payload) {
+        stampMeetingAttendance(payload, false);
         handle(payload, "participant.left", (n, call) -> {
             String identity = text(n, "participantIdentity");
             if (identity == null) {
@@ -158,6 +164,40 @@ public class RtcCallEventsConsumer {
             appendAuditRow(call, EVENT_RTC_PARTICIPANT_LEFT, identity, payload, occurredAt(n));
             log.info("RTC participant {} left call {}", identity, call.getCallId());
         });
+    }
+
+    /**
+     * Meeting attendance proxy: MEETING rooms are provisioned via live-service (owningService
+     * LIVE), so the khuluma-owned filter never matches them. Instead, khuluma resolves its own
+     * lobby mirror by {@code (rtc_session_id, identity)} and stamps joined/left — the meeting
+     * detail endpoint derives attendance from these stamps. No-op for non-meeting sessions.
+     */
+    private void stampMeetingAttendance(String payload, boolean joined) {
+        try {
+            JsonNode n = objectMapper.readTree(payload);
+            String sessionId = text(n, "sessionId");
+            String identity = text(n, "participantIdentity");
+            if (sessionId == null || identity == null) {
+                return;
+            }
+            meetingAdmissions.findByRtcSessionIdAndActorId(sessionId, identity).ifPresent(admission -> {
+                OffsetDateTime at = occurredAt(n);
+                if (joined) {
+                    if (admission.getJoinedAt() == null) {
+                        admission.setJoinedAt(at);
+                    }
+                    admission.setLeftAt(null); // reconnect clears the previous leave
+                } else {
+                    admission.setLeftAt(at);
+                }
+                admission.setUpdatedAt(OffsetDateTime.now());
+                meetingAdmissions.save(admission);
+                log.info("Meeting attendance stamped [conversation={}, actor={}, {}]",
+                        admission.getConversationId(), identity, joined ? "joined" : "left");
+            });
+        } catch (Exception e) {
+            log.warn("Failed to stamp meeting attendance from impilo.rtc participant event: {}", e.getMessage());
+        }
     }
 
     // ── internals ───────────────────────────────────────────────────────────

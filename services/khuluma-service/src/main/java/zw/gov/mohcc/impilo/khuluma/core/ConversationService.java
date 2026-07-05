@@ -173,6 +173,32 @@ public class ConversationService {
         return p;
     }
 
+    /**
+     * Join the ACTING actor to a conversation on the strength of a verified meeting invite.
+     * This deliberately skips {@code requireActiveParticipant} — the authz basis is the
+     * HMAC-signed invite token (minted by a meeting host/cohost, verified by
+     * {@link MeetingInviteService} before this is called), not existing membership. The actor
+     * can only ever add THEMSELVES; the audit event records the invite minter as the adder.
+     */
+    @Transactional
+    public ConversationParticipantEntity addSelfByInvite(ActorContext ctx, UUID conversationId,
+                                                         String role, String invitedBy) {
+        ConversationEntity conv = get(ctx, conversationId);
+        ConversationParticipantEntity p = upsertParticipant(conv, ctx.actorId(), ctx.actorType(), null,
+                role != null ? role : "MEMBER");
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("conversation_id", conversationId.toString());
+        payload.put("actor_id", ctx.actorId());
+        payload.put("added_by", invitedBy != null ? "invite:" + invitedBy : "invite");
+        payload.put("via", "MEETING_INVITE");
+        outbox.append("impilo.khuluma.conversation.participant-added.v1", AGGREGATE,
+                conversationId.toString(), ctx.tenantId(), ctx.podId(), ctx.correlationId(),
+                "conv-partadd-invite-" + conversationId + "-" + ctx.actorId(), payload,
+                conversationId.toString(), conversationId.toString(), AGGREGATE);
+        return p;
+    }
+
     @Transactional
     public void removeParticipant(ActorContext ctx, UUID conversationId, String actorId) {
         get(ctx, conversationId);

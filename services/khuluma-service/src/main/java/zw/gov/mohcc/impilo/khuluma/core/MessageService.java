@@ -183,7 +183,10 @@ public class MessageService {
         if (contentType == null || contentType.isBlank()) return "TEXT";
         String upper = contentType.trim().toUpperCase();
         return switch (upper) {
-            case "TEXT", "SYSTEM", "ATTACHMENT" -> upper;
+            // AGENDA|NOTE are the MEETING conversation's structured chat artifacts (template
+            // chat.persistence=CONVERSATION): agenda items and shared meeting notes render in
+            // the meeting Notes panel but live as ordinary governed messages.
+            case "TEXT", "SYSTEM", "ATTACHMENT", "AGENDA", "NOTE" -> upper;
             default -> "TEXT";
         };
     }
