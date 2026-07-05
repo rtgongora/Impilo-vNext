@@ -5,9 +5,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CommsHub } from "./CommsHub";
 
 const { get, post, put } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), put: vi.fn() }));
+const routerPush = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/api-client", () => ({
   apiClient: { get, post, put },
+}));
+
+// The hub navigates meetings to the /meet room (W5); tests run without an app router.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: routerPush, replace: vi.fn() }),
 }));
 
 vi.mock("@/hooks/useAuthStore", () => ({
@@ -114,9 +120,12 @@ describe("CommsHub", () => {
       expect(videoCall?.[1]).toMatchObject({ callType: "VIDEO" });
     });
 
+    post.mockResolvedValueOnce({ conversationId: "conv-meet-1", eventId: "ev-1" });
     fireEvent.click(screen.getByRole("button", { name: /Start meeting/ }));
     await waitFor(() => {
       expect(post.mock.calls.some((c) => c[0] === "/internal/v1/khuluma/meetings")).toBe(true);
+      // W5: meetings open the dedicated /meet room instead of the inline modal.
+      expect(routerPush).toHaveBeenCalledWith("/meet/conv-meet-1");
     });
   });
 

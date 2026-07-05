@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { MessageSquare, Send, Phone, Video, Users, Radio, PhoneIncoming } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import {
@@ -15,7 +16,6 @@ import {
   useMeetingActions,
   useCommsSummary,
   useIncomingCalls,
-  meetingToCall,
   type CallResponse,
 } from "@/hooks/queries/useComms";
 import { useKhulumaRealtime, type IncomingCall } from "@/hooks/useKhulumaRealtime";
@@ -30,6 +30,7 @@ const PRESENCE_OPTIONS = ["ONLINE", "AWAY", "BUSY", "DND", "OFFLINE"] as const;
  * enhancement (see {@link useKhulumaRealtime}) — the hub stays correct via refetch without it.
  */
 export function CommsHub({ persona }: { persona: "work" | "life" }) {
+  const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const currentActorId = user?.healthId ?? user?.id ?? "";
 
@@ -95,15 +96,20 @@ export function CommsHub({ persona }: { persona: "work" | "life" }) {
     );
   };
 
+  // Meetings open the full /meet room (W5): grid stage, KNOCK lobby, notes, reactions.
+  // A MEETING conversation navigates straight there; other types spin a meeting up first.
   const handleStartMeeting = () => {
     if (!selectedId || !detail.data) return;
+    if (detail.data.type === "MEETING") {
+      router.push(`/meet/${selectedId}`);
+      return;
+    }
     const participants = detail.data.participants
       .filter((p) => p.active && p.actorId !== currentActorId)
       .map((p) => ({ actorId: p.actorId, actorType: p.actorType, displayName: p.displayName ?? undefined }));
     meetingActions
       .create({ title: detail.data.title ?? "Meeting", participants })
-      .then((meeting) => meetingActions.join(meeting.conversationId))
-      .then((joined) => setActiveCall({ call: meetingToCall(joined), direction: "outgoing" }));
+      .then((meeting) => router.push(`/meet/${meeting.conversationId}`));
   };
 
   const acceptIncoming = async () => {
