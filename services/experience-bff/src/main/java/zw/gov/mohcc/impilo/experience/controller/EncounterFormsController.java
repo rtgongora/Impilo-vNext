@@ -122,6 +122,16 @@ public class EncounterFormsController {
                 Map.of("encounter_id", encounterId));
     }
 
+    /** Extraction provenance (routing + status) for every form-extracted resource on the encounter. */
+    @GetMapping("/encounters/{encounterId}/form-extractions")
+    public ResponseEntity<Map<String, Object>> listExtractionsForEncounter(
+            @PathVariable String encounterId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> pctClient.listEncounterFormExtractions(encounterId), requestId, correlationId,
+                Map.of("encounter_id", encounterId));
+    }
+
     // ------------------------------------------------------------------
 
     private interface Call {
