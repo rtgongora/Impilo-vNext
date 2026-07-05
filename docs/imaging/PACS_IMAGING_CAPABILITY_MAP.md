@@ -69,7 +69,7 @@ Classification legend: **REAL** (real and wired) · **PARTIAL** (partially wired
 | IMAGING order → COSTA bill line | `costa CostaEventConsumer` on `oros.order.placed` → `BillLineKind.SERVICE` (requires active COSTA encounter+bill) | REAL (generic order path; no imaging-specific tariff seed) |
 | MusheX shortfall/payment | Downstream of COSTA; **double-bill hazard `mushex CostaEventConsumer.onBillFinalized` is RED-serialized (R3) — not touched by this stream** | OUT OF SCOPE (hazard preserved as-is) |
 | Dura contrast/consumables ↔ imaging linkage | No imaging-specific consumable hook found | MISSING (deferred; documented seam) |
-| Khuluma notifications for imaging results | No imaging-specific notification consumer found | MISSING (deferred; documented seam) |
+| Critical-result notifications | `notification-service OrosResultCriticalKafkaListener` consumes `oros.result.critical` (published by OROS `OutboxPublisher`), gated by `impilo.kafka.oros.enabled=false` | DEFAULT-OFF (real when enabled) |
 
 ## 6. Telemedicine / diagnostics review
 
