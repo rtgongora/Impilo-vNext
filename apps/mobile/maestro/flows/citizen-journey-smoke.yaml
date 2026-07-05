@@ -1,0 +1,35 @@
+# Citizen journey smoke — login → home (Health ID identity card) →
+# profile/personal health view → a real service area (messages inbox).
+#
+# Env (Maestro auto-injects shell env vars prefixed with MAESTRO_):
+#   MAESTRO_CITIZEN_USERNAME / MAESTRO_CITIZEN_PASSWORD — see citizen-login.yaml
+#
+# Preconditions: preview stack reachable; profile bootstrap
+# (GET via experience BFF) must succeed for the seeded citizen, otherwise
+# the AuthGuard parks on "Loading your profile...".
+appId: zw.gov.impilo.citizen
+tags:
+  - auth
+  - journey
+---
+# Real Keycloak PKCE login (fresh state); ends on home-screen
+- runFlow: citizen-login.yaml
+
+# Identity: Health ID card on home
+- assertVisible:
+    id: "health-id-card"
+
+# Profile / personal health view
+- tapOn: "Health"
+- assertVisible:
+    id: "personal-screen"
+
+# Real service area: messages inbox
+- tapOn: "Messages"
+- assertVisible:
+    id: "messaging-inbox-screen"
+
+# Back home — journey lands where it started
+- tapOn: "Home"
+- assertVisible:
+    id: "home-screen"

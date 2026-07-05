@@ -1,0 +1,49 @@
+# Provider login — drives the REAL Keycloak PKCE flow end-to-end.
+#
+# Credentials are parameterized, never hardcoded. Export before running
+# (Maestro auto-injects shell env vars prefixed with MAESTRO_):
+#   MAESTRO_PROVIDER_USERNAME — seeded provider username (preview realm seeds
+#                               `vashandi.facility` [FACILITY_ADMIN+CLINICIAN,
+#                               has facility_id attr] and `vashandi.worker`
+#                               [NURSE+CLINICIAN]; see realm-impilo-preview.json)
+#   MAESTRO_PROVIDER_PASSWORD — that user's password (never committed)
+#
+# The Keycloak form renders in a browser Custom Tab; selectors target the
+# default Keycloak login theme (realm sets no custom loginTheme).
+#
+# This flow ends at the Provider Activation gate (Health OS §6: sign in as a
+# person, practice as a provider) — the first post-auth screen for a fresh
+# session. Full context activation is covered by provider-journey-smoke.yaml.
+appId: zw.gov.impilo.provider
+tags:
+  - auth
+---
+# Fresh state so a cached session never masks a broken login path.
+- launchApp:
+    clearState: true
+
+# App boot → unauthenticated login screen
+- extendedWaitUntil:
+    id: "login-screen"
+    timeout: 120000
+
+- tapOn:
+    id: "login-button"
+
+# Keycloak hosted login page (browser Custom Tab)
+- extendedWaitUntil:
+    text: "Username or email"
+    timeout: 60000
+- tapOn: "Username or email"
+- inputText: ${MAESTRO_PROVIDER_USERNAME}
+- tapOn: "Password"
+- inputText: ${MAESTRO_PROVIDER_PASSWORD}
+- hideKeyboard
+- tapOn: "Sign In"
+
+# Back in the app: code→token exchange, then the provider activation gate.
+- extendedWaitUntil:
+    id: "provider-activation-screen"
+    timeout: 180000
+- assertVisible:
+    id: "activate-provider-button"

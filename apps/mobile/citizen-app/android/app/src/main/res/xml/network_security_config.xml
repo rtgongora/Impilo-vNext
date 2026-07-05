@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network security config for the Impilo citizen app.
+
+  Cleartext (http) traffic is DENIED by default. It is explicitly permitted
+  ONLY for:
+    - 41.57.127.235 — the plain-HTTP preview environment (API :8160 via Envoy,
+      Keycloak :8480, LiveKit ws :7880). Temporary until preview moves to
+      DNS + TLS (api-preview.impilo.gov.zw).
+    - 10.0.2.2 — the Android emulator host loopback used by local development.
+
+  Debug builds additionally set android:usesCleartextTraffic="true" in the
+  debug AndroidManifest.xml; this file is what governs release variants.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">41.57.127.235</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

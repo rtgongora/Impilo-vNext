@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "impilo.provider",
+    "scheme": "impilo-provider",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
