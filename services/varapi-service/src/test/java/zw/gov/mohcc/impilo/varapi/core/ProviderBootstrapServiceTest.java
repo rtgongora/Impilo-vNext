@@ -156,11 +156,22 @@ class ProviderBootstrapServiceTest {
         ArgumentCaptor<ProviderEntity> providerCaptor = ArgumentCaptor.forClass(ProviderEntity.class);
         verify(providerRepository, atLeastOnce()).save(providerCaptor.capture());
         ProviderEntity saved = providerCaptor.getValue();
-        assertThat(saved.getLifecycleStatus()).isEqualTo("PRELOADED");
+        // Lifecycle strings now come from the typed enum — values identical to the
+        // historical untyped literals (no data rewrite).
+        assertThat(saved.getLifecycleStatus())
+                .isEqualTo(zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus.PRELOADED.name())
+                .isEqualTo("PRELOADED");
         assertThat(saved.getStatus()).isEqualTo("INACTIVE");
         assertThat(saved.getActiveFlag()).isFalse();
         assertThat(saved.getBootstrapOrigin()).isEqualTo("BULK_PRELOAD");
         assertThat(saved.getPreloadBatchId()).isEqualTo(resp.batchId());
+        // IATG Wave-1 axes: honest starting point for a fresh skeleton.
+        assertThat(saved.getTrustLevel())
+                .isEqualTo(zw.gov.mohcc.impilo.varapi.enums.ProviderTrustLevel.SELF_ASSERTED.name());
+        assertThat(saved.getRegistryStatus())
+                .isEqualTo(zw.gov.mohcc.impilo.varapi.enums.ProviderRegistryStatus.PENDING_VERIFICATION.name());
+        // Channel is set at CLAIM time, not preload time.
+        assertThat(saved.getOnboardingChannel()).isNull();
 
         // Only the SHA-256 hash of the token is persisted — never the raw token.
         ArgumentCaptor<ProviderClaimTokenEntity> tokenCaptor =
@@ -220,6 +231,7 @@ class ProviderBootstrapServiceTest {
         preloaded.setLifecycleStatus("PRELOADED");
         preloaded.setStatus("INACTIVE");
         preloaded.setActiveFlag(false);
+        preloaded.setBootstrapOrigin("BULK_PRELOAD");
         preloaded.setGivenName("Tariro");
         preloaded.setFamilyName("Moyo");
         preloaded.setProfession("DOCTOR");
@@ -252,11 +264,16 @@ class ProviderBootstrapServiceTest {
         assertThat(resp.providerPublicId()).isEqualTo("PUB-200");
 
         // Skeleton is now operational and bound to the claimant.
-        assertThat(preloaded.getLifecycleStatus()).isEqualTo("CLAIMED");
+        assertThat(preloaded.getLifecycleStatus())
+                .isEqualTo(zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus.CLAIMED.name())
+                .isEqualTo("CLAIMED");
         assertThat(preloaded.getStatus()).isEqualTo("ACTIVE");
         assertThat(preloaded.getActiveFlag()).isTrue();
         assertThat(preloaded.getImpiloHealthId()).isEqualTo(claimantHealthId);
         assertThat(preloaded.getClaimedHealthId()).isEqualTo(claimantHealthId);
+        // Channel typing at claim: BULK_PRELOAD provenance -> WORKFORCE_B.
+        assertThat(preloaded.getOnboardingChannel())
+                .isEqualTo(zw.gov.mohcc.impilo.varapi.enums.OnboardingChannel.WORKFORCE_B.name());
 
         // The token is burned (single-use) via the ATOMIC conditional UPDATE,
         // not a read-modify-write save: redeem(...) is the only burn path.
