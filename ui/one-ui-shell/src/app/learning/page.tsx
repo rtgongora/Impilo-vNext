@@ -33,6 +33,7 @@ export default function LearningHubPage() {
     { href: "/learning/record", label: "Transcript", detail: "Learning record and completion history", icon: ClipboardList },
     { href: "/learning/certificates", label: "Certificates", detail: "Issued certificates and evidence", icon: Award },
     { href: "/learning/pathways", label: "Pathways", detail: "Structured learning sequences", icon: Route },
+    { href: "/learning/cpd", label: "CPD evidence", detail: "Completion evidence for council CPD (Varapi governs points)", icon: Award },
     { href: "/learning/reports", label: "Reports", detail: "Cohorts, courses, overdue, and assessment views", icon: BarChart3 },
     { href: "/learning/library", label: "Library", detail: "Reusable learning resources and uploads", icon: Library },
     { href: "/learning/notifications", label: "Notifications", detail: "Reminder and outcome messaging", icon: Bell },

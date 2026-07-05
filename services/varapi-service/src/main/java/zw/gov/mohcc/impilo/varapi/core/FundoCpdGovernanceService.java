@@ -73,6 +73,21 @@ public class FundoCpdGovernanceService {
         return candidateRepository.findByTenantIdAndProvider_IdOrderByCreatedAtDesc(ctx.tenantId(), providerId);
     }
 
+    /**
+     * Same list keyed by the provider's public identifier — the identity learners and
+     * the Fundo learning subject carry. Fundo evidence surfaces use this to show the
+     * council verification state without knowing Varapi's numeric registry key.
+     */
+    @Transactional(readOnly = true)
+    public List<FundoCpdCandidateEntity> listForProviderPublicId(String providerPublicId) {
+        TrustContext ctx = TrustContextHolder.require();
+        requireTenant(ctx);
+        ProviderEntity provider = providerRepository.findByProviderPublicId(providerPublicId)
+                .filter(p -> ctx.tenantId().equals(p.getTenantId()))
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerPublicId));
+        return candidateRepository.findByTenantIdAndProvider_IdOrderByCreatedAtDesc(ctx.tenantId(), provider.getId());
+    }
+
     @Transactional
     public FundoCpdCandidateEntity ingestCompletion(
             UUID tenantId,

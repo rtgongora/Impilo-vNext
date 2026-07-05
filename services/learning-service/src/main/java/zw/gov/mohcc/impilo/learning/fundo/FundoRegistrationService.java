@@ -10,11 +10,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.learning.persistence.entity.ClinicalPlacementEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.CourseRegistrationEntity;
+import zw.gov.mohcc.impilo.learning.persistence.entity.FacilitatorEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.GraduationRecordEntity;
 import zw.gov.mohcc.impilo.learning.persistence.entity.StudentProfileEntity;
 import zw.gov.mohcc.impilo.learning.persistence.repository.AcademicProgramRepository;
 import zw.gov.mohcc.impilo.learning.persistence.repository.ClinicalPlacementRepository;
 import zw.gov.mohcc.impilo.learning.persistence.repository.CourseRegistrationRepository;
+import zw.gov.mohcc.impilo.learning.persistence.repository.FacilitatorRepository;
 import zw.gov.mohcc.impilo.learning.persistence.repository.GraduationRecordRepository;
 import zw.gov.mohcc.impilo.learning.persistence.repository.StudentProfileRepository;
 
@@ -30,7 +32,9 @@ public class FundoRegistrationService {
     private final CourseRegistrationRepository registrationRepository;
     private final ClinicalPlacementRepository placementRepository;
     private final GraduationRecordRepository graduationRepository;
+    private final FacilitatorRepository facilitatorRepository;
     private final FundoEnrolmentService enrolmentService;
+    private final FundoOutboxAppender outbox;
 
     public FundoRegistrationService(
             StudentProfileRepository profileRepository,
@@ -38,13 +42,17 @@ public class FundoRegistrationService {
             CourseRegistrationRepository registrationRepository,
             ClinicalPlacementRepository placementRepository,
             GraduationRecordRepository graduationRepository,
-            FundoEnrolmentService enrolmentService) {
+            FacilitatorRepository facilitatorRepository,
+            FundoEnrolmentService enrolmentService,
+            FundoOutboxAppender outbox) {
         this.profileRepository = profileRepository;
         this.programRepository = programRepository;
         this.registrationRepository = registrationRepository;
         this.placementRepository = placementRepository;
         this.graduationRepository = graduationRepository;
+        this.facilitatorRepository = facilitatorRepository;
         this.enrolmentService = enrolmentService;
+        this.outbox = outbox;
     }
 
     @Transactional
@@ -97,19 +105,63 @@ public class FundoRegistrationService {
         p.setSignoffStatus("PENDING");
         p.setCreatedBy(actorId);
         placementRepository.save(p);
+        outbox.append("FundoPlacement", p.getId().toString(), FundoNativeEventTypes.PLACEMENT_CREATED,
+                Map.of(
+                        "placementId", p.getId().toString(),
+                        "studentProfileId", student.getId().toString(),
+                        "preceptorFacilitatorId",
+                        p.getPreceptorFacilitatorId() == null ? "" : p.getPreceptorFacilitatorId().toString(),
+                        "signoffStatus", p.getSignoffStatus(),
+                        "createdBy", actorId == null ? "" : actorId));
         return placementView(p);
     }
 
+    /**
+     * Preceptor sign-off (D5): only the placement's assigned preceptor may sign off.
+     * The actor matches when it equals the preceptor facilitator's linked platform
+     * subject id, or the facilitator record id itself. A placement without an
+     * assigned preceptor cannot be signed off — assignment is the authorization
+     * anchor, not a formality.
+     */
     @Transactional
     public Map<String, Object> signoffPlacement(UUID tenantId, String placementId, String actorId, Map<String, Object> body) {
         ClinicalPlacementEntity p = placementRepository.findByTenantIdAndId(tenantId, UUID.fromString(placementId))
                 .orElseThrow(() -> new IllegalArgumentException("placement not found"));
+        requirePreceptorActor(tenantId, p, actorId);
         p.setSignoffStatus(str(body, "signoffStatus", "SIGNED_OFF"));
         p.setSignedOffBy(actorId);
         p.setSignedOffAt(OffsetDateTime.now());
         p.setSignoffNotes(nullable(body, "signoffNotes"));
         placementRepository.save(p);
+        outbox.append("FundoPlacement", p.getId().toString(), FundoNativeEventTypes.PLACEMENT_SIGNED_OFF,
+                Map.of(
+                        "placementId", p.getId().toString(),
+                        "studentProfileId", p.getStudentProfileId().toString(),
+                        "preceptorFacilitatorId",
+                        p.getPreceptorFacilitatorId() == null ? "" : p.getPreceptorFacilitatorId().toString(),
+                        "signoffStatus", p.getSignoffStatus(),
+                        "signedOffBy", actorId == null ? "" : actorId,
+                        "signedOffAt", p.getSignedOffAt().toString()));
         return placementView(p);
+    }
+
+    private void requirePreceptorActor(UUID tenantId, ClinicalPlacementEntity p, String actorId) {
+        if (p.getPreceptorFacilitatorId() == null) {
+            throw new IllegalStateException(
+                    "placement has no assigned preceptor — assign preceptorFacilitatorId before sign-off");
+        }
+        if (actorId == null || actorId.isBlank()) {
+            throw new IllegalStateException("sign-off requires an authenticated actor");
+        }
+        FacilitatorEntity preceptor = facilitatorRepository
+                .findByTenantIdAndId(tenantId, p.getPreceptorFacilitatorId())
+                .orElseThrow(() -> new IllegalStateException("assigned preceptor facilitator not found"));
+        boolean matchesSubject = preceptor.getSubjectId() != null && actorId.equals(preceptor.getSubjectId());
+        boolean matchesFacilitatorId = actorId.equals(preceptor.getId().toString());
+        if (!matchesSubject && !matchesFacilitatorId) {
+            throw new IllegalStateException(
+                    "actor is not the assigned preceptor for this placement — sign-off denied");
+        }
     }
 
     @Transactional(readOnly = true)

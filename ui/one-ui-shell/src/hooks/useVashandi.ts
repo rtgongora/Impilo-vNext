@@ -21,6 +21,12 @@ import {
   attendanceAnalyticsFromResponse,
   accessRiskAnalyticsFromResponse,
 } from "@/lib/vashandi/api/analytics";
+import {
+  listTrainingRequirements,
+  createTrainingRequirement,
+  deactivateTrainingRequirement,
+  trainingRequirementsFromResponse,
+} from "@/lib/vashandi/api/trainingRequirements";
 import type { CheckInRequest, CheckOutRequest, CreateAssignmentRequest, VashandiActionResponse } from "@/lib/vashandi/types";
 import { isUpstreamUnavailable } from "@/lib/vashandi/api/client";
 
@@ -154,6 +160,38 @@ export function useCheckOut() {
     mutationFn: (body: CheckOutRequest) => checkOut(body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["vashandi", "attendance"] });
+    },
+  });
+}
+
+export function useTrainingRequirements(params?: Record<string, string | undefined>) {
+  return useQuery({
+    queryKey: ["vashandi", "training-requirements", params],
+    queryFn: async () => {
+      const response = await listTrainingRequirements(params);
+      return { response, items: trainingRequirementsFromResponse(response) };
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateTrainingRequirement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { roleTemplateId: string; courseCode: string; enforcementLevel?: string; note?: string }) =>
+      createTrainingRequirement(body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "training-requirements"] });
+    },
+  });
+}
+
+export function useDeactivateTrainingRequirement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deactivateTrainingRequirement(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "training-requirements"] });
     },
   });
 }

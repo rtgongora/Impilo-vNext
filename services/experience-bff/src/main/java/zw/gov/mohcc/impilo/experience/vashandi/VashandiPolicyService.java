@@ -66,6 +66,9 @@ public class VashandiPolicyService {
             Map.entry("ANALYTICS_VACANCIES", List.of("vashandi.analytics", "vashandi.dashboard")),
             Map.entry("ANALYTICS_ACCESS_RISK", List.of("vashandi.analytics", "vashandi.access_review")),
             Map.entry("IMPORT_BRIDGE", List.of("vashandi.imports")),
+            Map.entry("TRAINING_REQUIREMENT_LIST", List.of("vashandi.assignments", "vashandi.organisation_workforce", "vashandi.access_review")),
+            Map.entry("TRAINING_REQUIREMENT_CREATE", List.of("vashandi.organisation_workforce", "vashandi.access_review")),
+            Map.entry("TRAINING_REQUIREMENT_DEACTIVATE", List.of("vashandi.organisation_workforce", "vashandi.access_review")),
             Map.entry("HSC_POSTINGS_VIEW", List.of("vashandi.hsc_postings")),
             Map.entry("EMERGENCY_SURGE", List.of("vashandi.emergency_surge"))
     );

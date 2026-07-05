@@ -13,10 +13,12 @@ export function FundoLearningOrchestrationRail() {
 
   const payload = (myLearningQ.data?.data ?? {}) as Record<string, unknown>;
   const kpis = summarizeFundoMyLearning(payload);
-  const enrolmentRows = Array.isArray(enrolmentsQ.data?.data)
-    ? enrolmentsQ.data.data
-    : Array.isArray(enrolmentsQ.data)
-      ? enrolmentsQ.data
+  // The v11 enrolments endpoint returns { data: { items: [...] } }.
+  const enrolmentData = enrolmentsQ.data?.data as Record<string, unknown> | unknown[] | undefined;
+  const enrolmentRows = Array.isArray(enrolmentData)
+    ? enrolmentData
+    : Array.isArray((enrolmentData as Record<string, unknown> | undefined)?.items)
+      ? ((enrolmentData as Record<string, unknown>).items as unknown[])
       : [];
   const enrolmentCount = enrolmentRows.length;
   const catalogCount = catalogQ.data?.data?.items?.length ?? 0;

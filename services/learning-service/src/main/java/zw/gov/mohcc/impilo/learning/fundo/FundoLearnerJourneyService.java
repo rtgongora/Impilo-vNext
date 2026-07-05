@@ -59,6 +59,7 @@ public class FundoLearnerJourneyService {
         List<Map<String, Object>> completed = new ArrayList<>();
         List<Map<String, Object>> overdue = new ArrayList<>();
         List<Map<String, Object>> cancelled = new ArrayList<>();
+        List<Map<String, Object>> required = new ArrayList<>();
         Set<UUID> unavailableCourseIds = enrolments.stream()
                 .filter(e -> !"CANCELLED".equals(e.getStatus()))
                 .map(EnrolmentEntity::getCourseId)
@@ -71,22 +72,35 @@ public class FundoLearnerJourneyService {
         for (EnrolmentEntity e : enrolments) {
             Map<String, Object> row = FundoEnrolmentService.toView(e);
             CourseEntity course = courses.get(e.getCourseId());
+            boolean mandatoryCourse = false;
             if (course != null) {
                 row.put("courseCode", course.getCode());
                 row.put("courseTitle", course.getTitle());
                 row.put("category", course.getCategory());
                 row.put("cpdEligible", course.isCpdEligible());
                 row.put("cpdPoints", course.getCpdPoints());
+                row.put("mandatory", course.isMandatory());
+                mandatoryCourse = course.isMandatory();
             }
             if ("ENROLLED".equals(e.getStatus())) enrolled.add(row);
             if ("IN_PROGRESS".equals(e.getStatus())) inProgress.add(row);
             if ("COMPLETED".equals(e.getStatus())) completed.add(row);
             if ("CANCELLED".equals(e.getStatus())) cancelled.add(row);
+            boolean outstanding = !"COMPLETED".equals(e.getStatus()) && !"CANCELLED".equals(e.getStatus());
             if (e.getDueAt() != null
                     && e.getDueAt().isBefore(OffsetDateTime.now())
-                    && !"COMPLETED".equals(e.getStatus())
-                    && !"CANCELLED".equals(e.getStatus())) {
+                    && outstanding) {
                 overdue.add(row);
+            }
+            // Honest "required" bucket: outstanding learning the subject is obliged to
+            // finish. Same semantics as FundoWorkforceReadinessService.isRequired —
+            // a mandatory-flagged course, or an enrolment assigned by orchestration.
+            // Enrolment-scoped truth only; role/workspace requirement gaps belong to
+            // the training-gate and are never guessed here.
+            String type = e.getEnrolmentType();
+            boolean assignedType = "ASSIGNED".equals(type) || "SYSTEM".equals(type) || "COHORT".equals(type);
+            if (outstanding && (mandatoryCourse || assignedType)) {
+                required.add(row);
             }
         }
 
@@ -123,6 +137,7 @@ public class FundoLearnerJourneyService {
         out.put("completed", completed);
         out.put("overdue", overdue);
         out.put("cancelled", cancelled);
+        out.put("required", required);
         out.put("recommended", recommended);
         out.put("assignedPathways", assignedPathways);
         out.put("certificates", certificates);

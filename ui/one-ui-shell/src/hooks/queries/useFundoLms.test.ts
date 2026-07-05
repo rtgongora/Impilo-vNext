@@ -34,12 +34,12 @@ describe("summarizeFundoMyLearning", () => {
     });
   });
 
-  it("uses overdue as required baseline when required is missing", () => {
+  it("does not fabricate required from overdue when required is missing", () => {
     const kpis = summarizeFundoMyLearning({
       overdue: [{ id: "od-1" }, { id: "od-2" }],
     });
 
-    expect(kpis.required).toBe(2);
+    expect(kpis.required).toBe(0);
     expect(kpis.overdue).toBe(2);
   });
 });

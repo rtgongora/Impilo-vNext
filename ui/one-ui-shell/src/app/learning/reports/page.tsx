@@ -29,6 +29,7 @@ export default function LearningReportsHomePage() {
             ["/learning/reports/courses", "Course completions"],
             ["/learning/reports/overdue", "Overdue learning"],
             ["/learning/reports/assessments", "Assessment performance"],
+            ["/learning/reports/dashboards", "Programme & regulator dashboards"],
           ].map(([href, label]) => (
             <Link key={String(href)} href={String(href)} className="rounded border border-border px-3 py-1.5 text-foreground">
               {String(label)}

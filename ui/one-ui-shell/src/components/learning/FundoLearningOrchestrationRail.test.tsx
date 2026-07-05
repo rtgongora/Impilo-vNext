@@ -12,7 +12,7 @@ vi.mock("@/hooks/queries/useFundoLms", () => ({
     data: { data: { inProgress: [{ id: "e1" }, { id: "e2" }] } },
     isLoading: false,
   }),
-  useFundoEnrolments: () => ({ data: { data: [{ id: "en1" }] }, isLoading: false }),
+  useFundoEnrolments: () => ({ data: { data: { items: [{ id: "en1" }, { id: "en2" }] } }, isLoading: false }),
 }));
 
 vi.mock("@/hooks/queries/useFundoCatalog", () => ({
@@ -27,6 +27,7 @@ describe("FundoLearningOrchestrationRail", () => {
     render(<FundoLearningOrchestrationRail />);
     expect(screen.getByTestId("fundo-learning-orchestration-rail")).toBeInTheDocument();
     expect(screen.getByTestId("fundo-kpi-strip")).toHaveTextContent("2 in progress");
+    expect(screen.getByTestId("fundo-kpi-strip")).toHaveTextContent("2 enrolment(s)");
     expect(screen.getByTestId("fundo-catalog-probe")).toHaveTextContent("3 published course(s)");
     expect(screen.queryByRole("link", { name: /Browse catalog/i })).not.toBeInTheDocument();
   });

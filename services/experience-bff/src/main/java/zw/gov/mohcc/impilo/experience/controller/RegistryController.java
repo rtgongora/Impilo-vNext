@@ -375,11 +375,20 @@ public class RegistryController {
      */
     @GetMapping("/provider-council/fundo-cpd-candidates")
     public ResponseEntity<Map<String, Object>> getFundoCpdCandidates(
-            @RequestParam long providerId,
+            @RequestParam(required = false) Long providerId,
+            @RequestParam(required = false) String providerPublicId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        if (providerId == null && (providerPublicId == null || providerPublicId.isBlank())) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "MISSING_PARAM",
+                            "message", "providerId or providerPublicId is required"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
         try {
-            JsonNode rows = varapiClient.getFundoCpdCandidates(providerId);
+            JsonNode rows = providerId != null
+                    ? varapiClient.getFundoCpdCandidates(providerId)
+                    : varapiClient.getFundoCpdCandidatesByPublicId(providerPublicId);
             return ResponseEntity.ok(Map.of(
                     "data", rows != null ? rows : JsonNodeFactory.instance.arrayNode(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));

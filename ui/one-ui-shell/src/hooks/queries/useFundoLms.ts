@@ -56,8 +56,11 @@ export function summarizeFundoMyLearning(payload: unknown): FundoMyLearningKpis 
 
   const inProgress =
     inProgressArr.length > 0 ? inProgressArr.length : (asNumber(root.inProgressCount) ?? 0);
+  // "required" counts only what the backend declares required (mandatory course or
+  // assigned enrolment). No overdue fallback: overdue-but-optional learning is not
+  // "required training", and conflating the two fabricates an obligation.
   const required =
-    requiredArr.length > 0 ? requiredArr.length : (asNumber(root.requiredCount) ?? overdueArr.length);
+    requiredArr.length > 0 ? requiredArr.length : (asNumber(root.requiredCount) ?? 0);
   const overdue =
     overdueArr.length > 0 ? overdueArr.length : (asNumber(root.overdueCount) ?? 0);
   const cpdEligible =

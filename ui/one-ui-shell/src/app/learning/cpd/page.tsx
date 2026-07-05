@@ -4,7 +4,23 @@ import Link from "next/link";
 import { PageShell } from "@/components/PageShell";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { useFundoCpdEvidence } from "@/hooks/queries/useFundoLms";
+import { useFundoCpdCandidatesByPublicId } from "@/hooks/queries/useProviderCouncil";
 import { useAuthStore } from "@/hooks/useAuthStore";
+
+interface CandidateStateRow {
+  courseId?: string;
+  externalRef?: string;
+  verificationState?: string;
+  linkedCpdEventId?: number | string | null;
+  [key: string]: unknown;
+}
+
+function candidateStateBadge(state: string) {
+  const s = state.toUpperCase();
+  if (s === "ACCEPTED") return "bg-emerald-100 text-emerald-800 border-emerald-200";
+  if (s === "REJECTED") return "bg-red-100 text-red-800 border-red-200";
+  return "bg-amber-100 text-amber-800 border-amber-200";
+}
 
 export default function CpdEvidencePage() {
   const subject = useLearningSubject();
@@ -17,6 +33,14 @@ export default function CpdEvidencePage() {
     []
   );
   const providerId = user?.providerId ?? "";
+  // The learning subject id IS the provider public id (see useLearningSubject),
+  // which is the key Varapi stores candidates under.
+  const providerPublicId = subject?.subjectType === "PROVIDER_PUBLIC_ID" ? subject.subjectId : undefined;
+  const { data: candidates } = useFundoCpdCandidatesByPublicId(providerPublicId);
+  const candidateByCourse = new Map<string, CandidateStateRow>();
+  for (const c of (Array.isArray(candidates) ? candidates : []) as CandidateStateRow[]) {
+    if (c.courseId) candidateByCourse.set(String(c.courseId), c);
+  }
 
   return (
       <PageShell
@@ -42,19 +66,41 @@ export default function CpdEvidencePage() {
         </div>
 
         <ul className="space-y-2" data-testid="fundo-cpd-evidence-list">
-          {evidence.map((e, index) => (
-            <li
-              key={String(e.certificateId ?? e.completionId ?? e.enrolmentId ?? index)}
-              className="rounded border border-border bg-card p-3 text-sm"
-            >
-              <p className="font-medium text-foreground">
-                Course: {String(e.courseTitle ?? e.courseId ?? e.resourceId ?? "Course")}
-              </p>
-              <p>Certificate: {String(e.certificateId ?? "-")}</p>
-              <p>Completed: {String(e.completedAt ?? e.issuedAt ?? "-")}</p>
-              <p>Verification: {String(e.verifiedState ?? e.reviewState ?? "PENDING_REVIEW")}</p>
-            </li>
-          ))}
+          {evidence.map((e, index) => {
+            const candidate = e.courseId ? candidateByCourse.get(String(e.courseId)) : undefined;
+            const councilState = candidate?.verificationState
+              ? String(candidate.verificationState)
+              : null;
+            return (
+              <li
+                key={String(e.certificateId ?? e.completionId ?? e.enrolmentId ?? index)}
+                className="rounded border border-border bg-card p-3 text-sm"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-medium text-foreground">
+                    Course: {String(e.courseTitle ?? e.courseId ?? e.resourceId ?? "Course")}
+                  </p>
+                  {councilState ? (
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${candidateStateBadge(councilState)}`}
+                      data-testid={`cpd-council-state-${index}`}
+                    >
+                      Council: {councilState}
+                      {candidate?.linkedCpdEventId != null
+                        ? ` (ledger #${String(candidate.linkedCpdEventId)})`
+                        : ""}
+                    </span>
+                  ) : (
+                    <span className="rounded-full border border-border bg-neutral-50 px-2 py-0.5 text-[11px] text-muted-foreground">
+                      Not yet with council
+                    </span>
+                  )}
+                </div>
+                <p>Certificate: {String(e.certificateId ?? "-")}</p>
+                <p>Completed: {String(e.completedAt ?? e.issuedAt ?? "-")}</p>
+              </li>
+            );
+          })}
           {evidence.length === 0 ? <p className="text-sm text-muted-foreground">No CPD evidence yet.</p> : null}
         </ul>
       </PageShell>

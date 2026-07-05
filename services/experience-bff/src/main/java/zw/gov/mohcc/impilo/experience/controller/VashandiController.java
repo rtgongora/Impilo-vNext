@@ -455,6 +455,52 @@ public class VashandiController {
                 "vashandi.leave.updated"));
     }
 
+    @GetMapping("/training-requirements")
+    public ResponseEntity<Map<String, Object>> listTrainingRequirements(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestParam Map<String, String> queryParams) {
+        return wrap(vashandiService.proxyGet("TRAINING_REQUIREMENT_LIST", "/training-requirements", queryParams,
+                tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId, purposeOfUse,
+                "vashandi.training_requirement.created"));
+    }
+
+    @PostMapping("/training-requirements")
+    public ResponseEntity<Map<String, Object>> createTrainingRequirement(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestBody Map<String, Object> body) {
+        return wrap(vashandiService.proxyPost("TRAINING_REQUIREMENT_CREATE", "/training-requirements", body,
+                tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId, purposeOfUse,
+                "vashandi.training_requirement.created"));
+    }
+
+    @PostMapping("/training-requirements/{id}/deactivate")
+    public ResponseEntity<Map<String, Object>> deactivateTrainingRequirement(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @PathVariable String id) {
+        return wrap(vashandiService.proxyPost("TRAINING_REQUIREMENT_DEACTIVATE",
+                "/training-requirements/" + id + "/deactivate", Map.of(),
+                tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId, purposeOfUse,
+                "vashandi.training_requirement.deactivated"));
+    }
+
     @GetMapping("/access-risks")
     public ResponseEntity<Map<String, Object>> listAccessRisks(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

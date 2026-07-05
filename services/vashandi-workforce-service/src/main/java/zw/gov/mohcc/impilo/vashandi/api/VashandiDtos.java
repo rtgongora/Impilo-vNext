@@ -89,6 +89,14 @@ public final class VashandiDtos {
     ) {
     }
 
+    public record CreateTrainingRequirementRequest(
+            String roleTemplateId,
+            String courseCode,
+            String enforcementLevel,
+            String note
+    ) {
+    }
+
     public record CreateRosterRequest(
             UUID organisationId,
             UUID facilityId,

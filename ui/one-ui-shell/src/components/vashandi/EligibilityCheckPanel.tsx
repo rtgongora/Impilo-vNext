@@ -51,10 +51,51 @@ export function EligibilityCheckPanel({ assignmentId }: EligibilityCheckPanelPro
           </p>
           {eligibility.message ? <p className="mt-1 text-muted-foreground">{eligibility.message}</p> : null}
           {eligibility.checks?.length ? (
-            <ul className="mt-2 list-disc pl-5 text-muted-foreground">
-              {eligibility.checks.map((check, index) => (
-                <li key={index}>{JSON.stringify(check)}</li>
-              ))}
+            <ul className="mt-2 space-y-1 text-muted-foreground">
+              {eligibility.checks.map((check, index) => {
+                const c = check as Record<string, unknown>;
+                const dependency = String(c.dependency ?? `check-${index}`);
+                const status = String(c.status ?? "unknown");
+                const payload =
+                  c.payload && typeof c.payload === "object"
+                    ? (c.payload as Record<string, unknown>)
+                    : undefined;
+                const gateDecision =
+                  dependency === "fundo-training-gate" && payload
+                    ? String((payload as Record<string, unknown>).decision ?? "")
+                    : "";
+                return (
+                  <li key={index} className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium text-foreground">{dependency}</span>
+                    <span
+                      className={
+                        status === "LIVE"
+                          ? "rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] text-emerald-800"
+                          : "rounded-full bg-amber-100 px-2 py-0.5 text-[11px] text-amber-800"
+                      }
+                    >
+                      {status}
+                    </span>
+                    {gateDecision ? (
+                      <span
+                        data-testid="training-gate-decision"
+                        className={
+                          gateDecision === "ALLOW"
+                            ? "rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800"
+                            : gateDecision === "ADVISE"
+                              ? "rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-800"
+                              : "rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-800"
+                        }
+                      >
+                        Training gate: {gateDecision}
+                      </span>
+                    ) : null}
+                    {typeof c.message === "string" && c.message !== "ok" ? (
+                      <span className="text-xs">{c.message}</span>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
         </div>

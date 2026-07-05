@@ -113,6 +113,24 @@ export function useFundoCpdCandidates(providerNumericId: string | undefined) {
   });
 }
 
+/**
+ * Same candidate list keyed by the provider *public* identifier — the identity the
+ * Fundo learning subject carries — so learner surfaces can show the council
+ * verification state without knowing Varapi's numeric registry key.
+ */
+export function useFundoCpdCandidatesByPublicId(providerPublicId: string | undefined) {
+  return useQuery({
+    queryKey: ["provider-council", "fundo-cpd-by-public-id", providerPublicId],
+    queryFn: async () => {
+      const r = await apiClient.get<RegistryEnvelope<unknown[]>>(
+        `/internal/v1/registry/provider-council/fundo-cpd-candidates?providerPublicId=${encodeURIComponent(providerPublicId ?? "")}`,
+      );
+      return r.data ?? [];
+    },
+    enabled: !!providerPublicId,
+  });
+}
+
 export function useAdvanceCouncilApplication(councilId?: string) {
   const qc = useQueryClient();
   return useMutation({

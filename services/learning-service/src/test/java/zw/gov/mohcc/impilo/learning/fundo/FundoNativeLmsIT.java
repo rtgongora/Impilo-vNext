@@ -67,6 +67,7 @@ class FundoNativeLmsIT {
     @Autowired private AssessmentRepository assessmentRepository;
     @Autowired private AssessmentQuestionRepository questionRepository;
     @Autowired private LearningOutboxRepository outboxRepository;
+    @Autowired private zw.gov.mohcc.impilo.learning.persistence.repository.ScheduledLearningSessionRepository sessionRepository;
 
     @Autowired private FundoCatalogService catalogService;
     @Autowired private FundoCourseStructureService structureService;
@@ -248,6 +249,32 @@ class FundoNativeLmsIT {
             List<Map<String, Object>> lessons = cast(modules.get(0).get("lessons"));
             assertThat(lessons).hasSize(2);
             assertThat(lessons.get(0).get("title")).isEqualTo("Lesson 1.1");
+        }
+
+        @Test
+        @DisplayName("D4: impiloLiveEventId derived from linked scheduled sessions, absent otherwise")
+        void liveLinkageIsHonest() {
+            Map<String, Object> unlinked = structureService.getStructure(TENANT, courseA.getId()).orElseThrow();
+            assertThat(unlinked).doesNotContainKey("impiloLiveEventId");
+
+            UUID liveEventId = UUID.randomUUID();
+            var session = new zw.gov.mohcc.impilo.learning.persistence.entity.ScheduledLearningSessionEntity();
+            session.setTenantId(TENANT);
+            session.setCourseId(courseA.getId());
+            session.setTitle("Course A live webinar");
+            session.setSessionType("VIRTUAL_CLASS");
+            session.setSessionMode("LIVE");
+            session.setStartsAt(OffsetDateTime.now().plusDays(1));
+            session.setEndsAt(OffsetDateTime.now().plusDays(1).plusHours(2));
+            session.setLiveEventId(liveEventId);
+            session.setJoinPath("/live/event/" + liveEventId);
+            session.setCreatedBy("test");
+            sessionRepository.save(session);
+
+            Map<String, Object> structure = structureService.getStructure(TENANT, courseA.getId()).orElseThrow();
+            assertThat(structure.get("impiloLiveEventId")).isEqualTo(liveEventId.toString());
+            assertThat(structure.get("impiloLiveJoinPath")).isEqualTo("/live/event/" + liveEventId);
+            assertThat(structure.get("impiloLiveSessionId")).isEqualTo(session.getId().toString());
         }
     }
 
@@ -495,6 +522,37 @@ class FundoNativeLmsIT {
             assertThat(enrolled).isNotEmpty();
             assertThat(recommended).isNotEmpty();
             assertThat(dashboard).containsKeys("certificates", "cpdEligibleCompletions");
+        }
+
+        @Test
+        @DisplayName("Required bucket holds mandatory/assigned outstanding learning only — never plain overdue-optional")
+        void requiredBucketIsHonest() {
+            CourseEntity mandatoryCourse = newCourse(
+                    "FUNDO-CTX-MAND", "Mandatory refresher", "PUBLISHED", "ORIENTATION", true, false);
+            courseRepository.save(mandatoryCourse);
+
+            // Mandatory course, self-enrolled, outstanding → required.
+            enrolmentService.create(new FundoEnrolmentService.EnrolmentRequest(
+                    TENANT, "PROVIDER", "REQ-1", mandatoryCourse.getId(), null, "SELF", null, null));
+            // Optional course assigned by orchestration, outstanding → required.
+            enrolmentService.create(new FundoEnrolmentService.EnrolmentRequest(
+                    TENANT, "PROVIDER", "REQ-1", courseA.getId(), null, "ASSIGNED", "supervisor-1", null));
+            // Optional self-enrolment overdue → overdue but NOT required.
+            enrolmentService.create(new FundoEnrolmentService.EnrolmentRequest(
+                    TENANT, "PROVIDER", "REQ-1", courseB.getId(), null, "SELF", null,
+                    OffsetDateTime.now().minusDays(3)));
+
+            Map<String, Object> dashboard = learnerJourneyService.myLearning(TENANT, "PROVIDER", "REQ-1");
+            List<Map<String, Object>> required = cast(dashboard.get("required"));
+            List<Map<String, Object>> overdue = cast(dashboard.get("overdue"));
+
+            assertThat(required).hasSize(2);
+            assertThat(required)
+                    .extracting(r -> (String) r.get("courseCode"))
+                    .containsExactlyInAnyOrder("FUNDO-CTX-MAND", courseA.getCode());
+            assertThat(overdue)
+                    .extracting(r -> (String) r.get("courseCode"))
+                    .containsExactly(courseB.getCode());
         }
 
         @Test
