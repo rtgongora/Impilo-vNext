@@ -8,6 +8,7 @@ import { useFundoCourseStructure } from "@/hooks/queries/useFundoCatalog";
 import { useCreateFundoEnrolment } from "@/hooks/queries/useFundoLms";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { FundoLiveWebinarEmbed } from "@/components/live/FundoLiveWebinarEmbed";
+import { CourseLiveSessionsSection } from "@/components/learning/live/CourseLiveSessionsSection";
 
 /**
  * Phase 6B — native Impilo Fundo course detail page. Renders the Phase 5B
@@ -121,6 +122,8 @@ export default function LearningCourseDetailPage() {
                 }
               />
             </div>
+
+            <CourseLiveSessionsSection courseId={structure.id} />
 
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Modules ({structure.modules.length})
