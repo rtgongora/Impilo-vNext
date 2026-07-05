@@ -4,16 +4,18 @@
  * Virtual hospital directory — /work/telemedicine/virtual-hospitals
  *
  * Directory of the strategic virtual service-delivery institutions (12
- * strategic + one per province). These are governed pools of clinical
- * capability — never duplicate copies of physical facilities. Every card
- * shows an honest substrate status; no fake queue counts or live metrics.
+ * strategic + one per province), read from the BFF operating-model registry
+ * (`GET /internal/v1/telemedicine/operating-model/virtual-hospitals`). These
+ * are governed pools of clinical capability — never duplicate copies of
+ * physical facilities. Every card shows an honest substrate status; no fake
+ * queue counts or live metrics.
  */
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Building2, Globe2, Search } from "lucide-react";
+import { useVirtualHospitalDirectory } from "@/hooks/queries/useTelemedicineOperatingModel";
 import {
-  ALL_VIRTUAL_HOSPITALS,
   OPERATING_MODEL_LABELS,
   SUBSTRATE_STATUS_LABELS,
   type VirtualHospitalLevel,
@@ -39,10 +41,11 @@ const STATUS_BADGE: Record<string, string> = {
 export default function VirtualHospitalDirectoryPage() {
   const [level, setLevel] = useState<VirtualHospitalLevel | "ALL">("ALL");
   const [query, setQuery] = useState("");
+  const directory = useVirtualHospitalDirectory();
 
   const hospitals = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return ALL_VIRTUAL_HOSPITALS.filter((vh) => {
+    return (directory.data ?? []).filter((vh) => {
       if (level !== "ALL" && vh.level !== level) return false;
       if (!q) return true;
       return (
@@ -51,7 +54,7 @@ export default function VirtualHospitalDirectoryPage() {
         vh.catchment.toLowerCase().includes(q)
       );
     });
-  }, [level, query]);
+  }, [directory.data, level, query]);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
@@ -102,7 +105,15 @@ export default function VirtualHospitalDirectoryPage() {
         </div>
       </div>
 
-      {hospitals.length === 0 ? (
+      {directory.isLoading ? (
+        <p className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-400">
+          Loading the governed directory from the operating-model registry…
+        </p>
+      ) : directory.isError ? (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800">
+          The operating-model registry is unreachable — the directory cannot be shown right now.
+        </p>
+      ) : hospitals.length === 0 ? (
         <p className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-400">
           No virtual hospitals match this filter.
         </p>

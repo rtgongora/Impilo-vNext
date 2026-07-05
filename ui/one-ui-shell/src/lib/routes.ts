@@ -439,6 +439,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/telemedicine/new", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "New Teleconsultation", navLabel: "New Teleconsult", navZone: "work" },
   { path: "/telemedicine/session/[sessionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Teleconsult Session", navLabel: "Session", navZone: "work" },
   { path: "/telemedicine/analytics", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Telemedicine Analytics", navLabel: "Telemedicine Analytics", navZone: "work" },
+  { path: "/work/telemedicine/groups", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Clinical Groups", navLabel: "Clinical Groups", navZone: "work" },
+  { path: "/work/telemedicine/virtual-hospitals", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Virtual Hospitals", navLabel: "Virtual Hospitals", navZone: "work" },
+  { path: "/work/telemedicine/virtual-hospitals/[id]", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Virtual Hospital", navLabel: "Virtual Hospital", navZone: "work" },
 
   // â”€â”€ Zone: Provider Activation (Health OS Â§6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/provider/activate", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activate Provider Role", navLabel: "Provider Activation" },
@@ -807,7 +810,7 @@ export const ROUTES: RouteDefinition[] = [
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
 // Dura (Jun 2026): native sovereign stock brain — +1 net-new route (/dura) merged from the Dura workstream.
-export const EXPECTED_ROUTE_COUNT = 682;
+export const EXPECTED_ROUTE_COUNT = 685;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

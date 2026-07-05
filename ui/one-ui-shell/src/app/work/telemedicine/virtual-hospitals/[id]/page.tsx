@@ -7,6 +7,8 @@
  * who operates it, how facilities relate to it (access/referral vs explicit
  * staffing), which session modes it opens, what cross-border privileges are
  * gated, and — honestly — which capabilities await the backend substrate.
+ * The definition is read from the BFF operating-model registry
+ * (`GET /internal/v1/telemedicine/operating-model/virtual-hospitals/{id}`).
  */
 
 import Link from "next/link";
@@ -25,8 +27,8 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
+import { useVirtualHospitalDetail } from "@/hooks/queries/useTelemedicineOperatingModel";
 import {
-  getVirtualHospital,
   LINKED_FACILITY_ROLE_LABELS,
   OPERATING_MODEL_LABELS,
   SUBSTRATE_STATUS_LABELS,
@@ -44,12 +46,31 @@ import {
 export default function VirtualHospitalDetailPage() {
   const params = useParams<{ id: string }>();
   const id = typeof params?.id === "string" ? params.id : "";
-  const vh = getVirtualHospital(id);
+  const detail = useVirtualHospitalDetail(id);
+  const vh = detail.data ?? null;
   const [pins, setPins] = useState<PinnedTarget[]>([]);
 
   useEffect(() => {
     setPins(loadPins());
   }, []);
+
+  if (detail.isLoading) {
+    return (
+      <div className="mx-auto max-w-4xl p-6">
+        <Link
+          href="/work/telemedicine/virtual-hospitals"
+          className="mb-4 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-teal-700"
+        >
+          <ArrowLeft className="h-4 w-4" /> Virtual hospitals
+        </Link>
+        <div className="rounded-lg border border-slate-200 bg-white p-8 text-center">
+          <p className="text-sm text-slate-400">
+            Loading this institution from the operating-model registry…
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!vh) {
     return (

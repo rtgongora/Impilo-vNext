@@ -4,21 +4,19 @@
  * Clinical groups directory — /work/telemedicine/groups
  *
  * Groups are for DISCOVERY and ROUTING; session modes are for clinical
- * governance. No governed clinical-group backend exists yet, so this surface
- * is deliberately fail-closed: it shows the governed taxonomy, the governance
- * a backend must enforce, and keeps group creation blocked with the reason
- * stated. That fail-closed posture IS the enforcement of "governance blocks
- * unauthorised clinical group creation" until the backend ships (HO-5).
+ * governance. The taxonomy and fail-closed creation governance are read from
+ * the BFF operating-model registry
+ * (`GET /internal/v1/telemedicine/operating-model/clinical-groups`) — the
+ * same governed document a clinical-group backend must enforce. Creation
+ * stays blocked with the reason stated; that fail-closed posture IS the
+ * enforcement of "governance blocks unauthorised clinical group creation"
+ * until the backend ships (HO-5).
  */
 
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Lock, ShieldAlert, Users } from "lucide-react";
-import {
-  CLINICAL_GROUP_TYPES,
-  GROUP_CREATION_BLOCKED_REASON,
-  GROUP_GOVERNANCE_REQUIREMENTS,
-} from "@/lib/telemedicine/clinical-groups";
+import { useClinicalGroupTaxonomy } from "@/hooks/queries/useTelemedicineOperatingModel";
 import { getSessionMode } from "@/lib/telemedicine/session-modes";
 
 const EXPOSURE_LABELS: Record<string, { label: string; className: string }> = {
@@ -35,6 +33,9 @@ const EXPOSURE_LABELS: Record<string, { label: string; className: string }> = {
 
 export default function ClinicalGroupsPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const taxonomy = useClinicalGroupTaxonomy();
+  const groupTypes = taxonomy.data?.groupTypes ?? [];
+  const governanceRequirements = taxonomy.data?.governanceRequirements ?? [];
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
@@ -62,26 +63,42 @@ export default function ClinicalGroupsPage() {
         <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-amber-900">
           <Lock className="h-4 w-4" /> Group creation is governance-blocked
         </div>
-        <p className="text-sm text-amber-800">{GROUP_CREATION_BLOCKED_REASON}</p>
-        <div className="mt-3">
-          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-amber-700">
-            Governance the backend must enforce before any group is creatable
-          </p>
-          <ul className="list-inside list-disc space-y-0.5 text-xs text-amber-800">
-            {GROUP_GOVERNANCE_REQUIREMENTS.map((req) => (
-              <li key={req}>{req}</li>
-            ))}
-          </ul>
-        </div>
+        <p className="text-sm text-amber-800">
+          {taxonomy.data?.creationBlockedReason ??
+            "Creation is disabled while the governed taxonomy loads from the operating-model registry — the block never lifts on a failed read."}
+        </p>
+        {governanceRequirements.length > 0 ? (
+          <div className="mt-3">
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-amber-700">
+              Governance the backend must enforce before any group is creatable
+            </p>
+            <ul className="list-inside list-disc space-y-0.5 text-xs text-amber-800">
+              {governanceRequirements.map((req) => (
+                <li key={req}>{req}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </section>
 
       {/* Taxonomy */}
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-slate-800">
-          Governed group taxonomy ({CLINICAL_GROUP_TYPES.length} types)
+          Governed group taxonomy{groupTypes.length > 0 ? ` (${groupTypes.length} types)` : ""}
         </h2>
+        {taxonomy.isLoading ? (
+          <p className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-400">
+            Loading the governed taxonomy from the operating-model registry…
+          </p>
+        ) : null}
+        {taxonomy.isError || (!taxonomy.isLoading && groupTypes.length === 0) ? (
+          <p className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800">
+            The operating-model registry is unreachable, so the taxonomy cannot be shown. Group
+            creation remains blocked.
+          </p>
+        ) : null}
         <ul className="space-y-2">
-          {CLINICAL_GROUP_TYPES.map((group) => {
+          {groupTypes.map((group) => {
             const exposure = EXPOSURE_LABELS[group.patientDataExposure];
             const isOpen = expanded === group.type;
             return (
