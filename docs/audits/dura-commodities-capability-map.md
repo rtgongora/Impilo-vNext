@@ -62,6 +62,10 @@ Legend: ✅ real and wired · 🟡 partially wired · 🔶 honest stub / adapter
 | `/work/dura` page | ✅ | `ui/one-ui-shell/src/app/work/dura/page.tsx` + `hooks/queries/useDura.ts` — catalogue search, near-expiry, recalls, cold-chain excursions; honest empty states, no fake numbers |
 | Stockout visibility on Dura page | ✅ (this branch) | was ❌ — `/stockouts` endpoint existed end-to-end but was not rendered |
 | eLMIS/NatPharm sync status panel | ✅ (this branch) | was ❌ |
+| Facility stock balance on Dura page | ✅ (this branch) | ledger-derived on-hand projection rendered via existing `/internal/v1/inventory/on-hand`; facility-scoped with honest awaiting-context/empty/error states |
+| Stock ledger view on Dura page | ✅ (this branch) | append-only movement history (type, Δqty, ref, actor, timestamp) via existing `/internal/v1/inventory/ledger` — the audit surface behind every balance |
+| Links to movement operations | ✅ (this branch) | Dura page links to existing `/inventory/stock-management` (receive/issue/transfer/adjust), `/inventory/counts`, `/inventory/reconciliation`, `/inventory/requisitions`, `/inventory/items` — no route-registry changes |
+| Estate-wide reuse of stock truth | ✅ (pre-existing) | `enterprise/warehousing`, `workspace-ops/StockManagementPanel`, `EnterpriseResourceDashboard` already consume on-hand/stockouts/near-expiry/ledger via `useInventory.ts` |
 | Mobile inventory | ✅ | `MobileInventoryController` (stockouts + near-expiry, honest empty fallback) |
 
 ## 5. No-touch boundaries respected

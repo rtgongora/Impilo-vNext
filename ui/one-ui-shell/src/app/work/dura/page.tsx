@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Boxes,
   Search,
@@ -12,6 +13,9 @@ import {
   Lock,
   PackageX,
   RefreshCw,
+  Warehouse,
+  ScrollText,
+  ArrowUpRight,
 } from "lucide-react";
 import {
   useDuraCommodities,
@@ -20,6 +24,8 @@ import {
   useDuraColdChainExcursions,
   useDuraStockouts,
   useDuraExternalSync,
+  useDuraOnHand,
+  useDuraLedger,
 } from "@/hooks/queries/useDura";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
@@ -27,10 +33,21 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
  * Dura — Stock & Supply operations surface.
  *
  * Live view of the Dura sovereign stock brain (inventory-service via BFF):
- * commodity catalogue search, near-expiry batches, open recalls, and open
- * cold-chain excursions.
+ * commodity catalogue search, facility stock balance, append-only ledger,
+ * stockouts, near-expiry batches, open recalls, cold-chain excursions, and
+ * eLMIS/NatPharm adapter sync status. Movements (receive/issue/transfer/
+ * adjust, counts, reconciliation, requisitions) run on the linked
+ * /inventory operational pages.
  */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const OPS_LINKS: { href: string; label: string }[] = [
+  { href: "/inventory/stock-management", label: "Receive / Issue / Transfer / Adjust" },
+  { href: "/inventory/counts", label: "Stock counts" },
+  { href: "/inventory/reconciliation", label: "Reconciliation" },
+  { href: "/inventory/requisitions", label: "Requisitions" },
+  { href: "/inventory/items", label: "Item registry" },
+];
 
 export default function DuraStockPage() {
   const [query, setQuery] = useState("");
@@ -48,18 +65,48 @@ export default function DuraStockPage() {
   const excursions = useDuraColdChainExcursions("OPEN");
   const stockouts = useDuraStockouts(facilityId || undefined);
   const externalSync = useDuraExternalSync();
+  const onHand = useDuraOnHand(facilityId || undefined, { size: 20 });
+  const ledger = useDuraLedger(facilityId || undefined, { size: 20 });
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
-      <header className="flex items-center gap-3">
-        <Boxes className="h-7 w-7 text-emerald-600" />
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Dura — Stock &amp; Supply</h1>
-          <p className="text-sm text-slate-500">
-            Native commodity, stock, inventory &amp; supply management. Live from inventory-service.
-          </p>
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Boxes className="h-7 w-7 text-emerald-600" />
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">Dura — Stock &amp; Supply</h1>
+            <p className="text-sm text-slate-500">
+              Native commodity, stock, inventory &amp; supply management. Live from inventory-service.
+            </p>
+          </div>
         </div>
+        <nav className="flex flex-wrap gap-2" aria-label="Stock operations">
+          {OPS_LINKS.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600 shadow-sm hover:border-emerald-400 hover:text-emerald-700"
+            >
+              {l.label} <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          ))}
+        </nav>
       </header>
+
+      {!facilityId ? (
+        <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <p className="mb-2">
+            Stock balance, ledger, and stockouts are per facility. No facility UUID in the current
+            session context — enter one to query facility-scoped stock truth.
+          </p>
+          <input
+            value={manualFacilityId}
+            onChange={(e) => setManualFacilityId(e.target.value.trim())}
+            placeholder="Facility UUID…"
+            className="w-full max-w-md rounded-md border border-amber-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
+          />
+        </section>
+      ) : null}
 
       {/* Commodity catalogue */}
       <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -182,6 +229,121 @@ export default function DuraStockPage() {
         </section>
       </div>
 
+      {/* Facility stock balance (ledger-derived on-hand projection) */}
+      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="mb-3 flex items-center gap-2 text-base font-medium text-slate-800">
+          <Warehouse className="h-5 w-5 text-emerald-600" /> Facility stock balance
+        </h2>
+        {!facilityId ? (
+          <Empty message="Awaiting facility context (see banner above)." />
+        ) : onHand.isLoading ? (
+          <Loading />
+        ) : onHand.isError ? (
+          <Empty message="Stock balance query failed — inventory-service unavailable." />
+        ) : !onHand.data || onHand.data.length === 0 ? (
+          <Empty message="No stock recorded at this facility yet. Balances appear after the first ledger movement (receipt / opening balance)." />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 text-xs uppercase text-slate-400">
+                  <th className="py-2 pr-4">Item</th>
+                  <th className="py-2 pr-4">Batch</th>
+                  <th className="py-2 pr-4">Expiry</th>
+                  <th className="py-2 pr-4 text-right">On hand</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {onHand.data.map((r) => (
+                  <tr key={r.id}>
+                    <td className="py-2 pr-4 font-medium text-slate-700">{r.itemCode}</td>
+                    <td className="py-2 pr-4 text-slate-500">{r.batch ?? "—"}</td>
+                    <td className="py-2 pr-4 text-slate-500">{r.expiry ?? "—"}</td>
+                    <td
+                      className={`py-2 pr-4 text-right font-medium ${
+                        r.qtyOnHand <= 0 ? "text-red-600" : "text-slate-700"
+                      }`}
+                    >
+                      {r.qtyOnHand}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* Append-only stock ledger */}
+      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="mb-1 flex items-center gap-2 text-base font-medium text-slate-800">
+          <ScrollText className="h-5 w-5 text-slate-500" /> Stock ledger
+        </h2>
+        <p className="mb-3 text-xs text-slate-500">
+          Append-only movement truth — every balance above derives from these events. No silent
+          stock changes.
+        </p>
+        {!facilityId ? (
+          <Empty message="Awaiting facility context (see banner above)." />
+        ) : ledger.isLoading ? (
+          <Loading />
+        ) : ledger.isError ? (
+          <Empty message="Ledger query failed — inventory-service unavailable." />
+        ) : !ledger.data || ledger.data.length === 0 ? (
+          <Empty message="No ledger events recorded for this facility yet." />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 text-xs uppercase text-slate-400">
+                  <th className="py-2 pr-4">Type</th>
+                  <th className="py-2 pr-4">Item</th>
+                  <th className="py-2 pr-4 text-right">Δ Qty</th>
+                  <th className="py-2 pr-4">Ref</th>
+                  <th className="py-2 pr-4">Actor</th>
+                  <th className="py-2 pr-4">When</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {ledger.data.map((e) => (
+                  <tr key={e.eventId}>
+                    <td className="py-2 pr-4">
+                      <span
+                        className={`rounded px-2 py-0.5 text-xs ${
+                          e.qtyDelta >= 0
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
+                        {e.eventType}
+                      </span>
+                    </td>
+                    <td className="py-2 pr-4 font-medium text-slate-700">
+                      {e.itemCode}
+                      {e.batch ? <span className="ml-1 text-xs text-slate-400">{e.batch}</span> : null}
+                    </td>
+                    <td
+                      className={`py-2 pr-4 text-right font-medium ${
+                        e.qtyDelta >= 0 ? "text-emerald-700" : "text-amber-700"
+                      }`}
+                    >
+                      {e.qtyDelta > 0 ? `+${e.qtyDelta}` : e.qtyDelta}
+                    </td>
+                    <td className="py-2 pr-4 text-slate-500">
+                      {e.refType ? `${e.refType} · ${e.refId ?? "—"}` : "—"}
+                    </td>
+                    <td className="py-2 pr-4 text-slate-500">{e.actorId ?? "—"}</td>
+                    <td className="py-2 pr-4 text-slate-500">
+                      {e.createdAt ? new Date(e.createdAt).toLocaleString() : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Stockouts */}
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -189,15 +351,7 @@ export default function DuraStockPage() {
             <PackageX className="h-5 w-5 text-red-500" /> Stockouts
           </h2>
           {!facilityId ? (
-            <div className="space-y-2 py-2 text-sm text-slate-500">
-              <p>Stockouts are per facility. No facility UUID in the current context — enter one to query.</p>
-              <input
-                value={manualFacilityId}
-                onChange={(e) => setManualFacilityId(e.target.value.trim())}
-                placeholder="Facility UUID…"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
-              />
-            </div>
+            <Empty message="Awaiting facility context (see banner above)." />
           ) : stockouts.isLoading ? (
             <Loading />
           ) : stockouts.isError ? (
