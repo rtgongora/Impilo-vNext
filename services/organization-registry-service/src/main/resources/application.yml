@@ -50,6 +50,22 @@ impilo:
     outbox:
       poll-interval-ms: 2000
     outbox-topic: impilo.org-registry.events
+    # START ARC — Channel-C claim ↔ IATG adjudication (workflow-service).
+    # External coupling is opt-in: default false leaves escalation honest
+    # (claim UNDER_REVIEW, no workflow instance) in envs without workflow-service.
+    adjudication:
+      enabled: ${ORG_REGISTRY_ADJUDICATION_ENABLED:false}
+      workflow-base-url: ${WORKFLOW_SERVICE_URL:http://localhost:8250}
+      pod-id: ${POD_ID:national}
+      # facility-claim-adjudication (workflow-service V003 seed explicitly scopes
+      # org-registry Channel-C claims to this definition).
+      definition-id: ${ORG_REGISTRY_ADJUDICATION_DEFINITION_ID:ad1d0000-0000-4000-8000-000000000003}
+
+# DECISION-FEEDBACK ARC — topic carrying workforce-governance decision events
+# (impilo.governance.adjudication.decision.recorded). Consumer is gated by
+# impilo.orgregistry.kafka-events-enabled=true.
+impilo.governance:
+  outbox-topic: ${GOVERNANCE_OUTBOX_TOPIC:impilo.governance.events}
 
 management:
   endpoints:

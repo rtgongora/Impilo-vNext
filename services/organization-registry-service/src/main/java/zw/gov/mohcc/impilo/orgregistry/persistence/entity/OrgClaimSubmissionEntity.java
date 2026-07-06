@@ -53,6 +53,16 @@ public class OrgClaimSubmissionEntity {
     @Column(length = 255)
     private String adjudicationRef;
 
+    /**
+     * workflow-service instance id of the IATG adjudication workflow this claim
+     * was escalated into. Authoritative join key for resolving the claim when
+     * workforce-governance emits an adjudication decision. Null while the claim
+     * has not been escalated, or when escalation happened but the workflow start
+     * was deferred/unavailable (honest pending state — see V004).
+     */
+    @Column(name = "workflow_instance_id")
+    private UUID workflowInstanceId;
+
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
