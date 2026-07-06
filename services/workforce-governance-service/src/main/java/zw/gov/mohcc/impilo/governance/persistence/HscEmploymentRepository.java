@@ -9,6 +9,9 @@ import java.util.UUID;
 
 public interface HscEmploymentRepository extends JpaRepository<HscEmploymentEntity, UUID> {
 
+    /** Rows whose phase-2c dual-key is not yet populated — used by the callable key backfill. */
+    List<HscEmploymentEntity> findByTenantIdAndOrgRegistryOrgIdIsNull(UUID tenantId);
+
     List<HscEmploymentEntity> findByTenantIdAndProviderWorkerIdOrderByUpdatedAtDesc(UUID tenantId, String providerWorkerId);
 
     List<HscEmploymentEntity> findByTenantIdAndLinkedHealthIdOrderByUpdatedAtDesc(UUID tenantId, String linkedHealthId);

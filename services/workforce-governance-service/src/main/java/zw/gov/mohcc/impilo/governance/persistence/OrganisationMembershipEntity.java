@@ -37,6 +37,15 @@ public class OrganisationMembershipEntity {
     @Column(name = "metadata", columnDefinition = "TEXT")
     private String metadata;
 
+    /**
+     * Dual-key phase-2a scaffolding (nullable, un-backfilled). Forward pointer to
+     * the organization-registry organization id; populated during the phase-2c
+     * key backfill from the org-registry id resolved via source_ref. The existing
+     * {@code organisation_id} FK remains authoritative until phase-2c.
+     */
+    @Column(name = "org_registry_org_id")
+    private UUID orgRegistryOrgId;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -68,6 +77,8 @@ public class OrganisationMembershipEntity {
     public void setRoleTemplate(String roleTemplate) { this.roleTemplate = roleTemplate; touch(); }
     public String getMetadata() { return metadata; }
     public void setMetadata(String metadata) { this.metadata = metadata; touch(); }
+    public UUID getOrgRegistryOrgId() { return orgRegistryOrgId; }
+    public void setOrgRegistryOrgId(UUID orgRegistryOrgId) { this.orgRegistryOrgId = orgRegistryOrgId; touch(); }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 
