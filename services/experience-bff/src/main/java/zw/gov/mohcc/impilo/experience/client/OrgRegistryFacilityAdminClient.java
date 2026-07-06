@@ -30,7 +30,7 @@ public class OrgRegistryFacilityAdminClient {
 
     public OrgRegistryFacilityAdminClient(
             RestTemplate serviceRestTemplate,
-            @Value("${impilo.services.org-registry-base-url:http://localhost:8153}") String orgRegistryBaseUrl) {
+            @Value("${impilo.services.organization-registry-base-url:http://localhost:8153}") String orgRegistryBaseUrl) {
         this.restTemplate = serviceRestTemplate;
         this.baseUrl = orgRegistryBaseUrl;
     }
