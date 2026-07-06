@@ -186,6 +186,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/facility", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Select Facility", navLabel: "Facilities" },
   { path: "/facility/[id]", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Facility Details", navLabel: "Facility" },
   { path: "/facility/[id]/configuration", zone: "facility", layout: "app", sidebar: "facility", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Configuration", navLabel: "Configuration" },
+  { path: "/facility/claim", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Claim facility administration", navLabel: "Claim administration" },
 
   // â”€â”€ Zone: Workspace Selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/workspace", zone: "workspace", layout: "app", sidebar: "workspace", guard: "facility", pageTitle: "Select Workspace", navLabel: "Workspaces" },
@@ -814,9 +815,8 @@ export const ROUTES: RouteDefinition[] = [
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
 // Dura (Jun 2026): native sovereign stock brain — +1 net-new route (/dura) merged from the Dura workstream.
-// E2-TRUST (Jul 2026): +2 net-new routes — /citizen/wallet/trust (four-block trust
-// profile) and /citizen/provider-claim (nav discoverability for the existing page).
-export const EXPECTED_ROUTE_COUNT = 687;
+// IATG Phase-E2 UI (Jul 2026): trust profile + provider-claim nav (+2), facility claim (+1).
+export const EXPECTED_ROUTE_COUNT = 688;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

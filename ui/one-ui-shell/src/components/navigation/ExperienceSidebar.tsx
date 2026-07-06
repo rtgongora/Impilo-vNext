@@ -159,6 +159,8 @@ const ZONES: SidebarZone[] = [
       { href: "/settings", label: "Settings", icon: CreditCard },
       // E2-TRUST: provider self-service claim / recovery (page already exists — nav discoverability).
       { href: "/citizen/provider-claim", label: "Provider Claim", icon: Stethoscope },
+      // IATG Wave 2, WS-E: facility administrator self-service claim.
+      { href: "/facility/claim", label: "Claim facility admin", icon: ShieldCheck },
     ],
   },
   {

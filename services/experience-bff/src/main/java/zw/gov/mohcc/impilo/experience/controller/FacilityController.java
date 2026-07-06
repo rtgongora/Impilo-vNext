@@ -166,6 +166,35 @@ public class FacilityController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Composite facility legitimacy + platform-access verdict (WS-E). Fail-closed: any upstream
+     * failure returns HTTP 502 (no stub fallback) — legitimacy is a governance read that must never
+     * be served from synthetic data. Placed under {@code /internal/v1} for consistency with the
+     * sibling facility reads. Passes the TUSO composite through unchanged (facilityId, facilityCode,
+     * facilityName, regulatoryStatus, certificates[], sourceLegitimacy[], platformAccessAllowed,
+     * reasons[]).
+     */
+    @GetMapping("/{id}/status-composite")
+    public ResponseEntity<Map<String, Object>> getFacilityStatusComposite(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode composite = tusoClient.getFacilityStatusComposite(id);
+            if (composite == null || composite.isNull()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", composite,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("TUSO facility status-composite failed for id={}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "TUSO_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
     private static Map<String, Object> mapTusoSummaryToFacilityResource(JsonNode n) {
         String idStr = n.has("id") ? String.valueOf(n.get("id").asLong()) : UUID.randomUUID().toString();
         Map<String, Object> attrs = new LinkedHashMap<>();

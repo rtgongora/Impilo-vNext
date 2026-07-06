@@ -1,0 +1,391 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Building2,
+  Clock,
+  FileText,
+  Loader2,
+  Mail,
+  ShieldCheck,
+  Stethoscope,
+} from "lucide-react";
+import {
+  facilityClaimErrorMessage,
+  isFeaturePending,
+  useAppointFacilityClaim,
+  useFacilityClaimEligibility,
+  usePreviewFacilityClaim,
+} from "@/hooks/queries/useFacilityClaim";
+
+type ClaimPath = "letter" | "document" | "org";
+
+/**
+ * Facility administrator self-service claim journey (IATG Wave 2, WS-E).
+ *
+ * Flow: eligibility gate (platform-legitimacy) → choose path (appointment letter /
+ * document / org invitation) → masked preview + consent → appoint → pending-approval
+ * confirmation.
+ *
+ * Doctrine: honest states only — the DOCUMENT and ORG_INVITATION lanes are not built yet and
+ * render as "coming soon" (never fake success, matching the BFF's honest 501 FEATURE_PENDING).
+ * Downstream 409 verdicts are shown verbatim, and facility codes / evidence refs are masked
+ * end-to-end. The subject is the facility UUID; the claimant is always the signed-in Health ID.
+ */
+export function FacilityClaimJourney({ facilityUuid }: { facilityUuid?: string }) {
+  const [path, setPath] = useState<ClaimPath | null>(null);
+  const eligibility = useFacilityClaimEligibility(facilityUuid ?? "");
+
+  if (!facilityUuid) {
+    return (
+      <section
+        className="rounded-xl border border-warning/35 bg-warning-soft px-4 py-4"
+        data-testid="facility-claim-journey"
+      >
+        <div className="flex items-start gap-2 text-sm text-warning-foreground">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            No facility selected. Open a facility and choose &ldquo;Claim administration&rdquo; to
+            request administrator access.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  if (eligibility.isLoading) {
+    return (
+      <section
+        className="rounded-xl border border-border bg-background px-4 py-6"
+        data-testid="facility-claim-journey"
+        aria-busy="true"
+      >
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Checking whether this facility can be administered right now…
+        </div>
+      </section>
+    );
+  }
+
+  if (eligibility.isError) {
+    return (
+      <section
+        className="rounded-xl border border-warning/35 bg-warning-soft px-4 py-4"
+        data-testid="facility-claim-journey"
+      >
+        <div className="flex items-start gap-2 text-sm text-warning-foreground">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            Eligibility could not be checked right now. Nothing was changed — retry once the
+            service is reachable.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const data = eligibility.data;
+  const claimable = !!data?.claimable;
+  const allowedOnPlatform = !!data?.allowedOnPlatform;
+
+  return (
+    <section
+      className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-sm"
+      data-testid="facility-claim-journey"
+    >
+      <header className="flex items-start gap-3">
+        <Building2 className="mt-1 h-5 w-5 shrink-0 text-primary" />
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">
+            Claim administrator access for this facility
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            You stay signed in as a person; a facility claim only requests administrator access —
+            it is recorded against your Health ID and activates nothing until an approver actions
+            it (Health OS §6).
+          </p>
+        </div>
+      </header>
+
+      {!claimable ? (
+        <NotClaimablePanel
+          allowedOnPlatform={allowedOnPlatform}
+          activeAdministratorCount={data?.activeAdministratorCount ?? 0}
+        />
+      ) : null}
+
+      {claimable && path === null ? <PathChooser onChoose={setPath} /> : null}
+
+      {claimable && path !== null ? (
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setPath(null)}
+            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Choose a different route
+          </button>
+          {path === "letter" ? <AppointmentLetterFlow facilityUuid={facilityUuid} /> : null}
+          {path === "document" ? <ComingSoonNote /> : null}
+          {path === "org" ? <ComingSoonNote /> : null}
+        </div>
+      ) : null}
+
+      <footer className="border-t border-border pt-3 text-xs text-muted-foreground">
+        Document-based verification and organisation invitations are not available yet — they arrive
+        with later waves and will appear here when real. Nompilo can guide you, but approval
+        decisions always rest with the registry.
+      </footer>
+    </section>
+  );
+}
+
+// ── Not claimable ─────────────────────────────────────────────────────────────
+
+function NotClaimablePanel({
+  allowedOnPlatform,
+  activeAdministratorCount,
+}: {
+  allowedOnPlatform: boolean;
+  activeAdministratorCount: number;
+}) {
+  return (
+    <div
+      className="rounded-lg border border-warning/35 bg-warning-soft px-4 py-3 text-sm"
+      data-testid="facility-claim-not-claimable"
+    >
+      <div className="flex items-start gap-2">
+        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning-foreground" />
+        <div className="space-y-1">
+          <p className="font-medium text-foreground">This facility cannot be claimed right now.</p>
+          <p className="text-muted-foreground">
+            {allowedOnPlatform
+              ? "The facility is recognised on the platform, but administrator claims are not open for it at the moment."
+              : "The facility is not currently allowed on the platform, so administrator access cannot be requested."}
+            {activeAdministratorCount > 0
+              ? ` It has ${activeAdministratorCount} active administrator${activeAdministratorCount === 1 ? "" : "s"}.`
+              : ""}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Path chooser ────────────────────────────────────────────────────────────
+
+const PATHS: { id: ClaimPath; icon: typeof FileText; title: string; body: string }[] = [
+  {
+    id: "letter",
+    icon: FileText,
+    title: "I have an appointment letter",
+    body: "Reference your administrator appointment letter. Preview the facility first, then request access.",
+  },
+  {
+    id: "document",
+    icon: Stethoscope,
+    title: "Upload a supporting document",
+    body: "Document-based facility verification is not available yet — this lane will appear when it is live.",
+  },
+  {
+    id: "org",
+    icon: Mail,
+    title: "Organisation invitation",
+    body: "Onboard via an organisation invitation. Arrives with a later wave.",
+  },
+];
+
+function PathChooser({ onChoose }: { onChoose: (p: ClaimPath) => void }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2" data-testid="facility-claim-path-chooser">
+      {PATHS.map(({ id, icon: Icon, title, body }) => (
+        <button
+          key={id}
+          type="button"
+          onClick={() => onChoose(id)}
+          className="rounded-lg border border-border bg-background px-4 py-3 text-left hover:border-primary/40 hover:bg-primary-soft"
+        >
+          <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <Icon className="h-4 w-4 text-primary" /> {title}
+          </span>
+          <span className="mt-1 block text-xs text-muted-foreground">{body}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Shared bits ─────────────────────────────────────────────────────────────
+
+function ErrorNote({ err, fallback }: { err: unknown; fallback: string }) {
+  return (
+    <div
+      className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-foreground"
+      role="alert"
+    >
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+      <p>{facilityClaimErrorMessage(err, fallback)}</p>
+    </div>
+  );
+}
+
+function ComingSoonNote({ err }: { err?: unknown }) {
+  return (
+    <div
+      className="flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground"
+      data-testid="facility-claim-coming-soon"
+    >
+      <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+      <p>
+        {facilityClaimErrorMessage(
+          err,
+          "This route is not available yet. It will appear here once the supporting lane is live — no shortcut is faked in the meantime.",
+        )}
+      </p>
+    </div>
+  );
+}
+
+const inputClass =
+  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground";
+const primaryButtonClass =
+  "inline-flex items-center gap-2 rounded-lg bg-primary-hover px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-700 disabled:cursor-not-allowed disabled:opacity-50";
+
+// ── Appointment letter flow ──────────────────────────────────────────────────
+
+function AppointmentLetterFlow({ facilityUuid }: { facilityUuid: string }) {
+  const [role, setRole] = useState("");
+  const [evidenceRef, setEvidenceRef] = useState("");
+  const [consent, setConsent] = useState(false);
+  const preview = usePreviewFacilityClaim();
+  const appoint = useAppointFacilityClaim();
+
+  if (appoint.data) {
+    return (
+      <div
+        className="rounded-lg border border-primary/25 bg-primary-soft px-4 py-3 text-sm"
+        data-testid="facility-claim-confirmation"
+      >
+        <p className="flex items-center gap-2 font-medium text-foreground">
+          <Clock className="h-4 w-4 text-primary" /> Administrator request recorded — pending approval
+        </p>
+        <p className="mt-1 text-muted-foreground">
+          {appoint.data.note ??
+            "Your facility administrator request was recorded and is pending approval. No administrative capability is active until it is approved."}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className="space-y-3"
+      data-testid="facility-claim-letter-flow"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!preview.data) preview.mutate(facilityUuid);
+        else if (consent)
+          appoint.mutate({
+            facilityUuid,
+            consent: true,
+            role: role.trim() || undefined,
+            evidenceRef: evidenceRef.trim() || undefined,
+          });
+      }}
+    >
+      {preview.isError ? (
+        <ErrorNote err={preview.error} fallback="That facility could not be previewed." />
+      ) : null}
+      {appoint.isError ? (
+        <ErrorNote
+          err={appoint.error}
+          fallback="The claim could not be submitted. You may already administer this facility."
+        />
+      ) : null}
+
+      {preview.data ? (
+        <div
+          className="rounded-lg border border-primary/25 bg-primary-soft px-4 py-3 text-sm"
+          data-testid="facility-claim-preview"
+        >
+          <p className="font-medium text-foreground">You are requesting access to:</p>
+          <p className="mt-1 text-muted-foreground">
+            <span className="font-medium text-foreground">{preview.data.name}</span> —{" "}
+            <span className="font-mono">{preview.data.facilityCode}</span>
+            {preview.data.facilityType ? `, ${preview.data.facilityType}` : ""}
+            {preview.data.district || preview.data.province
+              ? ` (${[preview.data.district, preview.data.province].filter(Boolean).join(", ")})`
+              : ""}
+          </p>
+
+          <label className="mt-3 block text-xs font-medium text-foreground" htmlFor="facility-role-input">
+            Administrator role (optional)
+          </label>
+          <input
+            id="facility-role-input"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            placeholder="e.g. FACILITY_ADMIN"
+            className={inputClass}
+          />
+          <label
+            className="mt-2 block text-xs font-medium text-foreground"
+            htmlFor="facility-evidence-input"
+          >
+            Appointment letter reference (optional)
+          </label>
+          <input
+            id="facility-evidence-input"
+            value={evidenceRef}
+            onChange={(e) => setEvidenceRef(e.target.value)}
+            placeholder="e.g. LETTER-2026-001"
+            className={inputClass}
+          />
+
+          <label className="mt-2 flex items-start gap-2 text-xs text-foreground">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-0.5"
+            />
+            I confirm I am appointed to administer this facility and consent to recording this
+            request against my Health ID. Only a masked reference is stored.
+          </label>
+        </div>
+      ) : null}
+
+      <button
+        type="submit"
+        className={primaryButtonClass}
+        disabled={preview.isPending || appoint.isPending || (!!preview.data && !consent)}
+      >
+        {(preview.isPending || appoint.isPending) && (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        )}
+        {preview.data ? "Request administrator access" : "Preview this facility"}
+      </button>
+
+      {!preview.data ? (
+        <p className="text-xs text-muted-foreground">
+          Preview shows a masked facility summary before you commit. Nothing is recorded until you
+          consent and submit.
+        </p>
+      ) : null}
+
+      <p className="border-t border-border pt-2 text-xs text-muted-foreground">
+        Need to return to the facility?{" "}
+        <Link href={`/facility/${facilityUuid}`} className="font-medium text-primary underline">
+          Back to facility
+        </Link>
+      </p>
+    </form>
+  );
+}
+
+/** Re-exported so tests can assert the coming-soon lane structurally. */
+export { isFeaturePending };
