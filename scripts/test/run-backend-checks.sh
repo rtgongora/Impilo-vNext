@@ -31,4 +31,13 @@ gate_run "tshepo-authz-tests" bash -c '
   cd services && mvn test -pl zw.gov.mohcc.impilo:tshepo-authz-service -q
 ' || FAIL=1
 
+# oros-service was in no gate (CI or VM) — its dcm4che DICOM modality-worklist
+# code and the WS-P6-B modality changes were never test-verified. The 32 unit
+# tests (surefire *Test — incl. DicomMwlTest / ImagingWorkflowServiceTest) need
+# no DB; the single OrosGoldenContractIT (failsafe *IT) is not run by `mvn test`.
+# dcm4che resolves from https://maven.dcm4che.org (reachable on the VM).
+gate_run "oros-imaging-tests" bash -c '
+  cd services && mvn test -pl oros-service -am -q
+' || FAIL=1
+
 exit "$FAIL"
