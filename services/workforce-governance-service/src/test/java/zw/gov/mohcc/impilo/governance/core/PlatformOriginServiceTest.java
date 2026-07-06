@@ -261,6 +261,26 @@ class PlatformOriginServiceTest {
     }
 
     @Test
+    void listApprovalsReturnsWhoApprovedProjection() {
+        AccessRequestEntity request = initiateCountryOperation();
+        service.approve(request.getId(), "approver-1", "PLATFORM_ORIGIN_ADMINISTRATOR", "APPROVE", "first sign-off");
+        service.approve(request.getId(), "approver-2", "PLATFORM_ORIGIN_ADMINISTRATOR", "APPROVE", null);
+
+        List<PlatformActionApprovalView> views = service.listApprovals(request.getId());
+        assertEquals(2, views.size());
+        assertEquals("approver-1", views.get(0).approverUserId());
+        assertEquals("PLATFORM_ORIGIN_ADMINISTRATOR", views.get(0).approverRole());
+        assertEquals("APPROVE", views.get(0).decision());
+        assertEquals("first sign-off", views.get(0).note());
+        assertEquals("approver-2", views.get(1).approverUserId());
+    }
+
+    @Test
+    void listApprovalsRejectsNonPlatformAction() {
+        assertThrows(IllegalArgumentException.class, () -> service.listApprovals(UUID.randomUUID()));
+    }
+
+    @Test
     void appointmentRequiresExistingCountryOperation() {
         assertThrows(IllegalArgumentException.class, () ->
                 service.initiateAppointment(platformTenant, "initiator-1", UUID.randomUUID(),

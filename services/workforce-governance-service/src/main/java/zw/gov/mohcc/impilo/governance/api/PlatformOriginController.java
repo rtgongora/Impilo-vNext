@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.governance.core.BootstrapGovernanceService;
+import zw.gov.mohcc.impilo.governance.core.PlatformActionApprovalView;
 import zw.gov.mohcc.impilo.governance.core.PlatformOriginService;
 import zw.gov.mohcc.impilo.governance.persistence.AccessRequestEntity;
 import zw.gov.mohcc.impilo.governance.persistence.CountryOperationEntity;
@@ -96,6 +97,14 @@ public class PlatformOriginController {
     public ResponseEntity<ApiResponse<List<NationalAppointmentEntity>>> listAppointments(
             @PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.ok(platformOriginService.listAppointments(id), corr()));
+    }
+
+    /** Who-approved projection for a platform action's two-person approvals (read-only). */
+    @GetMapping("/actions/{accessRequestId}/approvals")
+    public ResponseEntity<ApiResponse<List<PlatformActionApprovalView>>> listActionApprovals(
+            @PathVariable UUID accessRequestId) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                platformOriginService.listApprovals(accessRequestId), corr()));
     }
 
     /** Initiate APPOINT_NATIONAL_ADMIN — returns the PENDING PLATFORM_ACTION access request. */
