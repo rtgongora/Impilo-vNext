@@ -723,6 +723,12 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/live/event/[eventId]/replay", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Event Replay", navLabel: "Replay", navZone: "life" },
   { path: "/live/event/[eventId]/analytics", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Analytics", navLabel: "Analytics", navZone: "work" },
 
+  // ── Phase-E2 Governance spine (platform-origin console + org onboarding) ──
+  // Appended block (E2-GOV-UI). Role-gated via direct hasRole fallback in matchesRequiredRole.
+  { path: "/platform-origin", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PLATFORM_ORIGIN_ADMINISTRATOR", pageTitle: "Platform Origin", navLabel: "Platform Origin", navZone: "professional" },
+  { path: "/platform-origin/[id]", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PLATFORM_ORIGIN_ADMINISTRATOR", pageTitle: "Country Operation", navLabel: "Country Operation", navZone: "professional" },
+  { path: "/organization-admin/onboarding", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Organization Onboarding", navLabel: "Org Onboarding", navZone: "professional" },
+
   // Trust & Access Administration (Jun 2026): 90 routes under /work/** driven by Session Experience Contract.
   ...ADMINISTRATION_GOVERNANCE_ROUTES,
 
@@ -810,7 +816,8 @@ export const ROUTES: RouteDefinition[] = [
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
 // Dura (Jun 2026): native sovereign stock brain — +1 net-new route (/dura) merged from the Dura workstream.
-export const EXPECTED_ROUTE_COUNT = 685;
+// Phase-E2 governance spine (E2-GOV-UI): +3 routes (/platform-origin, /platform-origin/[id], /organization-admin/onboarding).
+export const EXPECTED_ROUTE_COUNT = 688;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
