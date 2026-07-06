@@ -40,4 +40,24 @@ gate_run "oros-imaging-tests" bash -c '
   cd services && mvn test -pl oros-service -am -q
 ' || FAIL=1
 
+# Full-reactor unit-test gate (Phase 2 of the CI-coverage closure). `mvn test`
+# runs surefire (*Test) only — never failsafe (*IT) — so this is the H2/Mockito
+# unit set across every reactor module and needs no Docker/Kafka/Postgres. The
+# full-reactor baseline (anchor cc302e5dc, after the pharmacy getOrderId() fix)
+# proved this set green: 112 modules, 3248 tests, 0 failures. Before this gate,
+# 96 of 113 modules ran in NO gate at all — the gap that let the pharmacy compile
+# break onto the anchor unseen.
+#
+# The three excluded modules each have a dedicated gate above whose special
+# handling this generic run would not reproduce:
+#   !oros-service                            — dcm4che external repo (oros-imaging-tests)
+#   !experience-bff                          — needs test,test-ci profile + datasource
+#   !zw.gov.mohcc.impilo:tshepo-authz-service — dedicated tshepo-authz-tests gate
+# Quarantine list is otherwise EMPTY. If a future module's *Test needs infra this
+# gate cannot provide, add it here with a one-line reason (Phase 3 burns it down).
+gate_run "backend-reactor-tests" bash -c '
+  cd services && mvn test \
+    -pl "!oros-service,!experience-bff,!zw.gov.mohcc.impilo:tshepo-authz-service" -q
+' || FAIL=1
+
 exit "$FAIL"
