@@ -65,6 +65,37 @@ jobs:
         run: |
           mvn test -pl zw.gov.mohcc.impilo:tshepo-authz-service,zw.gov.mohcc.impilo:shared-core -am
 
+  oros-imaging-test:
+    name: OROS Imaging Tests (dcm4che)
+    runs-on: ubuntu-latest
+    # oros-service pulls dcm4che from https://maven.dcm4che.org (not on Maven
+    # Central); GitHub-hosted runners have open internet so the repo resolves.
+    # The suite (DicomMwlTest etc.) builds DICOM MWL datasets in-memory — no
+    # dcm4chee-arc / Orthanc / database needed. This job closes the WS-P6-B
+    # verification gap: oros-service was in no CI gate, so its imaging modality
+    # changes were never test-verified in automation.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build shared libraries
+        run: |
+          cd services && mvn install -pl shared-core -am -DskipTests -q
+          cd ../libs/shared-kernel-java && mvn install -DskipTests -q
+
+      - name: Build tech-companion
+        working-directory: libs/tech-companion
+        run: mvn install -DskipTests -q
+
+      - name: Test oros-service
+        working-directory: services
+        run: mvn test -pl oros-service -am
+
   trust-e2e-gates:
     name: Trust E2E Gates
     runs-on: ubuntu-latest
