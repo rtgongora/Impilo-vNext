@@ -40,6 +40,15 @@ impilo:
     kafka-events-enabled: ${GOVERNANCE_KAFKA_EVENTS_ENABLED:false}
     outbox-topic: ${GOVERNANCE_OUTBOX_TOPIC:impilo.governance.events}
     outbox-publish-interval-ms: ${GOVERNANCE_OUTBOX_PUBLISH_INTERVAL_MS:2000}
+  # One-way organisation mirror producer (wgv_organisation -> organization-registry).
+  # Default OFF: enabling is an explicit ops decision (org-registry cutover phase 1).
+  org-mirror:
+    enabled: ${ORG_MIRROR_ENABLED:false}
+    base-url: ${ORG_MIRROR_BASE_URL:http://localhost:8153}
+    mirror-path: ${ORG_MIRROR_PATH:/v1/internal/org-registry/mirror/wgv}
+    connect-timeout-ms: ${ORG_MIRROR_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${ORG_MIRROR_READ_TIMEOUT_MS:3000}
+    backfill-page-size: ${ORG_MIRROR_BACKFILL_PAGE_SIZE:200}
 
 management:
   endpoints:
