@@ -107,6 +107,18 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Composite per-source facility legitimacy (WS-E): regulatory status + certificates +
+     * every per-source verdict + the derived platform-access verdict. {@code facilityUuid} is the
+     * canonical facility UUID (never the numeric surrogate id / facility code).
+     */
+    public JsonNode getFacilityStatusComposite(String facilityUuid) {
+        String url = baseUrl + "/v1/facilities/" + facilityUuid + "/status-composite";
+        log.info("TUSO: Getting facility status-composite id={}", facilityUuid);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Facility registry search (search-before-create). */
     public JsonNode searchFacilities(Map<String, Object> requestBody) {
         String url = baseUrl + "/v1/internal/facilities/search";
