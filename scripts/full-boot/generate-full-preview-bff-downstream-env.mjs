@@ -117,6 +117,9 @@ const SERVICE_ENV = [
   ["KHULUMA_BASE_URL", "khuluma-service"],
   ["PATIENT_SAFETY_BASE_URL", "patient-safety-service"],
   ["RITO_BASE_URL", "rito-quality-safety-service"],
+  // Organization registry SoR — feeds BFF impilo.services.organization-registry-base-url
+  // (OrganizationRegistryServiceClient + OrgRegistryFacilityAdminClient).
+  ["ORGANIZATION_REGISTRY_BASE_URL", "organization-registry-service"],
 ];
 
 /**
@@ -140,6 +143,9 @@ const FIXED_ENV = {
   IMPILO_BFF_PROVIDER_HUBS_FAILURE_POLICY: "stub_fallback",
   IMPILO_BFF_CITIZEN_LONGTAIL_MODE: "stub",
   IMPILO_BFF_CITIZEN_LONGTAIL_FAILURE_POLICY: "stub_fallback",
+  // IATG employment-context matching (ProviderClaimController @Value
+  // ${impilo.features.ec-matching}) — enabled for the preview journey.
+  IMPILO_FEATURES_EC_MATCHING: "true",
 };
 
 function validateCoverage(services) {
