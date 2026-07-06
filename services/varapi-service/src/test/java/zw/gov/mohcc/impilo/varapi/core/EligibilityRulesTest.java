@@ -55,14 +55,18 @@ class EligibilityRulesTest {
         provider.setProviderPublicId("TEST00000000000000000001");
         provider.setGivenName("Test");
         provider.setFamilyName("Provider");
-        provider.setStatus("ACTIVE");
+        // Wave-2: operational truth is the derived projection of the canonical
+        // lifecycle axis. Drive the lifecycle, then derive status/active_flag/licence.
+        provider.setLifecycleStatus("REGISTERED");
+        provider.deriveStatusProjections();
     }
 
     // -- Provider status checks --
 
     @Test
     void inactiveProvider_notEligible() {
-        provider.setStatus("SUSPENDED");
+        provider.setLifecycleStatus("SUSPENDED");
+        provider.deriveStatusProjections();
 
         EligibilityResult result = checkEligibility(provider, null);
 
@@ -72,7 +76,8 @@ class EligibilityRulesTest {
 
     @Test
     void revokedProvider_notEligible() {
-        provider.setStatus("REVOKED");
+        provider.setLifecycleStatus("REMOVED");
+        provider.deriveStatusProjections();
 
         EligibilityResult result = checkEligibility(provider, null);
 

@@ -64,9 +64,6 @@ public class ProviderBootstrapService {
             zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus.PRELOADED.name();
     private static final String LIFECYCLE_CLAIMED =
             zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus.CLAIMED.name();
-    /** Preloaded skeletons are not yet operational; status gates them out of active use. */
-    private static final String STATUS_PRELOADED = "INACTIVE";
-    private static final String STATUS_ACTIVE = "ACTIVE";
     private static final long CLAIM_TOKEN_TTL_DAYS = 30;
 
     private final ProviderRepository providerRepository;
@@ -186,9 +183,10 @@ public class ProviderBootstrapService {
         provider.setProfession(row.profession());
         provider.setCadre(row.cadre());
         provider.setEmploymentOrgId(row.employmentOrgId());
-        provider.setStatus(STATUS_PRELOADED);
+        // Canonical axis first; status / active_flag / licence_status are derived
+        // (PRELOADED projects to status=INACTIVE, active=false).
         provider.setLifecycleStatus(LIFECYCLE_PRELOADED);
-        provider.setActiveFlag(false);
+        provider.deriveStatusProjections();
         provider.setBootstrapOrigin(ORIGIN_BULK_PRELOAD);
         // IATG Wave-1 axes: a fresh skeleton is honestly self-asserted and unverified.
         provider.setTrustLevel(zw.gov.mohcc.impilo.varapi.enums.ProviderTrustLevel.SELF_ASSERTED.name());
@@ -301,9 +299,10 @@ public class ProviderBootstrapService {
         provider.setImpiloHealthId(claimantHealthId);
         provider.setClaimedHealthId(claimantHealthId);
         provider.setClaimedAt(now);
+        // Canonical axis first; status / active_flag / licence_status are derived
+        // (CLAIMED projects to status=ACTIVE, active=true).
         provider.setLifecycleStatus(LIFECYCLE_CLAIMED);
-        provider.setStatus(STATUS_ACTIVE);
-        provider.setActiveFlag(true);
+        provider.deriveStatusProjections();
         // Channel typing at claim, derived from preload/bootstrap provenance
         // (BULK_PRELOAD -> WORKFORCE_B, COUNCIL_IMPORT -> REGULATORY_A,
         // SELF_REGISTERED -> SELF). Never overwrites an already-set channel.

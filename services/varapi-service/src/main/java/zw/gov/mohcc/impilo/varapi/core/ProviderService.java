@@ -120,7 +120,10 @@ public class ProviderService {
         provider.setProfession(request.profession());
         provider.setCadre(request.cadre());
         provider.setEmploymentOrgId(request.employmentOrgId());
-        provider.setStatus("ACTIVE");
+        // A freshly registered provider is REGISTERED on the canonical lifecycle axis;
+        // status / active_flag / licence_status are derived from it (never set directly).
+        provider.setLifecycleStatus("REGISTERED");
+        provider.deriveStatusProjections();
         provider.setVersion(1);
         provider.setCreatedBy(ctx.actorId());
         provider.setUpdatedBy(ctx.actorId());
@@ -361,7 +364,12 @@ public class ProviderService {
         String currentStatus = provider.getStatus();
         validateStatusTransition(currentStatus, request.newStatus());
 
-        provider.setStatus(request.newStatus());
+        // Wave-2: the status axis is a derived projection. Move the CANONICAL
+        // lifecycle_status to the value that projects back to the requested status,
+        // then recompute status / active_flag / licence_status from it. The external
+        // status vocabulary (ACTIVE/SUSPENDED/INACTIVE/REVOKED) is preserved.
+        provider.setLifecycleStatus(ProviderEntity.lifecycleForStatusChange(request.newStatus()));
+        provider.deriveStatusProjections();
         provider.setVersion(provider.getVersion() + 1);
         provider.setUpdatedBy(ctx.actorId());
         provider = providerRepository.save(provider);

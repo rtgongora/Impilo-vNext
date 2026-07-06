@@ -4,10 +4,11 @@ package zw.gov.mohcc.impilo.varapi.enums;
  * The <b>honest registry answer</b> for a provider — what the national registry can
  * truthfully say about this person's standing right now (IATG Wave 1).
  *
- * <p>This is an <b>additive fifth status axis</b> next to the four legacy axes on the
- * provider row ({@code status}, {@code licenceStatus}, {@code professionalStandingStatus},
- * {@code activeFlag}), which remain untouched here and are consolidated in Wave&nbsp;2.
- * Unlike those operational flags, this axis encodes what the registry has actually
+ * <p>This is one of the three CANONICAL status axes after the Wave-2 consolidation
+ * ({@code lifecycleStatus}, {@code registryStatus}, {@code trustLevel}); the operational
+ * columns {@code status}, {@code licenceStatus} and {@code activeFlag} are now derived
+ * projections of {@code lifecycleStatus}, and the dead {@code professionalStandingStatus}
+ * axis was dropped. Unlike those operational flags, this axis encodes what the registry has actually
  * verified — including partial-evidence states such as
  * {@link #MATCHED_EMPLOYMENT_ONLY} and honest uncertainty ({@link #PENDING_VERIFICATION},
  * {@link #CONFLICT}) — so downstream consumers never have to infer verification depth
