@@ -145,6 +145,27 @@ function specialEnv(serviceId) {
       MUSHEX_SANDBOX_APPLY_SIMULATION_OUTCOME: "true",
     };
   }
+  if (serviceId === "organization-registry-service") {
+    // IATG Channel-C claim → adjudication journey. Adjudication is opt-in and,
+    // when on, escalates to workflow-service (in-cluster URL required — app
+    // default localhost:8250 is unreachable in the pod). Kafka events + the
+    // AdjudicationDecisionConsumer @KafkaListener are enabled here;
+    // SPRING_KAFKA_LISTENER_AUTO_STARTUP=true opts the listener in past the
+    // template's default-off guard.
+    return {
+      ORG_REGISTRY_ADJUDICATION_ENABLED: "true",
+      ORG_REGISTRY_KAFKA_EVENTS_ENABLED: "true",
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true",
+      WORKFLOW_SERVICE_URL: "http://workflow-service:8250",
+    };
+  }
+  if (serviceId === "workforce-governance-service") {
+    // DECISION-FEEDBACK arc — publish governance adjudication decision events
+    // (impilo.governance.adjudication.decision.recorded) consumed by org-registry.
+    return {
+      GOVERNANCE_KAFKA_EVENTS_ENABLED: "true",
+    };
+  }
   return null;
 }
 

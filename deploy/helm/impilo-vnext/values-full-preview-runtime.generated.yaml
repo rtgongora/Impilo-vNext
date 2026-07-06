@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
-# Microservices: 94 | enabled: 94 (all waves)
+# Microservices: 95 | enabled: 95 (all waves)
 fullBootServices:
   ai-model-registry-service:
     enabled: true
@@ -261,6 +261,15 @@ fullBootServices:
     enabled: true
     port: 8095
     database: offline_sync
+  organization-registry-service:
+    enabled: true
+    port: 8153
+    database: organization_registry
+    env:
+      ORG_REGISTRY_ADJUDICATION_ENABLED: 'true'
+      ORG_REGISTRY_KAFKA_EVENTS_ENABLED: 'true'
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: 'true'
+      WORKFLOW_SERVICE_URL: http://workflow-service:8250
   oros-service:
     enabled: true
     port: 8089
@@ -424,6 +433,8 @@ fullBootServices:
     enabled: true
     port: 8165
     database: workforce_governance
+    env:
+      GOVERNANCE_KAFKA_EVENTS_ENABLED: 'true'
   zibo-service:
     enabled: true
     port: 8085
@@ -491,6 +502,7 @@ postgres:
     - observability
     - offline_edge
     - offline_sync
+    - organization_registry
     - oros
     - pacs_adapter
     - patient_safety

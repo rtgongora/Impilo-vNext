@@ -78,6 +78,7 @@ CREATE DATABASE secharden;
 CREATE DATABASE surv;
 CREATE DATABASE camp;
 CREATE DATABASE impilo_audit_ledger;
+CREATE DATABASE impilo_org_registry;
 
 -- Integration & Operations
 CREATE DATABASE impilo_forms;

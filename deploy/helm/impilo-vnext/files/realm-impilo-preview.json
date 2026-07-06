@@ -383,6 +383,18 @@
             "HEALTH_PROMOTER"
           ]
         }
+      },
+      {
+        "name": "PLATFORM_ORIGIN_ADMINISTRATOR",
+        "description": "Platform Origin administrator: initiates and approves two-person platform actions (country operations, national appointments)",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "NATIONAL_ADMINISTRATOR",
+        "description": "National administrator appointed via Platform Origin: reads country operations and own-country national appointments",
+        "composite": false,
+        "clientRole": false
       }
     ]
   },
@@ -1177,6 +1189,48 @@
       },
       "credentials": [{ "type": "password", "value": "Vashandi@2024!", "temporary": false }],
       "realmRoles": ["CITIZEN"]
+    },
+    {
+      "username": "origin.admin.one",
+      "email": "origin.admin.one@impilo.gov.zw",
+      "firstName": "Origin",
+      "lastName": "Administrator One",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "actor_id": ["b0000000-0000-4000-8000-000000000101"],
+        "actor_type": ["PLATFORM_ORIGIN_ADMINISTRATOR"]
+      },
+      "credentials": [{ "type": "password", "value": "Origin@Admin2024!", "temporary": false }],
+      "realmRoles": ["PLATFORM_ORIGIN_ADMINISTRATOR"]
+    },
+    {
+      "username": "origin.admin.two",
+      "email": "origin.admin.two@impilo.gov.zw",
+      "firstName": "Origin",
+      "lastName": "Administrator Two",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "actor_id": ["b0000000-0000-4000-8000-000000000102"],
+        "actor_type": ["PLATFORM_ORIGIN_ADMINISTRATOR"]
+      },
+      "credentials": [{ "type": "password", "value": "Origin@Admin2024!", "temporary": false }],
+      "realmRoles": ["PLATFORM_ORIGIN_ADMINISTRATOR"]
+    },
+    {
+      "username": "national.admin.one",
+      "email": "national.admin.one@impilo.gov.zw",
+      "firstName": "National",
+      "lastName": "Administrator One",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "actor_id": ["b0000000-0000-4000-8000-000000000103"],
+        "actor_type": ["NATIONAL_ADMINISTRATOR"]
+      },
+      "credentials": [{ "type": "password", "value": "National@Admin2024!", "temporary": false }],
+      "realmRoles": ["NATIONAL_ADMINISTRATOR"]
     }
   ],
   "accessTokenLifespanForImplicitFlow": 900,
