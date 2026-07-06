@@ -213,7 +213,18 @@ services:
   # BACKEND SERVICES — Core Registry Spine
   # ===========================================================================
 
-  # ── TSHEPO — Trust & Governance (port 8081) ────────────────────────
+  # ── TSHEPO — legacy monolith (DEPRECATED-RETIRED, PDP routes severed) ──
+  # The fail-open PDP is reached ONLY via /v1/authorize (AuthorizeController).
+  # envoy-runtime.yaml now re-points authorize/policies/devices/step-up/
+  # break-glass to `tshepo-authz` (default-DENY / fail-closed) — so the
+  # fail-open PolicyEngine is off ALL live paths even though this container runs.
+  # The container is RETAINED only because it is still the sole local-compose
+  # server for the non-PDP legacy routes (identity/consent/audit/keys/sign/
+  # certificates/offline/external) whose canonical split-out services
+  # (tshepo-identity/consent/audit/keys/offline-service) are NOT yet in this
+  # runtime compose. FOLLOW-UP: wire those split-out services here, re-point
+  # those 8 route families to them, then remove this container. Full source
+  # deletion + compat-proxy removal remain TELEMETRY-GATED (checklist exit 1/3/4).
   tshepo:
     build:
       context: ./services/tshepo-service

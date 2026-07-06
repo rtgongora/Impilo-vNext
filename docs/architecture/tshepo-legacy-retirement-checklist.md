@@ -25,3 +25,58 @@ Scope: `tshepo-service` (`:8079`) retirement gates.
 2. No active runtime policy consumer defaults to `:8079`.
 3. Compatibility proxy routes are removed after zero-hit evidence and consumer confirmation.
 4. `/internal/v1/federation/*` ownership decision is ratified with explicit replacement path.
+
+## Progress Note — 2026-07-06 (W2-RED: local-compose split-brain closed)
+
+**What changed (safe, ungated subset only):**
+
+- **Local docker-compose split-brain fixed.** In `infra/envoy/envoy-runtime.yaml` the
+  authorize/policy/trust REST routes proven served by `tshepo-authz-service`
+  controllers were re-pointed from the legacy `tshepo_service` cluster to a new
+  HTTP `tshepo_authz_service` cluster (`tshepo-authz:8081`):
+  - `/api/v1/authorize` → `AuthorizeController` (`/v1/authorize`)
+  - `/api/v1/step-up` → `StepUpController` (`/v1/step-up`)
+  - `/api/v1/break-glass` → `BreakGlassController` (`/v1/break-glass`)
+  - `/api/v1/policies` → `PolicyController` (`/v1/policies`)
+  - `/api/v1/devices` → `DeviceController` (`/v1/devices`)
+  - `/actuator/health` → authz engine.
+- **Fail-open PolicyEngine is off ALL live paths.** The engine is reachable only via
+  `/v1/authorize` (AuthorizeController); with that route (and policies/devices/
+  step-up/break-glass) re-pointed to `tshepo-authz`, the fail-open PDP no longer
+  serves any request in any environment (already absent from prod/preview
+  `deploy/helm/**`; now unreachable in local compose too).
+- **Coordinator decision — legacy `tshepo` container RETAINED (not removed).** The
+  worker initially removed it, but the 8 non-PDP route families below have **no
+  other server in `docker-compose.runtime.yml`** (their canonical split-out
+  services `tshepo-identity/consent/audit/keys/offline-service` exist in-tree but
+  are NOT wired into this compose), so removal 503'd them locally. Since those
+  routes are not the fail-open PDP, the container is kept as their local-only
+  server while the PDP routes are severed. FOLLOW-UP (new item): add the split-out
+  services to `docker-compose.runtime.yml`, re-point the 8 families to them, then
+  remove this container.
+- **Stale reference fixed.** `experience-bff/.../registry-downstream-services.yml`
+  no longer defaults `tshepo-service` to `:8079`; redirected to `:8081`.
+- **Guard added.** `EnvoyRuntimeNoLegacyTshepoRouteGuardTest` (experience-bff)
+  fails if any live authorize/policy Envoy route targets `tshepo_service` again.
+
+**Non-PDP routes still served locally by the retained container** (canonical owners
+not yet in runtime compose — the FOLLOW-UP above): `/api/v1/identity`,
+`/api/v1/consent`, `/api/v1/audit`, `/api/v1/keys`, `/api/v1/sign`,
+`/api/v1/certificates`, `/api/v1/offline`, `/external/v1/`. These are NOT the
+fail-open PDP; keeping them on the monolith locally does not reintroduce the
+authz risk.
+
+**Also out of this worker's scope (flagged, NOT changed):** other compose files still
+build `services/tshepo-service` — `ops/runtime/docker-compose.kernel.yml`,
+`compose/trust/docker-compose.trust-e2e.yml`, and `.github/workflows/deploy.yml`.
+
+**Exit conditions remain OPEN — nothing below is met by this pass:**
+
+- Exit condition **1** (30-day zero-hit telemetry windows for the `/v1/*` compat
+  routes) is **STILL OPEN**. Not evidenced here.
+- Exit condition **3** (compatibility proxy removal) is **STILL OPEN** and
+  telemetry-gated. The compat proxy was **not** touched.
+- Exit condition **4** (`/internal/v1/federation/*` ownership ADR) is **STILL
+  BLOCKED**. Not resolved here.
+- `services/tshepo-service` **source was NOT deleted** and remains in the
+  `services/pom.xml` reactor (compiles under the backend-reactor-tests gate).

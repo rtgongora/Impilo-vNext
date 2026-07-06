@@ -3,7 +3,10 @@
 impilo:
   registry-downstream:
     services:
-      tshepo-service: http://localhost:8079
+      # tshepo-service (legacy monolith, :8079) is DEPRECATED-RETIRED and not deployed.
+      # Redirected to the LIVE tshepo-authz-service (:8081) so no reachability check
+      # defaults to the fail-open legacy engine. (Consumers reference :8081.)
+      tshepo-service: http://localhost:8081
       tshepo-authz-service: http://localhost:8081
       tshepo-identity-service: http://localhost:8181
       tshepo-consent-service: http://localhost:8182
