@@ -73,6 +73,14 @@ public class InternalHrApi {
         return employeeRepository.findByTenantIdOrderByStaffNumberAsc(tenant());
     }
 
+    /**
+     * Creates/updates a payroll-financial employee record. Note: the
+     * {@code employmentStatus} on the request body is payroll-financial only
+     * (payroll runs/contracts) and is NOT the employment-trust source of record —
+     * workforce-governance {@code HscEmployment.employmentStatus} is authoritative
+     * for trust/eligibility. This endpoint neither emits a trust event nor feeds
+     * governance/vashandi trust; it must not be consumed for access decisions.
+     */
     @PostMapping("/internal/v1/hr/employees")
     public EmployeeEntity createEmployee(@RequestBody EmployeeEntity e) {
         requireHrWriteAuthority();
