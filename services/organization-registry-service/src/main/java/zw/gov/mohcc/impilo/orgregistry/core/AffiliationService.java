@@ -76,6 +76,35 @@ public class AffiliationService {
         return saved;
     }
 
+    /**
+     * Record the administering affiliation for a facility whose administrator appointment went
+     * ACTIVE in TUSO (IATG Wave 2, WS-E). Reuses {@link #create} — the facility-admin case is an
+     * ordinary {@code FACILITY} affiliation ({@code affiliationType=FACILITY_ADMINISTRATION},
+     * {@code sourceChannel=FACILITY_ADMIN_APPOINTMENT}); no new schema. TUSO stays the facility SoR
+     * and the appointment SoR — this is a relationship link only. Idempotent: an existing ACTIVE
+     * FACILITY_ADMINISTRATION link for the same (org, facility) is returned instead of duplicated.
+     */
+    @Transactional
+    public AffiliationEntity recordFacilityAdminAffiliation(
+            UUID tenantId, UUID organizationId,
+            OrgRegistryDtos.RecordFacilityAdminAffiliationRequest request) throws Exception {
+        if (request == null || request.facilityUuid() == null || request.facilityUuid().isBlank()) {
+            throw new IllegalArgumentException("facilityUuid is required");
+        }
+        String facilityRef = request.facilityUuid().trim();
+        for (AffiliationEntity existing : affiliationRepository.findByOrganizationId(organizationId)) {
+            if ("FACILITY".equals(existing.getSubjectType())
+                    && facilityRef.equals(existing.getSubjectRef())
+                    && "FACILITY_ADMINISTRATION".equals(existing.getAffiliationType())
+                    && "ACTIVE".equals(existing.getStatus())) {
+                return existing;
+            }
+        }
+        return create(tenantId, organizationId, new OrgRegistryDtos.CreateAffiliationRequest(
+                "FACILITY", facilityRef, "FACILITY_ADMINISTRATION", "ACTIVE",
+                "FACILITY_ADMIN_APPOINTMENT", request.validFrom(), null));
+    }
+
     @Transactional
     public AffiliationEntity update(UUID tenantId, UUID organizationId, UUID affiliationId,
                                     OrgRegistryDtos.UpdateAffiliationRequest request) throws Exception {

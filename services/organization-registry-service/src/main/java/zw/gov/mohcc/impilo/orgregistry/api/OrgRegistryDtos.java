@@ -47,6 +47,18 @@ public final class OrgRegistryDtos {
     public record UpdateAffiliationRequest(String status, LocalDate validTo) {
     }
 
+    /**
+     * Record the administering relationship for a facility whose administrator appointment went
+     * ACTIVE in TUSO (IATG Wave 2, WS-E). {@code facilityUuid} is the canonical TUSO facility UUID;
+     * {@code personHealthId}/{@code appointedBy} are provenance (the affiliation itself is org↔facility).
+     */
+    public record RecordFacilityAdminAffiliationRequest(
+            String facilityUuid,
+            String personHealthId,
+            String appointedBy,
+            LocalDate validFrom) {
+    }
+
     public record CreateClaimRequest(
             UUID submittedByRepId,
             String subjectHealthId,
