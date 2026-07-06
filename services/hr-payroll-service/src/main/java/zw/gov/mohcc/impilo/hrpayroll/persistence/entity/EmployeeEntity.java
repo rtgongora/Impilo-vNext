@@ -38,6 +38,15 @@ public class EmployeeEntity {
     private String cadre;
     @Column(nullable = false, length = 32)
     private String employmentType;
+    /**
+     * Payroll-financial employment status ONLY (drives payroll runs/contracts).
+     * NOT the employment-trust source of record — workforce-governance
+     * {@code HscEmployment.employmentStatus} (table {@code wgv_hsc_employment}) is
+     * authoritative for trust/eligibility (vashandi eligibility, BFF
+     * TrustProfileComposer, Work gating). This field is set manually via
+     * {@code POST /internal/v1/hr/employees} and is NOT synced from governance.
+     * Do not consume this field for access decisions.
+     */
     @Column(nullable = false, length = 16)
     private String employmentStatus = "ACTIVE";
     private LocalDate hireDate;

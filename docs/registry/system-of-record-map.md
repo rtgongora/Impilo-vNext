@@ -32,7 +32,7 @@
 | `forms-service` | clinical | Forms canonical records; **encounter form definitions + immutable versions** (clinical DAK metadata). Must not own form responses or clinical encounters — those are PCT. |
 | `general-ledger-service` | enterprise | General Ledger canonical records |
 | `guidance-service` | clinical | Guidance canonical records |
-| `hr-payroll-service` | enterprise | Payroll-financial: employees, contracts, deductions, payroll runs, payslips, earnings. **Workforce attendance + leave are Vashandi's** — payroll derives worked-hours from Vashandi (no separately-entered attendance). |
+| `hr-payroll-service` | enterprise | Payroll-financial: employees, contracts, deductions, payroll runs, payslips, earnings. The `hr.employees` row (incl. `employment_status`) is **payroll-financial only**; **employment trust is `workforce-governance-service`'s** (`wgv_hsc_employment.employment_status`) — hr-payroll's copy is unsynced and must never be read as a trust/eligibility signal. **Workforce attendance + leave are Vashandi's** — payroll derives worked-hours from Vashandi (no separately-entered attendance). |
 | `identity-assurance-service` | trust | Identity Assurance canonical records |
 | `indawo-service` | registry | Indawo canonical records |
 | `inpatient-service` | clinical | Inpatient canonical records |
