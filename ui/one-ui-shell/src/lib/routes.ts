@@ -176,6 +176,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/citizen/wallet/dependants", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Dependants & Proxy", navLabel: "Dependants", navZone: "life" },
   { path: "/citizen/wallet/payments", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Payments & Bills", navLabel: "Payments", navZone: "life" },
   { path: "/citizen/wallet/comms", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Communication Preferences", navLabel: "Comms Preferences", navZone: "life" },
+  // E2-TRUST: four-block doctrine trust profile (identity/professional/employment/operational).
+  { path: "/citizen/wallet/trust", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Trust Profile", navLabel: "Trust Profile", navZone: "life" },
   { path: "/verify/credential", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Verify Credential", navLabel: "Verify Credential", navZone: "life" },
   { path: "/share/claim", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Claim Shared Documents", navLabel: "Claim Shared Documents", navZone: "life" },
   { path: "/collaboration/access", zone: "home", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Provider collaboration access", navLabel: "Collaboration access", navZone: "life" },
@@ -446,6 +448,8 @@ export const ROUTES: RouteDefinition[] = [
   // â”€â”€ Zone: Provider Activation (Health OS Â§6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/provider/activate", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activate Provider Role", navLabel: "Provider Activation" },
   { path: "/provider/status", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Provider Status", navLabel: "Provider Status" },
+  // E2-TRUST: provider self-service claim / recovery journey (page already exists — nav discoverability).
+  { path: "/citizen/provider-claim", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Claim Provider Profile", navLabel: "Provider Claim", navZone: "professional" },
 
   // â”€â”€ Zone: Wellness (Health OS Â§2 â€” prevention, self-care, fitness) â”€
   { path: "/wellness", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Hub", navLabel: "Wellness", navZone: "life" },
@@ -810,7 +814,9 @@ export const ROUTES: RouteDefinition[] = [
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).
 // Dura (Jun 2026): native sovereign stock brain — +1 net-new route (/dura) merged from the Dura workstream.
-export const EXPECTED_ROUTE_COUNT = 685;
+// E2-TRUST (Jul 2026): +2 net-new routes — /citizen/wallet/trust (four-block trust
+// profile) and /citizen/provider-claim (nav discoverability for the existing page).
+export const EXPECTED_ROUTE_COUNT = 687;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
