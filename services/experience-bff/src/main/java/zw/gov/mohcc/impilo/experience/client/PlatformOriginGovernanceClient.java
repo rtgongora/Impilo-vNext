@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.experience.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -63,6 +65,32 @@ public class PlatformOriginGovernanceClient {
 
     public JsonNode listAppointments(UUID countryOperationId) {
         return get(BASE_PATH + "/country-operations/" + countryOperationId + "/appointments");
+    }
+
+    /**
+     * Pending platform-action approvals inbox. Proxies the existing governance
+     * access-request read and filters to PLATFORM_ACTION requests in the given
+     * status (default PENDING), so the console is not limited to in-session ids.
+     */
+    public JsonNode listPendingActions(String status) {
+        String wanted = status == null || status.isBlank() ? "PENDING" : status;
+        JsonNode all = get("/v1/internal/governance/access-requests");
+        ArrayNode filtered = JsonNodeFactory.instance.arrayNode();
+        if (all != null && all.isArray()) {
+            for (JsonNode req : all) {
+                String type = req.path("requestType").asText("");
+                String st = req.path("status").asText("");
+                if ("PLATFORM_ACTION".equalsIgnoreCase(type) && wanted.equalsIgnoreCase(st)) {
+                    filtered.add(req);
+                }
+            }
+        }
+        return filtered;
+    }
+
+    /** Who-approved projection for a platform action (read-only). */
+    public JsonNode getActionApprovals(UUID accessRequestId) {
+        return get(BASE_PATH + "/actions/" + accessRequestId + "/approvals");
     }
 
     public JsonNode initiateAppointment(UUID countryOperationId, Map<String, Object> body) {

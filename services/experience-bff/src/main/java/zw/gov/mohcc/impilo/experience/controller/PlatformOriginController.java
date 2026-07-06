@@ -64,6 +64,24 @@ public class PlatformOriginController {
         return proxy(client::listCountryOperations, HttpStatus.OK, requestId, correlationId);
     }
 
+    /** Pending platform-action approvals inbox (PLATFORM_ACTION requests, default status PENDING). */
+    @GetMapping("/actions")
+    public ResponseEntity<Map<String, Object>> listPendingActions(
+            @RequestParam(required = false, defaultValue = "PENDING") String status,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.listPendingActions(status), HttpStatus.OK, requestId, correlationId);
+    }
+
+    /** Who-approved projection for a platform action's two-person approvals. */
+    @GetMapping("/actions/{accessRequestId}/approvals")
+    public ResponseEntity<Map<String, Object>> listActionApprovals(
+            @PathVariable UUID accessRequestId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.getActionApprovals(accessRequestId), HttpStatus.OK, requestId, correlationId);
+    }
+
     @GetMapping("/country-operations/{id}")
     public ResponseEntity<Map<String, Object>> getCountryOperation(
             @PathVariable UUID id,

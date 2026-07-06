@@ -149,6 +149,9 @@ const ZONES: SidebarZone[] = [
       { href: "/public-health", label: "Public Health", icon: Heart, requiredRoles: PUBLIC_HEALTH_ROLES },
       { href: "/operations/facility-operations", label: "Facility Operations", icon: Building2, requiredRoles: ADMIN_ROLES },
       { href: "/organization-admin", label: "Org administration", icon: BriefcaseBusiness, requiredRoles: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER", "FINANCE"] },
+      // Phase-E2 governance spine (E2-GOV-UI) — appended entries.
+      { href: "/platform-origin", label: "Platform Origin", icon: ShieldCheck, requiredRoles: ["PLATFORM_ORIGIN_ADMINISTRATOR", "NATIONAL_ADMINISTRATOR", "SYSTEM_ADMIN"] },
+      { href: "/organization-admin/onboarding", label: "Org Onboarding", icon: BriefcaseBusiness, requiredRoles: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER", "FINANCE"] },
       { href: "/reports", label: "Reports", icon: FileBarChart2 },
       { href: "/admin", label: "Administration", icon: Shield, requiredRoles: ADMIN_ROLES },
       // Absorbed sidecars: ops-console → /operations, developer-console → /developer

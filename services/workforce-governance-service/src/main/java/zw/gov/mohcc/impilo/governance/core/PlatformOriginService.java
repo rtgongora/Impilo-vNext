@@ -318,6 +318,19 @@ public class PlatformOriginService {
         return nationalAppointmentRepository.findByCountryOperationIdOrderByAppointedAtAsc(countryOperationId);
     }
 
+    /**
+     * Who-approved projection for a PLATFORM_ACTION access request: each recorded
+     * approver decision (id/role/decision/note/timestamp). Read-only — does not
+     * touch the two-person decision engine.
+     */
+    @Transactional(readOnly = true)
+    public List<PlatformActionApprovalView> listApprovals(UUID accessRequestId) {
+        AccessRequestEntity request = requirePlatformAction(accessRequestId);
+        return twoPersonApprovalService.approvals(request).stream()
+                .map(PlatformActionApprovalView::from)
+                .toList();
+    }
+
     /** The singleton Platform Origin root record, created on first use. */
     @Transactional
     public PlatformOriginEntity ensurePlatformOrigin() {

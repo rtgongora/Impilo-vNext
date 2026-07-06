@@ -69,6 +69,42 @@ class PlatformOriginControllerTest {
         assertEquals("req-6", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
     }
 
+    @Test
+    void pendingActionsAndApprovalsFailClosedWhenGovernanceUnavailable() {
+        PlatformOriginController controller = new PlatformOriginController(new FailingClient());
+
+        assertEquals(502, controller.listPendingActions("PENDING", "req-7", "corr-7")
+                .getStatusCode().value());
+        assertEquals(502, controller.listActionApprovals(UUID.randomUUID(), "req-8", "corr-8")
+                .getStatusCode().value());
+    }
+
+    @Test
+    void pendingActionsInboxProxiesFilteredList() throws Exception {
+        JsonNode data = objectMapper.readTree(
+                "[{\"requestType\":\"PLATFORM_ACTION\",\"status\":\"PENDING\"}]");
+        PlatformOriginController controller = new PlatformOriginController(new StubClient(data));
+
+        var response = controller.listPendingActions("PENDING", "req-9", "corr-9");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(data, response.getBody().get("data"));
+    }
+
+    @Test
+    void actionApprovalsProxyWrapsWhoApprovedProjection() throws Exception {
+        JsonNode data = objectMapper.readTree(
+                "[{\"approverUserId\":\"approver-1\",\"approverRole\":\"PLATFORM_ORIGIN_ADMINISTRATOR\",\"decision\":\"APPROVE\"}]");
+        PlatformOriginController controller = new PlatformOriginController(new StubClient(data));
+
+        var response = controller.listActionApprovals(UUID.randomUUID(), "req-10", "corr-10");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(data, response.getBody().get("data"));
+    }
+
     private static final class FailingClient extends PlatformOriginGovernanceClient {
         private FailingClient() {
             super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints());
@@ -99,6 +135,16 @@ class PlatformOriginControllerTest {
                                            Map<String, Object> body) {
             throw new IllegalStateException("governance unavailable");
         }
+
+        @Override
+        public JsonNode listPendingActions(String status) {
+            throw new IllegalStateException("governance unavailable");
+        }
+
+        @Override
+        public JsonNode getActionApprovals(UUID accessRequestId) {
+            throw new IllegalStateException("governance unavailable");
+        }
     }
 
     private static final class StubClient extends PlatformOriginGovernanceClient {
@@ -111,6 +157,16 @@ class PlatformOriginControllerTest {
 
         @Override
         public JsonNode listCountryOperations() {
+            return data;
+        }
+
+        @Override
+        public JsonNode listPendingActions(String status) {
+            return data;
+        }
+
+        @Override
+        public JsonNode getActionApprovals(UUID accessRequestId) {
             return data;
         }
     }
