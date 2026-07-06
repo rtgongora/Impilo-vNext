@@ -44,8 +44,13 @@ impilo:
   # Default OFF: enabling is an explicit ops decision (org-registry cutover phase 1).
   org-mirror:
     enabled: ${ORG_MIRROR_ENABLED:false}
+    # Phase-2a dormant read-preference. WGV (default) = strict no-op vs today.
+    # ORG_REGISTRY is a phase-2c step; do not flip until the mirror is soak-verified
+    # complete and the dual-key columns are backfilled.
+    read-preference: ${ORG_MIRROR_READ_PREFERENCE:WGV}
     base-url: ${ORG_MIRROR_BASE_URL:http://localhost:8153}
     mirror-path: ${ORG_MIRROR_PATH:/v1/internal/org-registry/mirror/wgv}
+    inventory-path: ${ORG_MIRROR_INVENTORY_PATH:/internal/v1/org-registry/mirror/wgv/inventory}
     connect-timeout-ms: ${ORG_MIRROR_CONNECT_TIMEOUT_MS:2000}
     read-timeout-ms: ${ORG_MIRROR_READ_TIMEOUT_MS:3000}
     backfill-page-size: ${ORG_MIRROR_BACKFILL_PAGE_SIZE:200}

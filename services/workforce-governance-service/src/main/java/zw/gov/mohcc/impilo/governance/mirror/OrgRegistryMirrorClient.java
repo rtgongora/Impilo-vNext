@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.governance.mirror;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -72,5 +74,44 @@ public class OrgRegistryMirrorClient {
                     payload != null ? payload.id() : null, e.toString());
             return false;
         }
+    }
+
+    /**
+     * Read-only GET over the org-registry mirror inventory, paging until the
+     * receiver is exhausted. Returns every mirrored row so the reconciliation
+     * report can diff the mirror against local active {@code wgv_organisation}
+     * rows.
+     *
+     * <p>Unlike {@link #push}, this does NOT swallow transport failures — a
+     * reconciliation must be honest: an unreachable receiver surfaces as an
+     * exception (the operator sees the failure) rather than a silent "empty".
+     * An empty mirror, by contrast, legitimately returns an empty list.
+     *
+     * @return all inventory rows across all pages (empty when the mirror is empty)
+     */
+    public List<MirrorInventoryDtos.InventoryRow> fetchInventory(UUID tenantId, UUID correlationId) {
+        List<MirrorInventoryDtos.InventoryRow> all = new ArrayList<>();
+        int pageIndex = 0;
+        int size = properties.getBackfillPageSize() > 0 ? properties.getBackfillPageSize() : 200;
+        while (true) {
+            final int currentPage = pageIndex;
+            MirrorInventoryDtos.InventoryPage page = restClient.get()
+                    .uri(properties.getInventoryPath() + "?page=" + currentPage + "&size=" + size)
+                    .header(TrustHeaders.X_TENANT_ID, tenantId != null ? tenantId.toString() : "")
+                    .header(TrustHeaders.X_CORRELATION_ID,
+                            (correlationId != null ? correlationId : UUID.randomUUID()).toString())
+                    .header("X-Access-Mode", "INTERNAL")
+                    .retrieve()
+                    .body(MirrorInventoryDtos.InventoryPage.class);
+            if (page == null || page.items() == null || page.items().isEmpty()) {
+                break;
+            }
+            all.addAll(page.items());
+            pageIndex++;
+            if (pageIndex >= page.totalPages()) {
+                break;
+            }
+        }
+        return all;
     }
 }
