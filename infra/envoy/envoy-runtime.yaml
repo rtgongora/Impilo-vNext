@@ -35,17 +35,31 @@ static_resources:
                     - name: impilo_services
                       domains: ["*"]
                       routes:
-                        # ── TSHEPO Service (legacy + authz) ──
+                        # ── TSHEPO Trust routes ──
+                        # Routes proven served by tshepo-authz-service controllers
+                        # (AuthorizeController, StepUpController, BreakGlassController,
+                        # PolicyController, DeviceController) are pointed at the LIVE
+                        # default-DENY / fail-closed authz engine so local-compose matches
+                        # prod. The legacy default-ALLOW `tshepo-service` monolith is
+                        # DEPRECATED-RETIRED and no longer on any live path here.
                         - match: { prefix: "/api/v1/authorize" }
-                          route: { cluster: tshepo_service, prefix_rewrite: "/v1/authorize" }
+                          route: { cluster: tshepo_authz_service, prefix_rewrite: "/v1/authorize" }
                         - match: { prefix: "/api/v1/step-up" }
-                          route: { cluster: tshepo_service, prefix_rewrite: "/v1/step-up" }
+                          route: { cluster: tshepo_authz_service, prefix_rewrite: "/v1/step-up" }
                         - match: { prefix: "/api/v1/break-glass" }
-                          route: { cluster: tshepo_service, prefix_rewrite: "/v1/break-glass" }
+                          route: { cluster: tshepo_authz_service, prefix_rewrite: "/v1/break-glass" }
                         - match: { prefix: "/api/v1/policies" }
-                          route: { cluster: tshepo_service, prefix_rewrite: "/v1/policies" }
+                          route: { cluster: tshepo_authz_service, prefix_rewrite: "/v1/policies" }
                         - match: { prefix: "/api/v1/devices" }
-                          route: { cluster: tshepo_service, prefix_rewrite: "/v1/devices" }
+                          route: { cluster: tshepo_authz_service, prefix_rewrite: "/v1/devices" }
+                        # ── UNCOVERED by tshepo-authz-service (coordinator decision needed) ──
+                        # These surfaces have NO controller in tshepo-authz-service. They are
+                        # intentionally NOT re-pointed (re-pointing would 404). The legacy
+                        # `tshepo` container has been removed from docker-compose.runtime.yml,
+                        # so these now hard-fail (503) locally instead of silently hitting the
+                        # fail-open monolith — strictly safer. Canonical owners appear to be the
+                        # split-out tshepo-identity/consent/audit/keys/offline services
+                        # (:8181-:8185); ownership/wiring is a coordinator decision, not W2-RED's.
                         - match: { prefix: "/api/v1/identity" }
                           route: { cluster: tshepo_service, prefix_rewrite: "/v1/identity" }
                         - match: { prefix: "/api/v1/consent" }
@@ -110,6 +124,8 @@ static_resources:
                         # ── v1.1 internal paths → Experience BFF ──
                         - match: { prefix: "/internal/v1/" }
                           route: { cluster: experience_bff }
+                        # UNCOVERED: /external/v1/ has no tshepo-authz-service controller —
+                        # left on legacy cluster (coordinator decision). See note above.
                         - match: { prefix: "/external/v1/" }
                           route: { cluster: tshepo_service }
 
@@ -144,9 +160,9 @@ static_resources:
                           route: { cluster: experience_bff, prefix_rewrite: "/" }
                         # (duplicate removed — /internal/v1/ above covers this)
 
-                        # ── Health check passthrough ──
+                        # ── Health check passthrough (authz engine) ──
                         - match: { prefix: "/actuator/health" }
-                          route: { cluster: tshepo_service }
+                          route: { cluster: tshepo_authz_service }
 
                 http_filters:
                   # TSHEPO ext_authz — injects visibility headers (x-visibility-tier,
@@ -197,7 +213,23 @@ static_resources:
                   address:
                     socket_address: { address: tshepo-authz, port_value: 9090 }
 
-    # ── TSHEPO ──
+    # ── TSHEPO Authz (HTTP/1.1 — for re-pointed REST trust routes) ──
+    # LIVE default-DENY / fail-closed engine. Serves /v1/authorize, /v1/step-up,
+    # /v1/break-glass, /v1/policies, /v1/devices and /actuator/health.
+    - name: tshepo_authz_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_authz_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: tshepo-authz, port_value: 8081 }
+
+    # ── TSHEPO (legacy monolith — DEPRECATED-RETIRED) ──
+    # No longer backed by a compose container (removed to close the split-brain).
+    # Retained only as the target for UNCOVERED routes pending coordinator decision;
+    # requests to it now hard-fail (503) instead of hitting the fail-open engine.
     - name: tshepo_service
       type: STRICT_DNS
       load_assignment:
