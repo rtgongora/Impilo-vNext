@@ -25,3 +25,49 @@ Scope: `tshepo-service` (`:8079`) retirement gates.
 2. No active runtime policy consumer defaults to `:8079`.
 3. Compatibility proxy routes are removed after zero-hit evidence and consumer confirmation.
 4. `/internal/v1/federation/*` ownership decision is ratified with explicit replacement path.
+
+## Progress Note — 2026-07-06 (W2-RED: local-compose split-brain closed)
+
+**What changed (safe, ungated subset only):**
+
+- **Local docker-compose split-brain fixed.** In `infra/envoy/envoy-runtime.yaml` the
+  authorize/policy/trust REST routes proven served by `tshepo-authz-service`
+  controllers were re-pointed from the legacy `tshepo_service` cluster to a new
+  HTTP `tshepo_authz_service` cluster (`tshepo-authz:8081`):
+  - `/api/v1/authorize` → `AuthorizeController` (`/v1/authorize`)
+  - `/api/v1/step-up` → `StepUpController` (`/v1/step-up`)
+  - `/api/v1/break-glass` → `BreakGlassController` (`/v1/break-glass`)
+  - `/api/v1/policies` → `PolicyController` (`/v1/policies`)
+  - `/api/v1/devices` → `DeviceController` (`/v1/devices`)
+  - `/actuator/health` → authz engine.
+- **Legacy `tshepo` container removed** from `docker-compose.runtime.yml` (no other
+  compose service depended on it). The fail-open monolith is now on **zero live
+  paths in all environments** (already absent from prod/preview `deploy/helm/**`).
+- **Stale reference fixed.** `experience-bff/.../registry-downstream-services.yml`
+  no longer defaults `tshepo-service` to `:8079`; redirected to `:8081`.
+- **Guard added.** `EnvoyRuntimeNoLegacyTshepoRouteGuardTest` (experience-bff)
+  fails if any live authorize/policy Envoy route targets `tshepo_service` again.
+
+**Routes deliberately LEFT on the legacy cluster (coordinator decision required):**
+`/api/v1/identity`, `/api/v1/consent`, `/api/v1/audit`, `/api/v1/keys`,
+`/api/v1/sign`, `/api/v1/certificates`, `/api/v1/offline`, `/external/v1/` — these
+have **no controller** in `tshepo-authz-service`, so re-pointing would 404. With
+the `tshepo` container removed they now hard-fail (503) locally instead of hitting
+the fail-open engine — strictly safer. Canonical owners appear to be the split-out
+`tshepo-identity/consent/audit/keys/offline` services (`:8181`–`:8185`); wiring is a
+coordinator decision, not part of this pass.
+
+**Also out of this worker's scope (flagged, NOT changed):** other compose files still
+build `services/tshepo-service` — `ops/runtime/docker-compose.kernel.yml`,
+`compose/trust/docker-compose.trust-e2e.yml`, and `.github/workflows/deploy.yml`.
+
+**Exit conditions remain OPEN — nothing below is met by this pass:**
+
+- Exit condition **1** (30-day zero-hit telemetry windows for the `/v1/*` compat
+  routes) is **STILL OPEN**. Not evidenced here.
+- Exit condition **3** (compatibility proxy removal) is **STILL OPEN** and
+  telemetry-gated. The compat proxy was **not** touched.
+- Exit condition **4** (`/internal/v1/federation/*` ownership ADR) is **STILL
+  BLOCKED**. Not resolved here.
+- `services/tshepo-service` **source was NOT deleted** and remains in the
+  `services/pom.xml` reactor (compiles under the backend-reactor-tests gate).
