@@ -40,22 +40,31 @@ Scope: `tshepo-service` (`:8079`) retirement gates.
   - `/api/v1/policies` → `PolicyController` (`/v1/policies`)
   - `/api/v1/devices` → `DeviceController` (`/v1/devices`)
   - `/actuator/health` → authz engine.
-- **Legacy `tshepo` container removed** from `docker-compose.runtime.yml` (no other
-  compose service depended on it). The fail-open monolith is now on **zero live
-  paths in all environments** (already absent from prod/preview `deploy/helm/**`).
+- **Fail-open PolicyEngine is off ALL live paths.** The engine is reachable only via
+  `/v1/authorize` (AuthorizeController); with that route (and policies/devices/
+  step-up/break-glass) re-pointed to `tshepo-authz`, the fail-open PDP no longer
+  serves any request in any environment (already absent from prod/preview
+  `deploy/helm/**`; now unreachable in local compose too).
+- **Coordinator decision — legacy `tshepo` container RETAINED (not removed).** The
+  worker initially removed it, but the 8 non-PDP route families below have **no
+  other server in `docker-compose.runtime.yml`** (their canonical split-out
+  services `tshepo-identity/consent/audit/keys/offline-service` exist in-tree but
+  are NOT wired into this compose), so removal 503'd them locally. Since those
+  routes are not the fail-open PDP, the container is kept as their local-only
+  server while the PDP routes are severed. FOLLOW-UP (new item): add the split-out
+  services to `docker-compose.runtime.yml`, re-point the 8 families to them, then
+  remove this container.
 - **Stale reference fixed.** `experience-bff/.../registry-downstream-services.yml`
   no longer defaults `tshepo-service` to `:8079`; redirected to `:8081`.
 - **Guard added.** `EnvoyRuntimeNoLegacyTshepoRouteGuardTest` (experience-bff)
   fails if any live authorize/policy Envoy route targets `tshepo_service` again.
 
-**Routes deliberately LEFT on the legacy cluster (coordinator decision required):**
-`/api/v1/identity`, `/api/v1/consent`, `/api/v1/audit`, `/api/v1/keys`,
-`/api/v1/sign`, `/api/v1/certificates`, `/api/v1/offline`, `/external/v1/` — these
-have **no controller** in `tshepo-authz-service`, so re-pointing would 404. With
-the `tshepo` container removed they now hard-fail (503) locally instead of hitting
-the fail-open engine — strictly safer. Canonical owners appear to be the split-out
-`tshepo-identity/consent/audit/keys/offline` services (`:8181`–`:8185`); wiring is a
-coordinator decision, not part of this pass.
+**Non-PDP routes still served locally by the retained container** (canonical owners
+not yet in runtime compose — the FOLLOW-UP above): `/api/v1/identity`,
+`/api/v1/consent`, `/api/v1/audit`, `/api/v1/keys`, `/api/v1/sign`,
+`/api/v1/certificates`, `/api/v1/offline`, `/external/v1/`. These are NOT the
+fail-open PDP; keeping them on the monolith locally does not reintroduce the
+authz risk.
 
 **Also out of this worker's scope (flagged, NOT changed):** other compose files still
 build `services/tshepo-service` — `ops/runtime/docker-compose.kernel.yml`,
