@@ -30,7 +30,7 @@
 | `forms-service` | clinical | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
 | `general-ledger-service` | enterprise | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy |
 | `guidance-service` | clinical | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
-| `hr-payroll-service` | enterprise | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy |
+| `hr-payroll-service` | enterprise | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy, must-not-own-employment-trust-status |
 | `identity-assurance-service` | trust | must-not-own-clinical-record-content, must-not-own-billing-ledgers |
 | `indawo-service` | registry | must-not-authorize-access-decisions, must-not-own-clinical-encounters |
 | `inpatient-service` | clinical | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
@@ -97,3 +97,12 @@
   to match persons to source records and to evidence claims; they are never a primary key
   for platform identity or professional participation
   ([Access Governance Doctrine §4](../doctrine/identity-access-trust-governance.md)).
+
+- **`must-not-own-employment-trust-status` (hr-payroll-service).** Employment trust is
+  owned solely by `workforce-governance-service` (`wgv_hsc_employment.employment_status` —
+  see the Employment-trust row in [`service-ownership-matrix.md`](service-ownership-matrix.md)).
+  hr-payroll's `hr.employees.employment_status` is a **payroll-financial** attribute only
+  (drives payroll runs/contracts), is set manually via `POST /internal/v1/hr/employees`, is
+  **not** synced from governance, and **must never** be consumed as a trust/eligibility
+  signal by vashandi eligibility, the BFF TrustProfileComposer, Work gating, or any access
+  decision. The two copies may legitimately diverge; only the governance copy is authoritative.

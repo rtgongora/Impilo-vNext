@@ -30,7 +30,7 @@
 | `forms-service` | `forms-service` | clinical | clinical-knowledge | — | Forms canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
 | `general-ledger-service` | `general-ledger-service` | enterprise | enterprise-resource | — | General Ledger canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy |
 | `guidance-service` | `guidance-service` | clinical | clinical-knowledge | — | Guidance canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
-| `hr-payroll-service` | `hr-payroll-service` | enterprise | enterprise-resource | — | Hr Payroll canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy |
+| `hr-payroll-service` | `hr-payroll-service` | enterprise | enterprise-resource | — | Hr Payroll canonical records (payroll-financial: employees, contracts, deductions, runs, payslips). **`hr.employees.employment_status` is payroll-scoped only — NOT employment trust** (see Employment-trust row below; `workforce-governance-service` is the SoR). | tshepo-authz-service | experience-bff, integration-hub | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy, must-not-own-employment-trust-status |
 | `identity-assurance-service` | `identity-assurance-service` | trust | identity-governance | — | Identity Assurance canonical records | — | experience-bff, integration-hub | must-not-own-clinical-record-content, must-not-own-billing-ledgers |
 | `indawo-service` | `indawo-service` | registry | registry-spine | — | Indawo canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-authorize-access-decisions, must-not-own-clinical-encounters |
 | `inpatient-service` | `inpatient-service` | clinical | care-delivery | — | Inpatient canonical records | tshepo-authz-service | experience-bff, integration-hub | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
@@ -99,6 +99,6 @@ each granular trust block has exactly one owning system of record:
 |---|---|
 | Identity trust (Health ID verified, biographic, contact) | `identity-assurance-service` |
 | Professional trust (council registration, qualification, cadre, scope, licence) | `varapi-service` |
-| Employment trust (EC matched, HSC/MoHCC matched, posting, supervisor) | `workforce-governance-service` |
+| Employment trust (EC matched, HSC/MoHCC matched, posting, supervisor) | `workforce-governance-service` (`wgv_hsc_employment.employment_status`). `hr-payroll-service` `hr.employees.employment_status` is payroll-financial only and is **not** a trust signal — it must never be consumed for eligibility/access decisions. |
 | Operational trust (facility assignment, workspace, shift context) | `vashandi-workforce-service` |
 | Trust profile **composition** (read-side assembly of the four blocks) | `experience-bff` — explicitly **NON-SoR**: composition only, owns no trust facts |
