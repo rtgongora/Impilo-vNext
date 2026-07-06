@@ -389,9 +389,9 @@ public class DispenseEngineImpl implements DispenseEngine {
         movement.put("batch", item.getBatchNumber());
         movement.put("expiry", item.getExpiryDate() != null ? item.getExpiryDate().toString() : null);
         movement.put("qty", item.getQtyDispensed());
-        movement.put("orderId", order.getId() != null ? order.getId().toString() : null);
+        movement.put("orderId", order.getOrderId() != null ? order.getOrderId().toString() : null);
         movement.put("actorId", actorId);
-        publishEvent("DISPENSE_ORDER", order.getId().toString(), "STOCK_MOVEMENT_REQUESTED", movement, tenantId);
+        publishEvent("DISPENSE_ORDER", order.getOrderId().toString(), "STOCK_MOVEMENT_REQUESTED", movement, tenantId);
     }
 
     private void publishEvent(String aggregateType, String aggregateId,
