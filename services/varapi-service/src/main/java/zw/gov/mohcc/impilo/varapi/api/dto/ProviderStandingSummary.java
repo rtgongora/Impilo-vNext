@@ -11,7 +11,6 @@ public record ProviderStandingSummary(
         String status,
         String lifecycleStatus,
         String licenceStatus,
-        String professionalStandingStatus,
         boolean active,
         boolean hasValidLicense,
         boolean picEligible,

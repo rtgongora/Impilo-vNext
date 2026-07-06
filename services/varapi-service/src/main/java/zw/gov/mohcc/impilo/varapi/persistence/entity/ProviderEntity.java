@@ -81,18 +81,35 @@ public class ProviderEntity {
     @Column(name = "profile_photo_ref", length = 255)
     private String profilePhotoRef;
 
+    /**
+     * DERIVED projection of {@link #lifecycleStatus} (Wave-2 consolidation). Never set
+     * independently — always recomputed via {@link #deriveStatusProjections()} so it
+     * can never diverge from the canonical lifecycle axis. Retained as a column because
+     * external readers depend on it.
+     */
     @Column(name = "status", length = 20)
     private String status = "ACTIVE";
 
+    /**
+     * CANONICAL operational + registration lifecycle axis ({@code ProviderLifecycleStatus}
+     * name, including the frozen bootstrap values PRELOADED / CLAIMED). Single source of
+     * truth from which {@link #status}, {@link #activeFlag}, and {@link #licenceStatus}
+     * are derived.
+     */
     @Column(name = "lifecycle_status", length = 50)
     private String lifecycleStatus = "REGISTERED";
 
+    /**
+     * DERIVED projection of {@link #lifecycleStatus} (Wave-2 consolidation). Never set
+     * independently — always recomputed via {@link #deriveStatusProjections()}.
+     */
     @Column(name = "licence_status", length = 50)
     private String licenceStatus;
 
-    @Column(name = "professional_standing_status", length = 50)
-    private String professionalStandingStatus;
-
+    /**
+     * DERIVED projection of {@link #lifecycleStatus} (Wave-2 consolidation). Never set
+     * independently — always recomputed via {@link #deriveStatusProjections()}.
+     */
     @Column(name = "active_flag")
     private Boolean activeFlag = true;
 
@@ -108,9 +125,9 @@ public class ProviderEntity {
     private String onboardingChannel;
 
     /**
-     * Honest registry answer ({@code ProviderRegistryStatus} name) — additive fifth
-     * status axis; the legacy four axes (status, licenceStatus,
-     * professionalStandingStatus, activeFlag) are untouched until Wave 2.
+     * Honest registry answer ({@code ProviderRegistryStatus} name) — Wave-1 cross-source
+     * verdict. One of the three CANONICAL axes (lifecycleStatus, registryStatus,
+     * trustLevel); status / activeFlag / licenceStatus are Wave-2 derived projections.
      */
     @Column(name = "registry_status", length = 40)
     private String registryStatus;
@@ -171,8 +188,85 @@ public class ProviderEntity {
 
     // Convenience methods
 
+    /**
+     * Operational truth is read from the CANONICAL {@link #lifecycleStatus} axis ONLY
+     * (Wave-2 consolidation). Previously this ANDed the derived {@code status} and
+     * {@code activeFlag} columns; those are now themselves projections of lifecycle, so
+     * lifecycle is the single source consulted here.
+     */
     public boolean isActive() {
-        return !Boolean.FALSE.equals(activeFlag) && "ACTIVE".equals(status);
+        return projectionFor(lifecycleStatus).active();
+    }
+
+    // ── Wave-2 status projection (derived axes) ──────────────────────────────
+
+    /**
+     * Deterministic projection of the derived axes from a lifecycle value:
+     * ({@code status}, {@code activeFlag}, {@code licenceStatus}).
+     */
+    private record StatusProjection(String status, boolean active, String licence) {}
+
+    private static StatusProjection projectionFor(String lifecycleName) {
+        zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus ls = null;
+        if (lifecycleName != null) {
+            try {
+                ls = zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus
+                        .valueOf(lifecycleName.trim().toUpperCase(java.util.Locale.ROOT));
+            } catch (IllegalArgumentException ignored) {
+                // Unknown / legacy string: fall through to the safe non-operational default.
+            }
+        }
+        if (ls == null) {
+            return new StatusProjection("INACTIVE", false, null);
+        }
+        return switch (ls) {
+            // Operational, licence-bearing.
+            case LICENCED_ACTIVE, LICENCE_DUE_FOR_RENEWAL, RENEWAL_IN_PROGRESS ->
+                    new StatusProjection("ACTIVE", true, "ACTIVE");
+            // Operational, not yet (or no longer) carrying an explicit licence projection.
+            case REGISTERED, CLAIMED ->
+                    new StatusProjection("ACTIVE", true, null);
+            // Restricted / suspended practice.
+            case SUSPENDED, RESTRICTED ->
+                    new StatusProjection("SUSPENDED", false, "SUSPENDED");
+            // Terminal removal / revocation.
+            case REMOVED ->
+                    new StatusProjection("REVOKED", false, "REVOKED");
+            // Everything else is non-operational but not revoked: PRELOADED, DRAFT,
+            // APPLICATION_IN_PROGRESS, UNDER_VERIFICATION, PENDING_REVIEW,
+            // PENDING_COMMITTEE_REVIEW, LAPSED, RESTORATION_IN_PROGRESS, RETIRED, DECEASED.
+            default ->
+                    new StatusProjection("INACTIVE", false, null);
+        };
+    }
+
+    /**
+     * Recompute the DERIVED axes ({@code status}, {@code activeFlag}, {@code licenceStatus})
+     * from the CANONICAL {@link #lifecycleStatus}. Every writer must set lifecycle_status and
+     * then call this instead of setting the derived columns independently — this is the single
+     * normalization point that guarantees the derived axes can never diverge from lifecycle.
+     */
+    public void deriveStatusProjections() {
+        StatusProjection p = projectionFor(lifecycleStatus);
+        this.status = p.status();
+        this.activeFlag = p.active();
+        this.licenceStatus = p.licence();
+    }
+
+    /**
+     * Map a legacy {@code status}-domain change request value (ACTIVE / SUSPENDED / INACTIVE /
+     * REVOKED) onto the CANONICAL lifecycle value that projects back to it. Lets the
+     * status-change API keep its external vocabulary while writing only the canonical axis.
+     */
+    public static String lifecycleForStatusChange(String targetStatus) {
+        String s = targetStatus == null ? "" : targetStatus.trim().toUpperCase(java.util.Locale.ROOT);
+        return switch (s) {
+            case "ACTIVE" -> zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus.LICENCED_ACTIVE.name();
+            case "SUSPENDED" -> zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus.SUSPENDED.name();
+            case "INACTIVE" -> zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus.RETIRED.name();
+            case "REVOKED" -> zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus.REMOVED.name();
+            default -> throw new IllegalArgumentException("Unsupported status-change target: " + targetStatus);
+        };
     }
 
     // Getters and setters
@@ -263,9 +357,6 @@ public class ProviderEntity {
 
     public String getLicenceStatus() { return licenceStatus; }
     public void setLicenceStatus(String licenceStatus) { this.licenceStatus = licenceStatus; }
-
-    public String getProfessionalStandingStatus() { return professionalStandingStatus; }
-    public void setProfessionalStandingStatus(String professionalStandingStatus) { this.professionalStandingStatus = professionalStandingStatus; }
 
     public Boolean getActiveFlag() { return activeFlag; }
     public void setActiveFlag(Boolean activeFlag) { this.activeFlag = activeFlag; }

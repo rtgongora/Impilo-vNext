@@ -392,11 +392,11 @@ public class ProviderApplicationService {
             history.setChangedAt(Instant.now());
             statusHistoryRepository.save(history);
 
-            // Update provider
-            provider.setStatus("ACTIVE");
+            // Update provider — set the CANONICAL lifecycle axis and derive
+            // status / active_flag / licence_status from it (LICENCED_ACTIVE projects
+            // to status=ACTIVE, active=true, licence=ACTIVE).
             provider.setLifecycleStatus("LICENCED_ACTIVE");
-            provider.setLicenceStatus("ACTIVE");
-            provider.setActiveFlag(true);
+            provider.deriveStatusProjections();
             provider.setEffectiveFrom(LocalDate.now());
             provider.setEffectiveTo(null);
             provider.setVersion(provider.getVersion() + 1);
