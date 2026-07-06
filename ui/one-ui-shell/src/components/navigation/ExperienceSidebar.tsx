@@ -157,6 +157,8 @@ const ZONES: SidebarZone[] = [
       { href: "/admin/clinical-curation", label: "Knowledge curation", icon: Lightbulb, requiredRoles: ADMIN_ROLES },
       { href: "/admin/sidecar-retirement", label: "Sidecar ledger", icon: ArrowUpRight, requiredRoles: ADMIN_ROLES },
       { href: "/settings", label: "Settings", icon: CreditCard },
+      // E2-TRUST: provider self-service claim / recovery (page already exists — nav discoverability).
+      { href: "/citizen/provider-claim", label: "Provider Claim", icon: Stethoscope },
     ],
   },
   {
@@ -197,6 +199,8 @@ const ZONES: SidebarZone[] = [
         { href: "/shell/task-manager", label: "Task manager", icon: Layers },
         // Absorbed sidecar: support-console → /support
         { href: "/support", label: "Support", icon: LifeBuoy },
+        // E2-TRUST: four-block doctrine trust profile (identity/professional/employment/operational).
+        { href: "/citizen/wallet/trust", label: "Trust Profile", icon: ShieldCheck },
       ],
   },
 ];

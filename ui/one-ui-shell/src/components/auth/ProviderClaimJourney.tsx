@@ -23,6 +23,10 @@ import {
   useRecoverProviderProfile,
   useSubmitClaimEvidence,
 } from "@/hooks/queries/useProviderClaim";
+import {
+  employmentMatchErrorMessage,
+  useEmploymentMatch,
+} from "@/hooks/queries/useTrustEmploymentMatch";
 
 type ClaimPath = "token" | "council" | "ec" | "recover";
 
@@ -452,11 +456,71 @@ function CouncilNumberFlow() {
   );
 }
 
-// ── EC number flow (flag-gated downstream; honest 501 when off) ─────────────
+// ── EC number flow (Channel B — live workforce employment match) ────────────
+//
+// Re-pointed (E2-TRUST) from the report-only /provider-claim/evidence lane
+// (501-gated) to the real /api/v1/trust/employment-match endpoint. That endpoint
+// returns a RAW map (no { data, meta } envelope): the mutation consumes it as-is.
+// A confirmed match with a linked provider asserts EMPLOYMENT_MATCHED trust; a
+// match with no provider surfaces honest providerCreationRequired guidance.
 
 function EcNumberFlow() {
   const [value, setValue] = useState("");
-  const evidence = useSubmitClaimEvidence();
+  const match = useEmploymentMatch();
+  const result = match.data;
+
+  if (result?.trustAssertion?.status === "ASSERTED") {
+    return (
+      <div
+        className="rounded-lg border border-success/25 bg-success-soft px-4 py-3 text-sm"
+        data-testid="provider-claim-ec-asserted"
+      >
+        <p className="flex items-center gap-2 font-medium text-foreground">
+          <ShieldCheck className="h-4 w-4 text-primary" /> Employment matched — EMPLOYMENT_MATCHED
+          asserted
+        </p>
+        <p className="mt-1 text-muted-foreground">
+          EC number <span className="font-mono">{result.maskedEcNumber}</span> matched the workforce
+          registry
+          {result.trustAssertion.providerPublicId ? (
+            <>
+              {" "}
+              and EMPLOYMENT_MATCHED trust was asserted on provider{" "}
+              <span className="font-mono">{result.trustAssertion.providerPublicId}</span>
+            </>
+          ) : null}
+          . Activate the role from{" "}
+          <Link href="/provider/activate" className="font-medium text-primary underline">
+            provider activation
+          </Link>{" "}
+          before any regulated work.
+        </p>
+      </div>
+    );
+  }
+
+  if (result?.providerCreationRequired) {
+    return (
+      <div
+        className="rounded-lg border border-border bg-background px-4 py-3 text-sm text-muted-foreground"
+        data-testid="provider-claim-ec-provider-required"
+      >
+        <p className="flex items-center gap-2 font-medium text-foreground">
+          <Clock className="h-4 w-4 text-primary" /> Employment matched — no provider profile yet
+        </p>
+        <p className="mt-1">
+          EC number <span className="font-mono">{result.maskedEcNumber}</span> matched the workforce
+          registry ({result.matchStatus}), but no provider profile is linked to this Health ID yet.
+          Provider profiles are not created here — nothing was fabricated. Claim or create one from
+          the{" "}
+          <Link href="/citizen/provider-claim" className="font-medium text-primary underline">
+            provider claim
+          </Link>{" "}
+          journey.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <form
@@ -464,7 +528,7 @@ function EcNumberFlow() {
       data-testid="provider-claim-ec-flow"
       onSubmit={(e) => {
         e.preventDefault();
-        evidence.mutate({ type: "EC_NUMBER", value: value.trim() });
+        match.mutate({ ecNumber: value.trim() });
       }}
     >
       <label className="block text-sm font-medium text-foreground" htmlFor="ec-number-input">
@@ -477,28 +541,36 @@ function EcNumberFlow() {
         placeholder="e.g. EC-77"
         className={inputClass}
       />
-      {evidence.isError ? (
-        isFeaturePending(evidence.error) ? (
-          <ComingSoonNote err={evidence.error} />
-        ) : (
-          <ErrorNote err={evidence.error} fallback="Employment matching failed." />
-        )
+      {match.isError ? (
+        <ErrorNote
+          err={match.error}
+          fallback={employmentMatchErrorMessage(match.error, "Employment matching failed.")}
+        />
       ) : null}
-      {evidence.data ? (
+      {result && result.status === "UNAVAILABLE" ? (
+        <div
+          className="flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground"
+          data-testid="provider-claim-ec-unavailable"
+        >
+          <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>The workforce registry is unreachable right now — nothing was matched or fabricated.</p>
+        </div>
+      ) : null}
+      {result && result.status === "OK" && !result.trustAssertion && !result.providerCreationRequired ? (
         <div
           className="rounded-lg border border-primary/25 bg-primary-soft px-4 py-3 text-sm text-muted-foreground"
           data-testid="provider-claim-ec-result"
         >
           Employment match result:{" "}
-          <span className="font-medium text-foreground">{evidence.data.matchStatus}</span>
+          <span className="font-medium text-foreground">{result.matchStatus}</span>
         </div>
       ) : null}
       <button
         type="submit"
         className={primaryButtonClass}
-        disabled={!value.trim() || evidence.isPending}
+        disabled={!value.trim() || match.isPending}
       >
-        {evidence.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+        {match.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         Match employment record
       </button>
     </form>
