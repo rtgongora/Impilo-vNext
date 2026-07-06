@@ -1,8 +1,11 @@
 package zw.gov.mohcc.impilo.governance.core;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.governance.domain.GovernanceEnums;
+import zw.gov.mohcc.impilo.governance.mirror.OrgMirrorEvent;
+import zw.gov.mohcc.impilo.governance.mirror.OrgMirrorPayload;
 import zw.gov.mohcc.impilo.governance.persistence.OrganisationEntity;
 import zw.gov.mohcc.impilo.governance.persistence.OrganisationRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
@@ -17,10 +20,27 @@ public class OrganisationService {
 
     private final OrganisationRepository organisationRepository;
     private final GovernanceEventService governanceEventService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public OrganisationService(OrganisationRepository organisationRepository, GovernanceEventService governanceEventService) {
+    public OrganisationService(OrganisationRepository organisationRepository,
+                               GovernanceEventService governanceEventService,
+                               ApplicationEventPublisher eventPublisher) {
         this.organisationRepository = organisationRepository;
         this.governanceEventService = governanceEventService;
+        this.eventPublisher = eventPublisher;
+    }
+
+    /**
+     * Enqueue a one-way mirror push for {@code org}. Published as an in-process
+     * event consumed AFTER_COMMIT by the mirror relay, so the mirror call is
+     * fully decoupled from — and can never roll back — this primary write.
+     */
+    private void enqueueMirror(OrganisationEntity org, TrustContext ctx, String changeType) {
+        eventPublisher.publishEvent(new OrgMirrorEvent(
+                OrgMirrorPayload.from(org),
+                org.getTenantId(),
+                ctx != null ? ctx.correlationId() : null,
+                changeType));
     }
 
     @Transactional
@@ -49,6 +69,7 @@ public class OrganisationService {
         governanceEventService.enqueue("ORGANISATION", org.getId().toString(), "impilo.governance.organisation.created",
                 Map.of("organisationId", org.getId().toString(), "code", organisationCode, "status", org.getStatus()),
                 tenantId, ctx.correlationId() != null ? ctx.correlationId().toString() : null);
+        enqueueMirror(org, ctx, "created");
         return org;
     }
 
@@ -68,6 +89,7 @@ public class OrganisationService {
         governanceEventService.enqueue("ORGANISATION", org.getId().toString(), "impilo.governance.organisation.updated",
                 Map.of("organisationId", org.getId().toString(), "status", org.getStatus()),
                 org.getTenantId(), ctx.correlationId() != null ? ctx.correlationId().toString() : null);
+        enqueueMirror(org, ctx, "updated");
         return org;
     }
 
@@ -90,6 +112,7 @@ public class OrganisationService {
         governanceEventService.enqueue("ORGANISATION", org.getId().toString(), "impilo.governance.organisation.patched",
                 Map.of("organisationId", org.getId().toString()), org.getTenantId(),
                 ctx.correlationId() != null ? ctx.correlationId().toString() : null);
+        enqueueMirror(org, ctx, "patched");
         return org;
     }
 }
