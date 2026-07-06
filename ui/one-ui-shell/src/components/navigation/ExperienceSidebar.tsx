@@ -157,6 +157,8 @@ const ZONES: SidebarZone[] = [
       { href: "/admin/clinical-curation", label: "Knowledge curation", icon: Lightbulb, requiredRoles: ADMIN_ROLES },
       { href: "/admin/sidecar-retirement", label: "Sidecar ledger", icon: ArrowUpRight, requiredRoles: ADMIN_ROLES },
       { href: "/settings", label: "Settings", icon: CreditCard },
+      // IATG Wave 2, WS-E: facility administrator self-service claim.
+      { href: "/facility/claim", label: "Claim facility admin", icon: ShieldCheck },
     ],
   },
   {
