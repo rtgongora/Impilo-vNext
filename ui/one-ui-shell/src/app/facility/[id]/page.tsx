@@ -26,6 +26,8 @@ import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { useFacilityProvenance } from "@/hooks/queries/useFacilityImports";
+import { useFacilityStatusComposite } from "@/hooks/queries/useFacilityStatusComposite";
+import { FacilityLegitimacyPanel } from "@/components/facility/FacilityLegitimacyPanel";
 
 interface FacilityDetail {
   id: string;
@@ -68,6 +70,10 @@ export default function FacilityDetailPage() {
   // Import provenance + configuration-completeness (admin-scoped; renders only when available).
   const { data: provData } = useFacilityProvenance(id);
   const provenance = provData?.data;
+
+  // Per-source legitimacy + derived platform-access verdict (fail-closed BFF proxy → TUSO).
+  const { data: legitData } = useFacilityStatusComposite(id);
+  const legitimacy = legitData?.data;
 
   return (
     <AppLayout>
@@ -289,6 +295,9 @@ export default function FacilityDetailPage() {
                 </div>
               </div>
             )}
+
+            {/* Legitimacy & platform access (fail-closed BFF proxy → TUSO source-legitimacy) */}
+            {legitimacy && <FacilityLegitimacyPanel composite={legitimacy} facilityId={id} />}
 
             {/* Workspaces */}
             {(facility.attributes.workspaces?.length ?? 0) > 0 && (
