@@ -538,6 +538,51 @@ services:
       retries: 15
       start_period: 45s
 
+  # ── Organization Registry — organizations, authorized reps, Channel-C claims (port 8153) ──
+  # NOTE: local-parity block. DB `impilo_org_registry` (app default) must be created by
+  # scripts/seed/01-init-databases.sql (E1-SEED lease) — not yet present there; add it in the
+  # integration step. IATG journey flags (ORG_REGISTRY_ADJUDICATION_ENABLED / KAFKA_EVENTS /
+  # GOVERNANCE_KAFKA_EVENTS) are enabled only in the helm preview env, not here: workflow-service
+  # + workforce-governance-service are absent from this compose file (documented gap), so adjudication
+  # escalation and decision-feedback have no in-compose target. Flags stay at app defaults locally.
+  organization-registry-service:
+    build:
+      context: ./services/organization-registry-service
+      dockerfile: Dockerfile
+    environment:
+      SERVER_PORT: 8153
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-impilo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: impilo_org_registry
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      WORKFLOW_SERVICE_URL: http://workflow-service:8250
+    mem_limit: 1280m
+    ports:
+      - "8153:8153"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8153/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 45s
+
   # ── VARAPI — Provider Registry (port 8083) ─────────────────────────
   varapi:
     build:
