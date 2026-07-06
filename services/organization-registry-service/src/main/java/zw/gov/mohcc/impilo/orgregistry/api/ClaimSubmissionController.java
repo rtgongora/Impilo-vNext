@@ -45,7 +45,20 @@ public class ClaimSubmissionController {
         return claimSubmissionService.transition(tenantId(), id, request.status(), request.adjudicationRef());
     }
 
+    /**
+     * START ARC — escalates a SUBMITTED claim to IATG adjudication: transitions
+     * it to UNDER_REVIEW and (best-effort) starts the adjudication workflow.
+     */
+    @PostMapping("/claims/{id}/escalate")
+    public OrgClaimSubmissionEntity escalate(@PathVariable UUID id) throws Exception {
+        return claimSubmissionService.escalateToAdjudication(tenantId(), id, actorId());
+    }
+
     private UUID tenantId() {
         return TrustContextHolder.require().tenantId();
+    }
+
+    private String actorId() {
+        return TrustContextHolder.require().actorId();
     }
 }
