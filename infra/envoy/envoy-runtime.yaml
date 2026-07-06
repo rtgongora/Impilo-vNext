@@ -52,28 +52,26 @@ static_resources:
                           route: { cluster: tshepo_authz_service, prefix_rewrite: "/v1/policies" }
                         - match: { prefix: "/api/v1/devices" }
                           route: { cluster: tshepo_authz_service, prefix_rewrite: "/v1/devices" }
-                        # ── UNCOVERED by tshepo-authz-service (coordinator decision needed) ──
-                        # These surfaces have NO controller in tshepo-authz-service. They are
-                        # intentionally NOT re-pointed (re-pointing would 404). The legacy
-                        # `tshepo` container has been removed from docker-compose.runtime.yml,
-                        # so these now hard-fail (503) locally instead of silently hitting the
-                        # fail-open monolith — strictly safer. Canonical owners appear to be the
-                        # split-out tshepo-identity/consent/audit/keys/offline services
-                        # (:8181-:8185); ownership/wiring is a coordinator decision, not W2-RED's.
+                        # ── Non-PDP families → canonical split-out services (W2-RED-FOLLOWUP) ──
+                        # Each prefix below is re-pointed to the split-out tshepo service PROVEN
+                        # (by @RequestMapping controller) to own that path. These are now wired
+                        # into docker-compose.runtime.yml (:8181-:8185). This retires the legacy
+                        # monolith from all these families — the legacy `tshepo` container is now
+                        # kept ONLY for the residual `/external/v1/` (no split-out owner; see below).
                         - match: { prefix: "/api/v1/identity" }
-                          route: { cluster: tshepo_service, prefix_rewrite: "/v1/identity" }
+                          route: { cluster: tshepo_identity_service, prefix_rewrite: "/v1/identity" }
                         - match: { prefix: "/api/v1/consent" }
-                          route: { cluster: tshepo_service, prefix_rewrite: "/v1/consent" }
+                          route: { cluster: tshepo_consent_service, prefix_rewrite: "/v1/consent" }
                         - match: { prefix: "/api/v1/audit" }
-                          route: { cluster: tshepo_service, prefix_rewrite: "/v1/audit" }
+                          route: { cluster: tshepo_audit_service, prefix_rewrite: "/v1/audit" }
                         - match: { prefix: "/api/v1/keys" }
-                          route: { cluster: tshepo_service, prefix_rewrite: "/v1/keys" }
+                          route: { cluster: tshepo_keys_service, prefix_rewrite: "/v1/keys" }
                         - match: { prefix: "/api/v1/sign" }
-                          route: { cluster: tshepo_service, prefix_rewrite: "/v1/sign" }
+                          route: { cluster: tshepo_keys_service, prefix_rewrite: "/v1/sign" }
                         - match: { prefix: "/api/v1/certificates" }
-                          route: { cluster: tshepo_service, prefix_rewrite: "/v1/certificates" }
+                          route: { cluster: tshepo_keys_service, prefix_rewrite: "/v1/certificates" }
                         - match: { prefix: "/api/v1/offline" }
-                          route: { cluster: tshepo_service, prefix_rewrite: "/v1/offline" }
+                          route: { cluster: tshepo_offline_service, prefix_rewrite: "/v1/offline" }
 
                         # ── VITO — Client Registry ──
                         - match: { prefix: "/api/v1/clients/snapshot" }
@@ -124,8 +122,11 @@ static_resources:
                         # ── v1.1 internal paths → Experience BFF ──
                         - match: { prefix: "/internal/v1/" }
                           route: { cluster: experience_bff }
-                        # UNCOVERED: /external/v1/ has no tshepo-authz-service controller —
-                        # left on legacy cluster (coordinator decision). See note above.
+                        # RESIDUAL: /external/v1/ has NO single split-out owner — it is served
+                        # across data-governance/channels/indawo/asset-registry/data-warehouse at
+                        # distinct sub-paths, none of them a tshepo split-out. Re-pointing to any
+                        # one of them would 404; it is left on the legacy `tshepo` cluster (the sole
+                        # reason that container is still retained). W2-RED-FOLLOWUP: honest partial.
                         - match: { prefix: "/external/v1/" }
                           route: { cluster: tshepo_service }
 
@@ -227,9 +228,12 @@ static_resources:
                     socket_address: { address: tshepo-authz, port_value: 8081 }
 
     # ── TSHEPO (legacy monolith — DEPRECATED-RETIRED) ──
-    # No longer backed by a compose container (removed to close the split-brain).
-    # Retained only as the target for UNCOVERED routes pending coordinator decision;
-    # requests to it now hard-fail (503) instead of hitting the fail-open engine.
+    # Backed by the `tshepo` compose container, RETAINED (W2-RED-FOLLOWUP) SOLELY
+    # as the target for the residual `/external/v1/` family, which has no single
+    # split-out owner. All 7 other non-PDP families (identity/consent/audit/keys/
+    # sign/certificates/offline) now target their split-out clusters below, and the
+    # PDP families target tshepo_authz_service. Remove this cluster + container once
+    # `/external/v1/` gains a proven owner.
     - name: tshepo_service
       type: STRICT_DNS
       load_assignment:
@@ -239,6 +243,59 @@ static_resources:
               - endpoint:
                   address:
                     socket_address: { address: tshepo, port_value: 8081 }
+
+    # ── TSHEPO split-out services (W2-RED-FOLLOWUP) ──
+    # Canonical non-PDP owners, wired into docker-compose.runtime.yml. Each serves
+    # the /v1/* path proven by its controllers (see route table above).
+    - name: tshepo_identity_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_identity_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: tshepo-identity, port_value: 8181 }
+
+    - name: tshepo_consent_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_consent_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: tshepo-consent, port_value: 8182 }
+
+    - name: tshepo_audit_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_audit_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: tshepo-audit, port_value: 8183 }
+
+    - name: tshepo_keys_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_keys_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: tshepo-keys, port_value: 8184 }
+
+    - name: tshepo_offline_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: tshepo_offline_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: tshepo-offline, port_value: 8185 }
 
     # ── VITO ──
     - name: vito_service

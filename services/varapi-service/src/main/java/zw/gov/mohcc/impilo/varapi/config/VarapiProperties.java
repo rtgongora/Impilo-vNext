@@ -239,6 +239,13 @@ public class VarapiProperties {
         private boolean policyDenyWhenUnreachable = true;
         /** Subscribe to {@code mushex.payment.status.changed} to settle Varapi obligations without polling. */
         private boolean mushexPaymentStatusKafkaEnabled = false;
+        /**
+         * Channel A live council/HPA verification adapter seam. OFF by default — Wave 1
+         * ingests council data only via manual bulk upload. When true, the
+         * {@code HttpCouncilRegistryAdapter} bean is created and an enabled per-council
+         * registration triggers a live pre-verification call ahead of the local registry.
+         */
+        private boolean liveAdapterEnabled = false;
 
         public boolean isPolicyEnabled() { return policyEnabled; }
         public void setPolicyEnabled(boolean policyEnabled) { this.policyEnabled = policyEnabled; }
@@ -247,6 +254,10 @@ public class VarapiProperties {
         public boolean isPolicyDenyWhenUnreachable() { return policyDenyWhenUnreachable; }
         public void setPolicyDenyWhenUnreachable(boolean policyDenyWhenUnreachable) {
             this.policyDenyWhenUnreachable = policyDenyWhenUnreachable;
+        }
+        public boolean isLiveAdapterEnabled() { return liveAdapterEnabled; }
+        public void setLiveAdapterEnabled(boolean liveAdapterEnabled) {
+            this.liveAdapterEnabled = liveAdapterEnabled;
         }
         public boolean isMushexPaymentStatusKafkaEnabled() { return mushexPaymentStatusKafkaEnabled; }
         public void setMushexPaymentStatusKafkaEnabled(boolean mushexPaymentStatusKafkaEnabled) {

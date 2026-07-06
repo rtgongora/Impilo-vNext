@@ -124,3 +124,7 @@ varapi:
     policy-deny-when-unreachable: ${VARAPI_COUNCIL_REGULATORY_POLICY_DENY_WHEN_UNREACHABLE:true}
     mushex-payment-status-kafka-enabled: ${VARAPI_MUSHEX_PAYMENT_STATUS_KAFKA_ENABLED:false}
     tshepo-policy-base-url: ${TSHEPO_AUTHZ_BASE_URL:http://localhost:8081}
+    # Channel A live council/HPA verification adapter seam. OFF by default: Wave 1 ingests
+    # council data only via manual bulk upload. When true the HttpCouncilRegistryAdapter bean
+    # is created; a live call still only happens for a council with an enabled registration row.
+    live-adapter-enabled: ${VARAPI_COUNCIL_REGULATORY_LIVE_ADAPTER_ENABLED:false}
