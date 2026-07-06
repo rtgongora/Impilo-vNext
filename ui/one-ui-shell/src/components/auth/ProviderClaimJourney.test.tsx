@@ -7,6 +7,7 @@ const mockUsePreview = vi.fn();
 const mockUseClaim = vi.fn();
 const mockUseEvidence = vi.fn();
 const mockUseRecover = vi.fn();
+const mockUseEmploymentMatch = vi.fn();
 
 vi.mock("@/hooks/queries/useProviderClaim", async () => {
   const actual = await vi.importActual<typeof import("@/hooks/queries/useProviderClaim")>(
@@ -22,6 +23,18 @@ vi.mock("@/hooks/queries/useProviderClaim", async () => {
     useClaimProviderProfile: (...args: unknown[]) => mockUseClaim(...args),
     useSubmitClaimEvidence: (...args: unknown[]) => mockUseEvidence(...args),
     useRecoverProviderProfile: (...args: unknown[]) => mockUseRecover(...args),
+  };
+});
+
+// EC-lane re-point (E2-TRUST): the EC path now calls the real employment-match
+// endpoint. Keep the pure error-message helper real; mock only the mutation hook.
+vi.mock("@/hooks/queries/useTrustEmploymentMatch", async () => {
+  const actual = await vi.importActual<typeof import("@/hooks/queries/useTrustEmploymentMatch")>(
+    "@/hooks/queries/useTrustEmploymentMatch",
+  );
+  return {
+    employmentMatchErrorMessage: actual.employmentMatchErrorMessage,
+    useEmploymentMatch: (...args: unknown[]) => mockUseEmploymentMatch(...args),
   };
 });
 
@@ -48,6 +61,7 @@ describe("ProviderClaimJourney", () => {
     mockUseClaim.mockReturnValue(idleMutation());
     mockUseEvidence.mockReturnValue(idleMutation());
     mockUseRecover.mockReturnValue(idleMutation());
+    mockUseEmploymentMatch.mockReturnValue(idleMutation());
   });
 
   it("checks eligibility first (loading state)", () => {
@@ -123,24 +137,59 @@ describe("ProviderClaimJourney", () => {
     expect(screen.getByText("ABCD***90")).toBeInTheDocument();
   });
 
-  it("EC path: a 501 FEATURE_PENDING renders honest coming-soon copy, never fake success", () => {
-    mockUseEvidence.mockReturnValue(
+  it("EC path (re-pointed): submits the EC number to the employment-match endpoint", () => {
+    const matchMutate = vi.fn();
+    mockUseEmploymentMatch.mockReturnValue(idleMutation({ mutate: matchMutate }));
+    render(<ProviderClaimJourney />);
+    fireEvent.click(screen.getByText(/EC \(employment\) number/));
+    fireEvent.change(screen.getByLabelText(/EC \(employment\) number/), {
+      target: { value: " EC-77 " },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Match employment record/ }));
+    // Calls the real employment-match lane (not the old report-only evidence path),
+    // with a trimmed EC number and no Health ID in the body (server-authoritative).
+    expect(matchMutate).toHaveBeenCalledWith({ ecNumber: "EC-77" });
+  });
+
+  it("EC path (re-pointed): renders EMPLOYMENT_MATCHED asserted on an ASSERTED trust assertion", () => {
+    mockUseEmploymentMatch.mockReturnValue(
       idleMutation({
-        isError: true,
-        error: {
-          status: 501,
-          error: {
-            code: "FEATURE_PENDING",
-            message: "EC-number employment matching is not enabled yet.",
+        data: {
+          status: "OK",
+          maskedEcNumber: "EC***",
+          matchStatus: "MATCHED_BOTH",
+          trustAssertion: {
+            status: "ASSERTED",
+            providerPublicId: "ABCD***90",
+            trustLevel: "EMPLOYMENT_MATCHED",
+            sourceOfRecord: "varapi-service (provider trust ledger)",
           },
         },
       }),
     );
     render(<ProviderClaimJourney />);
     fireEvent.click(screen.getByText(/EC \(employment\) number/));
-    expect(screen.getByTestId("provider-claim-coming-soon")).toBeInTheDocument();
-    expect(screen.getByText(/not enabled yet/)).toBeInTheDocument();
-    expect(screen.queryByTestId("provider-claim-ec-result")).not.toBeInTheDocument();
+    expect(screen.getByTestId("provider-claim-ec-asserted")).toBeInTheDocument();
+    expect(screen.getByText(/EMPLOYMENT_MATCHED\s+asserted/)).toBeInTheDocument();
+    expect(screen.getByText("EC***")).toBeInTheDocument();
+    expect(screen.getByText("ABCD***90")).toBeInTheDocument();
+  });
+
+  it("EC path (re-pointed): a matched employee without a provider gets honest guidance, never a fake claim", () => {
+    mockUseEmploymentMatch.mockReturnValue(
+      idleMutation({
+        data: {
+          status: "OK",
+          maskedEcNumber: "EC***",
+          matchStatus: "MATCHED_EMPLOYMENT_ONLY",
+          providerCreationRequired: true,
+        },
+      }),
+    );
+    render(<ProviderClaimJourney />);
+    fireEvent.click(screen.getByText(/EC \(employment\) number/));
+    expect(screen.getByTestId("provider-claim-ec-provider-required")).toBeInTheDocument();
+    expect(screen.queryByTestId("provider-claim-ec-asserted")).not.toBeInTheDocument();
   });
 
   it("council path: shows recorded-pending state with masked evidence ref", () => {
