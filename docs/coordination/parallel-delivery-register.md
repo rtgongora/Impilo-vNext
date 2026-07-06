@@ -301,3 +301,19 @@ Integration `integration/fable-iatg-wave2-batch2a-2026-07-06` @ `4e8152f96` off 
 
 ## Batch 2 wave B — W2-6 adjudication caller wiring (dispatched, off anchor a79aa561d)
 Wire the org-registry Channel-C claim ↔ adjudication loop end-to-end: claim escalation → workflow-service startInstance (existing API, engine untouched) → decision recorded (WGV, append-only) → `impilo.governance.adjudication.decision.recorded` consumed → claim ACCEPTED/REJECTED. WS-D employment CONFLICT and WS-F provider-claim producers = documented follow-ups. This is the last Wave-2 workstream.
+
+## Batch 2 wave B — MERGED TO ANCHOR 2026-07-06 (user-authorized "merge") — WAVE 2 COMPLETE
+- **W2-6 adjudication caller wiring** (`fable/w2-adjudication-wiring`, org-registry V004) — the org-registry Channel-C claim ↔ IATG adjudication loop is now real end-to-end: `POST /claims/{id}/escalate` → `WorkflowServiceClient` starts a `facility-claim-adjudication` workflow instance (workflow-service existing API, engine + V003 definitions UNTOUCHED) → decision recorded in WGV (append-only, untouched) → `AdjudicationDecisionConsumer` (@KafkaListener on `impilo.governance.events`, zero WGV change) resolves the claim ACCEPTED/REJECTED, keyed by `workflow_instance_id`. Honest failure handling (workflow down → claim stays UNDER_REVIEW pending; unknown claim → dead-lettered, acked; CONDITIONAL/unknown → not auto-resolved). Config-gated off by default (`impilo.orgregistry.adjudication.enabled` + `kafka-events-enabled` both false). Coordinator gate: org-registry 29 tests, 0 failures. **Anchor `a79aa561d` → `075fba349`, pushed.**
+
+### IATG WAVE 2 — COMPLETE (anchor `075fba349`, 2026-07-06)
+All six additive workstreams + the reframed RED retirement are on the anchor across three user-authorized merges (`35534fba2` Batch-1, `a79aa561d` Batch-2A, `075fba349` Batch-2B):
+W2-1 status-axis consolidation · W2-2 council/HPA adapter seam · W2-3 hr-payroll employment boundary · W2-4 facility-claim & admin-appointment · W2-5 org-registry mirror producer (cutover phase-1) · W2-6 adjudication caller wiring · W2-RED (+follow-up) legacy fail-open engine severed from all live paths, split-out routes wired.
+Every workstream coordinator-gated with real exit codes; frozen Wave-1 contracts (tshepo-service = still 0 files, varapi trust API, PRELOADED/CLAIMED, FacilityEntity/legitimacy) held throughout.
+
+**Non-blocking follow-ups on the books (none required for Wave-2 done):**
+1. **org-cutover phase 2** — repoint internal FKs (HscEmployment.employer_organisation_id etc.) to org-registry via source_ref, freeze the wgv write-path, disable the mirror endpoint. Gated on mirror-completeness soak evidence (adoption-doc criteria 2-5). Requires running the W2-5 producer/backfill with the flag ON first.
+2. **`/external/v1/` ownership ADR** — the one legacy non-PDP route with no split-out owner; needs an ADR (like the federation route) before the legacy `tshepo` container can be fully removed from runtime compose.
+3. **Additional adjudication producers** — WS-D employment CONFLICT and WS-F provider-claim should each start an adjudication via the same workflow-startInstance pattern (clean seams left).
+4. **Council adapter go-live** — real council/HPA endpoint registration + flip `varapi.council-regulatory.live-adapter-enabled` (framework is in place, default off).
+
+**Recommend:** run `bash scripts/test/run-backend-checks.sh` on the preview VM against anchor `075fba349` for the full-reactor green confirmation of the complete Wave-2 tree (as was done for `619399104`).
