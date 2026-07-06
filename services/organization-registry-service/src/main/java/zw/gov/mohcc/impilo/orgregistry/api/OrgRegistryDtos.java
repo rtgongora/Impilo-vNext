@@ -79,4 +79,31 @@ public final class OrgRegistryDtos {
             String status,
             UUID parentOrganisationId) {
     }
+
+    /**
+     * One row of the read-only WGV mirror inventory (source = WGV_MIRROR).
+     * Consumed by the workforce-governance reconciliation report to diff the
+     * mirror against local active {@code wgv_organisation} rows.
+     *
+     * <p>{@code orgRegistryId} is this registry's canonical organization id and
+     * {@code sourceRef} back-points to {@code wgv_organisation.id}; together they
+     * form the dual-key mapping the phase-2c key backfill resolves.
+     */
+    public record MirrorInventoryItem(
+            UUID orgRegistryId,
+            String sourceRef,
+            String code,
+            String legalName,
+            String status,
+            String verificationStatus) {
+    }
+
+    /** One page of the WGV mirror inventory. */
+    public record MirrorInventoryPage(
+            int page,
+            int size,
+            long totalElements,
+            int totalPages,
+            List<MirrorInventoryItem> items) {
+    }
 }

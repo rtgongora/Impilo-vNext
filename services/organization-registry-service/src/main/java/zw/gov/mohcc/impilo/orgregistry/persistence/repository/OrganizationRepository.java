@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.orgregistry.persistence.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import zw.gov.mohcc.impilo.orgregistry.persistence.entity.OrganizationEntity;
 
@@ -10,6 +12,9 @@ import java.util.UUID;
 public interface OrganizationRepository extends JpaRepository<OrganizationEntity, UUID> {
 
     Optional<OrganizationEntity> findByCode(String code);
+
+    /** Read-only inventory sweep over mirrored rows (source = WGV_MIRROR), paginated. */
+    Page<OrganizationEntity> findBySourceOrderByCreatedAtAsc(String source, Pageable pageable);
 
     Optional<OrganizationEntity> findByTenantIdAndId(UUID tenantId, UUID id);
 

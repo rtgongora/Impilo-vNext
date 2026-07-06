@@ -7,6 +7,9 @@ import java.util.UUID;
 
 public interface SiteOrganisationLinkRepository extends JpaRepository<SiteOrganisationLinkEntity, UUID> {
 
+    /** Rows whose phase-2c dual-key is not yet populated — used by the callable key backfill. */
+    List<SiteOrganisationLinkEntity> findByTenantIdAndOrgRegistryOrgIdIsNull(UUID tenantId);
+
     List<SiteOrganisationLinkEntity> findByTenantIdAndSiteIdAndStatus(UUID tenantId, UUID siteId, String status);
 
     List<SiteOrganisationLinkEntity> findByTenantIdAndOrganisationIdAndStatus(UUID tenantId, UUID organisationId, String status);

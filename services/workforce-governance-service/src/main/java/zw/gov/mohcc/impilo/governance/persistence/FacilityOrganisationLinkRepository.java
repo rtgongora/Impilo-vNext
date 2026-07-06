@@ -8,6 +8,9 @@ import java.util.UUID;
 
 public interface FacilityOrganisationLinkRepository extends JpaRepository<FacilityOrganisationLinkEntity, UUID> {
 
+    /** Rows whose phase-2c dual-key is not yet populated — used by the callable key backfill. */
+    List<FacilityOrganisationLinkEntity> findByTenantIdAndOrgRegistryOrgIdIsNull(UUID tenantId);
+
     List<FacilityOrganisationLinkEntity> findByTenantIdAndFacilityIdAndStatus(UUID tenantId, Long facilityId, String status);
 
     Optional<FacilityOrganisationLinkEntity> findByTenantIdAndFacilityIdAndPrimaryFlagIsTrueAndStatus(

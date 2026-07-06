@@ -43,6 +43,15 @@ public class FacilityOrganisationLinkEntity {
     @Column(name = "primary_flag", nullable = false)
     private boolean primaryFlag;
 
+    /**
+     * Dual-key phase-2a scaffolding (nullable, un-backfilled). Forward pointer to
+     * the organization-registry organization id; populated during the phase-2c
+     * key backfill from the org-registry id resolved via source_ref. The existing
+     * {@code organisation_id} FK remains authoritative until phase-2c.
+     */
+    @Column(name = "org_registry_org_id")
+    private UUID orgRegistryOrgId;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -78,6 +87,8 @@ public class FacilityOrganisationLinkEntity {
     public void setStatus(String status) { this.status = status; touch(); }
     public boolean isPrimaryFlag() { return primaryFlag; }
     public void setPrimaryFlag(boolean primaryFlag) { this.primaryFlag = primaryFlag; touch(); }
+    public UUID getOrgRegistryOrgId() { return orgRegistryOrgId; }
+    public void setOrgRegistryOrgId(UUID orgRegistryOrgId) { this.orgRegistryOrgId = orgRegistryOrgId; touch(); }
 
     private void touch() { this.updatedAt = Instant.now(); }
 }

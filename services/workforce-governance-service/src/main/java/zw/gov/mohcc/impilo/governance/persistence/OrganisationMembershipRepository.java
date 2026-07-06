@@ -8,6 +8,9 @@ import java.util.UUID;
 
 public interface OrganisationMembershipRepository extends JpaRepository<OrganisationMembershipEntity, UUID> {
 
+    /** Rows whose phase-2c dual-key is not yet populated — used by the callable key backfill. */
+    List<OrganisationMembershipEntity> findByTenantIdAndOrgRegistryOrgIdIsNull(UUID tenantId);
+
     List<OrganisationMembershipEntity> findByTenantIdAndOrganisationIdOrderByUpdatedAtDesc(UUID tenantId, UUID organisationId);
 
     Optional<OrganisationMembershipEntity> findByTenantIdAndOrganisationIdAndSubjectIdAndSubjectType(
