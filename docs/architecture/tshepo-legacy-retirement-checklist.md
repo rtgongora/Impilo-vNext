@@ -80,3 +80,68 @@ build `services/tshepo-service` — `ops/runtime/docker-compose.kernel.yml`,
   BLOCKED**. Not resolved here.
 - `services/tshepo-service` **source was NOT deleted** and remains in the
   `services/pom.xml` reactor (compiles under the backend-reactor-tests gate).
+
+## Progress Note — 2026-07-06 (W2-RED-FOLLOWUP: split-out services wired, 7/8 non-PDP families migrated)
+
+**What changed (config wiring + docs + guard test only — no service source touched):**
+
+- **Split-out services wired into `docker-compose.runtime.yml`.** Added five
+  canonical non-PDP services, mirroring the existing service-block pattern
+  (build context, postgres/redis/kafka/keycloak env, `SERVER_PORT`, `mem_limit`,
+  `depends_on … service_healthy`, actuator healthcheck):
+  - `tshepo-identity` — container `:8181`, host `18181` (host `8181` is taken by OPA)
+  - `tshepo-consent` — container `:8182`, host `18182`
+  - `tshepo-audit` — container `:8183`, host `18183`
+  - `tshepo-keys` — container `:8184`, host `18184`
+  - `tshepo-offline` — container `:8185`, host `18185`
+
+- **7 of 8 non-PDP families re-pointed off the legacy monolith** in
+  `infra/envoy/envoy-runtime.yaml`, each to the split-out cluster PROVEN (by
+  `@RequestMapping` controller, context-path `/`) to own the path:
+
+  | Route prefix (rewrite) | Split-out service (cluster) | Proven controller(s) | Port |
+  |---|---|---|---|
+  | `/api/v1/identity` → `/v1/identity` | `tshepo-identity` (`tshepo_identity_service`) | `ResolutionController`, `ReconciliationController`, `CpidController`, `MosipController`, `TokenController` @ `/v1/identity*` | 8181 |
+  | `/api/v1/consent` → `/v1/consent` | `tshepo-consent` (`tshepo_consent_service`) | `ConsentController`, `ConsentEvaluationController`, `PortalConsentController`, `ShareLinkController` @ `/v1/consent*` | 8182 |
+  | `/api/v1/audit` → `/v1/audit` | `tshepo-audit` (`tshepo_audit_service`) | `ChainIntegrityController`, `AuditQueryController`, `AuditIngestController`, `AuditExportController`, `AccessHistoryController` @ `/v1/audit*` | 8183 |
+  | `/api/v1/keys` → `/v1/keys` | `tshepo-keys` (`tshepo_keys_service`) | `KeyManagementController`, `JwksController` @ `/v1/keys*` | 8184 |
+  | `/api/v1/sign` → `/v1/sign` | `tshepo-keys` (`tshepo_keys_service`) | `SigningController` @ `/v1/sign` | 8184 |
+  | `/api/v1/certificates` → `/v1/certificates` | `tshepo-keys` (`tshepo_keys_service`) | `CertificateController` @ `/v1/certificates` | 8184 |
+  | `/api/v1/offline` → `/v1/offline` | `tshepo-offline` (`tshepo_offline_service`) | `OfflineActionController`, `ReconciliationController`, `CapabilityController`, `OfflinePackController` @ `/v1/offline*` | 8185 |
+
+- **Legacy `tshepo` container + `tshepo_service` cluster RETAINED (partial, not full removal)**
+  — HONEST PARTIAL COMPLETION. The **one residual family `/external/v1/`** has **no
+  single split-out owner**: repo-wide, `/external/v1/*` is served across
+  `data-governance-service`, `channels-service`, `indawo-service`,
+  `asset-registry-service` and `data-warehouse-service` at distinct sub-paths —
+  none of them a tshepo split-out — and the legacy `tshepo-service` source itself
+  has NO `/external` controller (its only mappings are `/v1/authorize`,
+  `/v1/biometric-policy`, `/v1/patient-share-policy`, `/v1/council-regulatory`,
+  `/internal/v1/federation`, `/internal/v1/legacy`). Re-pointing `/external/v1/`
+  to any one split-out service would 404; dropping the cluster would 503. Per the
+  "do NOT create 503s" rule, the container + cluster are kept SOLELY for
+  `/external/v1/`. Assigning a canonical owner for that prefix is a coordinator
+  decision and is the only remaining blocker to full container removal.
+
+- **Guard test tightened.** `EnvoyRuntimeNoLegacyTshepoRouteGuardTest`
+  (experience-bff) gained `migratedNonPdpRoutesMustTargetSplitOutClustersNotLegacy`,
+  asserting each of the 7 migrated prefixes resolves to its split-out cluster and
+  never to `tshepo_service`. The legacy cluster is NOT asserted absent (it is
+  intentionally retained for `/external/v1/`).
+
+**Exit conditions remain OPEN — nothing below is met by this pass** (these gate
+SOURCE deletion + compat-proxy removal + federation ownership, none of which this
+worker performed):
+
+- Exit condition **1** (30-day zero-hit telemetry windows for the `/v1/*` compat
+  routes) — **STILL OPEN**. Not evidenced here.
+- Exit condition **3** (compatibility proxy removal) — **STILL OPEN**, telemetry-gated.
+  The compat proxy was NOT touched.
+- Exit condition **4** (`/internal/v1/federation/*` ownership ADR) — **STILL BLOCKED**.
+  Not resolved here.
+- `services/tshepo-service` **source was NOT deleted**; the container is still built
+  for the residual `/external/v1/` family. `tshepo-authz` decision logic and the
+  compat proxy were NOT modified. Other compose files that build
+  `services/tshepo-service` (`ops/runtime/docker-compose.kernel.yml`,
+  `compose/trust/docker-compose.trust-e2e.yml`, `.github/workflows/deploy.yml`)
+  remain out of this worker's scope.
