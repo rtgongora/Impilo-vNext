@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-bff-downstream-env.mjs
-# Downstream env vars: 104
+# Downstream env vars: 106
 experienceBff:
   env:
     FHIR_BASE_URL: http://hapi-fhir:8090/fhir
@@ -12,6 +12,7 @@ experienceBff:
     IMPILO_BFF_PROVIDER_HUBS_FAILURE_POLICY: stub_fallback
     IMPILO_BFF_CITIZEN_LONGTAIL_MODE: stub
     IMPILO_BFF_CITIZEN_LONGTAIL_FAILURE_POLICY: stub_fallback
+    IMPILO_FEATURES_EC_MATCHING: 'true'
     PCT_BASE_URL: http://pct-service:8088
     OROS_BASE_URL: http://oros-service:8089
     PHARMACY_BASE_URL: http://pharmacy-service:8096
@@ -107,3 +108,4 @@ experienceBff:
     KHULUMA_BASE_URL: http://khuluma-service:8390
     PATIENT_SAFETY_BASE_URL: http://patient-safety-service:8202
     RITO_BASE_URL: http://rito-quality-safety-service:8391
+    ORGANIZATION_REGISTRY_BASE_URL: http://organization-registry-service:8153

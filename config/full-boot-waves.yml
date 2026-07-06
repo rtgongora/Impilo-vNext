@@ -143,6 +143,7 @@ waves:
       - msika-flow-service
       - msika-service
       - mushe-wallet-service
+      - organization-registry-service
       - procurement-service
       - share-slip-service
       - simba-service
