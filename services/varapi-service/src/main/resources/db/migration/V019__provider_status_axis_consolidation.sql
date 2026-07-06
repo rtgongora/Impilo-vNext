@@ -1,0 +1,34 @@
+-- =============================================================================
+-- Varapi V019 — Provider status-axis consolidation (IATG Wave 2)
+--
+-- Provider status was historically encoded across FIVE overlapping axes. This
+-- migration begins the consolidation onto three CANONICAL axes and drops the one
+-- dead axis:
+--
+--   CANONICAL (single source of truth, kept as-is):
+--     * lifecycle_status  — operational + registration lifecycle (incl. the frozen
+--                           bootstrap values PRELOADED / CLAIMED)
+--     * registry_status   — Wave-1 honest cross-source verdict
+--     * trust_level       — Wave-1 evidence ladder
+--
+--   DERIVED (kept as columns because external readers depend on them, but now only
+--   ever a deterministic projection of lifecycle_status via
+--   ProviderEntity.deriveStatusProjections()):
+--     * status
+--     * active_flag
+--     * licence_status
+--
+--   DROPPED — professional_standing_status:
+--     Declared in V005 and echoed in the standing-summary DTO, but NEVER written by
+--     any code path (audit confirmed zero writers, only a self-echo read). It is a
+--     dead axis, so it is removed here rather than carried forward as a fifth
+--     never-populated status field.
+--
+-- Scope note: this migration ONLY drops the dead axis. The three derived columns
+-- are intentionally retained (external readers depend on them); a future full
+-- column-removal would require every external consumer of status/active_flag/
+-- licence_status to migrate onto lifecycle_status first.
+-- =============================================================================
+
+ALTER TABLE varapi.provider
+    DROP COLUMN IF EXISTS professional_standing_status;

@@ -127,7 +127,6 @@ public class ProviderController {
                 p.getStatus(),
                 p.getLifecycleStatus(),
                 p.getLicenceStatus(),
-                p.getProfessionalStandingStatus(),
                 p.isActive(),
                 hasValidLicense,
                 picEligible,
