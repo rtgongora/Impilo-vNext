@@ -6,13 +6,17 @@ import {
   AlertCircle,
   ArrowLeft,
   BadgeCheck,
+  Building2,
+  CheckCircle2,
   Clock,
   FileText,
   KeyRound,
+  ListChecks,
   Loader2,
   RotateCcw,
   ShieldCheck,
   Stethoscope,
+  UserPlus,
 } from "lucide-react";
 import {
   isFeaturePending,
@@ -27,8 +31,12 @@ import {
   employmentMatchErrorMessage,
   useEmploymentMatch,
 } from "@/hooks/queries/useTrustEmploymentMatch";
+import {
+  useSubmitProviderAccessRequest,
+  type ProviderAccessRequestView,
+} from "@/hooks/queries/useProviderAccessRequest";
 
-type ClaimPath = "token" | "council" | "ec" | "recover";
+type ClaimPath = "token" | "council" | "ec" | "new" | "org" | "recover";
 
 /**
  * Provider self-service claim / recovery journey (IATG WS-F).
@@ -123,14 +131,24 @@ export function ProviderClaimJourney() {
           {path === "token" ? <ClaimTokenFlow /> : null}
           {path === "council" ? <CouncilNumberFlow /> : null}
           {path === "ec" ? <EcNumberFlow /> : null}
+          {path === "new" ? <NewProviderFlow /> : null}
+          {path === "org" ? <OrgInvitationFlow /> : null}
           {path === "recover" ? <RecoverFlow /> : null}
         </div>
       ) : null}
 
-      <footer className="border-t border-border pt-3 text-xs text-muted-foreground">
-        Document upload and organisation invitations are not available yet — they arrive with
-        later waves and will appear here when real. Nompilo can guide you, but verification
-        decisions always rest with the registry.
+      <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+        <span>
+          Document upload arrives with a later wave and will appear here when real. Verification
+          decisions always rest with the registry — no shortcut is faked.
+        </span>
+        <Link
+          href="/citizen/provider-claim/status"
+          className="inline-flex items-center gap-1 font-medium text-primary hover:text-primary-hover"
+          data-testid="provider-claim-status-link"
+        >
+          <ListChecks className="h-3.5 w-3.5" /> Check the status of a request
+        </Link>
       </footer>
     </section>
   );
@@ -209,6 +227,18 @@ const PATHS: { id: ClaimPath; icon: typeof KeyRound; title: string; body: string
     icon: FileText,
     title: "I have an EC (employment) number",
     body: "Matched against the workforce employment registry when that lane is live.",
+  },
+  {
+    id: "new",
+    icon: UserPlus,
+    title: "I am a new provider",
+    body: "No preload or token yet. This records a durable request routed to the right reviewer — no Provider ID is issued automatically.",
+  },
+  {
+    id: "org",
+    icon: Building2,
+    title: "I was invited by an organisation",
+    body: "Records a durable request routed to the inviting organisation to confirm your access.",
   },
   {
     id: "recover",
@@ -647,6 +677,130 @@ function RecoverFlow() {
       >
         {recover.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         Recover my profile
+      </button>
+    </form>
+  );
+}
+
+// ── Access-request confirmation (durable; IATG Journey D) ─────────────────────
+
+function AccessRequestSubmitted({ view }: { view: ProviderAccessRequestView }) {
+  return (
+    <div
+      className="space-y-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-3 text-sm dark:border-emerald-800 dark:bg-emerald-950/30"
+      data-testid="provider-claim-access-request-submitted"
+    >
+      <div className="flex items-center gap-2 font-medium text-foreground">
+        <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Request recorded
+      </div>
+      <dl className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        <dt>Reference</dt>
+        <dd className="font-mono text-foreground">{view.publicId}</dd>
+        <dt>Status</dt>
+        <dd className="text-foreground">{view.status}</dd>
+        {view.nextActor ? (
+          <>
+            <dt>Next actor</dt>
+            <dd className="text-foreground">{view.nextActor}</dd>
+          </>
+        ) : null}
+      </dl>
+      {view.reason ? <p className="text-xs text-muted-foreground">{view.reason}</p> : null}
+      <Link
+        href="/citizen/provider-claim/status"
+        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-hover"
+      >
+        <ListChecks className="h-3.5 w-3.5" /> Track this request
+      </Link>
+    </div>
+  );
+}
+
+// ── New provider flow (durable request; no auto-issue) ────────────────────────
+
+function NewProviderFlow() {
+  const [profession, setProfession] = useState("");
+  const [councilCode, setCouncilCode] = useState("");
+  const [councilNumber, setCouncilNumber] = useState("");
+  const [ecNumber, setEcNumber] = useState("");
+  const submit = useSubmitProviderAccessRequest();
+
+  if (submit.data) {
+    return <AccessRequestSubmitted view={submit.data} />;
+  }
+
+  return (
+    <form
+      className="space-y-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit.mutate({
+          requestType: "NEW_PROVIDER",
+          profession: profession.trim() || undefined,
+          councilCode: councilCode.trim() || undefined,
+          councilNumber: councilNumber.trim() || undefined,
+          ecNumber: ecNumber.trim() || undefined,
+        });
+      }}
+    >
+      <p className="text-sm text-muted-foreground">
+        Submit your details for review. A Provider ID is never issued automatically — your request
+        is routed to the right reviewer and you can track its status.
+      </p>
+      <input className={inputClass} placeholder="Profession / cadre (e.g. Medical Officer)"
+        value={profession} onChange={(e) => setProfession(e.target.value)} aria-label="Profession" />
+      <div className="grid gap-2 sm:grid-cols-2">
+        <input className={inputClass} placeholder="Council code (optional)"
+          value={councilCode} onChange={(e) => setCouncilCode(e.target.value)} aria-label="Council code" />
+        <input className={inputClass} placeholder="Council registration no. (optional)"
+          value={councilNumber} onChange={(e) => setCouncilNumber(e.target.value)} aria-label="Council registration number" />
+      </div>
+      <input className={inputClass} placeholder="EC number if public-sector (optional)"
+        value={ecNumber} onChange={(e) => setEcNumber(e.target.value)} aria-label="EC number" />
+      {submit.isError ? <ErrorNote err={submit.error} fallback="Your request could not be submitted right now. Nothing was changed — retry." /> : null}
+      <button type="submit" className={primaryButtonClass} disabled={submit.isPending}>
+        {submit.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+        Submit request
+      </button>
+    </form>
+  );
+}
+
+// ── Organisation-invitation flow (durable request) ────────────────────────────
+
+function OrgInvitationFlow() {
+  const [organizationRef, setOrganizationRef] = useState("");
+  const [evidenceSummary, setEvidenceSummary] = useState("");
+  const submit = useSubmitProviderAccessRequest();
+
+  if (submit.data) {
+    return <AccessRequestSubmitted view={submit.data} />;
+  }
+
+  return (
+    <form
+      className="space-y-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit.mutate({
+          requestType: "ORG_INVITATION",
+          organizationRef: organizationRef.trim() || undefined,
+          evidenceSummary: evidenceSummary.trim() || undefined,
+        });
+      }}
+    >
+      <p className="text-sm text-muted-foreground">
+        Recorded and routed to the inviting organisation to confirm your access. Nothing activates
+        until the organisation confirms.
+      </p>
+      <input className={inputClass} placeholder="Organisation name or reference"
+        value={organizationRef} onChange={(e) => setOrganizationRef(e.target.value)} aria-label="Organisation reference" />
+      <input className={inputClass} placeholder="Anything to help them find you (optional)"
+        value={evidenceSummary} onChange={(e) => setEvidenceSummary(e.target.value)} aria-label="Evidence summary" />
+      {submit.isError ? <ErrorNote err={submit.error} fallback="Your request could not be submitted right now. Nothing was changed — retry." /> : null}
+      <button type="submit" className={primaryButtonClass} disabled={submit.isPending}>
+        {submit.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Building2 className="h-3.5 w-3.5" />}
+        Submit request
       </button>
     </form>
   );
