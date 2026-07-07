@@ -28,6 +28,7 @@ import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { useFacilityProvenance } from "@/hooks/queries/useFacilityImports";
 import { useFacilityStatusComposite } from "@/hooks/queries/useFacilityStatusComposite";
 import { FacilityLegitimacyPanel } from "@/components/facility/FacilityLegitimacyPanel";
+import { formatServiceError } from "@/lib/service-error";
 
 interface FacilityDetail {
   id: string;
@@ -72,7 +73,7 @@ export default function FacilityDetailPage() {
   const provenance = provData?.data;
 
   // Per-source legitimacy + derived platform-access verdict (fail-closed BFF proxy → TUSO).
-  const { data: legitData } = useFacilityStatusComposite(id);
+  const { data: legitData, isError: legitIsError, error: legitError } = useFacilityStatusComposite(id);
   const legitimacy = legitData?.data;
 
   return (
@@ -297,7 +298,23 @@ export default function FacilityDetailPage() {
             )}
 
             {/* Legitimacy & platform access (fail-closed BFF proxy → TUSO source-legitimacy) */}
-            {legitimacy && <FacilityLegitimacyPanel composite={legitimacy} facilityId={id} />}
+            {legitimacy ? (
+              <FacilityLegitimacyPanel composite={legitimacy} facilityId={id} />
+            ) : legitIsError ? (
+              <div
+                role="alert"
+                data-testid="facility-legitimacy-unavailable"
+                className="bg-card rounded-lg border border-amber-300 dark:border-amber-800 p-5"
+              >
+                <h3 className="font-medium text-foreground mb-1">Legitimacy &amp; platform access</h3>
+                <p className="text-sm text-amber-700 dark:text-amber-400">
+                  Facility legitimacy could not be verified — the TUSO source-legitimacy service is
+                  unavailable. Nothing was assumed; the platform-access verdict is withheld until the
+                  service is reachable.
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">{formatServiceError(legitError)}</p>
+              </div>
+            ) : null}
 
             {/* Workspaces */}
             {(facility.attributes.workspaces?.length ?? 0) > 0 && (
