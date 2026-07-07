@@ -90,6 +90,15 @@ public class PlatformOriginController {
         return proxy(() -> client.getCountryOperation(id), HttpStatus.OK, requestId, correlationId);
     }
 
+    /** Durable current state of a platform action (status/approvals) — lets the console show the true terminal state after a refresh. */
+    @GetMapping("/actions/{accessRequestId}")
+    public ResponseEntity<Map<String, Object>> getAction(
+            @PathVariable UUID accessRequestId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.getAction(accessRequestId), HttpStatus.OK, requestId, correlationId);
+    }
+
     @GetMapping("/country-operations/{id}/appointments")
     public ResponseEntity<Map<String, Object>> listAppointments(
             @PathVariable UUID id,

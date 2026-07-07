@@ -93,6 +93,11 @@ public class PlatformOriginGovernanceClient {
         return get(BASE_PATH + "/actions/" + accessRequestId + "/approvals");
     }
 
+    /** Durable current state of a platform action (status/approvals) — refresh-proof terminal read. */
+    public JsonNode getAction(UUID accessRequestId) {
+        return get(BASE_PATH + "/actions/" + accessRequestId);
+    }
+
     public JsonNode initiateAppointment(UUID countryOperationId, Map<String, Object> body) {
         return post(BASE_PATH + "/country-operations/" + countryOperationId + "/appointments", body);
     }

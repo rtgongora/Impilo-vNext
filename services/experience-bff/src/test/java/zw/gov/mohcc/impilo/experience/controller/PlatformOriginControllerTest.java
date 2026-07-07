@@ -105,6 +105,27 @@ class PlatformOriginControllerTest {
         assertEquals(data, response.getBody().get("data"));
     }
 
+    @Test
+    void getActionProxiesDurableTerminalState() throws Exception {
+        JsonNode data = objectMapper.readTree(
+                "{\"accessRequestId\":\"a1\",\"status\":\"EXECUTED\",\"approvalsRequired\":2,\"approvalsSatisfied\":true}");
+        PlatformOriginController controller = new PlatformOriginController(new StubClient(data));
+
+        var response = controller.getAction(UUID.randomUUID(), "req-11", "corr-11");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(data, response.getBody().get("data"));
+    }
+
+    @Test
+    void getActionFailsClosedWhenGovernanceUnavailable() {
+        PlatformOriginController controller = new PlatformOriginController(new FailingClient());
+
+        assertEquals(502, controller.getAction(UUID.randomUUID(), "req-12", "corr-12")
+                .getStatusCode().value());
+    }
+
     private static final class FailingClient extends PlatformOriginGovernanceClient {
         private FailingClient() {
             super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints());
@@ -145,6 +166,11 @@ class PlatformOriginControllerTest {
         public JsonNode getActionApprovals(UUID accessRequestId) {
             throw new IllegalStateException("governance unavailable");
         }
+
+        @Override
+        public JsonNode getAction(UUID accessRequestId) {
+            throw new IllegalStateException("governance unavailable");
+        }
     }
 
     private static final class StubClient extends PlatformOriginGovernanceClient {
@@ -167,6 +193,11 @@ class PlatformOriginControllerTest {
 
         @Override
         public JsonNode getActionApprovals(UUID accessRequestId) {
+            return data;
+        }
+
+        @Override
+        public JsonNode getAction(UUID accessRequestId) {
             return data;
         }
     }
