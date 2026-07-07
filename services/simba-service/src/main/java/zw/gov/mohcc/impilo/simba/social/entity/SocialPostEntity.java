@@ -65,6 +65,9 @@ public class SocialPostEntity {
     @Column(name = "pinned", nullable = false)
     private boolean pinned = false;
 
+    @Column(name = "official", nullable = false)
+    private boolean official = false;
+
     @Column(name = "reaction_count", nullable = false)
     private int reactionCount = 0;
 
@@ -125,6 +128,8 @@ public class SocialPostEntity {
     public void setModerationStatus(String moderationStatus) { this.moderationStatus = moderationStatus; }
     public boolean isPinned() { return pinned; }
     public void setPinned(boolean pinned) { this.pinned = pinned; }
+    public boolean isOfficial() { return official; }
+    public void setOfficial(boolean official) { this.official = official; }
     public int getReactionCount() { return reactionCount; }
     public void setReactionCount(int reactionCount) { this.reactionCount = reactionCount; }
     public int getCommentCount() { return commentCount; }

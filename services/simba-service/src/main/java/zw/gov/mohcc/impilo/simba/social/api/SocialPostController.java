@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.simba.social.core.SocialFeedService;
-import zw.gov.mohcc.impilo.simba.social.core.SocialInteractionService;
+import zw.gov.mohcc.impilo.simba.social.core.SocialGroupService;
 import zw.gov.mohcc.impilo.simba.social.core.SocialPostService;
 import zw.gov.mohcc.impilo.simba.social.core.SocialVisibilityService;
 import zw.gov.mohcc.impilo.simba.social.entity.SocialPostEntity;
@@ -26,13 +26,16 @@ public class SocialPostController {
     private final SocialPostService postService;
     private final SocialFeedService feedService;
     private final SocialVisibilityService visibility;
+    private final SocialGroupService groups;
 
     public SocialPostController(SocialPostService postService,
                                 SocialFeedService feedService,
-                                SocialVisibilityService visibility) {
+                                SocialVisibilityService visibility,
+                                SocialGroupService groups) {
         this.postService = postService;
         this.feedService = feedService;
         this.visibility = visibility;
+        this.groups = groups;
     }
 
     @PostMapping("/posts")
@@ -46,9 +49,14 @@ public class SocialPostController {
             @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
             @RequestBody Map<String, Object> body) {
         String actor = actorId != null ? actorId : required(body, "actor_cpid");
+        UUID groupId = uuid(body.get("group_id"));
+        // Group posts require an active member with posting permission (VIEWER/blocked members denied).
+        if (groupId != null) {
+            groups.enforceCanPost(groupId, actor);
+        }
         SocialPostService.CreatePost in = new SocialPostService.CreatePost(
                 actor, actorType, providerId,
-                uuid(body.get("group_id")), uuid(body.get("community_id")), uuid(body.get("programme_id")),
+                groupId, uuid(body.get("community_id")), uuid(body.get("programme_id")),
                 required(body, "body"),
                 body.get("media_object_ids") instanceof List<?> l ? (List<String>) l : null,
                 str(body, "sensitive_category"), str(body, "milestone_ref"), str(body, "visibility"));
