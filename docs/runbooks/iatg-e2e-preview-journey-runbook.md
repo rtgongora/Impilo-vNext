@@ -110,6 +110,22 @@ done
 > flags are already baked into the generated preview values at this anchor (EC matching,
 > org-registry adjudication + Kafka, governance Kafka, listener auto-startup) — no manual flip.
 
+**2.1 Verify the full-preview security flag (prevents the varapi preload 403).** varapi imposes
+no role on `/v1/internal/providers/bootstrap/preload`; in `full-preview` the helm helper injects
+`IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true`, which makes `/v1/**` permitAll. If the stack was
+rendered from the wrong values (env `preview` instead of `full-preview`), oauth is "on but issuer
+blank" and Spring Security returns a **uniform 403 on every `/v1/**` call** — this is the seed's
+Step-2 preload 403. It is a **deploy-config** problem, not a token/role/PDP denial (Envoy ext_authz
+is not in varapi's preview path).
+```bash
+kubectl -n impilo-full-preview get deploy varapi-service -o yaml | grep -A1 IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS
+# expect: value: "true"
+curl -s http://41.57.127.235/health/version | jq -r .environment    # expect: full-preview
+```
+> If the flag is missing/`false`, you deployed with `values-preview.yaml`/`values.yaml`, not
+> `values-full-preview.yaml`. Redeploy via `scripts/deploy/full-boot-preview-deploy.sh` (§1.3) at
+> the correct commit — do NOT edit varapi security or any tshepo-authz policy.
+
 ---
 
 ## 3. Confirm realm seed (users/roles resolve)
