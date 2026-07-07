@@ -19,6 +19,7 @@ import {
   QrCode,
   Shield,
   ShoppingCart,
+  Stethoscope,
   User,
   Users,
 } from "lucide-react";
@@ -52,6 +53,12 @@ const EXPLORE_LINKS: QuickAccessItem[] = [
   { href: "/marketplace", label: "Marketplace", icon: ShoppingCart },
   { href: "/caregiving", label: "Caregiving", icon: Users },
   { href: "/wallet", label: "My Wallet", icon: Award },
+];
+
+// RJ-2: self-service provider access for a Health-ID person (Provider ID is secondary).
+const PROVIDER_ACCESS_LINKS: QuickAccessItem[] = [
+  { href: "/citizen/provider-claim", label: "Request Provider Access", icon: Stethoscope },
+  { href: "/citizen/wallet/trust", label: "Trust Profile", icon: Shield },
 ];
 
 interface CitizenQuickAccessRailProps {
@@ -177,6 +184,8 @@ export function CitizenQuickAccessRail({ className = "", collapsible = false }: 
       <QuickAccessSection title="My Care" items={MY_CARE_LINKS} collapsed={collapsed} />
       <hr className="border-border" />
       <QuickAccessSection title="Explore" items={EXPLORE_LINKS} collapsed={collapsed} />
+      <hr className="border-border" />
+      <QuickAccessSection title="Provider access" items={PROVIDER_ACCESS_LINKS} collapsed={collapsed} />
     </aside>
   );
 }

@@ -21,6 +21,11 @@ describe("CitizenQuickAccessRail", () => {
     expect(screen.getByRole("link", { name: /Medications/i })).toHaveAttribute("href", "/home/medications");
     expect(screen.getByRole("link", { name: /Care Team/i })).toHaveAttribute("href", "/home/care-team");
     expect(screen.getByRole("link", { name: /Marketplace/i })).toHaveAttribute("href", "/marketplace");
+    // RJ-2: self-service provider access is reachable from the citizen home rail.
+    expect(screen.getByRole("link", { name: /Request Provider Access/i })).toHaveAttribute(
+      "href",
+      "/citizen/provider-claim",
+    );
   });
 
   it("collapses and exposes icon-only quick access", async () => {

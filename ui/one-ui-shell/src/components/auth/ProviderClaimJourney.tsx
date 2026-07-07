@@ -90,12 +90,13 @@ export function ProviderClaimJourney() {
         <Stethoscope className="mt-1 h-5 w-5 shrink-0 text-primary" />
         <div>
           <h1 className="text-lg font-semibold text-foreground">
-            Claim or recover your provider profile
+            Request Provider Access
           </h1>
           <p className="text-sm text-muted-foreground">
-            You stay signed in as a person; a claimed profile only enables provider role
-            activation — regulated work still requires activation, licensure, and facility
-            context (Health OS §6).
+            You stay signed in as a person; claiming or recovering a Provider ID only enables
+            provider role activation — regulated work still requires activation, licensure, and
+            facility context (Health OS §6). Your Provider ID is confidential and is never a
+            council or EC number.
           </p>
         </div>
       </header>

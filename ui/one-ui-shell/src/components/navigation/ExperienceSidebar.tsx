@@ -206,6 +206,8 @@ const ZONES: SidebarZone[] = [
         { href: "/support", label: "Support", icon: LifeBuoy },
         // E2-TRUST: four-block doctrine trust profile (identity/professional/employment/operational).
         { href: "/citizen/wallet/trust", label: "Trust Profile", icon: ShieldCheck },
+        // RJ-2: self-service provider access — reachable by a Health-ID person with no provider context yet.
+        { href: "/citizen/provider-claim", label: "Request Provider Access", icon: Stethoscope },
       ],
   },
 ];
