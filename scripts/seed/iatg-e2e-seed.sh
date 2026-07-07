@@ -201,7 +201,7 @@ info "varapi=${VARAPI_BASE} tuso=${TUSO_BASE} tenant=${TENANT_ID}"
 if [[ -z "$FACILITY_ID" ]]; then
   info "1/5 resolving facility UUID for code ${FACILITY_CODE}"
   search_body="$(printf '{"query":"%s","page":0,"size":50}' "$FACILITY_CODE")"
-  http_call POST "${TUSO_BASE}/v1/facilities/search" 200 "$search_body"
+  http_call POST "${TUSO_BASE}/v1/internal/facilities/search" 200 "$search_body"
   if [[ "$DRY_RUN" -eq 1 ]]; then
     FACILITY_ID="<resolved-from-${FACILITY_CODE}>"
   else
