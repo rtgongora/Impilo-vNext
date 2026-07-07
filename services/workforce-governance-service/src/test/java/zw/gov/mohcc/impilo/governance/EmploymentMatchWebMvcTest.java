@@ -40,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class EmploymentMatchWebMvcTest {
 
     private static final String MATCH_PATH = "/internal/v1/workforce-governance/employment/match";
+    private static final String UPSERT_PATH = "/v1/internal/governance/hsc/employment-records";
 
     @Autowired
     MockMvc mockMvc;
@@ -77,6 +78,46 @@ class EmploymentMatchWebMvcTest {
                 .header("X-Correlation-ID", UUID.randomUUID().toString())
                 .header("Idempotency-Key", UUID.randomUUID().toString())
                 .content(body);
+    }
+
+    private org.springframework.test.web.servlet.RequestBuilder upsertRequest(UUID tenant, String body) {
+        return post(UPSERT_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Tenant-ID", tenant.toString())
+                .header("X-Pod-ID", "pod-test")
+                .header("X-Request-ID", UUID.randomUUID().toString())
+                .header("X-Correlation-ID", UUID.randomUUID().toString())
+                .header("Idempotency-Key", UUID.randomUUID().toString())
+                .content(body);
+    }
+
+    /**
+     * E3 fix: the HSC employment upsert endpoint can now persist {@code ecNumber}
+     * (canonicalised) and {@code linkedHealthId}, so an EC-bearing employment row
+     * can be created over REST and then matched to EMPLOYMENT_MATCHED — the IATG
+     * e2e Step-6 precondition. Before E3 the upsert dropped {@code ecNumber} and
+     * the follow-up match returned NOT_FOUND.
+     */
+    @Test
+    void upsertPersistsCanonicalisedEcNumberEnablingMatchedBoth() throws Exception {
+        UUID tenant = UUID.randomUUID();
+
+        // lowercase + hyphen on the way in — canonicalisation must uppercase it.
+        mockMvc.perform(upsertRequest(tenant, """
+                        {"providerWorkerId": "PW-E3-001", "employmentStatus": "ACTIVE",
+                         "linkedHealthId": "b0000000-0000-4000-8000-000000000001",
+                         "ecNumber": "ec-000001", "postTitle": "Medical Officer"}
+                        """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.ecNumber").value("EC-000001"))
+                .andExpect(jsonPath("$.data.linkedHealthId").value("b0000000-0000-4000-8000-000000000001"));
+
+        mockMvc.perform(matchRequest(tenant, """
+                        {"ecNumber": "EC-000001", "healthId": "b0000000-0000-4000-8000-000000000001"}
+                        """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.matchStatus").value("MATCHED_BOTH"))
+                .andExpect(jsonPath("$.data.linkedHealthId").value("b0000000-0000-4000-8000-000000000001"));
     }
 
     @Test

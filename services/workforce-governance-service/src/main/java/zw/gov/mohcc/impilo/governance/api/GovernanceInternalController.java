@@ -230,6 +230,7 @@ public class GovernanceInternalController {
         employmentFields.put("employmentRecordId", req.employmentRecordId() != null ? req.employmentRecordId() : "");
         employmentFields.put("providerWorkerId", req.providerWorkerId() != null ? req.providerWorkerId() : "");
         employmentFields.put("linkedHealthId", req.linkedHealthId() != null ? req.linkedHealthId() : "");
+        employmentFields.put("ecNumber", req.ecNumber() != null ? req.ecNumber() : "");
         employmentFields.put("employerOrganisationId", req.employerOrganisationId() != null ? req.employerOrganisationId().toString() : "");
         employmentFields.put("employmentStatus", req.employmentStatus() != null ? req.employmentStatus() : "ACTIVE");
         employmentFields.put("postId", req.postId() != null ? req.postId() : "");

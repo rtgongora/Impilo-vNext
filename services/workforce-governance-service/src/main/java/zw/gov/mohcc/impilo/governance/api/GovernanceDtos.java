@@ -173,6 +173,7 @@ public final class GovernanceDtos {
             String employmentRecordId,
             String providerWorkerId,
             String linkedHealthId,
+            String ecNumber,
             UUID employerOrganisationId,
             String employmentStatus,
             String postId,

@@ -47,6 +47,7 @@ public class HscEmploymentService {
         }
         if (request.containsKey("providerWorkerId")) entity.setProviderWorkerId(str(request.get("providerWorkerId")));
         if (request.containsKey("linkedHealthId")) entity.setLinkedHealthId(str(request.get("linkedHealthId")));
+        if (request.containsKey("ecNumber")) entity.setEcNumber(EcNumbers.canonicalise(str(request.get("ecNumber"))));
         if (request.containsKey("employerOrganisationId")) entity.setEmployerOrganisationId(parseUuid(request.get("employerOrganisationId")));
         if (request.containsKey("employmentStatus")) entity.setEmploymentStatus(str(request.get("employmentStatus")));
         if (request.containsKey("postId")) entity.setPostId(str(request.get("postId")));
