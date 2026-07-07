@@ -162,6 +162,8 @@ class PlatformOriginServiceTest {
 
         Map<String, Object> out = service.execute(request.getId(), "approver-1");
         assertEquals("CREATE_COUNTRY_OPERATION", out.get("action"));
+        // The execute response surfaces the terminal status (RJ-1) for the console.
+        assertEquals("EXECUTED", out.get("status"));
         assertEquals(1, countryOps.size());
         CountryOperationEntity op = countryOps.values().iterator().next();
         assertEquals("ZW", op.getIsoCountryCode());
@@ -174,6 +176,33 @@ class PlatformOriginServiceTest {
         assertThrows(IllegalStateException.class,
                 () -> service.execute(request.getId(), "approver-1"));
         assertEquals(1, countryOps.size());
+    }
+
+    @Test
+    void getActionReturnsDurableStateAcrossLifecycle() {
+        AccessRequestEntity request = initiateCountryOperation();
+
+        // PENDING before approvals — refresh-proof read reflects the stored request.
+        Map<String, Object> pending = service.getAction(request.getId());
+        assertEquals(request.getId().toString(), pending.get("accessRequestId"));
+        assertEquals("PENDING", pending.get("status"));
+        assertEquals(2, pending.get("approvalsRequired"));
+        assertEquals(Boolean.FALSE, pending.get("approvalsSatisfied"));
+
+        approveTwice(request.getId());
+        assertEquals("APPROVED", service.getAction(request.getId()).get("status"));
+
+        service.execute(request.getId(), "approver-1");
+        // The durable read is what the browser uses to render EXECUTED after a refresh.
+        Map<String, Object> executed = service.getAction(request.getId());
+        assertEquals("EXECUTED", executed.get("status"));
+        assertEquals(Boolean.TRUE, executed.get("approvalsSatisfied"));
+    }
+
+    @Test
+    void getActionRejectsNonPlatformAction() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.getAction(UUID.randomUUID()));
     }
 
     @Test

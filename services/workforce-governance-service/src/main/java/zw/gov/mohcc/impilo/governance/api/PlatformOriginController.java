@@ -107,6 +107,14 @@ public class PlatformOriginController {
                 platformOriginService.listApprovals(accessRequestId), corr()));
     }
 
+    /** Durable current state of a platform action (status/approvals) — refresh-proof terminal read. */
+    @GetMapping("/actions/{accessRequestId}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAction(
+            @PathVariable UUID accessRequestId) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                platformOriginService.getAction(accessRequestId), corr()));
+    }
+
     /** Initiate APPOINT_NATIONAL_ADMIN — returns the PENDING PLATFORM_ACTION access request. */
     @PostMapping("/country-operations/{id}/appointments")
     public ResponseEntity<ApiResponse<Map<String, Object>>> initiateAppointment(

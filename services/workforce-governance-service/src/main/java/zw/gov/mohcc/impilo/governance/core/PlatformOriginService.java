@@ -220,7 +220,27 @@ public class PlatformOriginService {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("accessRequestId", accessRequestId.toString());
         out.put("action", action);
+        out.put("status", STATUS_EXECUTED);
         out.put("result", result);
+        return out;
+    }
+
+    /**
+     * Read the current state of a PLATFORM_ACTION for the two-person console.
+     * The durable terminal state (incl. EXECUTED) is served from the access
+     * request itself, so the browser can render the true state after a refresh
+     * rather than a lost in-session flag.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getAction(UUID accessRequestId) {
+        AccessRequestEntity request = requirePlatformAction(accessRequestId);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("accessRequestId", accessRequestId.toString());
+        out.put("requestType", request.getRequestType());
+        out.put("status", request.getStatus());
+        out.put("approvalsRecorded", twoPersonApprovalService.approvalCount(request));
+        out.put("approvalsSatisfied", twoPersonApprovalService.isSatisfied(request));
+        out.put("approvalsRequired", TWO_PERSON_PLATFORM_APPROVALS.size());
         return out;
     }
 
