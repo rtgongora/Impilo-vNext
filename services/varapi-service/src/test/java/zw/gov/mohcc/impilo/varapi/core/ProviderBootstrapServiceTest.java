@@ -56,6 +56,7 @@ class ProviderBootstrapServiceTest {
     @Mock private ProviderCouncilRegistrationRecordRepository registrationRepository;
     @Mock private CouncilRepository councilRepository;
     @Mock private EventOutboxRepository outboxRepository;
+    @Mock private ProviderClaimAdjudicationService providerClaimAdjudicationService;
 
     private ProviderBootstrapService service;
 
@@ -69,7 +70,8 @@ class ProviderBootstrapServiceTest {
                 claimTokenRepository,
                 registrationRepository,
                 councilRepository,
-                outboxRepository);
+                outboxRepository,
+                providerClaimAdjudicationService);
         TrustContextHolder.set(new TrustContext(
                 tenantId, "national-admin-1", "REGISTRY_ADMIN", "REGISTRY_ADMIN", "device",
                 correlationId, null, null, null, AccessMode.INTERNAL));

@@ -71,18 +71,21 @@ public class ProviderBootstrapService {
     private final ProviderCouncilRegistrationRecordRepository registrationRepository;
     private final CouncilRepository councilRepository;
     private final EventOutboxRepository outboxRepository;
+    private final ProviderClaimAdjudicationService providerClaimAdjudicationService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public ProviderBootstrapService(ProviderRepository providerRepository,
                                     ProviderClaimTokenRepository claimTokenRepository,
                                     ProviderCouncilRegistrationRecordRepository registrationRepository,
                                     CouncilRepository councilRepository,
-                                    EventOutboxRepository outboxRepository) {
+                                    EventOutboxRepository outboxRepository,
+                                    ProviderClaimAdjudicationService providerClaimAdjudicationService) {
         this.providerRepository = providerRepository;
         this.claimTokenRepository = claimTokenRepository;
         this.registrationRepository = registrationRepository;
         this.councilRepository = councilRepository;
         this.outboxRepository = outboxRepository;
+        this.providerClaimAdjudicationService = providerClaimAdjudicationService;
     }
 
     // ── Bulk preload ────────────────────────────────────────────────────────
@@ -293,7 +296,15 @@ public class ProviderBootstrapService {
         providerRepository.findByTenantIdAndImpiloHealthId(ctx.tenantId(), claimantHealthId)
                 .filter(p -> !p.getId().equals(preloadedProviderId))
                 .ifPresent(p -> {
-                    throw new IllegalStateException("This person already has a provider profile");
+                    // WS-F: when adjudication is enabled, escalate the conflict (mark the existing
+                    // profile CONFLICT + start a provider adjudication) in its own committed
+                    // transaction, then still reject the claim. Default-off: behaviour is unchanged.
+                    providerClaimAdjudicationService.escalate(
+                            ctx.tenantId(), p.getId(), claimantHealthId, ctx.actorId(),
+                            ctx.correlationId() != null ? ctx.correlationId().toString() : null);
+                    throw new IllegalStateException("This person already has a provider profile"
+                            + (providerClaimAdjudicationService.isEnabled()
+                                    ? " — the conflict has been routed to adjudication" : ""));
                 });
 
         provider.setImpiloHealthId(claimantHealthId);
