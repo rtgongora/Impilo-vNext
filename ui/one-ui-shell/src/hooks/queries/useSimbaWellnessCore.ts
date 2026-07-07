@@ -107,6 +107,92 @@ export function useAssembleRecommendedPlan() {
   });
 }
 
+// ── Consent preferences ─────────────────────────────────────────────────────
+export interface ConsentPreference {
+  caregiverInvolvement: boolean;
+  providerInvolvement: boolean;
+  programmeInvolvement: boolean;
+  sensitiveCategories: string;
+  dataSharingScope: string;
+}
+
+export function useConsentPreferences(cpid?: string | null) {
+  return useQuery<ApiResponse<ConsentPreference>>({
+    queryKey: ["wellness-consent", cpid ?? null],
+    queryFn: () =>
+      apiClient.get(
+        `/internal/v1/wellness/consent-preferences?person_cpid=${encodeURIComponent(cpid ?? "")}`,
+      ),
+    enabled: !!cpid,
+  });
+}
+
+export function useUpdateConsentPreferences() {
+  const qc = useQueryClient();
+  return useMutation<
+    ApiResponse<ConsentPreference>,
+    Error,
+    {
+      person_cpid: string;
+      caregiver_involvement?: boolean;
+      provider_involvement?: boolean;
+      programme_involvement?: boolean;
+      sensitive_categories?: string[];
+      data_sharing_scope?: string;
+    }
+  >({
+    mutationFn: (body) =>
+      apiClient.put("/internal/v1/wellness/consent-preferences", body),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["wellness-consent"] }),
+  });
+}
+
+// ── Follow-ups ──────────────────────────────────────────────────────────────
+export function useFollowUps(cpid?: string | null) {
+  return useQuery<ApiResponse<unknown[]>>({
+    queryKey: ["wellness-follow-ups", cpid ?? null],
+    queryFn: () =>
+      apiClient.get(
+        `/internal/v1/wellness/follow-ups?person_cpid=${encodeURIComponent(cpid ?? "")}`,
+      ),
+    enabled: !!cpid,
+  });
+}
+
+// ── Provider workbench (BFF composition) ────────────────────────────────────
+export function useWorkbenchClientSummary(cpid?: string | null) {
+  return useQuery<ApiResponse<Record<string, unknown>>>({
+    queryKey: ["wellness-workbench-summary", cpid ?? null],
+    queryFn: () =>
+      apiClient.get(
+        `/internal/v1/wellness/workbench/client/${encodeURIComponent(cpid ?? "")}/summary`,
+      ),
+    enabled: !!cpid,
+  });
+}
+
+export function useCreateWorkbenchFollowUp() {
+  const qc = useQueryClient();
+  return useMutation<
+    ApiResponse<unknown>,
+    Error,
+    { cpid: string; title: string; detail?: string; action_type?: string; severity?: string }
+  >({
+    mutationFn: ({ cpid, ...body }) =>
+      apiClient.post(`/internal/v1/wellness/workbench/client/${cpid}/follow-up`, body),
+    onSuccess: (_r, vars) => {
+      void qc.invalidateQueries({ queryKey: ["wellness-workbench-summary", vars.cpid] });
+    },
+  });
+}
+
+export function useWellnessAggregate() {
+  return useQuery<ApiResponse<Record<string, number>>>({
+    queryKey: ["wellness-aggregate-dashboard"],
+    queryFn: () => apiClient.get("/internal/v1/wellness/aggregate/dashboard"),
+  });
+}
+
 /** Flatten paginated timeline pages into a single list. */
 export function flattenTimeline(
   pages?: { data: TimelineEvent[] }[],
