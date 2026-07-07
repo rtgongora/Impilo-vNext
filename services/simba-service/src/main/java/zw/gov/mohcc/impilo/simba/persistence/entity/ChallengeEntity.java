@@ -45,6 +45,24 @@ public class ChallengeEntity {
     @Column(name = "status", length = 16)
     private String status = "ACTIVE";
 
+    @Column(name = "group_id")
+    private UUID groupId;
+
+    @Column(name = "community_id")
+    private UUID communityId;
+
+    @Column(name = "programme_id")
+    private UUID programmeId;
+
+    @Column(name = "campaign_flag", nullable = false)
+    private boolean campaignFlag = false;
+
+    @Column(name = "visibility", nullable = false, length = 32)
+    private String visibility = "PUBLIC";
+
+    @Column(name = "moderation_status", nullable = false, length = 16)
+    private String moderationStatus = "VISIBLE";
+
     @Column(name = "created_by", length = 128)
     private String createdBy;
 
@@ -145,6 +163,54 @@ public class ChallengeEntity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public UUID getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(UUID groupId) {
+        this.groupId = groupId;
+    }
+
+    public UUID getCommunityId() {
+        return communityId;
+    }
+
+    public void setCommunityId(UUID communityId) {
+        this.communityId = communityId;
+    }
+
+    public UUID getProgrammeId() {
+        return programmeId;
+    }
+
+    public void setProgrammeId(UUID programmeId) {
+        this.programmeId = programmeId;
+    }
+
+    public boolean isCampaignFlag() {
+        return campaignFlag;
+    }
+
+    public void setCampaignFlag(boolean campaignFlag) {
+        this.campaignFlag = campaignFlag;
+    }
+
+    public String getVisibility() {
+        return visibility;
+    }
+
+    public void setVisibility(String visibility) {
+        this.visibility = visibility;
+    }
+
+    public String getModerationStatus() {
+        return moderationStatus;
+    }
+
+    public void setModerationStatus(String moderationStatus) {
+        this.moderationStatus = moderationStatus;
     }
 
     public String getCreatedBy() {

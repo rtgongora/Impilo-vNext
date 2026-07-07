@@ -14,4 +14,12 @@ public interface ChallengeRepository extends JpaRepository<ChallengeEntity, Long
     List<ChallengeEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
 
     Optional<ChallengeEntity> findByChallengeIdAndTenantId(UUID challengeId, UUID tenantId);
+
+    List<ChallengeEntity> findByTenantIdAndGroupIdOrderByCreatedAtDesc(UUID tenantId, UUID groupId);
+
+    List<ChallengeEntity> findByTenantIdAndProgrammeIdOrderByCreatedAtDesc(UUID tenantId, UUID programmeId);
+
+    List<ChallengeEntity> findByTenantIdAndCampaignFlagTrueOrderByCreatedAtDesc(UUID tenantId);
+
+    long countByTenantIdAndProgrammeId(UUID tenantId, UUID programmeId);
 }
