@@ -78,6 +78,30 @@ class FacilityClaimControllerTest {
         assertEquals(false, data.get("claimable"));
     }
 
+    // ── Facility-admin appointments (Facility Mode) ────────────────────────────
+
+    @Test
+    void appointments_proxiesFacilityAdminAppointments() throws Exception {
+        when(tusoClient.appointments(FACILITY)).thenReturn(MAPPER.readTree(
+                "[{\"id\":1,\"personHealthId\":\"hid-1\",\"approvalState\":\"APPROVED\"}]"));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller().appointments(TENANT, REQ, CORR, ACTOR, FACILITY);
+
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        assertEquals(FACILITY, data(resp).get("facilityUuid"));
+        assertNotNull(data(resp).get("appointments"));
+    }
+
+    @Test
+    void appointments_requiresFacilityUuid() {
+        ResponseEntity<Map<String, Object>> resp =
+                controller().appointments(TENANT, REQ, CORR, ACTOR, "");
+
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("FACILITY_UUID_REQUIRED", error(resp).get("code"));
+    }
+
     @Test
     void eligibility_claimableWhenAllowedOnPlatform() throws Exception {
         when(tusoClient.eligibility(FACILITY)).thenReturn(MAPPER.readTree(

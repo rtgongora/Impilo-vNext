@@ -99,6 +99,33 @@ public class FacilityClaimController {
         }
     }
 
+    /**
+     * Facility-admin appointments for a facility (Facility Mode card 5: pending
+     * claims/requests + who currently administers it). The UI derives whether the
+     * signed-in user administers THIS facility from these rows — no one administers
+     * a facility they hold no active appointment for.
+     */
+    @GetMapping("/appointments")
+    public ResponseEntity<Map<String, Object>> appointments(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestParam("facilityUuid") String facilityUuid) {
+        if (facilityUuid == null || facilityUuid.isBlank()) {
+            return error(HttpStatus.BAD_REQUEST, "FACILITY_UUID_REQUIRED",
+                    "A facility UUID is required to list facility-admin appointments.", requestId, correlationId);
+        }
+        try {
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("facilityUuid", facilityUuid);
+            data.put("appointments", tusoClient.appointments(facilityUuid));
+            return ok(data, requestId, correlationId);
+        } catch (HttpStatusCodeException ex) {
+            return propagate(ex, requestId, correlationId);
+        }
+    }
+
     // ── Preview (masked) ───────────────────────────────────────────────────────
 
     /** Masked facility summary shown before an administrator commits to a claim. */

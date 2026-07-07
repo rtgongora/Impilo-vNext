@@ -47,6 +47,13 @@ public class TusoFacilityClaimClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    /** All facility-admin appointments for a facility (Facility Mode: pending claims + who administers it). */
+    public JsonNode appointments(String facilityUuid) {
+        String url = baseUrl + "/v1/internal/facilities/" + enc(facilityUuid) + "/admin-claim/appointments";
+        log.info("TUSO: facility-admin appointments for facility={}", facilityUuid);
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     /** Submit a facility-administrator claim → creates a PENDING appointment. */
     public JsonNode submitClaim(String facilityUuid, Map<String, Object> body) {
         String url = baseUrl + "/v1/internal/facilities/" + enc(facilityUuid) + "/admin-claim";
