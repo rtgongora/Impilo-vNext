@@ -174,3 +174,350 @@ export function flattenFeed(pages?: { data: SocialPost[] }[]): SocialPost[] {
   if (!pages) return [];
   return pages.flatMap((p) => p.data ?? []);
 }
+
+// ── Groups ────────────────────────────────────────────────────────────────────
+export interface SocialGroup {
+  groupId: string;
+  name: string;
+  description?: string | null;
+  groupKind: string;
+  topic?: string | null;
+  sensitiveFlag: boolean;
+  visibility: string;
+  joinPolicy: string;
+  memberCount: number;
+  status: string;
+}
+
+export interface SocialGroupMember {
+  membershipId: string;
+  personCpid: string;
+  role: string;
+  canPost: boolean;
+  canComment: boolean;
+  status: string;
+}
+
+export function useSocialGroups(mine = false) {
+  return useQuery<ApiResponse<SocialGroup[]>>({
+    queryKey: ["simba-social-groups", mine],
+    queryFn: () =>
+      apiClient.get(`/internal/v1/wellness/social/groups${mine ? "?mine=true" : ""}`),
+  });
+}
+
+export function useSocialGroup(groupId?: string | null) {
+  return useQuery<ApiResponse<SocialGroup> & { members: SocialGroupMember[] }>({
+    queryKey: ["simba-social-group", groupId ?? null],
+    queryFn: () => apiClient.get(`/internal/v1/wellness/social/groups/${groupId}`),
+    enabled: !!groupId,
+  });
+}
+
+export function useCreateGroup() {
+  const qc = useQueryClient();
+  return useMutation<
+    ApiResponse<SocialGroup>,
+    Error,
+    {
+      name: string;
+      description?: string;
+      group_kind?: string;
+      topic?: string;
+      sensitive_flag?: boolean;
+      visibility?: string;
+      join_policy?: string;
+      max_members?: number;
+    }
+  >({
+    mutationFn: (payload) => apiClient.post("/internal/v1/wellness/social/groups", payload),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["simba-social-groups"] }),
+  });
+}
+
+export function useJoinGroup() {
+  const qc = useQueryClient();
+  return useMutation<ApiResponse<SocialGroupMember>, Error, { groupId: string }>({
+    mutationFn: ({ groupId }) =>
+      apiClient.post(`/internal/v1/wellness/social/groups/${groupId}/join`, {}),
+    onSuccess: (_r, vars) => {
+      void qc.invalidateQueries({ queryKey: ["simba-social-groups"] });
+      void qc.invalidateQueries({ queryKey: ["simba-social-group", vars.groupId] });
+    },
+  });
+}
+
+export function useLeaveGroup() {
+  const qc = useQueryClient();
+  return useMutation<ApiResponse<unknown>, Error, { groupId: string }>({
+    mutationFn: ({ groupId }) =>
+      apiClient.post(`/internal/v1/wellness/social/groups/${groupId}/leave`, {}),
+    onSuccess: (_r, vars) => {
+      void qc.invalidateQueries({ queryKey: ["simba-social-groups"] });
+      void qc.invalidateQueries({ queryKey: ["simba-social-group", vars.groupId] });
+    },
+  });
+}
+
+export function useApproveMember() {
+  const qc = useQueryClient();
+  return useMutation<ApiResponse<SocialGroupMember>, Error, { groupId: string; memberCpid: string }>({
+    mutationFn: ({ groupId, memberCpid }) =>
+      apiClient.post(
+        `/internal/v1/wellness/social/groups/${groupId}/members/${memberCpid}/approve`,
+        {},
+      ),
+    onSuccess: (_r, vars) =>
+      void qc.invalidateQueries({ queryKey: ["simba-social-group", vars.groupId] }),
+  });
+}
+
+export function useSetMemberRole() {
+  const qc = useQueryClient();
+  return useMutation<
+    ApiResponse<SocialGroupMember>,
+    Error,
+    { groupId: string; memberCpid: string; role: string }
+  >({
+    mutationFn: ({ groupId, memberCpid, role }) =>
+      apiClient.patch(
+        `/internal/v1/wellness/social/groups/${groupId}/members/${memberCpid}/role`,
+        { role },
+      ),
+    onSuccess: (_r, vars) =>
+      void qc.invalidateQueries({ queryKey: ["simba-social-group", vars.groupId] }),
+  });
+}
+
+export function usePublishAnnouncement() {
+  const qc = useQueryClient();
+  return useMutation<ApiResponse<SocialPost>, Error, { groupId: string; body: string }>({
+    mutationFn: ({ groupId, body }) =>
+      apiClient.post(`/internal/v1/wellness/social/groups/${groupId}/announcements`, { body }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["simba-social-feed"] }),
+  });
+}
+
+// ── Communities ─────────────────────────────────────────────────────────────
+export interface SocialCommunity {
+  communityId: string;
+  name: string;
+  description?: string | null;
+  communityType: string;
+  visibility: string;
+  memberCount: number;
+  status: string;
+}
+
+export function useSocialCommunities() {
+  return useQuery<ApiResponse<SocialCommunity[]>>({
+    queryKey: ["simba-social-communities"],
+    queryFn: () => apiClient.get("/internal/v1/wellness/social/communities"),
+  });
+}
+
+export function useSocialCommunity(communityId?: string | null) {
+  return useQuery<ApiResponse<SocialCommunity> & { members: SocialGroupMember[] }>({
+    queryKey: ["simba-social-community", communityId ?? null],
+    queryFn: () => apiClient.get(`/internal/v1/wellness/social/communities/${communityId}`),
+    enabled: !!communityId,
+  });
+}
+
+export function useCreateCommunity() {
+  const qc = useQueryClient();
+  return useMutation<
+    ApiResponse<SocialCommunity>,
+    Error,
+    { name: string; description?: string; community_type?: string; visibility?: string }
+  >({
+    mutationFn: (payload) => apiClient.post("/internal/v1/wellness/social/communities", payload),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["simba-social-communities"] }),
+  });
+}
+
+export function useJoinCommunity() {
+  const qc = useQueryClient();
+  return useMutation<ApiResponse<unknown>, Error, { communityId: string }>({
+    mutationFn: ({ communityId }) =>
+      apiClient.post(`/internal/v1/wellness/social/communities/${communityId}/join`, {}),
+    onSuccess: (_r, vars) => {
+      void qc.invalidateQueries({ queryKey: ["simba-social-communities"] });
+      void qc.invalidateQueries({ queryKey: ["simba-social-community", vars.communityId] });
+    },
+  });
+}
+
+export function usePublishCommunityAnnouncement() {
+  const qc = useQueryClient();
+  return useMutation<ApiResponse<SocialPost>, Error, { communityId: string; body: string }>({
+    mutationFn: ({ communityId, body }) =>
+      apiClient.post(`/internal/v1/wellness/social/communities/${communityId}/announcements`, {
+        body,
+      }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["simba-social-feed"] }),
+  });
+}
+
+// ── Challenges (social extension) ────────────────────────────────────────────
+export interface SocialChallenge {
+  challengeId: string;
+  title: string;
+  description?: string | null;
+  challengeType: string;
+  targetValue?: number | null;
+  unit?: string | null;
+  status: string;
+  campaignFlag?: boolean;
+  visibility?: string;
+}
+
+export interface LeaderboardRow {
+  rank: number;
+  personCpid: string;
+  progressValue: number;
+  sharedToFeed: boolean;
+}
+
+export function useChallenges() {
+  return useQuery<SocialChallenge[] | ApiResponse<SocialChallenge[]>>({
+    queryKey: ["simba-social-challenges"],
+    queryFn: () => apiClient.get("/internal/v1/wellness/challenges"),
+  });
+}
+
+export function useChallengeLeaderboard(challengeId?: string | null) {
+  return useQuery<ApiResponse<LeaderboardRow[]>>({
+    queryKey: ["simba-social-challenge-leaderboard", challengeId ?? null],
+    queryFn: () =>
+      apiClient.get(`/internal/v1/wellness/social/challenges/${challengeId}/leaderboard`),
+    enabled: !!challengeId,
+  });
+}
+
+export function useJoinChallenge() {
+  const qc = useQueryClient();
+  return useMutation<ApiResponse<unknown>, Error, { challengeId: string; personCpid: string }>({
+    mutationFn: ({ challengeId, personCpid }) =>
+      apiClient.post(`/internal/v1/wellness/challenges/${challengeId}/join`, {
+        person_cpid: personCpid,
+      }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["simba-social-challenges"] }),
+  });
+}
+
+export function useShareChallengeToFeed() {
+  const qc = useQueryClient();
+  return useMutation<
+    ApiResponse<SocialPost>,
+    Error,
+    { challengeId: string; message?: string; visibility?: string }
+  >({
+    mutationFn: ({ challengeId, message, visibility }) =>
+      apiClient.post(`/internal/v1/wellness/social/challenges/${challengeId}/share`, {
+        message,
+        visibility,
+      }),
+    onSuccess: (_r, vars) => {
+      void qc.invalidateQueries({ queryKey: ["simba-social-feed"] });
+      void qc.invalidateQueries({
+        queryKey: ["simba-social-challenge-leaderboard", vars.challengeId],
+      });
+    },
+  });
+}
+
+// ── Notifications ────────────────────────────────────────────────────────────
+export interface SocialNotification {
+  notificationId: string;
+  actorCpid?: string | null;
+  notificationType: string;
+  subjectType?: string | null;
+  subjectId?: string | null;
+  summary?: string | null;
+  status: string;
+  createdAt: string;
+}
+
+export function useSocialNotifications(limit = 20) {
+  return useQuery<{ data: SocialNotification[]; meta: { next_cursor: number | null }; unread: number }>(
+    {
+      queryKey: ["simba-social-notifications"],
+      queryFn: () =>
+        apiClient.get(`/internal/v1/wellness/social/notifications?limit=${limit}`),
+    },
+  );
+}
+
+export function useMarkNotificationRead() {
+  const qc = useQueryClient();
+  return useMutation<ApiResponse<SocialNotification>, Error, { notificationId: string }>({
+    mutationFn: ({ notificationId }) =>
+      apiClient.post(`/internal/v1/wellness/social/notifications/${notificationId}/read`, {}),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["simba-social-notifications"] }),
+  });
+}
+
+// ── Programme engagement dashboard (aggregate-only) ──────────────────────────
+export interface ProgrammeEngagement {
+  programme_id: string | null;
+  groups: number;
+  communities: number;
+  active_members: number;
+  posts: number;
+  official_posts: number;
+  challenge_enrolment: number;
+  challenge_completions: number;
+  challenge_completion_pct: number;
+  reported_content: number;
+  moderation_backlog: number;
+  safety_escalations: number;
+}
+
+export function useProgrammeEngagement(programmeId?: string | null) {
+  return useQuery<ApiResponse<ProgrammeEngagement>>({
+    queryKey: ["simba-social-programme-engagement", programmeId ?? null],
+    queryFn: () => {
+      const q = programmeId ? `?programme_id=${programmeId}` : "";
+      return apiClient.get(`/internal/v1/wellness/social/programme-engagement/dashboard${q}`);
+    },
+  });
+}
+
+// ── Moderation inbox (provider/programme workbench) ──────────────────────────
+export interface ContentReport {
+  reportId: string;
+  reporterCpid: string;
+  subjectType: string;
+  subjectId: string;
+  subjectOwnerCpid?: string | null;
+  reason: string;
+  detail?: string | null;
+  careLinkageId?: string | null;
+  status: string;
+  createdAt: string;
+}
+
+export function useModerationInbox(status = "OPEN") {
+  return useQuery<{ data: ContentReport[]; backlog: number }>({
+    queryKey: ["simba-social-moderation-inbox", status],
+    queryFn: () =>
+      apiClient.get(`/internal/v1/wellness/social/moderation/inbox?status=${status}`),
+  });
+}
+
+export function useModerationAction() {
+  const qc = useQueryClient();
+  return useMutation<
+    ApiResponse<unknown>,
+    Error,
+    { reportId: string; action_state: string; rationale?: string }
+  >({
+    mutationFn: ({ reportId, action_state, rationale }) =>
+      apiClient.post(`/internal/v1/wellness/social/moderation/${reportId}/action`, {
+        action_state,
+        rationale,
+      }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["simba-social-moderation-inbox"] }),
+  });
+}
