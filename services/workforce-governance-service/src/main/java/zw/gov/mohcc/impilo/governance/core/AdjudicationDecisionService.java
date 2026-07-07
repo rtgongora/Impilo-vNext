@@ -48,11 +48,14 @@ public class AdjudicationDecisionService {
 
     private final AdjudicationDecisionRepository repository;
     private final GovernanceEventService eventService;
+    private final EmploymentConflictCaseService employmentConflictCaseService;
 
     public AdjudicationDecisionService(AdjudicationDecisionRepository repository,
-                                       GovernanceEventService eventService) {
+                                       GovernanceEventService eventService,
+                                       EmploymentConflictCaseService employmentConflictCaseService) {
         this.repository = repository;
         this.eventService = eventService;
+        this.employmentConflictCaseService = employmentConflictCaseService;
     }
 
     /** Immutable command describing a decision to record. */
@@ -120,6 +123,15 @@ public class AdjudicationDecisionService {
         entity.setAccessRequestId(cmd.accessRequestId());
         entity.setCreatedBy(actor);
         AdjudicationDecisionEntity saved = repository.save(entity);
+
+        // WS-D: an IDENTITY decision resolves an open employment-conflict case in-process.
+        // Runs in its own transaction and is best-effort, so it can never roll back this
+        // append-only decision (the system of record).
+        if ("IDENTITY".equals(subjectType)) {
+            employmentConflictCaseService.resolveFromDecision(
+                    tenantId, saved.getWorkflowInstanceId(), saved.getSubjectRef(),
+                    decision, saved.getId().toString(), correlationId);
+        }
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("decisionId", saved.getId().toString());

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import zw.gov.mohcc.impilo.governance.core.EmploymentConflictCaseService;
 import zw.gov.mohcc.impilo.governance.core.EmploymentMatchService;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 
@@ -29,9 +30,12 @@ import java.util.UUID;
 public class EmploymentMatchController {
 
     private final EmploymentMatchService employmentMatchService;
+    private final EmploymentConflictCaseService employmentConflictCaseService;
 
-    public EmploymentMatchController(EmploymentMatchService employmentMatchService) {
+    public EmploymentMatchController(EmploymentMatchService employmentMatchService,
+                                     EmploymentConflictCaseService employmentConflictCaseService) {
         this.employmentMatchService = employmentMatchService;
+        this.employmentConflictCaseService = employmentConflictCaseService;
     }
 
     public record EmploymentMatchRequest(
@@ -49,6 +53,12 @@ public class EmploymentMatchController {
         UUID tenant = parseTenant(tenantId);
         Map<String, Object> result = employmentMatchService.match(
                 tenant, request.ecNumber(), request.healthId(), request.nationalId(), request.surname());
+        // WS-D: a CONFLICT (duplicate EC, or EC linked to a different Health ID) opens a durable
+        // adjudication case (best-effort; never affects this read response).
+        if (EmploymentMatchService.CONFLICT.equals(result.get("matchStatus"))) {
+            employmentConflictCaseService.openFromMatch(
+                    tenant, request.ecNumber(), request.healthId(), result, correlationId);
+        }
         return ResponseEntity.ok(ApiResponse.ok(result, correlationId != null ? correlationId : ""));
     }
 

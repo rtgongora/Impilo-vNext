@@ -30,6 +30,7 @@ class AdjudicationDecisionServiceTest {
 
     @Mock private AdjudicationDecisionRepository repository;
     @Mock private GovernanceEventService eventService;
+    @Mock private EmploymentConflictCaseService employmentConflictCaseService;
 
     private AdjudicationDecisionService service;
     private final UUID tenantId = UUID.randomUUID();
@@ -37,7 +38,7 @@ class AdjudicationDecisionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new AdjudicationDecisionService(repository, eventService);
+        service = new AdjudicationDecisionService(repository, eventService, employmentConflictCaseService);
         when(repository.save(any())).thenAnswer(i -> {
             AdjudicationDecisionEntity e = i.getArgument(0);
             if (e.getId() == null) e.setId(UUID.randomUUID());
