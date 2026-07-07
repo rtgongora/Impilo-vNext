@@ -78,7 +78,7 @@
 #
 # GATE (authoring container)
 #   bash -n test/integration/iatg-end-to-end-runtime.sh   -> SH_OK
-#   shellcheck (if installed)
+#   static lint (if installed)
 #   test/integration/iatg-end-to-end-runtime.sh --dry-run -> prints chain, exit 0
 # =============================================================================
 
@@ -109,8 +109,10 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 IATG_SEED_ENV="${IATG_SEED_ENV:-${REPO_ROOT}/reports/iatg-e2e/seed.env}"
 SEED_SOURCED="no"
 if [[ -f "$IATG_SEED_ENV" ]]; then
-  # shellcheck disable=SC1090
-  set -a; source "$IATG_SEED_ENV"; set +a
+  set -a
+  # shellcheck source=/dev/null
+  source "$IATG_SEED_ENV"
+  set +a
   SEED_SOURCED="yes ($IATG_SEED_ENV)"
 fi
 
@@ -202,6 +204,7 @@ build_headers() {
     -H "X-Pod-ID: ${POD_ID}"
     -H "X-Request-ID: req-${RUN_SUFFIX}-$RANDOM"
     -H "X-Correlation-ID: corr-${RUN_SUFFIX}-$RANDOM"
+    -H "Idempotency-Key: idem-${RUN_SUFFIX}-$RANDOM"
     -H "Content-Type: application/json"
   )
   [[ -n "$actor_id" ]] && HDRS+=(-H "X-Actor-ID: ${actor_id}" -H "X-Actor-Type: PERSON" -H "X-Purpose-Of-Use: TREATMENT")
