@@ -13,6 +13,7 @@ import {
   approveAction,
   createCountryOperation,
   executeAction,
+  fetchAction,
   fetchActionApprovals,
   fetchAppointments,
   fetchCountryOperation,
@@ -57,6 +58,11 @@ describe("usePlatformOrigin network helpers", () => {
   it("lists the who-approved projection for an action", () => {
     void fetchActionApprovals("ar-1");
     expect(get).toHaveBeenCalledWith("/internal/v1/platform-origin/actions/ar-1/approvals");
+  });
+
+  it("reads the durable action state for the refresh-proof terminal status", () => {
+    void fetchAction("ar-1");
+    expect(get).toHaveBeenCalledWith("/internal/v1/platform-origin/actions/ar-1");
   });
 
   it("creates a country operation with the platform-action body", () => {

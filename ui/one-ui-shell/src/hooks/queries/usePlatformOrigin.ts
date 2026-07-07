@@ -67,6 +67,16 @@ export interface PlatformActionApprovalState {
   approvalsSatisfied: boolean;
 }
 
+/** getAction() output: durable current state of a platform action (refresh-proof terminal read). */
+export interface PlatformActionState {
+  accessRequestId: string;
+  requestType?: string;
+  status: string;
+  approvalsRecorded: number;
+  approvalsSatisfied: boolean;
+  approvalsRequired?: number;
+}
+
 /** A single recorded approver decision (who-approved projection, A-b). */
 export interface PlatformActionApprovalRow {
   approverUserId?: string;
@@ -137,6 +147,12 @@ export function fetchPendingActions(status = "PENDING") {
 export function fetchActionApprovals(accessRequestId: string) {
   return apiClient.get<GovernanceEnvelope<PlatformActionApprovalRow[]>>(
     `${PLATFORM_ORIGIN_BASE}/actions/${accessRequestId}/approvals`,
+  );
+}
+
+export function fetchAction(accessRequestId: string) {
+  return apiClient.get<GovernanceEnvelope<PlatformActionState>>(
+    `${PLATFORM_ORIGIN_BASE}/actions/${accessRequestId}`,
   );
 }
 
@@ -216,6 +232,15 @@ export function useActionApprovals(accessRequestId: string | undefined) {
   return useQuery({
     queryKey: ["platform-origin", "action-approvals", accessRequestId],
     queryFn: () => fetchActionApprovals(accessRequestId as string),
+    enabled: Boolean(accessRequestId),
+  });
+}
+
+/** Durable current state of a platform action — the console shows the true terminal state (incl. EXECUTED) after a refresh. */
+export function useAction(accessRequestId: string | undefined) {
+  return useQuery({
+    queryKey: ["platform-origin", "action", accessRequestId],
+    queryFn: () => fetchAction(accessRequestId as string),
     enabled: Boolean(accessRequestId),
   });
 }

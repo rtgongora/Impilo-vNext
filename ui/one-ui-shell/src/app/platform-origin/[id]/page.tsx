@@ -19,6 +19,7 @@ import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { TwoPersonApprovalPanel } from "../TwoPersonApprovalPanel";
 import {
+  useAction,
   useActionApprovals,
   useAppointments,
   useApproveAction,
@@ -48,6 +49,8 @@ export default function PlatformOriginDetailPage() {
 
   const [activeActionId, setActiveActionId] = useState("");
   const approvals = useActionApprovals(activeActionId || undefined);
+  // Durable server-side state so the true terminal status (incl. EXECUTED) renders after a refresh.
+  const actionState = useAction(activeActionId || undefined);
 
   const [appt, setAppt] = useState({ subjectUserId: "", role: "NATIONAL_ADMINISTRATOR", expiresAt: "" });
 
@@ -63,11 +66,15 @@ export default function PlatformOriginDetailPage() {
   const approvalRows = approvals.data?.data ?? [];
 
   const approveState = approve.data?.data;
-  const executed = Boolean(execute.data?.data);
+  const durable = actionState.data?.data;
+  const executed = Boolean(execute.data?.data) || durable?.status === "EXECUTED";
   const recordedFromRows = approvalRows.filter((a) => a.decision?.toUpperCase() === "APPROVE").length;
-  const approvalsRecorded = approveState?.approvalsRecorded ?? recordedFromRows;
-  const approvalsSatisfied = approveState?.approvalsSatisfied ?? false;
-  const status = executed ? "EXECUTED" : approveState?.status ?? (activeActionId ? "PENDING" : "—");
+  const approvalsRecorded = approveState?.approvalsRecorded ?? durable?.approvalsRecorded ?? recordedFromRows;
+  const approvalsSatisfied = approveState?.approvalsSatisfied ?? durable?.approvalsSatisfied ?? false;
+  // Prefer this session's mutation result, then the durable server read, so a refresh still shows the true terminal state.
+  const status = executed
+    ? "EXECUTED"
+    : approveState?.status ?? durable?.status ?? (activeActionId ? "PENDING" : "—");
 
   function submitAppoint() {
     if (!id) return;
