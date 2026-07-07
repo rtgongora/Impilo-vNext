@@ -6,6 +6,7 @@ import zw.gov.mohcc.impilo.simba.core.CareLinkageService;
 import zw.gov.mohcc.impilo.simba.core.SimbaEventEmitter;
 import zw.gov.mohcc.impilo.simba.persistence.entity.CareLinkageEntity;
 import zw.gov.mohcc.impilo.simba.social.core.SocialModerationService;
+import zw.gov.mohcc.impilo.simba.social.core.SocialNotificationService;
 import zw.gov.mohcc.impilo.simba.social.entity.ContentReportEntity;
 import zw.gov.mohcc.impilo.simba.social.repository.ContentReportRepository;
 import zw.gov.mohcc.impilo.simba.social.repository.ModerationActionRepository;
@@ -27,7 +28,7 @@ class SocialModerationServiceTest {
 
     private SocialModerationService svc(CareLinkageService careLinkage, ContentReportRepository reports) {
         return new SocialModerationService(reports, mock(ModerationActionRepository.class),
-                careLinkage, mock(SimbaEventEmitter.class));
+                careLinkage, mock(SimbaEventEmitter.class), mock(SocialNotificationService.class));
     }
 
     @Test

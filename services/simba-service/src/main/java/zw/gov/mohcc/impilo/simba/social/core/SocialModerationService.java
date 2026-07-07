@@ -33,15 +33,18 @@ public class SocialModerationService {
     private final ModerationActionRepository actionRepository;
     private final CareLinkageService careLinkage;
     private final SimbaEventEmitter events;
+    private final SocialNotificationService notifications;
 
     public SocialModerationService(ContentReportRepository reportRepository,
                                    ModerationActionRepository actionRepository,
                                    CareLinkageService careLinkage,
-                                   SimbaEventEmitter events) {
+                                   SimbaEventEmitter events,
+                                   SocialNotificationService notifications) {
         this.reportRepository = reportRepository;
         this.actionRepository = actionRepository;
         this.careLinkage = careLinkage;
         this.events = events;
+        this.notifications = notifications;
     }
 
     /** True when the reason must escalate to a care linkage (safety), not just moderation. */
@@ -133,6 +136,15 @@ public class SocialModerationService {
         events.emit(tenantId, "WELLNESS_SOCIAL_MODERATION", action.getActionId().toString(),
                 "impilo.simba.wellness.social.moderation.action.v1", moderatorCpid,
                 "simba:social-mod:" + action.getActionId(), payload);
+
+        // Notify the affected party of the moderation outcome (emits SIMBA_MODERATION_ACTION_TAKEN via
+        // the notification seam). Delivery is Khuluma's; the outbox event is the seam — no fake delivery.
+        if (report.getSubjectOwnerCpid() != null && !report.getSubjectOwnerCpid().isBlank()) {
+            notifications.notify(tenantId, new SocialNotificationService.NotifyRequest(
+                    report.getSubjectOwnerCpid(), moderatorCpid, "MODERATION",
+                    report.getSubjectType(), report.getSubjectId(),
+                    "A moderation decision was made on your content: " + actionState));
+        }
         return action;
     }
 }
