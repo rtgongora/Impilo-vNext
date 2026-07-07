@@ -305,14 +305,55 @@ class ProviderClaimControllerTest {
         assertEquals("NO_LINKED_PROFILE", error(resp).get("code"));
     }
 
-    // ── Org invitation (Channel C placeholder) ────────────────────────────────
+    // ── Self-service access requests (durable; IATG Journey D) ─────────────────
 
     @Test
-    void orgInvitation_is501FeaturePending() {
-        ResponseEntity<Map<String, Object>> resp =
-                controller(false).orgInvitation(TENANT, REQ, CORR, ACTOR);
+    void submitAccessRequest_persistsDurableRequestWithNextActor() throws Exception {
+        com.fasterxml.jackson.databind.JsonNode view = MAPPER.readTree(
+                "{\"publicId\":\"PAR-ABC12345\",\"requestType\":\"NEW_PROVIDER\","
+                        + "\"status\":\"PENDING_NATIONAL_REVIEW\",\"nextActor\":\"NATIONAL_ADMINISTRATOR\"}");
+        when(varapiClient.submitProviderAccessRequest(any())).thenReturn(view);
 
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, resp.getStatusCode());
-        assertEquals("FEATURE_PENDING", error(resp).get("code"));
+        ResponseEntity<Map<String, Object>> resp = controller(false).submitAccessRequest(
+                TENANT, REQ, CORR, ACTOR, Map.of("requestType", "NEW_PROVIDER", "profession", "Medical Officer"));
+
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        assertEquals(view, resp.getBody().get("data"));
+    }
+
+    @Test
+    void submitAccessRequest_requiresRequestType() {
+        ResponseEntity<Map<String, Object>> resp = controller(false).submitAccessRequest(
+                TENANT, REQ, CORR, ACTOR, Map.of("profession", "Nurse"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("REQUEST_TYPE_REQUIRED", error(resp).get("code"));
+        verify(varapiClient, never()).submitProviderAccessRequest(any());
+    }
+
+    @Test
+    void statusList_returnsApplicantRequests() throws Exception {
+        com.fasterxml.jackson.databind.JsonNode list = MAPPER.readTree(
+                "[{\"publicId\":\"PAR-1\",\"status\":\"PENDING_ORGANIZATION_REVIEW\"}]");
+        when(varapiClient.listProviderAccessRequests()).thenReturn(list);
+
+        ResponseEntity<Map<String, Object>> resp = controller(false).status(TENANT, REQ, CORR, ACTOR);
+
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        assertEquals(list, resp.getBody().get("data"));
+    }
+
+    @Test
+    void orgInvitation_recordsDurableRequestNotA501() throws Exception {
+        com.fasterxml.jackson.databind.JsonNode view = MAPPER.readTree(
+                "{\"publicId\":\"PAR-INV-1\",\"requestType\":\"ORG_INVITATION\","
+                        + "\"status\":\"PENDING_ORGANIZATION_REVIEW\",\"nextActor\":\"ORGANIZATION_REPRESENTATIVE\"}");
+        when(varapiClient.submitProviderAccessRequest(any())).thenReturn(view);
+
+        ResponseEntity<Map<String, Object>> resp = controller(false).orgInvitation(
+                TENANT, REQ, CORR, ACTOR, Map.of("organizationRef", "ORG-1"));
+
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        assertEquals(view, resp.getBody().get("data"));
     }
 }

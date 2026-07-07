@@ -69,6 +69,29 @@ public class VarapiServiceClient {
         return extractData(response);
     }
 
+    /** Submit a self-service provider-access request (IATG Journey D). Applicant = forwarded X-Actor-ID. */
+    public JsonNode submitProviderAccessRequest(Map<String, Object> request) {
+        String url = baseUrl + "/v1/internal/providers/access-requests";
+        log.info("VARAPI: Submitting provider access request [type={}]", request.get("requestType"));
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** List the calling applicant's provider-access requests (tenant + X-Actor-ID scoped in varapi). */
+    public JsonNode listProviderAccessRequests() {
+        String url = baseUrl + "/v1/internal/providers/access-requests";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Read a single provider-access request by its opaque public id. */
+    public JsonNode getProviderAccessRequest(String publicId) {
+        String url = baseUrl + "/v1/internal/providers/access-requests/" + publicId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     /**
      * Search-before-create for provider registry (VARAPI internal).
      */

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -337,19 +338,79 @@ public class ProviderClaimController {
         }
     }
 
-    // ── Channel C placeholder ─────────────────────────────────────────────────
+    // ── Self-service access requests (durable; IATG Journey D) ────────────────
 
-    /** Organisation-invitation onboarding — arrives with org-registry adoption (Channel C). */
+    /**
+     * Submit a durable provider-access request (new provider / organisation
+     * invitation / council / EC). Always persists with a status and a named next
+     * actor; a new Provider ID is never issued here. Applicant = session Health ID.
+     */
+    @PostMapping("/access-request")
+    public ResponseEntity<Map<String, Object>> submitAccessRequest(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestBody Map<String, Object> body) {
+        if (str(body.get("requestType")) == null) {
+            return error(HttpStatus.BAD_REQUEST, "REQUEST_TYPE_REQUIRED",
+                    "A requestType is required (e.g. NEW_PROVIDER or ORG_INVITATION).",
+                    requestId, correlationId);
+        }
+        try {
+            return okNode(varapiClient.submitProviderAccessRequest(body), requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return propagate(e, requestId, correlationId);
+        }
+    }
+
+    /** List the signed-in applicant's provider-access requests (check status). */
+    @GetMapping("/status")
+    public ResponseEntity<Map<String, Object>> status(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader("X-Actor-ID") String actorId) {
+        try {
+            return okNode(varapiClient.listProviderAccessRequests(), requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return propagate(e, requestId, correlationId);
+        }
+    }
+
+    /** Read one provider-access request by its opaque public id. */
+    @GetMapping("/status/{publicId}")
+    public ResponseEntity<Map<String, Object>> statusById(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader("X-Actor-ID") String actorId,
+            @PathVariable String publicId) {
+        try {
+            return okNode(varapiClient.getProviderAccessRequest(publicId), requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return propagate(e, requestId, correlationId);
+        }
+    }
+
+    /**
+     * Organisation-invitation onboarding — now records a DURABLE request routed
+     * to the inviting organisation (PENDING_ORGANIZATION_REVIEW), not a 501.
+     */
     @PostMapping("/org-invitation")
     public ResponseEntity<Map<String, Object>> orgInvitation(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestHeader("X-Actor-ID") String actorId) {
-        return error(HttpStatus.NOT_IMPLEMENTED, "FEATURE_PENDING",
-                "Organisation invitations arrive with the org-registry adoption wave (Channel C). "
-                        + "Ask your organisation for a claim token, or use your council number.",
-                requestId, correlationId);
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        Map<String, Object> req = new LinkedHashMap<>(body == null ? Map.of() : body);
+        req.put("requestType", "ORG_INVITATION");
+        try {
+            return okNode(varapiClient.submitProviderAccessRequest(req), requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return propagate(e, requestId, correlationId);
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -371,6 +432,14 @@ public class ProviderClaimController {
         response.put("data", data);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return response;
+    }
+
+    /** Envelope a downstream JsonNode payload (object or array) unchanged. */
+    private ResponseEntity<Map<String, Object>> okNode(JsonNode data, String requestId, String correlationId) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data);
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
     }
 
     private ResponseEntity<Map<String, Object>> error(
