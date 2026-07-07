@@ -24,11 +24,10 @@
 #   All paths/payloads/response shapes were read from the controllers; none are
 #   guessed. See each run_step_N function.
 #
-# KNOWN PHASE-E2 GAP
-#   Step 8 (facility per-source legitimacy) hits tuso-service DIRECTLY in-mesh
-#   because NO experience-bff proxy exists yet for /v1/facilities/.../status-
-#   composite. This is a known Phase-E2 BFF-proxy gap and is annotated as such in
-#   the PREREQUISITES banner and inline at the step.
+# FACILITY LEGITIMACY VIA BFF PROXY
+#   Step 8 (facility per-source legitimacy) goes through the experience-bff proxy
+#   GET /internal/v1/facilities/{id}/status-composite (added in E2), the SAME path
+#   the experience shell uses — not tuso-service direct. tuso still backs the proxy.
 #
 # LEASE
 #   Writes ONLY under test/integration/** and the reports/iatg-e2e/ output dir.
@@ -304,10 +303,10 @@ ${BLUE}=========================================================================
    (provider Channel-A preload token, provider id, facility UUID with the seeded
     per-source legitimacy rows incl. GOVERNMENT_OPERATIONAL_EXCEPTION).
 
- KNOWN PHASE-E2 GAP
-   * Step 8 (facility per-source legitimacy) hits tuso-service DIRECTLY in-mesh.
-     There is NO experience-bff proxy for /v1/facilities/{id}/status-composite
-     yet — this is a tracked Phase-E2 BFF-proxy gap, not a harness shortcut.
+ FACILITY LEGITIMACY VIA BFF PROXY
+   * Step 8 (facility per-source legitimacy) uses the experience-bff proxy
+     GET /internal/v1/facilities/{id}/status-composite (E2), the same path the
+     experience shell uses; tuso-service backs the proxy (fail-closed 502 on down).
 ${BLUE}=============================================================================${NC}
 BANNER
 }
@@ -365,8 +364,8 @@ ${YELLOW}PLANNED CALL CHAIN (dry-run — no network performed)${NC}
             AND at least one block degrades honestly to status UNAVAILABLE without
             poisoning the others (four blocks always render).
 
- Step 8  Facility per-source legitimacy  [PHASE-E2 GAP: tuso DIRECT, no BFF proxy]
-   GET ${TUSO_URL}/v1/facilities/{facilityUuid}/status-composite
+ Step 8  Facility per-source legitimacy  (via experience-bff proxy; tuso ${TUSO_URL} backs it)
+   GET ${BFF_URL}/internal/v1/facilities/{facilityUuid}/status-composite
      assert HTTP 200 AND .data.platformAccessAllowed present AND reflects the
             seeded rows (incl. GOVERNMENT_OPERATIONAL_EXCEPTION -> reasons non-empty)
 
@@ -393,7 +392,12 @@ run_step_1() {
   log "${BLUE}== Step 1: Country Operation (two-person approve/execute) ==${NC}"
   build_headers "$ORIGIN_ADMIN_A_ID" "$ORIGIN_ADMIN_A_TOKEN"
   local init_body
-  init_body="$(jq -nc --arg n "IATG E2E ${RUN_SUFFIX}" '{name:$n, countryCode:"ZW", operationType:"CREATE_COUNTRY_OPERATION"}')"
+  # WGV requires tenantId (UUID) + isoCountryCode + displayName; execute later
+  # refuses a duplicate country op for the same tenant, so this is a once-per-
+  # clean-deploy proof (tenant is fixed because the Step-6 employment seed is
+  # keyed to the same TENANT_ID).
+  init_body="$(jq -nc --arg t "$TENANT_ID" --arg n "IATG E2E ${RUN_SUFFIX}" \
+    '{tenantId:$t, isoCountryCode:"ZW", displayName:$n}')"
   http_call POST "${BFF_URL}/internal/v1/platform-origin/country-operations" "$init_body"
   assert_http 1 "country-operation initiate" "201"
   assert_field_eq 1 "country-operation initiate -> PENDING" '.data.status' "PENDING"
@@ -424,7 +428,10 @@ run_step_1() {
   build_headers "$ORIGIN_ADMIN_A_ID" "$ORIGIN_ADMIN_A_TOKEN"
   http_call POST "${BFF_URL}/internal/v1/platform-origin/actions/${action_id}/execute"
   assert_http 1 "country-operation execute" "200"
-  assert_field_eq 1 "country-operation execute -> EXECUTED" '.data.status' "EXECUTED"
+  # The execute response surfaces {accessRequestId, action, result}; the access
+  # request is transitioned to EXECUTED internally but not echoed, so assert on
+  # the materialised country operation (result.status == ACTIVE) as proof.
+  assert_field_eq 1 "country-operation execute -> country op ACTIVE" '.data.result.status' "ACTIVE"
 
   # Resolve the country operation id for downstream steps (org countryOperationRef).
   build_headers "$NATIONAL_ADMIN_ID" "$NATIONAL_ADMIN_TOKEN"
@@ -444,7 +451,8 @@ run_step_2() {
   require_var 2 "appoint-national-admin" "COUNTRY_OP_ID" "${COUNTRY_OP_ID:-}"
   build_headers "$ORIGIN_ADMIN_A_ID" "$ORIGIN_ADMIN_A_TOKEN"
   local body
-  body="$(jq -nc --arg h "$NATIONAL_ADMIN_ID" '{appointeeHealthId:$h, role:"NATIONAL_ADMINISTRATOR", reason:"IATG E2E appointment"}')"
+  # WGV appoint reads subjectUserId (required) + role; appointeeHealthId/reason are ignored.
+  body="$(jq -nc --arg h "$NATIONAL_ADMIN_ID" '{subjectUserId:$h, role:"NATIONAL_ADMINISTRATOR"}')"
   http_call POST "${BFF_URL}/internal/v1/platform-origin/country-operations/${COUNTRY_OP_ID}/appointments" "$body"
   assert_http 2 "appoint-national-admin initiate" "201"
   assert_field_eq 2 "appoint-national-admin -> PENDING" '.data.status' "PENDING"
@@ -462,7 +470,7 @@ run_step_3() {
   local code="${ORG_CODE}-${RUN_SUFFIX}"
   local create_body
   create_body="$(jq -nc --arg c "$code" --arg op "${COUNTRY_OP_ID:-}" \
-    '{code:$c, legalName:("IATG E2E Mission Health " + $c), orgType:"MISSION",
+    '{code:$c, legalName:("IATG E2E Mission Health " + $c), orgType:"MISSION_FAITH_BASED",
       registrationIdentifiers:{source:"IATG-E2E"}}
      | if $op == "" then . else . + {countryOperationRef:$op} end')"
   http_call POST "${BFF_URL}/internal/v1/organizations" "$create_body"
@@ -595,18 +603,18 @@ run_step_7() {
   fi
 }
 
-# ── Step 8: Facility per-source legitimacy [PHASE-E2 GAP: tuso DIRECT] ────────
-# tuso FacilitySourceLegitimacyController.java:57
-#   GET /v1/facilities/{facilityId}/status-composite
-#   ApiResponse.data.{platformAccessAllowed, sourceLegitimacy[], reasons[]}
-# NOTE: No experience-bff proxy exists for this route yet — hitting tuso directly
-#       in-mesh is a KNOWN PHASE-E2 BFF-PROXY GAP (see prereq banner).
+# ── Step 8: Facility per-source legitimacy (via experience-bff proxy) ─────────
+# experience-bff FacilityController @RequestMapping("/internal/v1/facilities") + /{id}/status-composite
+#   GET /internal/v1/facilities/{facilityId}/status-composite → ApiResponse.data.{...}
+# E2 added this BFF proxy (fail-closed 502 on TUSO down); the harness now exercises
+# the SAME path the experience shell uses (useFacilityStatusComposite), not tuso direct.
+# Identical {data:{platformAccessAllowed, sourceLegitimacy[], reasons[]}} shape.
 run_step_8() {
-  log "${BLUE}== Step 8: Facility per-source legitimacy [Phase-E2 gap: tuso direct] ==${NC}"
+  log "${BLUE}== Step 8: Facility per-source legitimacy (bff proxy) ==${NC}"
   require_var 8 "facility-legitimacy" "FACILITY_UUID" "$FACILITY_UUID"
   build_headers "$NATIONAL_ADMIN_ID" "$NATIONAL_ADMIN_TOKEN"
-  http_call GET "${TUSO_URL}/v1/facilities/${FACILITY_UUID}/status-composite"
-  assert_http 8 "facility status-composite (tuso direct)" "200"
+  http_call GET "${BFF_URL}/internal/v1/facilities/${FACILITY_UUID}/status-composite"
+  assert_http 8 "facility status-composite (bff proxy)" "200"
   assert_field_present 8 "facility platformAccessAllowed present" '.data.platformAccessAllowed'
   # The seeded rows include a GOVERNMENT_OPERATIONAL_EXCEPTION -> platform access
   # is allowed under exception AND at least one per-source verdict + reason exist.
