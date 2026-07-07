@@ -3,9 +3,14 @@
  *
  * Facility-admin appointments for a facility, from the fail-closed BFF proxy
  * GET /api/v1/facility-claim/appointments. The signed-in person administers a
- * facility ONLY if they hold an active (APPROVED) appointment for it — this is
- * how the shell gates Facility-Mode admin actions per facility, not by a global
- * role. No one administers a facility they have no appointment for.
+ * facility ONLY if they hold an ACTIVE appointment for it — this is how the shell
+ * gates Facility-Mode admin actions per facility, not by a global role. No one
+ * administers a facility they have no appointment for.
+ *
+ * NB: the canonical active state emitted by tuso is "ACTIVE" (see
+ * FacilityAdminAppointmentEntity.STATE_ACTIVE; approve() sets ACTIVE, not
+ * APPROVED). The gate below MUST match that literal or Facility Mode never
+ * activates for a legitimately-approved admin.
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -49,14 +54,19 @@ export function useFacilityAppointments(facilityUuid: string | undefined) {
   });
 }
 
-/** True when the person holds an active (APPROVED) facility-admin appointment for this facility. */
+/** The canonical active appointment state emitted by tuso (never "APPROVED"). */
+export const FACILITY_ADMIN_ACTIVE_STATE = "ACTIVE";
+
+/** True when the person holds an ACTIVE facility-admin appointment for this facility. */
 export function administersFacility(
   appointments: FacilityAppointmentView[] | undefined,
   personHealthId: string | undefined,
 ): boolean {
   if (!appointments || !personHealthId) return false;
   return appointments.some(
-    (a) => a.personHealthId === personHealthId && (a.approvalState ?? "").toUpperCase() === "APPROVED",
+    (a) =>
+      a.personHealthId === personHealthId &&
+      (a.approvalState ?? "").toUpperCase() === FACILITY_ADMIN_ACTIVE_STATE,
   );
 }
 
