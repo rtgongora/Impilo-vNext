@@ -433,6 +433,16 @@ run_step_1() {
   # the materialised country operation (result.status == ACTIVE) as proof.
   assert_field_eq 1 "country-operation execute -> country op ACTIVE" '.data.result.status' "ACTIVE"
 
+  # Read-back (Journey A durability, RJ-1): the durable platform-action state must
+  # survive as EXECUTED on a fresh GET — the console shows the true terminal state
+  # after a browser refresh, NOT an optimistic in-memory value.
+  # BFF PlatformOriginController.java:94 GET /actions/{id} -> proxy WGV
+  #   PlatformOriginService.getAction (:235-240) serves request.getStatus() durably.
+  build_headers "$ORIGIN_ADMIN_A_ID" "$ORIGIN_ADMIN_A_TOKEN"
+  http_call GET "${BFF_URL}/internal/v1/platform-origin/actions/${action_id}"
+  assert_http 1 "platform-action durable read-back" "200"
+  assert_field_eq 1 "platform-action durable state == EXECUTED (refresh-proof)" '.data.status' "EXECUTED"
+
   # Resolve the country operation id for downstream steps (org countryOperationRef).
   build_headers "$NATIONAL_ADMIN_ID" "$NATIONAL_ADMIN_TOKEN"
   http_call GET "${BFF_URL}/internal/v1/platform-origin/country-operations"
@@ -683,6 +693,83 @@ run_step_9() {
   fi
 }
 
+# ── Step 10: Provider access-request submit + durable read-back (Journey D) ──
+# Full 8-step read-back doctrine (Section 7): submit -> capture durable id ->
+# read back by id -> confirm persisted status. Proves the "Request Provider
+# Access" self-service creates a DURABLE record, not local-only frontend state.
+# BFF ProviderClaimController.java:348 POST /api/v1/provider-claim/access-request
+#   -> okNode(data=ProviderAccessRequestView{publicId,requestType,status,nextActor})
+# BFF :382 GET /api/v1/provider-claim/status/{publicId} reads the same durable row.
+# varapi ProviderAccessRequestService routing:
+#   COUNCIL_NUMBER  -> PENDING_COUNCIL_REVIEW
+#   NEW_PROVIDER (already-linked) -> DUPLICATE_SUSPECTED (recover-not-reissue)
+run_step_10() {
+  log "${BLUE}== Step 10: Provider access-request durable record (Journey D) ==${NC}"
+  require_var 10 "provider-access-request" "CLAIMANT_HEALTH_ID" "$CLAIMANT_HEALTH_ID"
+
+  # Submit a COUNCIL_NUMBER request (routes to PENDING_COUNCIL_REVIEW, a real
+  # pending decision point — not a fake terminal success).
+  build_headers "$CLAIMANT_HEALTH_ID" "$CITIZEN_TOKEN"
+  local req_body
+  req_body="$(jq -nc '{requestType:"COUNCIL_NUMBER", profession:"Medical Practitioner",
+                       councilCode:"MDPCZ", councilNumber:"MDPCZ-IATG-E2E",
+                       evidenceSummary:"IATG e2e access-request read-back"}')"
+  http_call POST "${BFF_URL}/api/v1/provider-claim/access-request" "$req_body"
+  assert_http 10 "provider-access-request submit" "200"
+  assert_field_eq 10 "access-request requestType echoed" '.data.requestType' "COUNCIL_NUMBER"
+  assert_field_present 10 "access-request durable publicId minted" '.data.publicId'
+  local par_public_id; par_public_id="$(jq_get '.data.publicId')"
+  require_var 10 "provider-access-request" "publicId" "$par_public_id"
+  local submit_status; submit_status="$(jq_get '.data.status')"
+  log "  captured provider-access-request publicId=${par_public_id} status=${submit_status}"
+
+  # Read back by durable id — the record must persist and expose the same status
+  # + a nextActor (who acts next), proving read-after-submit (Section 3 #8).
+  build_headers "$CLAIMANT_HEALTH_ID" "$CITIZEN_TOKEN"
+  http_call GET "${BFF_URL}/api/v1/provider-claim/status/${par_public_id}"
+  assert_http 10 "provider-access-request read-back" "200"
+  assert_field_eq 10 "read-back publicId matches submit" '.data.publicId' "$par_public_id"
+  assert_field_present 10 "read-back status persisted" '.data.status'
+  assert_field_present 10 "read-back nextActor present (who acts next)" '.data.nextActor'
+  local readback_status; readback_status="$(jq_get '.data.status')"
+  if [[ "$readback_status" != "$submit_status" ]]; then
+    fail 10 "read-back status stable" "submit status '$submit_status' != read-back '$readback_status'" "$HTTP_CODE" "$RESP_BODY"
+  fi
+  pass 10 "provider-access-request read-after-submit stable" "status=$readback_status nextActor=$(jq_get '.data.nextActor')" "$HTTP_CODE"
+}
+
+# ── Step 11: Facility Mode eligibility context read (Journey E) ───────────────
+# Facility Mode eligibility is driven by facility-admin appointments for the
+# signed-in provider at a facility. This reads the SAME endpoint useFacilityMode
+# consumes so the browser dashboard's eligibility is backed by a real read, not
+# frontend-only state. An empty appointments array is an HONEST "not a facility
+# admin here" state (ineligible) — a present array is the read-back proof.
+# BFF FacilityClaimController.java:108 GET /api/v1/facility-claim/appointments?facilityUuid=
+#   -> {data:{facilityUuid, appointments:[...]}} (tuso-backed).
+run_step_11() {
+  log "${BLUE}== Step 11: Facility Mode eligibility context (Journey E) ==${NC}"
+  require_var 11 "facility-mode" "FACILITY_UUID" "$FACILITY_UUID"
+  require_var 11 "facility-mode" "CLAIMANT_HEALTH_ID" "$CLAIMANT_HEALTH_ID"
+  build_headers "$CLAIMANT_HEALTH_ID" "$CITIZEN_TOKEN"
+  http_call GET "${BFF_URL}/api/v1/facility-claim/appointments?facilityUuid=${FACILITY_UUID}"
+  assert_http 11 "facility-mode appointments read" "200"
+  assert_field_eq 11 "facility-mode echoes requested facility" '.data.facilityUuid' "$FACILITY_UUID"
+  # The appointments array must be PRESENT (a list, possibly empty). Empty is the
+  # honest "no facility-admin rights here" ineligible state; non-empty proves an
+  # eligible facility-admin context. Either way, eligibility is backed by a read.
+  local appt_type appt_n
+  appt_type="$(echo "$RESP_BODY" | jq -r '.data.appointments | type' 2>/dev/null || echo "__none__")"
+  if [[ "$appt_type" != "array" ]]; then
+    fail 11 "facility-mode appointments is an array" "expected .data.appointments to be an array, got type '$appt_type'" "$HTTP_CODE" "$RESP_BODY"
+  fi
+  appt_n="$(echo "$RESP_BODY" | jq -r '.data.appointments | length' 2>/dev/null || echo 0)"
+  if [[ "${appt_n:-0}" -ge 1 ]]; then
+    pass 11 "facility-mode eligible (admin appointment present)" "appointments=$appt_n (eligible facility-admin context)" "$HTTP_CODE"
+  else
+    pass 11 "facility-mode ineligible-honest (no admin appointment)" "appointments=0 (honest 'not a facility admin here' — no fabricated eligibility)" "$HTTP_CODE"
+  fi
+}
+
 # ── Finalize: write summary.json + counts ────────────────────────────────────
 finalize() {
   mkdir -p "$REPORT_DIR" 2>/dev/null || true
@@ -745,6 +832,8 @@ main() {
   run_step_6
   run_step_7
   run_step_8
+  run_step_10
+  run_step_11
 
   if [[ "$RUN_ADJUDICATION" == "1" ]]; then
     run_step_9
