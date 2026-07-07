@@ -13,6 +13,11 @@
 #                                 allowedOnPlatform=true) — the doctrine escape
 #                                 hatch for a public facility operating despite a
 #                                 lapsed HPA registration.
+#   (c) an EC-bearing HSC employment row for the seeded citizen via
+#       workforce-governance, so the harness Step-6 EC match can upgrade trust
+#       to EMPLOYMENT_MATCHED. Emitted as CLAIMANT_HEALTH_ID + EC_NUMBER. (The
+#       row is created over the real REST upsert — the governance registry is
+#       the system of record for public-sector employment.)
 #
 # It does NOT create the Country Operation, the Organization, or the provider
 # CLAIM — those ARE the journey steps that the e2e harness drives and asserts.
@@ -43,9 +48,14 @@
 #       ADMIN_TOKEN=... bash scripts/seed/iatg-e2e-seed.sh
 #   VARAPI_BASE            (default http://varapi-service:8083)
 #   TUSO_BASE              (default http://tuso-service:8084)
+#   WGV_BASE              (default http://workforce-governance-service:8165)
 #   BFF_BASE              (default http://experience-bff:8160)  # no preload route today; reserved
 #   ADMIN_TOKEN           bearer token for the internal/governance plane (required unless --dry-run)
 #   TENANT_ID             (default 00000000-0000-4000-8000-000000000001)
+#                         MUST equal the X-Tenant-ID the BFF forwards for the citizen's
+#                         employment-match call (default preview tenant), or Step 6 NOT_FOUNDs.
+#   CLAIMANT_HEALTH_ID    (default b0000000-0000-4000-8000-000000000001 = citizen.moyo)
+#   EC_NUMBER             (default EC-000001; canonicalised A-Z/0-9/-/ , >=1 digit)
 #   POD_ID                (default pod-iatg-seed)
 #   ACTOR_ID              (default b0000000-0000-4000-8000-000000000101 = origin.admin.one)
 #   ACTOR_TYPE            (default PLATFORM_ORIGIN_ADMINISTRATOR)
@@ -69,6 +79,7 @@ done
 # ── config ───────────────────────────────────────────────────────────────────
 VARAPI_BASE="${VARAPI_BASE:-http://varapi-service:8083}"
 TUSO_BASE="${TUSO_BASE:-http://tuso-service:8084}"
+WGV_BASE="${WGV_BASE:-http://workforce-governance-service:8165}"
 BFF_BASE="${BFF_BASE:-http://experience-bff:8160}"   # reserved; no preload route today
 ADMIN_TOKEN="${ADMIN_TOKEN:-}"
 TENANT_ID="${TENANT_ID:-00000000-0000-4000-8000-000000000001}"
@@ -80,6 +91,11 @@ FACILITY_CODE="${FACILITY_CODE:-ZW-HCH-001}"
 FACILITY_ID="${FACILITY_ID:-}"
 PROVIDER_REG_NUMBER="${PROVIDER_REG_NUMBER:-MDPCZ-DRMOYO-$(date -u +%Y%m%d%H%M%S)}"
 CORRELATION_ID="iatg-e2e-seed-$(date -u +%Y%m%d%H%M%S)"
+
+# Channel-B EC employment fixture for the seeded citizen (harness Step 6).
+CLAIMANT_HEALTH_ID="${CLAIMANT_HEALTH_ID:-b0000000-0000-4000-8000-000000000001}"
+EC_NUMBER="${EC_NUMBER:-EC-000001}"
+EMPLOYMENT_WORKER_ID="${EMPLOYMENT_WORKER_ID:-PW-IATG-E2E}"
 
 # Demo provider "Dr Moyo" skeleton (demographics only; the real provider fills the rest at claim time).
 PROVIDER_GIVEN_NAME="${PROVIDER_GIVEN_NAME:-Tarisai}"
@@ -155,6 +171,7 @@ http_call() {
   local -a args=(-sS -X "$method" "$url")
   args+=("${BASE_HEADERS[@]}")
   args+=(-H "X-Request-ID: $(gen_uuid)")
+  args+=(-H "Idempotency-Key: $(gen_uuid)")
   if [[ -n "$body" ]]; then
     args+=(-H "Content-Type: application/json" --data "$body")
   fi
@@ -182,7 +199,7 @@ info "varapi=${VARAPI_BASE} tuso=${TUSO_BASE} tenant=${TENANT_ID}"
 
 # ── Step 1: resolve the canonical facility UUID ──────────────────────────────
 if [[ -z "$FACILITY_ID" ]]; then
-  info "1/4 resolving facility UUID for code ${FACILITY_CODE}"
+  info "1/5 resolving facility UUID for code ${FACILITY_CODE}"
   search_body="$(printf '{"query":"%s","page":0,"size":50}' "$FACILITY_CODE")"
   http_call POST "${TUSO_BASE}/v1/facilities/search" 200 "$search_body"
   if [[ "$DRY_RUN" -eq 1 ]]; then
@@ -202,11 +219,11 @@ print(match["facilityUid"])
   fi
   info "    facility UUID = ${FACILITY_ID}"
 else
-  info "1/4 using supplied FACILITY_ID=${FACILITY_ID}"
+  info "1/5 using supplied FACILITY_ID=${FACILITY_ID}"
 fi
 
 # ── Step 2: preload demo provider "Dr Moyo" → mint claim token ───────────────
-info "2/4 preloading provider Dr ${PROVIDER_FAMILY_NAME} (reg ${PROVIDER_REG_NUMBER})"
+info "2/5 preloading provider Dr ${PROVIDER_FAMILY_NAME} (reg ${PROVIDER_REG_NUMBER})"
 preload_body="$(
   PG="$PROVIDER_GIVEN_NAME" PF="$PROVIDER_FAMILY_NAME" PP="$PROVIDER_PROFESSION" \
   PC="$PROVIDER_CADRE" PCC="$PROVIDER_COUNCIL_CODE" PRN="$PROVIDER_REG_NUMBER" \
@@ -240,7 +257,7 @@ else
 fi
 
 # ── Step 3: facility per-source legitimacy verdicts (upserts) ────────────────
-info "3/4 stamping per-source facility legitimacy for ${FACILITY_ID}"
+info "3/5 stamping per-source facility legitimacy for ${FACILITY_ID}"
 
 hpa_body='{"status":"EXPIRED","asOf":"2023-01-01T00:00:00Z","evidenceRef":"IATG-E2E-SEED"}'
 http_call PUT "${TUSO_BASE}/v1/internal/facilities/${FACILITY_ID}/source-legitimacy/HPA_LEGAL" 200 "$hpa_body"
@@ -254,14 +271,43 @@ exception_body='{"status":"GOVERNMENT_OPERATIONAL_EXCEPTION","allowedOnPlatform"
 http_call PUT "${TUSO_BASE}/v1/internal/facilities/${FACILITY_ID}/source-legitimacy/PLATFORM_OPERATIONAL" 200 "$exception_body"
 info "    PLATFORM_OPERATIONAL = GOVERNMENT_OPERATIONAL_EXCEPTION (allowedOnPlatform=true)"
 
-# ── Step 4: emit machine-parseable outputs for the e2e harness ───────────────
-info "4/4 emitting fixture outputs"
+# ── Step 4: EC-bearing HSC employment for the citizen (Channel-B match key) ──
+# Created over the real governance REST upsert (system of record for public
+# employment). linkedHealthId = the seeded citizen; ecNumber is the harness
+# Step-6 match key. Idempotent: re-running upserts a fresh row, and the match is
+# a single-EC lookup — pin EC_NUMBER only if you also clear prior rows, else a
+# duplicate EC would (honestly) resolve to CONFLICT.
+info "4/5 seeding citizen EC employment (health=${CLAIMANT_HEALTH_ID} ec=${EC_NUMBER})"
+employment_body="$(
+  WID="$EMPLOYMENT_WORKER_ID" HID="$CLAIMANT_HEALTH_ID" EC="$EC_NUMBER" python3 -c '
+import json, os
+print(json.dumps({
+    "providerWorkerId": os.environ["WID"],
+    "employmentStatus": "ACTIVE",
+    "linkedHealthId": os.environ["HID"],
+    "ecNumber": os.environ["EC"],
+    "postTitle": "Medical Officer",
+    "cadre": "DOCTOR",
+    "verificationStatus": "VERIFIED",
+}))
+')"
+http_call POST "${WGV_BASE}/v1/internal/governance/hsc/employment-records" 201 "$employment_body"
+if [[ "$DRY_RUN" -eq 0 ]]; then
+  emp_ec="$(json_extract 'd["data"]["ecNumber"] or ""')" || fail "malformed employment upsert response: ${RESP_BODY}"
+  [[ -n "$emp_ec" ]] || { printf '%s\n' "$RESP_BODY" >&2; fail "employment upsert returned no ecNumber (E3 wiring missing on this build?)"; }
+  info "    HSC employment created; ecNumber=${emp_ec} linkedHealthId=${CLAIMANT_HEALTH_ID}"
+fi
+
+# ── Step 5: emit machine-parseable outputs for the e2e harness ───────────────
+info "5/5 emitting fixture outputs"
 printf -- '----- IATG_E2E_SEED_OUTPUT_BEGIN -----\n'
 printf 'FACILITY_CODE=%s\n' "$FACILITY_CODE"
 printf 'FACILITY_ID=%s\n' "$FACILITY_ID"
 printf 'REG_NUMBER=%s\n' "$PROVIDER_REG_NUMBER"
 printf 'PROVIDER_PUBLIC_ID=%s\n' "$PROVIDER_PUBLIC_ID"
 printf 'CLAIM_TOKEN=%s\n' "$CLAIM_TOKEN"
+printf 'CLAIMANT_HEALTH_ID=%s\n' "$CLAIMANT_HEALTH_ID"
+printf 'EC_NUMBER=%s\n' "$EC_NUMBER"
 printf 'LEGITIMACY_HPA_LEGAL=EXPIRED\n'
 printf 'LEGITIMACY_MINISTRY_OPERATIONAL=REGISTERED_CURRENT\n'
 printf 'LEGITIMACY_PLATFORM_OPERATIONAL=GOVERNMENT_OPERATIONAL_EXCEPTION\n'
