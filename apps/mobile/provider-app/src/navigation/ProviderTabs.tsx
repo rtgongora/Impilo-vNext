@@ -18,6 +18,7 @@ import { EncounterScreen } from "../screens/provider/EncounterScreen";
 import { MessagingScreen } from "../screens/provider/MessagingScreen";
 import { HealthOsAppsScreen } from "../screens/provider/HealthOsAppsScreen";
 import { ProviderSocialScreen } from "../screens/provider/ProviderSocialScreen";
+import { WellnessSocialWorkbenchScreen } from "../screens/provider/WellnessSocialWorkbenchScreen";
 import { DiagnosticsScreen } from "../screens/provider/DiagnosticsScreen";
 import { useAppStore } from "../stores/appStore";
 import { useEncounterStore } from "../stores/encounterStore";
@@ -125,6 +126,8 @@ export function ProviderTabs() {
         return <MessagingScreen />;
       case "social":
         return <ProviderSocialScreen />;
+      case "wellnessSocial":
+        return <WellnessSocialWorkbenchScreen />;
       case "tools":
         return <ClinicalToolsScreen />;
       case "apps":
