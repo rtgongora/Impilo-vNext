@@ -84,6 +84,54 @@ class WellnessSocialJourneyIT {
     }
 
     @Test
+    void groupJourney_createJoinPostAnnounceModerate() throws Exception {
+        String owner = "it-grp-owner-" + UUID.randomUUID();
+        String member = "it-grp-member-" + UUID.randomUUID();
+
+        // Owner creates an OPEN group.
+        MvcResult groupRes = mockMvc.perform(trust(post("/internal/v1/wellness/social/groups"), owner, "CITIZEN")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Morning Walkers\",\"join_policy\":\"OPEN\",\"visibility\":\"PUBLIC\"}"))
+                .andExpect(status().isCreated())
+                .andReturn();
+        String groupId = MAPPER.readTree(groupRes.getResponse().getContentAsString())
+                .get("data").get("groupId").asText();
+
+        // A member joins (OPEN → immediately ACTIVE).
+        mockMvc.perform(trust(post("/internal/v1/wellness/social/groups/" + groupId + "/join"), member, "CITIZEN")
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.status").value("ACTIVE"));
+
+        // The member can post to the group.
+        mockMvc.perform(trust(post("/internal/v1/wellness/social/posts"), member, "CITIZEN")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"body\":\"Great walk today!\",\"visibility\":\"GROUP\",\"group_id\":\"" + groupId + "\"}"))
+                .andExpect(status().isCreated());
+
+        // A non-member is denied posting to the group.
+        String stranger = "it-grp-stranger-" + UUID.randomUUID();
+        mockMvc.perform(trust(post("/internal/v1/wellness/social/posts"), stranger, "CITIZEN")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"body\":\"hi\",\"visibility\":\"GROUP\",\"group_id\":\"" + groupId + "\"}"))
+                .andExpect(status().isForbidden());
+
+        // The owner publishes an official announcement (pinned + official post).
+        mockMvc.perform(trust(post("/internal/v1/wellness/social/groups/" + groupId + "/announcements"), owner, "PROVIDER")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"body\":\"Group walk this Saturday 8am!\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.official").value(true))
+                .andExpect(jsonPath("$.data.pinned").value(true));
+
+        // A plain member cannot announce.
+        mockMvc.perform(trust(post("/internal/v1/wellness/social/groups/" + groupId + "/announcements"), member, "CITIZEN")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"body\":\"unauthorised\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void selfHarmReport_escalatesToCareLinkage() throws Exception {
         String reporter = "it-social-reporter-" + UUID.randomUUID();
         String owner = "it-social-atrisk-" + UUID.randomUUID();
