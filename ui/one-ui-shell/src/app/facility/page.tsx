@@ -93,9 +93,9 @@ export default function FacilityPage() {
             ...(facilityModeEligible && facility
               ? [{
                   label: "Enter Facility Mode",
-                  description: "Open the facility cockpit for the selected facility.",
+                  description: "Open the facility-wide operational and admin context.",
                   icon: Building2,
-                  onClick: () => enterMode("clinical", `/facility/${facility.id}`),
+                  onClick: () => enterMode("clinical", `/facility/${facility.id}/mode`),
                 }]
               : []),
             ...(hasRole("SYSTEM_ADMIN") || hasRole("FACILITY_ADMIN") || hasRole("DEVELOPER")

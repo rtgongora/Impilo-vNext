@@ -452,6 +452,7 @@ export const ROUTES: RouteDefinition[] = [
   // E2-TRUST: provider self-service claim / recovery journey (page already exists — nav discoverability).
   { path: "/citizen/provider-claim", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Claim Provider Profile", navLabel: "Provider Claim", navZone: "professional" },
   { path: "/citizen/provider-claim/status", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Provider Access Requests", navLabel: "Provider Access Requests", navZone: "professional" },
+  { path: "/facility/[id]/mode", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Facility Mode", navLabel: "Facility Mode" },
 
   // â”€â”€ Zone: Wellness (Health OS Â§2 â€” prevention, self-care, fitness) â”€
   { path: "/wellness", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Hub", navLabel: "Wellness", navZone: "life" },
@@ -824,7 +825,7 @@ export const ROUTES: RouteDefinition[] = [
 // Dura (Jun 2026): native sovereign stock brain — +1 net-new route (/dura) merged from the Dura workstream.
 // IATG Phase-E2 UI (Jul 2026): +6 net-new routes — trust profile + provider-claim nav (E2-TRUST +2),
 // facility claim (E2-FACILITY +1), platform-origin console x2 + org-onboarding (E2-GOV +3).
-export const EXPECTED_ROUTE_COUNT = 692;
+export const EXPECTED_ROUTE_COUNT = 693;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
