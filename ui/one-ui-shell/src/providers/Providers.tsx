@@ -13,6 +13,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useState } from "react";
+import { TierProvider } from "shared-ui";
 import { AuthGuardProvider } from "./AuthGuardProvider";
 import { ExperienceEntryProvider } from "./ExperienceEntryProvider";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -112,19 +113,23 @@ export function Providers({ children }: { children: ReactNode }) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <StoreHydrator>
-        <ExperienceEntryProvider>
-          <AuthGuardProvider>
-            <InactivityLockProvider>
-              <PrivacyWatermark />
-              <VisibilityContextBar />
-              <ShellErrorBoundary>{children}</ShellErrorBoundary>
-              <ShellChrome />
-            </InactivityLockProvider>
-          </AuthGuardProvider>
-        </ExperienceEntryProvider>
-      </StoreHydrator>
-    </QueryClientProvider>
+    // TierProvider (Future-Realism §6): resolves the device/preference tier and mirrors tier-*/
+    // low-blur onto <html> so glass/motion enhancements degrade to the accessible baseline.
+    <TierProvider>
+      <QueryClientProvider client={queryClient}>
+        <StoreHydrator>
+          <ExperienceEntryProvider>
+            <AuthGuardProvider>
+              <InactivityLockProvider>
+                <PrivacyWatermark />
+                <VisibilityContextBar />
+                <ShellErrorBoundary>{children}</ShellErrorBoundary>
+                <ShellChrome />
+              </InactivityLockProvider>
+            </AuthGuardProvider>
+          </ExperienceEntryProvider>
+        </StoreHydrator>
+      </QueryClientProvider>
+    </TierProvider>
   );
 }
