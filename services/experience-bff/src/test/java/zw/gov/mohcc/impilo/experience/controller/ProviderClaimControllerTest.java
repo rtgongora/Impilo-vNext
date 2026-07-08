@@ -8,7 +8,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.client.HttpClientErrorException;
+import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.WorkforceEmploymentMatchClient;
 
@@ -42,9 +44,10 @@ class ProviderClaimControllerTest {
 
     @Mock private VarapiServiceClient varapiClient;
     @Mock private WorkforceEmploymentMatchClient employmentMatchClient;
+    @Mock private DocumentServiceClient documentServiceClient;
 
     private ProviderClaimController controller(boolean ecMatchingEnabled) {
-        return new ProviderClaimController(varapiClient, employmentMatchClient, ecMatchingEnabled);
+        return new ProviderClaimController(varapiClient, employmentMatchClient, documentServiceClient, ecMatchingEnabled);
     }
 
     @SuppressWarnings("unchecked")
@@ -237,12 +240,48 @@ class ProviderClaimControllerTest {
     }
 
     @Test
-    void evidence_document_is501FeaturePending() {
+    void evidence_document_jsonLane_pointsToUploadEndpoint() {
         ResponseEntity<Map<String, Object>> resp = controller(false).evidence(
                 TENANT, REQ, CORR, ACTOR, Map.of("type", "DOCUMENT", "value", "doc-ref"));
 
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, resp.getStatusCode());
-        assertEquals("FEATURE_PENDING", error(resp).get("code"));
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("EVIDENCE_DOCUMENT_USE_UPLOAD", error(resp).get("code"));
+    }
+
+    @Test
+    void uploadDocumentEvidence_storesAndOpensDurableReviewRequest() throws Exception {
+        when(documentServiceClient.uploadObject(any(), any(), anyString(), any()))
+                .thenReturn(MAPPER.readTree(
+                        "{\"objectId\":\"obj-1\",\"originalFilename\":\"cert.pdf\"}"));
+        when(varapiClient.submitProviderAccessRequest(any()))
+                .thenReturn(MAPPER.readTree(
+                        "{\"publicId\":\"REQ-1\",\"requestType\":\"DOCUMENT_EVIDENCE\",\"status\":\"PENDING\"}"));
+
+        MockMultipartFile file =
+                new MockMultipartFile("file", "cert.pdf", "application/pdf", "bytes".getBytes(StandardCharsets.UTF_8));
+        ResponseEntity<Map<String, Object>> resp =
+                controller(false).uploadDocumentEvidence(TENANT, REQ, CORR, ACTOR, file);
+
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        com.fasterxml.jackson.databind.JsonNode body =
+                (com.fasterxml.jackson.databind.JsonNode) resp.getBody().get("data");
+        assertEquals("REQ-1", body.get("publicId").asText());
+
+        ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
+        verify(varapiClient).submitProviderAccessRequest(captor.capture());
+        assertEquals("DOCUMENT_EVIDENCE", captor.getValue().get("requestType"));
+        assertEquals("obj-1", captor.getValue().get("evidenceRef"));
+    }
+
+    @Test
+    void uploadDocumentEvidence_rejectsEmptyFile() {
+        MockMultipartFile empty = new MockMultipartFile("file", "e.pdf", "application/pdf", new byte[0]);
+        ResponseEntity<Map<String, Object>> resp =
+                controller(false).uploadDocumentEvidence(TENANT, REQ, CORR, ACTOR, empty);
+
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("EVIDENCE_FILE_REQUIRED", error(resp).get("code"));
+        verifyNoInteractions(documentServiceClient);
     }
 
     // ── Recover ───────────────────────────────────────────────────────────────

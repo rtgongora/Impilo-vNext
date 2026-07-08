@@ -8,7 +8,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.client.HttpClientErrorException;
+import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrgRegistryFacilityAdminClient;
 import zw.gov.mohcc.impilo.experience.client.TusoFacilityClaimClient;
 
@@ -44,9 +46,10 @@ class FacilityClaimControllerTest {
 
     @Mock private TusoFacilityClaimClient tusoClient;
     @Mock private OrgRegistryFacilityAdminClient orgRegistryClient;
+    @Mock private DocumentServiceClient documentServiceClient;
 
     private FacilityClaimController controller() {
-        return new FacilityClaimController(tusoClient, orgRegistryClient);
+        return new FacilityClaimController(tusoClient, orgRegistryClient, documentServiceClient);
     }
 
     @SuppressWarnings("unchecked")
@@ -242,20 +245,51 @@ class FacilityClaimControllerTest {
     // ── Honest pending lanes ───────────────────────────────────────────────────
 
     @Test
-    void evidence_document_is501FeaturePending() {
-        ResponseEntity<Map<String, Object>> resp = controller().evidence(
-                TENANT, REQ, CORR, ACTOR, Map.of("type", "DOCUMENT", "value", "doc-ref"));
+    void evidence_document_uploadsToDocumentServiceAndReturnsRef() throws Exception {
+        when(documentServiceClient.uploadObject(any(), any(), anyString(), any()))
+                .thenReturn(MAPPER.readTree(
+                        "{\"objectId\":\"obj-1\",\"originalFilename\":\"letter.pdf\",\"mimeType\":\"application/pdf\",\"scanStatus\":\"CLEAN\"}"));
 
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, resp.getStatusCode());
-        assertEquals("FEATURE_PENDING", error(resp).get("code"));
+        MockMultipartFile file =
+                new MockMultipartFile("file", "letter.pdf", "application/pdf", "bytes".getBytes(StandardCharsets.UTF_8));
+        ResponseEntity<Map<String, Object>> resp = controller().evidence(TENANT, REQ, CORR, ACTOR, file);
+
+        assertEquals(HttpStatus.CREATED, resp.getStatusCode());
+        assertEquals("obj-1", data(resp).get("evidenceRef"));
+        assertEquals("letter.pdf", data(resp).get("filename"));
     }
 
     @Test
-    void orgInvitation_is501FeaturePending() {
-        ResponseEntity<Map<String, Object>> resp =
-                controller().orgInvitation(TENANT, REQ, CORR, ACTOR);
+    void evidence_document_rejectsEmptyFile() {
+        MockMultipartFile empty = new MockMultipartFile("file", "e.pdf", "application/pdf", new byte[0]);
+        ResponseEntity<Map<String, Object>> resp = controller().evidence(TENANT, REQ, CORR, ACTOR, empty);
 
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, resp.getStatusCode());
-        assertEquals("FEATURE_PENDING", error(resp).get("code"));
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("EVIDENCE_FILE_REQUIRED", error(resp).get("code"));
+        verifyNoInteractions(documentServiceClient);
+    }
+
+    @Test
+    void orgInvitation_acceptsTokenViaOrgRegistry() throws Exception {
+        when(orgRegistryClient.acceptInvitation(eq("TOK"), eq(ACTOR)))
+                .thenReturn(MAPPER.readTree(
+                        "{\"id\":\"inv-1\",\"organizationId\":\"org-1\",\"role\":\"FACILITY_ADMIN\",\"affiliationId\":\"aff-1\",\"status\":\"ACCEPTED\"}"));
+
+        ResponseEntity<Map<String, Object>> resp =
+                controller().orgInvitation(TENANT, REQ, CORR, ACTOR, Map.of("token", "TOK"));
+
+        assertEquals(HttpStatus.CREATED, resp.getStatusCode());
+        assertEquals(Boolean.TRUE, data(resp).get("accepted"));
+        assertEquals("aff-1", data(resp).get("affiliationId"));
+    }
+
+    @Test
+    void orgInvitation_requiresToken() {
+        ResponseEntity<Map<String, Object>> resp =
+                controller().orgInvitation(TENANT, REQ, CORR, ACTOR, Map.of());
+
+        assertEquals(HttpStatus.BAD_REQUEST, resp.getStatusCode());
+        assertEquals("INVITATION_TOKEN_REQUIRED", error(resp).get("code"));
+        verifyNoInteractions(orgRegistryClient);
     }
 }
