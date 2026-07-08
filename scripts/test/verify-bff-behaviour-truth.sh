@@ -19,7 +19,7 @@ set -euo pipefail
 REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
 cd "$REPO_PATH" 2>/dev/null || true
 
-URL="${PREVIEW_URL:-http://41.57.127.235}"
+URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
 NS="${FULL_BOOT_NAMESPACE:-impilo-full-preview}"
 SKIP_DOWNSTREAM=0
 

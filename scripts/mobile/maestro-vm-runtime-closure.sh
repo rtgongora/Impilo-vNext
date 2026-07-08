@@ -8,7 +8,7 @@ REPORTS="${ROOT}/reports/mobile"
 ARTIFACTS="${REPORTS}/artifacts/android"
 AVD_NAME="${IMPILO_AVD:-impilo-phone-api35}"
 COMMIT="$(git -C "${ROOT}" rev-parse --short HEAD)"
-API_URL="${EXPO_PUBLIC_API_BASE_URL:-http://41.57.127.235}"
+API_URL="${EXPO_PUBLIC_API_BASE_URL:-https://impilo.mohcc.gov.zw}"
 export EXPO_PUBLIC_API_BASE_URL="${API_URL}"
 export EXPO_PUBLIC_APP_VARIANT="${EXPO_PUBLIC_APP_VARIANT:-preview}"
 

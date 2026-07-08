@@ -119,14 +119,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID ?? "citizen-app",
     apiBaseUrl:
       process.env.EXPO_PUBLIC_API_BASE_URL ??
-      (VARIANT === "preview" ? "http://41.57.127.235" : "http://192.168.100.211:8160"),
+      (VARIANT === "preview" ? "https://impilo.mohcc.gov.zw" : "http://192.168.100.211:8160"),
     authBaseUrl:
       process.env.EXPO_PUBLIC_AUTH_BASE_URL ??
-      (VARIANT === "preview" ? "http://41.57.127.235:8480" : process.env.EXPO_PUBLIC_KEYCLOAK_URL ?? "http://192.168.100.211:8480"),
+      (VARIANT === "preview" ? "https://impilo.mohcc.gov.zw:8480" : process.env.EXPO_PUBLIC_KEYCLOAK_URL ?? "http://192.168.100.211:8480"),
     fhirBaseUrl: process.env.EXPO_PUBLIC_FHIR_BASE_URL,
     liveBaseUrl: process.env.EXPO_PUBLIC_LIVE_BASE_URL,
     nompiloBaseUrl: process.env.EXPO_PUBLIC_NOMPILO_BASE_URL,
-    webBaseUrl: process.env.EXPO_PUBLIC_WEB_BASE_URL ?? (VARIANT === "preview" ? "http://41.57.127.235" : undefined),
+    webBaseUrl: process.env.EXPO_PUBLIC_WEB_BASE_URL ?? (VARIANT === "preview" ? "https://impilo.mohcc.gov.zw" : undefined),
     redirectUri:
       process.env.EXPO_PUBLIC_REDIRECT_URI ?? "impilo-citizen://auth/callback",
     eas: {

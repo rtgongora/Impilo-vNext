@@ -834,7 +834,7 @@ jobs:
       #   MAESTRO_PATIENT_QUERY=...
       # Maestro forwards MAESTRO_-prefixed env vars into the flows; nothing
       # is ever echoed or committed. Requires the preview stack
-      # (41.57.127.235) to be reachable from the runner.
+      # (impilo.mohcc.gov.zw) to be reachable from the runner.
       - name: Run Maestro login/journey flows (preview credentials)
         if: ${{ secrets.MAESTRO_PREVIEW_CREDENTIALS != '' }}
         uses: reactivecircus/android-emulator-runner@v2

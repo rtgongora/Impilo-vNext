@@ -37,8 +37,8 @@
       "channel": "preview",
       "env": {
         "EXPO_PUBLIC_ENV": "preview",
-        "EXPO_PUBLIC_API_BASE_URL": "http://41.57.127.235",
-        "EXPO_PUBLIC_KEYCLOAK_URL": "http://41.57.127.235:8480",
+        "EXPO_PUBLIC_API_BASE_URL": "https://impilo.mohcc.gov.zw",
+        "EXPO_PUBLIC_KEYCLOAK_URL": "https://impilo.mohcc.gov.zw:8480",
         "EXPO_PUBLIC_KEYCLOAK_REALM": "impilo",
         "EXPO_PUBLIC_KEYCLOAK_CLIENT_ID": "impilo-mobile-provider",
         "EXPO_PUBLIC_APP_VARIANT": "preview",

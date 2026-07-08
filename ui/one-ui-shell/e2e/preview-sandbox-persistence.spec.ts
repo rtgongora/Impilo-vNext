@@ -29,7 +29,7 @@ test.describe("Preview sandbox persistence proofs", () => {
   });
 
   test.beforeEach(async ({ context, baseURL }) => {
-    await installPreviewSession(context, baseURL ?? process.env.PLAYWRIGHT_BASE_URL ?? "http://41.57.127.235");
+    await installPreviewSession(context, baseURL ?? process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw");
   });
 
   async function openStableShell(page: import("@playwright/test").Page) {
@@ -42,7 +42,7 @@ test.describe("Preview sandbox persistence proofs", () => {
 
   test("governance: policy POST persists across re-navigation", async ({ page }) => {
     const policyName = uniqueMarker("e2e-governance-policy");
-    await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "http://41.57.127.235");
+    await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw");
     await gotoAppPath(page, "/");
 
     const post = await bffPostFromBrowser(page, "/internal/v1/governance/access/policies", {
@@ -66,7 +66,7 @@ test.describe("Preview sandbox persistence proofs", () => {
 
   test("inventory: requisition POST persists across re-navigation", async ({ page }) => {
     const notes = uniqueMarker("e2e-requisition-notes");
-    await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "http://41.57.127.235");
+    await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw");
     await gotoAppPath(page, "/");
 
     const post = await bffPostFromBrowser(page, "/internal/v1/inventory/requisitions", {

@@ -81,7 +81,7 @@ export ANDROID_HOME="${ANDROID_SDK}"
 export ANDROID_SDK_ROOT="${ANDROID_SDK}"
 export JAVA_HOME="${JAVA_HOME}"
 export PATH="\${ANDROID_HOME}/cmdline-tools/latest/bin:\${ANDROID_HOME}/platform-tools:\${ANDROID_HOME}/emulator:\${PATH}"
-export EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235
+export EXPO_PUBLIC_API_BASE_URL=https://impilo.mohcc.gov.zw
 EOF
 
 log "Phase 5: repo sync"

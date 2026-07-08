@@ -8,7 +8,7 @@ BRANCH="${DEPLOY_BRANCH:-$(git branch --show-current)}"
 EXPECTED_SHA="${DEPLOY_COMMIT_SHA:-$(git rev-parse HEAD)}"
 BYPASS_CI="${BYPASS_CI:-0}"
 BYPASS_REASON="${BYPASS_REASON:-}"
-PREVIEW_URL="${PREVIEW_URL:-http://41.57.127.235}"
+PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
 NON_INTERACTIVE="${NON_INTERACTIVE:-0}"
 VM_REPORT="$REPO_PATH/reports/pipeline/latest-summary.json"
 
@@ -101,7 +101,7 @@ fi
 
 echo ""
 echo "=== Post-deploy verification ==="
-export PREVIEW_HOST="${PREVIEW_HOST:-41.57.127.235}"
+export PREVIEW_HOST="${PREVIEW_HOST:-impilo.mohcc.gov.zw}"
 bash scripts/deploy/preview-smoke-test.sh
 
 VERSION_JSON="$(curl -sf "${PREVIEW_URL}/health/version" || true)"

@@ -1,6 +1,6 @@
 global:
   environment: preview
-  publicHost: "41.57.127.235"
+  publicHost: "impilo.mohcc.gov.zw"
 
 images:
   experienceBff:

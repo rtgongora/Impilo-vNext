@@ -60,7 +60,7 @@ def shell_scenarios() -> list[Scenario]:
     ev = "5fa3f2e3,8510069f,8629e068; OWNER_PREVIEW_TEST_CHECKLIST A–D"
     return [
         s(test_id="UAT-SHL-001", module="Shell / Landing", role="Any user", scenario="Preview URL loads Impilo experience shell",
-          preconditions="Browser; network access to preview", steps="1. Open http://41.57.127.235\n2. Wait for shell load",
+          preconditions="Browser; network access to preview", steps="1. Open https://impilo.mohcc.gov.zw\n2. Wait for shell load",
           expected="Landing or auth redirect; Impilo title/branding visible; no 502/503",
           pass_criteria="Page loads within 10s; Impilo branding present", fail_criteria="Blank page, 5xx, or wrong product",
           evidence="Screenshot + URL + timestamp", priority="Critical", test_type="Smoke", route="/",
@@ -567,11 +567,11 @@ def regression_scenarios() -> list[Scenario]:
 def runtime_scenarios() -> list[Scenario]:
     return [
         s(test_id="UAT-RUN-001", module="Runtime / Preview", role="QA lead", scenario="Preview health endpoint UP",
-          preconditions="None", steps="curl http://41.57.127.235/actuator/health", expected='status UP',
+          preconditions="None", steps="curl https://impilo.mohcc.gov.zw/actuator/health", expected='status UP',
           pass_criteria="HTTP 200 UP", fail_criteria="DOWN or unreachable", evidence="curl output",
           priority="Critical", test_type="Smoke", route="/actuator/health", commit_evidence="closure report"),
         s(test_id="UAT-RUN-002", module="Runtime / Preview", role="QA lead", scenario="Version endpoint reports build",
-          preconditions="None", steps="curl http://41.57.127.235/health/version", expected="commit + buildDate JSON",
+          preconditions="None", steps="curl https://impilo.mohcc.gov.zw/health/version", expected="commit + buildDate JSON",
           pass_criteria="HTTP 200 with commit field", fail_criteria="Missing version info",
           evidence="JSON capture", priority="Critical", test_type="Smoke", route="/health/version",
           commit_evidence="ba7064e2 ingress generation"),
@@ -604,7 +604,7 @@ def runtime_scenarios() -> list[Scenario]:
         s(test_id="UAT-RUN-008", module="Runtime / Single stack", role="Platform operator", scenario="Single public ingress",
           preconditions="report-preview-generation.sh", steps="Run report-preview-generation.sh",
           expected="SINGLE_PUBLIC_STACK: yes", pass_criteria="One ingress owner", fail_criteria="Duplicate public stacks",
-          evidence="Script output", priority="High", test_type="Smoke", route="http://41.57.127.235",
+          evidence="Script output", priority="High", test_type="Smoke", route="https://impilo.mohcc.gov.zw",
           commit_evidence="closure report"),
         s(test_id="UAT-RUN-009", module="Runtime / Errors", role="Reviewer", scenario="Error messages understandable",
           preconditions="Trigger validation error on form", steps="1. Submit invalid form\n2. Read error copy",
@@ -669,7 +669,7 @@ def main() -> None:
 
     summary = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "preview_url": "http://41.57.127.235",
+        "preview_url": "https://impilo.mohcc.gov.zw",
         "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
         "baseline_commit": "c5f8ff43",
         "head_commit": "4917def8",

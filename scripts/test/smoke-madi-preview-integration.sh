@@ -7,7 +7,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
-PREVIEW_BASE="${PREVIEW_BASE:-http://41.57.127.235}"
+PREVIEW_BASE="${PREVIEW_BASE:-https://impilo.mohcc.gov.zw}"
 BFF_PREFIX="${BFF_PREFIX:-/internal/v1/madi}"
 TENANT="${TENANT_ID:-local}"
 REQ_ID="madi-smoke-$(date +%s)"

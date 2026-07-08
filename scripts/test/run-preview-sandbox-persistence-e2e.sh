@@ -4,7 +4,7 @@ set -euo pipefail
 source "$(dirname "$0")/_gate-common.sh"
 cd "$REPO_PATH"
 
-PREVIEW_URL="${PREVIEW_URL:-http://41.57.127.235}"
+PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
 
 if [[ "${PREVIEW_SMOKE_SKIP:-0}" == "1" ]]; then
   gate_warn "preview persistence E2E skipped (PREVIEW_SMOKE_SKIP=1)"

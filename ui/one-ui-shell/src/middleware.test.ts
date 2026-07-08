@@ -30,21 +30,21 @@ describe("isPublicPath (G-CZO-02 public L0 entry)", () => {
 
 describe("middleware double-slash normalization", () => {
   it("redirects duplicate-slash paths to the collapsed path", () => {
-    const req = new NextRequest("http://41.57.127.235//telemedicine/session/abc");
+    const req = new NextRequest("https://impilo.mohcc.gov.zw//telemedicine/session/abc");
     const res = middleware(req);
     expect(res.status).toBe(307);
     expect(new URL(res.headers.get("location")!).pathname).toBe("/telemedicine/session/abc");
   });
 
   it("collapses runs of slashes anywhere in the path", () => {
-    const req = new NextRequest("http://41.57.127.235/telemedicine//session///abc");
+    const req = new NextRequest("https://impilo.mohcc.gov.zw/telemedicine//session///abc");
     const res = middleware(req);
     expect(res.status).toBe(307);
     expect(new URL(res.headers.get("location")!).pathname).toBe("/telemedicine/session/abc");
   });
 
   it("leaves clean paths alone (session gate still applies)", () => {
-    const req = new NextRequest("http://41.57.127.235/telemedicine/session/abc");
+    const req = new NextRequest("https://impilo.mohcc.gov.zw/telemedicine/session/abc");
     const res = middleware(req);
     // No session cookie → login redirect, NOT a slash-normalization redirect.
     expect(new URL(res.headers.get("location")!).pathname).toBe("/auth/login");

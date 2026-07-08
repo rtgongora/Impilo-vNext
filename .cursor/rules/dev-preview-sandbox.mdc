@@ -12,7 +12,7 @@ production and not formal staging** — test data only, no real secrets, no real
 
 - Single-node **k3s**, namespace `impilo-preview`, Helm chart `deploy/helm/impilo-vnext`.
 - Components: `experience-bff`, `one-ui-shell`, `postgres`, `redis`, Traefik ingress.
-- Public preview URL: `http://41.57.127.235`.
+- Public preview URL: `https://impilo.mohcc.gov.zw`.
 - UI is built **same-origin** (empty `NEXT_PUBLIC_BFF_URL`); the browser calls the BFF via
   relative paths routed by Traefik, so the build is independent of the public IP.
 
@@ -52,8 +52,8 @@ bash scripts/deploy/preview-logs.sh one-ui-shell
 
 ## After every deployment, report
 
-- Preview URL (`http://41.57.127.235`)
-- Branch and commit SHA (`git rev-parse --short HEAD`, `curl -s http://41.57.127.235/health/version`)
+- Preview URL (`https://impilo.mohcc.gov.zw`)
+- Branch and commit SHA (`git rev-parse --short HEAD`, `curl -s https://impilo.mohcc.gov.zw/health/version`)
 - Tests run / passed / failed
 - Pod health (`kubectl get pods -n impilo-preview`)
 - Any blockers

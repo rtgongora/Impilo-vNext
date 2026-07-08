@@ -6,8 +6,8 @@ alwaysApply: true
 # Remote Development Workspace
 
 1. GitHub repo is the source of truth.
-2. **Web Preview / Engineering Control:** VM Remote SSH at `robert@41.57.127.235:2276`, folder `/opt/impilo/repos/Impilo-vNext`.
-3. **Mobile Android Sandbox (Maestro):** `facility@41.57.127.218:2027` — emulator/Maestro only; API target `http://41.57.127.235`. Sync branch via Git; no divergent unpushed work.
+2. **Web Preview / Engineering Control:** VM Remote SSH at `robert@impilo.mohcc.gov.zw:2276`, folder `/opt/impilo/repos/Impilo-vNext`.
+3. **Mobile Android Sandbox (Maestro):** `facility@41.57.127.218:2027` — emulator/Maestro only; API target `https://impilo.mohcc.gov.zw`. Sync branch via Git; no divergent unpushed work.
 4. Do not use the local 16GB laptop repo for normal development.
 5. Work on branches; commit and push to GitHub from the VM.
 6. Run builds, tests, and image builds on **235**; Android emulator smoke on **218**.

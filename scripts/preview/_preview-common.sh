@@ -6,7 +6,7 @@ REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
 cd "$REPO_PATH"
 
 PREVIEW_AUDIT_DIR="${PREVIEW_AUDIT_DIR:-$REPO_PATH/reports/audits}"
-PREVIEW_URL="${PREVIEW_URL:-http://41.57.127.235}"
+PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
 FULL_BOOT_NAMESPACE="${FULL_BOOT_NAMESPACE:-impilo-full-preview}"
 FULL_BOOT_RELEASE="${FULL_BOOT_RELEASE:-impilo-full-preview}"
 CHART_DIR="${CHART_DIR:-deploy/helm/impilo-vnext}"

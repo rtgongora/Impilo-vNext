@@ -33,7 +33,7 @@ mkdir -p "${OUT}"
 CITIZEN_PKG="zw.gov.impilo.citizen"
 PROVIDER_PKG="zw.gov.impilo.provider"
 BOOT_WAIT_SECS="${BOOT_WAIT_SECS:-45}"
-PREVIEW_HOST="${PREVIEW_HOST:-41.57.127.235}"
+PREVIEW_HOST="${PREVIEW_HOST:-impilo.mohcc.gov.zw}"
 
 log() { printf '[runtime-truth] %s\n' "$*" | tee -a "${OUT}/run.log"; }
 

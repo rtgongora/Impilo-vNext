@@ -6,7 +6,7 @@ from pathlib import Path, PurePosixPath
 
 import paramiko
 
-HOST = os.environ.get("SSH_HOST", "41.57.127.235")
+HOST = os.environ.get("SSH_HOST", "impilo.mohcc.gov.zw")
 PORT = int(os.environ.get("SSH_PORT", "2276"))
 USER = os.environ.get("SSH_USER", "robert")
 PASSWORD = os.environ.get("SSH_PASS", "")

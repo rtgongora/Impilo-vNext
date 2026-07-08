@@ -15,7 +15,7 @@ export PRODUCT_TRUTH_GATE_BLOCKING="${PRODUCT_TRUTH_GATE_BLOCKING:-1}"
 export COHESION_GATE_BLOCKING="${COHESION_GATE_BLOCKING:-1}"
 export PHASE6_GATE_BLOCKING="${PHASE6_GATE_BLOCKING:-1}"
 export PREVIEW_SMOKE_BLOCKING="${PREVIEW_SMOKE_BLOCKING:-1}"
-export PREVIEW_URL="${PREVIEW_URL:-http://41.57.127.235}"
+export PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
 
 echo "Impilo local quality pipeline"
 echo "Started: $PIPELINE_STARTED_AT"
@@ -156,7 +156,7 @@ if [[ "${PIPELINE_RUN_SESSION_E2E:-0}" == "1" ]]; then
   session_e2e_blocking=0
   [[ "${SESSION_E2E_STRICT:-0}" == "1" ]] && session_e2e_blocking=1
   pipeline_run_phase session-experience-e2e "Session Experience multi-persona E2E" "$session_e2e_blocking" \
-    bash scripts/test/verify-session-experience-e2e.sh --url "${SESSION_E2E_URL:-http://41.57.127.235}" || true
+    bash scripts/test/verify-session-experience-e2e.sh --url "${SESSION_E2E_URL:-https://impilo.mohcc.gov.zw}" || true
 fi
 
 # 13. Full-boot readiness (advisory unless PIPELINE_FULL_BOOT_BLOCKING=1)

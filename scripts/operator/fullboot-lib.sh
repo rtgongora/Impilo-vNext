@@ -199,14 +199,14 @@ PY
 Privileged action (sudo password): **$action**
 
 - **Affected namespace:** \`impilo-full-preview\` (full boot only)
-- **Protected (untouched):** \`impilo-preview\` (slice at http://41.57.127.235)
+- **Protected (untouched):** \`impilo-preview\` (slice at https://impilo.mohcc.gov.zw)
 
 ## What to run (one sequence)
 
 Open PowerShell:
 
 \`\`\`powershell
-ssh -p 2276 robert@41.57.127.235
+ssh -p 2276 robert@impilo.mohcc.gov.zw
 \`\`\`
 
 Inside the VM:
@@ -272,7 +272,7 @@ sudo password in **your** terminal (not in chat).
 
 Open PowerShell and run:
 
-  ssh -p 2276 robert@41.57.127.235
+  ssh -p 2276 robert@impilo.mohcc.gov.zw
 
 Then inside the VM run:
 

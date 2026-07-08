@@ -282,7 +282,7 @@ case "$CMD" in
     echo "Repo: $REPO"
     echo ""
     echo "--- Slice (protected: $IMPILO_PROTECTED_NS) ---"
-    curl -s http://41.57.127.235/health/version 2>/dev/null | head -c 200 || echo "slice health: unreachable"
+    curl -s https://impilo.mohcc.gov.zw/health/version 2>/dev/null | head -c 200 || echo "slice health: unreachable"
     echo ""
     kubectl get pods -n "$IMPILO_SLICE_NS" 2>/dev/null | head -20 || echo "$IMPILO_SLICE_NS: not reachable"
     echo ""

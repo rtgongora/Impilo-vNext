@@ -3,7 +3,7 @@
 # Complements Playwright: ui/one-ui-shell/e2e/preview-sandbox-cohesion.spec.ts
 set -euo pipefail
 
-PREVIEW_URL="${PREVIEW_URL:-http://41.57.127.235}"
+PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
 FAIL=0
 
 pass() { echo "PASS  $*"; }

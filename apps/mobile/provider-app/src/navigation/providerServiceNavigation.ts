@@ -7,7 +7,7 @@ import {
 import type { ServiceWiringBadgeStatus } from "@impilo/mobile-design-system";
 import type { ProviderTabKey } from "../types";
 
-const PREVIEW_WEB = process.env.EXPO_PUBLIC_WEB_BASE_URL ?? "http://41.57.127.235";
+const PREVIEW_WEB = process.env.EXPO_PUBLIC_WEB_BASE_URL ?? "https://impilo.mohcc.gov.zw";
 
 export interface ProviderServiceNavAction {
   slug: CanonicalServiceSlug;

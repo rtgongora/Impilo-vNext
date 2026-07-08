@@ -4,7 +4,7 @@ set -euo pipefail
 
 REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
 NS="${IMPILO_PREVIEW_NAMESPACE:-impilo-full-preview}"
-PREVIEW_URL="${PREVIEW_URL:-http://41.57.127.235}"
+PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
 FIXTURES="$REPO/contracts/trust/seeds/preview-vashandi-session-fixtures.json"
 PASSWORD="$(python3 -c "import json; print(json.load(open('$FIXTURES'))['previewPassword'])")"
 TENANT="00000000-0000-4000-8000-000000000001"

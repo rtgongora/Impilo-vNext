@@ -22,7 +22,7 @@ cd "$REPO_PATH"
 source scripts/full-boot/_estate-guard.sh
 
 NS="${FULL_BOOT_NAMESPACE:-impilo-full-preview}"
-PREVIEW_URL="${PREVIEW_URL:-http://41.57.127.235}"
+PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
 ASSUME_YES=0
 SUBCMD="${1:-status}"
 shift || true

@@ -9,7 +9,7 @@
 REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
 EXPECTED_BRANCH="${EXPECTED_BRANCH:-claude/staging-ux-orchestration-remediation-Yypyl}"
 EXPECTED_REMOTE="rtgongora/Impilo-vNext"
-PREVIEW_URL="${PREVIEW_URL:-http://41.57.127.235}"
+PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
 NS="impilo-preview"
 FAIL=0
 

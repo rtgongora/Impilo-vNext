@@ -1,6 +1,6 @@
 import type { BrowserContext } from "@playwright/test";
 
-export const PREVIEW_ORIGIN = process.env.PLAYWRIGHT_BASE_URL ?? "http://41.57.127.235";
+export const PREVIEW_ORIGIN = process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw";
 
 /** Canonical dev tenant — matches ui/one-ui-shell api-client default. */
 export const PREVIEW_TENANT_ID = "00000000-0000-4000-8000-000000000001";

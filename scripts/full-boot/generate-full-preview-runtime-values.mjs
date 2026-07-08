@@ -90,7 +90,7 @@ function specialEnv(serviceId) {
     return {
       LIVEKIT_ENABLED: "true",
       LIVEKIT_URL: "http://livekit:7880",
-      LIVEKIT_CLIENT_URL: "ws://41.57.127.235:7880",
+      LIVEKIT_CLIENT_URL: "ws://impilo.mohcc.gov.zw:7880",
       LIVEKIT_API_KEY: "impilo-preview-key",
       LIVEKIT_API_SECRET: "impilo-preview-livekit-secret-change-me-0123456789",
     };

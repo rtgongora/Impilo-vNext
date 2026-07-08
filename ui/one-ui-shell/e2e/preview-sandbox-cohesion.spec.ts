@@ -5,7 +5,7 @@ import { PREVIEW_ORIGIN, RUN_PREVIEW, installPreviewSession, isPreviewLoginScree
  * Preview sandbox runtime cohesion — live browser/API proof against the Dev Preview Sandbox.
  *
  * Run on VM or laptop against preview ingress:
- *   PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://41.57.127.235 npx playwright test e2e/preview-sandbox-cohesion.spec.ts
+ *   PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=https://impilo.mohcc.gov.zw npx playwright test e2e/preview-sandbox-cohesion.spec.ts
  */
 
 test.describe("Preview sandbox runtime cohesion", () => {

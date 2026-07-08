@@ -8,17 +8,17 @@ alwaysApply: true
 All Cursor and AI agent development for Impilo vNext happens on the **VM Remote SSH
 workspace** (Web Preview / Engineering Control), never on the local laptop clone.
 
-> **Dual-VM model:** `41.57.127.235` = web preview / engineering control (this rule).  
+> **Dual-VM model:** `impilo.mohcc.gov.zw` = web preview / engineering control (this rule).  
 > `41.57.127.218` = Android Maestro sandbox only — see `.cursor/rules/mobile-android-sandbox.mdc`.
 
 ## Canonical workspace (Web Preview / Engineering Control)
 
 | Item | Value |
 |------|-------|
-| Remote SSH target | `robert@41.57.127.235:2276` |
+| Remote SSH target | `robert@impilo.mohcc.gov.zw:2276` |
 | Repo path (open this folder) | `/opt/impilo/repos/Impilo-vNext` |
 | Active working branch | `claude/staging-ux-orchestration-remediation-Yypyl` (unless explicitly changed) |
-| Preview URL | `http://41.57.127.235` |
+| Preview URL | `https://impilo.mohcc.gov.zw` |
 | Source of truth | **GitHub** `rtgongora/Impilo-vNext` |
 
 ## Mobile Android Sandbox (separate VM)
@@ -27,7 +27,7 @@ workspace** (Web Preview / Engineering Control), never on the local laptop clone
 |------|-------|
 | SSH | `facility@41.57.127.218:2027` |
 | Role | Android emulator, Maestro smoke — **not** backend deploy |
-| Mobile API | `EXPO_PUBLIC_API_BASE_URL=http://41.57.127.235` |
+| Mobile API | `EXPO_PUBLIC_API_BASE_URL=https://impilo.mohcc.gov.zw` |
 | Sync | Same branch via Git — no divergent unpushed work across VMs |
 
 Docs: `docs/environment/DUAL_VM_OPERATING_MODEL.md`, `docs/mobile/MOBILE_ANDROID_SANDBOX.md`.
@@ -36,7 +36,7 @@ Docs: `docs/environment/DUAL_VM_OPERATING_MODEL.md`, `docs/mobile/MOBILE_ANDROID
 
 1. **GitHub is the source of truth.** The VM disk is the working copy; always push to GitHub.
 2. **The VM is the primary development workspace.** Connect Cursor via Remote SSH to
-   `robert@41.57.127.235:2276` and open `/opt/impilo/repos/Impilo-vNext`.
+   `robert@impilo.mohcc.gov.zw:2276` and open `/opt/impilo/repos/Impilo-vNext`.
 3. **The local laptop clone must not be used for normal development.** The laptop is only
    the Cursor client and the browser-testing machine. All dependency installation, builds,
    tests, Docker/image builds, k3s deployment, smoke tests, and logs run on the **235** VM.
@@ -75,4 +75,4 @@ explicitly instructed otherwise, then `git pull` before making changes.
 bash scripts/dev/verify-remote-cursor-workspace.sh
 ```
 
-Browser testing happens on the laptop against `http://41.57.127.235`.
+Browser testing happens on the laptop against `https://impilo.mohcc.gov.zw`.

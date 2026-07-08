@@ -1,7 +1,7 @@
 import os, sys
 import paramiko
 PASSWORD = os.environ.get("SSH_PASS") or sys.exit("Set the SSH_PASS environment variable before running this script.")
-HOST = os.environ.get("SSH_HOST", "41.57.127.235")
+HOST = os.environ.get("SSH_HOST", "impilo.mohcc.gov.zw")
 c=paramiko.SSHClient();c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 c.connect(HOST,2276,'robert',PASSWORD,timeout=30,look_for_keys=False,allow_agent=False)
 cmds={

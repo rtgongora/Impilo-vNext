@@ -2,7 +2,7 @@
 # Safe preview/demo only — no production secrets. gitBranch/gitCommit/buildDate set at deploy time.
 global:
   environment: full-preview
-  publicHost: "41.57.127.235"
+  publicHost: "impilo.mohcc.gov.zw"
   imageTag: preview
   imagePullPolicy: IfNotPresent
   imageRegistry: "127.0.0.1:5000"
@@ -47,7 +47,7 @@ images:
     tag: preview
     pullPolicy: IfNotPresent
 
-# Highest-Validated-Stack-Wins: the public IP (http://41.57.127.235) surfaces the latest
+# Highest-Validated-Stack-Wins: the public IP (https://impilo.mohcc.gov.zw) surfaces the latest
 # CI/CD-passed preview generation. The full stack now owns the public ingress; the legacy
 # 4-service impilo-preview slice is a short-lived rollback fallback only and must not also
 # serve the IP (its ingress is disabled). See docs/environment/FIRST_FULL_BOOT_ATTEMPT_PLAN.md.

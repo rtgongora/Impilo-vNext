@@ -33,7 +33,7 @@ FULL_BOOT_MAX_WAVE="$(estate_normalize_max_wave "${FULL_BOOT_MAX_WAVE:-all}")"
 ESTATE_DEBUG_SET=0
 
 # Public preview IP. Per Highest-Validated-Stack-Wins this is now served by the full stack.
-PREVIEW_URL="${PREVIEW_URL:-http://41.57.127.235}"
+PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
 # Dual-mode CI/VM evidence gate (mirrors manual-authorized-preview-deploy.sh).
 BYPASS_CI="${BYPASS_CI:-0}"
 BYPASS_REASON="${BYPASS_REASON:-}"

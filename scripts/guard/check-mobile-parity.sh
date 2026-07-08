@@ -54,7 +54,7 @@ fi
 # Preview backend config (advisory unless mobile release files changed)
 for cfg in apps/mobile/citizen-app/app.json apps/mobile/provider-app/app.json; do
   if [[ -f "$cfg" ]]; then
-    if grep -q '41.57.127.235\|impilo-preview\|EXPO_PUBLIC.*BFF\|API_URL' "$cfg" 2>/dev/null \
+    if grep -q 'impilo.mohcc.gov.zw\|impilo-preview\|EXPO_PUBLIC.*BFF\|API_URL' "$cfg" 2>/dev/null \
       || grep -rq 'extra.*api\|bff' apps/mobile/citizen-app 2>/dev/null; then
       guard_pass "mobile preview API config traceable in $cfg or env docs"
     else

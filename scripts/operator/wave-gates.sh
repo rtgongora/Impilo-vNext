@@ -42,7 +42,7 @@ gate completeness bash "$REPO/scripts/guard/check-full-boot-runtime-completeness
 
 if [[ "$GATES_SKIP" != "1" ]]; then
   note "--- gate: browser / public IP ---"
-  PREVIEW_URL="${PREVIEW_URL:-http://41.57.127.235}"
+  PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
   if curl -sf -m 15 "$PREVIEW_URL/health/version" | python3 -c "
 import json,sys
 d=json.load(sys.stdin)

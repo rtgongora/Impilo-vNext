@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-HOST="${PREVIEW_HOST:-41.57.127.235}"
+HOST="${PREVIEW_HOST:-impilo.mohcc.gov.zw}"
 PORT="${PREVIEW_HTTP_PORT:-80}"
 BASE="http://${HOST}:${PORT}"
 FAIL=0

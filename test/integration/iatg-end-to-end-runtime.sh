@@ -39,7 +39,7 @@
 #     (no flag)   Drive the live chain and assert; exit 0 iff every step passes.
 #
 # ENV PARAMETERS (all overridable; preview defaults shown)
-#   PREVIEW_HOST          Base host for all preview services   (41.57.127.235)
+#   PREVIEW_HOST          Base host for all preview services   (impilo.mohcc.gov.zw)
 #   BFF_URL               experience-bff base URL              (PREVIEW_HOST:8160)
 #   VARAPI_URL            varapi-service base URL              (PREVIEW_HOST:8083)
 #   TUSO_URL              tuso-service base URL                (PREVIEW_HOST:8084)
@@ -116,7 +116,7 @@ if [[ -f "$IATG_SEED_ENV" ]]; then
 fi
 
 # ── Env parameters with preview defaults ─────────────────────────────────────
-PREVIEW_HOST="${PREVIEW_HOST:-41.57.127.235}"
+PREVIEW_HOST="${PREVIEW_HOST:-impilo.mohcc.gov.zw}"
 BFF_URL="${BFF_URL:-http://${PREVIEW_HOST}:8160}"
 VARAPI_URL="${VARAPI_URL:-http://${PREVIEW_HOST}:8083}"
 TUSO_URL="${TUSO_URL:-http://${PREVIEW_HOST}:8084}"

@@ -908,12 +908,12 @@
       "serviceAccountsEnabled": false,
       "redirectUris": [
         "http://localhost:3000/*",
-        "http://41.57.127.235/*",
+        "https://impilo.mohcc.gov.zw/*",
         "https://impilo.gov.zw/*"
       ],
       "webOrigins": [
         "http://localhost:3000",
-        "http://41.57.127.235",
+        "https://impilo.mohcc.gov.zw",
         "https://impilo.gov.zw"
       ],
       "protocol": "openid-connect",

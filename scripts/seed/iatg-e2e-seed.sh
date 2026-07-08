@@ -43,8 +43,8 @@
 #   Base URLs — default to in-mesh service names (run from inside the cluster,
 #   e.g. `kubectl exec deploy/experience-bff -- ...`). From the preview VM host,
 #   override with the external IP, e.g.:
-#       VARAPI_BASE=http://41.57.127.235:8083 \
-#       TUSO_BASE=http://41.57.127.235:8084 \
+#       VARAPI_BASE=https://impilo.mohcc.gov.zw:8083 \
+#       TUSO_BASE=https://impilo.mohcc.gov.zw:8084 \
 #       ADMIN_TOKEN=... bash scripts/seed/iatg-e2e-seed.sh
 #   VARAPI_BASE            (default http://varapi-service:8083)
 #   TUSO_BASE              (default http://tuso-service:8084)

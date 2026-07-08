@@ -22,7 +22,7 @@ try:
 except Exception:  # noqa: BLE001
     pass
 
-HOST, PORT, USER = "41.57.127.235", 2276, "robert"
+HOST, PORT, USER = "impilo.mohcc.gov.zw", 2276, "robert"
 PASSWORD = os.environ.get("SSH_PASS") or sys.exit("Set the SSH_PASS environment variable before running this script.")
 REMOTE = "/opt/impilo/repos/Impilo-vNext"
 LOCAL = Path(os.environ.get("LOCAL_REPO", str(Path(__file__).resolve().parents[2])))

@@ -1,6 +1,6 @@
 global:
   environment: preview
-  publicHost: "41.57.127.235"
+  publicHost: "impilo.mohcc.gov.zw"
   # gitBranch, gitCommit, buildDate — set at deploy time by scripts/deploy/preview-deploy.sh
   # (uses DEPLOY_BRANCH / DEPLOY_COMMIT_SHA; detached HEAD safe via _preview-deploy-metadata.sh)
 

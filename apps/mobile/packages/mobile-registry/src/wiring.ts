@@ -1,6 +1,6 @@
 import type { CanonicalServiceSlug, MobileServiceWiring, MobileServiceWiringStatus } from "./types";
 
-const PREVIEW_WEB_BASE = "http://41.57.127.235";
+const PREVIEW_WEB_BASE = "https://impilo.mohcc.gov.zw";
 
 function wire(
   slug: CanonicalServiceSlug,
