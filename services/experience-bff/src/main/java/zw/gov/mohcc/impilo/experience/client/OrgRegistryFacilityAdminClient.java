@@ -44,4 +44,19 @@ public class OrgRegistryFacilityAdminClient {
                 restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
         return response.getBody();
     }
+
+    /**
+     * Accept an organisation invitation by its single-use token. Org-registry validates the token
+     * (PENDING + not expired) and creates the affiliation for {@code acceptedByHealthId}. Downstream
+     * verdicts (404 unknown token, 409 already accepted / expired / revoked) propagate honestly.
+     */
+    public JsonNode acceptInvitation(String token, String acceptedByHealthId) {
+        String url = baseUrl + "/v1/invitations/accept";
+        log.info("ORG-REGISTRY: accepting organisation invitation (token elided)");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                url,
+                new HttpEntity<>(Map.of("token", token, "acceptedByHealthId", acceptedByHealthId)),
+                JsonNode.class);
+        return response.getBody();
+    }
 }

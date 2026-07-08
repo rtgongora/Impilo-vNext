@@ -297,19 +297,44 @@ public class FacilityClaimController {
                 requestId, correlationId);
     }
 
-    // ── Org invitation (Channel C placeholder) ────────────────────────────────
+    // ── Org invitation (Channel C onboarding) ─────────────────────────────────
 
-    /** Organisation-invitation onboarding for facility administrators — arrives with a later wave. */
+    /**
+     * Accept an organisation invitation to administer a facility. The invitee supplies the
+     * single-use token from their invitation; org-registry validates it and establishes the
+     * affiliation for the session Health ID (never taken from the body). Unknown/expired/consumed
+     * tokens propagate honestly (404/409).
+     */
     @PostMapping("/org-invitation")
     public ResponseEntity<Map<String, Object>> orgInvitation(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestHeader("X-Actor-ID") String actorId) {
-        return error(HttpStatus.NOT_IMPLEMENTED, "FEATURE_PENDING",
-                "Organisation-invitation onboarding for facility administrators is not available yet. "
-                        + "Submit a claim for the facility directly, and an approver will action it.",
-                requestId, correlationId);
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestBody Map<String, Object> body) {
+
+        String token = str(body.get("token"));
+        if (token == null || token.isBlank()) {
+            return error(HttpStatus.BAD_REQUEST, "INVITATION_TOKEN_REQUIRED",
+                    "An invitation token is required to accept an organisation invitation.",
+                    requestId, correlationId);
+        }
+        try {
+            // The accepting person is ALWAYS the session Health ID — never taken from the body.
+            JsonNode result = orgRegistryClient.acceptInvitation(token, actorId);
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("accepted", true);
+            data.put("invitationId", text(result, "id"));
+            data.put("organizationId", text(result, "organizationId"));
+            data.put("role", text(result, "role"));
+            data.put("affiliationId", text(result, "affiliationId"));
+            data.put("status", text(result, "status"));
+            data.put("note", "Your organisation invitation was accepted and your administering "
+                    + "affiliation is now active.");
+            return ResponseEntity.status(HttpStatus.CREATED).body(envelope(data, requestId, correlationId));
+        } catch (HttpStatusCodeException e) {
+            return propagate(e, requestId, correlationId);
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
