@@ -9,6 +9,9 @@ EXPECTED_SHA="${DEPLOY_COMMIT_SHA:-$(git rev-parse HEAD)}"
 BYPASS_CI="${BYPASS_CI:-0}"
 BYPASS_REASON="${BYPASS_REASON:-}"
 PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
+# Runs ON the VM, where the PUBLIC URL hairpin-NATs. Verify the live estate via the node-local
+# ingress; PREVIEW_URL stays the documented external URL.
+PREVIEW_INTERNAL_URL="${PREVIEW_INTERNAL_URL:-http://127.0.0.1}"
 NON_INTERACTIVE="${NON_INTERACTIVE:-0}"
 VM_REPORT="$REPO_PATH/reports/pipeline/latest-summary.json"
 
@@ -101,10 +104,10 @@ fi
 
 echo ""
 echo "=== Post-deploy verification ==="
-export PREVIEW_HOST="${PREVIEW_HOST:-impilo.mohcc.gov.zw}"
+export PREVIEW_HOST="${PREVIEW_HOST:-127.0.0.1}"
 bash scripts/deploy/preview-smoke-test.sh
 
-VERSION_JSON="$(curl -sf "${PREVIEW_URL}/health/version" || true)"
+VERSION_JSON="$(curl -sf "${PREVIEW_INTERNAL_URL}/health/version" || true)"
 echo "health/version: $VERSION_JSON"
 LIVE_SHA="$(echo "$VERSION_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("commit",""))' 2>/dev/null || true)"
 if [[ "$LIVE_SHA" != "$EXPECTED_SHA" ]]; then

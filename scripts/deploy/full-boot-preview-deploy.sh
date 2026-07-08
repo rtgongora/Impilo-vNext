@@ -34,6 +34,9 @@ ESTATE_DEBUG_SET=0
 
 # Public preview IP. Per Highest-Validated-Stack-Wins this is now served by the full stack.
 PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
+# This deploy runs ON the VM, where the PUBLIC URL hairpin-NATs and is unreachable. Verify the live
+# estate via the node-local ingress; PREVIEW_URL stays the documented external URL for humans.
+PREVIEW_INTERNAL_URL="${PREVIEW_INTERNAL_URL:-http://127.0.0.1}"
 # Dual-mode CI/VM evidence gate (mirrors manual-authorized-preview-deploy.sh).
 BYPASS_CI="${BYPASS_CI:-0}"
 BYPASS_REASON="${BYPASS_REASON:-}"
@@ -97,7 +100,7 @@ verify_public_ip() {
   echo ""
   echo "=== Post-deploy public verification ($PREVIEW_URL) ==="
   local vjson live_commit live_env
-  vjson="$(curl -sf -m 15 "$PREVIEW_URL/health/version" || true)"
+  vjson="$(curl -sf -m 15 "$PREVIEW_INTERNAL_URL/health/version" || true)"
   echo "health/version: $vjson"
   live_commit="$(echo "$vjson" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("commit",""))' 2>/dev/null || true)"
   live_env="$(echo "$vjson" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("environment",""))' 2>/dev/null || true)"
@@ -488,9 +491,9 @@ fi
 
 # --- UI bundle + BFF behaviour truth (served bundle / changed endpoint, not metadata alone) ---
 echo "--- Served UI bundle truth ---"
-bash scripts/test/verify-ui-bundle-truth.sh --url "$PREVIEW_URL" || echo "WARN: UI bundle truth check failed."
+bash scripts/test/verify-ui-bundle-truth.sh --url "$PREVIEW_INTERNAL_URL" || echo "WARN: UI bundle truth check failed."
 echo "--- BFF behaviour truth ---"
-bash scripts/test/verify-bff-behaviour-truth.sh --url "$PREVIEW_URL" --ns "$NAMESPACE" || echo "WARN: BFF behaviour truth check failed."
+bash scripts/test/verify-bff-behaviour-truth.sh --url "$PREVIEW_INTERNAL_URL" --ns "$NAMESPACE" || echo "WARN: BFF behaviour truth check failed."
 
 # Record which preview generation is now public and assert a single public stack.
 bash scripts/operator/report-preview-generation.sh || true

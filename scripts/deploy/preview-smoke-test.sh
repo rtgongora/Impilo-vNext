@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-HOST="${PREVIEW_HOST:-impilo.mohcc.gov.zw}"
+# Runs ON the VM, where the PUBLIC host hairpin-NATs and is unreachable. Default to the node-local
+# ingress; override PREVIEW_HOST for an external smoke test from off-VM.
+HOST="${PREVIEW_HOST:-127.0.0.1}"
 PORT="${PREVIEW_HTTP_PORT:-80}"
 BASE="http://${HOST}:${PORT}"
 FAIL=0

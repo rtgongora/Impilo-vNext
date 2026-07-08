@@ -4,28 +4,31 @@
 set -euo pipefail
 
 PREVIEW_URL="${PREVIEW_URL:-https://impilo.mohcc.gov.zw}"
+# Reachability checks run ON the VM / inside the cluster LAN, where the PUBLIC URL hairpin-NATs and
+# is unreachable. Hit the node-local ingress instead; PREVIEW_URL stays the documented external URL.
+PREVIEW_INTERNAL_URL="${PREVIEW_INTERNAL_URL:-http://127.0.0.1}"
 FAIL=0
 
 pass() { echo "PASS  $*"; }
 fail() { echo "FAIL  $*"; FAIL=1; }
 
-echo "Preview sandbox runtime smoke — ${PREVIEW_URL}"
+echo "Preview sandbox runtime smoke — internal ${PREVIEW_INTERNAL_URL} (public ${PREVIEW_URL})"
 
-if curl -sf --max-time 15 "${PREVIEW_URL}/health/version" >/tmp/preview-health-version.json; then
+if curl -sf --max-time 15 "${PREVIEW_INTERNAL_URL}/health/version" >/tmp/preview-health-version.json; then
   COMMIT=$(python3 -c 'import json; print(json.load(open("/tmp/preview-health-version.json")).get("commit","?")[:12])')
   pass "GET /health/version commit=${COMMIT}"
 else
   fail "GET /health/version unreachable"
 fi
 
-if curl -sf --max-time 15 -o /dev/null -w "%{http_code}" "${PREVIEW_URL}/" | grep -qE '^(200|302|304|307)$'; then
+if curl -sf --max-time 15 -o /dev/null -w "%{http_code}" "${PREVIEW_INTERNAL_URL}/" | grep -qE '^(200|302|304|307)$'; then
   pass "GET / ingress"
 else
   fail "GET / ingress"
 fi
 
 for path in /auth/login/provider-id /registry /work/vashandi/workforce /enterprise /learning/library /dags; do
-  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "${PREVIEW_URL}${path}" || echo "000")
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "${PREVIEW_INTERNAL_URL}${path}" || echo "000")
   if [[ "$code" =~ ^(200|302|304|307)$ ]]; then
     pass "GET ${path} status=${code}"
   else
