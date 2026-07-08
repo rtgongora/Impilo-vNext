@@ -45,6 +45,7 @@ export default function LearningPage() {
   const [section, setSection] = useState<SectionKey>(learningSections.some((s) => s.key === initialSection) ? initialSection : "overview");
   const [history, setHistory] = useState<SectionKey[]>([]);
   const [modal, setModal] = useState<ModalKey | null>(null);
+  const [modalDefaults, setModalDefaults] = useState<Row>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -143,6 +144,16 @@ export default function LearningPage() {
     });
   };
 
+  const openModal = (next: ModalKey, defaults: Row = {}) => {
+    setModalDefaults(defaults);
+    setModal(next);
+  };
+
+  const closeModal = () => {
+    setModal(null);
+    setModalDefaults({});
+  };
+
   const submit = async (kind: ModalKey, form: HTMLFormElement) => {
     setError(null);
     setNotice(null);
@@ -169,7 +180,7 @@ export default function LearningPage() {
       } else if (kind === "session") {
         await postData(`${FUNDO}/sessions`, body);
       }
-      setModal(null);
+      closeModal();
       setNotice("Saved successfully.");
       await load();
     } catch (err) {
@@ -187,27 +198,27 @@ export default function LearningPage() {
 
   return (
     <AppLayout inlineContext>
-      <div className="-mt-1 space-y-2">
-        <LearningWorkspaceHeader
-          section={section}
-          busy={busy}
-          historyLength={history.length}
-          onSectionChange={openSection}
-          onBack={goBack}
-          onRefresh={() => void load()}
-        />
+      <LearningWorkspaceHeader
+        section={section}
+        busy={busy}
+        historyLength={history.length}
+        onSectionChange={openSection}
+        onBack={goBack}
+        onRefresh={() => void load()}
+      />
 
+      <div className="px-3 py-3 sm:px-4 space-y-2">
         {error ? <Banner tone="error">{error}</Banner> : null}
         {notice ? <Banner tone="success">{notice}</Banner> : null}
 
         <main className="min-w-0">
-          <LearningWorkspaceMain section={section} data={data} openSection={openSection} setModal={setModal} />
+          <LearningWorkspaceMain section={section} data={data} openSection={openSection} setModal={openModal} />
         </main>
       </div>
 
       {modal ? (
-        <LearningModal title={modalTitle(modal)} onClose={() => setModal(null)} busy={busy} onSubmit={handleModalSubmit}>
-          <ModalFields kind={modal} />
+        <LearningModal title={modalTitle(modal)} onClose={closeModal} busy={busy} onSubmit={handleModalSubmit}>
+          <ModalFields kind={modal} defaults={modalDefaults} />
         </LearningModal>
       ) : null}
     </AppLayout>

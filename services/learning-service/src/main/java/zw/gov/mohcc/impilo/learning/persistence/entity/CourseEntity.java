@@ -64,6 +64,18 @@ public class CourseEntity {
     @Column(name = "cpd_points")
     private Integer cpdPoints;
 
+    /** Due date type: FIXED (exact date) or RELATIVE (days from enrollment) */
+    @Column(name = "due_date_type", length = 32)
+    private String dueDateType; // FIXED or RELATIVE
+
+    /** For FIXED type: the exact due date */
+    @Column(name = "due_date")
+    private OffsetDateTime dueDate;
+
+    /** For RELATIVE type: number of days from enrollment to calculate due date */
+    @Column(name = "due_date_days_from_enrollment")
+    private Integer dueDateDaysFromEnrollment;
+
     @Column(name = "version", nullable = false)
     private int version = 1;
 
@@ -112,6 +124,14 @@ public class CourseEntity {
     public void setCpdPoints(Integer cpdPoints) { this.cpdPoints = cpdPoints; }
     public int getVersion() { return version; }
     public void setVersion(int version) { this.version = version; }
+
+    public String getDueDateType() { return dueDateType; }
+    public void setDueDateType(String dueDateType) { this.dueDateType = dueDateType; }
+    public OffsetDateTime getDueDate() { return dueDate; }
+    public void setDueDate(OffsetDateTime dueDate) { this.dueDate = dueDate; }
+    public Integer getDueDateDaysFromEnrollment() { return dueDateDaysFromEnrollment; }
+    public void setDueDateDaysFromEnrollment(Integer days) { this.dueDateDaysFromEnrollment = days; }
+
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 }
