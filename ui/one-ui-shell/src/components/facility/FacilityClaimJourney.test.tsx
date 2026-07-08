@@ -5,6 +5,7 @@ import { FacilityClaimJourney } from "./FacilityClaimJourney";
 const mockUseEligibility = vi.fn();
 const mockUsePreview = vi.fn();
 const mockUseAppoint = vi.fn();
+const mockUseAcceptOrgInvitation = vi.fn();
 
 vi.mock("@/hooks/queries/useFacilityClaim", async () => {
   const actual = await vi.importActual<typeof import("@/hooks/queries/useFacilityClaim")>(
@@ -17,6 +18,7 @@ vi.mock("@/hooks/queries/useFacilityClaim", async () => {
     useFacilityClaimEligibility: (...args: unknown[]) => mockUseEligibility(...args),
     usePreviewFacilityClaim: (...args: unknown[]) => mockUsePreview(...args),
     useAppointFacilityClaim: (...args: unknown[]) => mockUseAppoint(...args),
+    useAcceptOrgInvitation: (...args: unknown[]) => mockUseAcceptOrgInvitation(...args),
   };
 });
 
@@ -43,6 +45,7 @@ describe("FacilityClaimJourney", () => {
     });
     mockUsePreview.mockReturnValue(idleMutation());
     mockUseAppoint.mockReturnValue(idleMutation());
+    mockUseAcceptOrgInvitation.mockReturnValue(idleMutation());
   });
 
   it("requires a facility uuid (no facility selected)", () => {
@@ -83,10 +86,37 @@ describe("FacilityClaimJourney", () => {
     expect(screen.queryByTestId("facility-claim-letter-flow")).not.toBeInTheDocument();
   });
 
-  it("org-invitation lane renders honest coming-soon", () => {
+  it("org-invitation lane: accepts an invitation token behind consent", () => {
+    const acceptMutate = vi.fn();
+    mockUseAcceptOrgInvitation.mockReturnValue(idleMutation({ mutate: acceptMutate }));
+
     render(<FacilityClaimJourney facilityUuid={FAC} />);
     fireEvent.click(screen.getByText(/Organisation invitation/));
-    expect(screen.getByTestId("facility-claim-coming-soon")).toBeInTheDocument();
+
+    // Real form (no coming-soon), token accept gated behind consent.
+    expect(screen.getByTestId("facility-claim-org-invitation-flow")).toBeInTheDocument();
+    expect(screen.queryByTestId("facility-claim-coming-soon")).not.toBeInTheDocument();
+
+    const button = screen.getByRole("button", { name: /Accept invitation/ });
+    expect(button).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText(/Invitation token/), { target: { value: "TOK-123" } });
+    fireEvent.click(screen.getByRole("checkbox"));
+    expect(button).not.toBeDisabled();
+    fireEvent.click(button);
+    expect(acceptMutate).toHaveBeenCalledWith("TOK-123");
+  });
+
+  it("org-invitation lane: renders active-affiliation confirmation after accepting", () => {
+    mockUseAcceptOrgInvitation.mockReturnValue(
+      idleMutation({
+        data: { accepted: true, role: "FACILITY_ADMIN", status: "ACCEPTED", note: "Affiliation active." },
+      }),
+    );
+    render(<FacilityClaimJourney facilityUuid={FAC} />);
+    fireEvent.click(screen.getByText(/Organisation invitation/));
+    expect(screen.getByTestId("facility-claim-org-invitation-accepted")).toBeInTheDocument();
+    expect(screen.getByText(/administering affiliation active/i)).toBeInTheDocument();
   });
 
   it("appointment-letter lane: previews masked facility summary, gates appoint behind consent", () => {

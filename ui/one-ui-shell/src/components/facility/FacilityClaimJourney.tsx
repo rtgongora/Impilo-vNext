@@ -16,6 +16,7 @@ import {
 import {
   facilityClaimErrorMessage,
   isFeaturePending,
+  useAcceptOrgInvitation,
   useAppointFacilityClaim,
   useFacilityClaimEligibility,
   usePreviewFacilityClaim,
@@ -131,7 +132,7 @@ export function FacilityClaimJourney({ facilityUuid }: { facilityUuid?: string }
           </button>
           {path === "letter" ? <AppointmentLetterFlow facilityUuid={facilityUuid} /> : null}
           {path === "document" ? <ComingSoonNote /> : null}
-          {path === "org" ? <ComingSoonNote /> : null}
+          {path === "org" ? <OrgInvitationFlow facilityUuid={facilityUuid} /> : null}
         </div>
       ) : null}
 
@@ -195,7 +196,7 @@ const PATHS: { id: ClaimPath; icon: typeof FileText; title: string; body: string
     id: "org",
     icon: Mail,
     title: "Organisation invitation",
-    body: "Onboard via an organisation invitation. Arrives with a later wave.",
+    body: "Accept an invitation from an organisation to administer a facility using your invitation token.",
   },
 ];
 
@@ -376,6 +377,88 @@ function AppointmentLetterFlow({ facilityUuid }: { facilityUuid: string }) {
           consent and submit.
         </p>
       ) : null}
+
+      <p className="border-t border-border pt-2 text-xs text-muted-foreground">
+        Need to return to the facility?{" "}
+        <Link href={`/facility/${facilityUuid}`} className="font-medium text-primary underline">
+          Back to facility
+        </Link>
+      </p>
+    </form>
+  );
+}
+
+// ── Organisation invitation flow ─────────────────────────────────────────────
+
+function OrgInvitationFlow({ facilityUuid }: { facilityUuid: string }) {
+  const [token, setToken] = useState("");
+  const [consent, setConsent] = useState(false);
+  const accept = useAcceptOrgInvitation();
+
+  if (accept.data) {
+    return (
+      <div
+        className="rounded-lg border border-primary/25 bg-primary-soft px-4 py-3 text-sm"
+        data-testid="facility-claim-org-invitation-accepted"
+      >
+        <p className="flex items-center gap-2 font-medium text-foreground">
+          <ShieldCheck className="h-4 w-4 text-primary" /> Invitation accepted — administering affiliation active
+        </p>
+        <p className="mt-1 text-muted-foreground">
+          {accept.data.note ??
+            "Your organisation invitation was accepted and your administering affiliation is now active."}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className="space-y-3"
+      data-testid="facility-claim-org-invitation-flow"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (consent && token.trim()) accept.mutate(token.trim());
+      }}
+    >
+      {accept.isError ? (
+        <ErrorNote
+          err={accept.error}
+          fallback="That invitation token could not be accepted. It may be unknown, expired, or already used."
+        />
+      ) : null}
+
+      <label className="block text-xs font-medium text-foreground" htmlFor="org-invitation-token-input">
+        Invitation token
+      </label>
+      <input
+        id="org-invitation-token-input"
+        value={token}
+        onChange={(e) => setToken(e.target.value)}
+        placeholder="Paste the token from your organisation invitation"
+        className={inputClass}
+        autoComplete="off"
+      />
+
+      <label className="flex items-start gap-2 text-xs text-foreground">
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+          className="mt-0.5"
+        />
+        I confirm this invitation was issued to me and consent to recording the administering
+        affiliation against my Health ID.
+      </label>
+
+      <button
+        type="submit"
+        className={primaryButtonClass}
+        disabled={accept.isPending || !token.trim() || !consent}
+      >
+        {accept.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+        Accept invitation
+      </button>
 
       <p className="border-t border-border pt-2 text-xs text-muted-foreground">
         Need to return to the facility?{" "}

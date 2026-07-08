@@ -76,6 +76,16 @@ export interface FacilityApproveInput {
   organizationId?: string;
 }
 
+export interface OrgInvitationAcceptResult {
+  accepted: boolean;
+  invitationId?: string;
+  organizationId?: string;
+  role?: string;
+  affiliationId?: string;
+  status?: string;
+  note?: string;
+}
+
 /** Error shape thrown by apiClient: `{ status, error: { code, message } }`. */
 export interface FacilityClaimApiError {
   status?: number;
@@ -133,6 +143,21 @@ export function useApproveFacilityAppointment() {
       if (res.facilityUuid) {
         await qc.invalidateQueries({ queryKey: qk.eligibility(res.facilityUuid) });
       }
+    },
+  });
+}
+
+/**
+ * Accept an organisation invitation to administer a facility by its single-use token.
+ * The accepting person is always the session Health ID (set server-side, never from the client).
+ */
+export function useAcceptOrgInvitation() {
+  const qc = useQueryClient();
+  return useMutation<OrgInvitationAcceptResult, FacilityClaimApiError, string>({
+    mutationFn: async (token: string) =>
+      (await apiClient.post<Envelope<OrgInvitationAcceptResult>>(`${BASE}/org-invitation`, { token })).data,
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["facility-claim"] });
     },
   });
 }
