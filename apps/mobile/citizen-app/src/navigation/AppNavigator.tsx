@@ -16,6 +16,7 @@ import { CitizenTabs } from "./CitizenTabs";
 import { GlobalErrorBanner } from "../screens/GlobalErrorBanner";
 import { NetworkStatusBar } from "../screens/NetworkStatusBar";
 import { NompiloAssistantScreen } from "../screens/NompiloAssistantScreen";
+import { FloatingSosButton } from "../components/sos/FloatingSosButton";
 
 export function AppNavigator() {
   const [nompiloOpen, setNompiloOpen] = useState(false);
@@ -27,6 +28,7 @@ export function AppNavigator() {
       <AuthGuard>
         <View style={styles.guarded}>
           <CitizenTabs />
+          <FloatingSosButton />
           <NompiloLauncher
             onPress={() => setNompiloOpen(true)}
             accentColor="#059669"
