@@ -1,0 +1,136 @@
+openapi: 3.0.3
+info:
+  title: "Organization Registry"
+  description: |
+    Contract for `organization-registry-service` — the organization / provider-organization
+    registry: organizations and their representatives, organization affiliations, provider
+    claim submission with the IATG adjudication/transition loop, facility-admin affiliation
+    (internal), and the read-only WGV mirror + mirror inventory (internal).
+
+    Handler routes are synced from the Spring controllers via
+    `scripts/completeness/sync-handler-routes-to-contract.mjs` (complete-not-delete). Extend
+    with request/response schemas as the HTTP surface is stabilised.
+  version: 0.1.0
+servers:
+  - url: http://localhost:8153
+    description: Local default (`default_http_port` in docs/registry/services-registry.yaml)
+
+paths:
+  /{affiliationId}:
+    patch:
+      operationId: organizationregistry_patch__affiliationId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /organizations/{organizationId}/claims:
+    post:
+      operationId: organizationregistry_post__organizations_organizationId_claims
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: organizationregistry_get__organizations_organizationId_claims
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /claims/{id}:
+    get:
+      operationId: organizationregistry_get__claims_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /claims/{id}/transition:
+    post:
+      operationId: organizationregistry_post__claims_id_transition
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /claims/{id}/escalate:
+    post:
+      operationId: organizationregistry_post__claims_id_escalate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: organizationregistry_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/representatives:
+    post:
+      operationId: organizationregistry_post__id_representatives
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: organizationregistry_get__id_representatives
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/submit-verification:
+    post:
+      operationId: organizationregistry_post__id_submit_verification
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/verify:
+    post:
+      operationId: organizationregistry_post__id_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /wgv:
+    post:
+      operationId: organizationregistry_post__wgv
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /inventory:
+    get:
+      operationId: organizationregistry_get__inventory
+      tags:
+        - Generated-From-Handler
+      summary: Documented from organization-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+
+components:
+  schemas: {}

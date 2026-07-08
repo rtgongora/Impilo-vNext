@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-02T04:54:22.090Z",
+  "generatedAt": "2026-07-08T07:21:39.417Z",
   "services": {
     "ai-model-registry-service": "unknown-or-partial",
     "analytics-pipeline-service": "unknown-or-partial",
@@ -95,6 +95,7 @@
     "workflow-service": "unknown-or-partial",
     "workforce-governance-service": "unknown-or-partial",
     "vashandi-workforce-service": "partial",
+    "organization-registry-service": "partial",
     "khuluma-service": "partial",
     "zibo-service": "unknown-or-partial"
   }
