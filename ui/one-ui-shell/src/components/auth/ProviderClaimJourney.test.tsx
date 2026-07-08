@@ -8,6 +8,7 @@ const mockUseClaim = vi.fn();
 const mockUseEvidence = vi.fn();
 const mockUseRecover = vi.fn();
 const mockUseEmploymentMatch = vi.fn();
+const mockUseUploadDocument = vi.fn();
 
 vi.mock("@/hooks/queries/useProviderClaim", async () => {
   const actual = await vi.importActual<typeof import("@/hooks/queries/useProviderClaim")>(
@@ -23,6 +24,7 @@ vi.mock("@/hooks/queries/useProviderClaim", async () => {
     useClaimProviderProfile: (...args: unknown[]) => mockUseClaim(...args),
     useSubmitClaimEvidence: (...args: unknown[]) => mockUseEvidence(...args),
     useRecoverProviderProfile: (...args: unknown[]) => mockUseRecover(...args),
+    useUploadProviderDocument: (...args: unknown[]) => mockUseUploadDocument(...args),
   };
 });
 
@@ -62,6 +64,32 @@ describe("ProviderClaimJourney", () => {
     mockUseEvidence.mockReturnValue(idleMutation());
     mockUseRecover.mockReturnValue(idleMutation());
     mockUseEmploymentMatch.mockReturnValue(idleMutation());
+    mockUseUploadDocument.mockReturnValue(idleMutation());
+  });
+
+  it("document lane: offers a real upload form and submits", () => {
+    const uploadMutate = vi.fn();
+    mockUseUploadDocument.mockReturnValue(idleMutation({ mutate: uploadMutate }));
+    render(<ProviderClaimJourney />);
+    fireEvent.click(screen.getByText(/Upload a supporting document/));
+    expect(screen.getByTestId("provider-claim-document-flow")).toBeInTheDocument();
+    expect(screen.queryByTestId("provider-claim-coming-soon")).not.toBeInTheDocument();
+
+    const input = screen.getByLabelText(/Supporting document/) as HTMLInputElement;
+    const file = new File(["x"], "cert.pdf", { type: "application/pdf" });
+    fireEvent.change(input, { target: { files: [file] } });
+    fireEvent.click(screen.getByRole("button", { name: /Upload document/ }));
+    expect(uploadMutate).toHaveBeenCalledWith(file);
+  });
+
+  it("document lane: shows the durable review-request confirmation after upload", () => {
+    mockUseUploadDocument.mockReturnValue(
+      idleMutation({ data: { publicId: "REQ-9", status: "PENDING", nextStep: "Under review." } }),
+    );
+    render(<ProviderClaimJourney />);
+    fireEvent.click(screen.getByText(/Upload a supporting document/));
+    expect(screen.getByTestId("provider-claim-document-recorded")).toBeInTheDocument();
+    expect(screen.getByText(/REQ-9/)).toBeInTheDocument();
   });
 
   it("checks eligibility first (loading state)", () => {

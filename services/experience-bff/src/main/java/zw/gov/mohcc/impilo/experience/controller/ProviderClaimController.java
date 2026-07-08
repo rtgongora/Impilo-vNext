@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,12 +13,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.multipart.MultipartFile;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.WorkforceEmploymentMatchClient;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,10 +41,12 @@ import java.util.Map;
  *   <li><b>Recover-not-reissue</b>: /recover chains Varapi's recovery
  *       initiate + complete and surfaces the SAME providerPublicId (masked) —
  *       a recovery can never mint a new provider identity.</li>
- *   <li><b>Honest pending states</b>: EC-number matching (WS-D lane) is gated
- *       by {@code impilo.features.ec-matching} (default off) and returns 501
- *       FEATURE_PENDING rather than fake success; document upload and org
- *       invitations (Channel C) do the same.</li>
+ *   <li><b>All evidence lanes live</b>: council-number (Varapi), EC-number
+ *       employment match (workforce-governance, enabled via
+ *       {@code impilo.features.ec-matching}), document upload (document service +
+ *       durable DOCUMENT_EVIDENCE access request), and organisation invitation
+ *       (durable request) each bind a real endpoint — downstream verdicts surface
+ *       verbatim, never faked.</li>
  *   <li><b>Masked at the edge</b>: raw council/EC numbers never travel to the
  *       trust ledger — evidence refs are masked (first two characters) before
  *       leaving the BFF; provider identifiers return masked to the shell.</li>
@@ -55,16 +62,21 @@ public class ProviderClaimController {
     static final String EVIDENCE_EC_NUMBER = "EC_NUMBER";
     static final String EVIDENCE_DOCUMENT = "DOCUMENT";
 
+    private static final long MAX_EVIDENCE_BYTES = 10L * 1024 * 1024; // 10 MB
+
     private final VarapiServiceClient varapiClient;
     private final WorkforceEmploymentMatchClient employmentMatchClient;
+    private final DocumentServiceClient documentServiceClient;
     private final boolean ecMatchingEnabled;
 
     public ProviderClaimController(
             VarapiServiceClient varapiClient,
             WorkforceEmploymentMatchClient employmentMatchClient,
+            DocumentServiceClient documentServiceClient,
             @Value("${impilo.features.ec-matching:false}") boolean ecMatchingEnabled) {
         this.varapiClient = varapiClient;
         this.employmentMatchClient = employmentMatchClient;
+        this.documentServiceClient = documentServiceClient;
         this.ecMatchingEnabled = ecMatchingEnabled;
     }
 
@@ -195,9 +207,8 @@ public class ProviderClaimController {
             case EVIDENCE_EC_NUMBER:
                 return ecNumberEvidence(value, actorId, requestId, correlationId);
             case EVIDENCE_DOCUMENT:
-                return error(HttpStatus.NOT_IMPLEMENTED, "FEATURE_PENDING",
-                        "Document-based verification is not available yet. Your council number, a claim "
-                                + "token from your organisation, or a registry desk remain the supported routes.",
+                return error(HttpStatus.BAD_REQUEST, "EVIDENCE_DOCUMENT_USE_UPLOAD",
+                        "Upload document evidence via POST /api/v1/provider-claim/evidence/document (multipart).",
                         requestId, correlationId);
             default:
                 return error(HttpStatus.BAD_REQUEST, "EVIDENCE_TYPE_UNSUPPORTED",
@@ -260,6 +271,51 @@ public class ProviderClaimController {
             data.put("evidenceRef", maskRef(ecNumber));
             data.put("matchStatus", match != null ? text(match, "matchStatus") : null);
             return ok(data, requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return propagate(e, requestId, correlationId);
+        }
+    }
+
+    // ── Document evidence (upload) ────────────────────────────────────────────
+
+    /**
+     * Upload a supporting document as provider-claim evidence. The file is stored in the document
+     * service (object store + scan pipeline); a durable provider-access request of type
+     * {@code DOCUMENT_EVIDENCE} is opened referencing the stored object id, routed to the registry
+     * for review. Applicant = session Health ID; no Provider ID is issued here.
+     */
+    @PostMapping(value = "/evidence/document", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, Object>> uploadDocumentEvidence(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestPart("file") MultipartFile file) {
+
+        if (file == null || file.isEmpty()) {
+            return error(HttpStatus.BAD_REQUEST, "EVIDENCE_FILE_REQUIRED",
+                    "A document file is required for document-based evidence.", requestId, correlationId);
+        }
+        if (file.getSize() > MAX_EVIDENCE_BYTES) {
+            return error(HttpStatus.PAYLOAD_TOO_LARGE, "EVIDENCE_FILE_TOO_LARGE",
+                    "The supporting document must be 10 MB or smaller.", requestId, correlationId);
+        }
+        String mimeType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+        try {
+            JsonNode stored = documentServiceClient.uploadObject(
+                    file.getBytes(),
+                    file.getOriginalFilename(),
+                    mimeType,
+                    Map.of("purpose", "provider-claim-evidence", "uploadedBy", actorId));
+            String objectId = text(stored, "objectId");
+            Map<String, Object> requestBody = new LinkedHashMap<>();
+            requestBody.put("requestType", "DOCUMENT_EVIDENCE");
+            requestBody.put("evidenceRef", objectId);
+            requestBody.put("documentFilename", text(stored, "originalFilename"));
+            return okNode(varapiClient.submitProviderAccessRequest(requestBody), requestId, correlationId);
+        } catch (IOException e) {
+            return error(HttpStatus.BAD_REQUEST, "EVIDENCE_FILE_UNREADABLE",
+                    "The supporting document could not be read.", requestId, correlationId);
         } catch (HttpStatusCodeException e) {
             return propagate(e, requestId, correlationId);
         }

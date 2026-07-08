@@ -45,6 +45,10 @@ management:
       show-details: when-authorized
 
 impilo:
+  features:
+    # EC-number employment matching (WS-D). Downstream workforce-governance
+    # /internal/v1/workforce-governance/employment/match is live, so this lane is on.
+    ec-matching: ${IMPILO_FEATURE_EC_MATCHING:true}
   bootstrap:
     enabled: ${IMPILO_BOOTSTRAP_ENABLED:true}
     token-hash: ${IMPILO_BOOTSTRAP_TOKEN_HASH:}

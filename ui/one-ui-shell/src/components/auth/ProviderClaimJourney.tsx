@@ -16,16 +16,17 @@ import {
   RotateCcw,
   ShieldCheck,
   Stethoscope,
+  Upload,
   UserPlus,
 } from "lucide-react";
 import {
-  isFeaturePending,
   providerClaimErrorMessage,
   useClaimProviderProfile,
   usePreviewClaimToken,
   useProviderClaimEligibility,
   useRecoverProviderProfile,
   useSubmitClaimEvidence,
+  useUploadProviderDocument,
 } from "@/hooks/queries/useProviderClaim";
 import {
   employmentMatchErrorMessage,
@@ -36,7 +37,7 @@ import {
   type ProviderAccessRequestView,
 } from "@/hooks/queries/useProviderAccessRequest";
 
-type ClaimPath = "token" | "council" | "ec" | "new" | "org" | "recover";
+type ClaimPath = "token" | "council" | "ec" | "document" | "new" | "org" | "recover";
 
 /**
  * Provider self-service claim / recovery journey (IATG WS-F).
@@ -44,9 +45,10 @@ type ClaimPath = "token" | "council" | "ec" | "new" | "org" | "recover";
  * Flow: eligibility check → choose path (claim token / council number /
  * EC number / recover) → evidence submission → confirmation.
  *
- * Doctrine: honest states only — feature-pending lanes render as "coming
- * soon" (never fake success), downstream 409 verdicts are shown verbatim,
- * and recovery always surfaces the SAME masked Provider ID (recover-not-
+ * Doctrine: honest states only — every lane binds a real BFF endpoint (claim
+ * token, council number, EC match, document upload, invitation, recover),
+ * downstream 409 verdicts are shown verbatim, and recovery always surfaces the
+ * SAME masked Provider ID (recover-not-
  * reissue). Identifiers are masked end-to-end; the raw Provider ID is never
  * rendered here.
  */
@@ -131,6 +133,7 @@ export function ProviderClaimJourney() {
           {path === "token" ? <ClaimTokenFlow /> : null}
           {path === "council" ? <CouncilNumberFlow /> : null}
           {path === "ec" ? <EcNumberFlow /> : null}
+          {path === "document" ? <DocumentEvidenceFlow /> : null}
           {path === "new" ? <NewProviderFlow /> : null}
           {path === "org" ? <OrgInvitationFlow /> : null}
           {path === "recover" ? <RecoverFlow /> : null}
@@ -139,8 +142,8 @@ export function ProviderClaimJourney() {
 
       <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
         <span>
-          Document upload arrives with a later wave and will appear here when real. Verification
-          decisions always rest with the registry — no shortcut is faked.
+          Verification decisions always rest with the registry — no shortcut is faked, and no
+          Provider ID is issued automatically.
         </span>
         <Link
           href="/citizen/provider-claim/status"
@@ -226,7 +229,13 @@ const PATHS: { id: ClaimPath; icon: typeof KeyRound; title: string; body: string
     id: "ec",
     icon: FileText,
     title: "I have an EC (employment) number",
-    body: "Matched against the workforce employment registry when that lane is live.",
+    body: "Matched against the workforce employment registry to assert an employment-based trust signal.",
+  },
+  {
+    id: "document",
+    icon: Stethoscope,
+    title: "Upload a supporting document",
+    body: "Attach a PDF or image; it is stored securely and opens a durable request for registry review.",
   },
   {
     id: "new",
@@ -282,22 +291,6 @@ function ErrorNote({ err, fallback }: { err: unknown; fallback: string }) {
   );
 }
 
-function ComingSoonNote({ err }: { err: unknown }) {
-  return (
-    <div
-      className="flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground"
-      data-testid="provider-claim-coming-soon"
-    >
-      <Clock className="mt-0.5 h-4 w-4 shrink-0" />
-      <p>
-        {providerClaimErrorMessage(
-          err,
-          "This route is not available yet. It will appear here once the supporting lane is live — no shortcut is faked in the meantime.",
-        )}
-      </p>
-    </div>
-  );
-}
 
 const inputClass =
   "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground";
@@ -483,6 +476,71 @@ function CouncilNumberFlow() {
         Only a masked reference travels to the trust ledger. Verification is reviewed against the
         council record — no provider role activates until it completes.
       </p>
+    </form>
+  );
+}
+
+// ── Document evidence flow ───────────────────────────────────────────────────
+
+function DocumentEvidenceFlow() {
+  const [file, setFile] = useState<File | null>(null);
+  const upload = useUploadProviderDocument();
+
+  if (upload.data) {
+    return (
+      <div
+        className="rounded-lg border border-primary/25 bg-primary-soft px-4 py-3 text-sm"
+        data-testid="provider-claim-document-recorded"
+      >
+        <p className="flex items-center gap-2 font-medium text-foreground">
+          <CheckCircle2 className="h-4 w-4 text-primary" /> Document received — review request opened
+        </p>
+        <p className="mt-1 text-muted-foreground">
+          {upload.data.nextStep ??
+            "Your supporting document was stored and a durable review request was opened. You will be notified; no provider role is activated until the registry reviews it."}
+          {upload.data.publicId ? (
+            <>
+              {" "}
+              Reference <span className="font-mono">{upload.data.publicId}</span>.
+            </>
+          ) : null}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className="space-y-3"
+      data-testid="provider-claim-document-flow"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (file) upload.mutate(file);
+      }}
+    >
+      {upload.isError ? (
+        <ErrorNote err={upload.error} fallback="The document could not be uploaded. Try a smaller PDF or image." />
+      ) : null}
+
+      <label className="block text-xs font-medium text-foreground" htmlFor="provider-document-input">
+        Supporting document (PDF or image, up to 10 MB)
+      </label>
+      <input
+        id="provider-document-input"
+        type="file"
+        accept=".pdf,image/*"
+        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        className={inputClass}
+      />
+      <p className="text-xs text-muted-foreground">
+        Your document is stored securely and opens a durable request for registry review. No Provider
+        ID is issued automatically.
+      </p>
+
+      <button type="submit" className={primaryButtonClass} disabled={upload.isPending || !file}>
+        {upload.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+        <Upload className="h-3.5 w-3.5" /> Upload document
+      </button>
     </form>
   );
 }

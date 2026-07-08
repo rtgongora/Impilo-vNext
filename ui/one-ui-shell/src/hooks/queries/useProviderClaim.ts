@@ -5,9 +5,10 @@
  * binds every downstream call to the signed-in person's Health ID. Responses
  * use the BFF `{ data, meta }` envelope; hooks unwrap `data`.
  *
- * Doctrine: recover-not-reissue (recovery surfaces the SAME masked Provider ID),
- * and honest pending states — 501 FEATURE_PENDING errors are surfaced as-is so
- * the journey can render "coming soon", never fake success.
+ * Doctrine: recover-not-reissue (recovery surfaces the SAME masked Provider ID).
+ * Every evidence lane binds a real endpoint — council-number, EC-number match,
+ * document upload, and organisation invitation — and any downstream verdict is
+ * surfaced verbatim, never faked.
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -118,11 +119,42 @@ export function useClaimProviderProfile() {
   });
 }
 
-/** Submit identity evidence (council number / EC number / document). */
+/** Submit identity evidence (council number / EC number). */
 export function useSubmitClaimEvidence() {
   return useMutation<ProviderEvidenceResult, ProviderClaimApiError, ProviderEvidenceInput>({
     mutationFn: async (input) =>
       (await apiClient.post<Envelope<ProviderEvidenceResult>>(`${BASE}/evidence`, input)).data,
+  });
+}
+
+export interface ProviderDocumentEvidenceResult {
+  /** Opaque public id of the durable DOCUMENT_EVIDENCE access request opened for review. */
+  publicId?: string;
+  requestType?: string;
+  status?: string;
+  nextActor?: string;
+  nextStep?: string;
+}
+
+/**
+ * Upload a supporting document as provider-claim evidence. The document is stored in the document
+ * service and a durable DOCUMENT_EVIDENCE access request is opened for registry review.
+ */
+export function useUploadProviderDocument() {
+  const qc = useQueryClient();
+  return useMutation<ProviderDocumentEvidenceResult, ProviderClaimApiError, File>({
+    mutationFn: async (file: File) => {
+      const form = new FormData();
+      form.append("file", file);
+      const env = await apiClient.postForm<Envelope<ProviderDocumentEvidenceResult>>(
+        `${BASE}/evidence/document`,
+        form,
+      );
+      return env.data;
+    },
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["provider-claim"] });
+    },
   });
 }
 
@@ -145,7 +177,7 @@ export function providerClaimErrorMessage(err: unknown, fallback: string): strin
   return e?.error?.message || fallback;
 }
 
-/** True when the BFF answered 501 FEATURE_PENDING (render "coming soon", never fake success). */
+/** True when the BFF answered 501 FEATURE_PENDING for an optional sub-capability (never fake success). */
 export function isFeaturePending(err: unknown): boolean {
   const e = err as ProviderClaimApiError | undefined;
   return e?.status === 501 || e?.error?.code === "FEATURE_PENDING";
