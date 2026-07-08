@@ -88,6 +88,21 @@
   --shadow-floating: 0 22px 60px rgba(20, 60, 40, 0.18);
   --shadow-nompilo: 0 20px 50px rgba(252, 227, 0, 0.2);
 
+  /* ── Future-Realism: neon accents — GLOW/ACCENT ONLY (never text or clinical semantics) ── */
+  --neon-teal: #23e6a0;
+  --neon-gold: #ffe94d;
+  --glow-teal: 0 0 24px rgba(35, 230, 160, 0.45);
+  --glow-gold: 0 0 22px rgba(255, 233, 77, 0.4);
+  --glow-danger: 0 0 20px rgba(239, 51, 64, 0.45); /* reserved for emergency/SOS */
+
+  /* ── Glassmorphism (light defaults; .dark overrides fill/fallback/border) ──
+     Text on glass must pass AA against the SOLID fallback, not the blurred image. */
+  --glass-blur-soft: 12px;
+  --glass-blur-strong: 25px;
+  --glass-border: rgba(35, 31, 32, 0.12);   /* light: subtle dark light-catch edge */
+  --glass-fill: rgba(255, 255, 255, 0.62);
+  --glass-fallback: #f4f7f5;                 /* solid surface when blur is disabled */
+
   /* Legacy shared-ui aliases (backward compat) */
   --color-brand-primary: var(--impilo-green);
   --color-brand-accent-yellow: var(--impilo-yellow);
@@ -102,4 +117,57 @@
   --color-neutral-100: var(--surface-soft);
   --color-neutral-500: var(--text-muted);
   --color-neutral-900: var(--impilo-charcoal);
+}
+
+/* =========================================================================
+   Dark theme — activated by a `.dark` class on the root (Tailwind darkMode:'class').
+   Dark-first per the design brief; a high-contrast light theme is the :root default.
+   Only surface/text/border/primary + glass flip; brand hues and clinical semantics
+   are preserved (lifted where needed to keep AA contrast on dark surfaces).
+   ========================================================================= */
+.dark {
+  /* Surfaces — deep teal-black gradient base */
+  --background: #0c110f;
+  --background-deep: #06100c;
+  --surface: #131b17;
+  --surface-soft: #1a241e;
+  --surface-warm: #201f17;
+
+  /* Primary / action — lifted teal for AA on dark surfaces */
+  --primary: #23c26a;
+  --primary-hover: #34d67c;
+  --primary-soft: #123a24;
+  --primary-muted: #1c4a30;
+  --on-green: #04120a;
+
+  /* Borders */
+  --border: #24312b;
+  --border-soft: #1f2a24;
+  --border-strong: #33463c;
+
+  /* Text */
+  --text-primary: #eef4f0;
+  --text-secondary: #a6b8ae;
+  --text-muted: #7d918a;
+
+  /* Semantic status — lifted for dark; gold stays (dark text on it) */
+  --success: #23c26a;
+  --success-soft: #123a24;
+  --info: #23c26a;
+  --info-soft: #123a24;
+  --danger: #ff5a63;
+  --danger-soft: #3a1418;
+  --on-red: #170406;
+  --warning: #fce300;
+  --warning-soft: #2e2a08;
+  --on-yellow: #2a2000;
+
+  /* Glass — white light-catch edge + darkened translucent fill/fallback */
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-fill: rgba(20, 28, 24, 0.55);
+  --glass-fallback: #141c18;
+
+  /* Deepen elevation on dark */
+  --shadow-card: 0 10px 28px rgba(0, 0, 0, 0.45);
+  --shadow-floating: 0 22px 60px rgba(0, 0, 0, 0.55);
 }

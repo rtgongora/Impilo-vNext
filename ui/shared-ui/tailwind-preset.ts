@@ -6,9 +6,21 @@ import type { Config } from "tailwindcss";
  * and import shared-ui/tokens.css in their global stylesheet.
  */
 const impiloPreset: Partial<Config> = {
+  // Dark-first theming: consumers toggle a `.dark` class on <html> (see tokens.css .dark block).
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
+        // Future-Realism accents — glow/accent utilities only (never body text / clinical semantics).
+        neon: {
+          teal: "var(--neon-teal)",
+          gold: "var(--neon-gold)",
+        },
+        glass: {
+          fill: "var(--glass-fill)",
+          border: "var(--glass-border)",
+          fallback: "var(--glass-fallback)",
+        },
         impilo: {
           green: "var(--impilo-green)",
           greenDark: "var(--impilo-green-dark)",
@@ -105,6 +117,13 @@ const impiloPreset: Partial<Config> = {
         "impilo-card": "var(--shadow-card)",
         "impilo-floating": "var(--shadow-floating)",
         "impilo-nompilo": "var(--shadow-nompilo)",
+        "glow-teal": "var(--glow-teal)",
+        "glow-gold": "var(--glow-gold)",
+        "glow-danger": "var(--glow-danger)",
+      },
+      backdropBlur: {
+        glass: "var(--glass-blur-soft)",
+        "glass-strong": "var(--glass-blur-strong)",
       },
     },
   },
