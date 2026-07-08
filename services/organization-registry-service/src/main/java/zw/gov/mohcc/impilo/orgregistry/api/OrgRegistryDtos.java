@@ -70,6 +70,25 @@ public final class OrgRegistryDtos {
     public record TransitionClaimRequest(String status, String adjudicationRef) {
     }
 
+    /**
+     * Issue an organisation-invitation. {@code inviteeIdentifier} is an email or Health ID
+     * ({@code inviteeIdentifierType} = EMAIL | HEALTH_ID); {@code role} is the role being
+     * offered; {@code facilityUuid} scopes a facility-administrator invitation;
+     * {@code expiresInHours} bounds acceptance (defaulted server-side when null).
+     */
+    public record CreateInvitationRequest(
+            UUID invitedByRepId,
+            String inviteeIdentifier,
+            String inviteeIdentifierType,
+            String role,
+            UUID facilityUuid,
+            Integer expiresInHours) {
+    }
+
+    /** Accept a pending invitation by its single-use token. */
+    public record AcceptInvitationRequest(String token, String acceptedByHealthId) {
+    }
+
     /** wgv_organisation-shaped payload for the one-way mirror endpoint. */
     public record WgvOrganisationPayload(
             UUID id,
