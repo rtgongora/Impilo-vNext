@@ -3,7 +3,16 @@ import React from "react";
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "ghost";
   size?: "sm" | "md" | "lg";
+  /** Optional neon glow accent (enhancement). `danger` reserved for emergency/SOS. */
+  glow?: "none" | "teal" | "gold" | "danger";
 }
+
+const glowStyles: Record<string, string> = {
+  none: "",
+  teal: "shadow-glow-teal",
+  gold: "shadow-glow-gold",
+  danger: "shadow-glow-danger",
+};
 
 const variantStyles: Record<string, string> = {
   primary:
@@ -25,6 +34,7 @@ const sizeStyles: Record<string, string> = {
 export function Button({
   variant = "primary",
   size = "md",
+  glow = "none",
   className = "",
   children,
   ...props
@@ -33,7 +43,7 @@ export function Button({
     <button
       className={`inline-flex items-center justify-center rounded-full font-semibold transition-colors
         focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-        ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+        ${variantStyles[variant]} ${sizeStyles[size]} ${glowStyles[glow]} ${className}`}
       {...props}
     >
       {children}

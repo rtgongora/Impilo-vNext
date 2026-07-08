@@ -23,6 +23,12 @@ export type { ButtonProps } from "./components/Button";
 export { Card, CardHeader, CardTitle } from "./components/Card";
 export type { CardProps } from "./components/Card";
 
+export { GlassSurface } from "./components/GlassSurface";
+export type { GlassSurfaceProps } from "./components/GlassSurface";
+
+export { TierProvider, useTier, resolveTier } from "./hooks/useTier";
+export type { Tier } from "./hooks/useTier";
+
 export { Badge } from "./components/Badge";
 export type { BadgeProps } from "./components/Badge";
 
