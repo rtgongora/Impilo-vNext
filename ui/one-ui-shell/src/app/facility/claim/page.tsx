@@ -9,8 +9,8 @@ import { FacilityClaimJourney } from "@/components/facility/FacilityClaimJourney
  * Facility administrator claim journey (IATG Wave 2, WS-E).
  *
  * Route: /facility/claim?facilityUuid=<uuid> — reached from a facility detail page via the
- * "Claim administration" link. Fully backed by the BFF /api/v1/facility-claim endpoints;
- * feature-pending lanes (document / org invitation) render honestly as "coming soon".
+ * "Claim administration" link. Fully backed by the BFF /api/v1/facility-claim endpoints across all
+ * three lanes: appointment-letter reference, supporting-document upload, and organisation-invitation.
  */
 export default function FacilityClaimPage() {
   const searchParams = useSearchParams();

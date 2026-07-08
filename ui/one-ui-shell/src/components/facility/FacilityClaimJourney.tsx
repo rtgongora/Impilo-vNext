@@ -12,14 +12,15 @@ import {
   Mail,
   ShieldCheck,
   Stethoscope,
+  Upload,
 } from "lucide-react";
 import {
   facilityClaimErrorMessage,
-  isFeaturePending,
   useAcceptOrgInvitation,
   useAppointFacilityClaim,
   useFacilityClaimEligibility,
   usePreviewFacilityClaim,
+  useUploadFacilityEvidence,
 } from "@/hooks/queries/useFacilityClaim";
 
 type ClaimPath = "letter" | "document" | "org";
@@ -31,8 +32,8 @@ type ClaimPath = "letter" | "document" | "org";
  * document / org invitation) → masked preview + consent → appoint → pending-approval
  * confirmation.
  *
- * Doctrine: honest states only — the DOCUMENT and ORG_INVITATION lanes are not built yet and
- * render as "coming soon" (never fake success, matching the BFF's honest 501 FEATURE_PENDING).
+ * Doctrine: honest states only — every lane binds to real BFF endpoints (appointment-letter,
+ * document upload, and organisation-invitation accept); downstream verdicts surface verbatim.
  * Downstream 409 verdicts are shown verbatim, and facility codes / evidence refs are masked
  * end-to-end. The subject is the facility UUID; the claimant is always the signed-in Health ID.
  */
@@ -131,15 +132,14 @@ export function FacilityClaimJourney({ facilityUuid }: { facilityUuid?: string }
             <ArrowLeft className="h-3.5 w-3.5" /> Choose a different route
           </button>
           {path === "letter" ? <AppointmentLetterFlow facilityUuid={facilityUuid} /> : null}
-          {path === "document" ? <ComingSoonNote /> : null}
+          {path === "document" ? <DocumentEvidenceFlow facilityUuid={facilityUuid} /> : null}
           {path === "org" ? <OrgInvitationFlow facilityUuid={facilityUuid} /> : null}
         </div>
       ) : null}
 
       <footer className="border-t border-border pt-3 text-xs text-muted-foreground">
-        Document-based verification and organisation invitations are not available yet — they arrive
-        with later waves and will appear here when real. Nompilo can guide you, but approval
-        decisions always rest with the registry.
+        Nompilo can guide you through claiming administration of a facility, but approval decisions
+        always rest with the registry.
       </footer>
     </section>
   );
@@ -190,7 +190,7 @@ const PATHS: { id: ClaimPath; icon: typeof FileText; title: string; body: string
     id: "document",
     icon: Stethoscope,
     title: "Upload a supporting document",
-    body: "Document-based facility verification is not available yet — this lane will appear when it is live.",
+    body: "Upload an appointment letter or supporting document, then request administrator access with it attached.",
   },
   {
     id: "org",
@@ -230,23 +230,6 @@ function ErrorNote({ err, fallback }: { err: unknown; fallback: string }) {
     >
       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
       <p>{facilityClaimErrorMessage(err, fallback)}</p>
-    </div>
-  );
-}
-
-function ComingSoonNote({ err }: { err?: unknown }) {
-  return (
-    <div
-      className="flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground"
-      data-testid="facility-claim-coming-soon"
-    >
-      <Clock className="mt-0.5 h-4 w-4 shrink-0" />
-      <p>
-        {facilityClaimErrorMessage(
-          err,
-          "This route is not available yet. It will appear here once the supporting lane is live — no shortcut is faked in the meantime.",
-        )}
-      </p>
     </div>
   );
 }
@@ -388,6 +371,143 @@ function AppointmentLetterFlow({ facilityUuid }: { facilityUuid: string }) {
   );
 }
 
+// ── Document evidence flow ───────────────────────────────────────────────────
+
+function DocumentEvidenceFlow({ facilityUuid }: { facilityUuid: string }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [consent, setConsent] = useState(false);
+  const upload = useUploadFacilityEvidence();
+  const preview = usePreviewFacilityClaim();
+  const appoint = useAppointFacilityClaim();
+  const evidenceRef = upload.data?.evidenceRef;
+
+  if (appoint.data) {
+    return (
+      <div
+        className="rounded-lg border border-primary/25 bg-primary-soft px-4 py-3 text-sm"
+        data-testid="facility-claim-document-confirmation"
+      >
+        <p className="flex items-center gap-2 font-medium text-foreground">
+          <Clock className="h-4 w-4 text-primary" /> Administrator request recorded — pending approval
+        </p>
+        <p className="mt-1 text-muted-foreground">
+          {appoint.data.note ??
+            "Your facility administrator request was recorded with your supporting document and is pending approval."}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className="space-y-3"
+      data-testid="facility-claim-document-flow"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!evidenceRef) {
+          if (file) upload.mutate(file);
+        } else if (!preview.data) {
+          preview.mutate(facilityUuid);
+        } else if (consent) {
+          appoint.mutate({ facilityUuid, consent: true, evidenceRef });
+        }
+      }}
+    >
+      {upload.isError ? (
+        <ErrorNote err={upload.error} fallback="The document could not be uploaded. Try a smaller PDF or image." />
+      ) : null}
+      {preview.isError ? (
+        <ErrorNote err={preview.error} fallback="That facility could not be previewed." />
+      ) : null}
+      {appoint.isError ? (
+        <ErrorNote
+          err={appoint.error}
+          fallback="The claim could not be submitted. You may already administer this facility."
+        />
+      ) : null}
+
+      {!evidenceRef ? (
+        <div>
+          <label className="block text-xs font-medium text-foreground" htmlFor="facility-document-input">
+            Supporting document (PDF or image, up to 10 MB)
+          </label>
+          <input
+            id="facility-document-input"
+            type="file"
+            accept=".pdf,image/*"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className={inputClass}
+          />
+        </div>
+      ) : (
+        <div
+          className="rounded-lg border border-primary/25 bg-primary-soft px-3 py-2 text-xs text-muted-foreground"
+          data-testid="facility-claim-document-uploaded"
+        >
+          Uploaded <span className="font-medium text-foreground">{upload.data?.filename ?? "document"}</span>
+          {upload.data?.scanStatus ? ` — scan: ${upload.data.scanStatus}` : ""}. Preview the facility, then
+          submit your request with this document attached.
+        </div>
+      )}
+
+      {preview.data ? (
+        <div
+          className="rounded-lg border border-primary/25 bg-primary-soft px-4 py-3 text-sm"
+          data-testid="facility-claim-document-preview"
+        >
+          <p className="font-medium text-foreground">You are requesting access to:</p>
+          <p className="mt-1 text-muted-foreground">
+            <span className="font-medium text-foreground">{preview.data.name}</span> —{" "}
+            <span className="font-mono">{preview.data.facilityCode}</span>
+          </p>
+          <label className="mt-2 flex items-start gap-2 text-xs text-foreground">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-0.5"
+            />
+            I confirm I am appointed to administer this facility and consent to recording this request,
+            with my uploaded document as evidence, against my Health ID.
+          </label>
+        </div>
+      ) : null}
+
+      <button
+        type="submit"
+        className={primaryButtonClass}
+        disabled={
+          upload.isPending ||
+          preview.isPending ||
+          appoint.isPending ||
+          (!evidenceRef && !file) ||
+          (!!preview.data && !consent)
+        }
+      >
+        {(upload.isPending || preview.isPending || appoint.isPending) && (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        )}
+        {!evidenceRef ? (
+          <>
+            <Upload className="h-3.5 w-3.5" /> Upload document
+          </>
+        ) : !preview.data ? (
+          "Preview this facility"
+        ) : (
+          "Request administrator access"
+        )}
+      </button>
+
+      <p className="border-t border-border pt-2 text-xs text-muted-foreground">
+        Need to return to the facility?{" "}
+        <Link href={`/facility/${facilityUuid}`} className="font-medium text-primary underline">
+          Back to facility
+        </Link>
+      </p>
+    </form>
+  );
+}
+
 // ── Organisation invitation flow ─────────────────────────────────────────────
 
 function OrgInvitationFlow({ facilityUuid }: { facilityUuid: string }) {
@@ -469,6 +589,3 @@ function OrgInvitationFlow({ facilityUuid }: { facilityUuid: string }) {
     </form>
   );
 }
-
-/** Re-exported so tests can assert the coming-soon lane structurally. */
-export { isFeaturePending };

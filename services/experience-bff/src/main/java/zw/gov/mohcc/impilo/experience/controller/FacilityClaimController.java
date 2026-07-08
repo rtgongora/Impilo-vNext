@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,12 +12,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.multipart.MultipartFile;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrgRegistryFacilityAdminClient;
 import zw.gov.mohcc.impilo.experience.client.TusoFacilityClaimClient;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +45,9 @@ import java.util.Map;
  * </ul>
  *
  * <p><b>Masked at the edge</b>: facility codes and any echoed Health ID return masked to the shell;
- * raw evidence refs are masked before leaving the BFF. <b>Honest pending states</b>: document-based
- * evidence and org-invitation onboarding return 501 FEATURE_PENDING rather than fake success.</p>
+ * raw evidence refs are masked before leaving the BFF. Supporting-document evidence is stored in the
+ * document service and referenced by opaque object id; organisation-invitation onboarding accepts an
+ * invitation token and establishes the affiliation in org-registry.</p>
  */
 @RestController
 @RequestMapping("/api/v1/facility-claim")
@@ -52,13 +58,18 @@ public class FacilityClaimController {
     static final String EVIDENCE_APPOINTMENT_LETTER = "APPOINTMENT_LETTER";
     static final String EVIDENCE_DOCUMENT = "DOCUMENT";
 
+    private static final long MAX_EVIDENCE_BYTES = 10L * 1024 * 1024; // 10 MB
+
     private final TusoFacilityClaimClient tusoClient;
     private final OrgRegistryFacilityAdminClient orgRegistryClient;
+    private final DocumentServiceClient documentServiceClient;
 
     public FacilityClaimController(TusoFacilityClaimClient tusoClient,
-                                   OrgRegistryFacilityAdminClient orgRegistryClient) {
+                                   OrgRegistryFacilityAdminClient orgRegistryClient,
+                                   DocumentServiceClient documentServiceClient) {
         this.tusoClient = tusoClient;
         this.orgRegistryClient = orgRegistryClient;
+        this.documentServiceClient = documentServiceClient;
     }
 
     // ── Eligibility ───────────────────────────────────────────────────────────
@@ -271,30 +282,52 @@ public class FacilityClaimController {
         }
     }
 
-    // ── Evidence (honest pending) ─────────────────────────────────────────────
+    // ── Evidence (document upload) ────────────────────────────────────────────
 
     /**
-     * Submit claim evidence. Document-based verification is not built yet and returns an honest
-     * 501 FEATURE_PENDING rather than fake success.
+     * Upload a supporting document as facility-claim evidence. The file is stored in the document
+     * service (real object store + scan pipeline); the returned {@code evidenceRef} (object id) is
+     * then supplied on the {@code /appoint} call as the claim's evidence. The document owner is the
+     * session Health ID. Downstream document-service verdicts propagate honestly.
      */
-    @PostMapping("/evidence")
+    @PostMapping(value = "/evidence", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> evidence(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader("X-Actor-ID") String actorId,
-            @RequestBody Map<String, Object> body) {
+            @RequestPart("file") MultipartFile file) {
 
-        String type = str(body.get("type"));
-        if (EVIDENCE_DOCUMENT.equals(type)) {
-            return error(HttpStatus.NOT_IMPLEMENTED, "FEATURE_PENDING",
-                    "Document-based facility verification is not available yet. Use an appointment "
-                            + "letter reference on the claim, or your organisation's registry desk.",
-                    requestId, correlationId);
+        if (file == null || file.isEmpty()) {
+            return error(HttpStatus.BAD_REQUEST, "EVIDENCE_FILE_REQUIRED",
+                    "A document file is required for document-based evidence.", requestId, correlationId);
         }
-        return error(HttpStatus.BAD_REQUEST, "EVIDENCE_TYPE_UNSUPPORTED",
-                "Evidence type must be APPOINTMENT_LETTER (supplied on the claim) or DOCUMENT.",
-                requestId, correlationId);
+        if (file.getSize() > MAX_EVIDENCE_BYTES) {
+            return error(HttpStatus.PAYLOAD_TOO_LARGE, "EVIDENCE_FILE_TOO_LARGE",
+                    "The supporting document must be 10 MB or smaller.", requestId, correlationId);
+        }
+        String mimeType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+        try {
+            JsonNode stored = documentServiceClient.uploadObject(
+                    file.getBytes(),
+                    file.getOriginalFilename(),
+                    mimeType,
+                    Map.of("purpose", "facility-claim-evidence", "uploadedBy", actorId));
+            Map<String, Object> data = new LinkedHashMap<>();
+            // The object id is an opaque handle used as the claim evidence reference on /appoint.
+            data.put("evidenceRef", text(stored, "objectId"));
+            data.put("filename", text(stored, "originalFilename"));
+            data.put("mimeType", text(stored, "mimeType"));
+            data.put("scanStatus", text(stored, "scanStatus"));
+            data.put("note", "Your document was uploaded. Continue to preview the facility and submit "
+                    + "your administrator request with this evidence attached.");
+            return ResponseEntity.status(HttpStatus.CREATED).body(envelope(data, requestId, correlationId));
+        } catch (IOException e) {
+            return error(HttpStatus.BAD_REQUEST, "EVIDENCE_FILE_UNREADABLE",
+                    "The supporting document could not be read.", requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return propagate(e, requestId, correlationId);
+        }
     }
 
     // ── Org invitation (Channel C onboarding) ─────────────────────────────────

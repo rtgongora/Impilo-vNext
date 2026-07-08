@@ -6,6 +6,7 @@ const mockUseEligibility = vi.fn();
 const mockUsePreview = vi.fn();
 const mockUseAppoint = vi.fn();
 const mockUseAcceptOrgInvitation = vi.fn();
+const mockUseUploadEvidence = vi.fn();
 
 vi.mock("@/hooks/queries/useFacilityClaim", async () => {
   const actual = await vi.importActual<typeof import("@/hooks/queries/useFacilityClaim")>(
@@ -19,6 +20,7 @@ vi.mock("@/hooks/queries/useFacilityClaim", async () => {
     usePreviewFacilityClaim: (...args: unknown[]) => mockUsePreview(...args),
     useAppointFacilityClaim: (...args: unknown[]) => mockUseAppoint(...args),
     useAcceptOrgInvitation: (...args: unknown[]) => mockUseAcceptOrgInvitation(...args),
+    useUploadFacilityEvidence: (...args: unknown[]) => mockUseUploadEvidence(...args),
   };
 });
 
@@ -46,6 +48,7 @@ describe("FacilityClaimJourney", () => {
     mockUsePreview.mockReturnValue(idleMutation());
     mockUseAppoint.mockReturnValue(idleMutation());
     mockUseAcceptOrgInvitation.mockReturnValue(idleMutation());
+    mockUseUploadEvidence.mockReturnValue(idleMutation());
   });
 
   it("requires a facility uuid (no facility selected)", () => {
@@ -79,11 +82,26 @@ describe("FacilityClaimJourney", () => {
     expect(screen.queryByTestId("facility-claim-path-chooser")).not.toBeInTheDocument();
   });
 
-  it("document lane renders honest coming-soon (never fake success)", () => {
+  it("document lane: offers a real upload form (no coming-soon)", () => {
     render(<FacilityClaimJourney facilityUuid={FAC} />);
     fireEvent.click(screen.getByText(/Upload a supporting document/));
-    expect(screen.getByTestId("facility-claim-coming-soon")).toBeInTheDocument();
-    expect(screen.queryByTestId("facility-claim-letter-flow")).not.toBeInTheDocument();
+    expect(screen.getByTestId("facility-claim-document-flow")).toBeInTheDocument();
+    expect(screen.queryByTestId("facility-claim-coming-soon")).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Supporting document/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Upload document/ })).toBeInTheDocument();
+  });
+
+  it("document lane: after upload, shows the uploaded document and offers preview", () => {
+    mockUseUploadEvidence.mockReturnValue(
+      idleMutation({
+        data: { evidenceRef: "obj-123", filename: "letter.pdf", scanStatus: "CLEAN" },
+      }),
+    );
+    render(<FacilityClaimJourney facilityUuid={FAC} />);
+    fireEvent.click(screen.getByText(/Upload a supporting document/));
+    expect(screen.getByTestId("facility-claim-document-uploaded")).toBeInTheDocument();
+    expect(screen.getByText(/letter\.pdf/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Preview this facility/ })).toBeInTheDocument();
   });
 
   it("org-invitation lane: accepts an invitation token behind consent", () => {

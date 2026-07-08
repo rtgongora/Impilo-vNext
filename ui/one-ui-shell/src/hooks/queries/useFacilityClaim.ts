@@ -5,9 +5,9 @@
  * the signed-in person's Health ID (X-Actor-ID) — the subject key is the canonical facility UUID,
  * NOT a Health ID. Responses use the BFF `{ data, meta }` envelope; hooks unwrap `data`.
  *
- * Doctrine: masked at the edge (facility codes / evidence refs return masked), and honest pending
- * states — 501 FEATURE_PENDING errors are surfaced as-is (DOCUMENT / ORG_INVITATION lanes) so the
- * journey can render "coming soon", never fake success.
+ * Doctrine: masked at the edge (facility codes / evidence refs return masked). All three lanes are
+ * live — appointment-letter, supporting-document upload, and organisation-invitation accept — and
+ * any downstream verdict is surfaced verbatim, never faked.
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -74,6 +74,15 @@ export interface FacilityAppointInput {
 export interface FacilityApproveInput {
   appointmentId: string;
   organizationId?: string;
+}
+
+export interface FacilityEvidenceUploadResult {
+  /** Opaque document object id, supplied as the claim evidence reference on appoint. */
+  evidenceRef?: string;
+  filename?: string;
+  mimeType?: string;
+  scanStatus?: string;
+  note?: string;
 }
 
 export interface OrgInvitationAcceptResult {
@@ -148,6 +157,21 @@ export function useApproveFacilityAppointment() {
 }
 
 /**
+ * Upload a supporting document as facility-claim evidence. Returns an opaque evidence reference
+ * (document object id) to attach to the appoint call. The document is stored in the document service.
+ */
+export function useUploadFacilityEvidence() {
+  return useMutation<FacilityEvidenceUploadResult, FacilityClaimApiError, File>({
+    mutationFn: async (file: File) => {
+      const form = new FormData();
+      form.append("file", file);
+      const env = await apiClient.postForm<Envelope<FacilityEvidenceUploadResult>>(`${BASE}/evidence`, form);
+      return env.data;
+    },
+  });
+}
+
+/**
  * Accept an organisation invitation to administer a facility by its single-use token.
  * The accepting person is always the session Health ID (set server-side, never from the client).
  */
@@ -168,7 +192,7 @@ export function facilityClaimErrorMessage(err: unknown, fallback: string): strin
   return e?.error?.message || fallback;
 }
 
-/** True when the BFF answered 501 FEATURE_PENDING (render "coming soon", never fake success). */
+/** True when the BFF answered 501 FEATURE_PENDING for an optional sub-capability (never fake success). */
 export function isFeaturePending(err: unknown): boolean {
   const e = err as FacilityClaimApiError | undefined;
   return e?.status === 501 || e?.error?.code === "FEATURE_PENDING";
