@@ -25,6 +25,7 @@ import { useFacilities } from "@/hooks/queries/useFacilities";
 import { useRevenueSummary } from "@/hooks/queries/useFinancialReports";
 import { extractCount, useMushexPlatformRemittanceTransfers } from "@/hooks/queries/useMushexPlatformAdmin";
 import { countEnvelopeList } from "@/lib/apiEnvelope";
+import { GlassSurface } from "shared-ui";
 
 type GeoLevel = "national" | "province" | "district" | "facility";
 
@@ -40,26 +41,43 @@ type TileProps = {
 };
 
 function MetricTile({ title, value, hint, icon: Icon, tone = "slate", loading, error, href }: TileProps) {
-  const border =
+  // Glass command-centre tile (Future-Realism §8 "Floating Analytics Command Center"): a frosted
+  // GlassSurface with a tone-coloured LEFT ACCENT + icon. Ops/clinical severity (stockout, near-
+  // expiry, cold-chain) stays a full-contrast signal and is never washed out by the gloss (§1
+  // "Honest", §9 accessibility). GlassSurface degrades to a solid fallback at the baseline tier.
+  const accent =
     tone === "amber"
-      ? "border-warning/35 bg-warning-soft"
+      ? "border-l-warning"
       : tone === "rose"
-        ? "border-danger/28 bg-danger-soft"
+        ? "border-l-danger"
         : tone === "sky"
-          ? "border-sky-200 bg-sky-50"
+          ? "border-l-sky-400"
           : tone === "violet"
-            ? "border-violet-200 bg-violet-50"
-            : "border-border bg-card";
+            ? "border-l-violet-400"
+            : "border-l-border";
+  const iconTone =
+    tone === "amber"
+      ? "text-warning"
+      : tone === "rose"
+        ? "text-danger"
+        : tone === "sky"
+          ? "text-sky-500"
+          : tone === "violet"
+            ? "text-violet-500"
+            : "text-muted-foreground";
 
   const body = (
-    <div className={`rounded-2xl border p-4 shadow-sm ${border} ${href ? "transition hover:shadow-md" : ""}`}>
+    <GlassSurface
+      blur="soft"
+      className={`border-l-4 ${accent} p-4 ${href ? "transition hover:shadow-glow-teal" : ""}`}
+    >
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        <Icon className="h-4 w-4" aria-hidden />
+        <Icon className={`h-4 w-4 ${iconTone}`} aria-hidden />
         {title}
       </div>
       <div className="mt-2 text-3xl font-semibold text-foreground">{loading ? "…" : error ? "—" : value}</div>
       {hint ? <p className="mt-1 text-sm text-muted-foreground">{hint}</p> : null}
-    </div>
+    </GlassSurface>
   );
 
   return href ? <Link href={href}>{body}</Link> : body;

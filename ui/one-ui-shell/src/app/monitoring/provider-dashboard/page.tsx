@@ -7,6 +7,7 @@
  */
 
 import { LayoutDashboard, Search, Filter, Users, AlertTriangle, Activity } from "lucide-react";
+import { GlassSurface } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
@@ -27,7 +28,10 @@ export default function ProviderDashboardPage() {
               { label: "Readings Today", value: "0", Icon: Activity, color: "bg-green-50 text-green-600" },
               { label: "Pending Review", value: "0", Icon: Filter, color: "bg-warning-soft text-amber-600" },
             ].map(({ label, value, Icon, color }) => (
-              <div key={label} className="rounded-lg border border-border bg-card p-4">
+              // Glass summary tile (Future-Realism §8 provider surfaces). The tone-coloured icon chip
+              // carries the severity signal at full contrast; the value stays text-foreground. Glass
+              // degrades to a solid fallback at the baseline tier via TierProvider.
+              <GlassSurface key={label} blur="soft" className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-muted-foreground">{label}</span>
                   <div className={`rounded-lg p-1.5 ${color.split(" ")[0]}`}>
@@ -35,7 +39,7 @@ export default function ProviderDashboardPage() {
                   </div>
                 </div>
                 <p className="text-2xl font-bold text-foreground">{value}</p>
-              </div>
+              </GlassSurface>
             ))}
           </div>
 
