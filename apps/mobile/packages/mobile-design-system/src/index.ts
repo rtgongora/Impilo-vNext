@@ -18,6 +18,12 @@ export { borderRadius, shadows, neon, glass, tokens } from "./tokens/index";
 export { ThemeProvider, useTheme } from "./theme/ThemeProvider";
 export type { Theme, ThemeMode } from "./theme/ThemeProvider";
 
+// Future-Realism primitives
+export { GlassSurface, resolveGlassStyle } from "./components/GlassSurface";
+export type { GlassSurfaceProps, GlassTone, GlassGlow, GlassTier } from "./components/GlassSurface";
+export { useTier, resolveMobileTier } from "./hooks/useTier";
+export type { Tier, TierSignals } from "./hooks/useTier";
+
 // Core Components
 export { Button } from "./components/Button";
 export type { ButtonProps, ButtonVariant, ButtonSize } from "./components/Button";
