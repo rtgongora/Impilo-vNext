@@ -46,6 +46,8 @@ d = json.load(open(sys.argv[1]))
 jobs = d.get("jobs", [])
 if not jobs:
     print("ci_jobs_total: 0")
+    print("ci_failure_mode: infrastructure_no_steps")
+    print("ci_likely_cause: billing_lock_or_runner_unavailable")
     raise SystemExit(0)
 zero = [j for j in jobs if not j.get("steps")]
 skipped = [j for j in jobs if j.get("conclusion") == "skipped"]
