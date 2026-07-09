@@ -113,9 +113,14 @@ class EnforcementServiceTest {
     @DisplayName("tampered signature fails: INVALID_SIGNATURE")
     void tamperedSignature_failsClosed() {
         String token = enforcementService.issuePermitToken(request);
-        // Flip the last character of the signature segment.
-        char last = token.charAt(token.length() - 1);
-        String tampered = token.substring(0, token.length() - 1) + (last == 'A' ? 'B' : 'A');
+        int dot = token.lastIndexOf('.');
+        assertThat(dot).isGreaterThan(0);
+        String sig = token.substring(dot + 1);
+        assertThat(sig.length()).isGreaterThan(2);
+        // Flip a middle signature character so base64url still decodes but HMAC no longer matches.
+        int mid = sig.length() / 2;
+        char flipped = sig.charAt(mid) == 'A' ? 'B' : 'A';
+        String tampered = token.substring(0, dot + 1) + sig.substring(0, mid) + flipped + sig.substring(mid + 1);
         assertThat(enforcementService.verifyAndConsume(tampered, matchingContext()).reason())
                 .isEqualTo(Reason.INVALID_SIGNATURE);
     }
