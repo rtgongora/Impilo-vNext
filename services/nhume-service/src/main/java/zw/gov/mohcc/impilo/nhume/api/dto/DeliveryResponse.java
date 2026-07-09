@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.nhume.api.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -36,5 +37,8 @@ public record DeliveryResponse(
         @JsonProperty("updated_at") OffsetDateTime updatedAt,
         @JsonProperty("submitted_at") OffsetDateTime submittedAt,
         @JsonProperty("delivered_at") OffsetDateTime deliveredAt,
-        @JsonProperty("failed_at") OffsetDateTime failedAt
+        @JsonProperty("failed_at") OffsetDateTime failedAt,
+        @JsonProperty("clinical_context_ref") String clinicalContextRef,
+        @JsonProperty("programme_context_ref") String programmeContextRef,
+        @JsonProperty("metadata") Map<String, Object> metadata
 ) {}

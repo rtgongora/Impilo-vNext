@@ -120,7 +120,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | Port | Service / module |
 |------|------------------|
 | **8215** | `data-pipeline-service` |
-| **8210** | `data-ingestion-service` |
+| **8210** | `data-ingestion-service` — NOTE: `nhume-service` also defaults to `SERVER_PORT:8210`. In-cluster this is fine (separate pods; BFF reaches `nhume-service:8210`), but co-running both locally needs a distinct `SERVER_PORT` override for one of them. |
 | **8211** | `observability-service` |
 | 8220 | `data-governance-service` |
 | **8221** | `security-hardening-service` |

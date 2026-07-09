@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.nhume.api;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -61,6 +63,7 @@ import java.util.UUID;
 public class NhumeDeliveryController {
 
     private static final Logger log = LoggerFactory.getLogger(NhumeDeliveryController.class);
+    private static final ObjectMapper METADATA_MAPPER = new ObjectMapper();
 
     private final NhumeDeliveryService service;
     private final TrustLayerGuard trust;
@@ -351,7 +354,21 @@ public class NhumeDeliveryController {
                 d.isColdChainRequired(), d.isControlledItem(),
                 d.isChainOfCustodyRequired(), d.isDemo(),
                 d.getCreatedAt(), d.getUpdatedAt(), d.getSubmittedAt(),
-                d.getDeliveredAt(), d.getFailedAt());
+                d.getDeliveredAt(), d.getFailedAt(),
+                d.getClinicalContextRef(), d.getProgrammeContextRef(),
+                parseMetadata(d.getMetadataJson()));
+    }
+
+    /** Surface the persisted metadata JSON as a structured object so the UI can
+     *  read integration links (metadata.links) without exposing raw strings. */
+    private Map<String, Object> parseMetadata(String metadataJson) {
+        if (metadataJson == null || metadataJson.isBlank()) return Map.of();
+        try {
+            return METADATA_MAPPER.readValue(metadataJson, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            log.warn("Unparseable delivery metadata_json; returning empty: {}", e.getMessage());
+            return Map.of();
+        }
     }
 
     private Map<String, Object> toStatusEvent(DeliveryStatusEventEntity e) {
