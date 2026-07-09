@@ -105,6 +105,9 @@ function InboundRow({ delivery }: { delivery: DeliverySummary }) {
   async function confirm() {
     await proof.mutateAsync({
       method: "FACILITY_STAMP",
+      proof_stage: "DELIVERY",
+      mark_delivered: true, // receiving handover closes the mission
+      captured_by: receiver || undefined,
       recipient_name: receiver || undefined,
       notes: `Handover received at destination — ${label}`,
     });

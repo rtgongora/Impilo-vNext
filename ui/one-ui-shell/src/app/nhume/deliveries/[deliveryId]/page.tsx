@@ -19,7 +19,15 @@ import { ArrowLeft, Loader2, Send, CheckCircle2, XCircle, Truck, MapPin, ShieldC
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NhumeStatusChip, NhumePriorityChip } from "@/components/nhume/NhumeStatusChip";
+import { SignOffPanel } from "@/components/nhume/SignOffPanel";
 import { readDeliveryLinks } from "@/lib/nhume/cargo-profiles";
+
+/** Transport modes offered at assignment — bikes and bicycles included. */
+const ASSIGN_MODES = [
+  "MOTORCYCLE", "BICYCLE", "CAR", "VAN", "TRUCK", "AMBULANCE",
+  "WALKING_COURIER", "BOAT", "DRONE", "COLD_CHAIN_VEHICLE",
+  "SPECIMEN_TRANSPORT_VEHICLE", "BLOOD_TRANSPORT_VEHICLE", "PARTNER_COURIER",
+];
 import { DeliveryTrackMapPanel } from "@/components/maps/DeliveryTrackMapPanel";
 import {
   useNhumeDelivery,
@@ -37,7 +45,6 @@ import {
   useFailDelivery,
   useReturnDelivery,
   useRecordCustody,
-  useRecordProof,
 } from "@/hooks/useNhume";
 
 type TabId = "overview" | "timeline" | "custody" | "items";
@@ -173,12 +180,14 @@ function OverviewTab({ id, delivery }: { id: string; delivery: Record<string, un
   const start = useStartDeliveryTransit(id);
   const fail = useFailDelivery(id);
   const retDel = useReturnDelivery(id);
-  const proof = useRecordProof(id);
 
   const [reason, setReason] = useState("");
   const [courierId, setCourierId] = useState("");
   const [assetId, setAssetId] = useState("");
-  const [otp, setOtp] = useState("");
+  const [mode, setMode] = useState("MOTORCYCLE");
+
+  const canCollect = ["ASSIGNED", "ACCEPTED", "EN_ROUTE_TO_PICKUP", "AT_PICKUP"].includes(status);
+  const canDropOff = ["PICKED_UP", "IN_TRANSIT", "AT_DESTINATION", "DELIVERY_ATTEMPTED", "ARRIVED"].includes(status);
 
   return (
     <div className="space-y-4">
@@ -211,7 +220,7 @@ function OverviewTab({ id, delivery }: { id: string; delivery: Record<string, un
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-5">
-        <h3 className="font-semibold text-foreground mb-3">Assign courier / asset</h3>
+        <h3 className="font-semibold text-foreground mb-3">Assign courier / asset &amp; mode</h3>
         <div className="grid grid-cols-1 gap-3">
           <label className="block text-xs text-muted-foreground">
             Courier ID
@@ -221,30 +230,36 @@ function OverviewTab({ id, delivery }: { id: string; delivery: Record<string, un
             Asset ID (optional)
             <input value={assetId} onChange={(e) => setAssetId(e.target.value)} placeholder="UUID from /nhume/fleet" className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm" />
           </label>
+          <label className="block text-xs text-muted-foreground">
+            Mode of delivery
+            <select value={mode} onChange={(e) => setMode(e.target.value)} className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm">
+              {ASSIGN_MODES.map((m) => <option key={m} value={m}>{m.replace(/_/g, " ").toLowerCase()}</option>)}
+            </select>
+          </label>
           <Btn
             label="Assign"
             disabled={!courierId || assign.isPending}
-            onClick={() => assign.mutate({ courier_id: courierId, asset_id: assetId || undefined, reason: reason || undefined })}
+            onClick={() => assign.mutate({ courier_id: courierId, asset_id: assetId || undefined, mode, reason: reason || undefined })}
           />
         </div>
 
         <hr className="my-5 border-border" />
 
-        <h3 className="font-semibold text-foreground mb-3">Capture proof of delivery</h3>
-        <div className="grid grid-cols-1 gap-3">
-          <label className="block text-xs text-muted-foreground">
-            OTP / evidence reference
-            <input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="e.g. 1234 or photo:abc.jpg" className="mt-1 w-full rounded-xl border border-border px-3 py-2 text-sm" />
-          </label>
-          <Btn
-            label="Capture OTP proof & mark delivered"
-            disabled={!otp || proof.isPending}
-            onClick={() => proof.mutate({ method: "OTP", otp_code: otp })}
-            variant="success"
-          />
-        </div>
+        <h3 className="font-semibold text-foreground mb-1">Collection &amp; drop-off sign-off</h3>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Capture who released the cargo at collection and who received it at drop-off. The drop-off
+          sign-off marks the mission delivered. Both are recorded as auditable proof events.
+        </p>
+        {canCollect ? <SignOffPanel deliveryId={id} stage="PICKUP" /> : null}
+        {canCollect && canDropOff ? <div className="h-2" /> : null}
+        {canDropOff ? <SignOffPanel deliveryId={id} stage="DELIVERY" /> : null}
+        {!canCollect && !canDropOff ? (
+          <p className="rounded-lg border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
+            Sign-off becomes available once the mission is assigned and moving.
+          </p>
+        ) : null}
 
-        {(approve.isError || reject.isError || cancel.isError || assign.isError || pickup.isError || start.isError || proof.isError) && (
+        {(approve.isError || reject.isError || cancel.isError || assign.isError || pickup.isError || start.isError) && (
           <div className="mt-3 rounded-lg border border-danger/28 bg-danger-soft p-2 text-xs text-rose-800">
             One of the last actions was rejected — verify status, role and Trust-Layer headers.
           </div>
