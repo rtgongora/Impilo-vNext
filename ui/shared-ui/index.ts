@@ -26,6 +26,9 @@ export type { CardProps } from "./components/Card";
 export { GlassSurface } from "./components/GlassSurface";
 export type { GlassSurfaceProps } from "./components/GlassSurface";
 
+export { CinematicStage } from "./components/CinematicStage";
+export type { CinematicStageProps } from "./components/CinematicStage";
+
 export { TierProvider, useTier, resolveTier } from "./hooks/useTier";
 export type { Tier } from "./hooks/useTier";
 
