@@ -5,6 +5,7 @@ import NhumeNewDeliveryPage from "./page";
 const push = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
+  useSearchParams: () => new URLSearchParams(""),
 }));
 
 const mutateAsync = vi.fn().mockResolvedValue({ delivery_id: "d-1" });
