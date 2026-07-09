@@ -87,6 +87,37 @@ Seeded demo data (`NHM-2001…2006`) makes all of the above visible in a browser
   the new dispatcher functions (fleet/courier create, cargo-aware creation, inbound handover) are
   web-dispatcher surfaces by design.
 
+## 4b. Follow-on: delivery modes + full collection/drop-off sign-off (NF1–NF4)
+
+A second pass on the courier operational lifecycle found — and fixed — another **dead-by-construction**
+defect, plus delivered the requested sign-off flow and mode selection:
+
+- **Proof capture never worked on web *or* mobile.** Both clients POST `{method:…}` but the backend
+  `ProofRequest` binds `@NotBlank proof_method`, so `proof_method` was null and every proof capture
+  failed validation as a **silent 400** (mobile swallowed it via `catch → false`; web showed a
+  generic "action rejected"). Assignment had the same bug: clients send `{mode:…}` but the backend
+  binds `mode_category`, so the transport mode was silently dropped. Fixed backward-compatibly with
+  `@JsonAlias` (`method→proof_method`, `stage→proof_stage`, `evidence_ref→signature_uri`,
+  `mode→mode_category`) — both canonical and legacy names now bind. This un-breaks the existing web
+  and mobile proof buttons as well as the new flow.
+- **Two-ended sign-off** (`SignOffPanel`): **collection** (PICKUP-stage proof — who released at
+  origin) and **drop-off** (DELIVERY-stage proof — who received; marks the mission delivered), with
+  method = signature / OTP / facility-stamp / photo / provider-confirmation. Recorded as auditable
+  proof events. The delivery detail now shows the right sign-off for the current status; inbound
+  handover closes the mission with a DELIVERY sign-off.
+- **Delivery mode selection** at assignment — bike, bicycle, motorcycle, car, van, ambulance, boat,
+  drone, cold-chain / specimen / blood vehicles, partner courier — and the chosen mode now actually
+  reaches the backend.
+- Tests: `NhumePayloadBindingTest` 3/3 (alias binding), `SignOffPanel.test` 3/3 (collection records
+  without delivering vs drop-off marks delivered), plus a service-layer `collectionSignOff_…` test
+  proving a PICKUP proof does not close the mission. nhume-service **16/16**.
+
+Commits: `d22ae8361` (contract fix) · `c632ad137` (sign-off lifecycle + mode).
+
+**Remaining honest note:** mobile records proof now (no longer 400) and marks delivered via its
+separate `complete` action; a mobile UI that sets `mark_delivered`/`proof_stage` explicitly on the
+drop-off proof is a small follow-up.
+
 ## 5. Verification summary
 
 - UI: `tsc --noEmit` clean; route parity **697/697**; launcher dead-end gate PASS; Nhume vitest **13/13**.

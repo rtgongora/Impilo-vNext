@@ -228,6 +228,34 @@ class NhumeDeliveryServiceTest {
     }
 
     @Test
+    void collectionSignOff_recordsPickupProof_withoutMarkingDelivered() {
+        DeliveryRequestEntity d = service.createDelivery(tenantId, "national-spine", null, null,
+                baseRequestBuilder(true), actorCtx());
+        UUID id = d.getDeliveryId();
+        FleetAssetEntity asset = newAsset();
+        DriverCourierProfileEntity courier = newCourier();
+
+        service.approve(id, new StatusChangeRequest("ok", null), actorCtx());
+        service.assign(id, new AssignDeliveryRequest(courier.getCourierId(), asset.getAssetId(),
+                null, null, "BICYCLE", "MANUAL", "go"), actorCtx(), "k1");
+        service.accept(id, actorCtx());
+        service.startPickup(id, new StatusChangeRequest("rolling", null), actorCtx());
+        service.confirmPickup(id, new StatusChangeRequest("picked", null), actorCtx());
+        assertThat(store.get(id).getStatus()).isEqualTo(DeliveryStatus.PICKED_UP.name());
+
+        // Collection sign-off: PICKUP stage, mark_delivered=false.
+        DeliveryProofEntity proof = service.captureProof(id,
+                new ProofRequest("PICKUP", "RECIPIENT_SIGNATURE", "origin-clerk", null,
+                        "sig:collection", null, null, null, null, null, Map.of(), false),
+                actorCtx());
+
+        assertThat(proof.getProofStage()).isEqualTo("PICKUP");
+        // The collection sign-off must NOT close the mission.
+        assertThat(store.get(id).getStatus()).isEqualTo(DeliveryStatus.PICKED_UP.name());
+        assertThat(store.get(id).getDeliveredAt()).isNull();
+    }
+
+    @Test
     void invalidTransition_throws() {
         DeliveryRequestEntity d = service.createDelivery(tenantId, "national-spine", null, null,
                 baseRequest(), actorCtx());
