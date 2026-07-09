@@ -235,6 +235,12 @@ export interface TrackingUpdatePayload {
 
 export interface ProofPayload {
   method: string; // OTP, QR, SIGNATURE, FACILITY_STAMP, PHOTO, GEOFENCE, etc.
+  /** PICKUP = collection sign-off, DELIVERY = drop-off sign-off. Defaults DELIVERY server-side. */
+  proof_stage?: "PICKUP" | "DELIVERY";
+  /** True only for the drop-off sign-off — marks the mission delivered. */
+  mark_delivered?: boolean;
+  captured_by?: string;
+  signature_uri?: string;
   evidence_ref?: string;
   otp_code?: string;
   recipient_name?: string;
