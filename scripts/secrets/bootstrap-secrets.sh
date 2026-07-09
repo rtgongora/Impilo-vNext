@@ -59,6 +59,19 @@ set_if_absent keycloak-client-secret-ops-console "$(openssl rand -hex 24)"
 set_if_absent keycloak-client-secret-admin-cli "$(openssl rand -hex 24)"
 set_if_absent keycloak-backend-secret "$(openssl rand -hex 24)"
 
+# SMTP / SMS gateway credentials are OPERATOR-PROVIDED out-of-band — never
+# randomised (a random SMTP password is useless). Placeholders are seeded so
+# secretKeyRef-mounted pods schedule; delivery stays honest because
+# notification-service only activates real adapters when
+# NOTIFICATION_EMAIL_PROVIDER=smtp / NOTIFICATION_SMS_PROVIDER=http are set.
+# Provide real values via env on first run or `kubectl patch` later:
+#   SMTP_HOST=… SMTP_USERNAME=… SMTP_PASSWORD=… bash scripts/secrets/bootstrap-secrets.sh
+set_if_absent smtp-host "${SMTP_HOST:-placeholder-not-configured}"
+set_if_absent smtp-username "${SMTP_USERNAME:-placeholder-not-configured}"
+set_if_absent smtp-password "${SMTP_PASSWORD:-placeholder-not-configured}"
+set_if_absent sms-gateway-url "${SMS_GATEWAY_URL:-placeholder-not-configured}"
+set_if_absent sms-gateway-api-key "${SMS_GATEWAY_API_KEY:-placeholder-not-configured}"
+
 # livekit-api-secret: match the server key, don't randomise.
 lk_val="${LIVEKIT_API_SECRET:-$(kubectl get cm -n "$NS" livekit-config \
   -o jsonpath='{.data.livekit\.yaml}' 2>/dev/null | awk '/impilo-preview-key:/{print $2; exit}')}"

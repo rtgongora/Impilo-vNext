@@ -111,6 +111,12 @@ public class NotificationServiceClient {
         return extractData(response);
     }
 
+    public JsonNode channelStatus() {
+        String url = baseUrl + "/internal/v1/channels/status";
+        log.debug("Notification: channelStatus");
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     public JsonNode listTemplates() {
         String url = baseUrl + "/internal/v1/templates";
         log.debug("Notification: listTemplates");

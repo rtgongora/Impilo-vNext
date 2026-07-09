@@ -193,6 +193,25 @@ orthanc:
       cpu: 500m
       memory: 768Mi
 
+# Ndila Tier B — Martin PMTiles street basemap (self-hosted OSM-derived rasters).
+# Ndila proxies tiles via NDILA_OSM_TILE_BASE_URL=http://ndila-martin:3000/…
+# Populate PVC with scripts/operator/setup-ndila-street-stack.sh or pmtilesDownloadUrl.
+ndilaStreetStack:
+  enabled: true
+  storageSize: 2Gi
+  pmtilesDownloadUrl: ""
+  image:
+    repository: ghcr.io/maplibre/martin
+    tag: v0.15.0
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
 hapiFhir:
   enabled: true
   image:
@@ -291,6 +310,32 @@ fullBootServices:
       # Diagnostic rider for the silent import row-approve 403 (task #9):
       # surfaces the authorization decision path in pod logs. Preview-only.
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: "DEBUG"
+  notification-service:
+    env:
+      # Channel adapters stay log-mode until an operator provides real SMTP/SMS
+      # credentials (scripts/secrets/bootstrap-secrets.sh seeds placeholders so
+      # the secretKeyRef mounts schedule). Flip to smtp/http once real values
+      # are in impilo-app-secrets. GET /internal/v1/channels/status reports the
+      # live posture honestly — the admin panel shows stub-mode as NOT delivered.
+      NOTIFICATION_EMAIL_PROVIDER: log
+      NOTIFICATION_SMS_PROVIDER: log
+      NOTIFICATION_EMAIL_SMTP_FROM: noreply@impilo.mohcc.gov.zw
+    secretEnv:
+      NOTIFICATION_EMAIL_SMTP_HOST:
+        name: impilo-app-secrets
+        key: smtp-host
+      NOTIFICATION_EMAIL_SMTP_USERNAME:
+        name: impilo-app-secrets
+        key: smtp-username
+      NOTIFICATION_EMAIL_SMTP_PASSWORD:
+        name: impilo-app-secrets
+        key: smtp-password
+      NOTIFICATION_SMS_GATEWAY_URL:
+        name: impilo-app-secrets
+        key: sms-gateway-url
+      NOTIFICATION_SMS_GATEWAY_API_KEY:
+        name: impilo-app-secrets
+        key: sms-gateway-api-key
   # Kafka listener opt-ins — the estate default is auto-startup=false; these
   # services' event loops are journey-load-bearing (PACS study → OROS imaging
   # result; PCT encounter → COSTA draft bill; MusheX status → COSTA settlement;

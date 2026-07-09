@@ -156,6 +156,22 @@ public class NotificationController {
         }
     }
 
+    /** Channel-configuration honesty: which provider backs each channel and whether it really delivers. */
+    @GetMapping("/channels/status")
+    public ResponseEntity<Map<String, Object>> channelStatus(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.channelStatus();
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Notification channel-status failed: {}", e.getMessage());
+            return upstreamFailure("NOTIFICATIONS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
     @GetMapping("/preferences")
     public ResponseEntity<Map<String, Object>> getPreferences(
             @RequestParam(required = false) String patientId,
