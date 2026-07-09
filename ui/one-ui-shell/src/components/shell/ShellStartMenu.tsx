@@ -2,10 +2,10 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Pin, PinOff, X, ShoppingBag, AlertCircle } from "lucide-react";
+import { Pin, PinOff, X, ShoppingBag, AlertCircle, Zap } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useShellStore } from "@/hooks/useShellStore";
-import { listVisibleShellApps } from "@/lib/shell/app-registry";
+import { listVisibleShellApps, listQuickActions } from "@/lib/shell/app-registry";
 import type { AppDefinition, ShellAppCategory } from "@/lib/shell/types";
 import { ShellAppIcon } from "@/components/branding/ShellAppIcon";
 import { useHealthOsLauncher, type LauncherApp } from "@/hooks/queries/useHealthOsLauncher";
@@ -44,6 +44,7 @@ export function ShellStartMenu() {
   const recentItems = useShellStore((s) => s.recentItems);
 
   const apps = useMemo(() => listVisibleShellApps(hasRole), [hasRole]);
+  const quickActions = useMemo(() => listQuickActions(hasRole), [hasRole]);
 
   const byCategory = useMemo(() => {
     const map = new Map<ShellAppCategory, AppDefinition[]>();
@@ -86,6 +87,32 @@ export function ShellStartMenu() {
         </div>
 
         <div className="max-h-[calc(min(72vh,640px)-56px)] overflow-y-auto px-3 py-3">
+          {quickActions.length > 0 ? (
+            <section className="mb-4">
+              <h3 className="mb-2 flex items-center gap-1.5 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <Zap className="h-3 w-3" />
+                Quick actions
+              </h3>
+              <ul className="flex flex-wrap gap-1.5 px-1">
+                {quickActions.map((cmd) => (
+                  <li key={cmd.id}>
+                    <button
+                      type="button"
+                      title={cmd.description ?? cmd.label}
+                      className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground transition hover:border-primary hover:bg-primary-soft dark:border-border"
+                      onClick={() => {
+                        if (cmd.action.type === "navigate") router.push(cmd.action.href);
+                        setStartOpen(false);
+                      }}
+                    >
+                      {cmd.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           {recentItems.length > 0 ? (
             <section className="mb-4">
               <h3 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
