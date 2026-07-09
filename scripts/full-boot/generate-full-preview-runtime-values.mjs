@@ -84,13 +84,16 @@ function specialEnv(serviceId) {
     return { ORTHANC_BASE_URL: "http://orthanc:8042" };
   }
   if (serviceId === "rtc-gateway-service") {
-    // Chart-deployed LiveKit (templates/livekit.yaml). Client URL is the
-    // browser-facing ws endpoint on the public host (hostPort 7880); media
-    // needs 7881/tcp + 7882/udp open at the VM firewall.
+    // Chart-deployed LiveKit (templates/livekit.yaml). Browser signaling is
+    // wss via Traefik (deploy/tls/mohcc-gov/livekit-ingressroute.yaml routes
+    // /rtc on :443 -> livekit:7880) so it isn't mixed-content-blocked on the
+    // https UI. Media still needs 7881/tcp + 7882/udp reachable at the VM
+    // (off-LAN clients also need TURN / a public ICE candidate — see the
+    // livekit-config use_external_ip note).
     return {
       LIVEKIT_ENABLED: "true",
       LIVEKIT_URL: "http://livekit:7880",
-      LIVEKIT_CLIENT_URL: "ws://impilo.mohcc.gov.zw:7880",
+      LIVEKIT_CLIENT_URL: "wss://impilo.mohcc.gov.zw",
       LIVEKIT_API_KEY: "impilo-preview-key",
       LIVEKIT_API_SECRET: "impilo-preview-livekit-secret-change-me-0123456789",
     };

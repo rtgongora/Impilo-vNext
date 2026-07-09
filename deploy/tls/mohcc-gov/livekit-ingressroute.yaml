@@ -1,0 +1,28 @@
+# Secure (wss) signaling for LiveKit telemedicine on impilo.mohcc.gov.zw.
+#
+# The one-ui-shell is served over https, so a plaintext ws:// signaling socket is
+# blocked by browsers as mixed content. This routes the LiveKit signaling
+# WebSocket (SDK connects to wss://<host>/rtc and /rtc/validate) through Traefik
+# on :443 using the same .gov.zw cert, forwarding plaintext ws to livekit:7880.
+#
+# NOTE: This secures SIGNALING ONLY. WebRTC *media* (rtc.udp_port 7882 /
+# tcp_port 7881, hostNetwork) does NOT flow through Traefik and is unaffected —
+# media reachability for off-LAN clients is a separate ICE/TURN decision (see
+# the livekit-config comment re: use_external_ip + router hairpin).
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: impilo-mohcc-gov-livekit-ws
+  namespace: impilo-full-preview
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`impilo.mohcc.gov.zw`) && PathPrefix(`/rtc`)
+      priority: 1000
+      services:
+        - name: livekit
+          port: 7880
+  tls:
+    secretName: impilo-mohcc-gov-zw-tls
