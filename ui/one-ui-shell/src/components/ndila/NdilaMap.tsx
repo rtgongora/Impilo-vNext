@@ -35,6 +35,8 @@ interface NdilaMapProps {
   layers?: string[];
   mode?: "OPERATIONS" | "CITIZEN" | "DASHBOARD" | "FIELD";
   fitToMarkers?: boolean;
+  showZimbabweAdmin?: boolean;
+  clusterMarkers?: boolean;
 }
 
 export function NdilaMap({
@@ -46,6 +48,8 @@ export function NdilaMap({
   layers = [],
   mode = "OPERATIONS",
   fitToMarkers = false,
+  showZimbabweAdmin = true,
+  clusterMarkers = false,
 }: NdilaMapProps) {
   const tileQ = useNdilaTileConfig();
   const tileCfg = tileQ.data;
@@ -96,6 +100,8 @@ export function NdilaMap({
           height={height}
           tileConfig={tileCfg}
           fitToMarkers={fitToMarkers}
+          showZimbabweAdmin={showZimbabweAdmin}
+          clusterMarkers={clusterMarkers}
         />
 
         <div className="pointer-events-none absolute bottom-1 right-2 text-[9px] text-muted-foreground">

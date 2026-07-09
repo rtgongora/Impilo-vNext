@@ -14,6 +14,7 @@ interface FacilitiesGeoMapPanelProps {
   facilityType?: string;
   size?: number;
   enrichMissingCoordinates?: boolean;
+  clusterMarkers?: boolean;
 }
 
 export function FacilitiesGeoMapPanel({
@@ -23,8 +24,9 @@ export function FacilitiesGeoMapPanel({
   province,
   status,
   facilityType,
-  size = 80,
+  size = 2000,
   enrichMissingCoordinates = true,
+  clusterMarkers = true,
 }: FacilitiesGeoMapPanelProps) {
   const facilitiesQ = useFacilities({ search, province, status, facilityType, page: 0, size });
 
@@ -57,6 +59,9 @@ export function FacilitiesGeoMapPanel({
       markers={markers}
       emptyHint="No geo-tagged or geocodable facilities in this filter — capture location on facility registration."
       height={320}
+      clusterMarkers={clusterMarkers}
+      showZimbabweAdmin
+      fitToMarkers={markers.length > 0}
     />
   );
 }

@@ -1,0 +1,102 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "purpose": "Ndila preview Layer 0 — simplified Zimbabwe admin geography",
+    "note": "Preview-only simplified boundaries. Replace with COD-AB / ZIMSTAT polygons before production cut-over."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "adminLevel": "country", "name": "Zimbabwe", "code": "ZW" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [25.237, -17.127], [25.237, -15.609], [27.030, -15.609], [29.325, -15.745],
+          [31.191, -16.020], [32.849, -16.718], [33.006, -18.356], [32.659, -19.872],
+          [32.492, -20.645], [31.191, -21.552], [29.364, -22.271], [27.727, -22.271],
+          [26.619, -21.837], [25.834, -20.903], [25.237, -19.452], [25.237, -17.127]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "adminLevel": "province", "name": "Bulawayo", "code": "ZW-ADM1-BU" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[28.42, -20.25], [28.72, -20.25], [28.72, -19.95], [28.42, -19.95], [28.42, -20.25]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "adminLevel": "province", "name": "Harare", "code": "ZW-ADM1-HA" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[30.88, -18.05], [31.25, -18.05], [31.25, -17.65], [30.88, -17.65], [30.88, -18.05]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "adminLevel": "province", "name": "Manicaland", "code": "ZW-ADM1-MA" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[31.45, -21.05], [33.05, -21.05], [33.05, -17.95], [31.45, -17.95], [31.45, -21.05]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "adminLevel": "province", "name": "Mashonaland Central", "code": "ZW-ADM1-MC" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[29.55, -17.85], [32.45, -17.85], [32.45, -15.65], [29.55, -15.65], [29.55, -17.85]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "adminLevel": "province", "name": "Mashonaland East", "code": "ZW-ADM1-ME" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[30.85, -19.05], [33.05, -19.05], [33.05, -16.45], [30.85, -16.45], [30.85, -19.05]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "adminLevel": "province", "name": "Mashonaland West", "code": "ZW-ADM1-MW" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[28.05, -18.55], [31.05, -18.55], [31.05, -15.75], [28.05, -15.75], [28.05, -18.55]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "adminLevel": "province", "name": "Masvingo", "code": "ZW-ADM1-MV" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[29.45, -21.55], [32.45, -21.55], [32.45, -18.95], [29.45, -18.95], [29.45, -21.55]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "adminLevel": "province", "name": "Matabeleland North", "code": "ZW-ADM1-MN" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[26.05, -20.55], [29.05, -20.55], [29.05, -17.45], [26.05, -17.45], [26.05, -20.55]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "adminLevel": "province", "name": "Matabeleland South", "code": "ZW-ADM1-MS" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[27.45, -22.05], [30.05, -22.05], [30.05, -19.95], [27.45, -19.95], [27.45, -22.05]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "adminLevel": "province", "name": "Midlands", "code": "ZW-ADM1-MI" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[28.45, -21.05], [31.05, -21.05], [31.05, -18.05], [28.45, -18.05], [28.45, -21.05]]]
+      }
+    }
+  ]
+}

@@ -105,7 +105,8 @@ export default function FacilityRegistryPage() {
             title="Tuso facility registry map"
             subtitle="HPA-governed facilities with Ndila coordinates"
             search={searchTerm || undefined}
-            size={100}
+            size={2000}
+            clusterMarkers
           />
         </div>
 

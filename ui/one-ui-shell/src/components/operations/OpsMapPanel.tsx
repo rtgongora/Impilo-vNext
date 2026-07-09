@@ -30,6 +30,8 @@ interface OpsMapPanelProps {
   emptyHint?: string;
   height?: number;
   fitToMarkers?: boolean;
+  clusterMarkers?: boolean;
+  showZimbabweAdmin?: boolean;
 }
 
 export function OpsMapPanel({
@@ -40,6 +42,8 @@ export function OpsMapPanel({
   emptyHint,
   height = 280,
   fitToMarkers = true,
+  clusterMarkers = false,
+  showZimbabweAdmin = true,
 }: OpsMapPanelProps) {
   const tilesQ = useNdilaTileConfig();
   const geoMarkers = opsMarkersToGeoMarkers(markers);
@@ -69,6 +73,8 @@ export function OpsMapPanel({
         height={height}
         tileConfig={tilesQ.data}
         fitToMarkers={fitToMarkers && geoMarkers.length > 0}
+        clusterMarkers={clusterMarkers || geoMarkers.length > 12}
+        showZimbabweAdmin={showZimbabweAdmin}
       />
 
       {tilesQ.isError ? (
