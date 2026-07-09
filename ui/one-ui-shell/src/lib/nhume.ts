@@ -146,6 +146,8 @@ export interface CreateDeliveryRequestPayload {
   controlled_item?: boolean;
   fragile?: boolean;
   hazardous?: boolean;
+  specimen?: boolean;
+  biohazard?: boolean;
   chain_of_custody_required?: boolean;
   return_required?: boolean;
   declared_value?: number;

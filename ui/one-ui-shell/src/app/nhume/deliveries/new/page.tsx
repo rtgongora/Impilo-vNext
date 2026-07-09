@@ -18,6 +18,8 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useCreateNhumeDelivery } from "@/hooks/useNhume";
 import type { CreateDeliveryRequestPayload, NhumeDeliveryMode } from "@/lib/nhume";
+import { CARGO_PROFILES, applyCargoProfile, getCargoProfile } from "@/lib/nhume/cargo-profiles";
+import { ShellIcon } from "@/components/shell/ShellIcon";
 
 const DELIVERY_TYPES = [
   "MEDICINE", "PRESCRIPTION_REFILL", "LAB_SAMPLE_PICKUP", "LAB_RESULT", "VACCINE",
@@ -46,6 +48,10 @@ const MODES: NhumeDeliveryMode[] = [
 export default function NhumeNewDeliveryPage() {
   const router = useRouter();
   const createMutation = useCreateNhumeDelivery();
+
+  const [cargoProfileId, setCargoProfileId] = useState("MEDICINE");
+  const [cargoValues, setCargoValues] = useState<Record<string, string | number | boolean>>({});
+  const cargoProfile = getCargoProfile(cargoProfileId);
 
   const [form, setForm] = useState({
     delivery_type: "MEDICINE",
@@ -78,10 +84,26 @@ export default function NhumeNewDeliveryPage() {
     }));
   }
 
+  function selectCargoProfile(id: string) {
+    const profile = getCargoProfile(id);
+    if (!profile) return;
+    setCargoProfileId(id);
+    setCargoValues({});
+    setForm((prev) => ({ ...prev, delivery_type: profile.deliveryType }));
+  }
+
+  function setCargoValue(key: string, value: string | number | boolean) {
+    setCargoValues((prev) => ({ ...prev, [key]: value }));
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Fold the chosen cargo profile's type-specific fields onto the canonical
+    // CreateDeliveryRequest: handling flags + the primary clinical link, with
+    // everything else carried in metadata (cargo details + integration links).
+    const cargo = applyCargoProfile(cargoProfileId, cargoValues);
     const payload: CreateDeliveryRequestPayload = {
-      delivery_type: form.delivery_type,
+      delivery_type: cargo.deliveryType || form.delivery_type,
       priority: form.priority,
       request_source: form.request_source,
       origin: {
@@ -99,15 +121,19 @@ export default function NhumeNewDeliveryPage() {
         preferred_channel: form.recipient_phone ? "SMS" : "IN_APP",
       },
       items: [{
-        description: form.item_description || "Item",
+        description: form.item_description || cargoProfile?.label || "Item",
         quantity: Number(form.item_quantity) || 1,
         unit: form.item_unit || "unit",
-        cold_chain: form.cold_chain,
-        controlled: form.controlled,
+        cold_chain: form.cold_chain || Boolean(cargo.flags.cold_chain_required),
+        controlled: form.controlled || Boolean(cargo.flags.controlled_item),
       }],
+      // Base flags from the generic toggles, then cargo-profile flags win.
       cold_chain_required: form.cold_chain,
       controlled_item: form.controlled,
       chain_of_custody_required: form.chain_of_custody,
+      ...cargo.flags,
+      clinical_context_ref: cargo.clinicalContextRef,
+      metadata: cargo.metadata,
       required_by: form.required_by || undefined,
       notes: form.notes || undefined,
       allowed_modes: form.allowed_modes,
@@ -142,6 +168,70 @@ export default function NhumeNewDeliveryPage() {
         </div>
 
         <form onSubmit={onSubmit} className="space-y-6">
+          <Section title="What are you moving?">
+            <p className="text-xs text-muted-foreground mb-3">
+              Nhume moves what the health system needs moved — people, samples, commodities, teams,
+              blood, vaccines, equipment and documents. Pick the cargo so the right handling and
+              details apply.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              {CARGO_PROFILES.map((p) => {
+                const active = p.id === cargoProfileId;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => selectCargoProfile(p.id)}
+                    className={`flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition ${
+                      active ? "border-teal-500 bg-primary-soft" : "border-border hover:border-teal-300 hover:bg-background"
+                    }`}
+                    aria-pressed={active}
+                  >
+                    <ShellIcon name={p.icon} className="h-4 w-4 text-teal-600" />
+                    <span className="text-sm font-medium text-foreground">{p.label}</span>
+                    <span className="text-[11px] leading-tight text-muted-foreground">{p.description}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+
+          {cargoProfile && cargoProfile.fields.length > 0 ? (
+            <Section title={`${cargoProfile.label} details`}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {cargoProfile.fields.map((field) => {
+                  const value = cargoValues[field.key];
+                  if (field.type === "checkbox") {
+                    return (
+                      <div key={field.key} className="flex items-end pb-1">
+                        <Toggle label={field.label} checked={Boolean(value)} onChange={(v) => setCargoValue(field.key, v)} />
+                      </div>
+                    );
+                  }
+                  return (
+                    <Field key={field.key} label={field.label}>
+                      {field.type === "select" ? (
+                        <select className="form-input" value={String(value ?? "")} onChange={(e) => setCargoValue(field.key, e.target.value)}>
+                          <option value="">—</option>
+                          {(field.options ?? []).map((o) => <option key={o} value={o}>{o.replace(/_/g, " ")}</option>)}
+                        </select>
+                      ) : (
+                        <input
+                          className="form-input"
+                          type={field.type === "number" ? "number" : "text"}
+                          value={String(value ?? "")}
+                          placeholder={field.placeholder}
+                          onChange={(e) => setCargoValue(field.key, field.type === "number" ? Number(e.target.value) : e.target.value)}
+                        />
+                      )}
+                      {field.help ? <span className="mt-1 block text-[11px] text-muted-foreground">{field.help}</span> : null}
+                    </Field>
+                  );
+                })}
+              </div>
+            </Section>
+          ) : null}
+
           <Section title="Request basics">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <Field label="Delivery type">
