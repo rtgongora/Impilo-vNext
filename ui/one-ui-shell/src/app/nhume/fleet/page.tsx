@@ -9,9 +9,11 @@
 
 import Link from "next/link";
 import { Truck, Loader2, Plus } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useNhumeFleet } from "@/hooks/useNhume";
+import { FleetAssetCreatePanel } from "@/components/nhume/FleetAssetCreatePanel";
 
 const STATUS_TONE: Record<string, string> = {
   AVAILABLE: "bg-success-soft text-primary-hover border-success/25",
@@ -22,6 +24,8 @@ const STATUS_TONE: Record<string, string> = {
 
 export default function NhumeFleetPage() {
   const { data, isPending } = useNhumeFleet();
+  const searchParams = useSearchParams();
+  const showCreate = searchParams.get("create") === "1";
   const rows = data?.data ?? [];
   return (
     <AppLayout>
@@ -30,12 +34,16 @@ export default function NhumeFleetPage() {
         subtitle="Vehicles, drones, robots and smart-locker network"
         icon={<Truck className="h-6 w-6" />}
       >
-        <div className="flex justify-end mb-4">
-          <Link href="/nhume/fleet?create=1" className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary">
-            <Plus className="h-4 w-4" />
-            Add asset
-          </Link>
-        </div>
+        {!showCreate ? (
+          <div className="flex justify-end mb-4">
+            <Link href="/nhume/fleet?create=1" className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary">
+              <Plus className="h-4 w-4" />
+              Add asset
+            </Link>
+          </div>
+        ) : (
+          <FleetAssetCreatePanel />
+        )}
 
         {isPending ? (
           <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">

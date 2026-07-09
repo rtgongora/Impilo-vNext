@@ -6,9 +6,11 @@
 
 import Link from "next/link";
 import { Users, Loader2, Plus } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useNhumeCouriers } from "@/hooks/useNhume";
+import { CourierCreatePanel } from "@/components/nhume/CourierCreatePanel";
 
 const STATUS_TONE: Record<string, string> = {
   AVAILABLE: "bg-success-soft text-primary-hover border-success/25",
@@ -20,6 +22,8 @@ const STATUS_TONE: Record<string, string> = {
 
 export default function NhumeCouriersPage() {
   const { data, isPending } = useNhumeCouriers();
+  const searchParams = useSearchParams();
+  const showCreate = searchParams.get("create") === "1";
   const rows = data?.data ?? [];
   return (
     <AppLayout>
@@ -28,11 +32,15 @@ export default function NhumeCouriersPage() {
         subtitle="Profiles, training, affiliations and Trust-Layer verification"
         icon={<Users className="h-6 w-6" />}
       >
-        <div className="flex justify-end mb-4">
-          <Link href="/nhume/couriers?create=1" className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary">
-            <Plus className="h-4 w-4" /> Add courier
-          </Link>
-        </div>
+        {!showCreate ? (
+          <div className="flex justify-end mb-4">
+            <Link href="/nhume/couriers?create=1" className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary">
+              <Plus className="h-4 w-4" /> Add courier
+            </Link>
+          </div>
+        ) : (
+          <CourierCreatePanel />
+        )}
         {isPending ? (
           <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">
             <Loader2 className="inline-block h-5 w-5 animate-spin text-teal-500 mr-2" /> Loading…
