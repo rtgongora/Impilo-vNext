@@ -75,6 +75,24 @@
         "description": "Finance officer with access to billing, claims, payments, and tariffs",
         "composite": false,
         "clientRole": false
+      },
+      {
+        "name": "TRAINER",
+        "description": "Fundo course author — trainers, programme officers, provincial/national educators",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "HIE_ADMIN",
+        "description": "Registry/HIE governance officer — registry plane and IATG trust console without full platform admin",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "PUBLIC_HEALTH_OFFICER",
+        "description": "Public health officer — surveillance, campaigns, and population health surfaces",
+        "composite": false,
+        "clientRole": false
       }
     ]
   },
@@ -720,6 +738,218 @@
       ],
       "realmRoles": [
         "FINANCE"
+      ]
+    },
+    {
+      "username": "clerk.dube",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Nyasha",
+      "lastName": "Dube",
+      "email": "nyasha.dube@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000008"
+        ],
+        "provider_id": [
+          "PROV-ZW-00008"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SUPPORT_AGENT"
+      ]
+    },
+    {
+      "username": "dr.gwena",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Rudo",
+      "lastName": "Gwena",
+      "email": "rudo.gwena@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000002"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000009"
+        ],
+        "provider_id": [
+          "PROV-ZW-00009"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CLINICIAN"
+      ]
+    },
+    {
+      "username": "rad.nkomo",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Sipho",
+      "lastName": "Nkomo",
+      "email": "sipho.nkomo@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000010"
+        ],
+        "provider_id": [
+          "PROV-ZW-00010"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CLINICIAN"
+      ]
+    },
+    {
+      "username": "pharm.zimba",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Faith",
+      "lastName": "Zimba",
+      "email": "zimba@hch.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000004"
+        ],
+        "provider_id": [
+          "PROV-ZW-00004"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "PHARMACIST"
+      ]
+    },
+    {
+      "username": "trainer.chikafu",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Fungai",
+      "lastName": "Chikafu",
+      "email": "fungai.chikafu@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000011"
+        ],
+        "provider_id": [
+          "PROV-ZW-00011"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CLINICIAN",
+        "TRAINER"
+      ]
+    },
+    {
+      "username": "learner.tembo",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Kudzai",
+      "lastName": "Tembo",
+      "email": "kudzai.tembo@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000012"
+        ],
+        "provider_id": [
+          "PROV-ZW-00012"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "NURSE"
+      ]
+    },
+    {
+      "username": "regulator.hpcz",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Chipo",
+      "lastName": "Marimo",
+      "email": "chipo.marimo@hpcz.org.zw",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "HIE_ADMIN"
+      ]
+    },
+    {
+      "username": "iatg.gono",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Nomsa",
+      "lastName": "Gono",
+      "email": "nomsa.gono@mohcc.gov.zw",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SYSTEM_ADMIN",
+        "HIE_ADMIN"
       ]
     },
     {
