@@ -295,6 +295,7 @@ export const ROUTES: RouteDefinition[] = [
   // â”€â”€ Administrative plane landings (operational context: registry_admin / organization_admin) â”€â”€
   { path: "/registry-admin", zone: "admin", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Registry Administration", navLabel: "Registry Admin", navZone: "professional" },
   { path: "/registry-admin/trust-console", zone: "admin", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Trust Console", navLabel: "Trust Console", navZone: "professional" },
+  { path: "/registry-admin/activation-letter", zone: "admin", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Activation Letter", navLabel: "Activation Letter", navZone: "professional" },
   { path: "/organization-admin", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Organization Administration", navLabel: "Org Admin", navZone: "professional" },
   { path: "/organization-admin/facility", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Facility Administration", navLabel: "Org Facility", navZone: "professional" },
   { path: "/organization-admin/staffing", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Staffing & Scheduling", navLabel: "Org Staffing", navZone: "professional" },
@@ -827,7 +828,8 @@ export const ROUTES: RouteDefinition[] = [
 // IATG Phase-E2 UI (Jul 2026): +6 net-new routes — trust profile + provider-claim nav (E2-TRUST +2),
 // facility claim (E2-FACILITY +1), platform-origin console x2 + org-onboarding (E2-GOV +3).
 // IATG Trust Console (Jul 2026): +1 net-new route — /registry-admin/trust-console (unified governance queues).
-export const EXPECTED_ROUTE_COUNT = 694;
+// Activation letter (Jul 2026): +1 — /registry-admin/activation-letter (printable onboarding letter).
+export const EXPECTED_ROUTE_COUNT = 695;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
