@@ -6,12 +6,20 @@
  */
 
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, Globe, KeyRound, HeartHandshake } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Globe, KeyRound, HeartHandshake, ShieldCheck } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 
 const TRUST_DESTINATIONS = [
+  {
+    id: "trust-console",
+    title: "Trust console",
+    description:
+      "Live IATG governance queues via `/internal/v1/trust-console`: provider access, facility admin claims, org onboarding, assurance upgrades — with decisions.",
+    href: "/registry-admin/trust-console",
+    icon: ShieldCheck,
+  },
   {
     id: "federation",
     title: "Federation & trust pods",

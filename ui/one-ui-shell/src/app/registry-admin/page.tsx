@@ -85,6 +85,25 @@ export default function RegistryAdminLandingPage() {
             </p>
           </PlaneTrustBanner>
 
+          <Link
+            href="/registry-admin/trust-console"
+            className="group flex items-center justify-between gap-4 rounded-2xl border border-warning/35 bg-card p-5 shadow-sm transition hover:border-amber-400 hover:shadow-md"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-warning-foreground">
+                <Shield className="h-5 w-5" />
+              </div>
+              <div>
+                <h4 className="font-medium text-foreground group-hover:text-warning-foreground">Trust console</h4>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Unified IATG governance queues: pending provider access requests, facility admin claims,
+                  organisation onboarding, assurance upgrades — review and decide in one place.
+                </p>
+              </div>
+            </div>
+            <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-warning-foreground" />
+          </Link>
+
           <div>
             <h3 className="text-sm font-semibold text-foreground">Registry sub-planes</h3>
             <p className="mt-1 text-xs text-muted-foreground">
