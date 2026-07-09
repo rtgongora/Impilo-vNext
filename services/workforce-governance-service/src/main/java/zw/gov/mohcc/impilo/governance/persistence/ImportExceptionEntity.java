@@ -27,4 +27,13 @@ public class ImportExceptionEntity {
         this.message = message;
         this.createdAt = Instant.now();
     }
+
+    public UUID getId() { return id; }
+    public UUID getImportBatchId() { return importBatchId; }
+    public UUID getRowId() { return rowId; }
+    public String getExceptionType() { return exceptionType; }
+    public String getSeverity() { return severity; }
+    public String getMessage() { return message; }
+    public String getResolutionStatus() { return resolutionStatus; }
+    public Instant getCreatedAt() { return createdAt; }
 }

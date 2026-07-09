@@ -270,6 +270,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/admin/policies", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Policy Management", navLabel: "Policies", navZone: "professional" },
   { path: "/admin/audit", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Audit Trail", navLabel: "Audit", navZone: "professional" },
   { path: "/admin/audit/[id]", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Audit Entry", navLabel: "Audit Detail", navZone: "professional" },
+  { path: "/admin/workforce-intake", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Workforce Intake", navLabel: "Workforce Intake", navZone: "professional" },
   { path: "/admin/facility-imports", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Import Batches", navLabel: "Facility Imports", navZone: "professional" },
   { path: "/admin/facility-imports/[runId]", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Import Batch", navLabel: "Import Batch", navZone: "professional" },
   { path: "/admin/facility-imports/[runId]/review", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Import Review", navLabel: "Import Review", navZone: "professional" },
@@ -829,7 +830,8 @@ export const ROUTES: RouteDefinition[] = [
 // facility claim (E2-FACILITY +1), platform-origin console x2 + org-onboarding (E2-GOV +3).
 // IATG Trust Console (Jul 2026): +1 net-new route — /registry-admin/trust-console (unified governance queues).
 // Activation letter (Jul 2026): +1 — /registry-admin/activation-letter (printable onboarding letter).
-export const EXPECTED_ROUTE_COUNT = 695;
+// Workforce Intake (Jul 2026): +1 net-new route — /admin/workforce-intake staged staff bootstrap wizard.
+export const EXPECTED_ROUTE_COUNT = 696;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

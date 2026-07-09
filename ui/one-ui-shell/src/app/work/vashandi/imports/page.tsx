@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { VashandiShell } from "@/components/vashandi/VashandiShell";
 import { VashandiFriendlyBlockedState } from "@/components/vashandi/VashandiFriendlyBlockedState";
 import { useWorkforceImportBridge, isVashandiDegraded } from "@/hooks/useVashandi";
@@ -53,6 +54,15 @@ export default function Page() {
 
   return (
     <VashandiShell title="Workforce Imports" subtitle="Bulk workforce profile and assignment import bridge">
+      <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm text-foreground">
+        Bootstrapping MoHCC staff from a CSV? Use the{" "}
+        <Link href="/admin/workforce-intake" className="font-medium text-primary hover:text-primary-hover">
+          guided workforce intake journey
+        </Link>{" "}
+        — column mapping, validation, Health-ID matching, Provider ID issuance and activation
+        invitations in one staged flow. The raw bridge below remains available for advanced,
+        pre-resolved payloads.
+      </div>
       <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-border bg-card p-6">
         <p className="text-sm text-muted-foreground">
           Submit workforce rows through the BFF import bridge at{" "}

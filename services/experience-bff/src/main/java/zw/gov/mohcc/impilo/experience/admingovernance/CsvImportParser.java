@@ -2,10 +2,10 @@ package zw.gov.mohcc.impilo.experience.admingovernance;
 
 import java.util.*;
 
-final class CsvImportParser {
+public final class CsvImportParser {
     private CsvImportParser() {}
 
-    static List<Map<String, String>> parseCsv(String content) {
+    public static List<Map<String, String>> parseCsv(String content) {
         if (content == null || content.isBlank()) return List.of();
         String[] lines = content.replace("\r", "").split("\n");
         if (lines.length < 2) return List.of();

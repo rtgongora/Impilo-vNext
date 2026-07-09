@@ -555,6 +555,33 @@ public class GovernanceInternalController {
         return ResponseEntity.ok(ApiResponse.ok(importBatchService.recordInvitations(importBatchId, deliveries), corr()));
     }
 
+    @PatchMapping("/imports/{importBatchId}/stage")
+    public ResponseEntity<ApiResponse<ImportBatchEntity>> transitionImportStage(
+            @PathVariable UUID importBatchId,
+            @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                importBatchService.transitionStage(importBatchId, String.valueOf(body.get("stage"))), corr()));
+    }
+
+    @PatchMapping("/imports/{importBatchId}/column-mapping")
+    public ResponseEntity<ApiResponse<ImportBatchEntity>> applyImportColumnMapping(
+            @PathVariable UUID importBatchId,
+            @RequestBody Map<String, Object> body) {
+        @SuppressWarnings("unchecked")
+        Map<String, String> columnMapping = (Map<String, String>) body.getOrDefault("columnMapping", Map.of());
+        return ResponseEntity.ok(ApiResponse.ok(
+                importBatchService.applyColumnMapping(importBatchId, columnMapping), corr()));
+    }
+
+    @PostMapping("/imports/{importBatchId}/rows/{rowId}/execution-result")
+    public ResponseEntity<ApiResponse<ImportRowEntity>> recordImportRowExecutionResult(
+            @PathVariable UUID importBatchId,
+            @PathVariable UUID rowId,
+            @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                importBatchService.recordExecutionResult(importBatchId, rowId, body), corr()));
+    }
+
     @PatchMapping("/imports/{importBatchId}/rows/{rowId}")
     public ResponseEntity<ApiResponse<ImportRowEntity>> patchImportRow(
             @PathVariable UUID importBatchId,
