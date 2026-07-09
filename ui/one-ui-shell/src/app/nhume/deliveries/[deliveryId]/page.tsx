@@ -15,10 +15,11 @@
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Send, CheckCircle2, XCircle, Truck, MapPin, ShieldCheck, Package } from "lucide-react";
+import { ArrowLeft, Loader2, Send, CheckCircle2, XCircle, Truck, MapPin, ShieldCheck, Package, ExternalLink, Link2, Siren } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NhumeStatusChip, NhumePriorityChip } from "@/components/nhume/NhumeStatusChip";
+import { readDeliveryLinks } from "@/lib/nhume/cargo-profiles";
 import { DeliveryTrackMapPanel } from "@/components/maps/DeliveryTrackMapPanel";
 import {
   useNhumeDelivery,
@@ -180,6 +181,7 @@ function OverviewTab({ id, delivery }: { id: string; delivery: Record<string, un
   const [otp, setOtp] = useState("");
 
   return (
+    <div className="space-y-4">
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="rounded-2xl border border-border bg-card p-5">
         <h3 className="font-semibold text-foreground mb-3">Lifecycle controls</h3>
@@ -247,6 +249,75 @@ function OverviewTab({ id, delivery }: { id: string; delivery: Record<string, un
             One of the last actions was rejected — verify status, role and Trust-Layer headers.
           </div>
         )}
+      </div>
+    </div>
+      <LinkedReferencesPanel delivery={delivery} />
+    </div>
+  );
+}
+
+/**
+ * Honest integration surface: this mission MOVES cargo whose truth lives in
+ * another system (Dura stock, OROS lab order, MADI blood order, PCT referral,
+ * Daidzai incident). We display the linked references captured at creation and
+ * deep-link out — Nhume never rewrites those systems' records.
+ */
+function LinkedReferencesPanel({ delivery }: { delivery: Record<string, unknown> }) {
+  const links = readDeliveryLinks(delivery.metadata);
+  const clinical = delivery.clinical_context_ref ? String(delivery.clinical_context_ref) : "";
+  const priority = String(delivery.priority ?? "").toUpperCase();
+  const canEscalate = priority === "EMERGENCY" || priority === "URGENT";
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="mb-3 flex items-center gap-2">
+        <Link2 className="h-4 w-4 text-teal-600" />
+        <h3 className="font-semibold text-foreground">Linked records &amp; coordination</h3>
+      </div>
+
+      {links.length === 0 && !clinical ? (
+        <p className="text-sm text-muted-foreground">
+          No linked records. Missions moving lab samples, blood, stock or patients carry a reference to the
+          owning system (OROS / MADI / Dura / PCT) captured at creation.
+        </p>
+      ) : (
+        <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {links.map((l) => (
+            <li key={`${l.system}-${l.ref}`}>
+              <Link href={l.href} className="flex items-center justify-between rounded-xl border border-border px-3 py-2 text-sm hover:border-teal-300 hover:bg-background">
+                <span>
+                  <span className="mr-2 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-medium text-teal-700">{l.system}</span>
+                  <span className="text-foreground">{l.label}</span>
+                  <span className="ml-2 font-mono text-xs text-muted-foreground">{l.ref}</span>
+                </span>
+                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+              </Link>
+            </li>
+          ))}
+          {clinical && !links.some((l) => l.ref === clinical) ? (
+            <li>
+              <span className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm">
+                <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-medium text-teal-700">CLINICAL</span>
+                <span className="font-mono text-xs text-muted-foreground">{clinical}</span>
+              </span>
+            </li>
+          ) : null}
+        </ul>
+      )}
+
+      <div className="mt-4 flex items-center justify-between gap-2 border-t border-border pt-4">
+        <p className="text-xs text-muted-foreground">
+          Mass-casualty or disaster-scale movement is coordinated in Daidzai, which owns emergency incidents.
+        </p>
+        <Link
+          href={`/work/daidzai?source=nhume&delivery=${encodeURIComponent(String(delivery.delivery_id ?? delivery.reference_code ?? ""))}&priority=${encodeURIComponent(priority)}`}
+          className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium ${
+            canEscalate ? "bg-rose-600 text-white hover:bg-rose-700" : "border border-border text-foreground hover:bg-background"
+          }`}
+        >
+          <Siren className="h-4 w-4" />
+          Escalate to Daidzai
+        </Link>
       </div>
     </div>
   );

@@ -675,6 +675,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/nhume/dispatcher", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Nhume Dispatcher Console", navLabel: "Dispatcher Console", navZone: "work" },
   { path: "/nhume/map", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Fleet Tracking Map", navLabel: "Fleet Map", navZone: "work" },
   { path: "/nhume/courier", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Courier / Driver Console", navLabel: "Courier Console", navZone: "work" },
+  { path: "/nhume/inbound", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Inbound & Handover", navLabel: "Inbound & Handover", navZone: "work" },
   { path: "/nhume/fleet", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Fleet & Asset Management", navLabel: "Fleet & Assets", navZone: "work" },
   { path: "/nhume/fleet/[assetId]", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Fleet Asset", navLabel: "Asset Detail", navZone: "work" },
   { path: "/nhume/couriers", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Drivers & Couriers", navLabel: "Drivers & Couriers", navZone: "work" },
@@ -831,7 +832,8 @@ export const ROUTES: RouteDefinition[] = [
 // IATG Trust Console (Jul 2026): +1 net-new route — /registry-admin/trust-console (unified governance queues).
 // Activation letter (Jul 2026): +1 — /registry-admin/activation-letter (printable onboarding letter).
 // Workforce Intake (Jul 2026): +1 net-new route — /admin/workforce-intake staged staff bootstrap wizard.
-export const EXPECTED_ROUTE_COUNT = 696;
+// Nhume inbound (Jul 2026): +1 net-new route — /nhume/inbound receiving & handover surface.
+export const EXPECTED_ROUTE_COUNT = 697;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

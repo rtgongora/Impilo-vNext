@@ -23,11 +23,14 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { ShellIcon } from "@/components/shell/ShellIcon";
+import { CARGO_PROFILES } from "@/lib/nhume/cargo-profiles";
 
 const SECTIONS = [
   { href: "/nhume/dashboard", label: "Operations Dashboard", description: "Counts, alerts, SLA panel and live map", Icon: LayoutDashboard },
-  { href: "/nhume/deliveries", label: "Deliveries", description: "Browse, create and progress delivery requests", Icon: ListChecks },
+  { href: "/nhume/deliveries", label: "Missions & Deliveries", description: "Browse, create and progress dispatch missions", Icon: ListChecks },
   { href: "/nhume/dispatcher", label: "Dispatcher Console", description: "Pending queue, suggested assignments, exceptions", Icon: Navigation },
+  { href: "/nhume/inbound", label: "Inbound & Handover", description: "Incoming movements to receive and hand over", Icon: PackageCheck },
   { href: "/nhume/map", label: "Fleet Tracking Map", description: "Vehicles, routes, geofences and ETAs", Icon: MapIcon },
   { href: "/nhume/courier", label: "Courier Console", description: "Assigned deliveries, pickup and proof capture", Icon: PackageCheck },
   { href: "/nhume/fleet", label: "Fleet & Assets", description: "Vehicles, drones, robots and lockers", Icon: Truck },
@@ -45,6 +48,25 @@ export default function NhumeHubPage() {
         subtitle="Dispatch, Delivery, Fleet Tracking & Last-Mile Logistics"
         serviceSlug="nhume"
       >
+        <section className="mb-6">
+          <h2 className="mb-1 text-sm font-semibold text-foreground">Start a movement</h2>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Nhume moves what the health system needs moved — pick the cargo to open a mission with the right handling and fields.
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            {CARGO_PROFILES.filter((p) => p.id !== "GENERAL").map((p) => (
+              <Link
+                key={p.id}
+                href={`/nhume/deliveries/new?cargo=${p.id}`}
+                className="flex flex-col items-start gap-1 rounded-xl border border-border bg-card p-3 hover:border-teal-300 hover:shadow-sm transition-all"
+              >
+                <ShellIcon name={p.icon} className="h-4 w-4 text-teal-600" />
+                <span className="text-sm font-medium text-foreground">{p.label}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {SECTIONS.map(({ href, label, description, Icon }) => (
             <Link

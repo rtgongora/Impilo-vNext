@@ -10,7 +10,7 @@
  * progressively disclosed as the workflows that need them are wired up.
  */
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { PackagePlus, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -49,12 +49,14 @@ export default function NhumeNewDeliveryPage() {
   const router = useRouter();
   const createMutation = useCreateNhumeDelivery();
 
-  const [cargoProfileId, setCargoProfileId] = useState("MEDICINE");
+  const searchParams = useSearchParams();
+  const initialCargo = getCargoProfile(String(searchParams.get("cargo") ?? "").toUpperCase()) ? String(searchParams.get("cargo")).toUpperCase() : "MEDICINE";
+  const [cargoProfileId, setCargoProfileId] = useState(initialCargo);
   const [cargoValues, setCargoValues] = useState<Record<string, string | number | boolean>>({});
   const cargoProfile = getCargoProfile(cargoProfileId);
 
   const [form, setForm] = useState({
-    delivery_type: "MEDICINE",
+    delivery_type: getCargoProfile(initialCargo)?.deliveryType ?? "MEDICINE",
     priority: "STANDARD",
     request_source: "WEB_PORTAL",
     origin_label: "",
