@@ -1,6 +1,6 @@
 # Workforce Intake — Policy Specification
 
-Status: active (seeded by `tshepo-authz-service` migration `V032__workforce_intake_policy_rules.sql`)
+Status: active (seeded by `tshepo-authz-service` migration `V033__workforce_intake_policy_rules.sql`)
 
 ## Scope
 
@@ -19,7 +19,7 @@ Surfaces guarded by this policy family:
 | Experience BFF | `/internal/v1/workforce-intake/**` | experience-bff (stateless composition) |
 | Batch model (SoR) | `/v1/internal/governance/imports/**` (`import_type=workforce_intake`) | workforce-governance-service |
 
-## PDP rules (V032)
+## PDP rules (V033)
 
 Three ALLOW rules in `tshepo_authz.policy_rule`, all pinned with
 `{"path_contains": "/workforce-intake"}` so they never leak onto colliding
