@@ -7,7 +7,7 @@
  */
 
 import { LayoutDashboard, Search, Filter, Users, AlertTriangle, Activity } from "lucide-react";
-import { GlassSurface } from "shared-ui";
+import { CinematicStage, GlassSurface } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
@@ -19,7 +19,11 @@ export default function ProviderDashboardPage() {
         subtitle="Remote patient monitoring overview for clinical staff"
         icon={<LayoutDashboard className="h-6 w-6" />}
       >
-        <div className="space-y-6">
+        <CinematicStage className="space-y-6 p-5 sm:p-6">
+          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--text-secondary)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-neon-teal shadow-glow-teal" aria-hidden />
+            Remote monitoring · live cohort
+          </div>
           {/* Summary cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[
@@ -50,7 +54,7 @@ export default function ProviderDashboardPage() {
               <input
                 type="text"
                 placeholder="Search patients by name or Health ID..."
-                className="w-full rounded-lg border border-border py-2.5 pl-10 pr-4 text-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-primary/40"
+                className="w-full rounded-lg border border-border bg-white/[0.04] py-2.5 pl-10 pr-4 text-sm text-[color:var(--text-primary)] placeholder:text-[color:var(--text-muted)] focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-primary/40"
               />
             </div>
             <button className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-foreground hover:bg-background transition-colors">
@@ -67,7 +71,7 @@ export default function ProviderDashboardPage() {
               Patients enrolled in remote monitoring programmes with connected devices will appear here.
             </p>
           </div>
-        </div>
+        </CinematicStage>
       </PageShell>
     </AppLayout>
   );

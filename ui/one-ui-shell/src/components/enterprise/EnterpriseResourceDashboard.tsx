@@ -25,7 +25,7 @@ import { useFacilities } from "@/hooks/queries/useFacilities";
 import { useRevenueSummary } from "@/hooks/queries/useFinancialReports";
 import { extractCount, useMushexPlatformRemittanceTransfers } from "@/hooks/queries/useMushexPlatformAdmin";
 import { countEnvelopeList } from "@/lib/apiEnvelope";
-import { GlassSurface } from "shared-ui";
+import { CinematicStage, GlassSurface } from "shared-ui";
 
 type GeoLevel = "national" | "province" | "district" | "facility";
 
@@ -176,8 +176,12 @@ export function EnterpriseResourceDashboard() {
   }, [facilitiesQ.data?.data, province]);
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-2xl border border-border bg-background p-4">
+    <CinematicStage className="space-y-6 p-5 sm:p-6">
+      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--text-secondary)]">
+        <span className="h-1.5 w-1.5 rounded-full bg-neon-teal shadow-glow-teal" aria-hidden />
+        Command centre · live estate signals
+      </div>
+      <GlassSurface blur="soft" className="p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             <Globe2 className="h-4 w-4" />
@@ -186,7 +190,7 @@ export function EnterpriseResourceDashboard() {
           <select
             value={geoLevel}
             onChange={(e) => setGeoLevel(e.target.value as GeoLevel)}
-            className="rounded-lg border border-border px-3 py-2 text-sm"
+            className="rounded-lg border border-border bg-transparent px-3 py-2 text-sm text-[color:var(--text-primary)] [color-scheme:dark]"
           >
             <option value="national">National</option>
             <option value="province">Province</option>
@@ -197,7 +201,7 @@ export function EnterpriseResourceDashboard() {
             <select
               value={province}
               onChange={(e) => setProvince(e.target.value)}
-              className="rounded-lg border border-border px-3 py-2 text-sm"
+              className="rounded-lg border border-border bg-transparent px-3 py-2 text-sm text-[color:var(--text-primary)] [color-scheme:dark]"
             >
               <option value="">All provinces</option>
               {provinceOptions.map((p) => (
@@ -211,7 +215,7 @@ export function EnterpriseResourceDashboard() {
             <select
               value={district}
               onChange={(e) => setDistrict(e.target.value)}
-              className="rounded-lg border border-border px-3 py-2 text-sm"
+              className="rounded-lg border border-border bg-transparent px-3 py-2 text-sm text-[color:var(--text-primary)] [color-scheme:dark]"
             >
               <option value="">All districts</option>
               {districtOptions.map((d) => (
@@ -230,7 +234,7 @@ export function EnterpriseResourceDashboard() {
             National oversight links →
           </Link>
         </div>
-      </section>
+      </GlassSurface>
 
       {geoLevel === "facility" && !facility?.id ? (
         <div className="flex items-start gap-2 rounded-xl border border-warning/35 bg-warning-soft p-4 text-sm text-warning-foreground">
@@ -338,6 +342,6 @@ export function EnterpriseResourceDashboard() {
           />
         ) : null}
       </section>
-    </div>
+    </CinematicStage>
   );
 }
