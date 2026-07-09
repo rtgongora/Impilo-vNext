@@ -22,11 +22,30 @@ public class ImportBatchService {
     static final String EC_NUMBER_COLUMN = "ec_number";
     static final String OUTCOME_INVALID_EC_NUMBER = "invalid_ec_number";
 
+    static final String WORKFORCE_INTAKE_IMPORT_TYPE = "workforce_intake";
+
     private static final Map<String, List<String>> REQUIRED_COLUMNS = Map.of(
             "organisation_users", List.of("email", "full_name", "role_template"),
             "hsc_employment_records", List.of("provider_worker_id", "employment_status", "post_title"),
             "council_professional_register", List.of("registration_number", "profession", "registration_status"),
-            "facility_staff_list", List.of("provider_worker_id", "department", "role_template")
+            "facility_staff_list", List.of("provider_worker_id", "department", "role_template"),
+            WORKFORCE_INTAKE_IMPORT_TYPE, List.of("nationalid", "givenname", "familyname", "profession")
+    );
+
+    /**
+     * Workforce-intake pipeline stages. Legal transitions only — an out-of-order
+     * PATCH is rejected, never silently coerced. PARTIAL → EXECUTING allows an
+     * idempotent re-execution of the failed remainder.
+     */
+    private static final Map<String, Set<String>> STAGE_TRANSITIONS = Map.of(
+            "UPLOADED", Set.of("MAPPED"),
+            "MAPPED", Set.of("VALIDATED"),
+            "VALIDATED", Set.of("MATCHED"),
+            "MATCHED", Set.of("APPROVED"),
+            "APPROVED", Set.of("EXECUTING"),
+            "EXECUTING", Set.of("COMPLETED", "PARTIAL"),
+            "PARTIAL", Set.of("EXECUTING"),
+            "COMPLETED", Set.of()
     );
 
     private final ImportBatchRepository batchRepository;
@@ -105,7 +124,156 @@ public class ImportBatchService {
         ImportBatchEntity batch = get(batchId);
         batch.setStatus("approved");
         batch.setAuditStatus("approved_by_" + actorId);
+        if (batch.getStage() != null && canTransition(batch.getStage(), "APPROVED")) {
+            batch.setStage("APPROVED");
+        }
         return batchRepository.save(batch);
+    }
+
+    /**
+     * Explicit stage transition for the workforce-intake pipeline.
+     * Rejects transitions that are not in {@link #STAGE_TRANSITIONS}.
+     */
+    @Transactional
+    public ImportBatchEntity transitionStage(UUID batchId, String requestedStage) {
+        if (requestedStage == null || requestedStage.isBlank()) {
+            throw new IllegalArgumentException("stage is required");
+        }
+        String target = requestedStage.trim().toUpperCase(Locale.ROOT);
+        if (!STAGE_TRANSITIONS.containsKey(target)) {
+            throw new IllegalArgumentException("Unknown stage: " + target);
+        }
+        ImportBatchEntity batch = get(batchId);
+        String current = batch.getStage() != null ? batch.getStage() : "UPLOADED";
+        if (!canTransition(current, target)) {
+            throw new IllegalStateException("Illegal stage transition: " + current + " -> " + target);
+        }
+        batch.setStage(target);
+        return batchRepository.save(batch);
+    }
+
+    private static boolean canTransition(String current, String target) {
+        return STAGE_TRANSITIONS.getOrDefault(current, Set.of()).contains(target);
+    }
+
+    /**
+     * Applies a column mapping (source header, lower-cased → canonical column key)
+     * to every row's raw payload, re-validates against the import type's required
+     * columns, and records fresh validation exceptions. The batch moves through
+     * MAPPED to VALIDATED in one transaction — both stages are real, the endpoint
+     * simply performs them atomically so a half-mapped batch is never observable.
+     */
+    @Transactional
+    public ImportBatchEntity applyColumnMapping(UUID batchId, Map<String, String> columnMapping) {
+        ImportBatchEntity batch = get(batchId);
+        String current = batch.getStage() != null ? batch.getStage() : "UPLOADED";
+        if (!"UPLOADED".equals(current) && !"MAPPED".equals(current) && !"VALIDATED".equals(current)) {
+            throw new IllegalStateException("Column mapping can only be changed before matching (stage=" + current + ")");
+        }
+        Map<String, String> mapping = new LinkedHashMap<>();
+        if (columnMapping != null) {
+            columnMapping.forEach((source, target) -> {
+                if (source != null && target != null && !source.isBlank() && !target.isBlank()) {
+                    mapping.put(source.trim().toLowerCase(Locale.ROOT), target.trim().toLowerCase(Locale.ROOT));
+                }
+            });
+        }
+        batch.setColumnMapping(mapping);
+
+        List<String> required = REQUIRED_COLUMNS.getOrDefault(batch.getImportType(), List.of("email"));
+        List<ImportRowEntity> rows = rowRepository.findByImportBatchIdOrderByRowNumberAsc(batchId);
+        int valid = 0;
+        int exceptions = 0;
+        for (ImportRowEntity row : rows) {
+            Map<String, String> raw = readRow(row.getRawPayloadJson());
+            Map<String, String> normalized = new LinkedHashMap<>();
+            raw.forEach((key, value) -> normalized.put(mapping.getOrDefault(key, key), value));
+            row.setNormalizedPayloadJson(writeJson(normalized));
+
+            List<String> missing = required.stream()
+                    .filter(col -> normalized.getOrDefault(col, "").isBlank())
+                    .toList();
+            if (missing.isEmpty()) {
+                row.setValidationStatus("validated");
+                row.setOutcome("ready_to_invite");
+                valid++;
+            } else {
+                row.setValidationStatus("invalid");
+                row.setOutcome("invalid_required_fields");
+                exceptions++;
+                ImportExceptionEntity ex = new ImportExceptionEntity();
+                ex.init(batchId, row.getId(), "mapping_validation", "error",
+                        "Missing required column(s) after mapping: " + String.join(", ", missing));
+                exceptionRepository.save(ex);
+            }
+            rowRepository.save(row);
+        }
+        batch.setCounts(valid, exceptions, batch.getDuplicateCount(), 0, 0);
+        batch.setStage("VALIDATED");
+        batch.setStatus("validated");
+        return batchRepository.save(batch);
+    }
+
+    /**
+     * Records the per-row execution outcome (Provider ID issuance, Vashandi
+     * profile/assignment bridge, invitation) written back by the experience BFF
+     * after each idempotent execution step.
+     */
+    @Transactional
+    public ImportRowEntity recordExecutionResult(UUID batchId, UUID rowId, Map<String, Object> request) {
+        ImportRowEntity row = rowRepository.findById(rowId)
+                .orElseThrow(() -> new IllegalArgumentException("Import row not found"));
+        if (!batchId.equals(row.getImportBatchId())) {
+            throw new IllegalArgumentException("Import row does not belong to batch");
+        }
+        if (request.containsKey("executionStatus")) {
+            row.setExecutionStatus(stringOrNull(request.get("executionStatus")));
+        }
+        if (request.containsKey("executionError")) {
+            String error = stringOrNull(request.get("executionError"));
+            row.setExecutionError(error != null && error.length() > 500 ? error.substring(0, 500) : error);
+        }
+        if (request.containsKey("providerPublicId")) {
+            row.setProviderPublicId(stringOrNull(request.get("providerPublicId")));
+        }
+        if (request.containsKey("vashandiProfileId")) {
+            row.setVashandiProfileId(uuidOrNull(request.get("vashandiProfileId")));
+        }
+        if (request.containsKey("assignmentId")) {
+            row.setAssignmentId(uuidOrNull(request.get("assignmentId")));
+        }
+        if (request.containsKey("invitationId")) {
+            row.setInvitationId(stringOrNull(request.get("invitationId")));
+        }
+        return rowRepository.save(row);
+    }
+
+    private static String stringOrNull(Object value) {
+        if (value == null) return null;
+        String s = String.valueOf(value);
+        return s.isBlank() || "null".equals(s) ? null : s;
+    }
+
+    private static UUID uuidOrNull(Object value) {
+        String s = stringOrNull(value);
+        if (s == null) return null;
+        try {
+            return UUID.fromString(s);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid UUID: " + s);
+        }
+    }
+
+    private Map<String, String> readRow(String json) {
+        if (json == null || json.isBlank()) return Map.of();
+        try {
+            Map<String, String> row = new LinkedHashMap<>();
+            objectMapper.readTree(json).fields().forEachRemaining(entry ->
+                    row.put(entry.getKey(), entry.getValue().isNull() ? "" : entry.getValue().asText()));
+            return row;
+        } catch (Exception e) {
+            return Map.of();
+        }
     }
 
     /**
@@ -160,6 +328,15 @@ public class ImportBatchService {
         }
         if (request.containsKey("invitationId")) {
             row.setInvitationId(String.valueOf(request.get("invitationId")));
+        }
+        if (request.containsKey("matchStatus")) {
+            row.setMatchStatus(stringOrNull(request.get("matchStatus")));
+        }
+        if (request.containsKey("matchedHealthId")) {
+            row.setMatchedHealthId(stringOrNull(request.get("matchedHealthId")));
+        }
+        if (request.containsKey("duplicateOfRowId")) {
+            row.setDuplicateOfRowId(uuidOrNull(request.get("duplicateOfRowId")));
         }
         mergeInvitationMetadata(row, request);
         return rowRepository.save(row);
