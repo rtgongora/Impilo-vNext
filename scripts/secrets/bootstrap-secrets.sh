@@ -51,5 +51,10 @@ lk_val="${LIVEKIT_API_SECRET:-$(kubectl get cm -n "$NS" livekit-config \
   -o jsonpath='{.data.livekit\.yaml}' 2>/dev/null | awk '/impilo-preview-key:/{print $2; exit}')}"
 set_if_absent livekit-api-secret "$lk_val"
 
+# livekit-keys = "<apiKey>: <secret>" — consumed by the livekit server LIVEKIT_KEYS
+# env (P2). Kept in sync with livekit-api-secret; the apiKey is not a secret.
+lk_secret="$(get_key livekit-api-secret)"
+[[ -n "$lk_secret" ]] && set_if_absent livekit-keys "${LIVEKIT_API_KEY:-impilo-preview-key}: ${lk_secret}"
+
 echo "Done. Keys: $(kubectl get secret -n "$NS" "$SECRET" \
   -o go-template='{{range $k,$_ := .data}}{{$k}} {{end}}' 2>/dev/null)"

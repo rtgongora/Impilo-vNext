@@ -13,8 +13,9 @@ data:
     port: 7880
     bind_addresses:
       - ""
-    keys:
-      {{ .Values.livekit.apiKey }}: {{ .Values.livekit.apiSecret }}
+    # API keys are NOT inlined here — injected at runtime via the LIVEKIT_KEYS env
+    # from Secret impilo-app-secrets (key livekit-keys), so the signing secret is
+    # never committed. See docs/security/secrets-management-migration-plan.md (P2).
     # Redis is REQUIRED for egress coordination: livekit-server dispatches
     # StartEgress requests to egress workers over the shared redis bus.
     redis:

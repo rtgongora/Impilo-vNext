@@ -43,6 +43,13 @@ spec:
           image: "{{ .Values.livekit.image.repository }}:{{ .Values.livekit.image.tag }}"
           imagePullPolicy: {{ .Values.livekit.image.pullPolicy }}
           args: ["--config", "/etc/livekit/livekit.yaml"]
+          env:
+            # API keys injected out-of-band (never committed). Format "key: secret".
+            - name: LIVEKIT_KEYS
+              valueFrom:
+                secretKeyRef:
+                  name: impilo-app-secrets
+                  key: livekit-keys
           ports:
             - containerPort: 7880
               protocol: TCP

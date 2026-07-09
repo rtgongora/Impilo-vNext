@@ -108,8 +108,18 @@ Neither External-Secrets-Operator nor Sealed-Secrets is installed today.
     (needs a migration); dags is safe. LiveKit is already strong.
   - **Coupling note:** livekit-api-secret must equal the LiveKit *server* key until
     **P2** moves livekit-config/egress onto the same Secret.
-- **P2 — file-based (medium):** LiveKit server `LIVEKIT_KEYS` env + egress
-  initContainer; drop inline `keys:`/`api_secret`. Blank `values.livekit.apiSecret`.
+- **P2 — file-based. ✅ DONE.** LiveKit server reads keys via `LIVEKIT_KEYS` env
+  from `impilo-app-secrets` (key `livekit-keys` = "apiKey: secret"); the `keys:`
+  block is gone from `livekit-config`. Egress renders `egress.yaml` via a
+  `render-egress-config` initContainer (busybox `sed`) that substitutes
+  `api_secret` (impilo-app-secrets/livekit-api-secret) and the S3 `secret`
+  (minio-preview-credentials) into a placeholder template — no secret in the
+  ConfigMap. `values.livekit.apiSecret` removed (apiKey retained, non-secret).
+  The livekit secret is now **unified** across server/rtc-gateway/egress and can
+  be strengthened with a single Secret update + roll of the three. Verified:
+  `helm template` shows zero livekit placeholder and correct secretKeyRefs.
+  Guard baseline 25 → 24. (Caveat: rotating requires a manual pod roll — the
+  egress config checksum hashes the placeholder template, not the secret.)
 - **P3 — infra creds:** move `keycloakAdminPassword`, `minioRootPassword`,
   tshepo-keys off committed values to `impilo-app-secrets`/dedicated Secrets.
 - **P4 — Keycloak client secrets:** provision real client secrets out-of-band;

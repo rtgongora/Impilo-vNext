@@ -141,9 +141,11 @@ livekit:
     repository: mirror.gcr.io/livekit/livekit-server
     tag: "v1.13.3"
     pullPolicy: IfNotPresent
-  # Preview-only credentials (committed by convention like other preview secrets).
+  # apiKey is not a secret. The signing secret is injected out-of-band: livekit
+  # server via LIVEKIT_KEYS env, rtc-gateway via LIVEKIT_API_SECRET, egress via its
+  # render initContainer — all from Secret impilo-app-secrets (key livekit-*).
+  # See docs/security/secrets-management-migration-plan.md (P2).
   apiKey: "impilo-preview-key"
-  apiSecret: "impilo-preview-livekit-secret-change-me-0123456789"
   # rtc-gateway ingests LiveKit webhooks (room/participant/track/egress lifecycle)
   # and translates them onto the impilo.rtc.* outbox events. Service name + port
   # match the fullBootServices entry for rtc-gateway-service (8196).

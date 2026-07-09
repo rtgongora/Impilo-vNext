@@ -8,13 +8,15 @@
 # No Service: egress only dials out (redis, livekit ws, minio).
 {{- define "impilo.livekitEgressConfig" -}}
 api_key: {{ .Values.livekit.apiKey }}
-api_secret: {{ .Values.livekit.apiSecret }}
+# Secrets are placeholders rendered by the render-egress-config initContainer from
+# Secrets (impilo-app-secrets / minio-preview-credentials) — never committed.
+api_secret: __LIVEKIT_API_SECRET__
 ws_url: ws://livekit:7880
 redis:
   address: redis:6379
 s3:
   access_key: {{ .Values.previewSecrets.minioRootUser }}
-  secret: {{ .Values.previewSecrets.minioRootPassword }}
+  secret: __MINIO_ROOT_PASSWORD__
   endpoint: http://minio:9000
   bucket: {{ .Values.livekitEgress.bucket | default "impilo-recordings" }}
   force_path_style: true
@@ -59,17 +61,44 @@ spec:
       # A Service named like an env prefix would inject *_PORT service-link env
       # that confuses config parsing — same hygiene as the livekit deployment.
       enableServiceLinks: false
+      initContainers:
+        # Render egress.yaml from the placeholder template, substituting api_secret
+        # + S3 secret from Secrets (never committed). P2 of
+        # docs/security/secrets-management-migration-plan.md. Secret values are hex/
+        # alnum (no sed metacharacters); rotating a secret needs a manual pod roll
+        # (the config checksum hashes the placeholder template, not the secret).
+        - name: render-egress-config
+          image: "{{ .Values.livekitEgress.renderImage | default "mirror.gcr.io/library/busybox:1.36" }}"
+          command:
+            - sh
+            - -c
+            - 'sed -e "s|__LIVEKIT_API_SECRET__|$LIVEKIT_API_SECRET|g" -e "s|__MINIO_ROOT_PASSWORD__|$MINIO_ROOT_PASSWORD|g" /tmpl/egress.yaml > /rendered/egress.yaml'
+          env:
+            - name: LIVEKIT_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: impilo-app-secrets
+                  key: livekit-api-secret
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-preview-credentials
+                  key: MINIO_ROOT_PASSWORD
+          volumeMounts:
+            - name: egress-config
+              mountPath: /tmpl
+            - name: rendered-config
+              mountPath: /rendered
       containers:
         - name: livekit-egress
           image: "{{ .Values.livekitEgress.image.repository }}:{{ .Values.livekitEgress.image.tag }}"
           imagePullPolicy: {{ .Values.livekitEgress.image.pullPolicy }}
           env:
             - name: EGRESS_CONFIG_FILE
-              value: /etc/egress/egress.yaml
+              value: /rendered/egress.yaml
           volumeMounts:
-            - name: egress-config
-              mountPath: /etc/egress/egress.yaml
-              subPath: egress.yaml
+            - name: rendered-config
+              mountPath: /rendered
             # Room-composite rendering runs headless Chrome; the container
             # default 64Mi /dev/shm starves it.
             - name: dshm
@@ -80,6 +109,8 @@ spec:
         - name: egress-config
           configMap:
             name: livekit-egress-config
+        - name: rendered-config
+          emptyDir: {}
         - name: dshm
           emptyDir:
             medium: Memory
