@@ -32,6 +32,7 @@ class GovernanceInvitationServiceTest {
     void setUp() {
         service = new GovernanceInvitationService(keycloakAdminClient, notificationServiceClient);
         ReflectionTestUtils.setField(service, "invitationExpiryHours", 168);
+        ReflectionTestUtils.setField(service, "activationBaseUrl", "https://impilo.mohcc.gov.zw");
     }
 
     @Test
@@ -119,8 +120,16 @@ class GovernanceInvitationServiceTest {
         assertTrue(result.activated());
         ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
         verify(notificationServiceClient).sendNotification(captor.capture());
+        Map<String, Object> body = captor.getValue();
+        // notification-service NotifyRequest contract: registered template key, uppercase channel,
+        // "to" recipient, string variables — the worker rejects unregistered keys.
+        assertEquals("GOVERNANCE_ONBOARDING_INVITATION", body.get("templateKey"));
+        assertEquals("EMAIL", body.get("channel"));
+        assertEquals("uploader@org.example", body.get("to"));
         @SuppressWarnings("unchecked")
-        Map<String, Object> metadata = (Map<String, Object>) captor.getValue().get("metadata");
-        assertEquals("import_organisation_users:batch-1", metadata.get("invitationType"));
+        Map<String, String> variables = (Map<String, String>) body.get("variables");
+        assertEquals("import_organisation_users:batch-1", variables.get("invitationType"));
+        assertEquals("https://impilo.mohcc.gov.zw", variables.get("activationUrl"));
+        assertNotNull(variables.get("expiresAt"));
     }
 }

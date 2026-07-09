@@ -22,6 +22,9 @@ public class GovernanceInvitationService {
     @Value("${impilo.governance.invitation-expiry-hours:168}")
     private int invitationExpiryHours;
 
+    @Value("${impilo.governance.activation-base-url:https://impilo.mohcc.gov.zw}")
+    private String activationBaseUrl;
+
     public GovernanceInvitationService(KeycloakAdminClient keycloakAdminClient,
                                        NotificationServiceClient notificationServiceClient) {
         this.keycloakAdminClient = keycloakAdminClient;
@@ -170,17 +173,23 @@ public class GovernanceInvitationService {
             String invitationId,
             String email,
             String displayName,
-            String templateKey,
+            String invitationType,
             Map<String, Object> metadata) {
+        // notification-service NotifyRequest contract: templateKey + channel + "to" + string variables.
+        // Template GOVERNANCE_ONBOARDING_INVITATION is seeded by notification-service V012; the
+        // worker refuses unregistered keys, so the key must stay stable — the invitation type is a variable.
+        Map<String, String> variables = new LinkedHashMap<>();
+        variables.put("displayName", displayName != null ? displayName : "");
+        variables.put("invitationType", invitationType != null ? invitationType : "");
+        variables.put("invitationId", invitationId);
+        variables.put("activationUrl", activationBaseUrl);
+        metadata.forEach((key, value) -> variables.putIfAbsent(key, value != null ? String.valueOf(value) : ""));
+
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("channel", "email");
-        body.put("recipientId", email);
-        body.put("recipientEmail", email);
-        body.put("templateKey", templateKey);
-        body.put("subject", "Impilo onboarding invitation");
-        body.put("invitationId", invitationId);
-        body.put("metadata", metadata);
-        body.put("displayName", displayName);
+        body.put("templateKey", "GOVERNANCE_ONBOARDING_INVITATION");
+        body.put("channel", "EMAIL");
+        body.put("to", email);
+        body.put("variables", variables);
 
         try {
             JsonNode response = notificationServiceClient.sendNotification(body);
