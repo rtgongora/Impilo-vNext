@@ -125,6 +125,19 @@ public class TshepoIdentityServiceClient {
         return extractData(response);
     }
 
+    /**
+     * C3 silent identifier resolution ({@code kind} = HEALTH_ID | PHONE | EMAIL |
+     * IMPILO_ID | PROVIDER_ID | COUNCIL_NUMBER). Anti-enumeration upstream: a miss
+     * and an error return the same {@code resolved=false} shape.
+     */
+    public JsonNode resolveIdentifier(Map<String, Object> request) {
+        String url = baseUrl + "/v1/identity/resolve-identifier";
+        log.info("TSHEPO-IDENTITY: resolveIdentifier operation [kind={}]", request.get("kind"));
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
