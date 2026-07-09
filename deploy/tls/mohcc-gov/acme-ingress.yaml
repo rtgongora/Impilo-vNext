@@ -1,0 +1,27 @@
+# ACME HTTP-01 challenge routing for impilo.mohcc.gov.zw
+#
+# Routes Let's Encrypt's /.well-known/acme-challenge/ requests (arriving at
+# Traefik :80 for host impilo.mohcc.gov.zw) to the acme-host-nginx Service, whose
+# Endpoints point at the host nginx on :8089 serving /var/www/letsencrypt.
+#
+# This is the .gov.zw analogue of the (manually-applied) acme-host-nginx Ingress
+# that was created for impilo.mohcc.org.zw. It lets host-side certbot --webroot
+# validate impilo.mohcc.gov.zw. See README.md for the full pipeline.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: acme-host-nginx-gov
+  namespace: impilo-full-preview
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: impilo.mohcc.gov.zw
+      http:
+        paths:
+          - path: /.well-known/acme-challenge/
+            pathType: Prefix
+            backend:
+              service:
+                name: acme-host-nginx
+                port:
+                  number: 80

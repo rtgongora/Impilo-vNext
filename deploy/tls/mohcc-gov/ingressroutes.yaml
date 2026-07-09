@@ -1,0 +1,45 @@
+# Production TLS routing for impilo.mohcc.gov.zw (Traefik websecure / :443).
+#
+# Terminates TLS using the impilo-mohcc-gov-zw-tls secret (populated from the
+# host-side certbot cert by scripts/tls/sync-mohcc-gov-tls.sh) and routes:
+#   - UI  -> one-ui-shell:3000   (everything except BFF surfaces)
+#   - BFF -> experience-bff:8160 (/internal, /actuator, /health)
+#
+# Mirror of the (manually-applied) impilo-mohcc-https-{ui,bff} IngressRoutes that
+# were created for impilo.mohcc.org.zw. Envoy is intentionally NOT in this path:
+# the UI/BFF are addressed directly, TLS is terminated here at Traefik.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: impilo-mohcc-gov-https-ui
+  namespace: impilo-full-preview
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`impilo.mohcc.gov.zw`) && PathPrefix(`/`) && !PathPrefix(`/internal`) && !PathPrefix(`/actuator`) && !PathPrefix(`/health`)
+      priority: 1
+      services:
+        - name: one-ui-shell
+          port: 3000
+  tls:
+    secretName: impilo-mohcc-gov-zw-tls
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: impilo-mohcc-gov-https-bff
+  namespace: impilo-full-preview
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`impilo.mohcc.gov.zw`) && (PathPrefix(`/internal`) || PathPrefix(`/actuator`) || PathPrefix(`/health`))
+      priority: 100000
+      services:
+        - name: experience-bff
+          port: 8160
+  tls:
+    secretName: impilo-mohcc-gov-zw-tls
