@@ -237,6 +237,23 @@ theme refactor.
 
 ## 8. Per-surface application (brief → real code)
 
+### Visual temperature is context-graduated (not one global dark switch)
+
+Glass is invisible on a *flat* surface — it needs a backdrop to refract. But the register of that
+backdrop must track the context, per "many contexts, many experience modes". Two canonical stage
+primitives (both in `ui/shared-ui`, both tier-degrading, both keep text AA):
+
+- **`CinematicStage`** — deep teal-charcoal gradient + teal/gold aurora; carries `.dark` on its own
+  subtree (no global `<html>` flip). Reserved for **operational command** surfaces — analytics,
+  monitoring, national ops — where a mission-control feel is purposeful. *Applied:*
+  `EnterpriseResourceDashboard`, `monitoring/provider-dashboard`.
+- **`LuminousStage`** — luminous near-white gradient + soft teal/gold tint washes; stays **light**.
+  For **wellness / citizen / clinical-care** surfaces, which want a light, warm, airy, human
+  register. Dark would be the wrong emotional temperature there. *Applied:* `wellness` hub.
+
+Rule of thumb: if the surface is someone *operating the estate*, it may go dark; if it is someone
+*living their health or receiving care*, it stays luminous-light.
+
 ### Citizen app (`apps/mobile/citizen-app`)
 - **Iridescent Digital Health ID** → re-skin `HealthIdSection` as a glass card with a gold-teal
   gradient sheen + subtle tilt (gyroscope, high tier only, reduced-motion-off).
