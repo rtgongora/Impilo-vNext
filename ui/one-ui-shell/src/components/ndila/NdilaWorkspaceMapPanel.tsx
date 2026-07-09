@@ -10,8 +10,9 @@ import { NdilaNearbyServicesMap } from "./NdilaNearbyServicesMap";
 import { NdilaOfflineNotice } from "./NdilaOfflineNotice";
 import { NdilaProviderStatusBadge } from "./NdilaProviderStatusBadge";
 import { NdilaRoutePreview } from "./NdilaRoutePreview";
+import { ZIMBABWE_DEFAULT_CENTER, ZIMBABWE_DEFAULT_ZOOM } from "@/lib/ndila/zimbabwe-admin";
 
-const DEFAULT_CENTER: NdilaCoordinate = { latitude: -17.8252, longitude: 31.0335 };
+const DEFAULT_CENTER: NdilaCoordinate = ZIMBABWE_DEFAULT_CENTER;
 
 export function NdilaWorkspaceMapPanel() {
   const tileQ = useNdilaTileConfig();
@@ -115,12 +116,13 @@ export function NdilaWorkspaceMapPanel() {
           </div>
           <NdilaMap
             center={origin}
-            zoom={12}
+            zoom={origin === DEFAULT_CENTER ? ZIMBABWE_DEFAULT_ZOOM : 12}
             markers={mapMarkers}
             height={360}
             layers={["facilities", "catchment"]}
             mode="OPERATIONS"
             fitToMarkers={mapMarkers.length > 1}
+            showZimbabweAdmin
           />
         </div>
 
@@ -130,7 +132,7 @@ export function NdilaWorkspaceMapPanel() {
             <NdilaNearbyServicesMap
               origin={origin}
               radiusMeters={radiusKm * 1000}
-              entityTypes={["FACILITY", "PHARMACY", "PUBLIC_HEALTH_SITE"]}
+              entityTypes={["HEALTH_FACILITY", "PHARMACY", "PUBLIC_HEALTH_SITE"]}
               height={280}
             />
           </div>

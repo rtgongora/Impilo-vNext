@@ -189,10 +189,49 @@ export async function ndilaTileConfig(): Promise<NdilaTileConfig> {
 }
 
 // ── Spatial search ─────────────────────────────────────────────────────────
+
+type NearbyMatchRaw = {
+  id: string;
+  name?: string;
+  locationType?: string;
+  latitude?: number;
+  longitude?: number;
+  distanceMeters?: number;
+};
+
+type NearbyPayload = {
+  matches?: NearbyMatchRaw[];
+  items?: NdilaLocation[];
+};
+
+function mapNearbyMatch(raw: NearbyMatchRaw): NdilaLocation {
+  return {
+    id: raw.id,
+    name: raw.name ?? raw.id,
+    locationType: raw.locationType ?? "UNKNOWN",
+    latitude: raw.latitude,
+    longitude: raw.longitude,
+  };
+}
+
+/** Normalizes BFF `{ data: { matches } }` or legacy `{ items }` nearby responses. */
+export function normalizeNearbyResponse(body: unknown): { items: NdilaLocation[]; total?: number } {
+  const envelope = body as ApiResponse<NearbyPayload> & NearbyPayload;
+  const payload = envelope.data ?? envelope;
+  const rawMatches = payload.matches ?? payload.items ?? [];
+  const items = rawMatches.map((entry) =>
+    "locationType" in entry && entry.locationType !== undefined
+      ? (entry as NdilaLocation)
+      : mapNearbyMatch(entry as NearbyMatchRaw),
+  );
+  return { items, total: items.length };
+}
+
 export async function ndilaNearby(req: {
   origin: NdilaCoordinate; radiusMeters: number; entityTypes?: string[]; limit?: number;
 }): Promise<{ items: NdilaLocation[]; total?: number }> {
-  return apiClient.post("/internal/v1/ndila/spatial/nearby", req);
+  const body = await apiClient.post<ApiResponse<NearbyPayload>>("/internal/v1/ndila/spatial/nearby", req);
+  return normalizeNearbyResponse(body);
 }
 
 // ── Intelligence ───────────────────────────────────────────────────────────

@@ -8,7 +8,9 @@ import zw.gov.mohcc.impilo.ndila.repository.NdilaLocationRepository;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -20,6 +22,12 @@ import java.util.stream.Collectors;
 @Service
 public class NdilaSpatialSearchService {
 
+    /** UI/API aliases → canonical {@code ndila_locations.location_type} values. */
+    private static final Map<String, String> LOCATION_TYPE_ALIASES = Map.of(
+            "FACILITY", "HEALTH_FACILITY",
+            "CLINIC", "HEALTH_FACILITY",
+            "HOSPITAL", "HEALTH_FACILITY");
+
     private final NdilaLocationRepository locationRepository;
 
     public NdilaSpatialSearchService(NdilaLocationRepository locationRepository) {
@@ -28,9 +36,10 @@ public class NdilaSpatialSearchService {
 
     public List<Match> nearby(UUID tenantId, Coordinate origin, double radiusMeters,
                               List<String> entityTypes, int limit) {
-        List<NdilaLocationEntity> candidates = entityTypes == null || entityTypes.isEmpty()
+        List<String> normalizedTypes = normalizeLocationTypes(entityTypes);
+        List<NdilaLocationEntity> candidates = normalizedTypes == null || normalizedTypes.isEmpty()
                 ? locationRepository.findByTenantId(tenantId)
-                : entityTypes.stream()
+                : normalizedTypes.stream()
                 .flatMap(t -> locationRepository.findByTenantIdAndLocationType(tenantId, t).stream())
                 .collect(Collectors.toList());
 
@@ -52,9 +61,10 @@ public class NdilaSpatialSearchService {
     }
 
     public List<Match> nearest(UUID tenantId, Coordinate origin, String locationType, int limit) {
-        List<NdilaLocationEntity> candidates = locationType == null
+        String normalizedType = locationType == null ? null : normalizeLocationType(locationType);
+        List<NdilaLocationEntity> candidates = normalizedType == null
                 ? locationRepository.findByTenantId(tenantId)
-                : locationRepository.findByTenantIdAndLocationType(tenantId, locationType);
+                : locationRepository.findByTenantIdAndLocationType(tenantId, normalizedType);
         List<Match> matches = new ArrayList<>();
         for (NdilaLocationEntity loc : candidates) {
             if (!loc.isActive() || loc.getLatitude() == null || loc.getLongitude() == null) continue;
@@ -63,6 +73,26 @@ public class NdilaSpatialSearchService {
         }
         matches.sort(Comparator.comparingDouble(Match::distanceMeters));
         return matches.stream().limit(Math.max(1, limit)).toList();
+    }
+
+    static List<String> normalizeLocationTypes(List<String> entityTypes) {
+        if (entityTypes == null || entityTypes.isEmpty()) {
+            return null;
+        }
+        LinkedHashSet<String> out = new LinkedHashSet<>();
+        for (String raw : entityTypes) {
+            if (raw != null && !raw.isBlank()) {
+                out.add(normalizeLocationType(raw));
+            }
+        }
+        return out.isEmpty() ? null : List.copyOf(out);
+    }
+
+    static String normalizeLocationType(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return raw;
+        }
+        return LOCATION_TYPE_ALIASES.getOrDefault(raw.trim().toUpperCase(), raw.trim().toUpperCase());
     }
 
     public record Match(NdilaLocationEntity location, double distanceMeters) {}
