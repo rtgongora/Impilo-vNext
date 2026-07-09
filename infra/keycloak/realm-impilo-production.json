@@ -798,7 +798,7 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "secret": "CHANGE_ME_OPS_CONSOLE",
+      "secret": "${env.KC_CLIENT_SECRET_OPS_CONSOLE}",
       "redirectUris": [
         "https://ops.impilo.gov.zw/*"
       ],
@@ -1029,7 +1029,7 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": true,
-      "secret": "CHANGE_ME_BFF",
+      "secret": "${env.KC_CLIENT_SECRET_BFF}",
       "redirectUris": [],
       "webOrigins": [],
       "protocol": "openid-connect",
@@ -1059,7 +1059,7 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": true,
-      "secret": "CHANGE_ME_ADMIN_CLI",
+      "secret": "${env.KC_CLIENT_SECRET_ADMIN_CLI}",
       "redirectUris": [],
       "webOrigins": [],
       "protocol": "openid-connect",

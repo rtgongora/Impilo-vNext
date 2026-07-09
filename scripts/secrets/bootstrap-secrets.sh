@@ -52,6 +52,12 @@ set_if_absent keycloak-admin-user "admin"
 set_if_absent keycloak-admin-password "$(openssl rand -hex 24)"
 set_if_absent minio-root-user "impilo-preview"
 set_if_absent minio-root-password "$(openssl rand -hex 24)"
+# Keycloak confidential-client secrets (realm import ${env.*} + app KEYCLOAK_BACKEND_SECRET).
+# Applied only at first realm import; rotating an imported realm needs the admin API.
+set_if_absent keycloak-client-secret-bff "$(openssl rand -hex 24)"
+set_if_absent keycloak-client-secret-ops-console "$(openssl rand -hex 24)"
+set_if_absent keycloak-client-secret-admin-cli "$(openssl rand -hex 24)"
+set_if_absent keycloak-backend-secret "$(openssl rand -hex 24)"
 
 # livekit-api-secret: match the server key, don't randomise.
 lk_val="${LIVEKIT_API_SECRET:-$(kubectl get cm -n "$NS" livekit-config \

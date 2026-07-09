@@ -39,6 +39,29 @@ spec:
                 secretKeyRef:
                   name: impilo-app-secrets
                   key: keycloak-admin-password
+            # Client secrets for realm import ${env.*} substitution — never
+            # committed (Secret impilo-app-secrets). Applied only at first import;
+            # rotate an already-imported realm via the admin API (see runbook).
+            - name: KC_CLIENT_SECRET_BFF
+              valueFrom:
+                secretKeyRef:
+                  name: impilo-app-secrets
+                  key: keycloak-client-secret-bff
+            - name: KC_CLIENT_SECRET_OPS_CONSOLE
+              valueFrom:
+                secretKeyRef:
+                  name: impilo-app-secrets
+                  key: keycloak-client-secret-ops-console
+            - name: KC_CLIENT_SECRET_ADMIN_CLI
+              valueFrom:
+                secretKeyRef:
+                  name: impilo-app-secrets
+                  key: keycloak-client-secret-admin-cli
+            - name: KC_CLIENT_SECRET_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: impilo-app-secrets
+                  key: keycloak-backend-secret
             - name: KC_HEALTH_ENABLED
               value: "true"
             - name: KC_METRICS_ENABLED

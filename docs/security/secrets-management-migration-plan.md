@@ -134,9 +134,21 @@ Neither External-Secrets-Operator nor Sealed-Secrets is installed today.
   preserved** (Keycloak/MinIO passwords are init-only — rotating an initialised
   cluster needs an admin-API/`mc` change, per the runbook; not just a re-seed).
   - **Remaining P3:** `tshepo-keys` (`helm/tshepo-keys/values.yaml`, its own chart).
-- **P4 — Keycloak client secrets:** provision real client secrets out-of-band;
-  update realm import to reference env/`${...}` placeholders; rotate the
-  `CHANGE_ME_*` clients. Update any consumers reading those client secrets.
+- **P4 — Keycloak client secrets. ✅ DONE.** Realm import (`realm-impilo-preview.json`
+  + `infra/keycloak/realm-impilo-production.json`) now references
+  `${env.KC_CLIENT_SECRET_BFF|OPS_CONSOLE|ADMIN_CLI|BACKEND}` instead of committed
+  `CHANGE_ME_*`; Keycloak's realm-import env substitution fills them from
+  `impilo-app-secrets` (injected as `KC_CLIENT_SECRET_*` env on the keycloak
+  deployment). The one app-coupled secret, experience-bff `KEYCLOAK_BACKEND_SECRET`,
+  moved to `secretEnv` (a `secretEnv` hook was added to the dedicated
+  `experience-bff.yaml` template too). Baseline 22 → 16. Verified: `helm template`
+  shows 0 `CHANGE_ME` client secrets + 4 `${env.*}` refs + the bff secretKeyRef.
+  - **⚠️ Two deploy-window caveats (existing cluster unaffected today):** (1)
+    `${env.*}` substitution applies only at **first** realm import — the running
+    Keycloak already holds the old `CHANGE_ME_*` client secrets; rotate them via
+    the admin API + re-provision `impilo-app-secrets` (see P5 runbook). (2) verify
+    the `${env.*}` substitution actually resolves on a **fresh** import for
+    Keycloak 25 before relying on it for a clean install.
 - **P5 — Rotation runbook:** document rotation per secret (which consumers must
   roll together — e.g. LiveKit's three), and a `certbot`-style redeploy/roll step.
 

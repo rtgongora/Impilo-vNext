@@ -212,6 +212,10 @@ hapiFhir:
 experienceBff:
   enabled: true
   replicaCount: 1
+  secretEnv:
+    KEYCLOAK_BACKEND_SECRET:
+      name: impilo-app-secrets
+      key: keycloak-backend-secret
   env:
     REDIS_HOST: redis
     REDIS_PORT: "6379"
@@ -219,7 +223,6 @@ experienceBff:
     KEYCLOAK_REALM: impilo
     KEYCLOAK_CLIENT_ID: experience-ui
     KEYCLOAK_BACKEND_CLIENT_ID: impilo-backend
-    KEYCLOAK_BACKEND_SECRET: impilo-backend-secret
     AUTH_FALLBACK_ENABLED: "false"
     IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
     IMPILO_BOOTSTRAP_ENABLED: "true"

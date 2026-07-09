@@ -82,6 +82,14 @@ spec:
             - name: {{ $k }}
               value: {{ $v | quote }}
             {{- end }}
+            {{- /* Secret-backed env (secretKeyRef) — see secrets-management-migration-plan.md */}}
+            {{- range $ek, $ref := (.Values.experienceBff.secretEnv | default dict) }}
+            - name: {{ $ek }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $ref.name | quote }}
+                  key: {{ $ref.key | quote }}
+            {{- end }}
           readinessProbe:
             httpGet:
               path: /actuator/health
