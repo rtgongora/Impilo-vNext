@@ -16,8 +16,28 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      testIgnore: "journeys/**",
       use: {
         ...devices["Desktop Chrome"],
+        ...(process.env.PLAYWRIGHT_USE_SYSTEM_CHROME
+          ? { channel: "chrome" as const }
+          : process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+            ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } }
+            : {}),
+      },
+    },
+    {
+      // Golden-journey persona walkthroughs — honest auth against a live estate.
+      // Sequential (workers=1 via CLI), long timeouts, evidence-grade artefacts.
+      name: "journeys",
+      testMatch: "journeys/**/*.spec.ts",
+      timeout: 180_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        video: "retain-on-failure",
+        screenshot: "on",
+        trace: "retain-on-failure",
+        actionTimeout: 15_000,
         ...(process.env.PLAYWRIGHT_USE_SYSTEM_CHROME
           ? { channel: "chrome" as const }
           : process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
