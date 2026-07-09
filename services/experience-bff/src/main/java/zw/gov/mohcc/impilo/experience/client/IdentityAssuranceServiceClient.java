@@ -48,6 +48,23 @@ public class IdentityAssuranceServiceClient {
         return extractData(response);
     }
 
+    /** Pending assurance upgrade requests for the caller's tenant (Trust Console queue). */
+    public JsonNode listUpgradeRequests() {
+        String url = baseUrl + "/internal/v1/assurance/upgrade/requests";
+        log.info("IDENTITY-ASSURANCE: listing pending assurance upgrade requests");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Decide an assurance upgrade request ({@code {approve: boolean, reason: string}}). */
+    public JsonNode decideUpgradeRequest(long id, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/assurance/upgrade/requests/" + id + "/decide";
+        log.info("IDENTITY-ASSURANCE: deciding assurance upgrade request {}", id);
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

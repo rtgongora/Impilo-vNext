@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -89,6 +90,33 @@ public class VarapiServiceClient {
     public JsonNode getProviderAccessRequest(String publicId) {
         String url = baseUrl + "/v1/internal/providers/access-requests/" + publicId;
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Reviewer queue (IATG Trust Console): tenant-scoped provider-access requests in the
+     * given statuses (defaults to every still-decidable status when none supplied).
+     */
+    public JsonNode listProviderAccessRequestsForReview(List<String> statuses) {
+        StringBuilder sb = new StringBuilder(baseUrl).append("/v1/internal/providers/access-requests/review");
+        if (statuses != null && !statuses.isEmpty()) {
+            sb.append("?");
+            sb.append(statuses.stream()
+                    .map(s -> "status=" + URLEncoder.encode(s, StandardCharsets.UTF_8))
+                    .collect(java.util.stream.Collectors.joining("&")));
+        }
+        log.info("VARAPI: listing provider access requests for review");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(sb.toString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Record a reviewer decision on a provider-access request (Trust Console). */
+    public JsonNode decideProviderAccessRequest(String publicId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/providers/access-requests/"
+                + URLEncoder.encode(publicId, StandardCharsets.UTF_8) + "/decision";
+        log.info("VARAPI: deciding provider access request {}", publicId);
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
         return extractData(response);
     }
 

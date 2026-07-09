@@ -63,6 +63,16 @@ public class TusoFacilityClaimClient {
         return extractData(response);
     }
 
+    /**
+     * Cross-facility review queue (IATG Trust Console): appointments in a given approval
+     * state (PENDING/ACTIVE/REJECTED/REVOKED) across every facility of the caller's tenant.
+     */
+    public JsonNode appointmentsByState(String state) {
+        String url = baseUrl + "/v1/internal/facility-admin-appointments?state=" + enc(state);
+        log.info("TUSO: listing facility-admin appointments by state={}", state);
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     /** Approve a PENDING appointment → ACTIVE. */
     public JsonNode approve(String appointmentId, Map<String, Object> body) {
         String url = baseUrl + "/v1/internal/facility-admin-appointments/" + enc(appointmentId) + "/approve";
