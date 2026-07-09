@@ -1081,6 +1081,14 @@ export const SHELL_COMMANDS: ShellCommand[] = [
     keywords: ["ubomi", "birth registration", "death registration", "crvs", "life events"],
     action: { type: "navigate", href: "/ubomi" },
   },
+  {
+    id: "cmd-iatg-console",
+    label: "IATG Trust Console",
+    description: "Pending access requests, facility claims, assurance upgrades",
+    keywords: ["iatg", "trust console", "access requests", "approvals", "facility claims", "governance queue"],
+    action: { type: "navigate", href: "/registry-admin/trust-console" },
+    requiredRole: "REGISTRY_ADMIN",
+  },
 ];
 
 export function appVisibleForUser(
