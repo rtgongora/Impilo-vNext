@@ -76,10 +76,20 @@ Neither External-Secrets-Operator nor Sealed-Secrets is installed today.
 
 ## Phasing
 
-- **P0 — Guardrail first.** Add/verify a **gitleaks** (or equivalent) gate in
-  `.github/workflows/ci.yml` that fails on new committed secrets / `*-change-me-*`
-  in `values*.yaml`, the generator, and realm JSON. Prevents regression while the
-  rest lands. (CI already references secret scanning — confirm it actually blocks.)
+- **P0 — Guardrail first. ✅ DONE (baseline guard).** The hollow "Check for
+  secrets in code" step in the `security-scan` CI job (a `|| true` one-file grep)
+  is replaced by `scripts/guard/check-committed-secrets.sh`, which fails on any
+  NEW committed placeholder/secret token across tracked helm values, the
+  runtime-values generator, realm JSON, service config and env files. The 33
+  existing occurrences are recorded in `scripts/guard/committed-secrets-baseline.txt`
+  (green now, red on anything new); prune with `--update-baseline` as each phase
+  removes a secret. Proven: green on the tree, red on a planted token.
+  - **Remaining (gitleaks high-entropy net):** `.gitleaks.toml` is committed as the
+    starting config, but a raw scan of the tree reports **594 findings** (mostly
+    vendored/test-fixture noise) and runs ~21 min locally. Adopting it as a gate
+    needs (a) a committed findings-baseline (`--baseline-path`) so only NEW
+    high-entropy secrets fail, and (b) scoping to tracked files for speed. Do this
+    within P1 — the baseline guard already blocks the `*-change-me-*` convention.
 - **P1 — env-based (low risk):** build the `secretEnv` hook + `impilo-app-secrets`
   + bootstrap script; migrate VITO_HMAC_PEPPER, DAGS_ENFORCEMENT_SIGNING_KEY,
   LIVEKIT_API_SECRET (rtc-gateway), nhume, mushex. Remove literals from generator.

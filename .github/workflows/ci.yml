@@ -865,11 +865,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check for secrets in code
-        run: |
-          echo "Scanning for hardcoded secrets..."
-          ! grep -rn "password.*=.*['\"]" services/experience-bff/src/main/resources/application.yml | grep -v '${' | grep -v 'test' || true
-          echo "Secret scan passed"
+      # P0 secrets guardrail — fails on NEW committed placeholder/secret tokens
+      # (helm values, runtime-values generator, realm JSON, service config, env).
+      # Existing occurrences are baselined; the set shrinks as the migration
+      # phases land. See docs/security/secrets-management-migration-plan.md.
+      - name: No new committed secrets (baseline guard)
+        run: bash scripts/guard/check-committed-secrets.sh
 
   change-safety-gates:
     name: Change Safety Gates
