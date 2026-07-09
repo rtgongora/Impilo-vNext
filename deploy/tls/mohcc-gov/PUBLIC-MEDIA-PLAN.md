@@ -20,6 +20,11 @@ does NOT flow through Traefik and needs ICE/TURN + firewall work.
 
 ## Step 1 — Secret management (do FIRST; removes the revert-footgun)
 
+> **Superseded / generalized:** LiveKit is one of a platform-wide family of
+> committed placeholder secrets, so this is now tracked as an epic —
+> `docs/security/secrets-management-migration-plan.md` (LiveKit = its P1/P2).
+> The LiveKit-specific target below still holds; do it as part of that epic.
+
 Move the LiveKit API secret out of ConfigMap/values plaintext into a k8s Secret.
 
 - Create `Secret/livekit-api` (key `api-secret`) in `impilo-full-preview` holding the
