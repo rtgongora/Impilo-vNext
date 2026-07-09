@@ -217,6 +217,48 @@ class FacilityClaimServiceTest {
                         .isEqualTo(HttpStatus.NOT_FOUND));
     }
 
+    // ── Cross-facility review queue (Trust Console) ───────────────────────────────
+
+    @Test
+    void listByState_returnsTenantFacilitiesOnly_newestFirst() {
+        UUID foreignFacilityUuid = UUID.fromString("99999999-8888-7777-6666-555555555555");
+        FacilityEntity foreign = new FacilityEntity();
+        foreign.setId(43L);
+        foreign.setFacilityUuid(foreignFacilityUuid);
+        foreign.setTenantId(UUID.fromString("00000000-0000-0000-0000-000000000099"));
+
+        FacilityAdminAppointmentEntity mine = new FacilityAdminAppointmentEntity();
+        mine.setId(1L);
+        mine.setFacilityUuid(facilityUuid);
+        mine.setPersonHealthId("HID-1");
+        mine.setApprovalState(FacilityAdminAppointmentEntity.STATE_PENDING);
+
+        FacilityAdminAppointmentEntity foreignAppointment = new FacilityAdminAppointmentEntity();
+        foreignAppointment.setId(2L);
+        foreignAppointment.setFacilityUuid(foreignFacilityUuid);
+        foreignAppointment.setPersonHealthId("HID-2");
+        foreignAppointment.setApprovalState(FacilityAdminAppointmentEntity.STATE_PENDING);
+
+        stubFacility();
+        when(facilityRepository.findByFacilityUuid(foreignFacilityUuid)).thenReturn(Optional.of(foreign));
+        when(appointmentRepository.findByApprovalStateOrderByCreatedAtDesc(
+                FacilityAdminAppointmentEntity.STATE_PENDING))
+                .thenReturn(List.of(mine, foreignAppointment));
+
+        List<FacilityClaimDtos.AppointmentView> queue = service.listByState("pending");
+
+        assertThat(queue).hasSize(1);
+        assertThat(queue.get(0).personHealthId()).isEqualTo("HID-1");
+    }
+
+    @Test
+    void listByState_rejectsUnknownState() {
+        assertThatThrownBy(() -> service.listByState("MAYBE"))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(t -> assertThat(((ResponseStatusException) t).getStatusCode())
+                        .isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
     // ── Tenant isolation ─────────────────────────────────────────────────────────
 
     @Test

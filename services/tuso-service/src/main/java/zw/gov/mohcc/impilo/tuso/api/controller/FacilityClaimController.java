@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -67,6 +68,18 @@ public class FacilityClaimController {
         TrustContext ctx = TrustContextHolder.require();
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(
                 claimService.submitClaim(facilityId, request), ctx.correlationId().toString()));
+    }
+
+    /**
+     * Cross-facility review queue (IATG Trust Console): appointments in a given approval
+     * state across every facility of the caller's tenant. Defaults to PENDING.
+     */
+    @GetMapping("/v1/internal/facility-admin-appointments")
+    public ResponseEntity<ApiResponse<List<FacilityClaimDtos.AppointmentView>>> appointmentsByState(
+            @RequestParam(name = "state", defaultValue = "PENDING") String state) {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(
+                claimService.listByState(state), ctx.correlationId().toString()));
     }
 
     /** Approve a PENDING appointment → ACTIVE. */

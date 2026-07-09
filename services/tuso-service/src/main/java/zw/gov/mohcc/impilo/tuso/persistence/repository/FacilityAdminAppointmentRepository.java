@@ -13,6 +13,9 @@ public interface FacilityAdminAppointmentRepository
 
     List<FacilityAdminAppointmentEntity> findByFacilityUuidOrderByCreatedAtDesc(UUID facilityUuid);
 
+    /** Cross-facility review queue by approval state (Trust Console), newest first. */
+    List<FacilityAdminAppointmentEntity> findByApprovalStateOrderByCreatedAtDesc(String approvalState);
+
     boolean existsByFacilityUuidAndApprovalState(UUID facilityUuid, String approvalState);
 
     boolean existsByFacilityUuidAndPersonHealthIdAndApprovalState(

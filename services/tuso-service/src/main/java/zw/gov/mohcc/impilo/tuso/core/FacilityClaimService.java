@@ -207,6 +207,33 @@ public class FacilityClaimService {
                 .stream().map(FacilityClaimService::toView).toList();
     }
 
+    /**
+     * Cross-facility review queue by approval state (IATG Trust Console): every appointment
+     * in the given state, newest first, restricted to facilities of the caller's tenant.
+     * The appointment row itself carries no tenant column — tenancy is derived from the
+     * owning facility, mirroring the per-facility {@link #list(UUID)} guard.
+     */
+    @Transactional(readOnly = true)
+    public List<FacilityClaimDtos.AppointmentView> listByState(String state) {
+        TrustContext ctx = TrustContextHolder.require();
+        String normalized = state == null ? "" : state.trim().toUpperCase();
+        if (!List.of(FacilityAdminAppointmentEntity.STATE_PENDING,
+                FacilityAdminAppointmentEntity.STATE_ACTIVE,
+                FacilityAdminAppointmentEntity.STATE_REJECTED,
+                FacilityAdminAppointmentEntity.STATE_REVOKED).contains(normalized)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Unknown approval state '" + state + "' — expected PENDING, ACTIVE, REJECTED or REVOKED");
+        }
+        Map<UUID, Boolean> tenantOwned = new LinkedHashMap<>();
+        return appointmentRepository.findByApprovalStateOrderByCreatedAtDesc(normalized).stream()
+                .filter(a -> tenantOwned.computeIfAbsent(a.getFacilityUuid(),
+                        uuid -> facilityRepository.findByFacilityUuid(uuid)
+                                .map(f -> ctx.tenantId().equals(f.getTenantId()))
+                                .orElse(false)))
+                .map(FacilityClaimService::toView)
+                .toList();
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────────────
 
     /**
