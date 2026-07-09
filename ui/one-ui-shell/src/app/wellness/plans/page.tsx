@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Route, Loader2, CheckCircle2, Circle, ShieldAlert, ArrowRight } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
@@ -52,6 +53,7 @@ export default function WellnessPlansPage() {
         subtitle="Structured prevention journeys from Simba — enrol, follow the tasks, track your progress"
         icon={<Route className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <NompiloContextualGuidance routePath="/wellness/plans" />
 
         {!cpid ? (
@@ -78,7 +80,7 @@ export default function WellnessPlansPage() {
                     const pct = Number(e.progressPct ?? 0);
                     const isOpen = openEnrollment === enrollmentId;
                     return (
-                      <div key={enrollmentId} className="rounded-xl border border-border bg-card shadow-sm">
+                      <GlassSurface key={enrollmentId} className="p-0">
                         <button
                           type="button"
                           onClick={() => setOpenEnrollment(isOpen ? null : enrollmentId)}
@@ -130,7 +132,7 @@ export default function WellnessPlansPage() {
                             )}
                           </div>
                         )}
-                      </div>
+                      </GlassSurface>
                     );
                   })}
                 </div>
@@ -155,7 +157,7 @@ export default function WellnessPlansPage() {
                     const enrolled = enrolledPlanIds.has(planId);
                     const caution = Boolean(p.clinicalCaution);
                     return (
-                      <div key={planId} className="flex flex-col rounded-xl border border-border bg-card p-5 shadow-sm">
+                      <GlassSurface key={planId} className="flex flex-col p-5">
                         <div className="mb-2 flex items-center gap-2">
                           <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
                             {String(p.category ?? "WELLNESS")}
@@ -180,7 +182,7 @@ export default function WellnessPlansPage() {
                         >
                           {enrolled ? "Enrolled" : enroll.isPending ? "Enrolling…" : (<>Enrol <ArrowRight className="h-4 w-4" /></>)}
                         </button>
-                      </div>
+                      </GlassSurface>
                     );
                   })}
                 </div>
@@ -188,6 +190,7 @@ export default function WellnessPlansPage() {
             </section>
           </>
         )}
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

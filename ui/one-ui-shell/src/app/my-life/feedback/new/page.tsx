@@ -8,6 +8,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
@@ -76,6 +77,7 @@ export default function ShareFeedbackPage() {
         subtitle="Your voice helps improve care. You can submit anonymously."
         serviceSlug="rito"
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <div className="mb-4">
           <Link
             href="/my-life/feedback"
@@ -174,6 +176,7 @@ export default function ShareFeedbackPage() {
             </button>
           </form>
         )}
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

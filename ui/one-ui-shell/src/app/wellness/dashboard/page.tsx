@@ -20,6 +20,7 @@ import {
   Trophy,
   Users2,
 } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -118,7 +119,7 @@ function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+    <GlassSurface className="overflow-hidden p-0">
       <div className="flex items-center gap-2 border-b border-border px-4 py-3 bg-background/80">
         {icon}
         <h2 className="text-sm font-semibold text-foreground">{title}</h2>
@@ -137,7 +138,7 @@ function SectionCard({
         )}
         {!isLoading && !isError && children}
       </div>
-    </section>
+    </GlassSurface>
   );
 }
 
@@ -222,6 +223,7 @@ export default function WellnessDashboardPage() {
         subtitle="Your SIMBA wellness snapshot — activity, sleep, diet, mood, goals, clubs, and challenges"
         icon={<LayoutDashboard className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <div className="mb-4">
           <Link
             href="/wellness"
@@ -453,6 +455,7 @@ export default function WellnessDashboardPage() {
             )}
           </SectionCard>
         </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

@@ -7,6 +7,7 @@ import { WELLNESS_CONNECT_COLUMNS } from "@/lib/json-api/generic-table-columns";
 
 import { useCallback, useEffect, useState } from "react";
 import { Link2, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -157,6 +158,7 @@ export default function WellnessHealthConnectPage() {
         subtitle="Typed changesets → wellness_activities / vitals (idempotent by record id)"
         icon={<Link2 className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <p className="text-sm text-muted-foreground mb-4">
           This surface aligns with Android Health Connect–style batches: stable <code className="text-xs bg-neutral-100 px-1 rounded">records[].id</code>,
           ISO times, and types <strong>Steps</strong>, <strong>Hydration</strong>, <strong>SleepSession</strong>, <strong>HeartRate</strong>. See BFF{" "}
@@ -216,7 +218,7 @@ export default function WellnessHealthConnectPage() {
 
         <div className="mb-6">
           <h3 className="text-sm font-semibold text-foreground mb-2">Connected sources & permissions</h3>
-          <div className="rounded-lg border border-border divide-y bg-card">
+          <GlassSurface className="divide-y">
             {sources.length === 0 ? (
               <p className="px-3 py-2 text-sm text-muted-foreground">No connected sources yet.</p>
             ) : (
@@ -238,7 +240,7 @@ export default function WellnessHealthConnectPage() {
                 </div>
               ))
             )}
-          </div>
+          </GlassSurface>
         </div>
 
         {summary && (
@@ -262,6 +264,7 @@ export default function WellnessHealthConnectPage() {
         {result && (
           <p className="mt-4 text-sm text-foreground bg-background border border-border rounded-lg px-3 py-2 font-mono">{result}</p>
         )}
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

@@ -19,6 +19,7 @@ import {
   Stethoscope,
   Users,
 } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import {
@@ -165,6 +166,7 @@ export default function WellnessCommunityPage() {
         subtitle="Community health units and outreach visits"
         icon={<Users className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <div className="mb-4">
           <Link
             href="/wellness"
@@ -292,9 +294,9 @@ export default function WellnessCommunityPage() {
                 Failed to load community units.
               </p>
             ) : units.length === 0 ? (
-              <div className="bg-card rounded-lg border border-border p-12 text-center text-muted-foreground text-sm">
+              <GlassSurface className="p-12 text-center text-muted-foreground text-sm">
                 No community units yet. Create one to get started.
-              </div>
+              </GlassSurface>
             ) : (
               <div className="bg-card rounded-lg border border-border overflow-hidden">
                 <table className="w-full text-sm">
@@ -473,9 +475,9 @@ export default function WellnessCommunityPage() {
                 Failed to load outreach visits.
               </p>
             ) : visits.length === 0 ? (
-              <div className="bg-card rounded-lg border border-border p-12 text-center text-muted-foreground text-sm">
+              <GlassSurface className="p-12 text-center text-muted-foreground text-sm">
                 No outreach visits scheduled.
-              </div>
+              </GlassSurface>
             ) : (
               <div className="bg-card rounded-lg border border-border overflow-hidden">
                 <table className="w-full text-sm">
@@ -552,6 +554,7 @@ export default function WellnessCommunityPage() {
             )}
           </div>
         )}
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

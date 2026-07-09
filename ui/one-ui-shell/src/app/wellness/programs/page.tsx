@@ -8,6 +8,7 @@
 
 import { BookOpen, Search, Filter } from "lucide-react";
 import { useMemo, useState } from "react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -33,6 +34,7 @@ export default function WellnessProgramsPage() {
         subtitle="Enroll in wellness and prevention programmes designed for your health needs"
         icon={<BookOpen className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <div className="space-y-6">
           {/* Search and filter */}
           <div className="flex gap-3">
@@ -65,9 +67,9 @@ export default function WellnessProgramsPage() {
             <h3 className="text-sm font-semibold text-foreground mb-3">Available Programmes</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {programs.map((program) => (
-                <div
+                <GlassSurface
                   key={program.id}
-                  className="rounded-xl border border-border bg-card p-5 hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer group"
+                  className="p-5 transition-all hover:shadow-glow-teal cursor-pointer group"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">{program.title}</h4>
@@ -84,11 +86,12 @@ export default function WellnessProgramsPage() {
                   >
                     Enroll
                   </button>
-                </div>
+                </GlassSurface>
               ))}
             </div>
           </div>
         </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

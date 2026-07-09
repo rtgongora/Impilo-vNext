@@ -7,6 +7,7 @@
  */
 
 import { FileHeart, Plus, Search } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
@@ -18,6 +19,7 @@ export default function MonitoringCarePlansPage() {
         subtitle="Active care plans linked to remote monitoring and device thresholds"
         icon={<FileHeart className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <div className="space-y-6">
           {/* Actions bar */}
           <div className="flex items-center justify-between">
@@ -43,14 +45,15 @@ export default function MonitoringCarePlansPage() {
               { title: "Heart Failure", description: "Weight monitoring, fluid management, activity tracking" },
               { title: "COPD Management", description: "Oxygen saturation, peak flow monitoring, exacerbation tracking" },
             ].map((plan) => (
-              <div key={plan.title} className="rounded-lg border border-border bg-card p-5 hover:border-orange-400 hover:shadow-sm transition-all cursor-pointer">
+              <GlassSurface key={plan.title} className="p-5 transition-all hover:shadow-glow-teal cursor-pointer">
                 <h3 className="font-semibold text-foreground mb-1">{plan.title}</h3>
                 <p className="text-sm text-muted-foreground">{plan.description}</p>
                 <p className="mt-3 text-xs text-muted-foreground">No active plans</p>
-              </div>
+              </GlassSurface>
             ))}
           </div>
         </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

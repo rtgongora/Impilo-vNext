@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Moon, Star, BedDouble, Sun, Plus, X, Loader2 } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -84,6 +85,7 @@ export default function SleepPage() {
   return (
     <AppLayout>
       <PageShell title="Sleep & Recovery" subtitle="Sleep hours and quality sync to your wellness activity log" icon={<Moon className="h-6 w-6" />}>
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         {!patientId && (
           <p className="text-sm text-warning-foreground bg-warning-soft border border-warning/35 rounded-lg px-4 py-3">Sign in to log sleep.</p>
         )}
@@ -128,7 +130,7 @@ export default function SleepPage() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-border bg-card shadow-sm p-6 flex flex-col items-center justify-center">
+              <GlassSurface className="p-6 flex flex-col items-center justify-center">
                 <p className="text-sm font-medium text-muted-foreground mb-3">Recovery Score</p>
                 <div className="relative h-32 w-32">
                   <svg viewBox="0 0 36 36" className="h-32 w-32 -rotate-90">
@@ -150,10 +152,10 @@ export default function SleepPage() {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">Based on recent logged sleep (target 8h)</p>
-              </div>
+              </GlassSurface>
             </div>
 
-            <div className="rounded-xl border border-border bg-card shadow-sm p-6 mb-6">
+            <GlassSurface className="p-6 mb-6">
               <h3 className="font-semibold text-foreground mb-4">Recent sleep (from wellness log)</h3>
               {chartDays.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No rows yet. Log sleep below — data will match the citizen mobile app.</p>
@@ -179,9 +181,9 @@ export default function SleepPage() {
                   ))}
                 </div>
               )}
-            </div>
+            </GlassSurface>
 
-            <div className="rounded-xl border border-border bg-card shadow-sm p-6">
+            <GlassSurface className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-foreground">Log sleep (today)</h3>
                 <button
@@ -245,9 +247,10 @@ export default function SleepPage() {
                   </div>
                 </div>
               )}
-            </div>
+            </GlassSurface>
           </>
         )}
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

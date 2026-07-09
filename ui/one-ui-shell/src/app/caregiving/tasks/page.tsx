@@ -7,6 +7,7 @@
  */
 
 import { ListChecks, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
@@ -25,21 +26,20 @@ export default function CareTasksPage() {
         subtitle="View and complete assigned care tasks for your dependants"
         icon={<ListChecks className="h-6 w-6" />}
       >
-        <div className="space-y-6">
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
           {/* Status filters */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {FILTERS.map(({ label, count, Icon, color }) => (
-              <button
-                key={label}
-                className="flex items-center gap-3 rounded-lg border border-border bg-card p-4 hover:border-purple-400 transition-colors text-left"
-              >
-                <div className={`rounded-lg p-2 ${color.split(" ")[1]}`}>
-                  <Icon className={`h-5 w-5 ${color.split(" ")[0]}`} />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">{label}</p>
-                  <p className="text-xs text-muted-foreground">{count} tasks</p>
-                </div>
+              <button key={label} className="text-left">
+                <GlassSurface className="flex items-center gap-3 p-4 transition-all hover:shadow-glow-teal">
+                  <div className={`rounded-lg p-2 ${color.split(" ")[1]}`}>
+                    <Icon className={`h-5 w-5 ${color.split(" ")[0]}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{label}</p>
+                    <p className="text-xs text-muted-foreground">{count} tasks</p>
+                  </div>
+                </GlassSurface>
               </button>
             ))}
           </div>
@@ -52,7 +52,7 @@ export default function CareTasksPage() {
               Tasks such as medication reminders, appointment follow-ups, and health checks will appear here.
             </p>
           </div>
-        </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

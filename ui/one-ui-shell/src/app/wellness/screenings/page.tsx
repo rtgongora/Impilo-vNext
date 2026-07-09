@@ -10,6 +10,7 @@
 
 import Link from "next/link";
 import { AlertCircle, CalendarCheck, Clock, Loader2 } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
@@ -68,6 +69,7 @@ export default function WellnessScreeningsPage() {
         subtitle="Due and upcoming preventive screenings from your guidance reminders — not fabricated clinical schedules"
         icon={<CalendarCheck className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <FeatureMaturityBadge
             status={programmes.length > 0 ? "connected" : "partial"}
@@ -156,9 +158,9 @@ export default function WellnessScreeningsPage() {
               ) : (
                 <div className="space-y-3">
                   {screeningReminders.map((reminder) => (
-                    <div
+                    <GlassSurface
                       key={reminder.id}
-                      className="flex items-center justify-between rounded-lg border border-border bg-card p-4 hover:shadow-sm transition-all"
+                      className="flex items-center justify-between p-4 transition-all hover:shadow-glow-teal"
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -184,13 +186,14 @@ export default function WellnessScreeningsPage() {
                       >
                         View in reminders
                       </Link>
-                    </div>
+                    </GlassSurface>
                   ))}
                 </div>
               )}
             </>
           )}
         </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

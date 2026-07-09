@@ -8,6 +8,7 @@
 
 import Link from "next/link";
 import { HeartHandshake, Users, Share2, ListChecks, Bell, Loader2 } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useMyCaregivingLinkages, type CaregiverLinkage } from "@/hooks/queries/useCaregiverLinkage";
@@ -33,8 +34,9 @@ export default function CaregivingPage() {
   return (
     <AppLayout>
       <PageShell title="Caregiving Hub" subtitle="Health OS §4 — Delegated care, family caregivers, dependant management" icon={<HeartHandshake className="h-6 w-6" />}>
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         {linkages.length > 0 && (
-          <div className="mb-6 bg-card rounded-lg border border-border p-5">
+          <GlassSurface className="mb-6 p-5">
             <div className="flex items-center gap-2 mb-3">
               <Users className="h-4 w-4 text-purple-600" />
               <h3 className="text-sm font-medium text-foreground">My Dependants ({linkages.length})</h3>
@@ -59,7 +61,7 @@ export default function CaregivingPage() {
                 );
               })}
             </div>
-          </div>
+          </GlassSurface>
         )}
 
         {isLoading && (
@@ -71,15 +73,18 @@ export default function CaregivingPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {SECTIONS.map(({ href, label, description, Icon }) => (
-            <Link key={href} href={href} className="rounded-lg border border-border bg-card p-5 hover:border-impilo-400 hover:shadow-sm transition-all">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="rounded-lg bg-warning-soft p-2"><Icon className="h-5 w-5 text-purple-600" /></div>
-                <h3 className="font-semibold text-foreground">{label}</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">{description}</p>
+            <Link key={href} href={href} className="group block">
+              <GlassSurface className="h-full p-5 transition-all hover:shadow-glow-teal">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="rounded-lg bg-warning-soft p-2"><Icon className="h-5 w-5 text-purple-600" /></div>
+                  <h3 className="font-semibold text-foreground">{label}</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">{description}</p>
+              </GlassSurface>
             </Link>
           ))}
         </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

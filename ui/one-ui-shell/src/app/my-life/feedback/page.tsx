@@ -10,6 +10,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageSquarePlus, Search } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
@@ -24,7 +25,7 @@ export default function MyFeedbackPage() {
         subtitle="Share your experience or report a concern — and track it under your case reference"
         serviceSlug="rito"
       >
-        <div className="space-y-6">
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
           <Link
             href="/my-life/feedback/new"
             className="flex items-center gap-3 rounded-2xl border border-teal-300 bg-teal-50 p-5 transition-all hover:shadow-sm"
@@ -40,7 +41,7 @@ export default function MyFeedbackPage() {
             </div>
           </Link>
 
-          <div className="rounded-2xl border border-border bg-card p-5">
+          <GlassSurface className="p-5">
             <h3 className="mb-1 text-sm font-semibold text-foreground">Track a case</h3>
             <p className="mb-3 text-sm text-muted-foreground">
               Submit feedback or report a concern, then track it using the case reference you were
@@ -68,8 +69,8 @@ export default function MyFeedbackPage() {
                 <Search className="h-4 w-4" /> Track
               </button>
             </form>
-          </div>
-        </div>
+          </GlassSurface>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

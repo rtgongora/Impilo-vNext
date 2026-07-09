@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { HeartHandshake, Check, Flame, Loader2, Plus, Sparkles, X } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -109,6 +110,7 @@ export default function CoachingPage() {
   return (
     <AppLayout>
       <PageShell title="Coaching & Habits" subtitle="SIMBA goals, wellness activity logging, and Nompilo coaching prompts" icon={<HeartHandshake className="h-6 w-6" />}>
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 text-white p-6 shadow-lg">
             <h2 className="font-semibold text-lg mb-2">Today&apos;s Progress</h2>
@@ -120,7 +122,7 @@ export default function CoachingPage() {
               <div className="h-full rounded-full bg-card transition-all" style={{ width: `${totalToday > 0 ? (doneCount / totalToday) * 100 : 0}%` }} />
             </div>
           </div>
-          <div className="rounded-xl border border-border bg-card shadow-sm p-6 flex flex-col justify-center">
+          <GlassSurface className="p-6 flex flex-col justify-center">
             <Sparkles className="h-6 w-6 text-amber-500 mb-2" />
             {askGuidance.isPending ? (
               <p className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading coaching tip…</p>
@@ -136,7 +138,7 @@ export default function CoachingPage() {
             >
               Get coaching tip
             </button>
-          </div>
+          </GlassSurface>
         </div>
 
         {nudges.length > 0 && (
@@ -152,7 +154,7 @@ export default function CoachingPage() {
           </div>
         )}
 
-        <div className="rounded-xl border border-border bg-card shadow-sm mb-6">
+        <GlassSurface className="mb-6 overflow-hidden p-0">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-background">
             <h3 className="font-semibold text-foreground">Today&apos;s Habits (SIMBA goals)</h3>
             <button onClick={() => setShowForm(!showForm)} className="text-violet-600 hover:text-violet-700 text-sm font-medium flex items-center gap-1">
@@ -187,7 +189,8 @@ export default function CoachingPage() {
               ))}
             </div>
           )}
-        </div>
+        </GlassSurface>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

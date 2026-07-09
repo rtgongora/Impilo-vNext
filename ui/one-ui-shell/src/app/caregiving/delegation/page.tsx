@@ -7,6 +7,7 @@
  */
 
 import { Share2, UserPlus, UserCheck, Clock } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
@@ -24,12 +25,12 @@ export default function DelegationPage() {
         subtitle="Delegate or accept care responsibilities for dependants"
         icon={<Share2 className="h-6 w-6" />}
       >
-        <div className="space-y-6">
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {TABS.map(({ label, Icon, description }) => (
-              <div
+              <GlassSurface
                 key={label}
-                className="rounded-lg border border-border bg-card p-5 hover:border-purple-400 hover:shadow-sm transition-all cursor-pointer"
+                className="p-5 transition-all hover:shadow-glow-teal cursor-pointer"
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div className="rounded-lg bg-warning-soft p-2">
@@ -38,7 +39,7 @@ export default function DelegationPage() {
                   <h3 className="font-semibold text-foreground">{label}</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">{description}</p>
-              </div>
+              </GlassSurface>
             ))}
           </div>
 
@@ -50,7 +51,7 @@ export default function DelegationPage() {
               You have no active care delegation arrangements. Invite a caregiver to share responsibilities.
             </p>
           </div>
-        </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

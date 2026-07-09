@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Trophy, Target, Loader2 } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -88,6 +89,7 @@ export default function ChallengesPage() {
         subtitle="Join wellness challenges from Simba — national programme catalogue"
         icon={<Trophy className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         {!patientId && (
           <p className="text-sm text-warning-foreground bg-warning-soft border border-warning/35 rounded-lg px-4 py-3 mb-4">
             Sign in with your Health ID to join challenges.
@@ -116,7 +118,7 @@ export default function ChallengesPage() {
               const g = gradientForId(c.id);
               const joined = joinedLocal.has(c.id);
               return (
-                <div key={c.id} className="rounded-xl overflow-hidden shadow-sm border border-border bg-card flex flex-col">
+                <GlassSurface key={c.id} className="overflow-hidden p-0 flex flex-col">
                   <div className={`bg-gradient-to-r ${g} p-4 text-white`}>
                     <h3 className="font-bold">{c.title}</h3>
                     {c.description && <p className="text-xs text-white/85 mt-1 line-clamp-3">{c.description}</p>}
@@ -145,7 +147,7 @@ export default function ChallengesPage() {
                       )}
                     </div>
                   </div>
-                </div>
+                </GlassSurface>
               );
             })}
           </div>
@@ -157,6 +159,7 @@ export default function ChallengesPage() {
             Progress tracking for challenges may be extended in a later slice; enrollment is live on Simba.
           </p>
         )}
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

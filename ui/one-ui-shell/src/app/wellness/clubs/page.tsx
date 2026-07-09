@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { Users2, Search, MapPin, Calendar, ChevronRight } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -67,6 +68,7 @@ export default function ClubsPage() {
   return (
     <AppLayout>
       <PageShell title="Clubs & Communities" subtitle="Walking, running, and fitness clubs near you" icon={<Users2 className="h-6 w-6" />}>
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         {/* My Clubs */}
         {myClubs.length > 0 && (
           <div className="mb-6">
@@ -102,7 +104,7 @@ export default function ClubsPage() {
         {/* Club cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((c) => (
-            <div key={c.id} className="rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <GlassSurface key={c.id} className="overflow-hidden p-0 transition-all hover:shadow-glow-teal">
               <div className={`h-2 ${c.color}`} />
               <div className="p-4">
                 <div className="flex items-start justify-between mb-2">
@@ -125,10 +127,11 @@ export default function ClubsPage() {
                   {c.joined ? "Leave Club" : "Join Club"}<ChevronRight className="h-4 w-4" />
                 </button>
               </div>
-            </div>
+            </GlassSurface>
           ))}
           {filtered.length === 0 && <p className="col-span-full text-center text-muted-foreground py-8">No clubs match your search</p>}
         </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

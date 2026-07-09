@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Clock, Loader2, RefreshCw, SearchX } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
@@ -91,6 +92,7 @@ export default function TrackFeedbackPage() {
   return (
     <AppLayout>
       <PageShell title="Track feedback" subtitle="Follow the progress of your case" serviceSlug="rito">
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <div className="mb-4">
           <Link
             href="/my-life/feedback"
@@ -126,7 +128,7 @@ export default function TrackFeedbackPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <GlassSurface className="p-5">
               <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
                 <span className="font-mono font-semibold text-teal-700">
                   {caseData.caseReference ?? caseData.id}
@@ -145,9 +147,9 @@ export default function TrackFeedbackPage() {
               <h2 className="text-lg font-semibold text-foreground">
                 {caseData.title ?? "Your feedback"}
               </h2>
-            </div>
+            </GlassSurface>
 
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <GlassSurface className="p-5">
               <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                 <Clock className="h-4 w-4 text-teal-600" /> Progress
               </h3>
@@ -172,9 +174,10 @@ export default function TrackFeedbackPage() {
                   ))}
                 </ol>
               )}
-            </div>
+            </GlassSurface>
           </div>
         )}
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

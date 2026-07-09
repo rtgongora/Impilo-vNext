@@ -7,6 +7,7 @@
  */
 
 import { Users, Plus, Search } from "lucide-react";
+import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
@@ -18,7 +19,7 @@ export default function DependantsPage() {
         subtitle="View and manage people you provide care for"
         icon={<Users className="h-6 w-6" />}
       >
-        <div className="space-y-6">
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
           {/* Actions bar */}
           <div className="flex items-center justify-between">
             <div className="relative w-72">
@@ -43,7 +44,7 @@ export default function DependantsPage() {
               Add family members, children, or elderly relatives you provide care for.
             </p>
           </div>
-        </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

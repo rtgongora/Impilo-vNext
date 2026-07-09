@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Loader2, MapPin, Search, Star } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useQuery } from "@tanstack/react-query";
@@ -75,6 +76,7 @@ export default function RoutesPage() {
         subtitle="Fitness venues and community exercise services from the wellness discover catalogue"
         icon={<MapPin className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <WellnessPlacesMapPanel />
 
         {simbaRoutes.length > 0 && (
@@ -82,7 +84,7 @@ export default function RoutesPage() {
             <h2 className="font-semibold text-impilo-900 mb-3">Governed wellness routes (Simba)</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {simbaRoutes.map((route, idx) => (
-                <div key={String(route.routeId ?? route.route_id ?? idx)} className="rounded-lg border border-primary/20 bg-card p-4 text-sm">
+                <GlassSurface key={String(route.routeId ?? route.route_id ?? idx)} className="p-4 text-sm">
                   <p className="font-medium text-foreground">{String(route.title ?? route.routeCode ?? "Route")}</p>
                   <p className="text-muted-foreground mt-1">
                     {route.distanceKm != null || route.distance_km != null
@@ -96,7 +98,7 @@ export default function RoutesPage() {
                   {route.facilityName || route.facility_name ? (
                     <p className="text-xs text-muted-foreground mt-1">{String(route.facilityName ?? route.facility_name)}</p>
                   ) : null}
-                </div>
+                </GlassSurface>
               ))}
             </div>
           </div>
@@ -166,6 +168,7 @@ export default function RoutesPage() {
             <p className="col-span-full text-center text-muted-foreground py-8">No services match your filters</p>
           ) : null}
         </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );
@@ -193,7 +196,7 @@ function WellnessRouteServiceCard({ service }: { service: WellnessDiscoverServic
   }
 
   return (
-    <article className="rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+    <GlassSurface className="overflow-hidden transition-all hover:shadow-glow-teal">
       <div className="p-5">
         <div className="flex items-start gap-3 mb-2">
           <div className="h-11 w-11 rounded-xl bg-green-100 text-green-700 flex items-center justify-center shrink-0">
@@ -253,6 +256,6 @@ function WellnessRouteServiceCard({ service }: { service: WellnessDiscoverServic
           </Link>
         </div>
       </div>
-    </article>
+    </GlassSurface>
   );
 }

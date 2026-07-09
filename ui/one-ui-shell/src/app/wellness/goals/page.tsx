@@ -8,6 +8,7 @@
 
 import { useMemo, useState } from "react";
 import { Target, Plus } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -59,6 +60,7 @@ export default function WellnessGoalsPage() {
         subtitle="Set and track personal health and wellness targets"
         icon={<Target className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <div className="space-y-6">
           {/* Actions */}
           <div className="flex items-center justify-end">
@@ -86,13 +88,13 @@ export default function WellnessGoalsPage() {
             ) : (
               <div className="space-y-2">
                 {goals.map((goal, idx) => (
-                  <div key={idx} className="rounded-lg border border-border bg-card px-4 py-3 text-sm">
+                  <GlassSurface key={idx} className="px-4 py-3 text-sm">
                     <p className="font-medium text-foreground">{String(goal.goalType ?? goal.goal_type ?? "Goal")}</p>
                     <p className="text-muted-foreground">
                       Current: {String(goal.currentValue ?? goal.current_value ?? 0)} / Target:{" "}
                       {String(goal.targetValue ?? goal.target_value ?? 0)} {String(goal.unit ?? "")}
                     </p>
-                  </div>
+                  </GlassSurface>
                 ))}
               </div>
             )}
@@ -119,6 +121,7 @@ export default function WellnessGoalsPage() {
             </div>
           </div>
         </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

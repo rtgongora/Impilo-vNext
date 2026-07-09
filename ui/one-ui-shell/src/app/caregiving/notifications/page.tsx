@@ -7,6 +7,7 @@
  */
 
 import { Bell, Filter, CheckCheck } from "lucide-react";
+import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
@@ -18,7 +19,7 @@ export default function CareNotificationsPage() {
         subtitle="Notifications about your dependants' health events and care activities"
         icon={<Bell className="h-6 w-6" />}
       >
-        <div className="space-y-6">
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
           {/* Actions bar */}
           <div className="flex items-center justify-between">
             <button className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-background transition-colors">
@@ -39,7 +40,7 @@ export default function CareNotificationsPage() {
               Alerts about medication adherence, appointment reminders, and health changes for your dependants will appear here.
             </p>
           </div>
-        </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

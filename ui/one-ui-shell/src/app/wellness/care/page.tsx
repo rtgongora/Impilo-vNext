@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Stethoscope, Loader2, ArrowUpRight, ShieldAlert, Clock } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
@@ -57,6 +58,7 @@ export default function WellnessCarePage() {
         subtitle="Wellness is not a diagnosis. If something needs attention, route it safely to the right care service."
         icon={<Stethoscope className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <NompiloContextualGuidance routePath="/wellness/care" />
 
         {!cpid ? (
@@ -65,7 +67,7 @@ export default function WellnessCarePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <GlassSurface className="p-5">
               <h2 className="mb-3 font-semibold text-foreground">Route a concern</h2>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">What is happening?</label>
               <select value={trigger} onChange={(e) => setTrigger(e.target.value)} className="mb-3 w-full rounded-lg border px-3 py-2 text-sm">
@@ -103,9 +105,9 @@ export default function WellnessCarePage() {
                       : "Your concern was recorded. A care referral is pending and will follow up."}
                 </div>
               )}
-            </div>
+            </GlassSurface>
 
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <GlassSurface className="p-5">
               <h2 className="mb-3 font-semibold text-foreground">Your care linkages</h2>
               {linkagesQ.isLoading ? (
                 <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading…</p>
@@ -123,9 +125,10 @@ export default function WellnessCarePage() {
                   ))}
                 </ul>
               )}
-            </div>
+            </GlassSurface>
           </div>
         )}
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

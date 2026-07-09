@@ -6,6 +6,7 @@
 
 import { useState } from "react";
 import { Activity, Footprints, Droplets, Timer, Loader2 } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -52,6 +53,7 @@ export default function WellnessActivityPage() {
         subtitle="Steps, hydration, and active minutes — synced with your mobile wellness log"
         icon={<Activity className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         {!patientId && (
           <p className="text-sm text-warning-foreground bg-warning-soft border border-warning/35 rounded-lg px-4 py-3">
             Sign in to track activity against your Health ID.
@@ -72,7 +74,7 @@ export default function WellnessActivityPage() {
 
         {patientId && !isLoading && !isError && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="rounded-xl border border-border bg-card shadow-sm p-6">
+            <GlassSurface className="p-6">
               <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Footprints className="h-5 w-5 text-primary" /> Today
               </h3>
@@ -94,9 +96,9 @@ export default function WellnessActivityPage() {
                   <p className="text-xs text-indigo-600 font-medium">Sleep (h)</p>
                 </div>
               </div>
-            </div>
+            </GlassSurface>
 
-            <div className="rounded-xl border border-border bg-card shadow-sm p-6">
+            <GlassSurface className="p-6">
               <h3 className="font-semibold text-foreground mb-4">Log or update today</h3>
               <div className="space-y-3">
                 <label className="block text-xs font-medium text-muted-foreground">
@@ -164,10 +166,10 @@ export default function WellnessActivityPage() {
                   <p className="text-xs text-red-600">Save failed. Check you are signed in and the BFF is running.</p>
                 )}
               </div>
-            </div>
+            </GlassSurface>
 
             {activities.length > 0 && (
-              <div className="lg:col-span-2 rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <GlassSurface className="lg:col-span-2 overflow-hidden p-0">
                 <div className="px-4 py-3 bg-background border-b border-border">
                   <h3 className="font-semibold text-foreground">Recent days</h3>
                 </div>
@@ -182,10 +184,11 @@ export default function WellnessActivityPage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </GlassSurface>
             )}
           </div>
         )}
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );

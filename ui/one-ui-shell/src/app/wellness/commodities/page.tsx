@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Package, ArrowRight } from "lucide-react";
+import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { StockManagementPanel } from "@/components/workspace-ops/StockManagementPanel";
@@ -17,6 +18,7 @@ export default function WellnessCommoditiesPage() {
         subtitle="Stock for wellness programmes is owned by Dura (inventory-service). Simba is wellness — it does not own or manage stock; this is a convenience window into the Dura ledger."
         icon={<Package className="h-6 w-6" />}
       >
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <div className="mb-6 rounded-xl border border-teal-200 bg-teal-50/70 p-4 text-sm text-teal-950">
           <p>
             Commodities for wellness programmes are stock positions owned by <span className="font-semibold">Dura</span>
@@ -46,6 +48,7 @@ export default function WellnessCommoditiesPage() {
         ) : (
           <StockManagementPanel facilityId={facility.id} />
         )}
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );
