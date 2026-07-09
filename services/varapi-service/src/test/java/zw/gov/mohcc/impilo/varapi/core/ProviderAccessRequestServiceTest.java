@@ -17,6 +17,7 @@ import zw.gov.mohcc.impilo.varapi.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderAccessRequestRepository;
 import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -109,6 +110,109 @@ class ProviderAccessRequestServiceTest {
         assertEquals("DUPLICATE_SUSPECTED", e.getStatus());
         assertEquals("NATIONAL_ADMINISTRATOR", e.getNextActor());
         assertTrue(e.getReason().toLowerCase().contains("recover"));
+    }
+
+    // ── Reviewer lane (IATG Trust Console) ─────────────────────────────────────
+
+    private ProviderAccessRequestEntity pendingRequest(String status) {
+        ProviderAccessRequestEntity e = new ProviderAccessRequestEntity();
+        e.setPublicId("PAR-REVIEW01");
+        e.setTenantId(TENANT);
+        e.setApplicantHealthId(APPLICANT);
+        e.setRequestType("NEW_PROVIDER");
+        e.setStatus(status);
+        e.setNextActor("NATIONAL_ADMINISTRATOR");
+        return e;
+    }
+
+    @Test
+    void decideApprovesFromPendingReviewAndRecordsReviewer() {
+        withContext();
+        when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-REVIEW01"))
+                .thenReturn(Optional.of(pendingRequest("PENDING_NATIONAL_REVIEW")));
+
+        ProviderAccessRequestEntity e = service().decide("PAR-REVIEW01", "APPROVED", "Council registration confirmed");
+
+        assertEquals("APPROVED", e.getStatus());
+        assertEquals(APPLICANT.toString(), e.getDecidedBy());
+        assertNotNull(e.getDecidedAt());
+        assertEquals("Council registration confirmed", e.getDecisionNote());
+        assertNull(e.getNextActor());
+        verify(outboxRepository).save(any());
+    }
+
+    @Test
+    void decideNeedsMoreInformationRoutesBackToApplicant() {
+        withContext();
+        when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-REVIEW01"))
+                .thenReturn(Optional.of(pendingRequest("SUBMITTED")));
+
+        ProviderAccessRequestEntity e = service().decide(
+                "PAR-REVIEW01", "needs_more_information", "Attach the council certificate");
+
+        assertEquals("NEEDS_MORE_INFORMATION", e.getStatus());
+        assertEquals("APPLICANT", e.getNextActor());
+        assertEquals("Attach the council certificate", e.getReason());
+    }
+
+    @Test
+    void decideRejectsUnknownDecisionValue() {
+        withContext();
+        when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-REVIEW01"))
+                .thenReturn(Optional.of(pendingRequest("PENDING_COUNCIL_REVIEW")));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service().decide("PAR-REVIEW01", "ESCALATED", null));
+    }
+
+    @Test
+    void decideRefusesTerminalStatuses() {
+        withContext();
+        when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-REVIEW01"))
+                .thenReturn(Optional.of(pendingRequest("APPROVED")));
+
+        assertThrows(IllegalStateException.class,
+                () -> service().decide("PAR-REVIEW01", "REJECTED", "flip-flop"));
+    }
+
+    @Test
+    void decideIsTenantScoped() {
+        withContext();
+        // The repository lookup is tenant-keyed: another tenant's publicId resolves to empty.
+        when(requestRepository.findByTenantIdAndPublicId(TENANT, "PAR-OTHERTNT"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service().decide("PAR-OTHERTNT", "APPROVED", null));
+    }
+
+    @Test
+    void listForReviewDefaultsToDecidableStatusesForTenant() {
+        withContext();
+        when(requestRepository.findByTenantIdAndStatusInOrderByCreatedAtDesc(any(), any()))
+                .thenReturn(List.of(pendingRequest("PENDING_NATIONAL_REVIEW")));
+
+        List<ProviderAccessRequestEntity> rows = service().listForReview(null);
+
+        assertEquals(1, rows.size());
+        verify(requestRepository).findByTenantIdAndStatusInOrderByCreatedAtDesc(
+                org.mockito.ArgumentMatchers.eq(TENANT),
+                org.mockito.ArgumentMatchers.argThat(statuses ->
+                        statuses.containsAll(ProviderAccessRequestService.DECIDABLE_STATUSES)
+                                && !statuses.contains("APPROVED")));
+    }
+
+    @Test
+    void listForReviewNormalisesExplicitStatuses() {
+        withContext();
+        when(requestRepository.findByTenantIdAndStatusInOrderByCreatedAtDesc(any(), any()))
+                .thenReturn(List.of());
+
+        service().listForReview(List.of("pending_national_review", " submitted "));
+
+        verify(requestRepository).findByTenantIdAndStatusInOrderByCreatedAtDesc(
+                org.mockito.ArgumentMatchers.eq(TENANT),
+                org.mockito.ArgumentMatchers.eq(List.of("PENDING_NATIONAL_REVIEW", "SUBMITTED")));
     }
 
     @Test

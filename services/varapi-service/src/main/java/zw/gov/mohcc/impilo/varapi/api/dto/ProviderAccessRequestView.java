@@ -21,6 +21,9 @@ public record ProviderAccessRequestView(
         String evidenceSummary,
         String reason,
         String providerPublicId,
+        String decidedBy,
+        Instant decidedAt,
+        String decisionNote,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -38,6 +41,9 @@ public record ProviderAccessRequestView(
                 e.getEvidenceSummary(),
                 e.getReason(),
                 mask(e.getProviderPublicId()),
+                e.getDecidedBy(),
+                e.getDecidedAt(),
+                e.getDecisionNote(),
                 e.getCreatedAt(),
                 e.getUpdatedAt());
     }

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.varapi.api.dto.DecideProviderAccessRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderAccessRequestView;
 import zw.gov.mohcc.impilo.varapi.api.dto.SubmitProviderAccessRequest;
 import zw.gov.mohcc.impilo.varapi.core.ProviderAccessRequestService;
@@ -44,6 +45,32 @@ public class ProviderAccessRequestController {
                 .map(ProviderAccessRequestView::of)
                 .toList();
         return ResponseEntity.ok(ApiResponse.ok(views, ctx.correlationId().toString()));
+    }
+
+    /**
+     * Reviewer queue (IATG Trust Console): tenant-scoped requests in the given statuses
+     * (defaults to every still-decidable status). Authz: SYSTEM_ADMIN / HIE_ADMIN via
+     * ext_authz policy rules — this endpoint is never applicant-facing.
+     */
+    @GetMapping("/review")
+    public ResponseEntity<ApiResponse<List<ProviderAccessRequestView>>> listForReview(
+            @RequestParam(name = "status", required = false) List<String> statuses) {
+        TrustContext ctx = TrustContextHolder.require();
+        List<ProviderAccessRequestView> views = service.listForReview(statuses).stream()
+                .map(ProviderAccessRequestView::of)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.ok(views, ctx.correlationId().toString()));
+    }
+
+    /** Record a reviewer decision (APPROVED / REJECTED / NEEDS_MORE_INFORMATION). */
+    @PostMapping("/{publicId}/decision")
+    public ResponseEntity<ApiResponse<ProviderAccessRequestView>> decide(
+            @PathVariable String publicId,
+            @Valid @RequestBody DecideProviderAccessRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        ProviderAccessRequestView view = ProviderAccessRequestView.of(
+                service.decide(publicId, request.decision(), request.note()));
+        return ResponseEntity.ok(ApiResponse.ok(view, ctx.correlationId().toString()));
     }
 
     @GetMapping("/{publicId}")

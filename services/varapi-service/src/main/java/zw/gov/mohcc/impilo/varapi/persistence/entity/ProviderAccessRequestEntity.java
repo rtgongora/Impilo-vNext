@@ -67,6 +67,17 @@ public class ProviderAccessRequestEntity {
     @Column(name = "provider_public_id", length = 40)
     private String providerPublicId;
 
+    /** Reviewer (actor id) who recorded the decision — Trust Console review lane. */
+    @Column(name = "decided_by", length = 255)
+    private String decidedBy;
+
+    @Column(name = "decided_at")
+    private Instant decidedAt;
+
+    /** Reviewer-supplied note explaining the decision. */
+    @Column(name = "decision_note", length = 500)
+    private String decisionNote;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -135,6 +146,15 @@ public class ProviderAccessRequestEntity {
 
     public String getProviderPublicId() { return providerPublicId; }
     public void setProviderPublicId(String providerPublicId) { this.providerPublicId = providerPublicId; }
+
+    public String getDecidedBy() { return decidedBy; }
+    public void setDecidedBy(String decidedBy) { this.decidedBy = decidedBy; }
+
+    public Instant getDecidedAt() { return decidedAt; }
+    public void setDecidedAt(Instant decidedAt) { this.decidedAt = decidedAt; }
+
+    public String getDecisionNote() { return decisionNote; }
+    public void setDecisionNote(String decisionNote) { this.decisionNote = decisionNote; }
 
     public Instant getCreatedAt() { return createdAt; }
 

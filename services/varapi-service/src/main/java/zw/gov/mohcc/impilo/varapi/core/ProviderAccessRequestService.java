@@ -15,7 +15,10 @@ import zw.gov.mohcc.impilo.varapi.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderAccessRequestRepository;
 import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderRepository;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -99,6 +102,87 @@ public class ProviderAccessRequestService {
         TrustContext ctx = TrustContextHolder.require();
         return requestRepository.findByTenantIdAndPublicId(ctx.tenantId(), publicId)
                 .orElseThrow(() -> new IllegalArgumentException("No provider access request " + publicId));
+    }
+
+    // ── Reviewer lane (IATG Trust Console) ─────────────────────────────────────
+
+    /** Statuses a reviewer may still decide from. Terminal states are never re-decided. */
+    static final Set<String> DECIDABLE_STATUSES = Set.of(
+            ProviderAccessRequestStatus.SUBMITTED.name(),
+            ProviderAccessRequestStatus.PENDING_COUNCIL_REVIEW.name(),
+            ProviderAccessRequestStatus.PENDING_EMPLOYER_REVIEW.name(),
+            ProviderAccessRequestStatus.PENDING_ORGANIZATION_REVIEW.name(),
+            ProviderAccessRequestStatus.PENDING_NATIONAL_REVIEW.name(),
+            ProviderAccessRequestStatus.NEEDS_MORE_INFORMATION.name(),
+            ProviderAccessRequestStatus.NEEDS_ADJUDICATION.name());
+
+    /** Decisions a reviewer can record. NEEDS_MORE_INFORMATION keeps the request decidable. */
+    static final Set<String> ALLOWED_DECISIONS = Set.of(
+            ProviderAccessRequestStatus.APPROVED.name(),
+            ProviderAccessRequestStatus.REJECTED.name(),
+            ProviderAccessRequestStatus.NEEDS_MORE_INFORMATION.name());
+
+    /**
+     * Review queue: tenant-scoped requests in the given statuses (defaults to every
+     * still-decidable status when none supplied), newest first.
+     */
+    @Transactional(readOnly = true)
+    public List<ProviderAccessRequestEntity> listForReview(List<String> statuses) {
+        TrustContext ctx = TrustContextHolder.require();
+        List<String> effective = (statuses == null || statuses.isEmpty())
+                ? List.copyOf(DECIDABLE_STATUSES)
+                : statuses.stream().map(s -> s.trim().toUpperCase(Locale.ROOT)).filter(s -> !s.isEmpty()).toList();
+        return requestRepository.findByTenantIdAndStatusInOrderByCreatedAtDesc(ctx.tenantId(), effective);
+    }
+
+    /**
+     * Record a reviewer decision. Allowed only from a still-decidable status
+     * (SUBMITTED / PENDING_*_REVIEW / NEEDS_*) to APPROVED, REJECTED or
+     * NEEDS_MORE_INFORMATION. The decision is auditable: who, when, why —
+     * and emits the same outbox event pattern the submit path uses.
+     */
+    @Transactional
+    public ProviderAccessRequestEntity decide(String publicId, String decision, String note) {
+        TrustContext ctx = TrustContextHolder.require();
+        ProviderAccessRequestEntity entity = requestRepository
+                .findByTenantIdAndPublicId(ctx.tenantId(), publicId)
+                .orElseThrow(() -> new IllegalArgumentException("No provider access request " + publicId));
+
+        String target = decision == null ? "" : decision.trim().toUpperCase(Locale.ROOT);
+        if (!ALLOWED_DECISIONS.contains(target)) {
+            throw new IllegalArgumentException(
+                    "Unsupported decision '" + decision + "' — expected APPROVED, REJECTED or NEEDS_MORE_INFORMATION");
+        }
+        if (!DECIDABLE_STATUSES.contains(entity.getStatus())) {
+            throw new IllegalStateException("Request " + publicId + " is in status " + entity.getStatus()
+                    + " and can no longer be decided");
+        }
+
+        entity.setStatus(target);
+        entity.setDecidedBy(ctx.actorId());
+        entity.setDecidedAt(Instant.now());
+        entity.setDecisionNote(trimToNull(note));
+        if (ProviderAccessRequestStatus.NEEDS_MORE_INFORMATION.name().equals(target)) {
+            entity.setNextActor("APPLICANT");
+            entity.setReason(trimToNull(note) != null ? note.trim()
+                    : "The reviewer needs more information before a decision can be made.");
+        } else {
+            entity.setNextActor(null);
+            if (trimToNull(note) != null) {
+                entity.setReason(note.trim());
+            }
+        }
+        entity = requestRepository.save(entity);
+
+        publishEvent("PROVIDER_ACCESS_REQUEST", entity.getPublicId(),
+                "varapi.provider.access_request.decided",
+                String.format("{\"publicId\":\"%s\",\"requestType\":\"%s\",\"status\":\"%s\",\"decidedBy\":\"%s\"}",
+                        entity.getPublicId(), entity.getRequestType(), entity.getStatus(),
+                        entity.getDecidedBy() == null ? "" : entity.getDecidedBy()),
+                ctx.tenantId(), ctx.correlationId());
+        log.info("Provider access request {} decided (status={}, decidedBy={})",
+                entity.getPublicId(), entity.getStatus(), entity.getDecidedBy());
+        return entity;
     }
 
     /** Route a fresh request to its pending stage + next actor by the evidence supplied. */
