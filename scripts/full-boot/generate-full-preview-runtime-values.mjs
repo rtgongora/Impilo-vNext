@@ -77,7 +77,10 @@ function specialEnv(serviceId) {
     };
   }
   if (serviceId === "vito-service") {
-    return { VITO_HMAC_PEPPER: "preview-vito-hmac-pepper-change-me-0123456789" };
+    // VITO_HMAC_PEPPER (PII pseudonymization pepper) is injected from Secret
+    // impilo-app-secrets via specialSecretEnv — never committed. Rotating it is
+    // data-affecting (invalidates existing HMACs); requires a migration.
+    return null;
   }
   if (serviceId === "pacs-adapter-service") {
     // Chart-deployed Orthanc (templates/orthanc.yaml) is the preview DICOM backend.
@@ -95,7 +98,7 @@ function specialEnv(serviceId) {
       LIVEKIT_URL: "http://livekit:7880",
       LIVEKIT_CLIENT_URL: "wss://impilo.mohcc.gov.zw",
       LIVEKIT_API_KEY: "impilo-preview-key",
-      LIVEKIT_API_SECRET: "impilo-preview-livekit-secret-change-me-0123456789",
+      // LIVEKIT_API_SECRET injected from Secret impilo-app-secrets (specialSecretEnv).
     };
   }
   if (serviceId === "dispatch-service") {
@@ -104,10 +107,9 @@ function specialEnv(serviceId) {
     };
   }
   if (serviceId === "data-access-governance-service") {
-    // Permit-token signing key is now fail-closed (no insecure default); supply a
-    // preview-only secret so the service boots. Production must set a real secret
-    // via approved secret governance.
-    return { DAGS_ENFORCEMENT_SIGNING_KEY: "preview-dags-permit-signing-key-change-me-0123456789" };
+    // Permit-token signing key is fail-closed (no insecure default); injected from
+    // Secret impilo-app-secrets via specialSecretEnv — never committed.
+    return null;
   }
   if (serviceId === "product-registry-service") {
     return {
@@ -168,6 +170,24 @@ function specialEnv(serviceId) {
     return {
       GOVERNANCE_KAFKA_EVENTS_ENABLED: "true",
     };
+  }
+  return null;
+}
+
+// Secret-backed env: ENV_NAME -> { name, key } rendered by templates/microservice.yaml
+// as valueFrom.secretKeyRef. Signing keys/secrets come from the out-of-band Secret
+// `impilo-app-secrets` (provisioned by scripts/secrets/bootstrap-secrets.sh), never
+// from committed values. See docs/security/secrets-management-migration-plan.md.
+function specialSecretEnv(serviceId) {
+  const SECRET = "impilo-app-secrets";
+  if (serviceId === "vito-service") {
+    return { VITO_HMAC_PEPPER: { name: SECRET, key: "vito-hmac-pepper" } };
+  }
+  if (serviceId === "rtc-gateway-service") {
+    return { LIVEKIT_API_SECRET: { name: SECRET, key: "livekit-api-secret" } };
+  }
+  if (serviceId === "data-access-governance-service") {
+    return { DAGS_ENFORCEMENT_SIGNING_KEY: { name: SECRET, key: "dags-signing-key" } };
   }
   return null;
 }
@@ -237,6 +257,8 @@ function main() {
     };
     const env = specialEnv(entry.id);
     if (env) block.env = env;
+    const secretEnv = specialSecretEnv(entry.id);
+    if (secretEnv) block.secretEnv = secretEnv;
     const probes = specialProbes(entry.id);
     if (probes) Object.assign(block, probes);
     const res = specialResources(entry.id);

@@ -85,8 +85,10 @@ fullBootServices:
     enabled: true
     port: 8170
     database: data_access_governance
-    env:
-      DAGS_ENFORCEMENT_SIGNING_KEY: preview-dags-permit-signing-key-change-me-0123456789
+    secretEnv:
+      DAGS_ENFORCEMENT_SIGNING_KEY:
+        name: impilo-app-secrets
+        key: dags-signing-key
   data-governance-service:
     enabled: true
     port: 8220
@@ -335,7 +337,10 @@ fullBootServices:
       LIVEKIT_URL: http://livekit:7880
       LIVEKIT_CLIENT_URL: wss://impilo.mohcc.gov.zw
       LIVEKIT_API_KEY: impilo-preview-key
-      LIVEKIT_API_SECRET: impilo-preview-livekit-secret-change-me-0123456789
+    secretEnv:
+      LIVEKIT_API_SECRET:
+        name: impilo-app-secrets
+        key: livekit-api-secret
   rules-service:
     enabled: true
     port: 8241
@@ -419,8 +424,10 @@ fullBootServices:
     enabled: true
     port: 8082
     database: vito
-    env:
-      VITO_HMAC_PEPPER: preview-vito-hmac-pepper-change-me-0123456789
+    secretEnv:
+      VITO_HMAC_PEPPER:
+        name: impilo-app-secrets
+        key: vito-hmac-pepper
   wellness-service:
     enabled: true
     port: 8161

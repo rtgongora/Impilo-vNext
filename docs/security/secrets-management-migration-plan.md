@@ -90,9 +90,24 @@ Neither External-Secrets-Operator nor Sealed-Secrets is installed today.
     needs (a) a committed findings-baseline (`--baseline-path`) so only NEW
     high-entropy secrets fail, and (b) scoping to tracked files for speed. Do this
     within P1 — the baseline guard already blocks the `*-change-me-*` convention.
-- **P1 — env-based (low risk):** build the `secretEnv` hook + `impilo-app-secrets`
-  + bootstrap script; migrate VITO_HMAC_PEPPER, DAGS_ENFORCEMENT_SIGNING_KEY,
-  LIVEKIT_API_SECRET (rtc-gateway), nhume, mushex. Remove literals from generator.
+- **P1 — env-based. ✅ DONE (main-chart generator secrets).** Built the reusable
+  `secretEnv` hook in `templates/microservice.yaml` (ENV → `secretKeyRef`), the
+  out-of-band `Secret/impilo-app-secrets`, and idempotent
+  `scripts/secrets/bootstrap-secrets.sh`. Migrated **VITO_HMAC_PEPPER**,
+  **DAGS_ENFORCEMENT_SIGNING_KEY**, and **LIVEKIT_API_SECRET (rtc-gateway)** off
+  committed literals in the generator + generated values → `secretKeyRef`
+  (verified via `helm template`). Secret provisioned live seeded with **current**
+  values (livekit = the rotated strong value matching the server key; vito/dags
+  preserved) so next deploy is behavior-identical. Guard baseline 33 → 27.
+  - **Remaining P1:** `nhume-service` (`application.yml`) and `mushex-service`
+    (`helm/mushex/values.yaml`) live in their own service charts, not the main
+    generator — migrate them the same way (own Secret/secretKeyRef).
+  - **Value-strengthening (separate op, now trivial):** vito/dags still hold the
+    weak placeholder *value* (just no longer in git). Rotating is now a
+    `kubectl` Secret update + rollout — **but vito-hmac-pepper is data-affecting**
+    (needs a migration); dags is safe. LiveKit is already strong.
+  - **Coupling note:** livekit-api-secret must equal the LiveKit *server* key until
+    **P2** moves livekit-config/egress onto the same Secret.
 - **P2 — file-based (medium):** LiveKit server `LIVEKIT_KEYS` env + egress
   initContainer; drop inline `keys:`/`api_secret`. Blank `values.livekit.apiSecret`.
 - **P3 — infra creds:** move `keycloakAdminPassword`, `minioRootPassword`,

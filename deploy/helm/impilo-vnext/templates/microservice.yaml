@@ -125,6 +125,17 @@ spec:
             - name: {{ $k }}
               value: {{ $v | quote }}
             {{- end }}
+            {{- /* Secret-backed env: map of ENV_NAME -> {name, key} rendered as
+                   secretKeyRef, so signing keys/secrets come from out-of-band
+                   Secrets (e.g. impilo-app-secrets) instead of committed values.
+                   See docs/security/secrets-management-migration-plan.md. */}}
+            {{- range $ek, $ref := ($svc.secretEnv | default dict) }}
+            - name: {{ $ek }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $ref.name | quote }}
+                  key: {{ $ref.key | quote }}
+            {{- end }}
           {{- if $svc.startupProbe }}
           startupProbe:
             {{- toYaml $svc.startupProbe | nindent 12 }}
