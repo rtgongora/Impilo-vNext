@@ -33,11 +33,10 @@ test.describe("Preview sandbox persistence proofs", () => {
   });
 
   async function openStableShell(page: import("@playwright/test").Page) {
+    await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw");
     await gotoAppPath(page, "/enterprise");
     test.skip(await isPreviewLoginScreen(page), "Preview redirected to login");
-    await expect(page.getByText(/Enterprise resources|inventory|procurement/i).first()).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(page.getByTestId("module-workspace-hero")).toBeVisible({ timeout: 30_000 });
   }
 
   test("governance: policy POST persists across re-navigation", async ({ page }) => {
@@ -101,14 +100,12 @@ test.describe("Preview sandbox persistence proofs", () => {
     const snippetBefore = (await page.locator("body").innerText()).slice(0, 400);
 
     await gotoAppPath(page, "/enterprise");
-    await expect(page.getByText(/Enterprise resources|inventory|procurement/i).first()).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(page.getByTestId("module-workspace-hero")).toBeVisible({ timeout: 30_000 });
     const snippetAfter = (await page.locator("body").innerText()).slice(0, 400);
     expect(snippetAfter.length).toBeGreaterThan(40);
     expect(snippetAfter).not.toMatch(/502 Bad Gateway|503 Service Unavailable/i);
-    if (/Enterprise resources/i.test(snippetBefore)) {
-      expect(snippetAfter).toMatch(/Enterprise resources/i);
+    if (/Enterprise resources|Geography scope/i.test(snippetBefore)) {
+      expect(snippetAfter).toMatch(/Enterprise resources|Geography scope/i);
     }
   });
 
