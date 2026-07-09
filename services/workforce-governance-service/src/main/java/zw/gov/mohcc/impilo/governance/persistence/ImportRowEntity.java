@@ -16,6 +16,13 @@ public class ImportRowEntity {
     @Column(name = "match_status") private String matchStatus;
     @Column(name = "precheck_status") private String precheckStatus;
     @Column(name = "outcome") private String outcome;
+    @Column(name = "matched_health_id") private String matchedHealthId;
+    @Column(name = "duplicate_of_row_id") private UUID duplicateOfRowId;
+    @Column(name = "provider_public_id") private String providerPublicId;
+    @Column(name = "vashandi_profile_id") private UUID vashandiProfileId;
+    @Column(name = "assignment_id") private UUID assignmentId;
+    @Column(name = "execution_status") private String executionStatus;
+    @Column(name = "execution_error", length = 500) private String executionError;
     @Column(name = "invitation_id") private String invitationId;
     @Column(name = "exception_summary", columnDefinition = "TEXT") private String exceptionSummary;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
@@ -36,6 +43,25 @@ public class ImportRowEntity {
 
     public UUID getId() { return id; }
     public UUID getImportBatchId() { return importBatchId; }
+    public int getRowNumber() { return rowNumber; }
+    public String getRawPayloadJson() { return rawPayloadJson; }
+    public String getValidationStatus() { return validationStatus; }
+    public String getMatchStatus() { return matchStatus; }
+    public void setMatchStatus(String matchStatus) { this.matchStatus = matchStatus; touch(); }
+    public String getMatchedHealthId() { return matchedHealthId; }
+    public void setMatchedHealthId(String matchedHealthId) { this.matchedHealthId = matchedHealthId; touch(); }
+    public UUID getDuplicateOfRowId() { return duplicateOfRowId; }
+    public void setDuplicateOfRowId(UUID duplicateOfRowId) { this.duplicateOfRowId = duplicateOfRowId; touch(); }
+    public String getProviderPublicId() { return providerPublicId; }
+    public void setProviderPublicId(String providerPublicId) { this.providerPublicId = providerPublicId; touch(); }
+    public UUID getVashandiProfileId() { return vashandiProfileId; }
+    public void setVashandiProfileId(UUID vashandiProfileId) { this.vashandiProfileId = vashandiProfileId; touch(); }
+    public UUID getAssignmentId() { return assignmentId; }
+    public void setAssignmentId(UUID assignmentId) { this.assignmentId = assignmentId; touch(); }
+    public String getExecutionStatus() { return executionStatus; }
+    public void setExecutionStatus(String executionStatus) { this.executionStatus = executionStatus; touch(); }
+    public String getExecutionError() { return executionError; }
+    public void setExecutionError(String executionError) { this.executionError = executionError; touch(); }
     public String getNormalizedPayloadJson() { return normalizedPayloadJson; }
     public String getInvitationId() { return invitationId; }
     public String getOutcome() { return outcome; }

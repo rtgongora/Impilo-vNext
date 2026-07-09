@@ -1,7 +1,11 @@
 package zw.gov.mohcc.impilo.governance.persistence;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -23,6 +27,9 @@ public class ImportBatchEntity {
     @Column(name = "created_access_request_count") private int createdAccessRequestCount;
     @Column(name = "source_of_record_status") private String sourceOfRecordStatus = "workforce_governance";
     @Column(name = "audit_status") private String auditStatus;
+    @Column(name = "stage") private String stage;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "column_mapping") private Map<String, String> columnMapping;
     @Column(name = "expires_at") private Instant expiresAt;
     @Column(name = "metadata", columnDefinition = "TEXT") private String metadata;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
@@ -40,6 +47,7 @@ public class ImportBatchEntity {
         this.sourceFileName = fileName;
         this.fileHash = fileHash;
         this.rowCount = rowCount;
+        this.stage = "UPLOADED";
         Instant now = Instant.now();
         this.createdAt = now;
         this.updatedAt = now;
@@ -47,6 +55,17 @@ public class ImportBatchEntity {
     }
 
     public UUID getId() { return id; }
+    public UUID getOrganisationId() { return organisationId; }
+    public String getImportType() { return importType; }
+    public int getRowCount() { return rowCount; }
+    public int getValidRowCount() { return validRowCount; }
+    public int getExceptionCount() { return exceptionCount; }
+    public int getDuplicateCount() { return duplicateCount; }
+    public int getReadyToInviteCount() { return readyToInviteCount; }
+    public String getStage() { return stage; }
+    public void setStage(String stage) { this.stage = stage; touch(); }
+    public Map<String, String> getColumnMapping() { return columnMapping; }
+    public void setColumnMapping(Map<String, String> columnMapping) { this.columnMapping = columnMapping; touch(); }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; touch(); }
     public void setAuditStatus(String auditStatus) { this.auditStatus = auditStatus; touch(); }
