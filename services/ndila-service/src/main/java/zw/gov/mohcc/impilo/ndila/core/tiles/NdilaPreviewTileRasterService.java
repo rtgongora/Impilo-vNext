@@ -27,22 +27,28 @@ public class NdilaPreviewTileRasterService {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         int hash = stableHash(z, x, y);
-        int baseR = 200 + (hash % 35);
-        int baseG = 215 + ((hash / 7) % 25);
-        int baseB = 225 + ((hash / 13) % 20);
+        int baseR = 188 + (hash % 28);
+        int baseG = 210 + ((hash / 5) % 22);
+        int baseB = 228 + ((hash / 11) % 18);
         g.setColor(new Color(baseR, baseG, baseB));
         g.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
 
-        g.setColor(new Color(180, 195, 210));
+        g.setColor(new Color(Math.max(0, baseR - 18), Math.max(0, baseG - 16), Math.max(0, baseB - 12)));
+        g.setStroke(new BasicStroke(1.2f));
+        for (int i = -TILE_SIZE; i < TILE_SIZE * 2; i += 48) {
+            g.drawLine(i, 0, i + TILE_SIZE, TILE_SIZE);
+        }
+
+        g.setColor(new Color(170, 188, 205));
         g.setStroke(new BasicStroke(1f));
-        for (int i = 0; i <= TILE_SIZE; i += 32) {
+        for (int i = 0; i <= TILE_SIZE; i += 64) {
             g.drawLine(i, 0, i, TILE_SIZE);
             g.drawLine(0, i, TILE_SIZE, i);
         }
 
-        g.setColor(new Color(120, 140, 165));
-        g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
-        g.drawString("Ndila " + z + "/" + x + "/" + y, 8, 18);
+        g.setColor(new Color(96, 116, 138));
+        g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+        g.drawString("Ndila preview z/x/y " + z + "/" + x + "/" + y, 8, 16);
 
         g.dispose();
 

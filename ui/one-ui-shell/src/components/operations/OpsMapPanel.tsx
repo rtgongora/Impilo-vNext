@@ -75,6 +75,7 @@ export function OpsMapPanel({
         fitToMarkers={fitToMarkers && geoMarkers.length > 0}
         clusterMarkers={clusterMarkers || geoMarkers.length > 12}
         showZimbabweAdmin={showZimbabweAdmin}
+        showMapChrome
       />
 
       {tilesQ.isError ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import maplibregl, {
   type GeoJSONSource,
   type LngLatBoundsLike,
@@ -9,8 +9,13 @@ import maplibregl, {
   type RequestParameters,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { buildNdilaMapStyle } from "@/lib/ndila/build-ndila-map-style";
-import { ZIMBABWE_ADMIN_GEOJSON_URL, ZIMBABWE_BOUNDS } from "@/lib/ndila/zimbabwe-admin";
+import { buildNdilaMapStyle, streetsTilesAvailable } from "@/lib/ndila/build-ndila-map-style";
+import {
+  ZIMBABWE_ADMIN_GEOJSON_URL,
+  ZIMBABWE_BOUNDS,
+  ZIMBABWE_PLACES_GEOJSON_URL,
+} from "@/lib/ndila/zimbabwe-admin";
+import { NdilaMapChrome, type NdilaMapLayerMode } from "./NdilaMapChrome";
 
 export interface NdilaGeoMarker {
   id: string;
@@ -41,7 +46,9 @@ export interface NdilaMapLibreProps {
   fitToMarkers?: boolean;
   showNavigation?: boolean;
   showZimbabweAdmin?: boolean;
+  showMapChrome?: boolean;
   clusterMarkers?: boolean;
+  flyToCenter?: boolean;
   className?: string;
 }
 
@@ -111,6 +118,16 @@ function ndilaTileTransformRequest(url: string): RequestParameters {
   return { url };
 }
 
+function fitZimbabweBounds(map: MapLibreMap, animate = true) {
+  map.fitBounds(
+    [
+      [ZIMBABWE_BOUNDS.west, ZIMBABWE_BOUNDS.south],
+      [ZIMBABWE_BOUNDS.east, ZIMBABWE_BOUNDS.north],
+    ],
+    { padding: 36, duration: animate ? 700 : 0 },
+  );
+}
+
 function ensureRouteLayer(map: MapLibreMap) {
   if (!map.getSource("ndila-route")) {
     map.addSource("ndila-route", {
@@ -118,10 +135,16 @@ function ensureRouteLayer(map: MapLibreMap) {
       data: { type: "FeatureCollection", features: [] },
     });
     map.addLayer({
+      id: "ndila-route-casing",
+      type: "line",
+      source: "ndila-route",
+      paint: { "line-color": "#ffffff", "line-width": 7, "line-opacity": 0.95 },
+    });
+    map.addLayer({
       id: "ndila-route-line",
       type: "line",
       source: "ndila-route",
-      paint: { "line-color": "#0d9488", "line-width": 3, "line-opacity": 0.85 },
+      paint: { "line-color": "#1d4ed8", "line-width": 4, "line-opacity": 0.92 },
     });
   }
 }
@@ -129,34 +152,29 @@ function ensureRouteLayer(map: MapLibreMap) {
 function ensureZimbabweAdminLayers(map: MapLibreMap) {
   if (map.getSource("ndila-zw-admin")) return;
 
-  map.addSource("ndila-zw-admin", {
-    type: "geojson",
-    data: ZIMBABWE_ADMIN_GEOJSON_URL,
-  });
+  map.addSource("ndila-zw-admin", { type: "geojson", data: ZIMBABWE_ADMIN_GEOJSON_URL });
+  map.addSource("ndila-zw-places", { type: "geojson", data: ZIMBABWE_PLACES_GEOJSON_URL });
 
   map.addLayer({
     id: "ndila-zw-country-fill",
     type: "fill",
     source: "ndila-zw-admin",
     filter: ["==", ["get", "adminLevel"], "country"],
-    paint: { "fill-color": "#dbeafe", "fill-opacity": 0.35 },
+    paint: { "fill-color": "#e0edf8", "fill-opacity": 0.55 },
   });
-
   map.addLayer({
     id: "ndila-zw-province-fill",
     type: "fill",
     source: "ndila-zw-admin",
     filter: ["==", ["get", "adminLevel"], "province"],
-    paint: { "fill-color": "#bfdbfe", "fill-opacity": 0.22 },
+    paint: { "fill-color": "#c7daf0", "fill-opacity": 0.45 },
   });
-
   map.addLayer({
     id: "ndila-zw-admin-outline",
     type: "line",
     source: "ndila-zw-admin",
-    paint: { "line-color": "#64748b", "line-width": 1.2, "line-opacity": 0.85 },
+    paint: { "line-color": "#475569", "line-width": 1.4, "line-opacity": 0.9 },
   });
-
   map.addLayer({
     id: "ndila-zw-province-labels",
     type: "symbol",
@@ -167,10 +185,29 @@ function ensureZimbabweAdminLayers(map: MapLibreMap) {
       "text-size": 11,
       "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
     },
+    paint: { "text-color": "#1e293b", "text-halo-color": "#f8fafc", "text-halo-width": 1.4 },
+  });
+  map.addLayer({
+    id: "ndila-zw-place-labels",
+    type: "symbol",
+    source: "ndila-zw-places",
+    layout: {
+      "text-field": ["get", "name"],
+      "text-size": ["match", ["get", "kind"], "city", 12, 10],
+      "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+      "text-offset": [0, 0.8],
+    },
+    paint: { "text-color": "#0f172a", "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
+  });
+  map.addLayer({
+    id: "ndila-zw-place-dots",
+    type: "circle",
+    source: "ndila-zw-places",
     paint: {
-      "text-color": "#334155",
-      "text-halo-color": "#f8fafc",
-      "text-halo-width": 1.2,
+      "circle-radius": ["match", ["get", "kind"], "city", 4, 3],
+      "circle-color": "#334155",
+      "circle-stroke-color": "#ffffff",
+      "circle-stroke-width": 1.5,
     },
   });
 }
@@ -184,7 +221,7 @@ function ensureClusterLayers(map: MapLibreMap, markers: NdilaGeoMarker[]) {
       data,
       cluster: true,
       clusterMaxZoom: 14,
-      clusterRadius: 48,
+      clusterRadius: 52,
     });
     map.addLayer({
       id: "ndila-clusters",
@@ -192,9 +229,11 @@ function ensureClusterLayers(map: MapLibreMap, markers: NdilaGeoMarker[]) {
       source: "ndila-markers",
       filter: ["has", "point_count"],
       paint: {
-        "circle-color": "#4f46e5",
-        "circle-radius": ["step", ["get", "point_count"], 16, 20, 22, 100, 28],
-        "circle-opacity": 0.85,
+        "circle-color": ["step", ["get", "point_count"], "#6366f1", 20, "#4f46e5", 100, "#4338ca"],
+        "circle-radius": ["step", ["get", "point_count"], 18, 20, 24, 100, 30],
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#ffffff",
+        "circle-opacity": 0.92,
       },
     });
     map.addLayer({
@@ -204,7 +243,7 @@ function ensureClusterLayers(map: MapLibreMap, markers: NdilaGeoMarker[]) {
       filter: ["has", "point_count"],
       layout: {
         "text-field": ["get", "point_count_abbreviated"],
-        "text-size": 11,
+        "text-size": 12,
         "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
       },
       paint: { "text-color": "#ffffff" },
@@ -216,7 +255,7 @@ function ensureClusterLayers(map: MapLibreMap, markers: NdilaGeoMarker[]) {
       filter: ["!", ["has", "point_count"]],
       paint: {
         "circle-color": ["get", "color"],
-        "circle-radius": 6,
+        "circle-radius": 7,
         "circle-stroke-width": 2,
         "circle-stroke-color": "#ffffff",
       },
@@ -233,6 +272,22 @@ function removeClusterLayers(map: MapLibreMap) {
   if (map.getSource("ndila-markers")) map.removeSource("ndila-markers");
 }
 
+function registerClusterHandlers(map: MapLibreMap) {
+  map.on("click", "ndila-clusters", (event) => {
+    const features = map.queryRenderedFeatures(event.point, { layers: ["ndila-clusters"] });
+    const cluster = features[0];
+    if (!cluster?.geometry || cluster.geometry.type !== "Point") return;
+    const coordinates = cluster.geometry.coordinates as [number, number];
+    map.easeTo({ center: coordinates, zoom: map.getZoom() + 2, duration: 500 });
+  });
+  map.on("mouseenter", "ndila-clusters", () => {
+    map.getCanvas().style.cursor = "pointer";
+  });
+  map.on("mouseleave", "ndila-clusters", () => {
+    map.getCanvas().style.cursor = "";
+  });
+}
+
 export function NdilaMapLibre({
   center,
   zoom = 12,
@@ -241,11 +296,14 @@ export function NdilaMapLibre({
   height = 320,
   tileConfig,
   fitToMarkers = false,
-  showNavigation = true,
+  showNavigation = false,
   showZimbabweAdmin = true,
+  showMapChrome = true,
   clusterMarkers = false,
+  flyToCenter = true,
   className,
 }: NdilaMapLibreProps) {
+  const shellRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markerRefs = useRef<Marker[]>([]);
@@ -254,6 +312,10 @@ export function NdilaMapLibre({
   const fitRef = useRef(fitToMarkers);
   const clusterRef = useRef(clusterMarkers);
   const adminRef = useRef(showZimbabweAdmin);
+  const handlersRegistered = useRef(false);
+
+  const [layerMode, setLayerMode] = useState<NdilaMapLayerMode>("admin");
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   markersRef.current = markers;
   routeRef.current = routeCoordinates;
@@ -261,17 +323,17 @@ export function NdilaMapLibre({
   clusterRef.current = clusterMarkers;
   adminRef.current = showZimbabweAdmin;
 
-  const style = useMemo(() => buildNdilaMapStyle(tileConfig), [tileConfig]);
-  const useClusterLayer = clusterMarkers && markers.length > 12;
+  const streetsAvailable = streetsTilesAvailable(tileConfig);
+  const style = useMemo(
+    () => buildNdilaMapStyle(tileConfig, { includeRaster: layerMode === "streets" && streetsAvailable }),
+    [tileConfig, layerMode, streetsAvailable],
+  );
 
   const paintOverlay = useCallback(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
 
-    if (adminRef.current) {
-      ensureZimbabweAdminLayers(map);
-    }
-
+    if (adminRef.current) ensureZimbabweAdminLayers(map);
     ensureRouteLayer(map);
 
     markerRefs.current.forEach((marker) => marker.remove());
@@ -280,6 +342,10 @@ export function NdilaMapLibre({
     if (clusterRef.current && markersRef.current.length > 12) {
       removeClusterLayers(map);
       ensureClusterLayers(map, markersRef.current);
+      if (!handlersRegistered.current) {
+        registerClusterHandlers(map);
+        handlersRegistered.current = true;
+      }
     } else {
       removeClusterLayers(map);
       for (const marker of markersRef.current) {
@@ -287,17 +353,19 @@ export function NdilaMapLibre({
         element.type = "button";
         element.className = "ndila-map-marker";
         element.title = marker.label ?? marker.id;
-        element.style.width = "14px";
-        element.style.height = "14px";
+        element.style.width = "16px";
+        element.style.height = "16px";
         element.style.borderRadius = "9999px";
         element.style.border = "2px solid #fff";
         element.style.background = markerColor(marker);
-        element.style.boxShadow = "0 1px 4px rgba(15,23,42,0.35)";
+        element.style.boxShadow = "0 2px 6px rgba(15,23,42,0.35)";
         element.style.cursor = "pointer";
 
         const popup = marker.label
-          ? new maplibregl.Popup({ offset: 12, closeButton: false }).setText(
-              marker.status ? `${marker.label} · ${marker.status}` : marker.label,
+          ? new maplibregl.Popup({ offset: 14, closeButton: true, maxWidth: "240px" }).setHTML(
+              `<div class="text-xs"><div class="font-semibold">${marker.label}</div>${
+                marker.status ? `<div class="text-muted-foreground mt-0.5">${marker.status}</div>` : ""
+              }</div>`,
             )
           : undefined;
 
@@ -321,15 +389,7 @@ export function NdilaMapLibre({
       const bounds = new maplibregl.LngLatBounds();
       markersRef.current.forEach((marker) => bounds.extend([marker.longitude, marker.latitude]));
       route.forEach((point) => bounds.extend([point.longitude, point.latitude]));
-      map.fitBounds(bounds as LngLatBoundsLike, { padding: 48, maxZoom: 14, duration: 0 });
-    } else if (adminRef.current && markersRef.current.length === 0 && !fitRef.current) {
-      map.fitBounds(
-        [
-          [ZIMBABWE_BOUNDS.west, ZIMBABWE_BOUNDS.south],
-          [ZIMBABWE_BOUNDS.east, ZIMBABWE_BOUNDS.north],
-        ],
-        { padding: 24, duration: 0 },
-      );
+      map.fitBounds(bounds as LngLatBoundsLike, { padding: 56, maxZoom: 14, duration: 600 });
     }
   }, []);
 
@@ -347,13 +407,18 @@ export function NdilaMapLibre({
     mapRef.current = map;
 
     if (showNavigation) {
-      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
     }
     if (tileConfig?.attribution) {
-      map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
+      map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
     }
 
-    map.on("load", paintOverlay);
+    map.on("load", () => {
+      if (showZimbabweAdmin && markers.length === 0 && !fitToMarkers) {
+        fitZimbabweBounds(map, false);
+      }
+      paintOverlay();
+    });
     map.on("styledata", () => {
       if (map.isStyleLoaded()) paintOverlay();
     });
@@ -361,6 +426,7 @@ export function NdilaMapLibre({
     return () => {
       markerRefs.current.forEach((marker) => marker.remove());
       markerRefs.current = [];
+      handlersRegistered.current = false;
       map.remove();
       mapRef.current = null;
     };
@@ -379,21 +445,81 @@ export function NdilaMapLibre({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    map.setCenter([center.longitude, center.latitude]);
-    if (!fitToMarkers) map.setZoom(zoom);
-  }, [center.latitude, center.longitude, zoom, fitToMarkers]);
+    if (flyToCenter) {
+      map.flyTo({ center: [center.longitude, center.latitude], zoom, duration: 700, essential: true });
+    } else {
+      map.setCenter([center.longitude, center.latitude]);
+      if (!fitToMarkers) map.setZoom(zoom);
+    }
+  }, [center.latitude, center.longitude, zoom, fitToMarkers, flyToCenter]);
 
   useEffect(() => {
     paintOverlay();
-  }, [markers, routeCoordinates, fitToMarkers, showZimbabweAdmin, useClusterLayer, paintOverlay]);
+  }, [markers, routeCoordinates, fitToMarkers, showZimbabweAdmin, clusterMarkers, paintOverlay]);
+
+  const handleZoomIn = () => mapRef.current?.zoomIn({ duration: 250 });
+  const handleZoomOut = () => mapRef.current?.zoomOut({ duration: 250 });
+  const handleFitCountry = () => {
+    if (mapRef.current) fitZimbabweBounds(mapRef.current);
+  };
+  const handleLocate = () => {
+    if (!navigator.geolocation || !mapRef.current) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        mapRef.current?.flyTo({
+          center: [pos.coords.longitude, pos.coords.latitude],
+          zoom: 14,
+          duration: 800,
+        });
+      },
+      () => undefined,
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  };
+  const handleToggleFullscreen = useCallback(async () => {
+    const shell = shellRef.current;
+    if (!shell) return;
+    if (!document.fullscreenElement) {
+      await shell.requestFullscreen?.();
+      setIsFullscreen(true);
+    } else {
+      await document.exitFullscreen?.();
+      setIsFullscreen(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
 
   return (
     <div
-      ref={containerRef}
-      className={className ?? "w-full rounded-lg overflow-hidden"}
+      ref={shellRef}
+      className={className ?? "relative w-full overflow-hidden rounded-lg bg-[#c7d9ea]"}
       style={{ height }}
-      data-testid="ndila-maplibre-canvas"
-      aria-label="Interactive Ndila map"
-    />
+      data-testid="ndila-maplibre-shell"
+    >
+      <div
+        ref={containerRef}
+        className="absolute inset-0"
+        data-testid="ndila-maplibre-canvas"
+        aria-label="Interactive Ndila map"
+      />
+      {showMapChrome ? (
+        <NdilaMapChrome
+          layerMode={layerMode}
+          streetsAvailable={streetsAvailable}
+          isFullscreen={isFullscreen}
+          onLayerModeChange={setLayerMode}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onLocate={handleLocate}
+          onFitCountry={handleFitCountry}
+          onToggleFullscreen={handleToggleFullscreen}
+        />
+      ) : null}
+    </div>
   );
 }

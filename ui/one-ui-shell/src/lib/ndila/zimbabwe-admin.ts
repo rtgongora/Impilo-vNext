@@ -1,5 +1,6 @@
 /** Preview Layer 0 — Zimbabwe country bounds and admin GeoJSON path. */
 export const ZIMBABWE_ADMIN_GEOJSON_URL = "/geo/zimbabwe-admin.geojson";
+export const ZIMBABWE_PLACES_GEOJSON_URL = "/geo/zimbabwe-places.geojson";
 
 /** Approximate Zimbabwe bounding box (west, south, east, north). */
 export const ZIMBABWE_BOUNDS = {

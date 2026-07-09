@@ -37,6 +37,8 @@ interface NdilaMapProps {
   fitToMarkers?: boolean;
   showZimbabweAdmin?: boolean;
   clusterMarkers?: boolean;
+  showMapChrome?: boolean;
+  flyToCenter?: boolean;
 }
 
 export function NdilaMap({
@@ -50,6 +52,8 @@ export function NdilaMap({
   fitToMarkers = false,
   showZimbabweAdmin = true,
   clusterMarkers = false,
+  showMapChrome = true,
+  flyToCenter = true,
 }: NdilaMapProps) {
   const tileQ = useNdilaTileConfig();
   const tileCfg = tileQ.data;
@@ -102,6 +106,8 @@ export function NdilaMap({
           fitToMarkers={fitToMarkers}
           showZimbabweAdmin={showZimbabweAdmin}
           clusterMarkers={clusterMarkers}
+          showMapChrome={showMapChrome}
+          flyToCenter={flyToCenter}
         />
 
         <div className="pointer-events-none absolute bottom-1 right-2 text-[9px] text-muted-foreground">

@@ -12,6 +12,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, Navigation } from "lucide-react";
 import { ndilaRoute, type NdilaCoordinate, type NdilaRouteResponse, type NdilaTravelMode } from "@/lib/ndila/ndila-client";
+import { routePolylineToCoordinates } from "@/lib/ndila/ndila-route-geometry";
 
 interface Props {
   origin: NdilaCoordinate;
@@ -20,6 +21,7 @@ interface Props {
   optimizeFor?: "FASTEST" | "SHORTEST" | "SAFEST";
   showDistance?: boolean;
   showEta?: boolean;
+  onRouteCoordinates?: (coordinates: NdilaCoordinate[]) => void;
 }
 
 function formatDuration(seconds?: number): string {
@@ -37,7 +39,7 @@ function formatDistance(meters?: number): string {
 
 export function NdilaRoutePreview({
   origin, destination, mode = "MOTORBIKE", optimizeFor = "FASTEST",
-  showDistance = true, showEta = true,
+  showDistance = true, showEta = true, onRouteCoordinates,
 }: Props) {
   const [route, setRoute] = useState<NdilaRouteResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -46,12 +48,18 @@ export function NdilaRoutePreview({
   useEffect(() => {
     let cancelled = false;
     setLoading(true); setError(null);
-    ndilaRoute({ origin, destination, mode, optimizeFor, includeGeometry: false })
-      .then((r) => { if (!cancelled) { if (!r.success) setError(r.denialReason || "Routing denied"); setRoute(r); } })
+    ndilaRoute({ origin, destination, mode, optimizeFor, includeGeometry: true })
+      .then((r) => {
+        if (cancelled) return;
+        if (!r.success) setError(r.denialReason || "Routing denied");
+        setRoute(r);
+        const coords = routePolylineToCoordinates(r.polyline, { origin, destination });
+        onRouteCoordinates?.(coords);
+      })
       .catch(() => { if (!cancelled) setError("Ndila routing unreachable"); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [origin.latitude, origin.longitude, destination.latitude, destination.longitude, mode, optimizeFor]);
+  }, [origin.latitude, origin.longitude, destination.latitude, destination.longitude, mode, optimizeFor, onRouteCoordinates]);
 
   return (
     <div className="rounded-lg border border-border p-3 bg-card">

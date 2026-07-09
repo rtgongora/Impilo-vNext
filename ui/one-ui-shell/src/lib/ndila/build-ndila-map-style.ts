@@ -24,9 +24,13 @@ export function isRasterTileTemplate(template?: string): boolean {
  * Build a MapLibre style from Ndila tile policy. Mock/unsafe templates use a
  * sovereign-safe blank canvas — markers and routes still pan/zoom interactively.
  */
-export function buildNdilaMapStyle(tileConfig?: NdilaTileConfigInput | null): StyleSpecification {
+export function buildNdilaMapStyle(
+  tileConfig?: NdilaTileConfigInput | null,
+  opts?: { includeRaster?: boolean },
+): StyleSpecification {
+  const includeRaster = opts?.includeRaster !== false;
   const template = tileConfig?.tileUrlTemplate;
-  if (isRasterTileTemplate(template)) {
+  if (includeRaster && isRasterTileTemplate(template)) {
     return {
       version: 8,
       sources: {
@@ -45,6 +49,10 @@ export function buildNdilaMapStyle(tileConfig?: NdilaTileConfigInput | null): St
   return {
     version: 8,
     sources: {},
-    layers: [{ id: "ndila-background", type: "background", paint: { "background-color": "#e8eef4" } }],
+    layers: [{ id: "ndila-background", type: "background", paint: { "background-color": "#c7d9ea" } }],
   };
+}
+
+export function streetsTilesAvailable(tileConfig?: NdilaTileConfigInput | null): boolean {
+  return isRasterTileTemplate(tileConfig?.tileUrlTemplate);
 }

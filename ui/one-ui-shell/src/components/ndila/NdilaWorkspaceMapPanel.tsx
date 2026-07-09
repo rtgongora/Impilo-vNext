@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, MapPin, Navigation } from "lucide-react";
 import { useNdilaTileConfig } from "@/hooks/queries/useNdila";
 import type { NdilaCoordinate } from "@/lib/ndila/ndila-client";
@@ -18,7 +18,12 @@ export function NdilaWorkspaceMapPanel() {
   const tileQ = useNdilaTileConfig();
   const [origin, setOrigin] = useState<NdilaCoordinate>(DEFAULT_CENTER);
   const [destination, setDestination] = useState<NdilaCoordinate | null>(null);
+  const [routeCoordinates, setRouteCoordinates] = useState<NdilaCoordinate[]>([]);
   const [radiusKm, setRadiusKm] = useState(15);
+
+  useEffect(() => {
+    if (!destination) setRouteCoordinates([]);
+  }, [destination]);
 
   const mapMarkers = useMemo(
     () => [
@@ -116,13 +121,15 @@ export function NdilaWorkspaceMapPanel() {
           </div>
           <NdilaMap
             center={origin}
-            zoom={origin === DEFAULT_CENTER ? ZIMBABWE_DEFAULT_ZOOM : 12}
+            zoom={origin.latitude === DEFAULT_CENTER.latitude && origin.longitude === DEFAULT_CENTER.longitude ? ZIMBABWE_DEFAULT_ZOOM : 12}
             markers={mapMarkers}
-            height={360}
+            routeCoordinates={routeCoordinates}
+            height={420}
             layers={["facilities", "catchment"]}
             mode="OPERATIONS"
-            fitToMarkers={mapMarkers.length > 1}
+            fitToMarkers={mapMarkers.length > 1 || routeCoordinates.length > 1}
             showZimbabweAdmin
+            showMapChrome
           />
         </div>
 
@@ -142,7 +149,12 @@ export function NdilaWorkspaceMapPanel() {
                 <Navigation className="h-3.5 w-3.5" />
                 Route preview
               </p>
-              <NdilaRoutePreview origin={origin} destination={destination} mode="MOTORBIKE" />
+              <NdilaRoutePreview
+                origin={origin}
+                destination={destination}
+                mode="MOTORBIKE"
+                onRouteCoordinates={setRouteCoordinates}
+              />
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">

@@ -1,0 +1,18 @@
+{
+  "type": "FeatureCollection",
+  "metadata": { "purpose": "Ndila Layer 0 — major Zimbabwe places (preview labels)" },
+  "features": [
+    { "type": "Feature", "properties": { "name": "Harare", "kind": "city" }, "geometry": { "type": "Point", "coordinates": [31.053, -17.829] } },
+    { "type": "Feature", "properties": { "name": "Bulawayo", "kind": "city" }, "geometry": { "type": "Point", "coordinates": [28.583, -20.157] } },
+    { "type": "Feature", "properties": { "name": "Mutare", "kind": "city" }, "geometry": { "type": "Point", "coordinates": [32.671, -18.973] } },
+    { "type": "Feature", "properties": { "name": "Gweru", "kind": "city" }, "geometry": { "type": "Point", "coordinates": [29.825, -19.455] } },
+    { "type": "Feature", "properties": { "name": "Kwekwe", "kind": "city" }, "geometry": { "type": "Point", "coordinates": [29.815, -18.928] } },
+    { "type": "Feature", "properties": { "name": "Kadoma", "kind": "city" }, "geometry": { "type": "Point", "coordinates": [29.915, -18.333] } },
+    { "type": "Feature", "properties": { "name": "Masvingo", "kind": "city" }, "geometry": { "type": "Point", "coordinates": [30.830, -20.074] } },
+    { "type": "Feature", "properties": { "name": "Chinhoyi", "kind": "city" }, "geometry": { "type": "Point", "coordinates": [30.200, -17.354] } },
+    { "type": "Feature", "properties": { "name": "Victoria Falls", "kind": "city" }, "geometry": { "type": "Point", "coordinates": [25.857, -17.932] } },
+    { "type": "Feature", "properties": { "name": "Marondera", "kind": "city" }, "geometry": { "type": "Point", "coordinates": [31.552, -18.185] } },
+    { "type": "Feature", "properties": { "name": "Rusape", "kind": "town" }, "geometry": { "type": "Point", "coordinates": [32.128, -18.527] } },
+    { "type": "Feature", "properties": { "name": "Bindura", "kind": "town" }, "geometry": { "type": "Point", "coordinates": [31.093, -17.301] } }
+  ]
+}
