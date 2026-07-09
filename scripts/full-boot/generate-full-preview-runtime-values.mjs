@@ -189,6 +189,13 @@ function specialSecretEnv(serviceId) {
   if (serviceId === "data-access-governance-service") {
     return { DAGS_ENFORCEMENT_SIGNING_KEY: { name: SECRET, key: "dags-signing-key" } };
   }
+  if (serviceId === "nhume-service") {
+    return { NHUME_WEBHOOK_SECRET: { name: SECRET, key: "nhume-webhook-secret" } };
+  }
+  if (serviceId === "mushex-service") {
+    // MUSHEX_HMAC_PEPPER is an HMAC pepper (data-affecting) — preserve, don't rotate.
+    return { MUSHEX_HMAC_PEPPER: { name: SECRET, key: "mushex-hmac-pepper" } };
+  }
   return null;
 }
 

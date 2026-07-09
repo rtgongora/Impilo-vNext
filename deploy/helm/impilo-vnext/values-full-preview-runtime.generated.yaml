@@ -221,6 +221,10 @@ fullBootServices:
       MUSHEX_SANDBOX_ENABLED: 'true'
       MUSHEX_SANDBOX_BYPASS_CREDENTIAL_CHECK: 'true'
       MUSHEX_SANDBOX_APPLY_SIMULATION_OUTCOME: 'true'
+    secretEnv:
+      MUSHEX_HMAC_PEPPER:
+        name: impilo-app-secrets
+        key: mushex-hmac-pepper
   mvumo-service:
     enabled: true
     port: 8197
@@ -247,6 +251,10 @@ fullBootServices:
     enabled: true
     port: 8210
     database: nhume
+    secretEnv:
+      NHUME_WEBHOOK_SECRET:
+        name: impilo-app-secrets
+        key: nhume-webhook-secret
   notification-service:
     enabled: true
     port: 8200

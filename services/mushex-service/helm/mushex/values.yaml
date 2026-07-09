@@ -16,7 +16,8 @@ env:
   SPRING_DATA_REDIS_HOST: redis
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
   SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/impilo
-  MUSHEX_HMAC_PEPPER: change-me-in-production
+  # MUSHEX_HMAC_PEPPER must be injected out-of-band (Secret/env), never committed.
+  # Data-affecting HMAC pepper — see docs/security/secrets-management-migration-plan.md.
 
 resources:
   requests:

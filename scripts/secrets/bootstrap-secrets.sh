@@ -40,6 +40,11 @@ kubectl get secret -n "$NS" "$SECRET" >/dev/null 2>&1 \
 echo "Provisioning $NS/$SECRET (idempotent):"
 set_if_absent vito-hmac-pepper "$(openssl rand -hex 32)"
 set_if_absent dags-signing-key "$(openssl rand -hex 32)"
+# mushex-hmac-pepper is data-affecting like vito (preserve on existing clusters).
+set_if_absent mushex-hmac-pepper "$(openssl rand -hex 32)"
+# nhume-webhook-secret: on rotation the partner courier's configured secret must
+# be updated to match (per-provider DB secrets take precedence over this fallback).
+set_if_absent nhume-webhook-secret "$(openssl rand -hex 32)"
 
 # livekit-api-secret: match the server key, don't randomise.
 lk_val="${LIVEKIT_API_SECRET:-$(kubectl get cm -n "$NS" livekit-config \

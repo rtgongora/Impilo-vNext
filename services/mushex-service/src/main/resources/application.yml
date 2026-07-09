@@ -90,7 +90,10 @@ mushex:
     dual-emit-core-transaction-enabled: ${MUSHEX_OUTBOX_DUAL_EMIT_CORE_TRANSACTION_ENABLED:true}
     core-transaction-topic: ${MUSHEX_OUTBOX_CORE_TRANSACTION_TOPIC:core.transaction.events}
   currency: USD
-  hmac-pepper: ${MUSHEX_HMAC_PEPPER:mushex-dev-pepper-change-in-prod}
+  # Injected from Secret impilo-app-secrets (MUSHEX_HMAC_PEPPER) in preview/prod;
+  # empty default is fail-closed (no committed secret). Data-affecting: rotating
+  # the pepper invalidates existing HMACs — preserve or plan a migration.
+  hmac-pepper: ${MUSHEX_HMAC_PEPPER:}
   remittance:
     otp-length: 6
     expiry-minutes: 60

@@ -43,7 +43,10 @@ impilo:
       simulation-enabled: ${NHUME_AUTONOMOUS_SIM:true}
     # Webhook signature secret for partner couriers.
     webhooks:
-      shared-secret: ${NHUME_WEBHOOK_SECRET:dev-webhook-secret-change-me}
+      # Injected from Secret impilo-app-secrets (NHUME_WEBHOOK_SECRET) in preview/prod;
+      # empty default is fail-closed (no committed secret). Per-provider webhook
+      # secrets (DB) take precedence over this shared fallback.
+      shared-secret: ${NHUME_WEBHOOK_SECRET:}
     # Location retention window (days) for privacy-safe trimming.
     location-retention-days: ${NHUME_LOCATION_RETENTION_DAYS:30}
     # Seed demo / test data on startup.
