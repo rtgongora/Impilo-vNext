@@ -2,7 +2,9 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Pin, PinOff, X, ShoppingBag, AlertCircle, Zap } from "lucide-react";
+import { Bell, Pin, PinOff, X, ShoppingBag, AlertCircle, Zap } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { listVisibleShellApps, listQuickActions } from "@/lib/shell/app-registry";
@@ -45,6 +47,19 @@ export function ShellStartMenu() {
 
   const apps = useMemo(() => listVisibleShellApps(hasRole), [hasRole]);
   const quickActions = useMemo(() => listQuickActions(hasRole), [hasRole]);
+  const pinnedApps = useMemo(
+    () => pinnedAppCodes.map((code) => apps.find((a) => a.appCode === code)).filter(Boolean) as AppDefinition[],
+    [apps, pinnedAppCodes],
+  );
+
+  // Pending work signal — silent on failure so the launcher never degrades.
+  const unreadQuery = useQuery<{ data?: { count?: number } }>({
+    queryKey: ["shell-inbox-unread"],
+    queryFn: () => apiClient.get("/internal/v1/notifications/inbox/unread-count"),
+    refetchInterval: 60_000,
+    retry: false,
+  });
+  const unread = unreadQuery.data?.data?.count ?? 0;
 
   const byCategory = useMemo(() => {
     const map = new Map<ShellAppCategory, AppDefinition[]>();
@@ -87,6 +102,62 @@ export function ShellStartMenu() {
         </div>
 
         <div className="max-h-[calc(min(72vh,640px)-56px)] overflow-y-auto px-3 py-3">
+          {unread > 0 ? (
+            <button
+              type="button"
+              className="mb-3 flex w-full items-center gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-left text-sm text-foreground hover:bg-amber-500/20"
+              onClick={() => {
+                router.push("/home/notifications");
+                setStartOpen(false);
+              }}
+            >
+              <Bell className="h-4 w-4 text-amber-600" />
+              <span className="font-medium">Needs attention</span>
+              <span className="ml-auto rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                {unread} unread
+              </span>
+            </button>
+          ) : null}
+
+          {pinnedApps.length > 0 ? (
+            <section className="mb-4">
+              <h3 className="mb-2 flex items-center gap-1.5 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <Pin className="h-3 w-3" />
+                Pinned
+              </h3>
+              <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                {pinnedApps.map((app) => (
+                  <li
+                    key={`pin-${app.appCode}`}
+                    className="flex items-center gap-1 rounded-lg border border-transparent hover:border-border hover:bg-background dark:hover:border-border dark:hover:bg-primary-soft"
+                  >
+                    <button
+                      type="button"
+                      className="flex min-w-0 flex-1 items-center gap-2 px-2 py-2 text-left"
+                      onClick={() => launchApp(app, (href) => router.push(href))}
+                    >
+                      <ShellAppIcon icon={app.icon} serviceSlug={app.serviceSlug} name={app.name} size="card" />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium text-foreground dark:text-foreground">
+                          {app.name}
+                        </span>
+                        <span className="block truncate text-[11px] text-muted-foreground">{app.description}</span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="mr-1 shrink-0 rounded-md p-2 text-muted-foreground hover:bg-primary-soft hover:text-foreground dark:hover:bg-neutral-900"
+                      title="Unpin from taskbar"
+                      onClick={() => togglePinApp(app.appCode)}
+                    >
+                      <PinOff className="h-4 w-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           {quickActions.length > 0 ? (
             <section className="mb-4">
               <h3 className="mb-2 flex items-center gap-1.5 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
