@@ -16,6 +16,7 @@ import {
   UtensilsCrossed, Moon, Users2, Trophy, MapPin, HeartHandshake, LayoutDashboard, Package,
   Route, Stethoscope,
 } from "lucide-react";
+import { GlassSurface, LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -84,9 +85,10 @@ export default function WellnessPage() {
   return (
     <AppLayout>
       <PageShell title="Wellness Hub" subtitle="Move. Eat. Sleep. Rest. Recover. Live." serviceSlug="simba">
+        <LuminousStage className="space-y-6 p-5 sm:p-6">
         <Link
           href="/wellness/dashboard"
-          className="mb-6 block rounded-xl border-2 border-teal-200 bg-gradient-to-r from-teal-50 to-cyan-50 p-5 shadow-sm hover:border-teal-400 hover:shadow-md transition-all group"
+          className="block rounded-2xl border-2 border-teal-200 bg-gradient-to-r from-teal-50 to-cyan-50 p-5 shadow-sm hover:border-teal-400 hover:shadow-md transition-all group"
         >
           <div className="flex flex-wrap items-center gap-4">
             <div className="rounded-lg bg-teal-600 p-3 text-white shadow">
@@ -106,15 +108,18 @@ export default function WellnessPage() {
         <TodaySnapshot />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {SECTIONS.map(({ href, label, description, Icon, color }) => (
-            <Link key={href} href={href} className="rounded-xl border border-border bg-card p-5 hover:border-blue-400 hover:shadow-md transition-all group">
-              <div className="flex items-center gap-3 mb-2">
-                <div className={`rounded-lg p-2 ${color.split(" ")[0]}`}><Icon className={`h-5 w-5 ${color.split(" ")[1]}`} /></div>
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{label}</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">{description}</p>
+            <Link key={href} href={href} className="group block">
+              <GlassSurface className="h-full p-5 transition-all hover:shadow-glow-teal">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`rounded-lg p-2 ${color.split(" ")[0]}`}><Icon className={`h-5 w-5 ${color.split(" ")[1]}`} /></div>
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{label}</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">{description}</p>
+              </GlassSurface>
             </Link>
           ))}
         </div>
+        </LuminousStage>
       </PageShell>
     </AppLayout>
   );
