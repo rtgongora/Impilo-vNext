@@ -84,12 +84,12 @@ Neither External-Secrets-Operator nor Sealed-Secrets is installed today.
   existing occurrences are recorded in `scripts/guard/committed-secrets-baseline.txt`
   (green now, red on anything new); prune with `--update-baseline` as each phase
   removes a secret. Proven: green on the tree, red on a planted token.
-  - **Remaining (gitleaks high-entropy net):** `.gitleaks.toml` is committed as the
-    starting config, but a raw scan of the tree reports **594 findings** (mostly
-    vendored/test-fixture noise) and runs ~21 min locally. Adopting it as a gate
-    needs (a) a committed findings-baseline (`--baseline-path`) so only NEW
-    high-entropy secrets fail, and (b) scoping to tracked files for speed. Do this
-    within P1 — the baseline guard already blocks the `*-change-me-*` convention.
+  - **gitleaks high-entropy net. ✅ DONE (P5).** A whole-tree scan is impractical
+    here (~594 findings, ~21 min). Instead the CI `security-scan` job runs
+    `scripts/guard/gitleaks-diff-scan.sh` over **only the push/PR commit range**
+    (`gitleaks git --log-opts`) — ~12 ms, and it inherently ignores the
+    already-committed placeholders, so **no findings-baseline is needed**. Fails on
+    any NEW high-entropy secret. `.gitleaks.toml` holds the config/allowlist.
 - **P1 — env-based. ✅ DONE (main-chart generator secrets).** Built the reusable
   `secretEnv` hook in `templates/microservice.yaml` (ENV → `secretKeyRef`), the
   out-of-band `Secret/impilo-app-secrets`, and idempotent
@@ -149,8 +149,25 @@ Neither External-Secrets-Operator nor Sealed-Secrets is installed today.
     the admin API + re-provision `impilo-app-secrets` (see P5 runbook). (2) verify
     the `${env.*}` substitution actually resolves on a **fresh** import for
     Keycloak 25 before relying on it for a clean install.
-- **P5 — Rotation runbook:** document rotation per secret (which consumers must
-  roll together — e.g. LiveKit's three), and a `certbot`-style redeploy/roll step.
+- **P5 — Rotation runbook + gitleaks. ✅ DONE.** `docs/security/secrets-rotation-runbook.md`
+  documents per-secret rotation (which consumers roll together — e.g. LiveKit's
+  three; data-affecting peppers; init-only Keycloak/MinIO; admin-API client-secret
+  rotation; pre-go-live recommended rotations). gitleaks diff-scan wired into CI
+  (see the P0 tail above).
+
+## Residual (beyond the enumerated P1–P5)
+
+Baseline is now **16** (from 33). What remains is lower-priority and mostly
+non-secret or service-local:
+- **Intentional placeholders (leave / allowlisted):** `ops/runtime/environments/pilot.env`
+  and `infra/k8s/config/external-secrets.yaml` — operator/aspirational templates
+  whose whole point is a fill-me placeholder.
+- **Service-local defaults (a future secretEnv pass, same pattern as nhume/mushex):**
+  varapi (`VarapiProperties`/`FUNDO_WEBHOOK_SECRET`), dags `EnforcementService`,
+  mushe-wallet `CardHealthDataService` — Java `@Value` defaults / sentinels.
+- **Infra creds:** `values*.yaml` postgres password, `helm/tshepo-keys` KEK
+  (`TSHEPO_KEYS_KEK`, its own chart).
+The P0 baseline guard keeps all of these from growing and blocks any new addition.
 
 ## Verification
 
