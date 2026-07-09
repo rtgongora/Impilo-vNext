@@ -32,13 +32,13 @@ spec:
             - name: KEYCLOAK_ADMIN
               valueFrom:
                 secretKeyRef:
-                  name: keycloak-preview-credentials
-                  key: KEYCLOAK_ADMIN
+                  name: impilo-app-secrets
+                  key: keycloak-admin-user
             - name: KEYCLOAK_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: keycloak-preview-credentials
-                  key: KEYCLOAK_ADMIN_PASSWORD
+                  name: impilo-app-secrets
+                  key: keycloak-admin-password
             - name: KC_HEALTH_ENABLED
               value: "true"
             - name: KC_METRICS_ENABLED

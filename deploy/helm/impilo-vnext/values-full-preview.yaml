@@ -30,12 +30,10 @@ global:
       cpu: "1"
       memory: 1536Mi
 
-previewSecrets:
-  enabled: true
-  keycloakAdminUser: admin
-  keycloakAdminPassword: preview-keycloak-change-me
-  minioRootUser: impilo-preview
-  minioRootPassword: preview-minio-change-me
+# Keycloak/MinIO admin credentials are provisioned out-of-band into Secret
+# impilo-app-secrets (keys keycloak-admin-*, minio-root-*) by
+# scripts/secrets/bootstrap-secrets.sh — never committed. See P3 of
+# docs/security/secrets-management-migration-plan.md.
 
 images:
   experienceBff:
@@ -341,19 +339,25 @@ fullBootServices:
       # broke recording adoption (register-external) and any real storage IO.
       MINIO_ENDPOINT: http://minio:9000
       MINIO_ACCESS_KEY: impilo-preview
-      MINIO_SECRET_KEY: preview-minio-change-me
+    secretEnv:
+      MINIO_SECRET_KEY:
+        name: impilo-app-secrets
+        key: minio-root-password
   rtc-gateway-service:
     env:
       # Recording lifecycle: template-driven policy gates in RtcRecordingService
       # (rtc.gateway.recording-enabled / egress-enabled stay false by default;
-      # preview opts in). S3 creds mirror previewSecrets.minioRootUser/Password —
-      # LiveKit egress file_outputs carry the request-level S3 target.
+      # preview opts in). S3 secret comes from Secret impilo-app-secrets
+      # (minio-root-password); LiveKit egress carries the request-level S3 target.
       RTC_RECORDING_ENABLED: "true"
       RTC_EGRESS_ENABLED: "true"
       RTC_RECORDING_S3_ACCESS_KEY: "impilo-preview"
-      RTC_RECORDING_S3_SECRET_KEY: "preview-minio-change-me"
       RTC_RECORDING_S3_ENDPOINT: "http://minio:9000"
       RTC_RECORDING_BUCKET: "impilo-recordings"
+    secretEnv:
+      RTC_RECORDING_S3_SECRET_KEY:
+        name: impilo-app-secrets
+        key: minio-root-password
   live-service:
     env:
       # Real media sessions: without this the LocalDevMediaProvider mints

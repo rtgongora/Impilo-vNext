@@ -120,8 +120,20 @@ Neither External-Secrets-Operator nor Sealed-Secrets is installed today.
   `helm template` shows zero livekit placeholder and correct secretKeyRefs.
   Guard baseline 25 → 24. (Caveat: rotating requires a manual pod roll — the
   egress config checksum hashes the placeholder template, not the secret.)
-- **P3 — infra creds:** move `keycloakAdminPassword`, `minioRootPassword`,
-  tshepo-keys off committed values to `impilo-app-secrets`/dedicated Secrets.
+- **P3 — infra creds. ✅ DONE (keycloak/minio).** Folded the Keycloak + MinIO
+  admin creds into `impilo-app-secrets` (keys `keycloak-admin-user/-password`,
+  `minio-root-user/-password`); repointed every consumer — keycloak/minio
+  deployments, the egress render initContainer + bucket-init, the
+  document-service `MINIO_SECRET_KEY` and rtc-gateway `RTC_RECORDING_S3_SECRET_KEY`
+  (secretEnv), and the 3 operator scripts
+  (`keycloak-grant-backend-registration-roles.sh`,
+  `reconcile-keycloak-realm-users.sh`, `seed-scenario-a-estate.sh`). Deleted
+  `preview-credentials.yaml` and the `previewSecrets` values block; bootstrap
+  provisions the four keys. Verified: `helm template` shows zero committed admin
+  passwords and 0 references to the old Secret names. Baseline 24 → 22. **Values
+  preserved** (Keycloak/MinIO passwords are init-only — rotating an initialised
+  cluster needs an admin-API/`mc` change, per the runbook; not just a re-seed).
+  - **Remaining P3:** `tshepo-keys` (`helm/tshepo-keys/values.yaml`, its own chart).
 - **P4 — Keycloak client secrets:** provision real client secrets out-of-band;
   update realm import to reference env/`${...}` placeholders; rotate the
   `CHANGE_ME_*` clients. Update any consumers reading those client secrets.

@@ -14,7 +14,7 @@
 # Environment overrides:
 #   KEYCLOAK_URL          (default: http://<clusterIP of svc/keycloak in $NAMESPACE>:8080)
 #   KEYCLOAK_NAMESPACE    (default: impilo-full-preview)
-#   KEYCLOAK_SECRET       (default: keycloak-preview-credentials)
+#   KEYCLOAK_SECRET       (default: impilo-app-secrets; keys keycloak-admin-user/-password)
 #   REALM_NAME            (default: impilo)
 #   REALM_JSON            (default: tools/auth/impilo-realm.json)
 set -euo pipefail
@@ -22,7 +22,7 @@ REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
 cd "$REPO_PATH"
 
 NAMESPACE="${KEYCLOAK_NAMESPACE:-impilo-full-preview}"
-SECRET="${KEYCLOAK_SECRET:-keycloak-preview-credentials}"
+SECRET="${KEYCLOAK_SECRET:-impilo-app-secrets}"
 REALM_NAME="${REALM_NAME:-impilo}"
 REALM_JSON="${REALM_JSON:-tools/auth/impilo-realm.json}"
 DRY_RUN=0
@@ -76,8 +76,8 @@ def req(method, path, token=None, body=None, form=None, ok=(200, 201, 204, 409))
         raise
 
 # Prefer env creds (compose/bootstrap path); fall back to the k8s secret (estate path).
-admin_user = os.environ.get("KEYCLOAK_ADMIN") or k8s_secret("KEYCLOAK_ADMIN")
-admin_pw = os.environ.get("KEYCLOAK_ADMIN_PASSWORD") or k8s_secret("KEYCLOAK_ADMIN_PASSWORD")
+admin_user = os.environ.get("KEYCLOAK_ADMIN") or k8s_secret("keycloak-admin-user")
+admin_pw = os.environ.get("KEYCLOAK_ADMIN_PASSWORD") or k8s_secret("keycloak-admin-password")
 _, tok = req("POST", "/realms/master/protocol/openid-connect/token", form={
     "grant_type": "password", "client_id": "admin-cli",
     "username": admin_user, "password": admin_pw})

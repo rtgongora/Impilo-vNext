@@ -13,11 +13,11 @@ if ! command -v kubectl >/dev/null 2>&1; then
   exit 1
 fi
 
-ADMIN_USER="$(kubectl get secret keycloak-preview-credentials -n "$NAMESPACE" -o jsonpath='{.data.KEYCLOAK_ADMIN}' 2>/dev/null | base64 -d || true)"
-ADMIN_PASS="$(kubectl get secret keycloak-preview-credentials -n "$NAMESPACE" -o jsonpath='{.data.KEYCLOAK_ADMIN_PASSWORD}' 2>/dev/null | base64 -d || true)"
+ADMIN_USER="$(kubectl get secret impilo-app-secrets -n "$NAMESPACE" -o jsonpath='{.data.keycloak-admin-user}' 2>/dev/null | base64 -d || true)"
+ADMIN_PASS="$(kubectl get secret impilo-app-secrets -n "$NAMESPACE" -o jsonpath='{.data.keycloak-admin-password}' 2>/dev/null | base64 -d || true)"
 
 if [[ -z "$ADMIN_USER" || -z "$ADMIN_PASS" ]]; then
-  echo "ERROR: keycloak-preview-credentials secret missing in namespace $NAMESPACE" >&2
+  echo "ERROR: impilo-app-secrets (keycloak-admin-*) missing in namespace $NAMESPACE" >&2
   exit 1
 fi
 

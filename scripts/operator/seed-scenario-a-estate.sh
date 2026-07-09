@@ -45,7 +45,7 @@ info "1/4 sovereign domain seeds"
 bash "$REPO/scripts/deploy/seed-full-preview-sovereign-data.sh"
 
 info "2/4 Keycloak persona reconcile (users, passwords, roles, identity-anchor attributes)"
-NAMESPACE="$NS" SECRET="${KEYCLOAK_SECRET:-keycloak-preview-credentials}" \
+NAMESPACE="$NS" SECRET="${KEYCLOAK_SECRET:-impilo-app-secrets}" \
   bash "$REPO/scripts/operator/reconcile-keycloak-realm-users.sh"
 
 info "3/4 Vashandi workforce profile mirror (API-first reconcile upsert per persona)"

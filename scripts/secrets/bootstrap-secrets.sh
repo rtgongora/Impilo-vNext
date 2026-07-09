@@ -45,6 +45,13 @@ set_if_absent mushex-hmac-pepper "$(openssl rand -hex 32)"
 # nhume-webhook-secret: on rotation the partner courier's configured secret must
 # be updated to match (per-provider DB secrets take precedence over this fallback).
 set_if_absent nhume-webhook-secret "$(openssl rand -hex 32)"
+# Keycloak/MinIO admin. Usernames are not secret; passwords are randomised on
+# fresh clusters. NOTE: Keycloak/MinIO read these only at first init — rotating on
+# an initialised cluster needs an admin-API/mc password change, not just a re-seed.
+set_if_absent keycloak-admin-user "admin"
+set_if_absent keycloak-admin-password "$(openssl rand -hex 24)"
+set_if_absent minio-root-user "impilo-preview"
+set_if_absent minio-root-password "$(openssl rand -hex 24)"
 
 # livekit-api-secret: match the server key, don't randomise.
 lk_val="${LIVEKIT_API_SECRET:-$(kubectl get cm -n "$NS" livekit-config \

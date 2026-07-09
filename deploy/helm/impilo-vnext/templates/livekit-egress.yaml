@@ -9,13 +9,13 @@
 {{- define "impilo.livekitEgressConfig" -}}
 api_key: {{ .Values.livekit.apiKey }}
 # Secrets are placeholders rendered by the render-egress-config initContainer from
-# Secrets (impilo-app-secrets / minio-preview-credentials) — never committed.
+# Secrets (impilo-app-secrets) — never committed.
 api_secret: __LIVEKIT_API_SECRET__
 ws_url: ws://livekit:7880
 redis:
   address: redis:6379
 s3:
-  access_key: {{ .Values.previewSecrets.minioRootUser }}
+  access_key: __MINIO_ROOT_USER__
   secret: __MINIO_ROOT_PASSWORD__
   endpoint: http://minio:9000
   bucket: {{ .Values.livekitEgress.bucket | default "impilo-recordings" }}
@@ -72,18 +72,23 @@ spec:
           command:
             - sh
             - -c
-            - 'sed -e "s|__LIVEKIT_API_SECRET__|$LIVEKIT_API_SECRET|g" -e "s|__MINIO_ROOT_PASSWORD__|$MINIO_ROOT_PASSWORD|g" /tmpl/egress.yaml > /rendered/egress.yaml'
+            - 'sed -e "s|__LIVEKIT_API_SECRET__|$LIVEKIT_API_SECRET|g" -e "s|__MINIO_ROOT_USER__|$MINIO_ROOT_USER|g" -e "s|__MINIO_ROOT_PASSWORD__|$MINIO_ROOT_PASSWORD|g" /tmpl/egress.yaml > /rendered/egress.yaml'
           env:
             - name: LIVEKIT_API_SECRET
               valueFrom:
                 secretKeyRef:
                   name: impilo-app-secrets
                   key: livekit-api-secret
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: impilo-app-secrets
+                  key: minio-root-user
             - name: MINIO_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: minio-preview-credentials
-                  key: MINIO_ROOT_PASSWORD
+                  name: impilo-app-secrets
+                  key: minio-root-password
           volumeMounts:
             - name: egress-config
               mountPath: /tmpl
@@ -148,11 +153,11 @@ spec:
             - name: MINIO_ROOT_USER
               valueFrom:
                 secretKeyRef:
-                  name: minio-preview-credentials
-                  key: MINIO_ROOT_USER
+                  name: impilo-app-secrets
+                  key: minio-root-user
             - name: MINIO_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: minio-preview-credentials
-                  key: MINIO_ROOT_PASSWORD
+                  name: impilo-app-secrets
+                  key: minio-root-password
 {{- end }}
