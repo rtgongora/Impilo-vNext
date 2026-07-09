@@ -1021,9 +1021,9 @@ export const SHELL_COMMANDS: ShellCommand[] = [
   {
     id: "cmd-workforce-intake",
     label: "Workforce intake",
-    description: "Bulk staff onboarding via Vashandi",
+    description: "Staged staff onboarding — upload, match, issue, invite",
     keywords: ["workforce intake", "staff onboarding", "staff upload", "bulk staff", "intake"],
-    action: { type: "navigate", href: "/work/vashandi/imports" },
+    action: { type: "navigate", href: "/admin/workforce-intake" },
     requiredRole: "ADMIN",
   },
   {
