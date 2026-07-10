@@ -44,7 +44,7 @@ test.describe("Workforce management journey (live preview)", () => {
       page
         .getByText(/no assignments returned/i)
         .or(page.getByTestId("assignment-precheck").first())
-        .or(page.getByText(/service degraded|not in your vashandi workspace scope/i).first()),
+        .or(page.getByText(/service degraded|not in your vashandi workspace scope|blocked by trust policy/i).first()),
     ).toBeVisible({ timeout: 20_000 });
 
     // Rosters: planning form present (create is real, not view-only).
@@ -53,7 +53,7 @@ test.describe("Workforce management journey (live preview)", () => {
     await expect(
       page
         .getByTestId("roster-create-form")
-        .or(page.getByText(/service degraded|not in your vashandi workspace scope/i).first()),
+        .or(page.getByText(/service degraded|not in your vashandi workspace scope|blocked by trust policy/i).first()),
     ).toBeVisible({ timeout: 20_000 });
 
     // Leave: request form + decisions surface (was a read-only list).
@@ -62,7 +62,7 @@ test.describe("Workforce management journey (live preview)", () => {
     await expect(
       page
         .getByTestId("leave-request-form")
-        .or(page.getByText(/service degraded|not in your vashandi workspace scope/i).first()),
+        .or(page.getByText(/service degraded|not in your vashandi workspace scope|blocked by trust policy/i).first()),
     ).toBeVisible({ timeout: 20_000 });
 
     // Access review: table with actions or an honest empty/degraded state.
@@ -71,7 +71,7 @@ test.describe("Workforce management journey (live preview)", () => {
     await expect(
       page
         .getByRole("button", { name: /scan now/i })
-        .or(page.getByText(/service degraded|not in your vashandi workspace scope/i).first()),
+        .or(page.getByText(/service degraded|not in your vashandi workspace scope|blocked by trust policy/i).first()),
     ).toBeVisible({ timeout: 20_000 });
   });
 

@@ -105,18 +105,21 @@ WHERE NOT EXISTS (
     WHERE subject_id = 'PROV-ZW-00004' AND target_type = 'FACILITY' AND status = 'ACTIVE'
 );
 
--- hr.dziva — ACTIVE facility assignment so Vashandi manager workspaces resolve
+-- hr.dziva — ACTIVE facility assignment carrying the Vashandi manager role template
+-- (workspace authority resolves from extension_json.roleTemplateId, not the realm role).
 INSERT INTO wgv_assignment
     (id, tenant_id, subject_type, subject_id, role_definition_id, target_type, target_id,
-     organisation_id, start_date, status, primary_flag, secondary_flag, created_at, updated_at)
+     organisation_id, start_date, status, primary_flag, secondary_flag, extension_json, created_at, updated_at)
 SELECT
     'f5000000-0000-4000-8000-000000000036'::uuid,
     '00000000-0000-4000-8000-000000000001'::uuid,
     'PROVIDER', 'PROV-ZW-00013',
-    'f4000000-0000-4000-8000-000000000001'::uuid,
+    'f4000000-0000-4000-8000-000000000102'::uuid,
     'FACILITY', '1',
     'f2000000-0000-4000-8000-000000000001'::uuid,
-    CURRENT_DATE, 'ACTIVE', true, false, NOW(), NOW()
+    CURRENT_DATE, 'ACTIVE', true, false,
+    '{"roleTemplateId":"vashandi_facility_workforce_manager"}',
+    NOW(), NOW()
 WHERE NOT EXISTS (
     SELECT 1 FROM wgv_assignment WHERE id = 'f5000000-0000-4000-8000-000000000036'::uuid
 );
