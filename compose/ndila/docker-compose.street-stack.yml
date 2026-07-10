@@ -1,0 +1,41 @@
+# Ndila Tier B — self-hosted street basemap stack (Martin + optional OSRM).
+#
+# Sovereignty: no public OSM tile servers. Ndila proxies tiles through
+# /api/v1/ndila/tiles/{z}/{x}/{y}.png when NDILA_OSM_ENABLED=true.
+#
+# First run:
+#   bash scripts/operator/setup-ndila-street-stack.sh
+#   docker compose -f compose/ndila/docker-compose.street-stack.yml up -d
+#
+# Ndila env (local dev):
+#   NDILA_DEFAULT_TILES=OSM_OSRM
+#   NDILA_OSM_ENABLED=true
+#   NDILA_OSM_TILE_BASE_URL=http://localhost:3410/zimbabwe/{z}/{x}/{y}
+
+services:
+  ndila-martin:
+    image: ghcr.io/maplibre/martin:v0.15.0
+    container_name: impilo-ndila-martin
+    restart: unless-stopped
+    ports:
+      - "3410:3000"
+    volumes:
+      - ./data:/data:ro
+    command: ["--pmtiles-path", "/data"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  ndila-osrm:
+    image: ghcr.io/project-osrm/osrm-backend:v5.27.1
+    container_name: impilo-ndila-osrm
+    profiles: ["routing"]
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data/osrm:/data:ro
+    command: osrm-routed --algorithm mld /data/zimbabwe.osrm

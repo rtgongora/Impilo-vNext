@@ -1,0 +1,94 @@
+{{- if .Values.ndilaStreetStack.enabled }}
+# Self-hosted OSM-derived raster tiles for Ndila Tier B street basemaps.
+# Requires zimbabwe.pmtiles on the mounted volume — run
+# scripts/operator/setup-ndila-street-stack.sh on the preview VM (or set
+# ndilaStreetStack.pmtilesDownloadUrl for the init container).
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ndila-martin-data
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.ndilaStreetStack.storageSize | default "2Gi" }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ndila-martin
+  namespace: {{ .Release.Namespace }}
+spec:
+  strategy:
+    type: {{ .Values.global.deploymentStrategy | default "Recreate" }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ndila-martin
+  template:
+    metadata:
+      labels:
+        app: ndila-martin
+    spec:
+      {{- if .Values.ndilaStreetStack.pmtilesDownloadUrl }}
+      initContainers:
+        - name: fetch-pmtiles
+          image: curlimages/curl:8.11.1
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              if [ ! -f /data/zimbabwe.pmtiles ]; then
+                echo "Fetching PMTiles from configured URL …"
+                curl -fsSL "{{ .Values.ndilaStreetStack.pmtilesDownloadUrl }}" -o /data/zimbabwe.pmtiles
+              fi
+          volumeMounts:
+            - name: martin-data
+              mountPath: /data
+      {{- end }}
+      containers:
+        - name: martin
+          image: "{{ .Values.ndilaStreetStack.image.repository }}:{{ .Values.ndilaStreetStack.image.tag }}"
+          imagePullPolicy: {{ .Values.ndilaStreetStack.image.pullPolicy | default "IfNotPresent" }}
+          args: ["--pmtiles-path", "/data"]
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: martin-data
+              mountPath: /data
+              readOnly: true
+          resources:
+            {{- toYaml (.Values.ndilaStreetStack.resources | default dict) | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+      volumes:
+        - name: martin-data
+          persistentVolumeClaim:
+            claimName: ndila-martin-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ndila-martin
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: ndila-martin
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+{{- end }}
