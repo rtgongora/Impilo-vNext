@@ -86,6 +86,8 @@ ndila:
     osm:
       enabled: ${NDILA_OSM_ENABLED:false}
       tile-base-url: ${NDILA_OSM_TILE_BASE_URL:}
+      proxy-through-ndila: ${NDILA_OSM_PROXY_THROUGH_NDILA:true}
+      http-fetch-timeout-ms: ${NDILA_OSM_HTTP_TIMEOUT_MS:8000}
     osrm:
       enabled: ${NDILA_OSRM_ENABLED:false}
       base-url: ${NDILA_OSRM_BASE_URL:}
@@ -93,6 +95,8 @@ ndila:
       enabled: ${NDILA_NOMINATIM_ENABLED:false}
       base-url: ${NDILA_NOMINATIM_BASE_URL:}
       user-agent: impilo-ndila/0.1
+      engine: ${NDILA_NOMINATIM_ENGINE:photon}
+      bbox: ${NDILA_NOMINATIM_BBOX:25.2,-22.5,33.1,-15.6}
     pelias:
       enabled: ${NDILA_PELIAS_ENABLED:false}
       base-url: ${NDILA_PELIAS_BASE_URL:}

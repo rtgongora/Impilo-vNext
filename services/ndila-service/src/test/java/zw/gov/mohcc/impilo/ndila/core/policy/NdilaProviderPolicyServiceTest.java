@@ -17,7 +17,7 @@ class NdilaProviderPolicyServiceTest {
     private NdilaProviderPolicyService policyDefaultMock() {
         MockProviderAdapter mock = new MockProviderAdapter();
         OsmOsrmProviderAdapter osm = new OsmOsrmProviderAdapter(
-                false, "", false, "", true, "development");
+                null, false, "", false, "", true, "/api/v1/ndila", true, "development");
         return new NdilaProviderPolicyService(
                 List.<NdilaGeocodingProvider>of(mock),
                 List.<NdilaRoutingProvider>of(mock, osm),
@@ -55,8 +55,8 @@ class NdilaProviderPolicyServiceTest {
     void productionEnvironmentExcludesPublicOsmTiles() {
         MockProviderAdapter mock = new MockProviderAdapter();
         OsmOsrmProviderAdapter publicOsm = new OsmOsrmProviderAdapter(
-                false, "", true, "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                true, "production");
+                null, false, "", true, "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                true, "/api/v1/ndila", true, "production");
         NdilaProviderPolicyService policy = new NdilaProviderPolicyService(
                 List.<NdilaGeocodingProvider>of(mock),
                 List.<NdilaRoutingProvider>of(mock),

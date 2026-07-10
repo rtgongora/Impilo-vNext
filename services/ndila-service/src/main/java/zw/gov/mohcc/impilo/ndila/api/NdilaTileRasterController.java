@@ -6,15 +6,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-import zw.gov.mohcc.impilo.ndila.core.tiles.NdilaPreviewTileRasterService;
+import zw.gov.mohcc.impilo.ndila.core.tiles.NdilaTileRasterFacade;
 
 @RestController
 public class NdilaTileRasterController {
 
-    private final NdilaPreviewTileRasterService rasterService;
+    private final NdilaTileRasterFacade rasterFacade;
 
-    public NdilaTileRasterController(NdilaPreviewTileRasterService rasterService) {
-        this.rasterService = rasterService;
+    public NdilaTileRasterController(NdilaTileRasterFacade rasterFacade) {
+        this.rasterFacade = rasterFacade;
     }
 
     @GetMapping({
@@ -28,7 +28,7 @@ public class NdilaTileRasterController {
         if (z < 0 || z > 19 || x < 0 || y < 0) {
             return ResponseEntity.badRequest().build();
         }
-        byte[] png = rasterService.renderPng(z, x, y);
+        byte[] png = rasterFacade.renderPng(z, x, y);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "public, max-age=604800")
                 .contentType(MediaType.IMAGE_PNG)

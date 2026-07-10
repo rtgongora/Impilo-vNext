@@ -1,66 +1,70 @@
 package zw.gov.mohcc.impilo.ndila.core.provider.adapter;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import zw.gov.mohcc.impilo.ndila.core.geo.Coordinate;
 import zw.gov.mohcc.impilo.ndila.core.geo.GeoMath;
 import zw.gov.mohcc.impilo.ndila.core.provider.NdilaRoutingProvider;
 import zw.gov.mohcc.impilo.ndila.core.provider.NdilaTileProvider;
 import zw.gov.mohcc.impilo.ndila.core.provider.ProviderCapabilities;
 
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * OSM / OSRM provider adapter.
- *
- * <p>This adapter is wire-complete: when a self-hosted OSRM base URL is
- * configured, calls would be issued to that host. When not configured (the
- * default in this repo), the adapter degrades to deterministic great-circle
- * routing so dev / test / CI never reach a live public endpoint and so the
- * platform's "no public OSM tile servers in production" rule is preserved.
- *
- * <p>Real HTTP integration is intentionally left as a configuration-driven
- * follow-on wave; the adapter contract and provider policy work today.
+ * OSM / OSRM provider adapter — self-hosted street tiles and OSRM routing only.
  */
 @Component
 public class OsmOsrmProviderAdapter implements NdilaRoutingProvider, NdilaTileProvider {
 
     public static final String NAME = "OSM_OSRM";
 
+    private final RestClient restClient;
     private final boolean osrmEnabled;
     private final String osrmBaseUrl;
     private final boolean tilesEnabled;
     private final String tileBaseUrl;
+    private final boolean proxyThroughNdila;
+    private final String ndilaHttpBasePath;
     private final boolean blockPublicOsmInProduction;
     private final String environment;
 
     public OsmOsrmProviderAdapter(
+            RestClient ndilaOsmRestClient,
             @Value("${ndila.providers.osrm.enabled:false}") boolean osrmEnabled,
             @Value("${ndila.providers.osrm.base-url:}") String osrmBaseUrl,
             @Value("${ndila.providers.osm.enabled:false}") boolean tilesEnabled,
             @Value("${ndila.providers.osm.tile-base-url:}") String tileBaseUrl,
+            @Value("${ndila.providers.osm.proxy-through-ndila:true}") boolean proxyThroughNdila,
+            @Value("${ndila.providers.preview-sovereign-tiles.http-base-path:/api/v1/ndila}") String ndilaHttpBasePath,
             @Value("${ndila.sovereignty.block-public-osm-tiles-in-production:true}") boolean blockPublicOsmInProduction,
             @Value("${ndila.environment:development}") String environment) {
+        this.restClient = ndilaOsmRestClient;
         this.osrmEnabled = osrmEnabled;
-        this.osrmBaseUrl = osrmBaseUrl == null ? "" : osrmBaseUrl;
+        this.osrmBaseUrl = osrmBaseUrl == null ? "" : osrmBaseUrl.trim();
         this.tilesEnabled = tilesEnabled;
-        this.tileBaseUrl = tileBaseUrl == null ? "" : tileBaseUrl;
+        this.tileBaseUrl = tileBaseUrl == null ? "" : tileBaseUrl.trim();
+        this.proxyThroughNdila = proxyThroughNdila;
+        this.ndilaHttpBasePath = ndilaHttpBasePath == null || ndilaHttpBasePath.isBlank()
+                ? "/api/v1/ndila"
+                : ndilaHttpBasePath.replaceAll("/+$", "");
         this.blockPublicOsmInProduction = blockPublicOsmInProduction;
         this.environment = environment == null ? "development" : environment;
     }
 
     @Override public String providerName() { return NAME; }
-    @Override public boolean enabled() { return osrmEnabled || tilesEnabled; }
+    @Override public boolean enabled() { return osrmEnabled || (tilesEnabled && !tileBaseUrl.isBlank()); }
 
     @Override
     public boolean productionSafe() {
-        if (tileBaseUrl == null || tileBaseUrl.isBlank()) return true;
+        if (tileBaseUrl.isBlank()) return true;
         boolean isPublicOsm = tileBaseUrl.contains("tile.openstreetmap.org");
-        if ("production".equalsIgnoreCase(environment) && isPublicOsm && blockPublicOsmInProduction) {
-            return false;
-        }
-        return true;
+        return !("production".equalsIgnoreCase(environment) && isPublicOsm && blockPublicOsmInProduction);
     }
 
     @Override
@@ -78,24 +82,84 @@ public class OsmOsrmProviderAdapter implements NdilaRoutingProvider, NdilaTilePr
     }
 
     @Override
-    public NdilaRoutingProvider.RouteResult route(NdilaRoutingProvider.RouteRequest request) {
-        // Real implementation would POST to ${osrmBaseUrl}/route/v1/driving/{lon,lat;lon,lat}?...
-        // For now we use a deterministic great-circle approximation so that
-        // the policy + observability surface is fully exercised end-to-end.
+    public RouteResult route(RouteRequest request) {
         if (!osrmEnabled || osrmBaseUrl.isBlank()) {
-            return fallback(request, "OSM_OSRM not configured — using great-circle approximation.");
+            return fallback(request, "OSM_OSRM routing not configured — using great-circle approximation.");
         }
-        return fallback(request, "OSRM live HTTP integration is configuration-driven (follow-on wave).");
+        try {
+            String profile = osrmProfile(request.mode());
+            String coords = request.origin().longitude() + "," + request.origin().latitude()
+                    + ";" + request.destination().longitude() + "," + request.destination().latitude();
+            URI uri = UriComponentsBuilder
+                    .fromHttpUrl(osrmBaseUrl.replaceAll("/+$", ""))
+                    .path("/route/v1/" + profile + "/" + coords)
+                    .queryParam("overview", request.includeGeometry() ? "full" : "false")
+                    .queryParam("geometries", "polyline")
+                    .queryParam("steps", "false")
+                    .build(true)
+                    .toUri();
+
+            JsonNode body = restClient.get().uri(uri).retrieve().body(JsonNode.class);
+            if (body == null || !"Ok".equalsIgnoreCase(body.path("code").asText())) {
+                return fallback(request, "OSRM returned no route — using great-circle approximation.");
+            }
+            JsonNode route = body.path("routes").path(0);
+            if (route.isMissingNode()) {
+                return fallback(request, "OSRM returned empty routes — using great-circle approximation.");
+            }
+            double distance = route.path("distance").asDouble(0);
+            double duration = route.path("duration").asDouble(0);
+            String polyline = request.includeGeometry()
+                    ? route.path("geometry").asText(null)
+                    : null;
+            return new RouteResult(
+                    distance,
+                    duration,
+                    request.mode(),
+                    NAME,
+                    profile.toUpperCase(Locale.ROOT),
+                    false,
+                    false,
+                    polyline,
+                    List.of(),
+                    0.92);
+        } catch (Exception ex) {
+            return fallback(request, "OSRM request failed — using great-circle approximation.");
+        }
     }
 
     @Override
-    public NdilaTileProvider.TileConfig tileConfig(NdilaTileProvider.TileConfigRequest request) {
-        String url = tilesEnabled && !tileBaseUrl.isBlank() ? tileBaseUrl : "mock://tiles/{z}/{x}/{y}.png";
-        return new NdilaTileProvider.TileConfig(
-                NAME, url, "Self-hosted OSM-derived tiles", 19, false, "osm-token-ref");
+    public TileConfig tileConfig(TileConfigRequest request) {
+        if (!tilesEnabled || tileBaseUrl.isBlank()) {
+            return new TileConfig(
+                    NAME,
+                    "mock://tiles/{z}/{x}/{y}.png",
+                    "Self-hosted OSM-derived tiles (not configured)",
+                    19,
+                    false,
+                    null);
+        }
+        String browserTemplate = proxyThroughNdila
+                ? ndilaHttpBasePath + "/tiles/{z}/{x}/{y}.png"
+                : tileBaseUrl;
+        return new TileConfig(
+                NAME,
+                browserTemplate,
+                "© OpenStreetMap contributors — self-hosted via Ndila",
+                19,
+                false,
+                null);
     }
 
-    private NdilaRoutingProvider.RouteResult fallback(NdilaRoutingProvider.RouteRequest request, String warning) {
+    private static String osrmProfile(String mode) {
+        return switch (mode == null ? "CAR" : mode.toUpperCase(Locale.ROOT)) {
+            case "WALKING" -> "foot";
+            case "CYCLING" -> "bike";
+            default -> "driving";
+        };
+    }
+
+    private RouteResult fallback(RouteRequest request, String warning) {
         double straight = GeoMath.haversineMeters(request.origin(), request.destination());
         double pad = 1.30;
         double distance = straight * pad;
@@ -108,8 +172,10 @@ public class OsmOsrmProviderAdapter implements NdilaRoutingProvider, NdilaTilePr
             default -> 14.0;
         };
         double duration = distance / avgSpeed;
-        return new NdilaRoutingProvider.RouteResult(
+        List<String> warnings = new ArrayList<>();
+        warnings.add(warning);
+        return new RouteResult(
                 distance, duration, request.mode(), NAME, "FALLBACK",
-                true, false, null, List.of(warning), 0.5);
+                true, false, null, warnings, 0.5);
     }
 }
