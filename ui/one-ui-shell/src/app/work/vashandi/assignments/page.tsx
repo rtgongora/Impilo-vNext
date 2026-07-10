@@ -3,6 +3,7 @@
 import { VashandiShell } from "@/components/vashandi/VashandiShell";
 import { AssignmentCreateForm } from "@/components/vashandi/AssignmentCreateForm";
 import { AssignmentStatusBadge } from "@/components/vashandi/AssignmentStatusBadge";
+import { AssignmentLifecycleActions } from "@/components/vashandi/AssignmentLifecycleActions";
 import { VashandiFriendlyBlockedState } from "@/components/vashandi/VashandiFriendlyBlockedState";
 import { useAssignments, isVashandiDegraded } from "@/hooks/useVashandi";
 
@@ -26,12 +27,17 @@ export default function Page() {
       ) : null}
       <ul className="mt-4 space-y-2">
         {data?.items.map((assignment) => (
-          <li key={assignment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm">
-            <div>
-              <p className="font-medium">{assignment.assignmentType ?? "Assignment"}</p>
-              <p className="text-muted-foreground">{assignment.roleTemplateId ?? assignment.id}</p>
+          <li key={assignment.id} className="rounded-xl border border-border bg-card px-4 py-3 text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="font-medium">{assignment.assignmentType ?? "Assignment"}</p>
+                <p className="text-muted-foreground">{assignment.roleTemplateId ?? assignment.id}</p>
+              </div>
+              <AssignmentStatusBadge status={assignment.status} />
             </div>
-            <AssignmentStatusBadge status={assignment.status} />
+            <div className="mt-3 border-t border-border pt-3">
+              <AssignmentLifecycleActions assignment={assignment} />
+            </div>
           </li>
         ))}
       </ul>

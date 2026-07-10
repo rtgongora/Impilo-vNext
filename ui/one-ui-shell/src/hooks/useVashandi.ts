@@ -5,6 +5,10 @@ import {
   getAssignment,
   createAssignment,
   precheckAssignment,
+  approveAssignment,
+  activateAssignment,
+  suspendAssignment,
+  endAssignment,
   assignmentsFromResponse,
 } from "@/lib/vashandi/api/assignments";
 import { listRosters, rostersFromResponse } from "@/lib/vashandi/api/rosters";
@@ -106,10 +110,43 @@ export function useCreateAssignment() {
 }
 
 export function usePrecheckAssignment() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ assignmentId, body }: { assignmentId: string; body?: Record<string, unknown> }) =>
       precheckAssignment(assignmentId, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "assignments"] });
+    },
   });
+}
+
+function useAssignmentAction(
+  action: (id: string, body?: Record<string, unknown>) => Promise<import("@/lib/vashandi/types").VashandiActionResponse>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ assignmentId, body }: { assignmentId: string; body?: Record<string, unknown> }) =>
+      action(assignmentId, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "assignments"] });
+    },
+  });
+}
+
+export function useApproveAssignment() {
+  return useAssignmentAction(approveAssignment);
+}
+
+export function useActivateAssignment() {
+  return useAssignmentAction(activateAssignment);
+}
+
+export function useSuspendAssignment() {
+  return useAssignmentAction(suspendAssignment);
+}
+
+export function useEndAssignment() {
+  return useAssignmentAction(endAssignment);
 }
 
 export function useRosters(params?: Record<string, string | undefined>) {
