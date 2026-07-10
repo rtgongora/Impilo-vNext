@@ -106,4 +106,8 @@ public final class FacilityImportRowDtos {
     public record ApplyApprovedRequest(List<Long> rowIds) {}
 
     public record ApplyApprovedResponse(int applied, int skipped, List<FacilityImportRowView> rows) {}
+
+    public record BulkApproveResponse(
+            Long runId, int approved, int alreadyApproved, int ineligible, java.util.List<String> ineligibleReasons) {
+    }
 }

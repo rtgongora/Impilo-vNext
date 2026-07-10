@@ -61,4 +61,6 @@ public interface FacilityImportRowRepository extends JpaRepository<FacilityImpor
     List<FacilityImportRowEntity> findByImportRunIdAndFacilityCode(Long importRunId, String facilityCode);
 
     List<FacilityImportRowEntity> findByImportRunIdAndDecisionStatus(Long importRunId, String decisionStatus);
+
+    List<FacilityImportRowEntity> findByImportRunId(Long importRunId);
 }

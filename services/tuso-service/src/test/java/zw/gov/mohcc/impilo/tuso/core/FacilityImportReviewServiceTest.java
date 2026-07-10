@@ -234,4 +234,29 @@ class FacilityImportReviewServiceTest {
         assertThat(resp.skipped()).isEqualTo(1);
         verify(facilityRepository, never()).save(any());
     }
+
+    @Test
+    void approveAllApprovesEligibleAndReportsIneligible() {
+        FacilityImportRowEntity ready = stagedRow(1L, "READY_FOR_IMPORT",
+                FacilityImportRowEntity.DS_READY_FOR_IMPORT, "ZWA1");
+        FacilityImportRowEntity noCode = stagedRow(2L, FacilityImportRowEntity.EXCLUDED_MISSING_FACILITY_CODE,
+                FacilityImportRowEntity.DS_PENDING_REVIEW, null);
+        FacilityImportRowEntity rejected = stagedRow(3L, "READY_FOR_IMPORT",
+                FacilityImportRowEntity.DS_REJECTED, "ZWA3");
+        FacilityImportRowEntity already = stagedRow(4L, "READY_FOR_IMPORT",
+                FacilityImportRowEntity.DS_APPROVED_FOR_IMPORT, "ZWA4");
+        when(importRowRepository.findByImportRunId(500L))
+                .thenReturn(List.of(ready, noCode, rejected, already));
+        when(facilityRepository.findByTenantIdAndFacilityCode(tenantId, "ZWA1")).thenReturn(Optional.empty());
+        when(importRowRepository.findByImportRunIdAndFacilityCode(500L, "ZWA1")).thenReturn(List.of());
+        when(importRowRepository.save(org.mockito.ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
+
+        var result = service.approveAll(500L);
+
+        assertThat(result.approved()).isEqualTo(1);
+        assertThat(result.alreadyApproved()).isEqualTo(1);
+        assertThat(result.ineligible()).isEqualTo(2);
+        assertThat(ready.getDecisionStatus()).isEqualTo(FacilityImportRowEntity.DS_APPROVED_FOR_IMPORT);
+        assertThat(rejected.getDecisionStatus()).isEqualTo(FacilityImportRowEntity.DS_REJECTED);
+    }
 }

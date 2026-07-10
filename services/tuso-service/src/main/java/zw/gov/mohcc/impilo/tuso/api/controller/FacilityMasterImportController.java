@@ -210,6 +210,15 @@ public class FacilityMasterImportController {
         return ResponseEntity.ok(ApiResponse.ok(row, ctx.correlationId().toString()));
     }
 
+    /** Bulk-approve all eligible rows (same guards as per-row approve; ineligible rows reported). */
+    @PostMapping("/runs/{runId}/approve-all")
+    public ResponseEntity<ApiResponse<FacilityImportRowDtos.BulkApproveResponse>> approveAll(
+            @PathVariable Long runId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var result = importService.approveAll(runId);
+        return ResponseEntity.ok(ApiResponse.ok(result, ctx.correlationId().toString()));
+    }
+
     @PostMapping("/runs/{runId}/apply-approved")
     public ResponseEntity<ApiResponse<FacilityImportRowDtos.ApplyApprovedResponse>> applyApproved(
             @PathVariable Long runId,

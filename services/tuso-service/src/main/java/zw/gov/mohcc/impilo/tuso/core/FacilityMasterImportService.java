@@ -723,6 +723,46 @@ public class FacilityMasterImportService {
         return toRowView(importRowRepository.save(row));
     }
 
+    /**
+     * Bulk-approve every eligible row in a run (READY_FOR_IMPORT and resolved reviews).
+     * Applies the exact per-row guards; ineligible rows are counted and left for the
+     * review console — never silently force-approved.
+     */
+    @Transactional
+    public FacilityImportRowDtos.BulkApproveResponse approveAll(Long runId) {
+        UUID tenantId = requireRun(runId).getTenantId();
+        List<FacilityImportRowEntity> rows = importRowRepository.findByImportRunId(runId);
+        int approved = 0;
+        int alreadyApproved = 0;
+        int ineligible = 0;
+        List<String> ineligibleReasons = new ArrayList<>();
+        for (FacilityImportRowEntity row : rows) {
+            String ds = row.getDecisionStatus();
+            if (FacilityImportRowEntity.DS_APPROVED_FOR_IMPORT.equals(ds)) {
+                alreadyApproved++;
+                continue;
+            }
+            if (FacilityImportRowEntity.DS_IMPORTED.equals(ds)
+                    || FacilityImportRowEntity.DS_REJECTED.equals(ds)
+                    || FacilityImportRowEntity.DS_SKIPPED.equals(ds)
+                    || FacilityImportRowEntity.DS_RESOLUTION_CONFLICT.equals(ds)
+                    || isBlank(row.getFacilityCode())
+                    || codeConflict(tenantId, runId, row.getId(), row.getFacilityCode(), row.getMatchedFacilityId()) != null) {
+                ineligible++;
+                if (ineligibleReasons.size() < 20) {
+                    ineligibleReasons.add("row " + row.getId() + ": " + (isBlank(row.getFacilityCode()) ? "missing facility code" : ds));
+                }
+                continue;
+            }
+            String prev = ds;
+            row.setDecisionStatus(FacilityImportRowEntity.DS_APPROVED_FOR_IMPORT);
+            recordReview(row, "APPROVE", prev, null, null, "BULK_OK");
+            importRowRepository.save(row);
+            approved++;
+        }
+        return new FacilityImportRowDtos.BulkApproveResponse(runId, approved, alreadyApproved, ineligible, ineligibleReasons);
+    }
+
     /** Apply approved rows into TUSO (idempotent). rowIds null/empty = all approved rows in the run. */
     @Transactional
     public FacilityImportRowDtos.ApplyApprovedResponse applyApproved(Long runId, List<Long> rowIds) {
