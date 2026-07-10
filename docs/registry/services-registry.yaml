@@ -1707,7 +1707,7 @@ services:
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
-    default_http_port: null
+    default_http_port: 8210  # collides with data-ingestion-service when co-run locally; see docs/runbooks/port-allocation.md
     product_names:
       - Nhume
     owner_team: TBD
