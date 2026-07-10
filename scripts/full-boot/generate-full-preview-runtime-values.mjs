@@ -135,10 +135,16 @@ function specialEnv(serviceId) {
     };
   }
   if (serviceId === "ndila-service") {
+    const streetStackEnabled = process.env.NDILA_STREET_STACK_ENABLED !== "false";
     return {
       NDILA_ALLOW_ANONYMOUS: "true",
       NDILA_ENVIRONMENT: "staging",
-      NDILA_DEFAULT_TILES: "PREVIEW_SOVEREIGN",
+      NDILA_DEFAULT_TILES: streetStackEnabled ? "OSM_OSRM" : "PREVIEW_SOVEREIGN",
+      NDILA_OSM_ENABLED: streetStackEnabled ? "true" : "false",
+      NDILA_OSM_TILE_BASE_URL: streetStackEnabled
+        ? "http://ndila-martin:3000/zimbabwe/{z}/{x}/{y}"
+        : "",
+      NDILA_OSM_PROXY_THROUGH_NDILA: "true",
       NDILA_PREVIEW_SOVEREIGN_TILES_ENABLED: "true",
       NDILA_POSTGIS_ENABLED: "false",
     };
