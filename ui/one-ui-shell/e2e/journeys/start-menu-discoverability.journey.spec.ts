@@ -25,7 +25,7 @@ test.describe("Start Menu discoverability (live preview)", () => {
     await loginAs(page, PERSONAS.trainer);
     await openStartMenu(page);
     await expect(page.getByRole("button", { name: /^new course$/i })).toBeVisible();
-    await page.getByRole("button", { name: /^course studio$/i }).click();
+    await page.getByRole("button", { name: /^new course$/i }).click();
     await page.waitForURL(/\/learning\/studio/, { timeout: 20_000 });
     await acceptPoliciesIfGated(page);
     await expectNoDeadEnd(page);

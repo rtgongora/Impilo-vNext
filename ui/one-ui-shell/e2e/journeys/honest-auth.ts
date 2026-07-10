@@ -47,9 +47,16 @@ export async function loginAs(page: Page, persona: JourneyPersona) {
 export async function logout(page: Page) {
   const signOut = page.getByRole("button", { name: /sign out|log ?out/i }).first();
   if (await signOut.isVisible().catch(() => false)) {
-    await signOut.click();
-    await page.waitForURL((url) => url.pathname.startsWith("/auth"), { timeout: 15_000 }).catch(() => undefined);
-    return;
+    // Toasts (Nompilo guidance) can intercept the pointer — fall back to a
+    // session clear rather than failing the journey on a sign-out affordance.
+    const clicked = await signOut
+      .click({ timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (clicked) {
+      await page.waitForURL((url) => url.pathname.startsWith("/auth"), { timeout: 15_000 }).catch(() => undefined);
+      return;
+    }
   }
   await page.evaluate(() => {
     sessionStorage.clear();

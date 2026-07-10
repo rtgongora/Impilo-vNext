@@ -52,7 +52,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
 
   const user = useAuthStore((s) => s.user);
   const identity = useIdentityContext();
-  const { contract } = useSessionExperienceContract();
+  const { contract, isLoading: contractLoading } = useSessionExperienceContract();
 
   useEffect(() => {
     // Consent gate: redirect authenticated users who haven't consented,
@@ -106,6 +106,11 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
     // contract that unlocks work/governance (e.g. an operator with a WGV assignment) is not
     // overridden by stale client identity inference.
     if (identity.isCitizenOnly && isRouteBlockedForCitizen(pathname, identity)) {
+      // The contract is authoritative — never bounce while it is still loading,
+      // or a work-granted operator gets flashed back to /home mid-navigation.
+      if (!contract && contractLoading) {
+        return;
+      }
       const contractGrantsRoute =
         (!!contract && sessionContractAllowsRoute(contract, pathname)) ||
         isGovernanceWorkPathGrantedBySession(contract, pathname);
@@ -178,7 +183,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
         if (requiredRole && !matchesRequiredRole(hasRole, requiredRole)) { router.replace("/home"); return; }
         break;
     }
-  }, [pathname, isAuthenticated, hasConsented, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, user, identity, contract, router]);
+  }, [pathname, isAuthenticated, hasConsented, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, user, identity, contract, contractLoading, router]);
 
   return <>{children}</>;
 }

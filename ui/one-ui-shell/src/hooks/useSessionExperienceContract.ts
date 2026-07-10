@@ -38,6 +38,9 @@ export function useSessionExperienceContract() {
     enabled: isAuthenticated && !!user,
     staleTime: 60_000,
     refetchOnWindowFocus: false,
+    // The key includes facility/assignment state; keep the last contract while
+    // the new one loads so route guards never see a transient undefined.
+    placeholderData: (previous) => previous,
   });
 
   return {
