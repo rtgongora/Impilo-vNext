@@ -195,6 +195,25 @@ public class FacilityController {
         }
     }
 
+    /** Referral chain for a facility — registry truth walked from REFERS_TO relationships. */
+    @GetMapping("/{id}/referral-pathway")
+    public ResponseEntity<Map<String, Object>> referralPathway(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String id) {
+        try {
+            JsonNode pathway = tusoClient.referralPathway(id);
+            return ResponseEntity.ok(Map.of(
+                    "data", pathway != null ? pathway : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("Referral pathway lookup failed for {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "TUSO_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
     private static Map<String, Object> mapTusoSummaryToFacilityResource(JsonNode n) {
         String idStr = n.has("id") ? String.valueOf(n.get("id").asLong()) : UUID.randomUUID().toString();
         Map<String, Object> attrs = new LinkedHashMap<>();

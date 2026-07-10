@@ -127,6 +127,12 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    public JsonNode referralPathway(String facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/referral-pathway";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Create facility shell / provisional record. */
     public JsonNode createFacility(Map<String, Object> requestBody) {
         String url = baseUrl + "/v1/internal/facilities";
