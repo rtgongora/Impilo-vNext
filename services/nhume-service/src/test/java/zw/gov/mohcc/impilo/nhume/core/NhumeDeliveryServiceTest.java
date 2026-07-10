@@ -85,6 +85,29 @@ class NhumeDeliveryServiceTest {
     private CommsHubClient commsHub;
     private NdilaClient ndila;
     private NhumeDeliveryService service;
+    private zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeIntegrationWriteBackService writeBack;
+    private final StubWriteBackGateway stubGateway = new StubWriteBackGateway();
+
+    /** Records calls; returns OK — write-back HTTP truth is covered by gateway tests. */
+    static final class StubWriteBackGateway
+            implements zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeWriteBackGateway {
+        final java.util.List<String> calls = new java.util.ArrayList<>();
+        @Override public zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome
+                orosReceiveByOrder(String ref, WriteBackContext ctx) {
+            calls.add("OROS:" + ref);
+            return zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome.ok("stub");
+        }
+        @Override public zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome
+                madiCompleteOrder(String ref, WriteBackContext ctx) {
+            calls.add("MADI:" + ref);
+            return zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome.ok("stub");
+        }
+        @Override public zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome
+                pctAcceptReferral(String ref, WriteBackContext ctx) {
+            calls.add("PCT:" + ref);
+            return zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome.ok("stub");
+        }
+    }
 
     private final UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private final Map<UUID, DeliveryRequestEntity> store = new HashMap<>();
@@ -149,10 +172,12 @@ class NhumeDeliveryServiceTest {
                 .thenReturn(CommsHubClient.DispatchResult.sent("test-provider-ref"));
 
         ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        writeBack = new zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeIntegrationWriteBackService(
+                stubGateway, mapper, true);
         service = new NhumeDeliveryService(deliveryRepo, itemRepo, packageRepo, assignmentRepo,
                 statusEventRepo, trackingRepo, proofRepo, custodyRepo, exceptionRepo,
                 notificationRepo, auditRepo, outboxRepo, policyRepo, courierRepo, assetRepo,
-                commsHub, ndila, mapper);
+                commsHub, ndila, mapper, writeBack);
     }
 
     @Test
@@ -225,6 +250,34 @@ class NhumeDeliveryServiceTest {
         assertThat(proof.isVerified()).isTrue();
         assertThat(store.get(id).getStatus()).isEqualTo(DeliveryStatus.DELIVERED.name());
         assertThat(store.get(id).getDeliveredAt()).isNotNull();
+    }
+
+    @Test
+    void dropOffSignOff_firesIntegrationWriteBacks_andRecordsOutcomes() {
+        DeliveryRequestEntity d = service.createDelivery(tenantId, "national-spine", null, null,
+                baseRequestBuilder(true), actorCtx());
+        UUID id = d.getDeliveryId();
+        // Dispatcher captured integration refs at mission creation (cargo panel).
+        store.get(id).setMetadataJson(
+                "{\"cargoProfile\":\"SPECIMEN\",\"links\":{\"orosOrderRef\":\"ORD-42\",\"pctReferralRef\":\"REF-7\"}}");
+
+        service.approve(id, new StatusChangeRequest("ok", null), actorCtx());
+        FleetAssetEntity asset = newAsset();
+        DriverCourierProfileEntity courier = newCourier();
+        service.assign(id, new AssignDeliveryRequest(courier.getCourierId(), asset.getAssetId(),
+                null, null, null, null, null), actorCtx(), null);
+        service.accept(id, actorCtx());
+        service.startPickup(id, new StatusChangeRequest("rolling", null), actorCtx());
+        service.confirmPickup(id, new StatusChangeRequest("picked", null), actorCtx());
+        service.startTransit(id, new StatusChangeRequest("en route", null), actorCtx());
+        service.captureProof(id,
+                new ProofRequest("DELIVERY", "OTP", "tester", "123456", null, null, null,
+                        true, null, null, Map.of(), true), actorCtx());
+
+        assertThat(store.get(id).getStatus()).isEqualTo(DeliveryStatus.DELIVERED.name());
+        assertThat(stubGateway.calls).containsExactly("OROS:ORD-42", "PCT:REF-7");
+        assertThat(store.get(id).getMetadataJson()).contains("links_writeback");
+        assertThat(store.get(id).getMetadataJson()).contains("\"status\":\"OK\"");
     }
 
     @Test

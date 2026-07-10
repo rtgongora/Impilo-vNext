@@ -99,6 +99,7 @@ public class NhumeDeliveryService {
     private final CommsHubClient commsHub;
     private final NdilaClient ndila;
     private final ObjectMapper objectMapper;
+    private final zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeIntegrationWriteBackService writeBack;
 
     public NhumeDeliveryService(DeliveryRequestRepository deliveryRepo,
                                 DeliveryItemRepository itemRepo,
@@ -117,7 +118,8 @@ public class NhumeDeliveryService {
                                 FleetAssetRepository assetRepo,
                                 CommsHubClient commsHub,
                                 NdilaClient ndila,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper,
+                                zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeIntegrationWriteBackService writeBack) {
         this.deliveryRepo = deliveryRepo;
         this.itemRepo = itemRepo;
         this.packageRepo = packageRepo;
@@ -136,6 +138,7 @@ public class NhumeDeliveryService {
         this.commsHub = commsHub;
         this.ndila = ndila;
         this.objectMapper = objectMapper;
+        this.writeBack = writeBack;
     }
 
     // ─── Reads ──────────────────────────────────────────────────────────────
@@ -370,7 +373,44 @@ public class NhumeDeliveryService {
         dispatchNotification(d, "DELIVERY_" + target.name(),
                 "nhume.delivery." + target.name().toLowerCase(Locale.ROOT),
                 channelForRecipient(d));
+        if (target == DeliveryStatus.DELIVERED) {
+            runIntegrationWriteBacks(d, actor);
+        }
         return d;
+    }
+
+    /**
+     * Drop-off sign-off write-backs: confirm the movement with the services that
+     * own the cargo truth (OROS/MADI/PCT via metadata.links). Outcomes — including
+     * failures — are recorded on the delivery and in the outbox; a failed
+     * write-back never rolls back the courier-facing sign-off.
+     */
+    private void runIntegrationWriteBacks(DeliveryRequestEntity d, TrustLayerGuard.ActorContext actor) {
+        try {
+            var outcomes = writeBack.onDelivered(d, actor);
+            if (outcomes.isEmpty()) {
+                return;
+            }
+            d.setMetadataJson(writeBack.mergeOutcomes(d.getMetadataJson(), outcomes));
+            deliveryRepo.save(d);
+            Map<String, Object> payload = new LinkedHashMap<>();
+            outcomes.forEach((system, outcome) -> payload.put(system, Map.of(
+                    "status", outcome.status().name(),
+                    "detail", outcome.detail() == null ? "" : outcome.detail())));
+            appendOutboxEvent(NhumeEvents.DELIVERY_WRITEBACK, d, d.getTenantId(), d.getPodId(),
+                    d.getCorrelationId() != null ? d.getCorrelationId().toString() : null,
+                    "writeback-" + d.getDeliveryId(), payload);
+            recordAudit(d, "delivery.integration.writeback", actor);
+            boolean anyFailed = outcomes.values().stream()
+                    .anyMatch(o -> o.status() == zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome.Status.FAILED);
+            if (anyFailed) {
+                raiseException(d.getDeliveryId(), "INTEGRATION_WRITEBACK_FAILED", "WARNING",
+                        "One or more owning-service confirmations failed on drop-off; see links_writeback",
+                        actor);
+            }
+        } catch (Exception e) {
+            log.warn("Integration write-back pass failed for delivery {}: {}", d.getDeliveryId(), e.toString());
+        }
     }
 
     // ─── Assignment ─────────────────────────────────────────────────────────

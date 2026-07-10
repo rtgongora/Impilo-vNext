@@ -27,6 +27,7 @@ public final class NhumeEvents {
     public static final String DELIVERY_ARRIVED        = "nhume.delivery.arrived.v1";
     public static final String DELIVERY_ATTEMPTED      = "nhume.delivery.attempted.v1";
     public static final String DELIVERY_COMPLETED      = "nhume.delivery.completed.v1";
+    public static final String DELIVERY_WRITEBACK      = "nhume.delivery.integration_writeback.v1";
     public static final String DELIVERY_FAILED         = "nhume.delivery.failed.v1";
     public static final String DELIVERY_RETURN_STARTED = "nhume.delivery.return_started.v1";
     public static final String DELIVERY_RETURN_COMPLETED = "nhume.delivery.return_completed.v1";
