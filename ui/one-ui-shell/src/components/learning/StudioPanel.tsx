@@ -17,15 +17,17 @@ import {
 import { asArray, asRecord, asText, type ModalKey, type Row } from "@/components/learning/learningUtils";
 import { Panel, CreationCard, CreationTemplate, StatusPill, countOf } from "@/components/learning/SharedComponents";
 import { SectionFormComponent } from "./SectionFormComponent";
+import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 
 type ContentType = "courses" | "resources" | "media" | "activities" | "cohorts" | "sessions";
 
 export function Studio({ data, setModal }: { data: Record<string, unknown>; setModal: (m: ModalKey, defaults?: Row) => void }) {
   const [activeTab, setActiveTab] = useState<ContentType>("courses");
-  const [courseView, setCourseView] = useState<"list" | "create" | "sections" | null>(null);
+  const [courseView, setCourseView] = useState<"sections" | null>(null);
   const [selectedCourseForSections, setSelectedCourseForSections] = useState<Row | null>(null);
   const [sections, setSections] = useState<Row[]>([]);
   const [showAddSection, setShowAddSection] = useState(false);
+  const [deletingCourse, setDeletingCourse] = useState<Row | null>(null);
 
   const studio = asRecord(data.studio);
   const library = asArray(asRecord(data.library).items);
@@ -33,19 +35,32 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
   const activities = asArray(asRecord(data.activities).items);
   const cohorts = asArray(asRecord(data.cohorts).items);
   const sessions = asArray(asRecord(data.sessions).items);
-  const draftCourses = asArray(studio.draftCourses);
+  const courses = asArray(asRecord(data.catalogAll).items);
+  const visibleCourses = courses.length > 0 ? courses : asArray(asRecord(data.catalog).items);
 
   const totalAssets = library.length + media.length + activities.length;
   const draftCount = countOf(studio.draftCourses, 0);
+  const publishedCount = countOf(studio.publishedCourses, 0);
+  const courseCount = Math.max(visibleCourses.length, draftCount + publishedCount);
 
   // Show section management view
   if (courseView === "sections" && selectedCourseForSections) {
-    return <SectionManagementView courseView={courseView} setCourseView={setCourseView} selectedCourseForSections={selectedCourseForSections} setSelectedCourseForSections={setSelectedCourseForSections} sections={sections} setSections={setSections} showAddSection={showAddSection} setShowAddSection={setShowAddSection} />;
-  }
-
-  // Show course list/management view if requested
-  if (courseView === "list") {
-    return <CourseListView courseView={courseView} setCourseView={setCourseView} draftCourses={draftCourses} draftCount={draftCount} setModal={setModal} setSelectedCourseForSections={setSelectedCourseForSections} setSections={setSections} setShowAddSection={setShowAddSection} setCourseView={setCourseView} />;
+    return (
+      <>
+        <SectionManagementView courseView={courseView} setCourseView={setCourseView} selectedCourseForSections={selectedCourseForSections} setSelectedCourseForSections={setSelectedCourseForSections} sections={sections} setSections={setSections} showAddSection={showAddSection} setShowAddSection={setShowAddSection} />
+        {deletingCourse && (
+          <DeleteConfirmationDialog
+            title="Delete Course"
+            message={`Are you sure you want to delete "${asText(deletingCourse.title ?? deletingCourse.name, "this course")}"? This action cannot be undone.`}
+            onConfirm={() => {
+              // TODO: Call API to delete course
+              setDeletingCourse(null);
+            }}
+            onCancel={() => setDeletingCourse(null)}
+          />
+        )}
+      </>
+    );
   }
 
   return (
@@ -96,20 +111,33 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
 
       {/* Tab Content - Courses */}
       {activeTab === "courses" && (
-        <Panel title={`Courses (${draftCount})`}>
-          {draftCourses.length > 0 ? (
-            <div className="space-y-2">
-              {draftCourses.map((row, index) => (
-                <ContentListItem key={String(row.id ?? row.code ?? index)} row={row} type="course" onEdit={() => setModal("course", row)} onManage={() => { setSelectedCourseForSections(row); setSections([]); setShowAddSection(false); setCourseView("sections"); }} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 px-4 rounded-lg border border-dashed border-slate-200 bg-slate-50">
-              <p className="text-sm font-semibold text-slate-900">No courses yet</p>
-              <p className="text-xs text-slate-500 mt-1">Click "New course" to create your first course</p>
-            </div>
+        <>
+          <Panel title={`Courses (${courseCount})`}>
+            {visibleCourses.length > 0 ? (
+              <div className="space-y-2">
+                {visibleCourses.map((row, index) => (
+                  <ContentListItem key={String(row.id ?? row.code ?? index)} row={row} type="course" onEdit={() => setModal("course", row)} onManage={() => { setSelectedCourseForSections(row); setSections([]); setShowAddSection(false); setCourseView("sections"); }} onDelete={() => setDeletingCourse(row)} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 px-4 rounded-lg border border-dashed border-slate-200 bg-slate-50">
+                <p className="text-sm font-semibold text-slate-900">No courses yet</p>
+                <p className="text-xs text-slate-500 mt-1">Click "New course" to create your first course</p>
+              </div>
+            )}
+          </Panel>
+          {deletingCourse && (
+            <DeleteConfirmationDialog
+              title="Delete Course"
+              message={`Are you sure you want to delete "${asText(deletingCourse.title ?? deletingCourse.name, "this course")}"? This action cannot be undone.`}
+              onConfirm={() => {
+                // TODO: Call API to delete course
+                setDeletingCourse(null);
+              }}
+              onCancel={() => setDeletingCourse(null)}
+            />
           )}
-        </Panel>
+        </>
       )}
 
       {/* Tab Content - Resources */}
@@ -216,7 +244,7 @@ function SectionManagementView({
   setShowAddSection,
 }: {
   courseView: string | null;
-  setCourseView: (view: "list" | "create" | "sections" | null) => void;
+  setCourseView: (view: "sections" | null) => void;
   selectedCourseForSections: Row | null;
   setSelectedCourseForSections: (row: Row | null) => void;
   sections: Row[];
@@ -228,7 +256,7 @@ function SectionManagementView({
     <div className="space-y-3 pb-20 md:pb-3">
       <button
         onClick={() => {
-          setCourseView("list");
+          setCourseView(null);
           setSelectedCourseForSections(null);
           setSections([]);
         }}
@@ -316,11 +344,13 @@ function ContentListItem({
   type,
   onEdit,
   onManage,
+  onDelete,
 }: {
   row: Row;
   type: "course" | "resource" | "media" | "activity" | "cohort" | "session";
   onEdit: () => void;
   onManage?: () => void;
+  onDelete?: () => void;
 }) {
   const icons: Record<typeof type, React.ReactNode> = {
     course: "📚",
@@ -330,6 +360,8 @@ function ContentListItem({
     cohort: "👥",
     session: "📅",
   };
+  const required = row.mandatory === true || row.mandatory === "true";
+  const audience = asText(row.audienceType, "");
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-3 hover:shadow-md transition">
@@ -339,6 +371,12 @@ function ContentListItem({
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-slate-950 text-sm truncate">{asText(row.title ?? row.name, "Item")}</p>
             <p className="text-xs text-slate-500 mt-0.5 truncate">{asText(row.description ?? row.code ?? row.resourceType ?? row.status, "No detail")}</p>
+            {type === "course" ? (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {required ? <StatusPill>Required</StatusPill> : null}
+                {audience ? <StatusPill>{audience.replace(/_/g, " ")}</StatusPill> : null}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -359,116 +397,17 @@ function ContentListItem({
         >
           Edit
         </button>
+        {onDelete && type === "course" && (
+          <button
+            onClick={onDelete}
+            className="inline-flex h-8 items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2.5 text-xs font-medium text-red-700 hover:bg-red-100 transition"
+            title="Delete"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
-function CourseListView({
-  courseView,
-  setCourseView,
-  draftCourses,
-  draftCount,
-  setModal,
-  setSelectedCourseForSections,
-  setSections,
-  setShowAddSection,
-}: {
-  courseView: string | null;
-  setCourseView: (view: "list" | "create" | "sections" | null) => void;
-  draftCourses: Row[];
-  draftCount: number;
-  setModal: (m: ModalKey, defaults?: Row) => void;
-  setSelectedCourseForSections: (row: Row | null) => void;
-  setSections: (sections: Row[]) => void;
-  setShowAddSection: (show: boolean) => void;
-}) {
-  return (
-    <div className="space-y-3 pb-20 md:pb-3">
-      <button
-        onClick={() => setCourseView(null)}
-        className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 text-sm font-semibold mb-2"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </button>
-
-      <Panel
-        title={`Draft Courses (${draftCourses.length})`}
-        action={
-          <button
-            onClick={() => {
-              setCourseView("create");
-            }}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-teal-700 text-white px-3 text-xs font-semibold hover:bg-teal-800 transition"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">New Course</span>
-          </button>
-        }
-      >
-        {draftCourses.length > 0 ? (
-          <div className="space-y-2">
-            {draftCourses.map((row, index) => (
-              <div key={String(row.id ?? row.code ?? index)} className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-3 hover:shadow-md transition">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-950 text-sm truncate">{asText(row.title ?? row.name, "Course")}</p>
-                  <p className="text-xs text-slate-500 mt-1">{asText(row.code, "No code")}</p>
-                  <p className="text-xs text-slate-600 mt-1 line-clamp-1">{asText(row.description, "No description")}</p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <StatusPill>{asText(row.status ?? row.courseStatus, "DRAFT")}</StatusPill>
-                    {row.level ? <StatusPill>{asText(row.level as string)}</StatusPill> : null}
-                    {row.estimatedDurationMinutes ? (
-                      <span className="text-xs text-slate-500">
-                        {asText(row.estimatedDurationMinutes as string)} min
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1.5 shrink-0">
-                  <button
-                    onClick={() => {
-                      setModal("course", row);
-                      setCourseView(null);
-                    }}
-                    className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
-                    title="Edit course"
-                  >
-                    <span>Edit</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedCourseForSections(row);
-                      setSections([]);
-                      setShowAddSection(false);
-                      setCourseView("sections");
-                    }}
-                    className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
-                    title="Manage sections"
-                  >
-                    <span>Sections</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      // Future: Delete course
-                      // confirm and delete
-                    }}
-                    className="inline-flex h-8 items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2.5 text-xs font-medium text-red-700 hover:bg-red-100 transition"
-                    title="Delete course"
-                  >
-                    <span>Delete</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 px-4 rounded-lg border border-dashed border-slate-200 bg-slate-50">
-            <p className="text-sm font-semibold text-slate-900">No draft courses yet</p>
-            <p className="text-xs text-slate-500 mt-1">Click "New Course" to create your first course</p>
-          </div>
-        )}
-      </Panel>
-    </div>
-  );
-}
