@@ -30,7 +30,7 @@ RUN_ID="${FACILITY_IMPORT_RUN_ID:-}"
 AUTH_TOKEN="${IMPILO_AUTH_TOKEN:-}"
 LEGACY_JSON_SEED="${FACILITY_MASTER_SEED:-}"   # optional dev/legacy fallback (JSON records)
 
-TENANT_ID="${X_TENANT_ID:-moh-zw}"
+TENANT_ID="${X_TENANT_ID:-00000000-0000-4000-8000-000000000001}"  # must be the tenant UUID — a slug parses to null and 500s the audit row
 POD_ID="${X_POD_ID:-national}"
 REQUEST_ID="${X_REQUEST_ID:-facility-master-import-$(date +%s)}"
 CORRELATION_ID="${X_CORRELATION_ID:-$REQUEST_ID}"
@@ -136,17 +136,18 @@ post_import_payload() {
 
 # Extract a value from a JSON doc ($1) by a dotted path ($2) against the "data" envelope.
 data_field() {
-  python3 -c '
+  # Response docs for real-sized packs exceed ARG_MAX — pass the JSON via stdin.
+  printf '%s' "${1:-{}}" | python3 -c '
 import json, sys
-doc = json.loads(sys.argv[1] or "{}")
+doc = json.loads(sys.stdin.read() or "{}")
 data = doc.get("data", doc) if isinstance(doc, dict) else doc
 cur = data
-for part in sys.argv[2].split("."):
+for part in sys.argv[1].split("."):
     cur = cur.get(part) if isinstance(cur, dict) else None
     if cur is None:
         break
 print("" if cur is None else cur)
-' "$1" "$2"
+' "$2"
 }
 
 require_source() {
