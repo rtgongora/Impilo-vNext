@@ -37,6 +37,13 @@ const RAW_ROLE_GROUPS: Record<string, string[]> = {
     "HIE_ADMIN",
     "DISPATCH_COORDINATOR",
   ],
+  /** Vashandi workforce management: HR officers and the admin chain. */
+  WORKFORCE_ADMIN: [
+    "HR_OFFICER",
+    "FACILITY_ADMIN",
+    "SYSTEM_ADMIN",
+    "DEVELOPER",
+  ],
   /** Nhume dispatch/logistics command: coordinators, couriers and the ops chain. */
   DISPATCH_OPERATIONS: [
     "DISPATCH_COORDINATOR",

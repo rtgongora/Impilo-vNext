@@ -457,7 +457,7 @@ export const SHELL_APPS: AppDefinition[] = [
     category: "operations",
     href: "/work/vashandi",
     activeFlag: true,
-    requiredRole: "ADMIN",
+    requiredRole: "WORKFORCE_ADMIN",
     systemAppFlag: false,
     weight: 29,
     serviceSlug: "vashandi",
@@ -1073,7 +1073,7 @@ export const SHELL_COMMANDS: ShellCommand[] = [
     label: "Vashandi workforce",
     keywords: ["vashandi", "workforce", "rosters", "attendance", "assignments"],
     action: { type: "navigate", href: "/work/vashandi" },
-    requiredRole: "ADMIN",
+    requiredRole: "WORKFORCE_ADMIN",
   },
   {
     id: "cmd-ubomi",

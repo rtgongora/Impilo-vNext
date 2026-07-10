@@ -101,6 +101,10 @@
       {
         "name": "COURIER",
         "description": "Field courier/driver executing Nhume delivery missions"
+      },
+      {
+        "name": "HR_OFFICER",
+        "description": "Facility/organisation HR officer — Vashandi workforce management"
       }
     ]
   },
@@ -1057,6 +1061,35 @@
       ],
       "realmRoles": [
         "COURIER"
+      ]
+    },
+    {
+      "username": "hr.dziva",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Rumbidzai",
+      "lastName": "Dziva",
+      "email": "rumbidzai.dziva@mohcc.gov.zw",
+      "attributes": {
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000015"
+        ],
+        "provider_id": [
+          "PROV-ZW-00013"
+        ],
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "HR_OFFICER"
       ]
     }
   ]

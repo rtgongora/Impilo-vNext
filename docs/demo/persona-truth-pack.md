@@ -33,6 +33,7 @@
 | `iatg.gono` | Nomsa Gono | SYSTEM_ADMIN + HIE_ADMIN | IATG decisions: access requests, facility claims, invitations |
 | `dispatcher.chirwa` | Tapiwa Chirwa | DISPATCH_COORDINATOR | Nhume dispatch command: mission creation, assignment, fleet, Dispatch Ops console |
 | `courier.banda` | Blessing Banda | COURIER | Field courier: accept mission, pickup/drop-off sign-off, proof capture (mobile-first) |
+| `hr.dziva` | Rumbidzai Dziva | HR_OFFICER | Vashandi workforce management: assignments lifecycle, rosters, leave decisions, access review |
 
 ## What each persona should see (Start Menu truth)
 
@@ -62,6 +63,7 @@ Executable version of this table:
 | (fix) `OPERATIONS` | Was a launcher gate with no group and no realm role — Dispatch Ops was invisible to everyone. Re-gated to `OPERATIONS_AGGREGATE`; a registry test now forbids unknown gates. |
 | `DISPATCH_COORDINATOR` | Ndila gates referenced it but no realm role or persona existed — dispatch journeys were only testable as admin. Dispatch Ops now gates on the `DISPATCH_OPERATIONS` group. |
 | `COURIER` | The courier side of the two-ended sign-off lifecycle had no identity of its own. |
+| `HR_OFFICER` | Vashandi was gated `ADMIN`-only; workforce management had no persona of its own. Gates now use the `WORKFORCE_ADMIN` group. |
 
 ## Seeding & verification
 

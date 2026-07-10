@@ -89,3 +89,19 @@ SELECT
 WHERE NOT EXISTS (
     SELECT 1 FROM varapi.provider WHERE provider_public_id = 'PROV-ZW-00012'
 );
+
+-- hr.dziva — facility HR officer persona (Vashandi workforce management journeys)
+INSERT INTO varapi.provider
+    (tenant_id, provider_ref, impilo_health_id, given_name, family_name, practice_number,
+     provider_public_id, title, date_of_birth, gender, nationality,
+     email, phone, profession, cadre, primary_council_id, status)
+SELECT
+    '00000000-0000-4000-8000-000000000001',
+    'c0000000-0000-4000-8000-000000000015', 'c0000000-0000-4000-8000-000000000015',
+    'Rumbidzai', 'Dziva', 'MOHCC-HR-2016-072',
+    'PROV-ZW-00013', 'Mrs', '1987-05-14', 'FEMALE', 'ZW',
+    'rumbidzai.dziva@mohcc.gov.zw', '+263771000015', 'HEALTH_ADMINISTRATION', 'HR_OFFICER',
+    (SELECT id FROM varapi.councils WHERE council_code = 'MOHCC_HQ'), 'ACTIVE'
+WHERE NOT EXISTS (
+    SELECT 1 FROM varapi.provider WHERE provider_public_id = 'PROV-ZW-00013'
+);

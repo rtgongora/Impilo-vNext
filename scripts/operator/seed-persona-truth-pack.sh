@@ -43,6 +43,7 @@ declare -A PROVIDER_PERSONAS=(
   ["pharm.zimba"]="PROV-ZW-00004:c0000000-0000-4000-8000-000000000004"
   ["trainer.chikafu"]="PROV-ZW-00011:c0000000-0000-4000-8000-000000000011"
   ["learner.tembo"]="PROV-ZW-00012:c0000000-0000-4000-8000-000000000012"
+  ["hr.dziva"]="PROV-ZW-00013:c0000000-0000-4000-8000-000000000015"
 )
 
 # governance/citizen persona -> realm role the session must carry
@@ -54,6 +55,7 @@ declare -A ROLE_PERSONAS=(
   ["iatg.gono"]="HIE_ADMIN"
   ["dispatcher.chirwa"]="DISPATCH_COORDINATOR"
   ["courier.banda"]="COURIER"
+  ["hr.dziva"]="HR_OFFICER"
 )
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
