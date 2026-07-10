@@ -21,7 +21,8 @@ services:
       - "3410:3000"
     volumes:
       - ./data:/data:ro
-    command: ["--pmtiles-path", "/data"]
+    # martin v0.15 takes the pmtiles dir as a positional CONNECTION arg (no --pmtiles-path flag)
+    command: ["/data"]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
       interval: 15s
