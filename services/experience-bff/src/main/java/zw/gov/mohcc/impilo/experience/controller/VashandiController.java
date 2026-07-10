@@ -283,6 +283,21 @@ public class VashandiController {
                 "vashandi.roster.created"));
     }
 
+    @GetMapping("/rosters/{id}/shifts")
+    public ResponseEntity<Map<String, Object>> listRosterShifts(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @PathVariable String id) {
+        return wrap(vashandiService.proxyGet("ROSTER_LIST", "/rosters/" + id + "/shifts", Map.of(),
+                tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId, purposeOfUse,
+                "vashandi.roster.created"));
+    }
+
     @PostMapping("/rosters/{id}/approve")
     public ResponseEntity<Map<String, Object>> approveRoster(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

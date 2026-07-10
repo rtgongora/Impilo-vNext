@@ -11,7 +11,16 @@ import {
   endAssignment,
   assignmentsFromResponse,
 } from "@/lib/vashandi/api/assignments";
-import { listRosters, rostersFromResponse } from "@/lib/vashandi/api/rosters";
+import {
+  listRosters,
+  listRosterShifts,
+  createRoster,
+  approveRoster,
+  createShift,
+  updateShift,
+  rostersFromResponse,
+  shiftsFromResponse,
+} from "@/lib/vashandi/api/rosters";
 import { listAttendance, checkIn, adhocCheckIn, checkOut, attendanceFromResponse } from "@/lib/vashandi/api/attendance";
 import { listAvailability, leaveFromResponse } from "@/lib/vashandi/api/leave";
 import { listAccessRisks, scanAccessRisks, accessRisksFromResponse } from "@/lib/vashandi/api/accessReview";
@@ -157,6 +166,60 @@ export function useRosters(params?: Record<string, string | undefined>) {
       return { response, items: rostersFromResponse(response) };
     },
     staleTime: 30_000,
+  });
+}
+
+export function useRosterShifts(rosterId: string) {
+  return useQuery({
+    queryKey: ["vashandi", "roster-shifts", rosterId],
+    queryFn: async () => {
+      const response = await listRosterShifts(rosterId);
+      return { response, items: shiftsFromResponse(response) };
+    },
+    enabled: Boolean(rosterId),
+    staleTime: 15_000,
+  });
+}
+
+export function useCreateRoster() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) => createRoster(body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "rosters"] });
+    },
+  });
+}
+
+export function useApproveRoster() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (rosterId: string) => approveRoster(rosterId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "rosters"] });
+    },
+  });
+}
+
+export function useCreateShift() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) => createShift(body),
+    onSuccess: (_data, body) => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "roster-shifts", String(body.rosterId ?? "")] });
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "rosters"] });
+    },
+  });
+}
+
+export function useUpdateShift() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ shiftId, body }: { shiftId: string; body: Record<string, unknown> }) =>
+      updateShift(shiftId, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "roster-shifts"] });
+    },
   });
 }
 

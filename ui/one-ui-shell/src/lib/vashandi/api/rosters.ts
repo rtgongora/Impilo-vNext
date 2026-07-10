@@ -17,6 +17,10 @@ export async function approveRoster(id: string, body?: Record<string, unknown>) 
   return postVashandi(`/rosters/${encodeURIComponent(id)}/approve`, body);
 }
 
+export async function listRosterShifts(rosterId: string) {
+  return getVashandi<{ items?: Shift[] }>(`/rosters/${encodeURIComponent(rosterId)}/shifts`);
+}
+
 export async function createShift(body: Record<string, unknown>) {
   return postVashandi<Shift>("/shifts", body);
 }
