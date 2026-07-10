@@ -4,6 +4,8 @@ import {
   isMockTileTemplate,
   isRasterTileTemplate,
   isUnsafePublicOsmTemplate,
+  isVectorTileTemplate,
+  streetsTilesAvailable,
 } from "./build-ndila-map-style";
 
 describe("buildNdilaMapStyle", () => {
@@ -41,5 +43,39 @@ describe("buildNdilaMapStyle", () => {
     const template = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
     expect(isUnsafePublicOsmTemplate(template)).toBe(true);
     expect(isRasterTileTemplate(template)).toBe(false);
+  });
+
+  it("prefers the MVT street source when a vector template is present", () => {
+    const style = buildNdilaMapStyle({
+      tileUrlTemplate: "/internal/v1/ndila/tiles/{z}/{x}/{y}.png",
+      vectorTileUrlTemplate: "/internal/v1/ndila/tiles/{z}/{x}/{y}.mvt",
+      provider: "OSM_OSRM",
+    });
+    const source = style.sources?.["ndila-streets"];
+    expect(source).toBeDefined();
+    expect((source as { type?: string }).type).toBe("vector");
+    expect(style.sources?.["ndila-raster"]).toBeUndefined();
+    // Label-free until a glyphs endpoint exists — a symbol layer without glyphs hard-fails MapLibre.
+    expect(style.layers?.some((l) => l.type === "symbol")).toBe(false);
+    expect(style.layers?.some((l) => l.id === "ndila-street-road-major")).toBe(true);
+  });
+
+  it("falls back to raster when the vector template is mock or absent", () => {
+    const style = buildNdilaMapStyle({
+      tileUrlTemplate: "/internal/v1/ndila/tiles/{z}/{x}/{y}.png",
+      vectorTileUrlTemplate: "mock://tiles/{z}/{x}/{y}",
+      provider: "OSM_OSRM",
+    });
+    expect(isVectorTileTemplate("mock://tiles/{z}/{x}/{y}")).toBe(false);
+    expect(style.sources?.["ndila-raster"]).toBeDefined();
+  });
+
+  it("counts vector-only configs as street-capable", () => {
+    expect(
+      streetsTilesAvailable({
+        tileUrlTemplate: "mock://tiles/{z}/{x}/{y}",
+        vectorTileUrlTemplate: "/internal/v1/ndila/tiles/{z}/{x}/{y}.mvt",
+      }),
+    ).toBe(true);
   });
 });

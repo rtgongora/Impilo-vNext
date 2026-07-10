@@ -109,7 +109,7 @@ function readAuthToken(): string | null {
 }
 
 function ndilaTileTransformRequest(url: string): RequestParameters {
-  if (url.includes("/internal/v1/ndila/tiles/") && url.endsWith(".png")) {
+  if (url.includes("/internal/v1/ndila/tiles/") && (url.endsWith(".png") || url.endsWith(".mvt"))) {
     const token = readAuthToken();
     const headers: Record<string, string> = {};
     if (token) headers.Authorization = `Bearer ${token}`;

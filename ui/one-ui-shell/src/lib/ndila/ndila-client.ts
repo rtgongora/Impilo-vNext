@@ -84,6 +84,8 @@ export interface NdilaRouteResponse {
 
 export interface NdilaTileConfig {
   tileUrlTemplate: string;
+  /** Present when the self-hosted MVT street stack is live (BFF-relative). */
+  vectorTileUrlTemplate?: string;
   attribution: string;
   minZoom: number;
   maxZoom: number;
