@@ -49,7 +49,7 @@ export function CourierProofScreen() {
   const submitOtp = useCallback(async () => {
     if (!activeId || !otp) return;
     setBusy(true);
-    const ok = await captureProof(activeId, { method: "OTP", otp_code: otp, recipient_name: recipient || undefined });
+    const ok = await captureProof(activeId, { method: "OTP", proof_stage: "DELIVERY", mark_delivered: true, otp_code: otp, recipient_name: recipient || undefined });
     setBusy(false);
     if (ok) {
       Alert.alert("Delivered", "Proof captured and delivery marked as delivered.");
@@ -65,7 +65,7 @@ export function CourierProofScreen() {
   const submitSignature = useCallback(async () => {
     if (!activeId) return;
     setBusy(true);
-    const ok = await captureProof(activeId, { method: "RECIPIENT_SIGNATURE", recipient_name: recipient || undefined, evidence_ref: "signature-captured" });
+    const ok = await captureProof(activeId, { method: "RECIPIENT_SIGNATURE", proof_stage: "DELIVERY", mark_delivered: true, recipient_name: recipient || undefined, evidence_ref: "signature-captured" });
     setBusy(false);
     if (ok) {
       Alert.alert("Delivered", "Signature recorded and delivery marked as delivered.");
@@ -78,7 +78,7 @@ export function CourierProofScreen() {
 
   const submitFacilityStamp = useCallback(async () => {
     if (!activeId) return;
-    const ok = await captureProof(activeId, { method: "FACILITY_STAMP", evidence_ref: "facility-stamp" });
+    const ok = await captureProof(activeId, { method: "FACILITY_STAMP", proof_stage: "DELIVERY", mark_delivered: true, evidence_ref: "facility-stamp" });
     if (ok) { Alert.alert("Delivered", "Facility stamp recorded."); setActiveId(null); await load(); }
     else Alert.alert("Couldn't capture proof", "Please retry.");
   }, [activeId, load]);

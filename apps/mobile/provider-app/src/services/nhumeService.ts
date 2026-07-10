@@ -27,6 +27,10 @@ export interface NhumeCourierDelivery {
 
 export interface NhumeProofPayload {
   method: "OTP" | "QR_CODE_SCAN" | "RECIPIENT_SIGNATURE" | "FACILITY_STAMP" | "PHOTO" | "GEOFENCE" | "BIOMETRIC" | "PROVIDER_CONFIRMATION" | "NOMPILO" | "WEBHOOK" | "DRONE_LANDING" | "ROBOT_BAY" | "AV_LOCKER";
+  /** Two-ended sign-off lifecycle: COLLECTION at pickup, DELIVERY at drop-off. */
+  proof_stage?: "COLLECTION" | "DELIVERY";
+  /** Backend only transitions to DELIVERED when this is explicitly true. */
+  mark_delivered?: boolean;
   evidence_ref?: string;
   otp_code?: string;
   recipient_name?: string;
