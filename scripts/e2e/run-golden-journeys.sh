@@ -82,6 +82,7 @@ run_spec "fundo-author-learner"       "e2e/journeys/fundo-author-learner.journey
 run_spec "clinical-day"               "e2e/journeys/clinical-day.journey.spec.ts"               "journeys"
 run_spec "diagnostics-imaging"        "e2e/journeys/diagnostics-imaging.journey.spec.ts"        "journeys"
 run_spec "governance-intake"          "e2e/journeys/governance-intake.journey.spec.ts"          "journeys"
+run_spec "workforce-management"       "e2e/journeys/workforce-management.journey.spec.ts"       "journeys"
 # Two-party telemedicine with real media — already proven spec, included as the
 # teleconsult golden journey (citizen waits tokenless → doctor admits → media).
 run_spec "telehealth-patient-flow"    "e2e/telehealth-patient-flow.spec.ts"                     "chromium"
