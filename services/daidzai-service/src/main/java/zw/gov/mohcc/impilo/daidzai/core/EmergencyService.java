@@ -26,11 +26,13 @@ public class EmergencyService {
     private final ReferenceGenerator refs;
     private final OwnerRoutedGateway gateway;
     private final DaidzaiEventEmitter emitter;
+    private final zw.gov.mohcc.impilo.daidzai.integration.NdilaCatchmentClient catchment;
 
     public EmergencyService(EmergencyRequestRepository requestRepo, EmergencyIncidentRepository incidentRepo,
                             MissionEventRepository missionRepo, ResourceRequestRepository resourceRepo,
                             TriageClassifier triage, ReferenceGenerator refs,
-                            OwnerRoutedGateway gateway, DaidzaiEventEmitter emitter) {
+                            OwnerRoutedGateway gateway, DaidzaiEventEmitter emitter,
+                            zw.gov.mohcc.impilo.daidzai.integration.NdilaCatchmentClient catchment) {
         this.requestRepo = requestRepo;
         this.incidentRepo = incidentRepo;
         this.missionRepo = missionRepo;
@@ -39,6 +41,7 @@ public class EmergencyService {
         this.refs = refs;
         this.gateway = gateway;
         this.emitter = emitter;
+        this.catchment = catchment;
     }
 
     // ---- 1. SOS request intake (self / caregiver / provider / facility / bystander) ----
@@ -319,6 +322,38 @@ public class EmergencyService {
                 "EMERGENCY_INCIDENT", inc.getId().toString(),
                 Map.of("triageCategory", triageCat, "category", inc.getEmergencyCategory(),
                         "facilityId", facilityId == null ? "" : facilityId.toString()), tenantId);
+        alertCatchmentFacilities(tenantId, inc, lat, lng);
         return inc;
+    }
+
+    /**
+     * Facilities are surveillance nodes: an incident in their vicinity must reach
+     * them. Resolves the nearest registered facilities via Ndila and emits a
+     * catchment alert per facility (consumable by notification/control-tower).
+     * Degraded location service never blocks the incident — it simply carries
+     * no catchment set, which the events stream makes visible.
+     */
+    private void alertCatchmentFacilities(UUID tenantId, EmergencyIncidentEntity inc, Double lat, Double lng) {
+        if (lat == null || lng == null) {
+            return;
+        }
+        try {
+            var facilities = catchment.nearestFacilities(tenantId, lat, lng, 3);
+            for (var facility : facilities) {
+                emitter.emit("EMERGENCY_INCIDENT", inc.getId().toString(),
+                        "daidzai.facility.catchment_alert",
+                        "FACILITY_LOCATION", facility.locationId(),
+                        Map.of(
+                                "incidentId", inc.getId().toString(),
+                                "incidentReference", inc.getIncidentReference(),
+                                "triageCategory", inc.getTriageCategory(),
+                                "category", inc.getEmergencyCategory(),
+                                "facilityName", facility.name() == null ? "" : facility.name(),
+                                "distanceMeters", String.valueOf(Math.round(facility.distanceMeters()))),
+                        tenantId);
+            }
+        } catch (Exception e) {
+            // Never let catchment alerting break emergency intake.
+        }
     }
 }
