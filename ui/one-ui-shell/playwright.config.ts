@@ -43,6 +43,18 @@ export default defineConfig({
           : process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
             ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } }
             : {}),
+        // Hairpin NAT on the preview VM: the public hostname is unreachable from
+        // inside, so map it to the local ingress (curl's --resolve, for Chromium).
+        ...(process.env.PLAYWRIGHT_HOST_RESOLVER_RULES
+          ? {
+              launchOptions: {
+                ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+                  ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
+                  : {}),
+                args: [`--host-resolver-rules=${process.env.PLAYWRIGHT_HOST_RESOLVER_RULES}`],
+              },
+            }
+          : {}),
       },
     },
   ],

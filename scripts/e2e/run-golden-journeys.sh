@@ -48,6 +48,16 @@ SUMMARY="$EVIDENCE_DIR/summary.txt"
 
 cd "$REPO/ui/one-ui-shell"
 
+# Hairpin-NAT detection: if the target host is not directly reachable but IS
+# served by the local ingress, tell Chromium to resolve it to 127.0.0.1.
+HOST="$(printf '%s' "$BASE_URL" | sed -E 's#https?://([^/:]+).*#\1#')"
+if ! curl -skf -m 8 -o /dev/null "$BASE_URL/" 2>/dev/null; then
+  if curl -skf -m 8 -o /dev/null --resolve "$HOST:443:127.0.0.1" "$BASE_URL/" 2>/dev/null; then
+    export PLAYWRIGHT_HOST_RESOLVER_RULES="MAP $HOST 127.0.0.1"
+    echo "NOTE: $HOST unreachable directly (hairpin NAT) — mapping to 127.0.0.1 for the browser."
+  fi
+fi
+
 FAILED=0
 run_spec() {
   local name="$1" spec="$2" project="$3"
@@ -71,6 +81,7 @@ run_spec "start-menu-discoverability" "e2e/journeys/start-menu-discoverability.j
 run_spec "fundo-author-learner"       "e2e/journeys/fundo-author-learner.journey.spec.ts"       "journeys"
 run_spec "clinical-day"               "e2e/journeys/clinical-day.journey.spec.ts"               "journeys"
 run_spec "diagnostics-imaging"        "e2e/journeys/diagnostics-imaging.journey.spec.ts"        "journeys"
+run_spec "governance-intake"          "e2e/journeys/governance-intake.journey.spec.ts"          "journeys"
 # Two-party telemedicine with real media — already proven spec, included as the
 # teleconsult golden journey (citizen waits tokenless → doctor admits → media).
 run_spec "telehealth-patient-flow"    "e2e/telehealth-patient-flow.spec.ts"                     "chromium"
