@@ -3,6 +3,7 @@
 import { VashandiShell } from "@/components/vashandi/VashandiShell";
 import { AttendanceEventList } from "@/components/vashandi/AttendanceEventList";
 import { CheckInOutPanel } from "@/components/vashandi/CheckInOutPanel";
+import { SupervisorConfirmPanel } from "@/components/vashandi/SupervisorConfirmPanel";
 import { VashandiFriendlyBlockedState } from "@/components/vashandi/VashandiFriendlyBlockedState";
 import { useAttendance, isVashandiDegraded } from "@/hooks/useVashandi";
 import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
@@ -27,6 +28,9 @@ export default function Page() {
       ) : (
         <p className="mb-4 text-sm text-muted-foreground">No bound workforce profile on this session — check-in requires an active profile.</p>
       )}
+      <div className="mb-4">
+        <SupervisorConfirmPanel />
+      </div>
       <AttendanceEventList events={data?.items ?? []} isLoading={isLoading} />
     </VashandiShell>
   );

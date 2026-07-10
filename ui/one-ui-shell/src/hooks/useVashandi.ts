@@ -21,7 +21,7 @@ import {
   rostersFromResponse,
   shiftsFromResponse,
 } from "@/lib/vashandi/api/rosters";
-import { listAttendance, checkIn, adhocCheckIn, checkOut, attendanceFromResponse } from "@/lib/vashandi/api/attendance";
+import { listAttendance, checkIn, adhocCheckIn, checkOut, supervisorConfirmAttendance, attendanceFromResponse } from "@/lib/vashandi/api/attendance";
 import {
   listAvailability,
   createLeave,
@@ -32,7 +32,13 @@ import {
   leaveTypesFromResponse,
   leaveBalancesFromResponse,
 } from "@/lib/vashandi/api/leave";
-import { listAccessRisks, scanAccessRisks, accessRisksFromResponse } from "@/lib/vashandi/api/accessReview";
+import {
+  listAccessRisks,
+  scanAccessRisks,
+  resolveAccessRisk,
+  revokeAccessForRisk,
+  accessRisksFromResponse,
+} from "@/lib/vashandi/api/accessReview";
 import {
   getStaffingAnalytics,
   getRosterCoverageAnalytics,
@@ -273,6 +279,16 @@ export function useCheckOut() {
   });
 }
 
+export function useSupervisorConfirmAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) => supervisorConfirmAttendance(body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "attendance"] });
+    },
+  });
+}
+
 export function useTrainingRequirements(params?: Record<string, string | undefined>) {
   return useQuery({
     queryKey: ["vashandi", "training-requirements", params],
@@ -367,6 +383,28 @@ export function useAccessRisks(params?: Record<string, string | undefined>) {
       return { response, items: accessRisksFromResponse(response) };
     },
     staleTime: 30_000,
+  });
+}
+
+export function useResolveAccessRisk() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ riskId, body }: { riskId: string; body?: Record<string, unknown> }) =>
+      resolveAccessRisk(riskId, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "access-risks"] });
+    },
+  });
+}
+
+export function useRevokeAccessForRisk() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ riskId, body }: { riskId: string; body?: Record<string, unknown> }) =>
+      revokeAccessForRisk(riskId, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "access-risks"] });
+    },
   });
 }
 

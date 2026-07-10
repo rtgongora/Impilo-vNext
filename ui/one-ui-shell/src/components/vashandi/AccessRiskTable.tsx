@@ -1,6 +1,7 @@
 "use client";
 
-import { useScanAccessRisks } from "@/hooks/useVashandi";
+import { useState } from "react";
+import { useResolveAccessRisk, useRevokeAccessForRisk, useScanAccessRisks } from "@/hooks/useVashandi";
 import type { AccessRisk } from "@/lib/vashandi/types";
 import { VashandiFriendlyBlockedState } from "./VashandiFriendlyBlockedState";
 
@@ -11,6 +12,24 @@ interface AccessRiskTableProps {
 
 export function AccessRiskTable({ risks, isLoading }: AccessRiskTableProps) {
   const scan = useScanAccessRisks();
+  const resolve = useResolveAccessRisk();
+  const revoke = useRevokeAccessForRisk();
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const act = (mutation: typeof resolve, riskId: string, label: string) => {
+    setActionError(null);
+    mutation.mutate(
+      { riskId },
+      {
+        onSuccess: (response) => {
+          if (response && response.success === false) {
+            setActionError(response.friendlyMessage ?? `${label} was not accepted.`);
+          }
+        },
+        onError: (e) => setActionError(e instanceof Error ? e.message : `${label} failed.`),
+      },
+    );
+  };
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading access risks…</p>;
@@ -28,6 +47,11 @@ export function AccessRiskTable({ risks, isLoading }: AccessRiskTableProps) {
 
   return (
     <div className="space-y-4">
+      {actionError ? (
+        <p className="rounded border border-danger/28 bg-danger-soft px-2 py-1 text-xs text-danger" data-testid="risk-action-error">
+          {actionError}
+        </p>
+      ) : null}
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">Workforce access risks detected in your scope.</p>
         <button
@@ -53,6 +77,7 @@ export function AccessRiskTable({ risks, isLoading }: AccessRiskTableProps) {
                 <th className="px-4 py-2 font-medium">Status</th>
                 <th className="px-4 py-2 font-medium">Detected</th>
                 <th className="px-4 py-2 font-medium">Profile</th>
+                <th className="px-4 py-2 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -63,6 +88,34 @@ export function AccessRiskTable({ risks, isLoading }: AccessRiskTableProps) {
                   <td className="px-4 py-2 capitalize">{risk.status}</td>
                   <td className="px-4 py-2 text-muted-foreground">{risk.detectedAt}</td>
                   <td className="px-4 py-2 font-mono text-xs">{risk.workforceProfileId}</td>
+                  <td className="px-4 py-2">
+                    {(risk.status ?? "open").toLowerCase() === "open" ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={resolve.isPending || revoke.isPending}
+                          onClick={() => act(resolve, risk.id, "Resolve")}
+                          data-testid={`risk-resolve-${risk.id}`}
+                          className="rounded border border-emerald-300 px-2 py-0.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                        >
+                          Resolve
+                        </button>
+                        <button
+                          type="button"
+                          disabled={resolve.isPending || revoke.isPending}
+                          onClick={() => act(revoke, risk.id, "Revoke access")}
+                          data-testid={`risk-revoke-${risk.id}`}
+                          className="rounded border border-rose-300 px-2 py-0.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50"
+                        >
+                          Revoke access
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        {risk.resolvedBy ? `by ${risk.resolvedBy}` : "—"}
+                      </span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
