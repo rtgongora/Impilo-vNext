@@ -18,7 +18,8 @@ export type TrustConsoleQueueName =
   | "provider-access-requests"
   | "facility-admin-appointments"
   | "org-access-requests"
-  | "assurance-upgrades";
+  | "assurance-upgrades"
+  | "pending-invitations";
 
 export interface TrustConsoleQueueSummary {
   pendingCount: number | null;
@@ -64,7 +65,7 @@ interface TrustConsoleEnvelope<T> {
 export interface TrustConsoleDecisionInput {
   queue: TrustConsoleQueueName;
   itemId: string;
-  decision: "APPROVED" | "REJECTED" | "NEEDS_MORE_INFORMATION";
+  decision: "APPROVED" | "REJECTED" | "NEEDS_MORE_INFORMATION" | "RESEND" | "REVOKE";
   note?: string;
 }
 

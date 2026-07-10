@@ -51,9 +51,11 @@ public class TrustConsoleService {
     public static final String QUEUE_FACILITY_ADMIN = "facility-admin-appointments";
     public static final String QUEUE_ORG_ACCESS = "org-access-requests";
     public static final String QUEUE_ASSURANCE = "assurance-upgrades";
+    public static final String QUEUE_INVITATIONS = "pending-invitations";
 
     public static final Set<String> QUEUES = Set.of(
-            QUEUE_PROVIDER_ACCESS, QUEUE_FACILITY_ADMIN, QUEUE_ORG_ACCESS, QUEUE_ASSURANCE);
+            QUEUE_PROVIDER_ACCESS, QUEUE_FACILITY_ADMIN, QUEUE_ORG_ACCESS, QUEUE_ASSURANCE,
+            QUEUE_INVITATIONS);
 
     private static final String ACTION_VIEW = "TRUST_CONSOLE_VIEW";
     private static final String ACTION_DECIDE = "ACCESS_REQUEST_DECIDE";
@@ -68,6 +70,7 @@ public class TrustConsoleService {
     private final VarapiServiceClient varapiClient;
     private final TusoFacilityClaimClient tusoClient;
     private final IdentityAssuranceServiceClient identityAssuranceClient;
+    private final zw.gov.mohcc.impilo.experience.admingovernance.AdminGovernanceImportService importService;
 
     public TrustConsoleService(SessionExperienceService sessionExperienceService,
                                AdminGovernancePolicyService policyService,
@@ -75,7 +78,8 @@ public class TrustConsoleService {
                                AdminGovernanceService adminGovernanceService,
                                VarapiServiceClient varapiClient,
                                TusoFacilityClaimClient tusoClient,
-                               IdentityAssuranceServiceClient identityAssuranceClient) {
+                               IdentityAssuranceServiceClient identityAssuranceClient,
+                               zw.gov.mohcc.impilo.experience.admingovernance.AdminGovernanceImportService importService) {
         this.sessionExperienceService = sessionExperienceService;
         this.policyService = policyService;
         this.auditHelper = auditHelper;
@@ -83,6 +87,7 @@ public class TrustConsoleService {
         this.varapiClient = varapiClient;
         this.tusoClient = tusoClient;
         this.identityAssuranceClient = identityAssuranceClient;
+        this.importService = importService;
     }
 
     // ── Summary ──────────────────────────────────────────────────────────────────
@@ -106,6 +111,8 @@ public class TrustConsoleService {
         queues.put(QUEUE_ASSURANCE, countSection(() -> arraySize(
                 identityAssuranceClient.listUpgradeRequests()),
                 "Identity assurance service is unavailable — the upgrade queue cannot be counted."));
+        queues.put(QUEUE_INVITATIONS, countSection(() -> pendingInvitationItems().size(),
+                "Workforce governance is unavailable — pending onboarding invitations cannot be counted."));
 
         boolean allLive = queues.values().stream()
                 .allMatch(q -> "live".equals(((Map<?, ?>) q).get("integrationStatus")));
@@ -144,6 +151,8 @@ public class TrustConsoleService {
             case QUEUE_ASSURANCE -> itemsSection(() ->
                     jsonItems(identityAssuranceClient.listUpgradeRequests()),
                     "Identity assurance service is unavailable — the upgrade queue cannot be loaded.");
+            case QUEUE_INVITATIONS -> itemsSection(this::pendingInvitationItems,
+                    "Workforce governance is unavailable — the invitation queue cannot be loaded.");
             default -> throw new IllegalArgumentException("Unknown trust-console queue: " + queueName);
         };
         auditHelper.emit("trust_console.queue_viewed", actorId, queue, Map.of("queue", queue));
@@ -203,6 +212,8 @@ public class TrustConsoleService {
                 case QUEUE_ORG_ACCESS -> decideOrgAccess(tenantId, actorId, providerId, hasFacility,
                         itemId, normalizedDecision, note);
                 case QUEUE_ASSURANCE -> decideAssurance(itemId, normalizedDecision, note);
+                case QUEUE_INVITATIONS -> decideInvitation(actorId, providerId, hasFacility,
+                        itemId, normalizedDecision);
                 default -> throw new IllegalArgumentException("Unknown trust-console queue: " + queueName);
             };
         } catch (IllegalArgumentException e) {
@@ -225,6 +236,81 @@ public class TrustConsoleService {
         result.put("itemId", itemId);
         result.put("decision", normalizedDecision);
         return result;
+    }
+
+    /**
+     * Pending onboarding invitations composed from workforce-governance import rows
+     * (invitation lifecycle attached by AdminGovernanceImportService). Activated and
+     * revoked invitations are excluded; sent/expired/failed remain actionable.
+     */
+    private List<Map<String, Object>> pendingInvitationItems() {
+        var batchesEnvelope = importService.list(null);
+        if (!"live".equals(batchesEnvelope.integrationStatus())) {
+            throw new IllegalStateException(batchesEnvelope.friendlyMessage() == null
+                    ? "Import history unavailable." : batchesEnvelope.friendlyMessage());
+        }
+        Object rawItems = batchesEnvelope.data() == null ? null : batchesEnvelope.data().get("items");
+        if (!(rawItems instanceof List<?> batches)) {
+            return List.of();
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        int scanned = 0;
+        for (Object rawBatch : batches) {
+            if (scanned >= 10) break; // newest batches only — bounded fan-out
+            if (!(rawBatch instanceof Map<?, ?> batch)) continue;
+            Object batchId = batch.get("id");
+            if (batchId == null) continue;
+            scanned++;
+            var rowsEnvelope = importService.listRows(batchId.toString());
+            if (!"live".equals(rowsEnvelope.integrationStatus()) || rowsEnvelope.data() == null) continue;
+            Object rawRows = rowsEnvelope.data().get("items");
+            if (!(rawRows instanceof List<?> rows)) continue;
+            for (Object rawRow : rows) {
+                if (!(rawRow instanceof Map<?, ?> row)) continue;
+                Object invitation = row.get("invitation");
+                if (!(invitation instanceof Map<?, ?> inv)) continue;
+                String status = inv.get("status") == null ? "" : inv.get("status").toString();
+                if (!Set.of("sent", "expired", "failed").contains(status)) continue;
+                Map<String, Object> item = new LinkedHashMap<>();
+                Object rowId = row.get("id");
+                item.put("id", batchId + ":" + rowId);
+                item.put("importBatchId", batchId.toString());
+                item.put("rowId", rowId == null ? null : rowId.toString());
+                item.put("invitation", inv);
+                item.put("providerPublicId", row.get("providerPublicId"));
+                item.put("matchedHealthId", row.get("matchedHealthId"));
+                item.put("outcome", row.get("outcome"));
+                item.put("executionStatus", row.get("executionStatus"));
+                out.add(item);
+            }
+        }
+        return out;
+    }
+
+    /** RESEND / REVOKE map to the established per-row invitation actions. */
+    private Map<String, Object> decideInvitation(String actorId, String providerId,
+                                                 boolean hasFacility, String itemId, String decision) {
+        int sep = itemId.indexOf(':');
+        if (sep <= 0 || sep == itemId.length() - 1) {
+            throw new IllegalArgumentException(
+                    "Invitation items are keyed importBatchId:rowId — got: " + itemId);
+        }
+        String importBatchId = itemId.substring(0, sep);
+        String rowId = itemId.substring(sep + 1);
+        var response = switch (decision) {
+            case "RESEND" -> importService.resendRowInvitation(actorId, providerId, hasFacility,
+                    importBatchId, rowId);
+            case "REVOKE" -> importService.revokeRowInvitation(actorId, providerId, hasFacility,
+                    importBatchId, rowId);
+            default -> throw new IllegalArgumentException(
+                    "Invitation decisions are RESEND or REVOKE — got: " + decision);
+        };
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("status", response.status());
+        out.put("integrationStatus", "pending_backend".equals(response.status()) ? "pending_backend" : "live");
+        out.put("title", response.friendlyTitle());
+        out.put("message", response.friendlyMessage());
+        return out;
     }
 
     private Map<String, Object> decideProviderAccess(String publicId, String decision, String note) {

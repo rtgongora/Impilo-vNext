@@ -2,13 +2,30 @@ import { describe, expect, it } from "vitest";
 import { QUEUE_CONFIGS, queueConfig } from "./queue-config";
 
 describe("trust-console queue config", () => {
-  it("covers exactly the four BFF queues", () => {
+  it("covers exactly the five BFF queues", () => {
     expect(QUEUE_CONFIGS.map((q) => q.name).sort()).toEqual([
       "assurance-upgrades",
       "facility-admin-appointments",
       "org-access-requests",
+      "pending-invitations",
       "provider-access-requests",
     ]);
+  });
+
+  it("invitations queue offers only resend/revoke lifecycle actions", () => {
+    expect(queueConfig("pending-invitations").decisions).toEqual(["RESEND", "REVOKE"]);
+    const view = queueConfig("pending-invitations").toView({
+      id: "batch-1:row-1",
+      importBatchId: "batch-1",
+      rowId: "row-1",
+      providerPublicId: "PROV-9",
+      matchedHealthId: "c000-1",
+      outcome: "ISSUED",
+      invitation: { status: "sent", expiresAt: "2026-07-17T00:00:00Z" },
+    });
+    expect(view.id).toBe("batch-1:row-1");
+    expect(view.status).toBe("sent");
+    expect(view.detail.some((d) => d.label === "Expires")).toBe(true);
   });
 
   it("facility admin claims are approve-only (no downstream reject transition)", () => {

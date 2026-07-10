@@ -7,7 +7,12 @@
 
 import type { TrustConsoleQueueName } from "@/hooks/queries/useTrustConsole";
 
-export type TrustConsoleDecisionValue = "APPROVED" | "REJECTED" | "NEEDS_MORE_INFORMATION";
+export type TrustConsoleDecisionValue =
+  | "APPROVED"
+  | "REJECTED"
+  | "NEEDS_MORE_INFORMATION"
+  | "RESEND"
+  | "REVOKE";
 
 export interface QueueItemView {
   id: string;
@@ -109,6 +114,31 @@ export const QUEUE_CONFIGS: QueueConfig[] = [
         ...opt("Method", item.method),
       ],
     }),
+  },
+  {
+    name: "pending-invitations",
+    label: "Invitations",
+    description:
+      "Workforce onboarding invitations that are sent, expired or failed — resend or revoke (workforce governance + Keycloak).",
+    decisions: ["RESEND", "REVOKE"],
+    decisionNote:
+      "RESEND issues a fresh activation link; REVOKE disables the staged account. Activated invitations leave this queue automatically.",
+    toView: (item) => {
+      const invitation = (item.invitation ?? {}) as Record<string, unknown>;
+      return {
+        id: s(item.id),
+        title: `Invitation · ${s(item.providerPublicId ?? item.rowId)}`,
+        subtitle: `Batch ${s(item.importBatchId)}`,
+        status: s(invitation.status),
+        createdAt: typeof invitation.sentAt === "string" ? invitation.sentAt : undefined,
+        detail: [
+          { label: "Health ID", value: s(item.matchedHealthId) },
+          { label: "Row outcome", value: s(item.outcome) },
+          ...opt("Execution", item.executionStatus),
+          ...opt("Expires", invitation.expiresAt),
+        ],
+      };
+    },
   },
 ];
 

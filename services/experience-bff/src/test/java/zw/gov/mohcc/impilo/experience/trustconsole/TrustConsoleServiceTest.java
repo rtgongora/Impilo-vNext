@@ -52,13 +52,16 @@ class TrustConsoleServiceTest {
     @Mock private VarapiServiceClient varapiClient;
     @Mock private TusoFacilityClaimClient tusoClient;
     @Mock private IdentityAssuranceServiceClient identityAssuranceClient;
+    @Mock private zw.gov.mohcc.impilo.experience.admingovernance.AdminGovernanceImportService importService;
 
     private TrustConsoleService service;
 
     @BeforeEach
     void setUp() {
         service = new TrustConsoleService(sessionExperienceService, policyService, auditHelper,
-                adminGovernanceService, varapiClient, tusoClient, identityAssuranceClient);
+                adminGovernanceService, varapiClient, tusoClient, identityAssuranceClient, importService);
+        lenient().when(importService.list(any())).thenReturn(
+                new AdminGovernanceDtos.LookupEnvelope("live", null, Map.of("items", List.of())));
         lenient().when(sessionExperienceService.buildExperienceContract(anyString(), any(), any(), anyBoolean()))
                 .thenReturn(Map.of("visibleManagementWorkspaces", List.of("national_platform_user_administration")));
         lenient().when(policyService.evaluate(any(), any())).thenReturn(allowed());
@@ -266,5 +269,59 @@ class TrustConsoleServiceTest {
                 "subject-1", "role", null, null, null, "LOW", null, List.of(), List.of(),
                 "2026-07-09T00:00:00Z", "2026-07-09T00:00:00Z", Map.of(), "live",
                 null, null, null, false, null, null);
+    }
+
+    @org.junit.jupiter.api.Test
+    void invitationsQueue_listsOnlyActionableRows() {
+        when(importService.list(any())).thenReturn(new AdminGovernanceDtos.LookupEnvelope(
+                "live", null, Map.of("items", List.of(Map.of("id", "batch-1")))));
+        when(importService.listRows("batch-1")).thenReturn(new AdminGovernanceDtos.LookupEnvelope(
+                "live", null, Map.of("items", List.of(
+                        Map.of("id", "row-1", "invitation", Map.of("status", "sent"),
+                                "providerPublicId", "PROV-1"),
+                        Map.of("id", "row-2", "invitation", Map.of("status", "activated")),
+                        Map.of("id", "row-3", "invitation", Map.of("status", "expired"))))));
+
+        Map<String, Object> section = service.queue("t", "actor", null, false, "pending-invitations");
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> items = (List<Map<String, Object>>) section.get("items");
+        org.assertj.core.api.Assertions.assertThat(items).hasSize(2);
+        org.assertj.core.api.Assertions.assertThat(items.get(0).get("id")).isEqualTo("batch-1:row-1");
+        org.assertj.core.api.Assertions.assertThat(items.get(1).get("id")).isEqualTo("batch-1:row-3");
+    }
+
+    @org.junit.jupiter.api.Test
+    void invitationsQueue_degradesHonestlyWhenWgvDown() {
+        when(importService.list(any())).thenReturn(new AdminGovernanceDtos.LookupEnvelope(
+                "pending_backend", "Import history unavailable.", null));
+
+        Map<String, Object> section = service.queue("t", "actor", null, false, "pending-invitations");
+
+        org.assertj.core.api.Assertions.assertThat(section.get("integrationStatus"))
+                .isEqualTo("pending_backend");
+    }
+
+    @org.junit.jupiter.api.Test
+    void invitationDecision_resendRoutesToRowAction() {
+        when(importService.resendRowInvitation("actor", null, false, "batch-1", "row-1"))
+                .thenReturn(new AdminGovernanceDtos.ActionResponse("completed", null, null, null,
+                        "Invitation resent", "A fresh activation link was issued.",
+                        List.of(), null, null, null, "live", Map.of(), "live", null));
+
+        Map<String, Object> out = service.decide("t", "actor", null, false,
+                "pending-invitations", "batch-1:row-1", "RESEND", null);
+
+        org.assertj.core.api.Assertions.assertThat(out.get("status")).isEqualTo("completed");
+        org.assertj.core.api.Assertions.assertThat(out.get("title")).isEqualTo("Invitation resent");
+    }
+
+    @org.junit.jupiter.api.Test
+    void invitationDecision_rejectsUnknownVerbs() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+                        service.decide("t", "actor", null, false,
+                                "pending-invitations", "batch-1:row-1", "APPROVED", null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("RESEND or REVOKE");
     }
 }

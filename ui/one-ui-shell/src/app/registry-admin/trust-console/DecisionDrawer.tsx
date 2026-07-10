@@ -7,7 +7,7 @@
  */
 
 import { useState } from "react";
-import { CheckCircle2, HelpCircle, Loader2, X, XCircle } from "lucide-react";
+import { Ban, CheckCircle2, HelpCircle, Loader2, Send, X, XCircle } from "lucide-react";
 import {
   useTrustConsoleDecision,
   type TrustConsoleQueueName,
@@ -32,6 +32,16 @@ const DECISION_STYLES: Record<
     label: "Needs more info",
     className: "bg-amber-500 text-white hover:bg-amber-600",
     icon: HelpCircle,
+  },
+  RESEND: {
+    label: "Resend invitation",
+    className: "bg-emerald-600 text-white hover:bg-emerald-700",
+    icon: Send,
+  },
+  REVOKE: {
+    label: "Revoke invitation",
+    className: "bg-rose-600 text-white hover:bg-rose-700",
+    icon: Ban,
   },
 };
 
