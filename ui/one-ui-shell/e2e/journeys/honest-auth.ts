@@ -59,29 +59,51 @@ export async function logout(page: Page) {
 }
 
 /**
- * Satisfy the "Where are you working today?" facility chooser if it appears,
- * picking the persona's facility.
+ * Complete the work-session start flow if the Workplace Selection Hub is up:
+ * facility card (Enter) → workspace (Continue) → shift (Start Session).
+ * Deep routes are guarded on this context — skipping it bounces you to Home.
  */
 export async function ensureFacilityContext(page: Page, persona: JourneyPersona) {
   const pattern = persona.facilityNamePattern ?? /harare central/i;
-  const option = page.getByText(pattern).first();
-  if (await option.isVisible({ timeout: 3_000 }).catch(() => false)) {
-    await option.click();
+  const onHub = await page
+    .getByText(/start work session|workplace selection hub/i)
+    .first()
+    .isVisible({ timeout: 3_000 })
+    .catch(() => false);
+  if (!onHub) return;
+
+  // 1. The facility card is a button whose accessible name carries the facility name.
+  await page.getByRole("button", { name: pattern }).first().click();
+
+  // 2. Workspace step (skipped by the shell for single-workspace facilities).
+  const continueBtn = page.getByRole("button", { name: /continue/i }).first();
+  if (await continueBtn.isVisible({ timeout: 10_000 }).catch(() => false)) {
+    await continueBtn.click();
+  }
+
+  // 3. Shift step.
+  const startSession = page.getByRole("button", { name: /start session/i }).first();
+  if (await startSession.isVisible({ timeout: 10_000 }).catch(() => false)) {
+    await startSession.click();
+    await page
+      .waitForURL((url) => !url.pathname.startsWith("/shift"), { timeout: 20_000 })
+      .catch(() => undefined);
   }
 }
 
-/** Navigate within the shell, absorbing the consent gate and facility chooser. */
+/** Navigate within the shell, absorbing the consent gate and the work-session flow. */
 export async function gotoAs(page: Page, persona: JourneyPersona, path: string) {
+  await ensureFacilityContext(page, persona);
   await page.goto(`${PREVIEW_ORIGIN}${path}`);
   await acceptPoliciesIfGated(page);
-  await ensureFacilityContext(page, persona);
 }
 
 /** Open the Start menu (dock launcher button) and assert it rendered. */
 export async function openStartMenu(page: Page) {
+  // The dock button's accessible name is its aria-label ("Start menu").
   const startButton = page
-    .getByRole("button", { name: /^start$|open start/i })
-    .or(page.locator('[aria-label="Open Start menu"]'))
+    .getByRole("button", { name: /^start( menu)?$|open start/i })
+    .or(page.locator('[aria-label="Start menu"], [aria-label="Open Start menu"]'))
     .first();
   await startButton.click();
   await expect(page.getByText(/launch apps, utilities, and recent work/i)).toBeVisible({ timeout: 10_000 });

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { PERSONAS } from "./personas";
-import { RUN_PREVIEW, gotoAs, loginAs, logout } from "./honest-auth";
+import { RUN_PREVIEW, ensureFacilityContext, loginAs, logout } from "./honest-auth";
 
 /**
  * Golden journey — governance intake: a provider claims facility
@@ -26,7 +26,9 @@ test.describe("Governance intake journey (live preview)", () => {
   }
 
   test("provider submits a facility administration claim", async ({ page }) => {
-    await gotoAs(page, PERSONAS.specialist, "/facility/claim");
+    await loginAs(page, PERSONAS.specialist);
+    await ensureFacilityContext(page, PERSONAS.specialist);
+    await page.goto("/facility/claim");
     await expectNoDeadEnd(page);
 
     // The claim surface is real: it names the journey and offers a facility picker
