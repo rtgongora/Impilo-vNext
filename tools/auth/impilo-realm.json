@@ -93,6 +93,14 @@
         "description": "Public health officer — surveillance, campaigns, and population health surfaces",
         "composite": false,
         "clientRole": false
+      },
+      {
+        "name": "DISPATCH_COORDINATOR",
+        "description": "Coordinates Nhume dispatch missions, fleet and couriers"
+      },
+      {
+        "name": "COURIER",
+        "description": "Field courier/driver executing Nhume delivery missions"
       }
     ]
   },
@@ -316,7 +324,7 @@
   "clients": [
     {
       "clientId": "experience-ui",
-      "name": "Impilo web experience (OIDC \u2014 primary browser / ROPC client)",
+      "name": "Impilo web experience (OIDC — primary browser / ROPC client)",
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,
@@ -998,6 +1006,58 @@
           "manage-realm"
         ]
       }
+    },
+    {
+      "username": "dispatcher.chirwa",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tapiwa",
+      "lastName": "Chirwa",
+      "email": "tapiwa.chirwa@mohcc.gov.zw",
+      "attributes": {
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000013"
+        ],
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "DISPATCH_COORDINATOR"
+      ]
+    },
+    {
+      "username": "courier.banda",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Blessing",
+      "lastName": "Banda",
+      "email": "blessing.banda@mohcc.gov.zw",
+      "attributes": {
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000014"
+        ],
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "COURIER"
+      ]
     }
   ]
 }

@@ -31,6 +31,8 @@
 | `admin.central` | Central Admin | SYSTEM_ADMIN | National admin oversight (not a journey driver) |
 | `regulator.hpcz` | Chipo Marimo | **HIE_ADMIN** | Registry plane + IATG console review without SYSTEM_ADMIN superpowers |
 | `iatg.gono` | Nomsa Gono | SYSTEM_ADMIN + HIE_ADMIN | IATG decisions: access requests, facility claims, invitations |
+| `dispatcher.chirwa` | Tapiwa Chirwa | DISPATCH_COORDINATOR | Nhume dispatch command: mission creation, assignment, fleet, Dispatch Ops console |
+| `courier.banda` | Blessing Banda | COURIER | Field courier: accept mission, pickup/drop-off sign-off, proof capture (mobile-first) |
 
 ## What each persona should see (Start Menu truth)
 
@@ -58,6 +60,8 @@ Executable version of this table:
 | `HIE_ADMIN` | Frontend `REGISTRY_ADMIN`/`ADMIN_OR_HIE` groups referenced it, but it never existed in the realm — the registry-governance plane was SYSTEM_ADMIN-only in practice. |
 | `PUBLIC_HEALTH_OFFICER` | `PUBLIC_HEALTH` group was unsatisfiable by non-admins (ENV_HEALTH/CHW still absent — add when those personas exist). |
 | (fix) `OPERATIONS` | Was a launcher gate with no group and no realm role — Dispatch Ops was invisible to everyone. Re-gated to `OPERATIONS_AGGREGATE`; a registry test now forbids unknown gates. |
+| `DISPATCH_COORDINATOR` | Ndila gates referenced it but no realm role or persona existed — dispatch journeys were only testable as admin. Dispatch Ops now gates on the `DISPATCH_OPERATIONS` group. |
+| `COURIER` | The courier side of the two-ended sign-off lifecycle had no identity of its own. |
 
 ## Seeding & verification
 

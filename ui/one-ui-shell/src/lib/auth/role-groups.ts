@@ -35,6 +35,15 @@ const RAW_ROLE_GROUPS: Record<string, string[]> = {
     "SYSTEM_ADMIN",
     "DEVELOPER",
     "HIE_ADMIN",
+    "DISPATCH_COORDINATOR",
+  ],
+  /** Nhume dispatch/logistics command: coordinators, couriers and the ops chain. */
+  DISPATCH_OPERATIONS: [
+    "DISPATCH_COORDINATOR",
+    "COURIER",
+    "FACILITY_ADMIN",
+    "SYSTEM_ADMIN",
+    "DEVELOPER",
   ],
   COMMERCE: ["FINANCE", "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
 };

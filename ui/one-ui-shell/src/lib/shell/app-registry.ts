@@ -372,8 +372,8 @@ export const SHELL_APPS: AppDefinition[] = [
     category: "operations",
     href: "/operations/dispatch",
     activeFlag: true,
-    // OPERATIONS was never a role group nor a realm role — the app was invisible to everyone.
-    requiredRole: "OPERATIONS_AGGREGATE",
+    // Gated on the dispatch chain (DISPATCH_COORDINATOR/COURIER are seeded realm roles).
+    requiredRole: "DISPATCH_OPERATIONS",
     maturity: "partial",
     plane: "Enterprise",
     systemAppFlag: false,
