@@ -85,12 +85,15 @@ public class NdilaServiceClient {
         String provider = node.path("providerName").asText("");
         String template = node.path("tileUrlTemplate").asText("");
         if ("PREVIEW_SOVEREIGN".equals(provider)
+                || "OSM_OSRM".equals(provider)
                 || template.startsWith("/api/v1/ndila/tiles/")
                 || template.startsWith("mock://")) {
             node.put("tileUrlTemplate", "/internal/v1/ndila/tiles/{z}/{x}/{y}.png");
             if ("mock://".equals(template) || template.startsWith("mock://")) {
                 node.put("providerName", "PREVIEW_SOVEREIGN");
                 node.put("attribution", "Impilo Ndila — sovereign preview tiles");
+            } else if ("OSM_OSRM".equals(provider)) {
+                node.put("attribution", "© OpenStreetMap contributors — self-hosted via Ndila");
             }
         }
         return node;
