@@ -31,6 +31,14 @@ public class NdilaTileRasterFacade {
         return previewRaster.renderPng(z, x, y);
     }
 
+    /** Raw upstream vector tile bytes (gzipped MVT from Martin); empty when inactive or blank tile. */
+    public java.util.Optional<byte[]> fetchVectorTile(int z, int x, int y) {
+        if (!streetProxy.isActive()) {
+            return java.util.Optional.empty();
+        }
+        return streetProxy.fetchVector(z, x, y);
+    }
+
     public boolean streetTilesActive() {
         return streetProxy.isActive();
     }

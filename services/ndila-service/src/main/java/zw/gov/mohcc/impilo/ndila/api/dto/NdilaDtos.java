@@ -150,5 +150,13 @@ public final class NdilaDtos {
     // ── Tile config ─────────────────────────────────────────────────────────
     public record TileConfigResponse(
             String providerName, String tileUrlTemplate, String attribution,
-            int maxZoom, boolean supportsOffline) {}
+            int maxZoom, boolean supportsOffline,
+            @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+            String vectorTileUrlTemplate) {
+
+        public TileConfigResponse(String providerName, String tileUrlTemplate, String attribution,
+                                  int maxZoom, boolean supportsOffline) {
+            this(providerName, tileUrlTemplate, attribution, maxZoom, supportsOffline, null);
+        }
+    }
 }

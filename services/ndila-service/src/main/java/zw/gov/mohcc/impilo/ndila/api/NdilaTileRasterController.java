@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import zw.gov.mohcc.impilo.ndila.core.tiles.NdilaStreetTileProxyService;
 import zw.gov.mohcc.impilo.ndila.core.tiles.NdilaTileRasterFacade;
 
 @RestController
@@ -33,5 +34,31 @@ public class NdilaTileRasterController {
                 .header(HttpHeaders.CACHE_CONTROL, "public, max-age=604800")
                 .contentType(MediaType.IMAGE_PNG)
                 .body(png);
+    }
+
+    @GetMapping({
+            "/api/v1/ndila/tiles/{z}/{x}/{y}.mvt",
+            "/api/v1/maps/tiles/{z}/{x}/{y}.mvt"
+    })
+    public ResponseEntity<byte[]> vectorTile(
+            @PathVariable int z,
+            @PathVariable int x,
+            @PathVariable int y) {
+        if (z < 0 || z > 19 || x < 0 || y < 0) {
+            return ResponseEntity.badRequest().build();
+        }
+        var tile = rasterFacade.fetchVectorTile(z, x, y);
+        if (tile.isEmpty()) {
+            // Empty tile (Martin HTTP 204) or street stack inactive — MapLibre treats 204 as blank.
+            return ResponseEntity.noContent().build();
+        }
+        byte[] body = tile.get();
+        ResponseEntity.BodyBuilder builder = ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=604800")
+                .contentType(MediaType.parseMediaType("application/x-protobuf"));
+        if (NdilaStreetTileProxyService.isGzip(body)) {
+            builder.header(HttpHeaders.CONTENT_ENCODING, "gzip");
+        }
+        return builder.body(body);
     }
 }

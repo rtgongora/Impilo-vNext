@@ -14,11 +14,14 @@ import zw.gov.mohcc.impilo.ndila.core.provider.NdilaTileProvider;
 public class NdilaTileController {
 
     private final NdilaProviderPolicyService policy;
+    private final zw.gov.mohcc.impilo.ndila.core.tiles.NdilaTileRasterFacade rasterFacade;
     private final String environment;
 
     public NdilaTileController(NdilaProviderPolicyService policy,
+                               zw.gov.mohcc.impilo.ndila.core.tiles.NdilaTileRasterFacade rasterFacade,
                                @Value("${ndila.environment:development}") String environment) {
         this.policy = policy;
+        this.rasterFacade = rasterFacade;
         this.environment = environment;
     }
 
@@ -33,9 +36,14 @@ public class NdilaTileController {
         if (decision.chosen() instanceof NdilaTileProvider tp) {
             NdilaTileProvider.TileConfig cfg = tp.tileConfig(new NdilaTileProvider.TileConfigRequest(
                     tenantId, environment, "general"));
+            // The street stack upstream (Martin) serves MVT vector tiles; advertise the
+            // vector template so MapLibre renders them natively instead of the raster path.
+            String vectorTemplate = rasterFacade.streetTilesActive()
+                    ? "/api/v1/ndila/tiles/{z}/{x}/{y}.mvt"
+                    : null;
             return ResponseEntity.ok(new TileConfigResponse(
                     cfg.providerName(), cfg.tileUrlTemplate(), cfg.attribution(),
-                    cfg.maxZoom(), cfg.supportsOffline()));
+                    cfg.maxZoom(), cfg.supportsOffline(), vectorTemplate));
         }
         return ResponseEntity.ok(new TileConfigResponse(
                 "MOCK", "mock://tiles/{z}/{x}/{y}.png", "Ndila Mock Tiles", 19, true));
