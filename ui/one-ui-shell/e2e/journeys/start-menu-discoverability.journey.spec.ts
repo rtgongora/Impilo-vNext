@@ -35,7 +35,9 @@ test.describe("Start Menu discoverability (live preview)", () => {
     await loginAs(page, PERSONAS.clerk);
     await openStartMenu(page);
     await expect(page.getByRole("button", { name: /register patient/i })).toBeVisible();
-    await expect(page.getByText(/^Clinical Hub$/)).toHaveCount(0);
+    // The gated launcher must not offer Clinical Hub; a DISABLED marketplace
+    // card ("request access") is honest UX, so assert no launchable entry.
+    await expect(page.getByRole("button", { name: /^clinical hub$/i, disabled: false })).toHaveCount(0);
     await page.getByRole("button", { name: /register patient/i }).click();
     await page.waitForURL(/\/queue\/walk-in/, { timeout: 20_000 });
     await expectNoDeadEnd(page);

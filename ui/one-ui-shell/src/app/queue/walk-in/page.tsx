@@ -35,9 +35,11 @@ export default function WalkInPage() {
 
   const [showNewPatient, setShowNewPatient] = useState(false);
 
-  const { data: patientsData, isLoading: isSearching } = usePatients(
-    searchSubmitted ? { search: searchSubmitted } : undefined,
-  );
+  const {
+    data: patientsData,
+    isLoading: isSearching,
+    isError: searchFailed,
+  } = usePatients(searchSubmitted ? { search: searchSubmitted } : undefined);
   const { data: preselectedPatientData } = usePatient(preselectedPatientId ?? "");
 
   const patients = searchSubmitted ? (patientsData?.data ?? []) : [];
@@ -175,7 +177,16 @@ export default function WalkInPage() {
                 </div>
               )}
 
-              {searchSubmitted && !isSearching && patients.length === 0 && (
+              {searchSubmitted && !isSearching && searchFailed && (
+                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-center">
+                  <p className="text-sm text-warning-foreground">
+                    The patient registry is unreachable right now — this is not an empty result.
+                    Retry shortly or contact support if it persists.
+                  </p>
+                </div>
+              )}
+
+              {searchSubmitted && !isSearching && !searchFailed && patients.length === 0 && (
                 <div className="mt-4 p-3 bg-background rounded-lg text-center">
                   <p className="text-sm text-muted-foreground">No patients found</p>
                   <button
