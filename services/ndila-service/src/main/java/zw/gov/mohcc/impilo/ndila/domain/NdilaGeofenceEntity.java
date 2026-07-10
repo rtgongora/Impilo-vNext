@@ -30,6 +30,7 @@ public class NdilaGeofenceEntity {
     private String geofenceType;
 
     /** GeoJSON polygon or {"type":"Circle", "center":[lng,lat], "radius_m":...}. */
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "geometry_json", nullable = false, columnDefinition = "jsonb")
     private String geometryJson;
 
@@ -54,6 +55,7 @@ public class NdilaGeofenceEntity {
     @Column(name = "risk_level", nullable = false, length = 16)
     private String riskLevel = "LOW";
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "rules_json", columnDefinition = "jsonb")
     private String rulesJson;
 

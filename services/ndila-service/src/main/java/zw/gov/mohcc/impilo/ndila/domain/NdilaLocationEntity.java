@@ -120,6 +120,7 @@ public class NdilaLocationEntity {
     @Column(name = "sensitivity_level", nullable = false, length = 32)
     private String sensitivityLevel = "PUBLIC";
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "geojson", columnDefinition = "jsonb")
     private String geojson;
 

@@ -71,6 +71,7 @@ public class NdilaTrackingEventEntity {
     @Column(name = "received_at", nullable = false)
     private OffsetDateTime receivedAt = OffsetDateTime.now();
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadataJson;
 

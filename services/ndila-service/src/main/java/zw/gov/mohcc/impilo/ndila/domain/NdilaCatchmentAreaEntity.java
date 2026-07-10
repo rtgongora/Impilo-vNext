@@ -38,6 +38,7 @@ public class NdilaCatchmentAreaEntity {
     @Column(name = "geometry_type", nullable = false, length = 16)
     private String geometryType = "POLYGON"; // RADIUS|POLYGON|MULTIPOLYGON|ISOCHRONE
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "geometry_json", columnDefinition = "jsonb")
     private String geometryJson;
 

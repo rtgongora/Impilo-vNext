@@ -40,6 +40,7 @@ public class NdilaTrackingAssetEntity {
     @Column(name = "sensitivity_level", nullable = false, length = 32)
     private String sensitivityLevel = "INTERNAL";
 
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadataJson;
 
