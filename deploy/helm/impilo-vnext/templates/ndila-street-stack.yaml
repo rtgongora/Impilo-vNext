@@ -53,7 +53,7 @@ spec:
         - name: martin
           image: "{{ .Values.ndilaStreetStack.image.repository }}:{{ .Values.ndilaStreetStack.image.tag }}"
           imagePullPolicy: {{ .Values.ndilaStreetStack.image.pullPolicy | default "IfNotPresent" }}
-          args: ["--pmtiles-path", "/data"]
+          args: ["/data"]
           ports:
             - containerPort: 3000
           volumeMounts:
