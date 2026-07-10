@@ -23,6 +23,14 @@ describe("buildNdilaMapStyle", () => {
     expect(style.sources?.["ndila-raster"]).toBeDefined();
   });
 
+  it("treats OSM_OSRM BFF-relative tiles as raster", () => {
+    const style = buildNdilaMapStyle({
+      tileUrlTemplate: "/internal/v1/ndila/tiles/{z}/{x}/{y}.png",
+      provider: "OSM_OSRM",
+    });
+    expect(style.sources?.["ndila-raster"]).toBeDefined();
+  });
+
   it("uses blank canvas for mock templates", () => {
     expect(isMockTileTemplate("mock://tiles/{z}/{x}/{y}")).toBe(true);
     const style = buildNdilaMapStyle({ tileUrlTemplate: "mock://tiles/{z}/{x}/{y}" });

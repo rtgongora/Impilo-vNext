@@ -317,13 +317,20 @@ export function NdilaMapLibre({
   const [layerMode, setLayerMode] = useState<NdilaMapLayerMode>("admin");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  const streetsAvailable = streetsTilesAvailable(tileConfig);
+
+  useEffect(() => {
+    if (streetsAvailable && tileConfig?.provider === "OSM_OSRM") {
+      setLayerMode("streets");
+    }
+  }, [streetsAvailable, tileConfig?.provider]);
+
   markersRef.current = markers;
   routeRef.current = routeCoordinates;
   fitRef.current = fitToMarkers;
   clusterRef.current = clusterMarkers;
   adminRef.current = showZimbabweAdmin;
 
-  const streetsAvailable = streetsTilesAvailable(tileConfig);
   const style = useMemo(
     () => buildNdilaMapStyle(tileConfig, { includeRaster: layerMode === "streets" && streetsAvailable }),
     [tileConfig, layerMode, streetsAvailable],
