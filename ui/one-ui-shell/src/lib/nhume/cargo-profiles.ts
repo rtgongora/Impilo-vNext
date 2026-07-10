@@ -283,6 +283,29 @@ export function applyCargoProfile(
   };
 }
 
+/**
+ * Read drop-off write-back outcomes recorded by nhume-service under
+ * metadata.links_writeback ({SYSTEM: {status, detail, at}}). Failure is a
+ * first-class state the dispatcher must see.
+ */
+export function readWriteBackOutcomes(
+  metadata: unknown,
+): Record<string, { status: string; detail: string; at?: string }> {
+  const block = (metadata as { links_writeback?: Record<string, unknown> })?.links_writeback;
+  if (!block || typeof block !== "object") return {};
+  const out: Record<string, { status: string; detail: string; at?: string }> = {};
+  for (const [system, raw] of Object.entries(block)) {
+    if (!raw || typeof raw !== "object") continue;
+    const o = raw as { status?: unknown; detail?: unknown; at?: unknown };
+    out[system] = {
+      status: String(o.status ?? "UNKNOWN"),
+      detail: String(o.detail ?? ""),
+      at: o.at ? String(o.at) : undefined,
+    };
+  }
+  return out;
+}
+
 /** Read integration links back off a persisted delivery's metadata (detail view). */
 export function readDeliveryLinks(metadata: unknown): Array<{ system: string; label: string; ref: string; href: string }> {
   const out: Array<{ system: string; label: string; ref: string; href: string }> = [];

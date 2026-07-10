@@ -20,7 +20,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NhumeStatusChip, NhumePriorityChip } from "@/components/nhume/NhumeStatusChip";
 import { SignOffPanel } from "@/components/nhume/SignOffPanel";
-import { readDeliveryLinks } from "@/lib/nhume/cargo-profiles";
+import { readDeliveryLinks, readWriteBackOutcomes } from "@/lib/nhume/cargo-profiles";
 
 /** Transport modes offered at assignment — bikes and bicycles included. */
 const ASSIGN_MODES = [
@@ -275,10 +275,12 @@ function OverviewTab({ id, delivery }: { id: string; delivery: Record<string, un
  * Honest integration surface: this mission MOVES cargo whose truth lives in
  * another system (Dura stock, OROS lab order, MADI blood order, PCT referral,
  * Daidzai incident). We display the linked references captured at creation and
- * deep-link out — Nhume never rewrites those systems' records.
+ * deep-link out. On drop-off sign-off nhume-service confirms the movement with
+ * each owning service; those outcomes (including failures) render here.
  */
 function LinkedReferencesPanel({ delivery }: { delivery: Record<string, unknown> }) {
   const links = readDeliveryLinks(delivery.metadata);
+  const writeBacks = readWriteBackOutcomes(delivery.metadata);
   const clinical = delivery.clinical_context_ref ? String(delivery.clinical_context_ref) : "";
   const priority = String(delivery.priority ?? "").toUpperCase();
   const canEscalate = priority === "EMERGENCY" || priority === "URGENT";
@@ -304,6 +306,26 @@ function LinkedReferencesPanel({ delivery }: { delivery: Record<string, unknown>
                   <span className="mr-2 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-medium text-teal-700">{l.system}</span>
                   <span className="text-foreground">{l.label}</span>
                   <span className="ml-2 font-mono text-xs text-muted-foreground">{l.ref}</span>
+                  {writeBacks[l.system] ? (
+                    <span
+                      title={writeBacks[l.system].detail}
+                      className={`ml-2 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                        writeBacks[l.system].status === "OK"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : writeBacks[l.system].status === "FAILED"
+                            ? "bg-rose-100 text-rose-700"
+                            : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {writeBacks[l.system].status === "OK"
+                        ? "Confirmed with owner"
+                        : writeBacks[l.system].status === "FAILED"
+                          ? "Confirmation failed"
+                          : writeBacks[l.system].status === "SKIPPED_NO_TRANSITION"
+                            ? "Manual step in owner"
+                            : "No action needed"}
+                    </span>
+                  ) : null}
                 </span>
                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
               </Link>
@@ -325,7 +347,7 @@ function LinkedReferencesPanel({ delivery }: { delivery: Record<string, unknown>
           Mass-casualty or disaster-scale movement is coordinated in Daidzai, which owns emergency incidents.
         </p>
         <Link
-          href={`/work/daidzai?source=nhume&delivery=${encodeURIComponent(String(delivery.delivery_id ?? delivery.reference_code ?? ""))}&priority=${encodeURIComponent(priority)}`}
+          href={`/work/daidzai?source=nhume&delivery=${encodeURIComponent(String(delivery.delivery_id ?? ""))}&ref=${encodeURIComponent(String(delivery.reference_code ?? ""))}&priority=${encodeURIComponent(priority)}`}
           className={`inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium ${
             canEscalate ? "bg-rose-600 text-white hover:bg-rose-700" : "border border-border text-foreground hover:bg-background"
           }`}
