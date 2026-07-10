@@ -320,6 +320,25 @@ public class NhumeDeliveryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toCustody(e));
     }
 
+    /**
+     * Attach or update an integration link on a delivery (e.g. Daidzai writes
+     * back the incident it opened from a Nhume escalation). Whitelisted keys
+     * only — Nhume owns its own metadata, never the linked systems' truth.
+     */
+    @PostMapping({"/api/v1/nhume/deliveries/{id}/links",
+            "/internal/v1/nhume/deliveries/{id}/links"})
+    public ResponseEntity<?> addLink(@PathVariable UUID id,
+                                      @RequestBody Map<String, Object> body,
+                                      HttpServletRequest http) {
+        TrustLayerGuard.ActorContext actor = capture(http, "delivery.link");
+        String key = body.get("key") != null ? body.get("key").toString() : null;
+        String ref = body.get("ref") != null ? body.get("ref").toString() : null;
+        DeliveryRequestEntity d = service.addIntegrationLink(id, key, ref, actor);
+        return ResponseEntity.ok(Map.of(
+                "delivery_id", d.getDeliveryId().toString(),
+                "links", parseMetadata(d.getMetadataJson()).getOrDefault("links", Map.of())));
+    }
+
     @DeleteMapping({"/api/v1/nhume/deliveries/{id}",
             "/internal/v1/nhume/deliveries/{id}"})
     public ResponseEntity<?> deleteDraft(@PathVariable UUID id,

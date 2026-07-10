@@ -700,6 +700,43 @@ public class NhumeDeliveryService {
         return ex;
     }
 
+    private static final java.util.Set<String> LINK_KEYS = java.util.Set.of(
+            "daidzaiIncidentRef", "orosOrderRef", "madiOrderRef", "pctReferralRef", "duraRequisitionRef");
+
+    /** Attach/update a whitelisted integration link in metadata.links (audited). */
+    @Transactional
+    public DeliveryRequestEntity addIntegrationLink(UUID deliveryId, String key, String ref,
+                                                    TrustLayerGuard.ActorContext actor) {
+        if (key == null || !LINK_KEYS.contains(key)) {
+            throw new IllegalArgumentException("Unsupported link key: " + key);
+        }
+        if (ref == null || ref.isBlank()) {
+            throw new IllegalArgumentException("Link ref is required");
+        }
+        DeliveryRequestEntity d = deliveryRepo.findById(deliveryId)
+                .orElseThrow(() -> new DeliveryNotFoundException(deliveryId));
+        try {
+            Map<String, Object> metadata = d.getMetadataJson() == null || d.getMetadataJson().isBlank()
+                    ? new LinkedHashMap<>()
+                    : objectMapper.readValue(d.getMetadataJson(),
+                            new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+            Object linksRaw = metadata.get("links");
+            Map<String, Object> links = linksRaw instanceof Map<?, ?> m
+                    ? new LinkedHashMap<>(m.entrySet().stream().collect(
+                            java.util.stream.Collectors.toMap(e -> e.getKey().toString(), Map.Entry::getValue)))
+                    : new LinkedHashMap<>();
+            links.put(key, ref);
+            metadata.put("links", links);
+            d.setMetadataJson(objectMapper.writeValueAsString(metadata));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Could not update delivery links", e);
+        }
+        d.setUpdatedAt(OffsetDateTime.now());
+        deliveryRepo.save(d);
+        recordAudit(d, "delivery.link.attached:" + key, actor);
+        return d;
+    }
+
     // ─── Helpers ────────────────────────────────────────────────────────────
 
     private void applyRequest(DeliveryRequestEntity d, CreateDeliveryRequest req) {
