@@ -1,0 +1,65 @@
+# Impilo public gateway website at impilo.mohcc.gov.zw (edge split).
+# The website owns the PUBLIC paths; vNext keeps everything else — including
+# /auth/* (the "Log in for work" handoff), /learning (Fundo) and all app routes.
+# Priority sits between the UI catch-all (1) and the BFF surfaces (100000).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: public-website
+  namespace: impilo-full-preview
+  labels: { app: public-website }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }
+  selector: { matchLabels: { app: public-website } }
+  template:
+    metadata:
+      labels: { app: public-website }
+    spec:
+      containers:
+        - name: public-website
+          image: 127.0.0.1:5000/impilo/public-website@sha256:c914b5ff0fc1c8187d15072889c175e43e7558dd0ece781fab03c1af4005ab6c
+          ports: [{ containerPort: 8080 }]
+          readinessProbe:
+            httpGet: { path: /, port: 8080 }
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 25m, memory: 32Mi }
+            limits: { cpu: 200m, memory: 128Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: public-website
+  namespace: impilo-full-preview
+spec:
+  selector: { app: public-website }
+  ports: [{ port: 8080, targetPort: 8080 }]
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: impilo-mohcc-gov-https-public-website
+  namespace: impilo-full-preview
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      # Public gateway paths. NOTE: /learning deliberately NOT claimed — vNext
+      # Fundo owns it; the website serves that content at /training.
+      match: >-
+        Host(`impilo.mohcc.gov.zw`) && (Path(`/`) || PathPrefix(`/about`) ||
+        PathPrefix(`/services`) || PathPrefix(`/solutions`) ||
+        PathPrefix(`/features`) || PathPrefix(`/resources`) ||
+        PathPrefix(`/docs`) || PathPrefix(`/training`) ||
+        PathPrefix(`/get-involved`) || PathPrefix(`/community`) ||
+        PathPrefix(`/technical`) || PathPrefix(`/contact`) ||
+        PathPrefix(`/assets`) || Path(`/logo.png`))
+      priority: 50000
+      services:
+        - name: public-website
+          port: 8080
+  tls:
+    secretName: impilo-mohcc-gov-zw-tls
