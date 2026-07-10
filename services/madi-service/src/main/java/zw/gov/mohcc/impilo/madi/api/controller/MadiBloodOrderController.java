@@ -123,6 +123,18 @@ public class MadiBloodOrderController {
                 uuid(body, "reservation_id"), str(body, "issued_by"), facilityId));
     }
 
+    /** Delivery-side completion (e.g. Nhume drop-off sign-off): ISSUED -> COMPLETED. */
+    @PostMapping("/{orderId}/complete")
+    public ResponseEntity<BloodOrderEntity> complete(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID orderId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.ok(bloodOrderService.complete(
+                tenantId, orderId,
+                body != null ? str(body, "completed_by") : null,
+                body != null ? str(body, "delivery_ref") : null));
+    }
+
     private static String required(Map<String, Object> body, String key) {
         Object v = body.get(key);
         if (v == null || v.toString().isBlank()) {

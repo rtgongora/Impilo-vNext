@@ -199,6 +199,27 @@ public class BloodOrderService {
         return saved;
     }
 
+    /**
+     * Delivery-side completion: issued blood arrived at the requesting site
+     * (e.g. Nhume drop-off sign-off). Order must be ISSUED.
+     */
+    @Transactional
+    public BloodOrderEntity complete(UUID tenantId, UUID orderId, String completedBy, String deliveryRef) {
+        BloodOrderEntity order = requireOrder(tenantId, orderId);
+        if (!BloodOrderStatus.ISSUED.name().equals(order.getStatus())) {
+            throw new IllegalStateException(
+                    "Blood order must be ISSUED to complete; current status is " + order.getStatus());
+        }
+        order.setStatus(BloodOrderStatus.COMPLETED.name());
+        order.setUpdatedAt(OffsetDateTime.now());
+        orderRepository.save(order);
+        eventEmitter.emit("BLOOD_ORDER", orderId.toString(), "BLOOD_ORDER_COMPLETED", "BLOOD_ORDER",
+                orderId.toString(), refPayload(order, Map.of(
+                        "completedBy", completedBy == null ? "" : completedBy,
+                        "deliveryRef", deliveryRef == null ? "" : deliveryRef)), tenantId);
+        return order;
+    }
+
     @Transactional(readOnly = true)
     public List<BloodOrderEntity> listOrders(UUID tenantId, UUID facilityId, String status, String patientCpid) {
         List<BloodOrderEntity> rows = facilityId != null

@@ -45,6 +45,41 @@ class BloodOrderServiceTest {
     }
 
     @Test
+    void complete_transitionsIssuedOrderAndEmitsEvent() {
+        UUID orderId = UUID.randomUUID();
+        BloodOrderEntity order = new BloodOrderEntity();
+        order.setOrderId(orderId);
+        order.setTenantId(TENANT_ID);
+        order.setStatus(BloodOrderStatus.ISSUED.name());
+        when(orderRepository.findByOrderIdAndTenantId(orderId, TENANT_ID))
+                .thenReturn(java.util.Optional.of(order));
+        when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        BloodOrderEntity completed = bloodOrderService.complete(
+                TENANT_ID, orderId, "courier.moyo", "NHM-123");
+
+        assertThat(completed.getStatus()).isEqualTo(BloodOrderStatus.COMPLETED.name());
+        verify(eventEmitter).emit(eq("BLOOD_ORDER"), eq(orderId.toString()),
+                eq("BLOOD_ORDER_COMPLETED"), anyString(), anyString(), anyMap(), eq(TENANT_ID));
+    }
+
+    @Test
+    void complete_rejectsOrdersThatAreNotIssued() {
+        UUID orderId = UUID.randomUUID();
+        BloodOrderEntity order = new BloodOrderEntity();
+        order.setOrderId(orderId);
+        order.setTenantId(TENANT_ID);
+        order.setStatus(BloodOrderStatus.RESERVED.name());
+        when(orderRepository.findByOrderIdAndTenantId(orderId, TENANT_ID))
+                .thenReturn(java.util.Optional.of(order));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+                        bloodOrderService.complete(TENANT_ID, orderId, "courier.moyo", "NHM-123"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("ISSUED");
+    }
+
+    @Test
     void createOrder_setsDraftStatus() {
         BloodOrderEntity order = new BloodOrderEntity();
         order.setTenantId(TENANT_ID);
