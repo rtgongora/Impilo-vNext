@@ -37,6 +37,7 @@ public class FacilityReferralPathwayController {
     }
 
     @GetMapping("/{facilityId}/referral-pathway")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<Map<String, Object>>> referralPathway(@PathVariable Long facilityId) {
         TrustContext ctx = TrustContextHolder.require();
         List<Map<String, Object>> hops = new ArrayList<>();
