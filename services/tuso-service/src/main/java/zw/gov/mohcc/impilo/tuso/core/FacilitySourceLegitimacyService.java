@@ -254,6 +254,10 @@ public class FacilitySourceLegitimacyService {
         outbox.setCorrelationId(correlationId);
         outbox.setCausationId(correlationId);
         outbox.setProducer("tuso");
+        // v1.1 envelope requirements — a null pod/idempotency key poisons the
+        // outbox publisher (it halts the whole queue to preserve ordering).
+        outbox.setPodId("national-spine");
+        outbox.setIdempotencyKey("tuso:legitimacy:" + facility.getId() + ":" + correlationId);
         outbox.setSubjectType("Facility");
         outbox.setSubjectId(String.valueOf(facility.getId()));
         outbox.setPartitionKey(String.valueOf(facility.getId()));
