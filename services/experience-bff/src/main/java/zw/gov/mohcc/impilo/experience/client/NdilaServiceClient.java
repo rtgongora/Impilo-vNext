@@ -38,6 +38,12 @@ public class NdilaServiceClient {
         return response.getBody() == null ? new byte[0] : response.getBody();
     }
 
+    public byte[] tileVector(int z, int x, int y) {
+        String url = baseUrl + "/api/v1/ndila/tiles/" + z + "/" + x + "/" + y + ".mvt";
+        ResponseEntity<byte[]> response = restTemplate.getForEntity(url, byte[].class);
+        return response.getBody() == null ? new byte[0] : response.getBody();
+    }
+
     public JsonNode nearbyAssets(Map<String, Object> body) {
         String url = baseUrl + "/api/v1/ndila/tracking/assets/nearby";
         return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
@@ -89,6 +95,9 @@ public class NdilaServiceClient {
                 || template.startsWith("/api/v1/ndila/tiles/")
                 || template.startsWith("mock://")) {
             node.put("tileUrlTemplate", "/internal/v1/ndila/tiles/{z}/{x}/{y}.png");
+            if (node.hasNonNull("vectorTileUrlTemplate")) {
+                node.put("vectorTileUrlTemplate", "/internal/v1/ndila/tiles/{z}/{x}/{y}.mvt");
+            }
             if ("mock://".equals(template) || template.startsWith("mock://")) {
                 node.put("providerName", "PREVIEW_SOVEREIGN");
                 node.put("attribution", "Impilo Ndila — sovereign preview tiles");

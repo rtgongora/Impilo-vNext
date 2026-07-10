@@ -141,6 +141,7 @@ public class SecurityConfig {
                     .requestMatchers("/health/version").permitAll()
                     // Ndila sovereign preview raster tiles — MapLibre cannot attach JWT on img tile fetches
                     .requestMatchers(HttpMethod.GET, "/internal/v1/ndila/tiles/*/*/*.png").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/ndila/tiles/*/*/*.mvt").permitAll()
                     .requestMatchers(HttpMethod.GET, "/internal/v1/profile/visibility").authenticated()
 
                     // ── Admin zone ────────────────────────────────────────

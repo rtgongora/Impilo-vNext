@@ -64,6 +64,30 @@ public class NdilaController {
         }
     }
 
+    @GetMapping("/tiles/{z}/{x}/{y}.mvt")
+    public ResponseEntity<byte[]> tileVector(
+            @PathVariable int z,
+            @PathVariable int x,
+            @PathVariable int y) {
+        try {
+            byte[] tile = client.tileVector(z, x, y);
+            if (tile.length == 0) {
+                return ResponseEntity.noContent().build();
+            }
+            ResponseEntity.BodyBuilder builder = ResponseEntity.ok()
+                    .header(HttpHeaders.CACHE_CONTROL, "public, max-age=604800")
+                    .contentType(MediaType.parseMediaType("application/x-protobuf"));
+            // Martin stores tiles gzipped; forward the encoding so the browser inflates.
+            if (tile.length >= 2 && (tile[0] & 0xFF) == 0x1F && (tile[1] & 0xFF) == 0x8B) {
+                builder.header(HttpHeaders.CONTENT_ENCODING, "gzip");
+            }
+            return builder.body(tile);
+        } catch (Exception e) {
+            log.warn("Ndila tile vector failed z={} x={} y={}: {}", z, x, y, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
+    }
+
     @PostMapping("/geocode")
     public ResponseEntity<Map<String, Object>> geocode(
             @RequestBody Map<String, Object> body,
