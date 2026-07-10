@@ -573,8 +573,17 @@ export default function HomePage() {
   const hasWorkContext = !!facility;
   const selectedOperatingModel = facility?.operatingModel;
 
-  // Fetch facilities for workplace selection hub
-  const { data: facilitiesData, isLoading: facilitiesLoading } = useFacilities();
+  // Fetch facilities for workplace selection hub — search-first: the national
+  // registry holds ~1,800 facilities, so the hub queries rather than lists.
+  const [facilitySearch, setFacilitySearch] = useState("");
+  const [debouncedFacilitySearch, setDebouncedFacilitySearch] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedFacilitySearch(facilitySearch.trim()), 300);
+    return () => clearTimeout(t);
+  }, [facilitySearch]);
+  const { data: facilitiesData, isLoading: facilitiesLoading } = useFacilities(
+    debouncedFacilitySearch ? { search: debouncedFacilitySearch, size: 12 } : { size: 12 },
+  );
   const facilities: FacilityResource[] = facilitiesData?.data ?? [];
 
   // Fetch provider privileges (facility affiliations) from VARAPI
@@ -868,6 +877,8 @@ export default function HomePage() {
             <div id="workplace-selection">
               <WorkplaceSelectionHub
               facilities={facilities}
+              searchValue={facilitySearch}
+              onSearchChange={setFacilitySearch}
               isLoading={facilitiesLoading}
               onSelectFacility={handleFacilitySelect}
               maxVisible={6}

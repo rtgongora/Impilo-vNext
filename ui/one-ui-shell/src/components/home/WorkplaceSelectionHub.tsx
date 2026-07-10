@@ -29,6 +29,9 @@ interface WorkplaceSelectionHubProps {
   maxVisible?: number;
   browseHref?: string;
   modeActions?: ModeAction[];
+  /** Search-first: the national registry holds ~1,800 facilities. */
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
 }
 
 function facilityCardTone(status: string) {
@@ -66,10 +69,13 @@ export function WorkplaceSelectionHub({
   maxVisible,
   browseHref = "/facility",
   modeActions = [],
+  searchValue,
+  onSearchChange,
 }: WorkplaceSelectionHubProps) {
   const visibleFacilities =
     typeof maxVisible === "number" ? facilities.slice(0, maxVisible) : facilities;
   const hasMore = typeof maxVisible === "number" && facilities.length > maxVisible;
+  const searchable = typeof onSearchChange === "function";
 
   return (
     <section className="overflow-hidden rounded-[28px] border border-border bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),_transparent_38%),linear-gradient(135deg,#f8fbff_0%,#ffffff_45%,#f8fafc_100%)] shadow-sm">
@@ -112,6 +118,18 @@ export function WorkplaceSelectionHub({
       </div>
 
       <div className="px-6 py-6">
+        {searchable ? (
+          <label className="mb-3 block">
+            <span className="sr-only">Search facilities</span>
+            <input
+              value={searchValue ?? ""}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              placeholder="Search 1,800+ facilities by name, district or code…"
+              data-testid="facility-search"
+              className="w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm text-foreground shadow-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
+            />
+          </label>
+        ) : null}
         {isLoading ? (
           <div className="flex items-center justify-center gap-3 rounded-[24px] border border-dashed border-border bg-card/70 px-6 py-12 text-sm text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin text-sky-500" />
@@ -120,12 +138,17 @@ export function WorkplaceSelectionHub({
         ) : visibleFacilities.length === 0 ? (
           <div className="rounded-[24px] border border-dashed border-border bg-card/70 px-6 py-12 text-center">
             <Building2 className="mx-auto h-10 w-10 text-muted-foreground" />
-            <p className="mt-4 text-sm font-medium text-foreground">No facilities available yet</p>
+            <p className="mt-4 text-sm font-medium text-foreground">
+              {searchValue ? "No facilities match your search" : "No facilities available yet"}
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Once facilities are provisioned, they will appear here for inline selection.
+              {searchValue
+                ? "Try a different name, district or facility code."
+                : "Once facilities are provisioned, they will appear here for inline selection."}
             </p>
           </div>
         ) : (
+          <>
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             {visibleFacilities.map((facility) => {
               const attributes = facility.attributes;
@@ -220,6 +243,7 @@ export function WorkplaceSelectionHub({
               );
             })}
           </div>
+          </>
         )}
 
         {(hasMore || modeActions.length > 0) && (
