@@ -110,8 +110,15 @@ function readAuthToken(): string | null {
 
 function ndilaTileTransformRequest(url: string): RequestParameters {
   if (url.includes("/internal/v1/ndila/tiles/") && (url.endsWith(".png") || url.endsWith(".mvt"))) {
+    // MapLibre fetches tiles itself, bypassing api-client — synthesize the
+    // mandatory v1.1 trust headers or the BFF header filter 400s every tile.
+    const headers: Record<string, string> = {
+      "X-Tenant-ID": sessionStorage.getItem("exp:tenant_id") ?? "00000000-0000-4000-8000-000000000001",
+      "X-Pod-ID": sessionStorage.getItem("exp:pod_id") ?? "national-spine",
+      "X-Request-ID": crypto.randomUUID(),
+      "X-Correlation-ID": sessionStorage.getItem("exp:correlation_id") ?? crypto.randomUUID(),
+    };
     const token = readAuthToken();
-    const headers: Record<string, string> = {};
     if (token) headers.Authorization = `Bearer ${token}`;
     return { url, headers, credentials: "include" };
   }
