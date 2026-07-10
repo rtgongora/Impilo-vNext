@@ -22,7 +22,16 @@ import {
   shiftsFromResponse,
 } from "@/lib/vashandi/api/rosters";
 import { listAttendance, checkIn, adhocCheckIn, checkOut, attendanceFromResponse } from "@/lib/vashandi/api/attendance";
-import { listAvailability, leaveFromResponse } from "@/lib/vashandi/api/leave";
+import {
+  listAvailability,
+  createLeave,
+  updateLeave,
+  listLeaveTypes,
+  listLeaveBalances,
+  leaveFromResponse,
+  leaveTypesFromResponse,
+  leaveBalancesFromResponse,
+} from "@/lib/vashandi/api/leave";
 import { listAccessRisks, scanAccessRisks, accessRisksFromResponse } from "@/lib/vashandi/api/accessReview";
 import {
   getStaffingAnalytics,
@@ -302,6 +311,49 @@ export function useLeaveAvailability(params?: Record<string, string | undefined>
     queryFn: async () => {
       const response = await listAvailability(params);
       return { response, items: leaveFromResponse(response) };
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateLeave() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) => createLeave(body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "leave"] });
+    },
+  });
+}
+
+export function useUpdateLeave() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ leaveId, body }: { leaveId: string; body: Record<string, unknown> }) =>
+      updateLeave(leaveId, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "leave"] });
+    },
+  });
+}
+
+export function useLeaveTypes() {
+  return useQuery({
+    queryKey: ["vashandi", "leave", "types"],
+    queryFn: async () => {
+      const response = await listLeaveTypes();
+      return { response, items: leaveTypesFromResponse(response) };
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useLeaveBalances(params?: Record<string, string | undefined>) {
+  return useQuery({
+    queryKey: ["vashandi", "leave", "balances", params],
+    queryFn: async () => {
+      const response = await listLeaveBalances(params);
+      return { response, items: leaveBalancesFromResponse(response) };
     },
     staleTime: 30_000,
   });

@@ -439,6 +439,65 @@ public class VashandiController {
                 "vashandi.leave.updated"));
     }
 
+    @GetMapping("/leave/balances")
+    public ResponseEntity<Map<String, Object>> leaveBalances(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestParam Map<String, String> queryParams) {
+        return wrap(vashandiService.proxyGet("AVAILABILITY_LIST", "/leave/balances", queryParams,
+                tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId, purposeOfUse,
+                "vashandi.leave.updated"));
+    }
+
+    @PostMapping("/leave/balances")
+    public ResponseEntity<Map<String, Object>> upsertLeaveBalance(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestBody Map<String, Object> body) {
+        return wrap(vashandiService.proxyPost("LEAVE_CREATE", "/leave/balances", body,
+                tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId, purposeOfUse,
+                "vashandi.leave.updated"));
+    }
+
+    @GetMapping("/leave/types")
+    public ResponseEntity<Map<String, Object>> leaveTypes(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse) {
+        return wrap(vashandiService.proxyGet("AVAILABILITY_LIST", "/leave/types", Map.of(),
+                tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId, purposeOfUse,
+                "vashandi.leave.updated"));
+    }
+
+    @PostMapping("/leave/types")
+    public ResponseEntity<Map<String, Object>> createLeaveType(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestBody Map<String, Object> body) {
+        return wrap(vashandiService.proxyPost("LEAVE_CREATE", "/leave/types", body,
+                tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId, purposeOfUse,
+                "vashandi.leave.updated"));
+    }
+
     @PostMapping("/leave")
     public ResponseEntity<Map<String, Object>> createLeave(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

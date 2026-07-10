@@ -98,4 +98,43 @@ class LeaveBalanceServiceTest {
         assertThat(saved).isNotNull();
         verify(balanceRepository, never()).save(any());
     }
+
+    @org.junit.jupiter.api.Test
+    void leaveRejectionIsAnAllowedDecisionAndRecordsTheDecider() throws Exception {
+        LeaveAvailabilityService svc = new LeaveAvailabilityService(leaveRepository, balanceRepository, leaveTypeRepository, profileRepository, outboxWriter);
+        UUID id = UUID.randomUUID();
+        zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveAvailabilityEntity leave =
+                new zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveAvailabilityEntity();
+        leave.setId(id);
+        leave.setTenantId(TENANT);
+        leave.setStatus("pending");
+        org.mockito.Mockito.when(leaveRepository.findByTenantIdAndId(TENANT, id))
+                .thenReturn(java.util.Optional.of(leave));
+        org.mockito.Mockito.when(leaveRepository.save(org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        var saved = svc.update(TENANT, id,
+                new VashandiDtos.UpdateLeaveRequest("rejected", null, "hr.officer"));
+
+        org.assertj.core.api.Assertions.assertThat(saved.getStatus()).isEqualTo("rejected");
+        org.assertj.core.api.Assertions.assertThat(saved.getApprovedBy()).isEqualTo("hr.officer");
+    }
+
+    @org.junit.jupiter.api.Test
+    void terminalLeaveStatesCannotBeReopened() {
+        LeaveAvailabilityService svc = new LeaveAvailabilityService(leaveRepository, balanceRepository, leaveTypeRepository, profileRepository, outboxWriter);
+        UUID id = UUID.randomUUID();
+        zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveAvailabilityEntity leave =
+                new zw.gov.mohcc.impilo.vashandi.persistence.entity.LeaveAvailabilityEntity();
+        leave.setId(id);
+        leave.setTenantId(TENANT);
+        leave.setStatus("rejected");
+        org.mockito.Mockito.when(leaveRepository.findByTenantIdAndId(TENANT, id))
+                .thenReturn(java.util.Optional.of(leave));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+                        svc.update(TENANT, id, new VashandiDtos.UpdateLeaveRequest("approved", null, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("not allowed");
+    }
 }

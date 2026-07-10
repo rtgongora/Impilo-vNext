@@ -130,21 +130,34 @@ public class LeaveAvailabilityService {
         return saved;
     }
 
+    /** pending → approved | rejected | cancelled; approved → cancelled. Terminal states are final. */
+    private static final Map<String, List<String>> LEAVE_TRANSITIONS = Map.of(
+            "pending", List.of("approved", "rejected", "cancelled"),
+            "approved", List.of("cancelled"));
+
     @Transactional
     public LeaveAvailabilityEntity update(UUID tenantId, UUID id, VashandiDtos.UpdateLeaveRequest request)
             throws Exception {
         LeaveAvailabilityEntity leave = leaveRepository.findByTenantIdAndId(tenantId, id)
                 .orElseThrow(() -> new IllegalArgumentException("leave record not found"));
-        if (request.status() != null) {
+        if (request.status() != null && !request.status().equals(leave.getStatus())) {
+            String from = leave.getStatus() == null ? "pending" : leave.getStatus();
+            List<String> allowed = LEAVE_TRANSITIONS.getOrDefault(from, List.of());
+            if (!allowed.contains(request.status())) {
+                throw new IllegalArgumentException(
+                        "leave transition " + from + " -> " + request.status() + " is not allowed");
+            }
             leave.setStatus(request.status());
+            // approved/rejected are decisions — record the deciding actor either way.
+            if ("approved".equals(request.status()) || "rejected".equals(request.status())) {
+                leave.setApprovedBy(request.approvedBy() != null ? request.approvedBy() : actorId());
+            }
         }
         if (request.endDate() != null) {
             leave.setEndDate(request.endDate());
         }
-        if (request.approvedBy() != null) {
+        if (request.status() == null && request.approvedBy() != null) {
             leave.setApprovedBy(request.approvedBy());
-        } else if ("approved".equals(request.status())) {
-            leave.setApprovedBy(actorId());
         }
         LeaveAvailabilityEntity saved = leaveRepository.save(leave);
         emit(tenantId, saved, "updated");
