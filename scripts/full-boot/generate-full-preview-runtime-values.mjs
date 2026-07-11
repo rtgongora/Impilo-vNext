@@ -122,6 +122,9 @@ function specialEnv(serviceId) {
     return {
       KEYCLOAK_ISSUER: "",
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "",
+      // Queue materialisation pulls queue-definitions from TUSO; the code default
+      // is localhost:8084, which in-pod means "no queues ever materialise".
+      PCT_INTEGRATION_TUSO_BASE_URL: "http://tuso-service:8084",
     };
   }
   if (serviceId === "oros-service") {

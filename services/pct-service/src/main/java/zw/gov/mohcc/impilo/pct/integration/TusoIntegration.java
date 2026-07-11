@@ -91,10 +91,24 @@ public class TusoIntegration {
      * @return list of queue definitions, an empty list if none, or {@code null} on failure
      */
     @SuppressWarnings("unchecked")
-    public List<Map<String, Object>> getQueueDefinitions(UUID facilityUuid) {
+    public List<Map<String, Object>> getQueueDefinitions(UUID tenantId, UUID facilityUuid) {
         try {
             String url = baseUrl + "/v1/internal/facilities/by-uuid/" + facilityUuid + "/queue-definitions";
-            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            // Service-originated call: synthesize the mandatory trust headers (the
+            // MISSING_REQUIRED_HEADER defect family) — tuso requires a tenant context.
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            if (tenantId != null) {
+                headers.set("X-Tenant-ID", tenantId.toString());
+            }
+            headers.set("X-Pod-ID", "national-spine");
+            headers.set("X-Request-ID", UUID.randomUUID().toString());
+            headers.set("X-Correlation-ID", UUID.randomUUID().toString());
+            headers.set("X-Actor-ID", "pct-service");
+            headers.set("X-Actor-Type", "SERVICE");
+            headers.set("X-Purpose-Of-Use", "OPERATIONS");
+            ResponseEntity<Map> response = restTemplate.exchange(url,
+                    org.springframework.http.HttpMethod.GET,
+                    new org.springframework.http.HttpEntity<Void>(headers), Map.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Object data = response.getBody().getOrDefault("data", response.getBody().get("definitions"));

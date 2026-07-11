@@ -40,7 +40,7 @@ class QueueMaterializationServiceTest {
 
     @Test
     void reconcileCreatesMissingQueuesFromTuso() {
-        when(tuso.getQueueDefinitions(facility)).thenReturn(List.of(
+        when(tuso.getQueueDefinitions(any(), eq(facility))).thenReturn(List.of(
                 def("sp-1", "Triage", "TRIAGE", true),
                 def("sp-2", "Consultation", "CONSULTATION", true)));
         when(queueRepository.findByTenantIdAndFacilityIdAndSourceRef(eq(tenant), eq(facility), any()))
@@ -72,7 +72,7 @@ class QueueMaterializationServiceTest {
         existing.setSource(QueueEntity.SOURCE_TUSO);
         existing.setSourceRef("sp-1");
         existing.setName("Old Name");
-        when(tuso.getQueueDefinitions(facility)).thenReturn(List.of(def("sp-1", "Triage", "TRIAGE", true)));
+        when(tuso.getQueueDefinitions(any(), eq(facility))).thenReturn(List.of(def("sp-1", "Triage", "TRIAGE", true)));
         when(queueRepository.findByTenantIdAndFacilityIdAndSourceRef(tenant, facility, "sp-1"))
                 .thenReturn(Optional.of(existing));
         when(queueRepository.findByTenantIdAndFacilityIdAndSource(tenant, facility, QueueEntity.SOURCE_TUSO))
@@ -98,7 +98,7 @@ class QueueMaterializationServiceTest {
         existing.setSourceRef("sp-1");
         existing.setName("Triage");
         existing.setQueueType("TRIAGE");
-        when(tuso.getQueueDefinitions(facility)).thenReturn(List.of(def("sp-1", "Triage Renamed", "FIFO", true)));
+        when(tuso.getQueueDefinitions(any(), eq(facility))).thenReturn(List.of(def("sp-1", "Triage Renamed", "FIFO", true)));
         when(queueRepository.findByTenantIdAndFacilityIdAndSourceRef(tenant, facility, "sp-1"))
                 .thenReturn(Optional.of(existing));
         when(queueRepository.findByTenantIdAndFacilityIdAndSource(tenant, facility, QueueEntity.SOURCE_TUSO))
@@ -119,7 +119,7 @@ class QueueMaterializationServiceTest {
         orphan.setActive(true);
         orphan.setMaterializationStatus(QueueEntity.STATUS_MATERIALIZED);
         // TUSO no longer lists sp-gone (returns empty but NON-null = genuine "no queues").
-        when(tuso.getQueueDefinitions(facility)).thenReturn(List.of());
+        when(tuso.getQueueDefinitions(any(), eq(facility))).thenReturn(List.of());
         when(queueRepository.findByTenantIdAndFacilityIdAndSource(tenant, facility, QueueEntity.SOURCE_TUSO))
                 .thenReturn(List.of(orphan));
 
@@ -135,7 +135,7 @@ class QueueMaterializationServiceTest {
 
     @Test
     void nullTusoResponseFailsSafelyWithoutTouchingQueues() {
-        when(tuso.getQueueDefinitions(facility)).thenReturn(null);
+        when(tuso.getQueueDefinitions(any(), eq(facility))).thenReturn(null);
 
         var r = service().reconcileFacility(tenant, facility);
 
@@ -146,7 +146,7 @@ class QueueMaterializationServiceTest {
 
     @Test
     void malformedDefinitionIsSkippedNotFatal() {
-        when(tuso.getQueueDefinitions(facility)).thenReturn(List.of(
+        when(tuso.getQueueDefinitions(any(), eq(facility))).thenReturn(List.of(
                 Map.of("name", "No Ref Queue"),          // missing sourceRef
                 def("sp-9", "Good Queue", "FIFO", true)));
         when(queueRepository.findByTenantIdAndFacilityIdAndSourceRef(tenant, facility, "sp-9"))

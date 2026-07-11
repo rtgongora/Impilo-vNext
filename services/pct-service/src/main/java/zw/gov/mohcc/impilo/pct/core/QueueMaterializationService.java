@@ -56,7 +56,7 @@ public class QueueMaterializationService {
     public MaterializationResult reconcileFacility(UUID tenantId, UUID facilityId) {
         List<Map<String, Object>> defs;
         try {
-            defs = tusoIntegration.getQueueDefinitions(facilityId);
+            defs = tusoIntegration.getQueueDefinitions(tenantId, facilityId);
         } catch (Exception e) {
             log.warn("Queue materialisation aborted for facility {}: TUSO call failed: {}", facilityId, e.getMessage());
             return failed(facilityId, "TUSO call failed: " + e.getMessage());
