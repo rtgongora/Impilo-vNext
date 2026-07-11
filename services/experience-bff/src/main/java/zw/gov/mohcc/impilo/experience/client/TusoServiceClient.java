@@ -562,7 +562,9 @@ public class TusoServiceClient {
         if (facilityType != null && !facilityType.isBlank()) builder.queryParam("facilityType", facilityType);
         if (province != null && !province.isBlank()) builder.queryParam("province", province);
         if (district != null && !district.isBlank()) builder.queryParam("district", district);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        // Pass a URI, not a String: getForEntity(String) re-encodes the already-encoded
+        // string, so any search term with a space arrived double-encoded and matched nothing.
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().build().toUri(), JsonNode.class);
         return extractData(response);
     }
 

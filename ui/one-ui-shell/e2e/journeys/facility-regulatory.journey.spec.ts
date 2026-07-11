@@ -50,31 +50,38 @@ test.describe("Facility regulatory lifecycle journey (live preview)", () => {
     await page.goto("/registry/facility-lifecycle");
     await expectNoDeadEnd(page);
 
-    // Raise an application for imported facility 6 (Hunyani Municipal Clinic).
+    // Register a brand-new facility shell each run — the journey stays
+    // self-contained and re-runnable (no state soup on a shared facility).
+    const facilityName = `Chikara Journey Clinic ${Date.now()}`;
     await page.getByRole("button", { name: /new application/i }).click();
-    await page.getByPlaceholder(/existing facility id/i).fill("6");
-    await page.getByPlaceholder(/applicant name/i).fill("Hunyani Municipal Council");
+    await page.getByPlaceholder(/new facility name/i).fill(facilityName);
+    await page.getByPlaceholder(/applicant name/i).fill("Chikara Village Trust");
     await page.getByRole("button", { name: /create application/i }).click();
     // The intake panel closes only on successful creation — wait for it.
     await expect(page.getByRole("button", { name: /create application/i })).toHaveCount(0, {
       timeout: 20_000,
     });
 
-    // Open the facility's regulatory file.
-    await page.goto("/registry/facility-lifecycle/6");
+    // Find the new facility in the registry queue and open its file.
+    await page.getByPlaceholder(/search the national facility registry/i).fill(facilityName);
+    const fileLink = page.getByRole("link", { name: facilityName }).first();
+    await expect(fileLink).toBeVisible({ timeout: 20_000 });
+    const facilityHref = await fileLink.getAttribute("href");
+    await fileLink.click();
     await expectNoDeadEnd(page);
     await expect(page.getByText(/applications/i).first()).toBeVisible({ timeout: 20_000 });
 
-    // Attach a document, then submit.
+    // Attach a document (submission is governed: at least one supporting
+    // document is required) and wait for it to land before submitting.
     const docRef = page.getByPlaceholder(/document reference/i);
-    if (await docRef.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await docRef.fill("doc://hunyani/premises-plan-v1");
-      await page.getByRole("button", { name: /^attach$/i }).click();
-    }
+    await expect(docRef).toBeVisible({ timeout: 20_000 });
+    await docRef.fill("doc://chikara/premises-plan-v1");
+    await page.getByRole("button", { name: /^attach$/i }).click();
+    await expect(page.getByText(/PREMISES PLAN · v1/i)).toBeVisible({ timeout: 20_000 });
+
     const submitBtn = page.getByRole("button", { name: /^submit$/i }).first();
-    if (await submitBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await submitBtn.click();
-    }
+    await expect(submitBtn).toBeVisible({ timeout: 20_000 });
+    await submitBtn.click();
 
     // Ready for inspection.
     const readyBtn = page.getByRole("button", { name: /ready for inspection/i }).first();
@@ -98,7 +105,7 @@ test.describe("Facility regulatory lifecycle journey (live preview)", () => {
 
     // The inspector records the passing outcome.
     await loginAs(page, PERSONAS.hpaInspector);
-    await page.goto("/registry/facility-lifecycle/6");
+    await page.goto(facilityHref ?? "/registry/facility-lifecycle");
     await expectNoDeadEnd(page);
     await page.getByRole("button", { name: /record outcome/i }).first().click();
     await page.getByPlaceholder(/inspector notes/i).fill("Premises compliant on initial inspection.");
@@ -109,9 +116,11 @@ test.describe("Facility regulatory lifecycle journey (live preview)", () => {
 
     // The registrar records the committee approval → certificate issued.
     await loginAs(page, PERSONAS.hpaRegistrar);
-    await page.goto("/registry/facility-lifecycle/6");
+    await page.goto(facilityHref ?? "/registry/facility-lifecycle");
     await expectNoDeadEnd(page);
-    const appPicker = page.locator("select").filter({ hasText: /application/i }).first();
+    // The committee panel's picker — its placeholder option is "Application…"
+    // (case-sensitive; the inspections panel uses "Link application (optional)…").
+    const appPicker = page.locator("select").filter({ hasText: /Application…/ }).first();
     await expect(appPicker).toBeVisible({ timeout: 20_000 });
     await appPicker.selectOption({ index: 1 });
     await page.getByPlaceholder(/resolution notes/i).fill("Registration approved by committee.");
