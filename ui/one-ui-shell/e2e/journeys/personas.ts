@@ -105,6 +105,16 @@ export const PERSONAS = {
     displayName: "Nomsa Gono",
     roles: ["SYSTEM_ADMIN", "HIE_ADMIN"],
   },
+  hpaRegistrar: {
+    username: "hpa.registrar",
+    displayName: "Tarisai Makoni",
+    roles: ["HPA_REGISTRAR"],
+  },
+  hpaInspector: {
+    username: "hpa.inspector",
+    displayName: "Blessing Ncube",
+    roles: ["HPA_INSPECTOR"],
+  },
 } satisfies Record<string, JourneyPersona>;
 
 export type PersonaKey = keyof typeof PERSONAS;
