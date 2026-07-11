@@ -282,6 +282,58 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** Update a facility unit (department) — POST alias on tuso for partial update. */
+    public JsonNode updateFacilityUnit(long facilityId, long unitId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/units/" + unitId;
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Retire a facility unit (department). */
+    public JsonNode retireFacilityUnit(long facilityId, long unitId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/units/" + unitId + "/retire";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Facility capabilities — curated "services offered" registry truth. */
+    public JsonNode listFacilityCapabilities(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/capabilities";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode createFacilityCapability(long facilityId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/capabilities";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode updateFacilityCapability(long facilityId, long capabilityId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/capabilities/" + capabilityId;
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode retireFacilityCapability(long facilityId, long capabilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/capabilities/" + capabilityId + "/retire";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Facility readiness (infrastructure assessment). */
+    public JsonNode getFacilityReadiness(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/readiness";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode upsertFacilityReadiness(long facilityId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/readiness";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Tenant-scoped control-tower aggregate for scoped dashboards. */
     public JsonNode getControlTowerAggregate() {
         String url = baseUrl + "/v1/internal/control-tower/aggregate";

@@ -11,6 +11,8 @@ public interface FacilityCapabilityRepository extends JpaRepository<FacilityCapa
 
     List<FacilityCapabilityEntity> findByFacilityIdAndActiveTrue(Long facilityId);
 
+    List<FacilityCapabilityEntity> findByFacilityId(Long facilityId);
+
     List<FacilityCapabilityEntity> findByFacilityIdAndCapabilityType(Long facilityId, String capabilityType);
 
     List<FacilityCapabilityEntity> findByCapabilityCodeAndCapabilityType(String capabilityCode, String capabilityType);

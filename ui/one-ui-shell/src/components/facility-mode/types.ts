@@ -20,6 +20,8 @@ export interface FacilityModeServicePoint {
 
 export interface FacilityModeFacilityNode {
   facilityId: number;
+  /** Canonical cross-service UUID (tuso facility_uuid) — the PCT/staff-binding key. */
+  facilityUuid: string | null;
   tenantId: string | null;
   code: string | null;
   name: string;

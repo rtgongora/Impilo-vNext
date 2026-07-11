@@ -15,6 +15,14 @@ public final class FacilityUnitDto {
             Map<String, Object> metadata
     ) {}
 
+    /** Partial-update request; null fields are left unchanged. */
+    public record UpdateRequest(
+            String name,
+            String unitType,
+            String serviceLine,
+            Map<String, Object> metadata
+    ) {}
+
     public record Response(
             Long id,
             String name,

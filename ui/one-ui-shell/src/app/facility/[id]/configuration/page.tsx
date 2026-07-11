@@ -40,14 +40,32 @@ import {
   useFacilityQueuesAdmin,
   useReconcileQueues,
 } from "@/hooks/queries/useFacilityQueues";
+import {
+  useFacilityCapabilities,
+  useCreateFacilityCapability,
+  useUpdateFacilityCapability,
+  useRetireFacilityCapability,
+  useFacilityReadiness,
+  useUpsertFacilityReadiness,
+} from "@/components/facility-mode/useFacilityMode";
 
-type TabKey = "overview" | "service-points" | "workspaces" | "queues" | "readiness" | "audit";
+type TabKey =
+  | "overview"
+  | "service-points"
+  | "workspaces"
+  | "queues"
+  | "capabilities"
+  | "infrastructure"
+  | "readiness"
+  | "audit";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "overview", label: "Setup overview" },
   { key: "service-points", label: "Service points" },
   { key: "workspaces", label: "Workspaces" },
   { key: "queues", label: "Queue definitions" },
+  { key: "capabilities", label: "Services offered" },
+  { key: "infrastructure", label: "Infrastructure" },
   { key: "readiness", label: "Readiness checklist" },
   { key: "audit", label: "Audit / history" },
 ];
@@ -131,6 +149,8 @@ export default function FacilityConfigurationPage() {
             {tab === "service-points" && <ServicePointsTab facilityId={facilityId} />}
             {tab === "workspaces" && <WorkspacesTab facilityId={facilityId} />}
             {tab === "queues" && <QueuesTab facilityId={facilityId} facilityUuid={summary.facilityUuid} />}
+            {tab === "capabilities" && <CapabilitiesTab facilityId={facilityId} />}
+            {tab === "infrastructure" && <InfrastructureTab facilityId={facilityId} />}
             {tab === "readiness" && <ReadinessTab facilityId={facilityId} />}
             {tab === "audit" && <AuditTab facilityId={facilityId} />}
           </>
@@ -627,6 +647,222 @@ function ReadinessTab({ facilityId }: { facilityId: string }) {
           {downstream.data.data.note}
         </div>
       )}
+    </div>
+  );
+}
+
+function CapabilitiesTab({ facilityId }: { facilityId: string }) {
+  const { data: caps, isLoading } = useFacilityCapabilities(facilityId);
+  const create = useCreateFacilityCapability(facilityId);
+  const update = useUpdateFacilityCapability(facilityId);
+  const retire = useRetireFacilityCapability(facilityId);
+  const [code, setCode] = useState("");
+  const [name, setName] = useState("");
+
+  if (isLoading) return <Loading />;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-xs text-muted-foreground">
+        Capabilities are the registry truth for the services this facility offers — they power
+        citizen discovery and referral routing. Entries created by bulk provisioning are marked
+        “derived” until curated here.
+      </p>
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <ul>
+          {(caps ?? []).map((c) => {
+            const derived = Boolean((c.metadata as Record<string, unknown> | null)?.derived);
+            return (
+              <li key={c.id} className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0">
+                <div className="flex-1">
+                  <p className="text-sm text-foreground">
+                    {c.name}
+                    <span className="ml-2 text-xs text-muted-foreground">{c.capabilityCode}</span>
+                    {derived && (
+                      <span className="ml-2 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-amber-600">
+                        derived
+                      </span>
+                    )}
+                    {!c.active && (
+                      <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+                        retired
+                      </span>
+                    )}
+                  </p>
+                </div>
+                {c.active ? (
+                  <button
+                    type="button"
+                    disabled={retire.isPending}
+                    onClick={() => retire.mutate(c.id)}
+                    className="text-xs font-medium text-red-600 hover:underline disabled:opacity-50"
+                  >
+                    Retire
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={update.isPending}
+                    onClick={() => update.mutate({ capabilityId: c.id, active: true })}
+                    className="text-xs font-medium text-primary hover:underline disabled:opacity-50"
+                  >
+                    Reactivate
+                  </button>
+                )}
+              </li>
+            );
+          })}
+          {(caps ?? []).length === 0 && (
+            <li className="px-4 py-6 text-center text-sm text-muted-foreground">
+              No capabilities recorded for this facility yet.
+            </li>
+          )}
+        </ul>
+      </div>
+      <div className="bg-card rounded-lg border border-border p-4">
+        <h4 className="mb-2 text-sm font-medium text-foreground">Add a service</h4>
+        <div className="flex flex-wrap gap-2">
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            placeholder="Code (e.g. MATERNITY)"
+            className="w-48 rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Display name"
+            className="flex-1 rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
+          <button
+            type="button"
+            disabled={!code.trim() || create.isPending}
+            onClick={() =>
+              create.mutate(
+                { capabilityCode: code.trim(), name: name.trim() || undefined },
+                { onSuccess: () => { setCode(""); setName(""); } },
+              )
+            }
+            className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          >
+            Add service
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const CONNECTIVITY_OPTIONS = ["UNKNOWN", "NONE", "INTERMITTENT", "MOBILE_DATA", "BROADBAND", "SATELLITE"];
+const POWER_OPTIONS = ["UNKNOWN", "NONE", "GRID", "SOLAR", "GENERATOR", "HYBRID"];
+
+function InfrastructureTab({ facilityId }: { facilityId: string }) {
+  const { data: readiness, isLoading } = useFacilityReadiness(facilityId);
+  const upsert = useUpsertFacilityReadiness(facilityId);
+  const [connectivity, setConnectivity] = useState<string>("");
+  const [powerSource, setPowerSource] = useState<string>("");
+  const [powerBackup, setPowerBackup] = useState<boolean | null>(null);
+  const [deviceCount, setDeviceCount] = useState<string>("");
+  const [ehrReady, setEhrReady] = useState<boolean | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+
+  if (isLoading) return <Loading />;
+
+  const derived = Boolean((readiness?.complianceFlags as Record<string, unknown> | null)?.derived);
+
+  return (
+    <div className="max-w-xl space-y-4">
+      <p className="text-xs text-muted-foreground">
+        Infrastructure readiness for this site — connectivity, power and device truth.
+        {derived && " The current values are a bulk-provisioned baseline; assessing here replaces them with an honest assessment."}
+      </p>
+      <div className="bg-card rounded-lg border border-border p-4 space-y-3">
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <span className="block text-xs text-muted-foreground">Connectivity</span>
+            <select
+              value={connectivity || (readiness?.connectivity ?? "UNKNOWN")}
+              onChange={(e) => setConnectivity(e.target.value)}
+              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            >
+              {CONNECTIVITY_OPTIONS.map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <span className="block text-xs text-muted-foreground">Power source</span>
+            <select
+              value={powerSource || (readiness?.powerSource ?? "UNKNOWN")}
+              onChange={(e) => setPowerSource(e.target.value)}
+              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            >
+              {POWER_OPTIONS.map((o) => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <span className="block text-xs text-muted-foreground">Working devices</span>
+            <input
+              type="number"
+              min={0}
+              value={deviceCount !== "" ? deviceCount : String(readiness?.deviceCount ?? 0)}
+              onChange={(e) => setDeviceCount(e.target.value)}
+              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            />
+          </div>
+          <div className="space-y-2 pt-4">
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={powerBackup ?? Boolean(readiness?.powerBackup)}
+                onChange={(e) => setPowerBackup(e.target.checked)}
+              />
+              Power backup
+            </label>
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={ehrReady ?? Boolean(readiness?.ehrReady)}
+                onChange={(e) => setEhrReady(e.target.checked)}
+              />
+              EHR-ready
+            </label>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            disabled={upsert.isPending}
+            onClick={() => {
+              setNote(null);
+              upsert.mutate(
+                {
+                  connectivity: connectivity || readiness?.connectivity || "UNKNOWN",
+                  powerSource: powerSource || readiness?.powerSource || "UNKNOWN",
+                  powerBackup: powerBackup ?? Boolean(readiness?.powerBackup),
+                  deviceCount: deviceCount !== "" ? Number(deviceCount) : (readiness?.deviceCount ?? 0),
+                  ehrReady: ehrReady ?? Boolean(readiness?.ehrReady),
+                },
+                {
+                  onSuccess: () => setNote("Assessment saved."),
+                  onError: (e: unknown) => setNote((e as Error)?.message ?? "Assessment failed."),
+                },
+              );
+            }}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          >
+            Save assessment
+          </button>
+          {note && <span className="text-xs text-muted-foreground">{note}</span>}
+        </div>
+        {readiness?.assessedAt && (
+          <p className="text-xs text-muted-foreground">
+            Last assessed {fmt(readiness.assessedAt)} by {readiness.assessedBy ?? "—"}.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

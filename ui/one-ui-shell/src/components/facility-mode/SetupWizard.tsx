@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Circle, Loader2, Plus, Rocket, AlertTriangle } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, Circle, Loader2, Plus, Rocket, AlertTriangle, RefreshCw } from "lucide-react";
 import {
   useFacilitySetupState,
   useAdvanceSetupStep,
@@ -9,7 +10,11 @@ import {
   useCreateFacilityUnit,
   useServicePoints,
   useCreateServicePoint,
+  useFacilityModeContext,
 } from "./useFacilityMode";
+import { useFacilityQueueDefinitions } from "@/hooks/queries/useFacilityConfiguration";
+import { useReconcileQueues } from "@/hooks/queries/useFacilityQueues";
+import { useAssignments } from "@/hooks/useVashandi";
 import { SETUP_STEPS, type FacilitySetupStepState } from "./types";
 
 /**
@@ -65,13 +70,23 @@ export function SetupWizard({ facilityId }: { facilityId: string }) {
       {/* Service-point configuration */}
       <ServicePointsStep facilityId={facilityId} state={state} onToggle={toggle} />
 
-      {/* Remaining toggle-only steps */}
+      {/* Queue configuration — real queue-definition truth + live materialisation */}
+      <QueuesStep facilityId={facilityId} state={state} onToggle={toggle} />
+
+      {/* Workforce — real vashandi assignment truth for this facility */}
+      <WorkforceStep facilityId={facilityId} state={state} onToggle={toggle} />
+
+      {/* Remaining attestation-only steps */}
       <div className="rounded-lg border border-border bg-card p-4">
-        <h3 className="mb-3 text-sm font-medium text-foreground">Operational configuration</h3>
+        <h3 className="mb-1 text-sm font-medium text-foreground">Operational attestations</h3>
+        <p className="mb-3 text-xs text-muted-foreground">
+          These steps are operator attestations — ticking them records readiness but does not
+          configure the underlying system yet.
+        </p>
         <ul className="space-y-2">
           {SETUP_STEPS.filter(
             (s) =>
-              !["DEPARTMENTS", "SERVICE_POINTS", "GO_LIVE"].includes(s.key),
+              !["DEPARTMENTS", "SERVICE_POINTS", "QUEUES", "WORKFORCE", "GO_LIVE"].includes(s.key),
           ).map((s) => {
             const done = Boolean(state[s.flag]);
             return (
@@ -91,11 +106,9 @@ export function SetupWizard({ facilityId }: { facilityId: string }) {
                     {s.label}
                   </span>
                 </button>
-                {s.key === "FUNDO_READINESS" && !done && (
-                  <span className="ml-auto text-[10px] uppercase tracking-wide text-amber-600">
-                    Confirm readiness
-                  </span>
-                )}
+                <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground/70">
+                  {s.key === "FUNDO_READINESS" && !done ? "Confirm readiness" : "Attestation"}
+                </span>
               </li>
             );
           })}
@@ -284,6 +297,136 @@ function ServicePointsStep({
           <Plus className="h-4 w-4" /> Add
         </button>
       </div>
+    </StepCard>
+  );
+}
+
+function QueuesStep({
+  facilityId,
+  state,
+  onToggle,
+}: {
+  facilityId: string;
+  state: FacilitySetupStepState;
+  onToggle: (step: string, complete: boolean) => void;
+}) {
+  const defsQuery = useFacilityQueueDefinitions(String(facilityId));
+  const defs = defsQuery.data?.data ?? [];
+  const { data: contextEnvelope } = useFacilityModeContext(facilityId);
+  const facilityUuid = contextEnvelope?.context?.facility?.facilityUuid ?? undefined;
+  const reconcile = useReconcileQueues(facilityUuid);
+  const [reconcileNote, setReconcileNote] = useState<string | null>(null);
+
+  return (
+    <StepCard
+      title="Queues"
+      flag="queuesConfigured"
+      stepKey="QUEUES"
+      state={state}
+      onToggle={onToggle}
+    >
+      <p className="mb-2 text-xs text-muted-foreground">
+        Queues are derived from this facility&apos;s service points and materialised live in the
+        patient-flow engine.
+      </p>
+      <ul className="mb-3 space-y-1">
+        {defs.map((d) => (
+          <li key={d.sourceRef} className="flex items-center justify-between text-sm">
+            <span className="text-foreground">{d.displayName}</span>
+            <span className="text-xs text-muted-foreground">
+              {d.queueType ?? "QUEUE"}
+              {d.active === false ? " · inactive" : ""}
+            </span>
+          </li>
+        ))}
+        {defs.length === 0 && (
+          <li className="text-xs text-muted-foreground">
+            No queue definitions yet — add service points first; each active service point
+            defines a queue.
+          </li>
+        )}
+      </ul>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          disabled={!facilityUuid || reconcile.isPending}
+          onClick={() => {
+            setReconcileNote(null);
+            reconcile.mutate(undefined, {
+              onSuccess: (resp) => {
+                const r = ((resp as unknown as { data?: Record<string, unknown> })?.data ?? {}) as Record<string, unknown>;
+                setReconcileNote(
+                  `Materialised: created ${r.created ?? 0}, updated ${r.updated ?? 0}, retired ${r.retired ?? 0}.`,
+                );
+              },
+              onError: (e: unknown) =>
+                setReconcileNote(
+                  (e as Error)?.message ?? "Queue materialisation failed — see facility ops.",
+                ),
+            });
+          }}
+          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground disabled:opacity-50"
+        >
+          <RefreshCw className={`h-4 w-4 ${reconcile.isPending ? "animate-spin" : ""}`} />
+          Materialise live queues
+        </button>
+        {reconcileNote && <span className="text-xs text-muted-foreground">{reconcileNote}</span>}
+      </div>
+    </StepCard>
+  );
+}
+
+function WorkforceStep({
+  facilityId,
+  state,
+  onToggle,
+}: {
+  facilityId: string;
+  state: FacilitySetupStepState;
+  onToggle: (step: string, complete: boolean) => void;
+}) {
+  const { data: contextEnvelope } = useFacilityModeContext(facilityId);
+  const facilityUuid = contextEnvelope?.context?.facility?.facilityUuid ?? undefined;
+  const { data: assignmentsResp, isLoading } = useAssignments(
+    facilityUuid ? { facilityId: facilityUuid } : undefined,
+  );
+  // Guard against an unscoped fetch while the facility UUID is still loading.
+  const assignments = (assignmentsResp?.items ?? []).filter(
+    (a) => !facilityUuid || !a.facilityId || a.facilityId === facilityUuid,
+  );
+
+  return (
+    <StepCard
+      title="Workforce"
+      flag="workforceLinked"
+      stepKey="WORKFORCE"
+      state={state}
+      onToggle={onToggle}
+    >
+      <p className="mb-2 text-xs text-muted-foreground">
+        Staff work here through governed Vashandi assignments bound to this facility.
+      </p>
+      <ul className="mb-3 space-y-1">
+        {assignments.slice(0, 8).map((a) => (
+          <li key={a.id} className="flex items-center justify-between text-sm">
+            <span className="text-foreground">
+              {a.roleTemplateId ?? a.assignmentType ?? "Assignment"}
+            </span>
+            <span className="text-xs text-muted-foreground">{a.status ?? "—"}</span>
+          </li>
+        ))}
+        {!isLoading && assignments.length === 0 && (
+          <li className="text-xs text-muted-foreground">
+            No workforce assignments are bound to this facility yet.
+          </li>
+        )}
+      </ul>
+      <Link
+        href="/work/vashandi/assignments"
+        className="text-xs font-medium text-primary hover:underline"
+      >
+        Manage assignments in Vashandi →
+      </Link>
     </StepCard>
   );
 }

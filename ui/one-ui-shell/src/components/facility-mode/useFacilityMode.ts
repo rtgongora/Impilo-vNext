@@ -138,6 +138,176 @@ export function useCreateServicePoint(facilityId: string | number) {
   });
 }
 
+/** Update a department (partial). */
+export function useUpdateFacilityUnit(facilityId: string | number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      unitId: number;
+      name?: string;
+      unitType?: string;
+      serviceLine?: string;
+    }) => {
+      const { unitId, ...body } = input;
+      const resp = await apiClient.patch<BffEnvelope<FacilityUnit>>(
+        `/internal/v1/facility-mode/${encodeURIComponent(String(facilityId))}/units/${unitId}`,
+        body,
+      );
+      return resp.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["facility-units", String(facilityId)] });
+    },
+  });
+}
+
+/** Retire a department (administrative closure — governed closures stay with the regulator). */
+export function useRetireFacilityUnit(facilityId: string | number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (unitId: number) => {
+      const resp = await apiClient.post<BffEnvelope<FacilityUnit>>(
+        `/internal/v1/facility-mode/${encodeURIComponent(String(facilityId))}/units/${unitId}/retire`,
+        {},
+      );
+      return resp.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["facility-units", String(facilityId)] });
+    },
+  });
+}
+
+export interface FacilityCapability {
+  id: number;
+  capabilityCode: string;
+  capabilityType: string;
+  name: string;
+  ziboValidated: boolean;
+  active: boolean;
+  operatingHours: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
+}
+
+export interface FacilityReadiness {
+  connectivity: string | null;
+  powerSource: string | null;
+  powerBackup: boolean;
+  deviceCount: number;
+  ehrReady: boolean;
+  complianceFlags: Record<string, unknown> | null;
+  assessedAt: string | null;
+  assessedBy: string | null;
+}
+
+/** Curated facility capabilities ("services offered" registry truth). */
+export function useFacilityCapabilities(facilityId: string | number) {
+  return useQuery({
+    queryKey: ["facility-capabilities", String(facilityId)],
+    enabled: facilityId != null && facilityId !== "",
+    queryFn: async () => {
+      const resp = await apiClient.get<BffEnvelope<FacilityCapability[]>>(
+        `/internal/v1/facility-mode/${encodeURIComponent(String(facilityId))}/capabilities`,
+      );
+      return resp.data;
+    },
+  });
+}
+
+export function useCreateFacilityCapability(facilityId: string | number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      capabilityCode: string;
+      name?: string;
+      capabilityType?: string;
+    }) => {
+      const resp = await apiClient.post<BffEnvelope<FacilityCapability>>(
+        `/internal/v1/facility-mode/${encodeURIComponent(String(facilityId))}/capabilities`,
+        input,
+      );
+      return resp.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["facility-capabilities", String(facilityId)] });
+    },
+  });
+}
+
+export function useUpdateFacilityCapability(facilityId: string | number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      capabilityId: number;
+      name?: string;
+      capabilityType?: string;
+      active?: boolean;
+    }) => {
+      const { capabilityId, ...body } = input;
+      const resp = await apiClient.patch<BffEnvelope<FacilityCapability>>(
+        `/internal/v1/facility-mode/${encodeURIComponent(String(facilityId))}/capabilities/${capabilityId}`,
+        body,
+      );
+      return resp.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["facility-capabilities", String(facilityId)] });
+    },
+  });
+}
+
+export function useRetireFacilityCapability(facilityId: string | number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (capabilityId: number) => {
+      const resp = await apiClient.post<BffEnvelope<FacilityCapability>>(
+        `/internal/v1/facility-mode/${encodeURIComponent(String(facilityId))}/capabilities/${capabilityId}/retire`,
+        {},
+      );
+      return resp.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["facility-capabilities", String(facilityId)] });
+    },
+  });
+}
+
+/** Facility readiness (infrastructure assessment). */
+export function useFacilityReadiness(facilityId: string | number) {
+  return useQuery({
+    queryKey: ["facility-readiness", String(facilityId)],
+    enabled: facilityId != null && facilityId !== "",
+    queryFn: async () => {
+      const resp = await apiClient.get<BffEnvelope<FacilityReadiness | null>>(
+        `/internal/v1/facility-mode/${encodeURIComponent(String(facilityId))}/readiness`,
+      );
+      return resp.data;
+    },
+  });
+}
+
+export function useUpsertFacilityReadiness(facilityId: string | number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      connectivity?: string;
+      powerSource?: string;
+      powerBackup?: boolean;
+      deviceCount?: number;
+      ehrReady?: boolean;
+    }) => {
+      const resp = await apiClient.put<BffEnvelope<FacilityReadiness>>(
+        `/internal/v1/facility-mode/${encodeURIComponent(String(facilityId))}/readiness`,
+        input,
+      );
+      return resp.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["facility-readiness", String(facilityId)] });
+    },
+  });
+}
+
 /** Advance a single setup-wizard step. Surfaces TUSO's honest go-live rejection. */
 export function useAdvanceSetupStep(facilityId: string | number) {
   const qc = useQueryClient();

@@ -84,7 +84,67 @@ public class FacilityUnitService {
         event.setAggregateId(String.valueOf(unitId));
         event.setEventType(eventType);
         event.setPayload(String.format("{\"facilityId\":%d,\"unitId\":%d}", facilityId, unitId));
+        // Mandatory outbox hygiene — null pod_id/idempotency_key poisons the publisher drain.
+        event.setPodId("national-spine");
+        event.setIdempotencyKey("tuso:facility-unit:" + unitId + ":" + eventType + ":" + java.util.UUID.randomUUID());
         outboxRepository.save(event);
+    }
+
+    public record UpdateUnitRequest(
+            String name, String unitType, String serviceLine, Map<String, Object> metadata) {}
+
+    /** Partial update; null fields are left unchanged. Regulatory status is never writable here. */
+    @Transactional
+    public FacilityUnitEntity update(TrustContext ctx, Long facilityId, Long unitId, UpdateUnitRequest req) {
+        FacilityUnitEntity unit = requireUnit(ctx, facilityId, unitId);
+        if (req.name() != null && !req.name().isBlank()) {
+            unit.setName(req.name());
+        }
+        if (req.unitType() != null && !req.unitType().isBlank()) {
+            unit.setUnitType(req.unitType());
+        }
+        if (req.serviceLine() != null) {
+            unit.setServiceLine(req.serviceLine());
+        }
+        if (req.metadata() != null) {
+            unit.setMetadata(req.metadata());
+        }
+        unit.setUpdatedBy(actor(ctx));
+        FacilityUnitEntity saved = unitRepository.save(unit);
+        publishEvent(facilityId, unitId, "FACILITY_UNIT_UPDATED");
+        log.info("Facility unit {} updated for facility {} (actor={})", unitId, facilityId, actor(ctx));
+        return saved;
+    }
+
+    /**
+     * Administrative retirement — the unit stops offering services. Distinct from
+     * governed enforcement closure ({@code CLOSED}), which only the regulatory flow applies.
+     */
+    @Transactional
+    public FacilityUnitEntity retire(TrustContext ctx, Long facilityId, Long unitId) {
+        FacilityUnitEntity unit = requireUnit(ctx, facilityId, unitId);
+        if (unit.getRegulatoryStatus() == FacilityRegulatoryStatus.CLOSED
+                || unit.getRegulatoryStatus() == FacilityRegulatoryStatus.VOLUNTARILY_CLOSED) {
+            return unit;
+        }
+        unit.setRegulatoryStatus(FacilityRegulatoryStatus.VOLUNTARILY_CLOSED);
+        unit.setUpdatedBy(actor(ctx));
+        FacilityUnitEntity saved = unitRepository.save(unit);
+        publishEvent(facilityId, unitId, "FACILITY_UNIT_RETIRED");
+        log.info("Facility unit {} retired for facility {} (actor={})", unitId, facilityId, actor(ctx));
+        return saved;
+    }
+
+    private FacilityUnitEntity requireUnit(TrustContext ctx, Long facilityId, Long unitId) {
+        FacilityUnitEntity unit = unitRepository.findById(unitId)
+                .orElseThrow(() -> new IllegalArgumentException("Facility unit not found: " + unitId));
+        if (unit.getFacility() == null || !unit.getFacility().getId().equals(facilityId)) {
+            throw new IllegalArgumentException("Facility unit " + unitId + " does not belong to facility " + facilityId);
+        }
+        if (ctx != null && !unit.getFacility().getTenantId().equals(ctx.tenantId())) {
+            throw new SecurityException("Tenant isolation violation: facility belongs to different tenant");
+        }
+        return unit;
     }
 
     private static String actor(TrustContext ctx) {

@@ -171,6 +171,138 @@ public class FacilityModeController {
         }
     }
 
+    /** Update a facility unit (department) — TUSO SoR. */
+    @PatchMapping("/{facilityId}/units/{unitId}")
+    public ResponseEntity<Map<String, Object>> updateUnit(
+            @PathVariable long facilityId,
+            @PathVariable long unitId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode unit = tusoClient.updateFacilityUnit(facilityId, unitId, body);
+            return ResponseEntity.ok(Map.of("data", unit, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "FACILITY_UNIT_UPDATE_FAILED",
+                    "Unable to update facility unit in TUSO");
+        }
+    }
+
+    /** Retire a facility unit (department) — TUSO SoR. */
+    @PostMapping("/{facilityId}/units/{unitId}/retire")
+    public ResponseEntity<Map<String, Object>> retireUnit(
+            @PathVariable long facilityId,
+            @PathVariable long unitId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode unit = tusoClient.retireFacilityUnit(facilityId, unitId);
+            return ResponseEntity.ok(Map.of("data", unit, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "FACILITY_UNIT_RETIRE_FAILED",
+                    "Unable to retire facility unit in TUSO");
+        }
+    }
+
+    /** Facility capabilities (services offered) — TUSO SoR. */
+    @GetMapping("/{facilityId}/capabilities")
+    public ResponseEntity<Map<String, Object>> listCapabilities(
+            @PathVariable long facilityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode caps = tusoClient.listFacilityCapabilities(facilityId);
+            return ResponseEntity.ok(Map.of("data", caps, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "FACILITY_CAPABILITIES_UNAVAILABLE",
+                    "Unable to load facility capabilities from TUSO");
+        }
+    }
+
+    /** Add a facility capability — TUSO SoR. */
+    @PostMapping("/{facilityId}/capabilities")
+    public ResponseEntity<Map<String, Object>> createCapability(
+            @PathVariable long facilityId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode cap = tusoClient.createFacilityCapability(facilityId, body);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("data", cap, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "FACILITY_CAPABILITY_CREATE_FAILED",
+                    "Unable to create facility capability in TUSO");
+        }
+    }
+
+    /** Update a facility capability — TUSO SoR. */
+    @PatchMapping("/{facilityId}/capabilities/{capabilityId}")
+    public ResponseEntity<Map<String, Object>> updateCapability(
+            @PathVariable long facilityId,
+            @PathVariable long capabilityId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode cap = tusoClient.updateFacilityCapability(facilityId, capabilityId, body);
+            return ResponseEntity.ok(Map.of("data", cap, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "FACILITY_CAPABILITY_UPDATE_FAILED",
+                    "Unable to update facility capability in TUSO");
+        }
+    }
+
+    /** Retire a facility capability — TUSO SoR. */
+    @PostMapping("/{facilityId}/capabilities/{capabilityId}/retire")
+    public ResponseEntity<Map<String, Object>> retireCapability(
+            @PathVariable long facilityId,
+            @PathVariable long capabilityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode cap = tusoClient.retireFacilityCapability(facilityId, capabilityId);
+            return ResponseEntity.ok(Map.of("data", cap, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "FACILITY_CAPABILITY_RETIRE_FAILED",
+                    "Unable to retire facility capability in TUSO");
+        }
+    }
+
+    /** Facility readiness (infrastructure assessment) — TUSO SoR. */
+    @GetMapping("/{facilityId}/readiness")
+    public ResponseEntity<Map<String, Object>> getReadiness(
+            @PathVariable long facilityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode readiness = tusoClient.getFacilityReadiness(facilityId);
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("data", readiness);
+            out.put("meta", meta(requestId, correlationId));
+            return ResponseEntity.ok(out);
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "FACILITY_READINESS_UNAVAILABLE",
+                    "Unable to load facility readiness from TUSO");
+        }
+    }
+
+    /** Assess/update facility readiness — TUSO SoR. */
+    @PutMapping("/{facilityId}/readiness")
+    public ResponseEntity<Map<String, Object>> upsertReadiness(
+            @PathVariable long facilityId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode readiness = tusoClient.upsertFacilityReadiness(facilityId, body);
+            return ResponseEntity.ok(Map.of("data", readiness, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "FACILITY_READINESS_UPDATE_FAILED",
+                    "Unable to update facility readiness in TUSO");
+        }
+    }
+
     /** List facility service points — TUSO SoR. */
     @GetMapping("/{facilityId}/service-points")
     public ResponseEntity<Map<String, Object>> listServicePoints(

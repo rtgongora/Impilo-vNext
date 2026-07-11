@@ -56,6 +56,45 @@ public class FacilityUnitController {
                 .body(ApiResponse.ok(toResponse(entity), ctx.correlationId().toString()));
     }
 
+    @PatchMapping("/{unitId}")
+    public ResponseEntity<ApiResponse<FacilityUnitDto.Response>> update(
+            @PathVariable Long facilityId,
+            @PathVariable Long unitId,
+            @RequestBody FacilityUnitDto.UpdateRequest request) {
+        return doUpdate(facilityId, unitId, request);
+    }
+
+    /** POST alias for partial update — for composition layers whose HTTP clients can't PATCH. */
+    @PostMapping("/{unitId}")
+    public ResponseEntity<ApiResponse<FacilityUnitDto.Response>> updatePost(
+            @PathVariable Long facilityId,
+            @PathVariable Long unitId,
+            @RequestBody FacilityUnitDto.UpdateRequest request) {
+        return doUpdate(facilityId, unitId, request);
+    }
+
+    @PostMapping("/{unitId}/retire")
+    public ResponseEntity<ApiResponse<FacilityUnitDto.Response>> retire(
+            @PathVariable Long facilityId,
+            @PathVariable Long unitId) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Retiring facility unit [facilityId={}, unitId={}] correlationId={}",
+                facilityId, unitId, ctx.correlationId());
+        FacilityUnitEntity entity = unitService.retire(ctx, facilityId, unitId);
+        return ResponseEntity.ok(ApiResponse.ok(toResponse(entity), ctx.correlationId().toString()));
+    }
+
+    private ResponseEntity<ApiResponse<FacilityUnitDto.Response>> doUpdate(
+            Long facilityId, Long unitId, FacilityUnitDto.UpdateRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Updating facility unit [facilityId={}, unitId={}] correlationId={}",
+                facilityId, unitId, ctx.correlationId());
+        FacilityUnitEntity entity = unitService.update(ctx, facilityId, unitId,
+                new FacilityUnitService.UpdateUnitRequest(
+                        request.name(), request.unitType(), request.serviceLine(), request.metadata()));
+        return ResponseEntity.ok(ApiResponse.ok(toResponse(entity), ctx.correlationId().toString()));
+    }
+
     private static FacilityUnitDto.Response toResponse(FacilityUnitEntity e) {
         return new FacilityUnitDto.Response(
                 e.getId(), e.getName(), e.getUnitType(), e.getServiceLine(),
