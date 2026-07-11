@@ -53,6 +53,7 @@ public class FacilityRegulatoryService {
     private final RegulatoryRuleService regulatoryRuleService;
     private final ApplicationGovernanceService applicationGovernanceService;
     private final PremisesService premisesService;
+    private final InspectionContentService inspectionContentService;
 
     public FacilityRegulatoryService(FacilityRepository facilityRepository,
                                      FacilityGeoRepository facilityGeoRepository,
@@ -73,7 +74,8 @@ public class FacilityRegulatoryService {
                                      ObjectMapper objectMapper,
                                      RegulatoryRuleService regulatoryRuleService,
                                      ApplicationGovernanceService applicationGovernanceService,
-                                     PremisesService premisesService) {
+                                     PremisesService premisesService,
+                                     InspectionContentService inspectionContentService) {
         this.facilityRepository = facilityRepository;
         this.facilityGeoRepository = facilityGeoRepository;
         this.applicationRepository = applicationRepository;
@@ -94,6 +96,7 @@ public class FacilityRegulatoryService {
         this.regulatoryRuleService = regulatoryRuleService;
         this.applicationGovernanceService = applicationGovernanceService;
         this.premisesService = premisesService;
+        this.inspectionContentService = inspectionContentService;
     }
 
     @Transactional
@@ -320,7 +323,17 @@ public class FacilityRegulatoryService {
 
         FacilityEntity facility = requireFacility(request.facilityId(), ctx.tenantId());
         FacilityApplicationEntity application = request.applicationId() != null ? requireApplication(request.applicationId(), ctx.tenantId()) : null;
-        InspectionChecklistTemplateEntity template = resolveTemplate(request.templateCode(), request.inspectionType(), facility.getFacilityType());
+
+        InspectionChecklistTemplateEntity template = null;
+        InspectionContentService.ResolvedContent resolvedContent = null;
+        if (request.templateCode() != null && !request.templateCode().isBlank()) {
+            template = resolveTemplate(request.templateCode(), request.inspectionType(), facility.getFacilityType());
+        } else {
+            // Manual-derived content catalogue: resolve the applicable composed
+            // checklist from the facility profile; never a silent generic template.
+            resolvedContent = inspectionContentService.resolveForFacility(
+                    facility, request.compositionCode(), request.supplementaryModules());
+        }
 
         FacilityInspectionEntity inspection = new FacilityInspectionEntity();
         inspection.setTenantId(ctx.tenantId());
@@ -328,9 +341,21 @@ public class FacilityRegulatoryService {
         inspection.setApplication(application);
         inspection.setInspectionType(request.inspectionType());
         inspection.setTemplate(template);
+        if (resolvedContent != null) {
+            inspection.setCompositionCode(resolvedContent.compositionCode());
+            inspection.setModuleVersions(resolvedContent.moduleVersions());
+            String trail = String.join("; ", resolvedContent.resolutionTrail());
+            String justification = request.supplementJustification();
+            inspection.setNotes(joinNotes(request.notes(),
+                    "Checklist resolution: " + trail
+                            + (justification != null && !justification.isBlank()
+                                    ? ". Supplement justification: " + justification : "")));
+        }
         inspection.setScheduledDate(request.scheduledDate());
         inspection.setInspectorAssignments(defaultList(request.inspectorAssignments()));
-        inspection.setNotes(request.notes());
+        if (resolvedContent == null) {
+            inspection.setNotes(request.notes());
+        }
         inspection.setCaptureMode(firstNonBlank(request.captureMode(), "ONLINE"));
         inspection.setOfflineCaptureReference(request.offlineCaptureReference());
         inspection.setCreatedBy(ctx.actorId());
@@ -903,14 +928,26 @@ public class FacilityRegulatoryService {
                                                               FacilityInspectionType inspectionType,
                                                               String facilityType) {
         if (templateCode != null && !templateCode.isBlank()) {
-            return checklistTemplateRepository.findByCode(templateCode)
+            InspectionChecklistTemplateEntity template = checklistTemplateRepository.findByCode(templateCode)
                     .orElseThrow(() -> new IllegalArgumentException("Checklist template not found: " + templateCode));
+            if ("RETIRED".equals(template.getStatus())) {
+                throw new IllegalStateException("Checklist template " + templateCode
+                        + " is RETIRED (sample / non-regulatory) and cannot be used for inspections. "
+                        + "Use the manual-derived composed checklist instead.");
+            }
+            return template;
         }
         return checklistTemplateRepository.findApplicableTemplates(inspectionType, facilityType)
                 .stream()
+                .filter(template -> !"RETIRED".equals(template.getStatus()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException(
                         "No checklist template configured for inspectionType=" + inspectionType + ", facilityType=" + facilityType));
+    }
+
+    private static String joinNotes(String base, String addition) {
+        if (base == null || base.isBlank()) return addition;
+        return base + "\n" + addition;
     }
 
     private Map<String, Map<String, Object>> indexTemplateItems(InspectionChecklistTemplateEntity template) {

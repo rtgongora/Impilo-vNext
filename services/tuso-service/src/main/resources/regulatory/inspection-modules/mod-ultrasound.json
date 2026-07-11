@@ -1,0 +1,45 @@
+{
+  "moduleCode": "MOD-ULTRASOUND",
+  "version": 1,
+  "title": "Ultrasound — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS- ULTRASOUND",
+  "sourcePages": [33],
+  "notes": "Section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (page 33) — see the common all-institutions module; not repeated as items here.",
+  "items": [
+    {
+      "code": "USD-001",
+      "sourcePage": 33,
+      "sourceHeading": "MINIMUM REQUIREMENTS- ULTRASOUND",
+      "requirement": "Ultrasound room shall be not less than 10 meters square space providing that at least one examining bed is available.",
+      "requirementType": "MEASUREMENT",
+      "obligation": "MANDATORY",
+      "responseType": "MEASUREMENT",
+      "evidence": "MEASUREMENT",
+      "measurement": {"dimension": "ultrasound room floor area", "expected": "not less than 10 meters square as stated"},
+      "quantity": "at least one examining bed available"
+    },
+    {
+      "code": "USD-002",
+      "sourcePage": 33,
+      "sourceHeading": "MINIMUM REQUIREMENTS- ULTRASOUND",
+      "requirement": "Patient toilet shall be accessible within the ultrasound room with nursing call system.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "USD-003",
+      "sourcePage": 33,
+      "sourceHeading": "MINIMUM REQUIREMENTS- ULTRASOUND",
+      "requirement": "Lighting: fluorescent lights will provide illumination level up to 540 Candela during patient transfer on and from the table, equipment setting, room cleaning, and equipment maintenance.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "MEASUREMENT",
+      "evidence": "MEASUREMENT",
+      "measurement": {"dimension": "illumination level", "unit": "Candela", "expected": "up to 540 Candela as stated"}
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+== CJ1: medical consulting rooms inspection
+   PASS: resolved COMP-MEDICAL-CONSULTING from facility type
+   PASS: common module first + service module (MOD-ALL-HEALTH-INSTITUTIONS,MOD-MEDICAL-CONSULTING)
+   PASS: composed checklist has 109 structured items
+   PASS: every item carries source page + heading (109/109)
+== CJ2: pharmacy inspection with save/resume + progress
+   PASS: pharmacy resolves COMP-PHARMACY
+   PASS: save/resume: 2 answered, 58 mandatory outstanding
+   PASS: resume added third response
+   PASS: NON_COMPLIANT derived a finding
+== CJ3: laboratory inspection with measurement
+   PASS: laboratory module frozen with version ({"MOD-LABORATORY": 1, "MOD-ALL-HEALTH-INSTITUTIONS": 1})
+   PASS: inspector-recorded measurement persisted (16.4 m2)
+== CJ4: hospital with regulated units
+   PASS: hospital receives common + all unit modules
+   PASS: common module exactly once, first
+   PASS: resolution trail records unit attachment
+== CJ5: routine inspection, common + specific findings
+   PASS: findings from BOTH common (ALL-*) and specific (PHM-*) modules
+   PASS: each finding opened a corrective action
+== CJ6: multidisciplinary inspection, contributor attribution
+   PASS: 3 distinct contributors retained on one visit
+   PASS: typed multidisciplinary team recorded
+   PASS: visit completed and signed (responses frozen)
+== CJ7: air ambulance inspection (manual checklist)
+   PASS: air ambulance uses the manual's self-contained checklist
+   PASS: manual's own item numbering preserved on all 50 items
+   PASS: manual's inspection areas preserved (5 sections)
+== CJ8: negative — unmapped facility type cannot silently inspect
+   PASS: unmapped type rejected with explicit gap message; no inspection created
+   PASS: retired sample template rejected for scheduling
+   PASS: all 4 sample templates retired + labelled, history preserved
+== Content catalogue truth
+   PASS: 38 ACTIVE modules loaded
+   PASS: 39 ACTIVE compositions loaded
+   PASS: 73 applicability mappings loaded
+   PASS: 1172 structured requirements live
+   PASS: 20 items honestly flagged REVIEW_REQUIRED
+   PASS: uniform approval provenance on all active modules
+   PASS: RENEWAL_DUE_WINDOW_DAYS active as programme operational policy
+   PASS: reminder milestones 90/60/30/7 configured (not law)
+   PASS: 7 inspections carry frozen module-version provenance
+   PASS: outbox hygiene intact (pod_id + idempotency_key on all rows)
+RESULT: PASS=34 FAIL=0

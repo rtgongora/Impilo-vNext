@@ -1,0 +1,43 @@
+{
+  "moduleCode": "MOD-NATURAL-HERBAL-MANUFACTURING",
+  "version": 1,
+  "title": "Natural/Herbal/Organic Manufacturers, Wholesalers and Retailers — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS – NATURAL/HERBAL/ ORGANIC MANUFACTURERS, WHOLESALERS AND RETAILERS",
+  "sourcePages": [63],
+  "notes": "Section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (page 63) — refer to the common all-institutions module; not extracted as items.",
+  "items": [
+    {
+      "code": "NHM-001",
+      "sourcePage": 63,
+      "sourceHeading": "MINIMUM REQUIREMENTS – NATURAL/HERBAL/ ORGANIC MANUFACTURERS, WHOLESALERS AND RETAILERS",
+      "requirement": "All involved in retail sales of Herbal Medicines must have some academic study or sufficient experience in Herbal Medicines and must sell from a registered licensed outlet.",
+      "requirementType": "STAFFING",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "DOCUMENT"
+    },
+    {
+      "code": "NHM-002",
+      "sourcePage": 63,
+      "sourceHeading": "MINIMUM REQUIREMENTS – NATURAL/HERBAL/ ORGANIC MANUFACTURERS, WHOLESALERS AND RETAILERS",
+      "requirement": "They must also have some consultation facility to consult and assess a patient's medical background, lifestyle, diet and nutrition, and current ailments prior to selling any herbal/natural medicines.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "NHM-003",
+      "sourcePage": 63,
+      "sourceHeading": "MINIMUM REQUIREMENTS – NATURAL/HERBAL/ ORGANIC MANUFACTURERS, WHOLESALERS AND RETAILERS",
+      "requirement": "Where a practitioner or retailer does not have any electronic medical equipment such as Bio Resonance machines or does not have the scope of practice to diagnose/access a patient, that practitioner or retailer must be authorised to write referrals for any medical examination deemed necessary such as Bloods, Ultra Sound Scans, Blood Pressure & Blood Sugar and any other medical testing, imaging; these referrals must be made to an approved professional laboratory or Radiologist or Ultra Sound Centre or other relevant health professional.",
+      "requirementType": "PROCESS",
+      "obligation": "MANDATORY",
+      "conditional": "Applies where the practitioner or retailer does not have electronic medical equipment (e.g. Bio Resonance machines) or does not have the scope of practice to diagnose/access a patient.",
+      "responseType": "STATUS",
+      "evidence": "DOCUMENT"
+    }
+  ]
+}

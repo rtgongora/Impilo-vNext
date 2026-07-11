@@ -158,6 +158,63 @@ provenance retained:
 4. Council review integration is a recorded human step (MDPCZ etc.); machine-to-machine
    council interfaces are out of scope until agreements exist.
 
+## 9b. Inspection content completion wave (2026-07-12)
+
+The four V006 "Sample checklist" skeletons are **retired from operational use** and the
+manual's minimum-requirement schedules (pp. 16–73) are now the operational inspection
+content, delivered through a composable, versioned catalogue (migration **V019** +
+content resources + `InspectionContentSeeder`).
+
+**Catalogue:** 4 sample templates RETIRED (rows preserved, relabelled "SAMPLE /
+NON-REGULATORY / RETIRED", rejected at scheduling) · **38 ACTIVE requirement modules**
+(1 common "All Health Institutions" pp16–19 + 37 service-specific — every schedule in
+the manual incl. all imaging modalities, theatre, ICU, A&E, ambulance and the
+air-ambulance explicit checklist with its own item numbering preserved) · **1,172
+structured requirements** (stable codes, per-item source page + heading, obligation
+distinctions MANDATORY/OPTIONAL/RECOMMENDED/WHERE_APPLICABLE/WHERE_POSSIBLE, 35
+grouped equipment/tray lists with parent/component visibility, 37 numeric measurement
+items, quantities/alternatives/conditionals preserved verbatim-faithfully; **no invented
+severity, scoring or pass thresholds** — enforced by the seeder's activation proof and
+`InspectionContentCoverageTest`) · **39 ACTIVE compositions** (common module first,
+never duplicated) · **73 applicability mappings** — all 39 V018 classifications resolve;
+regulated units (pharmacy/lab/theatre/ICU/imaging/…) attach their modules automatically;
+an unmapped profile is **rejected with an explicit gap message**, never silently given a
+generic checklist.
+
+**Governance:** pipeline DRAFT → SOURCE_RECONCILED → VALIDATED_CURRENT_SOURCE → ACTIVE;
+activation honoured only when the automated proof passes (per-item provenance, unique
+codes, no invented policy, review-reasons present); versions are immutable
+(checksum-guarded — content changes require a new version); inspections freeze exact
+module versions at scheduling (`composition_code` + `module_versions`), so historical
+inspections retain their original content. **20 items REVIEW_REQUIRED** individually —
+each quoting the manual's genuine ambiguity (e.g. the air-ambulance duplicate "1-04"
+numbering, "Hydrocortisone x vials" without a count, A&E outlet-count contradiction,
+mammography FANR/RPAZ authority inconsistency) — without holding the catalogue pending.
+Full register: [content-catalogue-register.md](../../reports/journeys/hpa-content-proof-20260712/content-catalogue-register.md).
+
+**Renewal reminders:** `RENEWAL_DUE_WINDOW_DAYS` (90) activated as
+**PROGRAMME_OPERATIONAL_POLICY** (approved by PROGRAMME_OWNER, effective 2026-07-12 —
+the manual prescribes no reminder window; no claim it does; no effect on certificate
+validity, which remains 31 December per §3.1). New `RENEWAL_REMINDER_MILESTONE_DAYS`
+{90, 60, 30, 7} — configurable milestones; the renewal scheduler emits
+`tuso.facility.certificate.renewal_reminder` outbox events at each milestone with
+per-day idempotency keys.
+
+**Runtime proof (fresh V001→V019 rig):** original workflow suite re-proven **36/36**
+and the new content suite **34/34** — medical-consulting, pharmacy (save/resume +
+progress + missing-evidence), laboratory (inspector-recorded measurement), hospital
+with 5 regulated units (merged modules, common module exactly once), routine inspection
+deriving findings + CAPA from both common (ALL-*) and specific (PHM-*) items,
+multidisciplinary visit with 3 attributed contributors, air-ambulance via the manual's
+own checklist, and negatives (unmapped facility type rejected; retired sample template
+rejected). Evidence:
+[reports/journeys/hpa-content-proof-20260712/](../../reports/journeys/hpa-content-proof-20260712/).
+
+**Gates:** tuso 144/144 (incl. `InspectionContentCoverageTest` — the automated
+activation proof — and reminder-milestone tests) · experience-bff 866/866 (new content
+mirrors) · UI `tsc` clean + hook suites 132/132 (checklist + progress rendering in the
+facility file; no route changes).
+
 ## 10. Honest gaps / deferred
 
 - UI journeys proven at typecheck/route/hook level only — browser journeys need the
@@ -167,6 +224,8 @@ provenance retained:
 - J3 (separate unit registration) partially covered: `ADD_UNIT` engine path + unit-scoped
   certificates exist; not scripted end-to-end. J11 enforcement uses the pre-existing
   `enforcement_case` engine; not re-proven this wave.
-- Checklist template CRUD (authoring UI) deferred — governance columns + approval state
-  shipped; templates seed-managed for now (and remain pending on fidelity grounds, §9a).
+- ~~Checklist templates pending on fidelity grounds~~ — CLOSED by §9b: manual-derived
+  module catalogue is live; samples retired. Remaining content follow-ups: the 20
+  REVIEW_REQUIRED items need regulator clarification; module authoring/versioning UI
+  (content is resource+seeder-managed, governed and immutable) is a future convenience.
 - COSTA fee integration = reference fields only (by ownership design); no tariff logic in tuso.

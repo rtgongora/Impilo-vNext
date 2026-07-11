@@ -1,0 +1,56 @@
+{
+  "moduleCode": "MOD-MAMMOGRAPHY",
+  "version": 1,
+  "title": "Mammography — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS- MAMMOGRAPHY",
+  "sourcePages": [34, 35],
+  "notes": "Section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (page 34) — see the common all-institutions module; not repeated as items here.",
+  "items": [
+    {
+      "code": "MAM-001",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- MAMMOGRAPHY",
+      "requirement": "Mammography room space requirement is at least 12 square meters, with patient gowning area with safe storage for valuables and clothing immediately accessible to the room.",
+      "requirementType": "MEASUREMENT",
+      "obligation": "MANDATORY",
+      "responseType": "MEASUREMENT",
+      "evidence": "MEASUREMENT",
+      "measurement": {"dimension": "mammography room floor area", "unit": "m2", "expected": "at least 12 square meters as stated"}
+    },
+    {
+      "code": "MAM-002",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- MAMMOGRAPHY",
+      "requirement": "Door to the mammography room should be with interlock to prevent interruption of scanning procedure.",
+      "requirementType": "SAFETY",
+      "obligation": "RECOMMENDED",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "MAM-003",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- MAMMOGRAPHY",
+      "requirement": "Warning light with wording \"X-RAY IN USE, DO NOT ENTER\".",
+      "requirementType": "SAFETY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "MAM-004",
+      "sourcePage": 35,
+      "sourceHeading": "MINIMUM REQUIREMENTS- MAMMOGRAPHY",
+      "requirement": "Each X-ray room shall include a shielded control alcove. For mammography machines with built-in shielding for the operator, the alcove shall be permitted to be omitted if approved by FANR.",
+      "requirementType": "SAFETY",
+      "obligation": "MANDATORY",
+      "alternatives": "the shielded control alcove may be omitted for mammography machines with built-in operator shielding, if approved by FANR",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION",
+      "reviewRequired": true,
+      "reviewReason": "The manual states omission is permitted 'if approved by FANR'; elsewhere in the same imaging chapter (page 31) shielding compliance is referenced to RPAZ. The approving authority named here appears inconsistent with the rest of the manual."
+    }
+  ]
+}

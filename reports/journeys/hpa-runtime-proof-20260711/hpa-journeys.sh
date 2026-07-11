@@ -64,9 +64,11 @@ CR=$(PSQL tuso "SELECT status FROM tuso.external_council_review WHERE applicatio
 
 curl -sS $(hdr HPA_REGISTRAR) -X POST $TUSO/v1/internal/facility-registry/applications/$APP/ready-for-inspection >/dev/null
 INSP=$(curl -sS $(hdr HPA_REGISTRAR) -X POST $TUSO/v1/internal/facility-registry/inspections \
-  -d "{\"facilityId\":$FAC,\"applicationId\":\"$APP\",\"inspectionType\":\"INITIAL\",\"templateCode\":\"CLINIC-INITIAL-V1\"}" \
+  -d "{\"facilityId\":$FAC,\"applicationId\":\"$APP\",\"inspectionType\":\"INITIAL\"}" \
   | python3 -c "import json,sys;print(json.load(sys.stdin)['data']['inspectionId'])")
-[ -n "$INSP" ] && ok "inspection case $INSP scheduled with template" || bad "inspection schedule failed"
+FROZENMODS=$(PSQL tuso "SELECT module_versions FROM tuso.facility_inspection WHERE inspection_id='$INSP'")
+[ -n "$INSP" ] && echo "$FROZENMODS" | grep -q "MOD-ALL-HEALTH-INSTITUTIONS" \
+  && ok "inspection case $INSP scheduled with manual-derived composed checklist" || bad "inspection schedule failed (mods=$FROZENMODS)"
 
 # Visit + structured per-item responses (team + COI)
 VISIT=$(curl -sS $(hdr HPA_INSPECTOR inspector-1) -X POST $TUSO/v1/internal/facility-registry/inspections/$INSP/visits \

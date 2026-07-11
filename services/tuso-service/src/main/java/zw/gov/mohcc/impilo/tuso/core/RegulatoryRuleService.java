@@ -92,6 +92,27 @@ public class RegulatoryRuleService {
         return DEFAULT_RENEWAL_DUE_WINDOW_DAYS;
     }
 
+    /**
+     * Renewal reminder milestones (days before expiry). PROGRAMME OPERATIONAL
+     * POLICY — not prescribed by the HPA manual; configurable without code
+     * change; no effect on certificate validity.
+     */
+    @Transactional(readOnly = true)
+    public List<Integer> reminderMilestoneDays() {
+        Map<String, Object> value = configValue("RENEWAL_REMINDER_MILESTONE_DAYS");
+        if (value != null && value.get("days") instanceof List<?> days) {
+            List<Integer> milestones = days.stream()
+                    .filter(d -> d instanceof Number)
+                    .map(d -> ((Number) d).intValue())
+                    .filter(d -> d > 0)
+                    .toList();
+            if (!milestones.isEmpty()) {
+                return milestones;
+            }
+        }
+        return List.of(90, 60, 30, 7);
+    }
+
     @Transactional(readOnly = true)
     public List<RegulatoryRuleEntity> listRules() {
         return ruleRepository.findAllByOrderByCodeAscVersionDesc();

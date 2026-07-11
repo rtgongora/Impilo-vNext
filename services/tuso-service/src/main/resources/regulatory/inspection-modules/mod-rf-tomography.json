@@ -1,0 +1,66 @@
+{
+  "moduleCode": "MOD-RF-TOMOGRAPHY",
+  "version": 1,
+  "title": "Radiography/Fluoroscopy, Tomography — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS- RADIOGRAPHY/FLUOROSCOPY, TOMOGRAPHY",
+  "sourcePages": [33],
+  "notes": "Section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (page 33) — see the common all-institutions module; not repeated as items here.",
+  "items": [
+    {
+      "code": "RFT-001",
+      "sourcePage": 33,
+      "sourceHeading": "MINIMUM REQUIREMENTS- RADIOGRAPHY/FLUOROSCOPY, TOMOGRAPHY",
+      "requirement": "Combined Radiography and Fluoroscopy space requirement is at least 20 square meters.",
+      "requirementType": "MEASUREMENT",
+      "obligation": "MANDATORY",
+      "responseType": "MEASUREMENT",
+      "evidence": "MEASUREMENT",
+      "measurement": {"dimension": "combined radiography and fluoroscopy room floor area", "unit": "m2", "expected": "at least 20 square meters as stated"}
+    },
+    {
+      "code": "RFT-002",
+      "sourcePage": 33,
+      "sourceHeading": "MINIMUM REQUIREMENTS- RADIOGRAPHY/FLUOROSCOPY, TOMOGRAPHY",
+      "requirement": "Separate toilets with hand-washing stations shall be provided with direct access from each fluoroscopic room so that a patient can leave the toilet without having to re-enter the fluoroscopic room.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "RFT-003",
+      "sourcePage": 33,
+      "sourceHeading": "MINIMUM REQUIREMENTS- RADIOGRAPHY/FLUOROSCOPY, TOMOGRAPHY",
+      "requirement": "Rooms used only occasionally for fluoroscopic procedures shall be permitted to use nearby patient toilets if they are located for immediate access.",
+      "requirementType": "FACILITY",
+      "obligation": "WHERE_APPLICABLE",
+      "applicability": "rooms used only occasionally for fluoroscopic procedures",
+      "alternatives": "nearby patient toilets permitted for rooms used only occasionally for fluoroscopic procedures, if located for immediate access",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "RFT-004",
+      "sourcePage": 33,
+      "sourceHeading": "MINIMUM REQUIREMENTS- RADIOGRAPHY/FLUOROSCOPY, TOMOGRAPHY",
+      "requirement": "Patient gowning area with safe storage for valuables and clothing shall be provided in the facility.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "RFT-005",
+      "sourcePage": 33,
+      "sourceHeading": "MINIMUM REQUIREMENTS- RADIOGRAPHY/FLUOROSCOPY, TOMOGRAPHY",
+      "requirement": "At least one space should be large enough for staff-assisted dressing.",
+      "requirementType": "FACILITY",
+      "obligation": "RECOMMENDED",
+      "quantity": "at least one space",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    }
+  ]
+}

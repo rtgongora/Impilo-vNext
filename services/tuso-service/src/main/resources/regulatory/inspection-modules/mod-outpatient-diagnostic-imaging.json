@@ -1,0 +1,55 @@
+{
+  "moduleCode": "MOD-OUTPATIENT-DIAGNOSTIC-IMAGING",
+  "version": 1,
+  "title": "Diagnostic Service in Outpatient Care Facilities — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS- DIAGNOSTIC SERVICE IN OUTPATIENT CARE FACILITIES",
+  "sourcePages": [31],
+  "notes": "The section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (page 31) — those common requirements are covered by the all-institutions module and are not duplicated here. The section ends where the 'MINIMUM REQUIREMENTS- CONVENTIONAL RADIOLOGY' heading begins on the same page; conventional radiology requirements belong to that separate module.",
+  "items": [
+    {
+      "code": "ODI-001",
+      "sourcePage": 31,
+      "sourceHeading": "MINIMUM REQUIREMENTS- DIAGNOSTIC SERVICE IN OUTPATIENT CARE FACILITIES",
+      "requirement": "Outpatient Care facilities may provide specific range of diagnostic imaging services within the premises, such as ultrasound, conventional radiography (general radiology), Computer Tomography (CT), or Magnetic Resonance Images (MRI)",
+      "requirementType": "PROCESS",
+      "obligation": "OPTIONAL",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "ODI-002",
+      "sourcePage": 31,
+      "sourceHeading": "MINIMUM REQUIREMENTS- DIAGNOSTIC SERVICE IN OUTPATIENT CARE FACILITIES",
+      "requirement": "The facility shall meet design and building requirements for the specific diagnostic imaging service",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "ODI-003",
+      "sourcePage": 31,
+      "sourceHeading": "MINIMUM REQUIREMENTS- DIAGNOSTIC SERVICE IN OUTPATIENT CARE FACILITIES",
+      "requirement": "Sharing reception, waiting area and support areas for diagnostic imaging services (e.g. toilets, medical records / files area, etc.) are permitted",
+      "requirementType": "FACILITY",
+      "obligation": "OPTIONAL",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION",
+      "alternatives": "Reception, waiting area and support areas (e.g. toilets, medical records / files area) may be shared with the diagnostic imaging services rather than provided separately"
+    },
+    {
+      "code": "ODI-004",
+      "sourcePage": 31,
+      "sourceHeading": "MINIMUM REQUIREMENTS- DIAGNOSTIC SERVICE IN OUTPATIENT CARE FACILITIES",
+      "requirement": "If the facility is providing any diagnostic imaging service where contrast media may be used; the facility must provide easy access for parking and emergency ambulance pickup area within the premises",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "applicability": "where the facility provides any diagnostic imaging service in which contrast media may be used",
+      "conditional": "Applies only if the facility is providing any diagnostic imaging service where contrast media may be used",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    }
+  ]
+}

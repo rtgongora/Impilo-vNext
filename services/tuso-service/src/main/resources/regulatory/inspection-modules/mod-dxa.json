@@ -1,0 +1,34 @@
+{
+  "moduleCode": "MOD-DXA",
+  "version": 1,
+  "title": "Dual Energy X-Ray Absorptiometry (DXA) — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS- DUAL ENERGY X-RAY ABSORPTIOMETRY (DXA)",
+  "sourcePages": [40],
+  "notes": "Section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (page 40) — see the common all-institutions module; not repeated as items here.",
+  "items": [
+    {
+      "code": "DXA-001",
+      "sourcePage": 40,
+      "sourceHeading": "MINIMUM REQUIREMENTS- DUAL ENERGY X-RAY ABSORPTIOMETRY (DXA)",
+      "requirement": "A room size of 15-20 square meters may be required, depending on the design of the equipment. If limited space is available, 10 square metres may suffice for a compact pencil beam DXA system.",
+      "requirementType": "MEASUREMENT",
+      "obligation": "MANDATORY",
+      "alternatives": "10 square metres may suffice for a compact pencil beam DXA system where limited space is available",
+      "responseType": "MEASUREMENT",
+      "evidence": "MEASUREMENT",
+      "measurement": {"dimension": "DXA room floor area", "unit": "m2", "expected": "15-20 square meters depending on equipment design; 10 square metres may suffice for a compact pencil beam DXA system"}
+    },
+    {
+      "code": "DXA-002",
+      "sourcePage": 40,
+      "sourceHeading": "MINIMUM REQUIREMENTS- DUAL ENERGY X-RAY ABSORPTIOMETRY (DXA)",
+      "requirement": "A protective shield for the operator's console.",
+      "requirementType": "SAFETY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    }
+  ]
+}

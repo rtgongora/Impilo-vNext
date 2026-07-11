@@ -57,6 +57,7 @@ public class InspectionVisitService {
     private final RegulatoryRuleService ruleService;
     private final EventOutboxRepository outboxRepository;
     private final ComplianceActionRepository complianceActionRepository;
+    private final InspectionContentService inspectionContentService;
 
     public InspectionVisitService(InspectionVisitRepository visitRepository,
                                   InspectionResponseRepository responseRepository,
@@ -64,7 +65,8 @@ public class InspectionVisitService {
                                   InspectionFindingRepository findingRepository,
                                   RegulatoryRuleService ruleService,
                                   EventOutboxRepository outboxRepository,
-                                  ComplianceActionRepository complianceActionRepository) {
+                                  ComplianceActionRepository complianceActionRepository,
+                                  InspectionContentService inspectionContentService) {
         this.visitRepository = visitRepository;
         this.responseRepository = responseRepository;
         this.inspectionRepository = inspectionRepository;
@@ -72,6 +74,7 @@ public class InspectionVisitService {
         this.ruleService = ruleService;
         this.outboxRepository = outboxRepository;
         this.complianceActionRepository = complianceActionRepository;
+        this.inspectionContentService = inspectionContentService;
     }
 
     public record CreateVisitRequest(UUID inspectionId, LocalDate scheduledDate, String mode,
@@ -193,6 +196,85 @@ public class InspectionVisitService {
             }
         }
         return saved;
+    }
+
+    /**
+     * Save-and-resume progress for a visit: which checklist items are answered,
+     * which mandatory items are outstanding, and which recorded responses still
+     * lack the evidence the manual expects.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> progress(UUID visitId) {
+        TrustContext ctx = TrustContextHolder.require();
+        InspectionVisitEntity visit = requireVisit(visitId, ctx);
+        FacilityInspectionEntity inspection = requireInspection(visit.getInspectionId(), ctx);
+        Map<String, Object> checklist = inspectionContentService.checklistFor(inspection);
+
+        Map<String, InspectionResponseEntity> responsesByCode = new LinkedHashMap<>();
+        for (InspectionResponseEntity response : responseRepository.findByVisitIdOrderByItemCodeAsc(visitId)) {
+            responsesByCode.put(response.getItemCode(), response);
+        }
+
+        List<Map<String, Object>> outstandingMandatory = new ArrayList<>();
+        List<Map<String, Object>> missingEvidence = new ArrayList<>();
+        int totalItems = 0;
+        List<Map<String, Object>> allItems = new ArrayList<>();
+        if (checklist.get("modules") instanceof List<?> modules) {
+            for (Object moduleObj : modules) {
+                if (moduleObj instanceof Map<?, ?> module && module.get("items") instanceof List<?> items) {
+                    for (Object itemObj : items) {
+                        if (itemObj instanceof Map<?, ?> item) {
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> typed = (Map<String, Object>) item;
+                            allItems.add(typed);
+                        }
+                    }
+                }
+            }
+        } else if (checklist.get("items") instanceof List<?> items) {
+            for (Object itemObj : items) {
+                if (itemObj instanceof Map<?, ?> item) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> typed = (Map<String, Object>) item;
+                    allItems.add(typed);
+                }
+            }
+        }
+        for (Map<String, Object> item : allItems) {
+            totalItems++;
+            String code = String.valueOf(item.get("code"));
+            InspectionResponseEntity response = responsesByCode.get(code);
+            if (response == null) {
+                if ("MANDATORY".equals(item.get("obligation"))) {
+                    outstandingMandatory.add(Map.of(
+                            "code", code,
+                            "section", String.valueOf(item.getOrDefault("section", "")),
+                            "requirement", String.valueOf(item.getOrDefault("requirement", ""))));
+                }
+                continue;
+            }
+            Object expectedEvidence = item.get("evidence");
+            boolean needsEvidence = expectedEvidence != null
+                    && !"OBSERVATION".equals(expectedEvidence) && !"INTERVIEW".equals(expectedEvidence);
+            boolean hasEvidence = response.getEvidenceRefs() != null && !response.getEvidenceRefs().isEmpty();
+            boolean nonApplicable = "NOT_APPLICABLE".equals(response.getResponse())
+                    || "NOT_OBSERVED".equals(response.getResponse());
+            if (needsEvidence && !hasEvidence && !nonApplicable) {
+                missingEvidence.add(Map.of(
+                        "code", code,
+                        "expectedEvidence", String.valueOf(expectedEvidence),
+                        "response", response.getResponse()));
+            }
+        }
+
+        Map<String, Object> view = new LinkedHashMap<>();
+        view.put("visitId", visitId);
+        view.put("visitStatus", visit.getStatus());
+        view.put("totalItems", totalItems);
+        view.put("answered", responsesByCode.size());
+        view.put("outstandingMandatory", outstandingMandatory);
+        view.put("missingRequiredEvidence", missingEvidence);
+        return view;
     }
 
     /** Complete a visit — responses freeze; summary event emitted. */

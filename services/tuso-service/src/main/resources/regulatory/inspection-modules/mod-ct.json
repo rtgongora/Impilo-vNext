@@ -1,0 +1,177 @@
+{
+  "moduleCode": "MOD-CT",
+  "version": 1,
+  "title": "Computerized Tomography (CT) Scanning — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+  "sourcePages": [33, 34],
+  "notes": "Section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (page 33) — see the common all-institutions module; not repeated as items here.",
+  "items": [
+    {
+      "code": "CTS-001",
+      "sourcePage": 33,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "CT scan room space requirement is at least 25 square meters.",
+      "requirementType": "MEASUREMENT",
+      "obligation": "MANDATORY",
+      "responseType": "MEASUREMENT",
+      "evidence": "MEASUREMENT",
+      "measurement": {"dimension": "CT scan room floor area", "unit": "m2", "expected": "at least 25 square meters as stated"}
+    },
+    {
+      "code": "CTS-002",
+      "sourcePage": 33,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "The room shall be sized to allow a minimum clear dimension of 1m on three sides of the table for access to the patient and to facilitate transfer.",
+      "requirementType": "MEASUREMENT",
+      "obligation": "MANDATORY",
+      "responseType": "MEASUREMENT",
+      "evidence": "MEASUREMENT",
+      "measurement": {"dimension": "clear dimension on three sides of the table", "unit": "m", "expected": "minimum 1 m on three sides of the table as stated"}
+    },
+    {
+      "code": "CTS-003",
+      "sourcePage": 33,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "The door swing shall not encroach on the equipment, patient circulation, or transfer space.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-004",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "Patient gowning area with safe storage for valuables and clothing shall be provided in the facility.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-005",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "At least one space should be large enough for staff-assisted dressing.",
+      "requirementType": "FACILITY",
+      "obligation": "RECOMMENDED",
+      "quantity": "at least one space",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-006",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "A control room shall be provided that is designed to accommodate the computer and other controls for the equipment.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-007",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "A view window shall be provided to permit full view of the patient.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-008",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "The angle between the control and equipment shall permit the control operator to see the patient's head.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-009",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "The control room shall be located to allow convenient film processing (if such method is used).",
+      "requirementType": "FACILITY",
+      "obligation": "WHERE_APPLICABLE",
+      "applicability": "if film processing is used",
+      "conditional": "if such method (film processing) is used",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-010",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "A patient toilet shall be provided. It shall be close to the procedure room (directly accessible to the scan room is recommended so a patient can leave the toilet without having to re-enter the scan room).",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-011",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "Emergency Power Off push button station.",
+      "requirementType": "SAFETY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-012",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "Door switch with NO/NC contacts connected to CT system control circuit. CT should shut off upon opening of the entrance door.",
+      "requirementType": "SAFETY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-013",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "Magnetic door interlock with CT controller to prevent interruption of scanning procedure.",
+      "requirementType": "SAFETY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-014",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "Warning light with wording \"CT IN USE, DO NOT ENTER\". Provide interface with CT controller via interface relay.",
+      "requirementType": "SAFETY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-015",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "CT warning light interface relay with low voltage power supply to match CT equipment requirements.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CTS-016",
+      "sourcePage": 34,
+      "sourceHeading": "MINIMUM REQUIREMENTS- COMPUTERIZED TOMOGRAPHY (CT) SCANNING",
+      "requirement": "Radiation warning signs should be posted on the entrance door of CT scanner room.",
+      "requirementType": "SAFETY",
+      "obligation": "RECOMMENDED",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    }
+  ]
+}

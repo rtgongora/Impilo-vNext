@@ -1,18 +1,18 @@
 == J1: private initial registration
-   PASS: application 6013bd34-945b-4f0b-809e-22e4b5594220 created for facility 1 (number HPA-APP-2026-67684B69)
+   PASS: application 3bdb09c7-5770-422b-af94-ec6d8c5f7856 created for facility 1 (number HPA-APP-2026-2BFA62B9)
    PASS: human-readable application number
    PASS: submitted (state=SUBMITTED)
    PASS: council gate blocked premature approval (rejection logged)
    PASS: RFI parked application (AWAITING_DOCUMENTS)
    PASS: RFI close returned application to SUBMITTED
    PASS: council review persisted (ENDORSED, authority MDPCZ)
-   PASS: inspection case 3729a1a5-1ea7-42a3-91b8-e046b43ef8f5 scheduled with template
+   PASS: inspection case 11a44128-52ef-4a82-b90b-6574783bd5ce scheduled with manual-derived composed checklist
    PASS: 3 structured responses persisted
-   PASS: NON_COMPLIANT derived a linked finding (rule window 30d)
+   PASS: NON_COMPLIANT derived a linked finding (rule window 31d)
    PASS: visit completed
    PASS: corrective action verified (J7 shortfall loop)
    PASS: facility REGISTERED_ACTIVE
-   PASS: certificate carries verification code 1D3BCEC346A6
+   PASS: certificate carries verification code 9E4C8F96164A
    PASS: J12 public verification discloses public fields
    PASS: no confidential leakage
    PASS: unknown code → 404
@@ -24,7 +24,7 @@
    PASS: nomination created via live varapi assessment (PRACTITIONER_ACCEPTANCE_PENDING)
    PASS: NEGATIVE: foreign practitioner blocked from responding (rejection logged, state unchanged)
    PASS: PIC assignment 1 ACTIVATED (effective-dated)
-   PASS: J5: predecessor end-dated (2026-07-11), successor links predecessor 1
+   PASS: J5: predecessor end-dated (2026-07-12), successor links predecessor 1
    PASS: J6: credential change emitted varapi.provider.eligibility.changed
    PASS: J6: assignment review state UNDER_REVIEW via audited action (not deleted)
 == J4: shared premises
@@ -39,9 +39,9 @@
 == Guard: illegal transition rejected
    PASS: guard rejected VOLUNTARILY_CLOSED → PENDING_INSPECTION (rejection logged)
 == Events + audit
-   PASS: 39 outbox events, all with pod_id+idempotency_key
-   PASS: 32 audit events recorded
-   PASS: status-history chain for facility 1 has 8 entries
+   PASS: 40 outbox events, all with pod_id+idempotency_key
+   PASS: 33 audit events recorded
+   PASS: status-history chain for facility 1 has 9 entries
 == Reload continuity
    PASS: profile reload carries full state
 

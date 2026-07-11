@@ -1,0 +1,99 @@
+{
+  "moduleCode": "MOD-AUDIOLOGY-SPEECH",
+  "version": 1,
+  "title": "Audiologist and Speech Pathologist — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS – AUDIOLOGIST AND SPEECH PATHOLOGIST",
+  "sourcePages": [67, 68],
+  "notes": "Section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (page 67), repeated on page 68 with '(Appendix I)' — refer to the common all-institutions module; not extracted as items. Context passage (page 67), not an inspectable requirement: 'Speech therapists can do home visits and can work in the following places: Schools, Preschools, Hospitals, Rehabilitation centres, Private practice.'",
+  "items": [
+    {
+      "code": "AUD-001",
+      "section": "Room requirements",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – AUDIOLOGIST AND SPEECH PATHOLOGIST",
+      "requirement": "A quiet room (but not soundproof).",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "AUD-002",
+      "section": "Room requirements",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – AUDIOLOGIST AND SPEECH PATHOLOGIST",
+      "requirement": "A door that closes and ensures privacy.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "AUD-003",
+      "section": "Room requirements",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – AUDIOLOGIST AND SPEECH PATHOLOGIST",
+      "requirement": "Access to either a basin or hand sanitizer (can use one nearby).",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION",
+      "alternatives": "Basin or hand sanitizer; may use one nearby."
+    },
+    {
+      "code": "AUD-004",
+      "section": "Room requirements",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – AUDIOLOGIST AND SPEECH PATHOLOGIST",
+      "requirement": "Adequate ventilation and lighting provided by both natural and artificial means.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "AUD-005",
+      "section": "Room requirements",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – AUDIOLOGIST AND SPEECH PATHOLOGIST",
+      "requirement": "Chairs and desk.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "AUD-006",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – AUDIOLOGIST AND SPEECH PATHOLOGIST",
+      "requirement": "Should also have disability friendly ramps.",
+      "requirementType": "FACILITY",
+      "obligation": "RECOMMENDED",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "AUD-007",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – AUDIOLOGIST AND SPEECH PATHOLOGIST",
+      "requirement": "Wide entrance that allows free movement of a wheel chair.",
+      "requirementType": "FACILITY",
+      "obligation": "RECOMMENDED",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "AUD-008",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – AUDIOLOGIST AND SPEECH PATHOLOGIST",
+      "requirement": "Should be on the ground floor unless there is an elevator at the premises.",
+      "requirementType": "FACILITY",
+      "obligation": "RECOMMENDED",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION",
+      "alternatives": "Upper floor permitted where there is an elevator at the premises."
+    }
+  ]
+}

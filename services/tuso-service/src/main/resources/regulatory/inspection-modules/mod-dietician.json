@@ -1,0 +1,162 @@
+{
+  "moduleCode": "MOD-DIETICIAN",
+  "version": 1,
+  "title": "Dietician's Private Practice — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+  "sourcePages": [68],
+  "notes": "The manual's heading spells 'PRACITICE' (sic) — preserved verbatim in sourceHeading. Section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (page 68) — refer to the common all-institutions module; not extracted as items. The section's content sits entirely on page 68; it ends where the next MINIMUM REQUIREMENTS heading begins at the top of page 69.",
+  "items": [
+    {
+      "code": "DIE-001",
+      "section": "Recommended facilities",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "Reception.",
+      "requirementType": "FACILITY",
+      "obligation": "RECOMMENDED",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "DIE-002",
+      "section": "Recommended facilities",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "Counselling room.",
+      "requirementType": "FACILITY",
+      "obligation": "RECOMMENDED",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "DIE-003",
+      "section": "Recommended facilities",
+      "subsection": "Counselling room",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "Washable, impervious and non-slippery floors.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "applicability": "Requirement of the counselling room (the counselling room itself is a recommended facility).",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "DIE-004",
+      "section": "Recommended facilities",
+      "subsection": "Counselling room",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "Ceiling — dust proof type.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "applicability": "Requirement of the counselling room (the counselling room itself is a recommended facility).",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "DIE-005",
+      "section": "Recommended facilities",
+      "subsection": "Counselling room",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "Adequate ventilation and lighting provided by both natural and artificial means.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "applicability": "Requirement of the counselling room (the counselling room itself is a recommended facility).",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "DIE-006",
+      "section": "Essential equipment",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "Chairs and desk.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "DIE-007",
+      "section": "Essential equipment",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "Scales — mother to child scale.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "DIE-008",
+      "section": "Essential equipment",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "Height board or stedeometer.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION",
+      "alternatives": "Height board or stedeometer."
+    },
+    {
+      "code": "DIE-009",
+      "section": "Essential equipment",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "MUAC tape.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "DIE-010",
+      "section": "Essential equipment",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "Household measuring equipment.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "DIE-011",
+      "section": "Essential equipment",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "Calculator.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "DIE-012",
+      "section": "Essential equipment",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "Information, education and communication material.",
+      "requirementType": "DOCUMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "DIE-013",
+      "section": "Essential equipment",
+      "sourcePage": 68,
+      "sourceHeading": "MINIMUM REQUIREMENTS – DIETICIAN’S PRIVATE PRACITICE",
+      "requirement": "Secure filing cabinet.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    }
+  ]
+}

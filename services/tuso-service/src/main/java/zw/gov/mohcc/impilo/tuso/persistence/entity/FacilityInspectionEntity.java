@@ -72,6 +72,13 @@ public class FacilityInspectionEntity {
     @Column(name = "capture_mode", nullable = false, length = 32)
     private String captureMode = "ONLINE";
 
+    @Column(name = "composition_code", length = 96)
+    private String compositionCode;
+
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "module_versions", columnDefinition = "jsonb")
+    private java.util.Map<String, Integer> moduleVersions;
+
     @Column(name = "offline_capture_reference", length = 128)
     private String offlineCaptureReference;
 
@@ -142,6 +149,10 @@ public class FacilityInspectionEntity {
     public void setNextInspectionDueDate(LocalDate nextInspectionDueDate) { this.nextInspectionDueDate = nextInspectionDueDate; }
     public String getCaptureMode() { return captureMode; }
     public void setCaptureMode(String captureMode) { this.captureMode = captureMode; }
+    public String getCompositionCode() { return compositionCode; }
+    public void setCompositionCode(String compositionCode) { this.compositionCode = compositionCode; }
+    public java.util.Map<String, Integer> getModuleVersions() { return moduleVersions; }
+    public void setModuleVersions(java.util.Map<String, Integer> moduleVersions) { this.moduleVersions = moduleVersions; }
     public String getOfflineCaptureReference() { return offlineCaptureReference; }
     public void setOfflineCaptureReference(String offlineCaptureReference) { this.offlineCaptureReference = offlineCaptureReference; }
     public Map<String, Object> getEvidenceSummary() { return evidenceSummary; }

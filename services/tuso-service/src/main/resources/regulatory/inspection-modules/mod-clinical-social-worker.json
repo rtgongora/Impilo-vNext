@@ -1,0 +1,68 @@
+{
+  "moduleCode": "MOD-CLINICAL-SOCIAL-WORKER",
+  "version": 1,
+  "title": "Clinical Social Worker — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS – CLINICAL SOCIAL WORKER",
+  "sourcePages": [69],
+  "notes": "Section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (page 69) — refer to the common all-institutions module; not extracted as items. The section's content sits entirely on page 69; it ends where the next MINIMUM REQUIREMENTS heading begins at the top of page 70.",
+  "items": [
+    {
+      "code": "CSW-001",
+      "section": "Recommended facilities",
+      "sourcePage": 69,
+      "sourceHeading": "MINIMUM REQUIREMENTS – CLINICAL SOCIAL WORKER",
+      "requirement": "With adequate ventilation and lighting provided by both natural and artificial means.",
+      "requirementType": "FACILITY",
+      "obligation": "RECOMMENDED",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CSW-002",
+      "section": "Equipment",
+      "sourcePage": 69,
+      "sourceHeading": "MINIMUM REQUIREMENTS – CLINICAL SOCIAL WORKER",
+      "requirement": "Desk and chair for the practitioner.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CSW-003",
+      "section": "Equipment",
+      "sourcePage": 69,
+      "sourceHeading": "MINIMUM REQUIREMENTS – CLINICAL SOCIAL WORKER",
+      "requirement": "At least two more chairs for patients.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION",
+      "quantity": "At least two more chairs."
+    },
+    {
+      "code": "CSW-004",
+      "section": "Equipment",
+      "sourcePage": 69,
+      "sourceHeading": "MINIMUM REQUIREMENTS – CLINICAL SOCIAL WORKER",
+      "requirement": "Lockable filing cabinet.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "CSW-005",
+      "section": "Equipment",
+      "sourcePage": 69,
+      "sourceHeading": "MINIMUM REQUIREMENTS – CLINICAL SOCIAL WORKER",
+      "requirement": "Box of tissues.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    }
+  ]
+}

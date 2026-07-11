@@ -57,10 +57,40 @@ public class RenewalDueScheduler {
     @Transactional
     public void sweep() {
         int marked = markRenewalDue();
+        int reminders = emitReminderMilestones();
         int expired = markExpiredCertificates();
-        if (marked > 0 || expired > 0) {
-            log.info("Renewal sweep: {} facility(ies) marked RENEWAL_DUE, {} certificate(s) expired", marked, expired);
+        if (marked > 0 || reminders > 0 || expired > 0) {
+            log.info("Renewal sweep: {} facility(ies) marked RENEWAL_DUE, {} reminder(s) emitted, {} certificate(s) expired",
+                    marked, reminders, expired);
         }
+    }
+
+    /**
+     * Configurable renewal reminders (programme operational policy — default
+     * 90/60/30/7 days before expiry, never hard-coded as regulatory law). A
+     * reminder event is emitted when a certificate is exactly a configured
+     * number of days from expiry; the per-day idempotency key prevents
+     * duplicates for consumers.
+     */
+    int emitReminderMilestones() {
+        int emitted = 0;
+        for (Integer milestone : ruleService.reminderMilestoneDays()) {
+            LocalDate targetExpiry = LocalDate.now().plusDays(milestone);
+            List<FacilityCertificateEntity> dueForReminder = certificateRepository
+                    .findByExpiryDateBetweenAndStatus(targetExpiry, targetExpiry, FacilityCertificateStatus.ACTIVE);
+            for (FacilityCertificateEntity certificate : dueForReminder) {
+                publish(certificate.getFacility().getId(), certificate.getTenantId(),
+                        "tuso.facility.certificate.renewal_reminder", Map.of(
+                                "facilityId", certificate.getFacility().getId(),
+                                "certificateId", certificate.getCertificateId().toString(),
+                                "certificateNumber", certificate.getCertificateNumber(),
+                                "expiryDate", certificate.getExpiryDate().toString(),
+                                "daysToExpiry", milestone,
+                                "policySource", "PROGRAMME_OPERATIONAL_POLICY"));
+                emitted++;
+            }
+        }
+        return emitted;
     }
 
     int markRenewalDue() {

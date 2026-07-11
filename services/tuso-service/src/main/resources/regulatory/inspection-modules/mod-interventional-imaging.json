@@ -1,0 +1,200 @@
+{
+  "moduleCode": "MOD-INTERVENTIONAL-IMAGING",
+  "version": 1,
+  "title": "Interventional Imaging Facilities — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+  "sourcePages": [36, 37],
+  "notes": "Section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (page 36) — see the common all-institutions module; not repeated as items here. The manual lists 'Patient prep, holding, and recovery area or room' as a bare label bullet immediately followed by its substantive requirement bullet; the two are captured as the single item INT-008.",
+  "items": [
+    {
+      "code": "INT-001",
+      "sourcePage": 36,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "Interventional Radiology (IR) can be performed only in hospital based diagnostic setting.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-002",
+      "sourcePage": 36,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "The IR and/or cardiac catheterization laboratory is normally located in a separate suite, but any location in the diagnostic imaging area can be permitted provided the appropriate sterile environment is provided.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "alternatives": "any location in the diagnostic imaging area is permitted provided the appropriate sterile environment is provided",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-003",
+      "section": "Procedure rooms",
+      "sourcePage": 36,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "The number of procedure rooms shall be based on expected utilization.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-004",
+      "section": "Procedure rooms",
+      "sourcePage": 36,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "The procedure room shall be a minimum of 38 square meters exclusive of fixed cabinets and shelves.",
+      "requirementType": "MEASUREMENT",
+      "obligation": "MANDATORY",
+      "responseType": "MEASUREMENT",
+      "evidence": "MEASUREMENT",
+      "measurement": {"dimension": "procedure room floor area exclusive of fixed cabinets and shelves", "unit": "m2", "expected": "minimum 38 square meters as stated"}
+    },
+    {
+      "code": "INT-005",
+      "section": "Procedure rooms",
+      "sourcePage": 36,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "Prep, holding, and recovery rooms: the size of the prep, holding, and recovery areas shall be based on expected utilization.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-006",
+      "sourcePage": 36,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "Electrophysiology labs: if electrophysiology labs are also provided in accordance with the approved functional program, these labs may be located within and integral to the catheterization suite or located in a separate functional area proximate to the cardiac care unit.",
+      "requirementType": "FACILITY",
+      "obligation": "WHERE_APPLICABLE",
+      "applicability": "if electrophysiology labs are also provided in accordance with the approved functional program",
+      "alternatives": "may be located within and integral to the catheterization suite, or in a separate functional area proximate to the cardiac care unit",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-007",
+      "section": "Support areas for the IR suite / cardiac catheterization lab",
+      "sourcePage": 36,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "Scrub facilities with hands-free operable controls shall be provided adjacent to the entrance of procedure rooms, and shall be arranged to minimize incidental splatter on nearby personnel, medical equipment, or supplies.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-008",
+      "section": "Support areas for the IR suite / cardiac catheterization lab",
+      "sourcePage": 36,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "A patient preparation, holding, and recovery area or room shall be provided and arranged to provide visual observation before and after the procedure.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-009",
+      "section": "Support areas for the IR suite / cardiac catheterization lab",
+      "sourcePage": 36,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "Control room or area: a control room or area shall be provided and shall be large enough to contain and provide for the efficient functioning of the X-ray and image recording equipment.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-010",
+      "section": "Support areas for the IR suite / cardiac catheterization lab",
+      "sourcePage": 36,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "A view window permitting full view of the patient from the control console shall be provided.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-011",
+      "section": "Support areas for the IR suite / cardiac catheterization lab",
+      "sourcePage": 36,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "Electrical equipment room: an equipment room or enclosure large enough to contain X-ray transformers, power modules, and associated electronics and electrical gear shall be provided.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-012",
+      "section": "Support areas for the IR suite / cardiac catheterization lab",
+      "sourcePage": 36,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "Viewing room: a viewing room shall be available for use by the cardiac catheterization suite.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-013",
+      "section": "Support areas for the IR suite / cardiac catheterization lab",
+      "sourcePage": 37,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "A clean workroom or clean supply room shall be provided.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "alternatives": "clean workroom or clean supply room",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-014",
+      "section": "Support areas for the IR suite / cardiac catheterization lab",
+      "sourcePage": 37,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "A soiled workroom shall be provided.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-015",
+      "section": "Support areas for the IR suite / cardiac catheterization lab",
+      "sourcePage": 37,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "Film file room shall be available for use by the cardiac catheterization suite.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-016",
+      "section": "Support areas for the IR suite / cardiac catheterization lab",
+      "sourcePage": 37,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "Housekeeping closet shall be provided.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "INT-017",
+      "sourcePage": 37,
+      "sourceHeading": "MINIMUM REQUIREMENTS- INTERVENTIONAL IMAGING FACILITIES",
+      "requirement": "Support areas for staff clothing and change area(s) shall be provided and arranged to ensure a traffic pattern so that personnel can enter from outside the suite, change their clothing, and move directly into the cardiac catheterization suite.",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    }
+  ]
+}

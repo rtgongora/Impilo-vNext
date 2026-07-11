@@ -284,6 +284,45 @@ public class HpaRegulatoryBffController {
 
     // ---- transport -------------------------------------------------------------------
 
+    // --- Manual-derived inspection content catalogue (V019) ---
+
+    @GetMapping("/inspection-modules")
+    public ResponseEntity<Map<String, Object>> inspectionModules(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet("/inspection-modules", requestId, correlationId);
+    }
+
+    @GetMapping("/inspection-compositions")
+    public ResponseEntity<Map<String, Object>> inspectionCompositions(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet("/inspection-compositions", requestId, correlationId);
+    }
+
+    @GetMapping("/inspection-applicability")
+    public ResponseEntity<Map<String, Object>> inspectionApplicability(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet("/inspection-applicability", requestId, correlationId);
+    }
+
+    @GetMapping("/inspections/{inspectionId}/checklist")
+    public ResponseEntity<Map<String, Object>> inspectionChecklist(
+            @PathVariable String inspectionId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet("/inspections/" + inspectionId + "/checklist", requestId, correlationId);
+    }
+
+    @GetMapping("/visits/{visitId}/progress")
+    public ResponseEntity<Map<String, Object>> visitProgress(
+            @PathVariable String visitId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet("/visits/" + visitId + "/progress", requestId, correlationId);
+    }
+
     private ResponseEntity<Map<String, Object>> forwardGet(String subPath, String requestId, String correlationId) {
         try {
             JsonNode data = tusoClient.regulatoryGet(subPath);

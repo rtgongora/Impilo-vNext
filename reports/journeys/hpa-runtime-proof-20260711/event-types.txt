@@ -7,6 +7,7 @@ tuso.facility.committee.decision.recorded|5
 tuso.facility.compliance.action.updated|1
 tuso.facility.council_review.recorded|1
 tuso.facility.document.uploaded|5
+tuso.facility.inspection.completed|1
 tuso.facility.inspection.scheduled|1
 tuso.facility.inspection.visit_recorded|1
 tuso.facility.pic.accepted|2

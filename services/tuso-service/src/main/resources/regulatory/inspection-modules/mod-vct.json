@@ -1,0 +1,101 @@
+{
+  "moduleCode": "MOD-VCT",
+  "version": 1,
+  "title": "Voluntary Counselling and Testing Sites (VCT) — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS- VOLUNTARY COUNSELLING AND TESTING SITES (VCT)",
+  "sourcePages": [51],
+  "notes": "The section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (p51) — those requirements are covered by the common all-institutions module and are not duplicated here.",
+  "items": [
+    {
+      "code": "VCT-001",
+      "section": "Counselling room/s",
+      "sourcePage": 51,
+      "sourceHeading": "MINIMUM REQUIREMENTS- VOLUNTARY COUNSELLING AND TESTING SITES (VCT)",
+      "requirement": "Walls painted with light coloured washable paint",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "VCT-002",
+      "section": "Counselling room/s",
+      "sourcePage": 51,
+      "sourceHeading": "MINIMUM REQUIREMENTS- VOLUNTARY COUNSELLING AND TESTING SITES (VCT)",
+      "requirement": "White washed ceiling",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "VCT-003",
+      "section": "Counselling room/s",
+      "sourcePage": 51,
+      "sourceHeading": "MINIMUM REQUIREMENTS- VOLUNTARY COUNSELLING AND TESTING SITES (VCT)",
+      "requirement": "Washable, impervious and non-slippery floors",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "VCT-004",
+      "section": "Counselling room/s",
+      "sourcePage": 51,
+      "sourceHeading": "MINIMUM REQUIREMENTS- VOLUNTARY COUNSELLING AND TESTING SITES (VCT)",
+      "requirement": "Adequate ventilation and lighting provided by both natural and artificial means",
+      "requirementType": "FACILITY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "VCT-005",
+      "section": "Counselling room/s",
+      "sourcePage": 51,
+      "sourceHeading": "MINIMUM REQUIREMENTS- VOLUNTARY COUNSELLING AND TESTING SITES (VCT)",
+      "requirement": "Foot operated receptacle with self-closing devices, with plastic lining for ease of cleaning and infection control purposes",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "VCT-006",
+      "section": "Counselling room/s",
+      "sourcePage": 51,
+      "sourceHeading": "MINIMUM REQUIREMENTS- VOLUNTARY COUNSELLING AND TESTING SITES (VCT)",
+      "requirement": "Desk and chair and two chairs for the patient and relative, covered with washable material",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION",
+      "quantity": "two chairs for the patient and relative"
+    },
+    {
+      "code": "VCT-007",
+      "section": "Counselling room/s",
+      "sourcePage": 51,
+      "sourceHeading": "MINIMUM REQUIREMENTS- VOLUNTARY COUNSELLING AND TESTING SITES (VCT)",
+      "requirement": "Lockable cupboard with HIV/AIDS testing kits, clean linen and consumables, well arranged in the cupboard",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "VCT-008",
+      "section": "Counselling room/s",
+      "sourcePage": 51,
+      "sourceHeading": "MINIMUM REQUIREMENTS- VOLUNTARY COUNSELLING AND TESTING SITES (VCT)",
+      "requirement": "Sharps container",
+      "requirementType": "SAFETY",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    }
+  ]
+}

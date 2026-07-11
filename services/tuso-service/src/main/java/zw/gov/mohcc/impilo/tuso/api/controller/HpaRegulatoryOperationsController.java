@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.tuso.core.ApplicationGovernanceService;
+import zw.gov.mohcc.impilo.tuso.core.InspectionContentService;
 import zw.gov.mohcc.impilo.tuso.core.InspectionVisitService;
 import zw.gov.mohcc.impilo.tuso.core.PicNominationService;
 import zw.gov.mohcc.impilo.tuso.core.PremisesService;
@@ -22,12 +23,16 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.ExternalCouncilReviewEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityClassificationEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityPremisesEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityPremisesOccupancyEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.ClassificationTemplateApplicabilityEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.InspectionRequirementModuleEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.InspectionResponseEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.InspectionTemplateCompositionEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.InspectionVisitEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.PicNominationEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.RegulatoryApplicationTypeEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.RegulatoryRuleEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityClassificationRepository;
+import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityInspectionRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -49,19 +54,25 @@ public class HpaRegulatoryOperationsController {
     private final PremisesService premisesService;
     private final RegulatoryRuleService ruleService;
     private final FacilityClassificationRepository classificationRepository;
+    private final InspectionContentService contentService;
+    private final FacilityInspectionRepository inspectionRepository;
 
     public HpaRegulatoryOperationsController(ApplicationGovernanceService governanceService,
                                              PicNominationService picNominationService,
                                              InspectionVisitService visitService,
                                              PremisesService premisesService,
                                              RegulatoryRuleService ruleService,
-                                             FacilityClassificationRepository classificationRepository) {
+                                             FacilityClassificationRepository classificationRepository,
+                                             InspectionContentService contentService,
+                                             FacilityInspectionRepository inspectionRepository) {
         this.governanceService = governanceService;
         this.picNominationService = picNominationService;
         this.visitService = visitService;
         this.premisesService = premisesService;
         this.ruleService = ruleService;
         this.classificationRepository = classificationRepository;
+        this.contentService = contentService;
+        this.inspectionRepository = inspectionRepository;
     }
 
     // ---- Catalogues + rules ------------------------------------------------
@@ -296,6 +307,41 @@ public class HpaRegulatoryOperationsController {
         TrustContext ctx = TrustContextHolder.require();
         return ResponseEntity.ok(ApiResponse.ok(visitService.completeVisit(
                 visitId, body != null ? body.get("notes") : null), corr(ctx)));
+    }
+
+    // --- Manual-derived inspection content catalogue (V019) ---
+
+    @GetMapping("/inspection-modules")
+    public ResponseEntity<ApiResponse<List<InspectionRequirementModuleEntity>>> listInspectionModules() {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(contentService.listModules(), corr(ctx)));
+    }
+
+    @GetMapping("/inspection-compositions")
+    public ResponseEntity<ApiResponse<List<InspectionTemplateCompositionEntity>>> listInspectionCompositions() {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(contentService.listCompositions(), corr(ctx)));
+    }
+
+    @GetMapping("/inspection-applicability")
+    public ResponseEntity<ApiResponse<List<ClassificationTemplateApplicabilityEntity>>> listInspectionApplicability() {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(contentService.listApplicability(), corr(ctx)));
+    }
+
+    @GetMapping("/inspections/{inspectionId}/checklist")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> inspectionChecklist(@PathVariable UUID inspectionId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var inspection = inspectionRepository.findById(inspectionId)
+                .filter(i -> i.getTenantId().equals(ctx.tenantId()))
+                .orElseThrow(() -> new IllegalArgumentException("Inspection not found: " + inspectionId));
+        return ResponseEntity.ok(ApiResponse.ok(contentService.checklistFor(inspection), corr(ctx)));
+    }
+
+    @GetMapping("/visits/{visitId}/progress")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> visitProgress(@PathVariable UUID visitId) {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(visitService.progress(visitId), corr(ctx)));
     }
 
     private static String corr(TrustContext ctx) {

@@ -65,8 +65,12 @@ import {
   useVisitResponses,
   useRecordVisitResponses,
   useCompleteVisit,
+  useInspectionChecklist,
+  useVisitProgress,
   type PicNominationView,
   type InspectionVisitView,
+  type ChecklistItemView,
+  type ComposedChecklistModule,
 } from "@/hooks/queries/useHpaRegulatory";
 
 function errMsg(e: unknown, fallback: string): string {
@@ -400,6 +404,7 @@ function InspectionsPanel({ facilityId, profile }: { facilityId: number; profile
                 </button>
               </div>
             )}
+            <ChecklistSection inspectionId={i.inspectionId} />
             <VisitsSection inspectionId={i.inspectionId} />
           </li>
         ))}
@@ -738,6 +743,191 @@ function HistoryPanel({ profile }: { profile: FacilityProfile }) {
   );
 }
 
+/* ─── Composed inspection checklist (manual-derived catalogue, read-only) ─── */
+
+function fmtManualPages(pages: number[] | null | undefined): string | null {
+  if (!pages || pages.length === 0) return null;
+  const first = pages[0];
+  const last = pages[pages.length - 1];
+  return first === last ? `Manual p. ${first}` : `Manual pp. ${first}–${last}`;
+}
+
+function obligationChipClass(obligation: string | null | undefined): string {
+  switch (obligation) {
+    case "MANDATORY":
+      return "bg-red-500/10 text-red-600";
+    case "RECOMMENDED":
+      return "bg-sky-500/10 text-sky-600";
+    case "WHERE_APPLICABLE":
+    case "WHERE_POSSIBLE":
+      return "bg-amber-500/10 text-amber-600";
+    default:
+      return "bg-muted text-muted-foreground";
+  }
+}
+
+function groupItemsBySection(
+  items: ChecklistItemView[],
+): Array<{ section: string; items: ChecklistItemView[] }> {
+  const groups: Array<{ section: string; items: ChecklistItemView[] }> = [];
+  const index = new Map<string, ChecklistItemView[]>();
+  for (const item of items) {
+    const section = item.section ?? "General";
+    let bucket = index.get(section);
+    if (!bucket) {
+      bucket = [];
+      index.set(section, bucket);
+      groups.push({ section, items: bucket });
+    }
+    bucket.push(item);
+  }
+  return groups;
+}
+
+function ChecklistSection({ inspectionId }: { inspectionId: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const checklistQuery = useInspectionChecklist(expanded ? inspectionId : undefined);
+  const checklist = checklistQuery.data?.data;
+
+  return (
+    <div className="mt-2 border-t border-border/60 pt-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Checklist</p>
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="rounded-md border border-border px-2 py-0.5 text-[11px] font-medium"
+        >
+          {expanded ? "Hide checklist" : "Show checklist"}
+        </button>
+      </div>
+      {expanded && checklistQuery.isLoading && (
+        <p className="mt-1 text-[11px] text-muted-foreground">Loading checklist…</p>
+      )}
+      {expanded && checklistQuery.isError && (
+        <p className="mt-1 text-xs text-red-600">
+          Checklist unavailable — no template composition is mapped for this facility profile yet.
+        </p>
+      )}
+      {expanded && checklist && (
+        <div className="mt-1 max-h-96 overflow-y-auto rounded-md border border-border/60">
+          {checklist.mode === "COMPOSED" && (
+            <>
+              {checklist.compositionCode && (
+                <p className="border-b border-border/60 bg-muted/40 px-2 py-1 text-[11px] text-muted-foreground">
+                  Composition {checklist.compositionCode}
+                  {typeof checklist.totalItems === "number" ? ` · ${checklist.totalItems} items` : ""}
+                </p>
+              )}
+              {(checklist.modules ?? []).map((m) => (
+                <ChecklistModuleBlock key={`${m.code}-v${m.version}`} module={m} />
+              ))}
+            </>
+          )}
+          {checklist.mode === "TEMPLATE" && (
+            <div className="py-1">
+              <p className="px-2 py-1 text-[11px] text-muted-foreground">
+                Legacy template checklist
+                {checklist.templateCode ? ` · ${checklist.templateCode}` : ""}
+                {checklist.templateVersion != null ? ` v${checklist.templateVersion}` : ""}
+              </p>
+              <ChecklistItems items={checklist.items ?? []} />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChecklistModuleBlock({ module }: { module: ComposedChecklistModule }) {
+  const pages = fmtManualPages(module.sourcePages);
+  return (
+    <div className="border-b border-border/60 last:border-b-0">
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 bg-muted/40 px-2 py-1.5">
+        <span className="text-xs font-medium text-foreground">{module.title}</span>
+        {module.scope && (
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide ${
+              module.scope === "COMMON" ? "bg-muted text-muted-foreground" : "bg-indigo-500/10 text-indigo-600"
+            }`}
+          >
+            {module.scope.replace(/_/g, "-")}
+          </span>
+        )}
+        <span className="text-[10px] text-muted-foreground">v{module.version}</span>
+        {(module.sourceHeading || pages) && (
+          <span className="ml-auto text-[10px] text-muted-foreground">
+            {module.sourceHeading ?? ""}
+            {module.sourceHeading && pages ? " · " : ""}
+            {pages ?? ""}
+          </span>
+        )}
+      </div>
+      {module.notes && <p className="px-2 pt-1 text-[10px] italic text-muted-foreground">{module.notes}</p>}
+      <ChecklistItems items={module.items ?? []} />
+    </div>
+  );
+}
+
+function ChecklistItems({ items }: { items: ChecklistItemView[] }) {
+  if (items.length === 0) {
+    return <p className="px-2 py-1 text-[11px] text-muted-foreground">No checklist items.</p>;
+  }
+  return (
+    <div className="overflow-x-auto">
+      <div className="min-w-[28rem]">
+        {groupItemsBySection(items).map((group) => (
+          <div key={group.section}>
+            <p className="px-2 pt-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              {group.section}
+            </p>
+            <ul className="space-y-1 px-2 pb-1.5">
+              {group.items.map((item) => (
+                <ChecklistItemRow key={item.code} item={item} />
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChecklistItemRow({ item }: { item: ChecklistItemView }) {
+  const isComponent = item.groupRole === "COMPONENT";
+  return (
+    <li className={`text-[11px] ${isComponent ? "pl-4" : ""}`}>
+      <span className="mr-1.5 font-mono text-muted-foreground">{item.code}</span>
+      {item.sourceItemNumber && (
+        <span className="mr-1.5 text-muted-foreground">(manual item {item.sourceItemNumber})</span>
+      )}
+      <span className="text-foreground">{item.requirement}</span>
+      {item.obligation && (
+        <span
+          className={`ml-1.5 rounded-full px-1.5 py-0 text-[9px] uppercase tracking-wide ${obligationChipClass(item.obligation)}`}
+        >
+          {item.obligation.replace(/_/g, " ")}
+        </span>
+      )}
+      {item.reviewRequired && (
+        <span
+          title={item.reviewReason ?? undefined}
+          className="ml-1.5 cursor-help rounded-full bg-amber-500/10 px-1.5 py-0 text-[9px] uppercase tracking-wide text-amber-600"
+        >
+          Review required
+        </span>
+      )}
+      {item.measurement && (
+        <span className="ml-1.5 text-muted-foreground">
+          — {item.measurement.dimension ?? "measurement"}: {item.measurement.expected ?? "—"}
+          {item.measurement.unit ? ` (${item.measurement.unit})` : ""}
+        </span>
+      )}
+    </li>
+  );
+}
+
 /* ─── Inspection visits (multi-visit lifecycle per inspection) ─── */
 
 const VISIT_MODES = ["ONSITE", "DESKTOP", "VIRTUAL"];
@@ -805,6 +995,7 @@ function VisitsSection({ inspectionId }: { inspectionId: string }) {
 function VisitRow({ visit, inspectionId }: { visit: InspectionVisitView; inspectionId: string }) {
   const [expanded, setExpanded] = useState(false);
   const responsesQuery = useVisitResponses(expanded ? visit.visitId : undefined);
+  const progressQuery = useVisitProgress(visit.status !== "COMPLETED" ? visit.visitId : undefined);
   const recordResponses = useRecordVisitResponses();
   const completeVisit = useCompleteVisit();
   const [itemCode, setItemCode] = useState("");
@@ -816,6 +1007,7 @@ function VisitRow({ visit, inspectionId }: { visit: InspectionVisitView; inspect
 
   const responses = responsesQuery.data?.data ?? [];
   const completed = visit.status === "COMPLETED";
+  const progress = progressQuery.data?.data;
 
   return (
     <li className="rounded-md border border-border/60 p-2">
@@ -835,6 +1027,24 @@ function VisitRow({ visit, inspectionId }: { visit: InspectionVisitView; inspect
           </button>
         )}
       </div>
+      {!completed && progress && (
+        <div className="mt-1 rounded-md bg-muted/40 px-2 py-1 text-[11px]">
+          <span className="text-foreground">
+            Checklist progress: {progress.answered}/{progress.totalItems} answered
+          </span>
+          <span className={`ml-2 ${progress.outstandingMandatory.length > 0 ? "text-amber-600" : "text-emerald-600"}`}>
+            {progress.outstandingMandatory.length} mandatory outstanding
+          </span>
+          <span className={`ml-2 ${progress.missingRequiredEvidence.length > 0 ? "text-red-600" : "text-emerald-600"}`}>
+            {progress.missingRequiredEvidence.length} missing evidence
+          </span>
+          {progress.missingRequiredEvidence.length > 0 && (
+            <p className="mt-0.5 overflow-x-auto whitespace-nowrap font-mono text-[10px] text-muted-foreground">
+              Missing evidence: {progress.missingRequiredEvidence.map((m) => m.code).join(", ")}
+            </p>
+          )}
+        </div>
+      )}
       {expanded && !completed && (
         <div className="mt-2 space-y-2 border-t border-border/60 pt-2">
           {error && <p className="text-xs text-red-600">{error}</p>}

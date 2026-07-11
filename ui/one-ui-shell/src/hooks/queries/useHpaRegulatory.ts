@@ -266,6 +266,117 @@ export interface VisitResponseView {
   recordedAt?: string | null;
 }
 
+/* ─── Composable inspection checklist catalogue (manual-derived) ─── */
+
+export type ChecklistObligation =
+  | "MANDATORY"
+  | "OPTIONAL"
+  | "RECOMMENDED"
+  | "WHERE_APPLICABLE"
+  | "WHERE_POSSIBLE";
+
+export interface ChecklistMeasurementSpec {
+  dimension?: string | null;
+  unit?: string | null;
+  expected?: string | null;
+}
+
+/** One manual-derived checklist requirement. Keys may be absent per item. */
+export interface ChecklistItemView {
+  code: string;
+  section?: string | null;
+  subsection?: string | null;
+  sourcePage?: number | null;
+  sourceHeading?: string | null;
+  requirement?: string | null;
+  requirementType?: string | null;
+  obligation?: ChecklistObligation | string | null;
+  applicability?: string | null;
+  responseType?: "STATUS" | "MEASUREMENT" | string | null;
+  evidence?: string | null;
+  measurement?: ChecklistMeasurementSpec | null;
+  quantity?: string | null;
+  alternatives?: string | null;
+  conditional?: string | null;
+  group?: string | null;
+  groupRole?: "PARENT" | "COMPONENT" | string | null;
+  publicSafety?: boolean | null;
+  sourceItemNumber?: string | null;
+  reviewRequired?: boolean | null;
+  reviewReason?: string | null;
+}
+
+export interface InspectionModuleView {
+  code: string;
+  version: number;
+  title: string;
+  scope: "COMMON" | "SERVICE_SPECIFIC" | string;
+  sourceDoc?: string | null;
+  sourceHeading?: string | null;
+  sourcePages?: number[] | null;
+  notes?: string | null;
+  items?: ChecklistItemView[] | null;
+  itemCount?: number | null;
+  reviewRequiredCount?: number | null;
+  status?: string | null;
+}
+
+export interface InspectionCompositionView {
+  code: string;
+  version: number;
+  title: string;
+  description?: string | null;
+  moduleCodes: string[];
+  inspectionTypes?: string[] | null;
+  status?: string | null;
+}
+
+/** A module as it appears inside a composed checklist (frozen version). */
+export interface ComposedChecklistModule {
+  code: string;
+  version: number;
+  title: string;
+  scope?: string | null;
+  sourceDoc?: string | null;
+  sourceHeading?: string | null;
+  sourcePages?: number[] | null;
+  notes?: string | null;
+  items?: ChecklistItemView[] | null;
+}
+
+export interface InspectionChecklistView {
+  inspectionId: string;
+  mode: "COMPOSED" | "TEMPLATE" | string;
+  compositionCode?: string | null;
+  modules?: ComposedChecklistModule[] | null;
+  totalItems?: number | null;
+  templateCode?: string | null;
+  templateVersion?: number | null;
+  templateStatus?: string | null;
+  items?: ChecklistItemView[] | null;
+}
+
+export interface VisitOutstandingMandatoryItem {
+  code: string;
+  section?: string | null;
+  requirement?: string | null;
+}
+
+export interface VisitMissingEvidenceItem {
+  code: string;
+  expectedEvidence?: string | null;
+  response?: string | null;
+}
+
+export interface VisitProgressView {
+  visitId: string;
+  visitStatus: string;
+  totalItems: number;
+  answered: number;
+  outstandingMandatory: VisitOutstandingMandatoryItem[];
+  missingRequiredEvidence: VisitMissingEvidenceItem[];
+}
+
 /* ─── Public certificate verification ─── */
 
 export interface FacilityCertificateVerification {
@@ -670,5 +781,39 @@ export function useCompleteVisit() {
         ["facility-registry", "inspection-visits", variables.inspectionId],
         ["facility-registry", "visit-responses", variables.visitId],
       ),
+  });
+}
+
+/* ─── Inspection checklist catalogue hooks ─── */
+
+export function useInspectionModules() {
+  return useQuery<ApiResponse<InspectionModuleView[]>>({
+    queryKey: ["facility-registry", "inspection-modules"],
+    queryFn: () => apiClient.get<ApiResponse<InspectionModuleView[]>>(`${BASE}/inspection-modules`),
+  });
+}
+
+export function useInspectionCompositions() {
+  return useQuery<ApiResponse<InspectionCompositionView[]>>({
+    queryKey: ["facility-registry", "inspection-compositions"],
+    queryFn: () =>
+      apiClient.get<ApiResponse<InspectionCompositionView[]>>(`${BASE}/inspection-compositions`),
+  });
+}
+
+export function useInspectionChecklist(inspectionId: string | undefined) {
+  return useQuery<ApiResponse<InspectionChecklistView>>({
+    queryKey: ["facility-registry", "inspection-checklist", inspectionId],
+    queryFn: () =>
+      apiClient.get<ApiResponse<InspectionChecklistView>>(`${BASE}/inspections/${inspectionId}/checklist`),
+    enabled: !!inspectionId,
+  });
+}
+
+export function useVisitProgress(visitId: string | undefined) {
+  return useQuery<ApiResponse<VisitProgressView>>({
+    queryKey: ["facility-registry", "visit-progress", visitId],
+    queryFn: () => apiClient.get<ApiResponse<VisitProgressView>>(`${BASE}/visits/${visitId}/progress`),
+    enabled: !!visitId,
   });
 }

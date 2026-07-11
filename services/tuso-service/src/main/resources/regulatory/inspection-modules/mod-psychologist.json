@@ -1,0 +1,79 @@
+{
+  "moduleCode": "MOD-PSYCHOLOGIST",
+  "version": 1,
+  "title": "Psychologist Rooms — Minimum Requirements",
+  "scope": "SERVICE_SPECIFIC",
+  "sourceDoc": "HPA-2017-V1",
+  "sourceHeading": "MINIMUM REQUIREMENTS – PSYCHOLOGIST ROOMS",
+  "sourcePages": [69],
+  "notes": "Section opens with a cross-reference: 'Other requirements are as stated under \"Minimum requirements for all types of Health Institutions\"' (page 69) — refer to the common all-institutions module; not extracted as items.",
+  "items": [
+    {
+      "code": "PSY-001",
+      "section": "Recommended facilities",
+      "sourcePage": 69,
+      "sourceHeading": "MINIMUM REQUIREMENTS – PSYCHOLOGIST ROOMS",
+      "requirement": "With adequate ventilation and lighting provided by both natural and artificial means.",
+      "requirementType": "FACILITY",
+      "obligation": "RECOMMENDED",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "PSY-002",
+      "section": "Equipment",
+      "sourcePage": 69,
+      "sourceHeading": "MINIMUM REQUIREMENTS – PSYCHOLOGIST ROOMS",
+      "requirement": "Psychologist's desk.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "PSY-003",
+      "section": "Equipment",
+      "sourcePage": 69,
+      "sourceHeading": "MINIMUM REQUIREMENTS – PSYCHOLOGIST ROOMS",
+      "requirement": "At least two chairs.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION",
+      "quantity": "At least two."
+    },
+    {
+      "code": "PSY-004",
+      "section": "Equipment",
+      "sourcePage": 69,
+      "sourceHeading": "MINIMUM REQUIREMENTS – PSYCHOLOGIST ROOMS",
+      "requirement": "Lockable filing cabinet for patient/client information.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "PSY-005",
+      "section": "Equipment",
+      "sourcePage": 69,
+      "sourceHeading": "MINIMUM REQUIREMENTS – PSYCHOLOGIST ROOMS",
+      "requirement": "Security for psychological tests, client's psychological reports — psychometric test results.",
+      "requirementType": "PROCESS",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    },
+    {
+      "code": "PSY-006",
+      "section": "Equipment",
+      "sourcePage": 69,
+      "sourceHeading": "MINIMUM REQUIREMENTS – PSYCHOLOGIST ROOMS",
+      "requirement": "Facial tissues.",
+      "requirementType": "EQUIPMENT",
+      "obligation": "MANDATORY",
+      "responseType": "STATUS",
+      "evidence": "OBSERVATION"
+    }
+  ]
+}
