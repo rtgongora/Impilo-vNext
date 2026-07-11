@@ -330,8 +330,8 @@ public class FacilityRegulatoryService {
         }
 
         audit(facility, application, "INSPECTION_SCHEDULED", "FACILITY_INSPECTION", inspection.getInspectionId().toString(),
-                null, Map.of("inspectionType", inspection.getInspectionType().name(), "scheduledDate", nullSafe(request.scheduledDate())), ctx);
-        publishEvent(facility, "tuso.facility.inspection.scheduled", Map.of(
+                null, payloadOf("inspectionType", inspection.getInspectionType().name(), "scheduledDate", nullSafe(request.scheduledDate())), ctx);
+        publishEvent(facility, "tuso.facility.inspection.scheduled", payloadOf(
                 "facilityId", facility.getId(),
                 "applicationId", application != null ? application.getApplicationId() : null,
                 "inspectionId", inspection.getInspectionId(),
@@ -445,8 +445,8 @@ public class FacilityRegulatoryService {
         }
 
         audit(inspection.getFacility(), application, "INSPECTION_COMPLETED", "FACILITY_INSPECTION", inspectionId.toString(),
-                null, Map.of("outcome", inspection.getOutcome(), "recommendation", inspection.getRecommendation()), ctx);
-        publishEvent(inspection.getFacility(), "tuso.facility.inspection.completed", Map.of(
+                null, payloadOf("outcome", inspection.getOutcome(), "recommendation", inspection.getRecommendation()), ctx);
+        publishEvent(inspection.getFacility(), "tuso.facility.inspection.completed", payloadOf(
                 "facilityId", inspection.getFacility().getId(),
                 "applicationId", application != null ? application.getApplicationId() : null,
                 "inspectionId", inspectionId,
@@ -552,7 +552,7 @@ public class FacilityRegulatoryService {
         applicationRepository.save(application);
 
         audit(facility, application, "COMMITTEE_DECISION_RECORDED", "COMMITTEE_REVIEW", review.getReviewId().toString(),
-                null, Map.of("decision", request.decision().name(), "authorityContext", review.getAuthorityContext()), ctx);
+                null, payloadOf("decision", request.decision().name(), "authorityContext", review.getAuthorityContext()), ctx);
         publishEvent(facility, "tuso.facility.committee.decision.recorded", Map.of(
                 "facilityId", facility.getId(),
                 "applicationId", application.getApplicationId(),
@@ -599,8 +599,8 @@ public class FacilityRegulatoryService {
                 "Enforcement case opened", application != null ? application.getApplicationId() : null, ctx, "HPA_ADMIN");
 
         audit(facility, application, "ENFORCEMENT_CASE_OPENED", "ENFORCEMENT_CASE", enforcementCase.getCaseId().toString(),
-                null, Map.of("status", enforcementCase.getStatus().name(), "recommendation", nullSafe(enforcementCase.getRecommendation())), ctx);
-        publishEvent(facility, "tuso.facility.enforcement.case.opened", Map.of(
+                null, payloadOf("status", enforcementCase.getStatus().name(), "recommendation", nullSafe(enforcementCase.getRecommendation())), ctx);
+        publishEvent(facility, "tuso.facility.enforcement.case.opened", payloadOf(
                 "facilityId", facility.getId(),
                 "caseId", enforcementCase.getCaseId(),
                 "status", enforcementCase.getStatus().name(),
@@ -731,7 +731,7 @@ public class FacilityRegulatoryService {
         certificate.setIssuedBy(ctx.actorId());
         certificate = certificateRepository.save(certificate);
 
-        publishEvent(facility, "tuso.facility.certificate.issued", Map.of(
+        publishEvent(facility, "tuso.facility.certificate.issued", payloadOf(
                 "facilityId", facility.getId(),
                 "applicationId", application.getApplicationId(),
                 "certificateId", certificate.getCertificateId(),
@@ -924,6 +924,9 @@ public class FacilityRegulatoryService {
         outbox.setPartitionKey(String.valueOf(facility.getId()));
         outbox.setSchemaVersion(1);
         outbox.setOccurredAt(Instant.now().atOffset(java.time.ZoneOffset.UTC));
+        // Mandatory outbox hygiene — null pod_id/idempotency_key poisons the publisher drain.
+        outbox.setPodId("national-spine");
+        outbox.setIdempotencyKey("tuso:regulatory:" + eventType + ":" + facility.getId() + ":" + UUID.randomUUID());
         outboxRepository.save(outbox);
     }
 
@@ -943,6 +946,17 @@ public class FacilityRegulatoryService {
             throw new SecurityException("Tenant isolation violation for application: " + applicationId);
         }
         return application;
+    }
+
+    /** Null-skipping payload builder — Map.of rejects null values, and half these fields are nullable. */
+    private static Map<String, Object> payloadOf(Object... kv) {
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        for (int i = 0; i + 1 < kv.length; i += 2) {
+            if (kv[i] != null && kv[i + 1] != null) {
+                out.put(String.valueOf(kv[i]), kv[i + 1]);
+            }
+        }
+        return out;
     }
 
     private void assertAllowed(TrustContext ctx, Set<String> allowedRoles) {
