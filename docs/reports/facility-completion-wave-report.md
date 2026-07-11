@@ -23,11 +23,27 @@
 
 ## Verification
 
+- **Both golden journeys GREEN live against https://impilo.mohcc.gov.zw**:
+  - *facility-operations*: admin drives the wizard truth at imported facility 6 (queue
+    definitions + materialise action, workforce truth, attestation labels, capability +
+    readiness curation); a nurse selects Hunyani Municipal Clinic in the workplace flow and
+    reaches **Start Session** — the imported-facility dead-end is closed.
+  - *facility-regulatory*: registrar registers a brand-new facility shell → document →
+    governed submit → ready-for-inspection → checklist-templated inspection; inspector records
+    the passing outcome; registrar records committee approval → facility
+    **REGISTERED_ACTIVE** with an **ACTIVE HPA certificate** (verified in `tuso.facility` +
+    `facility_certificate`; all regulatory events published, outbox drained).
+  - The journey runs surfaced and fixed four more real defects: HPA personas arrived as
+    actor-type CITIZEN (BFF `determineActorType`) and the engine's role sets lacked
+    HPA_REGISTRAR; `Map.of`-with-null NPEs across checklist-template listing and four
+    regulatory event payloads; and multi-word registry searches silently returned empty
+    through the BFF (double-encoded URI).
 - tuso full suite green (incl. 5 new operationalization tests) · experience-bff full suite green ·
   UI vitest **1587/1587** + routes (698) green · `tsc --noEmit` clean.
 - Live DB truth: `tuso.facility` 1,778 · active workspaces 1,783 · service points 1,773 ·
-  `pct.pct_queues` 1,773 facilities `TUSO_MATERIALISED` · outbox drained.
-- Targeted roll: tuso-service, pct-service, experience-bff, one-ui-shell (tags in deploy log).
+  `pct.pct_queues` 1,773 facilities `TUSO_MATERIALISED` · outbox drained (0 unpublished).
+- Targeted roll: tuso-service (`f5-b22b39ad1`), experience-bff (`f5-19d29d384`),
+  pct-service (`f1-3761e2f55`), one-ui-shell (`f5-f6202f2de`).
 
 ## Honest remaining gaps
 
