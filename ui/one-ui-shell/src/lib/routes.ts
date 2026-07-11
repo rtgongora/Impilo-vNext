@@ -179,6 +179,10 @@ export const ROUTES: RouteDefinition[] = [
   // E2-TRUST: four-block doctrine trust profile (identity/professional/employment/operational).
   { path: "/citizen/wallet/trust", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Trust Profile", navLabel: "Trust Profile", navZone: "life" },
   { path: "/verify/credential", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Verify Credential", navLabel: "Verify Credential", navZone: "life" },
+  // HPA regulatory UX (Jul 2026): public facility-certificate verifier (guard mirrors /verify/credential)
+  // + the practitioner's own PIC-nomination ledger.
+  { path: "/verify/facility-certificate", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Verify Facility Certificate", navLabel: "Verify Facility Certificate", navZone: "life" },
+  { path: "/professional/pic-nominations", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "PIC Nominations", navLabel: "PIC Nominations", navZone: "professional" },
   { path: "/share/claim", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Claim Shared Documents", navLabel: "Claim Shared Documents", navZone: "life" },
   { path: "/collaboration/access", zone: "home", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Provider collaboration access", navLabel: "Collaboration access", navZone: "life" },
 
@@ -834,7 +838,9 @@ export const ROUTES: RouteDefinition[] = [
 // Activation letter (Jul 2026): +1 — /registry-admin/activation-letter (printable onboarding letter).
 // Workforce Intake (Jul 2026): +1 net-new route — /admin/workforce-intake staged staff bootstrap wizard.
 // Nhume inbound (Jul 2026): +1 net-new route — /nhume/inbound receiving & handover surface.
-export const EXPECTED_ROUTE_COUNT = 698;
+// HPA regulatory UX (Jul 2026): +2 net-new routes — /professional/pic-nominations (practitioner
+// PIC-nomination ledger) and /verify/facility-certificate (public certificate verifier).
+export const EXPECTED_ROUTE_COUNT = 700;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
