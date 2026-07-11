@@ -49,6 +49,18 @@ public class PractitionerInChargeAssignmentEntity {
     @Column(name = "notes", columnDefinition = "text")
     private String notes;
 
+    @Column(name = "review_state", nullable = false, length = 32)
+    private String reviewState = "IN_GOOD_STANDING";
+
+    @Column(name = "review_reason", columnDefinition = "text")
+    private String reviewReason;
+
+    @Column(name = "facility_unit_id")
+    private Long facilityUnitId;
+
+    @Column(name = "predecessor_assignment_id")
+    private Long predecessorAssignmentId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -93,6 +105,14 @@ public class PractitionerInChargeAssignmentEntity {
     public void setSourceCouncilReference(String sourceCouncilReference) { this.sourceCouncilReference = sourceCouncilReference; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public String getReviewState() { return reviewState; }
+    public void setReviewState(String reviewState) { this.reviewState = reviewState; }
+    public String getReviewReason() { return reviewReason; }
+    public void setReviewReason(String reviewReason) { this.reviewReason = reviewReason; }
+    public Long getFacilityUnitId() { return facilityUnitId; }
+    public void setFacilityUnitId(Long facilityUnitId) { this.facilityUnitId = facilityUnitId; }
+    public Long getPredecessorAssignmentId() { return predecessorAssignmentId; }
+    public void setPredecessorAssignmentId(Long predecessorAssignmentId) { this.predecessorAssignmentId = predecessorAssignmentId; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public String getCreatedBy() { return createdBy; }

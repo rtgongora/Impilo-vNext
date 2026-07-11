@@ -55,6 +55,18 @@ public class InspectionFindingEntity {
     @Column(name = "rectification_status", nullable = false, length = 64)
     private RectificationStatus rectificationStatus = RectificationStatus.NOT_REQUIRED;
 
+    @Column(name = "response_id")
+    private UUID responseId;
+
+    @Column(name = "extension_due_date")
+    private LocalDate extensionDueDate;
+
+    @Column(name = "extension_reason", columnDefinition = "text")
+    private String extensionReason;
+
+    @Column(name = "recurrence_of_finding_id")
+    private UUID recurrenceOfFindingId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -99,6 +111,14 @@ public class InspectionFindingEntity {
     public void setRectificationDeadline(LocalDate rectificationDeadline) { this.rectificationDeadline = rectificationDeadline; }
     public RectificationStatus getRectificationStatus() { return rectificationStatus; }
     public void setRectificationStatus(RectificationStatus rectificationStatus) { this.rectificationStatus = rectificationStatus; }
+    public UUID getResponseId() { return responseId; }
+    public void setResponseId(UUID responseId) { this.responseId = responseId; }
+    public LocalDate getExtensionDueDate() { return extensionDueDate; }
+    public void setExtensionDueDate(LocalDate extensionDueDate) { this.extensionDueDate = extensionDueDate; }
+    public String getExtensionReason() { return extensionReason; }
+    public void setExtensionReason(String extensionReason) { this.extensionReason = extensionReason; }
+    public UUID getRecurrenceOfFindingId() { return recurrenceOfFindingId; }
+    public void setRecurrenceOfFindingId(UUID recurrenceOfFindingId) { this.recurrenceOfFindingId = recurrenceOfFindingId; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

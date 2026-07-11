@@ -38,6 +38,9 @@ public class FacilityUnitEntity {
     @Column(name = "certificate_status", length = 64)
     private String certificateStatus;
 
+    @Column(name = "pic_required", nullable = false)
+    private boolean picRequired;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata", columnDefinition = "jsonb")
     private Map<String, Object> metadata;
@@ -80,6 +83,8 @@ public class FacilityUnitEntity {
     public void setRegulatoryStatus(FacilityRegulatoryStatus regulatoryStatus) { this.regulatoryStatus = regulatoryStatus; }
     public String getCertificateStatus() { return certificateStatus; }
     public void setCertificateStatus(String certificateStatus) { this.certificateStatus = certificateStatus; }
+    public boolean isPicRequired() { return picRequired; }
+    public void setPicRequired(boolean picRequired) { this.picRequired = picRequired; }
     public Map<String, Object> getMetadata() { return metadata; }
     public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
     public Instant getCreatedAt() { return createdAt; }

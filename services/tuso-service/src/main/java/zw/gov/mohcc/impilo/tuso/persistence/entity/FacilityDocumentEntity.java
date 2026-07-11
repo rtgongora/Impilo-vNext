@@ -52,6 +52,9 @@ public class FacilityDocumentEntity {
     @Column(name = "notes", columnDefinition = "text")
     private String notes;
 
+    @Column(name = "supersedes_document_id")
+    private UUID supersedesDocumentId;
+
     @PrePersist
     void onCreate() {
         if (documentId == null) {
@@ -83,4 +86,6 @@ public class FacilityDocumentEntity {
     public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public UUID getSupersedesDocumentId() { return supersedesDocumentId; }
+    public void setSupersedesDocumentId(UUID supersedesDocumentId) { this.supersedesDocumentId = supersedesDocumentId; }
 }

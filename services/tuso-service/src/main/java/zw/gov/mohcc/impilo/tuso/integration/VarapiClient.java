@@ -147,6 +147,47 @@ public class VarapiClient {
     }
 
     /**
+     * Request a time-specific PIC eligibility assessment from VARAPI
+     * (the professional-registry source of truth). Returns the assessment
+     * verbatim so Tuso can snapshot it on the nomination — per-axis evidence,
+     * reasons and source-record versions included. Trust headers are
+     * synthesized for this service-originated call (MISSING_REQUIRED_HEADER
+     * defect family). Throws on failure — nomination must not proceed on an
+     * unresolvable provider.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> requestEligibilityAssessment(String providerPublicId,
+                                                            String facilityRef,
+                                                            String facilityUnitRef,
+                                                            String purpose,
+                                                            String tenantId) {
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("providerPublicId", providerPublicId);
+        if (facilityRef != null) body.put("facilityRef", facilityRef);
+        if (facilityUnitRef != null) body.put("facilityUnitRef", facilityUnitRef);
+        body.put("purpose", purpose != null ? purpose : "PIC_NOMINATION");
+        Map<String, Object> response = restClient.post()
+                .uri("/v1/internal/interop/eligibility/assessments")
+                .headers(h -> {
+                    if (tenantId != null) h.set("X-Tenant-ID", tenantId);
+                    h.set("X-Pod-ID", "national-spine");
+                    h.set("X-Request-ID", java.util.UUID.randomUUID().toString());
+                    h.set("X-Correlation-ID", java.util.UUID.randomUUID().toString());
+                    h.set("X-Actor-ID", "tuso-service");
+                    h.set("X-Actor-Type", "SERVICE");
+                    h.set("X-Purpose-Of-Use", "OPERATIONS");
+                })
+                .body(body)
+                .retrieve()
+                .body((Class<Map<String, Object>>) (Class<?>) Map.class);
+        if (response == null) {
+            throw new IllegalStateException("VARAPI returned no eligibility assessment for " + providerPublicId);
+        }
+        Object data = response.get("data");
+        return data instanceof Map<?, ?> m ? (Map<String, Object>) m : response;
+    }
+
+    /**
      * Aggregated provider information returned by VARAPI.
      */
     public record ProviderInfo(

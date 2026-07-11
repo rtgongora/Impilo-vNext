@@ -8,4 +8,6 @@ import java.util.List;
 public interface PractitionerInChargeAssignmentRepository extends JpaRepository<PractitionerInChargeAssignmentEntity, Long> {
     List<PractitionerInChargeAssignmentEntity> findByFacilityIdOrderByStartDateDesc(Long facilityId);
     java.util.Optional<PractitionerInChargeAssignmentEntity> findByFacilityIdAndExternalAssignmentId(Long facilityId, Long externalAssignmentId);
+    List<PractitionerInChargeAssignmentEntity> findByProviderPublicIdAndEndDateIsNull(String providerPublicId);
+    List<PractitionerInChargeAssignmentEntity> findByFacilityIdAndEndDateIsNull(Long facilityId);
 }

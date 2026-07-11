@@ -58,6 +58,18 @@ public class FacilityCertificateEntity {
     @Column(name = "metadata", columnDefinition = "jsonb")
     private Map<String, Object> metadata;
 
+    @Column(name = "verification_code", length = 32)
+    private String verificationCode;
+
+    @Column(name = "facility_unit_id")
+    private Long facilityUnitId;
+
+    @Column(name = "conditions", columnDefinition = "text")
+    private String conditions;
+
+    @Column(name = "status_reason", columnDefinition = "text")
+    private String statusReason;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -98,6 +110,14 @@ public class FacilityCertificateEntity {
     public void setSupersedesCertificate(FacilityCertificateEntity supersedesCertificate) { this.supersedesCertificate = supersedesCertificate; }
     public Map<String, Object> getMetadata() { return metadata; }
     public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
+    public String getVerificationCode() { return verificationCode; }
+    public void setVerificationCode(String verificationCode) { this.verificationCode = verificationCode; }
+    public Long getFacilityUnitId() { return facilityUnitId; }
+    public void setFacilityUnitId(Long facilityUnitId) { this.facilityUnitId = facilityUnitId; }
+    public String getConditions() { return conditions; }
+    public void setConditions(String conditions) { this.conditions = conditions; }
+    public String getStatusReason() { return statusReason; }
+    public void setStatusReason(String statusReason) { this.statusReason = statusReason; }
     public Instant getCreatedAt() { return createdAt; }
     public String getIssuedBy() { return issuedBy; }
     public void setIssuedBy(String issuedBy) { this.issuedBy = issuedBy; }

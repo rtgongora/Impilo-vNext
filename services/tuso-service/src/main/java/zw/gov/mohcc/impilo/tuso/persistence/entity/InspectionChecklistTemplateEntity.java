@@ -46,6 +46,25 @@ public class InspectionChecklistTemplateEntity {
     @Column(name = "items_json", nullable = false, columnDefinition = "jsonb")
     private List<Map<String, Object>> itemsJson;
 
+    @Column(name = "status", nullable = false, length = 64)
+    private String status = "PENDING_REGULATOR_APPROVAL";
+
+    @Column(name = "source_manual", length = 64)
+    private String sourceManual;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "source_pages", columnDefinition = "jsonb")
+    private List<Integer> sourcePages;
+
+    @Column(name = "approved_by", length = 255)
+    private String approvedBy;
+
+    @Column(name = "approved_at")
+    private Instant approvedAt;
+
+    @Column(name = "supersedes_template_id")
+    private UUID supersedesTemplateId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -77,5 +96,17 @@ public class InspectionChecklistTemplateEntity {
     public void setDescription(String description) { this.description = description; }
     public List<Map<String, Object>> getItemsJson() { return itemsJson; }
     public void setItemsJson(List<Map<String, Object>> itemsJson) { this.itemsJson = itemsJson; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public String getSourceManual() { return sourceManual; }
+    public void setSourceManual(String sourceManual) { this.sourceManual = sourceManual; }
+    public List<Integer> getSourcePages() { return sourcePages; }
+    public void setSourcePages(List<Integer> sourcePages) { this.sourcePages = sourcePages; }
+    public String getApprovedBy() { return approvedBy; }
+    public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
+    public Instant getApprovedAt() { return approvedAt; }
+    public void setApprovedAt(Instant approvedAt) { this.approvedAt = approvedAt; }
+    public UUID getSupersedesTemplateId() { return supersedesTemplateId; }
+    public void setSupersedesTemplateId(UUID supersedesTemplateId) { this.supersedesTemplateId = supersedesTemplateId; }
     public Instant getCreatedAt() { return createdAt; }
 }

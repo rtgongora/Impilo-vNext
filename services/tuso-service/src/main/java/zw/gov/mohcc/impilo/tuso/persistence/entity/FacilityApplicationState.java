@@ -14,5 +14,7 @@ public enum FacilityApplicationState {
     DECIDED_APPROVED,
     DECIDED_REJECTED,
     DECIDED_DEFERRED,
-    CLOSED_OUT
+    CLOSED_OUT,
+    AWAITING_COUNCIL_REVIEW,
+    WITHDRAWN
 }

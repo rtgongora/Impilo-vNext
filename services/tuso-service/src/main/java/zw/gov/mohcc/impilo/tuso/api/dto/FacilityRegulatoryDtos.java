@@ -48,7 +48,12 @@ public final class FacilityRegulatoryDtos {
             java.math.BigDecimal longitude,
             Map<String, Object> metadata,
             @Valid List<UnitDraft> requestedUnits,
-            @Valid PractitionerInChargeDraft practitionerInCharge
+            @Valid PractitionerInChargeDraft practitionerInCharge,
+            String catalogueCode,
+            java.util.UUID premisesId,
+            Long facilityUnitId,
+            String feeReference,
+            String paymentReference
     ) {
     }
 

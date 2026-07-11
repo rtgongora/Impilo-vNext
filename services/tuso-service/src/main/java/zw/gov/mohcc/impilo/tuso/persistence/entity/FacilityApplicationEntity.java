@@ -78,6 +78,24 @@ public class FacilityApplicationEntity {
     @Column(name = "workflow_notes", columnDefinition = "text")
     private String workflowNotes;
 
+    @Column(name = "catalogue_code", length = 64)
+    private String catalogueCode;
+
+    @Column(name = "facility_unit_id")
+    private Long facilityUnitId;
+
+    @Column(name = "premises_id")
+    private UUID premisesId;
+
+    @Column(name = "fee_reference", length = 128)
+    private String feeReference;
+
+    @Column(name = "payment_reference", length = 128)
+    private String paymentReference;
+
+    @Column(name = "application_number", length = 64)
+    private String applicationNumber;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -144,6 +162,18 @@ public class FacilityApplicationEntity {
     public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
     public String getWorkflowNotes() { return workflowNotes; }
     public void setWorkflowNotes(String workflowNotes) { this.workflowNotes = workflowNotes; }
+    public String getCatalogueCode() { return catalogueCode; }
+    public void setCatalogueCode(String catalogueCode) { this.catalogueCode = catalogueCode; }
+    public Long getFacilityUnitId() { return facilityUnitId; }
+    public void setFacilityUnitId(Long facilityUnitId) { this.facilityUnitId = facilityUnitId; }
+    public UUID getPremisesId() { return premisesId; }
+    public void setPremisesId(UUID premisesId) { this.premisesId = premisesId; }
+    public String getFeeReference() { return feeReference; }
+    public void setFeeReference(String feeReference) { this.feeReference = feeReference; }
+    public String getPaymentReference() { return paymentReference; }
+    public void setPaymentReference(String paymentReference) { this.paymentReference = paymentReference; }
+    public String getApplicationNumber() { return applicationNumber; }
+    public void setApplicationNumber(String applicationNumber) { this.applicationNumber = applicationNumber; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public String getCreatedBy() { return createdBy; }

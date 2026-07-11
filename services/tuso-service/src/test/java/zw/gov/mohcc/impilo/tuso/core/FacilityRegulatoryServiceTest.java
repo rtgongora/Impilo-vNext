@@ -55,6 +55,9 @@ class FacilityRegulatoryServiceTest {
     @Mock private FacilityStatusHistoryRepository statusHistoryRepository;
     @Mock private FacilityAuditEventRepository auditEventRepository;
     @Mock private EventOutboxRepository outboxRepository;
+    @Mock private RegulatoryRuleService regulatoryRuleService;
+    @Mock private ApplicationGovernanceService applicationGovernanceService;
+    @Mock private PremisesService premisesService;
 
     private FacilityRegulatoryService service;
     private UUID tenantId;
@@ -78,8 +81,15 @@ class FacilityRegulatoryServiceTest {
                 statusHistoryRepository,
                 auditEventRepository,
                 outboxRepository,
-                new ObjectMapper()
+                new ObjectMapper(),
+                regulatoryRuleService,
+                applicationGovernanceService,
+                premisesService
         );
+        // Rule-config defaults for unit tests (windows/cycle come from the rule store in prod).
+        when(regulatoryRuleService.remediationWindowDays(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(30);
+        when(regulatoryRuleService.renewalCycleMonths()).thenReturn(12);
+        when(regulatoryRuleService.renewalDueWindowDays()).thenReturn(90);
         tenantId = UUID.randomUUID();
         TrustContextHolder.set(new TrustContext(
                 tenantId,
@@ -171,6 +181,11 @@ class FacilityRegulatoryServiceTest {
                         null,
                         Map.of("source", "unit-test"),
                         List.of(),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
                         null
                 )
         );
@@ -191,6 +206,9 @@ class FacilityRegulatoryServiceTest {
     @Test
     void recordInspectionOutcome_createsRectificationWorkflowForFailedCriticalFinding() {
         FacilityEntity facility = facility(202L);
+        // A recorded inspection presupposes the facility reached PENDING_INSPECTION —
+        // the transition guard rejects a DRAFT facility jumping to rectification.
+        facility.setRegulatoryStatus(FacilityRegulatoryStatus.PENDING_INSPECTION);
         FacilityApplicationEntity application = application(facility);
         FacilityInspectionEntity inspection = inspection(facility, application);
 

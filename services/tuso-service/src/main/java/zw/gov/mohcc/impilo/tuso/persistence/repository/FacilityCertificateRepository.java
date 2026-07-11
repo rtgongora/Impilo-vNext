@@ -18,4 +18,11 @@ public interface FacilityCertificateRepository extends JpaRepository<FacilityCer
 
     @Query("select c from FacilityCertificateEntity c where c.status = :status and c.expiryDate <= :cutoff")
     List<FacilityCertificateEntity> findByStatusAndExpiryBefore(FacilityCertificateStatus status, LocalDate cutoff);
+
+    Optional<FacilityCertificateEntity> findByVerificationCode(String verificationCode);
+
+    Optional<FacilityCertificateEntity> findByCertificateNumber(String certificateNumber);
+
+    List<FacilityCertificateEntity> findByExpiryDateBetweenAndStatus(LocalDate from, LocalDate to,
+                                                                     FacilityCertificateStatus status);
 }

@@ -50,6 +50,9 @@ public class FacilityRegulatoryService {
     private final FacilityAuditEventRepository auditEventRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final RegulatoryRuleService regulatoryRuleService;
+    private final ApplicationGovernanceService applicationGovernanceService;
+    private final PremisesService premisesService;
 
     public FacilityRegulatoryService(FacilityRepository facilityRepository,
                                      FacilityGeoRepository facilityGeoRepository,
@@ -67,7 +70,10 @@ public class FacilityRegulatoryService {
                                      FacilityStatusHistoryRepository statusHistoryRepository,
                                      FacilityAuditEventRepository auditEventRepository,
                                      EventOutboxRepository outboxRepository,
-                                     ObjectMapper objectMapper) {
+                                     ObjectMapper objectMapper,
+                                     RegulatoryRuleService regulatoryRuleService,
+                                     ApplicationGovernanceService applicationGovernanceService,
+                                     PremisesService premisesService) {
         this.facilityRepository = facilityRepository;
         this.facilityGeoRepository = facilityGeoRepository;
         this.applicationRepository = applicationRepository;
@@ -85,6 +91,9 @@ public class FacilityRegulatoryService {
         this.auditEventRepository = auditEventRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.regulatoryRuleService = regulatoryRuleService;
+        this.applicationGovernanceService = applicationGovernanceService;
+        this.premisesService = premisesService;
     }
 
     @Transactional
@@ -112,6 +121,14 @@ public class FacilityRegulatoryService {
         application.setInstitutionFileNumber(firstNonBlank(facility.getInstitutionFileNumber(), generateInstitutionFileNumber(facility)));
         application.setRequestedChanges(buildRequestedChanges(request));
         application.setMetadata(defaultMap(request.metadata()));
+        application.setCatalogueCode(request.catalogueCode());
+        application.setPremisesId(request.premisesId());
+        application.setFacilityUnitId(request.facilityUnitId());
+        application.setFeeReference(request.feeReference());
+        application.setPaymentReference(request.paymentReference());
+        // Human-readable application number: HPA-APP-<year>-<8 hex>, unique-indexed.
+        application.setApplicationNumber("HPA-APP-" + java.time.Year.now().getValue() + "-"
+                + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase());
         application.setCreatedBy(ctx.actorId());
         application.setUpdatedBy(ctx.actorId());
         application = applicationRepository.save(application);
@@ -387,7 +404,9 @@ public class FacilityRegulatoryService {
                 }
                 finding.setRectificationStatus(RectificationStatus.OPEN);
                 finding.setRectificationDeadline(input.rectificationDeadline() != null
-                        ? input.rectificationDeadline() : LocalDate.now().plusDays(finding.isCriticalFlag() ? 14 : 30));
+                        ? input.rectificationDeadline()
+                        : LocalDate.now().plusDays(regulatoryRuleService.remediationWindowDays(
+                                finding.getSeverity(), finding.isCriticalFlag())));
             } else {
                 finding.setRectificationStatus(RectificationStatus.NOT_REQUIRED);
             }
@@ -514,6 +533,15 @@ public class FacilityRegulatoryService {
                     .orElseThrow(() -> new IllegalArgumentException("Inspection not found: " + request.inspectionId()))
                 : null;
 
+        // Route gate (HPA-2017-V1 pp.6-7): the private route requires a recorded
+        // external council review before an approval decision. Never faked.
+        if (request.decision() == CommitteeDecision.APPROVED) {
+            String blocker = applicationGovernanceService.councilReviewBlocker(application);
+            if (blocker != null) {
+                throw new IllegalStateException(blocker);
+            }
+        }
+
         CommitteeReviewEntity review = new CommitteeReviewEntity();
         review.setTenantId(ctx.tenantId());
         review.setFacility(facility);
@@ -616,7 +644,7 @@ public class FacilityRegulatoryService {
         List<FacilityEntity> facilities = facilityRepository.findByTenantId(ctx.tenantId());
         List<ComplianceActionEntity> overdueActions = complianceActionRepository.findByStatusAndDueDateBefore(RectificationStatus.OPEN, LocalDate.now().plusDays(1));
         List<FacilityCertificateEntity> renewalsDue = certificateRepository.findByStatusAndExpiryBefore(
-                FacilityCertificateStatus.ACTIVE, LocalDate.now().plusDays(90));
+                FacilityCertificateStatus.ACTIVE, LocalDate.now().plusDays(regulatoryRuleService.renewalDueWindowDays()));
         long openCases = facilities.stream()
                 .map(FacilityEntity::getId)
                 .flatMap(id -> enforcementCaseRepository.findByFacilityIdOrderByOpenedAtDesc(id).stream())
@@ -682,6 +710,20 @@ public class FacilityRegulatoryService {
 
         applyRequestedFacilityUpdates(facility, requestedChanges, ctx);
 
+        // Relocation (HPA-2017-V1 p.8): approval binds the facility to the new
+        // premises; the old occupancy ends historically and the old certificate
+        // is superseded in issueCertificate — never silently transferred.
+        if (application.getApplicationType() == FacilityApplicationType.CHANGE_OF_PREMISES
+                && application.getPremisesId() != null) {
+            premisesService.assignOccupancy(application.getPremisesId(), facility.getId(),
+                    "PRIMARY", application.getApplicationId(),
+                    "Relocation approved via application " + application.getApplicationId());
+            publishEvent(facility, "tuso.facility.premises.relocated", payloadOf(
+                    "facilityId", facility.getId(),
+                    "applicationId", application.getApplicationId(),
+                    "premisesId", application.getPremisesId()), ctx);
+        }
+
         if (!Boolean.FALSE.equals(request.issueCertificate())) {
             issueCertificate(facility, application, request, ctx);
         }
@@ -689,6 +731,13 @@ public class FacilityRegulatoryService {
         FacilityRegulatoryStatus approvedStatus = application.getApplicationType() == FacilityApplicationType.VOLUNTARY_CLOSURE_NOTICE
                 ? FacilityRegulatoryStatus.VOLUNTARILY_CLOSED
                 : FacilityRegulatoryStatus.REGISTERED_ACTIVE;
+        if (application.getApplicationType() == FacilityApplicationType.REOPENING) {
+            // Reinstatement is an explicit decision; conditions ride on the certificate.
+            approvedStatus = FacilityRegulatoryStatus.REGISTERED_ACTIVE;
+            publishEvent(facility, "tuso.facility.reopened", payloadOf(
+                    "facilityId", facility.getId(),
+                    "applicationId", application.getApplicationId()), ctx);
+        }
         if (approvedStatus == FacilityRegulatoryStatus.VOLUNTARILY_CLOSED) {
             facility.setStatus("CLOSED");
             facility.setClosedDate(LocalDate.now());
@@ -706,11 +755,17 @@ public class FacilityRegulatoryService {
                                   FacilityRegulatoryDtos.RecordCommitteeDecisionRequest request,
                                   TrustContext ctx) {
         FacilityCertificateEntity superseded = null;
-        if (application.getApplicationType() == FacilityApplicationType.RENEWAL) {
+        boolean supersedesPrior = application.getApplicationType() == FacilityApplicationType.RENEWAL
+                || application.getApplicationType() == FacilityApplicationType.CHANGE_OF_PREMISES;
+        if (supersedesPrior) {
             superseded = certificateRepository.findFirstByFacilityIdAndStatusOrderByIssueDateDesc(
                     facility.getId(), FacilityCertificateStatus.ACTIVE).orElse(null);
             if (superseded != null) {
                 superseded.setStatus(FacilityCertificateStatus.SUPERSEDED);
+                if (application.getApplicationType() == FacilityApplicationType.CHANGE_OF_PREMISES) {
+                    // HPA-2017-V1 p.8: a certificate is not transferable between premises.
+                    superseded.setStatusReason("Superseded on relocation — certificate not transferable between premises");
+                }
                 certificateRepository.save(superseded);
             }
         }
@@ -722,13 +777,14 @@ public class FacilityRegulatoryService {
         certificate.setCertificateType(firstNonBlank(request.certificateType(), "HEALTH_INSTITUTION_REGISTRATION"));
         certificate.setCertificateNumber(generateCertificateNumber(facility, application));
         certificate.setIssueDate(LocalDate.now());
-        certificate.setExpiryDate(LocalDate.now().plusYears(1));
+        certificate.setExpiryDate(LocalDate.now().plusMonths(regulatoryRuleService.renewalCycleMonths()));
         certificate.setStatus(FacilityCertificateStatus.ACTIVE);
         certificate.setIssuedUnderAuthority(firstNonBlank(request.authorityContext(), "HPA"));
         certificate.setDigitalArtifactReference(request.digitalArtifactReference());
         certificate.setSupersedesCertificate(superseded);
         certificate.setMetadata(defaultMap(request.metadata()));
         certificate.setIssuedBy(ctx.actorId());
+        certificate.setVerificationCode(java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase());
         certificate = certificateRepository.save(certificate);
 
         publishEvent(facility, "tuso.facility.certificate.issued", payloadOf(
@@ -871,9 +927,79 @@ public class FacilityRegulatoryService {
         return items;
     }
 
+    /**
+     * Allowed regulatory-status transitions. Imperative jumps outside this
+     * graph are rejected — regulatory state is a governed machine, not a
+     * free-form column. SYSTEM authority (imports/ops tooling) may bypass.
+     */
+    private static final Map<FacilityRegulatoryStatus, Set<FacilityRegulatoryStatus>> ALLOWED_TRANSITIONS = Map.ofEntries(
+            Map.entry(FacilityRegulatoryStatus.DRAFT, Set.of(
+                    FacilityRegulatoryStatus.APPLICATION_IN_PROGRESS, FacilityRegulatoryStatus.IMPORTED_PENDING_CONFIGURATION)),
+            Map.entry(FacilityRegulatoryStatus.IMPORTED_PENDING_CONFIGURATION, Set.of(
+                    FacilityRegulatoryStatus.APPLICATION_IN_PROGRESS, FacilityRegulatoryStatus.RENEWAL_IN_PROGRESS)),
+            Map.entry(FacilityRegulatoryStatus.APPLICATION_IN_PROGRESS, Set.of(
+                    FacilityRegulatoryStatus.UNDER_INITIAL_REVIEW, FacilityRegulatoryStatus.PENDING_INSPECTION,
+                    FacilityRegulatoryStatus.DRAFT, FacilityRegulatoryStatus.CLOSED)),
+            Map.entry(FacilityRegulatoryStatus.UNDER_INITIAL_REVIEW, Set.of(
+                    FacilityRegulatoryStatus.PENDING_INSPECTION, FacilityRegulatoryStatus.APPLICATION_IN_PROGRESS,
+                    FacilityRegulatoryStatus.PENDING_COMMITTEE_REVIEW, FacilityRegulatoryStatus.REGISTERED_ACTIVE,
+                    FacilityRegulatoryStatus.VOLUNTARILY_CLOSED)),
+            Map.entry(FacilityRegulatoryStatus.PENDING_INSPECTION, Set.of(
+                    FacilityRegulatoryStatus.INSPECTION_IN_PROGRESS, FacilityRegulatoryStatus.PENDING_RECTIFICATION,
+                    FacilityRegulatoryStatus.PENDING_COMMITTEE_REVIEW, FacilityRegulatoryStatus.RESTRICTED,
+                    FacilityRegulatoryStatus.PENDING_INSPECTION)),
+            Map.entry(FacilityRegulatoryStatus.INSPECTION_IN_PROGRESS, Set.of(
+                    FacilityRegulatoryStatus.PENDING_RECTIFICATION, FacilityRegulatoryStatus.PENDING_COMMITTEE_REVIEW,
+                    FacilityRegulatoryStatus.RESTRICTED)),
+            Map.entry(FacilityRegulatoryStatus.PENDING_RECTIFICATION, Set.of(
+                    FacilityRegulatoryStatus.PENDING_INSPECTION, FacilityRegulatoryStatus.PENDING_COMMITTEE_REVIEW,
+                    FacilityRegulatoryStatus.RESTRICTED, FacilityRegulatoryStatus.SUSPENDED)),
+            Map.entry(FacilityRegulatoryStatus.PENDING_COMMITTEE_REVIEW, Set.of(
+                    FacilityRegulatoryStatus.APPROVED_FOR_REGISTRATION, FacilityRegulatoryStatus.REGISTERED_ACTIVE,
+                    FacilityRegulatoryStatus.PENDING_RECTIFICATION, FacilityRegulatoryStatus.APPLICATION_IN_PROGRESS,
+                    FacilityRegulatoryStatus.VOLUNTARILY_CLOSED, FacilityRegulatoryStatus.RESTRICTED)),
+            Map.entry(FacilityRegulatoryStatus.APPROVED_FOR_REGISTRATION, Set.of(
+                    FacilityRegulatoryStatus.REGISTERED_ACTIVE)),
+            Map.entry(FacilityRegulatoryStatus.REGISTERED_ACTIVE, Set.of(
+                    FacilityRegulatoryStatus.RENEWAL_DUE, FacilityRegulatoryStatus.RENEWAL_IN_PROGRESS,
+                    FacilityRegulatoryStatus.APPLICATION_IN_PROGRESS, FacilityRegulatoryStatus.RESTRICTED,
+                    FacilityRegulatoryStatus.SUSPENDED, FacilityRegulatoryStatus.PENDING_CLOSURE,
+                    FacilityRegulatoryStatus.VOLUNTARILY_CLOSED, FacilityRegulatoryStatus.UNDER_INITIAL_REVIEW,
+                    FacilityRegulatoryStatus.PENDING_INSPECTION)),
+            Map.entry(FacilityRegulatoryStatus.RENEWAL_DUE, Set.of(
+                    FacilityRegulatoryStatus.RENEWAL_IN_PROGRESS, FacilityRegulatoryStatus.REGISTERED_ACTIVE,
+                    FacilityRegulatoryStatus.SUSPENDED, FacilityRegulatoryStatus.RESTRICTED)),
+            Map.entry(FacilityRegulatoryStatus.RENEWAL_IN_PROGRESS, Set.of(
+                    FacilityRegulatoryStatus.REGISTERED_ACTIVE, FacilityRegulatoryStatus.UNDER_INITIAL_REVIEW,
+                    FacilityRegulatoryStatus.PENDING_INSPECTION, FacilityRegulatoryStatus.PENDING_COMMITTEE_REVIEW,
+                    FacilityRegulatoryStatus.RESTRICTED)),
+            Map.entry(FacilityRegulatoryStatus.RESTRICTED, Set.of(
+                    FacilityRegulatoryStatus.REGISTERED_ACTIVE, FacilityRegulatoryStatus.SUSPENDED,
+                    FacilityRegulatoryStatus.PENDING_CLOSURE, FacilityRegulatoryStatus.PENDING_COMMITTEE_REVIEW,
+                    FacilityRegulatoryStatus.PENDING_INSPECTION)),
+            Map.entry(FacilityRegulatoryStatus.SUSPENDED, Set.of(
+                    FacilityRegulatoryStatus.REGISTERED_ACTIVE, FacilityRegulatoryStatus.PENDING_CLOSURE,
+                    FacilityRegulatoryStatus.CLOSED, FacilityRegulatoryStatus.APPLICATION_IN_PROGRESS)),
+            Map.entry(FacilityRegulatoryStatus.PENDING_CLOSURE, Set.of(
+                    FacilityRegulatoryStatus.CLOSED, FacilityRegulatoryStatus.REGISTERED_ACTIVE,
+                    FacilityRegulatoryStatus.SUSPENDED)),
+            Map.entry(FacilityRegulatoryStatus.CLOSED, Set.of(
+                    FacilityRegulatoryStatus.APPLICATION_IN_PROGRESS)),
+            Map.entry(FacilityRegulatoryStatus.VOLUNTARILY_CLOSED, Set.of(
+                    FacilityRegulatoryStatus.APPLICATION_IN_PROGRESS))
+    );
+
     private void applyFacilityStatus(FacilityEntity facility, FacilityRegulatoryStatus status,
                                      FacilityApplicationState applicationState, String reason,
                                      UUID sourceApplicationId, TrustContext ctx, String authorityContext) {
+        FacilityRegulatoryStatus current = facility.getRegulatoryStatus();
+        if (current != null && current != status && !"SYSTEM".equals(authorityContext)) {
+            Set<FacilityRegulatoryStatus> allowed = ALLOWED_TRANSITIONS.getOrDefault(current, Set.of());
+            if (!allowed.contains(status)) {
+                throw new IllegalStateException("Regulatory status transition " + current + " -> " + status
+                        + " is not permitted (reason attempted: " + reason + ")");
+            }
+        }
         facility.setRegulatoryStatus(status);
         facility.setRegulatoryStatusUpdatedAt(Instant.now());
         facility.setUpdatedBy(ctx.actorId());
