@@ -1,0 +1,16 @@
+tuso.facility.application.created|5
+tuso.facility.application.information_provided|1
+tuso.facility.application.information_requested|1
+tuso.facility.application.submitted|5
+tuso.facility.certificate.issued|4
+tuso.facility.committee.decision.recorded|5
+tuso.facility.compliance.action.updated|1
+tuso.facility.council_review.recorded|1
+tuso.facility.document.uploaded|5
+tuso.facility.inspection.scheduled|1
+tuso.facility.inspection.visit_recorded|1
+tuso.facility.pic.accepted|2
+tuso.facility.pic.activated|2
+tuso.facility.pic.nominated|2
+tuso.facility.pic.review_recorded|2
+tuso.facility.premises.relocated|1

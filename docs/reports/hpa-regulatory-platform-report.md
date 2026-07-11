@@ -1,0 +1,141 @@
+# HPA Regulatory Platform — Implementation Report
+
+**Date:** 2026-07-11
+**Repo:** `/opt/impilo/repos/Impilo-vNext` · **Branch:** `claude/staging-ux-orchestration-remediation-Yypyl`
+**Starting commit:** `c04aa05a7` · **Final commit:** `d3306e1b9`
+**Source pack:** `/home/robert/tuso-varapi-hpa-regulatory-pack` (HPA Registration, Inspection and Renewal Manual, Vol 1, 2017 — treated as authoritative *baseline*, not current law)
+
+## 1. What was built
+
+Tuso moved from a facility directory + generic regulatory engine to a national facility
+**registration / inspection / licensing / renewal / material-change / regulatory-status**
+capability; Varapi gained a unified, time-specific **PIC eligibility assessment** truth with
+credential-change events. No new service was created; no Tshepo files were touched; money
+remains COSTA/MusheX references only; organisations remain org-registry territory.
+
+## 2. Commits (all pushed)
+
+| Commit | Scope |
+|---|---|
+| `2d63f99b9` | tuso backend: V018 migration, premises, catalogues, versioned rules, PIC nomination FSM, inspection visits/responses, RFI, council reviews, verification codes, renewal scheduler, new controller surfaces, Varapi client, credential-event consumer |
+| `ca07722c2` | varapi: V023 snapshot table, `PicEligibilityAssessmentService` (per-axis, asOf-time-specific), interop assessment endpoints, `varapi.provider.eligibility.changed` events, envelope hygiene |
+| `7375c0970` | design doc (gap matrix + reconciliation) + tuso `VARAPI_BASE_URL` runtime wiring |
+| `2ef103d64` | experience-bff: whitelisted regulatory mirror + public certificate verification route (permitAll) |
+| `4e64120d5` | one-ui-shell: 28 hooks + facility-file panels (PIC/RFI/council/premises/visits), `/professional/pic-nominations`, `/verify/facility-certificate`, cockpit regulatory panel (routes 698→700) |
+| `d3306e1b9` | runtime-proof fixes: committee decisions permitted from inspection-phase states; NON_COMPLIANT visit responses open CAPA; public verify lazy-proxy fix |
+
+## 3. Data model
+
+**Tuso `V018__hpa_regulatory_platform.sql`** — new tables: `facility_premises`,
+`facility_premises_occupancy` (shared premises = >1 active occupancy),
+`regulatory_application_type` (8-entry catalogue), `facility_classification` (39),
+`inspection_type_reference` (7), `regulatory_rule` (19 versioned rules incl. 3 CONFIG
+`value_json` rules — remediation windows, renewal cycle, renewal-due window),
+`application_information_request` (RFI), `external_council_review`, `pic_nomination`,
+`inspection_visit`, `inspection_response`. Additive columns on `facility_application`
+(catalogue/premises/unit/fee/payment refs + unique `application_number`),
+`practitioner_in_charge_assignment` (review axes + predecessor link), `facility_unit`
+(`pic_required`), `inspection_checklist_template` (governance/approval columns; V006 seeds
+backfilled to `PENDING_REGULATOR_APPROVAL`), `facility_certificate` (unique
+`verification_code`, unit scope, conditions, `status_reason`), `inspection_finding`
+(response link, extension, recurrence), `facility_document` (supersedes chain).
+
+**Varapi `V023__pic_eligibility_snapshot.sql`** — `provider_eligibility_snapshot`
+(per-axis JSON evidence, purpose, asOf, result).
+
+All seeds carry `HPA-2017-V1` provenance and `PENDING_REGULATOR_APPROVAL` /
+reference-requires-validation status. No 2017 fee or deadline is hard-coded anywhere;
+periods resolve through `RegulatoryRuleService` CONFIG rules at runtime.
+`raw_inspection_requirement_candidates.*` was **not** loaded as production truth.
+
+## 4. APIs
+
+**Tuso** `/v1/internal/facility-registry/**` (`HpaRegulatoryOperationsController` +
+patched `FacilityRegulatoryController` engine): application-types, classifications,
+rules (+approve), premises (+occupancies), information-requests (open/respond/close),
+council-reviews, pic-nominations (nominate → respond → record-review → activate →
+withdraw), pic-assignments/{id}/resolve-review, inspections/{id}/visits,
+visits/{id}/responses (+complete). Public: `GET /v1/public/facilities/certificates/verify/{code}`
+(disclosure-limited; 404 on unknown; honest status for expired/superseded).
+
+**Varapi** `POST|GET /v1/internal/interop/eligibility/assessments`
+(`TusoInteropController`): per-axis identity/council/registration/practising-certificate/
+licence/restrictions verdicts (PASS/WARN/FAIL), asOf time-specificity, persisted snapshot,
+result ELIGIBLE / CONDITIONAL / INELIGIBLE — council standing is never a boolean.
+
+**BFF** `/internal/v1/facility-registry/**` explicit whitelisted mirror
+(`HpaRegulatoryBffController`) + `/internal/v1/public/facility-certificates/verify/{code}`
+(permitAll). Upstream rejections surfaced verbatim (`REGULATORY_ACTION_REJECTED`).
+
+## 5. Events
+
+Tuso outbox (legacy emit mode preserved): application lifecycle, `premises.relocated`,
+PIC nomination/assignment transitions, visit completion summaries — every row carries
+`pod_id` + `idempotency_key` (proven: 39/39 in the run). Varapi emits
+`varapi.provider.eligibility.changed` (aggregate CREDENTIAL → topic `varapi.credential`);
+tuso's `VarapiCredentialEventConsumer` flags affected ACTIVE PIC assignments
+`UNDER_REVIEW` — audited state, never deletion.
+
+## 6. Experience
+
+Facility file: PIC nominations, information requests, council reviews, premises, and
+inspection visits panels. `/professional/pic-nominations` (practitioner accept/decline —
+health-ID-anchored: only the nominated practitioner may respond).
+`/verify/facility-certificate` (public, `?code=` prefill). Ops cockpit regulatory status
+panel. Route census 700; hook tests 88/88; `tsc` clean.
+
+## 7. Runtime proof — 36/36 PASS
+
+Evidence: [`reports/journeys/hpa-runtime-proof-20260711/`](../../reports/journeys/hpa-runtime-proof-20260711/)
+(journal, per-journey JSON, the executable script `hpa-journeys.sh`).
+
+Rig: virgin scratch Postgres 16 — tuso V001→V018 and varapi V001→V023 applied cleanly from
+zero; both jars booted against it (OAuth test-bypass flag, Kafka listeners off — consumer
+seam exercised in-process). **Not** run against preview/staging/production (deployment
+explicitly not authorised).
+
+| Journey | Verdict |
+|---|---|
+| J1 initial private registration: create → number → submit → council gate blocks premature approval → RFI park/return → council ENDORSED → inspection visit with 3 structured responses → NON_COMPLIANT derives finding (rule-driven 30d) + CAPA → verify action → committee APPROVED → `REGISTERED_ACTIVE` + certificate w/ verification code | PASS |
+| J2 government route approved **without** council review (route differentiation) | PASS |
+| PIC lifecycle: live varapi assessment (per-axis, snapshot persisted) → nomination → foreign practitioner blocked (negative) → accept → activate (effective-dated) | PASS |
+| J5 PIC succession: predecessor end-dated historically, successor links `predecessor_assignment_id` | PASS |
+| J6 credential change → `eligibility.changed` event → assignment `UNDER_REVIEW` (audited, not deleted) | PASS |
+| J4 shared premises: two regulated facilities, one premises, distinct identities | PASS |
+| J8 relocation: old certificate SUPERSEDED ("not transferable"), primary occupancy switched, history preserved | PASS |
+| J9 renewal: successor certificate; predecessor preserved SUPERSEDED | PASS |
+| J10 voluntary closure: explicit human decision; facility record preserved | PASS |
+| J12 public verification: public fields only, no confidential leakage, unknown code → 404 | PASS |
+| Negative guards: illegal `VOLUNTARILY_CLOSED → PENDING_INSPECTION` rejected; premature approval blocked by council gate | PASS |
+| Cross-cutting: 39 outbox events all hygienic, 32 audit events, 8-entry status-history chain, reload continuity | PASS |
+
+## 8. Gates
+
+tuso 133/133 · varapi 202/202 · experience-bff compile clean · UI `tsc` clean, routes 700,
+hook tests 88/88 · migrations proven virgin-DB-clean.
+
+## 9. Unresolved policy questions (for the regulator / PO)
+
+1. **Preview deployment awaits explicit authorisation** — nothing from this mission is
+   deployed; the permission gate correctly denied a preview roll and it was not retried.
+2. All 19 seeded rules + 4 checklist templates are `PENDING_REGULATOR_APPROVAL` — a
+   governed approval pass (via `POST rules/{id}/approve`) is required before they bind.
+3. Current statutory fees/renewal periods must replace the 2017-indicative CONFIG values
+   through the versioned-rule path.
+4. Council review integration is a recorded human step (MDPCZ etc.); machine-to-machine
+   council interfaces are out of scope until agreements exist.
+5. Classification catalogue (39 entries) needs regulator validation against current HPA
+   practice-type schedules.
+
+## 10. Honest gaps / deferred
+
+- UI journeys proven at typecheck/route/hook level only — browser journeys need the
+  authorised deploy.
+- Kafka consumer proven via the service seam (no broker in rig); broker-path proof lands
+  with the next full-boot.
+- J3 (separate unit registration) partially covered: `ADD_UNIT` engine path + unit-scoped
+  certificates exist; not scripted end-to-end. J11 enforcement uses the pre-existing
+  `enforcement_case` engine; not re-proven this wave.
+- Checklist template CRUD (authoring UI) deferred — governance columns + approval state
+  shipped; templates seed-managed for now.
+- COSTA fee integration = reference fields only (by ownership design); no tariff logic in tuso.
