@@ -366,6 +366,9 @@ public class SecurityConfig {
 
                     // ── Patient-mediated external provider collaboration (VITO-backed) ──
                     .requestMatchers("/internal/v1/public/patient-shares/**").permitAll()
+
+                    // ── Public facility-certificate verification (disclosure-limited) ──
+                    .requestMatchers("/internal/v1/public/facility-certificates/verify/**").permitAll()
                     .requestMatchers("/internal/v1/citizen/clients/*/patient-shares/**")
                             .hasAnyRole(CITIZEN_ROLES)
 

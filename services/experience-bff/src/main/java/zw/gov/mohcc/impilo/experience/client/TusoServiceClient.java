@@ -119,6 +119,29 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** Generic GET against a whitelisted tuso internal path (HPA regulatory ops surface). */
+    public JsonNode regulatoryGet(String subPath) {
+        String url = baseUrl + "/v1/internal/facility-registry" + subPath;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(java.net.URI.create(url), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Generic POST against a whitelisted tuso internal path (HPA regulatory ops surface). */
+    public JsonNode regulatoryPost(String subPath, Object body) {
+        String url = baseUrl + "/v1/internal/facility-registry" + subPath;
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(java.net.URI.create(url),
+                body != null ? body : java.util.Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Public certificate verification passthrough (no data-envelope unwrap — raw disclosure). */
+    public JsonNode verifyCertificatePublic(String code) {
+        String url = baseUrl + "/v1/public/facilities/certificates/verify/"
+                + java.net.URLEncoder.encode(code, java.nio.charset.StandardCharsets.UTF_8);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(java.net.URI.create(url), JsonNode.class);
+        return response.getBody();
+    }
+
     /** Resolve a facility by its canonical cross-service UUID (tuso facility_uuid). */
     public JsonNode getFacilityByUid(String facilityUuid) {
         String url = baseUrl + "/v1/internal/facilities/by-uid/" + facilityUuid;
