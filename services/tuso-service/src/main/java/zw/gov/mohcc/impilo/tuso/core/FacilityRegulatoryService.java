@@ -276,16 +276,22 @@ public class FacilityRegulatoryService {
         TrustContextHolder.require();
         List<InspectionChecklistTemplateEntity> templates = checklistTemplateRepository.findApplicableTemplates(inspectionType, facilityType);
         return templates.stream()
-                .map(template -> Map.<String, Object>of(
-                        "templateId", template.getTemplateId(),
-                        "code", template.getCode(),
-                        "name", template.getName(),
-                        "version", template.getVersion(),
-                        "facilityTypeApplicability", template.getFacilityTypeApplicability(),
-                        "inspectionTypeApplicability", template.getInspectionTypeApplicability().name(),
-                        "description", template.getDescription(),
-                        "items", template.getItemsJson()
-                ))
+                .map(template -> {
+                    // Map.of rejects null values — several template fields are nullable.
+                    Map<String, Object> view = new java.util.LinkedHashMap<>();
+                    view.put("templateId", template.getTemplateId());
+                    view.put("templateCode", template.getCode());
+                    view.put("code", template.getCode());
+                    view.put("name", template.getName());
+                    view.put("version", template.getVersion());
+                    view.put("facilityTypeApplicability", template.getFacilityTypeApplicability());
+                    view.put("inspectionTypeApplicability",
+                            template.getInspectionTypeApplicability() != null
+                                    ? template.getInspectionTypeApplicability().name() : null);
+                    view.put("description", template.getDescription());
+                    view.put("items", template.getItemsJson());
+                    return (Map<String, Object>) view;
+                })
                 .toList();
     }
 

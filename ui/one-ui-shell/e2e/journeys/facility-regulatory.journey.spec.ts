@@ -55,6 +55,10 @@ test.describe("Facility regulatory lifecycle journey (live preview)", () => {
     await page.getByPlaceholder(/existing facility id/i).fill("6");
     await page.getByPlaceholder(/applicant name/i).fill("Hunyani Municipal Council");
     await page.getByRole("button", { name: /create application/i }).click();
+    // The intake panel closes only on successful creation — wait for it.
+    await expect(page.getByRole("button", { name: /create application/i })).toHaveCount(0, {
+      timeout: 20_000,
+    });
 
     // Open the facility's regulatory file.
     await page.goto("/registry/facility-lifecycle/6");
