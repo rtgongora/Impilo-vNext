@@ -830,6 +830,14 @@ public class AuthSessionController {
     }
 
     private String determineActorType(List<String> roles) {
+        // HPA authority personas carry their authority identity through the
+        // actor-type seam — tuso's facility regulatory guard keys on it.
+        if (roles.contains("HPA_REGISTRAR")) {
+            return "HPA_REGISTRAR";
+        }
+        if (roles.contains("HPA_INSPECTOR")) {
+            return "HPA_INSPECTOR";
+        }
         if (roles.contains("SYSTEM_ADMIN") || roles.contains("SUPER_ADMIN") || roles.contains("DEVELOPER")
                 || roles.contains("SUPPORT_AGENT") || roles.contains("FINANCE")) {
             return "OPERATOR";

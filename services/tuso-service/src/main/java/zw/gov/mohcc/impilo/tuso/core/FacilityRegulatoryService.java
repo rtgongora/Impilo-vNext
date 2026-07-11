@@ -23,12 +23,15 @@ public class FacilityRegulatoryService {
 
     private static final Logger log = LoggerFactory.getLogger(FacilityRegulatoryService.class);
 
+    // HPA_REGISTRAR is the authority's registry officer: raises/administers
+    // applications on behalf of applicants, schedules inspections and records
+    // committee resolutions. HPA_INSPECTOR carries field verdicts only.
     private static final Set<String> APPLICANT_ROLES = Set.of(
-            "FACILITY_APPLICANT", "FACILITY_MANAGER", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER");
+            "FACILITY_APPLICANT", "FACILITY_MANAGER", "FACILITY_ADMIN", "HPA_REGISTRAR", "SYSTEM_ADMIN", "DEVELOPER");
     private static final Set<String> INSPECTOR_ROLES = Set.of(
-            "HPA_INSPECTOR", "HPA_ADMIN", "SYSTEM_ADMIN", "DEVELOPER");
+            "HPA_INSPECTOR", "HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN", "DEVELOPER");
     private static final Set<String> COMMITTEE_ROLES = Set.of(
-            "HPA_COMMITTEE_MEMBER", "HPA_ADMIN", "COUNCIL_REVIEWER", "SYSTEM_ADMIN", "DEVELOPER");
+            "HPA_COMMITTEE_MEMBER", "HPA_REGISTRAR", "HPA_ADMIN", "COUNCIL_REVIEWER", "SYSTEM_ADMIN", "DEVELOPER");
 
     private final FacilityRepository facilityRepository;
     private final FacilityGeoRepository facilityGeoRepository;

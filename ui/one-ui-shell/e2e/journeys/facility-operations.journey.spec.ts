@@ -74,25 +74,33 @@ test.describe("Facility operations journey (live preview)", () => {
       .catch(() => false);
 
     if (!hubVisible) {
-      // Already in a session — go back to the hub explicitly.
-      await page.goto("/work");
+      // Already in a session — reopen the workplace hub via the context switcher.
+      const switcher = page.getByRole("button", { name: /switch context/i }).first();
+      if (await switcher.isVisible({ timeout: 5_000 }).catch(() => false)) {
+        await switcher.click();
+      } else {
+        await page.goto("/home");
+      }
     }
 
+    // Facility selection surfaces vary (search-first hub, gateway cards, or the
+    // context-switcher overlay). Use search when present, then select Hunyani via
+    // whichever affordance renders it (link in the overlay, button card elsewhere).
     const search = page.getByPlaceholder(/search.*facilit/i).first();
-    await expect(search).toBeVisible({ timeout: 20_000 });
-    await search.fill("Hunyani");
-
-    // The imported facility is selectable (registry-backed, search-first hub).
-    const facilityCard = page.getByRole("button", { name: /hunyani/i }).first();
-    await expect(facilityCard).toBeVisible({ timeout: 20_000 });
-    await facilityCard.click();
-
-    // Workspace step: the F1 default workspace exists — Continue is enabled.
-    const continueBtn = page.getByRole("button", { name: /continue/i }).first();
-    if (await continueBtn.isVisible({ timeout: 10_000 }).catch(() => false)) {
-      await expect(continueBtn).toBeEnabled();
-      await continueBtn.click();
+    if (await search.isVisible({ timeout: 5_000 }).catch(() => false)) {
+      await search.fill("Hunyani");
     }
+    const facilityEntry = page
+      .getByRole("link", { name: /hunyani/i })
+      .or(page.getByRole("button", { name: /hunyani municipal clinic(?!.*opd)/i }))
+      .first();
+    await expect(facilityEntry).toBeVisible({ timeout: 20_000 });
+    await facilityEntry.click();
+
+    // Workspace step: the F1 default workspace card exists — clicking it advances.
+    const workspaceCard = page.getByRole("button", { name: /hunyani.*opd.*continue/i }).first();
+    await expect(workspaceCard).toBeVisible({ timeout: 20_000 });
+    await workspaceCard.click();
 
     // Shift step: Start Session is reachable (the previous dead-end).
     await expect(page.getByRole("button", { name: /start session/i }).first()).toBeVisible({
