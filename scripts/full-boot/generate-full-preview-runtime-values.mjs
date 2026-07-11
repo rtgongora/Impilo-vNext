@@ -118,6 +118,13 @@ function specialEnv(serviceId) {
       IMPILO_SECURITY_ALLOW_ANONYMOUS: "true",
     };
   }
+  if (serviceId === "tuso-service") {
+    return {
+      // PIC eligibility assessments call VARAPI; the code default is
+      // localhost:8083, which in-pod means "no assessments ever resolve".
+      VARAPI_BASE_URL: "http://varapi-service:8083",
+    };
+  }
   if (serviceId === "pct-service") {
     return {
       KEYCLOAK_ISSUER: "",
