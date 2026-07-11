@@ -15,6 +15,8 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.InspectionVisitEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.RectificationStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityInspectionRepository;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.ComplianceActionEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.repository.ComplianceActionRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.InspectionFindingRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.InspectionResponseRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.InspectionVisitRepository;
@@ -54,19 +56,22 @@ public class InspectionVisitService {
     private final InspectionFindingRepository findingRepository;
     private final RegulatoryRuleService ruleService;
     private final EventOutboxRepository outboxRepository;
+    private final ComplianceActionRepository complianceActionRepository;
 
     public InspectionVisitService(InspectionVisitRepository visitRepository,
                                   InspectionResponseRepository responseRepository,
                                   FacilityInspectionRepository inspectionRepository,
                                   InspectionFindingRepository findingRepository,
                                   RegulatoryRuleService ruleService,
-                                  EventOutboxRepository outboxRepository) {
+                                  EventOutboxRepository outboxRepository,
+                                  ComplianceActionRepository complianceActionRepository) {
         this.visitRepository = visitRepository;
         this.responseRepository = responseRepository;
         this.inspectionRepository = inspectionRepository;
         this.findingRepository = findingRepository;
         this.ruleService = ruleService;
         this.outboxRepository = outboxRepository;
+        this.complianceActionRepository = complianceActionRepository;
     }
 
     public record CreateVisitRequest(UUID inspectionId, LocalDate scheduledDate, String mode,
@@ -172,7 +177,19 @@ public class InspectionVisitService {
                 finding.setRectificationDeadline(LocalDate.now()
                         .plusDays(ruleService.remediationWindowDays(severity, critical)));
                 finding.setRectificationStatus(RectificationStatus.OPEN);
-                findingRepository.save(finding);
+                finding = findingRepository.save(finding);
+
+                // Derived failures open a corrective action (CAPA), mirroring
+                // the recordInspectionOutcome path.
+                ComplianceActionEntity action = new ComplianceActionEntity();
+                action.setTenantId(ctx.tenantId());
+                action.setFacility(inspection.getFacility());
+                action.setInspectionFinding(finding);
+                action.setActionType("RECTIFY_SHORTFALL");
+                action.setDueDate(finding.getRectificationDeadline());
+                action.setCreatedBy(ctx.actorId());
+                action.setUpdatedBy(ctx.actorId());
+                complianceActionRepository.save(action);
             }
         }
         return saved;

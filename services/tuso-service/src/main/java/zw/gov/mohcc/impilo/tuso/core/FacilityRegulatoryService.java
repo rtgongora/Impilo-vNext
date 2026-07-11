@@ -947,13 +947,18 @@ public class FacilityRegulatoryService {
             Map.entry(FacilityRegulatoryStatus.PENDING_INSPECTION, Set.of(
                     FacilityRegulatoryStatus.INSPECTION_IN_PROGRESS, FacilityRegulatoryStatus.PENDING_RECTIFICATION,
                     FacilityRegulatoryStatus.PENDING_COMMITTEE_REVIEW, FacilityRegulatoryStatus.RESTRICTED,
-                    FacilityRegulatoryStatus.PENDING_INSPECTION)),
+                    FacilityRegulatoryStatus.PENDING_INSPECTION, FacilityRegulatoryStatus.REGISTERED_ACTIVE,
+                    FacilityRegulatoryStatus.VOLUNTARILY_CLOSED, FacilityRegulatoryStatus.APPLICATION_IN_PROGRESS,
+                    FacilityRegulatoryStatus.RENEWAL_IN_PROGRESS)),
             Map.entry(FacilityRegulatoryStatus.INSPECTION_IN_PROGRESS, Set.of(
                     FacilityRegulatoryStatus.PENDING_RECTIFICATION, FacilityRegulatoryStatus.PENDING_COMMITTEE_REVIEW,
-                    FacilityRegulatoryStatus.RESTRICTED)),
+                    FacilityRegulatoryStatus.RESTRICTED, FacilityRegulatoryStatus.REGISTERED_ACTIVE,
+                    FacilityRegulatoryStatus.VOLUNTARILY_CLOSED)),
             Map.entry(FacilityRegulatoryStatus.PENDING_RECTIFICATION, Set.of(
                     FacilityRegulatoryStatus.PENDING_INSPECTION, FacilityRegulatoryStatus.PENDING_COMMITTEE_REVIEW,
-                    FacilityRegulatoryStatus.RESTRICTED, FacilityRegulatoryStatus.SUSPENDED)),
+                    FacilityRegulatoryStatus.RESTRICTED, FacilityRegulatoryStatus.SUSPENDED,
+                    FacilityRegulatoryStatus.PENDING_RECTIFICATION, FacilityRegulatoryStatus.REGISTERED_ACTIVE,
+                    FacilityRegulatoryStatus.VOLUNTARILY_CLOSED, FacilityRegulatoryStatus.APPLICATION_IN_PROGRESS)),
             Map.entry(FacilityRegulatoryStatus.PENDING_COMMITTEE_REVIEW, Set.of(
                     FacilityRegulatoryStatus.APPROVED_FOR_REGISTRATION, FacilityRegulatoryStatus.REGISTERED_ACTIVE,
                     FacilityRegulatoryStatus.PENDING_RECTIFICATION, FacilityRegulatoryStatus.APPLICATION_IN_PROGRESS,

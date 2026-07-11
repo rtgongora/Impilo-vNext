@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.tuso.api.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,6 +37,7 @@ public class PublicCertificateVerificationController {
     }
 
     @GetMapping("/verify/{code}")
+    @Transactional(readOnly = true) // facility/supersedes are lazy associations
     public ResponseEntity<Map<String, Object>> verify(@PathVariable String code) {
         String normalized = code == null ? "" : code.trim().toUpperCase();
         FacilityCertificateEntity certificate = certificateRepository.findByVerificationCode(normalized)
