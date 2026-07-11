@@ -94,6 +94,32 @@ public class FacilityController {
     }
 
     /**
+     * Resolve a facility by its canonical cross-service UUID ({@code facility_uuid}).
+     * Bridges UUID-keyed consumers (PCT overlay, staff binding, session contract)
+     * to the registry; same visibility guard as the bigint detail read.
+     */
+    @GetMapping("/by-uid/{facilityUuid}")
+    public ResponseEntity<ApiResponse<FacilityResponse>> getFacilityByUid(
+            @PathVariable java.util.UUID facilityUuid) {
+
+        TrustContext ctx = TrustContextHolder.require();
+        FacilityService.FacilityDetail detail = facilityService.getFacilityByUuid(facilityUuid);
+        FacilityResponse response = toDetailResponse(detail);
+
+        VisibilityProfile vis = VisibilityContextHolder.current().orElse(null);
+        if (AggregateVisibilityGuard.blocksRowLevelDetail(vis)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("VISIBILITY_AGGREGATE_ONLY",
+                            "Facility detail is not available under aggregate-only visibility.",
+                            HttpStatus.FORBIDDEN.value(),
+                            ctx.correlationId().toString()));
+        }
+        response = FacilityRepresentation.apply(response, vis);
+
+        return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
+    }
+
+    /**
      * Lightweight status reference endpoint for cross-service legitimacy checks.
      * Used by VARAPI (PIC assignment) and commerce/booking flows.
      */
@@ -252,6 +278,7 @@ public class FacilityController {
     private FacilityResponse toFacilityResponse(FacilityEntity entity) {
         return new FacilityResponse(
                 entity.getId(),
+                entity.getFacilityUuid() != null ? entity.getFacilityUuid().toString() : null,
                 entity.getName(),
                 entity.getFacilityCode(),
                 entity.getFacilityType(),
@@ -337,6 +364,7 @@ public class FacilityController {
 
         return new FacilityResponse(
                 entity.getId(),
+                entity.getFacilityUuid() != null ? entity.getFacilityUuid().toString() : null,
                 entity.getName(),
                 entity.getFacilityCode(),
                 entity.getFacilityType(),
@@ -390,6 +418,7 @@ public class FacilityController {
         FacilityMasterPackMetadata.Flags pack = FacilityMasterPackMetadata.from(entity);
         return new FacilityListResponse.FacilitySummary(
                 entity.getId(),
+                entity.getFacilityUuid() != null ? entity.getFacilityUuid().toString() : null,
                 entity.getName(),
                 entity.getFacilityCode(),
                 entity.getFacilityType(),

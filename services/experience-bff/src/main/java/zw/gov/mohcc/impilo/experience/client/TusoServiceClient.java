@@ -119,6 +119,13 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** Resolve a facility by its canonical cross-service UUID (tuso facility_uuid). */
+    public JsonNode getFacilityByUid(String facilityUuid) {
+        String url = baseUrl + "/v1/internal/facilities/by-uid/" + facilityUuid;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Facility registry search (search-before-create). */
     public JsonNode searchFacilities(Map<String, Object> requestBody) {
         String url = baseUrl + "/v1/internal/facilities/search";

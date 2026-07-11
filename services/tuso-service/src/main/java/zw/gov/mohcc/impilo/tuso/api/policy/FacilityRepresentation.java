@@ -32,6 +32,7 @@ public final class FacilityRepresentation {
                 geo.catchmentArea());
         return new FacilityResponse(
                 r.id(),
+                r.facilityUuid(),
                 r.name(),
                 r.facilityCode(),
                 r.facilityType(),

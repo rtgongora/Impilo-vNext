@@ -79,9 +79,14 @@ public class FacilityModeController {
         data.put("source", "TUSO");
         data.put("context", context);
 
-        // Overlay live PCT queue depth / open encounters when a UUID facility ref is given
-        // and the context is NOT aggregate-only (no per-facility row detail under aggregate).
+        // Overlay live PCT queue depth / open encounters when a UUID facility ref is
+        // available and the context is NOT aggregate-only. The facility's canonical
+        // UUID (tuso facility_uuid) IS the PCT facility key post-canonicalization, so
+        // callers no longer need to pass pctFacilityId explicitly.
         boolean aggregateOnly = "AGGREGATE_ONLY".equals(context.path("visibility").asText(null));
+        if (pctFacilityId == null || pctFacilityId.isBlank()) {
+            pctFacilityId = context.path("facility").path("facilityUuid").asText(null);
+        }
         if (pctFacilityId != null && !pctFacilityId.isBlank() && !aggregateOnly) {
             try {
                 JsonNode queues = pctClient.listQueues(UUID.fromString(pctFacilityId), null);

@@ -8,6 +8,7 @@ import java.util.Map;
 
 public record FacilityResponse(
         Long id,
+        String facilityUuid,
         String name,
         String facilityCode,
         String facilityType,

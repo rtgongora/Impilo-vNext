@@ -19,6 +19,7 @@ public record FacilityModeContextResponse(
 
     public record FacilityNode(
             Long facilityId,
+            String facilityUuid,
             String tenantId,
             String code,
             String name,

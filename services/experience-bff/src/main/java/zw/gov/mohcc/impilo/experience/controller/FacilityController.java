@@ -167,6 +167,34 @@ public class FacilityController {
     }
 
     /**
+     * Resolve a facility by its canonical cross-service UUID (tuso {@code facility_uuid}).
+     * Bridges UUID-keyed consumers (PCT queue refs, staff bindings, session contract)
+     * into the registry. Live-only: UUID resolution has no stub dataset.
+     */
+    @GetMapping("/by-uid/{facilityUuid}")
+    public ResponseEntity<Map<String, Object>> getFacilityByUid(
+            @PathVariable String facilityUuid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode detail = tusoClient.getFacilityByUid(facilityUuid);
+            if (detail == null || detail.isNull()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", mapTusoDetailToFacilityResource(detail),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (org.springframework.web.client.HttpClientErrorException.NotFound nf) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            log.warn("TUSO facility by-uid failed for {}: {}", facilityUuid, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "TUSO_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    /**
      * Composite facility legitimacy + platform-access verdict (WS-E). Fail-closed: any upstream
      * failure returns HTTP 502 (no stub fallback) — legitimacy is a governance read that must never
      * be served from synthetic data. Placed under {@code /internal/v1} for consistency with the
@@ -229,6 +257,9 @@ public class FacilityController {
         putTextIfPresent(attrs, "ownership", n, "ownership");
         putTextIfPresent(attrs, "level", n, "level");
         putTextIfPresent(attrs, "operationalStatus", n, "operationalStatus");
+        // Canonical cross-service UUID (tuso facility_uuid); facilityUid below is the
+        // master-pack provenance row key — different concept, both projected honestly.
+        putTextIfPresent(attrs, "facilityUuid", n, "facilityUuid");
         putTextIfPresent(attrs, "facilityUid", n, "facilityUid");
         putBooleanIfPresent(attrs, "hasValidCoordinates", n, "hasValidCoordinates");
         putBooleanIfPresent(attrs, "missingFacilityCode", n, "missingFacilityCode");
@@ -259,6 +290,7 @@ public class FacilityController {
         putTextIfPresent(attrs, "ownership", n, "ownership");
         putTextIfPresent(attrs, "level", n, "level");
         putTextIfPresent(attrs, "operationalStatus", n, "operationalStatus");
+        putTextIfPresent(attrs, "facilityUuid", n, "facilityUuid");
         putTextIfPresent(attrs, "description", n, "description");
         attrs.put("capabilities", List.of());
         JsonNode om = n.get("operatingModel");

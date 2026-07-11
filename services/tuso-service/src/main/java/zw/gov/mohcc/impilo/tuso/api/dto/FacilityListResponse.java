@@ -8,6 +8,7 @@ public record FacilityListResponse(
 ) {
     public record FacilitySummary(
             Long id,
+            String facilityUuid,
             String name,
             String code,
             String type,

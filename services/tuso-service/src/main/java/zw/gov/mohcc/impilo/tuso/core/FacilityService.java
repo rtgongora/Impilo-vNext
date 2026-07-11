@@ -308,6 +308,18 @@ public class FacilityService {
     }
 
     /**
+     * Resolve a facility by its canonical cross-service UUID ({@code facility_uuid}).
+     * UUID-keyed consumers (PCT queue overlay, vashandi staff binding, session
+     * contract) bridge into the registry through this without knowing the bigint PK.
+     */
+    @Transactional(readOnly = true)
+    public FacilityDetail getFacilityByUuid(UUID facilityUuid) {
+        FacilityEntity facility = facilityRepository.findByFacilityUuid(facilityUuid)
+                .orElseThrow(() -> new IllegalArgumentException("Facility not found for uid: " + facilityUuid));
+        return getFacility(facility.getId());
+    }
+
+    /**
      * Get a facility with all related data (identifiers, contacts, geo, capabilities, readiness).
      *
      * @param id the facility ID

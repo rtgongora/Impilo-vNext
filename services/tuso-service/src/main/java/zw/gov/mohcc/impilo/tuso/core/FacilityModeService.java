@@ -74,6 +74,7 @@ public class FacilityModeService {
 
         FacilityModeContextResponse.FacilityNode node = new FacilityModeContextResponse.FacilityNode(
                 facility.getId(),
+                facility.getFacilityUuid() != null ? facility.getFacilityUuid().toString() : null,
                 facility.getTenantId() != null ? facility.getTenantId().toString() : null,
                 facility.getFacilityCode(),
                 facility.getName(),

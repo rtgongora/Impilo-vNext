@@ -102,6 +102,7 @@ public class PublicFacilityController {
 
         return new FacilityResponse(
                 entity.getId(),
+                entity.getFacilityUuid() != null ? entity.getFacilityUuid().toString() : null,
                 entity.getName(),
                 entity.getFacilityCode(),
                 entity.getFacilityType(),
@@ -155,6 +156,7 @@ public class PublicFacilityController {
         FacilityMasterPackMetadata.Flags pack = FacilityMasterPackMetadata.from(entity);
         return new FacilityListResponse.FacilitySummary(
                 entity.getId(),
+                entity.getFacilityUuid() != null ? entity.getFacilityUuid().toString() : null,
                 entity.getName(),
                 entity.getFacilityCode(),
                 entity.getFacilityType(),
