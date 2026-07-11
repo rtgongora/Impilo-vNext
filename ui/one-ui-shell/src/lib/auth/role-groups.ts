@@ -53,6 +53,14 @@ const RAW_ROLE_GROUPS: Record<string, string[]> = {
     "DEVELOPER",
   ],
   COMMERCE: ["FINANCE", "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
+  /** HPA facility regulation: registrar + inspector personas and the admin chain. */
+  REGULATORY_AUTHORITY: [
+    "HPA_REGISTRAR",
+    "HPA_INSPECTOR",
+    "HIE_ADMIN",
+    "SYSTEM_ADMIN",
+    "DEVELOPER",
+  ],
 };
 
 /** SUPER_ADMIN inherits every group that grants SYSTEM_ADMIN or DEVELOPER override. */

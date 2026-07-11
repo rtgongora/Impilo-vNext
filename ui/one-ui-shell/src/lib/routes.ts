@@ -312,7 +312,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/registry", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Registry Hub", navLabel: "Registry", navZone: "professional" },
   { path: "/registry/intake", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Registry Intake", navLabel: "Intake", navZone: "professional" },
   { path: "/registry/locality-review", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Locality gazetteer review", navLabel: "Locality review", navZone: "professional" },
-  { path: "/registry/facility-lifecycle", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Facility regulatory lifecycle", navLabel: "Facility lifecycle", navZone: "professional" },
+  { path: "/registry/facility-lifecycle", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGULATORY_AUTHORITY", pageTitle: "Facility regulatory lifecycle", navLabel: "Facility lifecycle", navZone: "professional" },
+  { path: "/registry/facility-lifecycle/[facilityId]", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGULATORY_AUTHORITY", pageTitle: "Facility regulatory file", navLabel: "Facility file", navZone: "professional" },
   { path: "/registry/providers", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Provider Registry", navLabel: "Providers", navZone: "professional" },
   { path: "/registry/providers/verification", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "ADMIN", pageTitle: "Provider Verification Queue", navLabel: "Verification", navZone: "professional" },
   { path: "/registry/providers/[id]", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Provider Profile", navLabel: "Provider", navZone: "professional" },
@@ -833,7 +834,7 @@ export const ROUTES: RouteDefinition[] = [
 // Activation letter (Jul 2026): +1 — /registry-admin/activation-letter (printable onboarding letter).
 // Workforce Intake (Jul 2026): +1 net-new route — /admin/workforce-intake staged staff bootstrap wizard.
 // Nhume inbound (Jul 2026): +1 net-new route — /nhume/inbound receiving & handover surface.
-export const EXPECTED_ROUTE_COUNT = 697;
+export const EXPECTED_ROUTE_COUNT = 698;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

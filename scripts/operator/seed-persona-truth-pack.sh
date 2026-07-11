@@ -56,6 +56,8 @@ declare -A ROLE_PERSONAS=(
   ["dispatcher.chirwa"]="DISPATCH_COORDINATOR"
   ["courier.banda"]="COURIER"
   ["hr.dziva"]="HR_OFFICER"
+  ["hpa.registrar"]="HPA_REGISTRAR"
+  ["hpa.inspector"]="HPA_INSPECTOR"
 )
 
 fail() { echo "FAIL: $*" >&2; exit 1; }

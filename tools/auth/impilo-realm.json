@@ -78,19 +78,19 @@
       },
       {
         "name": "TRAINER",
-        "description": "Fundo course author — trainers, programme officers, provincial/national educators",
+        "description": "Fundo course author \u2014 trainers, programme officers, provincial/national educators",
         "composite": false,
         "clientRole": false
       },
       {
         "name": "HIE_ADMIN",
-        "description": "Registry/HIE governance officer — registry plane and IATG trust console without full platform admin",
+        "description": "Registry/HIE governance officer \u2014 registry plane and IATG trust console without full platform admin",
         "composite": false,
         "clientRole": false
       },
       {
         "name": "PUBLIC_HEALTH_OFFICER",
-        "description": "Public health officer — surveillance, campaigns, and population health surfaces",
+        "description": "Public health officer \u2014 surveillance, campaigns, and population health surfaces",
         "composite": false,
         "clientRole": false
       },
@@ -104,7 +104,15 @@
       },
       {
         "name": "HR_OFFICER",
-        "description": "Facility/organisation HR officer — Vashandi workforce management"
+        "description": "Facility/organisation HR officer \u2014 Vashandi workforce management"
+      },
+      {
+        "name": "HPA_REGISTRAR",
+        "description": "Health Professions Authority registrar \u2014 facility registration lifecycle"
+      },
+      {
+        "name": "HPA_INSPECTOR",
+        "description": "Health Professions Authority inspector \u2014 facility inspections"
       }
     ]
   },
@@ -328,7 +336,7 @@
   "clients": [
     {
       "clientId": "experience-ui",
-      "name": "Impilo web experience (OIDC — primary browser / ROPC client)",
+      "name": "Impilo web experience (OIDC \u2014 primary browser / ROPC client)",
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,
@@ -1090,6 +1098,52 @@
       ],
       "realmRoles": [
         "HR_OFFICER"
+      ]
+    },
+    {
+      "username": "hpa.registrar",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tarisai",
+      "lastName": "Makoni",
+      "email": "tarisai.makoni@hpa.co.zw",
+      "attributes": {
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000016"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "HPA_REGISTRAR"
+      ]
+    },
+    {
+      "username": "hpa.inspector",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Blessing",
+      "lastName": "Ncube",
+      "email": "blessing.ncube@hpa.co.zw",
+      "attributes": {
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000017"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "HPA_INSPECTOR"
       ]
     }
   ]
