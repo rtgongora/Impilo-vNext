@@ -473,6 +473,9 @@ public class PractitionerInChargeService {
         event.setSubjectType(aggregateType);
         event.setSubjectId(aggregateId);
         event.setPartitionKey(aggregateId);
+        // Mandatory outbox hygiene — null pod_id/idempotency_key poisons the publisher drain.
+        event.setPodId("national-spine");
+        event.setIdempotencyKey("varapi:pic:" + eventType + ":" + java.util.UUID.randomUUID());
         outboxRepository.save(event);
     }
 }

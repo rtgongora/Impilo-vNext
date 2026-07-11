@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.varapi.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,11 @@ import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderRepository;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * License lifecycle management service.
@@ -108,6 +114,7 @@ public class LicenseService {
 
         publishEvent("LICENSE", providerPublicId, "varapi.license.status.changed",
                 String.format("{\"licenseId\":%d,\"status\":\"ACTIVE\"}", licenseId));
+        publishEligibilityChanged(license, providerPublicId, "ACTIVE", "License renewed");
 
         return license;
     }
@@ -135,6 +142,7 @@ public class LicenseService {
 
         publishEvent("LICENSE", providerPublicId, "varapi.license.status.changed",
                 String.format("{\"licenseId\":%d,\"status\":\"SUSPENDED\"}", licenseId));
+        publishEligibilityChanged(license, providerPublicId, "SUSPENDED", reason);
 
         return license;
     }
@@ -158,6 +166,7 @@ public class LicenseService {
 
         publishEvent("LICENSE", providerPublicId, "varapi.license.status.changed",
                 String.format("{\"licenseId\":%d,\"status\":\"REVOKED\"}", licenseId));
+        publishEligibilityChanged(license, providerPublicId, "REVOKED", reason);
 
         return license;
     }
@@ -198,4 +207,45 @@ public class LicenseService {
         event.setPayload(payload);
         outboxRepository.save(event);
     }
+
+    /**
+     * Emit the credential-truth change signal consumed by PIC eligibility
+     * subscribers (eligibility snapshots become stale on licence transitions).
+     */
+    private void publishEligibilityChanged(LicenseEntity license, String providerPublicId,
+                                           String newStatus, String reason) {
+        ProviderEntity provider = license.getProvider();
+        Long providerId = provider != null ? provider.getId() : null;
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("providerId", providerId);
+        payload.put("providerPublicId", providerPublicId);
+        payload.put("impiloHealthId", provider != null && provider.getImpiloHealthId() != null
+                ? provider.getImpiloHealthId().toString() : null);
+        payload.put("changeAxis", "LICENSE");
+        payload.put("newStatus", newStatus);
+        payload.put("reason", reason);
+        payload.put("occurredAt", OffsetDateTime.now().toString());
+
+        EventOutboxEntity event = new EventOutboxEntity();
+        event.setAggregateType("CREDENTIAL");
+        event.setAggregateId(providerPublicId);
+        event.setEventType("varapi.provider.eligibility.changed");
+        event.setPayload(toJson(payload));
+        TrustContext ctx = TrustContextHolder.get();
+        event.setTenantId(ctx != null && ctx.tenantId() != null ? ctx.tenantId().toString() : null);
+        event.setPodId("national-spine");
+        event.setIdempotencyKey("varapi:eligchange:" + providerId + ":" + UUID.randomUUID());
+        outboxRepository.save(event);
+    }
+
+    private String toJson(Map<String, Object> payload) {
+        try {
+            return JSON.writeValueAsString(payload);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Eligibility-changed payload serialization failed", e);
+        }
+    }
+
+    private static final ObjectMapper JSON = new ObjectMapper();
 }

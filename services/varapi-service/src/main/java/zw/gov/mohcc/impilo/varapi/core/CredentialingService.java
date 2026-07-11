@@ -211,6 +211,13 @@ public class CredentialingService {
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
         event.setPayload(payload);
+        // Mandatory outbox hygiene — null pod_id/idempotency_key poisons the publisher drain.
+        zw.gov.mohcc.impilo.shared.auth.TrustContext ctx = zw.gov.mohcc.impilo.shared.auth.TrustContextHolder.get();
+        if (ctx != null && ctx.tenantId() != null) {
+            event.setTenantId(ctx.tenantId().toString());
+        }
+        event.setPodId("national-spine");
+        event.setIdempotencyKey("varapi:cred:" + eventType + ":" + java.util.UUID.randomUUID());
         outboxRepository.save(event);
     }
 }

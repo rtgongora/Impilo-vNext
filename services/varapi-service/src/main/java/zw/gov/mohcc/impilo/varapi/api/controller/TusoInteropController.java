@@ -18,9 +18,12 @@ import java.util.List;
 public class TusoInteropController {
 
     private final EligibilityService eligibilityService;
+    private final zw.gov.mohcc.impilo.varapi.core.PicEligibilityAssessmentService assessmentService;
 
-    public TusoInteropController(EligibilityService eligibilityService) {
+    public TusoInteropController(EligibilityService eligibilityService,
+                                 zw.gov.mohcc.impilo.varapi.core.PicEligibilityAssessmentService assessmentService) {
         this.eligibilityService = eligibilityService;
+        this.assessmentService = assessmentService;
     }
 
     @PostMapping
@@ -60,5 +63,23 @@ public class TusoInteropController {
             @RequestBody(required = false) Long excludeProviderId) {
         boolean hasActive = eligibilityService.facilityHasActiveProvider(facilityId, excludeProviderId);
         return ResponseEntity.ok(hasActive);
+    }
+
+    /**
+     * Time-specific PIC eligibility assessment: unified per-axis credential
+     * truth (identity, council, registration, practising certificate, licence,
+     * restrictions) with source evidence, coded reasons and a persisted
+     * snapshot. TUSO snapshots this verbatim on the nomination.
+     */
+    @PostMapping("/assessments")
+    public ResponseEntity<zw.gov.mohcc.impilo.varapi.core.PicEligibilityAssessmentService.AssessmentResponse> assess(
+            @RequestBody zw.gov.mohcc.impilo.varapi.core.PicEligibilityAssessmentService.AssessmentRequest request) {
+        return ResponseEntity.ok(assessmentService.assess(request));
+    }
+
+    @GetMapping("/assessments/{snapshotId}")
+    public ResponseEntity<zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderEligibilitySnapshotEntity> snapshot(
+            @PathVariable java.util.UUID snapshotId) {
+        return ResponseEntity.ok(assessmentService.getSnapshot(snapshotId));
     }
 }

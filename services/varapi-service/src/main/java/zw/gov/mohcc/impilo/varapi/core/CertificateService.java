@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.varapi.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,7 +16,10 @@ import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderCertificateRepo
 import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderRepository;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -275,6 +280,7 @@ public class CertificateService {
 
         certificate = certificateRepository.save(certificate);
         log.info("Certificate renewed: id={}", certificateId);
+        publishEligibilityChanged(certificate, "ACTIVE", "Certificate renewed");
         return certificate;
     }
 
@@ -300,6 +306,7 @@ public class CertificateService {
 
         certificate = certificateRepository.save(certificate);
         log.info("Certificate suspended: id={}", certificateId);
+        publishEligibilityChanged(certificate, "SUSPENDED", reason);
         return certificate;
     }
 
@@ -420,6 +427,44 @@ public class CertificateService {
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
         event.setPayload(payload);
+        outboxRepository.save(event);
+    }
+
+    private static final ObjectMapper ELIGIBILITY_JSON = new ObjectMapper();
+
+    /**
+     * Credential-change signal for downstream facility-regulatory consumers
+     * (TUSO flags active PIC assignments REVIEW_REQUIRED — never auto-erases).
+     */
+    private void publishEligibilityChanged(ProviderCertificateEntity certificate,
+                                           String newStatus, String reason) {
+        ProviderEntity provider = certificate.getProvider();
+        Long providerId = provider != null ? provider.getId() : null;
+        String providerPublicId = provider != null ? provider.getProviderPublicId() : null;
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("providerId", providerId);
+        payload.put("providerPublicId", providerPublicId);
+        payload.put("impiloHealthId", provider != null && provider.getImpiloHealthId() != null
+                ? provider.getImpiloHealthId().toString() : null);
+        payload.put("changeAxis", "CERTIFICATE");
+        payload.put("newStatus", newStatus);
+        payload.put("reason", reason);
+        payload.put("occurredAt", OffsetDateTime.now().toString());
+
+        EventOutboxEntity event = new EventOutboxEntity();
+        event.setAggregateType("CREDENTIAL");
+        event.setAggregateId(providerPublicId != null ? providerPublicId : String.valueOf(providerId));
+        event.setEventType("varapi.provider.eligibility.changed");
+        try {
+            event.setPayload(ELIGIBILITY_JSON.writeValueAsString(payload));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Eligibility-changed payload serialization failed", e);
+        }
+        TrustContext ctx = TrustContextHolder.get();
+        event.setTenantId(ctx != null && ctx.tenantId() != null ? ctx.tenantId().toString() : null);
+        event.setPodId("national-spine");
+        event.setIdempotencyKey("varapi:eligchange:" + providerId + ":" + java.util.UUID.randomUUID());
         outboxRepository.save(event);
     }
 }
