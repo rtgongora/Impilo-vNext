@@ -82,6 +82,11 @@ public class TusoOutboxPublisher extends CompanionOutboxPublisher {
             case "FACILITY" -> "tuso.facility";
             case "SERVICE_AREA" -> "tuso.service.area";
             case "RESOURCE" -> "tuso.resource";
+            // PCT's queue materialisation listens on these exact topics
+            // (PctEventConsumer). Without the mappings, LEGACY_ONLY mode routes
+            // them to the tuso.events catch-all and queues never materialise.
+            case "FACILITY_QUEUE_CONFIG" -> "impilo.tuso.facility_queue_config";
+            case "WORKSPACE" -> "tuso.workspace.updated";
             default -> "tuso.events";
         };
     }
