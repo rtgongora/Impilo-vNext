@@ -3,7 +3,7 @@
 **Date:** 2026-07-11
 **Repo:** `/opt/impilo/repos/Impilo-vNext` · **Branch:** `claude/staging-ux-orchestration-remediation-Yypyl`
 **Starting commit:** `c04aa05a7` · **Final commit:** `d3306e1b9`
-**Source pack:** `/home/robert/tuso-varapi-hpa-regulatory-pack` (HPA Registration, Inspection and Renewal Manual, Vol 1, 2017 — treated as authoritative *baseline*, not current law)
+**Source pack:** `/home/robert/tuso-varapi-hpa-regulatory-pack` (HPA Registration, Inspection and Renewal Manual, Vol 1, 2017 — the **current operative HPA manual**, confirmed in force by the programme owner on 2026-07-11, effective until formally superseded)
 
 ## 1. What was built
 
@@ -43,9 +43,15 @@ backfilled to `PENDING_REGULATOR_APPROVAL`), `facility_certificate` (unique
 **Varapi `V023__pic_eligibility_snapshot.sql`** — `provider_eligibility_snapshot`
 (per-axis JSON evidence, purpose, asOf, result).
 
-All seeds carry `HPA-2017-V1` provenance and `PENDING_REGULATOR_APPROVAL` /
-reference-requires-validation status. No 2017 fee or deadline is hard-coded anywhere;
-periods resolve through `RegulatoryRuleService` CONFIG rules at runtime.
+All seeds carry `HPA-2017-V1` provenance with source pages. Following the programme
+owner's source-authority confirmation (2026-07-11), faithful direct representations of
+the manual seed **ACTIVE** (16 principle rules + the manual-express CONFIG timeframes)
+and the reference catalogues seed `VALIDATED_CURRENT_SOURCE`; items remain
+`PENDING_REGULATOR_APPROVAL` only for substantive reasons recorded per row (see §9a).
+No fee amount is hard-coded anywhere — the manual defers amounts to Statutory
+Instrument 78 of 2017, so the platform records fee *requirements* with configurable
+references only. All timeframes resolve through versioned `RegulatoryRuleService`
+CONFIG rules at runtime, so future amendments apply without code changes.
 `raw_inspection_requirement_candidates.*` was **not** loaded as production truth.
 
 ## 4. APIs
@@ -114,18 +120,43 @@ explicitly not authorised).
 tuso 133/133 · varapi 202/202 · experience-bff compile clean · UI `tsc` clean, routes 700,
 hook tests 88/88 · migrations proven virgin-DB-clean.
 
+## 9a. Rule / template activation status (source-authority correction, 2026-07-11)
+
+The manual is the current operative source; activation reflects **fidelity**, never the
+publication year.
+
+**ACTIVE (18 of 19 rules)** — approved as
+`PROGRAMME_OWNER_SOURCE_AUTHORITY_CONFIRMATION_2026-07-11`, effective-dated, full
+provenance retained:
+- All 16 principle rules (faithful, page-cited representations).
+- `REMEDIATION_WINDOW_DAYS` `{CRITICAL:14, MAJOR:30, MINOR:30}` — manual §5: "from two
+  (2) weeks to a month … critical shortfalls, a shorter time frame". The former
+  `OBSERVATION:60` entry was **removed** (not stated in the manual; observations fall to
+  the engine's 30-day default within the manual's range).
+- `RENEWAL_CYCLE_MONTHS` `{mode:CALENDAR_YEAR, months:12}` — manual §3.1: certificates
+  are valid for a calendar year, up to 31 December. The engine now computes calendar-year
+  expiry (previously rolling 12 months — that was platform interpretation, corrected).
+
+**PENDING (1 rule + 4 templates)** — each for a precise substantive reason:
+- `RENEWAL_DUE_WINDOW_DAYS` `{days:90}` — the manual prescribes no renewal-reminder
+  window; this is a platform operational parameter awaiting explicit governance approval.
+- 4 inspection checklist templates — their content is **sample/skeleton material** (3
+  generic items each), not a faithful extraction of the manual's requirement schedules
+  (e.g. manual pp. 38–40 lab requirements). They stay pending on fidelity grounds until
+  manual-derived items are curated and published through template governance.
+
 ## 9. Unresolved policy questions (for the regulator / PO)
 
 1. **Preview deployment awaits explicit authorisation** — nothing from this mission is
    deployed; the permission gate correctly denied a preview roll and it was not retried.
-2. All 19 seeded rules + 4 checklist templates are `PENDING_REGULATOR_APPROVAL` — a
-   governed approval pass (via `POST rules/{id}/approve`) is required before they bind.
-3. Current statutory fees/renewal periods must replace the 2017-indicative CONFIG values
-   through the versioned-rule path.
+2. Fee **amounts** (application, renewal, penalty, noncompliance) are defined by
+   Statutory Instrument 78 of 2017 and its successors, not by the manual — the platform
+   records fee requirements and references; amounts must be configured from the statutory
+   instrument, never invented.
+3. Faithful checklist-template extraction from the manual's requirement schedules
+   (pp. 16–40+) remains to be curated and published through template governance.
 4. Council review integration is a recorded human step (MDPCZ etc.); machine-to-machine
    council interfaces are out of scope until agreements exist.
-5. Classification catalogue (39 entries) needs regulator validation against current HPA
-   practice-type schedules.
 
 ## 10. Honest gaps / deferred
 
@@ -137,5 +168,5 @@ hook tests 88/88 · migrations proven virgin-DB-clean.
   certificates exist; not scripted end-to-end. J11 enforcement uses the pre-existing
   `enforcement_case` engine; not re-proven this wave.
 - Checklist template CRUD (authoring UI) deferred — governance columns + approval state
-  shipped; templates seed-managed for now.
+  shipped; templates seed-managed for now (and remain pending on fidelity grounds, §9a).
 - COSTA fee integration = reference fields only (by ownership design); no tariff logic in tuso.

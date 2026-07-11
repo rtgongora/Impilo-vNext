@@ -777,7 +777,7 @@ public class FacilityRegulatoryService {
         certificate.setCertificateType(firstNonBlank(request.certificateType(), "HEALTH_INSTITUTION_REGISTRATION"));
         certificate.setCertificateNumber(generateCertificateNumber(facility, application));
         certificate.setIssueDate(LocalDate.now());
-        certificate.setExpiryDate(LocalDate.now().plusMonths(regulatoryRuleService.renewalCycleMonths()));
+        certificate.setExpiryDate(regulatoryRuleService.certificateExpiryFrom(LocalDate.now()));
         certificate.setStatus(FacilityCertificateStatus.ACTIVE);
         certificate.setIssuedUnderAuthority(firstNonBlank(request.authorityContext(), "HPA"));
         certificate.setDigitalArtifactReference(request.digitalArtifactReference());

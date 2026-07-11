@@ -3,12 +3,15 @@
 --       inspection visits/responses, RFI, external council review, template
 --       governance, certificate verification.
 --
--- Source baseline: HPA Registration, Inspection and Renewal Manual Vol 1 (2017)
--- via the curated pack (source_manual = 'HPA-2017-V1'). The 2017 manual is a
--- domain baseline, NOT current law: every seeded catalogue row and rule carries
--- REFERENCE_REQUIRES_REGULATOR_VALIDATION / PENDING_REGULATOR_APPROVAL and a
--- source-page provenance trail. Nothing seeded here is enforceable policy until
--- a regulator approves it through the governed endpoints.
+-- Source: HPA Registration, Inspection and Renewal Manual Vol 1 (2017) via the
+-- curated pack (source_manual = 'HPA-2017-V1'). The manual is the CURRENT
+-- operative HPA manual — confirmed IN FORCE by the programme owner on
+-- 2026-07-11, effective until formally superseded. Faithful, direct
+-- representations of its content are seeded ACTIVE/VALIDATED with source-page
+-- provenance; only items whose digital form adds interpretation, depends on a
+-- separate statutory instrument (e.g. fee amounts per SI 78 of 2017), or whose
+-- extraction is not yet faithful remain PENDING_REGULATOR_APPROVAL. Rules stay
+-- versioned and configurable so future amendments apply without code change.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
@@ -60,7 +63,7 @@ CREATE INDEX IF NOT EXISTS idx_occupancy_premises ON tuso.facility_premises_occu
 CREATE INDEX IF NOT EXISTS idx_occupancy_facility ON tuso.facility_premises_occupancy(facility_id);
 
 -- ----------------------------------------------------------------------------
--- 2. Data-driven catalogues (seeded from HPA-2017-V1, pending validation).
+-- 2. Data-driven catalogues (faithful transcriptions of HPA-2017-V1 schedules).
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tuso.regulatory_application_type (
     code                  VARCHAR(64) PRIMARY KEY,
@@ -104,8 +107,9 @@ CREATE TABLE IF NOT EXISTS tuso.inspection_type_reference (
 
 -- ----------------------------------------------------------------------------
 -- 3. Configurable, versioned regulatory rules. The engine consults ACTIVE
---    rules; PENDING_REGULATOR_APPROVAL rows are visible-but-advisory and the
---    engine falls back to conservative code defaults. No 2017 number is law.
+--    rules first; PENDING_REGULATOR_APPROVAL rows are visible-but-advisory and
+--    the engine falls back to conservative code defaults. Faithful
+--    representations of the current manual seed ACTIVE.
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tuso.regulatory_rule (
     rule_id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -298,8 +302,11 @@ ALTER TABLE tuso.inspection_checklist_template ADD COLUMN IF NOT EXISTS approved
 ALTER TABLE tuso.inspection_checklist_template ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ;
 ALTER TABLE tuso.inspection_checklist_template ADD COLUMN IF NOT EXISTS supersedes_template_id UUID;
 
--- Honest backfill: the V006 seed templates were authored from the 2017 manual
--- without regulator sign-off — they are PENDING_REGULATOR_APPROVAL, not law.
+-- Honest backfill: the V006 seed templates are sample/skeleton checklists (3
+-- generic items each) — NOT faithful extractions of the current manual's
+-- requirement schedules. They remain PENDING_REGULATOR_APPROVAL on fidelity
+-- grounds (not because of the manual's year) until manual-derived items are
+-- curated and published through template governance.
 UPDATE tuso.inspection_checklist_template
    SET status = 'PENDING_REGULATOR_APPROVAL',
        source_manual = 'HPA-2017-V1',
@@ -407,7 +414,7 @@ INSERT INTO tuso.facility_classification (class_code, facility_type_label, sourc
     ('C', 'Government, Local Authority and Mission: Hospital 101 beds and above', 'HPA-2017-V1', 15)
 ON CONFLICT (class_code, facility_type_label) DO NOTHING;
 
--- Curated principles (16) + engine CONFIG rules. All PENDING_REGULATOR_APPROVAL.
+-- Curated principles (16): faithful, page-cited representations of the current manual.
 INSERT INTO tuso.regulatory_rule (code, owner, rule_kind, statement, implementation, source_manual, source_pages) VALUES
     ('FACILITY_REQUIRES_REGISTERED_PIC', 'CROSS_TUSO_VARAPI', 'PRINCIPLE', 'A facility application must identify a qualified, registered practitioner in charge with valid professional evidence appropriate to the facility or unit.', 'eligibility_assessment_plus_human_approval', 'HPA-2017-V1', '[6,7,16]'),
     ('PRIVATE_ROUTE_COUNCIL_REVIEW', 'TUSO', 'PRINCIPLE', 'The manual routes private applications through the applicant practitioner''s council Practice Control Committee before HPA registration processing.', 'configurable_external_review_step', 'HPA-2017-V1', '[6,7]'),
@@ -416,7 +423,7 @@ INSERT INTO tuso.regulatory_rule (code, owner, rule_kind, statement, implementat
     ('ADDITIONAL_UNIT_SEPARATE_REGISTRATION', 'TUSO', 'PRINCIPLE', 'Additional departments or units may require separate registration, fee and inspection before use.', 'independent_facility_unit_regulatory_profile', 'HPA-2017-V1', '[8]'),
     ('CERTIFICATE_NOT_TRANSFERABLE_ON_RELOCATION', 'TUSO', 'PRINCIPLE', 'A change of premises restarts the regulatory application context; a certificate must not be silently transferred.', 'relocation_application_and_successor_premises', 'HPA-2017-V1', '[8]'),
     ('SHARED_PREMISES_SUPPORTS_MULTIPLE_REGULATORY_ENTITIES', 'TUSO', 'PRINCIPLE', 'The same physical address can support a partnership registration or separately registered institutions depending on practitioners and councils.', 'premises_entity_separated_from_regulated_entity', 'HPA-2017-V1', '[8,9]'),
-    ('ANNUAL_OR_CONFIGURED_RENEWAL', 'TUSO', 'PRINCIPLE', 'The manual uses calendar-year certificates and annual renewal; production cycle must be configurable and regulator validated.', 'versioned_renewal_policy', 'HPA-2017-V1', '[9]'),
+    ('ANNUAL_OR_CONFIGURED_RENEWAL', 'TUSO', 'PRINCIPLE', 'Registration certificates are valid for a calendar year, expiring 31 December of the year of issue (manual §3.1); the cycle remains versioned configuration so amendments apply without code change.', 'versioned_renewal_policy', 'HPA-2017-V1', '[9]'),
     ('PIC_CHANGE_REQUIRES_MATERIAL_CHANGE_WORKFLOW', 'CROSS_TUSO_VARAPI', 'PRINCIPLE', 'A change of practitioner in charge requires evidence, professional-council review and an authorised material-change process.', 'effective_dated_assignment_workflow', 'HPA-2017-V1', '[9,10]'),
     ('INSPECTION_TEMPLATE_MATCHES_FACILITY_TYPE', 'TUSO', 'PRINCIPLE', 'Inspectors use requirements specific to the health-institution type.', 'versioned_template_applicability', 'HPA-2017-V1', '[10,11,12]'),
     ('HUMAN_REGULATORY_DECISION', 'TUSO', 'PRINCIPLE', 'Inspection reports are considered by an authorised registration committee or chair as described by policy.', 'explicit_decision_record_no_automatic_licensing', 'HPA-2017-V1', '[10,11,12]'),
@@ -427,20 +434,55 @@ INSERT INTO tuso.regulatory_rule (code, owner, rule_kind, statement, implementat
     ('RECORDS_MAY_BE_ELECTRONIC_OR_HYBRID', 'TUSO_WITH_CLINICAL_SYSTEMS', 'PRINCIPLE', 'The manual permits a blend of electronic and hard-copy records and expects records to be available to authorised practitioners and inspectors.', 'evidence_of_recordkeeping_capability_not_storage_of_clinical_records_in_tuso', 'HPA-2017-V1', '[16,17]')
 ON CONFLICT (code, version) DO NOTHING;
 
--- Engine CONFIG values. Sourced from the 2017 manual's practice / current code
--- defaults; PENDING approval — the engine treats them as provisional config,
--- never as timeless law.
+-- Engine CONFIG values. Timeframes expressly contained in the current manual
+-- seed ACTIVE as current regulatory configuration (versioned; amendable without
+-- code change). Values the manual does not provide remain PENDING.
 INSERT INTO tuso.regulatory_rule (code, owner, rule_kind, statement, value_json, implementation, source_manual, source_pages) VALUES
     ('REMEDIATION_WINDOW_DAYS', 'TUSO', 'CONFIG',
-     'Default corrective-action windows by finding severity. 2017 practice suggested short windows for critical shortfalls; values are provisional until regulator-approved.',
-     '{"CRITICAL": 14, "MAJOR": 30, "MINOR": 30, "OBSERVATION": 60}',
+     'Corrective-action windows by finding severity. Manual §5: practitioners are given from two (2) weeks to a month to attend to shortfalls; critical shortfalls receive the shorter timeframe.',
+     '{"CRITICAL": 14, "MAJOR": 30, "MINOR": 30}',
      'configurable_findings_capa_verification', 'HPA-2017-V1', '[10,11,13]'),
     ('RENEWAL_CYCLE_MONTHS', 'TUSO', 'CONFIG',
-     'Certificate validity cycle in months. The 2017 manual used calendar-year certificates expiring 31 December; the production cycle is configurable and must be regulator-validated.',
-     '{"months": 12}',
+     'Certificate validity model. Manual §3.1: the Registration Certificate is valid for a calendar year, up to 31 December of that year. Fee amounts (incl. penalties/noncompliance) are per Statutory Instrument 78 of 2017 and are configured separately, never hard-coded.',
+     '{"mode": "CALENDAR_YEAR", "months": 12}',
      'versioned_renewal_policy', 'HPA-2017-V1', '[9]'),
     ('RENEWAL_DUE_WINDOW_DAYS', 'TUSO', 'CONFIG',
-     'How many days before certificate expiry a facility enters RENEWAL_DUE and reminders begin.',
+     'How many days before certificate expiry a facility enters RENEWAL_DUE and reminders begin. The manual does not prescribe a reminder window; this operational value awaits explicit governance approval.',
      '{"days": 90}',
      'versioned_renewal_policy', 'HPA-2017-V1', '[9]')
 ON CONFLICT (code, version) DO NOTHING;
+
+-- ----------------------------------------------------------------------------
+-- Source-authority activation (programme owner confirmation, 2026-07-11): the
+-- 2017 manual is the CURRENT operative HPA manual. Faithful, direct
+-- representations activate; each remaining pending row has a substantive
+-- reason recorded in its statement (not the publication year).
+--   ACTIVE:  16 principle rules + REMEDIATION_WINDOW_DAYS + RENEWAL_CYCLE_MONTHS
+--   PENDING: RENEWAL_DUE_WINDOW_DAYS (value not provided by the manual)
+--   PENDING: 4 checklist templates (sample/skeleton content — NOT faithful
+--            extractions of the manual's requirement schedules; the extracted
+--            candidates remain unloaded pending curation)
+-- ----------------------------------------------------------------------------
+UPDATE tuso.regulatory_rule
+   SET status = 'ACTIVE',
+       approved_by = 'PROGRAMME_OWNER_SOURCE_AUTHORITY_CONFIRMATION_2026-07-11',
+       approved_at = now(),
+       effective_from = CURRENT_DATE
+ WHERE status = 'PENDING_REGULATOR_APPROVAL'
+   AND source_manual = 'HPA-2017-V1'
+   AND code <> 'RENEWAL_DUE_WINDOW_DAYS';
+
+UPDATE tuso.regulatory_application_type
+   SET validation_status = 'VALIDATED_CURRENT_SOURCE'
+ WHERE source_manual = 'HPA-2017-V1'
+   AND validation_status = 'REFERENCE_REQUIRES_REGULATOR_VALIDATION';
+
+UPDATE tuso.facility_classification
+   SET validation_status = 'VALIDATED_CURRENT_SOURCE'
+ WHERE source_manual = 'HPA-2017-V1'
+   AND validation_status = 'REFERENCE_REQUIRES_REGULATOR_VALIDATION';
+
+UPDATE tuso.inspection_type_reference
+   SET validation_status = 'VALIDATED_CURRENT_SOURCE'
+ WHERE source_manual = 'HPA-2017-V1'
+   AND validation_status = 'REFERENCE_REQUIRES_REGULATOR_VALIDATION';

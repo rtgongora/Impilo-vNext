@@ -10,19 +10,23 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.RegulatoryRuleEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.RegulatoryRuleRepository;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Versioned, configurable regulatory rules (HPA-2017-V1 baseline).
+ * Versioned, configurable regulatory rules (HPA-2017-V1 — the CURRENT
+ * operative HPA manual, confirmed in force by the programme owner 2026-07-11,
+ * effective until formally superseded).
  *
- * <p>Rules seeded from the 2017 manual are {@code PENDING_REGULATOR_APPROVAL}
- * and treated as <em>provisional configuration</em>: the engine consults an
- * ACTIVE rule first, then falls back to the latest pending rule (so behaviour
- * is visible and consistent), and finally to conservative code defaults. No
- * 2017 fee, deadline or category is enforced as timeless law.</p>
+ * <p>Faithful representations of the manual seed ACTIVE; the engine consults
+ * an ACTIVE rule first, then falls back to the latest pending rule (so
+ * behaviour is visible and consistent), and finally to conservative code
+ * defaults. All values remain versioned and configurable so future amendments
+ * apply without code changes; fee amounts live in separate statutory
+ * instruments and are never hard-coded.</p>
  */
 @Service
 public class RegulatoryRuleService {
@@ -51,7 +55,7 @@ public class RegulatoryRuleService {
         return critical ? DEFAULT_CRITICAL_DAYS : DEFAULT_STANDARD_DAYS;
     }
 
-    /** Certificate validity cycle in months (configurable; 2017 baseline = annual). */
+    /** Certificate validity cycle in months (used when the rule is not calendar-year mode). */
     @Transactional(readOnly = true)
     public int renewalCycleMonths() {
         Map<String, Object> value = configValue("RENEWAL_CYCLE_MONTHS");
@@ -59,6 +63,23 @@ public class RegulatoryRuleService {
             return n.intValue();
         }
         return DEFAULT_RENEWAL_CYCLE_MONTHS;
+    }
+
+    /**
+     * Certificate expiry for an issue date. Manual §3.1: the Registration
+     * Certificate is valid for a calendar year, up to 31 December of that year
+     * ({@code mode: CALENDAR_YEAR}); a rolling month cycle applies only if a
+     * future rule version configures one.
+     */
+    @Transactional(readOnly = true)
+    public LocalDate certificateExpiryFrom(LocalDate issueDate) {
+        Map<String, Object> value = configValue("RENEWAL_CYCLE_MONTHS");
+        if (value != null && "CALENDAR_YEAR".equals(value.get("mode"))) {
+            return LocalDate.of(issueDate.getYear(), 12, 31);
+        }
+        int months = value != null && value.get("months") instanceof Number n && n.intValue() > 0
+                ? n.intValue() : DEFAULT_RENEWAL_CYCLE_MONTHS;
+        return issueDate.plusMonths(months);
     }
 
     /** Days before certificate expiry at which a facility enters RENEWAL_DUE. */

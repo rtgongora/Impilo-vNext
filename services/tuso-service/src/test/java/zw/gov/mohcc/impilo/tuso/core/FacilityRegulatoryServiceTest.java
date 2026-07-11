@@ -89,6 +89,9 @@ class FacilityRegulatoryServiceTest {
         // Rule-config defaults for unit tests (windows/cycle come from the rule store in prod).
         when(regulatoryRuleService.remediationWindowDays(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(30);
         when(regulatoryRuleService.renewalCycleMonths()).thenReturn(12);
+        // Manual §3.1: calendar-year validity — certificates expire 31 December of the issue year.
+        when(regulatoryRuleService.certificateExpiryFrom(any()))
+                .thenAnswer(inv -> LocalDate.of(((LocalDate) inv.getArgument(0)).getYear(), 12, 31));
         when(regulatoryRuleService.renewalDueWindowDays()).thenReturn(90);
         tenantId = UUID.randomUUID();
         TrustContextHolder.set(new TrustContext(

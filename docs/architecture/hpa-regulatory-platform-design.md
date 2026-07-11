@@ -1,8 +1,10 @@
 # HPA Regulatory Platform — Phase 1 Gap Matrix + Phase 2 Design
 
 > **Source pack:** `/home/robert/tuso-varapi-hpa-regulatory-pack` (HPA Registration, Inspection and
-> Renewal Manual Vol 1, 2017 — authoritative *baseline*, not current law; every seeded rule/checklist
-> is versioned + `PENDING_REGULATOR_APPROVAL`).
+> Renewal Manual Vol 1, 2017 — the **current operative HPA manual**, confirmed in force by the
+> programme owner on 2026-07-11, effective until formally superseded. Faithful representations of
+> its content are seeded ACTIVE/validated; every rule remains versioned + configurable so future
+> amendments apply without code change).
 > **Base:** `claude/staging-ux-orchestration-remediation-Yypyl` @ `c04aa05a7`.
 > **Constraints honoured:** `services/tshepo-service/**` NO-TOUCH · claims/organisations =
 > `organization-registry-service` (no duplicate org truth in tuso) · COSTA/MusheX owns money (tuso
@@ -26,7 +28,7 @@
 | Inspection case vs visit, team/lead/COI | Single `facility_inspection` row; untyped `inspector_assignments` | **V018**: `inspection_visit` (case keeps `facility_inspection`), typed team JSONB (actor, role, authority, councilNominee, coiDeclared), lead inspector |
 | Per-item structured responses | Findings only (partial submission) | **V018**: `inspection_response` (COMPLIANT/NON_COMPLIANT/NOT_APPLICABLE/NOT_OBSERVED/UNABLE_TO_VERIFY + measurements/evidence/provenance); findings link `response_id` |
 | Versioned regulator-approvable templates + provenance | `version` int never advanced; no status/source; seed-only | **V018**: template `status` (DRAFT/PENDING_REGULATOR_APPROVAL/APPROVED/RETIRED), `source_manual`, `source_pages`, `approved_by/at`, `supersedes_template_id`; existing 4 seeds honestly → `PENDING_REGULATOR_APPROVAL`; CRUD + approve endpoints |
-| Configurable remediation timeframes / renewal cycle | Hardcoded 14/30 days; `plusYears(1)`; 90-day dashboard window | **V018**: `regulatory_rule` store (versioned, effective-dated, `PENDING_REGULATOR_APPROVAL`, provenance); engine consults rules w/ code defaults as fallback |
+| Configurable remediation timeframes / renewal cycle | Hardcoded 14/30 days; `plusYears(1)`; 90-day dashboard window | **V018**: `regulatory_rule` store (versioned, effective-dated, provenance); manual-express values (shortfall windows §5, calendar-year expiry §3.1) seed ACTIVE; engine consults rules w/ code defaults as fallback |
 | Renewal as successor + cycle + queues | Successor cert exists; cycle hardcoded; no RENEWAL_DUE automation | Rule-driven expiry; scheduled `RENEWAL_DUE` marker job + event; renewal pre-population endpoint |
 | Relocation | Enum only, no handling | Premises-aware branch: new premises occupancy, old retired, old cert `SUPERSEDED(reason=RELOCATION)`, never silently transferred |
 | Voluntary closure / enforcement / reopening | Generic paths exist (`VOLUNTARY_CLOSURE_NOTICE`, enforcement_case, `REOPENING` enum) | Explicit closure-request journey + reopening branch + decision-gated suspension; transition guard matrix in `applyFacilityStatus` |
@@ -84,9 +86,9 @@ Envelope-hygiene fixes: varapi `PractitionerInChargeService`/`CredentialingServi
 - Facility Mode cockpit regulatory panel (identity/premises/operator/classification/certificate/
   PIC/expiry/conditions/open actions/verification link).
 
-## 6. Policy fields requiring HPA/council validation (seeded as pending, never enforced as law)
+## 6. Policy fields and their activation status (manual-faithful values ACTIVE; additions/statutory-instrument values pending)
 
 Facility classifications (39), application-type routes/evidence requirements, inspection-type
-purposes, remediation windows (severity→days), renewal cycle + expiry model (2017 = calendar-year
+purposes, remediation windows (severity→days; manual §5 values ACTIVE), renewal cycle + expiry model (manual §3.1 calendar-year
 31 Dec — NOT assumed), checklist templates (all), curated rules (18). Each carries
 `source_manual='HPA-2017-V1'` + source pages.

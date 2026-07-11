@@ -1,18 +1,18 @@
 == J1: private initial registration
-   PASS: application 241e1523-5180-4023-b4ec-2a3770d0b1c4 created for facility 1 (number HPA-APP-2026-AFF02DA4)
+   PASS: application 6013bd34-945b-4f0b-809e-22e4b5594220 created for facility 1 (number HPA-APP-2026-67684B69)
    PASS: human-readable application number
    PASS: submitted (state=SUBMITTED)
    PASS: council gate blocked premature approval (rejection logged)
    PASS: RFI parked application (AWAITING_DOCUMENTS)
    PASS: RFI close returned application to SUBMITTED
    PASS: council review persisted (ENDORSED, authority MDPCZ)
-   PASS: inspection case ed80f60d-5a62-41d7-8808-71841e1f2119 scheduled with template
+   PASS: inspection case 3729a1a5-1ea7-42a3-91b8-e046b43ef8f5 scheduled with template
    PASS: 3 structured responses persisted
    PASS: NON_COMPLIANT derived a linked finding (rule window 30d)
    PASS: visit completed
    PASS: corrective action verified (J7 shortfall loop)
    PASS: facility REGISTERED_ACTIVE
-   PASS: certificate carries verification code 9E5F3DAFD4E2
+   PASS: certificate carries verification code 1D3BCEC346A6
    PASS: J12 public verification discloses public fields
    PASS: no confidential leakage
    PASS: unknown code → 404
