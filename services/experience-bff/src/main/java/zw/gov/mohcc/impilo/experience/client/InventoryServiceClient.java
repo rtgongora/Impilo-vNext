@@ -265,7 +265,9 @@ public class InventoryServiceClient {
 
     private ResponseEntity<JsonNode> getJsonEntity(String url) {
         log.debug("Inventory GET {}", url);
-        return restTemplate.exchange(url, HttpMethod.GET, emptyEntity(), JsonNode.class);
+        // URI.create prevents RestTemplate re-encoding the already-encoded builder output
+        // (multi-word q= search terms otherwise arrive double-encoded and match nothing).
+        return restTemplate.exchange(java.net.URI.create(url), HttpMethod.GET, emptyEntity(), JsonNode.class);
     }
 
     private JsonNode extractData(JsonNode body) {

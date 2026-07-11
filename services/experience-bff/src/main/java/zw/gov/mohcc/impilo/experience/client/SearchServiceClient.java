@@ -44,7 +44,7 @@ public class SearchServiceClient {
         if (rankMode != null && !rankMode.isBlank()) {
             b.queryParam("rankMode", rankMode);
         }
-        String url = b.toUriString();
+        java.net.URI url = b.encode().build().toUri();
         log.debug("Search: query={} entityType={} rankMode={}", query, entityType, rankMode);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return response.getBody();

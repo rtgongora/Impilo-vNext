@@ -1035,7 +1035,9 @@ public class PublicHealthController {
 
     private ResponseEntity<Map<String, Object>> proxy(String url, String requestId) {
         try {
-            JsonNode result = restTemplate.getForEntity(url, JsonNode.class).getBody();
+            // URI.create prevents RestTemplate re-encoding the already-encoded builder output
+            // (multi-word search params otherwise arrive double-encoded and match nothing).
+            JsonNode result = restTemplate.getForEntity(java.net.URI.create(url), JsonNode.class).getBody();
             if (result == null) {
                 throw new IllegalStateException("Upstream returned empty response body");
             }

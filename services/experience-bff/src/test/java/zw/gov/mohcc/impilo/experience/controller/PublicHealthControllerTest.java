@@ -197,6 +197,11 @@ class PublicHealthControllerTest {
         }
 
         @Override
+        public <T> org.springframework.http.ResponseEntity<T> getForEntity(java.net.URI url, Class<T> responseType) {
+            throw new RuntimeException("upstream unavailable");
+        }
+
+        @Override
         public <T> org.springframework.http.ResponseEntity<T> postForEntity(String url, Object request, Class<T> responseType, Object... uriVariables) {
             throw new RuntimeException("upstream unavailable");
         }
@@ -210,6 +215,16 @@ class PublicHealthControllerTest {
         @Override
         public <T> ResponseEntity<T> getForEntity(String url, Class<T> responseType, Object... uriVariables) {
             this.lastGetUrl = url;
+            @SuppressWarnings("unchecked")
+            T body = (T) com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode();
+            return ResponseEntity.ok(body);
+        }
+
+        // The controller now passes a URI (not a String) so RestTemplate cannot
+        // re-encode already-encoded query params — capture that overload too.
+        @Override
+        public <T> ResponseEntity<T> getForEntity(java.net.URI url, Class<T> responseType) {
+            this.lastGetUrl = url.toString();
             @SuppressWarnings("unchecked")
             T body = (T) com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode();
             return ResponseEntity.ok(body);

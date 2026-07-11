@@ -101,12 +101,12 @@ public class GuidanceServiceClient {
     }
 
     public JsonNode search(String query, String domain, int page, int size) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/guidance/search")
+        java.net.URI url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/guidance/search")
                 .queryParam("q", query)
                 .queryParam("domain", domain)
                 .queryParam("page", page)
                 .queryParam("size", size)
-                .toUriString();
+                .encode().build().toUri();
         log.debug("Guidance: search q={} domain={}", query, domain);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);

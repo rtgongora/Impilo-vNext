@@ -118,7 +118,7 @@ public class CommunityServiceClient {
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/community/social/groups");
         if (category != null) builder.queryParam("category", category);
         log.info("COMMUNITY: listGroups operation (social)");
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().toUriString(), JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().build().toUri(), JsonNode.class);
         return extractData(response);
     }
 
@@ -171,7 +171,7 @@ public class CommunityServiceClient {
                 .queryParam("limit", limit)
                 .queryParam("offset", offset);
         if (scopeId != null) builder.queryParam("scopeId", scopeId);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().toUriString(), JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().build().toUri(), JsonNode.class);
         return rawBody(response);
     }
 
@@ -235,7 +235,7 @@ public class CommunityServiceClient {
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/community/social/communities");
         if (category != null) builder.queryParam("category", category);
         if (q != null) builder.queryParam("q", q);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().toUriString(), JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().build().toUri(), JsonNode.class);
         return rawBody(response);
     }
 
@@ -266,7 +266,7 @@ public class CommunityServiceClient {
     public JsonNode listSocialGroups(String communityId) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/community/social/groups");
         if (communityId != null) builder.queryParam("communityId", communityId);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().toUriString(), JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().build().toUri(), JsonNode.class);
         return rawBody(response);
     }
 
@@ -279,7 +279,7 @@ public class CommunityServiceClient {
     public JsonNode listSocialPages(String kind) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/community/social/pages");
         if (kind != null) builder.queryParam("kind", kind);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().toUriString(), JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().build().toUri(), JsonNode.class);
         return rawBody(response);
     }
 

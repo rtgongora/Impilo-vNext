@@ -91,7 +91,7 @@ public class LearningServiceClient {
                 .queryParam("limit", limit)
                 .toUriString();
         try {
-            ResponseEntity<JsonNode> res = restTemplate.getForEntity(url, JsonNode.class);
+            ResponseEntity<JsonNode> res = restTemplate.getForEntity(java.net.URI.create(url), JsonNode.class);
             return unwrapData(res.getBody());
         } catch (Exception e) {
             log.debug("Learning search-hits failed: {}", e.getMessage());

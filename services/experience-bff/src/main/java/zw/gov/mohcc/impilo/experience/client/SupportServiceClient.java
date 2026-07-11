@@ -42,7 +42,7 @@ public class SupportServiceClient {
         if (priority != null && !priority.isBlank()) b.queryParam("priority", priority);
         if (category != null && !category.isBlank()) b.queryParam("category", category);
         if (assigneeRef != null && !assigneeRef.isBlank()) b.queryParam("assigneeRef", assigneeRef);
-        String url = b.toUriString();
+        java.net.URI url = b.encode().build().toUri();
         log.debug("Support: listTickets");
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
@@ -90,7 +90,7 @@ public class SupportServiceClient {
         if (query != null && !query.isBlank()) {
             b.queryParam("q", query);
         }
-        String url = b.toUriString();
+        java.net.URI url = b.encode().build().toUri();
         log.debug("Support: searchArticles");
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
@@ -101,7 +101,7 @@ public class SupportServiceClient {
                 .queryParam("limit", limit);
         if (category != null && !category.isBlank()) b.queryParam("category", category);
         if (status != null && !status.isBlank()) b.queryParam("status", status);
-        String url = b.toUriString();
+        java.net.URI url = b.encode().build().toUri();
         log.debug("Support: listArticles");
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }

@@ -110,7 +110,7 @@ public class ProviderPublicHealthController {
         if (regulatoryStatus != null && !regulatoryStatus.isBlank()) builder.queryParam("regulatory_status", regulatoryStatus);
         if (province != null && !province.isBlank()) builder.queryParam("province", province);
         if (district != null && !district.isBlank()) builder.queryParam("district", district);
-        return restTemplate.getForEntity(builder.toUriString(), Map.class);
+        return restTemplate.getForEntity(builder.encode().build().toUri(), Map.class);
     }
 
     @GetMapping("/site-registry/sites/{siteId}")

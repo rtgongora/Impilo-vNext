@@ -755,7 +755,7 @@ public class TusoServiceClient {
                 .queryParam("limit", limit)
                 .toUriString();
         log.info("TUSO: search localities districtCode={}", districtCode);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(java.net.URI.create(url), JsonNode.class);
         return extractData(response);
     }
 

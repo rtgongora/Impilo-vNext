@@ -86,7 +86,7 @@ public class VitoServiceClient {
                 .queryParam("search", query)
                 .toUriString();
         log.info("VITO: Searching clients queryLength={}", query != null ? query.length() : 0);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(java.net.URI.create(url), JsonNode.class);
         return extractData(response);
     }
 
@@ -121,7 +121,7 @@ public class VitoServiceClient {
         if (search != null && !search.isBlank()) builder.queryParam("search", search);
         if (status != null && !status.isBlank()) builder.queryParam("status", status);
         log.info("VITO: Listing patients page={}, size={}", page, size);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().build().toUri(), JsonNode.class);
         return extractData(response);
     }
 
@@ -182,7 +182,7 @@ public class VitoServiceClient {
         if (query != null && !query.isBlank()) builder.queryParam("query", query);
         if (status != null && !status.isBlank()) builder.queryParam("status", status);
         if (verificationState != null && !verificationState.isBlank()) builder.queryParam("verificationState", verificationState);
-        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.encode().build().toUri(), JsonNode.class);
         return extractData(response);
     }
 
