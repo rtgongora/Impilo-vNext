@@ -84,6 +84,10 @@ public class FacilityConfigurationService {
         event.setAggregateId(facilityUuid.toString());
         event.setEventType(QUEUE_RECONCILE_EVENT);
         event.setTenantId(tenantId.toString());
+        // pod_id/idempotency_key are mandatory outbox hygiene — null values poison
+        // the publisher drain (v1.1 envelope emission throws on the head row).
+        event.setPodId("national-spine");
+        event.setIdempotencyKey("tuso:queue-reconcile:" + facilityUuid + ":" + changeType + ":" + UUID.randomUUID());
         Map<String, Object> payload = new java.util.LinkedHashMap<>();
         payload.put("facilityId", facilityUuid.toString());
         payload.put("facilityUuid", facilityUuid.toString());

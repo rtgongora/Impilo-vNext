@@ -495,6 +495,14 @@ public class WorkspaceService {
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
         event.setPayload(payload);
+        // Outbox rows without pod_id/idempotency_key poison the publisher queue
+        // (v1.1 envelope emission throws on them and halts the whole drain).
+        event.setPodId("national-spine");
+        event.setIdempotencyKey("tuso:" + eventType + ":" + aggregateId + ":" + UUID.randomUUID());
+        TrustContext ctx = TrustContextHolder.get();
+        if (ctx != null && ctx.tenantId() != null) {
+            event.setTenantId(ctx.tenantId().toString());
+        }
         outboxRepository.save(event);
     }
 

@@ -26,6 +26,19 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
 
     Optional<FacilityEntity> findByGofrId(String gofrId);
 
+    /**
+     * Facilities with no active workspace — the operational dead-ends targeted by
+     * bulk default provisioning. Ordered by id so paced batches are resumable.
+     */
+    @Query("SELECT f FROM FacilityEntity f WHERE f.tenantId = :tenantId " +
+           "AND (:province IS NULL OR f.province = :province) " +
+           "AND NOT EXISTS (SELECT 1 FROM WorkspaceEntity w WHERE w.facility = f AND w.active = true) " +
+           "ORDER BY f.id")
+    Page<FacilityEntity> findWithoutActiveWorkspace(
+            @Param("tenantId") UUID tenantId,
+            @Param("province") String province,
+            Pageable pageable);
+
     @Query("SELECT f FROM FacilityEntity f WHERE f.tenantId = :tenantId " +
            "AND LOWER(f.name) LIKE LOWER(CONCAT('%', :name, '%'))")
     Page<FacilityEntity> searchByNameContainingIgnoreCase(
