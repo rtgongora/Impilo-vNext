@@ -117,6 +117,117 @@ describe("resolvePostLoginDestination", () => {
     expect(result.href).toBe("/facility?returnTo=%2Fclinical");
   });
 
+  it("gateway intent destination takes precedence over returnTo", () => {
+    const result = resolvePostLoginDestination({
+      user: {
+        id: "user-citizen-1",
+        actorType: "CITIZEN",
+        roles: ["CITIZEN"],
+        providerActivated: false,
+      },
+      returnTo: "/home",
+      intent: {
+        pillar: "get-care",
+        goal: "book-appointment",
+        params: { dest: "/citizen/appointments/new" },
+        createdAt: Date.now(),
+      },
+    });
+    expect(result.href).toBe("/citizen/appointments/new");
+    expect(result.restoredIntent?.goal).toBe("book-appointment");
+  });
+
+  it("intent without a destination leaves existing returnTo behaviour unchanged", () => {
+    const result = resolvePostLoginDestination({
+      user: {
+        id: "user-citizen-1",
+        actorType: "CITIZEN",
+        roles: ["CITIZEN"],
+        providerActivated: false,
+      },
+      returnTo: "/discover",
+      intent: {
+        pillar: "health-information",
+        goal: "read-topic",
+        params: {},
+        createdAt: Date.now(),
+      },
+    });
+    expect(result.href).toBe("/discover");
+    expect(result.restoredIntent).toBeUndefined();
+  });
+
+  it("intent destinations honour the facility guard like returnTo", () => {
+    const result = resolvePostLoginDestination({
+      user: {
+        id: "user-provider-1",
+        actorType: "PROVIDER",
+        roles: ["CLINICIAN"],
+        providerActivated: true,
+        providerId: "PRV-001",
+      },
+      linkedIds: { providerStatus: "ACTIVE" },
+      workAssignments: [
+        {
+          assignmentId: "A1",
+          subjectId: "PRV-001",
+          subjectType: "provider_worker",
+          contextType: "facility_clinical",
+          assignmentType: "facility_assignment",
+          assignmentStatus: "active",
+        },
+      ],
+      hasFacility: false,
+      intent: {
+        pillar: "get-care",
+        goal: "resume-clinic",
+        params: { dest: "/clinical" },
+        createdAt: Date.now(),
+      },
+    });
+    expect(result.href).toBe("/facility?returnTo=%2Fclinical");
+    expect(result.restoredIntent).toBeUndefined();
+  });
+
+  it("citizen-only identity never lands on a facility-gated intent destination", () => {
+    const result = resolvePostLoginDestination({
+      user: {
+        id: "user-citizen-1",
+        actorType: "CITIZEN",
+        roles: ["CITIZEN"],
+        providerActivated: false,
+      },
+      intent: {
+        pillar: "get-care",
+        goal: "resume-clinic",
+        params: { dest: "/clinical" },
+        createdAt: Date.now(),
+      },
+    });
+    expect(result.href).toBe("/home");
+    expect(result.operationalMode).toBe("my_life");
+  });
+
+  it("does not replay a blocked /work intent destination after no_work resolution", () => {
+    const result = resolvePostLoginDestination({
+      user: {
+        id: "user-admin-1",
+        actorType: "SYSTEM",
+        roles: ["SYSTEM_ADMIN"],
+        providerActivated: false,
+      },
+      intent: {
+        pillar: "applications-licensing",
+        goal: "resume-governance",
+        params: { dest: "/work/administration-governance" },
+        createdAt: Date.now(),
+      },
+      resolutionReason: "no_work",
+    });
+    expect(result.href).toBe("/home");
+    expect(result.restoredIntent).toBeUndefined();
+  });
+
   it("rejects unsafe returnTo values", () => {
     expect(isSafeReturnTo("//evil.example")).toBe(false);
     expect(isSafeReturnTo("/auth/login")).toBe(false);

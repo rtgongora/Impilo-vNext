@@ -10,6 +10,8 @@ import type { FacilityAffiliation, LoginMethod } from "@/lib/identity-context";
 import { resolveIdentityContext } from "@/lib/identity-context";
 import type { WorkAssignment } from "@/lib/trust";
 import type { OperationalMode } from "@/lib/operational-context";
+import type { GatewayIntent } from "@/lib/gateway-intent";
+import { resolveIntentDestination } from "@/lib/gateway-intent";
 import { matchRouteDefinition } from "@/lib/routes";
 
 export interface ResolvePostLoginDestinationInput {
@@ -26,6 +28,12 @@ export interface ResolvePostLoginDestinationInput {
   returnTo?: string | null;
   /** When set (e.g. `no_work`), blocked returnTo targets must not be replayed after resolving. */
   resolutionReason?: string | null;
+  /**
+   * Pending gateway intent (doctrine §4.1 law 3: journey context survives auth).
+   * When it carries a safe destination it takes precedence over returnTo; the
+   * caller consumes the intent once navigation restores the journey.
+   */
+  intent?: GatewayIntent | null;
 }
 
 export interface PostLoginDestinationResult {
@@ -33,6 +41,8 @@ export interface PostLoginDestinationResult {
   operationalMode?: OperationalMode;
   autoActivateProvider?: boolean;
   linkedProviderId?: string | null;
+  /** Set when the destination was driven by the gateway intent — the caller should consume it. */
+  restoredIntent?: GatewayIntent;
 }
 
 const AUTH_EXEMPT_PREFIXES = ["/auth", "/consent"];
@@ -92,6 +102,25 @@ export function resolvePostLoginDestination(
     loginMethod: input.loginMethod,
     hasFacility,
   });
+
+  // Gateway intent precedence (doctrine §4.1 law 3): a valid intent destination wins
+  // over returnTo, under the exact same safety + context guards. When no intent (or no
+  // safe destination) is present, behaviour is unchanged.
+  const intentDest = resolveIntentDestination(input.intent ?? null);
+  if (intentDest && !isBlockedReturnToAfterResolution(intentDest, resolutionReason)) {
+    if (context.isCitizenOnly && routeRequiresFacility(intentDest)) {
+      return { href: "/home", operationalMode: "my_life" };
+    }
+    if (routeRequiresFacility(intentDest) && !hasFacility) {
+      // Facility context first; the intent stays pending and replays as returnTo.
+      return { href: withReturnTo("/facility", intentDest), operationalMode: "facility_work" };
+    }
+    return {
+      href: intentDest,
+      operationalMode: context.defaultOperationalMode,
+      restoredIntent: input.intent ?? undefined,
+    };
+  }
 
   if (isSafeReturnTo(returnTo) && !isBlockedReturnToAfterResolution(returnTo, resolutionReason)) {
     if (context.isCitizenOnly && routeRequiresFacility(returnTo)) {

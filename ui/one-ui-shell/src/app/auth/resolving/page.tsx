@@ -19,6 +19,7 @@ import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
 import { sessionContractAllowsRoute } from "@/lib/trust";
 import { isSafeReturnTo, resolvePostLoginDestination } from "@/lib/resolve-post-login-destination";
+import { consumeIntent, peekIntent, resolveIntentDestination } from "@/lib/gateway-intent";
 
 const RESOLUTION_TIMEOUT_MS = 5000;
 const PROFESSIONAL_NOTICE_DELAY_MS = 1200;
@@ -49,10 +50,23 @@ export default function ResolvingPage() {
     if (hasNavigated) return;
     setHasNavigated(true);
 
+    // Gateway intent (doctrine §4.1 law 3): journey context captured on a public
+    // surface survives authentication. A valid intent destination outranks returnTo
+    // in both routing branches below; it is consumed exactly when navigation restores it.
+    const pendingIntent = peekIntent();
+    const intentDest = resolveIntentDestination(pendingIntent);
+
     // Contract-authoritative routing: the BFF Session Experience Contract is the single
     // source of truth for the post-login landing (tabs/defaultRoute). The client identity
     // resolver below is only a fallback when the contract is unavailable (offline/dev).
     if (contract?.authenticated && contract.defaultRoute) {
+      const intentBlockedAfterResolution =
+        resolutionReason === "no_work" && !!intentDest && intentDest.startsWith("/work/");
+      if (intentDest && !intentBlockedAfterResolution && sessionContractAllowsRoute(contract, intentDest)) {
+        consumeIntent();
+        window.location.assign(intentDest);
+        return;
+      }
       const blockedAfterResolution =
         resolutionReason === "no_work" && !!returnTo && returnTo.startsWith("/work/");
       const href =
@@ -74,7 +88,12 @@ export default function ResolvingPage() {
       hasFacility: useFacilityStore.getState().hasFacility,
       returnTo,
       resolutionReason,
+      intent: pendingIntent,
     });
+
+    if (destination.restoredIntent) {
+      consumeIntent();
+    }
 
     if (destination.autoActivateProvider && destination.linkedProviderId) {
       activateProvider(destination.linkedProviderId);
