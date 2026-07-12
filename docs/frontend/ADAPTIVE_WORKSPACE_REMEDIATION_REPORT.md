@@ -155,6 +155,12 @@ Now (`NavRail`, ≥`lg` viewports):
 - `test:routes` (route parity) and `test:launchers` (dead-end guard): green.
 - `e2e/adaptive-workspace.spec.ts`: **5/5 passed** against the dev server (desktop 1440×900 and
   phone 393×851 viewports).
+- Regression check on the wider chromium e2e set covering every touched surface (responsive,
+  auth, citizen-signup, citizen/provider onboarding, dispatch, clinical-flow): these specs carry
+  pre-existing failures on this branch (mostly strict-mode duplicate-text violations against the
+  taskbar/drawer chrome). Honest baseline comparison at the pre-remediation merge-base
+  (`3c4ff3066`, clean temp worktree): **20 failed / 5 passed before → 16 failed / 8 passed
+  after** — no regression introduced; three additional specs now pass.
 - Website repo: `npm run build` green after every one of its 12 commits; lint clean.
 
 ## 10. Remaining exceptions — where vertical scrolling stays, and why
