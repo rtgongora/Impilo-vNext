@@ -182,6 +182,8 @@ export const ROUTES: RouteDefinition[] = [
   // HPA regulatory UX (Jul 2026): public facility-certificate verifier (guard mirrors /verify/credential)
   // + the practitioner's own PIC-nomination ledger.
   { path: "/verify/facility-certificate", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Verify Facility Certificate", navLabel: "Verify Facility Certificate", navZone: "life" },
+  // Gateway W2 (public lane): verify a health professional by registration number (guard mirrors /verify/facility-certificate)
+  { path: "/verify/practitioner", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Verify a Health Professional", navLabel: "Verify Health Professional", navZone: "life" },
   { path: "/professional/pic-nominations", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "PIC Nominations", navLabel: "PIC Nominations", navZone: "professional" },
   { path: "/share/claim", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Claim Shared Documents", navLabel: "Claim Shared Documents", navZone: "life" },
   { path: "/collaboration/access", zone: "home", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Provider collaboration access", navLabel: "Collaboration access", navZone: "life" },
@@ -847,7 +849,8 @@ export const ROUTES: RouteDefinition[] = [
 // Msika completion wave M7 (Jul 2026): +1 — /marketplace/orders/[id]/pay (real MusheX money leg).
 // Same wave re-gated marketplace personas: seller*→MARKETPLACE_SELL, ops+substitutions→MARKETPLACE_OPS,
 // vendor*→VENDOR_FULFILMENT, cart+orders/[id](+pay)→auth (citizens can buy); COMMERCE membership untouched.
-export const EXPECTED_ROUTE_COUNT = 702;
+// Gateway W2 (Jul 2026): +1 — /verify/practitioner (public health-professional register verifier).
+export const EXPECTED_ROUTE_COUNT = 703;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
