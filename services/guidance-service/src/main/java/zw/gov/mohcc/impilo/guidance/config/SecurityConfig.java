@@ -33,6 +33,11 @@ public class SecurityConfig {
 
         if (!disableOauthForTests) {
             http.authorizeHttpRequests(auth -> auth
+                            // Public gateway lane (ADR gateway-public-lane-security): anonymous,
+                            // read-only, allow-listed explain-step + education content served by
+                            // PublicGuidanceController. No PII, no personalization.
+                            .requestMatchers("/v1/public/guidance/**")
+                            .permitAll()
                             .requestMatchers(
                                     "/actuator/health",
                                     "/actuator/health/**",

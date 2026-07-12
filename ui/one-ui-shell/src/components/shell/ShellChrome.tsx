@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { shouldShowExperienceShell } from "@/lib/shell/shell-visibility";
+import { EmergencyHelpButton } from "@/components/public/EmergencyHelpButton";
 import { ShellEhrTaskEnricher } from "./ShellEhrTaskEnricher";
 import { ShellRouteSync } from "./ShellRouteSync";
 import { ShellSearchPalette } from "./ShellSearchPalette";
@@ -67,9 +68,14 @@ export function ShellChrome() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [show, setSearchOpen, setStartOpen, setNavDrawerOpen, setSosDialogOpen]);
 
+  // Persistent Emergency Help (gateway doctrine §7): visible before and after login on
+  // every surface this chrome reaches. /welcome/** already mounts it via PublicShell.
+  const showEmergencyHelp = !pathname?.startsWith("/welcome");
+
   return (
     <>
       <ShellRouteSync />
+      {showEmergencyHelp ? <EmergencyHelpButton raised={show} /> : null}
       {show ? (
         <>
           <ShellEhrTaskEnricher />
