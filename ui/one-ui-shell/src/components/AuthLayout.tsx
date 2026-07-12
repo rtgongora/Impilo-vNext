@@ -17,7 +17,7 @@ import { AuthHeroAfroFuturistBackground } from "@/components/auth/AuthHeroAfroFu
 import { AuthHeroContent } from "@/components/auth/AuthHeroContent";
 import { AuthHeroWatermark } from "@/components/auth/AuthHeroWatermark";
 
-export function AuthLayout({ children }: { children: ReactNode }) {
+export function AuthLayout({ children, width = "md" }: { children: ReactNode; width?: "md" | "xl" }) {
   return (
     <div className="min-h-screen flex bg-background-deep">
       {/* Left Panel — Afro-futurist hero (desktop / large tablet landscape) */}
@@ -39,7 +39,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
       {/* Right Panel — Auth Content */}
       <div className="flex flex-1 flex-col items-center justify-center p-4 sm:p-6 lg:p-10 xl:p-12 impilo-african-print bg-[color:var(--background)]">
-        <div className="w-full max-w-md">
+        <div className={width === "xl" ? "w-full max-w-xl" : "w-full max-w-md"}>
           {/* Mobile / tablet hero strip */}
           <div
             className="relative mb-6 overflow-hidden rounded-2xl border border-[color:var(--border-soft)] lg:hidden"

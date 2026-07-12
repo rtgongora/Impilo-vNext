@@ -155,7 +155,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout width="xl">
       <div>
         <h2 className="text-xl font-semibold text-foreground mb-1">Sign up for Impilo</h2>
         <p className="text-sm text-muted-foreground mb-6">
@@ -175,7 +175,8 @@ export default function RegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="min-w-0">
             <label className="block text-sm font-medium text-foreground mb-1">Full name</label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -191,7 +192,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label className="block text-sm font-medium text-foreground mb-1">Email or phone</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -207,7 +208,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label className="block text-sm font-medium text-foreground mb-1">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -231,7 +232,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label className="block text-sm font-medium text-foreground mb-1">Confirm password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -245,6 +246,7 @@ export default function RegisterPage() {
                 className="w-full pl-10 pr-3 py-3 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
+          </div>
           </div>
 
           {/* Health ID — optional link */}

@@ -14,6 +14,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { PackagePlus, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { StickyActionBar } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useCreateNhumeDelivery } from "@/hooks/useNhume";
@@ -373,7 +374,7 @@ export default function NhumeNewDeliveryPage() {
             </div>
           )}
 
-          <div className="flex justify-end gap-2">
+          <StickyActionBar status={cargoProfile ? `${cargoProfile.label} delivery` : "New delivery"}>
             <Link href="/nhume/deliveries" className="rounded-xl border border-border px-4 py-2 text-sm text-foreground hover:bg-background">
               Cancel
             </Link>
@@ -385,7 +386,7 @@ export default function NhumeNewDeliveryPage() {
               {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Create delivery
             </button>
-          </div>
+          </StickyActionBar>
         </form>
 
         <style jsx>{`

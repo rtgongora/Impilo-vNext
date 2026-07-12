@@ -68,13 +68,13 @@ export default function CreateDiagnosticOrderPage() {
   return (
     <AppLayout>
       <PageShell title="Create Diagnostic Order" subtitle="Compose and submit a diagnostic or imaging order">
-        <form onSubmit={submit} className="max-w-2xl space-y-4">
+        <form onSubmit={submit} className="max-w-4xl">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Patient CPID" required>
             <input value={patientCpid} onChange={(e) => setPatientCpid(e.target.value)}
               className="impilo-pill-input w-full" aria-label="Patient CPID" placeholder="CPID-…" />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
             <Field label="Order type">
               <select value={orderType} onChange={(e) => setOrderType(e.target.value)} className="impilo-pill-input w-full" aria-label="Order type">
                 {ORDER_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -85,7 +85,6 @@ export default function CreateDiagnosticOrderPage() {
                 {PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             </Field>
-          </div>
 
           <Field label="Order/procedure code" required>
             <input value={code} onChange={(e) => setCode(e.target.value)} className="impilo-pill-input w-full"
@@ -93,7 +92,7 @@ export default function CreateDiagnosticOrderPage() {
           </Field>
 
           {isImaging && (
-            <div className="grid grid-cols-2 gap-4">
+            <>
               <Field label="Modality">
                 <select value={modality} onChange={(e) => setModality(e.target.value)} className="impilo-pill-input w-full" aria-label="Modality">
                   {MODALITIES.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -102,11 +101,11 @@ export default function CreateDiagnosticOrderPage() {
               <Field label="Procedure code (optional)">
                 <input value={procedureCode} onChange={(e) => setProcedureCode(e.target.value)} className="impilo-pill-input w-full" aria-label="Procedure code" />
               </Field>
-            </div>
+            </>
           )}
 
           {isLab && (
-            <div className="grid grid-cols-2 gap-4">
+            <>
               <Field label="Specimen type">
                 <select value={specimenType} onChange={(e) => setSpecimenType(e.target.value)} className="impilo-pill-input w-full" aria-label="Specimen type">
                   {SPECIMEN_TYPES.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -117,19 +116,20 @@ export default function CreateDiagnosticOrderPage() {
                   {FASTING.map((f) => <option key={f} value={f}>{f}</option>)}
                 </select>
               </Field>
-            </div>
+            </>
           )}
 
           <Field label="Referring provider ID (optional)">
             <input value={referringProviderId} onChange={(e) => setReferringProviderId(e.target.value)} className="impilo-pill-input w-full" aria-label="Referring provider ID" />
           </Field>
 
-          <Field label="Indication / clinical notes">
+          <Field label="Indication / clinical notes" className="col-span-full">
             <textarea value={clinicalNotes} onChange={(e) => setClinicalNotes(e.target.value)}
               className="impilo-pill-input w-full min-h-[80px] rounded-2xl py-2" aria-label="Clinical notes" />
           </Field>
+          </div>
 
-          <div className="flex items-center gap-3">
+          <div className="mt-4 flex items-center gap-3">
             <button type="submit" disabled={!canSubmit}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
               {createMut.isPending ? (
@@ -157,9 +157,9 @@ export default function CreateDiagnosticOrderPage() {
   );
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, required, children, className = "" }: { label: string; required?: boolean; children: React.ReactNode; className?: string }) {
   return (
-    <label className="block">
+    <label className={`block min-w-0 ${className}`}>
       <span className="mb-1 block text-sm font-medium">
         {label}{required ? <span className="text-danger"> *</span> : null}
       </span>
