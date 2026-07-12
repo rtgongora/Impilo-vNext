@@ -73,7 +73,9 @@ Every permitAll route family must have a row here (the guard checks this file).
 | `/internal/v1/public/patient-shares/**` | VITO patient shares | pre-gateway | claim-code pattern |
 | `/internal/v1/public/facility-certificates/verify/**` | tuso `PublicCertificateVerificationController` | pre-gateway | licence verify |
 | `/v1/public/patient-safety/**` | patient-safety | pre-gateway | public reports lane |
-| `/internal/v1/public/gateway/**` | per-pillar `Public*Controller`s | W1+ | THE gateway lane; sub-paths registered per wave |
+| `/internal/v1/public/gateway/**` | per-pillar `Public*Controller`s | W1+ | THE gateway lane (GET-only until an anonymous-write wave); sub-paths below |
+| `/internal/v1/public/gateway/facilities/**` | tuso `PublicFacilityController` (search + profile) | W1 | disclosure-limited facility directory |
+| `/internal/v1/public/gateway/guidance/**` | guidance `PublicGuidanceController` (explain-steps + public education) | W1 | Nompilo escalation explainers, no personalization |
 
 Legacy Envoy-only prefixes `/v1/public/verify` and `/v1/public/share` are **deprecated
 as public entries** (not anonymous-capable through Envoy today; live traffic reaches

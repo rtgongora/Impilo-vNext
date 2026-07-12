@@ -86,6 +86,18 @@ gates documented.
 
 ### W1 — Gateway shell + progressive trust (XL; 3 parallel workstreams) — the priority wave
 
+> **Status (2026-07-12): LANDED** (unit/offline proof; live-estate `gateway-*` journey
+> runs pending next deploy). Delivered: `/welcome` intent home + public facility lane;
+> R1 `CONTACT_VERIFIED` attestation + OTP contact-verification/registration + real SMS
+> provider config (V013 templates, incl. the previously unseeded STEP_UP_OTP); semantic
+> intent primitive across auth; guidance V012 public explainers + sign-in escalation
+> panel; persistent Emergency Help control on public and authenticated chrome.
+> **Deviation:** OTP *login* deliberately not built — unachievable app-layer without
+> Keycloak realm changes (KEYCLOAK-GATE); OTP proves the channel at registration,
+> password remains the login credential. Tests: identity-assurance 45, notification 50,
+> guidance 32, BFF new classes 42, one-ui-shell 626 — all green; `check-public-lane.sh`
+> fully PASS.
+
 **Workstream A — Public gateway shell.** Evolve `/welcome` into the intent home ("How
 can we help you today?", 9 pillar cards; honest not-yet states for pillars without
 public journeys). Anchors: `src/app/welcome/page.tsx`, `PUBLIC_PREFIXES` in
