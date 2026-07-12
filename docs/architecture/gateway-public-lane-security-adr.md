@@ -75,7 +75,7 @@ Every permitAll route family must have a row here (the guard checks this file).
 | `/v1/public/patient-safety/**` | patient-safety | pre-gateway | public reports lane |
 | `/internal/v1/public/gateway/**` | per-pillar `Public*Controller`s | W1+ | THE gateway lane (GET-only until an anonymous-write wave); sub-paths below |
 | `/internal/v1/public/gateway/facilities/**` | tuso `PublicFacilityController` (search + profile) | W1 | disclosure-limited facility directory |
-| `/internal/v1/public/gateway/guidance/**` | guidance `PublicGuidanceController` (explain-steps + public education) | W1 | Nompilo escalation explainers, no personalization |
+| `/internal/v1/public/gateway/guidance/**` | guidance `PublicGuidanceController` (explain-steps + public education: topic index, category filter, article read) | W1 (education article/category reads W2) | Nompilo escalation explainers + citizen-language health-information articles (PD-4: guidance owns citizen education); no personalization |
 
 Legacy Envoy-only prefixes `/v1/public/verify` and `/v1/public/share` are **deprecated
 as public entries** (not anonymous-capable through Envoy today; live traffic reaches
