@@ -12,4 +12,5 @@ import java.util.UUID;
 @Repository
 public interface OpsReviewRepository extends JpaRepository<OpsReviewEntity, String> {
     Page<OpsReviewEntity> findByStatusAndTenantId(ReviewStatus status, UUID tenantId, Pageable pageable);
+    Page<OpsReviewEntity> findByTenantIdOrderByUpdatedAtDesc(UUID tenantId, Pageable pageable);
 }

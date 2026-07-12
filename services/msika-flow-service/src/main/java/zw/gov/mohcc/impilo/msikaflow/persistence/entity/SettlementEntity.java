@@ -34,6 +34,10 @@ public class SettlementEntity {
     @Column(name = "status", nullable = false)
     private SettlementStatus status;
 
+    /** COSTA ChargeRecord id (money-truth linkage), set from costa.charge.created. */
+    @Column(name = "costa_charge_ref", length = 64)
+    private String costaChargeRef;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -91,6 +95,14 @@ public class SettlementEntity {
 
     public void setStatus(SettlementStatus status) {
         this.status = status;
+    }
+
+    public String getCostaChargeRef() {
+        return costaChargeRef;
+    }
+
+    public void setCostaChargeRef(String costaChargeRef) {
+        this.costaChargeRef = costaChargeRef;
     }
 
     public OffsetDateTime getCreatedAt() {

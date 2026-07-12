@@ -9,6 +9,8 @@ public final class CartDtos {
 
     public record AddCartItemRequest(
             String msikaCoreCode,
+            /** msika-service listing id — the pricing source of truth resolved at checkout. */
+            String listingId,
             String kind,
             int qty,
             String fulfillmentMode,
@@ -23,7 +25,10 @@ public final class CartDtos {
             String fulfillmentMode,
             Object metadata,
             OffsetDateTime createdAt,
-            OffsetDateTime updatedAt
+            OffsetDateTime updatedAt,
+            String listingId,
+            java.math.BigDecimal unitPrice,
+            String currency
     ) {}
 
     public record CartView(

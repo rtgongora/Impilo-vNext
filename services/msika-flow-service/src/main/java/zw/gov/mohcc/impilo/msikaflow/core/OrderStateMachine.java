@@ -133,6 +133,19 @@ public class OrderStateMachine {
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
     }
 
+    /**
+     * Records a domain event that does not change the order's status (e.g. Rx token
+     * attachment). {@code fromState}/{@code toState} are both the current status so
+     * the audit trail reads as "something happened while in this state", not a
+     * transition.
+     */
+    @Transactional
+    public void recordAuxiliaryEvent(String orderId, String actorId, String actorType,
+                                     String reasonCode, String note) {
+        OrderEntity order = getOrder(orderId);
+        recordEvent(order, order.getStatus(), order.getStatus(), actorId, actorType, reasonCode, note);
+    }
+
     public List<OrderLineEntity> getOrderLines(String orderId) {
         return orderLineRepository.findByOrderId(orderId);
     }

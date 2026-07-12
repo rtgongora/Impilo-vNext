@@ -72,8 +72,18 @@ msika-flow:
   pricing:
     platform-fee-rate: "0.015"
     platform-fee-cap: "50.00"
+  payments:
+    # Rig/preview escape hatch for MusheX's provider-credential gate; MUST stay false in production.
+    simulation-metadata: ${MSIKA_FLOW_PAYMENTS_SIMULATION_METADATA:false}
+  fulfillment:
+    # Nhume is dispatch SoR for delivery-mode orders; disabling (or a failed call) falls
+    # back to the manual out-for-delivery / mark-delivered recovery endpoints.
+    nhume-enabled: ${MSIKA_FLOW_NHUME_ENABLED:true}
   integration:
     msika-core-url: ${MSIKA_CORE_URL:http://localhost:8086}
+    msika-base-url: ${MSIKA_BASE_URL:http://msika-service:8086}
     mushex-url: ${MUSHEX_URL:http://localhost:8102}
     tuso-url: ${TUSO_URL:http://localhost:8084}
     varapi-url: ${VARAPI_URL:http://localhost:8083}
+    nhume-url: ${NHUME_URL:http://nhume-service:8210}
+    share-slip-url: ${SHARE_SLIP_URL:http://localhost:8104}

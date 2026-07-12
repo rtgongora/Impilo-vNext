@@ -45,6 +45,10 @@ public class DeliveryPlanEntity {
     @Column(name = "selected_provider_ref", length = 255)
     private String selectedProviderRef;
 
+    /** Nhume delivery id — dispatch SoR linkage created by FulfillmentService.routeOrder. */
+    @Column(name = "nhume_delivery_id", length = 64)
+    private String nhumeDeliveryId;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "estimated_window", columnDefinition = "jsonb")
     private String estimatedWindowJson = "{}";
@@ -93,6 +97,8 @@ public class DeliveryPlanEntity {
     public void setStatus(DeliveryStatus status) { this.status = status; }
     public String getSelectedProviderRef() { return selectedProviderRef; }
     public void setSelectedProviderRef(String selectedProviderRef) { this.selectedProviderRef = selectedProviderRef; }
+    public String getNhumeDeliveryId() { return nhumeDeliveryId; }
+    public void setNhumeDeliveryId(String nhumeDeliveryId) { this.nhumeDeliveryId = nhumeDeliveryId; }
     public String getEstimatedWindowJson() { return estimatedWindowJson; }
     public void setEstimatedWindowJson(String estimatedWindowJson) { this.estimatedWindowJson = estimatedWindowJson; }
     public String getConstraintsSummaryJson() { return constraintsSummaryJson; }

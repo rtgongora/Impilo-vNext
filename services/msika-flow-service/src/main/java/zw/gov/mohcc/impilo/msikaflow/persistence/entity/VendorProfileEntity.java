@@ -40,6 +40,13 @@ public class VendorProfileEntity {
     @Column(name = "coverage", columnDefinition = "jsonb")
     private String coverage;
 
+    /**
+     * JWT principal (actor id) bound to this vendor — the BFF's vendor-me seam.
+     * Nullable; set via the ops-gated bind-actor endpoint.
+     */
+    @Column(name = "actor_binding", length = 128)
+    private String actorBinding;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -105,6 +112,14 @@ public class VendorProfileEntity {
 
     public void setCoverage(String coverage) {
         this.coverage = coverage;
+    }
+
+    public String getActorBinding() {
+        return actorBinding;
+    }
+
+    public void setActorBinding(String actorBinding) {
+        this.actorBinding = actorBinding;
     }
 
     public OffsetDateTime getCreatedAt() {

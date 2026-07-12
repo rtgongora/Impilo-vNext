@@ -67,4 +67,36 @@ public class OpsController {
         List<FulfillmentRouteEntity> stuck = fulfillmentService.getStuckRoutes();
         return ResponseEntity.ok(ApiResponse.ok(stuck, correlationId));
     }
+
+    @PostMapping("/vendors/{id}/suspend")
+    public ResponseEntity<ApiResponse<VendorProfileEntity>> suspendVendor(
+            @PathVariable String id,
+            @RequestBody(required = false) VendorSuspendRequest req,
+            HttpServletRequest httpReq) {
+        UUID tenantId = TrustHeaderExtractor.tenantId(httpReq);
+        String actorId = TrustHeaderExtractor.actorId(httpReq);
+        String correlationId = TrustHeaderExtractor.correlationId(httpReq);
+        String reason = req != null ? req.reason() : null;
+        VendorProfileEntity vendor = opsService.suspendVendor(id, reason, actorId, tenantId);
+        return ResponseEntity.ok(ApiResponse.ok(vendor, correlationId));
+    }
+
+    @PostMapping("/vendors/{id}/reinstate")
+    public ResponseEntity<ApiResponse<VendorProfileEntity>> reinstateVendor(
+            @PathVariable String id, HttpServletRequest httpReq) {
+        UUID tenantId = TrustHeaderExtractor.tenantId(httpReq);
+        String actorId = TrustHeaderExtractor.actorId(httpReq);
+        String correlationId = TrustHeaderExtractor.correlationId(httpReq);
+        VendorProfileEntity vendor = opsService.reinstateVendor(id, actorId, tenantId);
+        return ResponseEntity.ok(ApiResponse.ok(vendor, correlationId));
+    }
+
+    @GetMapping("/audit")
+    public ResponseEntity<ApiResponse<PagedAuditView>> getAuditLog(Pageable pageable, HttpServletRequest httpReq) {
+        UUID tenantId = TrustHeaderExtractor.tenantId(httpReq);
+        String correlationId = TrustHeaderExtractor.correlationId(httpReq);
+        return ResponseEntity.ok(ApiResponse.ok(opsService.getAuditLog(tenantId, pageable), correlationId));
+    }
+
+    public record VendorSuspendRequest(String reason) {}
 }

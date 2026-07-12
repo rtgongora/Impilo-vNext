@@ -45,4 +45,28 @@ public class MsikaCoreClient {
         JsonNode item = lookupItem(msikaCoreCode);
         return item.path("restrictions");
     }
+
+    /**
+     * Risk-friction rule for a marketplace risk classification (LOW_RISK,
+     * MODERATE_RISK, HIGH_RISK, REGULATED, ...). Returns a MissingNode when the
+     * classification has no configured rule (msika responds 404) or the lookup
+     * degrades — callers treat that as "no friction constraint".
+     */
+    public JsonNode getRiskFriction(String riskClassification) {
+        if (riskClassification == null || riskClassification.isBlank()) {
+            return objectMapper.missingNode();
+        }
+        try {
+            String url = msikaCoreBaseUrl + "/v1/validation/risk-friction/" + riskClassification;
+            String response = restTemplate.getForObject(url, String.class);
+            if (response != null) {
+                JsonNode envelope = objectMapper.readTree(response);
+                return envelope.has("data") ? envelope.path("data") : envelope;
+            }
+        } catch (Exception e) {
+            // 404 (no rule) or unreachable — both are non-blocking by design.
+            log.debug("MSIKA Core risk-friction lookup for {} returned none: {}", riskClassification, e.getMessage());
+        }
+        return objectMapper.missingNode();
+    }
 }

@@ -79,6 +79,14 @@ public class OrderEntity {
     @Column(name = "idempotency_key", unique = true)
     private String idempotencyKey;
 
+    /** Verified share-slip token reference for Rx orders (RxTokenService). */
+    @Column(name = "rx_token_ref", length = 255)
+    private String rxTokenRef;
+
+    /** Subject type reported by share-slip verification (e.g. PRESCRIPTION). */
+    @Column(name = "rx_token_subject_type", length = 64)
+    private String rxTokenSubjectType;
+
     @Version
     @Column(name = "lock_version")
     private int lockVersion;
@@ -108,6 +116,22 @@ public class OrderEntity {
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
+    }
+
+    public String getRxTokenRef() {
+        return rxTokenRef;
+    }
+
+    public void setRxTokenRef(String rxTokenRef) {
+        this.rxTokenRef = rxTokenRef;
+    }
+
+    public String getRxTokenSubjectType() {
+        return rxTokenSubjectType;
+    }
+
+    public void setRxTokenSubjectType(String rxTokenSubjectType) {
+        this.rxTokenSubjectType = rxTokenSubjectType;
     }
 
     public UUID getTenantId() {

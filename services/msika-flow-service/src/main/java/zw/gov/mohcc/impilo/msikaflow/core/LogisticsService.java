@@ -207,6 +207,11 @@ public class LogisticsService {
 
     // ── Missions / handoffs / custody ──────────────────────────────────────
 
+    /**
+     * Dispatch lifecycle is owned by Nhume (SoR); these mission-lifecycle methods
+     * remain for operator-visibility CRUD only (ops console mission log, not a
+     * competing dispatch engine).
+     */
     @Transactional
     public LogisticsDtos.MissionView createMission(LogisticsDtos.CreateMissionRequest req) {
         legRepository.findById(req.legId())
@@ -224,6 +229,7 @@ public class LogisticsService {
         return toView(m);
     }
 
+    /** Dispatch lifecycle is owned by Nhume (SoR); this remains for operator-visibility CRUD only. */
     public List<LogisticsDtos.MissionView> listMissions(String legId) {
         return missionRepository.findByLegIdOrderByCreatedAtDesc(legId).stream()
                 .map(this::toView)

@@ -142,8 +142,27 @@ public class OrderController {
         String actorId = TrustHeaderExtractor.actorId(httpReq);
         String actorType = TrustHeaderExtractor.actorType(httpReq);
         String correlationId = TrustHeaderExtractor.correlationId(httpReq);
-        OrderEntity order = stateMachine.transition(id, OrderStatus.VALIDATED, actorId, actorType, "ORDER_VALIDATED", null);
-        return ResponseEntity.ok(ApiResponse.ok(OrderView.from(order, null), correlationId));
+
+        OrderEntity order = stateMachine.getOrder(id);
+        List<OrderLineEntity> lines = stateMachine.getOrderLines(id);
+        List<CatalogValidationService.CartItem> items = lines.stream()
+                .map(l -> new CatalogValidationService.CartItem(l.getMsikaCoreCode(), l.getQty()))
+                .toList();
+        // Order carries no channel field; a facility-bound order is treated as a
+        // facility-channel order for restriction purposes (best-effort — an honest
+        // gap when neither a facility nor an explicit channel is known).
+        String channel = order.getFacilityId() != null ? "facility" : null;
+        CatalogValidationService.ValidationResult result = catalogValidation.validateCart(
+                items, channel, order.getActorType(), order.getPatientCpid(),
+                order.getFacilityId() != null ? order.getFacilityId().toString() : null,
+                order.getProviderRef());
+        if (!result.valid()) {
+            throw new ValidationFailedException("CATALOG_VALIDATION_FAILED",
+                    "Order failed catalog validation", result.items());
+        }
+
+        OrderEntity updated = stateMachine.transition(id, OrderStatus.VALIDATED, actorId, actorType, "ORDER_VALIDATED", null);
+        return ResponseEntity.ok(ApiResponse.ok(OrderView.from(updated, lines), correlationId));
     }
 
     @PostMapping("/{id}/price")
@@ -162,7 +181,7 @@ public class OrderController {
         String actorId = TrustHeaderExtractor.actorId(httpReq);
         String actorType = TrustHeaderExtractor.actorType(httpReq);
         String correlationId = TrustHeaderExtractor.correlationId(httpReq);
-        SettlementEntity settlement = paymentService.createPaymentIntent(id, actorId, actorType);
+        SettlementEntity settlement = paymentService.createPaymentIntent(id, actorId, actorType, httpReq);
         return ResponseEntity.ok(ApiResponse.ok(new Object() {
             public final String orderId = id;
             public final String mushexPaymentIntentId = settlement.getMushexPaymentIntentId();
@@ -175,7 +194,7 @@ public class OrderController {
         String actorId = TrustHeaderExtractor.actorId(httpReq);
         String actorType = TrustHeaderExtractor.actorType(httpReq);
         String correlationId = TrustHeaderExtractor.correlationId(httpReq);
-        fulfillmentService.routeOrder(id, actorId, actorType);
+        fulfillmentService.routeOrder(id, actorId, actorType, httpReq);
         OrderEntity order = stateMachine.getOrder(id);
         return ResponseEntity.ok(ApiResponse.ok(OrderView.from(order, null), correlationId));
     }
@@ -206,6 +225,26 @@ public class OrderController {
         String actorType = TrustHeaderExtractor.actorType(httpReq);
         String correlationId = TrustHeaderExtractor.correlationId(httpReq);
         fulfillmentService.markDelivered(id, actorId, actorType);
+        OrderEntity order = stateMachine.getOrder(id);
+        return ResponseEntity.ok(ApiResponse.ok(OrderView.from(order, null), correlationId));
+    }
+
+    @PostMapping("/{id}/out-for-delivery")
+    public ResponseEntity<ApiResponse<OrderView>> markOutForDelivery(@PathVariable String id, HttpServletRequest httpReq) {
+        String actorId = TrustHeaderExtractor.actorId(httpReq);
+        String actorType = TrustHeaderExtractor.actorType(httpReq);
+        String correlationId = TrustHeaderExtractor.correlationId(httpReq);
+        fulfillmentService.markOutForDelivery(id, actorId, actorType);
+        OrderEntity order = stateMachine.getOrder(id);
+        return ResponseEntity.ok(ApiResponse.ok(OrderView.from(order, null), correlationId));
+    }
+
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<ApiResponse<OrderView>> completeOrder(@PathVariable String id, HttpServletRequest httpReq) {
+        String actorId = TrustHeaderExtractor.actorId(httpReq);
+        String actorType = TrustHeaderExtractor.actorType(httpReq);
+        String correlationId = TrustHeaderExtractor.correlationId(httpReq);
+        fulfillmentService.completeOrder(id, actorId, actorType);
         OrderEntity order = stateMachine.getOrder(id);
         return ResponseEntity.ok(ApiResponse.ok(OrderView.from(order, null), correlationId));
     }

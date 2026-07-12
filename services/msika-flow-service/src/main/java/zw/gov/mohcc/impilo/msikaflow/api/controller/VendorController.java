@@ -49,6 +49,52 @@ public class VendorController {
                 .body(ApiResponse.ok(vendor, correlationId));
     }
 
+    /** Paged vendor directory for the ops console, optional {@code status} filter. */
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<VendorProfileEntity>>> listVendors(
+            @RequestParam(required = false) String status,
+            Pageable pageable, HttpServletRequest httpReq) {
+        UUID tenantId = TrustHeaderExtractor.tenantId(httpReq);
+        String correlationId = TrustHeaderExtractor.correlationId(httpReq);
+        VendorStatus vendorStatus = (status != null && !status.isBlank()) ? VendorStatus.valueOf(status) : null;
+        return ResponseEntity.ok(ApiResponse.ok(
+                vendorService.listVendors(tenantId, vendorStatus, pageable), correlationId));
+    }
+
+    /**
+     * Resolve the vendor bound to a JWT principal — the BFF's {@code vendor/me} seam.
+     * Placed before {@code /{id}} is irrelevant (distinct path), but declared here for
+     * clarity.
+     */
+    @GetMapping("/by-actor/{actorId}")
+    public ResponseEntity<ApiResponse<VendorProfileEntity>> vendorByActor(
+            @PathVariable String actorId, HttpServletRequest httpReq) {
+        UUID tenantId = TrustHeaderExtractor.tenantId(httpReq);
+        String correlationId = TrustHeaderExtractor.correlationId(httpReq);
+        return ResponseEntity.ok(ApiResponse.ok(
+                vendorService.getByActorBinding(tenantId, actorId), correlationId));
+    }
+
+    /** Vendor profile plus its uploaded documents. */
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<VendorDetailView>> getVendor(
+            @PathVariable String id, HttpServletRequest httpReq) {
+        String correlationId = TrustHeaderExtractor.correlationId(httpReq);
+        VendorProfileEntity vendor = vendorService.getVendor(id);
+        List<VendorDocumentEntity> docs = vendorService.getVendorDocuments(id);
+        return ResponseEntity.ok(ApiResponse.ok(new VendorDetailView(vendor, docs), correlationId));
+    }
+
+    /** Ops-gated: bind a JWT principal (actor id) to a vendor for the vendor-me seam. */
+    @PostMapping("/{id}/bind-actor")
+    public ResponseEntity<ApiResponse<VendorProfileEntity>> bindActor(
+            @PathVariable String id, @Valid @RequestBody BindActorRequest req, HttpServletRequest httpReq) {
+        String actorId = TrustHeaderExtractor.actorId(httpReq);
+        String correlationId = TrustHeaderExtractor.correlationId(httpReq);
+        VendorProfileEntity vendor = vendorService.bindActor(id, req.actorId(), actorId);
+        return ResponseEntity.ok(ApiResponse.ok(vendor, correlationId));
+    }
+
     @PostMapping("/{id}/documents/upload")
     public ResponseEntity<ApiResponse<VendorDocumentEntity>> uploadDoc(
             @PathVariable String id,

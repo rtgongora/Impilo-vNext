@@ -82,6 +82,9 @@ public class OutboxPublisher {
             case "VENDOR_APPLIED" -> "msika.flow.vendor.applied";
             case "VENDOR_APPROVED" -> "msika.flow.vendor.approved";
             case "VENDOR_SUSPENDED" -> "msika.flow.vendor.suspended";
+            case "VENDOR_REINSTATED" -> "msika.flow.vendor.reinstated";
+            case "VENDOR_REJECTED" -> "msika.flow.vendor.rejected";
+            case "VENDOR_ACTOR_BOUND" -> "msika.flow.vendor.actor-bound";
             case "REFUND_REQUESTED" -> "msika.flow.refund.requested";
             case "REFUND_COMPLETED" -> "msika.flow.refund.completed";
             case "SUBSTITUTION_APPROVED" -> "msika.flow.order.validated";

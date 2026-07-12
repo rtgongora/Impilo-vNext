@@ -103,6 +103,22 @@ public class VendorService {
         return vendor;
     }
 
+    /** Sets a vendor to REJECTED (ops decision on the VENDOR review). */
+    @Transactional
+    public VendorProfileEntity rejectVendor(String vendorId, String actorId, UUID tenantId, String notes) {
+        VendorProfileEntity vendor = vendorProfileRepository.findById(vendorId)
+                .orElseThrow(() -> new IllegalArgumentException("Vendor not found: " + vendorId));
+
+        vendor.setStatus(VendorStatus.REJECTED);
+        vendorProfileRepository.save(vendor);
+
+        publishOutbox("Vendor", vendorId, "VENDOR_REJECTED", tenantId,
+                Map.of("vendorId", vendorId, "rejectedBy", actorId, "notes", notes != null ? notes : ""));
+
+        log.info("Vendor rejected: id={} notes={}", vendorId, notes);
+        return vendor;
+    }
+
     @Transactional
     public VendorProfileEntity suspendVendor(String vendorId, String reason, String actorId, UUID tenantId) {
         VendorProfileEntity vendor = vendorProfileRepository.findById(vendorId)
@@ -116,6 +132,52 @@ public class VendorService {
 
         log.info("Vendor suspended: id={} reason={}", vendorId, reason);
         return vendor;
+    }
+
+    /** Reverses a suspension: SUSPENDED → ACTIVE, ops-gated (VendorController/OpsController). */
+    @Transactional
+    public VendorProfileEntity reinstateVendor(String vendorId, String actorId, UUID tenantId) {
+        VendorProfileEntity vendor = vendorProfileRepository.findById(vendorId)
+                .orElseThrow(() -> new IllegalArgumentException("Vendor not found: " + vendorId));
+
+        if (vendor.getStatus() != VendorStatus.SUSPENDED) {
+            throw new IllegalStateException("Vendor is not SUSPENDED: " + vendor.getStatus());
+        }
+
+        vendor.setStatus(VendorStatus.ACTIVE);
+        vendorProfileRepository.save(vendor);
+
+        publishOutbox("Vendor", vendorId, "VENDOR_REINSTATED", tenantId,
+                Map.of("vendorId", vendorId, "reinstatedBy", actorId));
+
+        log.info("Vendor reinstated: id={}", vendorId);
+        return vendor;
+    }
+
+    /** Binds a JWT principal (actor id) to a vendor profile — the BFF's vendor-me seam. Ops-gated. */
+    @Transactional
+    public VendorProfileEntity bindActor(String vendorId, String actorId, String boundBy) {
+        VendorProfileEntity vendor = vendorProfileRepository.findById(vendorId)
+                .orElseThrow(() -> new IllegalArgumentException("Vendor not found: " + vendorId));
+
+        vendor.setActorBinding(actorId);
+        vendorProfileRepository.save(vendor);
+
+        publishOutbox("Vendor", vendorId, "VENDOR_ACTOR_BOUND", vendor.getTenantId(),
+                Map.of("vendorId", vendorId, "actorId", actorId, "boundBy", boundBy != null ? boundBy : ""));
+
+        log.info("Vendor actor bound: vendorId={} actorId={}", vendorId, actorId);
+        return vendor;
+    }
+
+    public VendorProfileEntity getByActorBinding(UUID tenantId, String actorId) {
+        return vendorProfileRepository.findByTenantIdAndActorBinding(tenantId, actorId)
+                .orElseThrow(() -> new IllegalArgumentException("No vendor bound to actor: " + actorId));
+    }
+
+    public VendorProfileEntity getVendor(String vendorId) {
+        return vendorProfileRepository.findById(vendorId)
+                .orElseThrow(() -> new IllegalArgumentException("Vendor not found: " + vendorId));
     }
 
     public Page<VendorProfileEntity> listVendors(UUID tenantId, VendorStatus status, Pageable pageable) {

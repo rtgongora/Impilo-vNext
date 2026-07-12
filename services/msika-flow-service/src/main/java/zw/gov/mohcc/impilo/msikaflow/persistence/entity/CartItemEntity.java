@@ -29,6 +29,17 @@ public class CartItemEntity {
     @Column(name = "msika_core_code", nullable = false, length = 128)
     private String msikaCoreCode;
 
+    /** msika-service listing id — the pricing source of truth resolved at checkout. */
+    @Column(name = "listing_id", length = 64)
+    private String listingId;
+
+    /** Server-resolved unit price snapshot (never client-supplied). */
+    @Column(name = "unit_price", precision = 12, scale = 2)
+    private java.math.BigDecimal unitPrice;
+
+    @Column(name = "currency", length = 3)
+    private String currency;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "kind", nullable = false, length = 10)
     private LineItemKind kind = LineItemKind.PRODUCT;
@@ -68,6 +79,12 @@ public class CartItemEntity {
     public void setCartId(String cartId) { this.cartId = cartId; }
     public String getMsikaCoreCode() { return msikaCoreCode; }
     public void setMsikaCoreCode(String msikaCoreCode) { this.msikaCoreCode = msikaCoreCode; }
+    public String getListingId() { return listingId; }
+    public void setListingId(String listingId) { this.listingId = listingId; }
+    public java.math.BigDecimal getUnitPrice() { return unitPrice; }
+    public void setUnitPrice(java.math.BigDecimal unitPrice) { this.unitPrice = unitPrice; }
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
     public LineItemKind getKind() { return kind; }
     public void setKind(LineItemKind kind) { this.kind = kind; }
     public int getQty() { return qty; }

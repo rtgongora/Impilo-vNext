@@ -9,6 +9,8 @@ public class MsikaFlowProperties {
     private Pickup pickup = new Pickup();
     private Routing routing = new Routing();
     private Pricing pricing = new Pricing();
+    private Payments payments = new Payments();
+    private Fulfillment fulfillment = new Fulfillment();
 
     public Outbox getOutbox() { return outbox; }
     public void setOutbox(Outbox outbox) { this.outbox = outbox; }
@@ -18,6 +20,10 @@ public class MsikaFlowProperties {
     public void setRouting(Routing routing) { this.routing = routing; }
     public Pricing getPricing() { return pricing; }
     public void setPricing(Pricing pricing) { this.pricing = pricing; }
+    public Payments getPayments() { return payments; }
+    public void setPayments(Payments payments) { this.payments = payments; }
+    public Fulfillment getFulfillment() { return fulfillment; }
+    public void setFulfillment(Fulfillment fulfillment) { this.fulfillment = fulfillment; }
 
     public static class Outbox {
         private long pollIntervalMs = 2000;
@@ -50,5 +56,28 @@ public class MsikaFlowProperties {
         public void setPlatformFeeRate(String platformFeeRate) { this.platformFeeRate = platformFeeRate; }
         public String getPlatformFeeCap() { return platformFeeCap; }
         public void setPlatformFeeCap(String platformFeeCap) { this.platformFeeCap = platformFeeCap; }
+    }
+
+    /**
+     * Payment-rail behaviour. {@code simulationMetadata} tags MusheX intents with
+     * {@code "simulation": true} so preview/rig environments pass MusheX's
+     * provider-credential gate ({@code PROVIDER_CREDENTIAL_INVALID}) without real
+     * vendor-verifiable provider ids. MUST stay false in production.
+     */
+    public static class Payments {
+        private boolean simulationMetadata = false;
+        public boolean isSimulationMetadata() { return simulationMetadata; }
+        public void setSimulationMetadata(boolean simulationMetadata) { this.simulationMetadata = simulationMetadata; }
+    }
+
+    /**
+     * Fulfilment seams. {@code nhumeEnabled} routes delivery-mode orders to Nhume
+     * (dispatch SoR); when disabled — or when the Nhume call fails — the manual
+     * out-for-delivery / mark-delivered endpoints are the documented recovery path.
+     */
+    public static class Fulfillment {
+        private boolean nhumeEnabled = true;
+        public boolean isNhumeEnabled() { return nhumeEnabled; }
+        public void setNhumeEnabled(boolean nhumeEnabled) { this.nhumeEnabled = nhumeEnabled; }
     }
 }

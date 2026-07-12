@@ -5,6 +5,8 @@ public enum VendorStatus {
     PENDING_VERIFICATION,
     APPROVED,
     ACTIVE,
+    /** Application rejected by ops review (OpsService.rejectReview). */
+    REJECTED,
     SUSPENDED,
     DEACTIVATED
 }

@@ -8,7 +8,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import zw.gov.mohcc.impilo.msikaflow.api.dto.ApiResponse;
+import zw.gov.mohcc.impilo.msikaflow.core.UpstreamUnavailableException;
+import zw.gov.mohcc.impilo.msikaflow.core.ValidationFailedException;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @RestControllerAdvice
@@ -21,6 +24,24 @@ public class GlobalExceptionHandler {
         log.warn("Bad request: {}", ex.getMessage());
         return ResponseEntity.badRequest()
                 .body(ApiResponse.error("BAD_REQUEST", ex.getMessage(), 400, UUID.randomUUID().toString()));
+    }
+
+    /** 422 with structured per-item details in {@code data}; state untouched by contract. */
+    @ExceptionHandler(ValidationFailedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleValidationFailed(ValidationFailedException ex) {
+        log.warn("Validation failed [{}]: {}", ex.getCode(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ApiResponse<>(false, ex.getDetails(),
+                        new ApiResponse.ApiError(ex.getCode(), ex.getMessage(), 422),
+                        UUID.randomUUID().toString(), Instant.now()));
+    }
+
+    /** 502 — an upstream dependency is unreachable; never faked as success. */
+    @ExceptionHandler(UpstreamUnavailableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUpstreamUnavailable(UpstreamUnavailableException ex) {
+        log.error("Upstream unavailable: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(ApiResponse.error("UPSTREAM_UNAVAILABLE", ex.getMessage(), 502, UUID.randomUUID().toString()));
     }
 
     @ExceptionHandler(IllegalStateException.class)

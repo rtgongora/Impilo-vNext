@@ -1,11 +1,14 @@
 package zw.gov.mohcc.impilo.msikaflow.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.msikaflow.config.MsikaFlowProperties;
 import zw.gov.mohcc.impilo.msikaflow.domain.*;
+import zw.gov.mohcc.impilo.msikaflow.integration.NhumeClient;
 import zw.gov.mohcc.impilo.msikaflow.persistence.entity.*;
 import zw.gov.mohcc.impilo.msikaflow.persistence.repository.*;
 
@@ -21,40 +24,52 @@ public class FulfillmentService {
     private final FulfillmentRouteRepository routeRepository;
     private final ReservationRepository reservationRepository;
     private final OrderLineRepository orderLineRepository;
-    private final CapabilityProfileRepository capabilityRepository;
     private final FulfillmentOrderRepository fulfillmentOrderRepository;
     private final DeliveryPlanRepository deliveryPlanRepository;
     private final DeliveryLegRepository deliveryLegRepository;
     private final CustodyRecordRepository custodyRecordRepository;
     private final HandoffEventRepository handoffEventRepository;
+    private final SettlementRepository settlementRepository;
+    private final NhumeClient nhumeClient;
+    private final MsikaFlowProperties properties;
     private final ObjectMapper objectMapper;
 
     public FulfillmentService(OrderStateMachine stateMachine,
                               FulfillmentRouteRepository routeRepository,
                               ReservationRepository reservationRepository,
                               OrderLineRepository orderLineRepository,
-                              CapabilityProfileRepository capabilityRepository,
                               FulfillmentOrderRepository fulfillmentOrderRepository,
                               DeliveryPlanRepository deliveryPlanRepository,
                               DeliveryLegRepository deliveryLegRepository,
                               CustodyRecordRepository custodyRecordRepository,
                               HandoffEventRepository handoffEventRepository,
+                              SettlementRepository settlementRepository,
+                              NhumeClient nhumeClient,
+                              MsikaFlowProperties properties,
                               ObjectMapper objectMapper) {
         this.stateMachine = stateMachine;
         this.routeRepository = routeRepository;
         this.reservationRepository = reservationRepository;
         this.orderLineRepository = orderLineRepository;
-        this.capabilityRepository = capabilityRepository;
         this.fulfillmentOrderRepository = fulfillmentOrderRepository;
         this.deliveryPlanRepository = deliveryPlanRepository;
         this.deliveryLegRepository = deliveryLegRepository;
         this.custodyRecordRepository = custodyRecordRepository;
         this.handoffEventRepository = handoffEventRepository;
+        this.settlementRepository = settlementRepository;
+        this.nhumeClient = nhumeClient;
+        this.properties = properties;
         this.objectMapper = objectMapper;
     }
 
     @Transactional
     public FulfillmentRouteEntity routeOrder(String orderId, String actorId, String actorType) {
+        return routeOrder(orderId, actorId, actorType, null);
+    }
+
+    @Transactional
+    public FulfillmentRouteEntity routeOrder(String orderId, String actorId, String actorType,
+                                             HttpServletRequest inboundRequest) {
         OrderEntity order = stateMachine.getOrder(orderId);
         if (order.getStatus() != OrderStatus.PAID) {
             throw new IllegalStateException("Order must be PAID before routing. Current: " + order.getStatus());
@@ -153,9 +168,31 @@ public class FulfillmentService {
             }
         }
 
+        // Nhume is dispatch SoR for human/community delivery orders. Failure never
+        // blocks routing — the manual out-for-delivery / mark-delivered endpoints are
+        // the documented recovery path.
+        if (properties.getFulfillment().isNhumeEnabled()
+                && (deliveryMode == DeliveryMode.HUMAN_DELIVERY || deliveryMode == DeliveryMode.COMMUNITY_HANDOFF)) {
+            dispatchToNhume(order, plan, inboundRequest);
+        }
+
         stateMachine.transition(orderId, OrderStatus.ROUTED, actorId, actorType, "ORDER_ROUTED", "Route: " + mode);
         log.info("Order routed: id={} mode={}", orderId, mode);
         return route;
+    }
+
+    private void dispatchToNhume(OrderEntity order, DeliveryPlanEntity plan, HttpServletRequest inboundRequest) {
+        String mushexIntentId = settlementRepository.findByOrderId(order.getOrderId())
+                .map(SettlementEntity::getMushexPaymentIntentId)
+                .orElse(null);
+        nhumeClient.createMarketplaceDelivery(order, mushexIntentId, inboundRequest)
+                .ifPresentOrElse(
+                        created -> {
+                            plan.setNhumeDeliveryId(created.deliveryId());
+                            deliveryPlanRepository.save(plan);
+                            log.info("Nhume delivery created: orderId={} nhumeDeliveryId={}", order.getOrderId(), created.deliveryId());
+                        },
+                        () -> log.warn("Nhume delivery dispatch failed for order {}; manual endpoints are the recovery path", order.getOrderId()));
     }
 
     private FulfillmentMode determineRoute(OrderEntity order, List<OrderLineEntity> lines) {
@@ -163,16 +200,6 @@ public class FulfillmentService {
         for (OrderLineEntity line : lines) {
             if (line.getFulfillmentMode() != null) {
                 return line.getFulfillmentMode();
-            }
-        }
-
-        // Check capability profile for tenant/facility
-        if (order.getFacilityId() != null) {
-            Optional<CapabilityProfileEntity> cap = capabilityRepository
-                    .findByTenantIdAndFacilityId(order.getTenantId(), order.getFacilityId());
-            if (cap.isPresent()) {
-                // Parse profile for default fulfillment mode
-                // For now, default to PHARMACY_PICKUP for product orders
             }
         }
 
@@ -217,9 +244,82 @@ public class FulfillmentService {
         stateMachine.transition(orderId, OrderStatus.READY_FOR_PICKUP, actorId, actorType, "READY_FOR_PICKUP", null);
     }
 
+    /** IN_PROGRESS → OUT_FOR_DELIVERY: courier has picked up the order for delivery. */
+    @Transactional
+    public void markOutForDelivery(String orderId, String actorId, String actorType) {
+        stateMachine.transition(orderId, OrderStatus.OUT_FOR_DELIVERY, actorId, actorType, "OUT_FOR_DELIVERY", null);
+    }
+
     @Transactional
     public void markDelivered(String orderId, String actorId, String actorType) {
         stateMachine.transition(orderId, OrderStatus.DELIVERED, actorId, actorType, "DELIVERED", null);
+    }
+
+    /** COLLECTED | DELIVERED | ATTENDED → COMPLETED: closes the fulfilment lifecycle. */
+    @Transactional
+    public void completeOrder(String orderId, String actorId, String actorType) {
+        OrderEntity order = stateMachine.getOrder(orderId);
+        if (order.getStatus() != OrderStatus.COLLECTED
+                && order.getStatus() != OrderStatus.DELIVERED
+                && order.getStatus() != OrderStatus.ATTENDED) {
+            throw new IllegalStateException(
+                    "Order must be COLLECTED, DELIVERED, or ATTENDED to complete. Current: " + order.getStatus());
+        }
+        stateMachine.transition(orderId, OrderStatus.COMPLETED, actorId, actorType, "ORDER_COMPLETED", null);
+    }
+
+    /**
+     * Nhume dispatch-status callback handoff (see
+     * {@code InternalFulfillmentController.dispatchStatus}). {@code PICKED_UP} maps to
+     * out-for-delivery, {@code DELIVERED} to delivered; either way a custody record and
+     * handoff event are appended carrying the Nhume delivery id / proof reference so
+     * the chain-of-custody trail reflects the real courier event, not just the order
+     * status flip.
+     */
+    @Transactional
+    public void handleDispatchStatus(String orderId, String status, String nhumeDeliveryId,
+                                     String proofRef, String actorId, String actorType) {
+        switch (status) {
+            case "PICKED_UP" -> markOutForDelivery(orderId, actorId, actorType);
+            case "DELIVERED" -> markDelivered(orderId, actorId, actorType);
+            default -> throw new IllegalArgumentException("Unsupported dispatch status: " + status);
+        }
+        recordDispatchCustody(orderId, status, nhumeDeliveryId, proofRef, actorId);
+    }
+
+    private void recordDispatchCustody(String orderId, String status, String nhumeDeliveryId,
+                                       String proofRef, String actorId) {
+        List<FulfillmentOrderEntity> fulfillments = fulfillmentOrderRepository.findByOrderIdOrderByCreatedAtAsc(orderId);
+        if (fulfillments.isEmpty()) {
+            log.warn("Dispatch status {} for order {} has no fulfillment record; custody/handoff skipped", status, orderId);
+            return;
+        }
+        FulfillmentOrderEntity fulfillment = fulfillments.get(fulfillments.size() - 1);
+
+        CustodyRecordEntity custody = new CustodyRecordEntity();
+        custody.setCustodyId(UlidGenerator.generate());
+        custody.setFulfillmentId(fulfillment.getFulfillmentId());
+        custody.setCustodianType("NHUME_COURIER");
+        custody.setCustodianRef(nhumeDeliveryId != null ? "nhume:" + nhumeDeliveryId : "nhume:unknown");
+        Map<String, Object> condition = new LinkedHashMap<>();
+        condition.put("status", status);
+        if (proofRef != null) condition.put("proofRef", proofRef);
+        custody.setConditionSummaryJson(JsonSupport.toJsonSafe(objectMapper, condition, "{}"));
+        custodyRecordRepository.save(custody);
+
+        HandoffEventEntity handoff = new HandoffEventEntity();
+        handoff.setHandoffId(UlidGenerator.generate());
+        handoff.setFulfillmentId(fulfillment.getFulfillmentId());
+        handoff.setHandoffType("NHUME_" + status);
+        handoff.setFromPartyJson(JsonSupport.toJsonSafe(objectMapper,
+                Map.of("system", "nhume", "deliveryId", nhumeDeliveryId != null ? nhumeDeliveryId : ""), "{}"));
+        handoff.setToPartyJson(JsonSupport.toJsonSafe(objectMapper,
+                Map.of("system", "msika-flow", "actorId", actorId != null ? actorId : ""), "{}"));
+        handoff.setLocationJson("{}");
+        Map<String, Object> meta = new LinkedHashMap<>();
+        if (proofRef != null) meta.put("proofRef", proofRef);
+        handoff.setMetadataJson(JsonSupport.toJsonSafe(objectMapper, meta, "{}"));
+        handoffEventRepository.save(handoff);
     }
 
     public List<FulfillmentRouteEntity> getStuckRoutes() {

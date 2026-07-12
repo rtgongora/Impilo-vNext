@@ -121,6 +121,24 @@ public class CatalogValidationService {
                 }
             }
 
+            // Risk-friction: enforce the per-order quantity ceiling configured
+            // for the item's marketplace risk classification (msika-service
+            // msika_risk_friction_mapping). No rule / unreachable ⇒ no ceiling.
+            String riskClassification = firstNonBlank(
+                    catalogItem.path("riskClassification").asText(null),
+                    catalogItem.path("risk_classification").asText(null),
+                    restrictions.path("risk_classification").asText(null));
+            if (riskClassification != null) {
+                JsonNode friction = msikaCoreClient.getRiskFriction(riskClassification);
+                if (friction != null && !friction.isMissingNode()) {
+                    int maxQty = friction.path("maxQtyPerOrder").asInt(0);
+                    if (maxQty > 0 && item.qty() > maxQty) {
+                        errors.add("Quantity " + item.qty() + " exceeds the per-order maximum of "
+                                + maxQty + " for " + riskClassification + " items");
+                    }
+                }
+            }
+
             // Check channel restrictions
             JsonNode allowedChannels = restrictions.path("allowed_channels");
             if (allowedChannels.isArray() && allowedChannels.size() > 0) {
@@ -207,6 +225,13 @@ public class CatalogValidationService {
             return false;
         }
         return true;
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isBlank() && !"null".equals(v)) return v;
+        }
+        return null;
     }
 
     private static UUID parseUuid(String value) {

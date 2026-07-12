@@ -37,6 +37,11 @@ public class SecurityConfig {
                     "/swagger-ui.html"
                 ).permitAll()
                 .requestMatchers("/v1/internal/**").hasAuthority("SCOPE_internal")
+                // Nhume dispatch-status callback: authenticated at the Envoy ext_authz
+                // mesh edge, not by a bearer JWT — same precedent as mushex-service's
+                // /internal/v1/claims/*/appeal-resubmit.
+                .requestMatchers(org.springframework.http.HttpMethod.POST,
+                        "/internal/v1/msika-flow/orders/*/dispatch-status").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));

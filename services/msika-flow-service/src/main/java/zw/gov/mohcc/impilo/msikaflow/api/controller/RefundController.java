@@ -29,7 +29,7 @@ public class RefundController {
         String actorType = TrustHeaderExtractor.actorType(httpReq);
         String correlationId = TrustHeaderExtractor.correlationId(httpReq);
 
-        RefundEntity refund = paymentService.requestRefund(id, req.amount(), req.reason(), actorId, actorType);
+        RefundEntity refund = paymentService.requestRefund(id, req.amount(), req.reason(), actorId, actorType, httpReq);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(refund, correlationId));
     }
