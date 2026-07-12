@@ -62,3 +62,25 @@ notification:
     scheduler-enabled: ${NOTIFICATION_WORKER_SCHEDULER_ENABLED:true}
     poll-interval-ms: ${NOTIFICATION_WORKER_POLL_INTERVAL_MS:10000}
     batch-limit: ${NOTIFICATION_WORKER_BATCH_LIMIT:25}
+  # ── SMS delivery provider selection (env-selected) ─────────────────────────
+  # log (default): SmsStubProvider — messages are NOT delivered, only logged
+  #                loudly (safe for compose/local dev; OTPs land in the log).
+  # http:          HttpSmsProvider — POSTs {to, from, message} JSON to a real
+  #                SMS gateway (Africa's Talking / Twilio-style HTTP APIs) with
+  #                Bearer token auth. A non-2xx gateway response throws
+  #                NotificationDeliveryException → notification FAILED (loud),
+  #                so fail-closed callers such as tshepo-authz step-up and the
+  #                BFF contact-verification flow never see a silent OTP drop.
+  #
+  # The gateway settings are read by HttpSmsProvider via relaxed binding and are
+  # deliberately NOT given yml values: with provider=http and no gateway URL the
+  # bean fails at startup (unresolvable notification.sms.gateway.url) instead of
+  # half-configuring delivery.
+  #
+  # Production example (environment):
+  #   NOTIFICATION_SMS_PROVIDER=http
+  #   NOTIFICATION_SMS_GATEWAY_URL=https://sms-gateway.example.zw/v1/messages
+  #   NOTIFICATION_SMS_GATEWAY_API_KEY=<token>          # optional, Bearer auth
+  #   NOTIFICATION_SMS_GATEWAY_SENDER_ID=IMPILO         # optional, default IMPILO
+  sms:
+    provider: ${NOTIFICATION_SMS_PROVIDER:log}
