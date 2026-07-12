@@ -16,6 +16,18 @@ public interface NhumeWriteBackGateway {
     /** Accept a submitted PCT referral package on arrival. */
     WriteBackOutcome pctAcceptReferral(String pctReferralRef, WriteBackContext ctx);
 
+    /**
+     * Report a marketplace dispatch milestone (PICKED_UP / DELIVERED) back to
+     * Msika Flow, which owns the marketplace order truth.
+     *
+     * @param orderRef  the Msika Flow order id ({@code marketplace_order_ref} /
+     *                  {@code metadata.links.msikaFlowOrderRef})
+     * @param status    {@code PICKED_UP} or {@code DELIVERED}
+     * @param proofRef  optional proof-of-delivery reference (nullable)
+     */
+    WriteBackOutcome msikaFlowDispatchStatus(String orderRef, String status, String deliveryId,
+                                             String proofRef, WriteBackContext ctx);
+
     /** Trust/identity context carried into each outbound call. */
     record WriteBackContext(
             String tenantId,

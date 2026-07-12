@@ -21,6 +21,13 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
 
+nhume:
+  # Drop-off / pickup write-backs to the services that own the cargo truth
+  # (OROS/MADI/PCT defaults live on HttpNhumeWriteBackGateway @Value bindings).
+  writeback:
+    # Msika Flow (marketplace orchestration) dispatch-status write-back.
+    msika-flow-base-url: ${NHUME_WRITEBACK_MSIKA_FLOW_BASE_URL:http://msika-flow-service:8100}
+
 impilo:
   companion:
     enabled: true

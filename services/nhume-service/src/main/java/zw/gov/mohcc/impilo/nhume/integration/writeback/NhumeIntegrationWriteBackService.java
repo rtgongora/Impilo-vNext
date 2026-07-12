@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import zw.gov.mohcc.impilo.nhume.domain.DeliveryRequestEntity;
+import zw.gov.mohcc.impilo.nhume.domain.DeliveryType;
 import zw.gov.mohcc.impilo.nhume.integration.trust.TrustLayerGuard;
+import zw.gov.mohcc.impilo.nhume.repository.DeliveryProofRepository;
 import zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeWriteBackGateway.WriteBackContext;
 
 import java.time.OffsetDateTime;
@@ -27,6 +29,8 @@ import java.util.Map;
  *   <li>{@code orosOrderRef} — receive in-flight specimens at the lab (OROS owns specimen truth)</li>
  *   <li>{@code madiOrderRef} — complete the issued blood order (MADI owns blood truth)</li>
  *   <li>{@code pctReferralRef} — accept the referral package on arrival (PCT owns referral truth)</li>
+ *   <li>{@code msikaFlowOrderRef} (or the delivery's {@code marketplace_order_ref}) — report
+ *       dispatch milestones (PICKED_UP / DELIVERED) to Msika Flow (owns marketplace order truth)</li>
  *   <li>{@code duraRequisitionRef} — honestly skipped: Dura's requisition lifecycle ends at
  *       FULFILLED (warehouse-side); no destination-receipt transition exists yet</li>
  * </ul>
@@ -42,22 +46,25 @@ public class NhumeIntegrationWriteBackService {
 
     private final NhumeWriteBackGateway gateway;
     private final ObjectMapper objectMapper;
+    private final DeliveryProofRepository proofRepo;
     private final boolean enabled;
 
     public NhumeIntegrationWriteBackService(
             NhumeWriteBackGateway gateway,
             ObjectMapper objectMapper,
+            DeliveryProofRepository proofRepo,
             @Value("${nhume.writeback.enabled:true}") boolean enabled) {
         this.gateway = gateway;
         this.objectMapper = objectMapper;
+        this.proofRepo = proofRepo;
         this.enabled = enabled;
     }
 
     /**
      * Execute all applicable write-backs for a delivered mission. Never throws.
      *
-     * @return outcome map keyed by system (OROS/MADI/PCT/DURA); empty when
-     *         disabled or the delivery carries no integration links.
+     * @return outcome map keyed by system (OROS/MADI/PCT/MSIKA_FLOW/DURA); empty
+     *         when disabled or the delivery carries no integration links.
      */
     public Map<String, WriteBackOutcome> onDelivered(DeliveryRequestEntity delivery,
                                                      TrustLayerGuard.ActorContext actor) {
@@ -66,7 +73,8 @@ public class NhumeIntegrationWriteBackService {
             return outcomes;
         }
         Map<String, String> links = readLinks(delivery.getMetadataJson());
-        if (links.isEmpty()) {
+        String marketplaceRef = marketplaceOrderRef(delivery, links);
+        if (links.isEmpty() && marketplaceRef == null) {
             return outcomes;
         }
         WriteBackContext ctx = buildContext(delivery, actor);
@@ -83,6 +91,12 @@ public class NhumeIntegrationWriteBackService {
         if (pct != null && !pct.isBlank()) {
             outcomes.put("PCT", safely("PCT", () -> gateway.pctAcceptReferral(pct, ctx)));
         }
+        if (marketplaceRef != null) {
+            String proofRef = latestDeliveryProofRef(delivery);
+            String deliveryId = ctx.deliveryId();
+            outcomes.put("MSIKA_FLOW", safely("MSIKA_FLOW", () ->
+                    gateway.msikaFlowDispatchStatus(marketplaceRef, "DELIVERED", deliveryId, proofRef, ctx)));
+        }
         String dura = links.get("duraRequisitionRef");
         if (dura != null && !dura.isBlank()) {
             outcomes.put("DURA", WriteBackOutcome.skippedNoTransition(
@@ -90,6 +104,69 @@ public class NhumeIntegrationWriteBackService {
                             + "record receipt in Dura stock receiving"));
         }
         return outcomes;
+    }
+
+    /**
+     * Pickup sign-off write-back: marketplace deliveries only. Msika Flow tracks
+     * PICKED_UP as an order-fulfilment milestone; other cargo owners only care
+     * about arrival. Fire-and-forget — never throws, never blocks courier flows.
+     */
+    public Map<String, WriteBackOutcome> onPickedUp(DeliveryRequestEntity delivery,
+                                                    TrustLayerGuard.ActorContext actor) {
+        Map<String, WriteBackOutcome> outcomes = new LinkedHashMap<>();
+        if (!enabled) {
+            return outcomes;
+        }
+        Map<String, String> links = readLinks(delivery.getMetadataJson());
+        String marketplaceRef = marketplaceOrderRef(delivery, links);
+        if (marketplaceRef == null) {
+            return outcomes;
+        }
+        WriteBackContext ctx = buildContext(delivery, actor);
+        String deliveryId = ctx.deliveryId();
+        outcomes.put("MSIKA_FLOW", safely("MSIKA_FLOW", () ->
+                gateway.msikaFlowDispatchStatus(marketplaceRef, "PICKED_UP", deliveryId, null, ctx)));
+        return outcomes;
+    }
+
+    /**
+     * Resolve the Msika Flow order reference: the dispatcher-captured
+     * {@code metadata.links.msikaFlowOrderRef} wins, falling back to the
+     * delivery's own {@code marketplace_order_ref} column. A MARKETPLACE
+     * delivery with neither has nothing to report — logged honestly.
+     */
+    private String marketplaceOrderRef(DeliveryRequestEntity delivery, Map<String, String> links) {
+        String ref = links.get("msikaFlowOrderRef");
+        if (ref != null && !ref.isBlank()) {
+            return ref;
+        }
+        ref = delivery.getMarketplaceOrderRef();
+        if (ref != null && !ref.isBlank()) {
+            return ref;
+        }
+        if (DeliveryType.MARKETPLACE.name().equals(delivery.getDeliveryType())) {
+            log.warn("MARKETPLACE delivery {} has no marketplace_order_ref or "
+                    + "metadata.links.msikaFlowOrderRef; skipping Msika Flow write-back",
+                    delivery.getDeliveryId());
+        }
+        return null;
+    }
+
+    /** Latest DELIVERY-stage proof id, if any was captured — never throws. */
+    private String latestDeliveryProofRef(DeliveryRequestEntity delivery) {
+        if (proofRepo == null || delivery.getDeliveryId() == null) {
+            return null;
+        }
+        try {
+            return proofRepo.findByDeliveryIdOrderByCapturedAtAsc(delivery.getDeliveryId()).stream()
+                    .filter(p -> "DELIVERY".equals(p.getProofStage()))
+                    .reduce((first, second) -> second)
+                    .map(p -> p.getProofId() == null ? null : p.getProofId().toString())
+                    .orElse(null);
+        } catch (Exception e) {
+            log.warn("Could not resolve delivery proof for write-back: {}", e.getMessage());
+            return null;
+        }
     }
 
     /** Merge write-back outcomes into a delivery's metadata JSON under {@code links_writeback}. */

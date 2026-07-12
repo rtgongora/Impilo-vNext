@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -34,11 +35,13 @@ public class HttpNhumeWriteBackGateway implements NhumeWriteBackGateway {
     private final String orosBaseUrl;
     private final String madiBaseUrl;
     private final String pctBaseUrl;
+    private final String msikaFlowBaseUrl;
 
     public HttpNhumeWriteBackGateway(
             @Value("${nhume.writeback.oros-base-url:http://oros-service:8089}") String orosBaseUrl,
             @Value("${nhume.writeback.madi-base-url:http://madi-service:8300}") String madiBaseUrl,
             @Value("${nhume.writeback.pct-base-url:http://pct-service:8088}") String pctBaseUrl,
+            @Value("${nhume.writeback.msika-flow-base-url:http://msika-flow-service:8100}") String msikaFlowBaseUrl,
             @Value("${nhume.writeback.timeout-ms:5000}") int timeoutMs) {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(Duration.ofMillis(Math.min(timeoutMs, 3000)));
@@ -47,6 +50,7 @@ public class HttpNhumeWriteBackGateway implements NhumeWriteBackGateway {
         this.orosBaseUrl = trim(orosBaseUrl);
         this.madiBaseUrl = trim(madiBaseUrl);
         this.pctBaseUrl = trim(pctBaseUrl);
+        this.msikaFlowBaseUrl = trim(msikaFlowBaseUrl);
     }
 
     @Override
@@ -133,6 +137,57 @@ public class HttpNhumeWriteBackGateway implements NhumeWriteBackGateway {
         } catch (Exception ex) {
             return failedUnreachable("PCT", ex);
         }
+    }
+
+    @Override
+    public WriteBackOutcome msikaFlowDispatchStatus(String orderRef, String status, String deliveryId,
+                                                    String proofRef, WriteBackContext ctx) {
+        try {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("status", status);
+            body.put("deliveryId", deliveryId);
+            if (proofRef != null && !proofRef.isBlank()) {
+                body.put("proofRef", proofRef);
+            }
+            restClient.post()
+                    .uri(msikaFlowBaseUrl + "/internal/v1/msika-flow/orders/{orderId}/dispatch-status",
+                            orderRef)
+                    .headers(msikaFlowHeaders(ctx, "msika-flow-" + status))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .toBodilessEntity();
+            return WriteBackOutcome.ok("marketplace order reported " + status + " to Msika Flow");
+        } catch (RestClientResponseException ex) {
+            return failedFrom("MSIKA_FLOW", ex);
+        } catch (Exception ex) {
+            return failedUnreachable("MSIKA_FLOW", ex);
+        }
+    }
+
+    /**
+     * Msika Flow dispatch-status is a service-originated (system) call, not an
+     * actor-attributed clinical transition: actor is pinned to nhume-service /
+     * SYSTEM and purpose-of-use to LOGISTICS per the internal contract.
+     */
+    private Consumer<HttpHeaders> msikaFlowHeaders(WriteBackContext ctx, String idempotencySuffix) {
+        return headers -> {
+            headers.set("X-Tenant-ID", ctx.tenantId());
+            headers.set("X-Pod-ID", ctx.podId() == null ? "national-spine" : ctx.podId());
+            headers.set("X-Request-ID", UUID.randomUUID().toString());
+            headers.set("X-Correlation-ID",
+                    ctx.correlationId() == null ? UUID.randomUUID().toString() : ctx.correlationId());
+            // Stable per (delivery, milestone): retried sign-offs do not double-apply.
+            String idempotencyKey = "nhume-writeback:" + ctx.deliveryId() + ":" + idempotencySuffix;
+            headers.set("Idempotency-Key", idempotencyKey);
+            headers.set("X-Idempotency-Key", idempotencyKey);
+            headers.set("X-Actor-ID", "nhume-service");
+            headers.set("X-Actor-Type", "SYSTEM");
+            headers.set("X-Purpose-Of-Use", "LOGISTICS");
+            if (ctx.bearerToken() != null && !ctx.bearerToken().isBlank()) {
+                headers.set(HttpHeaders.AUTHORIZATION, ctx.bearerToken());
+            }
+        };
     }
 
     private Consumer<HttpHeaders> trustHeaders(WriteBackContext ctx, String idempotencySuffix) {

@@ -319,8 +319,17 @@ public class NhumeDeliveryService {
     @Transactional
     public DeliveryRequestEntity confirmPickup(UUID deliveryId, StatusChangeRequest req,
                                                 TrustLayerGuard.ActorContext actor) {
-        return transition(deliveryId, DeliveryStatus.PICKED_UP, req, actor,
+        DeliveryRequestEntity d = transition(deliveryId, DeliveryStatus.PICKED_UP, req, actor,
                 NhumeEvents.DELIVERY_PICKED_UP);
+        // Marketplace pickup milestone → Msika Flow. Fire-and-forget: a failed
+        // write-back never blocks the courier-facing pickup sign-off.
+        try {
+            writeBack.onPickedUp(d, actor);
+        } catch (Exception e) {
+            log.warn("Pickup write-back pass failed for delivery {}: {}",
+                    d.getDeliveryId(), e.toString());
+        }
+        return d;
     }
 
     @Transactional

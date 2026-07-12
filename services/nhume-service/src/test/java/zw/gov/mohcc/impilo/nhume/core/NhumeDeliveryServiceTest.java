@@ -107,6 +107,12 @@ class NhumeDeliveryServiceTest {
             calls.add("PCT:" + ref);
             return zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome.ok("stub");
         }
+        @Override public zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome
+                msikaFlowDispatchStatus(String orderRef, String status, String deliveryId,
+                                        String proofRef, WriteBackContext ctx) {
+            calls.add("MSIKA_FLOW:" + orderRef + ":" + status);
+            return zw.gov.mohcc.impilo.nhume.integration.writeback.WriteBackOutcome.ok("stub");
+        }
     }
 
     private final UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -172,8 +178,9 @@ class NhumeDeliveryServiceTest {
                 .thenReturn(CommsHubClient.DispatchResult.sent("test-provider-ref"));
 
         ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        when(proofRepo.findByDeliveryIdOrderByCapturedAtAsc(any(UUID.class))).thenReturn(List.of());
         writeBack = new zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeIntegrationWriteBackService(
-                stubGateway, mapper, true);
+                stubGateway, mapper, proofRepo, true);
         service = new NhumeDeliveryService(deliveryRepo, itemRepo, packageRepo, assignmentRepo,
                 statusEventRepo, trackingRepo, proofRepo, custodyRepo, exceptionRepo,
                 notificationRepo, auditRepo, outboxRepo, policyRepo, courierRepo, assetRepo,
@@ -278,6 +285,53 @@ class NhumeDeliveryServiceTest {
         assertThat(stubGateway.calls).containsExactly("OROS:ORD-42", "PCT:REF-7");
         assertThat(store.get(id).getMetadataJson()).contains("links_writeback");
         assertThat(store.get(id).getMetadataJson()).contains("\"status\":\"OK\"");
+    }
+
+    @Test
+    void marketplaceDelivery_reportsPickupAndDeliveredMilestonesToMsikaFlow() {
+        DeliveryRequestEntity d = service.createDelivery(tenantId, "national-spine", null, null,
+                marketplaceRequest(), actorCtx());
+        UUID id = d.getDeliveryId();
+        assertThat(store.get(id).getMarketplaceOrderRef()).isEqualTo("MKT-ORD-77");
+
+        service.approve(id, new StatusChangeRequest("ok", null), actorCtx());
+        FleetAssetEntity asset = newAsset();
+        DriverCourierProfileEntity courier = newCourier();
+        service.assign(id, new AssignDeliveryRequest(courier.getCourierId(), asset.getAssetId(),
+                null, null, null, null, null), actorCtx(), null);
+        service.accept(id, actorCtx());
+        service.startPickup(id, new StatusChangeRequest("rolling", null), actorCtx());
+
+        service.confirmPickup(id, new StatusChangeRequest("picked", null), actorCtx());
+        assertThat(stubGateway.calls).containsExactly("MSIKA_FLOW:MKT-ORD-77:PICKED_UP");
+
+        service.startTransit(id, new StatusChangeRequest("en route", null), actorCtx());
+        service.captureProof(id,
+                new ProofRequest("DELIVERY", "OTP", "tester", "123456", null, null, null,
+                        true, null, null, Map.of(), true), actorCtx());
+
+        assertThat(store.get(id).getStatus()).isEqualTo(DeliveryStatus.DELIVERED.name());
+        assertThat(stubGateway.calls).containsExactly(
+                "MSIKA_FLOW:MKT-ORD-77:PICKED_UP", "MSIKA_FLOW:MKT-ORD-77:DELIVERED");
+        assertThat(store.get(id).getMetadataJson()).contains("links_writeback");
+    }
+
+    @Test
+    void nonMarketplacePickup_doesNotCallMsikaFlow() {
+        DeliveryRequestEntity d = service.createDelivery(tenantId, "national-spine", null, null,
+                baseRequestBuilder(true), actorCtx());
+        UUID id = d.getDeliveryId();
+        service.approve(id, new StatusChangeRequest("ok", null), actorCtx());
+        FleetAssetEntity asset = newAsset();
+        DriverCourierProfileEntity courier = newCourier();
+        service.assign(id, new AssignDeliveryRequest(courier.getCourierId(), asset.getAssetId(),
+                null, null, null, null, null), actorCtx(), null);
+        service.accept(id, actorCtx());
+        service.startPickup(id, new StatusChangeRequest("rolling", null), actorCtx());
+
+        service.confirmPickup(id, new StatusChangeRequest("picked", null), actorCtx());
+
+        assertThat(stubGateway.calls).isEmpty();
     }
 
     @Test
@@ -394,6 +448,25 @@ class NhumeDeliveryServiceTest {
                 null, null, null, null, null,
                 List.of("MOTORCYCLE", "BICYCLE"), null, null,
                 "demo", Map.of("test", true), submit);
+    }
+
+    /** Msika Flow marketplace order dispatched via Nhume. */
+    private CreateDeliveryRequest marketplaceRequest() {
+        CreateDeliveryRequest base = baseRequest();
+        return new CreateDeliveryRequest(
+                "MARKETPLACE", base.priority(), "MSIKA_FLOW",
+                base.requestingActorId(), base.requestingActorType(), base.requestingOrgId(),
+                base.requestingFacilityId(), base.origin(), base.destination(), base.recipient(),
+                base.items(), base.packages(), base.clinicalContextRef(), base.programmeContextRef(),
+                base.telehealthSessionRef(), /* marketplaceOrderRef */ "MKT-ORD-77",
+                base.paymentPath(), base.paymentReference(), base.declaredValueCents(),
+                base.currency(), base.consentRequired(), base.identityVerification(),
+                base.coldChainRequired(), base.controlledItem(), base.fragile(),
+                base.hazardous(), base.biohazard(), base.specimen(),
+                base.chainOfCustodyRequired(), base.returnRequired(), base.requiredBy(),
+                base.pickupWindowStart(), base.pickupWindowEnd(), base.deliveryWindowStart(),
+                base.deliveryWindowEnd(), base.allowedModes(), base.policyId(), base.slaId(),
+                base.notes(), base.metadata(), true);
     }
 
     private CreateDeliveryRequest coldChainRequest() {
