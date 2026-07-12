@@ -1,8 +1,10 @@
 # Health OS Doctrine — Implementation Gap Matrix
 
-> Living document. Updated 2026-04-11 after expanded doctrine adoption
-> (wellness/lifestyle/diet/sleep/clubs, graduated trust, progressive identity assurance,
-> marketplace risk graduation, device/IoT as first-class participants).
+> Living document. Updated 2026-07-12 with the National Health Services Gateway clause
+> register (§8, GW-01…GW-08). Previously updated 2026-04-11 after expanded doctrine
+> adoption (wellness/lifestyle/diet/sleep/clubs, graduated trust, progressive identity
+> assurance, marketplace risk graduation, device/IoT as first-class participants) —
+> earlier sections reflect that date; where they conflict with §8, §8 is current.
 
 ## Legend
 - **DONE** — Implemented and aligned with doctrine
@@ -94,6 +96,29 @@
 | Device-equipment linkage | STRUCTURAL | IoT devices not linked to equipment assets | Need device→equipment relationship |
 
 ---
+
+## 8. National Health Services Gateway (GW-01…GW-08)
+
+Clause register for
+[`health-services-gateway-doctrine.md`](health-services-gateway-doctrine.md); grounded
+detail (endpoints, anchors, disproving searches) lives in
+[`../architecture/gateway-experience-capability-map.md`](../architecture/gateway-experience-capability-map.md);
+build sequence in
+[`../roadmaps/health-services-gateway-roadmap.md`](../roadmaps/health-services-gateway-roadmap.md).
+
+| Clause | Requirement | Status | Current State | Gap | Files |
+|---|---|---|---|---|---|
+| GW-01 | One citizen experience, three doors (doctrine §1) | PARTIAL | `/welcome` public landing exists; static brochure owns `/`,`/services`,… at Traefik; seam ungoverned (brochure source outside repo) | Brochure↔gateway handoff, "Get Health Services" CTA, PD-1 ownership decision | `ui/one-ui-shell/src/app/welcome/`, `deploy/tls/mohcc-gov/public-website.yaml` |
+| GW-02 | Intent-led gateway, nine pillars (§2) | STRUCTURAL | All nine pillars have authenticated backends; no intent home, no intent primitive, only 2 public APIs | Public "How can we help you today?" surface + public read lanes per pillar | `ui/one-ui-shell/src/lib/routes.ts`, `services/experience-bff/.../config/SecurityConfig.java` |
+| GW-03 | Public naming doctrine (§3) | PLANNED | No citizen-facing dictionary or payload guard; Envoy prod/compose public-bypass divergence unreconciled | Naming dictionary + guard script; Envoy reconciliation | `infra/envoy/envoy.yaml`, `infra/envoy/envoy-runtime.yaml` |
+| GW-04 | Progressive trust ladder R0–R5 (§4) | PARTIAL | R2–R5 enforced end-to-end (effective-LOA `min_loa`, step-up engine, mvumo delegation, break-glass — G-CZO-01/03/04 closed); R0 = web shell only (no API tier); R1 Reachable ABSENT (G-CZO-11, SMS stub, no Keycloak OTP flows); intent preservation = returnTo replay only (G-CZO-09) | R1 rung, public API lanes, semantic intent + drafts | `services/tshepo-authz-service/.../core/PolicyEngine.java`, `services/identity-assurance-service/`, `ui/one-ui-shell/src/lib/resolve-post-login-destination.ts` |
+| GW-05 | Persistent Emergency Help (§7) | PARTIAL | daidzai/nhume workflow BUILT; citizen SOS auth-gated; only static `/welcome/emergency`; no persistent control on all surfaces; no anonymous intake | Anonymous SOS lane + abuse controls; persistent control web/app/mobile | `services/daidzai-service/.../EmergencyController.java`, `ui/one-ui-shell/src/app/emergency/sos/` |
+| GW-06 | Feedback first-class incl. anonymous (§2 P7) | PARTIAL | Rito case intake/tracking BUILT for authenticated citizens | Anonymous intake + claim-code tracking (patient-shares pattern) | `services/rito-quality-safety-service/`, `experience-bff/.../RitoPersonaController.java` |
+| GW-07 | Nompilo mediates trust escalation (§9) | PARTIAL | Nompilo widgets + guidance-service wired for authenticated users | Public explain lane; per-escalation explainer coverage; no security-internals exposure check | `services/guidance-service/`, `ui/one-ui-shell/src/components/intelligent/` |
+| GW-08 | Cover & payments NHI-ready + safeguards (§6) | PARTIAL | coverage-service model (enrolment/eligibility/preauth/claims/subsidy) + COSTA bills/waivers + MusheX BUILT; no public plan-browse; §6.2 configurability and §6.3 safeguards unverified | Public explainers lane; safeguard verification (esp. emergency-never-blocked, no vulnerability flags); benefit-package versioning proof | `services/coverage-service/`, `services/costing-engine-service/`, `services/mushex-service/` |
+
+> Note: §3 row 9 ("Assurance level — STRUCTURAL") predates the G-CZO-01 closure; GW-04
+> carries the current truth (assurance enforcement is BUILT in tshepo-authz).
 
 ## Priority Roadmap
 
