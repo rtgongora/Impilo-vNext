@@ -28,7 +28,9 @@ import java.util.Map;
  * <ul>
  *   <li>GET /v1/public/guidance/explain-steps            — all active escalation explainers</li>
  *   <li>GET /v1/public/guidance/explain-steps/{stepKey}  — one explainer (why / level / next / help)</li>
- *   <li>GET /v1/public/guidance/education                — published education topics (safe fields)</li>
+ *   <li>GET /v1/public/guidance/education                — published education topics (safe fields; ?domain= / ?category=)</li>
+ *   <li>GET /v1/public/guidance/education/categories     — published-topic categories with counts</li>
+ *   <li>GET /v1/public/guidance/education/{id}           — one published article incl. plain-language body</li>
  * </ul>
  */
 @RestController
@@ -73,12 +75,15 @@ public class PublicGuidanceController {
     @GetMapping("/education")
     public ResponseEntity<Map<String, Object>> education(
             @RequestParam(defaultValue = "all") String domain,
+            @RequestParam(defaultValue = "") String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         int safeSize = Math.min(Math.max(size, 1), 50);
         int safePage = Math.max(page, 0);
-        Page<KnowledgeArticleEntity> articles =
-                guidanceService.getEducation(PUBLIC_TENANT, domain, safePage, safeSize);
+        String safeCategory = category == null ? "" : category.trim().toLowerCase(Locale.ROOT);
+        Page<KnowledgeArticleEntity> articles = safeCategory.isEmpty()
+                ? guidanceService.getEducation(PUBLIC_TENANT, domain, safePage, safeSize)
+                : guidanceService.getEducationByCategory(PUBLIC_TENANT, safeCategory, safePage, safeSize);
         List<Map<String, Object>> data = articles.getContent().stream()
                 .map(PublicGuidanceController::toPublicEducationTopic)
                 .toList();
@@ -89,6 +94,41 @@ public class PublicGuidanceController {
                         "size", safeSize,
                         "totalElements", articles.getTotalElements(),
                         "totalPages", articles.getTotalPages())));
+    }
+
+    /** Published-topic categories with counts — the public health-info topic index. */
+    @GetMapping("/education/categories")
+    public ResponseEntity<Map<String, Object>> educationCategories() {
+        List<Map<String, Object>> data = guidanceService.getEducationCategories(PUBLIC_TENANT).stream()
+                .map(c -> {
+                    Map<String, Object> m = new LinkedHashMap<String, Object>();
+                    m.put("category", c.getCategory());
+                    m.put("count", c.getCount());
+                    return m;
+                })
+                .toList();
+        return ResponseEntity.ok(Map.of("data", data));
+    }
+
+    /** One published article, including its plain-language body (allow-listed fields only). */
+    @GetMapping("/education/{id}")
+    public ResponseEntity<Map<String, Object>> educationArticle(@PathVariable String id) {
+        java.util.UUID articleId;
+        try {
+            articleId = java.util.UUID.fromString(id == null ? "" : id.trim());
+        } catch (IllegalArgumentException e) {
+            return articleNotFound();
+        }
+        return guidanceService.getPublishedArticle(PUBLIC_TENANT, articleId)
+                .map(a -> ResponseEntity.ok(Map.of("data", (Object) toPublicEducationArticle(a))))
+                .orElseGet(PublicGuidanceController::articleNotFound);
+    }
+
+    private static ResponseEntity<Map<String, Object>> articleNotFound() {
+        return ResponseEntity.status(404).body(Map.of(
+                "error", Map.of(
+                        "code", "EDUCATION_ARTICLE_NOT_FOUND",
+                        "message", "This article does not exist or is not published.")));
     }
 
     /** Allow-listed explainer disclosure — the four doctrinal parts plus routing labels. */
@@ -115,6 +155,22 @@ public class PublicGuidanceController {
         m.put("summary", a.getSummary());
         m.put("category", a.getCategory());
         m.put("domain", a.getDomain());
+        return m;
+    }
+
+    /**
+     * Allow-listed article read: the topic fields plus the plain-language body and the
+     * last-updated date (freshness cue). Source/sourceUrl/tenant/relevance never leak.
+     */
+    private static Map<String, Object> toPublicEducationArticle(KnowledgeArticleEntity a) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", a.getId().toString());
+        m.put("title", a.getTitle());
+        m.put("summary", a.getSummary());
+        m.put("body", a.getContent());
+        m.put("category", a.getCategory());
+        m.put("domain", a.getDomain());
+        m.put("updatedAt", a.getUpdatedAt() == null ? null : a.getUpdatedAt().toString());
         return m;
     }
 }

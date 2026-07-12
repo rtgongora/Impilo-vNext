@@ -100,6 +100,22 @@ public class GuidanceService {
         return articleRepo.findByTenantIdAndStatusOrderByUpdatedAtDesc(tenantId, "PUBLISHED", PageRequest.of(page, size));
     }
 
+    /** Get published education content for one category (public health-info taxonomy). */
+    public Page<KnowledgeArticleEntity> getEducationByCategory(String tenantId, String category, int page, int size) {
+        return articleRepo.findByTenantIdAndCategoryAndStatusOrderByUpdatedAtDesc(
+                tenantId, category, "PUBLISHED", PageRequest.of(page, size));
+    }
+
+    /** Read one PUBLISHED article (tenant-scoped; drafts/retired content never leak). */
+    public Optional<KnowledgeArticleEntity> getPublishedArticle(String tenantId, UUID id) {
+        return articleRepo.findByIdAndTenantIdAndStatus(id, tenantId, "PUBLISHED");
+    }
+
+    /** Published-article counts per category — the public topic index. */
+    public List<KnowledgeArticleRepository.CategoryCount> getEducationCategories(String tenantId) {
+        return articleRepo.countPublishedByCategory(tenantId);
+    }
+
     /** Search knowledge articles. */
     public Page<KnowledgeArticleEntity> search(String tenantId, String query, int page, int size) {
         return articleRepo.search(tenantId, query, PageRequest.of(page, size));

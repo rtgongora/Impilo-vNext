@@ -120,7 +120,7 @@ class PublicGuidanceControllerTest {
         when(guidanceService.getEducation(PublicGuidanceController.PUBLIC_TENANT, "all", 0, 20))
                 .thenReturn(new PageImpl<>(List.of(article)));
 
-        var response = controller.education("all", 0, 20);
+        var response = controller.education("all", "", 0, 20);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         List<Map<String, Object>> data = (List<Map<String, Object>>) response.getBody().get("data");
@@ -134,8 +134,97 @@ class PublicGuidanceControllerTest {
         when(guidanceService.getEducation(PublicGuidanceController.PUBLIC_TENANT, "all", 0, 50))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        var response = controller.education("all", -3, 5000);
+        var response = controller.education("all", "", -3, 5000);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
+    }
+
+    @Test
+    void educationFiltersByCategoryWithNormalizedSlug() {
+        when(guidanceService.getEducationByCategory(
+                PublicGuidanceController.PUBLIC_TENANT, "vaccination", 0, 20))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        var response = controller.education("all", "  Vaccination ", 0, 20);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        org.mockito.Mockito.verify(guidanceService)
+                .getEducationByCategory(PublicGuidanceController.PUBLIC_TENANT, "vaccination", 0, 20);
+        org.mockito.Mockito.verify(guidanceService, org.mockito.Mockito.never())
+                .getEducation(org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyInt(),
+                        org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void articleReadExposesBodyWithAllowListedFieldsOnly() {
+        var id = java.util.UUID.randomUUID();
+        var article = org.mockito.Mockito.mock(
+                zw.gov.mohcc.impilo.guidance.persistence.entity.KnowledgeArticleEntity.class);
+        when(article.getId()).thenReturn(id);
+        when(article.getTitle()).thenReturn("Clean hands, safe water, safe food");
+        when(article.getSummary()).thenReturn("Everyday habits that prevent diarrhoeal disease.");
+        when(article.getContent()).thenReturn("Wash your hands with soap and running water.");
+        when(article.getCategory()).thenReturn("prevention-nutrition");
+        when(article.getDomain()).thenReturn("public-health");
+        when(article.getUpdatedAt()).thenReturn(java.time.OffsetDateTime.parse("2026-07-12T00:00:00Z"));
+        when(guidanceService.getPublishedArticle(PublicGuidanceController.PUBLIC_TENANT, id))
+                .thenReturn(Optional.of(article));
+
+        var response = controller.educationArticle(id.toString());
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
+        assertThat(data.get("body")).asString().contains("soap and running water");
+        // Allow-list discipline: no source/sourceUrl/tenant/relevance leak on the public lane.
+        assertThat(data.keySet()).containsExactly(
+                "id", "title", "summary", "body", "category", "domain", "updatedAt");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void unknownOrUnpublishedArticleIsAnHonest404() {
+        var id = java.util.UUID.randomUUID();
+        when(guidanceService.getPublishedArticle(PublicGuidanceController.PUBLIC_TENANT, id))
+                .thenReturn(Optional.empty());
+
+        var response = controller.educationArticle(id.toString());
+
+        assertThat(response.getStatusCode().value()).isEqualTo(404);
+        Map<String, Object> error = (Map<String, Object>) response.getBody().get("error");
+        assertThat(error.get("code")).isEqualTo("EDUCATION_ARTICLE_NOT_FOUND");
+    }
+
+    @Test
+    void malformedArticleIdIsA404NotAServerError() {
+        var response = controller.educationArticle("../not-a-uuid");
+
+        assertThat(response.getStatusCode().value()).isEqualTo(404);
+        org.mockito.Mockito.verifyNoInteractions(guidanceService);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void categoriesEndpointReturnsPublishedTopicIndex() {
+        var vaccination = org.mockito.Mockito.mock(
+                zw.gov.mohcc.impilo.guidance.persistence.repository.KnowledgeArticleRepository.CategoryCount.class);
+        when(vaccination.getCategory()).thenReturn("vaccination");
+        when(vaccination.getCount()).thenReturn(1L);
+        var prevention = org.mockito.Mockito.mock(
+                zw.gov.mohcc.impilo.guidance.persistence.repository.KnowledgeArticleRepository.CategoryCount.class);
+        when(prevention.getCategory()).thenReturn("prevention-nutrition");
+        when(prevention.getCount()).thenReturn(2L);
+        when(guidanceService.getEducationCategories(PublicGuidanceController.PUBLIC_TENANT))
+                .thenReturn(List.of(prevention, vaccination));
+
+        var response = controller.educationCategories();
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        List<Map<String, Object>> data = (List<Map<String, Object>>) response.getBody().get("data");
+        assertThat(data).hasSize(2);
+        assertThat(data.get(0).keySet()).containsExactly("category", "count");
+        assertThat(data.get(1).get("category")).isEqualTo("vaccination");
     }
 }
