@@ -84,6 +84,12 @@ public class OrderController {
                 req.providerRef(),
                 req.idempotencyKey());
 
+        // Caller-supplied context (citizen notes/preferredDate via the BFF) — persisted
+        // so the request round-trips honestly. Idempotent replays re-set the same value.
+        if (req.metadata() != null && !req.metadata().isNull()) {
+            order = stateMachine.attachMetadata(order.getOrderId(), req.metadata().toString());
+        }
+
         // Add lines if provided
         if (req.lines() != null) {
             for (LineItemRequest lineReq : req.lines()) {

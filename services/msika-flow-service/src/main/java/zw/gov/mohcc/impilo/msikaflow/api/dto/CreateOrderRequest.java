@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.msikaflow.api.dto;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -14,5 +15,7 @@ public record CreateOrderRequest(
         String vendorRef,
         String providerRef,
         String idempotencyKey,
-        List<LineItemRequest> lines
+        List<LineItemRequest> lines,
+        /** Caller context (e.g. citizen notes/preferredDate from the BFF) — persisted on the order. */
+        JsonNode metadata
 ) {}
