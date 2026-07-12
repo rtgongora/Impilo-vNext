@@ -55,7 +55,7 @@ class PublicGatewaySosBffControllerTest {
         when(keycloakAdminClient.serviceAccountBearer()).thenReturn(null);
 
         daidzai = new StubDaidzaiClient();
-        ContactOtpService otp = new ContactOtpService(redis, null, MAPPER, "+263");
+        ContactOtpService otp = new ContactOtpService(redis, null, keycloakAdminClient, MAPPER, "+263");
         PublicSosIntakeService service = new PublicSosIntakeService(redis, daidzai, otp, keycloakAdminClient);
         controller = new PublicGatewaySosBffController(service);
     }
