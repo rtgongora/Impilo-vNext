@@ -44,6 +44,7 @@ declare -A PROVIDER_PERSONAS=(
   ["trainer.chikafu"]="PROV-ZW-00011:c0000000-0000-4000-8000-000000000011"
   ["learner.tembo"]="PROV-ZW-00012:c0000000-0000-4000-8000-000000000012"
   ["hr.dziva"]="PROV-ZW-00013:c0000000-0000-4000-8000-000000000015"
+  ["msika.seller"]="PROV-ZW-00014:c0000000-0000-4000-8000-000000000019"
 )
 
 # governance/citizen persona -> realm role the session must carry
@@ -58,6 +59,9 @@ declare -A ROLE_PERSONAS=(
   ["hr.dziva"]="HR_OFFICER"
   ["hpa.registrar"]="HPA_REGISTRAR"
   ["hpa.inspector"]="HPA_INSPECTOR"
+  ["msika.operator"]="MARKETPLACE_OPERATOR"
+  ["msika.seller"]="MARKETPLACE_SELLER"
+  ["msika.vendor"]="VENDOR"
 )
 
 fail() { echo "FAIL: $*" >&2; exit 1; }

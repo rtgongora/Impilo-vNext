@@ -102,6 +102,16 @@ public class MarketplaceOpsController {
                 () -> msikaFlowClient.suspendVendor(vendorId, normalizeBody(body)));
     }
 
+    @PostMapping(value = "/vendors/{vendorId}/bind-actor", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> bindVendorActor(
+            @PathVariable String vendorId,
+            @RequestBody(required = false) String body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward("bind vendor actor", requestId, correlationId,
+                () -> msikaFlowClient.bindVendorActor(vendorId, normalizeBody(body)));
+    }
+
     @PostMapping("/vendors/{vendorId}/reinstate")
     public ResponseEntity<String> reinstateVendor(
             @PathVariable String vendorId,

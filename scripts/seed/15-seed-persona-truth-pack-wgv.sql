@@ -123,3 +123,21 @@ SELECT
 WHERE NOT EXISTS (
     SELECT 1 FROM wgv_assignment WHERE id = 'f5000000-0000-4000-8000-000000000036'::uuid
 );
+
+-- msika.seller — ACTIVE facility assignment so the seller persona has work access
+-- (Msika completion wave M8). Facility 1 = Harare Central Hospital.
+-- NOTE: this row is also the seed-15 apply marker in seed-full-preview-sovereign-data.sh.
+INSERT INTO wgv_assignment
+    (id, tenant_id, subject_type, subject_id, role_definition_id, target_type, target_id,
+     organisation_id, start_date, status, primary_flag, secondary_flag, created_at, updated_at)
+SELECT
+    'f5000000-0000-4000-8000-000000000037'::uuid,
+    '00000000-0000-4000-8000-000000000001'::uuid,
+    'PROVIDER', 'PROV-ZW-00014',
+    'f4000000-0000-4000-8000-000000000001'::uuid,
+    'FACILITY', '1',
+    'f2000000-0000-4000-8000-000000000001'::uuid,
+    CURRENT_DATE, 'ACTIVE', true, false, NOW(), NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM wgv_assignment WHERE id = 'f5000000-0000-4000-8000-000000000037'::uuid
+);

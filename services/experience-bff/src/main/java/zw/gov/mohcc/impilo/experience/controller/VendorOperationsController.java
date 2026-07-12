@@ -23,6 +23,21 @@ public class VendorOperationsController {
         this.msikaFlowClient = msikaFlowClient;
     }
 
+    /**
+     * Authenticated vendor binding (M8): resolve the caller's vendor profile from the
+     * JWT actor (X-Actor-ID = Health ID) via msika-flow {@code GET /v1/vendors/by-actor/{actorId}}.
+     * Upstream 404 passes through and means "no vendor bound to this actor".
+     */
+    @GetMapping("/me")
+    public ResponseEntity<String> myVendor(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId
+    ) {
+        return forward("vendor me", requestId, correlationId,
+                () -> msikaFlowClient.getVendorByActor(actorId));
+    }
+
     @GetMapping("/{vendorId}/orders")
     public ResponseEntity<String> getVendorOrders(
             @PathVariable String vendorId,
@@ -63,6 +78,26 @@ public class VendorOperationsController {
     ) {
         return forward("vendor mark-delivered", requestId, correlationId,
                 () -> msikaFlowClient.markOrderDelivered(orderId));
+    }
+
+    @PostMapping("/orders/{orderId}/out-for-delivery")
+    public ResponseEntity<String> outForDelivery(
+            @PathVariable String orderId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId
+    ) {
+        return forward("vendor out-for-delivery", requestId, correlationId,
+                () -> msikaFlowClient.markOrderOutForDelivery(orderId));
+    }
+
+    @PostMapping("/orders/{orderId}/complete")
+    public ResponseEntity<String> completeOrder(
+            @PathVariable String orderId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId
+    ) {
+        return forward("vendor complete", requestId, correlationId,
+                () -> msikaFlowClient.completeOrder(orderId));
     }
 
     @PostMapping(value = "/rx/{orderId}/substitution/propose", consumes = MediaType.APPLICATION_JSON_VALUE)

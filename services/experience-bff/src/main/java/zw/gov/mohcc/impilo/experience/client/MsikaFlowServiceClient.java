@@ -259,6 +259,14 @@ public class MsikaFlowServiceClient {
         return postWithoutBody(baseUrl + "/v1/orders/" + orderId + "/mark-delivered", "Marking delivered");
     }
 
+    public ResponseEntity<String> markOrderOutForDelivery(String orderId) {
+        return postWithoutBody(baseUrl + "/v1/orders/" + orderId + "/out-for-delivery", "Marking out-for-delivery");
+    }
+
+    public ResponseEntity<String> completeOrder(String orderId) {
+        return postWithoutBody(baseUrl + "/v1/orders/" + orderId + "/complete", "Completing");
+    }
+
     public ResponseEntity<String> proposeSubstitution(String orderId, String requestBody) {
         log.info("MSIKA Flow: Proposing substitution for order={}", orderId);
         return postJson(baseUrl + "/v1/rx/" + orderId + "/substitution/propose", requestBody);
@@ -327,15 +335,26 @@ public class MsikaFlowServiceClient {
         return restTemplate.getForEntity(url, String.class);
     }
 
+    public ResponseEntity<String> getVendorByActor(String actorId) {
+        String url = baseUrl + "/v1/vendors/by-actor/" + actorId;
+        log.info("MSIKA Flow: Resolving vendor by actor");
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> bindVendorActor(String vendorId, String requestBody) {
+        log.info("MSIKA Flow: Binding actor to vendor={}", vendorId);
+        return postJson(baseUrl + "/v1/vendors/" + vendorId + "/bind-actor", requestBody);
+    }
+
     public ResponseEntity<String> suspendVendor(String vendorId, String requestBody) {
         log.info("MSIKA Flow: Suspending vendor={}", vendorId);
-        return postJson(baseUrl + "/v1/vendors/" + vendorId + "/suspend", requestBody);
+        return postJson(baseUrl + "/v1/ops/vendors/" + vendorId + "/suspend", requestBody);
     }
 
     public ResponseEntity<String> reinstateVendor(String vendorId) {
         log.info("MSIKA Flow: Reinstating vendor={}", vendorId);
         return restTemplate.exchange(
-                baseUrl + "/v1/vendors/" + vendorId + "/reinstate",
+                baseUrl + "/v1/ops/vendors/" + vendorId + "/reinstate",
                 HttpMethod.POST,
                 HttpEntity.EMPTY,
                 String.class

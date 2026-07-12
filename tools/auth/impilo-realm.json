@@ -113,6 +113,24 @@
       {
         "name": "HPA_INSPECTOR",
         "description": "Health Professions Authority inspector \u2014 facility inspections"
+      },
+      {
+        "name": "MARKETPLACE_OPERATOR",
+        "description": "Msika marketplace operations: vendor governance, review queues, audit, substitutions",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "MARKETPLACE_SELLER",
+        "description": "Msika seller centre: create and manage marketplace listings over verified identities",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "VENDOR",
+        "description": "Msika vendor fulfilment: accept, prepare, and hand over marketplace orders",
+        "composite": false,
+        "clientRole": false
       }
     ]
   },
@@ -1144,6 +1162,78 @@
       ],
       "realmRoles": [
         "HPA_INSPECTOR"
+      ]
+    },
+    {
+      "username": "msika.operator",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tariro",
+      "lastName": "Mutasa",
+      "email": "tariro.mutasa@mohcc.gov.zw",
+      "attributes": {
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000018"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "MARKETPLACE_OPERATOR"
+      ]
+    },
+    {
+      "username": "msika.seller",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Simba",
+      "lastName": "Chikore",
+      "email": "simba.chikore@example.co.zw",
+      "attributes": {
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000019"
+        ],
+        "provider_id": [
+          "PROV-ZW-00014"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "MARKETPLACE_SELLER"
+      ]
+    },
+    {
+      "username": "msika.vendor",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Rutendo",
+      "lastName": "Mhofu",
+      "email": "rutendo.mhofu@example.co.zw",
+      "attributes": {
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000020"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "VENDOR"
       ]
     }
   ]

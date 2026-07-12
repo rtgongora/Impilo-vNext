@@ -21,6 +21,7 @@
 | `pharm.zimba` | Faith Zimba | PHARMACIST | PROV-ZW-00004 | Pharmacist | 1 | Prescription → dispense (existing seed-04 provider, now with assignment) |
 | `trainer.chikafu` | Fungai Chikafu | CLINICIAN + **TRAINER** | PROV-ZW-00011 | Health educator | 1 | Fundo author: Course Studio → New Course → publish → assign |
 | `learner.tembo` | Kudzai Tembo | NURSE | PROV-ZW-00012 | Enrolled nurse | 1 | Fundo learner: enrol → 40% → logout/resume → quiz → certificate |
+| `msika.seller` | Simba Chikore | MARKETPLACE_SELLER | PROV-ZW-00014 | Pharmacist (community) | 1 | Msika seller: create listing (priced) → moderate → publish → receive order |
 
 ## Governance / citizen personas (no provider record needed)
 
@@ -34,6 +35,8 @@
 | `dispatcher.chirwa` | Tapiwa Chirwa | DISPATCH_COORDINATOR | Nhume dispatch command: mission creation, assignment, fleet, Dispatch Ops console |
 | `courier.banda` | Blessing Banda | COURIER | Field courier: accept mission, pickup/drop-off sign-off, proof capture (mobile-first) |
 | `hr.dziva` | Rumbidzai Dziva | HR_OFFICER | Vashandi workforce management: assignments lifecycle, rosters, leave decisions, access review |
+| `msika.operator` | Tariro Mutasa | MARKETPLACE_OPERATOR | Msika operations: vendor governance (suspend/reinstate), review queues, audit feed, substitution decisions |
+| `msika.vendor` | Rutendo Mhofu | VENDOR | Msika vendor fulfilment: accept → ready → out-for-delivery → complete; auto-bound via `/commerce/vendor/me` |
 
 ## What each persona should see (Start Menu truth)
 
@@ -52,6 +55,8 @@ Executable version of this table:
 - **HIE_ADMIN**: registry governance plane (`cmd-registry-plane`), `Issue Provider ID`,
   IATG Trust Console (when merged), Mvumo consent.
 - **PHARMACIST**: Pharmacy app (DISPENSER group).
+- **MARKETPLACE_OPERATOR/SELLER/VENDOR**: Marketplace tile (`MARKETPLACE_ACCESS`) plus their persona command —
+  `Marketplace operations` (ops), `Seller centre` (seller), `Vendor fulfilment` (vendor).
 
 ## Realm-role gaps this pack closes
 
@@ -64,6 +69,9 @@ Executable version of this table:
 | `DISPATCH_COORDINATOR` | Ndila gates referenced it but no realm role or persona existed — dispatch journeys were only testable as admin. Dispatch Ops now gates on the `DISPATCH_OPERATIONS` group. |
 | `COURIER` | The courier side of the two-ended sign-off lifecycle had no identity of its own. |
 | `HR_OFFICER` | Vashandi was gated `ADMIN`-only; workforce management had no persona of its own. Gates now use the `WORKFORCE_ADMIN` group. |
+| `MARKETPLACE_OPERATOR` | Msika ops (vendor governance, reviews, audit, substitutions) gated on the blanket `COMMERCE` group with no dedicated operator identity. Now `MARKETPLACE_OPS`. |
+| `MARKETPLACE_SELLER` | Seller centre had no seller-of-record identity; listing authoring was `COMMERCE`-gated. Now `MARKETPLACE_SELL`; seller identity derives from linked Provider ID. |
+| `VENDOR` | Vendor fulfilment had no vendor actor; the queue was operator-simulated by ID. Now `VENDOR_FULFILMENT` with `/commerce/vendor/me` auto-binding. |
 
 ## Seeding & verification
 

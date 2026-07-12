@@ -395,6 +395,24 @@
         "description": "National administrator appointed via Platform Origin: reads country operations and own-country national appointments",
         "composite": false,
         "clientRole": false
+      },
+      {
+        "name": "MARKETPLACE_OPERATOR",
+        "description": "Msika marketplace operations: vendor governance, review queues, audit, substitutions",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "MARKETPLACE_SELLER",
+        "description": "Msika seller centre: create and manage marketplace listings over verified identities",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "VENDOR",
+        "description": "Msika vendor fulfilment: accept, prepare, and hand over marketplace orders",
+        "composite": false,
+        "clientRole": false
       }
     ]
   },

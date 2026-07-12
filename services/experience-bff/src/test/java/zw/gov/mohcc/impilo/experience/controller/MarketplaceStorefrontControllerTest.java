@@ -70,7 +70,7 @@ class MarketplaceStorefrontControllerTest {
     @Test
     void search_forwardsQueryParams() {
         when(msika.searchListings(any())).thenReturn(ResponseEntity.ok("{\"content\":[]}"));
-        ResponseEntity<Map<String, Object>> resp = controller().search("t1", "req", "corr", "panadol", "LOW_RISK", 0, 20);
+        ResponseEntity<Map<String, Object>> resp = controller().search("t1", "req", "corr", "panadol", "LOW_RISK", null, 0, 20);
         assertEquals(200, resp.getStatusCode().value());
         assertNotNull(dataOf(resp).get("listings"));
         verify(msika).searchListings(any());

@@ -105,3 +105,22 @@ SELECT
 WHERE NOT EXISTS (
     SELECT 1 FROM varapi.provider WHERE provider_public_id = 'PROV-ZW-00013'
 );
+
+-- msika.seller — marketplace seller persona (Msika completion wave M8).
+-- Community pharmacist selling OTC/consumables via the Msika seller centre; the
+-- seller centre derives sellerType=PROVIDER / sellerId=PROV-ZW-00014 from linked-ids.
+-- NOTE: this row is also the seed-14 apply marker in seed-full-preview-sovereign-data.sh.
+INSERT INTO varapi.provider
+    (tenant_id, provider_ref, impilo_health_id, given_name, family_name, practice_number,
+     provider_public_id, title, date_of_birth, gender, nationality,
+     email, phone, profession, cadre, primary_council_id, status)
+SELECT
+    '00000000-0000-4000-8000-000000000001',
+    'c0000000-0000-4000-8000-000000000019', 'c0000000-0000-4000-8000-000000000019',
+    'Simba', 'Chikore', 'PHCZ-2018-441',
+    'PROV-ZW-00014', 'Mr', '1989-03-19', 'MALE', 'ZW',
+    'simba.chikore@example.co.zw', '+263771000019', 'PHARMACIST', 'PHARMACIST',
+    (SELECT id FROM varapi.councils WHERE council_code = 'PHCZ'), 'ACTIVE'
+WHERE NOT EXISTS (
+    SELECT 1 FROM varapi.provider WHERE provider_public_id = 'PROV-ZW-00014'
+);

@@ -90,6 +90,17 @@ public class SecurityConfig {
             new String[]{"FINANCE", "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT", "FACILITY_ADMIN"},
             PLATFORM_OVERRIDES);
 
+    // Msika completion wave (M8) — mirror ui/one-ui-shell src/lib/auth/role-groups.ts:
+    // MARKETPLACE_OPS / MARKETPLACE_SELL / VENDOR_FULFILMENT. COMMERCE stays untouched.
+    private static final String[] MARKETPLACE_OPS_ROLES = mergeRoleSets(
+            new String[]{"MARKETPLACE_OPERATOR"}, PLATFORM_OVERRIDES);
+
+    private static final String[] MARKETPLACE_SELL_ROLES = mergeRoleSets(
+            new String[]{"MARKETPLACE_SELLER", "FACILITY_ADMIN"}, PLATFORM_OVERRIDES);
+
+    private static final String[] VENDOR_FULFILMENT_ROLES = mergeRoleSets(
+            new String[]{"VENDOR", "MARKETPLACE_OPERATOR"}, PLATFORM_OVERRIDES);
+
     private static final String[] CITIZEN_ROLES = mergeRoleSets(
             new String[]{"CITIZEN"}, PLATFORM_OVERRIDES);
 
@@ -158,6 +169,25 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/msika/**").hasAnyRole(MSIKA_GOVERNANCE_ROLES)
                     .requestMatchers("/internal/v1/finance/**").hasAnyRole(FINANCE_ROLES)
                     .requestMatchers("/internal/v1/product-registry/**").hasAnyRole(COMMERCE_ROLES)
+
+                    // ── Msika marketplace personas (M8) — specific gates BEFORE the commerce catch-all ──
+                    // Operator console: vendor governance, review queues, audit, substitution decisions.
+                    .requestMatchers("/internal/v1/commerce/ops/**").hasAnyRole(MARKETPLACE_OPS_ROLES)
+                    .requestMatchers("/internal/v1/commerce/substitutions").hasAnyRole(MARKETPLACE_OPS_ROLES)
+                    .requestMatchers("/internal/v1/commerce/rx/**").hasAnyRole(MARKETPLACE_OPS_ROLES)
+                    // Vendor identity binding: any authenticated actor may ask "am I a vendor?".
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/commerce/vendor/me").authenticated()
+                    // Vendor fulfilment queue (accept/ready/out-for-delivery/complete/propose).
+                    .requestMatchers("/internal/v1/commerce/vendor/**").hasAnyRole(VENDOR_FULFILMENT_ROLES)
+                    // Buyer lane: carts/orders/pickup are person-anchored — citizens can buy
+                    // (bug fix: the blanket COMMERCE gate blocked CITIZEN); ABAC binds actor server-side.
+                    .requestMatchers("/internal/v1/commerce/cart/**", "/internal/v1/commerce/cart").authenticated()
+                    .requestMatchers("/internal/v1/commerce/orders/**").authenticated()
+                    .requestMatchers("/internal/v1/commerce/pickup/**").authenticated()
+                    // Seller centre composition endpoints; moderation decisions also open to operators.
+                    .requestMatchers("/internal/v1/marketplace/seller/moderation/**")
+                            .hasAnyRole(mergeRoleSets(MARKETPLACE_SELL_ROLES, MARKETPLACE_OPS_ROLES))
+                    .requestMatchers("/internal/v1/marketplace/seller/**").hasAnyRole(MARKETPLACE_SELL_ROLES)
                     .requestMatchers("/internal/v1/commerce/**").hasAnyRole(COMMERCE_ROLES)
 
                     // ── Multi-facility operational snapshots (oversight roles) ──
