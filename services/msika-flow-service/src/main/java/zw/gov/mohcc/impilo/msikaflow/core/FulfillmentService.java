@@ -280,11 +280,39 @@ public class FulfillmentService {
     public void handleDispatchStatus(String orderId, String status, String nhumeDeliveryId,
                                      String proofRef, String actorId, String actorType) {
         switch (status) {
-            case "PICKED_UP" -> markOutForDelivery(orderId, actorId, actorType);
-            case "DELIVERED" -> markDelivered(orderId, actorId, actorType);
+            case "PICKED_UP" -> {
+                fastForwardTo(orderId, OrderStatus.IN_PROGRESS, actorId, actorType);
+                markOutForDelivery(orderId, actorId, actorType);
+            }
+            case "DELIVERED" -> {
+                fastForwardTo(orderId, OrderStatus.OUT_FOR_DELIVERY, actorId, actorType);
+                markDelivered(orderId, actorId, actorType);
+            }
             default -> throw new IllegalArgumentException("Unsupported dispatch status: " + status);
         }
         recordDispatchCustody(orderId, status, nhumeDeliveryId, proofRef, actorId);
+    }
+
+    /**
+     * A courier dispatch signal is physical truth — the parcel demonstrably left the
+     * vendor (PICKED_UP) or reached the recipient (DELIVERED). When the vendor-side
+     * transitions lag the courier event (or a prior write-back was lost), walk the
+     * not-yet-recorded intermediate states as individual audited transitions rather
+     * than rejecting reality and stranding the order behind the FSM guard. The manual
+     * lifecycle endpoints keep their strict single-step semantics.
+     */
+    private void fastForwardTo(String orderId, OrderStatus target, String actorId, String actorType) {
+        List<OrderStatus> chain = List.of(OrderStatus.ACCEPTED, OrderStatus.IN_PROGRESS, OrderStatus.OUT_FOR_DELIVERY);
+        int targetIdx = chain.indexOf(target);
+        for (int i = 0; i <= targetIdx; i++) {
+            OrderStatus current = stateMachine.getOrder(orderId).getStatus();
+            boolean step = (current == OrderStatus.ROUTED && chain.get(i) == OrderStatus.ACCEPTED)
+                    || (current == OrderStatus.ACCEPTED && chain.get(i) == OrderStatus.IN_PROGRESS)
+                    || (current == OrderStatus.IN_PROGRESS && chain.get(i) == OrderStatus.OUT_FOR_DELIVERY);
+            if (step) {
+                stateMachine.transition(orderId, chain.get(i), actorId, actorType, chain.get(i).name(), null);
+            }
+        }
     }
 
     private void recordDispatchCustody(String orderId, String status, String nhumeDeliveryId,
