@@ -1,0 +1,75 @@
+# Gateway public naming dictionary
+# Doctrine: docs/doctrine/health-services-gateway-doctrine.md §3 — internal service
+# names never appear on citizen surfaces, in citizen payloads, or public URLs.
+# Enforced (informational in W0, strict from W1) by scripts/guard/check-public-lane.sh.
+#
+# `internal` = the platform name (matched case-insensitively as a whole word on
+# public surfaces). `public_label` = what citizens see instead. `allow_in_urls: false`
+# means the term must also never appear in public route paths.
+
+version: 1
+updated: 2026-07-12
+
+terms:
+  - internal: tshepo
+    public_label: "security and permissions"
+  - internal: vito
+    public_label: "Health ID and personal records"
+  - internal: butano
+    public_label: "health records"
+  - internal: tuso
+    public_label: "health facility register"
+  - internal: varapi
+    public_label: "health professionals register"
+  - internal: zibo
+    public_label: "health services register"
+  - internal: rito
+    public_label: "feedback and complaints"
+  - internal: msika
+    public_label: "health products and suppliers"
+  - internal: daidzai
+    public_label: "emergency services"
+  - internal: nhume
+    public_label: "delivery and transport"
+  - internal: costa
+    public_label: "health bills"
+  - internal: mushex
+    public_label: "payments"
+  - internal: mushe
+    public_label: "health wallet"
+  - internal: dura
+    public_label: "medicines and supplies"
+  - internal: indawo
+    public_label: "places and locations"
+  - internal: ndila
+    public_label: "maps and directions"
+  - internal: khuluma
+    public_label: "messages and calls"
+  - internal: fundo
+    public_label: "learning and training"
+  - internal: mvumo
+    public_label: "consent and permissions"
+  - internal: oros
+    public_label: "tests and results"
+  - internal: landela
+    public_label: "documents"
+  - internal: ubomi
+    public_label: "community health"
+  - internal: vashandi
+    public_label: "health workforce"
+  - internal: madi
+    public_label: "blood services"
+  - internal: simba
+    public_label: "wellness"
+
+# Names that are citizen-facing brands by design and therefore ALLOWED publicly.
+allowed_public_brands:
+  - impilo
+  - nompilo
+
+# Public surfaces the guard scans (globs relative to repo root).
+scan_surfaces:
+  - "ui/one-ui-shell/src/app/welcome/**"
+  - "ui/one-ui-shell/src/components/public/**"
+  - "services/experience-bff/src/main/java/**/controller/Public*BffController.java"
+  - "services/experience-bff/src/main/java/**/controller/PublicGateway*.java"
