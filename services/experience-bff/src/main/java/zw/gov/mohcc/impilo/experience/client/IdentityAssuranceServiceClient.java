@@ -65,6 +65,38 @@ public class IdentityAssuranceServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Record a CONTACT_VERIFIED attestation (R1 "Reachable" rung) for {@code accountId}
+     * after the BFF completed the contact OTP check. Only the masked value crosses this
+     * boundary — never the raw phone/email.
+     *
+     * <p>{@code overrideHeaders} lets the pre-auth registration flow supply a
+     * service-account bearer + synthesized actor identity; when the inbound request is
+     * authenticated (ATTACH), the shared trust-header interceptor forwards the caller's
+     * own Authorization/actor headers over these values.</p>
+     */
+    public JsonNode recordContactVerified(String accountId, String channel, String maskedValue,
+                                          org.springframework.http.HttpHeaders overrideHeaders) {
+        String url = baseUrl + "/internal/v1/attestations/contact-verified";
+        log.info("IDENTITY-ASSURANCE: recording CONTACT_VERIFIED attestation channel={}", channel);
+        Map<String, Object> body = Map.of(
+                "accountId", accountId,
+                "channel", channel,
+                "maskedValue", maskedValue,
+                "method", "OTP");
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body, overrideHeaders), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Contact-verification status of an account (verified contact + channels). */
+    public JsonNode getContactVerification(String accountId) {
+        String url = baseUrl + "/internal/v1/attestations/contact-verified/" + accountId;
+        log.debug("IDENTITY-ASSURANCE: reading contact-verification status");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
