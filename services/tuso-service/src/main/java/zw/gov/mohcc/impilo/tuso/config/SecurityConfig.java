@@ -32,6 +32,14 @@ public class SecurityConfig {
                 // and Http403ForbiddenEntryPoint masks the real failure as an
                 // empty-body 403 (the "silent 403" defect).
                 .requestMatchers("/error").permitAll()
+                // Gateway public lane (ADR gateway-public-lane-security): the disclosure-limited
+                // Public*Controller surface is tuso's anonymous R0 read lane, consumed by the
+                // experience-bff public gateway (PublicFacilityController search/profile and
+                // PublicCertificateVerificationController verify). The BFF calls it with NO
+                // bearer for anonymous visitors, so it must be permitAll here — mirrors
+                // guidance-service's /v1/public/guidance/** rule. Redaction is owned by the
+                // controllers' allow-listed DTO mappers; everything else stays fail-closed.
+                .requestMatchers("/v1/public/facilities/**").permitAll()
                 .requestMatchers(disableOauthForTests ? "/v1/**" : "/__disabled_test_auth_bypass__").permitAll()
                 .anyRequest().authenticated()
             );
