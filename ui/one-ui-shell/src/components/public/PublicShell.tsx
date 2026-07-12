@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { EmergencyHelpButton } from "./EmergencyHelpButton";
 import { PublicAccessibilityMenu } from "./PublicAccessibilityMenu";
 
 /**
@@ -39,6 +40,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+
+      {/* Doctrine §7: persistent, clearly labelled Emergency Help on every public page. */}
+      <EmergencyHelpButton />
 
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
