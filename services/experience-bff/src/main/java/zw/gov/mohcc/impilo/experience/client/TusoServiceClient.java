@@ -142,6 +142,44 @@ public class TusoServiceClient {
         return response.getBody();
     }
 
+    /** Public facility-directory search (disclosure-limited summaries; anonymous-safe). */
+    public JsonNode publicFacilitySearch(Map<String, String> params) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/public/facilities/search");
+        params.forEach(builder::queryParam);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                builder.build().toUri(), HttpMethod.GET, anonymousSafeEntity(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Public facility profile (disclosure-limited view; anonymous-safe). */
+    public JsonNode publicFacilityProfile(long id) {
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                java.net.URI.create(baseUrl + "/v1/public/facilities/" + id + "/profile"),
+                HttpMethod.GET, anonymousSafeEntity(), JsonNode.class);
+        return extractData(response);
+    }
+
+    private static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
+
+    /**
+     * Downstream registries reject requests missing the mandatory trust headers (400).
+     * Anonymous public-lane requests arrive with actor/trust headers stripped at the
+     * edge, so the BFF supplies service-originated defaults here; when the caller DID
+     * send platform headers (the web client always does), the shared forwarding
+     * interceptor overwrites these defaults with the inbound values.
+     */
+    private HttpEntity<Void> anonymousSafeEntity() {
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set("X-Tenant-ID", PUBLIC_DEFAULT_TENANT);
+        headers.set("X-Actor-ID", "public-gateway");
+        headers.set("X-Actor-Type", "SYSTEM");
+        headers.set("X-Purpose-Of-Use", "PUBLIC_ACCESS");
+        headers.set("X-Device-Fingerprint", "public-gateway");
+        headers.set("X-Correlation-ID", UUID.randomUUID().toString());
+        headers.set("X-Request-ID", UUID.randomUUID().toString());
+        return new HttpEntity<>(headers);
+    }
+
     /** Resolve a facility by its canonical cross-service UUID (tuso facility_uuid). */
     public JsonNode getFacilityByUid(String facilityUuid) {
         String url = baseUrl + "/v1/internal/facilities/by-uid/" + facilityUuid;

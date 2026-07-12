@@ -399,6 +399,12 @@ public class SecurityConfig {
 
                     // ── Public facility-certificate verification (disclosure-limited) ──
                     .requestMatchers("/internal/v1/public/facility-certificates/verify/**").permitAll()
+
+                    // ── Gateway public lane (anonymous R0 reads; ADR: gateway-public-lane-security-adr) ──
+                    // GET-only in W1; anonymous writes (feedback, SOS) arrive in later waves with
+                    // their own abuse controls. Every sub-path must be registered in the ADR's
+                    // public contract registry (enforced by scripts/guard/check-public-lane.sh).
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/public/gateway/**").permitAll()
                     .requestMatchers("/internal/v1/citizen/clients/*/patient-shares/**")
                             .hasAnyRole(CITIZEN_ROLES)
 

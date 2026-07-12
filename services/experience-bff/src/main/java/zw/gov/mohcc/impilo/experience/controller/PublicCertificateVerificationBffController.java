@@ -15,7 +15,7 @@ import java.util.Map;
 
 /**
  * Public facility-certificate verification (no authentication): forwards the
- * disclosure-limited verdict from tuso. Anyone can scan a certificate code and
+ * disclosure-limited verdict from the facility register. Anyone can scan a certificate code and
  * see facility name/location, certificate number, authority, dates, status and
  * public conditions — never findings, practitioner data or enforcement detail.
  */
