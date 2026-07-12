@@ -30,7 +30,7 @@ public class MsikaListingClient {
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
 
-    public record ListingPrice(BigDecimal amount, String currency) {}
+    public record ListingPrice(BigDecimal amount, String currency, String sellerType, String sellerId) {}
 
     public MsikaListingClient(ObjectMapper objectMapper,
                               @Value("${msika-flow.integration.msika-base-url:http://msika-service:8086}") String msikaBaseUrl) {
@@ -67,7 +67,12 @@ public class MsikaListingClient {
             }
             BigDecimal amount = new BigDecimal(data.get("priceAmount").asText());
             String currency = data.path("priceCurrency").asText("ZWG");
-            return Optional.of(new ListingPrice(amount, currency));
+            // The listing's seller is the order's payee — carry it so a
+            // citizen-buyer order (which has no facility context) can still
+            // resolve a MusheX provider_id.
+            String sellerType = data.path("sellerType").asText(null);
+            String sellerId = data.path("sellerId").asText(null);
+            return Optional.of(new ListingPrice(amount, currency, sellerType, sellerId));
         } catch (RestClientException e) {
             log.warn("Listing price lookup failed for {}: {}", listingId, e.getMessage());
             return Optional.empty();

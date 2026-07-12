@@ -83,7 +83,7 @@ class CartServiceRealPricingTest {
         when(catalogValidationService.validateCart(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new CatalogValidationService.ValidationResult(true, List.of()));
         when(msikaListingClient.resolvePrice("LST-1"))
-                .thenReturn(Optional.of(new MsikaListingClient.ListingPrice(new BigDecimal("12.50"), "ZWG")));
+                .thenReturn(Optional.of(new MsikaListingClient.ListingPrice(new BigDecimal("12.50"), "ZWG", "VENDOR", "VEND-TEST")));
         OrderEntity order = new OrderEntity();
         order.setOrderId("ORDER12345678901234567");
         order.setStatus(OrderStatus.CREATED);

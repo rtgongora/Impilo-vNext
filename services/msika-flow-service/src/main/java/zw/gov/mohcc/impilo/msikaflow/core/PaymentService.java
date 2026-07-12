@@ -142,13 +142,19 @@ public class PaymentService {
         metadata.put("order_type", order.getOrderType().name());
         if (order.getVendorId() != null) {
             metadata.put("provider_id", "vendor:" + order.getVendorId());
+        } else if (order.getVendorRef() != null && !order.getVendorRef().isBlank()) {
+            // Marketplace seller id (string) — the payee for a citizen-buyer order.
+            metadata.put("provider_id", "vendor:" + order.getVendorRef());
         } else if (order.getFacilityId() != null) {
             metadata.put("provider_id", "facility:" + order.getFacilityId());
         }
         if (properties.getPayments().isSimulationMetadata()) {
-            // Rig/preview escape hatch for MusheX's provider-credential gate; see
-            // MsikaFlowProperties.Payments — must remain false in production.
-            metadata.put("simulation", true);
+            // Rig/preview escape hatch — must remain false in production. MusheX
+            // keys off "impilo_simulation" (to skip the provider-credential gate)
+            // and "simulation_outcome" (to settle the sandbox intent); emit both
+            // so the escape hatch actually engages.
+            metadata.put("impilo_simulation", true);
+            metadata.put("simulation_outcome", "paid");
         }
         return toJsonSafe(metadata);
     }

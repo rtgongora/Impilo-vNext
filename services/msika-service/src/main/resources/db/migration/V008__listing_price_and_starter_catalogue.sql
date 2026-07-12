@@ -17,7 +17,7 @@
 -- ============================================================================
 
 ALTER TABLE msika_listings ADD COLUMN IF NOT EXISTS price_amount NUMERIC(12,2);
-ALTER TABLE msika_listings ADD COLUMN IF NOT EXISTS price_currency CHAR(3) DEFAULT 'ZWG';
+ALTER TABLE msika_listings ADD COLUMN IF NOT EXISTS price_currency VARCHAR(3) DEFAULT 'ZWG';
 
 -- ----------------------------------------------------------------------------
 -- Starter platform catalogue container (tenant NULL = NATIONAL scope).
