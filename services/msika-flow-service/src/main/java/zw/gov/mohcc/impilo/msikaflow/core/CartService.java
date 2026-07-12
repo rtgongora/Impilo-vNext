@@ -142,6 +142,14 @@ public class CartService {
         }
 
         OrderType orderType = req.orderType() != null ? OrderType.valueOf(req.orderType()) : OrderType.OTC_PRODUCT_ORDER;
+        // The order's payee is the seller of the first priced listing —
+        // carried as vendorRef (a marketplace seller id is a string, not the
+        // UUID vendorId slot) so a citizen-buyer order (no facility context)
+        // still resolves a MusheX payee.
+        String payeeVendorRef = priced.stream()
+                .map(p -> p.price().sellerId())
+                .filter(s -> s != null && !s.isBlank())
+                .findFirst().orElse(null);
         OrderEntity order = stateMachine.createOrder(
                 cart.getTenantId(),
                 cart.getActorId(),
@@ -151,7 +159,7 @@ public class CartService {
                 req.facilityId(),
                 null,
                 req.vendorId(),
-                null,
+                payeeVendorRef,
                 null,
                 req.idempotencyKey());
 
