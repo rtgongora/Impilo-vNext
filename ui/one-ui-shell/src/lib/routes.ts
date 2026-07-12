@@ -62,6 +62,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/welcome", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Welcome to Impilo", navLabel: "Welcome" },
   { path: "/welcome/find-care", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Find Care", navLabel: "Find Care" },
   { path: "/welcome/emergency", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Emergency & Public Health", navLabel: "Emergency" },
+  { path: "/welcome/health-info", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Health Information", navLabel: "Health Info" },
   { path: "/welcome/accessibility", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Accessibility & Language", navLabel: "Accessibility" },
 
   // â”€â”€ Zone: Legal / Consent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -849,8 +850,9 @@ export const ROUTES: RouteDefinition[] = [
 // Msika completion wave M7 (Jul 2026): +1 — /marketplace/orders/[id]/pay (real MusheX money leg).
 // Same wave re-gated marketplace personas: seller*→MARKETPLACE_SELL, ops+substitutions→MARKETPLACE_OPS,
 // vendor*→VENDOR_FULFILMENT, cart+orders/[id](+pay)→auth (citizens can buy); COMMERCE membership untouched.
-// Gateway W2 (Jul 2026): +1 — /verify/practitioner (public health-professional register verifier).
-export const EXPECTED_ROUTE_COUNT = 703;
+// Gateway W2 (Jul 2026): +2 — /verify/practitioner (public health-professional register verifier)
+// and /welcome/health-info (public citizen health-information pillar).
+export const EXPECTED_ROUTE_COUNT = 704;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

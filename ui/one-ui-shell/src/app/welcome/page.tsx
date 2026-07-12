@@ -53,9 +53,9 @@ const INTENT_PILLARS: Array<{
   {
     title: "Health information",
     description:
-      "Trusted health knowledge and prevention guidance is being added. Emergency and public-health notices are available today.",
-    href: "/welcome/emergency",
-    access: "coming",
+      "Trusted, plain-language health knowledge — when to seek care, child health, vaccinations, chronic conditions, medicines safety and prevention.",
+    href: "/welcome/health-info",
+    access: "open",
   },
   {
     title: "Health cover & payments",
