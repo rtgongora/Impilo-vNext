@@ -29,11 +29,19 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
+import { GatewayEscalationExplainer } from "@/components/intelligent/GatewayEscalationExplainer";
 import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { useLogin } from "@/hooks/queries/useAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useConsentStore, CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
+import {
+  INTENT_QUERY_PARAM,
+  captureIntentFromToken,
+  isSafeIntentDestination,
+  peekIntent,
+  type GatewayIntent,
+} from "@/lib/gateway-intent";
 import { buildPostLoginResolvingPath } from "@/lib/resolve-post-login-destination";
 
 const PREVIEW_VASHANDI_PASSWORD = "Vashandi@2024!";
@@ -58,6 +66,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Gateway intent (doctrine §4.1 law 3): capture a ?gwi= token arriving with the
+  // redirect so the journey survives sign-in even across storage loss, and read any
+  // pending intent so Nompilo can explain WHY sign-in is being requested (§9).
+  const intentToken = searchParams.get(INTENT_QUERY_PARAM);
+  const [pendingIntent, setPendingIntent] = useState<GatewayIntent | null>(null);
+  useEffect(() => {
+    const fromToken = intentToken ? captureIntentFromToken(intentToken) : null;
+    setPendingIntent(fromToken ?? peekIntent());
+  }, [intentToken]);
 
   // Redirect already-authenticated users
   useEffect(() => {
@@ -177,6 +195,20 @@ export default function LoginPage() {
           {error}
         </div>
       )}
+
+      {/* Nompilo mediates the escalation (doctrine §9): when the person arrives with a
+          gateway intent, explain why sign-in is being asked and how their journey is
+          preserved — with "Continue without signing in" back to the public page they
+          came from where the activity permits it. */}
+      {pendingIntent ? (
+        <GatewayEscalationExplainer
+          stepKey={pendingIntent.pillar === "get-care" ? "signin-to-book" : "signin-to-personal"}
+          continueWithoutHref={
+            isSafeIntentDestination(pendingIntent.params.from) ? pendingIntent.params.from : null
+          }
+          className="mb-4"
+        />
+      ) : null}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
