@@ -69,6 +69,37 @@ class EmergencyControllerWebTest {
     }
 
     @Test
+    void publicAnonymousSosGatesDispatchUntilCallbackVerified() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        String sos = "{\"requesterType\":\"PUBLIC_ANONYMOUS\",\"subjectIdentityMode\":\"ANONYMOUS\","
+                + "\"emergencyCategory\":\"MEDICAL\",\"severity\":\"HIGH\",\"description\":\"collapsed\","
+                + "\"channel\":\"PUBLIC_WEB\",\"callbackNumber\":\"+263771234567\"}";
+        String reqJson = mockMvc.perform(citizen(post("/internal/v1/daidzai/requests"), tenant)
+                        .contentType(MediaType.APPLICATION_JSON).content(sos))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("AWAITING_CALLBACK"))
+                .andExpect(jsonPath("$.callbackVerified").value(false))
+                .andReturn().getResponse().getContentAsString();
+        String requestId = MAPPER.readTree(reqJson).get("id").asText();
+
+        // Triage is refused before callback verification (PD-3 dispatch gate → 409).
+        mockMvc.perform(citizen(post("/internal/v1/daidzai/requests/" + requestId + "/triage"), tenant))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error.code").value("CALLBACK_VERIFICATION_REQUIRED"));
+
+        // Dispatcher verifies the callback (authenticated lane).
+        mockMvc.perform(citizen(post("/internal/v1/daidzai/requests/" + requestId + "/verify-callback"), tenant))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.callbackVerified").value(true))
+                .andExpect(jsonPath("$.status").value("RECEIVED"));
+
+        // Now triage succeeds — an incident is created.
+        mockMvc.perform(citizen(post("/internal/v1/daidzai/requests/" + requestId + "/triage"), tenant))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.incidentReference").exists());
+    }
+
+    @Test
     void missingCategoryIsBadRequest() throws Exception {
         UUID tenant = UUID.randomUUID();
         mockMvc.perform(citizen(post("/internal/v1/daidzai/requests"), tenant)

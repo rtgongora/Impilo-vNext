@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -46,6 +47,55 @@ class EmergencyServiceTest {
         EmergencyRequestEntity reread = service.getRequest(tenant, r.getId());
         assertThat(reread.getIncidentId()).isEqualTo(inc.getId());
         assertThat(reread.getStatus()).isEqualTo("LINKED");
+    }
+
+    @Test
+    void publicAnonymousRequestWithCallbackLandsAwaitingCallback() {
+        UUID tenant = UUID.randomUUID();
+        EmergencyRequestEntity r = service.createRequest(tenant, "PUBLIC_ANONYMOUS", null,
+                "ANONYMOUS", null, null, null, "MEDICAL", "HIGH", "collapsed at bus rank",
+                -17.83, 31.05, "Copacabana rank", null, "PUBLIC_WEB", "+263771234567");
+        assertThat(r.getStatus()).isEqualTo(EmergencyService.STATUS_AWAITING_CALLBACK);
+        assertThat(r.getCallbackNumber()).isEqualTo("+263771234567");
+        assertThat(r.getCallbackVerified()).isFalse();
+        assertThat(r.getRequesterType()).isEqualTo("PUBLIC_ANONYMOUS");
+    }
+
+    @Test
+    void triageOnAwaitingCallbackRequestIsRefusedUntilVerified() {
+        UUID tenant = UUID.randomUUID();
+        EmergencyRequestEntity r = service.createRequest(tenant, "PUBLIC_ANONYMOUS", null,
+                "ANONYMOUS", null, null, null, "TRAUMA", "CRITICAL", "RTA",
+                null, null, "highway", null, "PUBLIC_WEB", "+263772000111");
+        // Dispatch gate holds: no incident until the callback is verified.
+        assertThatThrownBy(() -> service.triageRequestToIncident(tenant, r.getId(), "dispatcher-1"))
+                .isInstanceOf(CallbackVerificationRequiredException.class)
+                .hasMessageContaining("callback verification required");
+
+        // Dispatcher reaches the caller and verifies — the request is released for triage.
+        EmergencyRequestEntity verified = service.verifyCallback(tenant, r.getId(), "dispatcher-1");
+        assertThat(verified.getCallbackVerified()).isTrue();
+        assertThat(verified.getCallbackVerifiedBy()).isEqualTo("dispatcher-1");
+        assertThat(verified.getCallbackVerifiedAt()).isNotNull();
+        assertThat(verified.getStatus()).isEqualTo("RECEIVED");
+
+        EmergencyIncidentEntity inc = service.triageRequestToIncident(tenant, r.getId(), "dispatcher-1");
+        assertThat(inc.getId()).isNotNull();
+        assertThat(inc.getStatus()).isEqualTo("TRIAGED");
+        assertThat(outboxRepo.findAll())
+                .anyMatch(e -> e.getEventType().equals("daidzai.callback.verified"));
+    }
+
+    @Test
+    void authenticatedSosWithoutCallbackKeepsReceivedDefault() {
+        UUID tenant = UUID.randomUUID();
+        EmergencyRequestEntity r = service.createRequest(tenant, "CITIZEN", "actor-1",
+                "KNOWN", "HID-1", null, null, "MEDICAL", "MODERATE", "fever",
+                null, null, "home", null, "WEB");
+        assertThat(r.getStatus()).isEqualTo("RECEIVED");
+        // Existing behaviour unchanged: an authenticated request triages with no gate.
+        EmergencyIncidentEntity inc = service.triageRequestToIncident(tenant, r.getId(), "t");
+        assertThat(inc.getStatus()).isEqualTo("TRIAGED");
     }
 
     @Test

@@ -18,6 +18,11 @@ import java.util.*;
 @Service
 public class EmergencyService {
 
+    /** Requester type for a guest emergency request captured through the public gateway lane. */
+    public static final String REQUESTER_PUBLIC_ANONYMOUS = "PUBLIC_ANONYMOUS";
+    /** Lifecycle state of a public-anonymous request held pending dispatcher callback (PD-3). */
+    public static final String STATUS_AWAITING_CALLBACK = "AWAITING_CALLBACK";
+
     private final EmergencyRequestRepository requestRepo;
     private final EmergencyIncidentRepository incidentRepo;
     private final MissionEventRepository missionRepo;
@@ -53,14 +58,36 @@ public class EmergencyService {
                                                 String category, String reportedSeverity, String description,
                                                 Double lat, Double lng, String locationDescription,
                                                 String attachmentsRef, String channel) {
+        return createRequest(tenantId, requesterType, requesterActorId, subjectIdentityMode, subjectHealthId,
+                subjectTempRef, subjectLabel, category, reportedSeverity, description, lat, lng,
+                locationDescription, attachmentsRef, channel, null);
+    }
+
+    /**
+     * SOS request intake. A {@code PUBLIC_ANONYMOUS} request carrying a callback number is captured
+     * immediately (never gated on sign-in) but held in {@link #STATUS_AWAITING_CALLBACK}: dispatch
+     * cannot proceed until a dispatcher/responder verifies the callback (PD-3). Every other requester
+     * (authenticated citizen, provider, facility, bystander) keeps the {@code RECEIVED} default —
+     * existing SOS behaviour is unchanged.
+     */
+    @Transactional
+    public EmergencyRequestEntity createRequest(UUID tenantId, String requesterType, String requesterActorId,
+                                                String subjectIdentityMode, String subjectHealthId,
+                                                String subjectTempRef, String subjectLabel,
+                                                String category, String reportedSeverity, String description,
+                                                Double lat, Double lng, String locationDescription,
+                                                String attachmentsRef, String channel, String callbackNumber) {
         if (category == null || category.isBlank()) {
             throw new IllegalArgumentException("emergencyCategory is required");
         }
         String mode = subjectIdentityMode != null ? subjectIdentityMode.toUpperCase() : "UNKNOWN";
+        String type = requesterType != null ? requesterType.toUpperCase() : "CITIZEN";
+        String normalizedCallback = callbackNumber != null && !callbackNumber.isBlank()
+                ? callbackNumber.trim() : null;
         EmergencyRequestEntity r = new EmergencyRequestEntity();
         r.setTenantId(tenantId);
         r.setRequestReference(refs.requestReference());
-        r.setRequesterType(requesterType != null ? requesterType.toUpperCase() : "CITIZEN");
+        r.setRequesterType(type);
         r.setRequesterActorId(requesterActorId);
         r.setSubjectIdentityMode(mode);
         r.setSubjectHealthId("KNOWN".equals(mode) ? subjectHealthId : null);
@@ -75,13 +102,17 @@ public class EmergencyService {
         r.setLocationDescription(locationDescription);
         r.setAttachmentsRef(attachmentsRef);
         r.setChannel(channel != null ? channel.toUpperCase() : "WEB");
-        r.setStatus("RECEIVED");
+        r.setCallbackNumber(normalizedCallback);
+        // PD-3: a public-anonymous request with a callback is held for verification; dispatch is gated.
+        boolean awaitingCallback = REQUESTER_PUBLIC_ANONYMOUS.equals(type) && normalizedCallback != null;
+        r.setStatus(awaitingCallback ? STATUS_AWAITING_CALLBACK : "RECEIVED");
         requestRepo.save(r);
 
         emitter.emit("EMERGENCY_REQUEST", r.getId().toString(), "daidzai.request.received",
                 "EMERGENCY_REQUEST", r.getId().toString(),
                 Map.of("category", r.getEmergencyCategory(), "channel", r.getChannel(),
-                        "requesterType", r.getRequesterType(), "sensitive", r.getSensitive()), tenantId);
+                        "requesterType", r.getRequesterType(), "sensitive", r.getSensitive(),
+                        "status", r.getStatus()), tenantId);
 
         // SOS acknowledgement (owner-routed: Khuluma delivers). Request-only, never faked.
         gateway.requestNotification(tenantId, r.getChannel(), "REQUESTER",
@@ -95,11 +126,50 @@ public class EmergencyService {
                 .orElseThrow(() -> new NoSuchElementException("Emergency request not found: " + id));
     }
 
+    /**
+     * Dispatcher/responder verifies that they reached the caller on the callback number, releasing
+     * the PD-3 dispatch gate. This rides the authenticated daidzai lane (operator action, audited);
+     * it moves an {@link #STATUS_AWAITING_CALLBACK} request to {@code RECEIVED} so it can be triaged.
+     * Idempotent: verifying an already-verified or already-released request is a no-op that returns
+     * the current row.
+     */
+    @Transactional
+    public EmergencyRequestEntity verifyCallback(UUID tenantId, UUID requestId, String actorId) {
+        EmergencyRequestEntity r = getRequest(tenantId, requestId);
+        if (Boolean.TRUE.equals(r.getCallbackVerified())) {
+            return r;
+        }
+        if (r.getCallbackNumber() == null || r.getCallbackNumber().isBlank()) {
+            throw new IllegalArgumentException("request has no callback number to verify");
+        }
+        r.setCallbackVerified(Boolean.TRUE);
+        r.setCallbackVerifiedAt(OffsetDateTime.now());
+        r.setCallbackVerifiedBy(actorId);
+        if (STATUS_AWAITING_CALLBACK.equals(r.getStatus())) {
+            r.setStatus("RECEIVED");
+        }
+        requestRepo.save(r);
+
+        emitter.emit("EMERGENCY_REQUEST", r.getId().toString(), "daidzai.callback.verified",
+                "EMERGENCY_REQUEST", r.getId().toString(),
+                Map.of("requestReference", r.getRequestReference(),
+                        "verifiedBy", actorId == null ? "" : actorId,
+                        "status", r.getStatus()), tenantId);
+        return r;
+    }
+
     // ---- 2 + 3. Triage a request into an incident (severity classification + dispatch need) ----
 
     @Transactional
     public EmergencyIncidentEntity triageRequestToIncident(UUID tenantId, UUID requestId, String actorId) {
         EmergencyRequestEntity r = getRequest(tenantId, requestId);
+        // PD-3 dispatch gate: a public-anonymous request captured pending callback cannot become an
+        // incident (and therefore cannot dispatch) until a dispatcher/responder has reached the
+        // caller and verified the callback number. This is the real gate — not a flag nothing reads.
+        if (STATUS_AWAITING_CALLBACK.equals(r.getStatus()) && !Boolean.TRUE.equals(r.getCallbackVerified())) {
+            throw new CallbackVerificationRequiredException(
+                    "callback verification required before dispatch");
+        }
         String triageCat = triage.classify(r.getEmergencyCategory(), r.getSeverity());
         String severity = triage.severityForTriage(triageCat);
 

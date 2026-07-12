@@ -27,6 +27,12 @@ public class EmergencyRequestEntity {
     @Column(name = "attachments_ref", length = 255) private String attachmentsRef;
     @Column(name = "channel", nullable = false, length = 32) private String channel = "WEB";
     @Column(name = "status", nullable = false, length = 24) private String status = "RECEIVED";
+    // PD-3 callback verification: a public-anonymous request is captured immediately but dispatch
+    // is gated on a dispatcher/responder reaching this number first (see V002, EmergencyService).
+    @Column(name = "callback_number", length = 32) private String callbackNumber;
+    @Column(name = "callback_verified", nullable = false) private Boolean callbackVerified = Boolean.FALSE;
+    @Column(name = "callback_verified_at") private OffsetDateTime callbackVerifiedAt;
+    @Column(name = "callback_verified_by", length = 128) private String callbackVerifiedBy;
     @Column(name = "incident_id") private UUID incidentId;
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt;
     @Column(name = "updated_at", nullable = false) private OffsetDateTime updatedAt;
@@ -77,6 +83,14 @@ public class EmergencyRequestEntity {
     public void setChannel(String v) { this.channel = v; }
     public String getStatus() { return status; }
     public void setStatus(String v) { this.status = v; }
+    public String getCallbackNumber() { return callbackNumber; }
+    public void setCallbackNumber(String v) { this.callbackNumber = v; }
+    public Boolean getCallbackVerified() { return callbackVerified; }
+    public void setCallbackVerified(Boolean v) { this.callbackVerified = v; }
+    public OffsetDateTime getCallbackVerifiedAt() { return callbackVerifiedAt; }
+    public void setCallbackVerifiedAt(OffsetDateTime v) { this.callbackVerifiedAt = v; }
+    public String getCallbackVerifiedBy() { return callbackVerifiedBy; }
+    public void setCallbackVerifiedBy(String v) { this.callbackVerifiedBy = v; }
     public UUID getIncidentId() { return incidentId; }
     public void setIncidentId(UUID v) { this.incidentId = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

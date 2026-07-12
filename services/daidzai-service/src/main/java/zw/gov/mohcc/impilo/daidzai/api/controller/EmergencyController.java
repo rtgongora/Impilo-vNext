@@ -39,7 +39,7 @@ public class EmergencyController {
                 str(body, "subjectTempRef"), str(body, "subjectLabel"),
                 str(body, "emergencyCategory"), str(body, "severity"), str(body, "description"),
                 dbl(body, "lat"), dbl(body, "lng"), str(body, "locationDescription"),
-                str(body, "attachmentsRef"), str(body, "channel"));
+                str(body, "attachmentsRef"), str(body, "channel"), str(body, "callbackNumber"));
         return ResponseEntity.status(HttpStatus.CREATED).body(r);
     }
 
@@ -47,6 +47,17 @@ public class EmergencyController {
     public EmergencyRequestEntity getRequest(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId, @PathVariable UUID id) {
         return service.getRequest(tenantId, id);
+    }
+
+    // ---- Dispatcher callback verification (PD-3 dispatch gate release) ----
+    // Operator/dispatcher-only: rides the authenticated daidzai lane through the PDP (NOT the public
+    // lane). Sets the request's callback as verified and releases it for triage/dispatch.
+    @PostMapping("/requests/{id}/verify-callback")
+    public EmergencyRequestEntity verifyCallback(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @PathVariable UUID id) {
+        return service.verifyCallback(tenantId, id, actorId);
     }
 
     // ---- Triage a request into an incident ----
