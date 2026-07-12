@@ -42,5 +42,8 @@
     "MOD-PSYCHOLOGIST": "ACTIVE",
     "MOD-CLINICAL-SOCIAL-WORKER": "ACTIVE",
     "MOD-AIR-AMBULANCE": "ACTIVE"
+  },
+  "classificationMappingStatuses": {
+    "HPA_FACILITY_CLASSIFICATION_MAP": "ACTIVE"
   }
 }

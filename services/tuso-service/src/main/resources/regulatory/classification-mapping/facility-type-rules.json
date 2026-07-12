@@ -1,0 +1,68 @@
+{
+  "code": "HPA_FACILITY_CLASSIFICATION_MAP",
+  "version": 1,
+  "title": "HPA facility classification mapping — source-derived, conservative (HPA-2017-V1)",
+  "sourceDoc": "HPA-2017-V1",
+  "description": "Versioned, checksum-governed mapping from imported source facility facts (facility_type, ownership, bed_capacity) to canonical dimensions and HPA classification. Per-dimension determinism; the facility-level status is the weakest HPA-relevant dimension. NOTHING receives a definitive HPA catalogue label without sufficient facts; catalogue gaps surface as exceptions and are never rounded to the nearest row. Interpreted by FacilityClassificationEnrichmentService.",
+  "ownershipAuthority": {
+    "GOVERNMENT":                                  { "authority": "GOVERNMENT",         "route": "PUBLIC_MISSION_LA", "group": "PUBLIC", "confidence": "DETERMINISTIC" },
+    "RURAL_DISTRICT_COUNCIL":                      { "authority": "RURAL_DISTRICT_COUNCIL", "route": "PUBLIC_MISSION_LA", "group": "PUBLIC", "confidence": "DETERMINISTIC" },
+    "LOCAL_AUTHORITY":                             { "authority": "LOCAL_AUTHORITY",    "route": "PUBLIC_MISSION_LA", "group": "PUBLIC", "confidence": "DETERMINISTIC" },
+    "MISSION_FAITH_BASED":                         { "authority": "MISSION_FAITH_BASED","route": "PUBLIC_MISSION_LA", "group": "PUBLIC", "confidence": "DETERMINISTIC" },
+    "ZIMBABWE_PRISONS_AND_CORRECTIONAL_SERVICE":   { "authority": "STATE_SERVICE",      "route": "PUBLIC_MISSION_LA", "group": "PUBLIC", "confidence": "DETERMINISTIC" },
+    "ZIMBABWE_REPUBLIC_POLICE":                    { "authority": "STATE_SERVICE",      "route": "PUBLIC_MISSION_LA", "group": "PUBLIC", "confidence": "DETERMINISTIC" },
+    "UNIFORMED_SERVICE":                           { "authority": "STATE_SERVICE",      "route": "PUBLIC_MISSION_LA", "group": "PUBLIC", "confidence": "DETERMINISTIC" },
+    "PUBLIC_SERVICE":                              { "authority": "STATE_SERVICE",      "route": "PUBLIC_MISSION_LA", "group": "PUBLIC", "confidence": "DETERMINISTIC" },
+    "PRIVATE":                                     { "authority": "PRIVATE",            "route": "PRIVATE",           "group": "PRIVATE", "confidence": "DETERMINISTIC" },
+    "MINE":                                        { "authority": "MINE_INDUSTRIAL",    "route": "PRIVATE",           "group": "PRIVATE", "confidence": "DETERMINISTIC" },
+    "PARASTATAL":                                  { "authority": "PARASTATAL",         "route": "AMBIGUOUS",         "group": "AMBIGUOUS", "confidence": "AMBIGUOUS" },
+    "SCHOOL":                                      { "authority": "SCHOOL",             "route": "AMBIGUOUS",         "group": "AMBIGUOUS", "confidence": "AMBIGUOUS" },
+    "SDA":                                         { "authority": "UNKNOWN",            "route": "AMBIGUOUS",         "group": "AMBIGUOUS", "confidence": "AMBIGUOUS" },
+    "RURAL":                                       { "authority": "UNKNOWN",            "route": "AMBIGUOUS",         "group": "AMBIGUOUS", "confidence": "AMBIGUOUS", "note": "ownership-field data defect" },
+    "RURAL_HOSPITAL":                              { "authority": "UNKNOWN",            "route": "AMBIGUOUS",         "group": "AMBIGUOUS", "confidence": "AMBIGUOUS", "note": "facility-type value leaked into ownership field" }
+  },
+  "facilityType": {
+    "CLINIC":                        { "canonicalType": "CLINIC",               "careSetting": "UNKNOWN",   "careSettingConfidence": "UNKNOWN" },
+    "MISSION_CLINIC":                { "canonicalType": "CLINIC",               "careSetting": "UNKNOWN",   "careSettingConfidence": "UNKNOWN", "impliedOwnership": "MISSION_FAITH_BASED" },
+    "PRIVATE_CLINIC":                { "canonicalType": "CLINIC",               "careSetting": "UNKNOWN",   "careSettingConfidence": "UNKNOWN", "impliedOwnership": "PRIVATE" },
+    "RURAL_HEALTH_CENTRE":           { "canonicalType": "RURAL_HEALTH_CENTRE",  "careSetting": "UNKNOWN",   "careSettingConfidence": "UNKNOWN" },
+    "HEALTH_CENTRE":                 { "canonicalType": "RURAL_HEALTH_CENTRE",  "careSetting": "UNKNOWN",   "careSettingConfidence": "UNKNOWN", "canonicalConfidence": "SUGGESTED" },
+    "HC":                            { "canonicalType": "RURAL_HEALTH_CENTRE",  "careSetting": "UNKNOWN",   "careSettingConfidence": "UNKNOWN", "canonicalConfidence": "SUGGESTED" },
+    "DISTRICT_HOSPITAL":             { "canonicalType": "HOSPITAL",             "careSetting": "INPATIENT", "careSettingConfidence": "DETERMINISTIC" },
+    "PROVINCIAL_HOSPITAL":           { "canonicalType": "HOSPITAL",             "careSetting": "INPATIENT", "careSettingConfidence": "DETERMINISTIC" },
+    "CENTRAL_HOSPITAL":              { "canonicalType": "HOSPITAL",             "careSetting": "INPATIENT", "careSettingConfidence": "DETERMINISTIC" },
+    "MISSION_HOSPITAL":              { "canonicalType": "HOSPITAL",             "careSetting": "INPATIENT", "careSettingConfidence": "DETERMINISTIC", "impliedOwnership": "MISSION_FAITH_BASED" },
+    "RURAL_HOSPITAL":                { "canonicalType": "HOSPITAL",             "careSetting": "INPATIENT", "careSettingConfidence": "DETERMINISTIC" },
+    "INFECTIOUS_DISEASE_HOSPITAL":   { "canonicalType": "HOSPITAL",             "careSetting": "INPATIENT", "careSettingConfidence": "DETERMINISTIC" },
+    "PRIVATE_HOSPITAL":              { "canonicalType": "HOSPITAL",             "careSetting": "INPATIENT", "careSettingConfidence": "DETERMINISTIC", "impliedOwnership": "PRIVATE" },
+    "HOSPITAL_REQUIRES_LEVEL_REVIEW":{ "canonicalType": "HOSPITAL",             "careSetting": "INPATIENT", "careSettingConfidence": "DETERMINISTIC", "forceAmbiguous": true, "ambiguousReason": "Source itself flags the hospital level as requiring review; no definitive label is auto-applied." }
+  },
+  "unmappedFacilityTypes": ["PRIVATE", "MUNICIPALITY", "MINE", "UNIVERSITY", "SCHOOL_DISPENSARY", "UNIFORMED", "ZPCS", "SDA", "PVT"],
+  "bedBands": [
+    { "band": "UP_TO_50",       "maxInclusive": 50 },
+    { "band": "BEDS_51_100",    "minInclusive": 51, "maxInclusive": 100 },
+    { "band": "BEDS_101_PLUS",  "minInclusive": 101 }
+  ],
+  "catalogueLabels": {
+    "publicHospital": {
+      "BEDS_51_100":   "Government, Local Authority and Mission: Hospital 51-100 beds",
+      "BEDS_101_PLUS": "Government, Local Authority and Mission: Hospital 101 beds and above",
+      "UP_TO_50":      "__CATALOGUE_GAP__"
+    },
+    "privateHospital": {
+      "UP_TO_50":      "Hospital with up to 50 beds",
+      "BEDS_51_100":   "Hospital with 51-100 beds",
+      "BEDS_101_PLUS": "Hospitals with 101 beds and above"
+    },
+    "publicClinicOutpatient":  "Government, Local Authority and Mission: Clinics (out patients only)",
+    "privateClinicOutpatient": "Clinics (out patients only)",
+    "privateClinicBedded":     "Clinics (up to 50 beds)",
+    "industrialClinic":        "Industrial clinics"
+  },
+  "policyNotes": {
+    "classLetterC": "Class C is definitionally the Government/Local Authority/Mission (public) group per HPA-2017-V1 p15 — deterministic for the public route. The specific institution label still requires facts (care_setting for clinics/RHCs; bed band for hospitals).",
+    "careSettingNeverInferredForOutpatientTypes": "A clinic or rural health centre is NEVER auto-set to INPATIENT from a non-zero bed_capacity (MFL counts include maternity-waiting/delivery beds), nor to OUTPATIENT_ONLY from a zero/absent count. Care setting for these types is human-supplied.",
+    "catalogueGap": "The catalogue has no Class-C row for a public hospital of up to 50 beds and no Class-C bedded-clinic row. Such facilities are AMBIGUOUS + a CATALOGUE_GAP exception; the label is never rounded up.",
+    "exactSourceMatch": "EXACT_SOURCE_MATCH is reserved for a future source whose value literally equals a catalogue label. None of the current 24 imported facility_type values qualify."
+  }
+}
