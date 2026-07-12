@@ -7,7 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.KeycloakAdminClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 
 import java.nio.charset.StandardCharsets;
@@ -59,6 +62,7 @@ public class ContactOtpService {
 
     private final StringRedisTemplate redis;
     private final NotificationServiceClient notificationClient;
+    private final KeycloakAdminClient keycloakAdminClient;
     private final ObjectMapper objectMapper;
 
     /** Default country calling code applied to national-format (0-leading) numbers. */
@@ -66,11 +70,13 @@ public class ContactOtpService {
 
     public ContactOtpService(StringRedisTemplate redis,
                              NotificationServiceClient notificationClient,
+                             KeycloakAdminClient keycloakAdminClient,
                              ObjectMapper objectMapper,
                              @Value("${impilo.auth.contact-otp.default-country-code:+263}")
                              String defaultCountryCode) {
         this.redis = redis;
         this.notificationClient = notificationClient;
+        this.keycloakAdminClient = keycloakAdminClient;
         this.objectMapper = objectMapper;
         this.defaultCountryCode = defaultCountryCode;
     }
@@ -231,7 +237,29 @@ public class ContactOtpService {
         body.put("to", contact.normalizedValue());
         body.put("messageKind", "SENSITIVE");
         body.put("variables", Map.of("otp", otp));
-        notificationClient.sendNotification(body);
+        notificationClient.sendNotification(body, serviceOriginHeaders());
+    }
+
+    /**
+     * Service identity for the OTP delivery hop (service-to-service v1.1 convention).
+     * The OTP request is pre-auth by definition — an anonymous R0 visitor proving a
+     * contact channel — so the inbound request carries no Authorization to forward,
+     * while notification-service's {@code /internal/v1/notify} is fail-closed
+     * JWT-authenticated. Without this bearer the whole R1 lane dies with 503
+     * OTP_DELIVERY_UNAVAILABLE (rig-caught in the W1 runtime proof). Mirrors
+     * {@code AuthContactOtpController#serviceAccountHeaders()}; when the caller IS
+     * authenticated, the shared interceptor overwrites these with the inbound values.
+     */
+    private HttpHeaders serviceOriginHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        String bearer = keycloakAdminClient.serviceAccountBearer();
+        if (bearer != null) {
+            headers.set(CompanionHeaders.AUTHORIZATION, CompanionHeaders.BEARER_PREFIX + bearer);
+        }
+        headers.set(CompanionHeaders.ACTOR_ID, "experience-bff");
+        headers.set(CompanionHeaders.ACTOR_TYPE, "SYSTEM");
+        headers.set(CompanionHeaders.PURPOSE_OF_USE, "IDENTITY_VERIFICATION");
+        return headers;
     }
 
     // ── verify ────────────────────────────────────────────────────────────────

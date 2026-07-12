@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import zw.gov.mohcc.impilo.experience.client.KeycloakAdminClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.service.ContactOtpService.Contact;
 import zw.gov.mohcc.impilo.experience.service.ContactOtpService.VerifyOutcome;
@@ -38,6 +39,7 @@ class ContactOtpServiceTest {
     @Mock private StringRedisTemplate redis;
     @Mock private ValueOperations<String, String> valueOps;
     @Mock private NotificationServiceClient notificationClient;
+    @Mock private KeycloakAdminClient keycloakAdminClient;
 
     private ContactOtpService service;
 
@@ -46,7 +48,8 @@ class ContactOtpServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ContactOtpService(redis, notificationClient, new ObjectMapper(), "+263");
+        service = new ContactOtpService(redis, notificationClient, keycloakAdminClient, new ObjectMapper(), "+263");
+        when(keycloakAdminClient.serviceAccountBearer()).thenReturn("rig-service-token");
         when(redis.opsForValue()).thenReturn(valueOps);
         when(redis.hasKey(anyString())).thenAnswer(inv -> store.containsKey(inv.getArgument(0, String.class)));
         when(redis.getExpire(anyString())).thenReturn(120L);
@@ -119,7 +122,7 @@ class ContactOtpServiceTest {
             assertThat(challenge.path("attempts").asInt()).isZero();
 
             ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
-            verify(notificationClient).sendNotification(captor.capture());
+            verify(notificationClient).sendNotification(captor.capture(), any());
             Map<String, Object> sent = captor.getValue();
             assertThat(sent.get("templateKey")).isEqualTo("CONTACT_VERIFY_OTP");
             assertThat(sent.get("channel")).isEqualTo("SMS");
@@ -133,14 +136,14 @@ class ContactOtpServiceTest {
         void emailUsesEmailTemplateAndChannel() {
             service.requestOtp(null, "jane@example.org", null);
             ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
-            verify(notificationClient).sendNotification(captor.capture());
+            verify(notificationClient).sendNotification(captor.capture(), any());
             assertThat(captor.getValue().get("templateKey")).isEqualTo("CONTACT_VERIFY_OTP_EMAIL");
             assertThat(captor.getValue().get("channel")).isEqualTo("EMAIL");
         }
 
         @Test
         void deliveryRejectionDestroysChallenge_failClosed() {
-            when(notificationClient.sendNotification(any())).thenThrow(new RuntimeException("notify down"));
+            when(notificationClient.sendNotification(any(), any())).thenThrow(new RuntimeException("notify down"));
 
             assertThatThrownBy(() -> service.requestOtp("PHONE", "0771234567", null))
                     .isInstanceOf(ContactOtpService.OtpUnavailableException.class);
@@ -160,7 +163,7 @@ class ContactOtpServiceTest {
                     .thenReturn((long) ContactOtpService.MAX_REQUESTS_PER_VALUE + 1);
             assertThatThrownBy(() -> service.requestOtp("PHONE", "0771234567", null))
                     .isInstanceOf(ContactOtpService.OtpRateLimitedException.class);
-            verify(notificationClient, never()).sendNotification(any());
+            verify(notificationClient, never()).sendNotification(any(), any());
         }
 
         @Test
@@ -178,7 +181,7 @@ class ContactOtpServiceTest {
         private String issueAndCaptureOtp() {
             service.requestOtp("PHONE", "0771234567", null);
             ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
-            verify(notificationClient).sendNotification(captor.capture());
+            verify(notificationClient).sendNotification(captor.capture(), any());
             @SuppressWarnings("unchecked")
             Map<String, String> vars = (Map<String, String>) captor.getValue().get("variables");
             return vars.get("otp");

@@ -35,6 +35,20 @@ public class NotificationServiceClient {
         return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
     }
 
+    /**
+     * Send with explicit override headers — for service-originated (pre-auth) flows such
+     * as contact-OTP delivery, where the inbound request is anonymous so there is no
+     * Authorization to forward, while notification-service's {@code /internal} lane is
+     * fail-closed JWT-authenticated (rig-caught W1 defect: the R1 OTP lane 503'd because
+     * this hop arrived unauthenticated). The shared trust-header interceptor still
+     * overwrites these values with the inbound ones when the caller IS authenticated.
+     */
+    public JsonNode sendNotification(Map<String, Object> body, org.springframework.http.HttpHeaders overrideHeaders) {
+        String url = baseUrl + "/internal/v1/notify";
+        log.info("Notification: send (service-originated)");
+        return extractData(restTemplate.postForEntity(url, new HttpEntity<>(body, overrideHeaders), JsonNode.class));
+    }
+
     public JsonNode listNotifications(String recipientId) {
         UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/notifications");
         if (recipientId != null && !recipientId.isBlank()) {
