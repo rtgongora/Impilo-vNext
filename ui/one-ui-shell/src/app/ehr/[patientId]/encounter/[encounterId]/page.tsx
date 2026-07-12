@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { StickyActionBar } from "shared-ui";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { RoleSpecificEncounterForm } from "@/components/encounter/StructuredEncounterForms";
@@ -811,7 +812,7 @@ export default function EncounterPage() {
                 {/* Acuity Selection */}
                 <div className="mb-4">
                   <label className="block text-xs font-medium text-muted-foreground mb-2">Triage Category</label>
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
                     {[
                       { level: 1, label: "Red", desc: "Resuscitation", color: "border-red-400 bg-danger-soft text-danger", active: "border-red-500 bg-red-100 ring-2 ring-red-300" },
                       { level: 2, label: "Orange", desc: "Emergency", color: "border-orange-400 bg-orange-50 text-orange-700", active: "border-orange-500 bg-orange-100 ring-2 ring-orange-300" },
@@ -837,7 +838,7 @@ export default function EncounterPage() {
                 {/* Danger Signs */}
                 <div className="mb-4">
                   <label className="block text-xs font-medium text-muted-foreground mb-2">Danger Signs Screening</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                     {DANGER_SIGNS.map((sign) => {
                       const present = dangerSigns[sign] ?? false;
                       return (
@@ -865,33 +866,33 @@ export default function EncounterPage() {
                 {/* Quick Triage Vitals */}
                 <div className="mb-4">
                   <label className="block text-xs font-medium text-muted-foreground mb-2">Triage Vitals</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+                    <div className="min-w-0">
                       <label className="block text-[10px] text-muted-foreground mb-0.5">Systolic</label>
                       <input type="number" value={tvSystolic} onChange={(e) => setTvSystolic(e.target.value)} placeholder="mmHg"
                         className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <label className="block text-[10px] text-muted-foreground mb-0.5">Diastolic</label>
                       <input type="number" value={tvDiastolic} onChange={(e) => setTvDiastolic(e.target.value)} placeholder="mmHg"
                         className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <label className="block text-[10px] text-muted-foreground mb-0.5">Heart Rate</label>
                       <input type="number" value={tvHR} onChange={(e) => setTvHR(e.target.value)} placeholder="bpm"
                         className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <label className="block text-[10px] text-muted-foreground mb-0.5">Temperature</label>
                       <input type="number" step="0.1" value={tvTemp} onChange={(e) => setTvTemp(e.target.value)} placeholder="Â°C"
                         className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <label className="block text-[10px] text-muted-foreground mb-0.5">SpOâ‚‚</label>
                       <input type="number" value={tvSpO2} onChange={(e) => setTvSpO2(e.target.value)} placeholder="%"
                         className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <label className="block text-[10px] text-muted-foreground mb-0.5">Resp Rate</label>
                       <input type="number" value={tvRR} onChange={(e) => setTvRR(e.target.value)} placeholder="/min"
                         className="w-full px-2 py-1.5 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
@@ -939,48 +940,48 @@ export default function EncounterPage() {
                     </span>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="min-w-0">
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Systolic (mmHg)</label>
                     <input type="number" value={systolic} onChange={(e) => setSystolic(e.target.value)} placeholder="120" disabled={!isActive}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Diastolic (mmHg)</label>
                     <input type="number" value={diastolic} onChange={(e) => setDiastolic(e.target.value)} placeholder="80" disabled={!isActive}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Heart Rate (bpm)</label>
                     <input type="number" value={heartRate} onChange={(e) => setHeartRate(e.target.value)} placeholder="72" disabled={!isActive}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Temperature (Â°C)</label>
                     <input type="number" step="0.1" value={temperature} onChange={(e) => setTemperature(e.target.value)} placeholder="36.5" disabled={!isActive}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Resp. Rate (/min)</label>
                     <input type="number" value={respiratoryRate} onChange={(e) => setRespiratoryRate(e.target.value)} placeholder="16" disabled={!isActive}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-medium text-muted-foreground mb-1">SpO2 (%)</label>
                     <input type="number" value={oxygenSat} onChange={(e) => setOxygenSat(e.target.value)} placeholder="98" disabled={!isActive}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Weight (kg)</label>
                     <input type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="70" disabled={!isActive}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Height (cm)</label>
                     <input type="number" step="0.1" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="170" disabled={!isActive}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-full min-w-0">
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Pain Score (0-10)</label>
                     <input type="number" min="0" max="10" value={painScore} onChange={(e) => setPainScore(e.target.value)} placeholder="0" disabled={!isActive}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-background disabled:text-muted-foreground" />
@@ -1213,40 +1214,47 @@ export default function EncounterPage() {
 
             {/* Close Encounter â€” clinical staff only */}
             {isActive && isClinical && !encounterClosed && (
-              <div className="bg-card rounded-lg border border-border p-5">
+              <StickyActionBar
+                status={
+                  showCloseConfirm ? (
+                    <>
+                      <p className="text-sm text-foreground">
+                        Are you sure you want to close this encounter? This action cannot be undone.
+                      </p>
+                      {closeEncounter.isError && (
+                        <p className="text-sm text-red-600">Failed to close encounter. Please try again.</p>
+                      )}
+                    </>
+                  ) : (
+                    "Close this encounter when documentation is complete"
+                  )
+                }
+              >
                 {!showCloseConfirm ? (
                   <button
                     onClick={() => setShowCloseConfirm(true)}
-                    className="w-full py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                    className="px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
                   >
                     <XCircle className="w-4 h-4" />
                     Close Encounter
                   </button>
                 ) : (
-                  <div className="space-y-3">
-                    <p className="text-sm text-foreground text-center">
-                      Are you sure you want to close this encounter? This action cannot be undone.
-                    </p>
-                    <div className="flex gap-3">
-                      <button onClick={() => setShowCloseConfirm(false)}
-                        className="flex-1 py-2.5 bg-neutral-100 text-foreground text-sm font-medium rounded-lg hover:bg-neutral-100 transition-colors">
-                        Cancel
-                      </button>
-                      <button onClick={handleClose} disabled={closeEncounter.isPending}
-                        className="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
-                        {closeEncounter.isPending ? (
-                          <><Loader2 className="w-4 h-4 animate-spin" /> Closing...</>
-                        ) : (
-                          <><CheckCircle2 className="w-4 h-4" /> Confirm Close</>
-                        )}
-                      </button>
-                    </div>
-                    {closeEncounter.isError && (
-                      <p className="text-sm text-red-600 text-center">Failed to close encounter. Please try again.</p>
-                    )}
-                  </div>
+                  <>
+                    <button onClick={() => setShowCloseConfirm(false)}
+                      className="px-4 py-2.5 bg-neutral-100 text-foreground text-sm font-medium rounded-lg hover:bg-neutral-100 transition-colors">
+                      Cancel
+                    </button>
+                    <button onClick={handleClose} disabled={closeEncounter.isPending}
+                      className="px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
+                      {closeEncounter.isPending ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Closing...</>
+                      ) : (
+                        <><CheckCircle2 className="w-4 h-4" /> Confirm Close</>
+                      )}
+                    </button>
+                  </>
                 )}
-              </div>
+              </StickyActionBar>
             )}
           </div>
         )}

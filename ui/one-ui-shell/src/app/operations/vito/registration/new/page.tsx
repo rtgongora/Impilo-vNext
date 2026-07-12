@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { UserPlus, CheckCircle, AlertTriangle, Plus, X } from "lucide-react";
+import { StickyActionBar } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { VitoRestrictedLocationCapture } from "@/components/registry/VitoRestrictedLocationCapture";
@@ -344,7 +345,7 @@ export default function NewRegistrationPage() {
             >
               <h2 className="text-sm font-semibold text-foreground">Step 1 — Demographics</h2>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
                   Given name *
                   <input
@@ -480,7 +481,7 @@ export default function NewRegistrationPage() {
                   </select>
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground sm:col-span-2">
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground col-span-full">
                   Notes
                   <textarea
                     rows={2}
@@ -498,7 +499,7 @@ export default function NewRegistrationPage() {
                 onChange={setRegistrationLocation}
               />
 
-              <div className="flex justify-end">
+              <StickyActionBar status="Step 1 of 4 — Demographics">
                 <button
                   type="submit"
                   disabled={createRegistration.isPending}
@@ -506,7 +507,7 @@ export default function NewRegistrationPage() {
                 >
                   {createRegistration.isPending ? "Saving draft…" : "Next — Review & Evidence"}
                 </button>
-              </div>
+              </StickyActionBar>
             </form>
           )}
 
@@ -602,7 +603,7 @@ export default function NewRegistrationPage() {
                 )}
               </div>
 
-              <div className="flex justify-end gap-3">
+              <StickyActionBar status="Step 2 of 4 — Review & Evidence">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
@@ -618,7 +619,7 @@ export default function NewRegistrationPage() {
                 >
                   {submitRegistration.isPending ? "Submitting…" : "Submit for review →"}
                 </button>
-              </div>
+              </StickyActionBar>
             </div>
           )}
 

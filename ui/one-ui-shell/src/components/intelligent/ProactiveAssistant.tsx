@@ -19,6 +19,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import {
   AlertTriangle, CheckCircle2, Info, Heart, Calendar,
   Stethoscope, X, ChevronRight, Sparkles,
@@ -26,7 +27,13 @@ import {
 } from "lucide-react";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useLayoutPrefsStore } from "@/hooks/useLayoutPrefsStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
+import {
+  shouldSuppressNonUrgent,
+  useAssistantUiStore,
+} from "@/hooks/useAssistantUiStore";
+import { isFocusedWorkspaceRoute } from "@/lib/shell/workspace-context";
 import { apiClient } from "@/lib/api-client";
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -46,7 +53,6 @@ interface AssistantNotification {
 
 interface AssistantState {
   notifications: AssistantNotification[];
-  isOpen: boolean;
   unreadCount: number;
 }
 
@@ -74,12 +80,42 @@ const TYPE_ICONS: Record<string, typeof Stethoscope> = {
 export function ProactiveAssistant() {
   const [state, setState] = useState<AssistantState>({
     notifications: [],
-    isOpen: false,
     unreadCount: 0,
   });
-  const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "assistant"; text: string }>>([]);
+
+  // Panel/chat/conversation live in a store so minimising the assistant or
+  // navigating never loses the conversation (workflow-state hard gate).
+  const isOpen = useAssistantUiStore((s) => s.panelOpen);
+  const setPanelOpen = useAssistantUiStore((s) => s.setPanelOpen);
+  const togglePanel = useAssistantUiStore((s) => s.togglePanel);
+  const chatOpen = useAssistantUiStore((s) => s.chatOpen);
+  const setChatOpen = useAssistantUiStore((s) => s.setChatOpen);
+  const chatMessages = useAssistantUiStore((s) => s.chatMessages);
+  const appendChatMessage = useAssistantUiStore((s) => s.appendChatMessage);
+  const lastTypingAt = useAssistantUiStore((s) => s.lastTypingAt);
+  const markTyping = useAssistantUiStore((s) => s.markTyping);
+
+  const pathname = usePathname();
+  const focusMode = useLayoutPrefsStore((s) => s.focusMode);
+  // Focused work (opened application/record or focus mode): Nompilo shrinks
+  // to an unobtrusive control and never expands over the workspace on its own.
+  const focusedWork = focusMode || (pathname ? isFocusedWorkspaceRoute(pathname) : false);
+
+  // Track active field entry anywhere on the page — non-urgent prompts are
+  // suppressed while the user is typing (interruption rule).
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        markTyping(Date.now());
+      }
+    }
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [markTyping]);
+  const suppressNonUrgent = shouldSuppressNonUrgent(lastTypingAt, Date.now());
 
   const workMode = useWorkModeStore();
   const facility = useFacilityStore();
@@ -126,18 +162,18 @@ export function ProactiveAssistant() {
     if (!chatInput.trim()) return;
     const userMessage = chatInput.trim();
     setChatInput("");
-    setChatMessages(prev => [...prev, { role: "user", text: userMessage }]);
+    appendChatMessage({ role: "user", text: userMessage });
 
     try {
       const response = await apiClient.post<{ data: { reply: string } }>(
         "/internal/v1/assistant/chat",
         { message: userMessage, context: { work_mode: workMode.mode, facility_id: facility.facility?.id } }
       );
-      setChatMessages(prev => [...prev, { role: "assistant", text: response?.data?.reply ?? "I'm here to help. Could you rephrase that?" }]);
+      appendChatMessage({ role: "assistant", text: response?.data?.reply ?? "I'm here to help. Could you rephrase that?" });
     } catch {
-      setChatMessages(prev => [...prev, { role: "assistant", text: "I'm having trouble connecting. Please try again." }]);
+      appendChatMessage({ role: "assistant", text: "I'm having trouble connecting. Please try again." });
     }
-  }, [chatInput, workMode.mode, facility.facility?.id]);
+  }, [appendChatMessage, chatInput, workMode.mode, facility.facility?.id]);
 
   const criticalNotifications = useMemo(
     () => state.notifications.filter(n => n.severity === "CRITICAL"),
@@ -164,22 +200,37 @@ export function ProactiveAssistant() {
         </div>
       )}
 
-      {/* Floating assistant button */}
+      {/* Floating assistant control — minimised during focused work so it never
+          covers Save/Continue/clinical actions; conversation is retained. */}
       <button
-        onClick={() => setState(prev => ({ ...prev, isOpen: !prev.isOpen }))}
-        className="fixed right-6 z-40 h-14 w-14 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
-        style={{ bottom: "calc(var(--shell-taskbar-height, 0px) + 1.5rem)" }}
+        onClick={() => togglePanel()}
+        aria-label={isOpen ? "Minimize Nompilo assistant" : "Open Nompilo assistant"}
+        aria-expanded={isOpen}
+        data-testid="proactive-assistant-launcher"
+        data-minimized={focusedWork && !isOpen ? "true" : "false"}
+        className={`fixed z-40 flex items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-lg transition-all hover:shadow-xl ${
+          focusedWork && !isOpen ? "right-2 h-9 w-9 opacity-75 hover:opacity-100 focus-visible:opacity-100" : "right-6 h-14 w-14"
+        }`}
+        style={{
+          bottom: focusedWork && !isOpen
+            ? "calc(var(--shell-taskbar-height, 0px) + 5rem)"
+            : "calc(var(--shell-taskbar-height, 0px) + 1.5rem)",
+        }}
       >
-        <Sparkles className="h-6 w-6" />
+        <Sparkles className={focusedWork && !isOpen ? "h-4 w-4" : "h-6 w-6"} />
         {state.unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-[10px] font-bold flex items-center justify-center">
+          <span
+            className={`absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-[10px] font-bold flex items-center justify-center ${
+              suppressNonUrgent ? "" : "animate-pulse"
+            }`}
+          >
             {state.unreadCount}
           </span>
         )}
       </button>
 
-      {/* Notification panel */}
-      {state.isOpen && (
+      {/* Notification panel — opens only on deliberate user action */}
+      {isOpen && (
         <div
           className="fixed right-6 z-40 w-96 max-h-[70vh] bg-card rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col"
           style={{ bottom: "calc(var(--shell-taskbar-height, 0px) + 6.5rem)" }}
@@ -193,12 +244,14 @@ export function ProactiveAssistant() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setChatOpen(!chatOpen)}
+                aria-label={chatOpen ? "Show notifications" : "Open chat"}
                 className="p-1.5 rounded-lg bg-card/20 hover:bg-card/30 transition"
               >
                 <MessageCircle className="h-4 w-4" />
               </button>
               <button
-                onClick={() => setState(prev => ({ ...prev, isOpen: false }))}
+                onClick={() => setPanelOpen(false)}
+                aria-label="Minimize assistant (conversation is kept)"
                 className="p-1.5 rounded-lg bg-card/20 hover:bg-card/30 transition"
               >
                 <X className="h-4 w-4" />

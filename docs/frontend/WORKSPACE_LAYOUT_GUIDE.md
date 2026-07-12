@@ -1,6 +1,37 @@
-# Workspace Layout Guide (Wave 20)
+# Workspace Layout Guide (Wave 20 + Adaptive Workspace remediation)
 
 > UX packaging patterns for Impilo one-ui-shell production readiness
+
+## Adaptive workspace principles (2026-07 remediation)
+
+Screen space is a limited operational resource. Every page must give the
+active task the largest practical workspace:
+
+- **Forms**: use `FormGrid` / `FormField` / `FormSection` (shared-ui) — short
+  fields side by side (2–3 columns ≥sm/≥lg), narrative fields `span="full"`,
+  single column on phones. Never stretch a date/code/select across the page.
+- **Long forms/wizards**: keep terminal actions reachable with
+  `StickyActionBar` (taskbar + safe-area aware, one per screen). Use the
+  shared `Stepper` for multi-stage flows — horizontal ≥sm, automatic compact
+  step-counter variant on phones.
+- **Cards**: size to content. `Card density="compact"` (or `padding="xs"`) for
+  title/status/action content; `AdaptiveGrid` for dashboards (auto-fit
+  columns, no oversized fixed grids).
+- **Overflow**: when a page genuinely scrolls, make it obvious — `MoreBelow`
+  cue (hides at end, tap scrolls forward, never hover-only).
+- **Split layouts**: `SplitView` for work + context panel (stacks on narrow
+  viewports, primary pane keeps reading order). Full-height apps (tables,
+  boards, maps, studios) use `FullHeightWorkspace` + `WorkspaceScrollPane` —
+  ONE internal scroll region, no nested/competing scrollbars.
+- **Shell behaviour** (automatic — don't fight it): the NavRail expands on
+  landing/hub surfaces and auto-compacts to icons inside opened applications
+  (`src/lib/shell/workspace-context.ts` decides; user preference and focus
+  mode override). `PageShell` heroes auto-compact on focused-work routes.
+  The taskbar minimises to a restore handle (Ctrl+Alt+B / focus mode).
+- **State preservation hard gate**: collapsing navigation, minimising the
+  taskbar or Nompilo, resizing, or rotating must never clear entered data,
+  reset a wizard, or lose patient/facility context. Keep layout state in
+  `useLayoutPrefsStore` / `useAssistantUiStore`, never in page state.
 
 ## PlaneWorkspaceShell
 
