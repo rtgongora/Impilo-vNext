@@ -1,0 +1,28 @@
+── Check 1: anonymous SOS POST (no auth) with callback → 202 + reference ──
+PASS  202 + reference=SOS-20260712-26259
+── Check 1b: psql read-back (AWAITING_CALLBACK, unverified, PUBLIC_ANONYMOUS) ──
+SOS-20260712-26259|AWAITING_CALLBACK|f|PUBLIC_ANONYMOUS|+263771234567|ANONYMOUS|PUBLIC_WEB
+PASS  row AWAITING_CALLBACK/unverified/PUBLIC_ANONYMOUS, callback normalized to E.164
+── Check 2: POST without callbackNumber → 400, no row created ──
+{"error":{"message":"A callback number is required so a responder can reach you.","code":"VALIDATION"}}
+PASS  400 VALIDATION (missing callback) and row count unchanged (8)
+── Check 3: triage the AWAITING_CALLBACK request → 409 (dispatch gate holds) ──
+{"error":{"code":"CALLBACK_VERIFICATION_REQUIRED","message":"callback verification required before dispatch"},"timestamp":"2026-07-12T08:43:14.520198650+02:00"}
+PASS  409 CALLBACK_VERIFICATION_REQUIRED
+── Check 4: dispatcher verify-callback → 200, then triage → succeeds (incident created) ──
+{"id":"6af87827-c798-4400-baa8-7bfd898aa075","tenantId":"11111111-1111-1111-1111-111111111111","requestReference":"SOS-20260712-26259","requesterType":"PUBLIC_ANONYMOUS","requesterActorId":"public-gateway","subjectIdentityMode":"ANONYMOUS","subjectHealthId":null,"subjectTempRef":null,"subjectLabel":null,"emergencyCategory":"MEDICAL","sensitive":false,"severity":"HIGH","description":"Man collapsed at the market","locationLat":null,"locationLng":null,"locationDescription":"Mbare Musika","attachmentsRef":null,"channel":"PUBLIC_WEB","status":"RECEIVED","callbackNumber":"+263771234567","callbackVerified":true,"callbackVerifiedAt":"2026-07-12T08:43:14.566537325+02:00","callbackVerifiedBy":"dispatcher-rig","incidentId":null,"createdAt":"2026-07-12T06:43:14.046541Z","updatedAt":"2026-07-12T08:43:14.571342388+02:00"}
+{"id":"33591ef5-c363-4ddc-9480-657bd46b7ddd","tenantId":"11111111-1111-1111-1111-111111111111","incidentReference":"INC-20260712-A6CAD","incidentType":"INDIVIDUAL","emergencyCategory":"MEDICAL","severity":"HIGH","triageCategory":"ORANGE","sensitive":false,"status":"TRIAGED","title":"MEDICAL emergency","description":"Man collapsed at the market","subjectIdentityMode":"ANONYMOUS","subjectHealthId":null,"subjectTempRef":null,"locationLat":null,"locationLng":null,"locationDescription":"Mbare Musika","affectedAreaRef":null,"facilityId":null,"ndilaRouteRef":null,"nhumeMissionRef":null,"pctEncounterRef":null,"ritoCaseRef":null,"commandPost":null,"incidentCommander":null,"openedAt":"2026-07-12T08:43:14.612718951+02:00","closedAt":null,"createdAt":"2026-07-12T08:43:14.612718951+02:00","updatedAt":"2026-07-12T08:43:14.612718951+02:00"}
+PASS  verify 200 → triage 201, incident=INC-20260712-A6CAD
+── Check 5: rate-limit — hammer public SOS → 429 + Retry-After at threshold ──
+  attempt 1 → 202
+  attempt 2 → 202
+  attempt 3 → 202
+  attempt 4 → 202
+  attempt 5 → 202
+  attempt 6 → 429
+PASS  429 with Retry-After=600 at per-IP threshold (limit=5/600s)
+── Check 6: naming — 202 body carries no internal service names ──
+{"requestReference":"SOS-20260712-6E64D","message":"Your request for help has been received. A responder will call you back on the number you provided to confirm before help is sent. If this is life-threatening, call the emergency numbers shown now."}
+PASS  202 body clean of internal service names
+
+==== gateway-emergency-anon: PASS=7 FAIL=0 ====

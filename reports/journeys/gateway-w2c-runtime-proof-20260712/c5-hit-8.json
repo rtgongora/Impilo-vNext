@@ -1,0 +1,1 @@
+{"error":{"code":"IDEMPOTENCY_KEY_REQUIRED","message":"Idempotency-Key header is required for POST/PUT/PATCH on v1.1 internal endpoints","details":{},"request_id":"0ceb58bc-740b-4ab0-9398-91df3934e7b8","correlation_id":"0ed8ff5f-0ade-4a7d-b35d-c6f30f796ef3"}}

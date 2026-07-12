@@ -1,0 +1,17 @@
+HTTP/1.1 429 
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 93
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Retry-After: 600
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Type: application/json
+Transfer-Encoding: chunked
+Date: Sun, 12 Jul 2026 06:43:14 GMT
+
