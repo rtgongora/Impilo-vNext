@@ -140,9 +140,11 @@ submit route requests to A.
   guidance-service owns citizen-language education; no new service without
   proof-of-no-owner.
 - **Anonymous emergency intake (T4):** public SOS into daidzai `EmergencyController` via
-  the public lane with abuse controls: strict rate-limit, optional-but-encouraged R1
-  callback verification (W1 SMS provider), coarse location until callback, dispatcher
-  "unverified" flag (PD-3). Never gated on sign-in.
+  the public lane with abuse controls: strict rate-limit, coarse location until callback,
+  dispatcher "unverified" flag. Per **PD-3 (decided)**: the request is captured
+  immediately and never gated on sign-in, but **callback verification is required before
+  dispatch** — a dispatcher/responder must reach the callback number (W1 SMS provider)
+  before resources move.
 - Parallel workstreams: (A) find/verify, (B) health-info, (C) SOS intake — disjoint
   services.
 
@@ -243,14 +245,14 @@ shell in W1, pillar parity per wave, Maestro proofs), not a separate wave — do
 | **ENVOY-GATE** | `infra/envoy/envoy.yaml` + `envoy-runtime.yaml` | Divergence reconciled in W0; thereafter both files change together in every public-route slice; single owner per wave; diff-equivalence check. |
 | **BRANCH-GATE** | concurrent branches | CLAUDE.md wave-completion cadence per slice; waves start from fresh rebase; files also touched by active branches flagged in the wave ownership table before work starts. |
 
-## 6. Open product decisions (STOP-for-PO)
+## 6. Product decisions — DECIDED by PO 2026-07-12
 
-| # | Decision | Needed by |
+| # | Decision | Ruling |
 |---|---|---|
-| PD-1 | Brochure vs gateway ownership of `/` and `/services` (interim: coexist, CTA handoff) | final by W7 |
-| PD-2 | R1 Reachable entitlements + data retention for contact-only accounts (recommend: save journeys/drafts, notifications, claim-code tracking; **no** health-record access) | W1 |
-| PD-3 | Fully-anonymous SOS accepted, or callback verification before dispatch? Abuse thresholds | W2 |
-| PD-4 | Citizen health-content authorship: guidance + clinical-knowledge sufficient as SoR, or a content-authoring capability (proof-of-no-owner required first)? | W2 |
-| PD-5 | Journey-draft SoR if drafts must outlive a session | W3 |
-| PD-6 | NHI financing scope at launch: explainers-only vs live enrolment rails | W5 |
-| PD-7 | Guest-cart persistence semantics + R1 cart claim | W6 (with msika lane owner) |
+| PD-1 | Brochure vs gateway ownership of `/` and `/services` | **Coexist**: brochure keeps its paths and adds a prominent "Get Health Services" CTA → `/welcome`. Final ownership revisited by W7. PO emphasis: the website and vNext are all Impilo — one cohesive ecosystem/OS; the seam must never read as two products. |
+| PD-2 | R1 Reachable entitlements + retention | R1 may **save journeys/drafts, receive notifications/reminders, and track claim-coded items** (complaints, SOS callbacks, applications). **No health-record access of any kind.** Drafts expire after 90 days of inactivity. |
+| PD-3 | Anonymous SOS dispatch policy | **Callback verification required before dispatch.** The anonymous request is captured immediately and never blocked; a dispatcher/responder must reach the callback number before resources move. Rate-limits + coarse location until callback stand. (W2 SOS workstream scoped accordingly.) |
+| PD-4 | Citizen health-content SoR | **Guidance + clinical-knowledge own it.** clinical-knowledge-platform owns clinical content, guidance-service owns citizen-language education; W2 adds public read lanes; no new CMS service. |
+| PD-5 | Journey-draft SoR beyond a session | **Sovereign draft owner.** Durable drafts are records: W3 runs proof-of-no-owner and, if none owns them, establishes an owning home (not the stateless BFF — see `experience-bff has no datasource` constraint). Client-side intent (W1) is unaffected. |
+| PD-6 | W5 financing scope | **Full rails**: public plan-browse + live authenticated enrolment, eligibility, bills, receipts, waivers on coverage/COSTA/MusheX. NHI remains a configured-payer placeholder until legislation lands. |
+| PD-7 | Guest-cart semantics | **Client-side guest cart, claimed at sign-in** (converted to a server cart at R1/R2 via the intent handoff). No anonymous server-side cart state. |
