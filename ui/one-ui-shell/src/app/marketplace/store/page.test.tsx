@@ -6,6 +6,10 @@ import MarketplaceStorePage from "./page";
 
 const { get } = vi.hoisted(() => ({ get: vi.fn() }));
 
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: { children: ReactNode; href: string }) => (
     <a href={href} {...props}>

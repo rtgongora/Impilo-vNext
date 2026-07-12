@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Search, Heart, ClipboardList, Store, ShieldCheck } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { ArrowRight, Search, Heart, ClipboardList, Store, ShieldCheck, X } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
-import { useStoreHome, type MsikaListing } from "@/hooks/queries/useMsikaStore";
+import { useStoreHome, useStoreSearch, type MsikaListing } from "@/hooks/queries/useMsikaStore";
 
 const RISK_BADGE: Record<string, string> = {
   UNRESTRICTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -40,8 +41,12 @@ function ListingCard({ listing }: { listing: MsikaListing }) {
 }
 
 export default function MarketplaceStorePage() {
+  const searchParams = useSearchParams();
+  const category = searchParams.get("category")?.trim() || "";
   const home = useStoreHome();
   const featured = home.data?.featured ?? [];
+  const categorySearch = useStoreSearch("", "ALL", category || undefined, { enabled: !!category });
+  const categoryListings = categorySearch.data ?? [];
 
   return (
     <AppLayout>
@@ -52,6 +57,43 @@ export default function MarketplaceStorePage() {
       >
         <div className="space-y-6">
           <NompiloContextualGuidance routePath="/marketplace/store" />
+
+          {category && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">Showing category:</span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-sm font-medium text-primary">
+                {category}
+                <Link
+                  href="/marketplace/store"
+                  aria-label="Clear category filter"
+                  className="rounded-full p-0.5 hover:bg-primary/10"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Link>
+              </span>
+            </div>
+          )}
+
+          {category && (
+            <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-foreground">Listings in this category</h2>
+              {categorySearch.isLoading ? (
+                <p className="mt-4 text-sm text-muted-foreground">Loading listings…</p>
+              ) : categorySearch.isError ? (
+                <p className="mt-4 text-sm text-red-600">Could not load category listings right now.</p>
+              ) : categoryListings.length === 0 ? (
+                <p className="mt-4 text-sm text-muted-foreground">
+                  No published listings in this category yet.
+                </p>
+              ) : (
+                <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {categoryListings.map((l) => (
+                    <ListingCard key={l.listingId} listing={l} />
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Link href="/marketplace/store/search" className="rounded-2xl border border-border bg-card p-4 shadow-sm hover:border-primary">

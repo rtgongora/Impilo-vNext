@@ -11,7 +11,7 @@
  * Every action here drives the tuso FacilityRegulatoryService — no local state.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -24,6 +24,7 @@ import {
   Loader2,
   MailQuestion,
   ShieldAlert,
+  ShoppingBag,
   Stethoscope,
   UserCheck,
 } from "lucide-react";
@@ -72,6 +73,7 @@ import {
   type ChecklistItemView,
   type ComposedChecklistModule,
 } from "@/hooks/queries/useHpaRegulatory";
+import { useResolveRequirementSourcing } from "@/hooks/queries/useRequirementSourcing";
 
 function errMsg(e: unknown, fallback: string): string {
   return (
@@ -131,6 +133,7 @@ export default function FacilityRegulatoryFilePage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <ApplicationsPanel facilityId={facilityId} profile={profile} />
             <InspectionsPanel facilityId={facilityId} profile={profile} />
+            <RequirementSourcingPanel profile={profile} />
             <CommitteePanel facilityId={facilityId} profile={profile} />
             <CertificatesPanel profile={profile} />
             <PractitionerPanel profile={profile} />
@@ -491,6 +494,72 @@ function InspectionsPanel({ facilityId, profile }: { facilityId: number; profile
           </p>
         )}
       </div>
+    </Panel>
+  );
+}
+
+/* ─── Rectification sourcing: open findings → marketplace supplier categories ─── */
+
+function RequirementSourcingPanel({ profile }: { profile: FacilityProfile }) {
+  const openFindings = useMemo(
+    () => profile.findings.filter((f) => f.rectificationStatus === "OPEN"),
+    [profile.findings],
+  );
+  const codes = useMemo(
+    () => [...new Set(openFindings.map((f) => f.checklistItemCode))],
+    [openFindings],
+  );
+  const resolveQuery = useResolveRequirementSourcing(codes);
+  const resolutions = resolveQuery.data?.data.resolutions ?? {};
+
+  return (
+    <Panel title="Rectification sourcing" icon={ShoppingBag}>
+      <p className="mb-3 text-[11px] text-muted-foreground">
+        Marketplace sellers in the matching category for each open finding — a sourcing aid, not an endorsement.
+      </p>
+      {openFindings.length === 0 && (
+        <p className="text-xs text-muted-foreground">No open findings awaiting rectification.</p>
+      )}
+      {codes.length > 0 && resolveQuery.isLoading && (
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" /> Resolving supplier categories…
+        </p>
+      )}
+      {codes.length > 0 && resolveQuery.isError && (
+        <p className="text-xs text-red-600">Supplier categories are unavailable right now.</p>
+      )}
+      <ul className="space-y-2">
+        {codes.map((code) => {
+          const resolution = resolutions[code];
+          return (
+            <li key={code} className="rounded-md border border-border/60 p-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-mono text-[11px] text-foreground">{code}</span>
+                {resolution ? (
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-muted-foreground">{resolution.categoryLabel}</span>
+                    <Link
+                      href={`/marketplace/store?category=${encodeURIComponent(resolution.categoryCode)}`}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      {resolution.publishedListingCount} supplier
+                      {resolution.publishedListingCount === 1 ? "" : "s"} on marketplace
+                    </Link>
+                    {resolution.restricted && (
+                      <span className="text-[10px] text-amber-700">licensed suppliers only</span>
+                    )}
+                  </span>
+                ) : (
+                  !resolveQuery.isLoading &&
+                  !resolveQuery.isError && (
+                    <span className="text-[11px] text-muted-foreground">No marketplace category mapped</span>
+                  )
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </Panel>
   );
 }

@@ -348,6 +348,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/marketplace/store/search", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Search Listings", navLabel: "Search", navZone: "life" },
   { path: "/marketplace/store/listing/[id]", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Listing", navLabel: "Listing", navZone: "life" },
   { path: "/marketplace/store/activity", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "My Marketplace Activity", navLabel: "My Activity", navZone: "life" },
+  { path: "/marketplace/establishment-guide", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Set Up Your Practice", navLabel: "Establishment Guide", navZone: "life" },
   { path: "/marketplace/seller", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Seller Centre", navLabel: "Seller Centre", navZone: "work" },
   { path: "/marketplace/seller/listings", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "My Listings", navLabel: "My Listings", navZone: "work" },
   { path: "/marketplace/seller/listings/new", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "New Listing", navLabel: "New Listing", navZone: "work" },
@@ -840,7 +841,9 @@ export const ROUTES: RouteDefinition[] = [
 // Nhume inbound (Jul 2026): +1 net-new route — /nhume/inbound receiving & handover surface.
 // HPA regulatory UX (Jul 2026): +2 net-new routes — /professional/pic-nominations (practitioner
 // PIC-nomination ledger) and /verify/facility-certificate (public certificate verifier).
-export const EXPECTED_ROUTE_COUNT = 700;
+// Requirement sourcing (Jul 2026): +1 — /marketplace/establishment-guide (HPA requirement →
+// marketplace supplier guide for prospective practice founders).
+export const EXPECTED_ROUTE_COUNT = 701;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

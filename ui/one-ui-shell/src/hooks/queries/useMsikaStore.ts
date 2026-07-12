@@ -83,13 +83,15 @@ export function useStoreHome() {
   });
 }
 
-export function useStoreSearch(q: string, risk: string) {
+export function useStoreSearch(q: string, risk: string, category?: string, opts?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: ["msika-store", "search", q, risk],
+    queryKey: ["msika-store", "search", q, risk, category ?? ""],
+    enabled: opts?.enabled ?? true,
     queryFn: async () => {
       const params = new URLSearchParams();
       if (q) params.set("q", q);
       if (risk && risk !== "ALL") params.set("risk", risk);
+      if (category) params.set("category", category);
       const qs = params.toString();
       const resp = await apiClient.get<BffEnvelope<Record<string, unknown>>>(
         `/internal/v1/marketplace/store/search${qs ? `?${qs}` : ""}`,
