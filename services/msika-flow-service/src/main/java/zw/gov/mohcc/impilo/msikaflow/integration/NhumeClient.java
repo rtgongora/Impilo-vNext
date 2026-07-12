@@ -46,7 +46,7 @@ public class NhumeClient {
     }
 
     /**
-     * POST /api/v1/nhume/deliveries. Never throws — a Nhume-side failure is logged and
+     * POST /internal/v1/nhume/deliveries (the V11HeaderFilter-covered path; /api/v1 has no RequestContext). Never throws — a Nhume-side failure is logged and
      * treated as "no dispatch id yet", not an order-blocking error.
      */
     public Optional<NhumeDeliveryCreated> createMarketplaceDelivery(OrderEntity order,
@@ -96,8 +96,8 @@ public class NhumeClient {
             body.put("metadata", metadata);
 
             ResponseEntity<String> response = restClient.post()
-                    .uri("/api/v1/nhume/deliveries")
-                    .headers(h -> copyTrustHeaders(inbound, h))
+                    .uri("/internal/v1/nhume/deliveries")
+                    .headers(h -> copyTrustHeaders(inbound, h, order.getOrderId()))
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
@@ -107,7 +107,10 @@ public class NhumeClient {
                 log.warn("Nhume delivery create failed for order {}: HTTP {}", order.getOrderId(), response.getStatusCode());
                 return Optional.empty();
             }
-            JsonNode data = objectMapper.readTree(response.getBody()).path("data");
+            // Nhume's DeliveryResponse is the bare object (snake_case, no {data} wrapper);
+            // tolerate a wrapped form for forward-compat.
+            JsonNode root = objectMapper.readTree(response.getBody());
+            JsonNode data = root.hasNonNull("data") && root.get("data").isObject() ? root.get("data") : root;
             String deliveryId = data.hasNonNull("delivery_id") ? data.get("delivery_id").asText()
                     : data.hasNonNull("deliveryId") ? data.get("deliveryId").asText() : null;
             if (deliveryId == null || deliveryId.isBlank()) {
@@ -122,8 +125,14 @@ public class NhumeClient {
         }
     }
 
-    /** MushexClient {@code copyTrustHeaders} idiom, reused for the Nhume hop. */
-    private static void copyTrustHeaders(HttpServletRequest inbound, HttpHeaders target) {
+    /**
+     * MushexClient {@code copyTrustHeaders} idiom, reused for the Nhume hop — plus the
+     * v1.1 hard-required set Nhume's tech-companion V11HeaderFilter enforces
+     * (MISSING_REQUIRED_HEADER defect family): X-Pod-ID forwarded or defaulted,
+     * X-Request-ID synthesized per call, Idempotency-Key stable per order so a
+     * retried route never double-creates the delivery.
+     */
+    private static void copyTrustHeaders(HttpServletRequest inbound, HttpHeaders target, String orderId) {
         if (inbound == null) {
             return;
         }
@@ -137,6 +146,12 @@ public class NhumeClient {
         copyIfPresent(inbound, target, TrustHeaderExtractor.H_WORKSPACE_ID);
         copyIfPresent(inbound, target, TrustHeaderExtractor.H_SHIFT_ID);
         copyIfPresent(inbound, target, "Authorization");
+        String pod = inbound.getHeader("X-Pod-ID");
+        target.add("X-Pod-ID", pod != null && !pod.isBlank() ? pod : "national-spine");
+        target.add("X-Request-ID", java.util.UUID.randomUUID().toString());
+        String idempotencyKey = "msika-flow-dispatch:" + orderId;
+        target.add("Idempotency-Key", idempotencyKey);
+        target.add("X-Idempotency-Key", idempotencyKey);
         target.add("x-envoy-internal", "true");
     }
 

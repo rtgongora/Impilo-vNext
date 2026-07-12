@@ -123,7 +123,7 @@ public class CitizenMarketplaceController {
             @Valid @RequestBody ServiceRequestBody body) {
 
         ObjectNode orderBody = objectMapper.createObjectNode();
-        orderBody.put("orderType", "SERVICE_BOOKING");
+        orderBody.put("orderType", "SERVICE_BOOKING_ORDER");
         orderBody.put("patientCpid", actorId);
         ArrayNode lines = orderBody.putArray("lines");
         ObjectNode line = lines.addObject();

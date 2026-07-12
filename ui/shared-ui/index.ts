@@ -62,6 +62,28 @@ export type { StatusIndicatorProps } from "./components/StatusIndicator";
 export { DataTable } from "./components/DataTable";
 export type { DataTableProps, Column } from "./components/DataTable";
 
+// Adaptive workspace / responsive layout primitives
+export { FormGrid, FormField, FormSection } from "./components/FormGrid";
+export type { FormGridProps, FormFieldProps, FormSectionProps } from "./components/FormGrid";
+
+export { StickyActionBar } from "./components/StickyActionBar";
+export type { StickyActionBarProps } from "./components/StickyActionBar";
+
+export { Stepper } from "./components/Stepper";
+export type { StepperProps, StepperStep } from "./components/Stepper";
+
+export { MoreBelow } from "./components/MoreBelow";
+export type { MoreBelowProps } from "./components/MoreBelow";
+
+export { SplitView } from "./components/SplitView";
+export type { SplitViewProps } from "./components/SplitView";
+
+export { FullHeightWorkspace, WorkspaceScrollPane } from "./components/FullHeightWorkspace";
+export type { FullHeightWorkspaceProps, WorkspaceScrollPaneProps } from "./components/FullHeightWorkspace";
+
+export { AdaptiveGrid } from "./components/AdaptiveGrid";
+export type { AdaptiveGridProps } from "./components/AdaptiveGrid";
+
 // Voice dictation — shared contracts (implementations live in shells / apps)
 export type {
   DictationAuditMetadata,

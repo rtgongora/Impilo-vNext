@@ -8,14 +8,15 @@ EXIT_CODE=0
 echo "=== Verifying Remediated Pages ==="
 echo ""
 
-# List of pages that were remediated in the adversarial wave
+# List of pages that were remediated in the adversarial wave.
+# The msika-flow-ops / msika-flow-portal sidecar apps were retired in the msika
+# completion wave (f0c3c2a65) — their remediated capabilities live in the
+# one-ui-shell marketplace pages, so those are what we verify now.
 declare -A REMEDIATED_PAGES
-REMEDIATED_PAGES["ui/msika-flow-ops/src/app/(ops)/orders/page.tsx"]="opsApi.searchOrders"
-REMEDIATED_PAGES["ui/msika-flow-ops/src/app/(ops)/vendors/page.tsx"]="opsApi.listVendors"
-REMEDIATED_PAGES["ui/msika-flow-ops/src/app/(ops)/audit/page.tsx"]="opsApi.listAuditEvents"
-REMEDIATED_PAGES["ui/msika-flow-portal/src/app/(portal)/browse/page.tsx"]="msikaFlowApi.searchCatalog"
-REMEDIATED_PAGES["ui/msika-flow-portal/src/app/(portal)/cart/page.tsx"]="msikaFlowApi.getOrder"
-REMEDIATED_PAGES["ui/msika-flow-portal/src/app/(portal)/substitutions/page.tsx"]="msikaFlowApi.listSubstitutions"
+REMEDIATED_PAGES["ui/one-ui-shell/src/app/marketplace/ops/page.tsx"]="useMarketplaceOpsVendors"
+REMEDIATED_PAGES["ui/one-ui-shell/src/app/marketplace/store/page.tsx"]="useStoreSearch"
+REMEDIATED_PAGES["ui/one-ui-shell/src/app/marketplace/cart/page.tsx"]="useCommerceCart"
+REMEDIATED_PAGES["ui/one-ui-shell/src/app/marketplace/substitutions/page.tsx"]="useCommerceSubstitutions"
 REMEDIATED_PAGES["ui/ops-console/src/app/(ops)/vito/page.tsx"]="vitoApi.listClients"
 REMEDIATED_PAGES["ui/butano-web/src/app/(ops)/reconciliation/page.tsx"]="butanoApi.listReconciliationJobs"
 
@@ -69,13 +70,11 @@ check_api_method() {
   fi
 }
 
-check_api_method "ui/msika-flow-ops/src/lib/opsApi.ts" "searchOrders"
-check_api_method "ui/msika-flow-ops/src/lib/opsApi.ts" "listVendors"
-check_api_method "ui/msika-flow-ops/src/lib/opsApi.ts" "listAuditEvents"
-check_api_method "ui/msika-flow-ops/src/lib/opsApi.ts" "reinstateVendor"
-check_api_method "ui/msika-flow-portal/src/lib/msikaFlowApi.ts" "searchCatalog"
-check_api_method "ui/msika-flow-portal/src/lib/msikaFlowApi.ts" "listSubstitutions"
-check_api_method "ui/msika-flow-portal/src/lib/msikaFlowApi.ts" "rejectSubstitution"
+# Sidecar api clients retired with the apps — the shell's commerce hooks carry
+# the same capabilities and are asserted here instead.
+check_api_method "ui/one-ui-shell/src/hooks/queries/useCommerceSubstitutions.ts" "useCommerceSubstitutions"
+check_api_method "ui/one-ui-shell/src/hooks/queries/useCommerceSubstitutions.ts" "useRejectCommerceSubstitution"
+check_api_method "ui/one-ui-shell/src/hooks/queries/useCommerceFlow.ts" "useCommerceCart"
 check_api_method "ui/butano-web/src/lib/butanoApi.ts" "listReconciliationJobs"
 
 echo ""

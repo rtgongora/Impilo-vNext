@@ -1,0 +1,40 @@
+== RIG: infra + services
+   msika (28086): 200
+   flow (28100): 200
+   mushex (28102): 200
+   nhume (28210): 200
+   costa (28101): 200
+   bff (28160): 200
+   PASS: 6/6 services healthy
+== J1: buyer money loop (cart → PAID → Costa SETTLED → refund)
+   PASS: real cart pricing: line=42.50 from listing snapshot
+   PASS: order payee = listing seller (VEND-J1)
+   PASS: REAL MusheX intent minted: 01KXADXTGHQWKWDQAVCZRZ97WV
+   PASS: intent exists in MusheX DB (status=PAID)
+   PASS: MONEY LOOP: order PAID via Kafka payment.status.changed
+   settlement: 
+   PASS: Costa charge SETTLED for the order
+   PASS: costa_charge_ref written back to settlement (01KXADXVYYW4WZDPR3KB6PQWMX)
+   PASS: REFUND LOOP: order REFUNDED via mushex.refund.status.changed
+   PASS: Costa charge marked REFUNDED
+== J1b: HOME_DELIVERY → Nhume mission → write-backs → COMPLETED
+   PASS: Nhume mission created + id stored on plan (40bd613e-c3ab-492b-bbf5-f5bce3298361)
+   nhume row: MARKETPLACE|01KXADY5V6S858654H5K7R6S61
+   PASS: PICKED_UP write-back → OUT_FOR_DELIVERY
+   PASS: DELIVERED write-back → DELIVERED
+   PASS: order COMPLETED (previously unreachable state)
+== J2: vendor onboard → approve → storefront auto-provisioned (Kafka) → bind-actor
+   PASS: vendor applied (01KXADYC9Y706M3442175F410D)
+   PASS: vendor ACTIVE after ops approve
+   PASS: storefront AUTO-PROVISIONED via msika.flow.vendor.approved (Kafka consumer live)
+   PASS: bind-actor + by-actor resolve (vendor/me seam)
+== J3: operator — suspend cascade + reinstate + audit
+   PASS: vendor SUSPENDED via ops endpoint
+   PASS: storefront SUSPENDED via vendor.suspended cascade (Kafka)
+   PASS: vendor reinstated
+   PASS: ops audit feed returns entries
+== J4: citizen mobile via experience-bff
+   PASS: citizen services discovery responds through BFF
+   PASS: citizen request created (01KXADYQYA5Q0V3A002X4E070J)
+   PASS: truthful cancel passthrough
+RESULT: PASS=25 FAIL=0

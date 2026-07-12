@@ -85,6 +85,9 @@ run_spec "governance-intake"          "e2e/journeys/governance-intake.journey.sp
 run_spec "workforce-management"       "e2e/journeys/workforce-management.journey.spec.ts"       "journeys"
 run_spec "facility-regulatory"        "e2e/journeys/facility-regulatory.journey.spec.ts"        "journeys"
 run_spec "facility-operations"        "e2e/journeys/facility-operations.journey.spec.ts"        "journeys"
+run_spec "msika-buyer"                "e2e/journeys/msika-buyer.journey.spec.ts"                "journeys"
+run_spec "msika-seller"               "e2e/journeys/msika-seller.journey.spec.ts"               "journeys"
+run_spec "msika-operator"             "e2e/journeys/msika-operator.journey.spec.ts"             "journeys"
 # Two-party telemedicine with real media — already proven spec, included as the
 # teleconsult golden journey (citizen waits tokenless → doctor admits → media).
 run_spec "telehealth-patient-flow"    "e2e/telehealth-patient-flow.spec.ts"                     "chromium"

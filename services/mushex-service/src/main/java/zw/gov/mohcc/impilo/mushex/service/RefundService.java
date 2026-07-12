@@ -133,6 +133,9 @@ public class RefundService {
         publishEvent("REFUND", refund.getRefundId(), "REFUND_REQUESTED",
                 Map.of(
                         "refundId", refund.getRefundId(),
+                        // Self-describing: the wire message is the bare payload (no
+                        // envelope/eventType), so consumers need the status inline.
+                        "status", "REQUESTED",
                         "intentId", intentId,
                         "billId", intent.getSourceId() != null ? intent.getSourceId() : "",
                         "amount", amount.toPlainString(),
@@ -140,7 +143,31 @@ public class RefundService {
                 ),
                 ctx.tenantId());
 
+        // Sandbox parity with apply-simulation-outcome-on-create: an Impilo-simulation
+        // intent has no real payment adapter to call back, so its refund auto-processes
+        // under the same flag — making the refund observable end-to-end (REFUND_COMPLETED
+        // on mushex.refund.status.changed) exactly like a production adapter would.
+        if (properties.getAdapters().getSandbox().isApplySimulationOutcomeOnCreate()
+                && isImpiloSimulation(intent.getMetadata())) {
+            return processRefund(refund.getRefundId(), "SANDBOX_SIMULATION");
+        }
+
         return refund;
+    }
+
+    private boolean isImpiloSimulation(String metadataJson) {
+        if (metadataJson == null || metadataJson.isBlank()) {
+            return false;
+        }
+        try {
+            com.fasterxml.jackson.databind.JsonNode n = objectMapper.readTree(metadataJson);
+            if (n.has("impilo_simulation") && n.get("impilo_simulation").asBoolean()) {
+                return true;
+            }
+            return n.has("impiloSimulation") && n.get("impiloSimulation").asBoolean();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -188,6 +215,7 @@ public class RefundService {
         publishEvent("REFUND", refundId, "REFUND_COMPLETED",
                 Map.of(
                         "refundId", refundId,
+                        "status", "COMPLETED",
                         "intentId", refund.getIntentId(),
                         "billId", intent.getSourceId() != null ? intent.getSourceId() : "",
                         "adapterRef", adapterRef != null ? adapterRef : "",
@@ -238,6 +266,7 @@ public class RefundService {
         publishEvent("REFUND", refundId, "REFUND_FAILED",
                 Map.of(
                         "refundId", refundId,
+                        "status", "FAILED",
                         "intentId", refund.getIntentId(),
                         "billId", intent.getSourceId() != null ? intent.getSourceId() : "",
                         "reason", reason != null ? reason : ""

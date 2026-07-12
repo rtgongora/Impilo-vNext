@@ -134,6 +134,17 @@ public class OrderStateMachine {
     }
 
     /**
+     * Persists caller-supplied context JSON on the order (citizen request
+     * notes/preferredDate via the BFF). Not a state transition — no event emitted.
+     */
+    @Transactional
+    public OrderEntity attachMetadata(String orderId, String metadataJson) {
+        OrderEntity order = getOrder(orderId);
+        order.setMetadata(metadataJson);
+        return orderRepository.save(order);
+    }
+
+    /**
      * Records a domain event that does not change the order's status (e.g. Rx token
      * attachment). {@code fromState}/{@code toState} are both the current status so
      * the audit trail reads as "something happened while in this state", not a

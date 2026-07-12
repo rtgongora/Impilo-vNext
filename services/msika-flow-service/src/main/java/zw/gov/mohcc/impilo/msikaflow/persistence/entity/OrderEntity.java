@@ -76,6 +76,11 @@ public class OrderEntity {
     @Column(name = "restrictions_snapshot", columnDefinition = "jsonb")
     private String restrictionsSnapshot;
 
+    /** Caller-supplied context (citizen request notes/preferredDate via the BFF). */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata", columnDefinition = "jsonb")
+    private String metadata;
+
     @Column(name = "idempotency_key", unique = true)
     private String idempotencyKey;
 
@@ -237,6 +242,14 @@ public class OrderEntity {
 
     public void setRestrictionsSnapshot(String restrictionsSnapshot) {
         this.restrictionsSnapshot = restrictionsSnapshot;
+    }
+
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
     }
 
     public String getIdempotencyKey() {
