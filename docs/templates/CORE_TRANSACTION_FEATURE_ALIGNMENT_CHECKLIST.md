@@ -28,3 +28,17 @@ Use this checklist for every new feature, API, UI flow, or integration.
 - [ ] 24. What accessibility needs must be considered?
 - [ ] 25. What omnichannel feedback opportunity exists?
 - [ ] 26. Does this help the health system act better?
+
+## Gateway addendum (citizen-facing features)
+
+Apply when the feature has any citizen-facing surface
+(see [`docs/doctrine/health-services-gateway-doctrine.md`](../doctrine/health-services-gateway-doctrine.md)).
+
+- [ ] 27. Which intent pillar does this serve, and is the citizen-facing label free of internal service names?
+- [ ] 28. What is the minimum trust rung (R0–R5) for this ACTION (not this user), and where is it enforced (PolicyEngine `min_loa` / assurance policy)?
+- [ ] 29. If trust must step up, does it happen in place with journey context preserved (fields, documents, return route, language, accessibility)?
+- [ ] 30. Is "Sign in / Create account" offered but never forced where the action is public or low-risk?
+- [ ] 31. Is Emergency Help reachable from this surface, and never blocked by identity, coverage, or payment state?
+- [ ] 32. Which coverage/payment safeguard applies (no emergency denial, no visible vulnerability flags, minimal payer disclosure, no silent rejection)?
+- [ ] 33. Does mobile share the same workflow state, with honest offline labels (saved-on-phone / queued / submitted)?
+- [ ] 34. Where does Nompilo explain the trust escalation, and is the explanation auditable without exposing security internals?
