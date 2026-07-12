@@ -32,6 +32,11 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                // Anonymous public practitioner register verification (gateway public lane).
+                // The experience-bff calls this tokenless with synthesized trust headers; the
+                // TrustContextFilter still requires those headers, and PublicPractitionerVerificationController
+                // returns only the allow-listed register-status DTO — everything else stays fail-closed.
+                .requestMatchers("/v1/public/practitioners/**").permitAll()
                 .requestMatchers(disableOauthForTests ? "/v1/**" : "/__disabled_test_auth_bypass__").permitAll()
                 .anyRequest().authenticated()
             );
