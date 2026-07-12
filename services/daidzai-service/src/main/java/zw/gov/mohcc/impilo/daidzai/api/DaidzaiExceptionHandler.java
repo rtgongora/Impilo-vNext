@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import zw.gov.mohcc.impilo.daidzai.core.CallbackVerificationRequiredException;
+
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -16,6 +18,12 @@ public class DaidzaiExceptionHandler {
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<Map<String, Object>> notFound(NoSuchElementException e) {
         return body(HttpStatus.NOT_FOUND, "NOT_FOUND", e.getMessage());
+    }
+
+    /** PD-3 dispatch gate — triage refused until the callback is verified. */
+    @ExceptionHandler(CallbackVerificationRequiredException.class)
+    public ResponseEntity<Map<String, Object>> callbackRequired(CallbackVerificationRequiredException e) {
+        return body(HttpStatus.CONFLICT, "CALLBACK_VERIFICATION_REQUIRED", e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
