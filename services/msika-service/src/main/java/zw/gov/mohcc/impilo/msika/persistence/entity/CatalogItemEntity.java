@@ -34,6 +34,9 @@ public class CatalogItemEntity {
     @Column(name = "tags", columnDefinition = "TEXT[]")
     private String[] tags;
 
+    @Column(name = "sourcing_category_code", length = 64)
+    private String sourcingCategoryCode;
+
     @JdbcTypeCode(SqlTypes.JSON)
 
 
@@ -100,6 +103,8 @@ public class CatalogItemEntity {
     public String[] getSynonyms() { return synonyms; }
     public void setSynonyms(String[] synonyms) { this.synonyms = synonyms; }
     public String[] getTags() { return tags; }
+    public String getSourcingCategoryCode() { return sourcingCategoryCode; }
+    public void setSourcingCategoryCode(String sourcingCategoryCode) { this.sourcingCategoryCode = sourcingCategoryCode; }
     public void setTags(String[] tags) { this.tags = tags; }
     public String getRestrictions() { return restrictions; }
     public void setRestrictions(String restrictions) { this.restrictions = restrictions; }
