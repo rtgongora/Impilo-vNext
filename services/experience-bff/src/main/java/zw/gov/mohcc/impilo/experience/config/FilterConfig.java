@@ -11,6 +11,22 @@ import zw.gov.mohcc.impilo.companion.idempotency.IdempotencyService;
 @Configuration
 public class FilterConfig {
 
+    /**
+     * Anonymous public gateway lane: synthesize missing platform headers on GETs under
+     * the single public namespace so the V11HeaderFilter below does not 400 genuinely
+     * anonymous callers (ADR gateway-public-lane-security; rig-caught W1 defect).
+     * Must stay ordered before {@link #v11HeaderFilter()}.
+     */
+    @Bean
+    public FilterRegistrationBean<PublicGatewayAnonymousDefaultsFilter> publicGatewayAnonymousDefaultsFilter() {
+        FilterRegistrationBean<PublicGatewayAnonymousDefaultsFilter> reg = new FilterRegistrationBean<>();
+        reg.setFilter(new PublicGatewayAnonymousDefaultsFilter());
+        reg.addUrlPatterns("/internal/v1/public/gateway/*");
+        reg.setOrder(Ordered.HIGHEST_PRECEDENCE + 9);
+        reg.setName("publicGatewayAnonymousDefaultsFilter");
+        return reg;
+    }
+
     @Bean
     public FilterRegistrationBean<V11HeaderFilter> v11HeaderFilter() {
         FilterRegistrationBean<V11HeaderFilter> reg = new FilterRegistrationBean<>();
