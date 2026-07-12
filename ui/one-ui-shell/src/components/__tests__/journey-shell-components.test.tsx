@@ -51,6 +51,10 @@ vi.mock("@/components/navigation/ExperienceSidebar", () => ({
   ExperienceSidebar: () => null,
 }));
 
+vi.mock("@/components/navigation/NavRail", () => ({
+  NavRail: () => null,
+}));
+
 vi.mock("@/components/shell/ShellTopAccountActions", () => ({
   ShellTopAccountActions: () => <div data-testid="shell-top-account-actions">account</div>,
 }));

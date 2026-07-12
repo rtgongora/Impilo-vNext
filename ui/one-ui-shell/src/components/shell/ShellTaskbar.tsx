@@ -5,16 +5,19 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Building2,
   ChevronDown,
+  ChevronUp,
   FolderOpen,
   Headphones,
   Layers,
   LayoutGrid,
   LifeBuoy,
   MessageSquare,
+  PanelBottomClose,
   Search,
   Siren,
 } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useLayoutPrefsStore } from "@/hooks/useLayoutPrefsStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import {
   findShellAppByCode,
@@ -75,6 +78,11 @@ export function ShellTaskbar() {
 
   const sosDialogOpen = useShellStore((s) => s.sosDialogOpen);
   const setSosDialogOpen = useShellStore((s) => s.setSosDialogOpen);
+
+  const taskbarMinimized = useLayoutPrefsStore((s) => s.taskbarMinimized);
+  const focusMode = useLayoutPrefsStore((s) => s.focusMode);
+  const setTaskbarMinimized = useLayoutPrefsStore((s) => s.setTaskbarMinimized);
+  const setFocusMode = useLayoutPrefsStore((s) => s.setFocusMode);
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -179,6 +187,35 @@ export function ShellTaskbar() {
     },
     [closeOtherTasks, closeTask, minimizeTask, openNewTaskInstance, router, setActiveTask],
   );
+
+  // Minimised: dock collapses to a small restore handle so focused work
+  // (data entry, consultations, wizards) gets the full viewport height.
+  if (taskbarMinimized || focusMode) {
+    return (
+      <>
+        <ShellSosDialog open={sosDialogOpen} onClose={() => setSosDialogOpen(false)} />
+        <div
+          className="fixed right-3 z-[10000]"
+          style={{ bottom: `max(6px, env(safe-area-inset-bottom, 0px))` }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setTaskbarMinimized(false);
+              setFocusMode(false);
+            }}
+            aria-label="Show taskbar (Ctrl+Alt+B)"
+            title="Show taskbar (Ctrl+Alt+B)"
+            data-testid="shell-taskbar-handle"
+            className="flex h-8 items-center gap-1 rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface)]/95 px-2.5 shadow-impilo-floating backdrop-blur-xl transition hover:bg-[color:var(--primary-soft)]"
+          >
+            <ImpiloBrandLogo variant="mark" size={16} className="h-4 w-4" />
+            <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -398,6 +435,13 @@ export function ShellTaskbar() {
           >
             Pin defaults
           </button>
+
+          <DockButton
+            onClick={() => setTaskbarMinimized(true)}
+            ariaLabel="Minimize taskbar (Ctrl+Alt+B)"
+          >
+            <PanelBottomClose className="h-4 w-4 text-muted-foreground" />
+          </DockButton>
         </nav>
       </div>
     </>

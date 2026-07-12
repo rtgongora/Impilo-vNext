@@ -5,8 +5,10 @@
  * Used by all route pages to display correct headings/labels from 02.
  */
 
+import { usePathname } from "next/navigation";
 import { ModuleWorkspaceHero } from "@/components/workspace/ModuleWorkspaceHero";
 import { useInferredServiceSlug } from "@/hooks/useInferredServiceSlug";
+import { isFocusedWorkspaceRoute } from "@/lib/shell/workspace-context";
 
 interface PageShellProps {
   title: string;
@@ -28,6 +30,11 @@ interface PageShellProps {
 
 export function PageShell({ title, subtitle, icon, hideHeader, serviceSlug, density, emptyStateLabel, children }: PageShellProps) {
   const resolvedSlug = useInferredServiceSlug(serviceSlug);
+  const pathname = usePathname();
+  // Inside opened applications/records the hero auto-compacts so the task
+  // gets the vertical space; explicit density (either value) still wins.
+  const resolvedDensity =
+    density ?? (pathname && isFocusedWorkspaceRoute(pathname) ? "compact" : "hero");
 
   return (
     <div className={hideHeader ? "" : "space-y-5"}>
@@ -37,7 +44,7 @@ export function PageShell({ title, subtitle, icon, hideHeader, serviceSlug, dens
           subtitle={subtitle}
           serviceSlug={resolvedSlug}
           icon={resolvedSlug ? undefined : icon}
-          density={density}
+          density={resolvedDensity}
         />
       ) : null}
       {children || (

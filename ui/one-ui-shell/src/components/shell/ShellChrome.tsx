@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useLayoutPrefsStore } from "@/hooks/useLayoutPrefsStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { shouldShowExperienceShell } from "@/lib/shell/shell-visibility";
 import { EmergencyHelpButton } from "@/components/public/EmergencyHelpButton";
@@ -41,6 +42,13 @@ export function ShellChrome() {
     if (!show) return;
 
     function onKeyDown(e: KeyboardEvent) {
+      // Taskbar minimise/restore — works during data entry too (fields keep focus).
+      if ((e.key === "b" || e.key === "B") && e.ctrlKey && e.altKey) {
+        e.preventDefault();
+        useLayoutPrefsStore.getState().toggleTaskbarMinimized();
+        return;
+      }
+
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
         if ((e.key === "k" || e.key === "K") && (e.ctrlKey || e.metaKey)) {

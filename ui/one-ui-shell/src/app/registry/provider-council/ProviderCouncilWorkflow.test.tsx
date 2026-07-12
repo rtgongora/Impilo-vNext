@@ -23,6 +23,7 @@ vi.mock("@/components/learning/CouncilLearningEvidencePanel", () => ({
 vi.mock("next/navigation", () => ({
   useSearchParams: () =>
     new URLSearchParams("councilId=1&workflowStates=SUBMITTED,READY_FOR_REVIEW"),
+  usePathname: () => "/registry/provider-council",
 }));
 
 vi.mock("@/hooks/queries/useProviderCouncil", async (importOriginal) => {
