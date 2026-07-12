@@ -14,6 +14,11 @@
 
 Full doctrine: [`docs/doctrine/health-os-doctrine.md`](docs/doctrine/health-os-doctrine.md)
 
+> **Gateway doctrine line**: One front door, many intents; trust rises with the action,
+> never restarts the journey; care before coverage; help before identity.
+
+Citizen gateway doctrine: [`docs/doctrine/health-services-gateway-doctrine.md`](docs/doctrine/health-services-gateway-doctrine.md)
+
 ## Workflow Rules
 
 ### Small-Commit Workflow
