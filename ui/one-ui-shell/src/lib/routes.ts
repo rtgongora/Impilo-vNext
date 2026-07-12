@@ -326,6 +326,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/registry/providers/[id]", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Provider Profile", navLabel: "Provider", navZone: "professional" },
   { path: "/registry/provider-council/self-service", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Council self-service", navLabel: "Council self-service", navZone: "professional" },
   { path: "/registry/provider-council/council-workspace", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Council operations", navLabel: "Council ops", navZone: "professional" },
+  { path: "/registry/facility-classification", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Facility classification reconciliation", navLabel: "Classification", navZone: "professional" },
   { path: "/registry/facilities", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Facility Registry", navLabel: "Facilities", navZone: "professional" },
   { path: "/registry/facilities/[id]", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Facility Profile", navLabel: "Facility", navZone: "professional" },
   { path: "/registry/terminology", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Terminology Browser", navLabel: "Terminology", navZone: "professional" },
@@ -852,7 +853,7 @@ export const ROUTES: RouteDefinition[] = [
 // vendor*→VENDOR_FULFILMENT, cart+orders/[id](+pay)→auth (citizens can buy); COMMERCE membership untouched.
 // Gateway W2 (Jul 2026): +2 — /verify/practitioner (public health-professional register verifier)
 // and /welcome/health-info (public citizen health-information pillar).
-export const EXPECTED_ROUTE_COUNT = 704;
+export const EXPECTED_ROUTE_COUNT = 705;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
