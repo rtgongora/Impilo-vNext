@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Heart, Flag, Lock, ShoppingCart, Stethoscope } from "lucide-react";
+import { ArrowLeft, Heart, Flag, Lock, Stethoscope } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
+import { AddToCartButton } from "@/components/marketplace/AddToCartButton";
 import { useListing, useFavouriteListing, useReportListing } from "@/hooks/queries/useMsikaStore";
 
 const REGULATED = new Set(["HIGH_RISK", "REGULATED"]);
@@ -23,6 +24,7 @@ export default function ListingDetailPage() {
   const listing = listingQuery.data;
   const regulated = listing ? REGULATED.has(listing.riskClassification) : false;
   const clinical = !!listing?.clinicalRoute;
+  const bookable = listing?.fulfilmentMode === "IN_PERSON" || listing?.fulfilmentMode === "VIRTUAL";
 
   return (
     <AppLayout>
@@ -50,7 +52,7 @@ export default function ListingDetailPage() {
                 </div>
                 {listing.summary ? <p className="mt-3 text-sm text-foreground">{listing.summary}</p> : null}
                 <div className="mt-4 text-sm text-muted-foreground">
-                  Price: <span className="font-medium text-foreground">{listing.priceDisplay ?? "Confirmed by Costa at checkout"}</span>
+                  Price: <span className="font-medium text-foreground">{listing.priceDisplay ?? "Set by the seller — confirmed at checkout"}</span>
                 </div>
               </section>
 
@@ -72,13 +74,15 @@ export default function ListingDetailPage() {
                   >
                     <Stethoscope className="h-4 w-4" /> Request via care
                   </Link>
-                ) : (
+                ) : bookable ? (
                   <Link
-                    href={`/marketplace/cart?listing=${listing.listingId}`}
+                    href={`/marketplace/bookings?listing=${listing.listingId}`}
                     className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground"
                   >
-                    <ShoppingCart className="h-4 w-4" /> {listing.fulfilmentMode === "IN_PERSON" || listing.fulfilmentMode === "VIRTUAL" ? "Book" : "Order"}
+                    Book
                   </Link>
+                ) : (
+                  <AddToCartButton listingId={listing.listingId} label="Add to cart" />
                 )}
                 <button
                   onClick={() => favourite.mutate(listing.listingId)}

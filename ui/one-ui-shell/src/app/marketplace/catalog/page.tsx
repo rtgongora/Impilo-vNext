@@ -10,6 +10,7 @@ import { PageShell } from "@/components/PageShell";
 import { useMarketplaceCatalog } from "@/hooks/queries/useMarketplace";
 import { useProductRegistrySearch } from "@/hooks/queries/useProductRegistry";
 import { useCommerceValidateCart, useCommerceCreateOrder } from "@/hooks/queries/useCommerceFlow";
+import { AddToCartButton } from "@/components/marketplace/AddToCartButton";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const CATEGORIES = ["All", "Logistics", "Biomedical", "Laboratory", "Engineering", "GENERAL"];
@@ -277,14 +278,17 @@ export default function CatalogPage() {
                           <p className="text-sm font-semibold text-foreground truncate">{name}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground break-all">{code || "No code field on this row"}</p>
                         </div>
-                        <button
-                          type="button"
-                          disabled={!code}
-                          onClick={() => addToCart(it)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
-                        >
-                          <ShoppingCart className="h-3.5 w-3.5" /> Add
-                        </button>
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                          <button
+                            type="button"
+                            disabled={!code}
+                            onClick={() => addToCart(it)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
+                          >
+                            <ShoppingCart className="h-3.5 w-3.5" /> Add for facility
+                          </button>
+                          {code ? <AddToCartButton msikaCoreCode={code} label="Add to cart" compact /> : null}
+                        </div>
                       </div>
                     );
                   })}
@@ -293,7 +297,7 @@ export default function CatalogPage() {
             </div>
 
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-foreground">Cart to procurement order (MSIKA Flow)</h2>
+              <h2 className="text-lg font-semibold text-foreground">Facility procurement order (MSIKA Flow, B2B)</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Validate via <code className="text-xs">POST /internal/v1/commerce/cart/validate</code> and create via{" "}
                 <code className="text-xs">POST /internal/v1/commerce/orders</code>.
@@ -349,7 +353,7 @@ export default function CatalogPage() {
                     disabled={createOrder.isPending}
                     className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                   >
-                    {createOrder.isPending ? "Creating..." : "Create order"}
+                    {createOrder.isPending ? "Creating..." : "Order for facility"}
                   </button>
                 </div>
 

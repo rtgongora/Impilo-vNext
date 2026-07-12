@@ -26,29 +26,49 @@ vi.mock("@/components/PageShell", () => ({
   ),
 }));
 
+const { identityData } = vi.hoisted(() => ({ identityData: { current: null as { vendorId: string } | null } }));
+
+vi.mock("@/hooks/queries/useCommerceVendor", () => ({
+  useVendorIdentity: () => ({ data: identityData.current, isLoading: false }),
+}));
+
+// Operator persona so the manual override section renders.
+vi.mock("@/hooks/useAuthStore", () => ({
+  useAuthStore: (selector: (state: { hasRole: (r: string) => boolean }) => unknown) =>
+    selector({ hasRole: (r: string) => r === "MARKETPLACE_OPERATOR" }),
+}));
+
 describe("MarketplaceVendorHomePage", () => {
   beforeEach(() => {
     sessionStorage.clear();
+    identityData.current = null;
   });
 
-  it("documents trusted-operator vendor mode and saves vendor id for the session", async () => {
+  it("lets an operator save a vendor-id override and deep-links vendor orders", async () => {
     const user = userEvent.setup();
     render(<VendorHomePage />);
 
     expect(screen.getByRole("heading", { level: 1, name: /Vendor workspace/i })).toBeInTheDocument();
-    expect(screen.getByText(/not a separate vendor login/i)).toBeInTheDocument();
+    expect(screen.getByText(/Operator override/i)).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText("Vendor ID"), "vendor-test-1");
+    await user.type(screen.getByLabelText("Vendor ID override"), "vendor-test-1");
     await user.click(screen.getByRole("button", { name: /Save for session/i }));
 
     expect(sessionStorage.getItem("exp:commerce_vendor_id")).toBe("vendor-test-1");
-    expect(screen.getByRole("link", { name: /Vendor orders/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Open vendor orders/i })).toHaveAttribute(
       "href",
       "/marketplace/vendor/orders?vendorId=vendor-test-1",
     );
-    expect(screen.getByRole("link", { name: /Commerce and payer integration map/i })).toHaveAttribute(
+  });
+
+  it("auto-binds a resolved vendor identity without any manual entry", () => {
+    identityData.current = { vendorId: "vendor-bound-9" };
+    render(<VendorHomePage />);
+
+    expect(screen.getByText(/vendor-bound-9/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Open vendor orders/i })).toHaveAttribute(
       "href",
-      "/finance/commerce-integrations",
+      "/marketplace/vendor/orders?vendorId=vendor-bound-9",
     );
   });
 });

@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
 import { useSellerListings } from "@/hooks/queries/useMsikaStore";
+import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { matchesRequiredRole } from "@/lib/auth/role-groups";
 
 const STATUS_BADGE: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
@@ -19,9 +22,26 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function SellerListingsPage() {
+  const hasRole = useAuthStore((s) => s.hasRole);
+  const isOperator = matchesRequiredRole(hasRole, "MARKETPLACE_OPS");
+
+  // Seller identity is derived from the signed-in person's linked IDs (Provider ID);
+  // operators may override to inspect another seller's listings.
+  const linkedIds = useLinkedIds();
+  const derivedSellerId = linkedIds.data?.data?.attributes?.providerId ?? "";
+
   const [sellerType, setSellerType] = useState("PROVIDER");
   const [sellerId, setSellerId] = useState("");
   const [active, setActive] = useState<{ type: string; id: string } | null>(null);
+
+  // Auto-load the caller's own listings once their Provider ID resolves.
+  useEffect(() => {
+    if (derivedSellerId && !active) {
+      setSellerId(derivedSellerId);
+      setActive({ type: "PROVIDER", id: derivedSellerId });
+    }
+  }, [derivedSellerId, active]);
+
   const query = useSellerListings(active?.type ?? "", active?.id ?? "");
   const listings = query.data?.listings ?? [];
 
@@ -40,7 +60,7 @@ export default function SellerListingsPage() {
           >
             <label className="text-sm">
               <span className="mb-1 block font-medium text-foreground">Seller type</span>
-              <select value={sellerType} onChange={(e) => setSellerType(e.target.value)} className="rounded-lg border border-border bg-background px-3 py-2">
+              <select value={sellerType} onChange={(e) => setSellerType(e.target.value)} disabled={!isOperator} className="rounded-lg border border-border bg-background px-3 py-2 disabled:opacity-60">
                 {["PROVIDER", "FACILITY", "SITE", "PROGRAMME", "VENDOR"].map((t) => (
                   <option key={t}>{t}</option>
                 ))}
@@ -48,9 +68,15 @@ export default function SellerListingsPage() {
             </label>
             <label className="flex-1 text-sm">
               <span className="mb-1 block font-medium text-foreground">Seller ID</span>
-              <input value={sellerId} onChange={(e) => setSellerId(e.target.value)} placeholder="your provider/facility ref" className="w-full rounded-lg border border-border bg-background px-3 py-2" />
+              <input
+                value={sellerId}
+                onChange={(e) => setSellerId(e.target.value)}
+                readOnly={!isOperator}
+                placeholder={isOperator ? "provider/facility ref to inspect" : "resolved from your sign-in"}
+                className={`w-full rounded-lg border border-border px-3 py-2 ${isOperator ? "bg-background" : "bg-muted text-muted-foreground"}`}
+              />
             </label>
-            <button type="submit" className="rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground">Load</button>
+            {isOperator ? <button type="submit" className="rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground">Load</button> : null}
             <Link href="/marketplace/seller/listings/new" className="inline-flex items-center gap-1 rounded-lg border border-border px-4 py-2 font-medium text-foreground hover:bg-background">
               <PlusCircle className="h-4 w-4" /> New
             </Link>
@@ -58,7 +84,9 @@ export default function SellerListingsPage() {
 
           <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             {!active ? (
-              <p className="text-sm text-muted-foreground">Enter your seller details to load listings.</p>
+              <p className="text-sm text-muted-foreground">
+                {isOperator ? "Enter a seller ID to load listings." : "Resolving your seller identity…"}
+              </p>
             ) : query.isLoading ? (
               <p className="text-sm text-muted-foreground">Loading…</p>
             ) : query.isError ? (

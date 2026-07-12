@@ -87,12 +87,12 @@ describe("CatalogPage (MSIKA registry mode)", () => {
     await user.type(screen.getByPlaceholderText(/Search MSIKA registry/i), "cold");
 
     expect(await screen.findByText(/Cold chain box/i)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /^Add$/i }));
+    await user.click(screen.getByRole("button", { name: /Add for facility/i }));
 
     await user.click(screen.getByRole("button", { name: /Validate cart/i }));
     await waitFor(() => expect(post).toHaveBeenCalledWith("/internal/v1/commerce/cart/validate", expect.any(Object)));
 
-    await user.click(screen.getByRole("button", { name: /Create order/i }));
+    await user.click(screen.getByRole("button", { name: /Order for facility/i }));
     await waitFor(() => expect(post).toHaveBeenCalledWith("/internal/v1/commerce/orders", expect.any(Object)));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/marketplace/orders/ORD-1"));
   });

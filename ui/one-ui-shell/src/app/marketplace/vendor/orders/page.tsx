@@ -9,6 +9,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useVendorAcceptOrder,
+  useVendorIdentity,
   useVendorMarkDelivered,
   useVendorMarkReady,
   useVendorOrders,
@@ -46,11 +47,16 @@ export default function MarketplaceVendorOrdersPage() {
     setSessionVendor(readCommerceVendorId());
   }, []);
 
+  const identity = useVendorIdentity();
+  const boundVendorId = identity.data?.vendorId;
+
+  // Precedence: explicit ?vendorId (operator deep-link) → session override → bound identity.
   const vendorId = useMemo(() => {
     const fromParam = paramVendor?.trim();
     if (fromParam) return fromParam;
-    return sessionVendor?.trim() || "";
-  }, [paramVendor, sessionVendor]);
+    if (sessionVendor?.trim()) return sessionVendor.trim();
+    return boundVendorId ?? "";
+  }, [paramVendor, sessionVendor, boundVendorId]);
 
   useEffect(() => {
     const fromParam = paramVendor?.trim();
@@ -101,8 +107,8 @@ export default function MarketplaceVendorOrdersPage() {
               <div className="text-sm text-warning-foreground">
                 <p className="font-medium">Set a vendor ID first</p>
                 <p className="mt-1 text-warning-foreground/90">
-                  Use <code className="text-xs">?vendorId=…</code> on this URL or save a vendor ID on the vendor workspace
-                  page. This keeps the scope explicit for Experience operators.
+                  No vendor is bound to your account, and no operator override is set. Bound vendors load automatically;
+                  operators can use <code className="text-xs">?vendorId=…</code> or the vendor workspace override.
                 </p>
                 <Link href="/marketplace/vendor" className="mt-2 inline-block font-medium text-warning-foreground hover:underline">
                   Open vendor workspace

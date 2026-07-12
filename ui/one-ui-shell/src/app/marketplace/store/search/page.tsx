@@ -6,6 +6,7 @@ import { Search, ArrowRight } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
+import { AddToCartButton } from "@/components/marketplace/AddToCartButton";
 import { useStoreSearch } from "@/hooks/queries/useMsikaStore";
 
 const RISKS = ["ALL", "UNRESTRICTED", "LOW_RISK", "MODERATE_RISK", "HIGH_RISK", "REGULATED"];
@@ -68,16 +69,17 @@ export default function MarketplaceSearchPage() {
             ) : (
               <ul className="divide-y divide-border">
                 {listings.map((l) => (
-                  <li key={l.listingId} className="py-3">
-                    <Link href={`/marketplace/store/listing/${l.listingId}`} className="flex items-center justify-between gap-3 hover:text-primary">
-                      <div>
+                  <li key={l.listingId} className="flex items-center justify-between gap-3 py-3">
+                    <Link href={`/marketplace/store/listing/${l.listingId}`} className="flex min-w-0 flex-1 items-center justify-between gap-3 hover:text-primary">
+                      <div className="min-w-0">
                         <div className="font-medium text-foreground">{l.title}</div>
                         <div className="text-xs text-muted-foreground">
-                          {l.riskClassification.replace("_", " ")} · {l.priceDisplay ?? "Price via Costa"}
+                          {l.riskClassification.replace("_", " ")} · {l.priceDisplay ?? "Price set by seller"}
                         </div>
                       </div>
                       <ArrowRight className="h-4 w-4 shrink-0" />
                     </Link>
+                    {!l.clinicalRoute ? <AddToCartButton listingId={l.listingId} label="Add" compact /> : null}
                   </li>
                 ))}
               </ul>

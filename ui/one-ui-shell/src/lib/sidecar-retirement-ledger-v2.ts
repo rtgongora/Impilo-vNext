@@ -2,7 +2,8 @@ export type SidecarRetirementStatus =
   | "absorbed into Experience"
   | "partially absorbed into Experience"
   | "retired sidecar path"
-  | "blocked by missing backend contract";
+  | "blocked by missing backend contract"
+  | "retired — deleted 2026-07-12";
 
 export interface SidecarRetirementEntry {
   sidecarApp: string;
@@ -30,35 +31,35 @@ export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
     oldUiPath: "ui/msika-flow-portal:/browse,/cart,/orders,/pickup,/substitutions",
     newExperiencePath:
       "/marketplace, /marketplace/catalog, /marketplace/orders/[id], /marketplace/cart, /marketplace/pickup, /marketplace/substitutions",
-    status: "absorbed into Experience",
+    status: "retired — deleted 2026-07-12",
     notes:
-      "CommerceFlowController, ProductRegistryController, and CommerceSubstitutionController now back the operator path in Experience.",
+      "Deleted 2026-07-12 (Msika completion wave M8). Buyer lane now real: add-to-cart, priced cart, and the /marketplace/orders/[id]/pay money leg back CommerceFlowController + CommerceSubstitutionController.",
   },
   {
     sidecarApp: "ui/msika-flow-vendor",
     capability: "Vendor queue and fulfillment",
     oldUiPath: "ui/msika-flow-vendor:/queue,/orders,/fulfillment",
     newExperiencePath: "/marketplace/vendor, /marketplace/vendor/orders",
-    status: "absorbed into Experience",
+    status: "retired — deleted 2026-07-12",
     notes:
-      "VendorOperationsController is live. Experience still uses trusted operator roles rather than a dedicated vendor actor plane.",
+      "Deleted 2026-07-12 (Msika completion wave M8). VendorOperationsController + GET /commerce/vendor/me now auto-bind a real VENDOR actor; manual vendorId is an operator-only override.",
   },
   {
     sidecarApp: "ui/msika-flow-ops",
     capability: "Marketplace ops reviews, stuck orders, and vendor governance",
     oldUiPath: "ui/msika-flow-ops:/reviews,/stuck,/audit,/vendors",
     newExperiencePath: "/marketplace/ops",
-    status: "absorbed into Experience",
-    notes: "MarketplaceOpsController-backed workflows now run in Experience.",
+    status: "retired — deleted 2026-07-12",
+    notes: "Deleted 2026-07-12 (Msika completion wave M8). MarketplaceOpsController-backed Vendors + Audit tabs and substitution reject run in /marketplace/ops and /marketplace/substitutions.",
   },
   {
     sidecarApp: "ui/msika-web",
     capability: "Catalog governance, mappings, publish, and import",
     oldUiPath: "ui/msika-web:/catalogs,/mappings,/publish,/import",
     newExperiencePath: "/finance/msika-governance",
-    status: "absorbed into Experience",
+    status: "retired — deleted 2026-07-12",
     notes:
-      "Catalog governance, mapping review, publishing, and CSV import now run in Experience through the canonical MSIKA governance workspace.",
+      "Deleted 2026-07-12 (Msika completion wave M8). Catalog governance, mapping review, publishing, and CSV import run in the canonical MSIKA governance workspace in Experience.",
   },
   {
     sidecarApp: "ui/mushex-finance-console",

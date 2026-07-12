@@ -218,22 +218,35 @@ describe("Route Registry", () => {
       expect(route?.navZone).toBe("work");
     }
 
-    const marketplacePaths = [
-      "/marketplace/catalog",
-      "/marketplace/orders/[id]",
-      "/marketplace/ops",
-      "/marketplace/vendor",
-      "/marketplace/vendor/orders",
-      "/marketplace/cart",
-      "/marketplace/substitutions",
-      "/marketplace/pickup",
+    // Msika completion wave M8: marketplace persona re-gating.
+    // Catalog/pickup stay COMMERCE (B2B facility procurement); persona surfaces get their own groups.
+    const marketplaceRoleGates: Array<[string, string]> = [
+      ["/marketplace/catalog", "COMMERCE"],
+      ["/marketplace/pickup", "COMMERCE"],
+      ["/marketplace/ops", "MARKETPLACE_OPS"],
+      ["/marketplace/substitutions", "MARKETPLACE_OPS"],
+      ["/marketplace/vendor", "VENDOR_FULFILMENT"],
+      ["/marketplace/vendor/orders", "VENDOR_FULFILMENT"],
+      ["/marketplace/seller", "MARKETPLACE_SELL"],
+      ["/marketplace/seller/listings", "MARKETPLACE_SELL"],
     ];
 
-    for (const path of marketplacePaths) {
+    for (const [path, role] of marketplaceRoleGates) {
       const route = ROUTES.find((r) => r.path === path);
       expect(route?.guard).toBe("role");
-      expect(route?.requiredRole).toBe("COMMERCE");
+      expect(route?.requiredRole).toBe(role);
       expect(route?.navZone).toBe("work");
+    }
+
+    // Buyer lane is person-anchored — auth guard so citizens can buy (COMMERCE previously blocked them).
+    const marketplaceAuthPaths = [
+      "/marketplace/cart",
+      "/marketplace/orders/[id]",
+      "/marketplace/orders/[id]/pay",
+    ];
+    for (const path of marketplaceAuthPaths) {
+      const route = ROUTES.find((r) => r.path === path);
+      expect(route?.guard).toBe("auth");
     }
   });
 

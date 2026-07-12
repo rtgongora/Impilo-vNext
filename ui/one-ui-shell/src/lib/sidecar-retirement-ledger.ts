@@ -13,7 +13,8 @@ export type SidecarRetirementStatus =
   | "absorbed into Experience"
   | "partially absorbed into Experience"
   | "retired — stub only"
-  | "deprecated — do not use";
+  | "deprecated — do not use"
+  | "retired — deleted 2026-07-12";
 
 export interface SidecarRetirementEntry {
   sidecarApp: string;
@@ -31,32 +32,32 @@ export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
     port: 3010,
     capability: "Marketplace browse, cart, orders, pickup, substitutions",
     experienceRoutes: ["/marketplace", "/marketplace/catalog", "/marketplace/orders", "/marketplace/cart", "/marketplace/substitutions"],
-    status: "absorbed into Experience",
-    notes: "BFF controllers: MarketplaceController, CommerceFlowController, CommerceSubstitutionController",
+    status: "retired — deleted 2026-07-12",
+    notes: "Sidecar ui/msika-flow-portal deleted 2026-07-12 (Msika completion wave M8). BFF controllers: MarketplaceController, CommerceFlowController, CommerceSubstitutionController. Buyer lane now has real add-to-cart, priced cart, and a /marketplace/orders/[id]/pay money leg.",
   },
   {
     sidecarApp: "ui/msika-flow-vendor",
     port: 3011,
     capability: "Vendor fulfillment queue, order acceptance, ready/deliver",
     experienceRoutes: ["/marketplace/vendor", "/marketplace/vendor/orders"],
-    status: "absorbed into Experience",
-    notes: "BFF controller: VendorOperationsController",
+    status: "retired — deleted 2026-07-12",
+    notes: "Sidecar ui/msika-flow-vendor deleted 2026-07-12 (Msika completion wave M8). BFF: VendorOperationsController + GET /commerce/vendor/me auto-binding; vendor pages resolve identity from the JWT actor.",
   },
   {
     sidecarApp: "ui/msika-flow-ops",
     port: 3012,
     capability: "Marketplace ops: stuck orders, vendor management, reviews",
     experienceRoutes: ["/marketplace/ops"],
-    status: "absorbed into Experience",
-    notes: "BFF controller: MarketplaceOpsController",
+    status: "retired — deleted 2026-07-12",
+    notes: "Sidecar ui/msika-flow-ops deleted 2026-07-12 (Msika completion wave M8). BFF: MarketplaceOpsController — Vendors + Audit tabs and substitution reject are live in /marketplace/ops and /marketplace/substitutions.",
   },
   {
     sidecarApp: "ui/msika-web",
     port: 3013,
     capability: "Catalog governance: item CRUD, mappings, publish workflow",
     experienceRoutes: ["/finance/commerce-integrations"],
-    status: "absorbed into Experience",
-    notes: "BFF controller: MsikaGovernanceController, ProductRegistryController",
+    status: "retired — deleted 2026-07-12",
+    notes: "Sidecar ui/msika-web deleted 2026-07-12 (Msika completion wave M8). BFF: MsikaGovernanceController, ProductRegistryController — catalogue governance lives in /finance/msika-governance.",
   },
 
   // ── Finance stack (3 apps → /finance/*) ───────────────────────────

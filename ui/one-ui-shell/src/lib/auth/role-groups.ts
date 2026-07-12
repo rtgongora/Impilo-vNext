@@ -53,6 +53,17 @@ const RAW_ROLE_GROUPS: Record<string, string[]> = {
     "DEVELOPER",
   ],
   COMMERCE: ["FINANCE", "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
+  /** Msika marketplace operations console: platform marketplace operators + admin chain. */
+  MARKETPLACE_OPS: ["MARKETPLACE_OPERATOR", "SYSTEM_ADMIN", "DEVELOPER"],
+  /** Msika seller centre: sellers (provider/facility/programme identities) + admin chain. */
+  MARKETPLACE_SELL: ["MARKETPLACE_SELLER", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
+  /** Vendor fulfilment queue: bound vendor actors; marketplace operators may step in. */
+  VENDOR_FULFILMENT: ["VENDOR", "MARKETPLACE_OPERATOR", "SYSTEM_ADMIN", "DEVELOPER"],
+  /** Marketplace launcher visibility: existing commerce personas PLUS the new marketplace roles. */
+  MARKETPLACE_ACCESS: [
+    "MARKETPLACE_OPERATOR", "MARKETPLACE_SELLER", "VENDOR",
+    "FINANCE", "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER",
+  ],
   /** HPA facility regulation: registrar + inspector personas and the admin chain. */
   REGULATORY_AUTHORITY: [
     "HPA_REGISTRAR",

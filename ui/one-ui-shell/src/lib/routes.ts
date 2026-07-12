@@ -335,10 +335,11 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/marketplace", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Health Marketplace", navLabel: "Marketplace", navZone: "work" },
   { path: "/marketplace/catalog", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Service Catalog", navLabel: "Catalog", navZone: "work" },
   { path: "/marketplace/orders", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "My Orders", navLabel: "Orders", navZone: "work" },
-  { path: "/marketplace/orders/[id]", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Order Details", navLabel: "Order", navZone: "work" },
-  { path: "/marketplace/ops", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Marketplace Operations", navLabel: "Marketplace Ops", navZone: "work" },
-  { path: "/marketplace/vendor", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Vendor Fulfilment", navLabel: "Vendor Fulfilment", navZone: "work" },
-  { path: "/marketplace/vendor/orders", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Vendor Orders", navLabel: "Vendor Orders", navZone: "work" },
+  { path: "/marketplace/orders/[id]", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Order Details", navLabel: "Order", navZone: "work" },
+  { path: "/marketplace/orders/[id]/pay", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Pay for Order", navLabel: "Pay", navZone: "work" },
+  { path: "/marketplace/ops", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "MARKETPLACE_OPS", pageTitle: "Marketplace Operations", navLabel: "Marketplace Ops", navZone: "work" },
+  { path: "/marketplace/vendor", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "VENDOR_FULFILMENT", pageTitle: "Vendor Fulfilment", navLabel: "Vendor Fulfilment", navZone: "work" },
+  { path: "/marketplace/vendor/orders", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "VENDOR_FULFILMENT", pageTitle: "Vendor Orders", navLabel: "Vendor Orders", navZone: "work" },
   { path: "/marketplace/pickup", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Pickup Handoff", navLabel: "Pickup", navZone: "work" },
   { path: "/marketplace/vendors", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Vendors", navLabel: "Vendors", navZone: "work" },
   { path: "/marketplace/bookings", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Bookings", navLabel: "Bookings", navZone: "work" },
@@ -349,10 +350,10 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/marketplace/store/listing/[id]", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Listing", navLabel: "Listing", navZone: "life" },
   { path: "/marketplace/store/activity", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "My Marketplace Activity", navLabel: "My Activity", navZone: "life" },
   { path: "/marketplace/establishment-guide", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Set Up Your Practice", navLabel: "Establishment Guide", navZone: "life" },
-  { path: "/marketplace/seller", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Seller Centre", navLabel: "Seller Centre", navZone: "work" },
-  { path: "/marketplace/seller/listings", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "My Listings", navLabel: "My Listings", navZone: "work" },
-  { path: "/marketplace/seller/listings/new", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "New Listing", navLabel: "New Listing", navZone: "work" },
-  { path: "/marketplace/seller/moderation", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Listing Moderation", navLabel: "Moderation", navZone: "work" },
+  { path: "/marketplace/seller", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "MARKETPLACE_SELL", pageTitle: "Seller Centre", navLabel: "Seller Centre", navZone: "work" },
+  { path: "/marketplace/seller/listings", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "MARKETPLACE_SELL", pageTitle: "My Listings", navLabel: "My Listings", navZone: "work" },
+  { path: "/marketplace/seller/listings/new", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "MARKETPLACE_SELL", pageTitle: "New Listing", navLabel: "New Listing", navZone: "work" },
+  { path: "/marketplace/seller/moderation", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "MARKETPLACE_SELL", pageTitle: "Listing Moderation", navLabel: "Moderation", navZone: "work" },
 
   // â”€â”€ Zone: Finance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/finance", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Finance Dashboard", navLabel: "Finance", navZone: "work" },
@@ -584,8 +585,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/home/documents", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Documents", navLabel: "Documents", navZone: "life" },
 
   // â”€â”€ Marketplace: Cart & Substitutions (absorbs msika-flow-portal sidecar) â”€â”€
-  { path: "/marketplace/cart", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Shopping Cart", navLabel: "Cart", navZone: "work" },
-  { path: "/marketplace/substitutions", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "COMMERCE", pageTitle: "Substitutions", navLabel: "Substitutions", navZone: "work" },
+  { path: "/marketplace/cart", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "auth", pageTitle: "Shopping Cart", navLabel: "Cart", navZone: "work" },
+  { path: "/marketplace/substitutions", zone: "marketplace", layout: "app", sidebar: "marketplace", guard: "role", requiredRole: "MARKETPLACE_OPS", pageTitle: "Substitutions", navLabel: "Substitutions", navZone: "work" },
 
   // â”€â”€ Zone: Experience shell (OS-like utilities) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/shell/file-manager", zone: "shell", layout: "app", sidebar: "main", guard: "auth", pageTitle: "File manager", navLabel: "Files", navZone: "life" },
@@ -843,7 +844,10 @@ export const ROUTES: RouteDefinition[] = [
 // PIC-nomination ledger) and /verify/facility-certificate (public certificate verifier).
 // Requirement sourcing (Jul 2026): +1 — /marketplace/establishment-guide (HPA requirement →
 // marketplace supplier guide for prospective practice founders).
-export const EXPECTED_ROUTE_COUNT = 701;
+// Msika completion wave M7 (Jul 2026): +1 — /marketplace/orders/[id]/pay (real MusheX money leg).
+// Same wave re-gated marketplace personas: seller*→MARKETPLACE_SELL, ops+substitutions→MARKETPLACE_OPS,
+// vendor*→VENDOR_FULFILMENT, cart+orders/[id](+pay)→auth (citizens can buy); COMMERCE membership untouched.
+export const EXPECTED_ROUTE_COUNT = 702;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -115,6 +115,24 @@ export const PERSONAS = {
     displayName: "Blessing Ncube",
     roles: ["HPA_INSPECTOR"],
   },
+  msikaOperator: {
+    username: "msika.operator",
+    displayName: "Tariro Mutasa",
+    roles: ["MARKETPLACE_OPERATOR"],
+  },
+  msikaSeller: {
+    username: "msika.seller",
+    displayName: "Simba Chikore",
+    roles: ["MARKETPLACE_SELLER"],
+    providerId: "PROV-ZW-00014",
+    healthId: "c0000000-0000-4000-8000-000000000019",
+    facilityNamePattern: /harare central/i,
+  },
+  msikaVendor: {
+    username: "msika.vendor",
+    displayName: "Rutendo Mhofu",
+    roles: ["VENDOR"],
+  },
 } satisfies Record<string, JourneyPersona>;
 
 export type PersonaKey = keyof typeof PERSONAS;

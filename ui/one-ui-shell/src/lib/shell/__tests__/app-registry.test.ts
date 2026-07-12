@@ -23,6 +23,9 @@ const PERSONAS: Record<string, string[]> = {
   "citizen.moyo (citizen)": ["CITIZEN"],
   "admin.central (national admin)": ["SYSTEM_ADMIN"],
   "regulator.hpcz (regulator)": ["HIE_ADMIN"],
+  "msika.operator (marketplace operator)": ["MARKETPLACE_OPERATOR"],
+  "msika.seller (marketplace seller)": ["MARKETPLACE_SELLER"],
+  "msika.vendor (marketplace vendor)": ["VENDOR"],
 };
 
 function rolesToHasRole(roles: string[]): (r: string) => boolean {
@@ -78,6 +81,27 @@ describe("shell app-registry", () => {
     for (const code of ["khuluma", "rito", "simba", "ubomi", "dura", "daidzai", "vashandi", "telemedicine"]) {
       expect(findShellAppByCode(code), `launcher app ${code}`).toBeDefined();
     }
+  });
+
+  it("marketplace personas see their launcher surfaces (and not each other's)", () => {
+    const cmdIds = (roles: string[]) => visibleShellCommands(rolesToHasRole(roles)).map((c) => c.id);
+    const appCodes = (roles: string[]) => listVisibleShellApps(rolesToHasRole(roles)).map((a) => a.appCode);
+
+    // Marketplace tile is visible to each marketplace persona.
+    for (const roles of [["MARKETPLACE_OPERATOR"], ["MARKETPLACE_SELLER"], ["VENDOR"]]) {
+      expect(appCodes(roles)).toContain("marketplace");
+    }
+
+    // Operator sees ops; seller sees seller centre; vendor sees vendor fulfilment.
+    expect(cmdIds(["MARKETPLACE_OPERATOR"])).toContain("cmd-marketplace-ops");
+    expect(cmdIds(["MARKETPLACE_OPERATOR"])).toContain("cmd-vendor-fulfilment"); // operators can step into vendor scope
+    expect(cmdIds(["MARKETPLACE_SELLER"])).toContain("cmd-marketplace-seller");
+    expect(cmdIds(["VENDOR"])).toContain("cmd-vendor-fulfilment");
+
+    // Sellers and vendors are NOT operators.
+    expect(cmdIds(["MARKETPLACE_SELLER"])).not.toContain("cmd-marketplace-ops");
+    expect(cmdIds(["VENDOR"])).not.toContain("cmd-marketplace-ops");
+    expect(cmdIds(["VENDOR"])).not.toContain("cmd-marketplace-seller");
   });
 
   it("quick actions all reference navigate commands that exist", () => {

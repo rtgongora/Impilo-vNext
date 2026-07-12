@@ -34,24 +34,32 @@ vi.mock("@/components/PageShell", () => ({
 
 const { post } = vi.hoisted(() => ({ post: vi.fn() }));
 
-vi.mock("@/hooks/queries/useCommerceFlow", () => ({
-  useCommerceOrder: () => ({
-    data: { orderId: ORDER_ID, status: "PENDING" },
-    isLoading: false,
-    isError: false,
-  }),
-  useCommerceOrderTracking: () => ({
-    data: { status: "PENDING" },
-    isLoading: false,
-    isError: false,
-    refetch: vi.fn(),
-  }),
-  useCommerceOrderAction: () => ({
-    isPending: false,
-    mutate: (_args: { orderId: string; action: string }, opts?: { onSuccess?: (res: unknown) => void }) => {
-      void post(`/internal/v1/commerce/orders/${ORDER_ID}/validate`).then((res: unknown) => opts?.onSuccess?.(res));
-    },
-  }),
+vi.mock("@/hooks/queries/useCommerceFlow", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/hooks/queries/useCommerceFlow")>();
+  return {
+    ...actual,
+    useCommerceOrder: () => ({
+      data: { orderId: ORDER_ID, status: "PENDING" },
+      isLoading: false,
+      isError: false,
+    }),
+    useCommerceOrderTracking: () => ({
+      data: { status: "PENDING" },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    }),
+    useCommerceOrderAction: () => ({
+      isPending: false,
+      mutate: (_args: { orderId: string; action: string }, opts?: { onSuccess?: (res: unknown) => void }) => {
+        void post(`/internal/v1/commerce/orders/${ORDER_ID}/validate`).then((res: unknown) => opts?.onSuccess?.(res));
+      },
+    }),
+  };
+});
+
+vi.mock("@/hooks/queries/useCommercePickup", () => ({
+  useCommerceIssuePickup: () => ({ isPending: false, data: null, mutate: vi.fn() }),
 }));
 
 vi.mock("@/hooks/queries/useMarketplace", () => ({

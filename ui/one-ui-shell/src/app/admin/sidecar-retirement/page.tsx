@@ -10,6 +10,7 @@ import {
 } from "@/lib/sidecar-retirement-ledger-v2";
 
 const STATUS_ORDER: SidecarRetirementStatus[] = [
+  "retired — deleted 2026-07-12",
   "absorbed into Experience",
   "partially absorbed into Experience",
   "retired sidecar path",
@@ -17,6 +18,7 @@ const STATUS_ORDER: SidecarRetirementStatus[] = [
 ];
 
 const STATUS_STYLES: Record<SidecarRetirementStatus, string> = {
+  "retired — deleted 2026-07-12": "border-success/25 bg-success-soft text-primary-hover",
   "absorbed into Experience": "border-success/25 bg-success-soft text-primary-hover",
   "partially absorbed into Experience": "border-cyan-200 bg-cyan-50 text-cyan-950",
   "retired sidecar path": "border-border bg-background text-foreground",
@@ -69,7 +71,9 @@ export default function SidecarRetirementPage() {
                 <div className={`rounded-xl border px-4 py-3 ${STATUS_STYLES[status]}`}>
                   <h2 className="text-sm font-semibold uppercase tracking-[0.18em]">{status}</h2>
                   <p className="mt-1 text-sm normal-case">
-                    {status === "absorbed into Experience"
+                    {status === "retired — deleted 2026-07-12"
+                      ? "These sidecar app directories were deleted from the repo; the capability lives only in the Experience shell."
+                      : status === "absorbed into Experience"
                       ? "These capabilities have an inspected Experience entry point and should not be accepted through the sidecar."
                       : status === "partially absorbed into Experience"
                         ? "These capabilities have real Experience entry points, but some parity or canonical route work is still incomplete."
