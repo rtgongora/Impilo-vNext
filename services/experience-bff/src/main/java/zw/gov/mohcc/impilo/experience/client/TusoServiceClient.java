@@ -134,6 +134,21 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** Generic GET against the tuso facility-classification reconciliation surface. */
+    public JsonNode classificationGet(String subPath, String query) {
+        String url = baseUrl + "/v1/internal/facilities/classification" + subPath + qs(query);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(java.net.URI.create(url), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Generic POST against the tuso facility-classification reconciliation surface. */
+    public JsonNode classificationPost(String subPath, Object body) {
+        String url = baseUrl + "/v1/internal/facilities/classification" + subPath;
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(java.net.URI.create(url),
+                body != null ? body : java.util.Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
     /** Public certificate verification passthrough (no data-envelope unwrap — raw disclosure). */
     public JsonNode verifyCertificatePublic(String code) {
         String url = baseUrl + "/v1/public/facilities/certificates/verify/"
