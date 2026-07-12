@@ -176,6 +176,18 @@ submit route requests to A.
 > now; the dispatcher-side callback-before-dispatch hard gate (PD-3) requires a daidzai
 > `emergency_request` callback/verification schema seam + a dispatcher verify action, built
 > and rig-proven as its own slice — not merged blind onto the daidzai spine.**
+>
+> **Update: W2-C LANDED (rig-proven 7/7).** daidzai V002 adds callback columns + a
+> real dispatch gate (triage 409s on `AWAITING_CALLBACK` until `POST
+> .../requests/{id}/verify-callback` by a dispatcher); BFF `POST
+> /internal/v1/public/gateway/sos` (required callback, per-IP 5/600s + global 60/60s
+> rate limits that fail **open** for life-safety, `PUBLIC_ANONYMOUS`); `/welcome/emergency`
+> assistance form. Rig `gateway-emergency-anon` proved 202→AWAITING_CALLBACK, no-callback
+> 400, triage-blocked 409, verify→triage 201, rate-limit 429. Tests: daidzai 13, BFF SOS 5
+> (+facility regression 5), UI form 4. Integration-caught (coordinator): the SOS test
+> predated the W1 KeycloakAdminClient ctor change — fixed. **Operator-surface follow-up:**
+> dispatcher verify-callback console UI (API-proven only) + automated callback-OTP
+> (dispatcher calls back manually today). **All three W2 pillars now landed.**
 
 - **Find & verify:** full public facility finder on the W1 lane; **new** varapi
   `PublicPractitionerVerificationController` (verify-by-registration-number, allow-listed
