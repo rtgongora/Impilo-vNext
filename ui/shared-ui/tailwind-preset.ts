@@ -10,6 +10,12 @@ const impiloPreset: Partial<Config> = {
   darkMode: "class",
   theme: {
     extend: {
+      screens: {
+        // Small-phone vs large-phone differentiation (Tailwind ≥3.2 sorts extended screens).
+        xs: "480px",
+        // Large desktop monitors — denser multi-pane operational layouts.
+        "3xl": "1920px",
+      },
       colors: {
         // Future-Realism accents — glow/accent utilities only (never body text / clinical semantics).
         neon: {

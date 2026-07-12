@@ -3,7 +3,7 @@ import React from "react";
 export interface CardProps {
   children: React.ReactNode;
   className?: string;
-  padding?: "sm" | "md" | "lg";
+  padding?: "xs" | "sm" | "md" | "lg";
   accent?: "none" | "top" | "left";
   accentColor?: "green" | "yellow" | "red";
   /**
@@ -13,6 +13,11 @@ export interface CardProps {
   surface?: "solid" | "glass";
   /** Optional single focal neon glow. `danger` reserved for emergency/SOS. */
   glow?: "none" | "teal" | "gold" | "danger";
+  /**
+   * `compact` sizes the card to its content — tighter padding and radius —
+   * for dense operational views. Explicit `padding` still wins.
+   */
+  density?: "default" | "compact";
 }
 
 const glowStyles: Record<string, string> = {
@@ -22,13 +27,14 @@ const glowStyles: Record<string, string> = {
   danger: "shadow-glow-danger",
 };
 
-const solidSurface = "bg-card rounded-2xl shadow-impilo-card border border-border";
+const solidSurface = "bg-card shadow-impilo-card border border-border";
 const glassSurface =
-  "rounded-2xl border border-glass-border bg-glass-fill shadow-impilo-floating backdrop-blur-glass " +
+  "border border-glass-border bg-glass-fill shadow-impilo-floating backdrop-blur-glass " +
   "supports-[not(backdrop-filter:blur(0px))]:bg-glass-fallback " +
   "[.low-blur_&]:bg-glass-fallback [.low-blur_&]:backdrop-blur-none";
 
 const paddingStyles: Record<string, string> = {
+  xs: "p-2",
   sm: "p-3",
   md: "p-4",
   lg: "p-6",
@@ -49,11 +55,12 @@ const accentLeftStyles: Record<string, string> = {
 export function Card({
   children,
   className = "",
-  padding = "md",
+  padding,
   accent = "none",
   accentColor = "green",
   surface = "solid",
   glow = "none",
+  density = "default",
 }: CardProps) {
   const accentClass =
     accent === "top"
@@ -63,28 +70,46 @@ export function Card({
         : "";
 
   const surfaceClass = surface === "glass" ? glassSurface : solidSurface;
+  const radiusClass = density === "compact" ? "rounded-xl" : "rounded-2xl";
+  const resolvedPadding = padding ?? (density === "compact" ? "sm" : "md");
 
   return (
     <div
-      className={`${surfaceClass} ${glowStyles[glow]}
-        ${paddingStyles[padding]} ${accentClass} ${className}`}
+      className={`${surfaceClass} ${radiusClass} ${glowStyles[glow]}
+        ${paddingStyles[resolvedPadding]} ${accentClass} ${className}`}
     >
       {children}
     </div>
   );
 }
 
-export function CardHeader({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export function CardHeader({
+  children,
+  className = "",
+  density = "default",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  density?: "default" | "compact";
+}) {
   return (
-    <div className={`pb-3 mb-3 border-b border-border ${className}`}>
+    <div className={`${density === "compact" ? "pb-2 mb-2" : "pb-3 mb-3"} border-b border-border ${className}`}>
       {children}
     </div>
   );
 }
 
-export function CardTitle({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export function CardTitle({
+  children,
+  className = "",
+  size = "base",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  size?: "sm" | "base";
+}) {
   return (
-    <h3 className={`text-base font-semibold text-foreground ${className}`}>
+    <h3 className={`${size === "sm" ? "text-sm" : "text-base"} font-semibold text-foreground ${className}`}>
       {children}
     </h3>
   );
