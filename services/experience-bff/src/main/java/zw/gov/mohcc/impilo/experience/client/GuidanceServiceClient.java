@@ -132,14 +132,32 @@ public class GuidanceServiceClient {
         return response.getBody();
     }
 
-    /** Published public education topics (safe fields only). */
-    public JsonNode getPublicEducation(String domain, int page, int size) {
-        java.net.URI url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/public/guidance/education")
+    /** Published public education topics (safe fields only; optional category filter). */
+    public JsonNode getPublicEducation(String domain, String category, int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/public/guidance/education")
                 .queryParam("domain", domain)
                 .queryParam("page", page)
-                .queryParam("size", size)
-                .encode().build().toUri();
+                .queryParam("size", size);
+        if (category != null && !category.isBlank()) {
+            builder.queryParam("category", category);
+        }
+        java.net.URI url = builder.encode().build().toUri();
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Published-topic categories with counts (the public health-info topic index). */
+    public JsonNode getPublicEducationCategories() {
+        String url = baseUrl + "/v1/public/guidance/education/categories";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    /** One published education article incl. plain-language body (allow-listed fields only). */
+    public JsonNode getPublicEducationArticle(String id) {
+        String url = baseUrl + "/v1/public/guidance/education/"
+                + java.net.URLEncoder.encode(id, java.nio.charset.StandardCharsets.UTF_8);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(java.net.URI.create(url), JsonNode.class);
         return response.getBody();
     }
 
