@@ -135,6 +135,12 @@ impilo:
     surveillance-base-url: ${SURVEILLANCE_BASE_URL:http://localhost:8180}
     campaigns-base-url: ${CAMPAIGNS_BASE_URL:http://localhost:8190}
     patient-safety-base-url: ${PATIENT_SAFETY_BASE_URL:http://localhost:8202}
+    # identity-assurance-service — bound by ServiceEndpoints#identityAssuranceBaseUrl (the
+    # IdentityAssuranceServiceClient the R1 contact-OTP lane uses). Previously this key only
+    # existed under the orchestration-backlog block below, which nothing reads for this client,
+    # so IDENTITY_ASSURANCE_BASE_URL never took effect and every REGISTER rolled back with
+    # 503 ATTESTATION_UNAVAILABLE off-localhost (rig-caught in the W1 runtime proof).
+    identity-assurance-base-url: ${IDENTITY_ASSURANCE_BASE_URL:http://localhost:8201}
     # Public Health & Data Plane — national repository, pipelines, warehouse, ingestion, reporting
     ndr-national-base-url: ${NDR_NATIONAL_BASE_URL:http://localhost:8152}
     ndr-query-base-url: ${NDR_QUERY_BASE_URL:http://localhost:8232}
