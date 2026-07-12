@@ -34,6 +34,7 @@ class ListingServiceTest {
     @Mock private StorefrontService storefrontService;
     @Mock private EventOutboxRepository outboxRepository;
     @Mock private ListingAuditService auditService;
+    @Mock private SourcingService sourcingService;
 
     private ListingService listingService;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -41,7 +42,7 @@ class ListingServiceTest {
     @BeforeEach
     void setUp() {
         listingService = new ListingService(listingRepository, mediaRepository, itemRepository,
-                storefrontService, outboxRepository, auditService, objectMapper);
+                storefrontService, outboxRepository, auditService, objectMapper, sourcingService);
         TrustContext ctx = new TrustContext(
                 UUID.randomUUID(), "actor-1", "PROVIDER", "TREATMENT",
                 "dev", UUID.randomUUID(), null, null, null, AccessMode.INTERNAL);
@@ -135,6 +136,43 @@ class ListingServiceTest {
         ListingDtos.ListingView v = listingService.publish("L1");
         assertEquals("PUBLISHED", v.status());
     }
+    @Test
+    void publish_restrictedCategory_withoutVerifiedSeller_deniesAndAudits() {
+        ListingEntity e = listing("APPROVED", "LOW_RISK");
+        when(listingRepository.findById("L1")).thenReturn(Optional.of(e));
+        var item = new zw.gov.mohcc.impilo.msika.persistence.entity.CatalogItemEntity();
+        item.setSourcingCategoryCode("MEDICINES_GENERAL");
+        when(itemRepository.findById(e.getCatalogItemId())).thenReturn(Optional.of(item));
+        when(sourcingService.isRestrictedCategory("MEDICINES_GENERAL")).thenReturn(true);
+        when(storefrontService.isSellerVerified("PROVIDER", "PROV-1")).thenReturn(false);
+        assertThrows(IllegalStateException.class, () -> listingService.publish("L1"));
+        verify(auditService).record(any(), eq("POLICY_DENIED"), eq("L1"), any(), any(), eq("DENY"), any());
+        verify(listingRepository, never()).save(any());
+    }
+
+    @Test
+    void publish_restrictedCategory_withVerifiedSeller_publishes() {
+        ListingEntity e = listing("APPROVED", "LOW_RISK");
+        when(listingRepository.findById("L1")).thenReturn(Optional.of(e));
+        var item = new zw.gov.mohcc.impilo.msika.persistence.entity.CatalogItemEntity();
+        item.setSourcingCategoryCode("MEDICINES_GENERAL");
+        when(itemRepository.findById(e.getCatalogItemId())).thenReturn(Optional.of(item));
+        when(sourcingService.isRestrictedCategory("MEDICINES_GENERAL")).thenReturn(true);
+        when(storefrontService.isSellerVerified("PROVIDER", "PROV-1")).thenReturn(true);
+        when(listingRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        assertEquals("PUBLISHED", listingService.publish("L1").status());
+    }
+
+    @Test
+    void publish_nullSourcingCategory_unaffectedByGate() {
+        ListingEntity e = listing("APPROVED", "LOW_RISK");
+        when(listingRepository.findById("L1")).thenReturn(Optional.of(e));
+        when(itemRepository.findById(e.getCatalogItemId())).thenReturn(Optional.empty());
+        when(sourcingService.isRestrictedCategory(null)).thenReturn(false);
+        when(listingRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        assertEquals("PUBLISHED", listingService.publish("L1").status());
+    }
+
 
     @Test
     void getForBuyer_unpublished_throws() {

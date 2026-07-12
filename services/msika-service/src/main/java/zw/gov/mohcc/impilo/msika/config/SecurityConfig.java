@@ -64,8 +64,30 @@ public class SecurityConfig {
 
 
                     .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
-
-
+                    // Test chain only: @EnableMethodSecurity is unconditional, so
+                    // @PreAuthorize checks need an Authentication. Derive roles from
+                    // X-Actor-Type (the same trust-header role seam the engines use).
+                    .addFilterAfter(new org.springframework.web.filter.OncePerRequestFilter() {
+                        @Override
+                        protected void doFilterInternal(jakarta.servlet.http.HttpServletRequest request,
+                                                        jakarta.servlet.http.HttpServletResponse response,
+                                                        jakarta.servlet.FilterChain chain)
+                                throws jakarta.servlet.ServletException, java.io.IOException {
+                            String actorType = request.getHeader("X-Actor-Type");
+                            String actorId = request.getHeader("X-Actor-ID");
+                            if (actorType != null && !actorType.isBlank()) {
+                                var authorities = java.util.List.of(
+                                        new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                                "ROLE_" + actorType.trim().toUpperCase(java.util.Locale.ROOT)));
+                                var authentication =
+                                        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                                                actorId != null ? actorId : "test-actor", "N/A", authorities);
+                                org.springframework.security.core.context.SecurityContextHolder.getContext()
+                                        .setAuthentication(authentication);
+                            }
+                            chain.doFilter(request, response);
+                        }
+                    }, UsernamePasswordAuthenticationFilter.class)
                     .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
 

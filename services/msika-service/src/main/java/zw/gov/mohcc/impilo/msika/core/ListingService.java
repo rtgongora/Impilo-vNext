@@ -42,6 +42,7 @@ public class ListingService {
     private final ListingMediaRepository mediaRepository;
     private final CatalogItemRepository itemRepository;
     private final StorefrontService storefrontService;
+    private final SourcingService sourcingService;
     private final EventOutboxRepository outboxRepository;
     private final ListingAuditService auditService;
     private final ObjectMapper objectMapper;
@@ -52,14 +53,16 @@ public class ListingService {
                           StorefrontService storefrontService,
                           EventOutboxRepository outboxRepository,
                           ListingAuditService auditService,
-                          ObjectMapper objectMapper) {
+                          ObjectMapper objectMapper,
+                          SourcingService sourcingService) {
         this.listingRepository = listingRepository;
         this.mediaRepository = mediaRepository;
         this.itemRepository = itemRepository;
         this.storefrontService = storefrontService;
         this.outboxRepository = outboxRepository;
         this.auditService = auditService;
-        this.objectMapper = objectMapper;
+        this.objectMapper = objectMapper;        this.sourcingService = sourcingService;
+
     }
 
     // ── Seller authoring ─────────────────────────────────────────────────────────────
@@ -190,6 +193,18 @@ public class ListingService {
                     Map.of("reason", "SELLER_NOT_VERIFIED", "phase", "publish"));
             throw new IllegalStateException("Regulated listing requires a VERIFIED seller storefront");
         }
+        // Restricted sourcing categories (e.g. medicines) require a verified
+        // credentialed seller regardless of the listing's risk classification.
+        String sourcingCategory = itemRepository.findById(e.getCatalogItemId())
+                .map(item -> item.getSourcingCategoryCode()).orElse(null);
+        if (sourcingService.isRestrictedCategory(sourcingCategory)
+                && !storefrontService.isSellerVerified(e.getSellerType(), e.getSellerId())) {
+            auditService.record(ctx, "POLICY_DENIED", e.getListingId(), null, e.getRiskClassification(), "DENY",
+                    Map.of("reason", "RESTRICTED_CATEGORY_SELLER_NOT_VERIFIED",
+                           "category", sourcingCategory, "phase", "publish"));
+            throw new IllegalStateException("Listings in restricted sourcing category " + sourcingCategory
+                    + " require a VERIFIED seller storefront with the applicable credential");
+        }
         e.setStatus("PUBLISHED");
         e.setPublishedAt(OffsetDateTime.now());
         e = listingRepository.save(e);
@@ -228,10 +243,11 @@ public class ListingService {
 
     // ── Buyer discovery ──────────────────────────────────────────────────────────────
 
-    public Page<ListingDtos.ListingView> searchPublished(String q, String risk, Pageable pageable) {
+    public Page<ListingDtos.ListingView> searchPublished(String q, String risk, String category, Pageable pageable) {
         String qn = (q == null || q.isBlank()) ? null : q;
         String rn = (risk == null || risk.isBlank()) ? null : risk;
-        return listingRepository.searchPublished(qn, rn, pageable).map(this::toView);
+        String cn = category == null || category.isBlank() ? null : category;
+        return listingRepository.searchPublished(qn, rn, cn, pageable).map(this::toView);
     }
 
     /**

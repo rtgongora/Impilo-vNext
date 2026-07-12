@@ -27,7 +27,13 @@ public class ListingAuditService {
         this.objectMapper = objectMapper;
     }
 
-    @Transactional
+    /**
+     * Audit rows must survive the caller's rollback: policy denials are
+     * recorded immediately before the denying exception is thrown, and an
+     * audit trail that disappears with the rolled-back transaction is no
+     * audit trail at all.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void record(TrustContext ctx, String action, String listingId, String subjectRef,
                        String riskClassification, String decision, Map<String, Object> detail) {
         ListingAuditEntity e = new ListingAuditEntity();
