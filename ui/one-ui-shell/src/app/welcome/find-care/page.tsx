@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
+import { PublicFacilitySearch } from "@/components/public/PublicFacilitySearch";
 
 export const metadata = {
   title: "Find care — Impilo",
-  description: "Major public referral hospitals, how to visit a facility, and how to access the full facility finder.",
+  description:
+    "Search the national facility directory, see major public referral hospitals, and learn how to visit a facility. No sign-in needed.",
 };
 
 /**
- * Public find-care orientation (part of G-CZO-02). This is reference information only —
- * major public referral hospitals are public knowledge, not patient data. The complete,
- * searchable facility directory and appointment booking require an account, so this page
- * orients newcomers and routes them to get started. No authenticated calls; no PII.
+ * Public find-care page (gateway pillar: Get care / Find or verify a service).
+ * The national facility directory is searchable WITHOUT sign-in via the anonymous
+ * gateway lane; booking and saved facilities remain behind sign-in. The referral
+ * hospital list stays as an always-available reference. No PII on this page.
  */
 const REFERRAL_HOSPITALS = [
   { name: "Parirenyatwa Group of Hospitals", city: "Harare" },
@@ -31,16 +33,16 @@ export default function FindCarePage() {
       </nav>
       <h1 className="mt-2 text-3xl font-bold text-slate-900">Find care near you</h1>
       <p className="mt-3 max-w-2xl text-slate-600">
-        Below are major public referral hospitals. To search the full facility directory, see clinic
-        hours, and book appointments, create an account or sign in.
+        Search the national facility directory — no sign-in needed. To book an appointment or save
+        a facility, create an account or sign in.
       </p>
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Link
-          href="/auth/register"
-          className="rounded-lg bg-emerald-600 px-5 py-2.5 font-semibold text-white hover:bg-emerald-700"
+          href="/verify/facility-certificate"
+          className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 font-semibold text-slate-800 hover:bg-slate-50"
         >
-          Create an account to use the facility finder
+          Verify a facility certificate
         </Link>
         <Link
           href="/welcome/emergency"
@@ -48,6 +50,10 @@ export default function FindCarePage() {
         >
           Emergency information
         </Link>
+      </div>
+
+      <div className="mt-8">
+        <PublicFacilitySearch />
       </div>
 
       <section className="mt-8">
@@ -61,8 +67,8 @@ export default function FindCarePage() {
           ))}
         </ul>
         <p className="mt-3 text-xs text-slate-500">
-          This is a reference list of major referral hospitals, not the complete national directory.
-          Sign in for the full, searchable facility finder.
+          This is a reference list of major referral hospitals. Use the search above for the
+          complete national directory.
         </p>
       </section>
 

@@ -8,10 +8,76 @@ export const metadata = {
 };
 
 /**
- * Public L0 landing (G-CZO-02). Reachable WITHOUT login. Explains what Impilo is and
- * routes a newcomer to get started. Static, server-rendered, no authenticated calls,
- * no personal/health data.
+ * Public L0 landing (G-CZO-02) and the gateway intent home ("How can we help you
+ * today?"). Reachable WITHOUT login. Explains what Impilo is, routes each of the nine
+ * service intents honestly (open now / sign in to continue / coming soon), and never
+ * makes authenticated calls or shows personal/health data.
  */
+const INTENT_PILLARS: Array<{
+  title: string;
+  description: string;
+  href: string;
+  access: "open" | "sign-in" | "coming";
+  tone?: "emergency";
+}> = [
+  {
+    title: "Get care",
+    description: "Find a facility near you, learn how to visit, and how booking works.",
+    href: "/welcome/find-care",
+    access: "open",
+  },
+  {
+    title: "Emergency help",
+    description: "Emergency numbers and what to do right now. Never blocked by sign-in.",
+    href: "/welcome/emergency",
+    access: "open",
+    tone: "emergency",
+  },
+  {
+    title: "Find or verify a service",
+    description: "Search the national facility directory or verify a facility certificate.",
+    href: "/welcome/find-care",
+    access: "open",
+  },
+  {
+    title: "My health",
+    description: "Your records, results, appointments and consent — protected behind sign-in.",
+    href: "/auth/login?returnTo=%2Fhome",
+    access: "sign-in",
+  },
+  {
+    title: "Health information",
+    description:
+      "Trusted health knowledge and prevention guidance is being added. Emergency and public-health notices are available today.",
+    href: "/welcome/emergency",
+    access: "coming",
+  },
+  {
+    title: "Health cover & payments",
+    description: "Check your cover, view bills and receipts, and pay for care.",
+    href: "/auth/login?returnTo=%2Fcoverage",
+    access: "sign-in",
+  },
+  {
+    title: "Applications & licensing",
+    description: "Professional registration, facility licensing, renewals and tracking.",
+    href: "/auth/login",
+    access: "sign-in",
+  },
+  {
+    title: "Feedback & complaints",
+    description: "Compliment, complain or raise a safety concern, and track the outcome.",
+    href: "/auth/login?returnTo=%2Fmy-life%2Ffeedback",
+    access: "sign-in",
+  },
+  {
+    title: "Health products & suppliers",
+    description: "Find pharmacies and health products, order and track delivery.",
+    href: "/auth/login?returnTo=%2Fmarketplace",
+    access: "sign-in",
+  },
+];
+
 export default function WelcomePage() {
   return (
     <PublicShell>
@@ -77,28 +143,55 @@ export default function WelcomePage() {
         </div>
       </section>
 
-      <section className="mt-8 grid gap-4 sm:grid-cols-2">
-        <Link
-          href="/welcome/find-care"
-          className="group rounded-xl border border-slate-200 bg-white p-6 hover:border-emerald-300 hover:bg-emerald-50/40"
-        >
-          <h2 className="text-lg font-semibold text-slate-900 group-hover:text-emerald-800">
-            Find care near you
-          </h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Major public hospitals, how to visit a facility, and how to get the full facility finder.
-          </p>
-        </Link>
-        <Link
-          href="/welcome/emergency"
-          className="group rounded-xl border border-red-200 bg-white p-6 hover:border-red-300 hover:bg-red-50/40"
-        >
-          <h2 className="text-lg font-semibold text-red-700">Emergency &amp; public health</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Emergency numbers and current public-health guidance. If life is at risk, call
-            emergency services now.
-          </p>
-        </Link>
+      <section className="mt-10" aria-labelledby="intent-heading">
+        <h2 id="intent-heading" className="text-2xl font-bold text-slate-900">
+          How can we help you today?
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Start with what you need. Many services are available without signing in; the rest tell
+          you exactly what they require.
+        </p>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {INTENT_PILLARS.map((pillar) => (
+            <Link
+              key={pillar.title}
+              href={pillar.href}
+              className={`group rounded-xl border bg-white p-5 transition ${
+                pillar.tone === "emergency"
+                  ? "border-red-200 hover:border-red-300 hover:bg-red-50/40"
+                  : "border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/40"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <h3
+                  className={`font-semibold ${
+                    pillar.tone === "emergency"
+                      ? "text-red-700"
+                      : "text-slate-900 group-hover:text-emerald-800"
+                  }`}
+                >
+                  {pillar.title}
+                </h3>
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                    pillar.access === "open"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : pillar.access === "sign-in"
+                        ? "bg-slate-100 text-slate-600"
+                        : "bg-amber-50 text-amber-700"
+                  }`}
+                >
+                  {pillar.access === "open"
+                    ? "No sign-in needed"
+                    : pillar.access === "sign-in"
+                      ? "Sign in to continue"
+                      : "Coming soon"}
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-slate-600">{pillar.description}</p>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6">
