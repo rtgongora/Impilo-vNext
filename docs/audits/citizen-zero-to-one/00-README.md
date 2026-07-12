@@ -5,6 +5,17 @@
 **Date:** 2026-06-25
 **Owner:** Citizen Zero-to-One coordination session
 
+> **Status update (2026-07-12):** the trust ladder in this audit set is now
+> **canonicalized** — with renamed rungs (R0 Public → R1 Reachable → R2 Person-verified →
+> R3 Strongly-authenticated → R4 Authorised-relationship → R5 High-assurance) — by
+> [`docs/doctrine/health-services-gateway-doctrine.md`](../../doctrine/health-services-gateway-doctrine.md) §4,
+> with clause status tracked in `docs/doctrine/doctrine-gap-matrix.md` §8 (GW-04).
+> Since this audit was written, **G-CZO-01 (LOA→policy propagation), G-CZO-02 (public L0
+> landing), G-CZO-03 (L5 delegation via mvumo + PDP Step 4.5), and G-CZO-04 (citizen
+> step-up BFF)** have closed in code. This folder remains the point-in-time
+> implementation evidence of record; per-gap current truth lives in the gap matrix and
+> [`docs/architecture/gateway-experience-capability-map.md`](../../architecture/gateway-experience-capability-map.md).
+
 ## Mission
 
 Prove that Impilo vNext lives in the practical world: an ordinary person can discover Impilo,
