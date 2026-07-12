@@ -17,6 +17,7 @@ import zw.gov.mohcc.impilo.tuso.core.InspectionContentService;
 import zw.gov.mohcc.impilo.tuso.core.InspectionVisitService;
 import zw.gov.mohcc.impilo.tuso.core.PicNominationService;
 import zw.gov.mohcc.impilo.tuso.core.PremisesService;
+import zw.gov.mohcc.impilo.tuso.core.RegulatoryDemandSignalService;
 import zw.gov.mohcc.impilo.tuso.core.RegulatoryRuleService;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.ApplicationInformationRequestEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.ExternalCouncilReviewEntity;
@@ -56,6 +57,7 @@ public class HpaRegulatoryOperationsController {
     private final FacilityClassificationRepository classificationRepository;
     private final InspectionContentService contentService;
     private final FacilityInspectionRepository inspectionRepository;
+    private final RegulatoryDemandSignalService demandSignalService;
 
     public HpaRegulatoryOperationsController(ApplicationGovernanceService governanceService,
                                              PicNominationService picNominationService,
@@ -64,7 +66,8 @@ public class HpaRegulatoryOperationsController {
                                              RegulatoryRuleService ruleService,
                                              FacilityClassificationRepository classificationRepository,
                                              InspectionContentService contentService,
-                                             FacilityInspectionRepository inspectionRepository) {
+                                             FacilityInspectionRepository inspectionRepository,
+                                             RegulatoryDemandSignalService demandSignalService) {
         this.governanceService = governanceService;
         this.picNominationService = picNominationService;
         this.visitService = visitService;
@@ -73,6 +76,7 @@ public class HpaRegulatoryOperationsController {
         this.classificationRepository = classificationRepository;
         this.contentService = contentService;
         this.inspectionRepository = inspectionRepository;
+        this.demandSignalService = demandSignalService;
     }
 
     // ---- Catalogues + rules ------------------------------------------------
@@ -342,6 +346,16 @@ public class HpaRegulatoryOperationsController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> visitProgress(@PathVariable UUID visitId) {
         TrustContext ctx = TrustContextHolder.require();
         return ResponseEntity.ok(ApiResponse.ok(visitService.progress(visitId), corr(ctx)));
+    }
+
+    /**
+     * Aggregate-only demand signal for marketplace supply-side insights.
+     * Never exposes facility/application identifiers; small cells suppressed.
+     */
+    @GetMapping("/demand-signal")
+    public ResponseEntity<ApiResponse<RegulatoryDemandSignalService.DemandSignalResponse>> demandSignal() {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(demandSignalService.demandSignal(), corr(ctx)));
     }
 
     private static String corr(TrustContext ctx) {
