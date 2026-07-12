@@ -281,6 +281,30 @@ static_resources:
                         - match: { prefix: "/internal/v1/rtc/" }
                           route: { cluster: rtc_gateway_service }
 
+                        # ── Governed PUBLIC gateway lane → Experience BFF ──
+                        # Anonymous (R0) lane per docs/architecture/gateway-public-lane-security-adr.md:
+                        # the BFF's permitAll list is the gate; ext_authz is disabled ONLY here, and
+                        # externally supplied trust headers are stripped so an anonymous caller can
+                        # never smuggle trust context. Must stay identical to infra/envoy/envoy-runtime.yaml
+                        # (ENVOY-GATE: both files change together).
+                        - match: { prefix: "/internal/v1/public/" }
+                          route: { cluster: experience_bff }
+                          request_headers_to_remove:
+                            - "x-actor-id"
+                            - "x-actor-type"
+                            - "x-assurance-level"
+                            - "x-purpose-of-use"
+                            - "x-subject-id"
+                            - "x-escalation-grant-id"
+                            - "x-visibility-tier"
+                            - "x-pii-access"
+                            - "x-clinical-access"
+                            - "x-obligations"
+                          typed_per_filter_config:
+                            envoy.filters.http.ext_authz:
+                              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                              disabled: true
+
                         # ── Experience BFF — internal profile/visibility paths ──
                         - match: { prefix: "/internal/v1/" }
                           route: { cluster: experience_bff }
