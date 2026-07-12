@@ -168,14 +168,30 @@ Now (`NavRail`, ≥`lg` viewports):
 - **Clinical record surfaces (EHR chart, vitals history)**: clinically visible information must
   not be collapsed or hidden (brief §4 hard rule) — long histories still scroll; grids reduce the
   length, `StickyActionBar` keeps actions reachable.
-- **`welcome/**` / `discover/**`**: hot files actively receiving gateway-intent functional work
-  from the parallel session; layout churn there risked rebase conflicts against in-flight
-  functional commits. Left for a follow-up pass once the gateway wave lands.
+- **`welcome/**` / `discover/**`** (deferred — conflict risk, not a defect): hot files actively
+  receiving gateway-intent functional work from the parallel session; on re-check they are already
+  responsibly built (responsive `sm:grid-cols-2 lg:grid-cols-3` pillar/reference grids, sensible
+  spacing). Layout churn there buys little and risks rebase conflicts against in-flight functional
+  commits, so it is intentionally left to the gateway session.
+- **`ui/portal` / `ui/self-service`** (assessed — correct as-is): the citizen self-service flows
+  (Health-ID request, card pickup, ID recovery, side-effect report, credential verify) are
+  deliberately narrow single-column (`max-w-lg`/`max-w-xl`). That is the *right* shape for a
+  low-literacy, one-task-at-a-time, low-cost-Android audience (brief §2 phones + §11 device
+  priority); multi-column gridding would be a regression, so none was applied.
+- **`registry/intake`** (assessed — already responsive): an operator dashboard of tool cards on a
+  `md:grid-cols-2` grid with wide cards spanning two columns — not the section-wizard an early
+  scan suggested; no conversion warranted.
 - **Telemedicine intake**: already a split-pane step-nav wizard — no conversion needed.
 - **List/queue pages (pharmacy dispense, dispatch queues)**: vertical lists are the correct shape
   for compare-and-act work; they use compact rows already.
 - **EHRLayout**: has its own focused chrome (own header/sidebar); only inherits the taskbar-height
   reclaim. Deeper unification deferred.
+
+**Scope discipline note:** the space-compaction mandate targets operational/professional forms
+completed under time pressure (health workers entering data), not linear citizen flows — those
+stay single-column by design. After converting the genuine operational offenders (§3), the
+remaining surfaces were each verified rather than assumed, and found to be either already
+responsive or correctly narrow, so no further churn was introduced onto the shared branch.
 
 ## 11. Website repo (`zimttech/impilo-website`)
 
