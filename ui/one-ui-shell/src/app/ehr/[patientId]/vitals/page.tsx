@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Activity, AlertTriangle, Baby, ClipboardList, Droplets, HeartPulse, Loader2, Plus, Truck } from "lucide-react";
+import { StickyActionBar } from "shared-ui";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEarlyWarningScores, useRecordEWS } from "@/hooks/queries/useEWS";
@@ -881,8 +882,8 @@ export default function VitalsPage() {
 
               {showApgarForm && isClinical && (
                 <form onSubmit={handleApgarSubmit} className="mt-4 space-y-3 rounded-lg border border-border bg-background/80 p-4">
-                  <div className="flex flex-wrap items-end gap-3">
-                    <label className="text-xs font-medium text-muted-foreground">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+                    <label className="min-w-0 text-xs font-medium text-muted-foreground">
                       Minute
                       <input
                         type="number"
@@ -891,10 +892,10 @@ export default function VitalsPage() {
                         required
                         value={apgarMinute}
                         onChange={(e) => setApgarMinute(e.target.value)}
-                        className="mt-1 block w-24 rounded-lg border border-border px-3 py-2 text-sm"
+                        className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-muted-foreground">
+                    <label className="min-w-0 text-xs font-medium text-muted-foreground">
                       Appearance (0–2)
                       <input
                         type="number"
@@ -903,10 +904,10 @@ export default function VitalsPage() {
                         required
                         value={apgarAppearance}
                         onChange={(e) => setApgarAppearance(e.target.value)}
-                        className="mt-1 block w-20 rounded-lg border border-border px-3 py-2 text-sm"
+                        className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-muted-foreground">
+                    <label className="min-w-0 text-xs font-medium text-muted-foreground">
                       Pulse (0–2)
                       <input
                         type="number"
@@ -915,10 +916,10 @@ export default function VitalsPage() {
                         required
                         value={apgarPulse}
                         onChange={(e) => setApgarPulse(e.target.value)}
-                        className="mt-1 block w-20 rounded-lg border border-border px-3 py-2 text-sm"
+                        className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-muted-foreground">
+                    <label className="min-w-0 text-xs font-medium text-muted-foreground">
                       Grimace (0–2)
                       <input
                         type="number"
@@ -927,10 +928,10 @@ export default function VitalsPage() {
                         required
                         value={apgarGrimace}
                         onChange={(e) => setApgarGrimace(e.target.value)}
-                        className="mt-1 block w-20 rounded-lg border border-border px-3 py-2 text-sm"
+                        className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-muted-foreground">
+                    <label className="min-w-0 text-xs font-medium text-muted-foreground">
                       Activity (0–2)
                       <input
                         type="number"
@@ -939,10 +940,10 @@ export default function VitalsPage() {
                         required
                         value={apgarActivity}
                         onChange={(e) => setApgarActivity(e.target.value)}
-                        className="mt-1 block w-20 rounded-lg border border-border px-3 py-2 text-sm"
+                        className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="text-xs font-medium text-muted-foreground">
+                    <label className="min-w-0 text-xs font-medium text-muted-foreground">
                       Respiration (0–2)
                       <input
                         type="number"
@@ -951,18 +952,18 @@ export default function VitalsPage() {
                         required
                         value={apgarRespiration}
                         onChange={(e) => setApgarRespiration(e.target.value)}
-                        className="mt-1 block w-20 rounded-lg border border-border px-3 py-2 text-sm"
+                        className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
                       />
                     </label>
-                    <button
-                      type="submit"
-                      disabled={recordApgar.isPending}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
-                    >
-                      {recordApgar.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                      Save APGAR
-                    </button>
                   </div>
+                  <button
+                    type="submit"
+                    disabled={recordApgar.isPending}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                  >
+                    {recordApgar.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Save APGAR
+                  </button>
                   {recordApgar.isError && (
                     <p className="text-xs text-red-600">Failed to save APGAR. Check BFF and try again.</p>
                   )}
@@ -1086,8 +1087,8 @@ export default function VitalsPage() {
 
               {showFluidForm && isClinical && (
                 <form onSubmit={handleFluidSubmit} className="mt-4 space-y-3 rounded-lg border border-border bg-background/80 p-4">
-                  <div className="flex flex-wrap gap-3">
-                    <label className="text-xs font-medium text-muted-foreground">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <label className="min-w-0 text-xs font-medium text-muted-foreground">
                       Type
                       <select
                         value={fluidEntryType}
@@ -1096,18 +1097,18 @@ export default function VitalsPage() {
                           setFluidEntryType(v);
                           setFluidCategory(v === "INTAKE" ? "ORAL" : "URINE");
                         }}
-                        className="mt-1 block rounded-lg border border-border px-2 py-2 text-sm"
+                        className="mt-1 block w-full rounded-lg border border-border px-2 py-2 text-sm"
                       >
                         <option value="INTAKE">Intake</option>
                         <option value="OUTPUT">Output</option>
                       </select>
                     </label>
-                    <label className="text-xs font-medium text-muted-foreground">
+                    <label className="min-w-0 text-xs font-medium text-muted-foreground">
                       Category
                       <select
                         value={fluidCategory}
                         onChange={(e) => setFluidCategory(e.target.value)}
-                        className="mt-1 block min-w-[8rem] rounded-lg border border-border px-2 py-2 text-sm"
+                        className="mt-1 block w-full rounded-lg border border-border px-2 py-2 text-sm"
                       >
                         {fluidEntryType === "INTAKE" ? (
                           <>
@@ -1127,7 +1128,7 @@ export default function VitalsPage() {
                         )}
                       </select>
                     </label>
-                    <label className="text-xs font-medium text-muted-foreground">
+                    <label className="min-w-0 text-xs font-medium text-muted-foreground">
                       Volume (ml)
                       <input
                         type="number"
@@ -1135,7 +1136,7 @@ export default function VitalsPage() {
                         required
                         value={fluidVolume}
                         onChange={(e) => setFluidVolume(e.target.value)}
-                        className="mt-1 block w-28 rounded-lg border border-border px-2 py-2 text-sm"
+                        className="mt-1 block w-full rounded-lg border border-border px-2 py-2 text-sm"
                       />
                     </label>
                   </div>
@@ -1592,7 +1593,7 @@ export default function VitalsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 pt-2">
+                  <StickyActionBar status="New vitals entry — save or cancel">
                     <button
                       type="submit"
                       disabled={recordVitals.isPending}
@@ -1613,7 +1614,7 @@ export default function VitalsPage() {
                     >
                       Cancel
                     </button>
-                  </div>
+                  </StickyActionBar>
 
                   {recordVitals.isError && (
                     <p className="text-sm text-red-600">

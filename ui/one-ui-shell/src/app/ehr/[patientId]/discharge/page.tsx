@@ -31,6 +31,7 @@ import {
   Pill,
 } from "lucide-react";
 import Link from "next/link";
+import { StickyActionBar } from "shared-ui";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EncounterBillingPanel } from "@/components/encounter/EncounterBillingPanel";
 import { EHRLayout } from "@/components/EHRLayout";
@@ -333,14 +334,14 @@ export default function VisitOutcomePage() {
                 <div className="space-y-4">
                   {/* Type-specific fields */}
                   {disposition === "ADMIT" && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="min-w-0">
                         <label className="block text-xs font-medium text-muted-foreground mb-1">Admitting Ward</label>
                         <input type="text" value={admitWard} onChange={(e) => setAdmitWard(e.target.value)}
                           placeholder="e.g. Medical Ward 1, ICU, Maternity"
                           className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <label className="block text-xs font-medium text-muted-foreground mb-1">Priority</label>
                         <div className="flex gap-2 mt-1">
                           {["Routine", "Urgent", "Emergency"].map((p) => (
@@ -360,14 +361,14 @@ export default function VisitOutcomePage() {
                         <AlertTriangle className="w-4 h-4 text-amber-600" />
                         <span className="text-sm text-warning-foreground">Ensure receiving facility has confirmed acceptance</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div className="min-w-0">
                           <label className="block text-xs font-medium text-muted-foreground mb-1">Receiving Facility</label>
                           <input type="text" value={transferFacility} onChange={(e) => setTransferFacility(e.target.value)}
                             placeholder="Facility name"
                             className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <label className="block text-xs font-medium text-muted-foreground mb-1">Reason for Transfer</label>
                           <input type="text" value={transferReason} onChange={(e) => setTransferReason(e.target.value)}
                             placeholder="Why is the patient being transferred?"
@@ -392,18 +393,18 @@ export default function VisitOutcomePage() {
                         <AlertCircle className="w-4 h-4 text-red-600" />
                         <span className="text-sm text-danger">This action records a patient death</span>
                       </div>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="min-w-0">
                           <label className="block text-xs font-medium text-muted-foreground mb-1">Date of Death</label>
                           <input type="date" value={deathDate} onChange={(e) => setDeathDate(e.target.value)}
                             className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <label className="block text-xs font-medium text-muted-foreground mb-1">Time of Death</label>
                           <input type="time" value={deathTime} onChange={(e) => setDeathTime(e.target.value)}
                             className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <label className="block text-xs font-medium text-muted-foreground mb-1">Primary Cause</label>
                           <input type="text" value={deathCause} onChange={(e) => setDeathCause(e.target.value)}
                             placeholder="Immediate cause of death"
@@ -429,47 +430,49 @@ export default function VisitOutcomePage() {
                   )}
 
                   {/* Common fields — always shown for all dispositions */}
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">Diagnosis</label>
-                    <textarea value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)}
-                      rows={2} placeholder="Primary and secondary diagnoses..."
-                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">Treatment Summary</label>
-                    <textarea value={treatmentSummary} onChange={(e) => setTreatmentSummary(e.target.value)}
-                      rows={2} placeholder="Summary of treatments and procedures..."
-                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
-                  </div>
-                  {(disposition === "DISCHARGE" || disposition === "REFER") && (
-                    <>
-                      <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">Follow-up Instructions</label>
-                        <textarea value={followUp} onChange={(e) => setFollowUp(e.target.value)}
-                          rows={2} placeholder="Follow-up appointments, return criteria..."
-                          className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">Medications at Discharge</label>
-                        <textarea value={medications} onChange={(e) => setMedications(e.target.value)}
-                          rows={2} placeholder="Medications with dosages..."
-                          className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
-                      </div>
-                    </>
-                  )}
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                      {disposition === "LAMA" ? "Additional Notes" : "Patient Instructions"}
-                    </label>
-                    <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)}
-                      rows={2} placeholder={disposition === "LAMA" ? "Additional documentation..." : "Instructions for the patient..."}
-                      className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="min-w-0">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Diagnosis</label>
+                      <textarea value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)}
+                        rows={2} placeholder="Primary and secondary diagnoses..."
+                        className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
+                    </div>
+                    <div className="min-w-0">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">Treatment Summary</label>
+                      <textarea value={treatmentSummary} onChange={(e) => setTreatmentSummary(e.target.value)}
+                        rows={2} placeholder="Summary of treatments and procedures..."
+                        className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
+                    </div>
+                    {(disposition === "DISCHARGE" || disposition === "REFER") && (
+                      <>
+                        <div className="min-w-0">
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Follow-up Instructions</label>
+                          <textarea value={followUp} onChange={(e) => setFollowUp(e.target.value)}
+                            rows={2} placeholder="Follow-up appointments, return criteria..."
+                            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
+                        </div>
+                        <div className="min-w-0">
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Medications at Discharge</label>
+                          <textarea value={medications} onChange={(e) => setMedications(e.target.value)}
+                            rows={2} placeholder="Medications with dosages..."
+                            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
+                        </div>
+                      </>
+                    )}
+                    <div className="col-span-full min-w-0">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        {disposition === "LAMA" ? "Additional Notes" : "Patient Instructions"}
+                      </label>
+                      <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)}
+                        rows={2} placeholder={disposition === "LAMA" ? "Additional documentation..." : "Instructions for the patient..."}
+                        className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none" />
+                    </div>
                   </div>
                 </div>
 
                 {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
 
-                <div className="flex justify-end gap-3 mt-5">
+                <StickyActionBar status={`Visit outcome: ${selectedDispositionLabel}`}>
                   <button
                     onClick={() => setDisposition("")}
                     className="px-4 py-2 bg-neutral-100 text-foreground text-sm font-medium rounded-lg hover:bg-neutral-100 transition-colors"
@@ -487,7 +490,7 @@ export default function VisitOutcomePage() {
                       <><CheckCircle2 className="w-4 h-4" /> Complete Encounter</>
                     )}
                   </button>
-                </div>
+                </StickyActionBar>
               </div>
             )}
           </div>

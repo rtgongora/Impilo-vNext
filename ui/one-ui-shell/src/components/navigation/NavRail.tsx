@@ -70,6 +70,9 @@ export function NavRail() {
         "transition-[width] duration-200",
         compact ? "w-16" : "w-60",
       ].join(" ")}
+      // The floating dock overlays the bottom edge; reserve its height so the
+      // rail's collapse toggle stays reachable.
+      style={{ paddingBottom: "var(--shell-taskbar-height, 0px)" }}
     >
       <div className={`flex h-11 shrink-0 items-center border-b border-[color:var(--border-soft)] ${compact ? "justify-center" : "gap-2 px-3"}`}>
         <button
@@ -82,10 +85,26 @@ export function NavRail() {
           <Menu className="h-4 w-4" />
         </button>
         {!compact ? (
-          <Link href="/home" className="min-w-0" aria-label="Home">
+          <Link href="/home" className="min-w-0 flex-1" aria-label="Home">
             <ImpiloBrandLogo variant="full" tone="brand" size={18} />
           </Link>
         ) : null}
+      </div>
+
+      {/* Toggle lives at the top: the bottom edge is contested by the floating
+          dock and the fixed Emergency Help button (gateway doctrine §7). */}
+      <div className={`flex shrink-0 border-b border-[color:var(--border-soft)] px-2 py-1 ${compact ? "justify-center" : "justify-end"}`}>
+        <button
+          type="button"
+          onClick={() => setNavRailPref(compact ? "expanded" : "compact")}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--text-primary)]"
+          aria-label={compact ? "Expand navigation labels" : "Collapse navigation to icons"}
+          title={compact ? "Expand navigation" : "Collapse navigation"}
+          aria-pressed={compact}
+          data-testid="nav-rail-toggle"
+        >
+          {compact ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-2" aria-label="Zone navigation">
@@ -127,23 +146,6 @@ export function NavRail() {
         ))}
       </nav>
 
-      <div className={`shrink-0 border-t border-[color:var(--border-soft)] p-2 ${compact ? "flex justify-center" : ""}`}>
-        <button
-          type="button"
-          onClick={() => setNavRailPref(compact ? "expanded" : "compact")}
-          className={[
-            "inline-flex items-center gap-2 rounded-xl text-xs text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--text-primary)]",
-            compact ? "h-9 w-9 justify-center" : "w-full px-2.5 py-2",
-          ].join(" ")}
-          aria-label={compact ? "Expand navigation labels" : "Collapse navigation to icons"}
-          title={compact ? "Expand navigation" : "Collapse navigation"}
-          aria-pressed={compact}
-          data-testid="nav-rail-toggle"
-        >
-          {compact ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-          {!compact ? <span>Collapse</span> : null}
-        </button>
-      </div>
     </aside>
   );
 }

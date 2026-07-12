@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { Stepper } from "shared-ui";
 import { AdministrationGovernanceShell } from "./AdministrationGovernanceShell";
 import { FriendlyBlockedState } from "./FriendlyBlockedState";
 import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
@@ -44,19 +45,16 @@ export function OnboardFlowWizard({ flow }: OnboardFlowWizardProps) {
               <p className="mt-2 text-sm font-medium text-primary-hover">Outcome: {option.outcome}</p>
             </div>
 
-            <ol className="space-y-3">
-              {steps.steps.map((step, index) => (
-                <li key={step} className="flex gap-3 rounded-xl border border-border bg-card p-4">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-primary-hover">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <p className="font-medium text-foreground">{step}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Guided step — BFF workforce-governance APIs apply OPA precheck on submit.</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <Stepper
+                aria-label="Onboarding steps"
+                steps={steps.steps.map((step) => ({ id: step, label: step }))}
+                activeIndex={0}
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                Guided steps — BFF workforce-governance APIs apply OPA precheck on submit.
+              </p>
+            </div>
 
             <OnboardReviewSubmit flowId={flow} option={option} />
 
