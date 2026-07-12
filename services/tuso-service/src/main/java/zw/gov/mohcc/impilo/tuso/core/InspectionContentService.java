@@ -10,7 +10,9 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityInspectionEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityUnitEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.InspectionRequirementModuleEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.InspectionTemplateCompositionEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryProfileEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.ClassificationTemplateApplicabilityRepository;
+import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRegulatoryProfileRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityUnitRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.InspectionRequirementModuleRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.InspectionTemplateCompositionRepository;
@@ -21,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -43,16 +46,22 @@ public class InspectionContentService {
     private final InspectionTemplateCompositionRepository compositionRepository;
     private final ClassificationTemplateApplicabilityRepository applicabilityRepository;
     private final FacilityUnitRepository facilityUnitRepository;
+    private final FacilityRegulatoryProfileRepository profileRepository;
 
     public InspectionContentService(InspectionRequirementModuleRepository moduleRepository,
                                     InspectionTemplateCompositionRepository compositionRepository,
                                     ClassificationTemplateApplicabilityRepository applicabilityRepository,
-                                    FacilityUnitRepository facilityUnitRepository) {
+                                    FacilityUnitRepository facilityUnitRepository,
+                                    FacilityRegulatoryProfileRepository profileRepository) {
         this.moduleRepository = moduleRepository;
         this.compositionRepository = compositionRepository;
         this.applicabilityRepository = applicabilityRepository;
         this.facilityUnitRepository = facilityUnitRepository;
+        this.profileRepository = profileRepository;
     }
+
+    private static final Set<String> RESOLVABLE_PROFILE_STATUSES = Set.of(
+            "HUMAN_CONFIRMED", "DETERMINISTIC_MULTI_FIELD_MATCH", "EXACT_SOURCE_MATCH");
 
     /** The outcome of composition resolution, frozen onto the inspection row. */
     public record ResolvedContent(String compositionCode, Map<String, Integer> moduleVersions,
@@ -78,20 +87,54 @@ public class InspectionContentService {
             compositionCodes.add(explicitCompositionCode);
             trail.add("explicit composition " + explicitCompositionCode + " selected by authorised regulator");
         } else {
-            String classificationLabel = facility.getMetadata() != null
-                    ? asText(facility.getMetadata().get("hpaClassificationLabel")) : null;
-            if (classificationLabel != null) {
-                for (ClassificationTemplateApplicabilityEntity mapping
-                        : applicabilityRepository.findByClassificationLabelIgnoreCase(classificationLabel)) {
-                    compositionCodes.add(mapping.getCompositionCode());
-                    trail.add("classification '" + classificationLabel + "' → " + mapping.getCompositionCode());
+            Optional<FacilityRegulatoryProfileEntity> profileOpt = profileRepository.findByFacilityId(facility.getId());
+            if (profileOpt.isPresent()) {
+                // A structured classification profile is authoritative and its
+                // resolution is gated on the profile being CONFIRMED (or already
+                // deterministic). An unconfirmed/ambiguous profile HARD-STOPS —
+                // it never silently falls through to metadata/free-text.
+                FacilityRegulatoryProfileEntity profile = profileOpt.get();
+                String status = profile.getClassificationStatus();
+                if (!RESOLVABLE_PROFILE_STATUSES.contains(status)) {
+                    throw new IllegalStateException("Facility " + facility.getId()
+                            + " has an unconfirmed classification profile (status=" + status
+                            + ", required facts=" + profile.getRequiredFacts()
+                            + "). Resolve it in the classification reconciliation queue before scheduling an "
+                            + "inspection; a definitive checklist will NOT be substituted.");
                 }
-            }
-            if (compositionCodes.isEmpty() && facility.getFacilityType() != null) {
-                for (ClassificationTemplateApplicabilityEntity mapping
-                        : applicabilityRepository.findByFacilityTypeIgnoreCase(facility.getFacilityType())) {
-                    compositionCodes.add(mapping.getCompositionCode());
-                    trail.add("facility type '" + facility.getFacilityType() + "' → " + mapping.getCompositionCode());
+                if ("NOT_APPLICABLE".equals(profile.getHpaClass())) {
+                    throw new IllegalStateException("Facility " + facility.getId()
+                            + " classification is NOT_APPLICABLE (" + profile.getHpaClassJustification()
+                            + "); no inspection composition applies.");
+                }
+                String label = profile.getHpaClassificationLabel();
+                if (label != null) {
+                    for (ClassificationTemplateApplicabilityEntity mapping
+                            : applicabilityRepository.findByClassificationLabelIgnoreCase(label)) {
+                        compositionCodes.add(mapping.getCompositionCode());
+                        trail.add("confirmed classification '" + label + "' (status " + status
+                                + ", rule " + profile.getMappingRuleCode() + " v" + profile.getMappingRuleVersion()
+                                + ") → " + mapping.getCompositionCode());
+                    }
+                }
+            } else {
+                // No profile row at all (e.g. a facility born via a fresh registration
+                // application before the estate backfill): legacy behaviour, unchanged.
+                String classificationLabel = facility.getMetadata() != null
+                        ? asText(facility.getMetadata().get("hpaClassificationLabel")) : null;
+                if (classificationLabel != null) {
+                    for (ClassificationTemplateApplicabilityEntity mapping
+                            : applicabilityRepository.findByClassificationLabelIgnoreCase(classificationLabel)) {
+                        compositionCodes.add(mapping.getCompositionCode());
+                        trail.add("classification '" + classificationLabel + "' → " + mapping.getCompositionCode());
+                    }
+                }
+                if (compositionCodes.isEmpty() && facility.getFacilityType() != null) {
+                    for (ClassificationTemplateApplicabilityEntity mapping
+                            : applicabilityRepository.findByFacilityTypeIgnoreCase(facility.getFacilityType())) {
+                        compositionCodes.add(mapping.getCompositionCode());
+                        trail.add("facility type '" + facility.getFacilityType() + "' → " + mapping.getCompositionCode());
+                    }
                 }
             }
             // Regulated units attach their specific compositions regardless of
