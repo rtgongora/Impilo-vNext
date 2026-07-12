@@ -28,10 +28,17 @@ public class SellerCentreController {
     private final MsikaServiceClient msika;
     private final MsikaFlowServiceClient msikaFlow;
 
-    public SellerCentreController(MsikaServiceClient msika, MsikaFlowServiceClient msikaFlow) {
+    public SellerCentreController(MsikaServiceClient msika, MsikaFlowServiceClient msikaFlow,
+                                  zw.gov.mohcc.impilo.experience.client.TusoServiceClient tuso,
+                                  com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
         this.msika = msika;
         this.msikaFlow = msikaFlow;
+        this.tuso = tuso;
+        this.objectMapper = objectMapper;
     }
+
+    private final zw.gov.mohcc.impilo.experience.client.TusoServiceClient tuso;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     // ── Storefront ────────────────────────────────────────────────────────────────────
     @PostMapping("/storefront")
@@ -49,6 +56,58 @@ public class SellerCentreController {
             @PathVariable String storefrontId,
             @RequestBody String body) {
         return passthrough(() -> msika.verifyStorefront(storefrontId, body).getBody(), "storefront", requestId, correlationId);
+    }
+
+    /**
+     * Verify a seller's pharmaceutical-wholesaler licence via the HPA public
+     * certificate register (disclosure-limited), then record the outcome on
+     * the msika storefront. msika stays outcome-only — no credential storage
+     * in the marketplace.
+     */
+    @PostMapping("/storefront/{storefrontId}/verify-wholesaler-licence")
+    public ResponseEntity<Map<String, Object>> verifyWholesalerLicence(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String storefrontId,
+            @RequestBody Map<String, String> body) throws Exception {
+        String code = body.get("verificationCode");
+        if (code == null || code.isBlank()) {
+            return ResponseEntity.unprocessableEntity().body(Map.of(
+                    "error", "VERIFICATION_CODE_REQUIRED",
+                    "message", "Provide the HPA certificate verification code printed on the certificate."));
+        }
+        com.fasterxml.jackson.databind.JsonNode verification;
+        try {
+            verification = tuso.verifyCertificatePublic(code.trim());
+        } catch (Exception e) {
+            return ResponseEntity.unprocessableEntity().body(Map.of(
+                    "error", "CERTIFICATE_NOT_VERIFIED",
+                    "message", "No HPA certificate matches this verification code."));
+        }
+        boolean verified = verification != null && verification.path("verified").asBoolean(false);
+        String status = verification != null ? verification.path("status").asText("") : "";
+        String facilityType = verification != null ? verification.path("facilityType").asText("") : "";
+        String certificateType = verification != null ? verification.path("certificateType").asText("") : "";
+        boolean wholesaler = (facilityType + " " + certificateType).toUpperCase(java.util.Locale.ROOT)
+                .matches(".*(WHOLESAL|PHARMACEUTICAL_MANUFACTUR).*");
+        if (!verified || !"ACTIVE".equals(status) || !wholesaler) {
+            Map<String, Object> outcome = new java.util.LinkedHashMap<>();
+            outcome.put("error", "LICENCE_NOT_ELIGIBLE");
+            outcome.put("verified", verified);
+            outcome.put("certificateStatus", status);
+            outcome.put("wholesalerScope", wholesaler);
+            outcome.put("message", "The certificate must be a verified, ACTIVE pharmaceutical-wholesaler "
+                    + "registration to sell in restricted categories.");
+            return ResponseEntity.unprocessableEntity().body(outcome);
+        }
+        String verifyBody = objectMapper.writeValueAsString(Map.of(
+                "verificationStatus", "VERIFIED",
+                "notes", "Wholesaler licence verified via HPA public certificate register"
+                        + " [method=HPA_PUBLIC_CERTIFICATE_VERIFY certificate="
+                        + verification.path("certificateNumber").asText("") + " code=" + code.trim()
+                        + " verifiedAt=" + java.time.Instant.now() + "]"));
+        return passthrough(() -> msika.verifyStorefront(storefrontId, verifyBody).getBody(),
+                "storefront", requestId, correlationId);
     }
 
     // ── Listing authoring ──────────────────────────────────────────────────────────────

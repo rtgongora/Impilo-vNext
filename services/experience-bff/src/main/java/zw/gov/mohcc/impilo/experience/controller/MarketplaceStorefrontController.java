@@ -70,11 +70,13 @@ public class MarketplaceStorefrontController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String risk,
+            @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         if (q != null && !q.isBlank()) params.add("q", q);
         if (risk != null && !risk.isBlank()) params.add("risk", risk);
+        if (category != null && !category.isBlank()) params.add("category", category);
         params.add("page", String.valueOf(page));
         params.add("size", String.valueOf(size));
         Map<String, Object> data = new LinkedHashMap<>();

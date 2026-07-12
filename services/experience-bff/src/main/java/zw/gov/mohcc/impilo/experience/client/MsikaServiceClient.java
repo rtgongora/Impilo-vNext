@@ -43,6 +43,18 @@ public class MsikaServiceClient {
         return restTemplate.getForEntity(url, String.class);
     }
 
+    // ── Requirement sourcing (HPA requirement codes → sourcing categories) ────────────
+
+    public ResponseEntity<String> listSourcingCategories() {
+        log.info("MSIKA: Listing sourcing categories");
+        return restTemplate.getForEntity(baseUrl + "/v1/sourcing/categories", String.class);
+    }
+
+    public ResponseEntity<String> resolveSourcing(String requestBody) {
+        log.info("MSIKA: Resolving requirement sourcing");
+        return postJson(baseUrl + "/v1/sourcing/resolve", requestBody);
+    }
+
     public ResponseEntity<String> getItem(String itemId) {
         String url = baseUrl + "/v1/items/" + itemId;
         log.info("MSIKA: Fetching item={}", itemId);
