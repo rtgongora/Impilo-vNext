@@ -46,8 +46,9 @@ public class ListingController {
     public ResponseEntity<ApiResponse<PagedResponse<ListingDtos.ListingView>>> search(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String risk,
+            @RequestParam(required = false) String category,
             Pageable pageable) {
-        Page<ListingDtos.ListingView> page = listingService.searchPublished(q, risk, pageable);
+        Page<ListingDtos.ListingView> page = listingService.searchPublished(q, risk, category, pageable);
         PagedResponse<ListingDtos.ListingView> paged = PagedResponse.of(
                 page.getContent(), page.getNumber(), page.getSize(), page.getTotalElements());
         return ResponseEntity.ok(ApiResponse.ok(paged, corr()));

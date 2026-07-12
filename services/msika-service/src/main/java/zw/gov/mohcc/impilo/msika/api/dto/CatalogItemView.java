@@ -11,6 +11,7 @@ public record CatalogItemView(
     String description,
     String[] synonyms,
     String[] tags,
+    String sourcingCategoryCode,
     Object restrictions,
     Object ziboBindings,
     Object metadata,

@@ -77,6 +77,7 @@ public class ItemService {
         item.setDescription(request.description());
         item.setSynonyms(request.synonyms());
         item.setTags(request.tags());
+        item.setSourcingCategoryCode(request.sourcingCategoryCode());
         item.setCreatedBy(ctx.actorId() != null ? ctx.actorId() : "SYSTEM");
 
         try {
@@ -119,6 +120,7 @@ public class ItemService {
         if (request.description() != null) item.setDescription(request.description());
         if (request.synonyms() != null) item.setSynonyms(request.synonyms());
         if (request.tags() != null) item.setTags(request.tags());
+        if (request.sourcingCategoryCode() != null) item.setSourcingCategoryCode(request.sourcingCategoryCode());
 
         try {
             if (request.restrictions() != null) item.setRestrictions(objectMapper.writeValueAsString(request.restrictions()));
@@ -203,6 +205,7 @@ public class ItemService {
                 item.getItemId(), item.getCatalogId(), item.getKind(),
                 item.getCanonicalCode(), item.getDisplayName(), item.getDescription(),
                 item.getSynonyms(), item.getTags(),
+            item.getSourcingCategoryCode(),
                 parseJson(item.getRestrictions()), parseJson(item.getZiboBindings()),
                 parseJson(item.getMetadata()), item.isActive(),
                 item.getCreatedAt(), item.getUpdatedAt(), item.getLockVersion(),

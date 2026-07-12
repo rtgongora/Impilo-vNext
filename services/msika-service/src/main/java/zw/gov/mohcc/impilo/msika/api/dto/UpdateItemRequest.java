@@ -7,6 +7,7 @@ public record UpdateItemRequest(
     String description,
     String[] synonyms,
     String[] tags,
+    String sourcingCategoryCode,
     Map<String, Object> restrictions,
     Object[] ziboBindings,
     Map<String, Object> metadata,

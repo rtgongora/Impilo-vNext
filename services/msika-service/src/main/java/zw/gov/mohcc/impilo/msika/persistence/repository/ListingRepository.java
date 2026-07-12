@@ -19,16 +19,33 @@ public interface ListingRepository extends JpaRepository<ListingEntity, String> 
 
     Page<ListingEntity> findByStatusInOrderByUpdatedAtDesc(List<String> statuses, Pageable pageable);
 
-    /** Published listings filtered (optionally) by free-text title/summary and risk class. */
-    @Query(value = "SELECT * FROM msika_listings " +
-            "WHERE status = 'PUBLISHED' " +
-            "AND (:risk IS NULL OR risk_classification = :risk) " +
-            "AND (:q IS NULL OR title ILIKE CONCAT('%', :q, '%') OR summary ILIKE CONCAT('%', :q, '%')) " +
-            "ORDER BY published_at DESC",
-            countQuery = "SELECT count(*) FROM msika_listings " +
-            "WHERE status = 'PUBLISHED' " +
-            "AND (:risk IS NULL OR risk_classification = :risk) " +
-            "AND (:q IS NULL OR title ILIKE CONCAT('%', :q, '%') OR summary ILIKE CONCAT('%', :q, '%'))",
+    /**
+     * Published listings filtered (optionally) by free-text title/summary,
+     * risk class and sourcing category (via the linked catalog item). Keep
+     * the value and countQuery predicates in lockstep.
+     */
+    @Query(value = "SELECT l.* FROM msika_listings l " +
+            "JOIN msika_catalog_items ci ON ci.item_id = l.catalog_item_id " +
+            "WHERE l.status = 'PUBLISHED' " +
+            "AND (:risk IS NULL OR l.risk_classification = :risk) " +
+            "AND (:category IS NULL OR ci.sourcing_category_code = :category) " +
+            "AND (:q IS NULL OR l.title ILIKE CONCAT('%', :q, '%') OR l.summary ILIKE CONCAT('%', :q, '%')) " +
+            "ORDER BY l.published_at DESC",
+            countQuery = "SELECT count(*) FROM msika_listings l " +
+            "JOIN msika_catalog_items ci ON ci.item_id = l.catalog_item_id " +
+            "WHERE l.status = 'PUBLISHED' " +
+            "AND (:risk IS NULL OR l.risk_classification = :risk) " +
+            "AND (:category IS NULL OR ci.sourcing_category_code = :category) " +
+            "AND (:q IS NULL OR l.title ILIKE CONCAT('%', :q, '%') OR l.summary ILIKE CONCAT('%', :q, '%'))",
             nativeQuery = true)
-    Page<ListingEntity> searchPublished(@Param("q") String q, @Param("risk") String risk, Pageable pageable);
+    Page<ListingEntity> searchPublished(@Param("q") String q, @Param("risk") String risk,
+                                        @Param("category") String category, Pageable pageable);
+
+    /** Published-listing counts per sourcing category (marketplace supply truth). */
+    @Query(value = "SELECT ci.sourcing_category_code, count(*) FROM msika_listings l " +
+            "JOIN msika_catalog_items ci ON ci.item_id = l.catalog_item_id " +
+            "WHERE l.status = 'PUBLISHED' AND ci.sourcing_category_code IS NOT NULL " +
+            "GROUP BY ci.sourcing_category_code",
+            nativeQuery = true)
+    List<Object[]> countPublishedByCategory();
 }
