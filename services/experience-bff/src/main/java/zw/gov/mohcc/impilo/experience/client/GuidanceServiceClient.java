@@ -112,6 +112,37 @@ public class GuidanceServiceClient {
         return extractData(response);
     }
 
+    // ── Public gateway lane (R0, anonymous — public-lane ADR) ─────────────────────────
+    // These call ONLY the service-side PublicGuidanceController (/v1/public/guidance/**):
+    // allow-listed DTOs, no PII, no personalization. Raw body is forwarded (incl. the
+    // data envelope) so the BFF adds no interpretation of public content.
+
+    /** One trust-escalation explainer (why / what level / what next / how to get help). */
+    public JsonNode getPublicExplainStep(String stepKey) {
+        String url = baseUrl + "/v1/public/guidance/explain-steps/"
+                + java.net.URLEncoder.encode(stepKey, java.nio.charset.StandardCharsets.UTF_8);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(java.net.URI.create(url), JsonNode.class);
+        return response.getBody();
+    }
+
+    /** All active trust-escalation explainers. */
+    public JsonNode listPublicExplainSteps() {
+        String url = baseUrl + "/v1/public/guidance/explain-steps";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Published public education topics (safe fields only). */
+    public JsonNode getPublicEducation(String domain, int page, int size) {
+        java.net.URI url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/public/guidance/education")
+                .queryParam("domain", domain)
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .encode().build().toUri();
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
