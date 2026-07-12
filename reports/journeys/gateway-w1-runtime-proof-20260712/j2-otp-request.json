@@ -1,0 +1,1 @@
+{"data":{"type":"contact-otp","attributes":{"status":"SENT","channel":"PHONE","maskedValue":"+263*******68","expiresInSeconds":300}},"meta":{"correlation_id":"5a0238ea-7b2e-4602-b819-707b6f5edb42","request_id":"05f58aac-7db6-4ad3-bdf1-6e8526656e43"}}
