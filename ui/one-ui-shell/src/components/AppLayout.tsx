@@ -8,11 +8,13 @@
 import { type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Home, Menu } from "lucide-react";
+import { ArrowLeft, Home, Maximize2, Menu, Minimize2 } from "lucide-react";
 import { ExperienceSidebar } from "./navigation/ExperienceSidebar";
+import { NavRail } from "./navigation/NavRail";
 import { ModuleBreadcrumb } from "./navigation/ModuleBreadcrumb";
 import { ActingForBanner } from "./citizen/ActingForBanner";
 import { ShellTopAccountActions } from "./shell/ShellTopAccountActions";
+import { useLayoutPrefsStore } from "@/hooks/useLayoutPrefsStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 
@@ -20,10 +22,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { facility, workspace, shiftActive } = useExperienceEntry();
   const router = useRouter();
   const toggleNavDrawer = useShellStore((s) => s.toggleNavDrawer);
+  const focusMode = useLayoutPrefsStore((s) => s.focusMode);
+  const toggleFocusMode = useLayoutPrefsStore((s) => s.toggleFocusMode);
 
   return (
     <div className="flex h-screen bg-background-deep">
       <ExperienceSidebar />
+      <NavRail />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-11 shrink-0 items-center justify-between gap-2 border-b border-[color:var(--border-soft)] bg-[color:var(--surface)]/90 px-3 sm:px-4">
           <div className="flex min-w-0 flex-1 items-center gap-1.5 text-sm text-[color:var(--text-muted)]">
@@ -76,7 +81,24 @@ export function AppLayout({ children }: { children: ReactNode }) {
             )}
             <ModuleBreadcrumb />
           </div>
-          <ShellTopAccountActions />
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => toggleFocusMode()}
+              aria-pressed={focusMode}
+              aria-label={focusMode ? "Exit focus mode" : "Enter focus mode"}
+              title={focusMode ? "Exit focus mode (restore navigation and taskbar)" : "Focus mode (maximise workspace)"}
+              data-testid="focus-mode-toggle"
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition ${
+                focusMode
+                  ? "bg-[color:var(--primary-soft)] text-[color:var(--primary-hover)]"
+                  : "text-[color:var(--text-muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--text-primary)]"
+              }`}
+            >
+              {focusMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </button>
+            <ShellTopAccountActions />
+          </div>
         </header>
         <ActingForBanner />
         <main className="impilo-canvas flex-1 overflow-auto px-3 pb-[var(--shell-taskbar-height,0px)] pt-0 md:px-4">{children}</main>

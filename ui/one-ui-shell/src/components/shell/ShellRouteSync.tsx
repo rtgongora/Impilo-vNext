@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useLayoutPrefsStore } from "@/hooks/useLayoutPrefsStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { deriveRouteTaskMeta } from "@/lib/shell/route-task-meta";
 import { shouldShowExperienceShell } from "@/lib/shell/shell-visibility";
@@ -18,11 +19,27 @@ export function ShellRouteSync() {
   const hydrateFromSession = useShellStore((s) => s.hydrateFromSession);
   const touchRouteTask = useShellStore((s) => s.touchRouteTask);
   const clearSessionShellState = useShellStore((s) => s.clearSessionShellState);
+  const hydrateLayoutPrefs = useLayoutPrefsStore((s) => s.hydrateFromStorage);
+  const taskbarMinimized = useLayoutPrefsStore((s) => s.taskbarMinimized);
+  const focusMode = useLayoutPrefsStore((s) => s.focusMode);
   const wasAuthenticated = useRef(false);
 
   useEffect(() => {
     hydrateFromSession();
-  }, [hydrateFromSession]);
+    hydrateLayoutPrefs();
+  }, [hydrateFromSession, hydrateLayoutPrefs]);
+
+  // Reserved dock height goes to zero when the taskbar is minimised or the
+  // user is in focus mode, so the workspace reclaims the space.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const show = shouldShowExperienceShell(pathname, isAuthenticated);
+    const dockVisible = show && !taskbarMinimized && !focusMode;
+    document.documentElement.style.setProperty(
+      "--shell-taskbar-height",
+      dockVisible ? `${SHELL_TASKBAR_HEIGHT_PX}px` : "0px",
+    );
+  }, [pathname, isAuthenticated, taskbarMinimized, focusMode]);
 
   useEffect(() => {
     if (wasAuthenticated.current && !isAuthenticated) {
@@ -33,12 +50,6 @@ export function ShellRouteSync() {
 
   useEffect(() => {
     const show = shouldShowExperienceShell(pathname, isAuthenticated);
-    if (typeof document !== "undefined") {
-      document.documentElement.style.setProperty(
-        "--shell-taskbar-height",
-        show ? `${SHELL_TASKBAR_HEIGHT_PX}px` : "0px",
-      );
-    }
     if (!show || !pathname) return;
 
     const meta = deriveRouteTaskMeta(pathname);
