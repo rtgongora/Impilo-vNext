@@ -94,7 +94,7 @@ public class ImportService {
                 colIndex.put(header[i].trim().toLowerCase(), i);
             }
 
-            int total = 0, valid = 0, duplicates = 0, errors = 0, imported = 0;
+            int total = 0, valid = 0, duplicates = 0, errors = 0, imported = 0, mappingsQueued = 0;
             List<Map<String, String>> errorRows = new ArrayList<>();
 
             String[] row;
@@ -111,18 +111,27 @@ public class ImportService {
                         continue;
                     }
 
-                    // Dedup check
+                    // Dedup check. Duplicate/ambiguous rows are not silently
+                    // dropped: they feed the PENDING mapping queue so a human
+                    // decides whether the external code aligns to the existing
+                    // item (the queue's producer — MappingController is its consumer).
                     Optional<CatalogItemEntity> existing = itemRepository.findByCatalogIdAndCanonicalCode(catalogId, code);
                     String barcode = getColumn(row, colIndex, "barcode");
                     if (barcode != null && !barcode.isBlank()) {
                         Optional<ProductDetailEntity> barcodeMatch = productDetailRepository.findByBarcode(barcode);
                         if (barcodeMatch.isPresent()) {
                             duplicates++;
+                            queuePendingMapping(ctx, code, name, barcodeMatch.get().getItemId(),
+                                    "NARROW", new BigDecimal("0.6000"));
+                            mappingsQueued++;
                             continue;
                         }
                     }
                     if (existing.isPresent()) {
                         duplicates++;
+                        queuePendingMapping(ctx, code, name, existing.get().getItemId(),
+                                "EXACT", new BigDecimal("0.9000"));
+                        mappingsQueued++;
                         continue;
                     }
 
@@ -179,7 +188,8 @@ public class ImportService {
             try {
                 job.setStats(objectMapper.writeValueAsString(Map.of(
                         "total", total, "valid", valid, "duplicates", duplicates,
-                        "errors", errors, "imported", imported, "errorDetails", errorRows
+                        "errors", errors, "imported", imported,
+                        "mappingsQueued", mappingsQueued, "errorDetails", errorRows
                 )));
             } catch (Exception ignored) {}
 
@@ -222,6 +232,44 @@ public class ImportService {
         return jobRepository.findById(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Import job not found: " + jobId));
     }
+
+    /**
+     * Queue a PENDING external-mapping row for a duplicate/ambiguous CSV code.
+     * msika_external_mappings.source_id is NOT NULL, so CSV-borne candidates
+     * hang off a per-tenant well-known CSV_IMPORT source (created lazily).
+     */
+    private void queuePendingMapping(TrustContext ctx, String externalCode, String externalName,
+                                     String internalItemId, String mapType, BigDecimal confidence) {
+        ExternalSourceEntity csvSource = ensureCsvImportSource(ctx);
+        ExternalMappingEntity mapping = new ExternalMappingEntity();
+        mapping.setId(UlidGenerator.generate());
+        mapping.setSourceId(csvSource.getSourceId());
+        mapping.setExternalCode(externalCode);
+        mapping.setExternalName(externalName);
+        mapping.setInternalItemId(internalItemId);
+        mapping.setMapType(mapType);
+        mapping.setConfidence(confidence);
+        mapping.setStatus("PENDING");
+        mappingRepository.save(mapping);
+    }
+
+    /** Find or create the tenant's well-known CSV_IMPORT source. */
+    private ExternalSourceEntity ensureCsvImportSource(TrustContext ctx) {
+        return sourceRepository.findByTenantId(ctx.tenantId()).stream()
+                .filter(s -> CSV_IMPORT_SOURCE_NAME.equals(s.getName()))
+                .findFirst()
+                .orElseGet(() -> {
+                    ExternalSourceEntity source = new ExternalSourceEntity();
+                    source.setSourceId(UlidGenerator.generate());
+                    source.setTenantId(ctx.tenantId());
+                    source.setName(CSV_IMPORT_SOURCE_NAME);
+                    source.setMode("CSV");
+                    source.setConfigEncrypted("{}");
+                    return sourceRepository.save(source);
+                });
+    }
+
+    static final String CSV_IMPORT_SOURCE_NAME = "CSV_IMPORT";
 
     private String getColumn(String[] row, Map<String, Integer> colIndex, String colName) {
         Integer idx = colIndex.get(colName);

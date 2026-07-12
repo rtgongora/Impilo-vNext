@@ -38,6 +38,12 @@ public final class OfferingDtos {
             Object metadata
     ) {}
 
+    /** Resolution result: the offering plus its effective fulfillment policy (nullable when none is configured). */
+    public record ResolvedOfferingView(
+            OfferingView offering,
+            FulfillmentPolicyDtos.FulfillmentPolicyView fulfillmentPolicy
+    ) {}
+
     public record OfferingView(
             String offeringId,
             UUID tenantId,

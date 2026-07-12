@@ -38,6 +38,19 @@ public class OfferingController {
         return ResponseEntity.ok(ApiResponse.ok(offeringService.update(offeringId, req), correlationId));
     }
 
+    /**
+     * Resolve the fulfilable offering (+ effective fulfillment policy) for a
+     * listing or catalog item. Authenticated read — msika-flow calls this at
+     * order time. 404 when nothing resolves.
+     */
+    @GetMapping("/resolve")
+    public ResponseEntity<ApiResponse<OfferingDtos.ResolvedOfferingView>> resolve(
+            @RequestParam(required = false) String catalogItemId,
+            @RequestParam(required = false) String listingId) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(offeringService.resolve(catalogItemId, listingId), correlationId));
+    }
+
     @GetMapping("/{offeringId}")
     @PreAuthorize("hasAnyRole('CATALOG_ADMIN','CATALOG_REVIEWER','MARKETPLACE_OPERATOR','REGULATORY_VIEWER','SYSTEM_ADMIN','DEVELOPER')")
     public ResponseEntity<ApiResponse<OfferingDtos.OfferingView>> get(@PathVariable String offeringId) {

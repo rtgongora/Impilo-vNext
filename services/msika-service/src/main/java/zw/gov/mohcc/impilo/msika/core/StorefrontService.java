@@ -93,6 +93,11 @@ public class StorefrontService {
         return storefrontRepository.findBySellerType(sellerType).stream().map(this::toView).toList();
     }
 
+    /** Storefront for a seller identity, if one exists. */
+    public java.util.Optional<StorefrontDtos.StorefrontView> findBySeller(String sellerType, String sellerId) {
+        return storefrontRepository.findBySellerTypeAndSellerId(sellerType, sellerId).map(this::toView);
+    }
+
     /** Whether a seller has a VERIFIED storefront — gate for publishing regulated listings. */
     public boolean isSellerVerified(String sellerType, String sellerId) {
         return storefrontRepository.findBySellerTypeAndSellerId(sellerType, sellerId)

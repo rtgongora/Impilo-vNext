@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.msika.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +26,8 @@ public final class ListingDtos {
             String clinicalRoute,
             String chargeRef,
             String priceDisplay,
+            BigDecimal priceAmount,
+            String priceCurrency,
             String fulfilmentMode,
             String fundoRef,
             Object metadata
@@ -38,6 +41,8 @@ public final class ListingDtos {
             String clinicalRoute,
             String chargeRef,
             String priceDisplay,
+            BigDecimal priceAmount,
+            String priceCurrency,
             String fulfilmentMode,
             String fundoRef,
             Object metadata
@@ -80,6 +85,8 @@ public final class ListingDtos {
             String clinicalRoute,
             String chargeRef,
             String priceDisplay,
+            BigDecimal priceAmount,
+            String priceCurrency,
             String fulfilmentMode,
             String fulfilmentOwner,
             String status,

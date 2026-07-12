@@ -10,16 +10,23 @@ import zw.gov.mohcc.impilo.msika.domain.UlidGenerator;
 import zw.gov.mohcc.impilo.msika.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.msika.persistence.entity.ListingEntity;
 import zw.gov.mohcc.impilo.msika.persistence.entity.ListingMediaEntity;
+import zw.gov.mohcc.impilo.msika.persistence.entity.CatalogItemEntity;
+import zw.gov.mohcc.impilo.msika.persistence.entity.RiskFrictionMappingEntity;
 import zw.gov.mohcc.impilo.msika.persistence.repository.CatalogItemRepository;
 import zw.gov.mohcc.impilo.msika.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.msika.persistence.repository.ListingMediaRepository;
 import zw.gov.mohcc.impilo.msika.persistence.repository.ListingRepository;
+import zw.gov.mohcc.impilo.msika.persistence.repository.OfferingRepository;
+import zw.gov.mohcc.impilo.msika.persistence.repository.RiskFrictionMappingRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -38,11 +45,16 @@ public class ListingService {
     /** Risk classes that require a VERIFIED seller + provider/facility context to publish. */
     private static final Set<String> REGULATED_RISK = Set.of("HIGH_RISK", "REGULATED");
 
+    /** Catalog-item kinds that are sellable and therefore must carry a price to publish. */
+    private static final Set<String> SELLABLE_KINDS = Set.of("PRODUCT", "SERVICE", "ORDERABLE");
+
     private final ListingRepository listingRepository;
     private final ListingMediaRepository mediaRepository;
     private final CatalogItemRepository itemRepository;
     private final StorefrontService storefrontService;
     private final SourcingService sourcingService;
+    private final OfferingRepository offeringRepository;
+    private final RiskFrictionMappingRepository riskFrictionRepository;
     private final EventOutboxRepository outboxRepository;
     private final ListingAuditService auditService;
     private final ObjectMapper objectMapper;
@@ -54,15 +66,19 @@ public class ListingService {
                           EventOutboxRepository outboxRepository,
                           ListingAuditService auditService,
                           ObjectMapper objectMapper,
-                          SourcingService sourcingService) {
+                          SourcingService sourcingService,
+                          OfferingRepository offeringRepository,
+                          RiskFrictionMappingRepository riskFrictionRepository) {
         this.listingRepository = listingRepository;
         this.mediaRepository = mediaRepository;
         this.itemRepository = itemRepository;
         this.storefrontService = storefrontService;
         this.outboxRepository = outboxRepository;
         this.auditService = auditService;
-        this.objectMapper = objectMapper;        this.sourcingService = sourcingService;
-
+        this.objectMapper = objectMapper;
+        this.sourcingService = sourcingService;
+        this.offeringRepository = offeringRepository;
+        this.riskFrictionRepository = riskFrictionRepository;
     }
 
     // ── Seller authoring ─────────────────────────────────────────────────────────────
@@ -88,6 +104,10 @@ public class ListingService {
         e.setClinicalRoute(req.clinicalRoute());
         e.setChargeRef(req.chargeRef());
         e.setPriceDisplay(req.priceDisplay());
+        e.setPriceAmount(req.priceAmount());
+        if (req.priceCurrency() != null && !req.priceCurrency().isBlank()) {
+            e.setPriceCurrency(req.priceCurrency());
+        }
         e.setFulfilmentMode(req.fulfilmentMode());
         e.setFundoRef(req.fundoRef());
         e.setMetadataJson(JsonSupport.toJsonSafe(objectMapper, req.metadata(), "{}"));
@@ -113,6 +133,8 @@ public class ListingService {
         if (req.clinicalRoute() != null) e.setClinicalRoute(req.clinicalRoute());
         if (req.chargeRef() != null) e.setChargeRef(req.chargeRef());
         if (req.priceDisplay() != null) e.setPriceDisplay(req.priceDisplay());
+        if (req.priceAmount() != null) e.setPriceAmount(req.priceAmount());
+        if (req.priceCurrency() != null && !req.priceCurrency().isBlank()) e.setPriceCurrency(req.priceCurrency());
         if (req.fulfilmentMode() != null) e.setFulfilmentMode(req.fulfilmentMode());
         if (req.fundoRef() != null) e.setFundoRef(req.fundoRef());
         if (req.metadata() != null) e.setMetadataJson(JsonSupport.toJsonSafe(objectMapper, req.metadata(), "{}"));
@@ -195,8 +217,8 @@ public class ListingService {
         }
         // Restricted sourcing categories (e.g. medicines) require a verified
         // credentialed seller regardless of the listing's risk classification.
-        String sourcingCategory = itemRepository.findById(e.getCatalogItemId())
-                .map(item -> item.getSourcingCategoryCode()).orElse(null);
+        Optional<CatalogItemEntity> item = itemRepository.findById(e.getCatalogItemId());
+        String sourcingCategory = item.map(CatalogItemEntity::getSourcingCategoryCode).orElse(null);
         if (sourcingService.isRestrictedCategory(sourcingCategory)
                 && !storefrontService.isSellerVerified(e.getSellerType(), e.getSellerId())) {
             auditService.record(ctx, "POLICY_DENIED", e.getListingId(), null, e.getRiskClassification(), "DENY",
@@ -204,6 +226,42 @@ public class ListingService {
                            "category", sourcingCategory, "phase", "publish"));
             throw new IllegalStateException("Listings in restricted sourcing category " + sourcingCategory
                     + " require a VERIFIED seller storefront with the applicable credential");
+        }
+        // Sellable listings (PRODUCT/SERVICE/ORDERABLE via the catalog item) must
+        // carry a positive vendor price — a priceless sellable listing is dead at
+        // checkout, so it is rejected at the gate rather than discovered downstream.
+        String itemKind = item.map(CatalogItemEntity::getKind).orElse(null);
+        if (itemKind != null && SELLABLE_KINDS.contains(itemKind)
+                && (e.getPriceAmount() == null || e.getPriceAmount().compareTo(BigDecimal.ZERO) <= 0)) {
+            auditService.record(ctx, "POLICY_DENIED", e.getListingId(), null, e.getRiskClassification(), "DENY",
+                    Map.of("reason", "PRICE_REQUIRED", "itemKind", itemKind, "phase", "publish"));
+            throw new IllegalStateException("Sellable listing (" + itemKind
+                    + ") requires a price_amount greater than 0 before publish; set priceAmount on the listing");
+        }
+        // Risk-friction seller-context gate (V004 mapping): if the risk class
+        // demands provider and/or facility custody, the seller must occupy at
+        // least one of the required contexts.
+        Optional<RiskFrictionMappingEntity> friction = riskFrictionRepository.findById(e.getRiskClassification());
+        if (friction.isPresent() && (friction.get().isRequiresProvider() || friction.get().isRequiresFacility())) {
+            List<String> allowedSellerTypes = new ArrayList<>();
+            if (friction.get().isRequiresProvider()) allowedSellerTypes.add("PROVIDER");
+            if (friction.get().isRequiresFacility()) allowedSellerTypes.add("FACILITY");
+            if (!allowedSellerTypes.contains(e.getSellerType())) {
+                auditService.record(ctx, "POLICY_DENIED", e.getListingId(), null, e.getRiskClassification(), "DENY",
+                        Map.of("reason", "RISK_FRICTION_SELLER_TYPE",
+                               "requiredSellerTypes", String.join("|", allowedSellerTypes),
+                               "sellerType", e.getSellerType(), "phase", "publish"));
+                throw new IllegalStateException("Risk class " + e.getRiskClassification()
+                        + " requires seller type " + String.join(" or ", allowedSellerTypes)
+                        + " (was " + e.getSellerType() + ")");
+            }
+        }
+        // A listing that references an offering must reference a real one.
+        if (e.getOfferingId() != null && offeringRepository.findById(e.getOfferingId()).isEmpty()) {
+            auditService.record(ctx, "POLICY_DENIED", e.getListingId(), null, e.getRiskClassification(), "DENY",
+                    Map.of("reason", "OFFERING_NOT_FOUND", "offeringId", e.getOfferingId(), "phase", "publish"));
+            throw new IllegalStateException("Listing references offering " + e.getOfferingId()
+                    + " which does not exist");
         }
         e.setStatus("PUBLISHED");
         e.setPublishedAt(OffsetDateTime.now());
@@ -297,7 +355,8 @@ public class ListingService {
                 e.getListingId(), e.getTenantId(), e.getStorefrontId(), e.getCatalogItemId(), e.getOfferingId(),
                 e.getSellerType(), e.getSellerId(), e.getTitle(), e.getSummary(), e.getRiskClassification(),
                 JsonSupport.parseJsonSafe(objectMapper, e.getEligibilityRuleJson(), Map.of()),
-                e.getClinicalRoute(), e.getChargeRef(), e.getPriceDisplay(), e.getFulfilmentMode(),
+                e.getClinicalRoute(), e.getChargeRef(), e.getPriceDisplay(),
+                e.getPriceAmount(), e.getPriceCurrency(), e.getFulfilmentMode(),
                 e.getFulfilmentOwner(), e.getStatus(), e.getModerationNotes(), e.getApprovedBy(),
                 e.getApprovedAt(), e.getPublishedAt(), e.getFundoRef(),
                 JsonSupport.parseJsonSafe(objectMapper, e.getMetadataJson(), Map.of()),

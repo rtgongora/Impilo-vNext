@@ -1,12 +1,16 @@
 package zw.gov.mohcc.impilo.msika.api.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.msika.persistence.entity.CatalogEntity;
+import zw.gov.mohcc.impilo.msika.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.msika.persistence.repository.CatalogRepository;
+import zw.gov.mohcc.impilo.msika.persistence.repository.EventOutboxRepository;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -19,9 +23,15 @@ import java.util.*;
 public class SnapshotController {
 
     private final CatalogRepository catalogRepository;
+    private final EventOutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
-    public SnapshotController(CatalogRepository catalogRepository) {
+    public SnapshotController(CatalogRepository catalogRepository,
+                              EventOutboxRepository outboxRepository,
+                              ObjectMapper objectMapper) {
         this.catalogRepository = catalogRepository;
+        this.outboxRepository = outboxRepository;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/catalogs")
@@ -53,7 +63,13 @@ public class SnapshotController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Emit a catalog-snapshot marker event through the real outbox. The
+     * OutboxPublisher relays it to Kafka — no fabricated success: the response
+     * mirrors exactly what was persisted for publication.
+     */
     @PostMapping("/catalogs/emit")
+    @PreAuthorize("hasAnyRole('CATALOG_ADMIN','MARKETPLACE_OPERATOR','SYSTEM_ADMIN','DEVELOPER')")
     public ResponseEntity<Map<String, Object>> emitCatalogSnapshot(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestHeader("X-Pod-ID") String podId,
@@ -61,14 +77,39 @@ public class SnapshotController {
             @RequestHeader("X-Correlation-ID") String correlationId) {
 
         long count = catalogRepository.count();
+        OffsetDateTime emittedAt = OffsetDateTime.now();
+
+        EventOutboxEntity event = new EventOutboxEntity();
+        event.setAggregateType("CATALOG");
+        event.setAggregateId(tenantId);
+        event.setEventType("CATALOG_SNAPSHOT_EMITTED");
+        try {
+            event.setTenantId(UUID.fromString(tenantId));
+        } catch (IllegalArgumentException ignored) {
+            // non-UUID tenant header: event still carries it in the payload
+        }
+        event.setCorrelationId(correlationId);
+        event.setPodId(podId);
+        event.setOccurredAt(emittedAt);
+        try {
+            event.setPayload(objectMapper.writeValueAsString(Map.of(
+                    "entity", "Catalog",
+                    "tenantId", tenantId,
+                    "catalogCount", count,
+                    "emittedAt", emittedAt.toString())));
+        } catch (Exception e) {
+            event.setPayload("{\"entity\":\"Catalog\",\"catalogCount\":" + count + "}");
+        }
+        event = outboxRepository.save(event);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("status", "SNAPSHOT_EMITTED");
         response.put("entity", "Catalog");
         response.put("tenant_id", tenantId);
         response.put("total_records", count);
-        response.put("emitted_at", OffsetDateTime.now().toString());
-        response.put("topic", "impilo.msika.snapshots");
+        response.put("emitted_at", emittedAt.toString());
+        response.put("outbox_event_id", event.getId());
+        response.put("event_type", "CATALOG_SNAPSHOT_EMITTED");
 
         return ResponseEntity.ok(response);
     }

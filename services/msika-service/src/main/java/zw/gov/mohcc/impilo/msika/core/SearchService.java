@@ -6,9 +6,18 @@ import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.msika.api.dto.CatalogItemView;
 import zw.gov.mohcc.impilo.msika.persistence.entity.CatalogItemEntity;
 import zw.gov.mohcc.impilo.msika.persistence.repository.CatalogItemRepository;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
-import java.util.UUID;
-
+/**
+ * Catalog item discovery over PUBLISHED catalogs.
+ *
+ * Tenant resolution is honest: an explicit tenantId wins, else the caller's
+ * TrustContext tenant, else the platform-catalogue branch (null tenant =
+ * tenant-null/NATIONAL rows only). No fabricated tenants — a random UUID
+ * would silently narrow every anonymous search to platform rows while
+ * pretending a tenant existed.
+ */
 @Service
 public class SearchService {
 
@@ -20,16 +29,33 @@ public class SearchService {
         this.itemService = itemService;
     }
 
-    public Page<CatalogItemView> search(String query, String kind, String tenantId, Pageable pageable) {
-        String effectiveTenantId = tenantId != null ? tenantId : UUID.randomUUID().toString();
+    public Page<CatalogItemView> search(String query, String kind, String restriction, String tag,
+                                        String ziboCode, String tenantId, Pageable pageable) {
+        String effectiveTenantId = resolveTenant(tenantId);
+        String qn = blankToNull(query);
         Page<CatalogItemEntity> page;
-
-        if (query != null && !query.isBlank()) {
-            page = itemRepository.searchItems(query, kind, effectiveTenantId, pageable);
+        if (qn != null) {
+            page = itemRepository.searchItems(qn, blankToNull(kind), blankToNull(restriction),
+                    blankToNull(tag), blankToNull(ziboCode), effectiveTenantId, pageable);
         } else {
-            page = itemRepository.findPublishedItems(kind, effectiveTenantId, pageable);
+            page = itemRepository.findPublishedItems(blankToNull(kind), blankToNull(restriction),
+                    blankToNull(tag), blankToNull(ziboCode), effectiveTenantId, pageable);
         }
-
         return page.map(itemService::toView);
+    }
+
+    private static String resolveTenant(String tenantId) {
+        if (tenantId != null && !tenantId.isBlank()) {
+            return tenantId;
+        }
+        TrustContext ctx = TrustContextHolder.get();
+        if (ctx != null && ctx.tenantId() != null) {
+            return ctx.tenantId().toString();
+        }
+        return null; // platform-catalogue branch: tenant-null rows only
+    }
+
+    private static String blankToNull(String s) {
+        return (s == null || s.isBlank()) ? null : s;
     }
 }

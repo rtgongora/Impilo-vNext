@@ -67,6 +67,13 @@ public class ListingEntity {
     @Column(name = "price_display", length = 64)
     private String priceDisplay;
 
+    /** Vendor-set price (listing-level truth; the shared catalogue carries no prices). */
+    @Column(name = "price_amount", precision = 12, scale = 2)
+    private java.math.BigDecimal priceAmount;
+
+    @Column(name = "price_currency", length = 3)
+    private String priceCurrency = "ZWG";
+
     @Column(name = "fulfilment_mode", length = 30)
     private String fulfilmentMode;
 
@@ -150,6 +157,10 @@ public class ListingEntity {
     public void setChargeRef(String chargeRef) { this.chargeRef = chargeRef; }
     public String getPriceDisplay() { return priceDisplay; }
     public void setPriceDisplay(String priceDisplay) { this.priceDisplay = priceDisplay; }
+    public java.math.BigDecimal getPriceAmount() { return priceAmount; }
+    public void setPriceAmount(java.math.BigDecimal priceAmount) { this.priceAmount = priceAmount; }
+    public String getPriceCurrency() { return priceCurrency; }
+    public void setPriceCurrency(String priceCurrency) { this.priceCurrency = priceCurrency; }
     public String getFulfilmentMode() { return fulfilmentMode; }
     public void setFulfilmentMode(String fulfilmentMode) { this.fulfilmentMode = fulfilmentMode; }
     public String getFulfilmentOwner() { return fulfilmentOwner; }

@@ -30,7 +30,7 @@ public class SearchController {
             @RequestParam(required = false) String tenantId,
             Pageable pageable) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
-        Page<CatalogItemView> page = searchService.search(q, kind, tenantId, pageable);
+        Page<CatalogItemView> page = searchService.search(q, kind, restriction, tag, ziboCode, tenantId, pageable);
         PagedResponse<CatalogItemView> paged = PagedResponse.of(
                 page.getContent(), page.getNumber(), page.getSize(), page.getTotalElements());
         return ResponseEntity.ok(ApiResponse.ok(paged, correlationId));

@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.msika.api.dto.*;
 import zw.gov.mohcc.impilo.msika.core.ItemService;
@@ -21,6 +22,7 @@ public class ItemController {
         this.itemService = itemService;
     }
 
+    @PreAuthorize("hasAnyRole('CATALOG_ADMIN','MARKETPLACE_OPERATOR','SYSTEM_ADMIN','DEVELOPER')")
     @PostMapping("/catalogs/{catalogId}/items")
     public ResponseEntity<ApiResponse<CatalogItemView>> createItem(
             @PathVariable String catalogId,
@@ -30,6 +32,7 @@ public class ItemController {
         return ResponseEntity.ok(ApiResponse.ok(view, correlationId));
     }
 
+    @PreAuthorize("hasAnyRole('CATALOG_ADMIN','MARKETPLACE_OPERATOR','SYSTEM_ADMIN','DEVELOPER')")
     @PutMapping("/items/{itemId}")
     public ResponseEntity<ApiResponse<CatalogItemView>> updateItem(
             @PathVariable String itemId,

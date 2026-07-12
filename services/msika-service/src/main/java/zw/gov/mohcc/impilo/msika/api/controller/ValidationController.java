@@ -25,12 +25,18 @@ public class ValidationController {
         return ResponseEntity.ok(ApiResponse.ok(result, correlationId));
     }
 
+    /**
+     * Pack validation. Optional JSON body of item ids validates that exact set
+     * (existence, published-catalog membership, restriction composition); no
+     * body validates the whole published pack for kind/tenant.
+     */
     @PostMapping("/pack")
     public ResponseEntity<ApiResponse<ValidationResult>> validatePack(
             @RequestParam(required = false) String kind,
-            @RequestParam(required = false) String tenantId) {
+            @RequestParam(required = false) String tenantId,
+            @RequestBody(required = false) java.util.List<String> itemIds) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
-        ValidationResult result = validationService.validatePack(kind, tenantId);
+        ValidationResult result = validationService.validatePack(kind, tenantId, itemIds);
         return ResponseEntity.ok(ApiResponse.ok(result, correlationId));
     }
 }
