@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-12
 **Repo:** `/opt/impilo/repos/Impilo-vNext` · **Branch:** `claude/staging-ux-orchestration-remediation-Yypyl`
-**Commits:** `4a3869360` (nhume) · `ead284785` (msika) · `5f2142b98` (msika-flow) · `3b6a30b13` (mushex+costa) · `3988958aa` (bff/auth) · `f725fc6a3` (ui buyer lane) · `f0c3c2a65` (sidecar cleanup) — all pushed.
+**Commits:** `4a3869360` (nhume) · `ead284785` (msika) · `5f2142b98` (msika-flow) · `3b6a30b13` (mushex+costa) · `3988958aa` (bff/auth) · `f725f3a` (ui buyer lane) · `f0c3c2a65` (sidecar cleanup) — plus the M10 gap-closure commits (`02cd498b6`…) that took every lane to live-green. All pushed.
 **Not deployed** (awaits explicit authorization).
 
 ## Why this wave
@@ -48,14 +48,25 @@ msika = catalogue/listing truth incl. the new numeric listing price. msika-flow 
 
 **Cross-agent contract seams — independently verified aligned** (the four backend services were built in parallel to a relayed spec, so I checked producer vs consumer directly): listing `priceAmount`/`priceCurrency` (msika ↔ MsikaListingClient); risk-friction fields + the max-qty consumer wiring (I closed this gap myself — the endpoint existed but nothing consumed it); COSTA event topics `msika.flow.order.paid`/`refund.completed` (emitter ↔ listener); Nhume `CreateDeliveryRequest` `@JsonProperty` names ↔ NhumeClient; dispatch-status `{status,deliveryId,proofRef}` both ends. V008 was applied V001→V008 on a real Postgres and validated (115 items, idempotent, no dangling category refs).
 
-**Live runtime rig (msika + msika-flow + mushex jars on scratch Postgres + Redpanda Kafka):** the buyer lane was driven live and proved — msika boot + 115-item catalogue seed, the V008 price gate, add-to-cart, **real cart pricing (42.50, not the hardcoded zero)**, the order FSM CREATED→VALIDATED→PRICED with real CatalogValidationService, the **real MushexClient HTTP handoff reaching MusheX** (disproving the audit's dead-code claim), live payee propagation, the working simulation escape hatch, and the live Kafka topology. The rig **caught three real bugs, all fixed and committed**: (1) a V008 `CHAR(3)` schema-validation boot-blocker every unit test missed; (2) orders carried no seller/payee so payment 500'd; (3) the simulation escape hatch emitted the wrong metadata keys so it was inert. The terminal PAID transition is blocked by a **mushex-internal NPE** (MusheX assumes every intent carries a facility UUID; a citizen-buyer order's payee is a vendor) — a mushex-service follow-up, not a wave defect; that final leg stays seam-proven by the green msika-flow PaymentEventConsumer + PaymentServiceTest. Full evidence + honest journal: [reports/journeys/msika-runtime-proof-20260712/](../../reports/journeys/msika-runtime-proof-20260712/).
+**Live runtime rig — ALL FOUR LANES GREEN (M10 closure, 2026-07-12).** The reusable rig `scripts/runtime-proof/msika-journeys.sh` boots msika, msika-flow (nhume-enabled), mushex (sandbox), nhume, costa and experience-bff from jars on scratch Postgres/Redpanda/Redis and drove **25/25 checks green** ([evidence](../../reports/journeys/msika-runtime-proof-20260712-full/)):
+
+- **J1 money loop end-to-end**: real cart pricing (42.50) → payee = listing seller → **real MusheX intent** → sandbox settle → Kafka `payment.status.changed` → order **PAID** → **Costa charge SETTLED** → `costa_charge_ref` written back → refund → `mushex.refund.status.changed` → order **REFUNDED** → **Costa charge REFUNDED**.
+- **J1b delivery leg**: HOME_DELIVERY order → **real Nhume MARKETPLACE mission** (verified in `impilo_nhume` with `marketplace_order_ref`) → PICKED_UP/DELIVERED dispatch-status write-backs → OUT_FOR_DELIVERY → DELIVERED → **COMPLETED**. (The courier write-back POST was driven by the rig to Nhume's exact contract; Nhume's own gateway remains covered by its 32 unit tests.)
+- **J2 seller/vendor**: apply → ops approve → `msika.flow.vendor.approved` → **storefront auto-provisioned in msika (Kafka consumer live-proven)** → bind-actor → by-actor.
+- **J3 operator**: suspend → vendor SUSPENDED + **storefront suspension cascade (Kafka)** → reinstate → ops audit feed.
+- **J4 citizen mobile through the booted BFF**: services discovery → request create → truthful cancel.
+
+**The rig caught seven more real bugs beyond the first run's three, all fixed + committed**: mushex NPE on facility-less vendor-payee intents; the sandbox settle flipping intents PAID *silently* (no STATUS_CHANGED event — the whole simulated money loop was unobservable); no refund could ever complete estate-wide (no adapter callback surface — sandbox parity added) and refund events carried no status on the wire (consumers ignored them); the msika-flow→Nhume hop was dead three ways (missing v1.1 hard-required headers — the MISSING_REQUIRED_HEADER defect family again; the `/api/v1` path outside the V11 filter so RequestContext never set; response parsed as a `{data}` wrapper it isn't); citizen mobile requests 500'd because the BFF round-trips order `metadata` that `mf_orders` never had (V005 added) and 400'd on `SERVICE_BOOKING` vs the real `SERVICE_BOOKING_ORDER` enum; and courier write-backs stranded orders at ROUTED behind the FSM guard (dispatch signals now fast-forward lagging vendor states as audited transitions).
+
+**Golden browser journeys**: `msika-buyer` / `msika-seller` / `msika-operator` specs registered in `run-golden-journeys.sh` (6 tests, RUN_PREVIEW-gated, honest-degraded alternates; not yet run against a live preview — part of the next deploy's journey pass).
 
 ## Open / honest deferrals
 
-- **Live four-lane runtime proof** is the one open verification item. The wave was committed on the strength of green unit suites + independently-verified contract seams + real-Postgres migration validation; the live rig (msika + msika-flow + mushex + nhume jars + a broker for the two Kafka confirmation hops) is the remaining proof and is being built. Where the broker leg cannot be exercised in the rig, those hops are seam-proven (consumer entry + HTTP-observable state) and flagged honestly in the journal — as the plan's WS6 anticipated.
-- Deferred by design (documented in-code): booking/slot depth (booking-service owns it), OTP-only pickup claim, OROS line-level Rx validation, Nhume Kafka publisher (estate-wide improvement), distributed pickup rate-limiter, `mf_reservations` inventory-ack loop (inventory-service emits no acks today), cart qty-edit, Maestro mobile browser journey.
-- `scripts/remediation/verify-remediations.sh` still names deleted sidecar page paths — a stale ad-hoc audit script, not a build gate; follow-up.
+- **Pay-confirm production seam**: the shell's `useCommercePaymentConfirm` debits the Mushe wallet (reference = intent id) but nothing records that debit against the MusheX intent (`POST /{id}/attempts` has no BFF passthrough). Preview is fully covered by the sandbox auto-settle; wiring wallet-debit→attempt is the one open production-money seam. Documented in the hook.
+- **Persona users are dev-realm only** — preview persona users are provisioned by the seed orchestrator at deploy time; verify at the next authorized roll (G10).
+- Deferred by design (unchanged): booking/slot depth (booking-service owns it), OTP-only pickup claim, OROS line-level Rx validation, Nhume Kafka publisher (estate-wide improvement), distributed pickup rate-limiter, `mf_reservations` inventory-ack loop, cart qty-edit, Maestro mobile browser journey.
+- `scripts/remediation/verify-remediations.sh` re-pointed at the shell pages that carry the retired sidecars' remediations — green.
 
 ## Deploy
 
-Nothing deployed. The next authorized roll carries msika V008, msika-flow V004, and the mushex/costa/nhume/bff/ui changes together.
+Nothing deployed. The next authorized roll carries msika V008, msika-flow V004+V005, and the mushex/costa/nhume/bff/ui changes together.
