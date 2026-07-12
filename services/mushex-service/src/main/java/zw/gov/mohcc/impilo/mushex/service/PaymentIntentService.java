@@ -227,7 +227,11 @@ public class PaymentIntentService {
         outboxPayload.put("sourceId", sourceId);
         outboxPayload.put("amount", amount.toPlainString());
         outboxPayload.put("currency", currency);
-        outboxPayload.put("facilityId", intent.getFacilityId().toString());
+        // A marketplace (vendor-payee) intent legitimately has no facility —
+        // emit the field only when present rather than NPE'ing intent creation.
+        if (intent.getFacilityId() != null) {
+            outboxPayload.put("facilityId", intent.getFacilityId().toString());
+        }
         outboxPayload.put("status", intent.getStatus().name());
         outboxPayload.put("effectiveRail", selection.effectiveRail().name());
         outboxPayload.put("preferredRail",
@@ -361,6 +365,17 @@ public class PaymentIntentService {
                     .min(intent.getAmountTotal()));
         }
         intentRepository.save(intent);
+        // A simulated settle must be observable exactly like a real one —
+        // downstream consumers (msika-flow order FSM, COSTA settle) listen on
+        // mushex.payment.status.changed, so emit the same STATUS_CHANGED event
+        // transitionStatus() would have produced.
+        publishEvent("PAYMENT_INTENT", intent.getIntentId(), "STATUS_CHANGED",
+                Map.of(
+                        "intentId", intent.getIntentId(),
+                        "fromStatus", IntentStatus.CREATED.name(),
+                        "toStatus", mapped.name()
+                ),
+                intent.getTenantId());
     }
 
     private static IntentStatus mapSimulationOutcome(String raw) {
