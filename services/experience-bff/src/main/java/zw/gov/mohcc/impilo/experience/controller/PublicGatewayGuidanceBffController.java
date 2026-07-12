@@ -25,7 +25,9 @@ import zw.gov.mohcc.impilo.experience.client.GuidanceServiceClient;
  * <ul>
  *   <li>GET /guidance/explain-steps            — active trust-escalation explainers</li>
  *   <li>GET /guidance/explain-steps/{stepKey}  — one explainer (why / level / next / help)</li>
- *   <li>GET /guidance/education                — published public education topics</li>
+ *   <li>GET /guidance/education                — published public education topics (?domain= / ?category=)</li>
+ *   <li>GET /guidance/education/categories     — published-topic categories with counts</li>
+ *   <li>GET /guidance/education/{id}           — one published article incl. plain-language body</li>
  * </ul>
  */
 @RestController
@@ -65,12 +67,35 @@ public class PublicGatewayGuidanceBffController {
     @GetMapping("/education")
     public ResponseEntity<JsonNode> education(
             @RequestParam(defaultValue = "all") String domain,
+            @RequestParam(defaultValue = "") String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         try {
-            return ResponseEntity.ok(guidanceClient.getPublicEducation(domain, page, size));
+            return ResponseEntity.ok(guidanceClient.getPublicEducation(domain, category, page, size));
         } catch (Exception e) {
             log.warn("Public gateway education read failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
+    }
+
+    @GetMapping("/education/categories")
+    public ResponseEntity<JsonNode> educationCategories() {
+        try {
+            return ResponseEntity.ok(guidanceClient.getPublicEducationCategories());
+        } catch (Exception e) {
+            log.warn("Public gateway education categories read failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
+    }
+
+    @GetMapping("/education/{id}")
+    public ResponseEntity<JsonNode> educationArticle(@PathVariable String id) {
+        try {
+            return ResponseEntity.ok(guidanceClient.getPublicEducationArticle(id));
+        } catch (org.springframework.web.client.HttpClientErrorException.NotFound nf) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            log.warn("Public gateway education article read failed for {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
         }
     }

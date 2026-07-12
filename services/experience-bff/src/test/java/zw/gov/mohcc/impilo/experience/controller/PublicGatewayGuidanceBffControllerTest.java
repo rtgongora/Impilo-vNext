@@ -65,19 +65,73 @@ class PublicGatewayGuidanceBffControllerTest {
     void listAndEducationFailClosedAs502WhenGuidanceUnavailable() {
         ThrowingRestTemplate restTemplate = new ThrowingRestTemplate();
         assertEquals(502, controller(restTemplate).listExplainSteps().getStatusCode().value());
-        assertEquals(502, controller(restTemplate).education("all", 0, 20).getStatusCode().value());
+        assertEquals(502, controller(restTemplate).education("all", "", 0, 20).getStatusCode().value());
+        assertEquals(502, controller(restTemplate).educationCategories().getStatusCode().value());
+        assertEquals(502, controller(restTemplate).educationArticle("any-id").getStatusCode().value());
     }
 
     @Test
     void educationProxiesTheServiceSidePublicEducationEndpoint() {
         CapturingRestTemplate restTemplate = new CapturingRestTemplate("{\"data\":[]}");
-        var response = controller(restTemplate).education("prevention", 0, 10);
+        var response = controller(restTemplate).education("prevention", "", 0, 10);
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(restTemplate.lastGetUrl);
         assertTrue(restTemplate.lastGetUrl.contains("/v1/public/guidance/education"),
                 "unexpected downstream url: " + restTemplate.lastGetUrl);
         assertTrue(restTemplate.lastGetUrl.contains("domain=prevention"));
+    }
+
+    @Test
+    void educationPassesTheCategoryFilterDownstream() {
+        CapturingRestTemplate restTemplate = new CapturingRestTemplate("{\"data\":[]}");
+        var response = controller(restTemplate).education("all", "vaccination", 0, 10);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(restTemplate.lastGetUrl);
+        assertTrue(restTemplate.lastGetUrl.contains("category=vaccination"),
+                "category filter must reach the downstream url: " + restTemplate.lastGetUrl);
+    }
+
+    @Test
+    void educationCategoriesProxiesTheServiceSideTopicIndex() {
+        CapturingRestTemplate restTemplate = new CapturingRestTemplate(
+                "{\"data\":[{\"category\":\"vaccination\",\"count\":1}]}");
+        var response = controller(restTemplate).educationCategories();
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(restTemplate.lastGetUrl);
+        assertTrue(restTemplate.lastGetUrl.contains("/v1/public/guidance/education/categories"),
+                "unexpected downstream url: " + restTemplate.lastGetUrl);
+        assertEquals("vaccination", response.getBody().path("data").path(0).path("category").asText());
+    }
+
+    @Test
+    void educationArticleProxiesAndEncodesUntrustedIds() {
+        CapturingRestTemplate restTemplate = new CapturingRestTemplate(
+                "{\"data\":{\"id\":\"a\",\"title\":\"t\",\"body\":\"b\"}}");
+        var response = controller(restTemplate).educationArticle("../internal/secret");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(restTemplate.lastGetUrl);
+        assertTrue(restTemplate.lastGetUrl.contains("/v1/public/guidance/education/"),
+                "unexpected downstream url: " + restTemplate.lastGetUrl);
+        assertTrue(restTemplate.lastGetUrl.contains("..%2Finternal%2Fsecret"),
+                "path must be percent-encoded: " + restTemplate.lastGetUrl);
+    }
+
+    @Test
+    void unknownArticlePassesThrough404() {
+        RestTemplate notFound = new RestTemplate() {
+            @Override
+            public <T> ResponseEntity<T> getForEntity(URI url, Class<T> responseType) {
+                throw org.springframework.web.client.HttpClientErrorException.NotFound.create(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "not found",
+                        org.springframework.http.HttpHeaders.EMPTY, new byte[0], null);
+            }
+        };
+        var response = controller(notFound).educationArticle("00000000-0000-0000-0000-000000000000");
+        assertEquals(404, response.getStatusCode().value());
     }
 
     // ── Test doubles (mirrors PublicHealthControllerTest conventions) ─────────────────
