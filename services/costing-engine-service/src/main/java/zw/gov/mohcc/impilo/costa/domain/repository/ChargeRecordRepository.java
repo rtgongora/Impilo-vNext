@@ -13,4 +13,6 @@ public interface ChargeRecordRepository extends JpaRepository<ChargeRecordEntity
     List<ChargeRecordEntity> findByTenantIdAndBillIdOrderByCreatedAtDesc(UUID tenantId, String billId);
 
     boolean existsByTenantIdAndSourceTypeAndSourceRef(UUID tenantId, String sourceType, String sourceRef);
+
+    List<ChargeRecordEntity> findByTenantIdAndSourceTypeAndSourceRef(UUID tenantId, String sourceType, String sourceRef);
 }

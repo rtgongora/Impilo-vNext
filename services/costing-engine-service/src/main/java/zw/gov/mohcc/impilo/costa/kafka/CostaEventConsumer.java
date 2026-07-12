@@ -657,6 +657,91 @@ public class CostaEventConsumer {
     }
 
     /**
+     * Msika Flow order paid ({@code msika.flow.order.paid}) → settle the marketplace
+     * charge (OPEN → SETTLED). Closes the charge leg the {@code order.priced} consumer
+     * opened. Idempotent via IdempotencyRepository + the OPEN-only guard in
+     * {@link ChargeRecordService#settleMsikaFlowOrder}. Kafka threads carry no servlet
+     * trust context, so it is synthesized from the event (PCT-consumer precedent).
+     */
+    @KafkaListener(topics = "msika.flow.order.paid", groupId = "costa-costing-engine")
+    @Transactional
+    public void onMsikaFlowOrderPaid(String message, Acknowledgment ack) {
+        try {
+            JsonNode event = objectMapper.readTree(message);
+            String orderId = text(event, "orderId");
+            String tenantStr = text(event, "tenantId");
+            if (orderId == null || tenantStr == null) {
+                log.warn("msika.flow.order.paid missing orderId or tenantId");
+                ack.acknowledge();
+                return;
+            }
+            String eventId = text(event, "eventId");
+            if (eventId == null) {
+                eventId = tenantStr + ":" + orderId + ":ORDER_PAID";
+            }
+            if (isProcessed(eventId, "MSIKA_FLOW_PAID")) {
+                ack.acknowledge();
+                return;
+            }
+            synthesizeTrustContext(tenantStr, text(event, "facilityId"), "BILLING");
+            chargeRecordService.settleMsikaFlowOrder(UUID.fromString(tenantStr), orderId);
+            markProcessed(eventId, "MSIKA_FLOW_PAID");
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed to process msika.flow.order.paid", e);
+            ack.acknowledge();
+        }
+    }
+
+    /**
+     * Msika Flow refund completed ({@code msika.flow.refund.completed}) → mark the
+     * marketplace charge REFUNDED. Idempotent via IdempotencyRepository + the
+     * already-REFUNDED guard in {@link ChargeRecordService#refundMsikaFlowOrder}.
+     */
+    @KafkaListener(topics = "msika.flow.refund.completed", groupId = "costa-costing-engine")
+    @Transactional
+    public void onMsikaFlowRefundCompleted(String message, Acknowledgment ack) {
+        try {
+            JsonNode event = objectMapper.readTree(message);
+            String orderId = text(event, "orderId");
+            String tenantStr = text(event, "tenantId");
+            if (orderId == null || tenantStr == null) {
+                log.warn("msika.flow.refund.completed missing orderId or tenantId");
+                ack.acknowledge();
+                return;
+            }
+            String eventId = text(event, "eventId");
+            if (eventId == null) {
+                String refundId = text(event, "refundId");
+                eventId = tenantStr + ":" + orderId + ":REFUND_COMPLETED:" + (refundId != null ? refundId : "");
+            }
+            if (isProcessed(eventId, "MSIKA_FLOW_REFUND")) {
+                ack.acknowledge();
+                return;
+            }
+            synthesizeTrustContext(tenantStr, text(event, "facilityId"), "BILLING");
+            chargeRecordService.refundMsikaFlowOrder(UUID.fromString(tenantStr), orderId);
+            markProcessed(eventId, "MSIKA_FLOW_REFUND");
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed to process msika.flow.refund.completed", e);
+            ack.acknowledge();
+        }
+    }
+
+    /**
+     * Kafka threads carry no servlet trust context, but downstream services
+     * {@code require()} one — synthesize it from the event (same pattern as
+     * {@link #onEncounterStarted}). Facility may be absent on the event; that is fine.
+     */
+    private void synthesizeTrustContext(String tenantId, String facilityId, String purposeOfUse) {
+        UUID facility = (facilityId != null && !facilityId.isBlank()) ? UUID.fromString(facilityId) : null;
+        zw.gov.mohcc.impilo.shared.auth.TrustContextHolder.set(new zw.gov.mohcc.impilo.shared.auth.TrustContext(
+                UUID.fromString(tenantId), "MSIKA-FLOW-SYSTEM", "SYSTEM", purposeOfUse, null,
+                UUID.randomUUID(), facility, null, null, null));
+    }
+
+    /**
      * Resolve a COSTA EncounterEntity from an encounter reference and/or patient CPID.
      * Tries: pctJourneyId lookup, direct encounterId lookup, then most recent by patient.
      */

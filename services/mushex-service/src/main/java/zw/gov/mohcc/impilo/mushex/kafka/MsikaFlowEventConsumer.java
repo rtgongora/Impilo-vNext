@@ -8,33 +8,36 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import zw.gov.mohcc.impilo.mushex.domain.entity.IdempotencyEntity;
-import zw.gov.mohcc.impilo.mushex.domain.repository.IdempotencyRepository;
-import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
-import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
-import zw.gov.mohcc.impilo.mushex.service.RefundService;
 
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
+/**
+ * Observes Msika Flow money events. Intent creation and refund execution are now
+ * driven by Msika Flow's <em>synchronous</em> HTTP handoff
+ * ({@code MushexClient} → {@code POST /mushex/v1/payment-intents} and
+ * {@code POST /mushex/v1/payment-intents/{id}/refund}), so these Kafka listeners are
+ * pure log-only observers — the exact retirement COSTA's
+ * {@code CostaEventConsumer.onBillFinalized} received for the identical reason.
+ *
+ * <p>The previous implementation was semantically backwards and could never work:</p>
+ * <ul>
+ *   <li>it created a payment intent on {@code msika.flow.order.paid} — but the order
+ *       is only "paid" <em>after</em> MusheX confirms the intent, so this both
+ *       inverted the lifecycle and would have double-created intents alongside the
+ *       real HTTP handoff (both keyed {@code MSIKA_ORDER:<orderId>});</li>
+ *   <li>{@code onRefundRequested} triggered a second MusheX refund for a refund Msika
+ *       Flow had already requested over HTTP — a double refund.</li>
+ * </ul>
+ *
+ * <p>Kept as observers (not deleted) so the topics stay wired for audit/metrics and
+ * so re-enabling a Kafka path later is a deliberate, reviewed change.</p>
+ */
 @Service
 public class MsikaFlowEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(MsikaFlowEventConsumer.class);
 
-    private final PaymentIntentService intentService;
-    private final RefundService refundService;
-    private final IdempotencyRepository idempotencyRepository;
     private final ObjectMapper objectMapper;
 
-    public MsikaFlowEventConsumer(PaymentIntentService intentService,
-                                  RefundService refundService,
-                                  IdempotencyRepository idempotencyRepository,
-                                  ObjectMapper objectMapper) {
-        this.intentService = intentService;
-        this.refundService = refundService;
-        this.idempotencyRepository = idempotencyRepository;
+    public MsikaFlowEventConsumer(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
@@ -43,35 +46,11 @@ public class MsikaFlowEventConsumer {
     public void onOrderPaid(String message, Acknowledgment ack) {
         try {
             JsonNode event = objectMapper.readTree(message);
-            String eventId = text(event, "eventId");
-
-            if (isProcessed(eventId, "MSIKA")) {
-                ack.acknowledge();
-                return;
-            }
-
-            String orderId = text(event, "orderId");
-            String tenantId = text(event, "tenantId");
-            BigDecimal amount = event.has("totalAmount")
-                ? new BigDecimal(event.get("totalAmount").asText())
-                : BigDecimal.ZERO;
-            String currency = event.has("currency") ? text(event, "currency") : "USD";
-            String facilityId = text(event, "facilityId");
-
-            // Create a payment intent for the MSIKA Flow order
-            String idempotencyKey = "MSIKA_ORDER:" + orderId;
-            intentService.createIntent(
-                SourceType.MSIKA_ORDER, orderId, amount, currency,
-                facilityId != null ? UUID.fromString(facilityId) : null,
-                idempotencyKey, null
-            );
-
-            log.info("Created payment intent for MSIKA Flow order {}", orderId);
-
-            markProcessed(eventId, "MSIKA");
-            ack.acknowledge();
+            log.info("msika.flow.order.paid observed for order {} (intent creation is Msika-Flow-driven via HTTP handoff)",
+                    text(event, "orderId"));
         } catch (Exception e) {
-            log.error("Failed to process msika.flow.order.paid", e);
+            log.error("Failed to read msika.flow.order.paid", e);
+        } finally {
             ack.acknowledge();
         }
     }
@@ -81,57 +60,16 @@ public class MsikaFlowEventConsumer {
     public void onRefundRequested(String message, Acknowledgment ack) {
         try {
             JsonNode event = objectMapper.readTree(message);
-            String eventId = text(event, "eventId");
-
-            if (isProcessed(eventId, "MSIKA")) {
-                ack.acknowledge();
-                return;
-            }
-
-            String orderId = text(event, "orderId");
-            String intentId = text(event, "intentId");
-            BigDecimal refundAmount = event.has("refundAmount")
-                ? new BigDecimal(event.get("refundAmount").asText())
-                : BigDecimal.ZERO;
-            String reason = text(event, "reason");
-
-            // If intentId is not provided, look up by source
-            String resolvedIntentId = intentId;
-            if (resolvedIntentId == null && orderId != null) {
-                resolvedIntentId = intentService.findIntentIdBySource(SourceType.MSIKA_ORDER, orderId);
-            }
-
-            if (resolvedIntentId != null) {
-                refundService.requestRefund(resolvedIntentId, refundAmount, reason);
-                log.info("Triggered refund for MSIKA Flow order {}, intentId={}, amount={}",
-                    orderId, resolvedIntentId, refundAmount);
-            } else {
-                log.warn("Cannot process MSIKA refund: no payment intent found for order {}", orderId);
-            }
-
-            markProcessed(eventId, "MSIKA");
-            ack.acknowledge();
+            log.info("msika.flow.refund.requested observed for order {} (refund execution is Msika-Flow-driven via HTTP handoff)",
+                    text(event, "orderId"));
         } catch (Exception e) {
-            log.error("Failed to process msika.flow.refund.requested", e);
+            log.error("Failed to read msika.flow.refund.requested", e);
+        } finally {
             ack.acknowledge();
         }
     }
 
     private String text(JsonNode node, String field) {
         return node.has(field) && !node.get(field).isNull() ? node.get(field).asText() : null;
-    }
-
-    private boolean isProcessed(String eventId, String source) {
-        if (eventId == null) return false;
-        return idempotencyRepository.existsById(source + ":" + eventId);
-    }
-
-    private void markProcessed(String eventId, String source) {
-        if (eventId == null) return;
-        IdempotencyEntity entity = new IdempotencyEntity();
-        entity.setIdempotencyKey(source + ":" + eventId);
-        entity.setSourceSystem(source);
-        entity.setProcessedAt(OffsetDateTime.now());
-        idempotencyRepository.save(entity);
     }
 }

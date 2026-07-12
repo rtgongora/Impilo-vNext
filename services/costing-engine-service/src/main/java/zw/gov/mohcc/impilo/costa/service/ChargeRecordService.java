@@ -24,6 +24,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -148,6 +149,79 @@ public class ChargeRecordService {
         chargeRecordRepository.save(e);
         publishChargeCreated(e);
         log.info("Recorded COSTA charge {} for Msika Flow priced order {}", e.getChargeId(), orderId);
+    }
+
+    /**
+     * Settle the MARKETPLACE_ORDER charge for a paid Msika Flow order
+     * ({@code msika.flow.order.paid}). Idempotent: OPEN → SETTLED only; a charge
+     * already SETTLED/REFUNDED is left untouched. Returns the number of charges moved
+     * (0 when the charge does not exist yet or is already terminal).
+     */
+    @Transactional
+    public int settleMsikaFlowOrder(UUID tenantId, String orderId) {
+        List<ChargeRecordEntity> charges = chargeRecordRepository
+                .findByTenantIdAndSourceTypeAndSourceRef(tenantId, SOURCE_MSIKA_FLOW_ORDER_PRICED, orderId);
+        if (charges.isEmpty()) {
+            log.warn("No MARKETPLACE_ORDER charge to settle for paid order {} (tenant {})", orderId, tenantId);
+            return 0;
+        }
+        int settled = 0;
+        for (ChargeRecordEntity e : charges) {
+            if (!"OPEN".equals(e.getChargeStatus())) {
+                continue;
+            }
+            e.setChargeStatus("SETTLED");
+            chargeRecordRepository.save(e);
+            publishChargeStatusEvent(e, "CHARGE_SETTLED");
+            settled++;
+            log.info("Settled COSTA charge {} for paid Msika Flow order {}", e.getChargeId(), orderId);
+        }
+        return settled;
+    }
+
+    /**
+     * Mark the MARKETPLACE_ORDER charge REFUNDED for a completed Msika Flow refund
+     * ({@code msika.flow.refund.completed}). Idempotent: skips charges already REFUNDED.
+     */
+    @Transactional
+    public int refundMsikaFlowOrder(UUID tenantId, String orderId) {
+        List<ChargeRecordEntity> charges = chargeRecordRepository
+                .findByTenantIdAndSourceTypeAndSourceRef(tenantId, SOURCE_MSIKA_FLOW_ORDER_PRICED, orderId);
+        if (charges.isEmpty()) {
+            log.warn("No MARKETPLACE_ORDER charge to refund for order {} (tenant {})", orderId, tenantId);
+            return 0;
+        }
+        int refunded = 0;
+        for (ChargeRecordEntity e : charges) {
+            if ("REFUNDED".equals(e.getChargeStatus())) {
+                continue;
+            }
+            e.setChargeStatus("REFUNDED");
+            chargeRecordRepository.save(e);
+            publishChargeStatusEvent(e, "CHARGE_REFUNDED");
+            refunded++;
+            log.info("Marked COSTA charge {} REFUNDED for refunded Msika Flow order {}", e.getChargeId(), orderId);
+        }
+        return refunded;
+    }
+
+    private void publishChargeStatusEvent(ChargeRecordEntity e, String eventType) {
+        try {
+            EventOutboxEntity ev = new EventOutboxEntity();
+            ev.setAggregateType("CHARGE");
+            ev.setAggregateId(e.getChargeId());
+            ev.setEventType(eventType);
+            ev.setPayload(objectMapper.writeValueAsString(new LinkedHashMap<>(Map.of(
+                    "chargeId", e.getChargeId(),
+                    "sourceType", e.getSourceType(),
+                    "sourceRef", e.getSourceRef(),
+                    "chargeStatus", e.getChargeStatus()
+            ))));
+            ev.setTenantId(e.getTenantId());
+            outboxRepository.save(ev);
+        } catch (Exception ex) {
+            log.error("Failed to publish {}: {}", eventType, ex.getMessage());
+        }
     }
 
     /**
