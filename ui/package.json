@@ -18,11 +18,7 @@
     "inventory-web",
     "support-console",
     "developer-console",
-    "costa-console",
-    "msika-web",
-    "msika-flow-ops",
-    "msika-flow-portal",
-    "msika-flow-vendor"
+    "costa-console"
   ],
   "scripts": {
     "dev:shell": "npm -w one-ui-shell run dev",
