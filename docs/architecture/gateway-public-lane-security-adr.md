@@ -76,6 +76,16 @@ Every permitAll route family must have a row here (the guard checks this file).
 | `/internal/v1/public/gateway/**` | per-pillar `Public*Controller`s | W1+ | THE gateway lane (GET-only until an anonymous-write wave); sub-paths below |
 | `/internal/v1/public/gateway/facilities/**` | tuso `PublicFacilityController` (search + profile) | W1 | disclosure-limited facility directory |
 | `/internal/v1/public/gateway/guidance/**` | guidance `PublicGuidanceController` (explain-steps + public education) | W1 | Nompilo escalation explainers, no personalization |
+| `/internal/v1/public/gateway/sos` (POST) | daidzai SOS intake via `PublicSosIntakeService` → `EmergencyController.createRequest` | W2 | **anonymous WRITE** (ADR §5, PD-3); abuse note below |
+
+**Anonymous-write abuse note — `POST /internal/v1/public/gateway/sos`:** rate-limited
+per-IP (5 / 600s fixed window) and globally (60 / 60s), both in Redis mirroring the
+OTP lane's `enforceWindow`; the callback number is REQUIRED and normalized to E.164
+(reusing `ContactOtpService.normalize`), a blank/invalid number is a 400 that never
+reaches daidzai; free-text fields are length-capped (description 2000, location 512).
+The rate-limiter fails **open** (unlike OTP) — a life-safety request is never dropped
+because Redis is down. Daidzai captures the request as `PUBLIC_ANONYMOUS` and holds it
+`AWAITING_CALLBACK`: dispatch is gated until a dispatcher verifies the callback (PD-3).
 
 Legacy Envoy-only prefixes `/v1/public/verify` and `/v1/public/share` are **deprecated
 as public entries** (not anonymous-capable through Envoy today; live traffic reaches

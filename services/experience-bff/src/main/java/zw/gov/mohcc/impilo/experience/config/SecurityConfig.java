@@ -405,6 +405,10 @@ public class SecurityConfig {
                     // their own abuse controls. Every sub-path must be registered in the ADR's
                     // public contract registry (enforced by scripts/guard/check-public-lane.sh).
                     .requestMatchers(HttpMethod.GET, "/internal/v1/public/gateway/**").permitAll()
+                    // Anonymous WRITE exception (ADR §5, PD-3): emergency SOS intake. Captured
+                    // immediately, never gated on sign-in; abuse controls (per-IP + global rate
+                    // limits, callback normalization, body caps) enforced in PublicSosIntakeService.
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/public/gateway/sos").permitAll()
                     .requestMatchers("/internal/v1/citizen/clients/*/patient-shares/**")
                             .hasAnyRole(CITIZEN_ROLES)
 

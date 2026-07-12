@@ -3,12 +3,18 @@ package zw.gov.mohcc.impilo.experience.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * HTTP client for daidzai-service — emergency, disaster &amp; public-health response command.
@@ -32,9 +38,43 @@ public class DaidzaiServiceClient {
         this.baseUrl = endpoints.daidzaiBaseUrl();
     }
 
+    private static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
+
     // ── Emergency requests (SOS) ─────────────────────────────────────
     public JsonNode createRequest(Map<String, Object> body) {
         return post(baseUrl + API + "/requests", body, "createRequest");
+    }
+
+    /**
+     * Anonymous public-lane SOS intake (gateway ADR anonymous-write exception). The inbound public
+     * request carries no user trust context, so the BFF supplies service-originated headers here
+     * (mirrors {@code TusoServiceClient.anonymousSafeEntity}) plus, when available, the BFF's own
+     * service-account bearer so daidzai authenticates the BFF as a SYSTEM caller (same "pre-auth
+     * hop" pattern as {@code AuthContactOtpController.serviceAccountHeaders}). Daidzai owns the
+     * emergency truth and applies the PD-3 callback gate; the BFF never fabricates a dispatch.
+     *
+     * @param serviceAccountBearer raw access token, or {@code null} when Keycloak is unreachable
+     */
+    public JsonNode createPublicSosRequest(Map<String, Object> body, String serviceAccountBearer) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(CompanionHeaders.TENANT_ID, PUBLIC_DEFAULT_TENANT);
+        headers.set(CompanionHeaders.POD_ID, "national-spine");
+        headers.set(CompanionHeaders.ACTOR_ID, "public-gateway");
+        headers.set(CompanionHeaders.ACTOR_TYPE, "SYSTEM");
+        headers.set(CompanionHeaders.PURPOSE_OF_USE, "EMERGENCY_INTAKE");
+        headers.set(CompanionHeaders.CORRELATION_ID, UUID.randomUUID().toString());
+        headers.set(CompanionHeaders.REQUEST_ID, UUID.randomUUID().toString());
+        headers.set(CompanionHeaders.IDEMPOTENCY_KEY, UUID.randomUUID().toString());
+        if (serviceAccountBearer != null && !serviceAccountBearer.isBlank()) {
+            headers.set(CompanionHeaders.AUTHORIZATION,
+                    CompanionHeaders.BEARER_PREFIX + serviceAccountBearer);
+        }
+        log.debug("DAIDZAI createPublicSosRequest: POST {}{}/requests (bearer={})",
+                baseUrl, API, serviceAccountBearer != null);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                baseUrl + API + "/requests", HttpMethod.POST,
+                new HttpEntity<>(body, headers), JsonNode.class);
+        return response.getBody();
     }
 
     public JsonNode getRequest(String id) {
