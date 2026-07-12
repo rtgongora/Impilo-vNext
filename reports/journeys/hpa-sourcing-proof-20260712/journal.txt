@@ -1,0 +1,20 @@
+== SJ1: requirement resolution (partial by design)
+   PASS: mapped equipment code AAM-017 resolves to a category
+   PASS: medicine code AAM-031 restricted + credential requirement
+   PASS: unmapped/unknown codes absent (partiality preserved)
+   PASS: 46 active sourcing categories
+== SJ2: category-filtered listings + counts
+   PASS: category search 'EMERGENCY_RESUSCITATION' finds the published listing
+   PASS: resolution carries live published-listing count (1)
+== SJ3: restricted-category licence gate
+   PASS: unverified seller blocked from restricted publish (HTTP 409, POLICY_DENIED audited)
+   PASS: wholesaler certificate issued with verification code
+   PASS: HPA public verify proves ACTIVE wholesaler scope
+   PASS: verified wholesaler publishes restricted listing
+== SJ4: aggregate demand signal
+   PASS: demand signal aggregates 3 open findings for AAM-017 by province
+   PASS: small-cell suppression holds (floor 3)
+== SJ5: negative — supplier payloads carry no facility identifiers
+   PASS: no identifier-shaped keys in demand-signal payload
+   PASS: no facility names in signal
+RESULT: PASS=14 FAIL=0

@@ -215,6 +215,40 @@ activation proof — and reminder-milestone tests) · experience-bff 866/866 (ne
 mirrors) · UI `tsc` clean + hook suites 132/132 (checklist + progress rendering in the
 facility file; no route changes).
 
+## 9c. Requirement sourcing — marketplace link (2026-07-12)
+
+The requirement catalogue now powers a regulator-neutral marketplace seam
+(msika **V007** + tuso demand-signal + BFF composition + three UI surfaces):
+
+- **Curated map:** 46 sourcing categories + **675 approved requirement→category
+  mappings** covering every purchasable requirement (6 justified exclusions;
+  curation provenance committed under `scripts/data/`). Requirements map to
+  CATEGORIES only — never suppliers or SKUs; the tuso catalogue is untouched;
+  the mapping is versioned/approved content and explicitly partial.
+- **Demand side:** `/marketplace/establishment-guide` (pick a facility category →
+  full requirement checklist with "Find suppliers · N listings" links; restricted
+  categories flagged); "Rectification sourcing" panel beside CAPA data on the
+  facility file (kept off the inspector's recording surface); store search by
+  category.
+- **Supply side:** aggregate-only demand signal (tuso
+  `GET /demand-signal`: OPEN findings/CAPAs by requirement code + province, open
+  applications by facility type — **no facility identifiers by construction**,
+  small-cell suppression floor 3) folded per-category for the seller hub.
+- **Licence gating:** listings in restricted categories (medicines) publish only
+  from VERIFIED storefronts; sellers verify via the HPA **public certificate
+  register** (ACTIVE + wholesaler scope) through the seller centre — msika stays
+  outcome-only. Fixed in passing: policy-denial audits previously rolled back
+  with the denying transaction (now REQUIRES_NEW — the trail survives).
+- **Proof:** [reports/journeys/hpa-sourcing-proof-20260712/](../../reports/journeys/hpa-sourcing-proof-20260712/)
+  — **14/14 PASS** on a virgin tuso V001→V019 + msika V001→V007 rig: partial
+  resolution, category search + live counts, unverified-seller publish denial
+  (409 + durable audit) → HPA licence verify → publish, aggregate demand signal,
+  and automated no-identifier assertions. Regression on the same rig: workflow
+  **36/36** + content **34/34** re-proven. Gates: msika 37/37, tuso 146/146,
+  BFF 866/866, UI typecheck + 182 tests + routes 701.
+- **Boundaries respected:** orders/payments remain MSIKA-flow/COSTA; medicines
+  fulfilment stays on pharmaceutical rails; tuso holds no commerce concepts.
+
 ## 10. Honest gaps / deferred
 
 - UI journeys proven at typecheck/route/hook level only — browser journeys need the
