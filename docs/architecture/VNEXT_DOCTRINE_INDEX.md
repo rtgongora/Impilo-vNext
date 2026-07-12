@@ -37,6 +37,7 @@
 | `docs/architecture/experience-plane-dependency-map.md` | human-review | all planes | advisory |
 | `docs/architecture/experience-plane-production-readiness-final-report.md` | human-review | all planes | advisory |
 | `docs/architecture/experience-plane-route-inventory.md` | partial-auto | all planes | yes |
+| `docs/architecture/gateway-experience-capability-map.md` | partial-auto | all planes | yes |
 | `docs/architecture/impilo-mobile-web-visual-style.md` | human-review | all planes | advisory |
 | `docs/architecture/mobile-kiosk-ui-patterns.md` | human-review | all planes | advisory |
 | `docs/architecture/nompilo-journey-companion-architecture.md` | human-review | all planes | advisory |
@@ -83,6 +84,7 @@
 | `docs/doctrine/doctrine-gap-matrix.md` | human-review | all planes | advisory |
 | `docs/doctrine/dura-stock-doctrine.md` | human-review | all planes | advisory |
 | `docs/doctrine/health-os-doctrine.md` | human-review | all planes | advisory |
+| `docs/doctrine/health-services-gateway-doctrine.md` | partial-auto | all planes | yes |
 | `docs/doctrine/healthcare-coding-standards.md` | human-review | all planes | advisory |
 | `docs/doctrine/khuluma-comms-orchestration.md` | human-review | all planes | advisory |
 | `docs/doctrine/mushex-gateway-neutrality.md` | partial-auto | all planes | yes |
