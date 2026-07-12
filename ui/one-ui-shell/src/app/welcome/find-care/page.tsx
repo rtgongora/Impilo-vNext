@@ -45,6 +45,12 @@ export default function FindCarePage() {
           Verify a facility certificate
         </Link>
         <Link
+          href="/verify/practitioner"
+          className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 font-semibold text-slate-800 hover:bg-slate-50"
+        >
+          Verify a health professional
+        </Link>
+        <Link
           href="/welcome/emergency"
           className="rounded-lg border border-red-300 bg-white px-5 py-2.5 font-semibold text-red-700 hover:bg-red-50"
         >

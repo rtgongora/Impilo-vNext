@@ -1,0 +1,52 @@
+package zw.gov.mohcc.impilo.varapi.api.dto;
+
+import java.time.LocalDate;
+
+/**
+ * Allow-listed public disclosure for practitioner register verification
+ * (gateway public lane — docs/architecture/gateway-public-lane-security-adr.md).
+ *
+ * <p>Contains ONLY public register facts: display name, profession/cadre,
+ * register status, practising-certificate validity window and the registering
+ * authority label. Never contact details, national identifiers, date of birth,
+ * disciplinary detail or internal identifiers.</p>
+ *
+ * <p>{@code registerStatus} is the single verification verdict. A miss is
+ * represented as {@code NOT_FOUND} with every other field {@code null} —
+ * the response shape is identical for hits and misses so the endpoint offers
+ * no existence oracle beyond the status itself.</p>
+ *
+ * @param registerStatus         REGISTERED / SUSPENDED / DEREGISTERED / … / NOT_FOUND
+ * @param displayName            public register name (title + given + family)
+ * @param profession             registered profession
+ * @param cadre                  registered cadre
+ * @param registrationNumber     the register's stored registration number
+ * @param registeredSince        registration date on the register
+ * @param registrationExpiryDate registration expiry (null = no recorded expiry)
+ * @param licenceStatus          current practising-certificate/licence status
+ * @param licenceValidFrom       practising-certificate validity window start
+ * @param licenceValidTo         practising-certificate validity window end
+ * @param registeringAuthority   registering authority label (council name)
+ */
+public record PublicPractitionerVerificationResponse(
+        String registerStatus,
+        String displayName,
+        String profession,
+        String cadre,
+        String registrationNumber,
+        LocalDate registeredSince,
+        LocalDate registrationExpiryDate,
+        String licenceStatus,
+        LocalDate licenceValidFrom,
+        LocalDate licenceValidTo,
+        String registeringAuthority
+) {
+
+    public static final String STATUS_NOT_FOUND = "NOT_FOUND";
+
+    /** Uniform miss shape — same fields, all null except the status. */
+    public static PublicPractitionerVerificationResponse notFound() {
+        return new PublicPractitionerVerificationResponse(
+                STATUS_NOT_FOUND, null, null, null, null, null, null, null, null, null, null);
+    }
+}

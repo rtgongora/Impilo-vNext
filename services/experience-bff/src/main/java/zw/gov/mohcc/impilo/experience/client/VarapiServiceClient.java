@@ -440,6 +440,42 @@ public class VarapiServiceClient {
         return response.getBody();
     }
 
+    // ── Public gateway lane (anonymous-safe) ──────────────────────────────────
+
+    private static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
+
+    /**
+     * Public practitioner register verification (disclosure-limited register
+     * facts; anonymous-safe). Downstream returns 200 with a uniform
+     * NOT_FOUND-status shape on a miss (no existence oracle).
+     */
+    public JsonNode publicPractitionerVerify(String registrationNumber) {
+        String url = baseUrl + "/v1/public/practitioners/verify/"
+                + URLEncoder.encode(registrationNumber, StandardCharsets.UTF_8);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                java.net.URI.create(url), HttpMethod.GET, anonymousSafeEntity(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Downstream registries reject requests missing the mandatory trust headers (400).
+     * Anonymous public-lane requests arrive with actor/trust headers stripped at the
+     * edge, so the BFF supplies service-originated defaults here; when the caller DID
+     * send platform headers (the web client always does), the shared forwarding
+     * interceptor overwrites these defaults with the inbound values.
+     */
+    private HttpEntity<Void> anonymousSafeEntity() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Tenant-ID", PUBLIC_DEFAULT_TENANT);
+        headers.set("X-Actor-ID", "public-gateway");
+        headers.set("X-Actor-Type", "SYSTEM");
+        headers.set("X-Purpose-Of-Use", "PUBLIC_ACCESS");
+        headers.set("X-Device-Fingerprint", "public-gateway");
+        headers.set("X-Correlation-ID", java.util.UUID.randomUUID().toString());
+        headers.set("X-Request-ID", java.util.UUID.randomUUID().toString());
+        return new HttpEntity<>(headers);
+    }
+
     /**
      * Resolve a council registration number to its provider reference
      * (anti-enumeration: a miss is an empty resolution, not a 404).

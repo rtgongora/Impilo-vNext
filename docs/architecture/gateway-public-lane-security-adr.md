@@ -76,6 +76,7 @@ Every permitAll route family must have a row here (the guard checks this file).
 | `/internal/v1/public/gateway/**` | per-pillar `Public*Controller`s | W1+ | THE gateway lane (GET-only until an anonymous-write wave); sub-paths below |
 | `/internal/v1/public/gateway/facilities/**` | tuso `PublicFacilityController` (search + profile) | W1 | disclosure-limited facility directory |
 | `/internal/v1/public/gateway/guidance/**` | guidance `PublicGuidanceController` (explain-steps + public education) | W1 | Nompilo escalation explainers, no personalization |
+| `/internal/v1/public/gateway/practitioners/**` | varapi `PublicPractitionerVerificationController` (verify-by-registration-number) | W2 | exact-match only (enumeration resistance); miss = 200 with uniform NOT_FOUND shape — no existence oracle |
 
 Legacy Envoy-only prefixes `/v1/public/verify` and `/v1/public/share` are **deprecated
 as public entries** (not anonymous-capable through Envoy today; live traffic reaches
