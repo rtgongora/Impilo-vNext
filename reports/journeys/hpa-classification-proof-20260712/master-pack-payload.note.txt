@@ -1,0 +1,1 @@
+See journal.txt — payload regenerated from data/source CSV at run time

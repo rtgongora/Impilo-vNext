@@ -1,0 +1,51 @@
+== RIG: infra + tuso
+   tuso health: 200
+   PASS: tuso booted (V001→V020, classification rule pack seeded)
+== IMPORT: real national master pack → tuso.facility
+   payload records: 1773
+   import created=1773 · tuso.facility rows=1773
+   PASS: real master pack imported (1773 facilities)
+== BACKFILL: classification enrichment run (real estate)
+   run total=1773 created=1773
+== P0: estate audit verifies the count (never assumes 1773)
+   PASS: estate audit total=1773 == facilities=1773 == profiles=1773
+== P1: district hospital enriched, source preserved
+   dh profile: C|DISTRICT_HOSPITAL|PRIMARY|HOSPITAL · facility.facility_type=DISTRICT_HOSPITAL
+   PASS: district hospital → class C, canonical HOSPITAL; source type+level intact on facility
+== P2: supply care_setting resolves a public clinic label, then confirm
+   after facts: status=DETERMINISTIC_MULTI_FIELD_MATCH label=Government, Local Authority and Mission: Clinics (out patients only)
+   PASS: care_setting supplied → public clinic label resolved deterministically
+   PASS: confirmed → HUMAN_CONFIRMED
+== P3: ambiguous private clinic stays in review across re-run
+   PASS: ambiguous facility 33 still AMBIGUOUS after re-run
+== P4: hospital unit review → confirm PHARMACY candidate creates a real unit
+   units 0→1 · candidate=CONFIRMED
+   PASS: PHARMACY candidate confirmed → real facility_unit created (units_review is a task, not auto-data)
+== P5: missing facts stay UNKNOWN (never guessed)
+   sample clinic w/o facts: care_setting|bed_band = UNKNOWN|NULL
+   PASS: no-fact clinic: care_setting=UNKNOWN, bed_band=NULL — never fabricated
+== P6: human correction survives re-backfill
+   after correction + re-run: HUMAN_CONFIRMED|A|Industrial clinics
+   PASS: correction survived re-backfill (HUMAN_CONFIRMED, class A, Industrial clinics)
+== P7: no facilities created/duplicated by enrichment
+   PASS: facility count stable (1773), ids unique — enrichment created no facilities
+== P8: inspection content resolution respects the profile
+   confirmed clinic 1 status=HUMAN_CONFIRMED ; unconfirmed sample=2 (hard-stop path — unit-tested InspectionContentResolutionPrecedenceTest)
+   PASS: confirmed profile is resolution-eligible; unconfirmed hard-stop proven by InspectionContentResolutionPrecedenceTest
+== P9: provenance queryable
+   rows missing rule provenance=0 · confirmed w/o confirmed_by=0 · history rows=1984
+   PASS: every profile carries rule provenance; confirmed rows carry confirmed_by; history populated (1984)
+== P10: authz 403 + bulk-confirm 400
+   confirm as FACILITY_ADMIN=403 ; bulk-confirm AMBIGUOUS=400
+   PASS: non-admin confirm 403; non-deterministic bulk-confirm 400
+== P11: summary totals reconcile
+   PASS: summary total 1773 == facility count 1773
+== EVIDENCE: exception report + status distribution
+   MISSING_REQUIRED_FACTS|1447
+   AMBIGUOUS|228
+   DETERMINISTIC_MULTI_FIELD_MATCH|65
+   UNMAPPED|29
+   HUMAN_CONFIRMED|2
+   SUGGESTED_HIGH_CONFIDENCE|2
+exception codes: ['CATALOGUE_GAP_PUBLIC_HOSPITAL_UNDER_51_BEDS', 'HUMAN_CONFIRMED_MACHINE_DRIFT', 'OWNERSHIP_AS_TYPE_DEFECT', 'OWNERSHIP_TYPE_CONFLICT']
+RESULT: PASS=15 FAIL=0

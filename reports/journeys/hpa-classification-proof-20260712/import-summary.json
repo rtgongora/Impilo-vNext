@@ -1,0 +1,30 @@
+{
+  "runId": 1,
+  "dryRun": false,
+  "recordsTotal": 1773,
+  "recordsCreated": 1773,
+  "recordsUpdated": 0,
+  "recordsSkipped": 0,
+  "recordsFailed": 0,
+  "warningsCount": 86,
+  "qualitySummary": {
+    "pack_id": "master-health-facility-2024-07-23",
+    "source_label": "MASTER_HEALTH_FACILITY_2024_07_23",
+    "records_total": 1773,
+    "records_imported": 1773,
+    "records_open": 0,
+    "records_with_valid_coordinates": 1687,
+    "records_missing_facility_code": 0,
+    "records_duplicate_facility_code": 0,
+    "records_duplicate_facility_name": 0,
+    "records_excluded_total": 0,
+    "records_acceptable_missing": 96,
+    "records_failed": 0,
+    "warnings_emitted": 86,
+    "legitimacy_stamps": {
+      "platform_operational_pending_verification": 1773,
+      "hpa_legal": 0,
+      "ministry_operational_registered_current": 1773
+    }
+  }
+}
