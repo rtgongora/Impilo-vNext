@@ -97,6 +97,30 @@ gates documented.
 > password remains the login credential. Tests: identity-assurance 45, notification 50,
 > guidance 32, BFF new classes 42, one-ui-shell 626 — all green; `check-public-lane.sh`
 > fully PASS.
+>
+> **Live rig proof (2026-07-12): 21/21 checks green** against jars from HEAD with real
+> JWT enforcement (evidence `reports/journeys/gateway-w1-runtime-proof-20260712/`). The
+> rig caught and fixed 4 real end-to-end defects unit tests missed: (1) the companion
+> V11 header filter 400'd truly anonymous callers on the public lane (new
+> `PublicGatewayAnonymousDefaultsFilter`); (2) tuso had no `permitAll` for
+> `/v1/public/facilities/**` so the lane 502'd E2E; (3) the OTP delivery hop reached
+> notification unauthenticated → R1 503'd; (4) `IDENTITY_ASSURANCE_BASE_URL` never bound
+> to its client → REGISTER rolled back off-localhost.
+>
+> **Known follow-ups (honest, not yet closed):**
+> - **KEYCLOAK-GATE — realm-file gaps** reproduce on any virgin import of
+>   `realm-impilo-preview.json` and affect pre-existing governed onboarding too: (a) no
+>   `roles` client scope/mappers → service-account tokens carry no `resource_access` →
+>   Admin API 403 → server-side user creation dead; (b) user profile requires email so
+>   phone-only ROPC auto-login degrades to 201; (c) `${env.KC_CLIENT_SECRET_BACKEND}`
+>   didn't substitute on `--import-realm`. These need a dedicated KEYCLOAK-GATE slice with
+>   rollback + full auth-regression proof — NOT patched here.
+> - **`next build` fails at HEAD** on a pre-existing msika-lane page-export type error
+>   (`findIntentId`, commit `f725fc6a3`) — blocks the production UI build estate-wide;
+>   owned by the msika lane (follow-up chip spawned).
+> - **PDP-denies-R2 negative** unproven (tshepo-authz not in the W1 rig).
+> - **Preview helm wiring** for the three W1 BFF hops added to
+>   `values-full-preview.yaml` (`GUIDANCE_BASE_URL`/`IDENTITY_ASSURANCE_BASE_URL`/`NOTIFICATION_BASE_URL`).
 
 **Workstream A — Public gateway shell.** Evolve `/welcome` into the intent home ("How
 can we help you today?", 9 pillar cards; honest not-yet states for pillars without
@@ -140,6 +164,18 @@ submit route requests to A.
    `npx vitest run` in one-ui-shell.
 
 ### W2 — Public knowledge & verification + anonymous emergency intake (L; pillars 3, 4, 9; rungs R0–R1)
+
+> **Status (2026-07-12): find-&-verify + health-info LANDED; anonymous SOS in progress.**
+> W2-A public practitioner verification (varapi `PublicPractitionerVerificationController`,
+> enumeration-resistant uniform-shape NOT_FOUND, BFF proxy, `/verify/practitioner` page —
+> integration-caught the same missing-permitAll bug the rig found for tuso, now fixed);
+> W2-B public health-information lane (guidance V013 = 13 citizen-language articles,
+> topic/category/read endpoints, `/welcome/health-info` page, pillar card flipped to open).
+> Tests: varapi 207/full + 5 new, guidance 37, BFF guidance 9 + practitioner 5, one-ui-shell
+> green (route count 704). Guard strict PASS. **W2-C anonymous SOS: intake lane + UI landing
+> now; the dispatcher-side callback-before-dispatch hard gate (PD-3) requires a daidzai
+> `emergency_request` callback/verification schema seam + a dispatcher verify action, built
+> and rig-proven as its own slice — not merged blind onto the daidzai spine.**
 
 - **Find & verify:** full public facility finder on the W1 lane; **new** varapi
   `PublicPractitionerVerificationController` (verify-by-registration-number, allow-listed

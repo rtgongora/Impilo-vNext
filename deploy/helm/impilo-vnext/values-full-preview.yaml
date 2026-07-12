@@ -261,6 +261,12 @@ experienceBff:
     # and citizen/provider appointment surfaces returned 500 (connection refused).
     BOOKING_BASE_URL: http://booking-service:8265
     SCHEDULING_SERVICE_BASE_URL: http://scheduling-service:8128
+    # Gateway W1 public lanes + R1 rung — unset previously, so the BFF called localhost
+    # and the guidance explainer lane, R1 contact-attestation hop and OTP delivery all
+    # failed in-cluster (same class as the booking/scheduling fix above). Rig-flagged.
+    GUIDANCE_BASE_URL: http://guidance-service:8260
+    IDENTITY_ASSURANCE_BASE_URL: http://identity-assurance-service:8201
+    NOTIFICATION_BASE_URL: http://notification-service:8200
     SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
     MANAGEMENT_HEALTH_KAFKA_ENABLED: "false"
