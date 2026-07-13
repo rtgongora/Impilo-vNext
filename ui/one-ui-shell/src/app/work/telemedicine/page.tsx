@@ -36,6 +36,13 @@ import { loadPins, type PinnedTarget } from "@/lib/telemedicine/pinning";
 
 const SECTIONS = [
   {
+    href: "/work/telemedicine/worklist",
+    icon: Stethoscope,
+    title: "Specialist worklist",
+    description:
+      "Submitted teleconsult referrals awaiting your review — accept or decline under governance, then join the session.",
+  },
+  {
     href: "/work/telemedicine/virtual-hospitals",
     icon: Building2,
     title: "Virtual hospitals",

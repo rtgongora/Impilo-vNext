@@ -457,6 +457,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/telemedicine/new", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "New Teleconsultation", navLabel: "New Teleconsult", navZone: "work" },
   { path: "/telemedicine/session/[sessionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Teleconsult Session", navLabel: "Session", navZone: "work" },
   { path: "/telemedicine/analytics", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Telemedicine Analytics", navLabel: "Telemedicine Analytics", navZone: "work" },
+  { path: "/work/telemedicine/worklist", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Specialist Worklist", navLabel: "Specialist Worklist", navZone: "work" },
   { path: "/work/telemedicine/groups", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Clinical Groups", navLabel: "Clinical Groups", navZone: "work" },
   { path: "/work/telemedicine/virtual-hospitals", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Virtual Hospitals", navLabel: "Virtual Hospitals", navZone: "work" },
   { path: "/work/telemedicine/virtual-hospitals/[id]", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Virtual Hospital", navLabel: "Virtual Hospital", navZone: "work" },
