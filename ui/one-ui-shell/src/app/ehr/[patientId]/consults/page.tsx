@@ -49,6 +49,7 @@ import {
 import {
   useTelemedicineSessions,
   useCreateTelemedicineSession,
+  useAcceptTeleconsultSession,
   type TelemedicineSession } from "@/hooks/queries/useTelemedicine";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -191,6 +192,7 @@ export default function ConsultsPage() {
   const createReferral = useCreateReferral();
   const completeReferral = useCompleteReferral();
   const acceptReferral = useAcceptReferral();
+  const acceptTeleconsult = useAcceptTeleconsultSession();
   const respondReferral = useRespondReferral();
   const createSession = useCreateTelemedicineSession();
 
@@ -273,6 +275,26 @@ export default function ConsultsPage() {
 
   function handleAcceptReferral(referral: ReferralResource) {
     if (!facility) return;
+
+    const attrs = referral.attributes as Record<string, unknown>;
+    const modality = String(attrs.modality ?? attrs.virtualMode ?? attrs.virtual_mode ?? "").toLowerCase();
+    const teleconsult = modality === "virtual" || attrs.virtualMode === true || attrs.virtual_mode === true;
+
+    if (teleconsult) {
+      // Governed teleconsult accept (governance assert + audit + referrer notification),
+      // not the plain referral route — otherwise this is a one-click governance bypass.
+      acceptTeleconsult.mutate(
+        {
+          id: referral.id,
+          receivingFacilityId: facility.id,
+          receivingFacilityName: facility.name,
+          scheduledAt: referralScheduledAt || undefined,
+          notes: referralHandoffNote.trim() || undefined,
+        },
+        { onSuccess: () => resetReferralAction() },
+      );
+      return;
+    }
 
     acceptReferral.mutate({
       id: referral.id,
