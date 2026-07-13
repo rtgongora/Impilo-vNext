@@ -20,7 +20,9 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 | R2 G11 credentials wiring | ✅ done | `ab07af81c` | qualifications + practice-contexts full BFF+UI+tests; affiliation/privilege client methods added (UI deferred) |
 | R2 G30 PIC seam | ✅ done | `385e3f7f8` | SoR split affirmed (TUSO=assignment, VARAPI=eligibility snapshot); deprecated orphan writers; snapshot surfaced on UI |
 | **R2 COMPLETE** | ✅ | — | VARAPI surfacing wave (G7–G11 + G30) all landed + pushed |
-| R3 coverage subsidy | pending | — | G3 reconcile → G2 wire → G15 preauth |
+| R3 G2 subsidy wiring | ✅ done | `f9faa2aa5`, `d63920430` | BFF enrol/consume/exemption + UI value-lane section + exemption list |
+| R3 G15 preauth decision | ✅ done | `f9faa2aa5`, `d63920430` | BFF `PUT /preauth/{id}/decision` (cap-denial/409 passthrough) + UI reviewer Approve/Deny |
+| R3 G3 subsidy model | ⚠️ deferred (safe part done) | this commit | disambiguation doc landed; physical merge = operator architecture decision (see below) |
 | R4 khuluma | pending | — | G31 delegate → G6 paging → G13 broadcast |
 | R5 teleconsult completion | pending | — | G17 orders → G18 scheduling → G33 richness |
 | R6 indawo geography | pending | — | G4 catchment engine → G21 geocoding |
@@ -37,6 +39,16 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 - *Fee-obligation creation NOT coupled to renewal-start.* The obligation lane (ProviderPaymentObligationService.createObligation + MusheX intent) is policy-gated and can fail closed; coupling it into start-renewal would let a policy/gate failure block the lifecycle transition. Kept in the existing council-obligation UI lane. Alternative: best-effort try/catch obligation creation inside start-renewal — viable follow-up.
 - *Notices lane left event-driven.* varapi `/notices` returns a hardcoded empty list (stub); the sweep emits `varapi.provider.licence_due`/`lapsed` outbox events. Converting `/notices` to derive from lifecycle_status + licence validTo is a clean follow-up but out of G8 scope.
 - *Renewal transitions bypass the operator LIFECYCLE_TRANSITIONS matrix* (which intentionally excludes renewal arcs) — they are system/renewal-driven via LicenseService with explicit source-state guards.
+
+**G3 subsidy duplicate model (register framing was wrong; merge DEFERRED):**
+- *Exploration corrected the register.* The register grouped "V010 enrolments+balances vs V011/V012 enrollments+drawdowns." Actual split: Model X = `cv_subsidy_enrolments`+`balances`+`drawdowns` (V010 **and V011** — V011 drawdowns FK to the British-spelling enrolments), the value/annual-cap money lane keyed by `member_cpid`; Model Y = `cv_subsidy_enrollments` (V012, double-L), the exemption-category costing lane keyed by `client_id`. **Neither is orphan/dead** — each has distinct live consumers (Model X: SubsidyController `/enrolments*` + eligibility headroom; Model Y: SubsidyController `/enrollments*` + CoveragePlanController patient-category). No data bridge between them.
+- *Decision: defer the physical merge, do the safe part now.* A true merge must fold `exemption_category` into Model X (or add a cap to Model Y) AND repoint CoveragePlanController AND reconcile the key spaces (`member_cpid` vs `client_id` — these may not be the same identifier universe). That is a data-ownership/architecture call with real migration risk, and it does NOT block G2/G15 (the models are cleanly separated at the DB layer). So I landed authoritative **disambiguation** (SoR-map note + the pre-existing controller lane comments) so nobody wires the wrong lane, and G2 wires *both* lanes explicitly labelled. **Merge itself → § Deferred for operator.**
+- *G2 scope:* wired Model X (enrol + list-with-balance + consume) and Model Y (exemption enrol/list) through BFF + UI. The cap-enforced `consume` is exposed but the drawdown trigger in production is the billing/costing rail, not this admin surface — the UI surfaces balance/consumed/remaining and an admin enrol; it does not fabricate a "spend" button beyond the honest consume endpoint.
+- *Subsidy outbox events NOT added.* The map showed subsidy mutations emit no outbox (preauth does). Adding a SUBSIDY aggregate + topic is a clean follow-up; not done here to keep the wave focused and avoid touching the publisher topic map unattended. Logged as a follow-up, not a blocker.
+
+**G15 preauth reviewer decision:**
+- *Reviewer queue = per-member, not cross-member.* The engine's only preauth list is member-scoped (`GET /preauths?member_cpid=`); no cross-member "all pending" endpoint exists. Rather than add a new engine endpoint unattended, I surfaced Approve/Deny on the existing per-member preauth rows (status PENDING). A dedicated cross-member reviewer worklist is a follow-up (needs a `GET /preauths/pending` engine route). Alternative considered: add the pending-list endpoint now — deferred to avoid scope creep + an un-specced query semantics decision.
+- *Cap-denial surfaced honestly.* The engine can flip an APPROVED submission to DENIED (UTILIZATION_LIMIT_EXCEEDED); the BFF passes the engine's 4xx/409 through verbatim (`upstreamWrite`) so the reviewer sees the real outcome.
 
 **G30 PIC system-of-record split (the key decision):**
 - *Direction reversed from the register's first framing.* The register proposed a new VARAPI listener on `tuso.facility.pic.activated`. Exploration disproved that as the right move: the richer HPA-2017 nomination FSM, the BFF surface, and the UI all already treat **TUSO as SoR for the facility-effective assignment**, and TUSO's own `PicNominationService.activate()` writes the assignment. VARAPI's `PractitionerInChargeController` is an orphan parallel writer nothing surfaces. Adding a new VARAPI writer would *perpetuate* the dual-writer contradiction, not resolve it.
@@ -58,3 +70,9 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 ## Deferred for operator
 
 _(appended as encountered — issues genuinely needing operator input that did not block forward progress)_
+
+**[R3/G3] Subsidy data-model merge — architecture decision.** coverage-service has two live subsidy enrolment models (Model X value/cap money lane keyed by `member_cpid`; Model Y exemption-category costing lane keyed by `client_id`) sharing `cv_subsidy_programs`, with no bridge. They are NOT a simple duplicate — each serves a distinct consumer. Options for the operator/architect:
+  1. **Keep both, formalise the boundary** (what I did, non-destructively): disambiguation doc + explicit lane labelling in code/BFF/UI. Lowest risk; the "duplication" is conceptual not conflicting. *Recommended as the durable answer unless a unified subsidy record is a product goal.*
+  2. **Merge into Model X**: add `exemption_category` (nullable) to `cv_subsidy_enrolments`, backfill from `cv_subsidy_enrollments`, repoint `CoveragePlanController.resolvePatientCategory` to read it, retire Model Y. Requires resolving whether `client_id` (Model Y) and `member_cpid` (Model X) are the same identifier space — if not, the backfill is unsafe.
+  3. **Merge into Model Y**: give the exemption lane a cap/balance — larger rebuild of the atomic-drawdown machinery; not recommended (Model X already has correct H1/H2 money semantics).
+  Blocking? **No** — G2/G15 wired around it. Needs operator input only to decide whether a physical merge is desired and to confirm the identifier-space question.

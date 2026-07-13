@@ -16,7 +16,7 @@
 | `community-service` | experience | Community canonical records |
 | `connector-fhir-adapter` | integration | Connector Fhir Adapter canonical records |
 | `costing-engine-service` | enterprise | Costing Engine canonical records |
-| `coverage-service` | enterprise | Coverage canonical records |
+| `coverage-service` | enterprise | Coverage canonical records. **Subsidy dual-lane (G3):** two distinct, both-live subsidy enrolment models share `cv_subsidy_programs`. **Model X** — `cv_subsidy_enrolments` + `cv_subsidy_balances` + `cv_subsidy_drawdowns` (V010/V011): the *value / annual-cap money lane*, keyed by `member_cpid`, with atomic cap-enforced drawdown; SoR for subsidy value consumption. **Model Y** — `cv_subsidy_enrollments` (V012, note the double-L): the *exemption-category / billing-classification lane*, keyed by `client_id`, carries `exemption_category`; SoR for costing waivers (consumed by `CoveragePlanController` patient-category). No data bridge exists between them. A physical merge would repoint a live consumer and cross an identifier boundary (`member_cpid` ≠ `client_id` space) — deferred to an architecture decision; do NOT wire the wrong lane (the `enrolment`/`enrollment` near-homonym is the trap). |
 | `credential-verification-service` | enterprise | Credential Verification canonical records |
 | `daidzai-service` | experience | Daidzai canonical records — emergency_request / emergency_incident / mission status timeline / resource_request / affected_site. Orchestrates (does NOT own) dispatch (Nhume), maps/routing (Ndila), clinical encounter/record (PCT/Butano), comms (Khuluma), after-action (Rito). |
 | `data-access-governance-service` | data | Data Access Governance canonical records |
