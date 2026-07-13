@@ -35,13 +35,15 @@ public class ChannelService {
     private final ConversationParticipantRepository participants;
     private final MessageRepository messages;
     private final OutboxAppender outbox;
+    private final RealtimeDispatcher realtime;
 
     public ChannelService(ConversationRepository conversations, ConversationParticipantRepository participants,
-                          MessageRepository messages, OutboxAppender outbox) {
+                          MessageRepository messages, OutboxAppender outbox, RealtimeDispatcher realtime) {
         this.conversations = conversations;
         this.participants = participants;
         this.messages = messages;
         this.outbox = outbox;
+        this.realtime = realtime;
     }
 
     public record NewChannel(String conversationType, String scopeType, UUID scopeRef,
@@ -128,6 +130,20 @@ public class ChannelService {
         conv.setLastMessagePreview(body != null && body.length() > 200 ? body.substring(0, 200) : body);
         conv.setLastMessageAt(OffsetDateTime.now());
         conversations.save(conv);
+
+        // Fan the broadcast out to connected channel members in realtime (G13) — previously a
+        // broadcast only persisted a row + emitted an outbox event, so members saw it only on refetch.
+        Map<String, Object> rt = new LinkedHashMap<>();
+        rt.put("messageId", msg.getMessageId().toString());
+        rt.put("conversationId", conversationId.toString());
+        rt.put("senderId", senderId);
+        rt.put("contentType", "BROADCAST");
+        rt.put("body", body);
+        try {
+            realtime.publish(tenantId, "conversation:" + conversationId, "broadcast.created", rt);
+        } catch (RuntimeException ex) {
+            // Delivery-transport failure must not roll back a persisted broadcast.
+        }
 
         emit("impilo.khuluma.channel.broadcast.v1", conv, senderId);
         return msg;

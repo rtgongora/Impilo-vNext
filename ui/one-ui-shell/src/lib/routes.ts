@@ -217,6 +217,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/communication", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Communication Hub", navLabel: "Communication", navZone: "work" },
   { path: "/communication/secure-messaging", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Secure Messaging", navLabel: "Messaging", navZone: "work" },
   { path: "/communication/approvals", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Comms Approval Queue", navLabel: "Approvals", navZone: "work" },
+  { path: "/communication/announcements", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Facility Announcements", navLabel: "Announcements", navZone: "work" },
   // Khuluma — Impilo Comms Hub (the comms orchestration umbrella): unified conversations, presence, calls, meetings.
   { path: "/work/comms", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Comms Hub", navLabel: "Khuluma", navZone: "work" },
   { path: "/my/comms", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Messages", navLabel: "Khuluma", navZone: "life" },

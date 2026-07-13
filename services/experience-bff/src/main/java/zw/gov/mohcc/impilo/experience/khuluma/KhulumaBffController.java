@@ -104,6 +104,40 @@ public class KhulumaBffController {
         return relay(khuluma.get("/on-call", Map.of()));
     }
 
+    // ── channels / communities / broadcast (G13) ──────────────────────────────
+
+    @PostMapping("/channels")
+    public ResponseEntity<JsonNode> createChannel(@RequestBody JsonNode body) {
+        policy.requireCommsActor();
+        return relay(khuluma.post("/channels", body));
+    }
+
+    @GetMapping("/channels/discover")
+    public ResponseEntity<JsonNode> discoverChannels(
+            @RequestParam("scope_type") String scopeType,
+            @RequestParam("scope_ref") String scopeRef) {
+        return relay(khuluma.get("/channels/discover", Map.of("scope_type", scopeType, "scope_ref", scopeRef)));
+    }
+
+    @PostMapping("/channels/{id}/join")
+    public ResponseEntity<JsonNode> joinChannel(@PathVariable String id, @RequestBody(required = false) JsonNode body) {
+        policy.requireCommsActor();
+        return relay(khuluma.post("/channels/" + id + "/join", body != null ? body : objectMapper.createObjectNode()));
+    }
+
+    @PostMapping("/channels/{id}/leave")
+    public ResponseEntity<JsonNode> leaveChannel(@PathVariable String id) {
+        policy.requireCommsActor();
+        return relay(khuluma.post("/channels/" + id + "/leave", objectMapper.createObjectNode()));
+    }
+
+    /** Facility/programme announcement: an owner/moderator broadcasts into a channel (khuluma gates the role). */
+    @PostMapping("/channels/{id}/broadcast")
+    public ResponseEntity<JsonNode> broadcastChannel(@PathVariable String id, @RequestBody JsonNode body) {
+        policy.requireCommsActor();
+        return relay(khuluma.post("/channels/" + id + "/broadcast", body));
+    }
+
     // ── messages ──────────────────────────────────────────────────────────────
 
     @GetMapping("/conversations/{id}/messages")

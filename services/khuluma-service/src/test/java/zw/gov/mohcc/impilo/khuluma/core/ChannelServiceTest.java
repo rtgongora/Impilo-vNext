@@ -32,9 +32,10 @@ class ChannelServiceTest {
     @Mock private ConversationParticipantRepository participants;
     @Mock private MessageRepository messages;
     @Mock private OutboxAppender outbox;
+    @Mock private RealtimeDispatcher realtime;
 
     private ChannelService service() {
-        return new ChannelService(conversations, participants, messages, outbox);
+        return new ChannelService(conversations, participants, messages, outbox, realtime);
     }
 
     @BeforeEach
