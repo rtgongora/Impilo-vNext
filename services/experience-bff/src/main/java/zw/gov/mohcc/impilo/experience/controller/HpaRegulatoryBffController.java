@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
@@ -66,6 +67,58 @@ public class HpaRegulatoryBffController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return forwardPost("/rules/" + ruleId + "/approve", null, requestId, correlationId);
+    }
+
+    // ---- Fee schedule + application fee (SI 78 of 2017) ----------------------
+
+    @GetMapping("/fee-schedules")
+    public ResponseEntity<Map<String, Object>> feeSchedules(
+            @RequestParam(required = false, defaultValue = "SI_78_2017") String scheduleCode,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet("/fee-schedules?scheduleCode=" + scheduleCode, requestId, correlationId);
+    }
+
+    @PostMapping("/fee-schedules")
+    public ResponseEntity<Map<String, Object>> createFeeSchedule(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost("/fee-schedules", body, requestId, correlationId);
+    }
+
+    @PostMapping("/fee-schedules/{feeId}/approve")
+    public ResponseEntity<Map<String, Object>> approveFeeSchedule(
+            @PathVariable UUID feeId,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost("/fee-schedules/" + feeId + "/approve", body, requestId, correlationId);
+    }
+
+    @GetMapping("/applications/{applicationId}/fee")
+    public ResponseEntity<Map<String, Object>> applicationFee(
+            @PathVariable UUID applicationId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet("/applications/" + applicationId + "/fee", requestId, correlationId);
+    }
+
+    @PostMapping("/applications/{applicationId}/fee/payment-intent")
+    public ResponseEntity<Map<String, Object>> createFeePaymentIntent(
+            @PathVariable UUID applicationId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost("/applications/" + applicationId + "/fee/payment-intent", null, requestId, correlationId);
+    }
+
+    @PostMapping("/applications/{applicationId}/fee/waive")
+    public ResponseEntity<Map<String, Object>> waiveFee(
+            @PathVariable UUID applicationId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost("/applications/" + applicationId + "/fee/waive", body, requestId, correlationId);
     }
 
     // ---- Premises ------------------------------------------------------------
