@@ -105,6 +105,20 @@ public class VarapiServiceClient {
         return extractData(response);
     }
 
+    // ── Lifecycle transitions (G10) ─────────────────────────────────────────
+
+    public JsonNode getLifecycleTransitions(String providerPublicId) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/internal/providers/" + providerPublicId + "/lifecycle-transitions", JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode transitionLifecycle(String providerPublicId, Map<String, Object> body) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/" + providerPublicId + "/lifecycle-transition", body, JsonNode.class);
+        return extractData(response);
+    }
+
     /**
      * Create a provider profile in the canonical registry.
      */

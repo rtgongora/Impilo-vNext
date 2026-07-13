@@ -2,7 +2,7 @@
  * Provider lifecycle queries — VARAPI lifecycle summary, applications, eligibility.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 export interface ApplicationResource {
@@ -127,3 +127,56 @@ export function usePicEligibility(providerId: string | number, facilityId: strin
     staleTime: 5 * 60 * 1000,
   });
 }
+
+// ── Canonical lifecycle transition console (G10) ────────────────────────────
+
+export interface AllowedTransitions {
+  current: string;
+  allowed: string[];
+}
+
+interface TransitionsEnvelope {
+  data: AllowedTransitions | { attributes?: AllowedTransitions };
+}
+
+function normalizeTransitions(payload: TransitionsEnvelope["data"]): AllowedTransitions {
+  if (payload && "current" in payload) return payload as AllowedTransitions;
+  if (payload && "attributes" in payload && payload.attributes) return payload.attributes;
+  return { current: "", allowed: [] };
+}
+
+const lifecycleBase = (publicId: string) =>
+  `/internal/v1/registry/providers/${encodeURIComponent(publicId)}/lifecycle`;
+
+export function useLifecycleTransitions(providerPublicId?: string) {
+  return useQuery<AllowedTransitions>({
+    queryKey: ["provider-lifecycle-transitions", providerPublicId ?? null],
+    queryFn: async () => {
+      const res = await apiClient.get<TransitionsEnvelope>(`${lifecycleBase(providerPublicId!)}/transitions`);
+      return normalizeTransitions(res.data);
+    },
+    enabled: !!providerPublicId,
+    staleTime: 30_000,
+  });
+}
+
+export interface TransitionInput {
+  targetState: string;
+  reason?: string;
+  effectiveDate?: string;
+  sourceRef?: string;
+}
+
+export function useTransitionLifecycle(providerPublicId?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: TransitionInput) =>
+      apiClient.post(`${lifecycleBase(providerPublicId!)}/transitions`, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["provider-lifecycle-transitions", providerPublicId ?? null] });
+      qc.invalidateQueries({ queryKey: ["providers", providerPublicId] });
+    },
+  });
+}
+
+export const TERMINAL_LIFECYCLE_STATES = new Set(["RETIRED", "DECEASED", "REMOVED"]);
