@@ -4,17 +4,25 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import NewTeleconsultPage from "./page";
 
-const { push, createMutateAsync, post, put, get } = vi.hoisted(() => ({
+const { push, createMutateAsync, post, put, get, uploadMutateAsync, searchParams } = vi.hoisted(() => ({
   push: vi.fn(),
   createMutateAsync: vi.fn(),
   post: vi.fn(),
   put: vi.fn(),
   get: vi.fn(),
+  uploadMutateAsync: vi.fn(),
+  searchParams: { patientId: null as string | null, encounterId: null as string | null },
 }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
-  useSearchParams: () => ({ get: () => null }),
+  useSearchParams: () => ({
+    get: (k: string) => (k === "patientId" ? searchParams.patientId : k === "encounterId" ? searchParams.encounterId : null),
+  }),
+}));
+
+vi.mock("@/hooks/queries/useClinicalDocuments", () => ({
+  useUploadDocumentFile: () => ({ mutateAsync: uploadMutateAsync, isPending: false }),
 }));
 
 vi.mock("@/components/AppLayout", () => ({
@@ -54,6 +62,9 @@ describe("NewTeleconsultPage", () => {
     createMutateAsync.mockReset();
     post.mockReset();
     put.mockReset();
+    uploadMutateAsync.mockReset();
+    searchParams.patientId = null;
+    searchParams.encounterId = null;
     createMutateAsync.mockResolvedValue({ data: { id: "sess-9" } });
     post.mockImplementation((path: string) => {
       if (path.endsWith("/consent")) {
@@ -111,6 +122,42 @@ describe("NewTeleconsultPage", () => {
     expect(await screen.findByText("Referral Submitted Successfully")).toBeInTheDocument();
     // The session is created exactly once and reused for the whole flow.
     expect(createMutateAsync).toHaveBeenCalledTimes(1);
+  }, 30000);
+
+  it("uploads real attachments to the document service and submits their ids (G33)", async () => {
+    const user = userEvent.setup();
+    searchParams.patientId = "CPID-1";
+    uploadMutateAsync.mockResolvedValue({ data: { id: "doc-uuid-1" } });
+
+    render(<NewTeleconsultPage />);
+
+    await user.type(screen.getByPlaceholderText(/dear colleague/i), "Letter");
+    await user.click(screen.getByText("Attachments"));
+
+    const file = new File(["x"], "xray.pdf", { type: "application/pdf" });
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, file);
+
+    await screen.findByText("xray.pdf");
+    expect(uploadMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ patientId: "CPID-1", documentType: "REFERRAL_ATTACHMENT", title: "xray.pdf" }),
+    );
+
+    // Finish the required steps and submit — the referral carries the uploaded document id, not free text.
+    await user.click(screen.getByText("Routing"));
+    await user.click(screen.getByText("General / Specialty Pool"));
+    await user.click(screen.getByText("Consent"));
+    await user.click(screen.getByText("Digital (patient present)"));
+    await user.click(screen.getByRole("button", { name: /record consent & issue token/i }));
+    await screen.findByText("Consent recorded");
+    await user.click(screen.getByRole("button", { name: /send referral/i }));
+
+    await waitFor(() =>
+      expect(put).toHaveBeenCalledWith(
+        "/internal/v1/teleconsult/sessions/sess-9/referral",
+        expect.objectContaining({ attachments: ["doc-uuid-1"] }),
+      ),
+    );
   }, 30000);
 
   it("lets the referrer adjust the scheduled time before creating the session", async () => {

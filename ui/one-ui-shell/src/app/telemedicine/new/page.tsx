@@ -20,6 +20,7 @@ import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useCreateTelemedicineSession } from "@/hooks/queries/useTelemedicine";
+import { useUploadDocumentFile } from "@/hooks/queries/useClinicalDocuments";
 
 function toLocalDateTimeValue(date: Date) {
   const offset = date.getTimezoneOffset();
@@ -88,7 +89,11 @@ export default function NewTeleconsultPage() {
   const [referralLetter, setReferralLetter] = useState("");
   const [presentingProblems, setPresentingProblems] = useState("");
   const [clinicalQuestion, setClinicalQuestion] = useState("");
-  const [attachmentRefs, setAttachmentRefs] = useState("");
+  // Real uploaded documents (document-service UUIDs) — the referral attachment validator
+  // requires document ids, so free-text refs never validated (G33). Uploads produce them.
+  const [attachments, setAttachments] = useState<{ id: string; title: string }[]>([]);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const uploadDoc = useUploadDocumentFile();
   const [routingType, setRoutingType] = useState("");
   const [routingTarget, setRoutingTarget] = useState("");
   const [purposeOfUse, setPurposeOfUse] = useState("TREATMENT");
@@ -139,6 +144,31 @@ export default function NewTeleconsultPage() {
     }
   }
 
+  async function handleUploadFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    if (!patientId) {
+      setUploadError("A patient must be in context to upload attachments.");
+      return;
+    }
+    setUploadError(null);
+    for (const file of Array.from(files)) {
+      try {
+        const res = await uploadDoc.mutateAsync({
+          patientId,
+          file,
+          documentType: "REFERRAL_ATTACHMENT",
+          title: file.name,
+          encounter_id: encounterId || undefined,
+          uploaded_by: user?.id,
+        });
+        const id = res.data.id;
+        if (id) setAttachments((prev) => [...prev, { id, title: file.name }]);
+      } catch {
+        setUploadError(`Failed to upload ${file.name}. Verify document-service availability.`);
+      }
+    }
+  }
+
   async function handleSubmit() {
     if (!canSubmit) return;
     setSubmitting(true);
@@ -152,7 +182,7 @@ export default function NewTeleconsultPage() {
         referralLetter,
         presentingProblems: presentingProblems.split("\n").filter(Boolean),
         clinicalQuestion,
-        attachments: attachmentRefs.split("\n").filter(Boolean),
+        attachments: attachments.map((a) => a.id),
         routingType,
         routingTarget,
         urgency,
@@ -332,18 +362,53 @@ export default function NewTeleconsultPage() {
             {activeStep === "attachments" && (
               <div className="bg-card rounded-xl border border-border p-6 space-y-4">
                 <h3 className="text-base font-semibold text-foreground">④ Attachments</h3>
-                <p className="text-sm text-muted-foreground">Upload or reference supporting documents, images, or files.</p>
-                <label className="block">
-                  <span className="text-sm font-medium text-foreground">Attachment references (one per line)</span>
-                  <textarea value={attachmentRefs} onChange={(e) => setAttachmentRefs(e.target.value)} rows={4}
-                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
-                    placeholder="e.g. X-ray chest PA — 2026-04-14&#10;Blood results — FBC, U&E&#10;ECG tracing" />
-                </label>
-                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-                  <Upload className="w-8 h-8 mx-auto mb-2" />
-                  <p className="text-sm">Drag & drop files here or click to browse</p>
+                <p className="text-sm text-muted-foreground">
+                  Upload supporting documents, images, or files. Each is stored in the clinical document
+                  service and attached to the referral by its document id.
+                </p>
+                {!patientId && (
+                  <p className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
+                    A patient must be in context to upload attachments.
+                  </p>
+                )}
+                <label
+                  className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-8 text-center text-muted-foreground ${patientId ? "cursor-pointer hover:bg-background" : "opacity-50"}`}
+                >
+                  {uploadDoc.isPending ? (
+                    <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin" />
+                  ) : (
+                    <Upload className="w-8 h-8 mx-auto mb-2" />
+                  )}
+                  <p className="text-sm">{uploadDoc.isPending ? "Uploading…" : "Click to browse and upload"}</p>
                   <p className="text-xs mt-1">PDF, JPEG, PNG, DICOM up to 25MB each</p>
-                </div>
+                  <input
+                    type="file"
+                    multiple
+                    disabled={!patientId || uploadDoc.isPending}
+                    onChange={(e) => void handleUploadFiles(e.target.files)}
+                    className="hidden"
+                  />
+                </label>
+                {uploadError && <p className="text-xs text-red-600">{uploadError}</p>}
+                {attachments.length > 0 && (
+                  <ul className="space-y-1.5">
+                    {attachments.map((a) => (
+                      <li key={a.id} className="flex items-center justify-between gap-2 rounded-lg bg-background px-3 py-2 text-sm">
+                        <span className="flex items-center gap-2 min-w-0">
+                          <FileText className="w-4 h-4 shrink-0 text-primary" />
+                          <span className="truncate">{a.title}</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setAttachments((prev) => prev.filter((x) => x.id !== a.id))}
+                          className="text-xs text-red-600 hover:underline shrink-0"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
 
