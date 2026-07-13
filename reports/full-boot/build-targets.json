@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-03T11:04:19.808Z",
+  "generated_at": "2026-07-09T05:04:58.903Z",
   "targets": [
     {
       "id": "ai-model-registry-service",
@@ -993,6 +993,20 @@
       "image_strategy": "buildpacks",
       "image_strategy_status": "not_required",
       "reason": "UI workspace not independently deployed \u2014 not a missing Dockerfile failure",
+      "classification_confidence": "certain"
+    },
+    {
+      "id": "organization-registry-service",
+      "path": "services/organization-registry-service",
+      "component_name": "organization-registry-service",
+      "type": "backend_service",
+      "plane": "registry",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
       "classification_confidence": "certain"
     },
     {

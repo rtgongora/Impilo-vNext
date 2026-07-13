@@ -2,7 +2,7 @@
 
 > Prefer **pre-built JAR + shared JRE template** or **Jib**. Avoid Maven inside Alpine runtime Dockerfiles.
 
-**Maven services in catalog:** 96
+**Maven services in catalog:** 97
 
 | Service | Path | Full-boot | JAR after build | Dockerfile | Strategy | Recommended | Reason | Changes |
 |---|---|---|---|---|---|---|---|---|
@@ -22,7 +22,7 @@
 | costing-engine-service | services/costing-engine-service | optional | yes (if reactor built) | services/costing-engine-service/Dockerfile | jib | prebuilt-jar-runtime-image or jib | Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template | — |
 | coverage-service | services/coverage-service | optional | yes (if reactor built) | services/coverage-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | credential-verification-service | services/credential-verification-service | optional | yes (if reactor built) | services/credential-verification-service/Dockerfile | jib | prebuilt-jar-runtime-image or jib | Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template | — |
-| daidzai-service | services/daidzai-service | optional | no | — | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Java service — default shared JRE template after mvn install | — |
+| daidzai-service | services/daidzai-service | optional | yes (if reactor built) | — | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Java service — default shared JRE template after mvn install | — |
 | data-access-governance-service | services/data-access-governance-service | optional | yes (if reactor built) | services/data-access-governance-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | data-governance-service | services/data-governance-service | optional | yes (if reactor built) | services/data-governance-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | data-ingestion-service | services/data-ingestion-service | optional | yes (if reactor built) | services/data-ingestion-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
@@ -65,6 +65,7 @@
 | observability-service | services/observability-service | optional | yes (if reactor built) | services/observability-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | offline-edge-service | services/offline-edge-service | optional | yes (if reactor built) | services/offline-edge-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | offline-sync-service | services/offline-sync-service | optional | yes (if reactor built) | services/offline-sync-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
+| organization-registry-service | services/organization-registry-service | optional | yes (if reactor built) | services/organization-registry-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | oros-service | services/oros-service | optional | yes (if reactor built) | services/oros-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | pacs-adapter-service | services/pacs-adapter-service | optional | yes (if reactor built) | services/pacs-adapter-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | patient-safety-service | services/patient-safety-service | optional | yes (if reactor built) | — | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Java service — default shared JRE template after mvn install | — |

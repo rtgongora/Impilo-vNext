@@ -65,6 +65,11 @@ public class CardEntity {
     @Column(name = "ips_updated_at")
     private OffsetDateTime ipsUpdatedAt;
 
+    /** Reference to the canonical VITO CardCredential (its cardNumber) — the identity facet of this
+     * same physical SMART card. Null when the money card is not (yet) linked to a VITO card. */
+    @Column(name = "vito_card_number", length = 64)
+    private String vitoCardNumber;
+
     @Column(name = "activated_at")
     private OffsetDateTime activatedAt;
 
@@ -225,6 +230,14 @@ public class CardEntity {
 
     public void setIpsUpdatedAt(OffsetDateTime ipsUpdatedAt) {
         this.ipsUpdatedAt = ipsUpdatedAt;
+    }
+
+    public String getVitoCardNumber() {
+        return vitoCardNumber;
+    }
+
+    public void setVitoCardNumber(String vitoCardNumber) {
+        this.vitoCardNumber = vitoCardNumber;
     }
 
     public OffsetDateTime getActivatedAt() {

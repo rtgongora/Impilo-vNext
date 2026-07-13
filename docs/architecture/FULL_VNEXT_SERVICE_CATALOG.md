@@ -3,7 +3,7 @@
 > **Source of truth:** [`docs/registry/services-registry.yaml`](../registry/services-registry.yaml)
 > Runtime images: see [`RUNTIME_IMAGE_STRATEGY_DOCTRINE.md`](../environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md).
 
-**Total components:** 151
+**Total components:** 152
 
 | Name | Type | Plane | Domain | Path | Stack | Image strategy | Reclass | Strategy status | Port | Full-boot class | Status | Blocker | Next action |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -101,6 +101,7 @@
 | `ops-console` | frontend_app | experience | ui-workspace | `ui/ops-console` | npm | buildpacks | buildpack-candidate | not_required | — | wave_sequenced_full_boot | no_runtime_image_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
 | `ops-docs` | frontend_app | experience | ui-workspace | `ui/ops-docs` | npm | buildpacks | buildpack-candidate | not_required | — | wave_sequenced_full_boot | no_runtime_image_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
 | `ops-instrumentation` | library | integration | shared-library | `libs/ops-instrumentation` | maven | not-required-internal-package | not-required-internal-package | not_required | — | internal_package | no_runtime_image_required | — | Maven/npm library — not a K8s workload |
+| `organization-registry-service` | backend_service | registry | organization-registry | `services/organization-registry-service` | maven | shared-dockerfile-template | shared-template-candidate | valid | 8153 | wave_sequenced_full_boot | image_strategy_defined | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | `oros-service` | backend_service | clinical | care-delivery | `services/oros-service` | maven | shared-dockerfile-template | shared-template-candidate | valid | 8089 | wave_sequenced_full_boot | image_strategy_defined | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | `oros-web` | frontend_app | experience | ui-workspace | `ui/oros-web` | npm | buildpacks | buildpack-candidate | not_required | — | wave_sequenced_full_boot | no_runtime_image_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
 | `pacs-adapter-service` | backend_service | clinical | care-delivery | `services/pacs-adapter-service` | maven | shared-dockerfile-template | shared-template-candidate | valid | 8113 | wave_sequenced_full_boot | image_strategy_defined | — | Thin JAR-copy Dockerfile — equivalent to shared template |

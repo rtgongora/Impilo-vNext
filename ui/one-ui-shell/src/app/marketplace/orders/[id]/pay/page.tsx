@@ -23,6 +23,7 @@ import {
 } from "@/hooks/queries/useCommerceFlow";
 import { useBalance, useWalletByOwner } from "@/hooks/queries/useMusheWallet";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { findIntentId } from "@/lib/marketplace/find-intent-id";
 
 const SETTLED_STATUSES = new Set(["PAID", "IN_PROGRESS", "OUT_FOR_DELIVERY", "DELIVERED", "COLLECTED", "COMPLETED"]);
 
@@ -30,23 +31,6 @@ function asNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value))) return Number(value);
   return null;
-}
-
-/** Deep, tolerant scan for the MusheX intent id in the pay response. */
-export function findIntentId(payload: unknown, depth = 0): string | undefined {
-  if (payload == null || typeof payload !== "object" || depth > 4) return undefined;
-  const record = payload as Record<string, unknown>;
-  for (const key of ["mushexPaymentIntentId", "mushex_payment_intent_id", "paymentIntentId", "intentId"]) {
-    const value = record[key];
-    if (typeof value === "string" && value) return value;
-  }
-  for (const value of Object.values(record)) {
-    if (value && typeof value === "object") {
-      const found = findIntentId(value, depth + 1);
-      if (found) return found;
-    }
-  }
-  return undefined;
 }
 
 function errorMessage(error: unknown): string {

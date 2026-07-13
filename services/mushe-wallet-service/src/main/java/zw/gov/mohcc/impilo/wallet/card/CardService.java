@@ -173,6 +173,38 @@ public class CardService {
         return card;
     }
 
+    // ── Unified SMART card: react to VITO CardCredential lifecycle (Phase 2) ──
+
+    /**
+     * Link this money card to the canonical VITO CardCredential (its cardNumber) — the identity facet
+     * of the same physical SMART card. Establishes the reference VITO card events act on.
+     */
+    @Transactional
+    public CardEntity linkVitoCard(UUID cardId, String vitoCardNumber, UUID tenantId) {
+        CardEntity card = findCardOrThrow(cardId);
+        card.setVitoCardNumber(vitoCardNumber);
+        return cardRepository.save(card);
+    }
+
+    /**
+     * Freeze the money card linked to a revoked/suspended VITO SMART card (identity facet). Idempotent
+     * and best-effort: no-op if no money card is linked to that VITO cardNumber or it is already blocked.
+     * Uses the card's own tenant. Drives the money side of a lost/stolen-card revocation.
+     */
+    @Transactional
+    public void freezeForVitoCard(String vitoCardNumber, String reason) {
+        if (vitoCardNumber == null || vitoCardNumber.isBlank()) {
+            return;
+        }
+        cardRepository.findByVitoCardNumber(vitoCardNumber).ifPresent(card -> {
+            if ("BLOCKED".equals(card.getStatus())) {
+                return; // idempotent — already frozen
+            }
+            blockCard(card.getCardId(), reason, card.getTenantId());
+            log.info("Froze money card {} for revoked/suspended VITO card {}", card.getCardId(), vitoCardNumber);
+        });
+    }
+
     // ── Replace Card ────────────────────────────────────────────────────
 
     /**

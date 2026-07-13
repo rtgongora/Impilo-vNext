@@ -404,6 +404,12 @@
       "available": 1,
       "healthy": true
     },
+    "organization-registry-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "oros-service": {
       "replicas": 1,
       "ready": 1,
@@ -641,7 +647,7 @@
   },
   "missing_deployments": [],
   "unhealthy_deployments": [],
-  "runtime_pods_count": 107,
+  "runtime_pods_count": 108,
   "verify_pods_ignored": 0,
   "crashloop": [],
   "pending": [],

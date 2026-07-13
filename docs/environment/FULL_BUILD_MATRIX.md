@@ -1,6 +1,6 @@
 # Full Build Matrix
 
-> 134 buildable targets. Regenerate after classification.
+> 135 buildable targets. Regenerate after classification.
 
 | Service | Plane | Path | Tool | Command | Artifact | Status | Failure | Log |
 |---|---|---|---|---|---|---|---|---|
@@ -84,6 +84,7 @@
 | ops-console | experience | ui/ops-console | npm | cd ui/ops-console && npm run build | jar\|dist | not_run | — | — |
 | ops-docs | experience | ui/ops-docs | npm | cd ui/ops-docs && npm run build | jar\|dist | not_run | — | — |
 | ops-instrumentation | integration | libs/ops-instrumentation | maven | cd services/ops-instrumentation && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
+| organization-registry-service | registry | services/organization-registry-service | maven | cd services/organization-registry-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | oros-service | clinical | services/oros-service | maven | cd services/oros-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | oros-web | experience | ui/oros-web | npm | cd ui/oros-web && npm run build | jar\|dist | not_run | — | — |
 | pacs-adapter-service | clinical | services/pacs-adapter-service | maven | cd services/pacs-adapter-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |

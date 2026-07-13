@@ -70,6 +70,7 @@ offline-sync-service		services/offline-sync-service	wave_sequenced_full_boot
 one-ui-shell		ui/one-ui-shell	required_full_boot
 ops-console		ui/ops-console	wave_sequenced_full_boot
 ops-docs		ui/ops-docs	wave_sequenced_full_boot
+organization-registry-service		services/organization-registry-service	wave_sequenced_full_boot
 oros-service		services/oros-service	wave_sequenced_full_boot
 oros-web		ui/oros-web	wave_sequenced_full_boot
 pacs-adapter-service		services/pacs-adapter-service	wave_sequenced_full_boot

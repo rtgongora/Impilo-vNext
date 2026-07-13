@@ -4,7 +4,7 @@
 
 **Estate status:** `FULL_ESTATE_PASS`
 **Estate reason:** full estate deployed, ready, and healthy
-**Runtime estate ready:** 96/96 (missing/not-ready: 0)
+**Runtime estate ready:** 97/97 (missing/not-ready: 0)
 **Legacy full-boot status (alias):** `FULL_BOOT_PASS` — images, helm, and runtime healthy
 
 | Phase | State |
@@ -16,10 +16,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total discovered | 151 |
+| Total discovered | 152 |
 | Required full boot | 22 |
-| Image pass / fail | 3 / 0 |
+| Image pass / fail | 105 / 0 |
 | Helm ready / missing / partial | 22 / 0 / 0 |
-| Deployed in full boot | 106 |
-| Pods ready / total | 106 / 107 |
+| Deployed in full boot | 109 |
+| Pods ready / total | 109 / 110 |
 

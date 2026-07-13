@@ -3,7 +3,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import OrderPayPage, { findIntentId } from "./page";
+import OrderPayPage from "./page";
+import { findIntentId } from "@/lib/marketplace/find-intent-id";
 
 const ORDER_ID = "ORD-PAY-1";
 

@@ -1,8 +1,8 @@
 {
-  "total": 151,
+  "total": 152,
   "by_plane": {
     "trust": 12,
-    "registry": 7,
+    "registry": 8,
     "clinical": 20,
     "data": 12,
     "integration": 46,
@@ -10,7 +10,7 @@
     "enterprise": 17
   },
   "by_classification": {
-    "wave_sequenced_full_boot": 103,
+    "wave_sequenced_full_boot": 104,
     "external_dependency": 9,
     "required_full_boot": 22,
     "internal_package": 12,
@@ -18,7 +18,7 @@
   },
   "image_strategy": {
     "dockerfile": 1,
-    "shared-dockerfile-template": 75,
+    "shared-dockerfile-template": 76,
     "jib": 20,
     "buildpacks": 19,
     "official-upstream-image": 0,
@@ -32,7 +32,7 @@
   },
   "runtime_image_required_count": 22,
   "dockerfile_count": 1,
-  "shared_template_count": 75,
+  "shared_template_count": 76,
   "jib_count": 20,
   "buildpacks_count": 19,
   "official_image_count": 0,

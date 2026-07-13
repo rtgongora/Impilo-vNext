@@ -90,6 +90,7 @@
 | `ops-console` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/ops-console` | triage |
 | `ops-docs` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/ops-docs` | triage |
 | `ops-instrumentation` | health-os-doctrine, core-transaction (if domain) | as classified | library | n/a | see MOBILE_PARITY_MATRIX | n/a | unknown | `libs/ops-instrumentation` | triage |
+| `organization-registry-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/organization-registry-service` | triage |
 | `oros-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/oros-service` | triage |
 | `oros-web` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/oros-web` | triage |
 | `pacs-adapter-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/pacs-adapter-service` | triage |

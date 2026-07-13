@@ -43,10 +43,14 @@
 | `docs/architecture/mobile-kiosk-ui-patterns.md` | human-review | all planes | advisory |
 | `docs/architecture/nompilo-journey-companion-architecture.md` | human-review | all planes | advisory |
 | `docs/architecture/nompilo-tool-registry-and-permissioning.md` | partial-auto | all planes | yes |
+| `docs/architecture/org-registry-cutover-phase2-runbook.md` | partial-auto | all planes | yes |
+| `docs/architecture/organization-registry-adoption.md` | partial-auto | all planes | yes |
+| `docs/architecture/pct-care-tracker-journey.md` | human-review | all planes | advisory |
 | `docs/architecture/planes/00-production-plane-doctrine.md` | human-review | all planes | advisory |
 | `docs/architecture/planes/01-trust-identity-assurance-governance.md` | human-review | all planes | advisory |
 | `docs/architecture/planes/02-registry-sovereign-identity-spine.md` | partial-auto | all planes | yes |
 | `docs/architecture/planes/06-experience-workflow-orchestration.md` | human-review | all planes | advisory |
+| `docs/architecture/queue-management-journey.md` | human-review | all planes | advisory |
 | `docs/architecture/registry-api-contract-convergence-matrix.md` | partial-auto | all planes | yes |
 | `docs/architecture/registry-plane-canonical-api-contract.md` | partial-auto | all planes | yes |
 | `docs/architecture/registry-plane-dependency-map.md` | partial-auto | all planes | yes |
@@ -87,6 +91,7 @@
 | `docs/doctrine/health-os-doctrine.md` | human-review | all planes | advisory |
 | `docs/doctrine/health-services-gateway-doctrine.md` | partial-auto | all planes | yes |
 | `docs/doctrine/healthcare-coding-standards.md` | human-review | all planes | advisory |
+| `docs/doctrine/identity-access-trust-governance.md` | human-review | all planes | advisory |
 | `docs/doctrine/khuluma-comms-orchestration.md` | human-review | all planes | advisory |
 | `docs/doctrine/mushex-gateway-neutrality.md` | partial-auto | all planes | yes |
 | `docs/environment/BACKEND_FRONTEND_PARITY_GATE.md` | partial-auto | all planes | yes |

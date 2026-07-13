@@ -17,5 +17,8 @@ public interface CardRepository extends JpaRepository<CardEntity, Long> {
 
     Optional<CardEntity> findByCardNumber(String cardNumber);
 
+    /** Find the money card linked to a canonical VITO CardCredential (unified SMART card, Phase 2). */
+    Optional<CardEntity> findByVitoCardNumber(String vitoCardNumber);
+
     Optional<CardEntity> findByCardIdAndTenantId(UUID cardId, UUID tenantId);
 }

@@ -1,8 +1,8 @@
 metadata:
-  generated_at: '2026-07-02T05:08:28.897Z'
+  generated_at: '2026-07-09T05:04:58.903Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
-  total_entries: 151
+  total_entries: 152
 classifications:
   - id: ai-model-registry-service
     canonical_name: ai-model-registry-service
@@ -3888,6 +3888,49 @@ classifications:
     deployment_lane: build_validate_only
     run_applicable: false
     run_not_applicable_reason: Maven/npm library — not a K8s workload
+  - id: organization-registry-service
+    canonical_name: organization-registry-service
+    plane: registry
+    domain: organization-registry
+    component_type: backend_service
+    full_boot_classification: wave_sequenced_full_boot
+    classification: wave_sequenced_full_boot
+    estate_role: wave_sequenced_full_estate
+    runtime_kind: kubernetes_service
+    deploy_order_group: registries
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: >-
+      docker build -f services/organization-registry-service/Dockerfile OR build-runtime-image-from-jar.sh
+      organization-registry-service
+    image_name: impilo/organization-registry-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: services/organization-registry-service/Dockerfile
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/organization-registry-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/organization-registry-service
+    build_tool: maven
+    default_http_port: 8153
+    priority: P2
+    blocker: null
+    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: oros-service
     canonical_name: oros-service
     plane: clinical
@@ -6110,47 +6153,6 @@ classifications:
     priority: P2
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
-    classification_confidence: certain
-    deployment_lane: runtime_k8s_microservice
-    run_applicable: true
-    run_not_applicable_reason: null
-  - id: organization-registry-service
-    canonical_name: organization-registry-service
-    plane: registry
-    domain: organizations
-    component_type: backend_service
-    full_boot_classification: wave_sequenced_full_boot
-    classification: wave_sequenced_full_boot
-    estate_role: wave_sequenced_full_estate
-    runtime_kind: kubernetes_service
-    deploy_order_group: platform_services
-    build_required: true
-    image_required: false
-    runtime_image_required: false
-    image_strategy: dockerfile
-    image_strategy_reclass: shared-template-candidate
-    image_strategy_status: valid
-    image_build_command: docker build -f services/organization-registry-service/Dockerfile OR build-runtime-image-from-jar.sh organization-registry-service
-    image_name: impilo/organization-registry-service
-    official_image: null
-    official_chart: null
-    dockerfile_path: services/organization-registry-service/Dockerfile
-    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
-    jib_module: services/organization-registry-service
-    buildpack_builder: null
-    container_required: false
-    helm_required: false
-    health_check_required: false
-    contract_check_required: true
-    frontend_surface_expected: true
-    mobile_surface_expected: false
-    doctrine_compliance_required: false
-    source_path: services/organization-registry-service
-    build_tool: maven
-    default_http_port: 8153
-    priority: P2
-    blocker: null
-    reason: Organization registry SoR — organizations, authorized representatives, Channel-C claims
     classification_confidence: certain
     deployment_lane: runtime_k8s_microservice
     run_applicable: true

@@ -10,7 +10,7 @@
 | Plane ID | Name | Evidence | Component count |
 |---|---|---|---|
 | trust | Trust, Identity Assurance & Governance | `docs/architecture/planes/01-trust-identity-assurance-governance.md` | 12 |
-| registry | Registry & Sovereign Identity Spine | `docs/architecture/planes/02-registry-sovereign-identity-spine.md` | 7 |
+| registry | Registry & Sovereign Identity Spine | `docs/architecture/planes/02-registry-sovereign-identity-spine.md` | 8 |
 | clinical | Clinical Execution & Shared Health Record | `docs/architecture/planes/03-clinical-execution-shared-health-record.md` | 20 |
 | data | Data, Intelligence & Public Health | `docs/architecture/planes/04-data-intelligence-public-health.md` | 12 |
 | integration | Integration, Interoperability & Edge | `docs/architecture/planes/05-integration-interoperability-edge.md` | 46 |
@@ -43,6 +43,7 @@ Evidence: [`docs/architecture/planes/02-registry-sovereign-identity-spine.md`](d
 | Component | Type | Classification | Status | Confidence |
 |---|---|---|---|---|
 | `indawo-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
+| `organization-registry-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `product-registry-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `tuso-service` | backend_service | required_full_boot | image_strategy_defined | certain |
 | `ubomi-service` | backend_service | required_full_boot | image_strategy_defined | certain |

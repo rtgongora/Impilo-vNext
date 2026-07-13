@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-07-05T08:38:21.002Z",
+  "generatedAt": "2026-07-09T05:04:53.635Z",
   "counts": {
-    "totalOpenApiOperations": 4790,
+    "totalOpenApiOperations": 4803,
     "totalAsyncChannels": 84,
-    "implemented": 4843,
+    "implemented": 4856,
     "partial": 0,
     "missing": 8,
     "unownedContract": 23,
-    "orphanHandlers": 19,
-    "violations": 27,
+    "orphanHandlers": 24,
+    "violations": 32,
     "contractParseErrors": 0
   },
   "openApiOperations": [
@@ -21972,7 +21972,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/RegistryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/OrganizationRegistryController.java",
       "stubPattern": null
     },
     {
@@ -25092,7 +25092,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/citizen/CitizenLongtailController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ProviderClaimController.java",
       "stubPattern": null
     },
     {
@@ -35024,7 +35024,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/citizen/CitizenLongtailController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ProviderClaimController.java",
       "stubPattern": null
     },
     {
@@ -42695,6 +42695,175 @@
       ],
       "implStatus": "implemented",
       "serviceHandler": "services/offline-sync-service/src/main/java/zw/gov/mohcc/impilo/offlinesync/api/controller/SyncPackController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_patch__affiliationId_",
+      "method": "PATCH",
+      "path": "/{affiliationId}",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/AffiliationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_post__organizations_organizationId_claims",
+      "method": "POST",
+      "path": "/organizations/{organizationId}/claims",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/ClaimSubmissionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_get__organizations_organizationId_claims",
+      "method": "GET",
+      "path": "/organizations/{organizationId}/claims",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/ClaimSubmissionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_get__claims_id_",
+      "method": "GET",
+      "path": "/claims/{id}",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/ClaimSubmissionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_post__claims_id_transition",
+      "method": "POST",
+      "path": "/claims/{id}/transition",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/ClaimSubmissionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_post__claims_id_escalate",
+      "method": "POST",
+      "path": "/claims/{id}/escalate",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/ClaimSubmissionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_get__id_",
+      "method": "GET",
+      "path": "/{id}",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/ClaimSubmissionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_post__id_representatives",
+      "method": "POST",
+      "path": "/{id}/representatives",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/OrganizationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_get__id_representatives",
+      "method": "GET",
+      "path": "/{id}/representatives",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/OrganizationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_post__id_submit_verification",
+      "method": "POST",
+      "path": "/{id}/submit-verification",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/OrganizationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_post__id_verify",
+      "method": "POST",
+      "path": "/{id}/verify",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/OrganizationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_post__wgv",
+      "method": "POST",
+      "path": "/wgv",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/internal/WgvMirrorController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "organization-registry.openapi.yaml",
+      "operationId": "organizationregistry_get__inventory",
+      "method": "GET",
+      "path": "/inventory",
+      "summary": "Documented from organization-registry-service handler (complete-not-delete sync)",
+      "modules": [
+        "organization-registry-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/organization-registry-service/src/main/java/zw/gov/mohcc/impilo/orgregistry/api/internal/WgvMirrorInventoryController.java",
       "stubPattern": null
     },
     {
@@ -63467,6 +63636,46 @@
       "method": "POST",
       "path": "/v1/orders/external-manual",
       "handler": "services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/api/controller/IntakeController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "GET",
+      "path": "/v1/internal/facilities/{facilityId}/admin-claim/eligibility",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityClaimController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "GET",
+      "path": "/v1/internal/facilities/{facilityId}/admin-claim/preview",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityClaimController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "GET",
+      "path": "/v1/internal/facilities/{facilityId}/admin-claim/appointments",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityClaimController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "POST",
+      "path": "/v1/internal/facilities/{facilityId}/admin-claim",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityClaimController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "POST",
+      "path": "/v1/internal/facility-admin-appointments/{appointmentId}/approve",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityClaimController.java",
       "implStatus": "contract-gap",
       "remediation": "add OpenAPI operation — complete contract; do not delete handler"
     },

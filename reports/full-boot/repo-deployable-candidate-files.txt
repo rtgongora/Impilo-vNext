@@ -65,6 +65,7 @@ contracts/openapi/notification.openapi.yaml
 contracts/openapi/observability.openapi.yaml
 contracts/openapi/offline-edge.openapi.yaml
 contracts/openapi/offline-sync.openapi.yaml
+contracts/openapi/organization-registry.openapi.yaml
 contracts/openapi/oros.openapi.yaml
 contracts/openapi/pacs-adapter.openapi.yaml
 contracts/openapi/patient-safety.openapi.yaml
@@ -221,6 +222,8 @@ services/offline-edge-service/Dockerfile
 services/offline-edge-service/pom.xml
 services/offline-sync-service/Dockerfile
 services/offline-sync-service/pom.xml
+services/organization-registry-service/Dockerfile
+services/organization-registry-service/pom.xml
 services/oros-service/Dockerfile
 services/oros-service/pom.xml
 services/pacs-adapter-service/Dockerfile

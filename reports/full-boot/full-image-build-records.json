@@ -1,510 +1,1261 @@
 {
-  "generated_at": "2026-07-03T03:51:12.065770+00:00",
-  "source_commit": "e1b3bf54c610aaaa92c76bea37b9d50a26364272",
-  "tag_sha": "preview-e1b3bf54c",
+  "generated_at": "2026-07-09T06:59:56.205838+00:00",
+  "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+  "tag_sha": "preview-efedd0f49",
   "records": {
+    "ai-model-registry-service": {
+      "service": "ai-model-registry-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:d653517dec04eccf7c7963190be0e3c2ecd3648b7b380c493c3fa0cee9556f3b",
+      "registry_digest": "sha256:9204793c43d768783f0807af8f50c91e2dcb71d5a49512720a67e8f08d3fdcae",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "analytics-pipeline-service": {
+      "service": "analytics-pipeline-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:c392f9ae67e8e94f78c3d3f5c1e799431f2bb042312979a1fdee830a5536d62f",
+      "registry_digest": "sha256:608350f3cf92051b4cbd061262c1b037fcc399d2c85311f22d763eb6446d99f5",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "asset-registry-service": {
+      "service": "asset-registry-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:cd42471a38007a9325bae2c9fe5b70ca3763aa0cc983e4d33bef040ea6d88052",
+      "registry_digest": "sha256:ad99d4f3f7a95a7889af37d6640a74eedb84ff65c284bdc67ae4704a2f498570",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "audit-ledger-service": {
+      "service": "audit-ledger-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:7357841d9e31828dedeffa2659cbbd748d0121a5de4984ae1f9d8223a471c563",
+      "registry_digest": "sha256:87f339a60056a135d0e7433529d4dd9400101abf33443baa77ee7cbebc51fcae",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "booking-service": {
+      "service": "booking-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:42fd3018f3a53e38748dbc5030664e00bcda45cf40ad8098add443150a8d6b80",
+      "registry_digest": "sha256:f6beb06a1aa09b43748071e7dc707b8e48921399146ef7fdf8134bd162267701",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "butano-fhir": {
+      "service": "butano-fhir",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:9b93777f94bb02ac066ad20e5c8175febc85dd3e65af6246a9d772d41c2ad1e8",
+      "registry_digest": "sha256:bf2bb8dc04ee7269fbd467f43dfdc36dcca3a3d232262d0b156df613b6b423db",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "butano-service": {
+      "service": "butano-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:de43d71829f511ca23a6d0366980b537a1a429c0069d5274f76410c0ed670ea9",
+      "registry_digest": "sha256:3c71c6579a48f3596a924cb217b75572b2abd07e55154b693fbc285e01576406",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "campaigns-service": {
+      "service": "campaigns-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:bd307bf95449078ce2fbe03ffb3ea0bbc8944cea15b14b07cd680fd3f5bd4930",
+      "registry_digest": "sha256:52cbaa5f041749b074d9fafc144192552b5c9a2896078f6ee8af48dd46e5d111",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "card-print-agent": {
+      "service": "card-print-agent",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:c7d63c6b8759203ed8aeecdb05269d2d1aae15bcde121154f4565c544390a68a",
+      "registry_digest": "sha256:da5a79d1805e4ec7a7ad06bc962cc326bcad13d2bee2d7737b2654df7a624163",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "channels-service": {
+      "service": "channels-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:ad98973dea36beb1f30aa52bed947c0e312975676a9149788c0d6fbb4eeaef9d",
+      "registry_digest": "sha256:6bf6a808993f8144d87a337b6288a5371e971fe7f647fc88122f2b8d5db2eeef",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "clinical-knowledge-platform-service": {
+      "service": "clinical-knowledge-platform-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:6e1e33108b8e6084427d4c53de7f001fc0123bbde97d767b50fb2b830176dc09",
+      "registry_digest": "sha256:44a94ab50d4c8a6e9248bec6a73321c5234af0b3126da6ed7f7106552c7d6cc1",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "community-service": {
+      "service": "community-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:61a48863f5e0ec6335431220e5ab0b23cea1090bdd35d11399dc6bb0e8c13516",
+      "registry_digest": "sha256:e537136d2b3490514d490082a0cc6703c7cd02262e3e7638e167347e69d0c8ab",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "connector-fhir-adapter": {
+      "service": "connector-fhir-adapter",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:089498afa5576c3fc2c09a29f9175ed4f9761df07b5eceaeaa91675ed32de6fc",
+      "registry_digest": "sha256:af966e9db6e4e1d2a017263c556da2b4215d0119a86ff3a0e9456266a5022fbc",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "costing-engine-service": {
+      "service": "costing-engine-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:fad5baf32f19823992a0465da77b412ebca3099386476577a66ab405d92be840",
+      "registry_digest": "sha256:b6a987f0064840e0e19fa5a3ab88847ef0899558609e40d39d0453b122f077b7",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "coverage-service": {
+      "service": "coverage-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:2dd70454dd55b5836b4e6f72f613e5f84fb61bef569594cdf1bfd4a4ab71f5d1",
+      "registry_digest": "sha256:0dd35aed153180c86166c1957c07f6fde2d0e6ccfff5170e3e0acec9e38e37c4",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "credential-verification-service": {
+      "service": "credential-verification-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:54172ebcf24158423fc00d0d3b6f773b9cac6346c45e27219a478e3f6acebeb3",
+      "registry_digest": "sha256:9658703587f341318e10c64108df0b6a055b18b60c044ab70a57a2c5a1207386",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "daidzai-service": {
+      "service": "daidzai-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:b057c56dcdaa33c7f2479bea5e5529057f8c2e6207d29904505e606b9e489b3e",
+      "registry_digest": "sha256:a9c40379c85857410f187247721a4919c2fe7350dfe8e1b53bf7e18f659784f5",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "data-access-governance-service": {
+      "service": "data-access-governance-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:1f57dff1f7d3573e1bdbc7ab7e7d649087c8360e899cc4599a18613a1dfbb5fb",
+      "registry_digest": "sha256:ad71f83eccd0be9100904a8ec32b48db8eaf6bdd952fbc4ebe042fca93d62802",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "data-governance-service": {
+      "service": "data-governance-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:f35c88c77912b8a7b2009dee8c7b2e54cc9a15233e56687c1d1a9e74ce3a65f2",
+      "registry_digest": "sha256:95ec49c77e79ae2c800123346ff2091b094c967314bca95d7fb5fc0c263b0b0d",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "data-ingestion-service": {
+      "service": "data-ingestion-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:ec87679c1b5c8a3f11cbfbce1731a3d7bd137f437afdecc0844765613554f1c3",
+      "registry_digest": "sha256:4cbe153c1c9f5dd442437d324b2b45c84a9ef27af123a2e1c7d60907334d6fb9",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "data-pipeline-service": {
+      "service": "data-pipeline-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:a5cc83b46583fd444671a16287beb42ffae5caed16622bf1e1e6ec36f79376fa",
+      "registry_digest": "sha256:967ed00e2f1aa4cce9438523626148ae9e5275821fc28d37aa07da251b85fe11",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "data-warehouse-service": {
+      "service": "data-warehouse-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:477addb558c5c86931d34be239e8edc50cf3e223e049f2146c8af3f7fb69b161",
+      "registry_digest": "sha256:9071b1ebdafb55fae7c72af74ca1dccd41730661eebc24253a7252145458d28b",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "developer-portal-service": {
+      "service": "developer-portal-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:27140501c6829e9bb01396c366d882cc4a5559b055bfdf0a9a585dbbbcfe60ac",
+      "registry_digest": "sha256:46841c7c0df56c093f57f4d088e6113ce98d831ac3e4304872145f2cd315a0ca",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "dispatch-service": {
+      "service": "dispatch-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:a6346dec2484e1d60af5edc7c1682217d0289dee9c5d682c21c780693effb508",
+      "registry_digest": "sha256:dc1ef15ce6f7f30404524a9404a763f5d7bdaf2a4614350e779216068f2dcb5c",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "document-service": {
+      "service": "document-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:6b607aeed9c4e82daabee6e004fcf13d42355c3c9d1a5253b1a5a99ee8b63cdf",
+      "registry_digest": "sha256:659cc9b52143667222047fdf51b0eab95aac0142c6758c7491f5917d6170c7b5",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "envoy": {
+      "service": "envoy",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "",
+      "local_docker_image_id": "",
+      "registry_digest": "",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "official_ok"
+    },
+    "experience-bff": {
+      "service": "experience-bff",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e:f3079df8256dddf7",
+      "local_docker_image_id": "sha256:52c55a7384665fc6b37c7e1d0c92d25e80163160eeaf598faf1e71b61f039df3",
+      "registry_digest": "sha256:97c184cf794f6052c01166f2fdbf436458b2b187ba4c609054e1c289de91a7bc",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "fhir-gateway-service": {
+      "service": "fhir-gateway-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:e37abb7ec3b7364ff86f56555e67b204d0f3eb7805a4499326d2806d746ee5f9",
+      "registry_digest": "sha256:e9a85af11a9047fb1b96c0ad1994beca9e1f2872f1ac729ece8fa267274f8d42",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "forms-service": {
+      "service": "forms-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:0d96cddb4c7bc13e6877422caf7589ba38eecee1ac65d091d625268351bd0b87",
+      "registry_digest": "sha256:09f3afd9a96ec54dd9764f328ac54d31154d60dcbfa82ead05e90a52cd000b44",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "general-ledger-service": {
+      "service": "general-ledger-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:8b29a3ccf2f8bc894f79aa90724b18acfa885a8c8f56990d00c117aae45b51a3",
+      "registry_digest": "sha256:f691b52fc278c1f187ad64cc008a3ed0753e8f0f7199a57b16a43a4d076f5536",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "guidance-service": {
+      "service": "guidance-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:ec845aed1ba31296787a35f83cf84a315951e3f9de87d5ea4c254db662f32f0a",
+      "registry_digest": "sha256:17c429f0a0e5029b2673403ced238f6f100eba9ad690fb7d4e9720d31d901a9d",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "hapi-fhir": {
+      "service": "hapi-fhir",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "",
+      "local_docker_image_id": "",
+      "registry_digest": "",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "official_ok"
+    },
+    "hr-payroll-service": {
+      "service": "hr-payroll-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:a9fa5cbb0d720d9da9c423b69ea90365c718047e6c77cff24bc23c44fb6ab049",
+      "registry_digest": "sha256:b1056021319ef2b368a42bee0a2c471842cbff09312e05b3141ccadeaff8ada9",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "identity-assurance-service": {
+      "service": "identity-assurance-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:801400da2e1b854012475834df1425489ec2146ec2cee4ae1b208d011487e610",
+      "registry_digest": "sha256:b43496dfc0d7d852991d5da2e1cf30d91e14137a6e9867df1dd8f09f5b365b66",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "indawo-service": {
+      "service": "indawo-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:7779bd3fe353ee48cc0f95b32c9996e4e06a84b42633ad27795f6e1f3aef49a9",
+      "registry_digest": "sha256:e93041384ee40d22ccf4dd6bf0e9f92cf3da05b529ec2dcfd41ff71cddbdd530",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "inpatient-service": {
+      "service": "inpatient-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:0df154717c930fa0dbe8fa696b4e3e14bc5d4470197c3475674500e581acd0c2",
+      "registry_digest": "sha256:313632b20ad6308a9fdfc96c330b10e579088948dba99a44df1cf6ff62b20d28",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "integration-hub": {
+      "service": "integration-hub",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:a38341605c3d0beaa898205bebe28c8bab44af521725f8c9d390318a2b76dd7c",
+      "registry_digest": "sha256:afc8f8099d000503f0fe85ff90ddd1e41b92a1f41f06faffe383a9c9df4bd879",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "inventory-elmis-adapter": {
+      "service": "inventory-elmis-adapter",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:f1a4d7fa732675a62929a116a2581ee49264bd0d73cb9e2fd168fb632a401fba",
+      "registry_digest": "sha256:60969111b8b9c6644d51b8d5df939570c4449ba2a8886d2cfdc39bc2bc260a7d",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "inventory-service": {
+      "service": "inventory-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:399c7f1d68d364eb30e45ce3d15430c71bac64298b478b90a27e18b856036baf",
+      "registry_digest": "sha256:779e30f89c0e6271acf775b1ca2db26db0681fc56ffc0f2087485b40e5be7bbd",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "iot-ingestion-service": {
+      "service": "iot-ingestion-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:21d0788319198efe3dfe3a7df22b7e34275cf6d1366fa950d0fc350d84267db1",
+      "registry_digest": "sha256:0e15193758f93f57d4b28c1faa591cbbae7c4064d1868c2411fd2d4811bc2434",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "jobs-service": {
+      "service": "jobs-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:9182e6f67ef552110d4c6b60b8cfb9f5d0d6773325407e58ce70ce7d171da906",
+      "registry_digest": "sha256:2072bb4f45b6dd1a8c3997da8c5c66e255fb549633c5bc753a6665cb2ddad1ce",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "kafka": {
+      "service": "kafka",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "",
+      "local_docker_image_id": "",
+      "registry_digest": "",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "official_ok"
+    },
+    "keycloak": {
+      "service": "keycloak",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "",
+      "local_docker_image_id": "",
+      "registry_digest": "",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "official_ok"
+    },
+    "khuluma-service": {
+      "service": "khuluma-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:25dbeb044597a394369b2c70170cccbfcf67a4968bc734d8719441e1eb22f9f1",
+      "registry_digest": "sha256:a68aca8f48ab9d088649e24354ace2018635f8dbd43ceafafeeb604b08abc9d0",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "landela-adapter-service": {
+      "service": "landela-adapter-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:983e33cd21a7e3d51e6a8c540f0d1d8f5ffbfbda15911a1d30961814898d0880",
+      "registry_digest": "sha256:c45b98b389dcf2ad66061917fdc547595372ff998a92a753fa77b1cf07ecdc93",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "learning-service": {
+      "service": "learning-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:59185cfe4dd286f3c51ccebb35ec9b7365fe03fb1af74b99e70ba6130ef4932b",
+      "registry_digest": "sha256:0001d0c4927df7b27937174408455e612733063bcc42997f0bea4a72dd597374",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "live-service": {
+      "service": "live-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:43a622334da92e54915407ffede9521d549c737f72f55af9a00b510cbad83ecb",
+      "registry_digest": "sha256:84c244211d12ba25942c9fc93a9688d9236839a89a70d47bb6e67f14d3723534",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "llm-orchestration-service": {
+      "service": "llm-orchestration-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:5cbb6c98b4db1e7353895f5e95cbdde54d30bba820ce3e9414bc41d7698c5545",
+      "registry_digest": "sha256:90590178aaf38a6653863cef440a7836c6b4bc7675dfb28610f0f9f836778bd7",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "madi-service": {
+      "service": "madi-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:43db38426b6fb95b8b901dd5dae30fad2081471e1ceecbac089bb984cad2f870",
+      "registry_digest": "sha256:9b1748475592d15b6186c93048bec3b1d20761c5dc04f1f7fe2fe8da3d60e31a",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "minio": {
+      "service": "minio",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "",
+      "local_docker_image_id": "",
+      "registry_digest": "",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "official_ok"
+    },
+    "msika-apps-service": {
+      "service": "msika-apps-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:3cae80f072410290ec64694f781e8864157e2c4ad2ad12a3af69f8ef5439a0a6",
+      "registry_digest": "sha256:c6c19952114d4fea966acf2009040dbbc23e9b77f2497b381399f5130bebd0bf",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "msika-flow-service": {
+      "service": "msika-flow-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:a440397a26d4d31a925fe58b01d254c64a276facba53670a6181f1f9795c22f4",
+      "registry_digest": "sha256:738ca18489c69d58ed30abefdb036f98e0d11543ac4ec157bfea2f57a8b0b048",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "msika-service": {
+      "service": "msika-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:0174935980cfb4a49d56af234059ec8045c9dd19edc1257b5834b7b52cd9fb26",
+      "registry_digest": "sha256:b435f1097750ba7eb9a3c04143a3c44610c5ea0caad25b9de6491756dda99fa1",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "mushe-wallet-service": {
+      "service": "mushe-wallet-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:38e5e9e63e666fd4e570f722979fe3886b44d1ef858194ac398c27c942f884ee",
+      "registry_digest": "sha256:20b483419ba9c7c712628cdda66929d4393ba305ae6b048d0bd23115e30ed3bc",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "mushex-service": {
+      "service": "mushex-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:b898f3b91eff7ebc47068f9435155401f96d2139481628fed96e3f40b31ea2d9",
+      "registry_digest": "sha256:5dbea335f6b93b0f6709de0cbe1730d2bb7f43773fb1eeed4a0b7894e461b346",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "mvumo-service": {
+      "service": "mvumo-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:0038908c3762a7b67ec7a85fe8ebcfa74a302926c4591485035656642b9da2be",
+      "registry_digest": "sha256:b097e725b60b934f88799ffd152dd4c86e76b7dfc6fa6c7c625f0e1e7a5148f3",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "national-data-repository-service": {
+      "service": "national-data-repository-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:48e4892092236b33760e9fca2ecd8feb948a9f6bf996d135ad3fc5b92610fd30",
+      "registry_digest": "sha256:523d952852c0d895befa57706d6ca58770dbf9bf4d846a64aca5b4810b56ab5c",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "ndila-service": {
+      "service": "ndila-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:fab7d4725b483cf63c474095a0de3174038ac6f199dd71c2146a76a98e868a9f",
+      "registry_digest": "sha256:85ce0ec58ab8ec38d6e39adeb0a5339138fbe7967594e8fdb8195695d7cf0a83",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "ndr-service": {
+      "service": "ndr-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:f5ae97cdd3aab2e6a9262ea2d3154e92dd34d0f89641c8ea70f4c882e9ffcc85",
+      "registry_digest": "sha256:0cbb808909b8d897d90a1551bd0499f652e4cd3519e3dc6c0c9077c07f321ff6",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "nhume-service": {
+      "service": "nhume-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:aeb70aa1bcdbe66054bb2c1e256a9595777e99896d20581d82613cbeac4fce26",
+      "registry_digest": "sha256:f9fb2ff3f99d68e1468d9e835a599a1e04525348f5031d6deb6fcb2a206c87e4",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "notification-service": {
+      "service": "notification-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:19d8813f0c7c8143aec4df51135fde1179ca9561f8cabf497db3ee03c3b3d5d8",
+      "registry_digest": "sha256:57ddfbcab08d5a9308fcf56c55025ec6e329a9fe0dfa3e119e2562a27e38fc9d",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "observability-service": {
+      "service": "observability-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:379193fbc7e61006897fc5355e21c1626f030596f68efeaa3d029d157aeb5e78",
+      "registry_digest": "sha256:fae4a94aba59b3601ef291e87c83fbd67a24c0e5d2f73977f8889a13dcb4bc05",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "offline-edge-service": {
+      "service": "offline-edge-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:17d162e25970f76d51d920410ed21924127f7979174b196867fe14d08bc95af1",
+      "registry_digest": "sha256:4b0ecfd767efaf1ba4731c0d1c3302be058ff71f3b593ef70552aa510abc6263",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "offline-sync-service": {
+      "service": "offline-sync-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:087f91786ac5c9a9109e4a834307c910b6832456fd90a9219f6954da4814c597",
+      "registry_digest": "sha256:9d0779f4aa1df2a8d01c2763e26efb69b6f61fa565e0305d692a20465447b437",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
     "one-ui-shell": {
       "service": "one-ui-shell",
-      "source_commit": "e1b3bf54c610aaaa92c76bea37b9d50a26364272",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
       "image_tag": "preview",
-      "image_tag_sha": "preview-e1b3bf54c",
-      "cache_bust": "e1b3bf54c610aaaa92c76bea37b9d50a26364272:fd3d90cc2265bb19",
-      "local_docker_image_id": "sha256:479e234ffcebca47ef1e4f7915b6747918d790d5b4878d27507d7dbf4453078b",
-      "registry_digest": "sha256:6c152da94b9f832d4c3cfc134eac0afc0cc7908f7c9e3ba270e6d2b6eae5ccc4",
-      "build_timestamp": "2026-07-03T03:51:12.065770+00:00",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e:2ad0525038d4dbf3",
+      "local_docker_image_id": "sha256:58d9a89bac75857b4e48b705b520953656bfb9db4c10d2de17537c1d8f0bee72",
+      "registry_digest": "sha256:1a792ec588124739a55cb9e639037d177e587f05002f09725df4f023ba75d759",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
       "build_status": "pass",
-      "ui_bundle_hash": "0eb16afaa770fa99",
+      "ui_bundle_hash": "cbcc87326661cfb3",
+      "digest_pinned": true
+    },
+    "opa": {
+      "service": "opa",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "",
+      "local_docker_image_id": "",
+      "registry_digest": "",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "official_ok"
+    },
+    "organization-registry-service": {
+      "service": "organization-registry-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:b1c6e30f89a33a0780010549be644e6a52ba597390dde5b7f0645fc24517d733",
+      "registry_digest": "sha256:18049f63296b3c13e7104d4969b3852d207eadcb9ba22a825689d536cf7bc162",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "oros-service": {
+      "service": "oros-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:9739a78c1ed32f00641cf1e63fc3cd46da32b8976d86dd02ca414a1a08eac42a",
+      "registry_digest": "sha256:2607f2602515a79b0bb2bee8a968d9aba50bb668bca6a4f60f369512e6823a73",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "pacs-adapter-service": {
+      "service": "pacs-adapter-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:ed093e5127436f96a1cbe3d2be6ac4f29b1c36cab1e481aa2a38bbab84abcad3",
+      "registry_digest": "sha256:d37ac73afbc86f480dc736526f2db52f736dbc22b321d1fa305332be33275766",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "patient-safety-service": {
+      "service": "patient-safety-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:7f7d5321cf803abbb551b97faa622b0facd711f0f23e62dec40d4ae0d2ee0630",
+      "registry_digest": "sha256:4f72b8db431d755bc4b12803beafa43659976004cd7dda053ea113b5e6b750dc",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
       "digest_pinned": true
     },
     "pct-service": {
       "service": "pct-service",
-      "source_commit": "e1b3bf54c610aaaa92c76bea37b9d50a26364272",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
       "image_tag": "preview",
-      "image_tag_sha": "preview-e1b3bf54c",
-      "cache_bust": "e1b3bf54c610aaaa92c76bea37b9d50a26364272",
-      "local_docker_image_id": "sha256:3b0c47c11865033c53e6ff81e112ce902426722a4ab694cbe3c86d18193c7002",
-      "registry_digest": "sha256:fe5d662c672932fac4f411086c0fbe68473d62288cac8d2e408a5d659f679729",
-      "build_timestamp": "2026-07-03T03:51:12.065770+00:00",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:a356339c4ba1f82456df41ffe4dcf5c365f744ad5d822ec6fe3a31ebadb16fdb",
+      "registry_digest": "sha256:07bba86acea3c28b1b3bd8184e731cb854f59e685854db1ac32bd2b1040a7a3a",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "pharmacy-elmis-adapter": {
+      "service": "pharmacy-elmis-adapter",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:40d47bd1e48dd3e1997581d27085071384ed6effd82975b0787da83ebe44689e",
+      "registry_digest": "sha256:f0103979fa26291c5abce9a478dfeb2c0de853e7cad88d0107ff6104c8ebf68e",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "pharmacy-service": {
+      "service": "pharmacy-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:71058710147d549a67a082b95df8fcc314478a11eb1b239a1c3e957a2aaef6bc",
+      "registry_digest": "sha256:952f9d6bd30f1d6c29c1accbd45dc7b2d5f638aa30b0dd9f0cad063696dc6e85",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "postgres": {
+      "service": "postgres",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "",
+      "local_docker_image_id": "",
+      "registry_digest": "",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "official_ok"
+    },
+    "procurement-service": {
+      "service": "procurement-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:e70ff887d7b94c097da7b7ce14faf1a2903c94c916f3762cf94546f2685c86bd",
+      "registry_digest": "sha256:11fbad916cb30ece3673208cee9341841ba3032eec2dcdd30a6981f5f11c0f68",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "product-registry-service": {
+      "service": "product-registry-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:d55de09b455d95cbaa2c8522baadecb6a4bdfa90855a5d40d8c5ccc0db6b8438",
+      "registry_digest": "sha256:96b716a0ba4495129a21947e45268fd8e428a1ee14b0543b9aecec8ab48c7345",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "redis": {
+      "service": "redis",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "",
+      "local_docker_image_id": "",
+      "registry_digest": "",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "official_ok"
+    },
+    "referral-service": {
+      "service": "referral-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:cf17cb367d8b5c1e8391001228bc6df2abbb0c6cf228dc2a03c2baa51e90890a",
+      "registry_digest": "sha256:f46f2ff1eae4415100c69ed146a2501d0ef8052e2522c26ff7b838b664ab4813",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "reporting-service": {
+      "service": "reporting-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:dc34f26dfe779df7310c6bd4c926b3bdcf5695d047df59abea4dcdfb88602bf1",
+      "registry_digest": "sha256:9d1f68ccd8b6097cc1db6e6faf45ae40628826b1d3667c8a180774d2af4b8435",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "rito-quality-safety-service": {
+      "service": "rito-quality-safety-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:ae9861f3fcc69dd96236115d3524e17b75aeb23396b3cf8ee4b057aa2bb1ac82",
+      "registry_digest": "sha256:ffeafb2320ee50e3b4072b2d6d62416dd0d8a4ff08247b25673c3d594a4b628b",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "rtc-gateway-service": {
+      "service": "rtc-gateway-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:dfd1b5e53c71b17b8cae134fe1dc7f2e375236750ef94f2d17be6de35ca67359",
+      "registry_digest": "sha256:d9af7cf8e48cfa3ee51f1f3b91e219c11a26cbf83a42ef8bc5dafc60837f3999",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "rules-service": {
+      "service": "rules-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:6c5824690aeaf31100e5d4069990b4217106ea37fd87878fe76eba24bf00d196",
+      "registry_digest": "sha256:7f6a89831b793fb81c0fb98131d04344b027b84f26afacb643edafd6e77521a1",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "scheduling-service": {
+      "service": "scheduling-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:319d077445bff55c05b3b6cb70f6b1a7f0e8912538fd02a0ba77f1dcd51a00ad",
+      "registry_digest": "sha256:bd370ad8bc50957fe96aadd9ef62e27039b8cfdfcb561d59573a8d7a4a839d92",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "schema-registry-service": {
+      "service": "schema-registry-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:a4cdc5c18738f34f4d9069d13e6ef83c1786a24f9d92cddd44f92c4324c9f3fc",
+      "registry_digest": "sha256:298c6ba32639e3d5f89a695bde57ebad0a14ebbdd0cad994c36f3214d40f74f4",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "search-service": {
+      "service": "search-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:420bdb170c68f31af5092fd5a6c505ddadf35ab809a65ece1c2363353f602534",
+      "registry_digest": "sha256:bd1be3acdf33da06f4eca1af4b2734b510f25f9c1cfc061756a20a1b8b4730df",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "security-hardening-service": {
+      "service": "security-hardening-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:894e8738d0644879ed2c6a8664a84f1fd071684338a645fc68efc286560ebdc4",
+      "registry_digest": "sha256:e0304684bd61ef66988c8d947ea02c53c686207bb842ca77b99e370ae404ac32",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "share-slip-service": {
+      "service": "share-slip-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:19f8ba33d3844985d6db0cba1cec3b05cfc4aa51a466e87a8d04df773d1e70c1",
+      "registry_digest": "sha256:1a3eb0fa5af71e6b64f09e7dce3e3546385a42a2c660b4fb824b1efac4778d4b",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "simba-service": {
+      "service": "simba-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:2d5871f49bb5a586de1216d6733d6e251fc5d54a4103c555eb51517b3b72e394",
+      "registry_digest": "sha256:0fc7b585348ef33495380a3733841a89ad6969357a76541457bc82f61909fc26",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "support-service": {
+      "service": "support-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:0d4334a693d15fe1b49792b53f3e10c0b5844019edc7f104904c1f14254d93ad",
+      "registry_digest": "sha256:91af832770883c7e3abf3b3898a2989fd5c2ac805cb11025a8a1258efdce2473",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "surveillance-service": {
+      "service": "surveillance-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:a13436efbbdea6b9c1a48162490c902c7fdf50e1af139c76397a079631e15d1d",
+      "registry_digest": "sha256:d2fac12a56378e28773f3cea41c1b3ed4c83f20e4fdaf31c6756f0db94c5d260",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "tshepo-audit-service": {
+      "service": "tshepo-audit-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:fed0252d47d8a64944b52c5d40062ebd64c7153a3323991107bbe09663675d38",
+      "registry_digest": "sha256:93a4e022314f259c9f571e27942cc59f724f755e68d8e946fed2ee924f690728",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "tshepo-authz-service": {
+      "service": "tshepo-authz-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:f583c61198578ca80a6cc0901227f59555d96d8ca97dc4b84c093d3e0b209142",
+      "registry_digest": "sha256:884d5b5ea9a94bb787c1c9cb636d7d4229a8f9fcfe2a1901de0392817bea273b",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "tshepo-consent-service": {
+      "service": "tshepo-consent-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:c2d56276b0dc952d4b3a249f13ec546554ac4b1593fd202d276419d8a3f1c59f",
+      "registry_digest": "sha256:bcd6e6450a341c06c0f03e43b0ec58f8c861ac0c4ce958846433ec3557da8623",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "tshepo-identity-service": {
+      "service": "tshepo-identity-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:6e21e32ac2a038fdb20597c617fb548b97d739ff6b22f6fdcf527417ff98a1af",
+      "registry_digest": "sha256:32b689edc0acac71f80efcceb9c8acb3cfe7b71331196d6992ab606bf11e5cfb",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "tshepo-keys-service": {
+      "service": "tshepo-keys-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:508a7f871bb78e6065cc85fa24e9d2e70620d7d710bc296c9be1a2d8829324b5",
+      "registry_digest": "sha256:500a4aa991947a131f7409ca51b349d9b35f8e6d4774fabee4438e1d4bac885c",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "tshepo-offline-service": {
+      "service": "tshepo-offline-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:fbf2f806f1968af6f94879acf6f7728d63b73d4e53d7b1a02ad41e40d9099b69",
+      "registry_digest": "sha256:bc3995d7d604797c8c3d42d76f324baf3514f75424df1b2b2bbbe4a520499224",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "tuso-service": {
+      "service": "tuso-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:226d95dbf29f163b6e63fa0c86f272cd544bf4a811fee858d8c2cb9aeffc138e",
+      "registry_digest": "sha256:e727f0d9946b4d167b367405e5097c6007221f40fe5baec302195064c7f55c6f",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "ubomi-service": {
+      "service": "ubomi-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:1547a361a3cd9824aa0b30af4a72a0b870d532ea4aaaddfa1b042f493f5e8fc9",
+      "registry_digest": "sha256:9f9d712ef0b1c7ede92a284c644aaefdca6ad81239e89f580d084002178e49a2",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
+      "digest_pinned": true
+    },
+    "varapi-service": {
+      "service": "varapi-service",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:2e291907967e7a44e5212da9f89a6f3bde20dc6756ba376c412267476db1a6ba",
+      "registry_digest": "sha256:a887626d673873d831083b6762831e24d92fb863bb59d876db7251915c792439",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
       "build_status": "pass_shared_template",
       "digest_pinned": true
     },
     "vashandi-workforce-service": {
       "service": "vashandi-workforce-service",
-      "source_commit": "e1b3bf54c610aaaa92c76bea37b9d50a26364272",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
       "image_tag": "preview",
-      "image_tag_sha": "preview-e1b3bf54c",
-      "cache_bust": "e1b3bf54c610aaaa92c76bea37b9d50a26364272",
-      "local_docker_image_id": "sha256:02dc3feaaa5f9d69eec2c009293221814574f213a8fd0cf80b7845de3cdfd57e",
-      "registry_digest": "sha256:7f949d727ca1deca59a6defc1c5df9657c4687a61d3bda28169001ef5ed0e5e3",
-      "build_timestamp": "2026-07-03T03:51:12.065770+00:00",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:1324ab3a38b24a1260d573eef6d1126d98406af52acad369ea56cd7db752c192",
+      "registry_digest": "sha256:b8a5255a27723a872b066a6c040e22b60b66cf80423903f87a0ec864ccc4c672",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
       "build_status": "pass_shared_template",
-      "digest_pinned": true
-    },
-    "ai-model-registry-service": {
-      "service": "ai-model-registry-service",
-      "registry_digest": "sha256:44f5da9473c64b266d6b6daf157cc9520bdefcffa48b3e9eec45703dd9128392",
-      "digest_pinned": true
-    },
-    "analytics-pipeline-service": {
-      "service": "analytics-pipeline-service",
-      "registry_digest": "sha256:97671fba370d81383d139600d947dc162f8e32712e0a04cdddbfb75ebe289cc4",
-      "digest_pinned": true
-    },
-    "asset-registry-service": {
-      "service": "asset-registry-service",
-      "registry_digest": "sha256:226ae97505178e3f6cda8c0de9d9becd7a0526db7772949d7a2710d5ac911504",
-      "digest_pinned": true
-    },
-    "audit-ledger-service": {
-      "service": "audit-ledger-service",
-      "registry_digest": "sha256:3bb896b8d4140f509b942f3f86aa2d98842db1f7f65e173a9b003b1673269722",
-      "digest_pinned": true
-    },
-    "booking-service": {
-      "service": "booking-service",
-      "registry_digest": "sha256:ac1897f4682c45471895b09b601f862fcceee250a73185e1ad8c9ee5fc470caa",
-      "digest_pinned": true
-    },
-    "butano-fhir": {
-      "service": "butano-fhir",
-      "registry_digest": "sha256:0177c04efbdb526b5205c34665cc6e9b6bf9e4d792a867bac323d5928b5de7f6",
-      "digest_pinned": true
-    },
-    "butano-service": {
-      "service": "butano-service",
-      "registry_digest": "sha256:c39774e353d16f407a00fd6249cfd58ed24047784e0f0c461c071b5bc8c66933",
-      "digest_pinned": true
-    },
-    "campaigns-service": {
-      "service": "campaigns-service",
-      "registry_digest": "sha256:bc933d9f86d58c0acfcec37035b820486038fd5f921e00bf312239bd44ca0086",
-      "digest_pinned": true
-    },
-    "card-print-agent": {
-      "service": "card-print-agent",
-      "registry_digest": "sha256:c4f761241702062e26f5d4b9238e8544af7b157b2ca02e1e97fe1327f1f55fb5",
-      "digest_pinned": true
-    },
-    "channels-service": {
-      "service": "channels-service",
-      "registry_digest": "sha256:d6b6cd0804dcebde3d3d36d3594f70c21676dab423259dca07cfa090c03a82fa",
-      "digest_pinned": true
-    },
-    "clinical-knowledge-platform-service": {
-      "service": "clinical-knowledge-platform-service",
-      "registry_digest": "sha256:60f0af4f3cf421ce2b4f96a62fbc959f1296f78f3ab7454a0b271998506d527d",
-      "digest_pinned": true
-    },
-    "community-service": {
-      "service": "community-service",
-      "registry_digest": "sha256:07f836085c04b6e19fd13fbf878e3a5783e01778cddd30f2f1d47ef0a2800343",
-      "digest_pinned": true
-    },
-    "connector-fhir-adapter": {
-      "service": "connector-fhir-adapter",
-      "registry_digest": "sha256:bca140691df112d2cee11fe8d369e4400298784f7b45b70ee048309ac79f0395",
-      "digest_pinned": true
-    },
-    "costing-engine-service": {
-      "service": "costing-engine-service",
-      "registry_digest": "sha256:01e201e28a35a8c9b2764f0bd38ddd8dacb86bd75a120bce493dcaba0b788b9a",
-      "digest_pinned": true
-    },
-    "coverage-service": {
-      "service": "coverage-service",
-      "registry_digest": "sha256:4912fe29f0cbd84992bc641c3c71a52ab7800401f9f088a2281b0ef4987faaba",
-      "digest_pinned": true
-    },
-    "credential-verification-service": {
-      "service": "credential-verification-service",
-      "registry_digest": "sha256:9aec7a626052224ac887b07f9ed9c91f572b0137f8e734a00216dd903beb7f51",
-      "digest_pinned": true
-    },
-    "daidzai-service": {
-      "service": "daidzai-service",
-      "registry_digest": "sha256:d763a1b0e44721bb041a6fa99d3701a31280975b28bc4fa55bee5301cdd42fe6",
-      "digest_pinned": true
-    },
-    "data-access-governance-service": {
-      "service": "data-access-governance-service",
-      "registry_digest": "sha256:d2fb1431793d8ae3bd9e7546bc0f71039461fafe770c68f5c60e4195e2ef55c4",
-      "digest_pinned": true
-    },
-    "data-governance-service": {
-      "service": "data-governance-service",
-      "registry_digest": "sha256:c99f32396f041e40fb426776529513cf77d7849354a55973da5d758d97996d7b",
-      "digest_pinned": true
-    },
-    "data-ingestion-service": {
-      "service": "data-ingestion-service",
-      "registry_digest": "sha256:ff2057b2453655de5c141bc1b40d65719f341c0286d432c09597912060a0a721",
-      "digest_pinned": true
-    },
-    "data-pipeline-service": {
-      "service": "data-pipeline-service",
-      "registry_digest": "sha256:6b717a6ae973b517fae79d7c464f22f408e917447dbf550ba9703afc593e9dfc",
-      "digest_pinned": true
-    },
-    "data-warehouse-service": {
-      "service": "data-warehouse-service",
-      "registry_digest": "sha256:3370e81abd663d7b2c97ad715791db63b144fd5fbff70a54b1a7bbf566b68155",
-      "digest_pinned": true
-    },
-    "developer-portal-service": {
-      "service": "developer-portal-service",
-      "registry_digest": "sha256:21326f2e889d3518425a2cae16e950e3eaaf5de5f27240d8b49eb9743004ddcd",
-      "digest_pinned": true
-    },
-    "dispatch-service": {
-      "service": "dispatch-service",
-      "registry_digest": "sha256:db1a6ff561fa6172dd4f88facef70e49e1d0d3e36fc782aeecdd0741b4d0cbcb",
-      "digest_pinned": true
-    },
-    "document-service": {
-      "service": "document-service",
-      "registry_digest": "sha256:547892732576e5e1a37b1557bda000c73be5e9acc66ce917621a95724e568476",
-      "digest_pinned": true
-    },
-    "experience-bff": {
-      "service": "experience-bff",
-      "registry_digest": "sha256:cf96a36e968dcb3c1ccda3de5bf69e18339fc3eb9165997c1a41c6923e45329d",
-      "digest_pinned": true
-    },
-    "fhir-gateway-service": {
-      "service": "fhir-gateway-service",
-      "registry_digest": "sha256:3178001d30d0ff59edc07ccc56d04239c4f4e4210a9e19e8cee2c78fa62c4373",
-      "digest_pinned": true
-    },
-    "forms-service": {
-      "service": "forms-service",
-      "registry_digest": "sha256:6813f4002668d30298226d189c6ad7d02fcaa20a7a53697eab763e2c849fc529",
-      "digest_pinned": true
-    },
-    "general-ledger-service": {
-      "service": "general-ledger-service",
-      "registry_digest": "sha256:2724b38e5bdc329d0ea2ce255e5bdbdbfc7aeac69d253f857ee1a724644185ed",
-      "digest_pinned": true
-    },
-    "guidance-service": {
-      "service": "guidance-service",
-      "registry_digest": "sha256:0ee9bdb1ea8e46a04a4a905524c7bb56d60468283021b112d95f84f632bdcf33",
-      "digest_pinned": true
-    },
-    "hr-payroll-service": {
-      "service": "hr-payroll-service",
-      "registry_digest": "sha256:3cf020eb2dde0a581718c87723d2cd2c6f41f1133eb308effe8a9ff1abdbd1c7",
-      "digest_pinned": true
-    },
-    "identity-assurance-service": {
-      "service": "identity-assurance-service",
-      "registry_digest": "sha256:82a082af71475387f0e6a38cc54dd9add6dfa19b729ccaf6dc5923a4940f4036",
-      "digest_pinned": true
-    },
-    "indawo-service": {
-      "service": "indawo-service",
-      "registry_digest": "sha256:afc9fcb962498da8a81fbf21afa8263445ea5bedd857f128111376608bb09845",
-      "digest_pinned": true
-    },
-    "inpatient-service": {
-      "service": "inpatient-service",
-      "registry_digest": "sha256:ce9e2928c386b4f1158067c23e8999a2803c8ed73f440c5c4d528ae2c94b2f57",
-      "digest_pinned": true
-    },
-    "integration-hub": {
-      "service": "integration-hub",
-      "registry_digest": "sha256:d289e0fef4917bb8a58f1f43435621c46f287063c9de9b2cd39fbaa350520327",
-      "digest_pinned": true
-    },
-    "inventory-elmis-adapter": {
-      "service": "inventory-elmis-adapter",
-      "registry_digest": "sha256:62d73fd7be3e1da5d086e85b217dc23af0f6b0e8be2fa5ccb65b4cf2d05a77d0",
-      "digest_pinned": true
-    },
-    "inventory-service": {
-      "service": "inventory-service",
-      "registry_digest": "sha256:6eca51373fe33735df83379086fb50e963284b20a93e0255bc40c414907a58f6",
-      "digest_pinned": true
-    },
-    "iot-ingestion-service": {
-      "service": "iot-ingestion-service",
-      "registry_digest": "sha256:f468fbced00d48ff3c346c053720925f456998e922e3c7b359c96f076dff4878",
-      "digest_pinned": true
-    },
-    "jobs-service": {
-      "service": "jobs-service",
-      "registry_digest": "sha256:8ecaf6f31f9554209fab10bca50e36faae417df4a3816968eaae2da879c40293",
-      "digest_pinned": true
-    },
-    "khuluma-service": {
-      "service": "khuluma-service",
-      "registry_digest": "sha256:64d87f976b9dea45ec66275cff5c36a09b7c1713794a8df2b4a8a0bed8d88f5e",
-      "digest_pinned": true
-    },
-    "landela-adapter-service": {
-      "service": "landela-adapter-service",
-      "registry_digest": "sha256:54d455676609cca4b85622b42544a268db2b83e5077563e40def8406d665225e",
-      "digest_pinned": true
-    },
-    "learning-service": {
-      "service": "learning-service",
-      "registry_digest": "sha256:2b0fed4b677da6a16376e9a90d1c7a52e995012621f7b98650ce4c6a88413cc8",
-      "digest_pinned": true
-    },
-    "live-service": {
-      "service": "live-service",
-      "registry_digest": "sha256:785f179a661ffb80ede6d02950c2af25f0365ddf2b8e36fa8e5caa932ecb46d2",
-      "digest_pinned": true
-    },
-    "llm-orchestration-service": {
-      "service": "llm-orchestration-service",
-      "registry_digest": "sha256:6e67b8cce6cb5b61c74d4c6107133cddd1bb76007cd269d352c8dbd07adec42c",
-      "digest_pinned": true
-    },
-    "madi-service": {
-      "service": "madi-service",
-      "registry_digest": "sha256:1979e8e3071a341a2b702d3f04cec5fbd5af7855f8ad95612dc336f493be18a4",
-      "digest_pinned": true
-    },
-    "msika-apps-service": {
-      "service": "msika-apps-service",
-      "registry_digest": "sha256:32627b12065ae0813a898c6ab6967e938238962c301408bb32d3fc7bb3defaa8",
-      "digest_pinned": true
-    },
-    "msika-flow-service": {
-      "service": "msika-flow-service",
-      "registry_digest": "sha256:0d99b31b296a72ee10fb6c548c5990693ce433a4d4f8239e1e89b24d165a140a",
-      "digest_pinned": true
-    },
-    "msika-service": {
-      "service": "msika-service",
-      "registry_digest": "sha256:0fab19a783ad9639ea03edd97cb25cf9e9e56c5b4ba369047800f0d6d2a19093",
-      "digest_pinned": true
-    },
-    "mushe-wallet-service": {
-      "service": "mushe-wallet-service",
-      "registry_digest": "sha256:49466a77ad369c931e9b839fa34094f3159d1096baf8298bcddc5b22bbadaf10",
-      "digest_pinned": true
-    },
-    "mushex-service": {
-      "service": "mushex-service",
-      "registry_digest": "sha256:640d1fc36a4d0a69a19b57940dac93318342b3827cff0362032990b21d5e1e2e",
-      "digest_pinned": true
-    },
-    "mvumo-service": {
-      "service": "mvumo-service",
-      "registry_digest": "sha256:4d645c9c5ef9b92d463e02b90625648ac807da61e2334e24dde532331b5d8fee",
-      "digest_pinned": true
-    },
-    "national-data-repository-service": {
-      "service": "national-data-repository-service",
-      "registry_digest": "sha256:b0ac3966c21cde9e21a417d76118d2eb66a0841ee93a06c88e1db608e332d87a",
-      "digest_pinned": true
-    },
-    "ndila-service": {
-      "service": "ndila-service",
-      "registry_digest": "sha256:670d245ad159b9e5b2e3394a281482d09d72bd2bb9867e957e82ad23ce566e39",
-      "digest_pinned": true
-    },
-    "ndr-service": {
-      "service": "ndr-service",
-      "registry_digest": "sha256:f2dda685b9e0a75b44f1c5635e3c6a8e5daf761c2cc1977c3f0e4cecca576e8c",
-      "digest_pinned": true
-    },
-    "nhume-service": {
-      "service": "nhume-service",
-      "registry_digest": "sha256:3de50ca4912cafb699acf6190b2e1d4a724007a075a6bfc36b33dbaf81402524",
-      "digest_pinned": true
-    },
-    "notification-service": {
-      "service": "notification-service",
-      "registry_digest": "sha256:39a2a8101c36957cf18e1f5dd1fbbfcf7248497b9c5a43f8128cb33392847eee",
-      "digest_pinned": true
-    },
-    "observability-service": {
-      "service": "observability-service",
-      "registry_digest": "sha256:184e6b6006dbdb28f83d6d5f6fddadd8f8e568ffc4077a7026b906defa52f1e6",
-      "digest_pinned": true
-    },
-    "offline-edge-service": {
-      "service": "offline-edge-service",
-      "registry_digest": "sha256:761b3440ceaeea6f976c071e5c9bab9ef4407e354330277520044cdb684ca395",
-      "digest_pinned": true
-    },
-    "offline-sync-service": {
-      "service": "offline-sync-service",
-      "registry_digest": "sha256:aae4282725219aaa8e4ec4d74e1c9164b31919f63868b65f9c950b23295adeec",
-      "digest_pinned": true
-    },
-    "oros-service": {
-      "service": "oros-service",
-      "registry_digest": "sha256:54ee85f58517e9541f0e6cd2d8853c478be198ec3b07d685c0fcb399139a438d",
-      "digest_pinned": true
-    },
-    "pacs-adapter-service": {
-      "service": "pacs-adapter-service",
-      "registry_digest": "sha256:99b5e6b0b77345d9ad05b9e9ebf1b761c6ccc613ec7d95230674911c77319bcf",
-      "digest_pinned": true
-    },
-    "patient-safety-service": {
-      "service": "patient-safety-service",
-      "registry_digest": "sha256:ff08beb3c1f7a3bc0dd1d945731d4bf73ccddfb9a5fb92beffce9e011ac725f8",
-      "digest_pinned": true
-    },
-    "pharmacy-elmis-adapter": {
-      "service": "pharmacy-elmis-adapter",
-      "registry_digest": "sha256:f6a56892dae7014b5f6958df5d31d7ab3c408e55856539ea9d69deba33f62f6a",
-      "digest_pinned": true
-    },
-    "pharmacy-service": {
-      "service": "pharmacy-service",
-      "registry_digest": "sha256:a72accab46d5f2f89e449553af080e9957bebd9c809c1404408e69af5329f4a7",
-      "digest_pinned": true
-    },
-    "procurement-service": {
-      "service": "procurement-service",
-      "registry_digest": "sha256:d7749e3c19a16395db925445a38876b81ed2255a87c62e160fe35f5716ca2d27",
-      "digest_pinned": true
-    },
-    "product-registry-service": {
-      "service": "product-registry-service",
-      "registry_digest": "sha256:35597d8c8ac2f5456b405bb503caf7a860567dfcd784d052b7a6e305be0e0700",
-      "digest_pinned": true
-    },
-    "referral-service": {
-      "service": "referral-service",
-      "registry_digest": "sha256:ed5d81925d0ef3871536f2550aa499fdbd7610ca4f6259b31c83bb3ce3875fcf",
-      "digest_pinned": true
-    },
-    "reporting-service": {
-      "service": "reporting-service",
-      "registry_digest": "sha256:524011508b029cc9ced78ddb9c635f2b2e4a4075207196d49288a6ae71a504f6",
-      "digest_pinned": true
-    },
-    "rito-quality-safety-service": {
-      "service": "rito-quality-safety-service",
-      "registry_digest": "sha256:3fee05b5b57202b62ee13fbca180f60c7128cd106b600053849ba5ac0b191d18",
-      "digest_pinned": true
-    },
-    "rtc-gateway-service": {
-      "service": "rtc-gateway-service",
-      "registry_digest": "sha256:c5c6768ac042183af812f537a6d77103d16fe1a124ffff28e085f98c464bc1ee",
-      "digest_pinned": true
-    },
-    "rules-service": {
-      "service": "rules-service",
-      "registry_digest": "sha256:f66515f237a0d548a1b9d42ea4e259174dab4756703d87fd10313c9c12866305",
-      "digest_pinned": true
-    },
-    "scheduling-service": {
-      "service": "scheduling-service",
-      "registry_digest": "sha256:4d21b4afdd2e55f91b8690709cd735dd99d48ba58385e41200be592646b17b7a",
-      "digest_pinned": true
-    },
-    "schema-registry-service": {
-      "service": "schema-registry-service",
-      "registry_digest": "sha256:73574230fac2f760d6a4f16818cfd782ac8d9b747596573a31a78c535e9fa56e",
-      "digest_pinned": true
-    },
-    "search-service": {
-      "service": "search-service",
-      "registry_digest": "sha256:62d73252884b07bf774bf50a8643b136d6c0fd9e8bc10e922c073951c7a29617",
-      "digest_pinned": true
-    },
-    "security-hardening-service": {
-      "service": "security-hardening-service",
-      "registry_digest": "sha256:4c0e864e0518831f273e4dc4e29a1a35457e773e5721b2980498ef6039ac239e",
-      "digest_pinned": true
-    },
-    "share-slip-service": {
-      "service": "share-slip-service",
-      "registry_digest": "sha256:5929b720560bde245f8e292f815f9bb34461290b1bcb6e6667045875a1a3f9e6",
-      "digest_pinned": true
-    },
-    "simba-service": {
-      "service": "simba-service",
-      "registry_digest": "sha256:804c5bd03f34ee6e0f20da9b4e87521957357681e9cba3c3b966c38facb7f70e",
-      "digest_pinned": true
-    },
-    "support-service": {
-      "service": "support-service",
-      "registry_digest": "sha256:d3aa7081d8f0107acbe9f7bab02aa9ec8260fa5c53e40daad2128eca269d0b68",
-      "digest_pinned": true
-    },
-    "surveillance-service": {
-      "service": "surveillance-service",
-      "registry_digest": "sha256:bb5b4f61b514719ec47a7d4487cc9c640e0bfab1877e268160436498b517e82d",
-      "digest_pinned": true
-    },
-    "tshepo-audit-service": {
-      "service": "tshepo-audit-service",
-      "registry_digest": "sha256:ecb49f558618612d67ddf98d408c70a102b5347bf76dc491c5938f2892f809ce",
-      "digest_pinned": true
-    },
-    "tshepo-authz-service": {
-      "service": "tshepo-authz-service",
-      "registry_digest": "sha256:2a3b91c5c1a073274a4c030ff202a27faa6247bb74a5767035c0dde840e25e04",
-      "digest_pinned": true
-    },
-    "tshepo-consent-service": {
-      "service": "tshepo-consent-service",
-      "registry_digest": "sha256:a060bb44e692e82e61d0d168152aa79bceb9d02983771486ff627bdfbe577ef9",
-      "digest_pinned": true
-    },
-    "tshepo-identity-service": {
-      "service": "tshepo-identity-service",
-      "registry_digest": "sha256:47a204941582aaceba96a6fb0d48ddd649f6e8ec99f7a3826f8a0fd34beeb681",
-      "digest_pinned": true
-    },
-    "tshepo-keys-service": {
-      "service": "tshepo-keys-service",
-      "registry_digest": "sha256:bef0005cb0844142d528088a49a3c24a68873348c918f6e0dabb04bd512a8507",
-      "digest_pinned": true
-    },
-    "tshepo-offline-service": {
-      "service": "tshepo-offline-service",
-      "registry_digest": "sha256:9a71669125729e70900ad51bbf088fd47fd62940f5f1fe4c9ce613e5b62e3024",
-      "digest_pinned": true
-    },
-    "tuso-service": {
-      "service": "tuso-service",
-      "registry_digest": "sha256:6bee827fdaa3796ba7efd9a29c207d07f46215ccc4e2c55daeb69053697c9881",
-      "digest_pinned": true
-    },
-    "ubomi-service": {
-      "service": "ubomi-service",
-      "registry_digest": "sha256:890c7e5de9e70db0d3d3e124c9c94e895fe0542427e97da558c2153bf6718e58",
-      "digest_pinned": true
-    },
-    "varapi-service": {
-      "service": "varapi-service",
-      "registry_digest": "sha256:d849db697a0c15ef3a2fd183b63812d1c87b7edb9dd5e3cf7ab3e1fa04edc1e4",
       "digest_pinned": true
     },
     "vito-service": {
       "service": "vito-service",
-      "registry_digest": "sha256:850fba0816ba45de4887325eb7ce05465bd813934eb444eed74b8d90da919a93",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:5731a74d7160452e6fc45fbea14f49dd10b43be0572f151e40bc847a1afad6de",
+      "registry_digest": "sha256:2c2b0b3e986901dd36c39607e8ca5501c72ae25620637918943274a2e1a15114",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
       "digest_pinned": true
     },
     "wellness-service": {
       "service": "wellness-service",
-      "registry_digest": "sha256:2c2e9916a52161b0ebfb143eba14c9a5b4f698c4370deb088118c05c124d66ff",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:f578480b130ce4d21ecdb4eaf249ac6c6d879ae19747b9b7c4e3ed7cdbf50e0f",
+      "registry_digest": "sha256:7a0f128b7d8dbcaf17a9a8b03384070c900545fc5d44145159eb78c1d4b6778d",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
       "digest_pinned": true
     },
     "workflow-service": {
       "service": "workflow-service",
-      "registry_digest": "sha256:3649b79d16d4e80a997ca68f728380fb709e55a9bc57f41a2e57e386739f30e3",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:0ed186078a622f8e8041c752e8387de4112858024a8a2a4f2cc0fd045c0ceab4",
+      "registry_digest": "sha256:7656bea1958214df9ddca8c5311d8bd18cff84aa291bb694d2d14cb54725d6d7",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
       "digest_pinned": true
     },
     "workforce-governance-service": {
       "service": "workforce-governance-service",
-      "registry_digest": "sha256:82e40fc51515e96d4caef8dff99994151f5806118b5810f6cfe95690b4c84e89",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:58c777062e0cf0df45aee14f42d018ea4190e39a44a7f2d9505e9825d38e4aaa",
+      "registry_digest": "sha256:7296b36f9c98272b4ac705a2982596777e700ede6ae48f65ebfd4a904bb49998",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
       "digest_pinned": true
     },
     "zibo-service": {
       "service": "zibo-service",
-      "registry_digest": "sha256:b9abc32bf0f81c1419bc4595257977bbb37b19b470d0f5e7984bd551a5fe80ab",
+      "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "image_tag": "preview",
+      "image_tag_sha": "preview-efedd0f49",
+      "cache_bust": "efedd0f49a31a1dd9570057edb2f93584d06524e",
+      "local_docker_image_id": "sha256:f6a0d1bf22404d2207ffae6c6bf43e394e587031b68159cb581427d632640dca",
+      "registry_digest": "sha256:b16a9204d5c7832debb7bdb95630fc44b6745388083d3ab5a793ef8a8e3595e6",
+      "build_timestamp": "2026-07-09T06:59:56.205838+00:00",
+      "build_status": "pass_shared_template",
       "digest_pinned": true
     }
   },
-  "digest_pin_generated_at": "2026-07-05T01:05:43.600544+00:00"
+  "digest_pin_generated_at": "2026-07-09T07:30:07.623849+00:00"
 }

@@ -4,7 +4,7 @@
 
 ## Strategy counts
 
-- **shared-dockerfile-template**: 75
+- **shared-dockerfile-template**: 76
 - **jib**: 20
 - **buildpacks**: 19
 - **not-required-internal-package**: 12
@@ -110,6 +110,7 @@
 | ops-console | experience | frontend_app | wave_sequenced_full_boot | no | buildpacks | not_required | — | — | — | paketobuildpacks/nodejs | — | impilo/ops-console | pack build (optional) or bundled in one-ui-shell | not_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
 | ops-docs | experience | frontend_app | wave_sequenced_full_boot | no | buildpacks | not_required | — | — | — | paketobuildpacks/nodejs | — | impilo/ops-docs | pack build (optional) or bundled in one-ui-shell | not_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
 | ops-instrumentation | integration | library | internal_package | no | not-required-internal-package | not_required | — | — | — | — | — | impilo/ops-instrumentation | — | not_required | — | Maven/npm library — not a K8s workload |
+| organization-registry-service | registry | backend_service | wave_sequenced_full_boot | no | shared-dockerfile-template | valid | services/organization-registry-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/organization-registry-service | — | — | impilo/organization-registry-service | docker build -f services/organization-registry-service/Dockerfile OR build-runtime-image-from-jar.sh organization-registry-service | not_required | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | oros-service | clinical | backend_service | wave_sequenced_full_boot | no | shared-dockerfile-template | valid | services/oros-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/oros-service | — | — | impilo/oros-service | docker build -f services/oros-service/Dockerfile OR build-runtime-image-from-jar.sh oros-service | not_required | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | oros-web | experience | frontend_app | wave_sequenced_full_boot | no | buildpacks | not_required | — | — | — | paketobuildpacks/nodejs | — | impilo/oros-web | pack build (optional) or bundled in one-ui-shell | not_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
 | pacs-adapter-service | clinical | backend_service | wave_sequenced_full_boot | no | shared-dockerfile-template | valid | services/pacs-adapter-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/pacs-adapter-service | — | — | impilo/pacs-adapter-service | docker build -f services/pacs-adapter-service/Dockerfile OR build-runtime-image-from-jar.sh pacs-adapter-service | not_required | — | Thin JAR-copy Dockerfile — equivalent to shared template |

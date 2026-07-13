@@ -2,7 +2,7 @@
 
 > OpenAPI under `contracts/openapi/`. Extend with BFF route map and controller scan.
 
-**OpenAPI files:** 106
+**OpenAPI files:** 107
 
 | Contract | Plane | Path | Provider | Web consumer | Mobile consumer | Tests | Deployed |
 |---|---|---|---|---|---|---|---|
@@ -73,6 +73,7 @@
 | `observability.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `offline-edge.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `offline-sync.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `organization-registry.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `oros.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `pacs-adapter.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `patient-safety.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
