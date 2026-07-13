@@ -1,11 +1,13 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
@@ -204,11 +206,45 @@ public class InpatientController {
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "data", created,
                     "meta", meta));
+        } catch (HttpStatusCodeException e) {
+            // A bed-safety violation (409) or invalid request (400) is meaningful to the
+            // clinician placing the admission — pass it through with the upstream message
+            // instead of masking it as a 502. Nothing was persisted (the create is atomic).
+            if (e.getStatusCode().is4xxClientError()) {
+                return ResponseEntity.status(e.getStatusCode()).body(Map.of(
+                        "error", Map.of(
+                                "code", "ADMISSION_" + e.getStatusCode().value(),
+                                "message", extractUpstreamMessage(e)),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+            throw upstreamFailure("Inpatient createAdmission", e);
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
             throw upstreamFailure("Inpatient createAdmission", e);
         }
+    }
+
+    private static final ObjectMapper ERROR_MAPPER = new ObjectMapper();
+
+    /** Pull a human-readable message out of an upstream error body ({error:{message}} or {message}). */
+    private static String extractUpstreamMessage(HttpStatusCodeException ce) {
+        String body = ce.getResponseBodyAsString();
+        if (body != null && !body.isBlank()) {
+            try {
+                JsonNode node = ERROR_MAPPER.readTree(body);
+                JsonNode err = node.get("error");
+                if (err != null && err.isObject() && err.hasNonNull("message")) {
+                    return err.get("message").asText();
+                }
+                if (node.hasNonNull("message") && !node.get("message").asText().isBlank()) {
+                    return node.get("message").asText();
+                }
+            } catch (Exception ignored) {
+                // fall through to status reason
+            }
+        }
+        return ce.getStatusText();
     }
 
     @PostMapping("/admissions/{admissionRef}/discharge")
