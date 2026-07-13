@@ -18,7 +18,8 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 | R2 G8 licence renewal | ✅ done | `2b0d02b5a`, `4ddc4415e` | sweep sets DUE/LAPSED + start-renewal/restoration + UI |
 | R2 G9 disciplinary+compliance | ✅ done | `bc6177ec8`, `db7444c81`, `c08a3cd43` | disciplinary engine (PIC propagation) + compliance/disciplinary BFF + provider-360 panel |
 | R2 G11 credentials wiring | ✅ done | `ab07af81c` | qualifications + practice-contexts full BFF+UI+tests; affiliation/privilege client methods added (UI deferred) |
-| R2 G30 PIC seam | pending | — | consume tuso.facility.pic.activated + deprecate + snapshot |
+| R2 G30 PIC seam | ✅ done | `385e3f7f8` | SoR split affirmed (TUSO=assignment, VARAPI=eligibility snapshot); deprecated orphan writers; snapshot surfaced on UI |
+| **R2 COMPLETE** | ✅ | — | VARAPI surfacing wave (G7–G11 + G30) all landed + pushed |
 | R3 coverage subsidy | pending | — | G3 reconcile → G2 wire → G15 preauth |
 | R4 khuluma | pending | — | G31 delegate → G6 paging → G13 broadcast |
 | R5 teleconsult completion | pending | — | G17 orders → G18 scheduling → G33 richness |
@@ -36,6 +37,12 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 - *Fee-obligation creation NOT coupled to renewal-start.* The obligation lane (ProviderPaymentObligationService.createObligation + MusheX intent) is policy-gated and can fail closed; coupling it into start-renewal would let a policy/gate failure block the lifecycle transition. Kept in the existing council-obligation UI lane. Alternative: best-effort try/catch obligation creation inside start-renewal — viable follow-up.
 - *Notices lane left event-driven.* varapi `/notices` returns a hardcoded empty list (stub); the sweep emits `varapi.provider.licence_due`/`lapsed` outbox events. Converting `/notices` to derive from lifecycle_status + licence validTo is a clean follow-up but out of G8 scope.
 - *Renewal transitions bypass the operator LIFECYCLE_TRANSITIONS matrix* (which intentionally excludes renewal arcs) — they are system/renewal-driven via LicenseService with explicit source-state guards.
+
+**G30 PIC system-of-record split (the key decision):**
+- *Direction reversed from the register's first framing.* The register proposed a new VARAPI listener on `tuso.facility.pic.activated`. Exploration disproved that as the right move: the richer HPA-2017 nomination FSM, the BFF surface, and the UI all already treat **TUSO as SoR for the facility-effective assignment**, and TUSO's own `PicNominationService.activate()` writes the assignment. VARAPI's `PractitionerInChargeController` is an orphan parallel writer nothing surfaces. Adding a new VARAPI writer would *perpetuate* the dual-writer contradiction, not resolve it.
+- *Chosen resolution:* **affirm the split** — TUSO owns the facility-effective PIC assignment; VARAPI is SoR only for the point-in-time eligibility-assessment snapshot each nomination captures verbatim. Documented in both `services-registry.yaml` and `system-of-record-map.md`.
+- *Deprecate, don't delete.* VARAPI's 5 PIC write endpoints get `@Deprecated` + javadoc (behaviour unchanged — safe, non-breaking) rather than removal, to avoid breaking any unknown legacy caller. TUSO's `VarapiPicAssignmentConsumer` javadoc updated to mark it vestigial (kept idempotent for historical reconciliation). Alternative considered: hard-delete the endpoints + consumer — rejected as riskier during an unattended run; retirement is a clean follow-up once legacy assignment records are confirmed drained.
+- *UI surfacing via the inline snapshot.* The nomination view already carries `eligibilitySnapshot` inline, so the page renders axes/reasons directly (no round-trip needed). The new BFF pass-through (`GET /pic-nominations/eligibility-snapshots/{snapshotId}` → VARAPI SoR) is wired as an on-demand "verify against registry" affordance, gated on an optional `eligibilitySnapshotRef` — if the backend DTO doesn't populate the ref, the button simply never shows (no dead UI). This keeps the SoR-audit seam real without inventing a required field.
 
 **G11 credentials wiring:**
 - *Scope split.* Qualifications + practice-contexts get full BFF+UI (the genuinely-dark 0-UI gaps registrars need). Affiliation-write and privilege-decide got VarapiServiceClient methods (reachable) but no UI panel — deferred as a documented follow-up, because a `useProviderPrivileges.ts` hook already exists and affiliations surface elsewhere; a dedicated panel is additive, not a journey unblocker.
