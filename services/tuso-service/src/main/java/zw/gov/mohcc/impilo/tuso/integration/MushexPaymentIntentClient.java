@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.tuso.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -33,9 +34,12 @@ public class MushexPaymentIntentClient {
 
     private final TusoProperties tusoProperties;
     private final RestClient restClient;
+    private final ObjectMapper objectMapper;
 
-    public MushexPaymentIntentClient(TusoProperties tusoProperties, RestClient.Builder restClientBuilder) {
+    public MushexPaymentIntentClient(TusoProperties tusoProperties, RestClient.Builder restClientBuilder,
+                                     ObjectMapper objectMapper) {
         this.tusoProperties = tusoProperties;
+        this.objectMapper = objectMapper;
         this.restClient = restClientBuilder
                 .baseUrl(trimSlash(tusoProperties.getMushex().getBaseUrl()))
                 .build();
@@ -62,7 +66,7 @@ public class MushexPaymentIntentClient {
             body.put("facilityId", ctx.facilityId().toString());
         }
         body.put("idempotencyKey", idempotencyKey);
-        body.put("metadata", buildMetadata(sourceId));
+        body.put("metadata", buildMetadataJson(sourceId));  // mushex CreateIntentRequest.metadata is a JSON string
         try {
             JsonNode root = restClient.post()
                     .uri("/mushex/v1/payment-intents")
@@ -80,7 +84,8 @@ public class MushexPaymentIntentClient {
         }
     }
 
-    private Map<String, Object> buildMetadata(String applicationId) {
+    /** MusheX expects metadata as a JSON string, not a nested object. */
+    private String buildMetadataJson(String applicationId) {
         Map<String, Object> md = new LinkedHashMap<>();
         md.put("hpa_application_id", applicationId);
         md.put("source_instrument", "SI 78 of 2017");
@@ -89,7 +94,11 @@ public class MushexPaymentIntentClient {
             md.put("impilo_simulation", true);
             md.put("simulation_outcome", "paid");
         }
-        return md;
+        try {
+            return objectMapper.writeValueAsString(md);
+        } catch (Exception e) {
+            return "{}";
+        }
     }
 
     private static void applyTrustHeaders(HttpHeaders headers, TrustContext ctx) {
