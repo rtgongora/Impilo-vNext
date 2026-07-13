@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -14,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * Adapter for calling the Mushe Wallet service from MUSHEX.
@@ -39,6 +41,36 @@ public class MusheWalletAdapter {
             ObjectMapper objectMapper) {
         this.restClient = restClientBuilder.baseUrl(baseUrl).build();
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Full v1.1 trust-header set for service-originated calls. Mushe-wallet's
+     * header guard rejects requests missing X-Pod-ID/X-Request-ID/X-Correlation-ID
+     * (MISSING_REQUIRED_HEADER) — the known service-to-service header defect
+     * family; synthesize them here like every other cross-service client.
+     */
+    private static Consumer<HttpHeaders> v11Headers(UUID tenantId, String correlationId) {
+        return v11Headers(tenantId, correlationId, UUID.randomUUID().toString());
+    }
+
+    /**
+     * @param idempotencyKey for MONEY MOVEMENTS pass a key deterministic per
+     *        business operation (e.g. per intent) so a replay never double-moves;
+     *        random keys are only for reads/non-movement calls.
+     */
+    private static Consumer<HttpHeaders> v11Headers(UUID tenantId, String correlationId, String idempotencyKey) {
+        return h -> {
+            h.set("X-Tenant-ID", tenantId.toString());
+            h.set("X-Pod-ID", "national-spine");
+            h.set("X-Request-ID", UUID.randomUUID().toString());
+            h.set("X-Correlation-ID", correlationId != null && !correlationId.isBlank()
+                    ? correlationId : UUID.randomUUID().toString());
+            h.set("X-Actor-ID", "mushex-service");
+            h.set("X-Actor-Type", "SYSTEM");
+            // both spellings: the tech-companion guard checks Idempotency-Key.
+            h.set("Idempotency-Key", idempotencyKey);
+            h.set("X-Idempotency-Key", idempotencyKey);
+        };
     }
 
     // ── Pay From Wallet ────────────────────────────────────────────────
@@ -92,7 +124,7 @@ public class MusheWalletAdapter {
         try {
             String raw = restClient.post()
                     .uri("/internal/v1/merchants/pay")
-                    .header("X-Tenant-ID", tenantId.toString())
+                    .headers(v11Headers(tenantId, null))
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
@@ -144,7 +176,7 @@ public class MusheWalletAdapter {
 
                 restClient.post()
                         .uri("/internal/v1/wallets/{walletId}/credit", merchantWalletId)
-                        .header("X-Tenant-ID", tenantId.toString())
+                        .headers(v11Headers(tenantId, null))
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(body)
                         .retrieve()
@@ -176,7 +208,7 @@ public class MusheWalletAdapter {
                             .queryParam("owner_type", ownerType)
                             .queryParam("owner_ref", ownerRef)
                             .build())
-                    .header("X-Tenant-ID", tenantId.toString())
+                    .headers(v11Headers(tenantId, null))
                     .retrieve()
                     .body(String.class);
 
@@ -207,7 +239,7 @@ public class MusheWalletAdapter {
                             .path("/internal/v1/merchants/by-provider")
                             .queryParam("provider_number", providerNumber)
                             .build())
-                    .header("X-Tenant-ID", tenantId.toString())
+                    .headers(v11Headers(tenantId, null))
                     .retrieve()
                     .body(String.class);
 
@@ -245,8 +277,7 @@ public class MusheWalletAdapter {
         try {
             String raw = restClient.post()
                     .uri("/internal/v1/wallets/{walletId}/debit", walletId)
-                    .header("X-Tenant-ID", tenantId.toString())
-                    .header("X-Correlation-ID", correlationId != null ? correlationId : "")
+                    .headers(v11Headers(tenantId, correlationId, "mushex:wallet-pay:" + reference))
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(body)
                     .retrieve()
