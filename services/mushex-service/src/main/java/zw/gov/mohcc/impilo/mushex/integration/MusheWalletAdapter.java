@@ -111,13 +111,20 @@ public class MusheWalletAdapter {
     /**
      * Credit merchant wallets for settlement / payout batch items.
      *
+     * <p>Per-item failures do not abort the batch, but they are never silently
+     * dropped either: every failure is returned with its reason so the caller can
+     * mark the batch PARTIAL, surface an ops event, and retry/compensate the
+     * missed payouts. A bare success-count return let a batch under-disburse
+     * invisibly.</p>
+     *
      * @param payoutItems list of maps containing: merchantProviderNumber, amount, reference
-     * @return number of successfully credited items
+     * @return per-item outcome: credited count + the failed items with reasons
      */
-    public int disburseToBatch(UUID tenantId, List<Map<String, Object>> payoutItems) {
+    public DisbursementResult disburseToBatch(UUID tenantId, List<Map<String, Object>> payoutItems) {
         log.info("disburseToBatch: tenantId={} items={}", tenantId, payoutItems.size());
 
         int credited = 0;
+        List<FailedDisbursement> failures = new java.util.ArrayList<>();
         for (Map<String, Object> item : payoutItems) {
             String merchantProviderNumber = String.valueOf(item.get("merchantProviderNumber"));
             BigDecimal amount = new BigDecimal(String.valueOf(item.get("amount")));
@@ -149,11 +156,14 @@ public class MusheWalletAdapter {
             } catch (Exception e) {
                 log.error("Failed to credit merchant wallet: provider={} amount={}",
                         merchantProviderNumber, amount, e);
+                failures.add(new FailedDisbursement(merchantProviderNumber, amount, reference,
+                        e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
             }
         }
 
-        log.info("disburseToBatch complete: tenantId={} credited={}/{}", tenantId, credited, payoutItems.size());
-        return credited;
+        log.info("disburseToBatch complete: tenantId={} credited={}/{} failed={}",
+                tenantId, credited, payoutItems.size(), failures.size());
+        return new DisbursementResult(credited, List.copyOf(failures));
     }
 
     // ── Internal Helpers ───────────────────────────────────────────────
@@ -273,6 +283,17 @@ public class MusheWalletAdapter {
     // ── Result / Exception types ───────────────────────────────────────
 
     public record WalletPaymentResult(String transactionId, String status, BigDecimal amount) {}
+
+    /** Outcome of a payout-batch disbursement: how many credited, and exactly what failed. */
+    public record DisbursementResult(int credited, List<FailedDisbursement> failures) {
+        public boolean complete() {
+            return failures.isEmpty();
+        }
+    }
+
+    /** A single payout item that could not be credited, with the reason. */
+    public record FailedDisbursement(String merchantProviderNumber, BigDecimal amount,
+                                     String reference, String reason) {}
 
     public static class WalletAdapterException extends RuntimeException {
         public WalletAdapterException(String message) {
