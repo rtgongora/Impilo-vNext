@@ -49,6 +49,11 @@ public class CartService {
 
     @Transactional
     public CartDtos.CartView getOrCreateOpenCart(UUID tenantId, String actorId, ActorType actorType, String patientCpid, String channel) {
+        // A PATIENT actor IS the buyer: without this the cart (and therefore the
+        // order and MusheX intent metadata) carried no patient identity, and the
+        // wallet payment leg could not resolve the payer's CPID-keyed wallet.
+        String effectiveCpid = (patientCpid == null || patientCpid.isBlank())
+                && actorType == ActorType.PATIENT ? actorId : patientCpid;
         CartEntity cart = cartRepository.findByTenantIdAndActorIdAndStatus(tenantId, actorId, CartStatus.OPEN)
                 .orElseGet(() -> {
                     CartEntity c = new CartEntity();
@@ -56,7 +61,7 @@ public class CartService {
                     c.setTenantId(tenantId);
                     c.setActorId(actorId);
                     c.setActorType(actorType);
-                    c.setPatientCpid(patientCpid);
+                    c.setPatientCpid(effectiveCpid);
                     if (channel != null) c.setChannel(channel);
                     c.setStatus(CartStatus.OPEN);
                     return cartRepository.save(c);
