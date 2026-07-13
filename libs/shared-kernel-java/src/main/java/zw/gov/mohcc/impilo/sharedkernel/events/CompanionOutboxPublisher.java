@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
@@ -36,6 +38,8 @@ import java.util.function.Consumer;
  * </ul>
  */
 public abstract class CompanionOutboxPublisher {
+
+    private static final Logger log = LoggerFactory.getLogger(CompanionOutboxPublisher.class);
 
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .registerModule(new JavaTimeModule());
@@ -113,6 +117,11 @@ public abstract class CompanionOutboxPublisher {
                 markPublished(row, OffsetDateTime.now());
                 published++;
             } catch (Exception e) {
+                // A silently-swallowed failure here head-of-line-blocks the whole
+                // drain: the row is never marked published, so every later row
+                // starves. Always log so the poison row is diagnosable.
+                log.warn("Outbox drain halted at row aggregateType={} eventType={} id={}: {}",
+                        row.aggregateType(), row.eventType(), row.id(), e.toString(), e);
                 if (row.retryCount() >= MAX_RETRIES) {
                     markFailed(row, e.getMessage());
                 }

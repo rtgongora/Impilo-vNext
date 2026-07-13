@@ -3,6 +3,8 @@ package zw.gov.mohcc.impilo.sharedkernel.events;
 import zw.gov.mohcc.impilo.sharedkernel.schema.SchemaValidationException;
 
 import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -68,8 +70,12 @@ public record EventEnvelope(
         Objects.requireNonNull(subjectType, "subject_type is required");
         Objects.requireNonNull(subjectId, "subject_id is required");
         Objects.requireNonNull(payload, "payload is required");
-        meta = meta != null ? Map.copyOf(meta) : Map.of();
-        payload = Map.copyOf(payload);
+        // A domain payload may legitimately carry JSON-null field values (e.g. an
+        // all-classes fee whose classCode is null). Map.copyOf forbids null values
+        // and would NPE, silently head-of-line-blocking the whole outbox drain, so
+        // take a null-tolerant unmodifiable copy instead.
+        meta = meta != null ? Collections.unmodifiableMap(new LinkedHashMap<>(meta)) : Map.of();
+        payload = Collections.unmodifiableMap(new LinkedHashMap<>(payload));
     }
 
     /**
