@@ -22,6 +22,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { facility, workspace, shiftActive } = useExperienceEntry();
   const router = useRouter();
   const toggleNavDrawer = useShellStore((s) => s.toggleNavDrawer);
+  const navDrawerOpen = useShellStore((s) => s.navDrawerOpen);
   const focusMode = useLayoutPrefsStore((s) => s.focusMode);
   const toggleFocusMode = useLayoutPrefsStore((s) => s.toggleFocusMode);
 
@@ -81,7 +82,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
             )}
             <ModuleBreadcrumb />
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          {/* Hide header actions while the nav drawer is open: the drawer overlay
+              sits above the header, so leaving them visible let clicks fall through
+              to the overlay (closing the drawer) instead of the button (QA #4). */}
+          <div
+            className={`flex shrink-0 items-center gap-1 transition-opacity ${
+              navDrawerOpen ? "pointer-events-none opacity-0" : ""
+            }`}
+            aria-hidden={navDrawerOpen}
+          >
             <button
               type="button"
               onClick={() => toggleFocusMode()}

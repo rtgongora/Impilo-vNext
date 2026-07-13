@@ -536,7 +536,9 @@ export function ExperienceSidebar() {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto px-3 py-4">
+        {/* Reserve the floating dock's height so the drawer's footer content is
+            not overpainted by the bottom taskbar (QA #3), matching NavRail. */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 pb-[calc(1rem+var(--shell-taskbar-height,0px))]">
           {visibleZones.map((zone) => (
             <section key={zone.id} className="mb-6">
               {!collapsed && (

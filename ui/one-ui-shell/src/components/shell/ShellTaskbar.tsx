@@ -374,21 +374,15 @@ export function ShellTaskbar() {
                 (task.id === activeTaskId && task.status === "open") ||
                 (task.status === "open" && pathname === task.route);
               return (
-                <button
+                // Row is a container, NOT a <button> — the close control must be a
+                // sibling <button>, never a role="button" span nested inside another
+                // button (invalid HTML, unreliable events on touch). (QA #8)
+                <div
                   key={task.id}
-                  type="button"
-                  aria-label={`${task.title}${active ? " (active)" : task.status === "minimized" ? " (minimized)" : ""}`}
-                  onClick={() => {
-                    if (task.status === "minimized") {
-                      useShellStore.getState().restoreTask(task.id);
-                    }
-                    setActiveTask(task.id);
-                    router.push(task.route);
-                  }}
                   onContextMenu={(e) => openContextMenu(e, taskMenuItems(task))}
                   onMouseEnter={(e) => setPreview({ task, x: e.clientX, y: e.clientY })}
                   onMouseLeave={() => setPreview(null)}
-                  className={`group flex max-w-[240px] shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-left text-xs transition-colors ${
+                  className={`group flex max-w-[240px] shrink-0 items-center gap-1 rounded-lg border py-1 pl-2.5 pr-1 text-left text-xs transition-colors ${
                     active
                       ? "border-impilo-500 bg-primary-hover text-white"
                       : task.status === "minimized"
@@ -396,28 +390,33 @@ export function ShellTaskbar() {
                         : "border-border bg-card hover:border-border"
                   }`}
                 >
-                  <ShellIcon name="LayoutGrid" className="h-3.5 w-3.5 shrink-0 opacity-70" />
-                  <span className="truncate font-medium">{task.title}</span>
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    className="ml-auto rounded p-0.5 opacity-60 hover:bg-black/10 group-hover:opacity-100"
+                  <button
+                    type="button"
+                    aria-label={`${task.title}${active ? " (active)" : task.status === "minimized" ? " (minimized)" : ""}`}
+                    onClick={() => {
+                      if (task.status === "minimized") {
+                        useShellStore.getState().restoreTask(task.id);
+                      }
+                      setActiveTask(task.id);
+                      router.push(task.route);
+                    }}
+                    className="flex min-w-0 flex-1 items-center gap-1.5"
+                  >
+                    <ShellIcon name="LayoutGrid" className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                    <span className="truncate font-medium">{task.title}</span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Close ${task.title}`}
                     onClick={(ev) => {
                       ev.stopPropagation();
                       closeTask(task.id);
                     }}
-                    onKeyDown={(ev) => {
-                      if (ev.key === "Enter" || ev.key === " ") {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        closeTask(task.id);
-                      }
-                    }}
-                    aria-label={`Close ${task.title}`}
+                    className="ml-auto grid h-7 w-7 shrink-0 place-items-center rounded opacity-70 hover:bg-black/10 hover:opacity-100"
                   >
-                    ×
-                  </span>
-                </button>
+                    <span aria-hidden>×</span>
+                  </button>
+                </div>
               );
             })}
           </div>
