@@ -147,6 +147,9 @@ class RbacIntegrationTest {
     }
 
     // ── Bed endpoints should work ────────────────────────────────
+    // inpatient-service is stubbed in-process (ExperienceBffSovereignWireMockSupport),
+    // so this asserts the full RBAC-pass + proxy path deterministically — it no longer
+    // depends on a live inpatient-service being up on localhost:8121.
 
     @Test
     @Order(7)

@@ -11,7 +11,8 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 
 /**
  * In-process stubs for sovereign HTTP dependencies used by JVM integration tests
- * (pharmacy-service, TUSO staffing, marketplace) so CI does not require live services.
+ * (pharmacy-service, TUSO staffing, marketplace, inpatient-service) so CI does not
+ * require live services.
  */
 public final class ExperienceBffSovereignWireMockSupport {
 
@@ -29,6 +30,7 @@ public final class ExperienceBffSovereignWireMockSupport {
                 stubMarketplace();
                 stubSupport();
                 stubPct();
+                stubInpatient();
                 started = true;
             }
         }
@@ -38,6 +40,7 @@ public final class ExperienceBffSovereignWireMockSupport {
         registry.add("impilo.services.msika-flow-base-url", () -> base);
         registry.add("impilo.services.support-base-url", () -> base);
         registry.add("impilo.services.pct-base-url", () -> base);
+        registry.add("impilo.services.inpatient-base-url", () -> base);
     }
 
     private static void stubPharmacy() {
@@ -127,6 +130,17 @@ public final class ExperienceBffSovereignWireMockSupport {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody("[]")));
+    }
+
+    private static void stubInpatient() {
+        // Ward list backs the RBAC integration test's bed route. Without this stub the BFF
+        // proxies to the default inpatient-service (localhost:8121), making the test pass or
+        // fail depending on whether a live estate happens to be up on the host.
+        SERVER.stubFor(get(urlPathMatching("/internal/v1/beds/wards.*"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"data\":[]}")));
     }
 
     private static void stubSupport() {
