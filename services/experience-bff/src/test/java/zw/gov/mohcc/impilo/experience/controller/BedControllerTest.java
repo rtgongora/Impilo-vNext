@@ -39,8 +39,9 @@ class BedControllerTest {
                 controller.updateBedStatus(bedId, "t1", "req-2", "corr-2",
                         Map.of("status", "CLEANING"));
         assertEquals(200, response.getStatusCode().value());
-        Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
-        assertEquals("CLEANING", data.get("status"));
+        // The BFF now returns the REAL upstream bed state, not a fabricated status.
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertEquals("CLEANING", data.get("status").asText());
     }
 
     @Test
@@ -50,12 +51,38 @@ class BedControllerTest {
         ResponseEntity<Map<String, Object>> response =
                 controller.dischargeBed(bedId, "t1", "req-3", "corr-3");
         assertEquals(200, response.getStatusCode().value());
-        Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
-        assertEquals("CLEANING", data.get("status"));
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertEquals("CLEANING", data.get("status").asText());
+    }
+
+    @Test
+    void assignPatient_passesBedSafety409Through() {
+        // A bed-safety violation must reach the caller as 409 with the message —
+        // never be masked as a fabricated 200 {status: OCCUPIED}.
+        BedController controller = new BedController(new UnsafeBedClient());
+        UUID bedId = UUID.randomUUID();
+        ResponseEntity<Map<String, Object>> response =
+                controller.assignPatient(bedId, "t1", "req-4", "corr-4",
+                        Map.of("patientId", "CPID-1"));
+        assertEquals(409, response.getStatusCode().value());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("Bed assignment unsafe: GENDER_BAY_MISMATCH", error.get("message"));
     }
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
+    }
+
+    private static final class UnsafeBedClient extends InpatientServiceClient {
+        UnsafeBedClient() { super(new RestTemplate(), endpoints(), mapper); }
+
+        @Override public JsonNode assignPatientToBed(String bedId, Map<String, Object> request) {
+            byte[] body = "{\"error\":{\"code\":\"BED_UNSAFE\",\"message\":\"Bed assignment unsafe: GENDER_BAY_MISMATCH\"}}"
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            throw org.springframework.web.client.HttpClientErrorException.create(
+                    org.springframework.http.HttpStatus.CONFLICT, "Conflict",
+                    org.springframework.http.HttpHeaders.EMPTY, body, null);
+        }
     }
 
     private static final class StubInpatientClient extends InpatientServiceClient {

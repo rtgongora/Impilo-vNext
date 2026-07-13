@@ -196,10 +196,12 @@ public class InpatientController {
         try {
             // Inject the tenant from the trust header so the UI doesn't have to carry it
             // in the body (inpatient-service requires tenantId on the admission request).
+            // Copy first — the inbound body may be immutable.
+            Map<String, Object> admissionBody = new LinkedHashMap<>(body);
             if (tenantId != null && !tenantId.isBlank()) {
-                body.putIfAbsent("tenantId", tenantId);
+                admissionBody.putIfAbsent("tenantId", tenantId);
             }
-            JsonNode created = requirePayload(inpatientClient.createAdmission(body), "Inpatient createAdmission");
+            JsonNode created = requirePayload(inpatientClient.createAdmission(admissionBody), "Inpatient createAdmission");
             String admissionRef = extractAdmissionRef(created);
             Map<String, Object> meta = new LinkedHashMap<>();
             meta.put("request_id", requestId);
