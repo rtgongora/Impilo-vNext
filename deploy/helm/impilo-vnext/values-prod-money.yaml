@@ -1,0 +1,43 @@
+# PRODUCTION money-posture overlay — hand-maintained (NOT generated).
+#
+# Layer this file LAST on any production install so the money-simulation flags
+# are pinned OFF as an artifact, not an intention:
+#
+#   helm upgrade --install impilo-vnext . \
+#     -f values.yaml -f <runtime values> -f values-prod-money.yaml
+#
+# Every flag below fabricates money outcomes when true and exists for
+# rig/preview use ONLY. The preview overlay (values-full-preview-runtime)
+# deliberately sets the MusheX trio to 'true'; production must never inherit
+# that. MusheX additionally fail-fasts at boot (MushexSecurityStartupValidator)
+# when the sandbox posture is off but MUSHEX_HMAC_PEPPER is blank or payee
+# credential verification is disabled — so a misassembled production install
+# refuses to start rather than running fail-open.
+#
+# NO deploy is implied by this file's existence; production installs remain
+# separately authorized.
+
+fullBootServices:
+  mushex-service:
+    env:
+      # Simulation adapter + auto-settle: OFF — intents must never fabricate PAID.
+      MUSHEX_SANDBOX_ENABLED: 'false'
+      MUSHEX_SANDBOX_BYPASS_CREDENTIAL_CHECK: 'false'
+      MUSHEX_SANDBOX_APPLY_SIMULATION_OUTCOME: 'false'
+      # Payee credential verification: fail-closed gate stays ON.
+      CREDENTIAL_VERIFICATION_ENABLED: 'true'
+      CREDENTIAL_PAYEE_VERIFICATION_ENABLED: 'true'
+    secretEnv:
+      # A real secret MUST be present; mushex refuses to boot on a blank pepper
+      # outside sandbox mode.
+      MUSHEX_HMAC_PEPPER:
+        name: impilo-app-secrets
+        key: mushex-hmac-pepper
+  msika-flow-service:
+    env:
+      # Never stamp impilo_simulation/simulation_outcome into intent metadata.
+      MSIKA_FLOW_PAYMENTS_SIMULATION_METADATA: 'false'
+  tuso-service:
+    env:
+      # HPA fee payment intents must not carry the sandbox settle escape hatch.
+      TUSO_MUSHEX_SANDBOX_SIMULATION: 'false'
