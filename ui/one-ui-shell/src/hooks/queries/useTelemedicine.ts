@@ -113,6 +113,43 @@ export function useEndTelemedicineSession() {
   });
 }
 
+/** Governed Stage-4 accept — carries acceptance context and emits the telemedicine audit + notification. */
+export function useAcceptTeleconsultSession() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    SessionResponse,
+    unknown,
+    { id: string; receivingFacilityId?: string; receivingFacilityName?: string; scheduledAt?: string; notes?: string }
+  >({
+    mutationFn: ({ id, receivingFacilityId, receivingFacilityName, scheduledAt, notes }) =>
+      apiClient.post<SessionResponse>(`/internal/v1/teleconsult/sessions/${id}/accept`, {
+        receiving_facility_id: receivingFacilityId,
+        receiving_facility_name: receivingFacilityName,
+        scheduled_at: scheduledAt,
+        notes,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["telemedicine-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["telemedicine-specialty-workbench"] });
+      queryClient.invalidateQueries({ queryKey: ["incoming-referrals"] });
+    },
+  });
+}
+
+/** Governed Stage-4 decline — a reason is mandatory (the BFF rejects a blank one). */
+export function useDeclineTeleconsultSession() {
+  const queryClient = useQueryClient();
+  return useMutation<SessionResponse, unknown, { id: string; reason: string }>({
+    mutationFn: ({ id, reason }) =>
+      apiClient.post<SessionResponse>(`/internal/v1/teleconsult/sessions/${id}/decline`, { reason }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["telemedicine-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["telemedicine-specialty-workbench"] });
+      queryClient.invalidateQueries({ queryKey: ["incoming-referrals"] });
+    },
+  });
+}
+
 export function useCreateTelemedicineSession() {
   const queryClient = useQueryClient();
 

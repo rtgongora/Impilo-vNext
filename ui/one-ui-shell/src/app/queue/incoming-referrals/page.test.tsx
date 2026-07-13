@@ -4,34 +4,45 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import IncomingReferralsPage from "./page";
 
-const { acceptMutateAsync } = vi.hoisted(() => ({
+const { acceptMutateAsync, teleconsultAcceptMutateAsync, fixture } = vi.hoisted(() => ({
   acceptMutateAsync: vi.fn(),
+  teleconsultAcceptMutateAsync: vi.fn(),
+  fixture: { referrals: [] as unknown[] },
 }));
 const facility = { id: "facility-1", name: "Harare Central" };
 
-const incomingReferrals = [
-  {
-    id: "ref-1",
-    type: "referral",
-    attributes: {
-      patient_id: "patient-1",
-      referral_type: "SPECIALIST",
-      specialty: "Cardiology",
-      referred_to: "Cardiology Team",
-      referred_to_facility: "Harare Central",
-      reason: "Review persistent chest pain",
-      urgency: "URGENT",
-      status: "PENDING",
-      clinical_summary: "Troponin elevated",
-      referred_by: "provider-9",
-      referred_by_name: "Dr. Ncube",
-      response_notes: null,
-      responded_at: null,
-      accepted_at: null,
-      created_at: "2026-04-08T08:00:00.000Z",
-    },
+const specialistReferral = {
+  id: "ref-1",
+  type: "referral",
+  attributes: {
+    patient_id: "patient-1",
+    referral_type: "SPECIALIST",
+    specialty: "Cardiology",
+    referred_to: "Cardiology Team",
+    referred_to_facility: "Harare Central",
+    reason: "Review persistent chest pain",
+    urgency: "URGENT",
+    status: "PENDING",
+    clinical_summary: "Troponin elevated",
+    referred_by: "provider-9",
+    referred_by_name: "Dr. Ncube",
+    response_notes: null,
+    responded_at: null,
+    accepted_at: null,
+    created_at: "2026-04-08T08:00:00.000Z",
   },
-];
+};
+
+const teleconsultReferral = {
+  id: "tc-1",
+  type: "referral",
+  attributes: {
+    ...specialistReferral.attributes,
+    patient_id: "patient-2",
+    specialty: "Dermatology",
+    modality: "virtual",
+  },
+};
 
 vi.mock("@/components/AppLayout", () => ({
   AppLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -53,17 +64,24 @@ vi.mock("@/hooks/useFacilityStore", () => ({
 }));
 
 vi.mock("@/hooks/queries/useReferrals", () => ({
-  useIncomingReferrals: () => ({ data: { data: incomingReferrals }, isLoading: false }),
+  useIncomingReferrals: () => ({ data: { data: fixture.referrals }, isLoading: false }),
   useAcceptReferral: () => ({ mutateAsync: acceptMutateAsync, isPending: false }),
   useRespondReferral: () => ({ mutateAsync: vi.fn(), isPending: false }),
   buildReferralConsultHandoffRoute: (patientId: string, referralId: string) =>
     `/ehr/${patientId}/consults?tab=referrals&referral_id=${referralId}`,
 }));
 
+vi.mock("@/hooks/queries/useTelemedicine", () => ({
+  useAcceptTeleconsultSession: () => ({ mutateAsync: teleconsultAcceptMutateAsync, isPending: false }),
+}));
+
 describe("IncomingReferralsPage", () => {
   beforeEach(() => {
+    fixture.referrals = [specialistReferral];
     acceptMutateAsync.mockReset();
-    acceptMutateAsync.mockResolvedValue({ data: incomingReferrals[0] });
+    acceptMutateAsync.mockResolvedValue({ data: specialistReferral });
+    teleconsultAcceptMutateAsync.mockReset();
+    teleconsultAcceptMutateAsync.mockResolvedValue({ data: {} });
   });
 
   it("shows the receiving orchestration summary and in-place handoff action", async () => {
@@ -96,5 +114,25 @@ describe("IncomingReferralsPage", () => {
         }),
       ),
     );
+    expect(teleconsultAcceptMutateAsync).not.toHaveBeenCalled();
+  }, 30_000);
+
+  it("routes a teleconsult referral through the GOVERNED accept, not the plain one", async () => {
+    fixture.referrals = [teleconsultReferral];
+    const user = userEvent.setup();
+
+    render(<IncomingReferralsPage />);
+
+    expect(await screen.findByText("Teleconsult")).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: "Accept Handoff" }));
+    const acceptButtons = screen.getAllByRole("button", { name: "Accept Handoff" });
+    await user.click(acceptButtons[acceptButtons.length - 1]);
+
+    await waitFor(() =>
+      expect(teleconsultAcceptMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ id: "tc-1", receivingFacilityId: "facility-1" }),
+      ),
+    );
+    expect(acceptMutateAsync).not.toHaveBeenCalled();
   }, 30_000);
 });

@@ -30,6 +30,7 @@ import {
   useIncomingReferrals,
   useRespondReferral,
 } from "@/hooks/queries/useReferrals";
+import { useAcceptTeleconsultSession } from "@/hooks/queries/useTelemedicine";
 import {
   COORDINATION_COPY,
   getReferralFacilityName,
@@ -74,10 +75,19 @@ const STATUS_BADGE: Record<string, string> = {
   COMPLETED: "bg-green-100 text-green-700",
 };
 
+/** A teleconsult referral (modality "virtual") must be accepted through the GOVERNED
+ * teleconsult route — the plain referral accept skips the telemedicine governance
+ * assert, audit, and referrer notification. */
+function isTeleconsult(attrs: Record<string, unknown>): boolean {
+  const modality = String(attrs.modality ?? attrs.virtual_mode ?? attrs.virtualMode ?? "").toLowerCase();
+  return modality === "virtual" || attrs.virtualMode === true || attrs.virtual_mode === true;
+}
+
 export default function IncomingReferralsPage() {
   const facility = useFacilityStore((s) => s.facility);
   const { data: incomingData, isLoading } = useIncomingReferrals(facility?.id);
   const acceptReferral = useAcceptReferral();
+  const acceptTeleconsult = useAcceptTeleconsultSession();
   const respondReferral = useRespondReferral();
 
   const referrals = (incomingData?.data ?? []) as unknown as IncomingReferral[];
@@ -109,17 +119,28 @@ export default function IncomingReferralsPage() {
     setResponseOutcome((referral.attributes.outcome as string | undefined) ?? "");
   }
 
-  async function handleAccept(referralId: string) {
+  async function handleAccept(referral: IncomingReferral) {
     if (!facility) return;
     setIsSubmitting(true);
     try {
-      await acceptReferral.mutateAsync({
-        id: referralId,
-        receiving_facility_id: facility.id,
-        receiving_facility_name: facility.name,
-        scheduled_at: scheduledAt || undefined,
-        notes: handoffNote.trim() || undefined,
-      });
+      if (isTeleconsult(referral.attributes)) {
+        // Governed teleconsult route: telemedicine governance assert + audit + referrer notification.
+        await acceptTeleconsult.mutateAsync({
+          id: referral.id,
+          receivingFacilityId: facility.id,
+          receivingFacilityName: facility.name,
+          scheduledAt: scheduledAt || undefined,
+          notes: handoffNote.trim() || undefined,
+        });
+      } else {
+        await acceptReferral.mutateAsync({
+          id: referral.id,
+          receiving_facility_id: facility.id,
+          receiving_facility_name: facility.name,
+          scheduled_at: scheduledAt || undefined,
+          notes: handoffNote.trim() || undefined,
+        });
+      }
       resetActionState();
     } finally {
       setIsSubmitting(false);
@@ -297,6 +318,11 @@ export default function IncomingReferralsPage() {
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusStyle}`}>
                           {attrs.status}
                         </span>
+                        {isTeleconsult(attrs) && (
+                          <span className="flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                            <Video className="h-3 w-3" /> Teleconsult
+                          </span>
+                        )}
                       </div>
 
                       <div className={`mb-3 rounded-2xl border px-3 py-3 ${
@@ -497,7 +523,7 @@ export default function IncomingReferralsPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => activeAction.type === "accept" ? handleAccept(referral.id) : handleRespond(referral.id)}
+                            onClick={() => activeAction.type === "accept" ? handleAccept(referral) : handleRespond(referral.id)}
                             disabled={isSubmitting || (activeAction.type === "respond" && !responseNotes.trim())}
                             className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium text-white transition-colors disabled:opacity-50 ${
                               activeAction.type === "accept"
