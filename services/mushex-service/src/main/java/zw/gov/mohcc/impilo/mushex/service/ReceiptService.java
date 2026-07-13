@@ -72,7 +72,9 @@ public class ReceiptService {
         summaryMap.put("currency", intent.getCurrency());
         summaryMap.put("status", intent.getStatus().name());
         summaryMap.put("tenantId", intent.getTenantId().toString());
-        summaryMap.put("facilityId", intent.getFacilityId().toString());
+        // Citizen marketplace/fee intents legitimately carry no facility; an NPE
+        // here killed the settlement AFTER the wallet was already debited.
+        summaryMap.put("facilityId", intent.getFacilityId() != null ? intent.getFacilityId().toString() : null);
         summaryMap.put("issuedAt", OffsetDateTime.now().toString());
 
         String summaryJson;
