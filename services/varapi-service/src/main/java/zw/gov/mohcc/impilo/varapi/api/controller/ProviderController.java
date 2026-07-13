@@ -203,6 +203,7 @@ public class ProviderController {
     private ProviderResponse toProviderResponse(ProviderEntity entity) {
         return new ProviderResponse(
                 entity.getProviderPublicId(),
+                entity.getId(),
                 entity.getProviderRef(),
                 entity.getImpiloHealthId(),
                 entity.getTitle(),
@@ -277,6 +278,7 @@ public class ProviderController {
 
         return new ProviderResponse(
                 entity.getProviderPublicId(),
+                entity.getId(),
                 entity.getProviderRef(),
                 entity.getImpiloHealthId(),
                 entity.getTitle(),

@@ -7,6 +7,10 @@ import java.util.UUID;
 
 public record ProviderResponse(
         String providerPublicId,
+        // Numeric registry key. The certificate/lifecycle/compliance engines are keyed on this
+        // Long PK, while the experience layer only holds the public id — surfacing it here lets
+        // the BFF resolve public-id → numeric with a single provider lookup (W0 bridge).
+        Long providerId,
         UUID providerRef,
         UUID impiloHealthId,
         String title,
