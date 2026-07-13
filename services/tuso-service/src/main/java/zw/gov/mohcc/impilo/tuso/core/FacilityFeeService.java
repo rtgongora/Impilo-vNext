@@ -283,15 +283,27 @@ public class FacilityFeeService {
         event.setAggregateType("FACILITY_APPLICATION_FEE");
         event.setAggregateId(application.getApplicationId().toString());
         event.setEventType(eventType);
-        event.setPayload(new LinkedHashMap<>(payload));
+        // The three fee events share one topic; the legacy payload must self-describe
+        // its event type so COSTA can dispatch fee_due/fee_paid/fee_waived.
+        Map<String, Object> body = new LinkedHashMap<>(payload);
+        body.put("eventType", eventType);
+        event.setPayload(body);
         event.setTenantId(ctx.tenantId().toString());
-        event.setCorrelationId(ctx.correlationId() != null ? ctx.correlationId().toString() : null);
+        // v1.1 envelope requires non-null correlation_id AND causation_id; a
+        // system-synthesized ctx (mushex payment consumer) may carry neither, so
+        // fall back to a generated id. A null here poisons the DUAL publisher drain
+        // and head-of-line-blocks every later fee row (fee_paid/fee_waived stall).
+        String correlationId = ctx.correlationId() != null
+                ? ctx.correlationId().toString() : UUID.randomUUID().toString();
+        event.setCorrelationId(correlationId);
+        event.setCausationId(correlationId);
         event.setProducer("tuso");
         event.setSubjectType("FacilityApplication");
         event.setSubjectId(application.getApplicationId().toString());
         event.setPartitionKey(application.getApplicationId().toString());
         event.setSchemaVersion(1);
         event.setPodId("national-spine");
+        event.setOccurredAt(java.time.Instant.now().atOffset(java.time.ZoneOffset.UTC));
         event.setIdempotencyKey("tuso:fee:" + eventType + ":" + application.getApplicationId() + ":" + UUID.randomUUID());
         outboxRepository.save(event);
     }

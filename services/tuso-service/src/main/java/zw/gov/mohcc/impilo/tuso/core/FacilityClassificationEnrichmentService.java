@@ -320,13 +320,19 @@ public class FacilityClassificationEnrichmentService {
         event.setEventType("facility.classification.enrichment-run.completed.v1");
         event.setPayload(payload);
         event.setTenantId(ctx.tenantId().toString());
-        event.setCorrelationId(ctx.correlationId() != null ? ctx.correlationId().toString() : null);
+        // v1.1 envelope requires non-null correlation_id AND causation_id; a null
+        // poisons the DUAL publisher drain and head-of-line-blocks later rows.
+        String correlationId = ctx.correlationId() != null
+                ? ctx.correlationId().toString() : UUID.randomUUID().toString();
+        event.setCorrelationId(correlationId);
+        event.setCausationId(correlationId);
         event.setProducer("tuso");
         event.setSubjectType("FacilityEnrichmentRun");
         event.setSubjectId(String.valueOf(run.getId()));
         event.setPartitionKey(String.valueOf(run.getId()));
         event.setSchemaVersion(1);
         event.setPodId("national-spine");
+        event.setOccurredAt(java.time.Instant.now().atOffset(java.time.ZoneOffset.UTC));
         event.setIdempotencyKey("tuso:classification:run-completed:" + run.getId());
         outboxRepository.save(event);
     }
