@@ -143,6 +143,31 @@ class FacilityFeeServiceTest {
     }
 
     @Test
+    void waiveFeeRequiresARegulatorAndADueFeeAndAReason() {
+        var due = app("INITIAL_REGISTRATION_PRIVATE");
+        due.setFeeState("DUE");
+        due.setCurrentWorkflowState(FacilityApplicationState.AWAITING_FEE);
+        var s = service();
+
+        // non-regulator → 403-equivalent
+        var applicant = new TrustContext(tenantId, "x", "FACILITY_APPLICANT", "REGULATION", null,
+                UUID.randomUUID(), null, null, null, AccessMode.INTERNAL);
+        org.junit.jupiter.api.Assertions.assertThrows(SecurityException.class,
+                () -> s.waiveFee(applicant, due, "hardship"));
+
+        // missing reason → 400-equivalent
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> s.waiveFee(ctx, due, "  "));
+
+        // happy path
+        s.waiveFee(ctx, due, "public-interest waiver");
+        assertThat(due.getFeeState()).isEqualTo("WAIVED");
+        assertThat(due.getFeeWaiverReason()).isEqualTo("public-interest waiver");
+        assertThat(due.getCurrentWorkflowState()).isEqualTo(FacilityApplicationState.SUBMITTED);
+        verify(outboxRepository).save(any());   // fee_waived emitted
+    }
+
+    @Test
     void markPaidClearsTheGateAndEmitsFeePaid() {
         var a = app("INITIAL_REGISTRATION_PRIVATE");
         a.setFeeState("DUE");

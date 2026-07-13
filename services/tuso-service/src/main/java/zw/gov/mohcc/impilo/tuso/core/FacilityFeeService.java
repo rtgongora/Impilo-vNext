@@ -143,6 +143,62 @@ public class FacilityFeeService {
         return null;
     }
 
+    /** Actor types permitted to waive a fee. */
+    static final java.util.Set<String> FEE_WAIVER_ROLES =
+            java.util.Set.of("HPA_REGISTRAR", "HPA_ADMIN", "SYSTEM_ADMIN");
+
+    /**
+     * Waive a DUE fee: records WAIVED + waiver provenance, opens the gate, and
+     * emits fee_waived (COSTA voids the charge). A late PAID after waiver is
+     * ignored loudly by markPaid's idempotency.
+     */
+    @Transactional
+    public FacilityApplicationEntity waiveFee(TrustContext ctx, FacilityApplicationEntity application, String reason) {
+        String actorType = ctx.actorType();
+        if (actorType != null && !actorType.isBlank() && !FEE_WAIVER_ROLES.contains(actorType)) {
+            throw new SecurityException("Actor type " + actorType + " cannot waive a registration fee");
+        }
+        if (!"DUE".equals(application.getFeeState())) {
+            throw new IllegalArgumentException("Only a DUE fee can be waived (fee_state="
+                    + application.getFeeState() + ")");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("A waiver reason is required");
+        }
+        application.setFeeState("WAIVED");
+        application.setFeeWaivedBy(ctx.actorId());
+        application.setFeeWaivedAt(java.time.Instant.now());
+        application.setFeeWaiverReason(reason);
+        if (application.getCurrentWorkflowState() == FacilityApplicationState.AWAITING_FEE) {
+            application.setCurrentWorkflowState(FacilityApplicationState.SUBMITTED);
+        }
+        applicationRepository.save(application);
+        emit(ctx, application, "tuso.facility.application.fee_waived", Map.of(
+                "applicationId", application.getApplicationId().toString(),
+                "tenantId", ctx.tenantId().toString(),
+                "waivedBy", ctx.actorId() != null ? ctx.actorId() : "",
+                "reason", reason));
+        log.info("Fee WAIVED for application {} by {}: {}", application.getApplicationId(), ctx.actorId(), reason);
+        return application;
+    }
+
+    /** Link the COSTA charge id onto the application (from costa.charge.created). Idempotent. */
+    @Transactional
+    public void linkChargeReference(String applicationId, String chargeId) {
+        if (applicationId == null || chargeId == null) return;
+        try {
+            applicationRepository.findById(UUID.fromString(applicationId)).ifPresent(a -> {
+                if (a.getFeeReference() == null || a.getFeeReference().isBlank()) {
+                    a.setFeeReference(chargeId);
+                    applicationRepository.save(a);
+                    log.info("Linked COSTA charge {} to application {}", chargeId, applicationId);
+                }
+            });
+        } catch (IllegalArgumentException ignored) {
+            // applicationId not a UUID — not an HPA fee charge; ignore.
+        }
+    }
+
     /** Applied by the payment consumer (PAID) and the waiver path (WAIVED). Idempotent. */
     @Transactional
     public FacilityApplicationEntity markPaid(TrustContext ctx, FacilityApplicationEntity application,

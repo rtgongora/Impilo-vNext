@@ -88,6 +88,18 @@ public class FacilityFeeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(out, corr(ctx)));
     }
 
+    @PostMapping("/applications/{applicationId}/fee/waive")
+    public ResponseEntity<ApiResponse<ApplicationFeeView>> waiveFee(@PathVariable UUID applicationId,
+                                                                    @RequestBody WaiveFeeRequest req) {
+        TrustContext ctx = TrustContextHolder.require();
+        ApplicationFeeView out = call(() -> {
+            FacilityApplicationEntity application = requireApplication(applicationId, ctx);
+            facilityFeeService.waiveFee(ctx, application, req == null ? null : req.reason());
+            return facilityFeeService.getApplicationFee(application);
+        });
+        return ResponseEntity.ok(ApiResponse.ok(out, corr(ctx)));
+    }
+
     private FacilityApplicationEntity requireApplication(UUID applicationId, TrustContext ctx) {
         FacilityApplicationEntity a = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
