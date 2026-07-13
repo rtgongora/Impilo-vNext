@@ -198,6 +198,33 @@ public class ProviderController {
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }
 
+    /** Canonical lifecycle transitions available for this provider (operator console). */
+    @GetMapping("/{providerPublicId}/lifecycle-transitions")
+    public ResponseEntity<ApiResponse<ProviderService.AllowedTransitions>> allowedLifecycleTransitions(
+            @PathVariable String providerPublicId) {
+        TrustContext ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(
+                providerService.allowedLifecycleTransitions(providerPublicId), ctx.correlationId().toString()));
+    }
+
+    /** Apply a canonical lifecycle transition (suspend/restrict/lapse/restore/retire/deceased/remove). */
+    @PostMapping("/{providerPublicId}/lifecycle-transition")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> transitionLifecycle(
+            @PathVariable String providerPublicId,
+            @RequestBody java.util.Map<String, Object> body) {
+        TrustContext ctx = TrustContextHolder.require();
+        String target = body.get("targetState") != null ? String.valueOf(body.get("targetState")) : null;
+        String reason = body.get("reason") != null ? String.valueOf(body.get("reason")) : null;
+        String effectiveDate = body.get("effectiveDate") != null ? String.valueOf(body.get("effectiveDate")) : null;
+        String sourceRef = body.get("sourceRef") != null ? String.valueOf(body.get("sourceRef")) : null;
+        ProviderService.LifecycleTransitionResult result =
+                providerService.transitionLifecycle(providerPublicId, target, reason, effectiveDate, sourceRef);
+        java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("provider", toProviderResponse(result.provider()));
+        payload.put("warnings", result.warnings());
+        return ResponseEntity.ok(ApiResponse.ok(payload, ctx.correlationId().toString()));
+    }
+
     // ---- Mapper: Entity → Response DTO (basic, without related data) ----
 
     private ProviderResponse toProviderResponse(ProviderEntity entity) {

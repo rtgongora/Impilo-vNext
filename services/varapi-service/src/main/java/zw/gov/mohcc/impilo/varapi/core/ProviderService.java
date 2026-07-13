@@ -27,9 +27,17 @@ import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderIdentifierRepos
 import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderRepository;
 import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderSpecialtyRepository;
 
+import zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus;
+
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -385,6 +393,114 @@ public class ProviderService {
                         request.reason() != null ? request.reason() : "", provider.getVersion()));
 
         return provider;
+    }
+
+    // ---- Canonical lifecycle transition console (G10) ----
+
+    /**
+     * Operator-invocable lifecycle transitions (curated subset). Application/bootstrap states
+     * (PRELOADED/CLAIMED/DRAFT/APPLICATION_IN_PROGRESS/UNDER_VERIFICATION/PENDING_*) are driven
+     * by their owning workflows and are read-only here; renewal arcs (LICENCE_DUE_FOR_RENEWAL /
+     * RENEWAL_IN_PROGRESS) are driven by the G8 renewal flow. DECEASED/REMOVED are terminal.
+     */
+    private static final Map<ProviderLifecycleStatus, Set<ProviderLifecycleStatus>> LIFECYCLE_TRANSITIONS =
+            new EnumMap<>(ProviderLifecycleStatus.class);
+    static {
+        LIFECYCLE_TRANSITIONS.put(ProviderLifecycleStatus.REGISTERED,
+                EnumSet.of(ProviderLifecycleStatus.LICENCED_ACTIVE));
+        LIFECYCLE_TRANSITIONS.put(ProviderLifecycleStatus.LICENCED_ACTIVE,
+                EnumSet.of(ProviderLifecycleStatus.SUSPENDED, ProviderLifecycleStatus.RESTRICTED,
+                        ProviderLifecycleStatus.RETIRED, ProviderLifecycleStatus.DECEASED));
+        LIFECYCLE_TRANSITIONS.put(ProviderLifecycleStatus.SUSPENDED,
+                EnumSet.of(ProviderLifecycleStatus.LICENCED_ACTIVE, ProviderLifecycleStatus.RESTRICTED,
+                        ProviderLifecycleStatus.RETIRED, ProviderLifecycleStatus.REMOVED));
+        LIFECYCLE_TRANSITIONS.put(ProviderLifecycleStatus.RESTRICTED,
+                EnumSet.of(ProviderLifecycleStatus.LICENCED_ACTIVE, ProviderLifecycleStatus.SUSPENDED,
+                        ProviderLifecycleStatus.RETIRED));
+        LIFECYCLE_TRANSITIONS.put(ProviderLifecycleStatus.LAPSED,
+                EnumSet.of(ProviderLifecycleStatus.RESTORATION_IN_PROGRESS, ProviderLifecycleStatus.RETIRED));
+        LIFECYCLE_TRANSITIONS.put(ProviderLifecycleStatus.RESTORATION_IN_PROGRESS,
+                EnumSet.of(ProviderLifecycleStatus.LICENCED_ACTIVE, ProviderLifecycleStatus.LAPSED));
+    }
+
+    private static final Set<ProviderLifecycleStatus> TERMINAL =
+            EnumSet.of(ProviderLifecycleStatus.RETIRED, ProviderLifecycleStatus.DECEASED, ProviderLifecycleStatus.REMOVED);
+
+    public record AllowedTransitions(String current, List<String> allowed) {}
+    public record LifecycleTransitionResult(ProviderEntity provider, List<String> warnings) {}
+
+    /** Current lifecycle status + the operator-invocable next states. */
+    public AllowedTransitions allowedLifecycleTransitions(String providerPublicId) {
+        ProviderEntity provider = providerRepository.findByProviderPublicId(providerPublicId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerPublicId));
+        ProviderLifecycleStatus current = parseLifecycle(provider.getLifecycleStatus());
+        Set<ProviderLifecycleStatus> next = current == null ? Set.of()
+                : LIFECYCLE_TRANSITIONS.getOrDefault(current, Set.of());
+        List<String> allowed = new ArrayList<>();
+        next.forEach(s -> allowed.add(s.name()));
+        return new AllowedTransitions(current == null ? provider.getLifecycleStatus() : current.name(), allowed);
+    }
+
+    /**
+     * Apply a canonical lifecycle transition (suspend/restrict/lapse/restore/retire/deceased/remove).
+     * Validates the transition, requires a reason for terminal states (and a source ref for DECEASED),
+     * recomputes the derived status axes, and emits an outbox event.
+     */
+    @Transactional
+    public LifecycleTransitionResult transitionLifecycle(String providerPublicId, String targetState,
+                                                         String reason, String effectiveDate, String sourceRef) {
+        TrustContext ctx = TrustContextHolder.require();
+        ProviderEntity provider = providerRepository.findByProviderPublicId(providerPublicId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerPublicId));
+
+        ProviderLifecycleStatus current = parseLifecycle(provider.getLifecycleStatus());
+        ProviderLifecycleStatus target = parseLifecycle(targetState);
+        if (target == null) {
+            throw new IllegalArgumentException("Unknown lifecycle status: " + targetState);
+        }
+        Set<ProviderLifecycleStatus> allowed = current == null ? Set.of()
+                : LIFECYCLE_TRANSITIONS.getOrDefault(current, Set.of());
+        if (!allowed.contains(target)) {
+            throw new IllegalStateException("Invalid lifecycle transition: "
+                    + (current == null ? provider.getLifecycleStatus() : current.name()) + " -> " + target.name());
+        }
+        if (TERMINAL.contains(target) && (reason == null || reason.isBlank())) {
+            throw new IllegalArgumentException("A reason is required to transition a provider to " + target.name());
+        }
+        if (target == ProviderLifecycleStatus.DECEASED && (sourceRef == null || sourceRef.isBlank())) {
+            throw new IllegalArgumentException("A source reference (e.g. death notification) is required to mark a provider DECEASED");
+        }
+
+        String previous = provider.getLifecycleStatus();
+        provider.setLifecycleStatus(target.name());
+        provider.deriveStatusProjections();
+        provider.setVersion(provider.getVersion() + 1);
+        provider.setUpdatedBy(ctx.actorId());
+        provider = providerRepository.save(provider);
+
+        publishEvent("PROVIDER", provider.getProviderPublicId(), "varapi.provider.updated",
+                String.format("{\"providerPublicId\":\"%s\",\"previousLifecycle\":\"%s\",\"newLifecycle\":\"%s\","
+                                + "\"reason\":\"%s\",\"effectiveDate\":\"%s\",\"sourceRef\":\"%s\",\"version\":%d}",
+                        provider.getProviderPublicId(), previous, target.name(),
+                        reason != null ? reason : "", effectiveDate != null ? effectiveDate : "",
+                        sourceRef != null ? sourceRef : "", provider.getVersion()));
+
+        List<String> warnings = new ArrayList<>();
+        if (TERMINAL.contains(target)) {
+            warnings.add("Confirm a successor for any active practitioner-in-charge assignment before finalising.");
+        }
+        return new LifecycleTransitionResult(provider, warnings);
+    }
+
+    private static ProviderLifecycleStatus parseLifecycle(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return ProviderLifecycleStatus.valueOf(value.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     // ---- Private helpers ----
