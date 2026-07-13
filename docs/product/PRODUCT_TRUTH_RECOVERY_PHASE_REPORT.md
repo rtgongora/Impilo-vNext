@@ -1,6 +1,6 @@
 # Product Truth Recovery — Phase Report
 
-> Generated: 2026-06-14T00:21:09.923Z
+> Generated: 2026-07-13T19:22:11.174Z
 > Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 > Phase: **1 — Discovery & Documentation Only**
 
@@ -8,42 +8,42 @@
 
 | Domain | Paths scanned |
 |--------|---------------|
-| Backend services | `services/*` (91 registry services, 748 controllers) |
-| Experience BFF | `services/experience-bff` (250 controllers, 227 route prefixes) |
-| API contracts | `contracts/openapi/` (99), `contracts/asyncapi/` (13) |
+| Backend services | `services/*` (97 registry services, 959 controllers) |
+| Experience BFF | `services/experience-bff` (312 controllers, 281 route prefixes) |
+| API contracts | `contracts/openapi/` (107), `contracts/asyncapi/` (13) |
 | Web experience | `ui/one-ui-shell/src/app/`, `routes.ts`, `hooks/queries/` |
 | Mobile | `apps/mobile/citizen-app`, `apps/mobile/provider-app`, `apps/mobile/packages/` |
 | Registry & doctrine | `docs/registry/`, `docs/doctrine/`, `docs/product/`, `CLAUDE.md`, `AGENTS.md` |
-| Infrastructure | Dockerfiles (93), `deploy/helm/`, `.github/workflows/` |
-| Canonical capabilities | `scripts/frontend/generate-parity-docs.mjs` (37 capabilities) |
-| Database | Flyway migrations across 88 service modules |
+| Infrastructure | Dockerfiles (96), `deploy/helm/`, `.github/workflows/` |
+| Canonical capabilities | `scripts/frontend/generate-parity-docs.mjs` (38 capabilities) |
+| Database | Flyway migrations across 97 service modules |
 
 ## 2. Total components discovered
 
-**2722** entries in the Product Truth Recovery Map.
+**3355** entries in the Product Truth Recovery Map.
 
 ## 3. Total backend capabilities
 
-- **91** registry backend services
+- **97** registry backend services
 - **12** shared libraries
-- **748** backend REST controllers
-- **250** BFF controllers composing sovereign services
+- **959** backend REST controllers
+- **312** BFF controllers composing sovereign services
 
 ## 4. Total APIs/contracts
 
-- **99** OpenAPI specifications
+- **107** OpenAPI specifications
 - **13** AsyncAPI event contracts
-- **112** total API/event contracts
+- **120** total API/event contracts
 
 ## 5. Total frontend routes
 
-- **485** registered routes in `routes.ts`
-- **117** on-disk pages not in registry (guard/sidebar gap)
-- **189** TanStack Query hooks
+- **607** registered routes in `routes.ts`
+- **166** on-disk pages not in registry (guard/sidebar gap)
+- **248** TanStack Query hooks
 
 ## 6. Total mobile screens
 
-- **169** mobile screens (citizen + provider apps)
+- **204** mobile screens (citizen + provider apps)
 
 ## 7. Major hidden backend capability areas
 
@@ -51,7 +51,7 @@ Backend-rich domains with partial or missing experience surfacing (from canonica
 
 _None flagged as Not Wired/Fixture._
 
-Additional signal: BFF implements ~227 route prefixes but `experience-bff.openapi.yaml` documents only a baseline subset — significant contract-runtime drift.
+Additional signal: BFF implements ~281 route prefixes but `experience-bff.openapi.yaml` documents only a baseline subset — significant contract-runtime drift.
 
 ## 8. Major frontend/mobile visibility gaps
 
@@ -65,6 +65,7 @@ Additional signal: BFF implements ~227 route prefixes but `experience-bff.openap
 - Public Health Ops: web=yes mobile=partial gap=Citizen PH awareness thinner than provider web
 - Ndila: web=yes mobile=partial gap=Mobile Ndila map parity on field tasks
 - Nhume: web=partial mobile=partial gap=Dual path: nhume vs dispatch BFF
+- Vashandi: web=partial mobile=partial gap=Web route scaffolds thin; mobile lacks assignment/admin depth
 - Comms Hub: web=partial mobile=partial gap=Template/campaign admin depth
 - Telemedicine: web=partial mobile=partial gap=RTC media intentionally blocked
 - Telemedicine analytics: web=yes mobile=no gap=Mobile analytics dashboard
@@ -79,16 +80,15 @@ Additional signal: BFF implements ~227 route prefixes but `experience-bff.openap
 - Integration Hub: web=partial mobile=partial gap=Adapter template admin thin
 - Workflow / Dispatch: web=partial mobile=partial gap=Dispatch detail + offline queue UX
 - Admin / Governance: web=partial mobile=partial gap=Keys/federation blocked
-- MADI: web=Live mobile=Live gap=—
 
 
-_…and 9 more in rollups JSON._
+_…and 10 more in rollups JSON._
 
 
 ## 9. Unknown-needs-review items
 
-**196** entries classified `unknown-needs-review`, primarily:
-- Unregistered frontend pages (117)
+**258** entries classified `unknown-needs-review`, primarily:
+- Unregistered frontend pages (166)
 - Query hooks without detected BFF paths
 - Non-canonical UI workspaces
 

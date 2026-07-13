@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-07-05T08:45:15.463Z
-> Web surfaces: **742** | Mobile screens: **204**
+> Generated: 2026-07-13T19:21:22.682Z
+> Web surfaces: **772** | Mobile screens: **204**
 
 ## Web routes (one-ui-shell)
 
@@ -24,7 +24,8 @@
 | /auth/context-chooser | Choose Work Context | auth | yes | no | yes | no | yes | — |
 | /welcome | Welcome to Impilo | auth | no | no | yes | no | yes | — |
 | /welcome/find-care | Find Care | auth | no | no | yes | no | yes | — |
-| /welcome/emergency | Emergency & Public Health | auth | no | no | yes | no | yes | — |
+| /welcome/emergency | Emergency & Public Health | auth | yes | no | yes | no | yes | — |
+| /welcome/health-info | Health Information | auth | yes | no | yes | no | yes | — |
 | /welcome/accessibility | Accessibility & Language | auth | no | no | yes | no | yes | — |
 | /privacy | Privacy Policy | auth | no | no | yes | no | no | — |
 | /terms | Terms of Use | auth | no | no | yes | no | no | — |
@@ -111,12 +112,17 @@
 | /citizen/wallet/dependants | Dependants & Proxy | home | yes | no | yes | yes | yes | — |
 | /citizen/wallet/payments | Payments & Bills | home | yes | no | yes | yes | yes | — |
 | /citizen/wallet/comms | Communication Preferences | home | yes | no | yes | yes | yes | — |
+| /citizen/wallet/trust | Trust Profile | home | yes | no | yes | no | yes | — |
 | /verify/credential | Verify Credential | home | no | no | yes | yes | no | — |
+| /verify/facility-certificate | Verify Facility Certificate | home | yes | no | yes | yes | yes | — |
+| /verify/practitioner | Verify a Health Professional | home | no | no | yes | yes | yes | — |
+| /professional/pic-nominations | PIC Nominations | professional | yes | no | yes | yes | yes | — |
 | /share/claim | Claim Shared Documents | home | yes | no | yes | yes | no | — |
 | /collaboration/access | Provider collaboration access | home | yes | no | yes | yes | yes | — |
 | /facility | Select Facility | facility | yes | no | yes | no | yes | — |
 | /facility/[id] | Facility Details | facility | yes | no | yes | yes | yes | — |
 | /facility/[id]/configuration | Facility Configuration | facility | yes | no | yes | yes | yes | — |
+| /facility/claim | Claim facility administration | facility | yes | no | yes | yes | yes | — |
 | /workspace | Select Workspace | workspace | yes | no | yes | yes | yes | — |
 | /workspace/[id] | Workspace Details | workspace | yes | no | yes | no | yes | — |
 | /shift | Start Shift | shift | yes | no | yes | yes | yes | — |
@@ -132,6 +138,7 @@
 | /communication | Khuluma — Communication Hub | queue | yes | no | yes | yes | yes | — |
 | /communication/secure-messaging | Khuluma — Secure Messaging | queue | yes | no | yes | yes | yes | — |
 | /communication/approvals | Khuluma — Comms Approval Queue | queue | yes | no | yes | yes | yes | — |
+| /communication/announcements | Khuluma — Facility Announcements | queue | yes | no | yes | yes | yes | — |
 | /work/comms | Khuluma — Comms Hub | queue | yes | no | yes | yes | yes | — |
 | /my/comms | Khuluma — Messages | home | yes | no | yes | yes | yes | — |
 | /queue | Patient Queue | queue | yes | no | yes | yes | yes | — |
@@ -185,6 +192,7 @@
 | /admin/policies | Policy Management | admin | yes | no | yes | yes | yes | — |
 | /admin/audit | Audit Trail | admin | yes | no | yes | no | yes | — |
 | /admin/audit/[id] | Audit Entry | admin | yes | no | yes | no | yes | — |
+| /admin/workforce-intake | Workforce Intake | admin | yes | no | yes | yes | yes | — |
 | /admin/facility-imports | Facility Import Batches | admin | yes | no | yes | yes | yes | — |
 | /admin/facility-imports/[runId] | Facility Import Batch | admin | yes | no | yes | yes | yes | — |
 | /admin/facility-imports/[runId]/review | Facility Import Review | admin | yes | no | yes | yes | yes | — |
@@ -207,6 +215,9 @@
 | /dags | Data Access Governance | admin | yes | no | yes | yes | yes | — |
 | /dags/policy | Data Access Policy | admin | yes | no | yes | yes | yes | — |
 | /registry-admin | Registry Administration | admin | yes | no | yes | yes | yes | — |
+| /registry-admin/trust-console | Trust Console | admin | yes | no | yes | yes | yes | — |
+| /registry-admin/activation-letter | Activation Letter | admin | no | no | yes | no | no | — |
+| /registry-admin/fee-schedules | Regulatory fee schedule | admin | yes | no | yes | yes | yes | — |
 | /organization-admin | Organization Administration | admin | yes | no | yes | no | yes | — |
 | /organization-admin/facility | Facility Administration | admin | yes | no | yes | no | yes | — |
 | /organization-admin/staffing | Staffing & Scheduling | admin | yes | no | yes | no | yes | — |
@@ -220,12 +231,14 @@
 | /registry | Registry Hub | registry | yes | no | yes | yes | yes | — |
 | /registry/intake | Registry Intake | registry | yes | no | yes | yes | yes | — |
 | /registry/locality-review | Locality gazetteer review | registry | yes | no | yes | yes | yes | — |
-| /registry/facility-lifecycle | Facility regulatory lifecycle | registry | yes | no | yes | no | yes | — |
+| /registry/facility-lifecycle | Facility regulatory lifecycle | registry | yes | no | yes | yes | yes | — |
+| /registry/facility-lifecycle/[facilityId] | Facility regulatory file | registry | yes | no | yes | yes | yes | — |
 | /registry/providers | Provider Registry | registry | yes | no | yes | yes | yes | — |
 | /registry/providers/verification | Provider Verification Queue | registry | yes | no | yes | yes | yes | — |
 | /registry/providers/[id] | Provider Profile | registry | yes | no | yes | yes | yes | — |
 | /registry/provider-council/self-service | Council self-service | registry | yes | no | yes | yes | yes | — |
 | /registry/provider-council/council-workspace | Council operations | registry | yes | no | yes | yes | yes | — |
+| /registry/facility-classification | Facility classification reconciliation | registry | yes | no | yes | yes | yes | — |
 | /registry/facilities | Facility Registry | registry | yes | no | yes | yes | yes | — |
 | /registry/facilities/[id] | Facility Profile | registry | yes | no | yes | yes | yes | — |
 | /registry/terminology | Terminology Browser | registry | yes | no | yes | no | yes | — |
@@ -237,8 +250,9 @@
 | /marketplace/catalog | Service Catalog | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/orders | My Orders | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/orders/[id] | Order Details | marketplace | yes | no | yes | yes | yes | — |
+| /marketplace/orders/[id]/pay | Pay for Order | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/ops | Marketplace Operations | marketplace | yes | no | yes | yes | yes | — |
-| /marketplace/vendor | Vendor Fulfilment | marketplace | yes | no | yes | no | yes | — |
+| /marketplace/vendor | Vendor Fulfilment | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/vendor/orders | Vendor Orders | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/pickup | Pickup Handoff | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/vendors | Vendors | marketplace | yes | no | yes | yes | yes | — |
@@ -247,6 +261,7 @@
 | /marketplace/store/search | Search Listings | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/store/listing/[id] | Listing | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/store/activity | My Marketplace Activity | marketplace | yes | no | yes | yes | yes | — |
+| /marketplace/establishment-guide | Set Up Your Practice | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/seller | Seller Centre | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/seller/listings | My Listings | marketplace | yes | no | yes | yes | yes | — |
 | /marketplace/seller/listings/new | New Listing | marketplace | yes | no | yes | yes | yes | — |
@@ -324,11 +339,15 @@
 | /telemedicine/new | New Teleconsultation | queue | yes | no | yes | yes | yes | — |
 | /telemedicine/session/[sessionId] | Teleconsult Session | queue | yes | no | yes | yes | yes | — |
 | /telemedicine/analytics | Telemedicine Analytics | queue | yes | no | yes | yes | yes | — |
+| /work/telemedicine/worklist | Specialist Worklist | queue | yes | no | yes | yes | yes | — |
 | /work/telemedicine/groups | Clinical Groups | queue | yes | no | yes | no | yes | — |
 | /work/telemedicine/virtual-hospitals | Virtual Hospitals | queue | yes | no | yes | no | yes | — |
 | /work/telemedicine/virtual-hospitals/[id] | Virtual Hospital | queue | yes | no | yes | no | yes | — |
 | /provider/activate | Activate Provider Role | auth | yes | no | yes | no | yes | — |
 | /provider/status | Provider Status | auth | yes | no | yes | no | yes | — |
+| /citizen/provider-claim | Claim Provider Profile | home | yes | no | yes | yes | yes | — |
+| /citizen/provider-claim/status | Provider Access Requests | home | yes | no | yes | yes | yes | — |
+| /facility/[id]/mode | Facility Mode | facility | yes | no | yes | yes | yes | — |
 | /wellness | Wellness Hub | wellness | yes | no | yes | yes | yes | — |
 | /wellness/dashboard | Wellness Dashboard | wellness | yes | no | yes | yes | yes | — |
 | /wellness/goals | Health Goals | wellness | yes | no | yes | yes | yes | — |
@@ -447,7 +466,7 @@
 | /learning/courses/[courseId] | Impilo Fundo Course | professional | yes | no | yes | yes | yes | — |
 | /learning/my-learning | My Learning | professional | yes | no | yes | no | yes | — |
 | /learning/enrolments/[enrolmentId] | Enrolment Player | professional | yes | no | yes | yes | yes | — |
-| /learning/enrolments/[enrolmentId]/lessons/[lessonId] | Lesson Player | professional | yes | no | yes | no | yes | — |
+| /learning/enrolments/[enrolmentId]/lessons/[lessonId] | Lesson Player | professional | yes | no | yes | yes | yes | — |
 | /learning/pathways | Learning Pathways | professional | yes | no | yes | no | yes | — |
 | /learning/pathways/[pathwayId] | Pathway Detail | professional | yes | no | yes | no | yes | — |
 | /learning/record | Learning Record | professional | yes | no | yes | no | yes | — |
@@ -488,25 +507,6 @@
 | /learning/feedback/course/[courseId] | Course Feedback | professional | yes | no | yes | yes | yes | — |
 | /learning/admin | Fundo Admin | professional | yes | no | yes | no | yes | — |
 | /learning/admin/courses | Admin Courses | professional | no | no | yes | no | yes | — |
-| /learning/admin/courses/new | New Course | professional | yes | no | yes | no | yes | — |
-| /learning/admin/courses/[courseId]/edit | Edit Course | professional | no | no | yes | no | yes | — |
-| /learning/admin/pathways | Admin Pathways | professional | yes | no | yes | no | yes | — |
-| /learning/admin/pathways/new | New Pathway | professional | yes | no | yes | no | yes | — |
-| /learning/admin/pathways/[pathwayId]/edit | Edit Pathway | professional | yes | no | yes | yes | yes | — |
-| /learning/admin/assessments | Admin Assessments | professional | yes | no | yes | no | yes | — |
-| /learning/admin/assessments/new | New Assessment | professional | yes | no | yes | no | yes | — |
-| /learning/admin/assessments/[assessmentId]/edit | Edit Assessment | professional | yes | no | yes | yes | yes | — |
-| /nhume | Nhume Logistics | operations | yes | no | yes | no | yes | — |
-| /nhume/dashboard | Nhume Operations Dashboard | operations | yes | no | yes | yes | yes | — |
-| /nhume/deliveries | Nhume Deliveries | operations | yes | no | yes | yes | yes | — |
-| /nhume/deliveries/new | New Delivery Request | operations | yes | no | yes | yes | yes | — |
-| /nhume/deliveries/[deliveryId] | Delivery Detail | operations | yes | no | yes | yes | yes | — |
-| /nhume/dispatcher | Nhume Dispatcher Console | operations | yes | no | yes | yes | yes | — |
-| /nhume/map | Fleet Tracking Map | operations | yes | no | yes | yes | yes | — |
-| /nhume/courier | Courier / Driver Console | operations | yes | no | yes | yes | yes | — |
-| /nhume/fleet | Fleet & Asset Management | operations | yes | no | yes | yes | yes | — |
-| /nhume/fleet/[assetId] | Fleet Asset | operations | yes | no | yes | yes | yes | — |
-| /nhume/couriers | Drivers & Couriers | operations | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 
@@ -525,10 +525,12 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/auth/SignUpScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/caregiving/DelegationSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/comms/CommsHubScreen.tsx | 0 | yes |
+| citizen-app | apps/mobile/citizen-app/src/screens/comms/MeetingScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/crvs/UbomiCrvsScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/discover/ProviderDiscoveryScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/emergency/SosScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/emergency/TrackEmergencyScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/learning/CoursePlayerScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/learning/LearningClassroomScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/live/EventDiscussionSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/live/LiveDiscoverScreen.tsx | 0 | no |
@@ -600,7 +602,6 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/social/SocialHubScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/support/SupportScreen.tsx | 0 | no |
-| citizen-app | apps/mobile/citizen-app/src/screens/telehealth/LiveKitMobileConsultRoom.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/telehealth/TelehealthListScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/telehealth/TelehealthSessionScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/GlobalErrorBanner.tsx | 0 | no |
@@ -666,7 +667,6 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/InpatientScreen.tsx | 0 | yes |
 | provider-app | apps/mobile/provider-app/src/screens/provider/LabHubScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/LabOrderPanel.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/LiveKitMobileConsultRoom.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/MessagingScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/NEWS2ScoringScreen.tsx | 1 | no |

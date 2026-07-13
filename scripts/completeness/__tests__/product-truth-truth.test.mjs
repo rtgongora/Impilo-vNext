@@ -26,6 +26,7 @@ import {
 import {
   scanHardcodedCollections,
   scanInMemoryStore,
+  scanMockStubHits,
   scanSecurityPlaceholders,
   scanStubMarkers,
 } from '../generate-product-truth.mjs';
@@ -139,6 +140,40 @@ test('stub-marker detector flags a future-work Placeholder but not a domain plac
   assert.equal(scanStubMarkers('/** Placeholder document id when no Landela document is attached yet. */', '/x/ShareSlipEventConsumer.java').length, 0);
   // actionable TODO: wire
   assert.ok(scanStubMarkers('// TODO: wire to PctServiceClient', '/x/VitalsController.java').some((h) => h.pattern === 'todo-wire'));
+});
+
+test('stub-marker does NOT flag a guarded-against sentinel/dev value (security control, not a stub)', () => {
+  // mushex: a dev pepper the guard must NEVER accept for real webhooks — fail-closed control.
+  assert.equal(
+    scanStubMarkers('    /** Known dev placeholder that must never authenticate real webhooks. */', '/x/MushexSecurityStartupValidator.java').length,
+    0,
+  );
+  // elmis: the sentinel default URL that means "no real endpoint configured" — fail-closed sync.
+  assert.equal(
+    scanStubMarkers('    /** The placeholder default that means "no real endpoint has been configured". */', '/x/ElmisSyncConnector.java').length,
+    0,
+  );
+  // a genuine future-work stub with no guard/sentinel framing STILL flags.
+  assert.ok(
+    scanStubMarkers('"{}",  // Placeholder — actual summary fetched from BUTANO at sync time', '/x/WalletEventConsumer.java')
+      .some((h) => h.pattern === 'stub-placeholder'),
+  );
+});
+
+test('placeholder-copy: backend readiness-gated note is honest; a bare "coming soon" page still flags', () => {
+  // WalletController: the note only shows while the CARD_GATEWAY rail is off — a real gate.
+  const gated = 'boolean aggregatorLive = isRailLive("CARD_GATEWAY");\n    String extNote = aggregatorLive ? null : "Not yet available — coming soon";';
+  assert.equal(scanMockStubHits(gated, '/x/WalletController.java', { backendOnly: true }).length, 0);
+  // a bare placeholder-copy with no readiness gate is still a stub.
+  assert.ok(
+    scanMockStubHits('return "This feature is coming soon";', '/x/FooController.java', { backendOnly: true })
+      .some((h) => h.pattern === 'placeholder-copy'),
+  );
+  // a frontend surface (no backendOnly) with "coming soon" still flags — the exemption is backend-only.
+  assert.ok(
+    scanMockStubHits('<p>Coming soon</p>', '/x/page.tsx')
+      .some((h) => h.pattern === 'placeholder-copy'),
+  );
 });
 
 test('in-memory detector Rule 2 flags a static seeded collection in a controller (nested generics ok)', () => {

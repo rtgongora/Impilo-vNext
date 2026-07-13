@@ -71,6 +71,24 @@ const MOCK_STUB_PATTERNS = [
 /** Production rail safety tokens — not UX mock/stub indicators. */
 const BACKEND_SAFETY_TOKENS = /BLOCKED_NOT_LIVE|NOT_LIVE_CAPABLE|BLOCKED_PRE_LIVE/g;
 
+/**
+ * Honest readiness-gated degradation note — the OPPOSITE of a stub. A ternary on a
+ * `*Live`/`*Ready`/`*Enabled`/`*Available`/`*Configured` flag whose disabled branch
+ * carries a "coming soon"/"not yet available" string (or that literal phrase) is a real
+ * capability gate: the citizen only ever sees the note while the rail is genuinely off,
+ * and it flips to the live method the moment the adapter reports READY. Backend paths only.
+ */
+const BACKEND_READINESS_NOTE =
+  /\b[A-Za-z]\w*(?:Live|Ready|Enabled|Available|Configured)\b[\s\S]{0,40}\?[\s\S]{0,80}:|not yet available/i;
+
+/** The single source line of `text` containing character offset `index`. */
+function lineAt(text, index) {
+  const start = text.lastIndexOf('\n', index) + 1;
+  let end = text.indexOf('\n', index);
+  if (end === -1) end = text.length;
+  return text.slice(start, end);
+}
+
 /** Services reached via public URL or FHIR layer rather than BFF /internal/v1. */
 const DIRECT_PUBLIC_OR_FHIR = new Set([
   'share-slip-service',
@@ -225,17 +243,31 @@ function scanMockStubHits(text, filePath, options = {}) {
   const fp = rel(filePath);
   const isTest = /\/test\/|\.test\.|\.spec\.|Test\.java$|IT\.java$/i.test(fp);
   for (const { re, label } of MOCK_STUB_PATTERNS) {
-    if (re.test(text)) {
-      if (options.backendOnly && label === 'placeholder-copy' && BACKEND_SAFETY_TOKENS.test(text)) {
-        re.lastIndex = 0;
+    re.lastIndex = 0;
+    if (label === 'placeholder-copy') {
+      if (options.backendOnly && BACKEND_SAFETY_TOKENS.test(text)) {
+        BACKEND_SAFETY_TOKENS.lastIndex = 0;
         continue;
       }
-      if (isTest && (label === 'placeholder-copy' || label === 'mock-data-var')) {
-        re.lastIndex = 0;
-        continue;
+      BACKEND_SAFETY_TOKENS.lastIndex = 0;
+      if (isTest) continue;
+      // In a backend path, flag only if SOME occurrence is not an honest
+      // readiness-gated note (a `<flag>Live ? … : "coming soon"` degradation string
+      // is a real capability gate, not placeholder UX). Frontend surfaces are scanned
+      // without backendOnly, so a "coming soon" page there still flags.
+      let genuine = false;
+      for (let m = re.exec(text); m; m = re.exec(text)) {
+        if (!(options.backendOnly && BACKEND_READINESS_NOTE.test(lineAt(text, m.index)))) {
+          genuine = true;
+          break;
+        }
       }
-      hits.push({ file: fp, pattern: label });
+      re.lastIndex = 0;
+      if (genuine) hits.push({ file: fp, pattern: label });
+      continue;
     }
+    if (label === 'mock-data-var' && isTest) continue;
+    if (re.test(text)) hits.push({ file: fp, pattern: label });
     re.lastIndex = 0;
   }
   return hits;
@@ -329,12 +361,28 @@ const STUB_MARKER_PATTERNS = [
   { re: /\bPlaceholder\b[\s:—–-]+[^.\n]*\b(?:actual|real|fetch|wire|implement|integrat|will be|to be|for now|TODO|not yet|temporar|stub)/i, label: 'stub-placeholder' },
   { re: /TODO:?\s*(?:wire|implement|hook\s*up|finish|complete|replace with real)\b/i, label: 'todo-wire' },
 ];
+/**
+ * A stub-placeholder promises future replacement of BEHAVIOUR ("Placeholder —
+ * actual summary fetched later"). When the same phrase instead describes a
+ * guarded-against SENTINEL value — a dev secret the code must never accept, or a
+ * default that means "no real endpoint configured" — it is a fail-closed security
+ * control, the OPPOSITE of a stub. These tokens (guard verbs + sentinel framing +
+ * webhook/secret nouns) mark that framing, scoped to the matched phrase itself.
+ */
+const STUB_PLACEHOLDER_GUARD_CONTEXT =
+  /must never|must not|never authenticate|reject|fails? closed|sentinel|default that means|means\s+"?no\b|webhook|secret|pepper|hmac|credential/i;
+
 function scanStubMarkers(text, filePath) {
   const fp = rel(filePath);
   if (/\/test\/java\/|Test\.java$|IT\.java$/.test(fp)) return [];
   const hits = [];
   for (const { re, label } of STUB_MARKER_PATTERNS) {
-    if (re.test(text)) hits.push({ file: fp, pattern: label });
+    const m = re.exec(text);
+    if (!m) continue;
+    if (label === 'stub-placeholder' && STUB_PLACEHOLDER_GUARD_CONTEXT.test(m[0])) {
+      continue;
+    }
+    hits.push({ file: fp, pattern: label });
   }
   return hits;
 }
@@ -830,6 +878,12 @@ const SURFACE_ALLOWLIST_PREFIXES = [
   '/admin/keys',
   '/admin/federation',
   '/admin/sidecar-retirement',
+  // Client-side print/format view: renders a printable activation letter from query
+  // params (Health ID + one-time code) fed by the already-backed activation flow.
+  // The code is issued+verified upstream; this page performs no data fetch, no
+  // persistence, and carries no passwords or clinical content — same static
+  // print-shell class as the /welcome orientation pages. (window.print only.)
+  '/registry-admin/activation-letter',
   // Telemedicine operating-model doctrine shells: clinical group taxonomy and
   // virtual-hospital capability orientation rendered from checked-in doctrine
   // data (src/lib/telemedicine/{clinical-groups,session-modes,virtual-hospitals}.ts)
