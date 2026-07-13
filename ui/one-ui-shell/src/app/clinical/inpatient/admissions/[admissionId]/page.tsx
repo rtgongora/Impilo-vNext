@@ -6,14 +6,14 @@ import { Loader2 } from "lucide-react";
 import { PlaneWorkspaceShell } from "@/components/workspace/PlaneWorkspaceShell";
 import { WorkspaceEmptyState } from "@/components/workspace/WorkspaceEmptyState";
 import { TrustContextBanner } from "@/components/experience/TrustContextBanner";
-import { useAdmission, useWardRounds } from "@/hooks/queries/useInpatient";
+import { useAdmission } from "@/hooks/queries/useInpatient";
 import { AdmissionOrchestrationRail } from "@/components/inpatient/AdmissionOrchestrationRail";
+import { WardRoundRecorder } from "@/components/inpatient/WardRoundRecorder";
 
 export default function InpatientAdmissionDetailPage() {
   const params = useParams();
   const admissionId = params?.admissionId as string | undefined;
   const { data, isLoading, isError } = useAdmission(admissionId);
-  const roundsQuery = useWardRounds(admissionId);
 
   const attrs =
     data && typeof data === "object" && "data" in data
@@ -89,19 +89,12 @@ export default function InpatientAdmissionDetailPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border p-4">
-            <h3 className="text-sm font-semibold text-foreground">Ward rounds</h3>
-            {roundsQuery.isLoading ? (
-              <p className="mt-2 text-sm text-muted-foreground">Loading rounds…</p>
-            ) : (
-              <p className="mt-2 text-sm text-muted-foreground">
-                {roundsQuery.data ? "Round history available via BFF." : "No ward rounds recorded yet."}
-              </p>
-            )}
-            <Link href="/clinical/inpatient/rounds" className="mt-2 inline-block text-sm text-primary hover:underline">
-              Open medical rounds workspace →
-            </Link>
-          </div>
+          {admissionId ? (
+            <WardRoundRecorder
+              admissionRef={admissionId}
+              wardId={attrs.wardId ? String(attrs.wardId) : undefined}
+            />
+          ) : null}
         </div>
       )}
     </PlaneWorkspaceShell>
