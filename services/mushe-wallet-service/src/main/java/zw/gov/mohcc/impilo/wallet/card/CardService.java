@@ -219,6 +219,37 @@ public class CardService {
         });
     }
 
+    // ── Unified SMART card: PHR-carry function opt-in (Phase 4) ──────────
+
+    /**
+     * Set the cardholder's opt-in to the card's PHR-carry function (carrying their health record
+     * on the card for offline/emergency access — one of the card's three functions). Fail-closed:
+     * until this is enabled, the encounter→card PHR sync ({@code WalletEventConsumer}) never caches
+     * a clinical summary on the card. This is a card-FUNCTION activation the cardholder controls,
+     * NOT a record-sharing consent (Mvumo governs sharing PHI with other parties).
+     *
+     * @param enabled true to opt in to carrying the health record, false to opt out
+     * @return the updated card entity
+     */
+    @Transactional
+    public CardEntity setPhrCarry(UUID cardId, boolean enabled, UUID tenantId) {
+        CardEntity card = findCardOrThrow(cardId);
+        if (card.isPhrEnabled() == enabled) {
+            return card; // idempotent — no state change, no event
+        }
+        card.setPhrEnabled(enabled);
+        card.setPhrConsentAt(OffsetDateTime.now());
+        card = cardRepository.save(card);
+
+        writeOutboxEvent(card, enabled ? "CARD_PHR_ENABLED" : "CARD_PHR_DISABLED", tenantId, Map.of(
+                "cardId", cardId.toString(),
+                "walletId", card.getWalletId().toString()
+        ));
+
+        log.info("PHR-carry {} for cardId={}", enabled ? "enabled" : "disabled", cardId);
+        return card;
+    }
+
     // ── Replace Card ────────────────────────────────────────────────────
 
     /**

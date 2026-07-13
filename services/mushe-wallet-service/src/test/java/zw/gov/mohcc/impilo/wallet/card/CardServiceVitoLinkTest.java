@@ -65,4 +65,28 @@ class CardServiceVitoLinkTest {
 
         verify(repo, never()).save(any());
     }
+
+    @Test
+    void setPhrCarry_enables_the_optin_and_stamps_consent_time() {
+        CardRepository repo = mock(CardRepository.class);
+        CardEntity card = linkedCard("ACTIVE");
+        when(repo.findByCardId(card.getCardId())).thenReturn(Optional.of(card));
+        when(repo.save(any(CardEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        service(repo).setPhrCarry(card.getCardId(), true, card.getTenantId());
+
+        org.junit.jupiter.api.Assertions.assertTrue(card.isPhrEnabled());
+        org.junit.jupiter.api.Assertions.assertNotNull(card.getPhrConsentAt());
+    }
+
+    @Test
+    void setPhrCarry_is_noop_when_state_is_unchanged() {
+        CardRepository repo = mock(CardRepository.class);
+        CardEntity card = linkedCard("ACTIVE"); // phrEnabled defaults to false
+        when(repo.findByCardId(card.getCardId())).thenReturn(Optional.of(card));
+
+        service(repo).setPhrCarry(card.getCardId(), false, card.getTenantId());
+
+        verify(repo, never()).save(any());
+    }
 }

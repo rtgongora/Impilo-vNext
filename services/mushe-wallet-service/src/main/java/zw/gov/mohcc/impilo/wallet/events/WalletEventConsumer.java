@@ -235,6 +235,13 @@ public class WalletEventConsumer {
             // Queue CRITICAL_SUMMARY update for each active card
             String encryptionKeyRef = "tshepo-keys:" + wallet.getTenantId() + ":patient:" + patientCpid;
             for (CardEntity card : cards) {
+                // Fail-closed consent gate: only cache a clinical summary on cards whose holder has
+                // opted the card into its PHR-carry function. No opt-in → no health data on the card.
+                if (!card.isPhrEnabled()) {
+                    log.debug("Card {} has not opted into PHR-carry; skipping health data update",
+                            card.getCardId());
+                    continue;
+                }
                 cardHealthDataService.updateCriticalSummary(
                         card.getCardId(),
                         patientCpid,

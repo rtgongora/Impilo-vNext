@@ -78,6 +78,20 @@ public class CardEntity {
     @Column(name = "last_offline_counter", nullable = false)
     private long lastOfflineCounter = 0L;
 
+    /**
+     * Patient opt-in to the card's PHR-carry function (one of the card's three functions:
+     * ID + money + health record). Fail-closed: FALSE means no clinical summary is ever cached
+     * on this card. This is a card-FUNCTION activation the cardholder controls — not a record-
+     * sharing consent (Mvumo governs sharing PHI with other parties; carrying your own summary
+     * on your own card for offline/emergency access is your own choice).
+     */
+    @Column(name = "phr_enabled", nullable = false)
+    private boolean phrEnabled = false;
+
+    /** When the cardholder opted the card into (or out of) carrying their health record. */
+    @Column(name = "phr_consent_at")
+    private OffsetDateTime phrConsentAt;
+
     @Column(name = "activated_at")
     private OffsetDateTime activatedAt;
 
@@ -262,6 +276,22 @@ public class CardEntity {
 
     public void setLastOfflineCounter(long lastOfflineCounter) {
         this.lastOfflineCounter = lastOfflineCounter;
+    }
+
+    public boolean isPhrEnabled() {
+        return phrEnabled;
+    }
+
+    public void setPhrEnabled(boolean phrEnabled) {
+        this.phrEnabled = phrEnabled;
+    }
+
+    public OffsetDateTime getPhrConsentAt() {
+        return phrConsentAt;
+    }
+
+    public void setPhrConsentAt(OffsetDateTime phrConsentAt) {
+        this.phrConsentAt = phrConsentAt;
     }
 
     public OffsetDateTime getActivatedAt() {

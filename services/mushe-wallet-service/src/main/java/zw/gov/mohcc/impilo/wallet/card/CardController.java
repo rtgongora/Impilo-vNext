@@ -201,6 +201,27 @@ public class CardController {
         return ResponseEntity.ok(response);
     }
 
+    // ── PHR-Carry Function Opt-In (Unified SMART card, Phase 4) ─────────
+
+    /**
+     * Set the cardholder's opt-in to the card's PHR-carry function. Fail-closed: until enabled,
+     * no clinical summary is ever cached on the card. Body: {@code {"enabled": true|false}}.
+     */
+    @PutMapping("/{cardId}/phr-carry")
+    public ResponseEntity<Map<String, Object>> setPhrCarry(
+            @PathVariable UUID cardId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+
+        Object enabledRaw = body.get("enabled");
+        if (enabledRaw == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "enabled (boolean) is required"));
+        }
+        boolean enabled = Boolean.parseBoolean(enabledRaw.toString());
+        CardEntity card = cardService.setPhrCarry(cardId, enabled, UUID.fromString(tenantId));
+        return ResponseEntity.ok(toCardResponse(card));
+    }
+
     // ── Health Data Status ──────────────────────────────────────────────
 
     @GetMapping("/{cardId}/health-data")
@@ -243,6 +264,12 @@ public class CardController {
         if (patientCpid == null || patientCpid.isBlank()) {
             return ResponseEntity.unprocessableEntity().body(Map.of(
                     "error", "Wallet has no owner_ref (patient CPID) to sync health data for"));
+        }
+        // Fail-closed consent gate: a manual sync must not bypass the PHR-carry opt-in either.
+        if (!card.isPhrEnabled()) {
+            return ResponseEntity.unprocessableEntity().body(Map.of(
+                    "error", "Card has not opted into the PHR-carry function; enable it before syncing health data",
+                    "code", "PHR_CARRY_NOT_ENABLED"));
         }
         String encryptionKeyRef = "tshepo-keys:" + card.getTenantId() + ":patient:" + patientCpid;
 
@@ -292,6 +319,8 @@ public class CardController {
         map.put("expiryMonth", card.getExpiryMonth());
         map.put("expiryYear", card.getExpiryYear());
         map.put("status", card.getStatus());
+        map.put("phrEnabled", card.isPhrEnabled());
+        map.put("phrConsentAt", card.getPhrConsentAt());
         map.put("pinTriesRemaining", card.getPinTriesRemaining());
         map.put("healthAppletVersion", card.getHealthAppletVersion());
         map.put("healthDataUpdatedAt", card.getHealthDataUpdatedAt());
