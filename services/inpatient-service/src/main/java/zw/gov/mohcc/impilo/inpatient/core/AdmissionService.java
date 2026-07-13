@@ -42,6 +42,7 @@ public class AdmissionService {
     private final EventOutboxRepository outboxRepository;
     private final WardRepository wardRepository;
     private final BedRepository bedRepository;
+    private final BedManagementService bedManagementService;
     private final ObjectMapper objectMapper;
 
     public AdmissionService(AdmissionRepository admissionRepository,
@@ -49,12 +50,14 @@ public class AdmissionService {
                             EventOutboxRepository outboxRepository,
                             WardRepository wardRepository,
                             BedRepository bedRepository,
+                            BedManagementService bedManagementService,
                             ObjectMapper objectMapper) {
         this.admissionRepository = admissionRepository;
         this.transferRepository = transferRepository;
         this.outboxRepository = outboxRepository;
         this.wardRepository = wardRepository;
         this.bedRepository = bedRepository;
+        this.bedManagementService = bedManagementService;
         this.objectMapper = objectMapper;
     }
 
@@ -135,6 +138,20 @@ public class AdmissionService {
      */
     @Transactional
     public AdmissionEntity createAdmission(CreateAdmissionRequest request) {
+        // When a bed is chosen, occupy it in the SAME transaction — this runs the
+        // clinical safety gate and marks the bed OCCUPIED. An unsafe or unavailable
+        // bed aborts the whole admission (no orphan admission pointing at a free bed,
+        // no occupied bed without an admission record). Placement and admission are
+        // atomic because both tables live in this service and database.
+        if (request.getBedId() != null) {
+            Map<String, Object> bedAssignment = new LinkedHashMap<>();
+            bedAssignment.put("patientId", request.getSubjectCpid());
+            if (request.getAdmittingDiagnosis() != null) {
+                bedAssignment.put("diagnosis", request.getAdmittingDiagnosis());
+            }
+            bedManagementService.assignPatient(request.getBedId(), bedAssignment);
+        }
+
         AdmissionEntity admission = new AdmissionEntity();
         admission.setAdmissionRef(UUID.randomUUID());
         admission.setTenantId(request.getTenantId());

@@ -104,7 +104,12 @@ public class BedManagementService {
     @Transactional
     public Map<String, Object> assignPatient(UUID bedId, Map<String, Object> body) {
         BedEntity bed = requireBed(bedId);
-        if (!"AVAILABLE".equalsIgnoreCase(bed.getStatus()) && !"CLEANING".equalsIgnoreCase(bed.getStatus())) {
+        // AVAILABLE, CLEANING (turned over) and RESERVED (held for this admission) are
+        // assignable; an already-OCCUPIED or out-of-service bed is not.
+        String bedStatus = bed.getStatus();
+        if (!"AVAILABLE".equalsIgnoreCase(bedStatus)
+                && !"CLEANING".equalsIgnoreCase(bedStatus)
+                && !"RESERVED".equalsIgnoreCase(bedStatus)) {
             throw new IllegalStateException("Bed is not available for assignment: " + bedId);
         }
 

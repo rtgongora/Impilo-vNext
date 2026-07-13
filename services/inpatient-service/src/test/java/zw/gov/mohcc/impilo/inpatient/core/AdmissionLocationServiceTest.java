@@ -39,6 +39,7 @@ class AdmissionLocationServiceTest {
     @Mock private EventOutboxRepository outboxRepository;
     @Mock private WardRepository wardRepository;
     @Mock private BedRepository bedRepository;
+    @Mock private BedManagementService bedManagementService;
 
     private AdmissionService service;
 
@@ -47,7 +48,7 @@ class AdmissionLocationServiceTest {
     @BeforeEach
     void setUp() {
         service = new AdmissionService(admissionRepository, transferRepository,
-                outboxRepository, wardRepository, bedRepository, new ObjectMapper());
+                outboxRepository, wardRepository, bedRepository, bedManagementService, new ObjectMapper());
     }
 
     private AdmissionEntity admission(UUID wardId, UUID bedId, OffsetDateTime admittedAt) {
