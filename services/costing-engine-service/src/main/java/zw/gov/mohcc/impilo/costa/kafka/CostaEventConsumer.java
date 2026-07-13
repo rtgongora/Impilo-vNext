@@ -694,6 +694,49 @@ public class CostaEventConsumer {
     }
 
     /**
+     * HPA regulatory fee lifecycle ({@code tuso.facility.application.fee}) — TUSO is
+     * the regulatory truth of SI-78 fees; COSTA is the money truth of the charge.
+     * fee_due → open a REGULATORY_APPLICATION_FEE charge; fee_paid → settle it;
+     * fee_waived → void it. Idempotent via IdempotencyRepository + the charge-status
+     * guards in {@link ChargeRecordService}. Kafka threads carry no trust context.
+     */
+    @KafkaListener(topics = "tuso.facility.application.fee", groupId = "costa-costing-engine")
+    @Transactional
+    public void onHpaFacilityFee(String message, Acknowledgment ack) {
+        try {
+            JsonNode root = objectMapper.readTree(message);
+            JsonNode event = root.has("payload") && root.get("payload").isObject() ? root.get("payload") : root;
+            String eventType = text(root, "eventType");
+            if (eventType == null) eventType = text(event, "eventType");
+            String applicationId = text(event, "applicationId");
+            String tenantStr = text(event, "tenantId");
+            if (eventType == null || applicationId == null || tenantStr == null) {
+                ack.acknowledge();
+                return;
+            }
+            String eventId = tenantStr + ":" + applicationId + ":" + eventType;
+            if (isProcessed(eventId, "HPA_FEE")) {
+                ack.acknowledge();
+                return;
+            }
+            synthesizeTrustContext(tenantStr, text(event, "facilityId"), "REGULATION");
+            switch (eventType) {
+                case "tuso.facility.application.fee_due" -> chargeRecordService.ingestRegulatoryFeeDue(event);
+                case "tuso.facility.application.fee_paid" ->
+                        chargeRecordService.settleRegulatoryFee(UUID.fromString(tenantStr), applicationId);
+                case "tuso.facility.application.fee_waived" ->
+                        chargeRecordService.waiveRegulatoryFee(UUID.fromString(tenantStr), applicationId);
+                default -> { /* other fee events not charge-relevant */ }
+            }
+            markProcessed(eventId, "HPA_FEE");
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed to process tuso.facility.application.fee", e);
+            ack.acknowledge();
+        }
+    }
+
+    /**
      * Msika Flow refund completed ({@code msika.flow.refund.completed}) → mark the
      * marketplace charge REFUNDED. Idempotent via IdempotencyRepository + the
      * already-REFUNDED guard in {@link ChargeRecordService#refundMsikaFlowOrder}.

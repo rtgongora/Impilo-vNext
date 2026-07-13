@@ -36,6 +36,7 @@ public class ChargeRecordService {
 
     public static final String SOURCE_MSIKA_FLOW_ORDER_PRICED = "MSIKA_FLOW_ORDER_PRICED";
     public static final String SOURCE_TELECONSULT_COMPLETED = "TELECONSULT_COMPLETED";
+    public static final String SOURCE_REGULATORY_APPLICATION_FEE = "REGULATORY_APPLICATION_FEE";
 
     /** Tariff code used for teleconsult charges when no specialty-specific tariff is configured. */
     public static final String TELECONSULT_TARIFF_CODE = "TELECONSULT";
@@ -203,6 +204,100 @@ public class ChargeRecordService {
             log.info("Marked COSTA charge {} REFUNDED for refunded Msika Flow order {}", e.getChargeId(), orderId);
         }
         return refunded;
+    }
+
+    /**
+     * Record an HPA regulatory registration/renewal fee as a COSTA charge from
+     * TUSO's {@code tuso.facility.application.fee_due}. Idempotent by
+     * (tenant, REGULATORY_APPLICATION_FEE, applicationId). The amount is TUSO's
+     * pinned SI-78 schedule value — never priced here.
+     */
+    @Transactional
+    public void ingestRegulatoryFeeDue(JsonNode event) {
+        String applicationId = text(event, "applicationId");
+        String tenantStr = text(event, "tenantId");
+        if (applicationId == null || tenantStr == null) {
+            log.warn("fee_due event missing applicationId or tenantId");
+            return;
+        }
+        UUID tenantId = UUID.fromString(tenantStr);
+        if (chargeRecordRepository.existsByTenantIdAndSourceTypeAndSourceRef(
+                tenantId, SOURCE_REGULATORY_APPLICATION_FEE, applicationId)) {
+            return;
+        }
+        if (!event.has("amount") || event.get("amount").isNull()) {
+            // Fee required but no configured amount reached COSTA — do not fabricate a charge.
+            log.info("fee_due for application {} has no amount; no charge recorded (amount not configured)",
+                    applicationId);
+            return;
+        }
+        BigDecimal amount = new BigDecimal(event.get("amount").asText());
+        String currency = text(event, "currency");
+        if (currency == null) currency = "USD";
+        UUID facilityId = null;
+        String fid = text(event, "facilityId");
+        if (fid != null && !fid.isBlank()) {
+            try { facilityId = UUID.fromString(fid); } catch (IllegalArgumentException ignored) { }
+        }
+
+        ChargeRecordEntity e = new ChargeRecordEntity();
+        e.setChargeId(UlidGenerator.generate());
+        e.setTenantId(tenantId);
+        e.setChargeCode("HPA_FEE:" + applicationId);
+        e.setChargeType("REGULATORY_FEE");
+        e.setSourceType(SOURCE_REGULATORY_APPLICATION_FEE);
+        e.setSourceRef(applicationId);
+        e.setFacilityId(facilityId);
+        e.setOfferingRef(text(event, "feeCode"));
+        e.setChargeAmount(amount);
+        e.setCurrency(currency);
+        e.setChargeStatus("OPEN");
+        e.setBillableFlag(true);
+        try {
+            e.setMetadataJson(objectMapper.writeValueAsString(Map.of(
+                    "kafkaEvent", "tuso.facility.application.fee_due",
+                    "catalogueCode", text(event, "catalogueCode") == null ? "" : text(event, "catalogueCode"),
+                    "sourceInstrument", "SI 78 of 2017")));
+        } catch (Exception ex) {
+            e.setMetadataJson("{}");
+        }
+        chargeRecordRepository.save(e);
+        publishChargeCreated(e);
+        log.info("Recorded COSTA regulatory fee charge {} for HPA application {}", e.getChargeId(), applicationId);
+    }
+
+    /** Settle the regulatory-fee charge (OPEN → SETTLED) on {@code fee_paid}. Idempotent. */
+    @Transactional
+    public int settleRegulatoryFee(UUID tenantId, String applicationId) {
+        List<ChargeRecordEntity> charges = chargeRecordRepository
+                .findByTenantIdAndSourceTypeAndSourceRef(tenantId, SOURCE_REGULATORY_APPLICATION_FEE, applicationId);
+        int settled = 0;
+        for (ChargeRecordEntity e : charges) {
+            if (!"OPEN".equals(e.getChargeStatus())) continue;
+            e.setChargeStatus("SETTLED");
+            chargeRecordRepository.save(e);
+            publishChargeStatusEvent(e, "CHARGE_SETTLED");
+            settled++;
+            log.info("Settled COSTA regulatory fee charge {} for HPA application {}", e.getChargeId(), applicationId);
+        }
+        return settled;
+    }
+
+    /** Void the regulatory-fee charge (OPEN → WAIVED) on {@code fee_waived}. Idempotent. */
+    @Transactional
+    public int waiveRegulatoryFee(UUID tenantId, String applicationId) {
+        List<ChargeRecordEntity> charges = chargeRecordRepository
+                .findByTenantIdAndSourceTypeAndSourceRef(tenantId, SOURCE_REGULATORY_APPLICATION_FEE, applicationId);
+        int waived = 0;
+        for (ChargeRecordEntity e : charges) {
+            if ("WAIVED".equals(e.getChargeStatus()) || "SETTLED".equals(e.getChargeStatus())) continue;
+            e.setChargeStatus("WAIVED");
+            chargeRecordRepository.save(e);
+            publishChargeStatusEvent(e, "CHARGE_WAIVED");
+            waived++;
+            log.info("Waived COSTA regulatory fee charge {} for HPA application {}", e.getChargeId(), applicationId);
+        }
+        return waived;
     }
 
     private void publishChargeStatusEvent(ChargeRecordEntity e, String eventType) {
