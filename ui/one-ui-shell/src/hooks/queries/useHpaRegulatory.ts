@@ -180,6 +180,8 @@ export interface PicNominationView {
   state: string;
   eligibilityResult: PicEligibilityResult | string | null;
   eligibilitySnapshot: PicEligibilitySnapshot | null;
+  /** Ref to VARAPI's canonical eligibility snapshot (G30); present on newer nominations. */
+  eligibilitySnapshotRef?: string | null;
   providerPublicId: string;
   impiloHealthId: string | null;
   facilityId?: number;
@@ -699,6 +701,23 @@ export function useWithdrawPicNomination() {
       }),
     onSuccess: (_response, variables) =>
       invalidatePicNominations(queryClient, variables.facilityId, variables.providerPublicId),
+  });
+}
+
+/**
+ * Canonical PIC eligibility snapshot by reference (G30). The nomination carries an inline
+ * `eligibilitySnapshot` copy; this fetches VARAPI's system-of-record snapshot verbatim for
+ * audit/verification. Enabled only when a snapshot ref is present.
+ */
+export function usePicEligibilitySnapshot(snapshotId: string | null | undefined) {
+  return useQuery<ApiResponse<PicEligibilitySnapshot>>({
+    queryKey: ["facility-registry", "pic-eligibility-snapshot", snapshotId ?? null],
+    queryFn: () =>
+      apiClient.get<ApiResponse<PicEligibilitySnapshot>>(
+        `${BASE}/pic-nominations/eligibility-snapshots/${encodeURIComponent(snapshotId ?? "")}`,
+      ),
+    enabled: !!snapshotId,
+    staleTime: 300_000,
   });
 }
 

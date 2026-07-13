@@ -14,7 +14,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BadgeCheck, Building2, Clock, History, Loader2, UserCheck } from "lucide-react";
+import {
+  BadgeCheck,
+  Building2,
+  ChevronDown,
+  Clock,
+  History,
+  Loader2,
+  ShieldCheck,
+  UserCheck,
+} from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -22,6 +31,8 @@ import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
 import {
   useProviderPicNominations,
   useRespondPicNomination,
+  usePicEligibilitySnapshot,
+  type PicEligibilitySnapshot,
   type PicNominationView,
 } from "@/hooks/queries/useHpaRegulatory";
 
@@ -49,6 +60,87 @@ function eligibilityChipClass(result: string | null | undefined): string {
     default:
       return "bg-muted text-muted-foreground";
   }
+}
+
+function axisChipClass(status: string | null | undefined): string {
+  switch (status) {
+    case "PASS":
+      return "bg-emerald-500/10 text-emerald-600";
+    case "WARN":
+      return "bg-amber-500/10 text-amber-600";
+    case "FAIL":
+      return "bg-red-500/10 text-red-600";
+    default:
+      return "bg-muted text-muted-foreground";
+  }
+}
+
+/**
+ * The eligibility assessment behind a nomination (G30). Renders the inline snapshot the
+ * nomination captured; if a canonical VARAPI snapshot ref is present, offers a verify link
+ * that fetches VARAPI's system-of-record copy on demand.
+ */
+function EligibilitySnapshotDetail({
+  snapshot,
+  snapshotRef,
+}: {
+  snapshot: PicEligibilitySnapshot | null;
+  snapshotRef?: string | null;
+}) {
+  const [showCanonical, setShowCanonical] = useState(false);
+  const canonical = usePicEligibilitySnapshot(showCanonical ? snapshotRef : undefined);
+  const effective = (showCanonical ? canonical.data?.data : null) ?? snapshot;
+
+  if (!effective) return null;
+  const axes = Object.entries(effective.axes ?? {});
+
+  return (
+    <div className="mt-2 rounded-md border border-border/60 bg-muted/30 p-2">
+      <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+        <ShieldCheck className="h-3.5 w-3.5" />
+        Eligibility assessment
+        {effective.profession ? ` · ${effective.profession}` : ""}
+        {effective.councilCode ? ` · ${effective.councilCode}` : ""}
+      </div>
+      {axes.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {axes.map(([name, axis]) => (
+            <span
+              key={name}
+              title={axis.evidence ?? undefined}
+              className={`rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide ${axisChipClass(axis.status)}`}
+            >
+              {name.replace(/_/g, " ")}: {axis.status}
+            </span>
+          ))}
+        </div>
+      )}
+      {(effective.reasons?.length ?? 0) > 0 && (
+        <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-[11px] text-muted-foreground">
+          {effective.reasons.map((r, i) => (
+            <li key={i}>{r}</li>
+          ))}
+        </ul>
+      )}
+      {snapshotRef && !showCanonical && (
+        <button
+          type="button"
+          onClick={() => setShowCanonical(true)}
+          className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+        >
+          <ChevronDown className="h-3 w-3" /> Verify against registry (VARAPI)
+        </button>
+      )}
+      {showCanonical && canonical.isPending && (
+        <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" /> Loading registry snapshot…
+        </p>
+      )}
+      {showCanonical && canonical.isError && (
+        <p className="mt-1.5 text-[11px] text-red-600">Registry snapshot unavailable.</p>
+      )}
+    </div>
+  );
 }
 
 export default function PicNominationsPage() {
@@ -224,6 +316,11 @@ function NominationCard({
           </span>
         </div>
       </div>
+
+      <EligibilitySnapshotDetail
+        snapshot={nomination.eligibilitySnapshot}
+        snapshotRef={nomination.eligibilitySnapshotRef}
+      />
 
       {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
 

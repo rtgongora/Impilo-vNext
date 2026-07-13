@@ -2727,6 +2727,12 @@ services:
       - Facility setup wizard state
       - Facility units and service points
       - Facility control-tower telemetry aggregation and alerts
+      # PIC SoR split (G30): TUSO owns the facility-effective Practitioner-In-Charge
+      # assignment via the HPA-2017 nomination lifecycle (PicNominationService). VARAPI
+      # supplies (and is SoR for) the point-in-time provider eligibility assessment that
+      # each nomination snapshots verbatim. VARAPI's own pic-assignments write endpoints
+      # are deprecated legacy parallel writers; do not re-introduce a second writer.
+      - Facility-effective Practitioner-In-Charge (PIC) assignment (HPA-2017 nomination)
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -2787,6 +2793,12 @@ services:
       - Varapi canonical records
       - Provider bootstrap chain (bulk preload + self-claim)
       - Council / EC-number registration resolution
+      # PIC SoR split (G30): VARAPI is SoR for the provider professional ELIGIBILITY
+      # ASSESSMENT snapshot behind a PIC nomination (TusoInteropController
+      # /v1/internal/interop/eligibility/assessments), NOT the facility-effective
+      # assignment (that is TUSO's — see tuso-service). VARAPI's pic-assignments write
+      # endpoints are @Deprecated legacy parallel writers.
+      - Provider PIC eligibility assessment snapshot (point-in-time)
     consumes_from:
       - tshepo-authz-service
     exposes_to:

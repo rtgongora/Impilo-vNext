@@ -58,6 +58,17 @@ public class VarapiServiceClient {
         return extractData(response);
     }
 
+    /**
+     * PIC eligibility assessment snapshot (G30): VARAPI is SoR for the point-in-time provider
+     * eligibility that a TUSO nomination captured verbatim. Read-only pass-through by snapshotId.
+     */
+    public JsonNode getEligibilitySnapshot(String snapshotId) {
+        String url = baseUrl + "/v1/internal/interop/eligibility/assessments/" + snapshotId;
+        log.info("VARAPI: Getting eligibility snapshot={}", snapshotId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Certificates ────────────────────────────────────────────────────────
 
     /** Self-service: the authenticated provider's own certificates (resolved from X-Actor-ID). */

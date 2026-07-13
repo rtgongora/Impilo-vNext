@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -33,9 +34,11 @@ public class HpaRegulatoryBffController {
     private static final Logger log = LoggerFactory.getLogger(HpaRegulatoryBffController.class);
 
     private final TusoServiceClient tusoClient;
+    private final VarapiServiceClient varapiClient;
 
-    public HpaRegulatoryBffController(TusoServiceClient tusoClient) {
+    public HpaRegulatoryBffController(TusoServiceClient tusoClient, VarapiServiceClient varapiClient) {
         this.tusoClient = tusoClient;
+        this.varapiClient = varapiClient;
     }
 
     // ---- Catalogues + rules ------------------------------------------------
@@ -288,6 +291,28 @@ public class HpaRegulatoryBffController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return forwardPost("/pic-assignments/" + assignmentId + "/resolve-review", body, requestId, correlationId);
+    }
+
+    /**
+     * PIC eligibility snapshot behind a nomination (G30). TUSO owns the facility-effective
+     * assignment but snapshots VARAPI's point-in-time eligibility assessment verbatim onto each
+     * nomination (eligibilitySnapshotRef). This read-only route lets the reviewer inspect that
+     * assessment — VARAPI is SoR for the snapshot, so it is fetched from VARAPI, not TUSO.
+     */
+    @GetMapping("/pic-nominations/eligibility-snapshots/{snapshotId}")
+    public ResponseEntity<Map<String, Object>> eligibilitySnapshot(
+            @PathVariable String snapshotId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = varapiClient.getEligibilitySnapshot(snapshotId);
+            return ResponseEntity.ok(envelope(data, requestId, correlationId));
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            return upstreamError(e, requestId, correlationId);
+        } catch (Exception e) {
+            log.warn("PIC eligibility snapshot {} failed: {}", snapshotId, e.getMessage());
+            return badGateway(requestId, correlationId, e.getMessage());
+        }
     }
 
     // ---- Inspection visits + responses ----------------------------------------------

@@ -86,9 +86,9 @@
 | `tshepo-keys-service` | trust | Tshepo Keys canonical records |
 | `tshepo-offline-service` | trust | Tshepo Offline canonical records |
 | `tshepo-service` | trust | Tshepo canonical records |
-| `tuso-service` | registry | Tuso canonical records |
+| `tuso-service` | registry | Tuso canonical records; **facility-effective Practitioner-In-Charge (PIC) assignment** via the HPA-2017 nomination lifecycle (`PicNominationService`). SoR split (G30): TUSO owns the assignment; VARAPI owns the PIC eligibility-assessment snapshot each nomination captures verbatim. VARAPI's `pic-assignments` write endpoints are deprecated legacy parallel writers — do not re-introduce a second PIC assignment writer. |
 | `ubomi-service` | registry | Ubomi canonical records |
-| `varapi-service` | registry | Varapi canonical records |
+| `varapi-service` | registry | Varapi canonical records; **provider PIC eligibility-assessment snapshot** (`TusoInteropController /v1/internal/interop/eligibility/assessments`). SoR split (G30): VARAPI is SoR for the point-in-time eligibility assessment only, NOT the facility-effective PIC assignment (that is tuso-service). VARAPI's own `pic-assignments` write path is `@Deprecated`. |
 | `vito-service` | registry | Vito canonical records |
 | `wellness-service` | enterprise | — |
 | `workflow-service` | integration | Workflow canonical records |

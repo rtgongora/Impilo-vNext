@@ -19,9 +19,14 @@ import java.util.UUID;
 /**
  * Mirrors VARAPI PIC assignment lifecycle events into TUSO's facility regulatory view.
  *
- * VARAPI remains the source of truth for provider legitimacy and PIC assignment lifecycle.
- * TUSO stores a facility-scoped mirror for operational facility screens and downstream
- * facility legitimacy checks.
+ * <p><b>SoR note (G30):</b> the facility-effective PIC assignment is owned by <b>TUSO</b> via its
+ * HPA-2017 nomination state machine ({@code PicNominationService}); VARAPI is SoR only for the
+ * provider's professional <em>eligibility assessment</em> (the snapshot TUSO captures on each
+ * nomination). VARAPI's own {@code PractitionerInChargeController} write path is now
+ * {@code @Deprecated} (legacy parallel writer), so this mirror is <b>vestigial</b>: with the
+ * write path retired, no {@code impilo.varapi.pic_assignment} events are produced. It is kept
+ * — idempotent and harmless — only to reconcile any historical/legacy VARAPI-originated
+ * assignments during the transition, and should be removed once none remain.
  */
 @Component
 public class VarapiPicAssignmentConsumer {

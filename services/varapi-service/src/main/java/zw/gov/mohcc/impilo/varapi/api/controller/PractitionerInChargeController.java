@@ -12,6 +12,19 @@ import java.util.Map;
 
 /**
  * REST controller for Practitioner-In-Charge (PIC) assignments.
+ *
+ * <p><b>SoR note (G30):</b> the facility-effective PIC assignment lifecycle is owned by
+ * <b>TUSO</b> via its HPA-2017 nomination state machine
+ * ({@code tuso PicNominationService} → {@code /v1/internal/facility-registry/pic-nominations}).
+ * VARAPI remains SoR only for the provider's professional <em>eligibility assessment</em>
+ * (the snapshot TUSO captures verbatim on each nomination — see
+ * {@code TusoInteropController} {@code /v1/internal/interop/eligibility/assessments}).
+ *
+ * <p>The <b>write</b> endpoints below (create/approve/reject/revoke/transfer) are a legacy
+ * parallel assignment writer that nothing in the BFF/UI surfaces. They are
+ * {@code @Deprecated}; do not build new callers. Use TUSO's nomination flow instead. The
+ * <b>read</b> endpoints remain valid for legacy VARAPI-originated assignment records.
+ * See {@code docs/registry/system-of-record-map.md} and {@code services-registry.yaml}.
  */
 @RestController
 @RequestMapping("/v1/internal/providers/pic-assignments")
@@ -23,6 +36,8 @@ public class PractitionerInChargeController {
         this.picService = picService;
     }
 
+    /** @deprecated legacy parallel writer — TUSO owns the facility-effective PIC assignment (G30). */
+    @Deprecated
     @PostMapping
     public ResponseEntity<GenericResponse> createAssignment(@RequestBody Map<String, Object> request) {
         Long providerId = Long.valueOf(request.get("providerId").toString());
@@ -44,6 +59,8 @@ public class PractitionerInChargeController {
         ));
     }
 
+    /** @deprecated legacy parallel writer — use TUSO nomination review/activate (G30). */
+    @Deprecated
     @PostMapping("/{assignmentId}/approve")
     public ResponseEntity<GenericResponse> approveAssignment(
             @PathVariable Long assignmentId,
@@ -57,6 +74,8 @@ public class PractitionerInChargeController {
         ));
     }
 
+    /** @deprecated legacy parallel writer — use TUSO nomination review (G30). */
+    @Deprecated
     @PostMapping("/{assignmentId}/reject")
     public ResponseEntity<GenericResponse> rejectAssignment(
             @PathVariable Long assignmentId,
@@ -69,6 +88,8 @@ public class PractitionerInChargeController {
         ));
     }
 
+    /** @deprecated legacy parallel writer — use TUSO nomination withdraw/resolve-review (G30). */
+    @Deprecated
     @PostMapping("/{assignmentId}/revoke")
     public ResponseEntity<GenericResponse> revokeAssignment(
             @PathVariable Long assignmentId,
@@ -83,6 +104,8 @@ public class PractitionerInChargeController {
         ));
     }
 
+    /** @deprecated legacy parallel writer — TUSO owns facility-effective transfer (G30). */
+    @Deprecated
     @PostMapping("/{assignmentId}/transfer")
     public ResponseEntity<GenericResponse> transferAssignment(
             @PathVariable Long assignmentId,
