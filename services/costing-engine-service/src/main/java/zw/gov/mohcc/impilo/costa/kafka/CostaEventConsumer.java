@@ -719,7 +719,9 @@ public class CostaEventConsumer {
                 ack.acknowledge();
                 return;
             }
-            synthesizeTrustContext(tenantStr, text(event, "facilityId"), "REGULATION");
+            // The fee payload's facilityId is TUSO's numeric facility id (not a COSTA
+            // facility UUID); the synthesized context does not need it.
+            synthesizeTrustContext(tenantStr, null, "REGULATION");
             switch (eventType) {
                 case "tuso.facility.application.fee_due" -> chargeRecordService.ingestRegulatoryFeeDue(event);
                 case "tuso.facility.application.fee_paid" ->
