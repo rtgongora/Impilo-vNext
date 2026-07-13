@@ -39,23 +39,29 @@ public class VitoCardEventConsumer {
             String eventType = firstNonBlank(
                     node.path("event_type").asText(null),
                     node.path("eventType").asText(null)).toUpperCase();
-            // Resilient to raw (CARD_REVOKED) or v1.1 (impilo.vito.cards.revoked.v1) type strings.
-            boolean revoked = eventType.contains("REVOK");
-            boolean suspended = eventType.contains("SUSPEND");
-            if (!revoked && !suspended) {
-                return; // only revocation/suspension freezes the money facet
-            }
 
             String vitoCardNumber = firstNonBlank(
                     payload.path("cardNumber").asText(null),
                     node.path("cardNumber").asText(null));
             if (vitoCardNumber == null || vitoCardNumber.isBlank()) {
-                log.warn("VITO card {} event carried no cardNumber — cannot match a money card", eventType);
+                return; // not attributable to a money card
+            }
+
+            // Resilient to raw (CARD_REVOKED) or v1.1 (impilo.vito.cards.revoked.v1) type strings.
+            if (eventType.contains("REVOK") || eventType.contains("SUSPEND")) {
+                cardService.freezeForVitoCard(vitoCardNumber,
+                        "VITO SMART card " + (eventType.contains("REVOK") ? "revoked" : "suspended"));
                 return;
             }
 
-            cardService.freezeForVitoCard(vitoCardNumber,
-                    "VITO SMART card " + (revoked ? "revoked" : "suspended"));
+            // Non-revocation events: cache the card's device/SE public key so mushe can verify
+            // offline transactions (Phase 3). Only takes effect for an already-linked money card.
+            String publicKey = firstNonBlank(
+                    payload.path("publicKey").asText(null),
+                    node.path("publicKey").asText(null));
+            if (!publicKey.isBlank()) {
+                cardService.cacheVitoCardKey(vitoCardNumber, publicKey);
+            }
         } catch (Exception e) {
             log.warn("Failed to process VITO card event: {}", e.getMessage());
         }

@@ -186,6 +186,20 @@ public class CardService {
         return cardRepository.save(card);
     }
 
+    /** Cache the linked VITO card's device/SE public key (from card events) for offline-txn verification. */
+    @Transactional
+    public void cacheVitoCardKey(String vitoCardNumber, String publicKeyPem) {
+        if (vitoCardNumber == null || vitoCardNumber.isBlank() || publicKeyPem == null || publicKeyPem.isBlank()) {
+            return;
+        }
+        cardRepository.findByVitoCardNumber(vitoCardNumber).ifPresent(card -> {
+            if (!publicKeyPem.equals(card.getVitoCardPublicKey())) {
+                card.setVitoCardPublicKey(publicKeyPem);
+                cardRepository.save(card);
+            }
+        });
+    }
+
     /**
      * Freeze the money card linked to a revoked/suspended VITO SMART card (identity facet). Idempotent
      * and best-effort: no-op if no money card is linked to that VITO cardNumber or it is already blocked.

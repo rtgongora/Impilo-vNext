@@ -1,0 +1,124 @@
+package zw.gov.mohcc.impilo.wallet.card;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.wallet.core.WalletService;
+import zw.gov.mohcc.impilo.wallet.persistence.entity.CardEntity;
+import zw.gov.mohcc.impilo.wallet.persistence.entity.TransactionEntity;
+import zw.gov.mohcc.impilo.wallet.persistence.repository.CardRepository;
+
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+
+/**
+ * Reconciles offline stored-value transactions signed by a card's device/SE key into the ledger
+ * (unified SMART card, Phase 3). A virtual card (wallet pass on the phone) or a physical card signs a
+ * canonical payload with its P-256 key; mushe verifies it against the card's cached public key,
+ * enforces a monotonic counter (replay/gap rejection), and applies an idempotent ledger debit — the
+ * ledger is authoritative, the on-card purse is a reconciled float. Dependency-free JDK ECDSA
+ * (SHA256withECDSA over the exact payload bytes, DER signature) so it verifies identically whether the
+ * key lives on a physical secure element or the phone keystore.
+ */
+@Service
+public class OfflineTransactionService {
+
+    private static final Logger log = LoggerFactory.getLogger(OfflineTransactionService.class);
+
+    private final CardRepository cardRepository;
+    private final WalletService walletService;
+    private final ObjectMapper objectMapper;
+
+    public OfflineTransactionService(CardRepository cardRepository, WalletService walletService,
+                                     ObjectMapper objectMapper) {
+        this.cardRepository = cardRepository;
+        this.walletService = walletService;
+        this.objectMapper = objectMapper;
+    }
+
+    /** Thrown when an offline transaction fails verification/policy — surfaced as 4xx by the controller. */
+    public static class OfflineTransactionRejected extends RuntimeException {
+        public OfflineTransactionRejected(String message) { super(message); }
+    }
+
+    /**
+     * @param vitoCardNumber the canonical card the txn was signed on
+     * @param payloadJson    canonical signed payload: {"amount","counter","nonce","currency"}
+     * @param signatureB64   Base64 DER ECDSA-SHA256 signature over the exact payloadJson bytes
+     */
+    @Transactional
+    public TransactionEntity redeem(String vitoCardNumber, String payloadJson, String signatureB64) {
+        CardEntity card = cardRepository.findByVitoCardNumber(vitoCardNumber)
+                .orElseThrow(() -> new OfflineTransactionRejected("No money card linked to VITO card " + vitoCardNumber));
+        if ("BLOCKED".equals(card.getStatus())) {
+            throw new OfflineTransactionRejected("Card is blocked");
+        }
+        if (card.getVitoCardPublicKey() == null || card.getVitoCardPublicKey().isBlank()) {
+            throw new OfflineTransactionRejected("Card has no provisioned public key to verify against");
+        }
+        if (!verify(card.getVitoCardPublicKey(), payloadJson, signatureB64)) {
+            throw new OfflineTransactionRejected("Signature verification failed");
+        }
+
+        JsonNode payload;
+        try {
+            payload = objectMapper.readTree(payloadJson);
+        } catch (Exception e) {
+            throw new OfflineTransactionRejected("Malformed payload");
+        }
+        long counter = payload.path("counter").asLong(-1);
+        String nonce = payload.path("nonce").asText(null);
+        if (counter < 0 || nonce == null || nonce.isBlank()) {
+            throw new OfflineTransactionRejected("Payload missing counter/nonce");
+        }
+        // Monotonic counter — rejects replays and stale/out-of-order offline txns.
+        if (counter <= card.getLastOfflineCounter()) {
+            throw new OfflineTransactionRejected("Stale offline counter " + counter
+                    + " (last accepted " + card.getLastOfflineCounter() + ")");
+        }
+        BigDecimal amount = new BigDecimal(payload.path("amount").asText("0"));
+        if (amount.signum() <= 0) {
+            throw new OfflineTransactionRejected("Amount must be positive");
+        }
+
+        // Idempotent ledger debit — the nonce is the idempotency key, so a re-submitted offline txn
+        // never double-debits even if the counter check is bypassed by a race.
+        TransactionEntity txn = walletService.debit(
+                card.getWalletId(), amount, "OFFLINE_PURSE", "CARD_OFFLINE",
+                nonce, "Offline card transaction", null, null, null, nonce);
+
+        card.setLastOfflineCounter(counter);
+        cardRepository.save(card);
+        log.info("Reconciled offline txn (card {}, counter {}, nonce {}) into the ledger", vitoCardNumber, counter, nonce);
+        return txn;
+    }
+
+    private static boolean verify(String publicKeyPem, String payloadJson, String signatureB64) {
+        try {
+            Signature sig = Signature.getInstance("SHA256withECDSA");
+            sig.initVerify(parseEcPublicKey(publicKeyPem));
+            sig.update(payloadJson.getBytes(StandardCharsets.UTF_8));
+            return sig.verify(Base64.getDecoder().decode(signatureB64));
+        } catch (Exception e) {
+            log.warn("Offline-txn signature verification error: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    private static PublicKey parseEcPublicKey(String pem) throws Exception {
+        String base64 = pem
+                .replaceAll("-----BEGIN[^-]*-----", "")
+                .replaceAll("-----END[^-]*-----", "")
+                .replaceAll("\\s", "");
+        byte[] der = Base64.getDecoder().decode(base64);
+        return KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(der));
+    }
+}

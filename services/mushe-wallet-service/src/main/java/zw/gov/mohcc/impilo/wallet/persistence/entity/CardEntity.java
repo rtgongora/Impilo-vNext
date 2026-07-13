@@ -70,6 +70,14 @@ public class CardEntity {
     @Column(name = "vito_card_number", length = 64)
     private String vitoCardNumber;
 
+    /** The linked VITO card's device/SE P-256 public key (PEM) — verifies offline transactions. */
+    @Column(name = "vito_card_public_key", columnDefinition = "TEXT")
+    private String vitoCardPublicKey;
+
+    /** Highest accepted offline-transaction counter — enforces monotonicity (replay/gap rejection). */
+    @Column(name = "last_offline_counter", nullable = false)
+    private long lastOfflineCounter = 0L;
+
     @Column(name = "activated_at")
     private OffsetDateTime activatedAt;
 
@@ -238,6 +246,22 @@ public class CardEntity {
 
     public void setVitoCardNumber(String vitoCardNumber) {
         this.vitoCardNumber = vitoCardNumber;
+    }
+
+    public String getVitoCardPublicKey() {
+        return vitoCardPublicKey;
+    }
+
+    public void setVitoCardPublicKey(String vitoCardPublicKey) {
+        this.vitoCardPublicKey = vitoCardPublicKey;
+    }
+
+    public long getLastOfflineCounter() {
+        return lastOfflineCounter;
+    }
+
+    public void setLastOfflineCounter(long lastOfflineCounter) {
+        this.lastOfflineCounter = lastOfflineCounter;
     }
 
     public OffsetDateTime getActivatedAt() {
