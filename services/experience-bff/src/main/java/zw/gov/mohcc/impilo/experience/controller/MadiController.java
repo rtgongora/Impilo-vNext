@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.MadiServiceClient;
 
@@ -59,7 +61,11 @@ public class MadiController {
             @RequestParam("person_cpid") String personCpid,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return proxy(() -> client.donorByPerson(personCpid), requestId, correlationId, false);
+        // A person with no donor profile is a legitimate "not a donor yet" state,
+        // not a service failure — the upstream 404 must surface as 200 {data:null}
+        // so the profile page renders the "Register as a donor" empty state instead
+        // of a red error banner.
+        return proxy(() -> client.donorByPerson(personCpid), requestId, correlationId, false, true);
     }
 
     @PostMapping("/donors/{donorId}/screenings")
@@ -572,6 +578,15 @@ public class MadiController {
             String requestId,
             String correlationId,
             boolean created) {
+        return proxy(call, requestId, correlationId, created, false);
+    }
+
+    private ResponseEntity<Map<String, Object>> proxy(
+            MadiCall call,
+            String requestId,
+            String correlationId,
+            boolean created,
+            boolean nullOn404) {
         try {
             JsonNode body = call.call();
             Map<String, Object> response = new LinkedHashMap<>();
@@ -580,12 +595,53 @@ public class MadiController {
             return created
                     ? ResponseEntity.status(HttpStatus.CREATED).body(response)
                     : ResponseEntity.ok(response);
+        } catch (HttpClientErrorException ce) {
+            // A non-donor lookup (404) is a legitimate empty state, not a failure.
+            if (nullOn404 && ce.getStatusCode().value() == HttpStatus.NOT_FOUND.value()) {
+                Map<String, Object> response = new LinkedHashMap<>();
+                response.put("data", null);
+                response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+                return ResponseEntity.ok(response);
+            }
+            // Client (4xx) errors are meaningful to the caller — e.g. a duplicate
+            // donor (409) or a validation failure (400). Pass the upstream status
+            // and message through instead of masking everything as MADI_UNAVAILABLE.
+            String message = extractUpstreamMessage(ce);
+            log.warn("MADI proxy client error {}: {}", ce.getStatusCode(), message);
+            return ResponseEntity.status(ce.getStatusCode()).body(Map.of(
+                    "data", List.of(),
+                    "error", Map.of("code", "MADI_" + ce.getStatusCode().value(), "message", message),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
+            // 5xx / connection failures — the service itself is unreachable/broken.
             log.warn("MADI proxy failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                     "data", List.of(),
                     "error", Map.of("code", "MADI_UNAVAILABLE", "message", e.getMessage()),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
+    }
+
+    private static final ObjectMapper ERROR_MAPPER = new ObjectMapper();
+
+    /** Pull the human-readable message out of an upstream madi-service error body ({"error": "..."}). */
+    private String extractUpstreamMessage(HttpClientErrorException ce) {
+        String body = ce.getResponseBodyAsString();
+        if (body != null && !body.isBlank()) {
+            try {
+                JsonNode node = ERROR_MAPPER.readTree(body);
+                JsonNode err = node.get("error");
+                if (err != null && err.isTextual() && !err.asText().isBlank()) {
+                    return err.asText();
+                }
+                JsonNode msg = node.get("message");
+                if (msg != null && msg.isTextual() && !msg.asText().isBlank()) {
+                    return msg.asText();
+                }
+            } catch (Exception ignored) {
+                // fall through to status reason
+            }
+        }
+        return ce.getStatusText();
     }
 }

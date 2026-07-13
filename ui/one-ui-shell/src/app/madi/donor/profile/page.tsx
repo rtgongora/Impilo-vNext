@@ -29,7 +29,7 @@ export default function DonorProfilePage() {
           </div>
         )}
 
-        {!isPending && !donor && (
+        {!isPending && !isError && !donor && (
           <div className="rounded-2xl border border-dashed border-border p-8 text-center">
             <p className="text-sm text-muted-foreground">No donor profile found for this account.</p>
             <Link href="/madi/donor/register" className="mt-3 inline-block text-sm font-medium text-rose-600 hover:text-rose-800">

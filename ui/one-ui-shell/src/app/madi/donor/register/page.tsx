@@ -12,9 +12,18 @@ import { useRegisterDonor } from "@/hooks/queries/useMadi";
 const BLOOD_GROUPS = ["A", "B", "AB", "O"];
 const RH_FACTORS = ["POSITIVE", "NEGATIVE"];
 
+function registerErrorMessage(error: unknown): string {
+  if (error && typeof error === "object") {
+    const err = (error as { error?: { message?: string } }).error;
+    if (err?.message && typeof err.message === "string") return err.message;
+  }
+  return "Registration failed. Please try again.";
+}
+
 export default function DonorRegisterPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const register = useRegisterDonor();
   const [bloodGroup, setBloodGroup] = useState("O");
   const [rhFactor, setRhFactor] = useState("POSITIVE");
@@ -42,6 +51,19 @@ export default function DonorRegisterPage() {
         subtitle="Voluntary registration — your identity is protected"
         icon={<Droplet className="h-6 w-6" />}
       >
+        {!isAuthenticated || !personCpid ? (
+          <div className="max-w-md rounded-2xl border border-dashed border-border bg-card p-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Sign in with your Health ID to register as a blood donor.
+            </p>
+            <Link
+              href="/auth/login"
+              className="mt-3 inline-block rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+            >
+              Sign in
+            </Link>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="max-w-md space-y-4 rounded-2xl border border-border bg-card p-6">
           <p className="text-sm text-muted-foreground">
             Registering links your Health ID to a donor profile. Only share blood group information
@@ -85,9 +107,10 @@ export default function DonorRegisterPage() {
             </button>
           </div>
           {register.isError && (
-            <p className="text-sm text-red-600">Registration failed. Please try again.</p>
+            <p className="text-sm text-red-600">{registerErrorMessage(register.error)}</p>
           )}
         </form>
+        )}
       </PageShell>
     </AppLayout>
   );
