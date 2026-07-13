@@ -33,6 +33,7 @@ import {
   User,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { ProviderCertificatesPanel } from "@/components/registry/ProviderCertificatesPanel";
 import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
@@ -187,6 +188,9 @@ export default function ProfessionalProfilePage() {
             )}
           </div>
         </section>
+
+        {/* My certificates (self-service list + PDF download) */}
+        <ProviderCertificatesPanel />
 
         {/* Facility Affiliations */}
         <section className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
