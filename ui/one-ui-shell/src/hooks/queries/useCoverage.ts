@@ -312,6 +312,83 @@ export function useCoverageSubsidiesList() {
   });
 }
 
+// ── Subsidy value enrolment + annual-cap drawdown (Model X) ──────────────────
+
+export function useSubsidyEnrolments(memberCpid?: string | null) {
+  return useQuery({
+    queryKey: ["coverage-subsidy-enrolments", memberCpid ?? null],
+    queryFn: async () => {
+      const res = await apiClient.get<unknown>(
+        `/internal/v1/coverage/subsidies/enrolments?member_cpid=${encodeURIComponent(memberCpid ?? "")}`,
+      );
+      return coverageListRows(res);
+    },
+    enabled: !!memberCpid,
+  });
+}
+
+export function useEnrolSubsidy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post("/internal/v1/coverage/subsidies/enrolments", body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["coverage-subsidy-enrolments"] });
+    },
+  });
+}
+
+export function useConsumeSubsidy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ enrolmentId, ...body }: { enrolmentId: string } & Record<string, unknown>) =>
+      apiClient.post(`/internal/v1/coverage/subsidies/enrolments/${encodeURIComponent(enrolmentId)}/consume`, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["coverage-subsidy-enrolments"] });
+    },
+  });
+}
+
+// ── Subsidy exemption-category enrolment (Model Y — costing waivers) ─────────
+
+export function useSubsidyExemptions(memberCpid?: string | null) {
+  return useQuery({
+    queryKey: ["coverage-subsidy-exemptions", memberCpid ?? null],
+    queryFn: async () => {
+      const res = await apiClient.get<unknown>(
+        `/internal/v1/coverage/subsidies/enrollments?member_cpid=${encodeURIComponent(memberCpid ?? "")}`,
+      );
+      return coverageListRows(res);
+    },
+    enabled: !!memberCpid,
+  });
+}
+
+export function useEnrollSubsidyExemption() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post("/internal/v1/coverage/subsidies/enrollments", body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["coverage-subsidy-exemptions"] });
+    },
+  });
+}
+
+// ── Preauth reviewer decision (G15) ──────────────────────────────────────────
+
+export function useDecideCoveragePreauth() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ preauthId, ...body }: { preauthId: string } & Record<string, unknown>) =>
+      apiClient.put(`/internal/v1/coverage/preauth/${encodeURIComponent(preauthId)}/decision`, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["coverage-preauths-list"] });
+      void queryClient.invalidateQueries({ queryKey: ["member-coverage-preauths"] });
+    },
+  });
+}
+
 export function useCheckCoverageEligibility() {
   return useMutation({
     mutationFn: async (body: Record<string, string>) => {

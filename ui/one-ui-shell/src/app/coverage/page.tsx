@@ -28,7 +28,10 @@ import {
   useCoverageSubsidiesList,
   useCreateCoverageClaim,
   useDecideCoverageAppeal,
+  useDecideCoveragePreauth,
   useEnrollCoverageMember,
+  useEnrolSubsidy,
+  useSubsidyEnrolments,
   useReviewCoverageAppeal,
   useRunCoverageCommand,
   useSubmitCoverageAppeal,
@@ -916,6 +919,64 @@ function MembershipTab() {
 }
 
 // ── PREAUTH TAB ──────────────────────────────────────────────────
+/** Reviewer approve/deny controls for a PENDING preauth (G15). */
+function PreauthDecisionActions({ preauthId }: { preauthId: string }) {
+  const decide = useDecideCoveragePreauth();
+  const [denying, setDenying] = useState(false);
+  const [reason, setReason] = useState("");
+
+  if (denying) {
+    return (
+      <div className="flex items-center gap-1">
+        <input
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Denial reason"
+          className="w-32 rounded border border-border px-1.5 py-0.5 text-xs"
+        />
+        <button
+          type="button"
+          disabled={decide.isPending || !reason.trim()}
+          onClick={() =>
+            decide.mutate(
+              { preauthId, status: "DENIED", decisionJson: JSON.stringify({ reason }) },
+              { onSuccess: () => setDenying(false) },
+            )
+          }
+          className="rounded bg-red-600 px-2 py-0.5 text-xs text-white disabled:opacity-50"
+        >
+          Confirm
+        </button>
+        <button type="button" onClick={() => setDenying(false)} className="rounded border border-border px-2 py-0.5 text-xs">
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        disabled={decide.isPending}
+        onClick={() => decide.mutate({ preauthId, status: "APPROVED" })}
+        className="rounded border border-emerald-300 px-2 py-0.5 text-xs text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+      >
+        Approve
+      </button>
+      <button
+        type="button"
+        disabled={decide.isPending}
+        onClick={() => setDenying(true)}
+        className="rounded border border-red-300 px-2 py-0.5 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50"
+      >
+        Deny
+      </button>
+      {decide.isError && <span className="text-xs text-red-600">Rejected</span>}
+    </div>
+  );
+}
+
 function PreauthTab() {
   const [showForm, setShowForm] = useState(false);
   const [preauthForm, setPreauthForm] = useState({
@@ -942,8 +1003,10 @@ function PreauthTab() {
         </button>
       </div>
       <p className="text-sm text-muted-foreground">
-        Read rows from <code className="text-xs">GET /internal/v1/coverage/preauths</code>. Create form continues to use{" "}
-        <code className="text-xs">POST /internal/v1/coverage/preauth</code>.
+        Read rows from <code className="text-xs">GET /internal/v1/coverage/preauths</code>. Create uses{" "}
+        <code className="text-xs">POST /internal/v1/coverage/preauth</code>; reviewers approve/deny PENDING requests via{" "}
+        <code className="text-xs">PUT /internal/v1/coverage/preauth/&#123;id&#125;/decision</code> (the engine applies
+        utilization cap-denial — an approval can be flipped to DENIED when the annual limit is exceeded).
       </p>
 
       {preauthListQ.isLoading ? (
@@ -968,6 +1031,7 @@ function PreauthTab() {
                 <th className="px-3 py-2 font-medium text-muted-foreground">Type</th>
                 <th className="px-3 py-2 font-medium text-muted-foreground">Status</th>
                 <th className="px-3 py-2 font-medium text-muted-foreground">Requested</th>
+                <th className="px-3 py-2 font-medium text-muted-foreground">Review</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -991,6 +1055,13 @@ function PreauthTab() {
                     <td className="px-3 py-2 text-xs text-muted-foreground">
                       {formatCoverageDate(
                         readUnknownString(row, "requested_at", "requestedAt", "created_at", "createdAt"),
+                      )}
+                    </td>
+                    <td className="px-3 py-2">
+                      {status === "PENDING" && id !== `row-${idx}` ? (
+                        <PreauthDecisionActions preauthId={id} />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </td>
                   </tr>
@@ -1129,6 +1200,133 @@ function ContributionsTab() {
 }
 
 // ── SUBSIDIES TAB ────────────────────────────────────────────────
+/**
+ * Enrol a member into a subsidy programme's value lane (Model X) and view their
+ * annual-cap balance/consumed/remaining (G2). Drawdown itself is triggered by the
+ * billing/costing rails, not this admin surface.
+ */
+function MemberSubsidyEnrolments({ programmes }: { programmes: Record<string, unknown>[] }) {
+  const [memberCpid, setMemberCpid] = useState("");
+  const [query, setQuery] = useState("");
+  const [programCode, setProgramCode] = useState("");
+  const [capOverride, setCapOverride] = useState("");
+  const enrolmentsQ = useSubsidyEnrolments(query || null);
+  const enrol = useEnrolSubsidy();
+  const rows = (enrolmentsQ.data ?? []).map(asRecord);
+
+  return (
+    <div className="space-y-3 rounded-lg border border-border bg-card p-5">
+      <h4 className="text-sm font-semibold text-foreground">Member subsidy enrolments (value lane)</h4>
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="text-xs text-muted-foreground">
+          Member CPID
+          <input
+            value={memberCpid}
+            onChange={(e) => setMemberCpid(e.target.value)}
+            placeholder="CPID"
+            className="mt-0.5 block w-48 rounded border border-border px-2 py-1.5 text-sm"
+          />
+        </label>
+        <button
+          type="button"
+          disabled={!memberCpid.trim()}
+          onClick={() => setQuery(memberCpid.trim())}
+          className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-background disabled:opacity-50"
+        >
+          Look up
+        </button>
+      </div>
+
+      {query && (
+        <div className="space-y-2 rounded-lg border border-border/60 bg-background p-3">
+          <p className="text-xs font-medium text-muted-foreground">Enrol {query} into a programme</p>
+          <div className="flex flex-wrap items-end gap-2">
+            <select
+              value={programCode}
+              onChange={(e) => setProgramCode(e.target.value)}
+              className="rounded border border-border bg-card px-2 py-1.5 text-sm"
+            >
+              <option value="">Select programme…</option>
+              {programmes.map((p, i) => {
+                const code = readUnknownString(p, "programCode", "program_code");
+                return (
+                  <option key={`${code}-${i}`} value={code}>
+                    {readUnknownString(p, "programName", "program_name") || code}
+                  </option>
+                );
+              })}
+            </select>
+            <input
+              value={capOverride}
+              onChange={(e) => setCapOverride(e.target.value)}
+              placeholder="Cap override (optional)"
+              className="w-40 rounded border border-border px-2 py-1.5 text-sm"
+            />
+            <button
+              type="button"
+              disabled={enrol.isPending || !programCode}
+              onClick={() =>
+                enrol.mutate(
+                  {
+                    member_cpid: query,
+                    program_code: programCode,
+                    ...(capOverride.trim() ? { annual_cap_override: capOverride.trim() } : {}),
+                  },
+                  { onSuccess: () => { setProgramCode(""); setCapOverride(""); } },
+                )
+              }
+              className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {enrol.isPending ? "Enrolling…" : "Enrol"}
+            </button>
+          </div>
+          {enrol.isError && <p className="text-xs text-red-600">Enrolment rejected by coverage service.</p>}
+        </div>
+      )}
+
+      {query && (
+        enrolmentsQ.isLoading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading…</div>
+        ) : rows.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No subsidy enrolments for {query}.</p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-background text-left">
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Enrolment</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Status</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Cap</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Consumed</th>
+                  <th className="px-3 py-2 font-medium text-muted-foreground">Remaining</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {rows.map((row, idx) => {
+                  const currency = readUnknownString(row, "currency") || "USD";
+                  return (
+                    <tr key={`${readUnknownString(row, "id") || "enr"}-${idx}`}>
+                      <td className="px-3 py-2 font-mono text-[10px] text-muted-foreground">{readUnknownString(row, "id") || "—"}</td>
+                      <td className="px-3 py-2">
+                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">
+                          {readUnknownString(row, "status") || "—"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-foreground">{formatCoverageCurrency(readUnknownNumber(row, "effective_cap", "effectiveCap"), currency)}</td>
+                      <td className="px-3 py-2 text-foreground">{formatCoverageCurrency(readUnknownNumber(row, "consumed_amount", "consumedAmount"), currency)}</td>
+                      <td className="px-3 py-2 text-foreground">{formatCoverageCurrency(readUnknownNumber(row, "remaining_amount", "remainingAmount"), currency)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
 function SubsidiesTab() {
   const subsidiesQ = useCoverageSubsidiesList();
   const subsidyRows = (subsidiesQ.data ?? []).map(asRecord);
@@ -1189,6 +1387,8 @@ function SubsidiesTab() {
           </table>
         </div>
       )}
+
+      <MemberSubsidyEnrolments programmes={subsidyRows} />
     </div>
   );
 }

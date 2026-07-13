@@ -165,6 +165,61 @@ describe("CoveragePage", () => {
     expect(get.mock.calls.some((c) => String(c[0]).includes("/internal/v1/coverage/preauths"))).toBe(true);
   });
 
+  it("preauth reviewer approves a PENDING request via the decision endpoint (G15)", async () => {
+    const user = userEvent.setup();
+    get.mockImplementation((url: string) => {
+      if (url.includes("/internal/v1/coverage/plans")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/remittances")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/contributions")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/utilization")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/appeals")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/preauths")) {
+        return Promise.resolve({ data: [{ id: "pa-9", request_type: "SURGERY", status: "PENDING" }] });
+      }
+      return Promise.reject(new Error(`unexpected GET ${url}`));
+    });
+
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /^Pre-Auth$/i }));
+    await waitFor(() => expect(screen.getByText("pa-9")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: /^Approve$/ }));
+    await waitFor(() =>
+      expect(
+        put.mock.calls.some((c) => String(c[0]) === "/internal/v1/coverage/preauth/pa-9/decision"),
+      ).toBe(true),
+    );
+    const call = put.mock.calls.find((c) => String(c[0]).includes("/preauth/pa-9/decision"));
+    expect((call?.[1] as { status?: string })?.status).toBe("APPROVED");
+  });
+
+  it("subsidies tab enrols a member into a programme value lane (G2)", async () => {
+    const user = userEvent.setup();
+    get.mockImplementation((url: string) => {
+      if (url.includes("/internal/v1/coverage/subsidies/enrolments")) {
+        return Promise.resolve({ data: [] });
+      }
+      if (url.includes("/internal/v1/coverage/subsidies")) {
+        return Promise.resolve({ data: [{ id: "sp-1", program_code: "SUB-MOHCC-PRIMARY", program_name: "MOHCC Primary", subsidy_type: "GOVERNMENT", annual_cap: 1500, status: "ACTIVE" }] });
+      }
+      return Promise.resolve({ data: [] });
+    });
+
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Subsidies/i }));
+    await user.type(screen.getByPlaceholderText("CPID"), "CPID-77");
+    await user.click(screen.getByRole("button", { name: /^Look up$/ }));
+    await screen.findByText(/Enrol CPID-77 into a programme/);
+    await user.selectOptions(screen.getByRole("combobox"), "SUB-MOHCC-PRIMARY");
+    await user.click(screen.getByRole("button", { name: /^Enrol$/ }));
+    await waitFor(() =>
+      expect(
+        post.mock.calls.some((c) => String(c[0]) === "/internal/v1/coverage/subsidies/enrolments"),
+      ).toBe(true),
+    );
+    const call = post.mock.calls.find((c) => String(c[0]).includes("/subsidies/enrolments"));
+    expect((call?.[1] as { member_cpid?: string })?.member_cpid).toBe("CPID-77");
+  });
+
   it("contributions tab renders list rows from coverage contributions endpoint", async () => {
     const user = userEvent.setup();
     get.mockImplementation((url: string) => {
