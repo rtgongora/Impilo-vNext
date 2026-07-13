@@ -25,6 +25,7 @@ import { LowBandwidthToggle } from "@/components/session/LowBandwidthToggle";
 import { TelemedicineRtcHealthPanel } from "@/components/telemedicine/TelemedicineRtcHealthPanel";
 import { TelemedicineLiveSessionEmbed } from "@/components/live/TelemedicineLiveSessionEmbed";
 import { WaitingRoomAdmitControl } from "@/components/telemedicine/WaitingRoomAdmitControl";
+import { TeleconsultOrdersSection } from "@/components/telemedicine/TeleconsultOrdersSection";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useTelemedicineMediaToken } from "@/hooks/queries/useTelemedicine";
@@ -386,11 +387,24 @@ export default function TeleconsultSessionPage() {
         </label>
 
         <label className="block">
-          <span className="text-xs font-medium text-muted-foreground">Orders (one per line)</span>
-          <textarea value={orders} onChange={(e) => setOrders(e.target.value)} rows={3}
+          <span className="text-xs font-medium text-muted-foreground">Orders summary (narrative)</span>
+          <textarea value={orders} onChange={(e) => setOrders(e.target.value)} rows={2}
             className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
-            placeholder="FBC + differential&#10;Chest X-ray PA&#10;Start Amoxicillin 500mg TDS x 5 days" />
+            placeholder="Narrative summary of the plan — place coded orders below." />
         </label>
+
+        {/* Real coded orders to the SoR rails (labs/imaging/meds), encounter-scoped (G17). */}
+        {session?.encounterId && session?.patientCpid ? (
+          <TeleconsultOrdersSection
+            patientId={session.patientCpid as string}
+            encounterId={session.encounterId as string}
+            patientCpid={session.patientCpid as string}
+          />
+        ) : (
+          <p className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
+            Coded orders require a linked encounter. This referral has no encounter reference.
+          </p>
+        )}
 
         <label className="block">
           <span className="text-xs font-medium text-muted-foreground">Follow-up instructions</span>
@@ -425,7 +439,7 @@ export default function TeleconsultSessionPage() {
             <User className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">{(session?.patientId as string)?.substring(0, 12) || "Patient"}</p>
+            <p className="text-sm font-medium text-foreground">{((session?.patientCpid as string) ?? (session?.patientId as string))?.substring(0, 12) || "Patient"}</p>
             <p className="text-[10px] text-muted-foreground">Click to view chart</p>
           </div>
         </div>

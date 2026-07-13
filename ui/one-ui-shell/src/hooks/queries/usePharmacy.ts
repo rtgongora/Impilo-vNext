@@ -61,6 +61,34 @@ export function usePrescriptions(params?: PrescriptionsParams) {
   });
 }
 
+export interface CreatePrescriptionPayload {
+  patient_id: string;
+  medication_name: string;
+  dosage: string;
+  frequency: string;
+  prescribed_by: string;
+  facility_id?: string;
+  encounter_id?: string;
+  generic_name?: string;
+  route?: string;
+  duration?: string;
+  quantity?: number;
+  instructions?: string;
+  indication?: string;
+}
+
+/** Create a prescription via the pharmacy SoR (BFF `POST /internal/v1/pharmacy/prescriptions`). */
+export function useCreatePrescription() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<PrescriptionResource>, unknown, CreatePrescriptionPayload>({
+    mutationFn: (payload) =>
+      apiClient.post<ApiResponse<PrescriptionResource>>("/internal/v1/pharmacy/prescriptions", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["prescriptions"] });
+    },
+  });
+}
+
 export function useDispensePrescription() {
   const queryClient = useQueryClient();
 
