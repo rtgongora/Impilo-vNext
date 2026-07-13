@@ -17,12 +17,22 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class WalletPlatformService {
 
     private static final Logger log = LoggerFactory.getLogger(WalletPlatformService.class);
+
+    /**
+     * Actor types permitted to move custodial wallet money. Credit mints balance,
+     * so this must never be open to citizen/provider actors; reads stay open like
+     * sibling platform endpoints. Permissive when actor type is unset (ext_authz
+     * already gated the call), matching the estate idiom.
+     */
+    static final Set<String> PLATFORM_MONEY_ROLES = Set.of(
+            "SYSTEM", "SYSTEM_ADMIN", "FINANCE_ADMIN", "FACILITY_FINANCE", "PLATFORM_OPERATOR");
 
     private final WalletAccountRepository walletAccountRepository;
     private final WalletTransactionRepository walletTransactionRepository;
@@ -88,6 +98,7 @@ public class WalletPlatformService {
     private WalletTransactionEntity postMovement(String walletId, BigDecimal amount, String transactionType,
                                                    String referenceCode, String direction) {
         TrustContext ctx = TrustContextHolder.require();
+        assertMoneyRole(ctx, direction);
         WalletAccountEntity w = loadWallet(walletId, ctx.tenantId());
         if ("DEBIT".equals(direction) && w.getAvailableBalance().compareTo(amount) < 0) {
             throw new IllegalStateException("Insufficient wallet balance");
@@ -123,6 +134,16 @@ public class WalletPlatformService {
         TrustContext ctx = TrustContextHolder.require();
         loadWallet(walletId, ctx.tenantId());
         return walletTransactionRepository.findByWalletIdOrderByCreatedAtDesc(walletId);
+    }
+
+    private void assertMoneyRole(TrustContext ctx, String action) {
+        String actorType = ctx.actorType();
+        if (actorType == null || actorType.isBlank()) {
+            return; // permissive when unset, matching the estate idiom (ext_authz already gated the call)
+        }
+        if (!PLATFORM_MONEY_ROLES.contains(actorType)) {
+            throw new SecurityException("Actor type " + actorType + " cannot " + action + " a custodial wallet");
+        }
     }
 
     private WalletAccountEntity loadWallet(String walletId, UUID tenantId) {

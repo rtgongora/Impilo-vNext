@@ -39,6 +39,14 @@ public class WalletPlatformController {
                         ex.getMessage(), 404, ctx.correlationId().toString()));
     }
 
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<ApiResponse<Void>> handleForbidden(SecurityException ex) {
+        var ctx = TrustContextHolder.require();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("PLATFORM_ACCESS_DENIED",
+                        ex.getMessage(), 403, ctx.correlationId().toString()));
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<WalletAccountEntity>>> list(@RequestParam String ownerRef) {
         var ctx = TrustContextHolder.require();
