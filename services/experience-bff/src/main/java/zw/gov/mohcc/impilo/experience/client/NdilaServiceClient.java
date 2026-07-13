@@ -79,6 +79,36 @@ public class NdilaServiceClient {
         return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
     }
 
+    // ── Catchment resolution (R6/G4) — ndila is the geography SoR ─────────────
+
+    /** Which catchments contain a point ({@code {point:{latitude,longitude}}}). */
+    public JsonNode catchmentCheckPoint(Map<String, Object> body) {
+        String url = baseUrl + "/api/v1/ndila/catchments/check-point";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
+    /** Nearest service locations to a point ({@code {point, locationType, limit}}). */
+    public JsonNode catchmentNearestService(Map<String, Object> body) {
+        String url = baseUrl + "/api/v1/ndila/catchments/nearest-service";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
+    /** Coverage summary for an owner ({@code {ownerService, ownerEntityId}}). */
+    public JsonNode catchmentCoverageSummary(Map<String, Object> body) {
+        String url = baseUrl + "/api/v1/ndila/catchments/coverage-summary";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
+    public JsonNode catchmentsByOwner(String ownerService, String ownerEntityId) {
+        String url = baseUrl + "/api/v1/ndila/catchments/by-owner/" + ownerService + "/" + ownerEntityId;
+        return restTemplate.getForEntity(url, JsonNode.class).getBody();
+    }
+
+    public JsonNode createCatchment(Map<String, Object> body) {
+        String url = baseUrl + "/api/v1/ndila/catchments";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
     /**
      * Browser-facing tile URLs must be same-origin BFF paths so MapLibre can load
      * raster pyramids without CORS or direct ndila-service exposure.

@@ -188,6 +188,90 @@ public class NdilaController {
         }
     }
 
+    // ── Catchment resolution (R6/G4) — ndila is the geography SoR ─────────────
+
+    /** Which catchments contain a point — makes facility↔catchment resolution reachable. */
+    @PostMapping("/catchments/check-point")
+    public ResponseEntity<Map<String, Object>> catchmentCheckPoint(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.catchmentCheckPoint(body);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : List.of(), "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.warn("Ndila catchment check-point failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "data", List.of(), "error", Map.of("code", "NDILA_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", meta(requestId, correlationId)));
+        }
+    }
+
+    @PostMapping("/catchments/nearest-service")
+    public ResponseEntity<Map<String, Object>> catchmentNearestService(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.catchmentNearestService(body);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : Map.of(), "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.warn("Ndila catchment nearest-service failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "data", Map.of(), "error", Map.of("code", "NDILA_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", meta(requestId, correlationId)));
+        }
+    }
+
+    @PostMapping("/catchments/coverage-summary")
+    public ResponseEntity<Map<String, Object>> catchmentCoverageSummary(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.catchmentCoverageSummary(body);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : Map.of(), "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.warn("Ndila catchment coverage-summary failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "data", Map.of(), "error", Map.of("code", "NDILA_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", meta(requestId, correlationId)));
+        }
+    }
+
+    @GetMapping("/catchments/by-owner/{ownerService}/{ownerEntityId}")
+    public ResponseEntity<Map<String, Object>> catchmentsByOwner(
+            @PathVariable String ownerService,
+            @PathVariable String ownerEntityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.catchmentsByOwner(ownerService, ownerEntityId);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : List.of(), "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.warn("Ndila catchments by-owner failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "data", List.of(), "error", Map.of("code", "NDILA_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", meta(requestId, correlationId)));
+        }
+    }
+
+    @PostMapping("/catchments")
+    public ResponseEntity<Map<String, Object>> createCatchment(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.createCatchment(body);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", data != null ? data : Map.of(), "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.warn("Ndila create catchment failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "NDILA_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", meta(requestId, correlationId)));
+        }
+    }
+
     @PostMapping("/tracking/nearby")
     public ResponseEntity<Map<String, Object>> nearbyAssets(
             @RequestBody Map<String, Object> body,
