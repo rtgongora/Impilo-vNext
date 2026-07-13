@@ -135,6 +135,51 @@ public class VarapiServiceClient {
         return extractData(response);
     }
 
+    // ── Compliance actions (G9) ─────────────────────────────────────────────
+
+    public JsonNode getComplianceByProvider(long providerId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/internal/providers/compliance/provider/" + providerId, JsonNode.class));
+    }
+
+    public JsonNode getOutstandingCompliance(long providerId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/internal/providers/compliance/provider/" + providerId + "/outstanding", JsonNode.class));
+    }
+
+    public JsonNode createComplianceAction(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/compliance", body, JsonNode.class));
+    }
+
+    /** op ∈ fulfil | exempt | escalate. */
+    public JsonNode complianceActionOp(long actionId, String op, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/compliance/" + actionId + "/" + op, body, JsonNode.class));
+    }
+
+    // ── Disciplinary cases (G9) ─────────────────────────────────────────────
+
+    public JsonNode getDisciplinaryByProvider(long providerId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/internal/providers/disciplinary-cases/provider/" + providerId, JsonNode.class));
+    }
+
+    public JsonNode openDisciplinaryCase(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/disciplinary-cases", body, JsonNode.class));
+    }
+
+    public JsonNode recordDisciplinaryAction(long caseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/disciplinary-cases/" + caseId + "/record-action", body, JsonNode.class));
+    }
+
+    public JsonNode closeDisciplinaryCase(long caseId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/disciplinary-cases/" + caseId + "/close", body, JsonNode.class));
+    }
+
     /**
      * Create a provider profile in the canonical registry.
      */
