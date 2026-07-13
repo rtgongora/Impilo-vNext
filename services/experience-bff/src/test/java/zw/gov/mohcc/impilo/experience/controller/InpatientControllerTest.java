@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
+import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.Map;
@@ -20,7 +21,7 @@ class InpatientControllerTest {
 
     @Test
     void listAdmissions_returnsDataFromInpatientService() {
-        InpatientController controller = new InpatientController(new StubInpatientClient());
+        InpatientController controller = new InpatientController(new StubInpatientClient(), stubAudit());
         ResponseEntity<Map<String, Object>> response = controller.listAdmissions(
                 "00000000-0000-4000-8000-000000000001",
                 "req-1",
@@ -33,11 +34,12 @@ class InpatientControllerTest {
 
     @Test
     void createAdmission_returns201WithCoreTransactionMeta() {
-        InpatientController controller = new InpatientController(new StubInpatientClient());
+        InpatientController controller = new InpatientController(new StubInpatientClient(), stubAudit());
         ResponseEntity<Map<String, Object>> response = controller.createAdmission(
                 "00000000-0000-4000-8000-000000000001",
                 "req-1",
                 "corr-1",
+                "actor-1", "PROVIDER", "INPATIENT_CARE", null,
                 Map.of("subjectCpid", "CPID-ZW-00001"));
         assertEquals(201, response.getStatusCode().value());
         @SuppressWarnings("unchecked")
@@ -47,8 +49,28 @@ class InpatientControllerTest {
     }
 
     @Test
+    void createAdmission_emitsAdmissionAndBedAuditEvents() {
+        java.util.List<Map<String, Object>> events = new java.util.ArrayList<>();
+        TshepoAuditServiceClient capturing = new TshepoAuditServiceClient(
+                new RestTemplate(), ServiceClientConfig.testServiceEndpoints()) {
+            @Override public void ingestAuditEvent(Map<String, Object> request) { events.add(request); }
+        };
+        InpatientController controller = new InpatientController(new StubInpatientClient(), capturing);
+
+        controller.createAdmission(
+                "00000000-0000-4000-8000-000000000001", "req-1", "corr-1",
+                "actor-1", "PROVIDER", "INPATIENT_CARE", null,
+                Map.of("subjectCpid", "CPID-ZW-00001", "bedId", "bed-9"));
+
+        assertEquals(2, events.size());
+        assertEquals("INPATIENT_ADMISSION_CREATED", events.get(0).get("eventType"));
+        assertEquals("INPATIENT_BED_ASSIGNED", events.get(1).get("eventType"));
+        assertEquals("bed-9", events.get(1).get("resourceId"));
+    }
+
+    @Test
     void getActiveAdmissions_returnsCoreTransactionMeta() {
-        InpatientController controller = new InpatientController(new StubInpatientClient());
+        InpatientController controller = new InpatientController(new StubInpatientClient(), stubAudit());
         ResponseEntity<Map<String, Object>> response = controller.getActiveAdmissions(
                 "CPID-ZW-00001",
                 "f1000000-0000-0000-0000-000000000001",
@@ -63,7 +85,7 @@ class InpatientControllerTest {
 
     @Test
     void transferAdmission_returnsCoreTransactionMeta() {
-        InpatientController controller = new InpatientController(new StubInpatientClient());
+        InpatientController controller = new InpatientController(new StubInpatientClient(), stubAudit());
         ResponseEntity<Map<String, Object>> response = controller.transferAdmission(
                 "demo-admission",
                 "req-3",
@@ -77,7 +99,7 @@ class InpatientControllerTest {
 
     @Test
     void dischargeAdmission_returnsCoreTransactionMeta() {
-        InpatientController controller = new InpatientController(new StubInpatientClient());
+        InpatientController controller = new InpatientController(new StubInpatientClient(), stubAudit());
         ResponseEntity<Map<String, Object>> response = controller.dischargeAdmission(
                 "demo-admission",
                 "req-4",
@@ -92,7 +114,7 @@ class InpatientControllerTest {
 
     @Test
     void listEscalations_returnsData() {
-        InpatientController controller = new InpatientController(new StubInpatientClient());
+        InpatientController controller = new InpatientController(new StubInpatientClient(), stubAudit());
         ResponseEntity<Map<String, Object>> response = controller.listEscalations(
                 "req-e", "corr-e", "CPID-ZW-00001", null);
         assertEquals(200, response.getStatusCode().value());
@@ -101,7 +123,7 @@ class InpatientControllerTest {
 
     @Test
     void respondEscalation_returnsResponded() {
-        InpatientController controller = new InpatientController(new StubInpatientClient());
+        InpatientController controller = new InpatientController(new StubInpatientClient(), stubAudit());
         ResponseEntity<Map<String, Object>> response = controller.respondEscalation(
                 "esc-1", "req-e", "corr-e", Map.of("note", "Reviewed"));
         assertEquals(200, response.getStatusCode().value());
@@ -110,7 +132,7 @@ class InpatientControllerTest {
 
     @Test
     void finaliseDischargeSummary_returnsFinalised() {
-        InpatientController controller = new InpatientController(new StubInpatientClient());
+        InpatientController controller = new InpatientController(new StubInpatientClient(), stubAudit());
         ResponseEntity<Map<String, Object>> response = controller.finaliseDischargeSummary(
                 "enc-1", "req-d", "corr-d");
         assertEquals(200, response.getStatusCode().value());
@@ -119,12 +141,19 @@ class InpatientControllerTest {
 
     @Test
     void countersignDischargeSummary_returnsCountersignedRow() {
-        InpatientController controller = new InpatientController(new StubInpatientClient());
+        InpatientController controller = new InpatientController(new StubInpatientClient(), stubAudit());
         ResponseEntity<Map<String, Object>> response = controller.countersignDischargeSummary(
                 "enc-1", "req-d", "corr-d", Map.of("attestation", "Reviewed and agreed"));
         assertEquals(200, response.getStatusCode().value());
         assertEquals("supervisor-1",
                 ((JsonNode) response.getBody().get("data")).path("countersigned_by").asText());
+    }
+
+    /** No-op audit client so the best-effort admission audit does not make real HTTP calls in tests. */
+    private static TshepoAuditServiceClient stubAudit() {
+        return new TshepoAuditServiceClient(new RestTemplate(), ServiceClientConfig.testServiceEndpoints()) {
+            @Override public void ingestAuditEvent(Map<String, Object> request) { /* no-op */ }
+        };
     }
 
     private static final class StubInpatientClient extends InpatientServiceClient {

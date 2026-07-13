@@ -11,6 +11,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
+import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
 import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
 
 import java.util.LinkedHashMap;
@@ -27,9 +28,12 @@ public class InpatientController {
     private static final Logger log = LoggerFactory.getLogger(InpatientController.class);
 
     private final InpatientServiceClient inpatientClient;
+    private final TshepoAuditServiceClient auditClient;
 
-    public InpatientController(InpatientServiceClient inpatientClient) {
+    public InpatientController(InpatientServiceClient inpatientClient,
+                              TshepoAuditServiceClient auditClient) {
         this.inpatientClient = inpatientClient;
+        this.auditClient = auditClient;
     }
 
     private static JsonNode requirePayload(JsonNode node, String operation) {
@@ -57,6 +61,52 @@ public class InpatientController {
     private static ResponseStatusException upstreamFailure(String operation, Exception cause) {
         log.warn("{} failed: {}", operation, cause.getMessage());
         return new ResponseStatusException(HttpStatus.BAD_GATEWAY, operation + " failed", cause);
+    }
+
+    /**
+     * Emit governance audit for a created admission (and the bed assignment when a bed was chosen).
+     * Best-effort — an audit failure must not fail the admission the clinician already completed.
+     */
+    private void emitAdmissionAudit(String tenantId, String correlationId, String actorId, String actorType,
+                                    String purposeOfUse, String facilityId, String admissionRef,
+                                    Object bedId, Object subjectCpid) {
+        try {
+            String subjectRef = admissionRef != null ? "admission:" + admissionRef
+                    : (subjectCpid != null ? "patient:" + subjectCpid : "admission:unknown");
+            auditClient.ingestAuditEvent(auditBody(tenantId, correlationId, actorId, actorType, purposeOfUse,
+                    facilityId, "INPATIENT_ADMISSION_CREATED", subjectRef, "ADMISSION",
+                    admissionRef != null ? admissionRef : "unknown"));
+            if (bedId != null && !String.valueOf(bedId).isBlank()) {
+                auditClient.ingestAuditEvent(auditBody(tenantId, correlationId, actorId, actorType, purposeOfUse,
+                        facilityId, "INPATIENT_BED_ASSIGNED", subjectRef, "BED", String.valueOf(bedId)));
+            }
+        } catch (Exception e) {
+            log.warn("Inpatient admission audit emit failed (non-fatal): {}", e.getMessage());
+        }
+    }
+
+    private static Map<String, Object> auditBody(String tenantId, String correlationId, String actorId,
+                                                 String actorType, String purposeOfUse, String facilityId,
+                                                 String eventType, String subjectRef, String resourceType,
+                                                 String resourceId) {
+        Map<String, Object> b = new LinkedHashMap<>();
+        if (tenantId != null && !tenantId.isBlank()) {
+            try { b.put("tenantId", java.util.UUID.fromString(tenantId.trim())); } catch (IllegalArgumentException ignored) { }
+        }
+        b.put("eventType", eventType);
+        b.put("actorId", actorId != null && !actorId.isBlank() ? actorId : "SYSTEM");
+        b.put("actorType", actorType != null && !actorType.isBlank() ? actorType : "PROVIDER");
+        b.put("subjectRef", subjectRef);
+        b.put("resourceType", resourceType);
+        b.put("resourceId", resourceId != null && resourceId.length() > 255 ? resourceId.substring(0, 255) : resourceId);
+        b.put("action", eventType);
+        b.put("outcome", "SUCCESS");
+        b.put("purposeOfUse", purposeOfUse != null && !purposeOfUse.isBlank() ? purposeOfUse : "INPATIENT_CARE");
+        b.put("correlationId", correlationId);
+        if (facilityId != null && !facilityId.isBlank()) {
+            try { b.put("facilityId", java.util.UUID.fromString(facilityId.trim())); } catch (IllegalArgumentException ignored) { }
+        }
+        return b;
     }
 
     @GetMapping("/admissions")
@@ -192,6 +242,10 @@ public class InpatientController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
             @RequestBody Map<String, Object> body) {
         try {
             // Inject the tenant from the trust header so the UI doesn't have to carry it
@@ -210,6 +264,8 @@ public class InpatientController {
                 meta.put("admission_ref", admissionRef);
                 meta.put("core_transaction_id", CoreTransactionCompositionService.admissionTransactionId(admissionRef));
             }
+            emitAdmissionAudit(tenantId, correlationId, actorId, actorType, purposeOfUse, facilityId,
+                    admissionRef, admissionBody.get("bedId"), admissionBody.get("subjectCpid"));
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "data", created,
                     "meta", meta));
