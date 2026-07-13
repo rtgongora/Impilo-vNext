@@ -202,6 +202,17 @@ the offline purse — no money and no PHR is trapped on the dead card.
 
 ---
 
+## 10a. Implementation status (build log)
+
+| Phase | Status | Detail |
+|---|---|---|
+| **1. VITO CardCredential spine + lifecycle events** | ✅ **BUILT** | `CardLifecycleService` now emits canonical `SMART_CARD` events on every transition — `CARD_REQUESTED/PRINTED/ACTIVATED/SUSPENDED/REVOKED/REPLACED` — each carrying the full credential payload (cardNumber, healthId, didUri, status, previousCardId, revocationReason). Secure handover links the replacement chain (`recordReplacement` → `CARD_REPLACED`). Topic: `impilo.vito.cards` (+ legacy `vito.cards`). Unit-tested. |
+| **2. mushe references the credential + safety integration** | ✅ **BUILT** | `cards.vito_card_number` link + `findByVitoCardNumber`; `VitoCardEventConsumer` on `impilo.vito.cards` calls `freezeForVitoCard` → a revoked/suspended SMART card **freezes its linked money card** (idempotent, no-op when unlinked). Unit-tested. *Live cross-service Kafka flow needs a deploy-time integration check.* |
+| **3. Financial offline purse + JWS reconciliation** | ⛔ **SPEC (needs real env / hardware)** | No offline-txn/counter/JWS/purse seam exists in mushe today (vito's was the only one, now deprecated). Full build: (a) propagate the SE **public key** on the card events so mushe can cache it (extend the Phase-1 payload); (b) an offline-txn ingestion endpoint that **verifies the JWS against the card's P-256 SE public key**, enforces a **monotonic counter** (replay/gap detection), and reconciles each txn into the double-entry ledger (server balance authoritative). Meaningful testing requires **real card-signed transactions** (SE hardware) — deferred rather than shipped as blind money-crypto. |
+| **4. PHR key custody → tshepo-keys + Mvumo consent gate** | ⛔ **SPEC (platform-gap blocked)** | Key custody move is **blocked**: `CardHealthDataService` documents that *the platform has no data-encryption-key (KMS) service — tshepo-keys is signing-only*. The fail-closed deployment master key is the honest current state until a data-key service exists. The **Mvumo consent gate** on the encounter→card PHR write (`WalletEventConsumer.onEncounterCompleted`) is buildable but needs a mushe→Mvumo client (cross-service). |
+
+**Net:** the *unification core* — one canonical card credential, one lifecycle event stream, and the cross-facet safety loop (revoke → freeze money) — is built and tested. Phases 3–4 are money-/PHI-crypto and are honestly gated on card hardware and a platform KMS respectively; their precise specs are above. Two operator prerequisites remain from §9: migrate any legacy vito card-wallet balances into mushe before dropping the deprecated vito ledger, and (Phase-3 enabler) decide whether mushe caches the SE public key from card events.
+
 ## 11. Summary
 
 One physical **secure-element smart card** carries three governed functions off one cryptographic
