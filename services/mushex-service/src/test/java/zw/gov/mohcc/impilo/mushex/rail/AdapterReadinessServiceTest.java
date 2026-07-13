@@ -207,8 +207,15 @@ class AdapterReadinessServiceTest {
         assertEquals(AdapterReadinessStatus.DISABLED, rowFor(rows, AdapterType.MOBILE_MONEY).status());
         assertEquals(AdapterReadinessStatus.DISABLED, rowFor(rows, AdapterType.BANK_TRANSFER).status());
         assertEquals(AdapterReadinessStatus.DISABLED, rowFor(rows, AdapterType.CARD_GATEWAY).status());
-        long liveCapable = rows.stream().filter(AdapterReadiness::liveCapable).count();
-        assertEquals(0, liveCapable, "Default production posture must have zero live-capable rails");
+        // The internal WALLET rail is deliberately always live (mushe-wallet is the
+        // estate's own money movement); EXTERNAL rails must have zero live-capable.
+        long externalLiveCapable = rows.stream()
+                .filter(r -> r.adapterType() != AdapterType.WALLET)
+                .filter(AdapterReadiness::liveCapable).count();
+        assertEquals(0, externalLiveCapable,
+                "Default production posture must have zero live-capable EXTERNAL rails");
+        assertEquals(AdapterReadinessStatus.READY_LIVE, rowFor(rows, AdapterType.WALLET).status(),
+                "Internal wallet rail is always live");
     }
 
     @Test

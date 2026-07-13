@@ -50,6 +50,14 @@ public class AdapterReadinessService {
      * targeted operator drill-down views.
      */
     public AdapterReadiness describe(AdapterType type) {
+        if (type == AdapterType.WALLET) {
+            // The internal Mushe-wallet rail is service-to-service (MusheWalletAdapter),
+            // not a PaymentRailAdapter bean; it is live whenever mushe-wallet is reachable.
+            return new AdapterReadiness(type, AdapterReadinessStatus.READY_LIVE,
+                    true, false,
+                    "Internal Mushe-wallet rail: wallet payments and payout disbursements "
+                            + "execute against mushe-wallet-service (real internal money movement).");
+        }
         if (!adapterRegistry.has(type)) {
             return new AdapterReadiness(type, AdapterReadinessStatus.NOT_REGISTERED,
                     false, false,
@@ -101,7 +109,7 @@ public class AdapterReadinessService {
             case MOBILE_MONEY -> adapters.getMobileMoney();
             case BANK_TRANSFER -> adapters.getBankTransfer();
             case CARD_GATEWAY -> adapters.getCardGateway();
-            case SANDBOX -> null;
+            case WALLET, SANDBOX -> null;
         };
     }
 
@@ -110,6 +118,7 @@ public class AdapterReadinessService {
             case MOBILE_MONEY -> "mushex.adapters.mobile-money";
             case BANK_TRANSFER -> "mushex.adapters.bank-transfer";
             case CARD_GATEWAY -> "mushex.adapters.card-gateway";
+            case WALLET -> "mushex.adapters.wallet";
             case SANDBOX -> "mushex.adapters.sandbox";
         };
     }

@@ -248,7 +248,7 @@ public class PaymentAttemptService {
             case MOBILE_MONEY -> properties.getAdapters().getMobileMoney();
             case BANK_TRANSFER -> properties.getAdapters().getBankTransfer();
             case CARD_GATEWAY -> properties.getAdapters().getCardGateway();
-            case SANDBOX -> null;
+            case WALLET, SANDBOX -> null;
         };
     }
 
@@ -257,6 +257,7 @@ public class PaymentAttemptService {
             case MOBILE_MONEY -> "mobile-money";
             case BANK_TRANSFER -> "bank-transfer";
             case CARD_GATEWAY -> "card-gateway";
+            case WALLET -> "wallet";
             case SANDBOX -> "sandbox";
         };
     }

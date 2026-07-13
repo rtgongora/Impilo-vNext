@@ -24,6 +24,8 @@ import zw.gov.mohcc.impilo.mushex.domain.repository.PayoutBatchRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PayoutItemRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.SettlementRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.LedgerEntryRepository;
+import zw.gov.mohcc.impilo.mushex.service.disbursement.DisbursementRail;
+import zw.gov.mohcc.impilo.mushex.service.disbursement.DisbursementRailRegistry;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -56,6 +58,7 @@ public class SettlementService {
     private final LedgerService ledgerService;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final DisbursementRailRegistry disbursementRails;
 
     public SettlementService(SettlementRepository settlementRepository,
                              PayoutBatchRepository batchRepository,
@@ -64,7 +67,8 @@ public class SettlementService {
                              LedgerEntryRepository ledgerEntryRepository,
                              LedgerService ledgerService,
                              EventOutboxRepository outboxRepository,
-                             ObjectMapper objectMapper) {
+                             ObjectMapper objectMapper,
+                             DisbursementRailRegistry disbursementRails) {
         this.settlementRepository = settlementRepository;
         this.batchRepository = batchRepository;
         this.itemRepository = itemRepository;
@@ -73,6 +77,7 @@ public class SettlementService {
         this.ledgerService = ledgerService;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.disbursementRails = disbursementRails;
     }
 
     /**
@@ -138,30 +143,78 @@ public class SettlementService {
         settlement.setStatus(SettlementStatus.COMPUTED);
         settlement = settlementRepository.save(settlement);
 
-        // Create a default payout batch
-        PayoutBatchEntity batch = new PayoutBatchEntity();
-        batch.setBatchId(UlidGenerator.generate());
-        batch.setSettlementId(settlement.getSettlementId());
-        batch.setAdapterType(AdapterType.BANK_TRANSFER);
-        batch.setStatus(PayoutStatus.PENDING);
-        batch = batchRepository.save(batch);
-
-        // Create payout items - one per facility with paid intents
-        Map<UUID, BigDecimal> facilityTotals = new LinkedHashMap<>();
+        // Aggregate payouts by PAYEE, not by facility: marketplace intents carry
+        // their payee in metadata (provider_id = "vendor:<sellerId>") and the
+        // payee's SHARE in metadata payee_amount (vendor goods + delivery,
+        // excluding the platform fee) — paying a vendor the gross amountPaid
+        // would hand them the platform fee. Facility intents fall back to the
+        // intent's facilityId and gross paid amount. Intents with no resolvable
+        // payee are skipped LOUDLY, never attributed to a "null" payee.
+        Map<PayeeType, Map<String, BigDecimal>> payeeTotals = new LinkedHashMap<>();
+        int skippedNoPayee = 0;
         for (PaymentIntentEntity intent : paidIntents) {
-            facilityTotals.merge(intent.getFacilityId(), intent.getAmountPaid(), BigDecimal::add);
+            String providerId = readMetadataField(intent.getMetadata(), "provider_id");
+            PayeeType payeeType;
+            String payeeRef;
+            if (providerId != null && providerId.startsWith("vendor:")) {
+                payeeType = PayeeType.VENDOR;
+                payeeRef = providerId.substring("vendor:".length());
+            } else if (providerId != null && providerId.startsWith("facility:")) {
+                payeeType = PayeeType.FACILITY;
+                payeeRef = providerId.substring("facility:".length());
+            } else if (intent.getFacilityId() != null) {
+                payeeType = PayeeType.FACILITY;
+                payeeRef = intent.getFacilityId().toString();
+            } else {
+                skippedNoPayee++;
+                log.warn("Settlement {}: intent {} has no resolvable payee — excluded from payouts",
+                        settlement.getSettlementId(), intent.getIntentId());
+                continue;
+            }
+            BigDecimal payeeAmount = intent.getAmountPaid();
+            String share = readMetadataField(intent.getMetadata(), "payee_amount");
+            if (share != null) {
+                try {
+                    BigDecimal parsed = new BigDecimal(share);
+                    // A payee share can never exceed what was actually paid.
+                    if (parsed.signum() > 0 && parsed.compareTo(intent.getAmountPaid()) <= 0) {
+                        payeeAmount = parsed;
+                    }
+                } catch (NumberFormatException ignored) {
+                    log.warn("Unparseable payee_amount '{}' on intent {} — using gross amountPaid",
+                            share, intent.getIntentId());
+                }
+            }
+            payeeTotals.computeIfAbsent(payeeType, k -> new LinkedHashMap<>())
+                    .merge(payeeRef, payeeAmount, BigDecimal::add);
         }
 
-        for (Map.Entry<UUID, BigDecimal> entry : facilityTotals.entrySet()) {
-            PayoutItemEntity item = new PayoutItemEntity();
-            item.setId(UlidGenerator.generate());
-            item.setBatchId(batch.getBatchId());
-            item.setPayeeType(PayeeType.FACILITY);
-            item.setPayeeRef(entry.getKey().toString());
-            item.setAmount(entry.getValue());
-            item.setCurrency("USD");
-            item.setStatus(PayoutStatus.PENDING);
-            itemRepository.save(item);
+        // One batch per rail: VENDOR payees ride the internal WALLET rail (live);
+        // FACILITY/other payees ride BANK_TRANSFER (external rail, pending until
+        // a disbursement agreement exists — fail-closed, never fake-disbursed).
+        for (Map.Entry<PayeeType, Map<String, BigDecimal>> group : payeeTotals.entrySet()) {
+            PayoutBatchEntity batch = new PayoutBatchEntity();
+            batch.setBatchId(UlidGenerator.generate());
+            batch.setSettlementId(settlement.getSettlementId());
+            batch.setAdapterType(group.getKey() == PayeeType.VENDOR
+                    ? AdapterType.WALLET : AdapterType.BANK_TRANSFER);
+            batch.setStatus(PayoutStatus.PENDING);
+            batch = batchRepository.save(batch);
+            for (Map.Entry<String, BigDecimal> entry : group.getValue().entrySet()) {
+                PayoutItemEntity item = new PayoutItemEntity();
+                item.setId(UlidGenerator.generate());
+                item.setBatchId(batch.getBatchId());
+                item.setPayeeType(group.getKey());
+                item.setPayeeRef(entry.getKey());
+                item.setAmount(entry.getValue());
+                item.setCurrency("USD");
+                item.setStatus(PayoutStatus.PENDING);
+                itemRepository.save(item);
+            }
+        }
+        if (skippedNoPayee > 0) {
+            log.warn("Settlement {}: {} intent(s) had no resolvable payee", 
+                    settlement.getSettlementId(), skippedNoPayee);
         }
 
         log.info("Settlement computed: id={}, intents={}, totalPaid={}",
@@ -293,21 +346,65 @@ public class SettlementService {
         settlement.setStatus(SettlementStatus.RELEASED);
         settlement = settlementRepository.save(settlement);
 
-        // Mark all batches as processing
+        // Release = authorization to disburse. Each batch is handed to its rail;
+        // a batch whose rail is not registered stays PENDING (fail-closed) — the
+        // record must never claim money moved when no rail could move it.
         List<PayoutBatchEntity> batches = batchRepository.findBySettlementId(settlementId);
         for (PayoutBatchEntity batch : batches) {
+            List<PayoutItemEntity> items = itemRepository.findByBatchId(batch.getBatchId());
+            DisbursementRail rail = disbursementRails.railFor(batch.getAdapterType()).orElse(null);
+            if (rail == null) {
+                log.warn("Payout batch {} rail {} has no registered disbursement rail — "
+                        + "batch stays PENDING awaiting the external rail", 
+                        batch.getBatchId(), batch.getAdapterType());
+                publishEvent("SETTLEMENT", settlementId, "SETTLEMENT_PAYOUT_AWAITING_RAIL",
+                        Map.of("settlementId", settlementId, "batchId", batch.getBatchId(),
+                                "rail", batch.getAdapterType().name(), "items", items.size()),
+                        settlement.getTenantId());
+                continue;
+            }
+
             batch.setStatus(PayoutStatus.PROCESSING);
             batch.setReleasedAt(OffsetDateTime.now());
             batchRepository.save(batch);
 
-            // Post ledger entry for each batch's items
-            List<PayoutItemEntity> items = itemRepository.findByBatchId(batch.getBatchId());
-            BigDecimal batchTotal = items.stream()
-                    .map(PayoutItemEntity::getAmount)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            DisbursementRail.RailOutcome outcome =
+                    rail.disburse(settlement.getTenantId(), batch.getBatchId(), items);
 
-            ledgerService.postSettlement(settlement.getTenantId(), settlementId,
-                    batchTotal, "USD");
+            BigDecimal disbursedTotal = BigDecimal.ZERO;
+            Map<String, DisbursementRail.ItemOutcome> byItem = new LinkedHashMap<>();
+            for (DisbursementRail.ItemOutcome io : outcome.items()) {
+                byItem.put(io.itemId(), io);
+            }
+            for (PayoutItemEntity item : items) {
+                DisbursementRail.ItemOutcome io = byItem.get(item.getId());
+                boolean credited = io != null && io.credited();
+                item.setStatus(credited ? PayoutStatus.COMPLETED : PayoutStatus.FAILED);
+                itemRepository.save(item);
+                if (credited) {
+                    disbursedTotal = disbursedTotal.add(item.getAmount());
+                }
+            }
+            batch.setStatus(outcome.complete() ? PayoutStatus.COMPLETED : PayoutStatus.PARTIAL);
+            batchRepository.save(batch);
+
+            // Ledger reflects what was actually disbursed, never the intended total.
+            if (disbursedTotal.signum() > 0) {
+                ledgerService.postSettlement(settlement.getTenantId(), settlementId,
+                        disbursedTotal, "USD");
+            }
+
+            publishEvent("SETTLEMENT", settlementId,
+                    outcome.complete() ? "SETTLEMENT_PAYOUT_COMPLETED" : "SETTLEMENT_PAYOUT_PARTIAL",
+                    Map.of("settlementId", settlementId, "batchId", batch.getBatchId(),
+                            "rail", batch.getAdapterType().name(),
+                            "credited", outcome.creditedCount(), "items", items.size(),
+                            "disbursedTotal", disbursedTotal.toPlainString()),
+                    settlement.getTenantId());
+            if (!outcome.complete()) {
+                log.error("PAYOUT PARTIAL: batch {} credited {}/{} — failed items need ops attention",
+                        batch.getBatchId(), outcome.creditedCount(), items.size());
+            }
         }
 
         log.info("Settlement released: id={}, batches={}", settlementId, batches.size());
@@ -340,6 +437,20 @@ public class SettlementService {
         log.info("Payout batch status updated: batchId={}, status={}", batchId, status);
 
         return batch;
+    }
+
+    /** Read a single string field from intent metadata JSON; null when absent/unparseable. */
+    private String readMetadataField(String metadataJson, String field) {
+        if (metadataJson == null || metadataJson.isBlank()) {
+            return null;
+        }
+        try {
+            com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(metadataJson);
+            com.fasterxml.jackson.databind.JsonNode v = node.get(field);
+            return v != null && !v.isNull() && !v.asText().isBlank() ? v.asText() : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private void publishEvent(String aggregateType, String aggregateId,
