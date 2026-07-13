@@ -1,6 +1,10 @@
 import { test, expect } from "./fixtures";
 
-test.describe("Inpatient admissions and rounds (mocked)", () => {
+// NOTE: This is a RENDERING-CONTRACT test — it route-mocks /internal/v1/inpatient/**
+// and asserts the pages render against a pre-existing admission. It does NOT prove
+// the admission-creation journey (nothing here creates an admission). The honest,
+// no-mocks creation journey lives in inpatient-admit-to-discharge-honest.spec.ts.
+test.describe("Inpatient admissions and rounds (mocked rendering contract)", () => {
   test.beforeEach(async ({ page }) => {
     await page.route("**/internal/v1/inpatient/**", async (route) => {
       const url = new URL(route.request().url());
