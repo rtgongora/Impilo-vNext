@@ -313,6 +313,16 @@ public class MusheWalletServiceClient {
     }
 
     /**
+     * List deposit intents (pending + confirmed) for a wallet.
+     */
+    public JsonNode listDeposits(UUID walletId) {
+        String url = baseUrl + "/internal/v1/funding/" + walletId + "/deposits";
+        log.debug("MusheWallet: Listing deposits for wallet={}", walletId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Deposit cash into a wallet.
      *
      * @param walletId the wallet UUID

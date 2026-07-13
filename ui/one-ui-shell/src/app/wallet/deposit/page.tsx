@@ -172,13 +172,41 @@ export default function DepositPage() {
             {/* Success */}
             {success && (
               <div className="rounded-xl border border-success/25 bg-success-soft p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle2 className="h-5 w-5 text-primary" />
-                  <h3 className="text-sm font-semibold text-primary-hover">Deposit successful</h3>
-                </div>
-                <div className="text-xs text-primary-hover space-y-1">
-                  <p>Transaction ID: {readStr(success, "txnId", "txn_id", "transactionId", "transaction_id") || "N/A"}</p>
-                </div>
+                {readStr(success, "status") === "PENDING" ? (
+                  <>
+                    {/* Honest collection-intent state: the balance rises only when the
+                        money's arrival is confirmed — never on request. */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <Loader2 className="h-5 w-5 text-primary" />
+                      <h3 className="text-sm font-semibold text-primary-hover">
+                        Deposit requested — awaiting your transfer
+                      </h3>
+                    </div>
+                    <div className="text-xs text-primary-hover space-y-1">
+                      <p>
+                        Send the money from your linked account and quote this reference
+                        so we can match it:
+                      </p>
+                      <p className="font-mono text-base font-bold tracking-wider">
+                        {readStr(success, "referenceCode", "reference_code") || "—"}
+                      </p>
+                      <p>
+                        Your wallet balance will rise as soon as the transfer is confirmed.
+                        You can check progress under deposit history.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
+                      <h3 className="text-sm font-semibold text-primary-hover">Deposit successful</h3>
+                    </div>
+                    <div className="text-xs text-primary-hover space-y-1">
+                      <p>Transaction ID: {readStr(success, "txnId", "txn_id", "transactionId", "transaction_id") || "N/A"}</p>
+                    </div>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={() => setSuccess(null)}
