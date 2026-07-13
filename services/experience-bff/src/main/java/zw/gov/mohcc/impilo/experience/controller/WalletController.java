@@ -262,28 +262,73 @@ public class WalletController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
+        // Enablement is driven by REAL MusheX adapter readiness, not a hardcoded
+        // 'true' — the citizen only ever sees a method that can actually take money.
+        // External methods (EcoCash/OneMoney/InnBucks/bank/cards) ride the Paynow
+        // aggregator = the CARD_GATEWAY rail; they light up together when it is
+        // READY_LIVE. The internal wallet and coverage methods are always shown.
+        boolean aggregatorLive = isRailLive("CARD_GATEWAY");
+        String extNote = aggregatorLive ? null : "Not yet available — coming soon";
+
         return ok(List.of(
-                Map.of("id", "MUSHE_WALLET", "label", "Mushe Wallet", "icon", "wallet",
-                        "description", "Pay from your Impilo digital wallet", "enabled", true),
-                Map.of("id", "CASH", "label", "Cash", "icon", "banknote",
-                        "description", "Pay with cash at the facility cashier", "enabled", true),
-                Map.of("id", "ECOCASH", "label", "EcoCash", "icon", "smartphone",
-                        "description", "Pay via EcoCash mobile money", "enabled", true),
-                Map.of("id", "INNBUCKS", "label", "InnBucks", "icon", "smartphone",
-                        "description", "Pay via InnBucks mobile wallet", "enabled", true),
-                Map.of("id", "ONE_MONEY", "label", "OneMoney", "icon", "smartphone",
-                        "description", "Pay via OneMoney mobile money", "enabled", true),
-                Map.of("id", "BANK_TRANSFER", "label", "Bank Transfer / ZIPIT", "icon", "building",
-                        "description", "Pay via bank transfer or ZIPIT", "enabled", true),
-                Map.of("id", "VISA", "label", "Visa Card", "icon", "creditCard",
-                        "description", "Pay with Visa debit or credit card", "enabled", true),
-                Map.of("id", "MASTERCARD", "label", "Mastercard", "icon", "creditCard",
-                        "description", "Pay with Mastercard", "enabled", true),
-                Map.of("id", "INSURANCE", "label", "Medical Aid / Insurance", "icon", "shield",
-                        "description", "Covered by medical aid scheme", "enabled", true),
-                Map.of("id", "GOVERNMENT_SUBSIDY", "label", "Government Subsidy", "icon", "landmark",
-                        "description", "Covered under government health programme", "enabled", true)
+                method("MUSHE_WALLET", "Mushe Wallet", "wallet",
+                        "Pay from your Impilo digital wallet", true, null),
+                method("CASH", "Cash", "banknote",
+                        "Pay with cash at the facility cashier", true, null),
+                method("ECOCASH", "EcoCash", "smartphone",
+                        "Pay via EcoCash mobile money", aggregatorLive, extNote),
+                method("INNBUCKS", "InnBucks", "smartphone",
+                        "Pay via InnBucks mobile wallet", aggregatorLive, extNote),
+                method("ONE_MONEY", "OneMoney", "smartphone",
+                        "Pay via OneMoney mobile money", aggregatorLive, extNote),
+                method("BANK_TRANSFER", "Bank Transfer / ZIPIT", "building",
+                        "Pay via bank transfer or ZIPIT", aggregatorLive, extNote),
+                method("VISA", "Visa Card", "creditCard",
+                        "Pay with Visa debit or credit card", aggregatorLive, extNote),
+                method("MASTERCARD", "Mastercard", "creditCard",
+                        "Pay with Mastercard", aggregatorLive, extNote),
+                method("INSURANCE", "Medical Aid / Insurance", "shield",
+                        "Covered by medical aid scheme", true, null),
+                method("GOVERNMENT_SUBSIDY", "Government Subsidy", "landmark",
+                        "Covered under government health programme", true, null)
         ), requestId, correlationId);
+    }
+
+    private static Map<String, Object> method(String id, String label, String icon,
+                                              String description, boolean enabled, String unavailableReason) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", id);
+        m.put("label", label);
+        m.put("icon", icon);
+        m.put("description", description);
+        m.put("enabled", enabled);
+        if (unavailableReason != null) {
+            m.put("unavailableReason", unavailableReason);
+        }
+        return m;
+    }
+
+    /** True when MusheX reports the given rail as READY_LIVE; false on any doubt (fail-closed). */
+    private boolean isRailLive(String railType) {
+        try {
+            ResponseEntity<String> resp = mushexClient.platformAdapterReadiness();
+            if (resp.getBody() == null) return false;
+            JsonNode root = objectMapper.readTree(resp.getBody());
+            JsonNode rows = root.has("data") ? root.get("data") : root;
+            if (rows != null && rows.isArray()) {
+                for (JsonNode row : rows) {
+                    if (railType.equals(row.path("adapterType").asText())
+                            && "READY_LIVE".equals(row.path("status").asText())) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            log.debug("Adapter readiness lookup failed, treating external methods as unavailable: {}",
+                    e.getMessage());
+            return false;
+        }
     }
 
     // ── Helpers ────────────────────────────────────────────────────────

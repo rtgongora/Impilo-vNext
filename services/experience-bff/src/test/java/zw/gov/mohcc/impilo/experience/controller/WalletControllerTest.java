@@ -465,6 +465,7 @@ class WalletControllerTest {
         private final boolean lookupThrows;
         private final boolean payFails;
         private final String settledStatus;
+        private String cardGatewayStatus = "DISABLED";
         boolean payFromWalletCalled = false;
 
         private StubMushexClient(boolean intentExists, boolean lookupThrows,
@@ -474,6 +475,17 @@ class WalletControllerTest {
             this.lookupThrows = lookupThrows;
             this.payFails = payFails;
             this.settledStatus = settledStatus;
+        }
+
+        StubMushexClient withCardGatewayStatus(String status) {
+            this.cardGatewayStatus = status;
+            return this;
+        }
+
+        @Override
+        public ResponseEntity<String> platformAdapterReadiness() {
+            return ResponseEntity.ok("{\"data\":[{\"adapterType\":\"CARD_GATEWAY\",\"status\":\""
+                    + cardGatewayStatus + "\"}]}");
         }
 
         static StubMushexClient notAnIntent() {
@@ -514,5 +526,54 @@ class WalletControllerTest {
             return ResponseEntity.ok(
                     "{\"data\":{\"intentId\":\"" + intentId + "\",\"status\":\"" + settledStatus + "\"}}");
         }
+    }
+
+    // ── Payment-method honesty (driven by adapter readiness) ───────────
+
+    @Test
+    void paymentMethods_externalDisabled_whenAggregatorNotLive() {
+        StubMusheWalletClient stub = StubMusheWalletClient.returningNull();
+        StubMushexClient mushex = StubMushexClient.notAnIntent().withCardGatewayStatus("DISABLED");
+        WalletController controller = new WalletController(stub, mushex, new ObjectMapper());
+
+        ResponseEntity<Map<String, Object>> response = controller.getPaymentMethods(REQ, CORR);
+
+        assertEquals(200, response.getStatusCode().value());
+        Map<String, Object> byId = methodsById(response);
+        assertEquals(Boolean.TRUE, enabled(byId, "MUSHE_WALLET"));
+        assertEquals(Boolean.TRUE, enabled(byId, "CASH"));
+        assertEquals(Boolean.FALSE, enabled(byId, "ECOCASH"));
+        assertEquals(Boolean.FALSE, enabled(byId, "VISA"));
+        assertEquals(Boolean.TRUE, enabled(byId, "INSURANCE"));
+    }
+
+    @Test
+    void paymentMethods_externalEnabled_whenAggregatorReadyLive() {
+        StubMusheWalletClient stub = StubMusheWalletClient.returningNull();
+        StubMushexClient mushex = StubMushexClient.notAnIntent().withCardGatewayStatus("READY_LIVE");
+        WalletController controller = new WalletController(stub, mushex, new ObjectMapper());
+
+        ResponseEntity<Map<String, Object>> response = controller.getPaymentMethods(REQ, CORR);
+
+        Map<String, Object> byId = methodsById(response);
+        assertEquals(Boolean.TRUE, enabled(byId, "ECOCASH"));
+        assertEquals(Boolean.TRUE, enabled(byId, "MASTERCARD"));
+        assertEquals(Boolean.TRUE, enabled(byId, "BANK_TRANSFER"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> methodsById(ResponseEntity<Map<String, Object>> response) {
+        Object data = response.getBody().get("data");
+        List<Map<String, Object>> methods = (List<Map<String, Object>>) data;
+        Map<String, Object> byId = new java.util.LinkedHashMap<>();
+        for (Map<String, Object> m : methods) {
+            byId.put((String) m.get("id"), m);
+        }
+        return byId;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Object enabled(Map<String, Object> byId, String id) {
+        return ((Map<String, Object>) byId.get(id)).get("enabled");
     }
 }
