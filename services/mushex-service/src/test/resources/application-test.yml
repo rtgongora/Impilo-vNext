@@ -37,6 +37,11 @@ mushex:
     poll-interval-ms: 60000
   currency: USD
   hmac-pepper: test-pepper
+  adapters:
+    sandbox:
+      # Declares the non-production posture: the startup validator refuses
+      # payee-verification-disabled outside sandbox mode.
+      enabled: true
   remittance:
     otp-length: 6
     expiry-minutes: 60
