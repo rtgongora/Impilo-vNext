@@ -16,7 +16,7 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 | R2 G7 certificates | ✅ done | `f124f2213`, `f5b77fe4c`, `10c4a3f00`, `7db73c2f8` | engine status-gate + BFF + self-service + registrar UI |
 | R2 G10 lifecycle console | ✅ done | `487396555`, `9a4230828` | transition matrix + BFF + Provider-360 panel |
 | R2 G8 licence renewal | ✅ done | `2b0d02b5a`, `4ddc4415e` | sweep sets DUE/LAPSED + start-renewal/restoration + UI |
-| R2 G9 disciplinary | pending | — | thin svc+controller over unused entity |
+| R2 G9 disciplinary+compliance | ✅ done | `bc6177ec8`, `db7444c81`, `c08a3cd43` | disciplinary engine (PIC propagation) + compliance/disciplinary BFF + provider-360 panel |
 | R2 G11 credentials wiring | pending | — | qualifications/practice-contexts/affiliations/privileges |
 | R2 G30 PIC seam | pending | — | consume tuso.facility.pic.activated + deprecate + snapshot |
 | R3 coverage subsidy | pending | — | G3 reconcile → G2 wire → G15 preauth |
@@ -36,6 +36,12 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 - *Fee-obligation creation NOT coupled to renewal-start.* The obligation lane (ProviderPaymentObligationService.createObligation + MusheX intent) is policy-gated and can fail closed; coupling it into start-renewal would let a policy/gate failure block the lifecycle transition. Kept in the existing council-obligation UI lane. Alternative: best-effort try/catch obligation creation inside start-renewal — viable follow-up.
 - *Notices lane left event-driven.* varapi `/notices` returns a hardcoded empty list (stub); the sweep emits `varapi.provider.licence_due`/`lapsed` outbox events. Converting `/notices` to derive from lifecycle_status + licence validTo is a clean follow-up but out of G8 scope.
 - *Renewal transitions bypass the operator LIFECYCLE_TRANSITIONS matrix* (which intentionally excludes renewal arcs) — they are system/renewal-driven via LicenseService with explicit source-state guards.
+
+**G9 disciplinary + compliance:**
+- *A recorded SUSPENSION/REVOCATION disciplinary action also writes a DisciplinaryActionEntity (ACTIVE)* — because PicEligibilityAssessmentService reads that (separate) table, not the case table. This makes the sanction actually block PIC eligibility (the propagation the register/rig cares about).
+- *Disciplinary-narrative masking left to the gateway rego,* consistent with the rest of RegistryController (which relies on ext_authz, not BFF field-masking). Alternatives: BFF-level field stripping on the list (mask summary/finalRecommendation) or a role-header check — both deferred as documented follow-ups. Chosen for consistency + to avoid fragile BFF role logic.
+- *Compliance controller-wired methods emit no outbox events* (pre-existing gap; only the older createAction/resolveAction do). Left as-is — governance is captured by the BFF audit; adding outbox to the wired methods is a follow-up.
+- *ComplianceActionType/DisciplinaryTriggerType enums are not bound to their entities* (stored as raw strings). The UI constrains to valid values; server-side enum validation is a follow-up.
 
 ## Deferred for operator
 
