@@ -7,8 +7,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.client.MusheWalletServiceClient;
+import zw.gov.mohcc.impilo.experience.client.MushexServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.List;
@@ -57,7 +59,7 @@ class WalletControllerTest {
     @Test
     void getMyWallet_upstreamSucceeds_returnsUpstreamPayloadUnchanged() {
         StubMusheWalletClient stub = StubMusheWalletClient.returningWallet("00000000-0000-0000-0000-000000000001");
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.getMyWallet(REQ, CORR, ACTOR);
 
@@ -72,7 +74,7 @@ class WalletControllerTest {
     @Test
     void getMyWallet_upstreamThrows_fallbackDisabled_returns503WithStableCode() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.getMyWallet(REQ, CORR, ACTOR);
 
@@ -83,7 +85,7 @@ class WalletControllerTest {
     @Test
     void getMyWallet_upstreamReturnsNull_fallbackDisabled_returns503WithStableCode() {
         StubMusheWalletClient stub = StubMusheWalletClient.returningNull();
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.getMyWallet(REQ, CORR, ACTOR);
 
@@ -97,7 +99,7 @@ class WalletControllerTest {
     void pay_musheWallet_upstreamSucceeds_returnsCreated() {
         StubMusheWalletClient stub = StubMusheWalletClient.returningWallet("00000000-0000-0000-0000-000000000002")
                 .withDebitResponse("debit-001");
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.pay(
                 REQ, CORR, ACTOR, null,
@@ -113,7 +115,7 @@ class WalletControllerTest {
     @Test
     void pay_musheWallet_upstreamThrows_fallbackDisabled_returns503() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.pay(
                 REQ, CORR, ACTOR, null,
@@ -126,7 +128,7 @@ class WalletControllerTest {
     @Test
     void pay_musheWallet_upstreamReturnsNull_fallbackDisabled_returns503() {
         StubMusheWalletClient stub = StubMusheWalletClient.returningNull();
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.pay(
                 REQ, CORR, ACTOR, null,
@@ -149,7 +151,7 @@ class WalletControllerTest {
         StubMusheWalletClient stub = StubMusheWalletClient
                 .returningWallet("00000000-0000-0000-0000-000000000010")
                 .withBalance(balanceNode);
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.getBalance(REQ, CORR, ACTOR);
 
@@ -165,7 +167,7 @@ class WalletControllerTest {
     @Test
     void getBalance_upstreamThrows_fallbackDisabled_returns503WithStableCode() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.getBalance(REQ, CORR, ACTOR);
 
@@ -188,7 +190,7 @@ class WalletControllerTest {
         StubMusheWalletClient stub = StubMusheWalletClient
                 .returningWallet("00000000-0000-0000-0000-000000000011")
                 .withTransactions(paginated);
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.getTransactions(REQ, CORR, ACTOR);
 
@@ -203,7 +205,7 @@ class WalletControllerTest {
     @Test
     void getTransactions_upstreamThrows_fallbackDisabled_returns503WithStableCode() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.getTransactions(REQ, CORR, ACTOR);
 
@@ -225,7 +227,7 @@ class WalletControllerTest {
         StubMusheWalletClient stub = StubMusheWalletClient
                 .returningWallet("00000000-0000-0000-0000-000000000012")
                 .withFundingSources(sourcesNode);
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.getFundingSources(REQ, CORR, ACTOR);
 
@@ -240,7 +242,7 @@ class WalletControllerTest {
     @Test
     void getFundingSources_upstreamThrows_fallbackDisabled_returns503WithStableCode() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.getFundingSources(REQ, CORR, ACTOR);
 
@@ -253,7 +255,7 @@ class WalletControllerTest {
     @Test
     void pay_cashMethodReturnsNotImplementedUntilRailIsWired() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.pay(
                 REQ, CORR, ACTOR, null,
@@ -271,7 +273,7 @@ class WalletControllerTest {
     @Test
     void pay_zeroAmount_stillRejectedAs400_validationBeforeGate() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
-        WalletController controller = new WalletController(stub);
+        WalletController controller = new WalletController(stub, StubMushexClient.notAnIntent(), new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.pay(
                 REQ, CORR, ACTOR, null,
@@ -401,6 +403,116 @@ class WalletControllerTest {
         @Override
         public JsonNode listFundingSources(UUID walletId) {
             return fundingSourcesSupplier.get();
+        }
+    }
+
+    // ── Pay-confirm seam (intent-settling path) ────────────────────────
+
+    @Test
+    void pay_musheWallet_referenceIsIntent_settlesThroughMushex_neverBareDebit() {
+        StubMusheWalletClient stub = StubMusheWalletClient.returningWallet("00000000-0000-0000-0000-000000000009");
+        StubMushexClient mushex = StubMushexClient.intentSettling("01INTENT", "PAID");
+        WalletController controller = new WalletController(stub, mushex, new ObjectMapper());
+
+        ResponseEntity<Map<String, Object>> response = controller.pay(
+                REQ, CORR, ACTOR, null,
+                Map.of("method", "MUSHE_WALLET", "amount", 10.0, "reference", "01INTENT"));
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+        JsonNode data = assertInstanceOf(JsonNode.class, body.get("data"));
+        assertEquals("PAID", data.get("status").asText());
+        assertEquals("INTENT_WALLET_PAYMENT", ((Map<?, ?>) body.get("meta")).get("settlement"));
+        assertTrue(mushex.payFromWalletCalled, "must settle through mushex pay-from-wallet");
+    }
+
+    @Test
+    void pay_musheWallet_intentSettlementFails_failsClean_neverFallsBackToBareDebit() {
+        StubMusheWalletClient stub = StubMusheWalletClient.returningWallet("00000000-0000-0000-0000-00000000000a");
+        StubMushexClient mushex = StubMushexClient.intentButPayFails("01INTENT");
+        WalletController controller = new WalletController(stub, mushex, new ObjectMapper());
+
+        ResponseEntity<Map<String, Object>> response = controller.pay(
+                REQ, CORR, ACTOR, null,
+                Map.of("method", "MUSHE_WALLET", "amount", 10.0, "reference", "01INTENT"));
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+        assertWalletUpstreamUnavailable(response.getBody());
+    }
+
+    @Test
+    void pay_musheWallet_mushexUnreachable_failsClean_neverGuessing() {
+        StubMusheWalletClient stub = StubMusheWalletClient.returningWallet("00000000-0000-0000-0000-00000000000b");
+        StubMushexClient mushex = StubMushexClient.unreachable();
+        WalletController controller = new WalletController(stub, mushex, new ObjectMapper());
+
+        ResponseEntity<Map<String, Object>> response = controller.pay(
+                REQ, CORR, ACTOR, null,
+                Map.of("method", "MUSHE_WALLET", "amount", 10.0, "reference", "01INTENT"));
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+        assertWalletUpstreamUnavailable(response.getBody());
+    }
+
+    /**
+     * Stub subclass of {@link MushexServiceClient} for the pay-confirm seam:
+     * chooses whether the reference resolves to a payment intent and how the
+     * pay-from-wallet leg behaves.
+     */
+    private static final class StubMushexClient extends MushexServiceClient {
+        private final boolean intentExists;
+        private final boolean lookupThrows;
+        private final boolean payFails;
+        private final String settledStatus;
+        boolean payFromWalletCalled = false;
+
+        private StubMushexClient(boolean intentExists, boolean lookupThrows,
+                                 boolean payFails, String settledStatus) {
+            super(new RestTemplate(), endpoints());
+            this.intentExists = intentExists;
+            this.lookupThrows = lookupThrows;
+            this.payFails = payFails;
+            this.settledStatus = settledStatus;
+        }
+
+        static StubMushexClient notAnIntent() {
+            return new StubMushexClient(false, false, false, null);
+        }
+
+        static StubMushexClient intentSettling(String intentId, String status) {
+            return new StubMushexClient(true, false, false, status);
+        }
+
+        static StubMushexClient intentButPayFails(String intentId) {
+            return new StubMushexClient(true, false, true, null);
+        }
+
+        static StubMushexClient unreachable() {
+            return new StubMushexClient(false, true, false, null);
+        }
+
+        @Override
+        public ResponseEntity<String> getPaymentIntent(String intentId) {
+            if (lookupThrows) {
+                throw new IllegalStateException("simulated mushex outage");
+            }
+            if (!intentExists) {
+                throw HttpClientErrorException.NotFound.create(
+                        HttpStatus.NOT_FOUND, "not found", org.springframework.http.HttpHeaders.EMPTY,
+                        new byte[0], null);
+            }
+            return ResponseEntity.ok("{\"data\":{\"intentId\":\"" + intentId + "\"}}");
+        }
+
+        @Override
+        public ResponseEntity<String> payIntentFromWallet(String intentId) {
+            payFromWalletCalled = true;
+            if (payFails) {
+                throw new IllegalStateException("simulated wallet payment failure");
+            }
+            return ResponseEntity.ok(
+                    "{\"data\":{\"intentId\":\"" + intentId + "\",\"status\":\"" + settledStatus + "\"}}");
         }
     }
 }

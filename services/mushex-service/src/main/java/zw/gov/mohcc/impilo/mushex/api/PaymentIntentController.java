@@ -21,6 +21,7 @@ import zw.gov.mohcc.impilo.mushex.domain.entity.PaymentIntentEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.ReceiptEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.RefundEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.RemittanceTokenEntity;
+import zw.gov.mohcc.impilo.mushex.domain.enums.IntentStatus;
 import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 import zw.gov.mohcc.impilo.mushex.service.IntentNotFoundException;
 import zw.gov.mohcc.impilo.mushex.service.PaymentAttemptService;
@@ -270,6 +271,27 @@ public class PaymentIntentController {
 
         PaymentIntentEntity intent = paymentIntentService.getIntent(id);
 
+        return ResponseEntity.ok(ApiResponse.ok(intent, correlationId));
+    }
+
+    /**
+     * Execute payment for an intent from the payer's Mushe wallet — the citizen
+     * pay-confirm seam. Debits the CPID-keyed INDIVIDUAL wallet (via
+     * MusheWalletAdapter) and records the payment against the intent, so the
+     * intent reaches PAID from a REAL wallet debit rather than sandbox
+     * auto-settle. Idempotent: an already-PAID intent returns 200 unchanged so a
+     * double-confirm never fails the citizen.
+     */
+    @PostMapping("/{id}/pay-from-wallet")
+    public ResponseEntity<ApiResponse<PaymentIntentEntity>> payFromWallet(@PathVariable String id) {
+        var ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+
+        PaymentIntentEntity current = paymentIntentService.getIntent(id);
+        if (current.getStatus() == IntentStatus.PAID) {
+            return ResponseEntity.ok(ApiResponse.ok(current, correlationId));
+        }
+        PaymentIntentEntity intent = paymentIntentService.executeWalletPayment(id);
         return ResponseEntity.ok(ApiResponse.ok(intent, correlationId));
     }
 

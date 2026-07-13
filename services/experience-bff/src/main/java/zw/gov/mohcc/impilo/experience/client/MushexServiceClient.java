@@ -129,6 +129,25 @@ public class MushexServiceClient {
     }
 
     /**
+     * Citizen pay-confirm seam — proxy
+     * {@code POST /mushex/v1/payment-intents/{intentId}/pay-from-wallet}. MusheX
+     * debits the payer's CPID-keyed Mushe wallet and records the payment against
+     * the intent, so the intent reaches PAID from a real wallet debit (no
+     * sandbox auto-settle needed). Idempotent upstream.
+     */
+    public ResponseEntity<String> payIntentFromWallet(String intentId) {
+        log.info("MusheX: Executing wallet payment for intent={}", intentId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return restTemplate.exchange(
+                baseUrl + "/mushex/v1/payment-intents/" + intentId + "/pay-from-wallet",
+                HttpMethod.POST,
+                new HttpEntity<>("{}", headers),
+                String.class
+        );
+    }
+
+    /**
      * Phase 3 follow-on — proxy
      * {@code POST /mushex/v1/payment-intents/{intentId}/attempts/reselect}.
      * No idempotency key: reselection is intentionally not money-movement.

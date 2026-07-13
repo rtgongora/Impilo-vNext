@@ -220,18 +220,17 @@ export type CommercePaymentConfirmArgs = {
 /**
  * The ONE place the marketplace payment-confirm contract lives.
  *
- * Verified contract (runtime-proven on the 4-lane rig, 2026-07-12):
- * msika-flow `POST /orders/{id}/pay` creates a REAL MusheX payment intent and returns
- * its id; when the intent settles MusheX emits `mushex.payment.status.changed`, which
- * msika-flow's PaymentEventConsumer folds back into the order (PAYMENT_PENDING→PAID) —
- * that whole loop is live. In preview/sandbox the intent auto-settles at creation
- * (mushex apply-simulation-outcome), so callers polling the order reach PAID without
- * further citizen action. The wallet debit this hook fires
- * (`POST /internal/v1/wallet/pay`, BFF → Mushe wallet, reference = intent id) debits
- * the citizen wallet but does NOT record a payment against the MusheX intent —
- * mushex's real execution leg is `POST /mushex/v1/payment-intents/{id}/attempts`,
- * which no BFF passthrough exposes yet. Wiring wallet-debit→attempt is the one open
- * production seam (documented in the wave report); when it lands, only this hook changes.
+ * Verified contract: msika-flow `POST /orders/{id}/pay` creates a REAL MusheX
+ * payment intent and returns its id; when the intent settles MusheX emits
+ * `mushex.payment.status.changed`, which msika-flow's PaymentEventConsumer folds
+ * back into the order (PAYMENT_PENDING→PAID). The pay-confirm seam is CLOSED
+ * (Stage 1, 2026-07-13): this hook posts `/internal/v1/wallet/pay` with
+ * reference = intent id, and the BFF recognises the reference as a MusheX intent
+ * and settles THROUGH the money SoR — mushex
+ * `POST /payment-intents/{id}/pay-from-wallet` debits the citizen's CPID-keyed
+ * Mushe wallet and records the payment, so the intent reaches PAID from the
+ * REAL debit (no sandbox auto-settle required). Non-intent references keep the
+ * legacy direct wallet debit (merchant/ad-hoc payments).
  */
 export function useCommercePaymentConfirm() {
   const walletPay = useWalletPay();

@@ -1,13 +1,16 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.MusheWalletServiceClient;
+import zw.gov.mohcc.impilo.experience.client.MushexServiceClient;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -36,9 +39,15 @@ public class WalletController {
 
     private static final Logger log = LoggerFactory.getLogger(WalletController.class);
     private final MusheWalletServiceClient musheClient;
+    private final MushexServiceClient mushexClient;
+    private final ObjectMapper objectMapper;
 
-    public WalletController(MusheWalletServiceClient musheClient) {
+    public WalletController(MusheWalletServiceClient musheClient,
+                            MushexServiceClient mushexClient,
+                            ObjectMapper objectMapper) {
         this.musheClient = musheClient;
+        this.mushexClient = mushexClient;
+        this.objectMapper = objectMapper;
     }
 
     // ── Get or auto-create wallet for current user ────────────────────
@@ -119,6 +128,36 @@ public class WalletController {
 
         // Try Mushe for wallet payments
         if ("MUSHE_WALLET".equals(method)) {
+            // Pay-confirm seam: when the reference is a known MusheX payment intent
+            // (marketplace/fee flows pass reference = intentId), settle THROUGH the
+            // money SoR — MusheX debits the payer's CPID-keyed wallet and records the
+            // payment, so the intent reaches PAID from the real debit. Only when the
+            // reference is NOT an intent do we fall through to the direct debit
+            // (merchant/ad-hoc payments). If intent settlement fails we fail clean —
+            // never fall back to a bare debit that takes money without paying the order.
+            if (reference != null && !reference.isBlank()) {
+                Boolean isIntent = lookupIntentExists(reference);
+                if (Boolean.TRUE.equals(isIntent)) {
+                    try {
+                        ResponseEntity<String> paid = mushexClient.payIntentFromWallet(reference);
+                        JsonNode body2 = objectMapper.readTree(paid.getBody() != null ? paid.getBody() : "{}");
+                        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                                "data", body2.has("data") ? body2.get("data") : body2,
+                                "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                                        "settlement", "INTENT_WALLET_PAYMENT")));
+                    } catch (Exception e) {
+                        log.warn("Intent wallet payment failed for {}: {}", reference, e.getMessage());
+                        return walletUpstreamUnavailable("pay[MUSHE_WALLET:intent]",
+                                "mushex pay-from-wallet failed: " + e.getMessage(), requestId, correlationId);
+                    }
+                }
+                if (isIntent == null) {
+                    // MusheX unreachable — cannot tell whether the reference is an intent.
+                    // Debiting anyway could take money without settling the order: fail clean.
+                    return walletUpstreamUnavailable("pay[MUSHE_WALLET:intent-lookup]",
+                            "mushex unreachable during intent lookup", requestId, correlationId);
+                }
+            }
             String upstreamFailureReason = null;
             try {
                 String ownerId = actorId != null ? actorId : "anonymous";
@@ -264,6 +303,22 @@ public class WalletController {
      * duplicating the upstream try/catch/null-check four times
      * (audit gap {@code G-5.1}).</p>
      */
+    /**
+     * True/false when MusheX answered whether the reference is a payment intent;
+     * null when MusheX was unreachable (the caller must fail clean, not guess).
+     */
+    private Boolean lookupIntentExists(String reference) {
+        try {
+            ResponseEntity<String> resp = mushexClient.getPaymentIntent(reference);
+            return resp.getStatusCode().is2xxSuccessful();
+        } catch (HttpClientErrorException.NotFound nf) {
+            return false;
+        } catch (Exception e) {
+            log.warn("MusheX unreachable during intent lookup for {}: {}", reference, e.getMessage());
+            return null;
+        }
+    }
+
     private WalletLookup lookupWalletByOwner(String ownerId) {
         try {
             JsonNode wallet = musheClient.getWalletByOwner("PERSON", ownerId);
