@@ -30,6 +30,22 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 
 ---
 
+## Post-run operator-decision batch (2026-07-13)
+
+The operator returned and answered the deferred items. Outcomes:
+
+| Item | Decision | Outcome |
+|---|---|---|
+| **G3 subsidy** | Investigate id-space first | **Investigated → merge is SAFE.** Model Y's `enrollMember` populates `client_id` directly from `request.memberCpid()` (DTO: *"the patient CPID being enrolled"*) and lists query it by member CPID — so `client_id` ≡ `member_cpid`. Recommend the merge into Model X; **held for operator go** (it retires a live model). |
+| **G20 recording writeback** | Build now → `pct_referrals` | ✅ **Built** (`cbb54093a`): V033 `recording_ref`/`recording_storage_key`; provisioning passes `owningRef=referralId`; new `PctRecordingConsumer` matches by owningRef, unit-tested. Live Kafka path still needs a deploy-time integration check. |
+| **G4 indawo geo** | Full delegate to ndila | ⚠️ **Partial + correction.** `ind_catchment_areas`/`ind_facility_locations` dropped (`d1b5ef232`). But **`ind_addresses` is LIVE** (registry-intake: `RegistryIntakeService`, `IndawoPlaceModeController`) — "full delegate" would break a live journey, so retiring it is a scoped intake-model refactor, **not done blind**. Flagged. |
+| **G28 vito wallet** | Investigate | **Investigated → NOT vestigial.** vito's "Health Payments Wallet" (healthId+cardId) is consumed by `RecoveryService`. Its role vs the mushe money-wallet is still a genuine product question — did NOT deprecate or surface. |
+| **G14 dedup** | Do it | ❌ **Not safe — corrected.** The "unused" `vito/client-registry` stack is **live** (registration flow + `EditDemographicsForm`); the other serves the `[id]` workspace. Deleting either breaks pages. Left both; it's a real refactor, not a cleanup. |
+| **G31 khuluma templates** | Seed | ✅ **Seeded** (`1964ec4a7`): `KHULUMA_MESSAGE` + `KHULUMA_BROADCAST` (V014). Resolved by key-only (request channel drives delivery), so one row per key. |
+| **G33/G18 tails** | Do them | ⚠️ **Partial.** Stage-2/3 summary panels wired to live data (`284a587d4`). Worklist queues + follow-up booking still deferred (need new BFF endpoints). |
+
+**Two more verify-first catches** in this batch (G4 `ind_addresses` live; G14 both stacks live) — bringing the run total to **7 places where checking the code before acting prevented a broken build or duplicate work.** Recommend the operator confirm: (a) go on the G3 merge; (b) the vito-wallet product question; (c) whether the indawo-address full-delegate + G14 refactor are worth scheduling.
+
 ## Progress ledger
 
 | Wave / gap | Status | Commit(s) | Notes |
