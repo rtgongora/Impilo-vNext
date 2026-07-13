@@ -13,19 +13,23 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.indawo.api.dto.AddressResponse;
 import zw.gov.mohcc.impilo.indawo.api.dto.CreateAddressRequest;
 import zw.gov.mohcc.impilo.indawo.domain.AddressEntity;
+import zw.gov.mohcc.impilo.indawo.integration.NdilaGeocodeClient;
 import zw.gov.mohcc.impilo.indawo.repository.AddressRepository;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/internal/v1/addresses")
 public class AddressController {
 
     private final AddressRepository addressRepository;
+    private final NdilaGeocodeClient geocodeClient;
 
-    public AddressController(AddressRepository addressRepository) {
+    public AddressController(AddressRepository addressRepository, NdilaGeocodeClient geocodeClient) {
         this.addressRepository = addressRepository;
+        this.geocodeClient = geocodeClient;
     }
 
     @GetMapping
@@ -60,8 +64,28 @@ public class AddressController {
         address.setCity(request.city());
         address.setDistrict(request.district());
         address.setPostalCode(request.postalCode());
-        address.setLatitude(request.latitude());
-        address.setLongitude(request.longitude());
+
+        if (request.latitude() != null && request.longitude() != null) {
+            // Caller supplied coordinates → treat as MANUAL (operator-provided), unverified.
+            address.setLatitude(request.latitude());
+            address.setLongitude(request.longitude());
+            address.setGeocodeQuality("MANUAL");
+        } else {
+            // G21: delegate geocoding to ndila (the geography SoR) instead of leaving lat/long null.
+            String query = Stream.of(request.line1(), request.suburb(), request.city(), request.province())
+                    .filter(s -> s != null && !s.isBlank())
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse(request.line1());
+            NdilaGeocodeClient.GeocodeResult geo = geocodeClient.geocode(query, request.province(), request.district());
+            if (geo != null) {
+                address.setLatitude(geo.latitude());
+                address.setLongitude(geo.longitude());
+                address.setGeocodeQuality(geo.quality());
+                address.setVerified(geo.verified());
+            }
+            // else: no coordinates — honest, address persists unlocated (geocode_quality stays null).
+        }
+
         addressRepository.save(address);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(address));
     }
@@ -80,6 +104,7 @@ public class AddressController {
                 entity.getPostalCode(),
                 entity.getLatitude(),
                 entity.getLongitude(),
+                entity.getGeocodeQuality(),
                 entity.isVerified()
         );
     }

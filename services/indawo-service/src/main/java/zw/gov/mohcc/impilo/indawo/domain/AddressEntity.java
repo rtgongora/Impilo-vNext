@@ -106,7 +106,10 @@ public class AddressEntity {
     public void setLatitude(BigDecimal latitude) { this.latitude = latitude; }
     public BigDecimal getLongitude() { return longitude; }
     public void setLongitude(BigDecimal longitude) { this.longitude = longitude; }
+    public String getGeocodeQuality() { return geocodeQuality; }
+    public void setGeocodeQuality(String geocodeQuality) { this.geocodeQuality = geocodeQuality; }
     public boolean isVerified() { return verified; }
+    public void setVerified(boolean verified) { this.verified = verified; }
     public int getEntityVersion() { return entityVersion; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }

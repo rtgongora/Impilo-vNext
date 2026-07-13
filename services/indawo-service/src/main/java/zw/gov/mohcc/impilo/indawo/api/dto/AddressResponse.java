@@ -16,5 +16,6 @@ public record AddressResponse(
         String postalCode,
         BigDecimal latitude,
         BigDecimal longitude,
+        String geocodeQuality,
         boolean verified
 ) {}
