@@ -100,6 +100,28 @@ class TelemedicineOrchestrationServiceTest {
     }
 
     @Test
+    void updateReferralStage_persists_appointment_backlink() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "ACCEPTED");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+            when(referralRepository.save(any(ReferralEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            Map<String, Object> result = service.updateReferralStage(referralId.toString(), Map.of(
+                    "appointment_id", "appt-77",
+                    "scheduled_at", "2026-08-01T09:30:00Z"));
+
+            // G18: the referral is now the durable join to its scheduling-service appointment.
+            assertThat(referral.getAppointmentId()).isEqualTo("appt-77");
+            assertThat(referral.getScheduledAt()).isNotNull();
+            assertThat(result.get("appointmentId")).isEqualTo("appt-77");
+            assertThat(result.get("scheduledAt")).isNotNull();
+        }
+    }
+
+    @Test
     void completeReferral_rejects_closure_without_an_audit_note() {
         try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
             mocked.when(TrustContextHolder::require).thenReturn(context());

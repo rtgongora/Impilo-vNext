@@ -6,9 +6,11 @@
  *   GET /internal/v1/teleconsult/routing/facilities?q=  (Tuso search)
  *   GET /internal/v1/teleconsult/routing/workspaces?facility_id= (Tuso)
  *
- * ON_CALL / POOL / NATIONAL_POOL / UNIT routing intentionally has no hook:
- * the BFF returns 501 ROUTING_TYPE_UNAVAILABLE for those kinds (fail-closed
- * until the pool/on-call directory backend exists — capability map HO-1).
+ * ON_CALL routing IS wired (no directory-search hook needed): the BFF resolves
+ * the on-call roster at submit (khuluma OnCallService) and auto-matches a provider,
+ * failing closed with 422 NO_ON_CALL_PROVIDER if none is on call. Only POOL /
+ * NATIONAL_POOL / UNIT still return 501 ROUTING_TYPE_UNAVAILABLE (no pool directory
+ * backend yet — capability map HO-1).
  */
 
 import { useQuery } from "@tanstack/react-query";

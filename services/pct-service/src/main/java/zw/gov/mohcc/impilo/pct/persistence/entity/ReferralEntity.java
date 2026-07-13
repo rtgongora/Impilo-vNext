@@ -122,6 +122,14 @@ public class ReferralEntity {
     @Column(name = "routed_at")
     private OffsetDateTime routedAt;
 
+    // Booking↔referral back-link (G18): the scheduling-service appointment for a scheduled
+    // teleconsult, persisted here so the referral is the durable join (was only an appointment note).
+    @Column(name = "appointment_id")
+    private String appointmentId;
+
+    @Column(name = "scheduled_at")
+    private OffsetDateTime scheduledAt;
+
     @Column(name = "submitted_at")
     private OffsetDateTime submittedAt;
 
@@ -171,6 +179,10 @@ public class ReferralEntity {
     public void setReason(String reason) { this.reason = reason; }
     public String getClinicalSummary() { return clinicalSummary; }
     public void setClinicalSummary(String clinicalSummary) { this.clinicalSummary = clinicalSummary; }
+    public String getAppointmentId() { return appointmentId; }
+    public void setAppointmentId(String appointmentId) { this.appointmentId = appointmentId; }
+    public OffsetDateTime getScheduledAt() { return scheduledAt; }
+    public void setScheduledAt(OffsetDateTime scheduledAt) { this.scheduledAt = scheduledAt; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public Integer getStage() { return stage; }

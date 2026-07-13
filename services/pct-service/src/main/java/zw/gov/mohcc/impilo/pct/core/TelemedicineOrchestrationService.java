@@ -150,6 +150,19 @@ public class TelemedicineOrchestrationService {
         String status = optional(request, "status");
         if (status != null) entity.setStatus(status.trim().toUpperCase(Locale.ROOT));
 
+        // G18: persist the booking↔referral back-link the BFF sends after scheduling a teleconsult
+        // appointment (previously swallowed — pct_referrals had no column for it).
+        String appointmentId = optional(request, "appointment_id", "appointmentId");
+        if (appointmentId != null && !appointmentId.isBlank()) entity.setAppointmentId(appointmentId);
+        String scheduledAt = optional(request, "scheduled_at", "scheduledAt");
+        if (scheduledAt != null && !scheduledAt.isBlank()) {
+            try {
+                entity.setScheduledAt(OffsetDateTime.parse(scheduledAt));
+            } catch (java.time.format.DateTimeParseException ignore) {
+                // Non-ISO scheduled_at is ignored rather than failing the whole stage update.
+            }
+        }
+
         ReferralEntity saved = referralRepository.save(entity);
         emitOutbox("telemedicine.session.referral_updated", saved.getReferralId().toString(), toReferralPayload(saved));
         return toReferralPayload(saved);
@@ -552,6 +565,8 @@ public class TelemedicineOrchestrationService {
         body.put("routingKind", entity.getRoutingKind());
         body.put("routingPoolId", entity.getRoutingPoolId());
         body.put("routedAt", toIso(entity.getRoutedAt()));
+        body.put("appointmentId", entity.getAppointmentId());
+        body.put("scheduledAt", toIso(entity.getScheduledAt()));
         body.put("structuredResponse", entity.getStructuredResponse() == null ? null : readJsonMap(entity.getStructuredResponse()));
         body.put("attachmentDocumentIds", readJsonStringList(entity.getAttachmentDocumentIds()));
         body.put("messages", readJsonMapList(entity.getMessages()));
