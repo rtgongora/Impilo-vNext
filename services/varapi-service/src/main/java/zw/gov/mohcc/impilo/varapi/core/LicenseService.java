@@ -195,6 +195,14 @@ public class LicenseService {
             throw new IllegalArgumentException("License does not belong to provider: " + providerPublicId);
         }
 
+        // Status gate: never stream a certificate PDF for a suspended, revoked or expired
+        // licence — a printed cert must reflect current standing, not a stale entitlement.
+        if (license.isRevoked() || license.isSuspended() || license.isExpired()) {
+            throw new IllegalStateException(
+                    "Certificate is not available for a licence in status "
+                            + license.getStatus() + (license.isExpired() ? " (expired)" : ""));
+        }
+
         return certificatePdfGenerator.generate(license);
     }
 
