@@ -214,7 +214,9 @@ export default function ImagingWorklistPage() {
                             </button>
                           </>
                         ) : (
-                          <span className="text-xs text-muted-foreground">No actions</span>
+                          <Link href={`/diagnostics/reporting?orderId=${encodeURIComponent(id)}`} className="rounded-md border border-border px-2 py-1 text-xs text-primary hover:bg-background">
+                            Report
+                          </Link>
                         )}
                       </div>
                     </div>
