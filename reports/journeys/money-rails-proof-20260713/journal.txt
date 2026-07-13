@@ -1,0 +1,23 @@
+== RIG: infra + services (mushex + mushe-wallet)
+   mushex (30102): 200
+   wallet (30126): 200
+   PASS: 2/2 services healthy
+== JV-1: vendor payout LIVE (settlement → wallet disbursement, payee share)
+   PASS: merchant wallet provisioned (dce71f34-10ad-452c-ad61-751cd31b39e9)
+   PASS: intent minted (01KXDQ9FWXXM0WYD2PN4APTWMZ)
+   PASS: intent PAID from payer wallet debit
+   PASS: settlement computed (01KXDQ9GCKJTK1XGR8VDQ8EEVS)
+   PASS: vendor payout item = payee SHARE 42.50 (not gross 43.14)
+   PASS: MERCHANT wallet CREDITED the payout (balance 0.00 -> 42.50)
+   PASS: wallet payout batch COMPLETED
+== JD-1: bank→wallet deposit via statement reference matching
+   PASS: deposit PENDING with reference code (IMP-WE8C6ALJ)
+   PASS: statement line MATCHED to the pending deposit
+   PASS: wallet CREDITED on confirmed arrival (0.00 -> 50.00)
+== JD-2: amount-mismatch line stays UNMATCHED, nothing moves
+   PASS: amount mismatch → UNMATCHED (no force-credit)
+   PASS: wallet balance unchanged by the mismatch (50.00)
+== JH-1: adapter readiness — wallet live, external aggregator not live
+   PASS: internal WALLET rail READY_LIVE
+   PASS: external CARD_GATEWAY rail NOT live (DISABLED) → BFF disables external methods
+RESULT: PASS=15 FAIL=0
