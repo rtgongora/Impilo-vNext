@@ -1,0 +1,29 @@
+== RIG: infra + services (tuso + costa + mushex)
+   tuso (28084): 200
+   costa (28101): 200
+   mushex (28102): 200
+   PASS: 3/3 services healthy
+== CONFIG: governed TEST fee amount (RIG-TEST-CONFIG — not SI 78)
+   PASS: TEST fee configured + approved ACTIVE (120.00 USD)
+== J-FEE-1: configured fee → charge → pay → PAID → SETTLED → inspection
+   after submit: DUE|AWAITING_FEE
+   PASS: submit → fee DUE + AWAITING_FEE
+   PASS: COSTA opened a REGULATORY_APPLICATION_FEE charge (Kafka fee_due)
+   PASS: costa charge id written back as fee_reference (costa.charge.created)
+   PASS: MusheX intent minted (01KXD0YNQR7FJQP6HMCEN10WKV)
+   PASS: MONEY LOOP: fee PAID via mushex.payment.status.changed
+   PASS: COSTA charge SETTLED (fee_paid)
+   PASS: ready-for-inspection ALLOWED after PAID
+== J-FEE-2: gate holds while DUE
+   PASS: ready-for-inspection REJECTED while fee DUE (HTTP 500)
+== J-FEE-3: waiver opens the gate + voids the charge
+   after waive: WAIVED|rig public-interest waiver
+   PASS: fee WAIVED with reason recorded
+   PASS: COSTA charge WAIVED (fee_waived)
+   PASS: ready-for-inspection ALLOWED after WAIVED
+== J-FEE-4: fee required but no configured amount → honest, no gate
+   RENEWAL fee_state: NOT_CONFIGURED
+   PASS: unconfigured fee recorded NOT_CONFIGURED (not silently skipped)
+   PASS: no charge fabricated for an unconfigured fee
+   PASS: NOT_CONFIGURED never gates inspection
+RESULT: PASS=16 FAIL=0
