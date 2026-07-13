@@ -1283,6 +1283,24 @@ public class PctServiceClient {
         return extractData(restTemplate.postForEntity(baseUrl + "/v1/death/" + caseId + "/crvs-package", Map.of(), JsonNode.class));
     }
 
+    // ── Sorting desk (R7/G12) — pre-triage visit-type sort between ARRIVED and TRIAGE ──
+
+    public JsonNode getSortingVisitTypes(String context) {
+        String url = baseUrl + "/v1/sorting-desk/visit-types"
+                + (context != null && !context.isBlank() ? "?context=" + context : "");
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode sortJourney(String journeyId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/sorting-desk/journeys/" + journeyId + "/sort", body, JsonNode.class));
+    }
+
+    public JsonNode getLatestSort(String journeyId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/sorting-desk/journeys/" + journeyId, JsonNode.class));
+    }
+
     public JsonNode getDeathBodyCustody(String caseId) {
         return extractData(restTemplate.getForEntity(baseUrl + "/v1/death/" + caseId + "/body", JsonNode.class));
     }

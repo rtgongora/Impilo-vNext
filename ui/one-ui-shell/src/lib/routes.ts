@@ -788,6 +788,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/daidzai/dispatch", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Dispatch Console", navLabel: "Dispatch", navZone: "work" },
   { path: "/work/daidzai/missions", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mission Tracking", navLabel: "Missions", navZone: "work" },
   { path: "/work/daidzai/disasters", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Disaster Command", navLabel: "Disasters", navZone: "work" },
+  // Sorting desk — pre-triage visit-type sort (G12).
+  { path: "/work/sorting-desk", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Sorting Desk", navLabel: "Sorting Desk", navZone: "work" },
   // WS#8 — Death & Post-Death Pathway (provider/facility surfaces).
   { path: "/work/clinical/death-cases", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Death Cases", navLabel: "Death Cases", navZone: "work" },
   { path: "/work/clinical/death-cases/[id]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Death Case", navLabel: "Death Case", navZone: "work" },
