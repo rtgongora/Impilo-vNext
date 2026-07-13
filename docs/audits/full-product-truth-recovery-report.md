@@ -1,28 +1,28 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-07-05T08:45:15.463Z
-> Branch: `claude/hungry-lewin-5f02da`
+> Generated: 2026-07-13T23:03:52.555Z
+> Branch: `claude/bold-moore-f6010a`
 
 ## Executive summary
 
 | Metric | Count |
 |--------|------:|
-| Total services audited | 96 |
-| Backend services | 96 |
+| Total services audited | 97 |
+| Backend services | 97 |
 | Shared libraries | 12 |
-| Frontend surfaces (routes) | 742 |
+| Frontend surfaces (routes) | 772 |
 | Mobile screens | 204 |
-| BFF route handlers | 2665 |
-| OpenAPI contracts | 106 |
-| Services with DB persistence | 96 |
-| **Phase 6 complete (user-facing + documented internal)** | **96** |
-| User-facing services with `real` code present (file-existence axis) | 71 / 71 |
+| BFF route handlers | 2921 |
+| OpenAPI contracts | 107 |
+| Services with DB persistence | 97 |
+| **Phase 6 complete (user-facing + documented internal)** | **97** |
+| User-facing services with `real` code present (file-existence axis) | 72 / 72 |
 | — of those, **runtime-proven** (REAL_PROVEN) | **4** |
 | Services internal-only (documented) | 25 |
 | Services partially complete | 0 |
 | Services backend-only (no UI) | 0 |
 | Services UI-only (no backend) | 0 |
-| Services with mock/stub hits | 1 |
+| Services with mock/stub hits | 0 |
 | Total classified gaps | 0 |
 | Blocker gaps | 0 |
 | High severity gaps | 0 |
@@ -37,7 +37,7 @@
 | Maturity | Count |
 |----------|------:|
 | INTERNAL_ONLY | 25 |
-| REAL_CODE_NOT_PROBED | 67 |
+| REAL_CODE_NOT_PROBED | 68 |
 | REAL_PROVEN | 4 |
 
 ## Quality gates added
