@@ -60,6 +60,35 @@ class CoverageControllerTest {
         assertEquals("req-4", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
     }
 
+    @Test
+    void enrolSubsidy_returns201() {
+        CoverageController controller = new CoverageController(new StubCoverageClient());
+        ResponseEntity<Map<String, Object>> response =
+                controller.enrolSubsidy(Map.of("memberCpid", "cpid-1", "programCode", "SUB-MOHCC-PRIMARY"),
+                        "req-5", "corr-5");
+        assertEquals(201, response.getStatusCode().value());
+        assertEquals("req-5", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
+    }
+
+    @Test
+    void consumeSubsidy_passesThroughCapExceeded400() {
+        CoverageController controller = new CoverageController(new CapExceededCoverageClient());
+        ResponseEntity<Map<String, Object>> response =
+                controller.consumeSubsidy("enr-1", Map.of("amount", "5000.00"), "req-6", "corr-6");
+        // The engine's honest 400 (cap exceeded) must reach the UI, not be masked as 502.
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("SUBSIDY_CAP_EXCEEDED", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+    }
+
+    @Test
+    void decidePreauth_passesThroughConflictOnNonPending() {
+        CoverageController controller = new CoverageController(new PreauthConflictCoverageClient());
+        ResponseEntity<Map<String, Object>> response =
+                controller.decidePreauth("pa-1", Map.of("status", "APPROVED"), "req-7", "corr-7");
+        assertEquals(409, response.getStatusCode().value());
+        assertEquals("PREAUTH_DECISION_REJECTED", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -81,8 +110,36 @@ class CoverageControllerTest {
             return mapper.createObjectNode().put("id", "member-1").put("status", "ACTIVE");
         }
 
+        @Override public JsonNode enrolSubsidy(Map<String, Object> body) {
+            return mapper.createObjectNode().put("id", "enr-1").put("status", "ACTIVE");
+        }
+
         @Override public JsonNode checkEligibility(Map<String, Object> body) {
             return mapper.createObjectNode().put("eligible", true);
+        }
+    }
+
+    private static final class CapExceededCoverageClient extends CoverageServiceClient {
+        CapExceededCoverageClient() { super(new RestTemplate(), endpoints()); }
+
+        @Override public JsonNode consumeSubsidy(String id, Map<String, Object> body) {
+            throw org.springframework.web.client.HttpClientErrorException.create(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "Bad Request",
+                    org.springframework.http.HttpHeaders.EMPTY,
+                    "{\"error\":\"BAD_REQUEST\",\"message\":\"Subsidy annual cap exceeded\"}".getBytes(),
+                    null);
+        }
+    }
+
+    private static final class PreauthConflictCoverageClient extends CoverageServiceClient {
+        PreauthConflictCoverageClient() { super(new RestTemplate(), endpoints()); }
+
+        @Override public JsonNode decidePreauth(String id, Map<String, Object> body) {
+            throw org.springframework.web.client.HttpClientErrorException.create(
+                    org.springframework.http.HttpStatus.CONFLICT, "Conflict",
+                    org.springframework.http.HttpHeaders.EMPTY,
+                    "{\"error\":\"CONFLICT\",\"message\":\"Preauth is not PENDING\"}".getBytes(),
+                    null);
         }
     }
 

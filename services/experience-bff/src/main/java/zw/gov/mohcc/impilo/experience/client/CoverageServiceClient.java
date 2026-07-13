@@ -84,6 +84,52 @@ public class CoverageServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    // ── Subsidy value enrolment + annual-cap drawdown (Model X: cv_subsidy_enrolments) ──
+
+    public JsonNode enrolSubsidy(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/coverage/subsidies/enrolments";
+        log.info("COVERAGE: Enrolling member into subsidy (value lane)");
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode listSubsidyEnrolments(String memberCpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/subsidies/enrolments")
+                .queryParam("member_cpid", memberCpid)
+                .toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode getSubsidyEnrolment(String id) {
+        String url = baseUrl + "/internal/v1/coverage/subsidies/enrolments/" + id;
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** Draw down subsidy value against the annual cap — the engine enforces the cap atomically. */
+    public JsonNode consumeSubsidy(String id, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/coverage/subsidies/enrolments/" + id + "/consume";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    // ── Subsidy exemption-category enrolment (Model Y: cv_subsidy_enrollments) ──
+
+    public JsonNode enrollSubsidyExemption(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/coverage/subsidies/enrollments";
+        log.info("COVERAGE: Enrolling member exemption category (costing lane)");
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode listSubsidyExemptions(String memberCpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/subsidies/enrollments")
+                .queryParam("member_cpid", memberCpid)
+                .toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode endSubsidyExemption(String id) {
+        String url = baseUrl + "/internal/v1/coverage/subsidies/enrollments/" + id + "/end";
+        return extractData(restTemplate.postForEntity(url, Map.of(), JsonNode.class));
+    }
+
     public JsonNode listEligibilityForMember(String memberCpid) {
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/eligibility")
                 .queryParam("member_cpid", memberCpid)
@@ -161,6 +207,17 @@ public class CoverageServiceClient {
     public JsonNode getPreauth(String id) {
         String url = baseUrl + "/internal/v1/coverage/preauth/" + id;
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /**
+     * Reviewer decision on a preauth (PENDING → APPROVED|DENIED). The engine applies utilization
+     * cap-denial (an APPROVED submission can be flipped to DENIED with reason
+     * UTILIZATION_LIMIT_EXCEEDED) and rejects a non-PENDING preauth with 409.
+     */
+    public JsonNode decidePreauth(String id, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/coverage/preauth/" + id + "/decision";
+        log.info("COVERAGE: Deciding preauth {}", id);
+        return extractData(restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(body), JsonNode.class));
     }
 
     public JsonNode enrollMember(Map<String, Object> body) {
