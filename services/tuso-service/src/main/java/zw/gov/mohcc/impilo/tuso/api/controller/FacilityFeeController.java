@@ -10,32 +10,41 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityFeeDtos.*;
+import zw.gov.mohcc.impilo.tuso.core.FacilityFeeService;
 import zw.gov.mohcc.impilo.tuso.core.RegulatoryFeeScheduleService;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityApplicationEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.RegulatoryFeeScheduleEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityApplicationRepository;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
- * Regulatory fee-schedule governance (TUSO SoR). Amounts are recorded through
- * governed approval — the platform never invents them; they come from SI 78 of
- * 2017. Sits on the {@code /v1/internal/facility-registry} surface so the
- * experience-bff regulatory proxy reaches it with the admin RBAC seam.
+ * Regulatory fee-schedule governance + application fee view (TUSO SoR). Amounts
+ * are recorded through governed approval — the platform never invents them; they
+ * come from SI 78 of 2017. Sits on the {@code /v1/internal/facility-registry}
+ * surface so the experience-bff regulatory proxy reaches it with the admin RBAC seam.
  */
 @RestController
-@RequestMapping("/v1/internal/facility-registry/fee-schedules")
+@RequestMapping("/v1/internal/facility-registry")
 public class FacilityFeeController {
 
     private static final Logger log = LoggerFactory.getLogger(FacilityFeeController.class);
 
     private final RegulatoryFeeScheduleService feeScheduleService;
+    private final FacilityFeeService facilityFeeService;
+    private final FacilityApplicationRepository applicationRepository;
 
-    public FacilityFeeController(RegulatoryFeeScheduleService feeScheduleService) {
+    public FacilityFeeController(RegulatoryFeeScheduleService feeScheduleService,
+                                 FacilityFeeService facilityFeeService,
+                                 FacilityApplicationRepository applicationRepository) {
         this.feeScheduleService = feeScheduleService;
+        this.facilityFeeService = facilityFeeService;
+        this.applicationRepository = applicationRepository;
     }
 
-    @GetMapping
+    @GetMapping("/fee-schedules")
     public ResponseEntity<ApiResponse<List<FeeScheduleView>>> list(
             @RequestParam(required = false, defaultValue = "SI_78_2017") String scheduleCode) {
         TrustContext ctx = TrustContextHolder.require();
@@ -44,7 +53,7 @@ public class FacilityFeeController {
         return ResponseEntity.ok(ApiResponse.ok(out, corr(ctx)));
     }
 
-    @PostMapping
+    @PostMapping("/fee-schedules")
     public ResponseEntity<ApiResponse<FeeScheduleView>> create(@RequestBody CreateFeeScheduleRequest req) {
         TrustContext ctx = TrustContextHolder.require();
         FeeScheduleView out = call(() -> toView(feeScheduleService.create(
@@ -53,12 +62,28 @@ public class FacilityFeeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(out, corr(ctx)));
     }
 
-    @PostMapping("/{feeId}/approve")
+    @PostMapping("/fee-schedules/{feeId}/approve")
     public ResponseEntity<ApiResponse<FeeScheduleView>> approve(@PathVariable UUID feeId,
                                                                @RequestBody(required = false) ApproveFeeScheduleRequest req) {
         TrustContext ctx = TrustContextHolder.require();
         FeeScheduleView out = call(() -> toView(feeScheduleService.approve(feeId, req == null ? null : req.effectiveFrom())));
         return ResponseEntity.ok(ApiResponse.ok(out, corr(ctx)));
+    }
+
+    @GetMapping("/applications/{applicationId}/fee")
+    public ResponseEntity<ApiResponse<ApplicationFeeView>> applicationFee(@PathVariable UUID applicationId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ApplicationFeeView out = call(() -> facilityFeeService.getApplicationFee(requireApplication(applicationId, ctx)));
+        return ResponseEntity.ok(ApiResponse.ok(out, corr(ctx)));
+    }
+
+    private FacilityApplicationEntity requireApplication(UUID applicationId, TrustContext ctx) {
+        FacilityApplicationEntity a = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
+        if (ctx.tenantId() != null && a.getTenantId() != null && !ctx.tenantId().equals(a.getTenantId())) {
+            throw new SecurityException("Tenant isolation violation");
+        }
+        return a;
     }
 
     private static String corr(TrustContext ctx) {

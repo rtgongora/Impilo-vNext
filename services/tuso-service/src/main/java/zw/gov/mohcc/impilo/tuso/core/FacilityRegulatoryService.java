@@ -54,6 +54,7 @@ public class FacilityRegulatoryService {
     private final ApplicationGovernanceService applicationGovernanceService;
     private final PremisesService premisesService;
     private final InspectionContentService inspectionContentService;
+    private final FacilityFeeService facilityFeeService;
 
     public FacilityRegulatoryService(FacilityRepository facilityRepository,
                                      FacilityGeoRepository facilityGeoRepository,
@@ -75,7 +76,8 @@ public class FacilityRegulatoryService {
                                      RegulatoryRuleService regulatoryRuleService,
                                      ApplicationGovernanceService applicationGovernanceService,
                                      PremisesService premisesService,
-                                     InspectionContentService inspectionContentService) {
+                                     InspectionContentService inspectionContentService,
+                                     FacilityFeeService facilityFeeService) {
         this.facilityRepository = facilityRepository;
         this.facilityGeoRepository = facilityGeoRepository;
         this.applicationRepository = applicationRepository;
@@ -97,6 +99,7 @@ public class FacilityRegulatoryService {
         this.applicationGovernanceService = applicationGovernanceService;
         this.premisesService = premisesService;
         this.inspectionContentService = inspectionContentService;
+        this.facilityFeeService = facilityFeeService;
     }
 
     @Transactional
@@ -183,6 +186,9 @@ public class FacilityRegulatoryService {
                 "applicationId", applicationId,
                 "workflowState", application.getCurrentWorkflowState().name()
         ), ctx);
+        // Resolve the registration fee: sets fee state and, when configured, moves the
+        // application to AWAITING_FEE and emits fee_due for COSTA to mint the charge.
+        facilityFeeService.initiateFee(ctx, application);
         return getFacilityProfile(application.getFacility().getId());
     }
 
@@ -192,6 +198,11 @@ public class FacilityRegulatoryService {
         assertAllowed(ctx, INSPECTOR_ROLES);
 
         FacilityApplicationEntity application = requireApplication(applicationId, ctx.tenantId());
+        // Fee gate: an outstanding registration fee (DUE) blocks inspection until PAID or WAIVED.
+        String feeBlocker = facilityFeeService.feeBlocker(application);
+        if (feeBlocker != null) {
+            throw new IllegalStateException(feeBlocker);
+        }
         application.setCurrentWorkflowState(FacilityApplicationState.READY_FOR_INSPECTION);
         application.setUpdatedBy(ctx.actorId());
         applicationRepository.save(application);

@@ -59,6 +59,7 @@ class FacilityRegulatoryServiceTest {
     @Mock private ApplicationGovernanceService applicationGovernanceService;
     @Mock private PremisesService premisesService;
     @Mock private InspectionContentService inspectionContentService;
+    @Mock private FacilityFeeService facilityFeeService;
 
     private FacilityRegulatoryService service;
     private UUID tenantId;
@@ -86,7 +87,8 @@ class FacilityRegulatoryServiceTest {
                 regulatoryRuleService,
                 applicationGovernanceService,
                 premisesService,
-                inspectionContentService
+                inspectionContentService,
+                facilityFeeService
         );
         // Rule-config defaults for unit tests (windows/cycle come from the rule store in prod).
         when(regulatoryRuleService.remediationWindowDays(any(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(30);

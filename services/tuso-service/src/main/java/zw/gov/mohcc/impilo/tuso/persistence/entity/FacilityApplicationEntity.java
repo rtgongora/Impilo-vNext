@@ -93,6 +93,18 @@ public class FacilityApplicationEntity {
     @Column(name = "payment_reference", length = 128)
     private String paymentReference;
 
+    @Column(name = "fee_schedule_ref")
+    private UUID feeScheduleRef;
+
+    @Column(name = "fee_waived_by", length = 255)
+    private String feeWaivedBy;
+
+    @Column(name = "fee_waived_at")
+    private Instant feeWaivedAt;
+
+    @Column(name = "fee_waiver_reason", columnDefinition = "text")
+    private String feeWaiverReason;
+
     @Column(name = "application_number", length = 64)
     private String applicationNumber;
 
@@ -172,6 +184,14 @@ public class FacilityApplicationEntity {
     public void setFeeReference(String feeReference) { this.feeReference = feeReference; }
     public String getPaymentReference() { return paymentReference; }
     public void setPaymentReference(String paymentReference) { this.paymentReference = paymentReference; }
+    public UUID getFeeScheduleRef() { return feeScheduleRef; }
+    public void setFeeScheduleRef(UUID feeScheduleRef) { this.feeScheduleRef = feeScheduleRef; }
+    public String getFeeWaivedBy() { return feeWaivedBy; }
+    public void setFeeWaivedBy(String feeWaivedBy) { this.feeWaivedBy = feeWaivedBy; }
+    public Instant getFeeWaivedAt() { return feeWaivedAt; }
+    public void setFeeWaivedAt(Instant feeWaivedAt) { this.feeWaivedAt = feeWaivedAt; }
+    public String getFeeWaiverReason() { return feeWaiverReason; }
+    public void setFeeWaiverReason(String feeWaiverReason) { this.feeWaiverReason = feeWaiverReason; }
     public String getApplicationNumber() { return applicationNumber; }
     public void setApplicationNumber(String applicationNumber) { this.applicationNumber = applicationNumber; }
     public Instant getCreatedAt() { return createdAt; }

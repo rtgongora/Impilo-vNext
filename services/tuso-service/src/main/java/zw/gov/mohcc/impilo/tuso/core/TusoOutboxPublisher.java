@@ -86,6 +86,7 @@ public class TusoOutboxPublisher extends CompanionOutboxPublisher {
             // (PctEventConsumer). Without the mappings, LEGACY_ONLY mode routes
             // them to the tuso.events catch-all and queues never materialise.
             case "FACILITY_QUEUE_CONFIG" -> "impilo.tuso.facility_queue_config";
+            case "FACILITY_APPLICATION_FEE" -> "tuso.facility.application.fee";
             case "WORKSPACE" -> "tuso.workspace.updated";
             default -> "tuso.events";
         };
