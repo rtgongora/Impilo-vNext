@@ -556,13 +556,16 @@ export const madiApi = {
       await apiClient.get(`${BASE}/donors/${donorId}/pre-screening/latest`),
     ),
 
-  drivesNearMe: (ndilaSiteRef: string, radiusKm = 25) =>
-    apiClient.get<Array<Record<string, unknown>>>(
-      `${BASE}/donors/drives-near-me?ndila_site_ref=${encodeURIComponent(ndilaSiteRef)}&radius_km=${radiusKm}`,
+  drivesNearMe: async (ndilaSiteRef: string, radiusKm = 25) =>
+    unwrapMadiData<Array<Record<string, unknown>>>(
+      await apiClient.get(
+        `${BASE}/donors/drives-near-me?ndila_site_ref=${encodeURIComponent(ndilaSiteRef)}&radius_km=${radiusKm}`,
+      ),
     ),
 
   // Donation drives
-  listDrives: () => apiClient.get<DonationDrive[]>(`${BASE}/drives`),
+  listDrives: async () =>
+    unwrapMadiData<DonationDrive[]>(await apiClient.get(`${BASE}/drives`)),
 
   createDrive: (body: CreateDrivePayload) =>
     apiClient.post<DonationDrive>(`${BASE}/drives`, body),

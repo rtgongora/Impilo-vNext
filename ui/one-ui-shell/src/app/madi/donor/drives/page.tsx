@@ -15,8 +15,8 @@ export default function DonorDrivesPage() {
   const nearMe = useDrivesNearMe(siteRef || undefined);
   const allDrives = useMadiDrives();
 
-  const nearRows = nearMe.data ?? [];
-  const tenantDrives = allDrives.data ?? [];
+  const nearRows = Array.isArray(nearMe.data) ? nearMe.data : [];
+  const tenantDrives = Array.isArray(allDrives.data) ? allDrives.data : [];
 
   return (
     <AppLayout>
