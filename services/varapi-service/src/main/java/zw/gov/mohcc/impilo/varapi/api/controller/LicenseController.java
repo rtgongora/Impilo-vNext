@@ -21,6 +21,7 @@ import zw.gov.mohcc.impilo.varapi.core.LicenseService;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.LicenseEntity;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Internal REST API for managing provider licenses within the VARAPI Provider Registry.
@@ -72,6 +73,30 @@ public class LicenseController {
         LicenseResponse response = toLicenseResponse(entity);
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
+    }
+
+    /** Begin a renewal — moves the provider lifecycle to RENEWAL_IN_PROGRESS. */
+    @PostMapping("/{licenseId}/start-renewal")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> startRenewal(
+            @PathVariable String providerPublicId,
+            @PathVariable Long licenseId) {
+        TrustContext ctx = TrustContextHolder.require();
+        licenseService.startRenewal(providerPublicId, licenseId);
+        return ResponseEntity.ok(ApiResponse.ok(
+                Map.of("providerPublicId", providerPublicId, "lifecycle", "RENEWAL_IN_PROGRESS"),
+                ctx.correlationId().toString()));
+    }
+
+    /** Begin restoration of a lapsed licence — moves the provider lifecycle to RESTORATION_IN_PROGRESS. */
+    @PostMapping("/{licenseId}/start-restoration")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> startRestoration(
+            @PathVariable String providerPublicId,
+            @PathVariable Long licenseId) {
+        TrustContext ctx = TrustContextHolder.require();
+        licenseService.startRestoration(providerPublicId, licenseId);
+        return ResponseEntity.ok(ApiResponse.ok(
+                Map.of("providerPublicId", providerPublicId, "lifecycle", "RESTORATION_IN_PROGRESS"),
+                ctx.correlationId().toString()));
     }
 
     @PostMapping("/{licenseId}/suspend")

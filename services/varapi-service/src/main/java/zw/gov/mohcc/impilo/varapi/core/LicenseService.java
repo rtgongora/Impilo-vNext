@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.varapi.api.dto.IssueLicenseRequest;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.CouncilEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.LicenseEntity;
+import zw.gov.mohcc.impilo.varapi.enums.ProviderLifecycleStatus;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.varapi.persistence.repository.LicenseRepository;
@@ -20,6 +21,7 @@ import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderRepository;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,7 +118,69 @@ public class LicenseService {
                 String.format("{\"licenseId\":%d,\"status\":\"ACTIVE\"}", licenseId));
         publishEligibilityChanged(license, providerPublicId, "ACTIVE", "License renewed");
 
+        // Completing a renewal returns the provider lifecycle to LICENCED_ACTIVE (from a
+        // DUE/RENEWAL/RESTORATION state). Renewal FSM states are otherwise never cleared.
+        moveProviderLifecycle(providerPublicId, ProviderLifecycleStatus.LICENCED_ACTIVE,
+                "varapi.provider.updated", EnumSet.of(
+                        ProviderLifecycleStatus.LICENCE_DUE_FOR_RENEWAL,
+                        ProviderLifecycleStatus.RENEWAL_IN_PROGRESS,
+                        ProviderLifecycleStatus.RESTORATION_IN_PROGRESS,
+                        ProviderLifecycleStatus.LAPSED));
+
         return license;
+    }
+
+    /** Provider self-service / registrar: begin a renewal — moves lifecycle to RENEWAL_IN_PROGRESS. */
+    @Transactional
+    public void startRenewal(String providerPublicId, Long licenseId) {
+        TrustContextHolder.require();
+        licenseRepository.findById(licenseId)
+                .orElseThrow(() -> new IllegalArgumentException("License not found: " + licenseId));
+        boolean moved = moveProviderLifecycle(providerPublicId, ProviderLifecycleStatus.RENEWAL_IN_PROGRESS,
+                "varapi.provider.updated", EnumSet.of(
+                        ProviderLifecycleStatus.LICENCE_DUE_FOR_RENEWAL,
+                        ProviderLifecycleStatus.LICENCED_ACTIVE));
+        if (!moved) {
+            throw new IllegalStateException("Renewal can only be started from an active or due-for-renewal licence");
+        }
+    }
+
+    /** Begin restoration of a lapsed licence — moves lifecycle to RESTORATION_IN_PROGRESS. */
+    @Transactional
+    public void startRestoration(String providerPublicId, Long licenseId) {
+        TrustContextHolder.require();
+        licenseRepository.findById(licenseId)
+                .orElseThrow(() -> new IllegalArgumentException("License not found: " + licenseId));
+        boolean moved = moveProviderLifecycle(providerPublicId, ProviderLifecycleStatus.RESTORATION_IN_PROGRESS,
+                "varapi.provider.updated", EnumSet.of(ProviderLifecycleStatus.LAPSED));
+        if (!moved) {
+            throw new IllegalStateException("Restoration can only be started from a lapsed licence");
+        }
+    }
+
+    private boolean moveProviderLifecycle(String providerPublicId, ProviderLifecycleStatus target,
+                                          String eventType, java.util.Set<ProviderLifecycleStatus> from) {
+        ProviderEntity provider = providerRepository.findByProviderPublicId(providerPublicId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerPublicId));
+        ProviderLifecycleStatus current;
+        try {
+            current = provider.getLifecycleStatus() == null ? null
+                    : ProviderLifecycleStatus.valueOf(provider.getLifecycleStatus().trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            current = null;
+        }
+        if (current == null || !from.contains(current)) {
+            return false;
+        }
+        String previous = provider.getLifecycleStatus();
+        provider.setLifecycleStatus(target.name());
+        provider.deriveStatusProjections();
+        provider.setVersion((provider.getVersion() == null ? 0 : provider.getVersion()) + 1);
+        providerRepository.save(provider);
+        publishEvent("PROVIDER", provider.getProviderPublicId(), eventType,
+                String.format("{\"providerPublicId\":\"%s\",\"previousLifecycle\":\"%s\",\"newLifecycle\":\"%s\"}",
+                        provider.getProviderPublicId(), previous, target.name()));
+        return true;
     }
 
     @Transactional
