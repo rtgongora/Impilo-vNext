@@ -249,6 +249,76 @@ The requirement catalogue now powers a regulator-neutral marketplace seam
 - **Boundaries respected:** orders/payments remain MSIKA-flow/COSTA; medicines
   fulfilment stays on pharmaceutical rails; tuso holds no commerce concepts.
 
+## 9d. Facility classification enrichment — the imported estate (Wave K1, 2026-07-12)
+
+The HPA classification model now **enriches the imported national Tuso facility
+estate** instead of standing beside it as a parallel taxonomy. tuso **V020**
+adds a per-facility `facility_regulatory_profile` (one current row per facility),
+append-only history, a versioned `facility_classification_mapping_rule` pack
+(checksum-governed seeder), an idempotent backfill run table, and a
+`facility_unit_candidate` table (units are *proposed*, never auto-created).
+
+- **Source truth preserved:** imported `facility_type`/`ownership`/`level`/
+  `bed_capacity` are snapshotted verbatim; the backfill never mutates a
+  `facility` column, never creates a facility, and never overwrites a
+  HUMAN_CONFIRMED/REJECTED profile (drift is recorded, not forced).
+- **Conservative, no-guessing policy:** only genuinely deterministic mappings
+  auto-apply; `care_setting` is never inferred from bed counts; a public
+  hospital ≤50 beds surfaces as a real **CATALOGUE_GAP** exception (never
+  rounded up); ~29 ownership-as-type import defects land **UNMAPPED**; the
+  ~1,455 public clinics/RHCs land `MISSING_REQUIRED_FACTS` with HPA class C
+  already fixed but the institution label withheld pending a supplied fact.
+- **Reconciliation surface:** `/v1/internal/facilities/classification` (counts
+  dashboard, filterable queue, verbatim source vs suggestion+rationale,
+  supply-facts / confirm / correct, deterministic-only bulk-confirm with a
+  server-side whitelist, unit-candidate propose→confirm→real unit) with
+  actor-type authz; BFF passthrough; a REGISTRY_ADMIN work queue in the shell.
+- **Inspection precedence:** `InspectionContentService` now prefers a
+  confirmed/deterministic profile's label and **hard-stops an ambiguous
+  facility** instead of silently handing it a checklist; the legacy no-profile
+  fallback is preserved so existing registrations stay green.
+- **Proof:** [reports/journeys/hpa-classification-proof-20260712/](../../reports/journeys/hpa-classification-proof-20260712/)
+  — **15/15 PASS** on a real **1,773-row** national import + backfill (P0 estate
+  audit, source preservation, ambiguous-stays-in-review across re-runs,
+  human-correction survives re-backfill, checklist hard-stop, provenance
+  queryable, wrong-actor 403 + non-deterministic bulk-confirm 400).
+
+## 9e. Regulatory fee rails — the dormant AWAITING_FEE gate, wired (Wave K2, 2026-07-13)
+
+HPA fee obligations now ride the **live COSTA↔MusheX money loop**. tuso **V021**
+adds a governed `regulatory_fee_schedule` (amount **NULLABLE**, PENDING→ACTIVE
+lifecycle) and fee columns on `facility_application`. **No SI 78 of 2017 amount
+is hard-coded** — amounts arrive only through the governed configure+approve
+endpoint or a PO-supplied migration.
+
+- **Loop:** submit with a CONFIGURED fee → `fee_state=DUE` + state
+  `AWAITING_FEE` → `tuso.facility.application.fee_due` → COSTA mints a
+  `REGULATORY_APPLICATION_FEE` charge → `costa.charge.created` writes back
+  `fee_reference` → `POST …/fee/payment-intent` mints a MusheX
+  `HPA_FACILITY_FEE` intent → wallet pay → `mushex.payment.status.changed` →
+  tuso `PAID` (AWAITING_FEE→SUBMITTED) → COSTA charge **SETTLED**.
+- **Gate:** feeState-authoritative `feeBlocker` beside `councilReviewBlocker`
+  holds `ready-for-inspection` while `DUE`; documents/RFI/council run in
+  parallel; renewals inherit the seam.
+- **Waiver:** `POST …/fee/waive` (regulator roles) → `WAIVED` + authority
+  columns + audit → COSTA charge **WAIVED**.
+- **Honest unconfigured behaviour:** fee required but no ACTIVE amount →
+  `NOT_CONFIGURED` recorded and surfaced (never silently skipped), no charge
+  fabricated, never gates inspection. No pending/code-default fallback for money.
+- **Platform fix landed to reach green:** the shared v1.1 `EventEnvelope` used
+  `Map.copyOf(payload)`, which NPEs on any JSON-null field value (an all-classes
+  fee carries `classCode: null`). The swallowed NPE head-of-line-blocked the
+  outbox drain — **any service emitting a null-valued payload field silently
+  stalled its v1.1 outbox.** Fixed with a null-tolerant envelope copy + poison-row
+  logging in the shared drain; fee/classification emits now stamp
+  `causation_id`/`correlation_id`/`occurred_at`.
+- **Proof:** [reports/journeys/hpa-fee-proof-20260713/](../../reports/journeys/hpa-fee-proof-20260713/)
+  — **16/16 PASS** (J-FEE-1..4) on a tuso+costa+mushex rig under the
+  production-default **DUAL** publisher; TEST amount marked `RIG-TEST-CONFIG (not
+  SI 78)`. Gates: tuso **192/192**, costa **132/132**, mushex **217/217**.
+- **Not deployed:** fee amounts remain NULL/PENDING until the PO supplies the
+  SI 78 of 2017 schedule through governance.
+
 ## 10. Honest gaps / deferred
 
 - UI journeys proven at typecheck/route/hook level only — browser journeys need the
