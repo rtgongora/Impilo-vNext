@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.khuluma.domain.EscalationEntity;
+import zw.gov.mohcc.impilo.khuluma.domain.PresenceEntity;
 import zw.gov.mohcc.impilo.khuluma.domain.SlaPolicyEntity;
 import zw.gov.mohcc.impilo.khuluma.repository.EscalationRepository;
 import zw.gov.mohcc.impilo.khuluma.repository.SlaPolicyRepository;
@@ -34,11 +35,16 @@ public class EscalationService {
     private final EscalationRepository escalations;
     private final SlaPolicyRepository policies;
     private final OutboxAppender outbox;
+    private final OnCallService onCall;
+    private final RealtimeDispatcher realtime;
 
-    public EscalationService(EscalationRepository escalations, SlaPolicyRepository policies, OutboxAppender outbox) {
+    public EscalationService(EscalationRepository escalations, SlaPolicyRepository policies, OutboxAppender outbox,
+                             OnCallService onCall, RealtimeDispatcher realtime) {
         this.escalations = escalations;
         this.policies = policies;
         this.outbox = outbox;
+        this.onCall = onCall;
+        this.realtime = realtime;
     }
 
     public record NewEscalation(UUID conversationId, String reason, String priority) {}
@@ -72,6 +78,10 @@ public class EscalationService {
 
         EscalationEntity saved = escalations.save(e);
         emit("impilo.khuluma.escalation.opened.v1", saved);
+        // URGENT escalations page the on-call roster immediately (G6) — don't wait for an SLA breach.
+        if ("URGENT".equals(priority)) {
+            pageOnCall(saved, "escalation.opened");
+        }
         return saved;
     }
 
@@ -83,6 +93,8 @@ public class EscalationService {
         if (e.getStatus().equals("OPEN")) e.setStatus("ASSIGNED");
         EscalationEntity saved = escalations.save(e);
         emit("impilo.khuluma.escalation.assigned.v1", saved);
+        // Page the named assignee in-app so an assignment actually reaches them (G6).
+        pageActor(saved, assignee, "escalation.assigned");
         return saved;
     }
 
@@ -160,6 +172,9 @@ public class EscalationService {
             e.setFirstResponseBreached(true);
             escalations.save(e);
             emit("impilo.khuluma.escalation.first-response-breached.v1", e);
+            // No one has responded within the first-response SLA — page the on-call roster (G6).
+            // (Previously the breach only emitted an event and nobody was actually paged.)
+            pageOnCall(e, "escalation.first-response-breached");
         }
         for (EscalationEntity e : escalations.findResolutionBreaches(now)) {
             e.setResolutionBreached(true);
@@ -167,6 +182,70 @@ public class EscalationService {
             escalations.save(e);
             emit("impilo.khuluma.escalation.breached.v1", e);
         }
+    }
+
+    /**
+     * Page the on-call roster for the escalation's tenant (G6): a realtime {@code actor:<id>} push
+     * to each ON_CALL worker, plus an audit outbox event recording who was paged. Realtime failures
+     * are swallowed — a delivery-transport problem must not roll back the escalation transaction.
+     * Constraint: {@code PresenceEntity} has no facility/department column, so paging is tenant-wide
+     * (the roster is tenant + optional specialty scoped only).
+     */
+    private void pageOnCall(EscalationEntity e, String pageType) {
+        List<PresenceEntity> roster;
+        try {
+            roster = onCall.onCallRoster(e.getTenantId());
+        } catch (RuntimeException ex) {
+            log.warn("Escalation {} on-call roster lookup failed: {}", e.getId(), ex.getMessage());
+            return;
+        }
+        if (roster.isEmpty()) {
+            log.warn("Escalation {} ({}) has no ON_CALL worker to page for tenant {}",
+                    e.getId(), pageType, e.getTenantId());
+        }
+        Map<String, Object> body = pagePayload(e, pageType);
+        int paged = 0;
+        for (PresenceEntity p : roster) {
+            if (p.getActorId() == null) continue;
+            try {
+                realtime.publish(e.getTenantId(), "actor:" + p.getActorId(), "escalation.page", body);
+                paged++;
+            } catch (RuntimeException ex) {
+                log.warn("Escalation {} page to actor {} failed: {}", e.getId(), p.getActorId(), ex.getMessage());
+            }
+        }
+        Map<String, Object> auditPayload = pagePayload(e, pageType);
+        auditPayload.put("pagedCount", paged);
+        auditPayload.put("rosterSize", roster.size());
+        outbox.append("impilo.khuluma.escalation.paged.v1", AGGREGATE, e.getId().toString(), e.getTenantId(),
+                "national-spine", UUID.randomUUID().toString(),
+                "escalation.paged-" + e.getId() + "-" + UUID.randomUUID(), auditPayload,
+                e.getTenantId() + ":" + e.getId(),
+                e.getConversationId() != null ? e.getConversationId().toString() : e.getId().toString(),
+                "CONVERSATION");
+        log.info("Escalation {} ({}) paged {}/{} on-call worker(s)", e.getId(), pageType, paged, roster.size());
+    }
+
+    /** Targeted realtime page to a single actor (the named assignee). Best-effort. */
+    private void pageActor(EscalationEntity e, String actorId, String pageType) {
+        if (actorId == null || actorId.isBlank()) return;
+        try {
+            realtime.publish(e.getTenantId(), "actor:" + actorId, "escalation.page", pagePayload(e, pageType));
+        } catch (RuntimeException ex) {
+            log.warn("Escalation {} page to assignee {} failed: {}", e.getId(), actorId, ex.getMessage());
+        }
+    }
+
+    private static Map<String, Object> pagePayload(EscalationEntity e, String pageType) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("escalationId", e.getId().toString());
+        payload.put("conversationId", e.getConversationId() != null ? e.getConversationId().toString() : null);
+        payload.put("reason", e.getReason());
+        payload.put("priority", e.getPriority());
+        payload.put("tier", e.getTier());
+        payload.put("status", e.getStatus());
+        payload.put("pageType", pageType);
+        return payload;
     }
 
     private void emit(String eventType, EscalationEntity e) {

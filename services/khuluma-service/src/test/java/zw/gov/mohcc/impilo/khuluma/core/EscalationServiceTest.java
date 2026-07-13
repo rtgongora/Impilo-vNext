@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.khuluma.core.EscalationService.NewEscalation;
 import zw.gov.mohcc.impilo.khuluma.domain.EscalationEntity;
+import zw.gov.mohcc.impilo.khuluma.domain.PresenceEntity;
 import zw.gov.mohcc.impilo.khuluma.domain.SlaPolicyEntity;
 import zw.gov.mohcc.impilo.khuluma.repository.EscalationRepository;
 import zw.gov.mohcc.impilo.khuluma.repository.SlaPolicyRepository;
@@ -33,9 +34,11 @@ class EscalationServiceTest {
     @Mock private EscalationRepository escalations;
     @Mock private SlaPolicyRepository policies;
     @Mock private OutboxAppender outbox;
+    @Mock private OnCallService onCall;
+    @Mock private RealtimeDispatcher realtime;
 
     private EscalationService service() {
-        return new EscalationService(escalations, policies, outbox);
+        return new EscalationService(escalations, policies, outbox, onCall, realtime);
     }
 
     /** Simulate JPA: save assigns a generated id (so post-save emit has an aggregate id, as in prod). */
@@ -134,9 +137,42 @@ class EscalationServiceTest {
         assertThat(fr.isFirstResponseBreached()).isTrue();
         assertThat(res.isResolutionBreached()).isTrue();
         assertThat(res.getStatus()).isEqualTo("BREACHED");
-        // one event per breach.
-        verify(outbox, times(2)).append(anyString(), anyString(), anyString(), any(), anyString(),
+        // Three events: first-response-breached + the on-call page audit (G6) + resolution breached.
+        verify(outbox, times(3)).append(anyString(), anyString(), anyString(), any(), anyString(),
                 anyString(), anyString(), any(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void first_response_breach_pages_the_on_call_roster() {
+        EscalationEntity fr = open("OPEN");
+        PresenceEntity onCallWorker = new PresenceEntity();
+        onCallWorker.setActorId("provider-9");
+        onCallWorker.setDutyStatus("ON_CALL");
+        when(escalations.findFirstResponseBreaches(any())).thenReturn(List.of(fr));
+        when(escalations.findResolutionBreaches(any())).thenReturn(List.of());
+        when(onCall.onCallRoster(T)).thenReturn(List.of(onCallWorker));
+
+        service().checkSlaBreaches();
+
+        // The on-call provider is actually paged (previously the breach only emitted an event).
+        verify(realtime).publish(org.mockito.ArgumentMatchers.eq(T),
+                org.mockito.ArgumentMatchers.eq("actor:provider-9"),
+                org.mockito.ArgumentMatchers.eq("escalation.page"), any());
+        // ...and a paged audit event is recorded.
+        verify(outbox).append(eqEvent("paged"), anyString(), anyString(), any(), anyString(),
+                anyString(), anyString(), any(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void assign_pages_the_named_assignee() {
+        UUID id = UUID.randomUUID();
+        when(escalations.findByIdAndTenantId(id, T)).thenReturn(Optional.of(open("OPEN")));
+
+        service().assign(T, id, "agent-7");
+
+        verify(realtime).publish(org.mockito.ArgumentMatchers.eq(T),
+                org.mockito.ArgumentMatchers.eq("actor:agent-7"),
+                org.mockito.ArgumentMatchers.eq("escalation.page"), any());
     }
 
     // matcher helper: assert the event-type arg contains the lifecycle keyword.
