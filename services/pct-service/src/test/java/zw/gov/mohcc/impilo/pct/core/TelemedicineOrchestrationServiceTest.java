@@ -100,6 +100,33 @@ class TelemedicineOrchestrationServiceTest {
     }
 
     @Test
+    void attachRecording_writes_ref_to_the_matching_referral() {
+        UUID referralId = UUID.randomUUID();
+        ReferralEntity referral = newReferral(referralId, "COMPLETED");
+        when(referralRepository.findByReferralId(referralId)).thenReturn(Optional.of(referral));
+        when(referralRepository.save(any(ReferralEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        boolean attached = service.attachRecording(referralId.toString(), "egr-77", "s3://bucket/rec.mp4");
+
+        assertThat(attached).isTrue();
+        assertThat(referral.getRecordingRef()).isEqualTo("egr-77");
+        assertThat(referral.getRecordingStorageKey()).isEqualTo("s3://bucket/rec.mp4");
+        // A recording_attached outbox event is emitted (tenant-explicit — no TrustContext needed).
+        verify(outboxRepository, atLeastOnce()).save(any());
+    }
+
+    @Test
+    void attachRecording_ignores_unknown_referral() {
+        UUID referralId = UUID.randomUUID();
+        when(referralRepository.findByReferralId(referralId)).thenReturn(Optional.empty());
+
+        boolean attached = service.attachRecording(referralId.toString(), "egr-1", "k");
+
+        assertThat(attached).isFalse();
+        verify(referralRepository, org.mockito.Mockito.never()).save(any());
+    }
+
+    @Test
     void updateReferralStage_persists_appointment_backlink() {
         try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
             mocked.when(TrustContextHolder::require).thenReturn(context());

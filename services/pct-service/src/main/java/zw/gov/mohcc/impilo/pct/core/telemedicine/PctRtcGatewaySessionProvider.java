@@ -74,6 +74,10 @@ public class PctRtcGatewaySessionProvider implements TelemedicineSessionProvider
         body.put("providerId", providerId);
         body.put("facilityId", request.facilityId());
         body.put("referralId", request.referralId());
+        // G20: attribute the rtc session (and its recording event) to this teleconsult referral so
+        // the recording can be written back to pct_referrals.
+        body.put("owningService", "PCT");
+        body.put("owningRef", request.referralId());
         body.put("encounterId", request.encounterId());
         body.put("sessionType", request.sessionType() != null ? request.sessionType() : "VIDEO");
         body.put("purposeOfUse", text(attributes.getOrDefault("purposeOfUse", "TREATMENT")));

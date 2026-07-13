@@ -9,6 +9,9 @@ import java.util.UUID;
 
 public interface ReferralRepository extends JpaRepository<ReferralEntity, UUID> {
     Optional<ReferralEntity> findByTenantIdAndReferralId(UUID tenantId, UUID referralId);
+
+    /** Kafka-consumer lookup (no TrustContext): referralId is globally unique (recording writeback, G20). */
+    Optional<ReferralEntity> findByReferralId(UUID referralId);
     List<ReferralEntity> findByTenantIdAndPatientCpidOrderByCreatedAtDesc(UUID tenantId, String patientCpid);
     List<ReferralEntity> findByTenantIdAndFacilityIdOrderByCreatedAtDesc(UUID tenantId, String facilityId);
     List<ReferralEntity> findByTenantIdAndFacilityIdAndStatusOrderByCreatedAtDesc(UUID tenantId, String facilityId, String status);

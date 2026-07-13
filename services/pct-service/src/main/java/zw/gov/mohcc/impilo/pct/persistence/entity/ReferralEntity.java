@@ -130,6 +130,14 @@ public class ReferralEntity {
     @Column(name = "scheduled_at")
     private OffsetDateTime scheduledAt;
 
+    // Recording writeback (G20): the rtc-gateway egress reference for this teleconsult, set by the
+    // pct consumer of impilo.rtc.recording.available.v1 (matched via owningRef = referralId).
+    @Column(name = "recording_ref")
+    private String recordingRef;
+
+    @Column(name = "recording_storage_key")
+    private String recordingStorageKey;
+
     @Column(name = "submitted_at")
     private OffsetDateTime submittedAt;
 
@@ -183,6 +191,10 @@ public class ReferralEntity {
     public void setAppointmentId(String appointmentId) { this.appointmentId = appointmentId; }
     public OffsetDateTime getScheduledAt() { return scheduledAt; }
     public void setScheduledAt(OffsetDateTime scheduledAt) { this.scheduledAt = scheduledAt; }
+    public String getRecordingRef() { return recordingRef; }
+    public void setRecordingRef(String recordingRef) { this.recordingRef = recordingRef; }
+    public String getRecordingStorageKey() { return recordingStorageKey; }
+    public void setRecordingStorageKey(String recordingStorageKey) { this.recordingStorageKey = recordingStorageKey; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public Integer getStage() { return stage; }

@@ -3,6 +3,8 @@ package zw.gov.mohcc.impilo.pct.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ import java.util.UUID;
 @Service
 public class TelemedicineOrchestrationService {
 
+    private static final Logger log = LoggerFactory.getLogger(TelemedicineOrchestrationService.class);
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
     private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {};
     private static final TypeReference<List<Map<String, Object>>> MAP_LIST_TYPE = new TypeReference<>() {};
@@ -567,6 +570,8 @@ public class TelemedicineOrchestrationService {
         body.put("routedAt", toIso(entity.getRoutedAt()));
         body.put("appointmentId", entity.getAppointmentId());
         body.put("scheduledAt", toIso(entity.getScheduledAt()));
+        body.put("recordingRef", entity.getRecordingRef());
+        body.put("recordingStorageKey", entity.getRecordingStorageKey());
         body.put("structuredResponse", entity.getStructuredResponse() == null ? null : readJsonMap(entity.getStructuredResponse()));
         body.put("attachmentDocumentIds", readJsonStringList(entity.getAttachmentDocumentIds()));
         body.put("messages", readJsonMapList(entity.getMessages()));
@@ -679,6 +684,54 @@ public class TelemedicineOrchestrationService {
         outbox.setEventType("TELECONSULT_COMPLETED");
         outbox.setTenantId(ctx.tenantId());
         outbox.setPayload(writeJsonObject(payload));
+        outboxRepository.save(outbox);
+    }
+
+    /**
+     * Attach an rtc-gateway recording to its teleconsult referral (G20). Called from the Kafka
+     * consumer of {@code impilo.rtc.recording.available.v1} (no TrustContext) — matched via
+     * {@code owningRef} = referralId. Idempotent; ignores unknown/non-teleconsult refs.
+     */
+    @Transactional
+    public boolean attachRecording(String referralId, String recordingRef, String storageKey) {
+        if (referralId == null || referralId.isBlank()) return false;
+        UUID id;
+        try {
+            id = UUID.fromString(referralId);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+        ReferralEntity entity = referralRepository.findByReferralId(id).orElse(null);
+        if (entity == null) {
+            log.warn("Recording available for unknown referral {} — ignoring", referralId);
+            return false;
+        }
+        if (recordingRef != null && recordingRef.equals(entity.getRecordingRef())) {
+            return true; // idempotent replay
+        }
+        entity.setRecordingRef(recordingRef);
+        if (storageKey != null && !storageKey.isBlank()) entity.setRecordingStorageKey(storageKey);
+        ReferralEntity saved = referralRepository.save(entity);
+        emitOutbox("telemedicine.session.recording_attached", saved.getReferralId().toString(),
+                saved.getTenantId(), toReferralPayload(saved));
+        log.info("Attached recording {} to teleconsult referral {}", recordingRef, referralId);
+        return true;
+    }
+
+    /** Outbox emit for consumer/system threads that carry no TrustContext (tenantId supplied). */
+    private void emitOutbox(String eventType, String aggregateId, UUID tenantId, Map<String, Object> payload) {
+        EventOutboxEntity outbox = new EventOutboxEntity();
+        outbox.setAggregateType("telemedicine");
+        outbox.setAggregateId(aggregateId);
+        outbox.setEventType(eventType);
+        outbox.setTenantId(tenantId);
+        Map<String, Object> envelope = new LinkedHashMap<>();
+        envelope.put("eventType", eventType);
+        envelope.put("aggregateId", aggregateId);
+        envelope.put("tenantId", tenantId);
+        envelope.put("occurredAt", OffsetDateTime.now().toString());
+        envelope.put("payload", payload == null ? Map.of() : payload);
+        outbox.setPayload(writeJsonObject(envelope));
         outboxRepository.save(outbox);
     }
 
