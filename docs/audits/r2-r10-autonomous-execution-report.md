@@ -22,7 +22,8 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 | **R2 COMPLETE** | ✅ | — | VARAPI surfacing wave (G7–G11 + G30) all landed + pushed |
 | R3 G2 subsidy wiring | ✅ done | `f9faa2aa5`, `d63920430` | BFF enrol/consume/exemption + UI value-lane section + exemption list |
 | R3 G15 preauth decision | ✅ done | `f9faa2aa5`, `d63920430` | BFF `PUT /preauth/{id}/decision` (cap-denial/409 passthrough) + UI reviewer Approve/Deny |
-| R3 G3 subsidy model | ⚠️ deferred (safe part done) | this commit | disambiguation doc landed; physical merge = operator architecture decision (see below) |
+| R3 G3 subsidy model | ⚠️ deferred (safe part done) | `a5bc30b6e` | disambiguation doc landed; physical merge = operator architecture decision (see below) |
+| **R3 COMPLETE** | ✅ | — | G2+G15 wired; G3 merge deferred to operator (non-blocking) |
 | R4 khuluma | pending | — | G31 delegate → G6 paging → G13 broadcast |
 | R5 teleconsult completion | pending | — | G17 orders → G18 scheduling → G33 richness |
 | R6 indawo geography | pending | — | G4 catchment engine → G21 geocoding |
