@@ -5,6 +5,31 @@
 
 Per operator instruction: continue wave by wave to R10 unattended. Critical decisions → take the blueprint's recommendation, log the alternatives here. Issues needing operator input → defer and move on unless they block forward progress; log them in **§ Deferred for operator**. Everything is code-only (no deploy); verified by compile + tests, committed and pushed per increment.
 
+---
+
+## 🏁 Consolidated final report (R2–R10 complete)
+
+**Outcome:** the full R0–R10 remediation plan ran to completion unattended. Every wave is committed + pushed to `claude/staging-ux-orchestration-remediation-Yypyl`; nothing deployed (per instruction). Each increment was verified by compile + unit tests before commit.
+
+**What shipped (by wave):**
+- **R2 VARAPI surfacing** — W0 numeric-ID bridge; G7 certificates (self-service + registrar); G10 lifecycle console; G8 licence renewal sweep; G9 disciplinary+compliance (PIC-propagating); G11 qualifications+practice-contexts; G30 PIC SoR split (TUSO owns assignment, VARAPI owns eligibility snapshot).
+- **R3 Coverage** — G2 subsidy enrol/consume + exemption wired (both lanes); G15 preauth reviewer decision (cap-denial passthrough); G3 dual subsidy model disambiguated (merge deferred).
+- **R4 Khuluma** — G6 escalation pages the on-call roster; G13 channel broadcast + Announcements page; G31 external delivery delegated to notification-service.
+- **R5 Teleconsult** — G17 real in-session coded orders/prescribing (reuse OROS/pharmacy); G18 booking↔referral back-link (V032); G33 real document uploader for attachments.
+- **R6 Indawo geography** — premise inverted: reused ndila (the geography SoR) — G21 indawo addresses geocode via ndila, G4 catchment resolution reachable via BFF; no duplicate build.
+- **R7 PCT+VITO** — G12 sorting desk (BFF+UI); G16 verbal-autopsy + field-body UI. G14/G28 were already built (not gaps).
+- **R8 Imaging** — G22 viewer-linked report authoring (reuse). G19 (native C-FIND SCP/MPPS) + G20 (recording writeback) deferred with evidence/plan.
+- **R9 Mobile** — genuinely sandbox-blocked (no Android SDK/secrets); verified config, logged operator/CI actions. No fabricated work.
+- **R10 Hygiene** — G32/G35 prod-config prerequisites doc; G34 de-staled wiring docs; G29 (Madi bench) deferred as UX enhancement.
+
+**The register was wrong or overstated in 5 waves** — verify-first (fresh-context explorer per gap, then coordinator implements+tests) repeatedly prevented wasted or duplicate-SoR work: G30 (TUSO already owns PIC), G3 (two live subsidy models, not a duplicate), G18 (on-call already wired), R6/G4-G21 (ndila already owns geography), R7/G14-G28 (VITO relationships + secondary screens already built). Each divergence is documented with evidence in the per-wave decisions below.
+
+**Deferred to the operator (all non-blocking):** see **§ Deferred for operator** — 10 items, each with options + a recommendation. Highlights: G3 subsidy physical merge (identifier-space question), G20 recording writeback (untestable Kafka flow + ambiguous target), G19 native DICOM SCP (deployment-topology decision), G23–G27 mobile (CI/VM/secrets), and the config prerequisites now consolidated in [`PROD_CONFIG_PREREQUISITES.md`](../environment/PROD_CONFIG_PREREQUISITES.md).
+
+**Recommended next step (operator):** run the gates → clean no-stale fullboot preview deploy (also resolves the VITO MPI 403 estate drift) → live re-probe of the four traced journeys + golden rigs, per the `no-stale-fullboot-preview-deploy-checklist`. Then triage the Deferred list.
+
+---
+
 ## Progress ledger
 
 | Wave / gap | Status | Commit(s) | Notes |
@@ -48,7 +73,11 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 | **R8 COMPLETE** | ✅ | — | G22 built; G19/G20 deferred with evidence + plan (both non-blocking) |
 | R9 mobile prod path (G23-27) | ⚠️ deferred (sandbox-blocked) | — | build/sign/run/test an APK needs CI/VM/secrets — impossible in-sandbox; documented + operator actions logged |
 | **R9 COMPLETE (as far as sandbox allows)** | ✅ | — | verified config state; all 5 items = operator/CI/secrets, logged with exact actions |
-| R10 hygiene + prod config | pending | — | G29, G32, G34, G35 |
+| R10 G32/G35 prod config | ✅ done | `ede4fa89f` | PROD_CONFIG_PREREQUISITES.md (Fundo/LiveKit/khuluma/mobile env vars) |
+| R10 G34 doc hygiene | ✅ done | `ede4fa89f` | de-staled teleconsult wiring map (media LIVE, on-call wired, ui/one-ui-shell) |
+| R10 G29 Madi bench | ⚠️ deferred (enhancement) | — | crossmatch already reachable in blood-bank flow; dedicated bench screen = minor UX, not a gap |
+| **R10 COMPLETE** | ✅ | — | config + doc hygiene done; G29 deferred as UX enhancement |
+| **🏁 R2–R10 RUN COMPLETE** | ✅ | — | see § Consolidated final report below |
 
 ## Key decisions (autonomous)
 
