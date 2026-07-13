@@ -6,7 +6,7 @@
  * uniformly. The Live backend mounts at /internal/v1/live.
  */
 
-import { apiClient, type ApiResponse } from "./api-client";
+import { apiClient } from "./api-client";
 
 // ============================================================================
 // Domain types (mirror live-service DTOs / entities)
@@ -677,8 +677,15 @@ export const liveApi = {
   // Nompilo composer assist
   composerAssist: async (body: LiveComposerAssistPayload): Promise<LiveComposerAssistResult> => {
     try {
-      const res = await apiClient.post<ApiResponse<unknown>>(`${BASE}/composer/assist`, body);
-      return { result: res.data, fallbackUsed: false };
+      // The BFF LiveComposerController returns a flat object with top-level
+      // `result` and `fallbackUsed` (not an ApiResponse `{data}` envelope), and
+      // always 200 — even on LLM fallback. Reading `res.data` gave undefined, so
+      // Ask Nompilo rendered nothing despite a successful call (QA #12a).
+      const res = await apiClient.post<{ result?: unknown; fallbackUsed?: boolean }>(
+        `${BASE}/composer/assist`,
+        body,
+      );
+      return { result: res?.result, fallbackUsed: Boolean(res?.fallbackUsed) };
     } catch {
       if (body.op === "suggest_title" && body.eventType) {
         return {

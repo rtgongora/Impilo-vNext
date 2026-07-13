@@ -11,6 +11,13 @@ import { useMessages, useSendMessage, useMeetingActions } from "@/hooks/queries/
  * conversation anchored to the event ({@code eventConversation}); if none exists yet, an opt-in
  * "Start discussion" attaches one idempotently ({@code fromEvent}). Reuses the Khuluma message hooks.
  */
+function commsErrorMessage(error: unknown): string {
+  const status = (error as { status?: number })?.status;
+  if (status === 401 || status === 403) return "Sign in to join this discussion.";
+  const msg = (error as { error?: { message?: string } })?.error?.message;
+  return msg || "Couldn't reach the discussion. Please try again.";
+}
+
 export function EventDiscussionPanel({ eventId, title }: { eventId: string; title?: string }) {
   const user = useAuthStore((s) => s.user);
   const currentActorId = user?.healthId ?? user?.id ?? "";
@@ -19,6 +26,7 @@ export function EventDiscussionPanel({ eventId, title }: { eventId: string; titl
   const [conversationId, setConversationId] = useState<string | null | undefined>(undefined); // undefined = loading
   const [starting, setStarting] = useState(false);
   const [draft, setDraft] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -41,17 +49,25 @@ export function EventDiscussionPanel({ eventId, title }: { eventId: string; titl
 
   const startDiscussion = () => {
     setStarting(true);
+    setActionError(null);
     meetingActions
       .fromEvent(eventId, [], title)
       .then((r) => setConversationId(r.conversationId))
+      .catch((e) => setActionError(commsErrorMessage(e)))
       .finally(() => setStarting(false));
   };
 
   const handleSend = () => {
     const body = draft.trim();
     if (!body || !conversationId) return;
-    send.mutate({ body, clientMessageId: crypto.randomUUID() });
-    setDraft("");
+    setActionError(null);
+    send.mutate(
+      { body, clientMessageId: crypto.randomUUID() },
+      {
+        onSuccess: () => setDraft(""),
+        onError: (e) => setActionError(commsErrorMessage(e)),
+      },
+    );
   };
 
   return (
@@ -74,6 +90,7 @@ export function EventDiscussionPanel({ eventId, title }: { eventId: string; titl
           >
             {starting ? "Starting…" : "Start discussion"}
           </button>
+          {actionError && <p className="text-xs text-red-600">{actionError}</p>}
         </div>
       )}
 
@@ -122,6 +139,7 @@ export function EventDiscussionPanel({ eventId, title }: { eventId: string; titl
               <Send className="h-4 w-4" />
             </button>
           </div>
+          {actionError && <p className="mt-1 text-xs text-red-600">{actionError}</p>}
         </>
       )}
     </section>
