@@ -53,7 +53,11 @@ export function InpatientAdmissionHandoffBanner({
             </Link>
             {patientId ? (
               <Link
-                href={`/ehr/${patientId}/encounter/${encounterId ?? ""}`}
+                href={
+                  encounterId
+                    ? `/ehr/${patientId}/encounter/${encounterId}`
+                    : `/ehr/${patientId}/encounters`
+                }
                 className="text-xs font-medium text-primary-hover hover:underline"
               >
                 Return to encounter
