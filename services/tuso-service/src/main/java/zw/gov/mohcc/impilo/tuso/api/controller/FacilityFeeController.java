@@ -77,6 +77,17 @@ public class FacilityFeeController {
         return ResponseEntity.ok(ApiResponse.ok(out, corr(ctx)));
     }
 
+    @PostMapping("/applications/{applicationId}/fee/payment-intent")
+    public ResponseEntity<ApiResponse<ApplicationFeeView>> createPaymentIntent(@PathVariable UUID applicationId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ApplicationFeeView out = call(() -> {
+            FacilityApplicationEntity application = requireApplication(applicationId, ctx);
+            facilityFeeService.createFeePaymentIntent(ctx, application);
+            return facilityFeeService.getApplicationFee(application);
+        });
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(out, corr(ctx)));
+    }
+
     private FacilityApplicationEntity requireApplication(UUID applicationId, TrustContext ctx) {
         FacilityApplicationEntity a = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));

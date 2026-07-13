@@ -11,11 +11,14 @@ import zw.gov.mohcc.impilo.tuso.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityApplicationEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityApplicationState;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.RegulatoryApplicationTypeEntity;
+import zw.gov.mohcc.impilo.tuso.integration.MushexPaymentIntentClient;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.RegulatoryFeeScheduleEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityApplicationRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRegulatoryProfileRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.RegulatoryApplicationTypeRepository;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -41,17 +44,53 @@ public class FacilityFeeService {
     private final FacilityRegulatoryProfileRepository profileRepository;
     private final FacilityApplicationRepository applicationRepository;
     private final EventOutboxRepository outboxRepository;
+    private final MushexPaymentIntentClient mushexClient;
 
     public FacilityFeeService(RegulatoryFeeScheduleService feeScheduleService,
                               RegulatoryApplicationTypeRepository applicationTypeRepository,
                               FacilityRegulatoryProfileRepository profileRepository,
                               FacilityApplicationRepository applicationRepository,
-                              EventOutboxRepository outboxRepository) {
+                              EventOutboxRepository outboxRepository,
+                              MushexPaymentIntentClient mushexClient) {
         this.feeScheduleService = feeScheduleService;
         this.applicationTypeRepository = applicationTypeRepository;
         this.profileRepository = profileRepository;
         this.applicationRepository = applicationRepository;
         this.outboxRepository = outboxRepository;
+        this.mushexClient = mushexClient;
+    }
+
+    /**
+     * Mint (or return the existing) MusheX payment intent for an application's DUE
+     * fee. Idempotent: a payment_reference already present is returned unchanged;
+     * the amount is priced from the pinned schedule row.
+     */
+    @Transactional
+    public FacilityApplicationEntity createFeePaymentIntent(TrustContext ctx, FacilityApplicationEntity application) {
+        if (!"DUE".equals(application.getFeeState())) {
+            throw new IllegalArgumentException("No fee is DUE for application " + application.getApplicationId()
+                    + " (fee_state=" + application.getFeeState() + ")");
+        }
+        if (application.getPaymentReference() != null && !application.getPaymentReference().isBlank()) {
+            return application; // idempotent — intent already minted
+        }
+        RegulatoryFeeScheduleEntity pinned = application.getFeeScheduleRef() != null
+                ? feeScheduleService.require(application.getFeeScheduleRef()) : null;
+        BigDecimal amount = pinned != null ? pinned.getAmount() : null;
+        String currency = pinned != null ? pinned.getCurrency() : null;
+        if (amount == null) {
+            throw new IllegalArgumentException("Fee amount is not configured for application "
+                    + application.getApplicationId() + " — cannot mint a payment intent");
+        }
+        String intentId = mushexClient.createPaymentIntent(
+                application.getApplicationId().toString(), amount, currency,
+                "HPA_FACILITY_FEE:" + application.getApplicationId());
+        if (intentId != null) {
+            application.setPaymentReference(intentId);
+            applicationRepository.save(application);
+            log.info("HPA fee intent {} minted for application {}", intentId, application.getApplicationId());
+        }
+        return application;
     }
 
     /**

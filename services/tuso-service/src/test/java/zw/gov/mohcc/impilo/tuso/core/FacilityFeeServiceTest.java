@@ -35,6 +35,7 @@ class FacilityFeeServiceTest {
     @Mock private FacilityRegulatoryProfileRepository profileRepository;
     @Mock private FacilityApplicationRepository applicationRepository;
     @Mock private EventOutboxRepository outboxRepository;
+    @Mock private zw.gov.mohcc.impilo.tuso.integration.MushexPaymentIntentClient mushexClient;
 
     private final UUID tenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private final TrustContext ctx = new TrustContext(tenantId, "tester", "HPA_ADMIN", "REGULATION", null,
@@ -43,7 +44,7 @@ class FacilityFeeServiceTest {
     private FacilityFeeService service() {
         lenient().when(applicationRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         return new FacilityFeeService(feeScheduleService, applicationTypeRepository, profileRepository,
-                applicationRepository, outboxRepository);
+                applicationRepository, outboxRepository, mushexClient);
     }
 
     private FacilityApplicationEntity app(String catalogueCode) {
@@ -111,6 +112,34 @@ class FacilityFeeServiceTest {
         assertThat(service().feeBlocker(a)).contains("outstanding registration fee");
         a.setFeeState("PAID");
         assertThat(service().feeBlocker(a)).isNull();
+    }
+
+    @Test
+    void createPaymentIntentMintsOnceAndStoresTheReference() {
+        var a = app("INITIAL_REGISTRATION_PRIVATE");
+        a.setFeeState("DUE");
+        var scheduleId = UUID.randomUUID();
+        a.setFeeScheduleRef(scheduleId);
+        var pinned = new zw.gov.mohcc.impilo.tuso.persistence.entity.RegulatoryFeeScheduleEntity();
+        pinned.setAmount(new BigDecimal("120.00"));
+        pinned.setCurrency("USD");
+        when(feeScheduleService.require(scheduleId)).thenReturn(pinned);
+        when(mushexClient.createPaymentIntent(any(), any(), any(), any())).thenReturn("01INTENT");
+
+        service().createFeePaymentIntent(ctx, a);
+        assertThat(a.getPaymentReference()).isEqualTo("01INTENT");
+
+        // Idempotent: a second call returns the same intent without re-minting.
+        service().createFeePaymentIntent(ctx, a);
+        verify(mushexClient, org.mockito.Mockito.times(1)).createPaymentIntent(any(), any(), any(), any());
+    }
+
+    @Test
+    void createPaymentIntentRefusesWhenNoFeeIsDue() {
+        var a = app("INITIAL_REGISTRATION_PRIVATE");
+        a.setFeeState("NOT_CONFIGURED");
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> service().createFeePaymentIntent(ctx, a));
     }
 
     @Test

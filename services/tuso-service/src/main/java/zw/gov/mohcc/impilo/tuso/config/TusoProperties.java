@@ -75,6 +75,26 @@ public class TusoProperties {
         public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
     }
 
+    private MushexProperties mushex = new MushexProperties();
+
+    public MushexProperties getMushex() { return mushex; }
+    public void setMushex(MushexProperties mushex) { this.mushex = mushex; }
+
+    /** MusheX payment-intent integration for HPA registration fees. */
+    public static class MushexProperties {
+        private boolean enabled = true;
+        private String baseUrl = "http://localhost:8102";
+        /** Rig/preview only: attach Impilo-simulation metadata so mushex sandbox auto-settles the intent. */
+        private boolean sandboxSimulation = false;
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public String getBaseUrl() { return baseUrl; }
+        public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+        public boolean isSandboxSimulation() { return sandboxSimulation; }
+        public void setSandboxSimulation(boolean sandboxSimulation) { this.sandboxSimulation = sandboxSimulation; }
+    }
+
     public static class AlertThresholds {
         private int queueWaitThresholdMinutes = 60;
         private int taskStagnationThresholdMinutes = 120;

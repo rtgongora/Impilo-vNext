@@ -61,6 +61,13 @@ tuso:
   varapi:
     base-url: ${VARAPI_BASE_URL:http://localhost:8083}
 
+  # MusheX payment intents for HPA registration fees (SI 78 of 2017).
+  mushex:
+    enabled: ${TUSO_MUSHEX_ENABLED:true}
+    base-url: ${MUSHEX_URL:http://localhost:8102}
+    # Rig/preview only — never true in production.
+    sandbox-simulation: ${TUSO_MUSHEX_SANDBOX_SIMULATION:false}
+
   # Alert thresholds
   alerts:
     queue-wait-threshold-minutes: 60
