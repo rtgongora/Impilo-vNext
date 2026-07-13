@@ -79,10 +79,20 @@ public class AdapterReadinessService {
                             + "Set " + propertyPath(type)
                             + ".credentialsConfigured=true once secret-management wiring is verified.");
         }
+        // Configuration alone must never claim readiness the attempt-time safety gate
+        // would contradict: a stub adapter (liveCapable() == false) is hard-blocked at
+        // attempt time, so reporting READY_LIVE here would mislead the operator.
+        if (!adapterRegistry.getAdapter(type).liveCapable()) {
+            return new AdapterReadiness(type, AdapterReadinessStatus.STUB_NOT_LIVE_CAPABLE,
+                    false, false,
+                    "Real-money rail " + type + " is enabled and credentials are declared, but the adapter "
+                            + "implementation is a stub (liveCapable=false) and cannot move money. The "
+                            + "attempt-time safety gate blocks this rail.");
+        }
         return new AdapterReadiness(type, AdapterReadinessStatus.READY_LIVE,
                 true, false,
-                "Real-money rail " + type + " is enabled and operator declares credentials are configured. "
-                        + "Note: adapter implementations are currently stubs and do not perform live money movement.");
+                "Real-money rail " + type + " is enabled, operator declares credentials are configured, "
+                        + "and the adapter implementation reports live capability.");
     }
 
     private MushexProperties.RealRail realRailConfig(AdapterType type) {

@@ -56,6 +56,23 @@ class AdapterReadinessServiceTest {
         };
     }
 
+    private static PaymentRailAdapter liveCapableStub(AdapterType type) {
+        return new PaymentRailAdapter() {
+            @Override public String adapterType() { return type.name(); }
+            @Override public boolean liveCapable() { return true; }
+            @Override public AdapterResponse initiatePayment(String i, BigDecimal a, String c, Map<String, String> cfg) {
+                return new AdapterResponse("ref", "PENDING", "", Map.of());
+            }
+            @Override public AdapterResponse checkStatus(String r, Map<String, String> cfg) {
+                return new AdapterResponse("ref", "PENDING", "", Map.of());
+            }
+            @Override public boolean verifyWebhook(String s, String p, Map<String, String> cfg) { return true; }
+            @Override public AdapterResponse initiateRefund(String r, BigDecimal a, Map<String, String> cfg) {
+                return new AdapterResponse("ref", "PENDING", "", Map.of());
+            }
+        };
+    }
+
     private AdapterRegistry registryWith(AdapterType... types) {
         List<PaymentRailAdapter> adapters = new ArrayList<>();
         for (AdapterType t : types) {
@@ -146,7 +163,9 @@ class AdapterReadinessServiceTest {
     }
 
     @Test
-    void realMoneyRail_enabledAndCredentialsConfigured_isReadyLive() {
+    void realMoneyRail_enabledAndCredentialsConfigured_butStubAdapter_isStubNotLiveCapable() {
+        // Configuration alone must never claim READY_LIVE: the stub adapter reports
+        // liveCapable=false, and the attempt-time safety gate would block it anyway.
         properties.getAdapters().getBankTransfer().setEnabled(true);
         properties.getAdapters().getBankTransfer().setCredentialsConfigured(true);
         AdapterReadinessService svc = new AdapterReadinessService(
@@ -154,11 +173,25 @@ class AdapterReadinessServiceTest {
 
         AdapterReadiness row = svc.describe(AdapterType.BANK_TRANSFER);
 
+        assertEquals(AdapterReadinessStatus.STUB_NOT_LIVE_CAPABLE, row.status());
+        assertFalse(row.liveCapable(), "A stub adapter must never be reported live-capable");
+        assertFalse(row.sandboxCapable());
+        assertTrue(row.detail().contains("stub"),
+                "Detail string must say the adapter implementation is a stub");
+    }
+
+    @Test
+    void realMoneyRail_enabledCredentialsConfigured_andLiveCapableAdapter_isReadyLive() {
+        properties.getAdapters().getBankTransfer().setEnabled(true);
+        properties.getAdapters().getBankTransfer().setCredentialsConfigured(true);
+        AdapterReadinessService svc = new AdapterReadinessService(
+                new AdapterRegistry(List.of(liveCapableStub(AdapterType.BANK_TRANSFER))), properties);
+
+        AdapterReadiness row = svc.describe(AdapterType.BANK_TRANSFER);
+
         assertEquals(AdapterReadinessStatus.READY_LIVE, row.status());
         assertTrue(row.liveCapable());
         assertFalse(row.sandboxCapable());
-        assertTrue(row.detail().contains("currently stubs"),
-                "Detail string must remind operators that adapters remain stubs today");
     }
 
     @Test

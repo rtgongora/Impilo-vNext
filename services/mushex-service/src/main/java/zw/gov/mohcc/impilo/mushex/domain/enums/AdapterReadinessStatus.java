@@ -35,10 +35,17 @@ public enum AdapterReadinessStatus {
     CREDENTIALS_MISSING,
 
     /**
-     * A real-money rail is enabled and the operator has declared that credentials
-     * are configured in their secret-management system. Live routing is permitted
-     * by configuration; the actual money movement still depends on adapter
-     * implementation (which today remains a stub).
+     * A real-money rail is enabled and credentials are declared, but the adapter
+     * implementation itself reports it is not live-capable (a stub). The attempt-time
+     * safety gate will still block this rail, so it is never shown as ready — a
+     * READY_LIVE here would tell an operator the rail works when it cannot.
+     */
+    STUB_NOT_LIVE_CAPABLE,
+
+    /**
+     * A real-money rail is enabled, the operator has declared that credentials
+     * are configured, AND the adapter implementation reports it is live-capable.
+     * Only a rail in this state can actually move money.
      */
     READY_LIVE,
 
