@@ -22,6 +22,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { ProviderCertificatesAdminPanel } from "@/components/registry/ProviderCertificatesAdminPanel";
 import { ProviderLifecyclePanel } from "@/components/registry/ProviderLifecyclePanel";
 import { ProviderCompliancePanel } from "@/components/registry/ProviderCompliancePanel";
+import { ProviderCredentialsPanel } from "@/components/registry/ProviderCredentialsPanel";
 import { PageShell } from "@/components/PageShell";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
@@ -153,6 +154,9 @@ export default function ProviderDetailPage() {
 
             {/* Compliance & disciplinary casework */}
             <ProviderCompliancePanel providerPublicId={id} />
+
+            {/* Qualifications & practice contexts */}
+            <ProviderCredentialsPanel providerPublicId={id} />
 
 
             {/* Specialties */}

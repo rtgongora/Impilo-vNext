@@ -180,6 +180,62 @@ public class VarapiServiceClient {
                 baseUrl + "/v1/internal/providers/disciplinary-cases/" + caseId + "/close", body, JsonNode.class));
     }
 
+    // ── Qualifications (G11) ────────────────────────────────────────────────
+
+    public JsonNode getQualificationsByProvider(long providerId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/internal/providers/qualifications/provider/" + providerId, JsonNode.class));
+    }
+
+    public JsonNode getPendingQualifications(long providerId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/internal/providers/qualifications/provider/" + providerId + "/pending-verification", JsonNode.class));
+    }
+
+    public JsonNode createQualification(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/qualifications", body, JsonNode.class));
+    }
+
+    public JsonNode verifyQualification(long qualificationId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/qualifications/" + qualificationId + "/verify", body, JsonNode.class));
+    }
+
+    // ── Practice contexts (G11) ─────────────────────────────────────────────
+
+    public JsonNode getPracticeContextsByProvider(long providerId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/internal/providers/practice-contexts/provider/" + providerId, JsonNode.class));
+    }
+
+    public JsonNode createPracticeContext(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/practice-contexts", body, JsonNode.class));
+    }
+
+    public JsonNode practiceContextOp(long contextId, String op, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/practice-contexts/" + contextId + "/" + op, body, JsonNode.class));
+    }
+
+    // ── Affiliation writes + privilege decide (G11 — BFF-reachable) ─────────
+
+    public JsonNode affiliationOp(long affiliationId, String op, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/affiliations/" + affiliationId + "/" + op, body, JsonNode.class));
+    }
+
+    public JsonNode getPendingPrivileges(int page, int size) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/v1/internal/privileges/pending?page=" + page + "&size=" + size, JsonNode.class));
+    }
+
+    public JsonNode decidePrivilege(long privilegeId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/v1/internal/privileges/" + privilegeId + "/decide", body, JsonNode.class));
+    }
+
     /**
      * Create a provider profile in the canonical registry.
      */
