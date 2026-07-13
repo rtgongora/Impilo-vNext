@@ -119,6 +119,22 @@ public class VarapiServiceClient {
         return extractData(response);
     }
 
+    // ── Licence renewal (G8) ────────────────────────────────────────────────
+
+    public JsonNode startLicenseRenewal(String providerPublicId, long licenseId) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/" + providerPublicId + "/licenses/" + licenseId + "/start-renewal",
+                null, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode startLicenseRestoration(String providerPublicId, long licenseId) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/" + providerPublicId + "/licenses/" + licenseId + "/start-restoration",
+                null, JsonNode.class);
+        return extractData(response);
+    }
+
     /**
      * Create a provider profile in the canonical registry.
      */

@@ -180,3 +180,27 @@ export function useTransitionLifecycle(providerPublicId?: string) {
 }
 
 export const TERMINAL_LIFECYCLE_STATES = new Set(["RETIRED", "DECEASED", "REMOVED"]);
+
+/** Start a licence renewal (from LICENCE_DUE_FOR_RENEWAL / LICENCED_ACTIVE). */
+export function useStartLicenceRenewal(providerPublicId?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiClient.post(`${lifecycleBase(providerPublicId!)}/licence-renewal`, {}),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["provider-lifecycle-transitions", providerPublicId ?? null] });
+      qc.invalidateQueries({ queryKey: ["providers", providerPublicId] });
+    },
+  });
+}
+
+/** Start restoration of a lapsed licence (from LAPSED). */
+export function useStartLicenceRestoration(providerPublicId?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiClient.post(`${lifecycleBase(providerPublicId!)}/licence-restoration`, {}),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["provider-lifecycle-transitions", providerPublicId ?? null] });
+      qc.invalidateQueries({ queryKey: ["providers", providerPublicId] });
+    },
+  });
+}

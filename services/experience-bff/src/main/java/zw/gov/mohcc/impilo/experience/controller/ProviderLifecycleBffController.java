@@ -84,6 +84,65 @@ public class ProviderLifecycleBffController {
         }
     }
 
+    @PostMapping("/licence-renewal")
+    public ResponseEntity<Map<String, Object>> startRenewal(
+            @PathVariable String providerPublicId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purpose) {
+        return renewalAction(providerPublicId, true, tenantId, requestId, correlationId, actorId, purpose);
+    }
+
+    @PostMapping("/licence-restoration")
+    public ResponseEntity<Map<String, Object>> startRestoration(
+            @PathVariable String providerPublicId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purpose) {
+        return renewalAction(providerPublicId, false, tenantId, requestId, correlationId, actorId, purpose);
+    }
+
+    private ResponseEntity<Map<String, Object>> renewalAction(
+            String providerPublicId, boolean renewal, String tenantId, String requestId,
+            String correlationId, String actorId, String purpose) {
+        try {
+            long licenceId = resolveActiveLicenceId(providerPublicId);
+            JsonNode data = renewal
+                    ? varapiClient.startLicenseRenewal(providerPublicId, licenceId)
+                    : varapiClient.startLicenseRestoration(providerPublicId, licenceId);
+            audit.emit(renewal ? "REGISTRY_LICENCE_RENEWAL_STARTED" : "REGISTRY_LICENCE_RESTORATION_STARTED",
+                    actorId, tenantId, correlationId, purpose, "PROVIDER", providerPublicId, "SUCCESS",
+                    Map.of("licenceId", String.valueOf(licenceId)));
+            return ok(data, requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return error(requestId, correlationId, "RENEWAL_REJECTED", e.getResponseBodyAsString(),
+                    e.getStatusCode().is4xxClientError() ? HttpStatus.valueOf(e.getStatusCode().value()) : HttpStatus.BAD_GATEWAY);
+        } catch (Exception e) {
+            return error(requestId, correlationId, "NO_ACTIVE_LICENCE", e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /** Find the provider's ACTIVE licence id (the sweep changes provider lifecycle, not licence status). */
+    private long resolveActiveLicenceId(String providerPublicId) {
+        JsonNode licences = varapiClient.getProviderLicenses(providerPublicId);
+        if (licences != null && licences.isArray()) {
+            for (JsonNode l : licences) {
+                if ("ACTIVE".equalsIgnoreCase(l.path("status").asText(""))) {
+                    return l.path("id").asLong();
+                }
+            }
+            // fall back to the first licence if none is explicitly ACTIVE
+            if (licences.size() > 0) {
+                return licences.get(0).path("id").asLong();
+            }
+        }
+        throw new IllegalStateException("No licence found for provider " + providerPublicId);
+    }
+
     private static ResponseEntity<Map<String, Object>> ok(JsonNode data, String requestId, String correlationId) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("data", data != null ? data : Map.of());

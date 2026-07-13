@@ -5,6 +5,8 @@ import { Loader2, GitBranch, AlertTriangle } from "lucide-react";
 import {
   useLifecycleTransitions,
   useTransitionLifecycle,
+  useStartLicenceRenewal,
+  useStartLicenceRestoration,
   TERMINAL_LIFECYCLE_STATES,
 } from "@/hooks/queries/useProviderLifecycle";
 
@@ -28,6 +30,8 @@ function transitionError(error: unknown): string {
 export function ProviderLifecyclePanel({ providerPublicId }: { providerPublicId: string }) {
   const { data, isPending } = useLifecycleTransitions(providerPublicId);
   const transition = useTransitionLifecycle(providerPublicId);
+  const startRenewal = useStartLicenceRenewal(providerPublicId);
+  const startRestoration = useStartLicenceRestoration(providerPublicId);
 
   const [target, setTarget] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -81,6 +85,28 @@ export function ProviderLifecyclePanel({ providerPublicId }: { providerPublicId:
             <p className="text-sm text-muted-foreground">
               Current state: <span className="font-medium text-foreground">{label(data?.current ?? "—")}</span>
             </p>
+
+            {/* Renewal actions — the renewal FSM is driven here, not via the operator matrix. */}
+            {data?.current === "LICENCE_DUE_FOR_RENEWAL" && (
+              <button
+                type="button"
+                onClick={() => startRenewal.mutate()}
+                disabled={startRenewal.isPending}
+                className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-hover disabled:opacity-50"
+              >
+                {startRenewal.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Start renewal
+              </button>
+            )}
+            {data?.current === "LAPSED" && (
+              <button
+                type="button"
+                onClick={() => startRestoration.mutate()}
+                disabled={startRestoration.isPending}
+                className="mt-2 inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-background disabled:opacity-50"
+              >
+                {startRestoration.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Start restoration
+              </button>
+            )}
 
             {(data?.allowed?.length ?? 0) === 0 ? (
               <p className="mt-2 text-xs text-muted-foreground">

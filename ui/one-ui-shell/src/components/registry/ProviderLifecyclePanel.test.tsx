@@ -2,9 +2,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { ProviderLifecyclePanel } from "./ProviderLifecyclePanel";
 
-const { transitions, transitionMutate } = vi.hoisted(() => ({
+const { transitions, transitionMutate, renewalMutate } = vi.hoisted(() => ({
   transitions: { data: { current: "LICENCED_ACTIVE", allowed: ["SUSPENDED", "RETIRED"] } },
   transitionMutate: vi.fn(),
+  renewalMutate: vi.fn(),
 }));
 
 vi.mock("@/hooks/queries/useProviderLifecycle", async () => {
@@ -15,11 +16,24 @@ vi.mock("@/hooks/queries/useProviderLifecycle", async () => {
     ...actual,
     useLifecycleTransitions: () => ({ data: transitions.data, isPending: false }),
     useTransitionLifecycle: () => ({ mutate: transitionMutate, isPending: false, isError: false, error: null }),
+    useStartLicenceRenewal: () => ({ mutate: renewalMutate, isPending: false }),
+    useStartLicenceRestoration: () => ({ mutate: vi.fn(), isPending: false }),
   };
 });
 
 describe("ProviderLifecyclePanel", () => {
-  beforeEach(() => transitionMutate.mockReset());
+  beforeEach(() => {
+    transitionMutate.mockReset();
+    renewalMutate.mockReset();
+    transitions.data = { current: "LICENCED_ACTIVE", allowed: ["SUSPENDED", "RETIRED"] };
+  });
+
+  it("offers Start renewal when the provider is due for renewal", () => {
+    transitions.data = { current: "LICENCE_DUE_FOR_RENEWAL", allowed: [] };
+    render(<ProviderLifecyclePanel providerPublicId="PRV-1" />);
+    fireEvent.click(screen.getByRole("button", { name: /Start renewal/i }));
+    expect(renewalMutate).toHaveBeenCalled();
+  });
 
   it("shows the current state and allowed transitions", () => {
     render(<ProviderLifecyclePanel providerPublicId="PRV-1" />);
