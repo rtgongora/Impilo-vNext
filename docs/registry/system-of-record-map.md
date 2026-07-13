@@ -34,7 +34,7 @@
 | `guidance-service` | clinical | Guidance canonical records |
 | `hr-payroll-service` | enterprise | Payroll-financial: employees, contracts, deductions, payroll runs, payslips, earnings. The `hr.employees` row (incl. `employment_status`) is **payroll-financial only**; **employment trust is `workforce-governance-service`'s** (`wgv_hsc_employment.employment_status`) — hr-payroll's copy is unsynced and must never be read as a trust/eligibility signal. **Workforce attendance + leave are Vashandi's** — payroll derives worked-hours from Vashandi (no separately-entered attendance). |
 | `identity-assurance-service` | trust | Identity Assurance canonical records |
-| `indawo-service` | registry | Indawo canonical records |
+| `indawo-service` | registry | Indawo canonical records: public-health **site registry**, site regulatory/inspection lifecycle, and surveillance (outbreaks/field-teams/case investigations). **Geography SoR clarification (G4/G21):** indawo does NOT own geocoding or catchment geometry — that is **ndila-service**. Indawo's `ind_addresses` geocode via ndila (`NdilaGeocodeClient`); the dead `ind_catchment_areas`/`ind_facility_locations` tables (no Java) are **deprecated** — do not build a parallel catchment engine on them (would duplicate ndila's SoR). Retiring/repointing those tables is a follow-up. |
 | `inpatient-service` | clinical | Inpatient canonical records |
 | `integration-hub` | integration | Integration Hub canonical records |
 | `inventory-elmis-adapter` | clinical | Inventory Elmis Adapter canonical records |
@@ -53,7 +53,7 @@
 | `mushex-service` | enterprise | Mushex canonical records |
 | `mvumo-service` | trust | Mvumo canonical records |
 | `national-data-repository-service` | data | National Data Repository canonical records |
-| `ndila-service` | integration | canonical geospatial location registry, routing, ETA, and distance matrix orchestration, geofencing and catchment boundary operations, tracking asset telemetry normalization, spatial search and geospatial intelligence context |
+| `ndila-service` | integration | canonical geospatial location registry, routing, ETA, and distance matrix orchestration, geofencing and catchment boundary operations, tracking asset telemetry normalization, spatial search and geospatial intelligence context. **Platform geography/geocoding/catchment SoR (G4/G21):** owns geocode/reverse-geocode (Nominatim/Pelias/…), catchment check-point/nearest-service/coverage, geofences — reachable via BFF `/internal/v1/ndila/**`. Other services (indawo addresses, tuso facilities) delegate geocoding + catchment resolution here rather than duplicating it. |
 | `ndr-service` | data | Ndr canonical records |
 | `nhume-service` | integration | dispatch request and assignment lifecycle, courier and fleet operational registry, last-mile tracking and proof-of-delivery telemetry, delivery chain-of-custody and exception workflow |
 | `notification-service` | integration | Notification canonical records |
