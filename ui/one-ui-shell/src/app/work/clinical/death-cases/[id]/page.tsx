@@ -15,6 +15,7 @@ import { HeartCrack, Loader2, RefreshCw, ShieldAlert, FileText, Building2, Clipb
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
+import { DeathFieldPathwayPanels } from "@/components/death/DeathFieldPathwayPanels";
 import { apiClient } from "@/lib/api-client";
 
 interface DeathCase {
@@ -142,6 +143,9 @@ export default function DeathCaseDetailPage() {
               <Link href="/work/mortuary" className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-background"><Building2 className="h-3.5 w-3.5" /> Mortuary &amp; body</Link>
               <Link href="/work/crvs/death-registration" className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-background"><ClipboardList className="h-3.5 w-3.5" /> Registration</Link>
             </div>
+
+            {/* Community / field death pathway (G16) — verbal autopsy + non-facility body management. */}
+            <DeathFieldPathwayPanels caseId={id} />
 
             <div className="rounded-xl border border-border bg-card p-4">
               <h3 className="mb-3 text-sm font-semibold">Audit &amp; amendment trail</h3>
