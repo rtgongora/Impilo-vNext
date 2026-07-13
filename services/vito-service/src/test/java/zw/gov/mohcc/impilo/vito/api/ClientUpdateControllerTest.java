@@ -94,7 +94,7 @@ class ClientUpdateControllerTest {
         ClientDemographicsUpdateRequest request = new ClientDemographicsUpdateRequest(
                 "NewGiven", null, "NewFamily",
                 null, null, null, null, null, null, null,
-                null, null, null, null, null, null
+                null, null, null, null, null, null, null
         );
 
         ClientEntity updatedClient = buildClient(healthId, tenantId, "NewGiven", "NewFamily");
@@ -119,7 +119,7 @@ class ClientUpdateControllerTest {
         ClientDemographicsUpdateRequest request = new ClientDemographicsUpdateRequest(
                 "UpdatedGiven", null, null,
                 null, null, null, null, null, null, null,
-                null, null, null, null, null, null
+                null, null, null, null, null, null, null
         );
 
         ClientEntity clientWithOriginalFamily = buildClient(healthId, tenantId, "UpdatedGiven", "OriginalFamily");
@@ -143,7 +143,7 @@ class ClientUpdateControllerTest {
         ClientDemographicsUpdateRequest request = new ClientDemographicsUpdateRequest(
                 "Ghost", null, null,
                 null, null, null, null, null, null, null,
-                null, null, null, null, null, null
+                null, null, null, null, null, null, null
         );
 
         when(clientUpdateService.update(eq(tenantId), eq(healthId), any(), anyString(), anyString()))
@@ -173,7 +173,7 @@ class ClientUpdateControllerTest {
         ClientDemographicsUpdateRequest request = new ClientDemographicsUpdateRequest(
                 "NewGiven", null, null,
                 null, null, null, null, null, null, null,
-                null, null, null, null, null, null
+                null, null, null, null, null, null, null
         );
 
         mockMvc.perform(put("/v1/clients/{healthId}", healthId)
@@ -187,7 +187,7 @@ class ClientUpdateControllerTest {
         ClientDemographicsUpdateRequest request = new ClientDemographicsUpdateRequest(
                 "Event", null, "Test",
                 null, null, null, null, null, null, null,
-                null, null, null, null, null, null
+                null, null, null, null, null, null, null
         );
 
         ClientEntity updatedClient = buildClient(healthId, tenantId, "Event", "Test");

@@ -314,6 +314,17 @@ public class PatientController {
         reg.put("emergencyContactName", strVal(body, "emergency_contact_name", "emergencyContactName"));
         reg.put("emergencyContactPhone", strVal(body, "emergency_contact_phone", "emergencyContactPhone"));
         reg.put("issueProvisionalIdentifier", true);
+        // Optional medical-aid number: from a top-level field or the coverage sub-object (wizard).
+        // VITO ties it to the Health ID as a MEDICAL_AID_NUMBER identifier.
+        String medicalAid = strVal(body, "medical_aid_number", "medicalAidNumber");
+        if ((medicalAid == null || medicalAid.isBlank()) && body.get("coverage") instanceof Map<?, ?> coverage) {
+            Object mn = coverage.get("membership_number");
+            if (mn == null) mn = coverage.get("membershipNumber");
+            if (mn != null) medicalAid = mn.toString();
+        }
+        if (medicalAid != null && !medicalAid.isBlank()) {
+            reg.put("medicalAidNumber", medicalAid.trim());
+        }
         reg.put("metadata", metadata);
 
         String facilityId = strVal(body, "facility_id", "facilityId");
@@ -482,14 +493,16 @@ public class PatientController {
             if (identifier == null || identifier.isNull()) {
                 continue;
             }
-            if (!"PASSPORT_REFERENCE".equals(textOrNull(identifier, "identifierType"))) {
+            String type = textOrNull(identifier, "identifierType");
+            String value = textOrNull(identifier, "identifierValue");
+            if (value == null || value.isBlank()) {
                 continue;
             }
-            String value = textOrNull(identifier, "identifierValue");
-            if (value != null && !value.isBlank()) {
+            if ("PASSPORT_REFERENCE".equals(type)) {
                 attrs.put("passportReference", value.trim());
+            } else if ("MEDICAL_AID_NUMBER".equals(type)) {
+                attrs.put("medicalAidNumber", value.trim());
             }
-            return;
         }
     }
 

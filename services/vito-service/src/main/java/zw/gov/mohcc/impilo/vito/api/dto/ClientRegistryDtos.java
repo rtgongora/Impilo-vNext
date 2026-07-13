@@ -40,6 +40,9 @@ public final class ClientRegistryDtos {
             String email,
             String nationalIdReference,
             String passportReference,
+            // Optional medical-aid membership number, attached to the Health ID as an identifier
+            // (mirrors linkedProviderId being optionally tied to the person).
+            String medicalAidNumber,
             String addressLine1,
             String addressLine2,
             String city,

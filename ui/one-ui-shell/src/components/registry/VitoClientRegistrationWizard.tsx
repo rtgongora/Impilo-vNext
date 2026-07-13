@@ -468,10 +468,11 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
             />
           </div>
           <div>
-            <label className="block text-xs text-muted-foreground mb-1">Membership number</label>
+            <label className="block text-xs text-muted-foreground mb-1">Medical aid number (optional)</label>
             <input
               value={membershipNumber}
               onChange={(e) => setMembershipNumber(e.target.value)}
+              placeholder="Tied to this person's Health ID"
               className="w-full px-3 py-2 border border-border rounded-lg text-sm"
             />
           </div>

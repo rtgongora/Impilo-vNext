@@ -79,7 +79,7 @@ class ClientUpdateServiceTest {
         return new ClientDemographicsUpdateRequest(
                 null, "Rumbidzai", null, null, null, null,
                 "12 Samora Ave", "Harare", null, null,
-                "tendai@example.com", "ZW-PP-99887766", "sn", "MARRIED",
+                "tendai@example.com", "ZW-PP-99887766", null, "sn", "MARRIED",
                 "Chiedza Moyo", "+263770000000");
     }
 
@@ -126,13 +126,30 @@ class ClientUpdateServiceTest {
 
         ClientDemographicsUpdateRequest req = new ClientDemographicsUpdateRequest(
                 null, null, null, null, null, null, null, null, null, null,
-                null, "NEW-PP-0002", null, null, null, null);
+                null, "NEW-PP-0002", null, null, null, null, null);
         service.update(tenantId, healthId, req, "system-actor", UUID.randomUUID().toString());
 
         ArgumentCaptor<ClientIdentifierEntity> ident = ArgumentCaptor.forClass(ClientIdentifierEntity.class);
         verify(identifierRepository, times(1)).save(ident.capture());
         assertEquals("NEW-PP-0002", ident.getValue().getIdentifierValue(), "existing identifier updated in place");
         assertEquals(existing, ident.getValue(), "no duplicate identifier row created");
+    }
+
+    @Test
+    void update_medicalAidNumber_attachesIdentifierToHealthId() {
+        existingClient();
+        when(identifierRepository.findByTenantIdAndClientHealthId(tenantId, healthId)).thenReturn(List.of());
+
+        ClientDemographicsUpdateRequest req = new ClientDemographicsUpdateRequest(
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, "MA-77421", null, null, null, null);
+        service.update(tenantId, healthId, req, "system-actor", UUID.randomUUID().toString());
+
+        ArgumentCaptor<ClientIdentifierEntity> ident = ArgumentCaptor.forClass(ClientIdentifierEntity.class);
+        verify(identifierRepository, times(1)).save(ident.capture());
+        assertEquals("MEDICAL_AID_NUMBER", ident.getValue().getIdentifierType());
+        assertEquals("MA-77421", ident.getValue().getIdentifierValue());
+        assertEquals(healthId, ident.getValue().getClientHealthId(), "tied to the person's Health ID");
     }
 
     @Test
@@ -143,7 +160,7 @@ class ClientUpdateServiceTest {
 
         ClientDemographicsUpdateRequest onlyGivenName = new ClientDemographicsUpdateRequest(
                 "Updated", null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null);
         service.update(tenantId, healthId, onlyGivenName, "system-actor", UUID.randomUUID().toString());
 
         ArgumentCaptor<ClientEntity> saved = ArgumentCaptor.forClass(ClientEntity.class);
@@ -161,7 +178,7 @@ class ClientUpdateServiceTest {
 
         ClientDemographicsUpdateRequest blanks = new ClientDemographicsUpdateRequest(
                 null, null, null, null, null, null, null, null, null, null,
-                "   ", null, "", null, null, null);
+                "   ", null, null, "", null, null, null);
         service.update(tenantId, healthId, blanks, "system-actor", UUID.randomUUID().toString());
 
         ArgumentCaptor<ClientEntity> saved = ArgumentCaptor.forClass(ClientEntity.class);
@@ -178,7 +195,7 @@ class ClientUpdateServiceTest {
 
         ClientDemographicsUpdateRequest req = new ClientDemographicsUpdateRequest(
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, "nd", null, null, null);
+                null, null, null, "nd", null, null, null);
         service.update(tenantId, healthId, req, "system-actor", UUID.randomUUID().toString());
 
         ArgumentCaptor<ClientEntity> saved = ArgumentCaptor.forClass(ClientEntity.class);

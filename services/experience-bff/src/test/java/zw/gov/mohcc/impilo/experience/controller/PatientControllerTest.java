@@ -105,6 +105,32 @@ class PatientControllerTest {
     }
 
     @Test
+    void toClientRegistryRegistration_mapsMedicalAidNumberFromCoverage() {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("given_name", "Tendai");
+        body.put("family_name", "Moyo");
+        Map<String, Object> coverage = new LinkedHashMap<>();
+        coverage.put("membership_number", "MA-99881");
+        body.put("coverage", coverage);
+
+        Map<String, Object> reg = PatientController.toClientRegistryRegistration(body);
+
+        // The medical-aid number is threaded to VITO so it is tied to the Health ID (optional).
+        assertEquals("MA-99881", reg.get("medicalAidNumber"));
+    }
+
+    @Test
+    void toClientRegistryRegistration_omitsMedicalAidNumberWhenAbsent() {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("given_name", "Tendai");
+        body.put("family_name", "Moyo");
+
+        Map<String, Object> reg = PatientController.toClientRegistryRegistration(body);
+
+        assertFalse(reg.containsKey("medicalAidNumber"));
+    }
+
+    @Test
     void createPatient_returnsExtendedDemographicsFromRegistryProfile() {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode profile = mapper.createObjectNode();
@@ -182,6 +208,32 @@ class PatientControllerTest {
         assertEquals(200, response.getStatusCode().value());
         Map<?, ?> attrs = (Map<?, ?>) ((Map<?, ?>) response.getBody().get("data")).get("attributes");
         assertEquals("P12345678", attrs.get("passportReference"));
+    }
+
+    @Test
+    void getPatient_mapsMedicalAidNumberFromProfileIdentifiers() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode profile = mapper.createObjectNode();
+        ObjectNode master = profile.putObject("master");
+        master.put("healthId", "11111111-1111-1111-1111-111111111111");
+        master.put("firstName", "Tendai");
+        master.put("lastName", "Moyo");
+        master.put("dateOfBirth", "1992-04-07");
+        master.put("sex", "male");
+        master.put("lifecycleStatus", "PROVISIONAL");
+        var identifiers = profile.putArray("identifiers");
+        ObjectNode ma = identifiers.addObject();
+        ma.put("identifierType", "MEDICAL_AID_NUMBER");
+        ma.put("identifierValue", "MA-99881");
+
+        PatientController controller = new PatientController(new ProfileReturningVitoClient(profile));
+
+        ResponseEntity<Map<String, Object>> response = controller.getPatient(
+                "11111111-1111-1111-1111-111111111111", "req-ma-get", "corr-ma-get");
+
+        assertEquals(200, response.getStatusCode().value());
+        Map<?, ?> attrs = (Map<?, ?>) ((Map<?, ?>) response.getBody().get("data")).get("attributes");
+        assertEquals("MA-99881", attrs.get("medicalAidNumber"));
     }
 
     @Test

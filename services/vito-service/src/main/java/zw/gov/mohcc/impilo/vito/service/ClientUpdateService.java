@@ -24,6 +24,7 @@ import java.util.UUID;
 public class ClientUpdateService {
 
     private static final String PASSPORT_REFERENCE = "PASSPORT_REFERENCE";
+    private static final String MEDICAL_AID_NUMBER = "MEDICAL_AID_NUMBER";
 
     private final ClientRepository clientRepository;
     private final EventOutboxRepository outboxRepository;
@@ -97,7 +98,12 @@ public class ClientUpdateService {
         // passportReference is held as an identifier row (mirrors create path); upsert
         // so an update changes the existing PASSPORT_REFERENCE rather than duplicating it.
         if (notBlank(req.passportReference())) {
-            upsertPassportReference(client, req.passportReference().trim());
+            upsertIdentifier(client, PASSPORT_REFERENCE, req.passportReference().trim());
+        }
+
+        // Optional medical-aid number — held as an identifier tied to the Health ID (upsert).
+        if (notBlank(req.medicalAidNumber())) {
+            upsertIdentifier(client, MEDICAL_AID_NUMBER, req.medicalAidNumber().trim());
         }
 
         publishOutboxEvent(client, tenantId, actorId, correlationId);
@@ -105,10 +111,11 @@ public class ClientUpdateService {
         return client;
     }
 
-    private void upsertPassportReference(ClientEntity client, String value) {
+    /** Upsert a typed identifier row tied to the client's Health ID (used for passport + medical-aid). */
+    private void upsertIdentifier(ClientEntity client, String type, String value) {
         ClientIdentifierEntity existing = identifierRepository
                 .findByTenantIdAndClientHealthId(client.getTenantId(), client.getHealthId()).stream()
-                .filter(i -> PASSPORT_REFERENCE.equals(i.getIdentifierType()))
+                .filter(i -> type.equals(i.getIdentifierType()))
                 .findFirst()
                 .orElse(null);
         if (existing != null) {
@@ -121,7 +128,7 @@ public class ClientUpdateService {
         ClientIdentifierEntity identifier = new ClientIdentifierEntity();
         identifier.setTenantId(client.getTenantId());
         identifier.setClientHealthId(client.getHealthId());
-        identifier.setIdentifierType(PASSPORT_REFERENCE);
+        identifier.setIdentifierType(type);
         identifier.setIdentifierValue(value);
         identifier.setPrimaryFlag(false);
         identifier.setSource("DEMOGRAPHICS_UPDATE");

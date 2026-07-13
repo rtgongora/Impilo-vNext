@@ -17,6 +17,7 @@ public record ClientDemographicsUpdateRequest(
         // Appended (not reordered) to preserve positional/JSON contract compatibility.
         String email,
         String passportReference,
+        String medicalAidNumber,
         String preferredLanguage,
         String maritalStatus,
         String emergencyContactName,

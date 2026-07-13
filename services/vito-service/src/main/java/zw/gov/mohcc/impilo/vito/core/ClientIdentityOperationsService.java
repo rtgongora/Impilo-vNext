@@ -228,6 +228,10 @@ public class ClientIdentityOperationsService {
         if (request.passportReference() != null && !request.passportReference().isBlank()) {
             ensureIdentifier(client, "PASSPORT_REFERENCE", request.passportReference().trim(), false, "REGISTRATION_CAPTURE");
         }
+        if (request.medicalAidNumber() != null && !request.medicalAidNumber().isBlank()) {
+            // Optional: tie the medical-aid membership number to the Health ID as an identifier.
+            ensureIdentifier(client, "MEDICAL_AID_NUMBER", request.medicalAidNumber().trim(), false, "REGISTRATION_CAPTURE");
+        }
         if (request.previousNames() != null) {
             for (String previousName : request.previousNames()) {
                 if (previousName != null && !previousName.isBlank()) {
