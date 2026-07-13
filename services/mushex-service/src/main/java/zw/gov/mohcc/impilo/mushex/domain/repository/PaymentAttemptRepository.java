@@ -28,4 +28,8 @@ public interface PaymentAttemptRepository extends JpaRepository<PaymentAttemptEn
      * Used by {@code PaymentAttemptService} (Phase 3) to short-circuit replays.
      */
     Optional<PaymentAttemptEntity> findByIntentIdAndIdempotencyKey(String intentId, String idempotencyKey);
+
+    /** Open attempts with an external reference — the status poller's work queue. */
+    List<PaymentAttemptEntity> findTop50ByStatusInAndAdapterRefIsNotNullOrderByRequestedAtAsc(
+            java.util.Collection<zw.gov.mohcc.impilo.mushex.domain.enums.AttemptStatus> statuses);
 }

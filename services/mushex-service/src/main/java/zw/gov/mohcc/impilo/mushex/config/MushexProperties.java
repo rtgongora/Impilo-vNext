@@ -85,6 +85,10 @@ public class MushexProperties {
         private RealRail mobileMoney = new RealRail();
         private RealRail bankTransfer = new RealRail();
         private RealRail cardGateway = new RealRail();
+        private Paynow paynow = new Paynow();
+
+        public Paynow getPaynow() { return paynow; }
+        public void setPaynow(Paynow paynow) { this.paynow = paynow; }
 
         public Sandbox getSandbox() { return sandbox; }
         public void setSandbox(Sandbox sandbox) { this.sandbox = sandbox; }
@@ -104,6 +108,36 @@ public class MushexProperties {
      * <p>Defaults are {@code enabled=false} and {@code credentialsConfigured=false}
      * — production deployments must explicitly opt in per environment.
      */
+    /**
+     * Paynow aggregator configuration — ONE integration covering EcoCash,
+     * OneMoney, InnBucks, ZimSwitch and Visa/Mastercard. Real credentials come
+     * from the merchant agreement; with {@code enabled=false} (default) the
+     * legacy card-gateway stub stays registered and the safety gate holds.
+     */
+    public static class Paynow {
+        private boolean enabled = false;
+        private String baseUrl = "https://www.paynow.co.zw";
+        private String integrationId = "";
+        private String integrationKey = "";
+        /** Publicly reachable URL Paynow POSTs transaction results to. */
+        private String resultUrl = "";
+        /** Where the citizen's browser returns after checkout. */
+        private String returnUrl = "";
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public String getBaseUrl() { return baseUrl; }
+        public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+        public String getIntegrationId() { return integrationId; }
+        public void setIntegrationId(String integrationId) { this.integrationId = integrationId; }
+        public String getIntegrationKey() { return integrationKey; }
+        public void setIntegrationKey(String integrationKey) { this.integrationKey = integrationKey; }
+        public String getResultUrl() { return resultUrl; }
+        public void setResultUrl(String resultUrl) { this.resultUrl = resultUrl; }
+        public String getReturnUrl() { return returnUrl; }
+        public void setReturnUrl(String returnUrl) { this.returnUrl = returnUrl; }
+    }
+
     public static class RealRail {
         private boolean enabled = false;
         private boolean credentialsConfigured = false;

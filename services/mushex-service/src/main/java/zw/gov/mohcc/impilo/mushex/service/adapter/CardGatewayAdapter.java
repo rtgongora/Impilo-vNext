@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.mushex.service.adapter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import zw.gov.mohcc.impilo.mushex.service.UlidGenerator;
 import zw.gov.mohcc.impilo.mushex.service.WebhookSecurityService;
@@ -15,6 +16,8 @@ import java.util.Map;
  * Current implementation logs the request and returns a PENDING status.
  */
 @Component
+// The Paynow aggregator REPLACES this stub as the CARD_GATEWAY rail when enabled.
+@ConditionalOnProperty(name = "mushex.adapters.paynow.enabled", havingValue = "false", matchIfMissing = true)
 public class CardGatewayAdapter implements PaymentRailAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(CardGatewayAdapter.class);

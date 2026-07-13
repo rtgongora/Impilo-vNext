@@ -154,7 +154,7 @@ public class PaymentAttemptService {
                         intent.getIntentId(),
                         intent.getAmountTotal(),
                         intent.getCurrency(),
-                        Map.of());
+                        adapterConfigFromMetadata(intent.getMetadata()));
             } catch (Exception ex) {
                 log.error("Rail adapter {} threw initiating attempt for intent {}: {}",
                         effective, intentId, ex.getMessage(), ex);
@@ -208,6 +208,37 @@ public class PaymentAttemptService {
                 gate.label(), mappedStatus);
 
         return attempt;
+    }
+
+    /**
+     * Adapter config derived from the intent's metadata: the citizen's chosen
+     * payment method + MSISDN travel to aggregator rails (Paynow express push).
+     */
+    private Map<String, String> adapterConfigFromMetadata(String metadataJson) {
+        if (metadataJson == null || metadataJson.isBlank()) {
+            return Map.of();
+        }
+        try {
+            com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(metadataJson);
+            java.util.Map<String, String> config = new java.util.LinkedHashMap<>();
+            for (String key : new String[] {"payment_method", "method"}) {
+                com.fasterxml.jackson.databind.JsonNode v = node.get(key);
+                if (v != null && !v.isNull() && !v.asText().isBlank()) {
+                    config.put("method", v.asText());
+                    break;
+                }
+            }
+            for (String key : new String[] {"phone", "msisdn", "payer_msisdn"}) {
+                com.fasterxml.jackson.databind.JsonNode v = node.get(key);
+                if (v != null && !v.isNull() && !v.asText().isBlank()) {
+                    config.put("phone", v.asText());
+                    break;
+                }
+            }
+            return config;
+        } catch (Exception e) {
+            return Map.of();
+        }
     }
 
     private SafetyGate evaluateSafetyGate(AdapterType rail) {

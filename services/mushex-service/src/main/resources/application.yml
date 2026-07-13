@@ -112,3 +112,12 @@ mushex:
       simulate-delay-ms: 500
       bypass-credential-check-for-simulation: ${MUSHEX_SANDBOX_BYPASS_CREDENTIAL_CHECK:false}
       apply-simulation-outcome-on-create: ${MUSHEX_SANDBOX_APPLY_SIMULATION_OUTCOME:false}
+    paynow:
+      # Aggregator surface (EcoCash/OneMoney/InnBucks/ZimSwitch/cards behind one
+      # integration). Default OFF; a real merchant integration id + key light it up.
+      enabled: ${MUSHEX_PAYNOW_ENABLED:false}
+      base-url: ${MUSHEX_PAYNOW_BASE_URL:https://www.paynow.co.zw}
+      integration-id: ${MUSHEX_PAYNOW_INTEGRATION_ID:}
+      integration-key: ${MUSHEX_PAYNOW_INTEGRATION_KEY:}
+      result-url: ${MUSHEX_PAYNOW_RESULT_URL:}
+      return-url: ${MUSHEX_PAYNOW_RETURN_URL:}
