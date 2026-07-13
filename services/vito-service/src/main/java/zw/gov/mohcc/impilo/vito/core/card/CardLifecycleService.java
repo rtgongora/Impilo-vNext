@@ -64,6 +64,17 @@ public class CardLifecycleService {
     @Transactional
     public SmartCardEntity requestCard(UUID tenantId, UUID healthId,
                                         String publicKey, String requestedBy) {
+        return requestCard(tenantId, healthId, publicKey, requestedBy, "PHYSICAL");
+    }
+
+    /**
+     * Request a card in a given form. A VIRTUAL card is a wallet pass on the phone: the device
+     * generates its keypair and supplies the public key up front (no physical print), so it can be
+     * provisioned + activated without the card-print-agent. PHYSICAL keeps the print-then-provision flow.
+     */
+    @Transactional
+    public SmartCardEntity requestCard(UUID tenantId, UUID healthId,
+                                        String publicKey, String requestedBy, String cardForm) {
         // Check for existing active card
         Optional<SmartCardEntity> existing = cardRepository
                 .findByTenantIdAndHealthIdAndStatus(tenantId, healthId, CardStatus.ACTIVE);
@@ -90,6 +101,7 @@ public class CardLifecycleService {
         card.setDidUri(did);
         card.setPublicKey(resolvedPublicKey);
         card.setStatus(CardStatus.REQUESTED);
+        card.setCardForm("VIRTUAL".equalsIgnoreCase(cardForm) ? "VIRTUAL" : "PHYSICAL");
         card.setRequestedBy(resolvedRequestedBy);
         card.setExpiresAt(OffsetDateTime.now().plusYears(properties.getCard().getExpiryYears()));
 
@@ -297,6 +309,8 @@ public class CardLifecycleService {
                 + ",\"healthId\":" + jsonStr(card.getHealthId() != null ? card.getHealthId().toString() : null)
                 + ",\"didUri\":" + jsonStr(card.getDidUri())
                 + ",\"status\":" + jsonStr(card.getStatus() != null ? card.getStatus().name() : null)
+                + ",\"cardForm\":" + jsonStr(card.getCardForm())
+                + ",\"publicKey\":" + jsonStr(card.getPublicKey())
                 + ",\"previousCardId\":" + (card.getPreviousCardId() != null ? card.getPreviousCardId().toString() : "null")
                 + ",\"revocationReason\":" + jsonStr(card.getRevocationReason())
                 + "}";

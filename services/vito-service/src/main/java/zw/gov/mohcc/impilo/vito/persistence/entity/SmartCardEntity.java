@@ -36,6 +36,10 @@ public class SmartCardEntity {
     @Column(name = "status", nullable = false)
     private CardStatus status = CardStatus.REQUESTED;
 
+    /** VIRTUAL (wallet pass on the phone, device-keystore keypair) or PHYSICAL (printed, SE keypair). */
+    @Column(name = "card_form", nullable = false)
+    private String cardForm = "PHYSICAL";
+
     @Column(name = "previous_card_id")
     private Long previousCardId;
 
@@ -91,6 +95,8 @@ public class SmartCardEntity {
     public void setId(Long id) { this.id = id; }
     public UUID getTenantId() { return tenantId; }
     public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
+    public String getCardForm() { return cardForm; }
+    public void setCardForm(String cardForm) { this.cardForm = cardForm; }
     public String getCardNumber() { return cardNumber; }
     public void setCardNumber(String cardNumber) { this.cardNumber = cardNumber; }
     public UUID getHealthId() { return healthId; }
