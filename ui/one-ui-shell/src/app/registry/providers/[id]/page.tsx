@@ -19,6 +19,7 @@ import {
   Pencil,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { ProviderCertificatesAdminPanel } from "@/components/registry/ProviderCertificatesAdminPanel";
 import { PageShell } from "@/components/PageShell";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
@@ -71,6 +72,16 @@ export default function ProviderDetailPage() {
 
   const provider = data?.data;
   const workContext = wcEnvelope?.data;
+
+  // Numeric registry id (W0 bridge) — surfaced flat or under attributes depending on shape.
+  const providerBag = (provider ?? {}) as unknown as Record<string, unknown>;
+  const attrsBag = (provider?.attributes ?? {}) as Record<string, unknown>;
+  const numericProviderId =
+    typeof providerBag.providerId === "number"
+      ? (providerBag.providerId as number)
+      : typeof attrsBag.providerId === "number"
+        ? (attrsBag.providerId as number)
+        : null;
 
   return (
     <AppLayout>
@@ -131,6 +142,10 @@ export default function ProviderDetailPage() {
                 </span>
               </div>
             </div>
+
+            {/* Certificates (registrar lifecycle) */}
+            <ProviderCertificatesAdminPanel providerPublicId={id} providerId={numericProviderId} />
+
 
             {/* Specialties */}
             <div className="bg-card rounded-lg border border-border p-5">
