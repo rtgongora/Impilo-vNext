@@ -15,7 +15,7 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 | R2 W0 numeric-ID bridge | ✅ done | `48ac82f47` | ProviderResponse.providerId |
 | R2 G7 certificates | ✅ done | `f124f2213`, `f5b77fe4c`, `10c4a3f00`, `7db73c2f8` | engine status-gate + BFF + self-service + registrar UI |
 | R2 G10 lifecycle console | ✅ done | `487396555`, `9a4230828` | transition matrix + BFF + Provider-360 panel |
-| R2 G8 licence renewal | ⏳ in progress | — | renewal/lapse sweep + endpoints |
+| R2 G8 licence renewal | ✅ done | `2b0d02b5a`, `4ddc4415e` | sweep sets DUE/LAPSED + start-renewal/restoration + UI |
 | R2 G9 disciplinary | pending | — | thin svc+controller over unused entity |
 | R2 G11 credentials wiring | pending | — | qualifications/practice-contexts/affiliations/privileges |
 | R2 G30 PIC seam | pending | — | consume tuso.facility.pic.activated + deprecate + snapshot |
@@ -30,7 +30,12 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 
 ## Key decisions (autonomous)
 
-_(appended as encountered)_
+**G8 licence renewal:**
+- *Sweep runs without a TrustContext* → writes lifecycle directly (set + deriveStatusProjections + save + outbox) rather than through the request-scoped ProviderService.transitionLifecycle (which calls TrustContextHolder.require()). Alternative considered: set a synthetic system TrustContext (pattern exists in ProviderPaymentObligationService); rejected as heavier for a pure system job.
+- *Renewal window = 60-day constant.* No renewal_window_days field exists on CouncilRegulatoryConfigEntity (only JSONB blobs). Alternatives: parse workflowHintsJson (untyped, fragile) or add a migration column. Deferred config override; constant is `varapi.licence-sweep`-adjacent and easily promoted later.
+- *Fee-obligation creation NOT coupled to renewal-start.* The obligation lane (ProviderPaymentObligationService.createObligation + MusheX intent) is policy-gated and can fail closed; coupling it into start-renewal would let a policy/gate failure block the lifecycle transition. Kept in the existing council-obligation UI lane. Alternative: best-effort try/catch obligation creation inside start-renewal — viable follow-up.
+- *Notices lane left event-driven.* varapi `/notices` returns a hardcoded empty list (stub); the sweep emits `varapi.provider.licence_due`/`lapsed` outbox events. Converting `/notices` to derive from lifecycle_status + licence validTo is a clean follow-up but out of G8 scope.
+- *Renewal transitions bypass the operator LIFECYCLE_TRANSITIONS matrix* (which intentionally excludes renewal arcs) — they are system/renewal-driven via LicenseService with explicit source-state guards.
 
 ## Deferred for operator
 
