@@ -46,7 +46,8 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 | R8 G19 DICOM MWL/MPPS | ⚠️ deferred (decision) | — | native C-FIND SCP + MPPS = large protocol build; archive-push already works → defer |
 | R8 G20 recording writeback | ⚠️ deferred (plan) | — | join-key + writeback-target ambiguous + untestable Kafka flow; non-blocking |
 | **R8 COMPLETE** | ✅ | — | G22 built; G19/G20 deferred with evidence + plan (both non-blocking) |
-| R9 mobile prod path | pending | — | G23-27 (CI/infra — mostly document + config, can't build APK here) |
+| R9 mobile prod path (G23-27) | ⚠️ deferred (sandbox-blocked) | — | build/sign/run/test an APK needs CI/VM/secrets — impossible in-sandbox; documented + operator actions logged |
+| **R9 COMPLETE (as far as sandbox allows)** | ✅ | — | verified config state; all 5 items = operator/CI/secrets, logged with exact actions |
 | R10 hygiene + prod config | pending | — | G29, G32, G34, G35 |
 
 ## Key decisions (autonomous)
@@ -57,6 +58,13 @@ Per operator instruction: continue wave by wave to R10 unattended. Critical deci
 - *Fee-obligation creation NOT coupled to renewal-start.* The obligation lane (ProviderPaymentObligationService.createObligation + MusheX intent) is policy-gated and can fail closed; coupling it into start-renewal would let a policy/gate failure block the lifecycle transition. Kept in the existing council-obligation UI lane. Alternative: best-effort try/catch obligation creation inside start-renewal — viable follow-up.
 - *Notices lane left event-driven.* varapi `/notices` returns a hardcoded empty list (stub); the sweep emits `varapi.provider.licence_due`/`lapsed` outbox events. Converting `/notices` to derive from lifecycle_status + licence validTo is a clean follow-up but out of G8 scope.
 - *Renewal transitions bypass the operator LIFECYCLE_TRANSITIONS matrix* (which intentionally excludes renewal arcs) — they are system/renewal-driven via LicenseService with explicit source-state guards.
+
+**R9 Mobile production path (G23–G27) — genuinely sandbox-blocked, all operator/CI/secrets:**
+This wave's core work — build a signed APK and prove it runs — is impossible in this sandbox (no Android SDK; the proxy blocks `dl.google.com`; no emulator; no production credentials). Fabricating credentials or committing untestable React-Native screens would be dishonest, so I verified the current config state and logged precise operator actions instead. Verified state:
+- *eas.json* (both apps) is well-structured: `production` android = `app-bundle` (correct for Play), development = debug APK. The gap is real credentials — `submit.production` carries placeholders (ios `ascAppId`/`appleTeamId`, android `serviceAccountKeyPath: ./google-services.json`). These are operator secrets; cannot be added here.
+- *CI:* `.github/workflows/ci.yml` references the mobile-e2e-maestro path — the operator/CI runner is where debug APKs + Maestro runs happen.
+- *Extensive existing docs* already cover this: `docs/mobile/qa-and-release-checklist.md`, `mobile-runtime-truth-report.md`, `MOBILE_ANDROID_SANDBOX.md`, `MAESTRO_VM_TOOLCHAIN_SETUP_PLAN.md`, the tierN parity matrices — I did not duplicate them.
+- *One config observation (not changed):* provider-app `preview` env points keycloak at `impilo.mohcc.gov.zw:8480` / client `impilo-mobile-provider`, while `staging`/`production` use `*.impilo.gov.zw` / client `provider-app`. The canonical live host is `impilo.mohcc.gov.zw` (per the TLS/ingress memory; `.gov.zw` was an anomaly). The staging/prod domains may be aspirational — flagged for operator, NOT changed (deploy-config they own). → § Deferred.
 
 **R8 Imaging (G22/G19/G20) — 1 clean build + 2 justified defers:**
 - *G22 (built, the flagged priority) — UI-only wiring.* The report lifecycle (draft→final→amend/addendum→release, immutable version chain) already shipped in OROS + BFF + a standalone `/diagnostics/reporting` page. The gap was the *link*: the DICOM viewer had no reporting panel and the authoring form was a separate route keyed by a hand-typed order id. Added `ImagingReportPanel` (reusing `useAuthorReport`/`useReleaseReport`/`useOrderReportVersions`, seeded from the viewer's `orderId`) on the viewer + a Report link from worklist rows. No new BFF/engine.
@@ -122,6 +130,14 @@ _(appended as encountered — issues genuinely needing operator input that did n
   2. **Merge into Model X**: add `exemption_category` (nullable) to `cv_subsidy_enrolments`, backfill from `cv_subsidy_enrollments`, repoint `CoveragePlanController.resolvePatientCategory` to read it, retire Model Y. Requires resolving whether `client_id` (Model Y) and `member_cpid` (Model X) are the same identifier space — if not, the backfill is unsafe.
   3. **Merge into Model Y**: give the exemption lane a cap/balance — larger rebuild of the atomic-drawdown machinery; not recommended (Model X already has correct H1/H2 money semantics).
   Blocking? **No** — G2/G15 wired around it. Needs operator input only to decide whether a physical merge is desired and to confirm the identifier-space question.
+
+**[R9/G23–G27] Mobile production path — operator/CI/secrets (sandbox cannot do these).**
+- **G23 runtime proof:** trigger the CI `mobile-e2e-maestro` job (builds debug APKs + runs Maestro on an emulator) or run `scripts/mobile/runtime-truth.sh` on the operator VM. No APK has been built+run with evidence; this sandbox physically can't (no Android SDK, proxy blocks `dl.google.com`).
+- **G24 production signing:** provide a real Android upload keystore + Play service-account JSON, and real Apple `ascAppId`/`appleTeamId` — replace the `submit.production` placeholders in both apps' `eas.json`. Release builds are otherwise debug-keystore-signed.
+- **G25 auth model:** mobile uses device-side Keycloak PKCE, bypassing BFF/Envoy ext_authz — needs a trust-program sign-off (design/policy decision), not a code change.
+- **G26 preview hygiene:** reconcile stale realm clients/DNS; confirm/repair the preview keycloak host+client (`impilo-mobile-provider` @ `:8480`) vs the staging/prod client (`provider-app`); validate the Maestro Keycloak login flow on a real emulator.
+- **G27 parity:** e.g. sorting desk (just built for web in G12) has no mobile screen; Nhume/Ndila/payments depth partial per `docs/mobile/full-mobile-parity-matrix.md`. Building RN screens is possible but UNTESTABLE here (no build/run) — do it where an emulator exists.
+All non-blocking to the web estate; each needs the operator's CI runner, VM, or secrets.
 
 **[R8/G20] Live recording → pct clinical-record writeback — plan (non-blocking, untestable here).** To link a teleconsult recording to its clinical record: (1) decide the writeback target — `pct_referrals` (teleconsults are referrals) vs `pct_telehealth_sessions` (may not have a row per teleconsult); recommend `pct_referrals` since that's the live teleconsult record. (2) Migration: add `recording_ref` (+ `recording_storage_key`) to the chosen table. (3) Make pct's RTC provisioning pass `owningRef` = the referral id (currently omitted) so the recording event is attributable, AND confirm rtc-gateway echoes `owningRef` into `impilo.rtc.recording.available.v1` (verify — the event has an `owningRef` field but pct never sets it). (4) Add a pct `@KafkaListener` on that topic filtering `owningService=="PCT"`, resolving the referral by `owningRef`, setting `recording_ref`. Requires an integration test against the real Kafka + rtc-gateway (not possible in this sandbox), which is why it's deferred rather than built blind. Blocking? **No** — notes land; replay works in live-service.
 
