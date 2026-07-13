@@ -174,6 +174,10 @@ public class BillService {
         line.setAmount(ruleResult.chargeAmount());
         line.setCostAmount(costResult.totalCost());
         line.setCostMethodUsed(costResult.methodUsed().name());
+        // CostResult.zero() (source NONE) means no price was CONFIGURED — the line
+        // priced to zero by absence. Mark it so finalize can refuse the wrong total.
+        line.setPendingPricing("NONE".equals(costResult.unitCostSource())
+                && ruleResult.chargeAmount().signum() <= 0);
         line.setSourceEvent(sourceEvent);
         line.setSourceRef(sourceRef);
 
@@ -334,11 +338,34 @@ public class BillService {
 
     @Transactional
     public BillHeaderEntity finalize(String billId, jakarta.servlet.http.HttpServletRequest inbound) {
+        return finalize(billId, inbound, false);
+    }
+
+    @Transactional
+    public BillHeaderEntity finalize(String billId, jakarta.servlet.http.HttpServletRequest inbound,
+                                     boolean allowUnpriced) {
         BillHeaderEntity bill = billHeaderRepository.findById(billId)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found: " + billId));
 
         if (bill.getStatus() != BillStatus.APPROVED) {
             throw new IllegalStateException("Cannot finalize bill in status: " + bill.getStatus());
+        }
+
+        // Zero-price guardrail: a line the cost engine priced to zero by ABSENCE
+        // (no configured tariff) must not silently finalize the wrong total. The
+        // explicit allowUnpriced override exists for genuinely-free lines.
+        if (!allowUnpriced) {
+            List<String> unpriced = billLineRepository.findByBillIdAndVoidedFalse(billId).stream()
+                    .filter(BillLineEntity::isPendingPricing)
+                    .map(l -> l.getMsikaCode() != null ? l.getMsikaCode() : l.getLineId())
+                    .toList();
+            if (!unpriced.isEmpty()) {
+                throw new IllegalStateException(
+                        "Cannot finalize bill " + billId + ": " + unpriced.size()
+                                + " line(s) have no configured price (pending pricing): " + unpriced
+                                + ". Configure the tariff (or finalize with allowUnpriced=true for"
+                                + " genuinely-free lines).");
+            }
         }
 
         bill.setStatus(BillStatus.FINAL);

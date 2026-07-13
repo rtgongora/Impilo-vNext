@@ -74,6 +74,14 @@ public class BillLineEntity {
     @Column(name = "voided", nullable = false)
     private boolean voided = false;
 
+    /**
+     * True when the cost engine found no configured price for this line's code —
+     * it priced to zero by ABSENCE, not by decision. Finalize refuses while any
+     * non-voided line is pending pricing (explicit override for free lines).
+     */
+    @Column(name = "pending_pricing", nullable = false)
+    private boolean pendingPricing = false;
+
     @PrePersist
     protected void onCreate() { if (postedAt == null) postedAt = OffsetDateTime.now(); }
 
@@ -110,4 +118,6 @@ public class BillLineEntity {
     public OffsetDateTime getPostedAt() { return postedAt; }
     public boolean isVoided() { return voided; }
     public void setVoided(boolean voided) { this.voided = voided; }
+    public boolean isPendingPricing() { return pendingPricing; }
+    public void setPendingPricing(boolean pendingPricing) { this.pendingPricing = pendingPricing; }
 }

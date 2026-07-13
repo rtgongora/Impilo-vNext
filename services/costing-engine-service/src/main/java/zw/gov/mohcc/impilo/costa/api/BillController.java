@@ -124,9 +124,10 @@ public class BillController {
 
     @PostMapping("/{id}/finalize")
     public ResponseEntity<ApiResponse<BillHeaderEntity>> finalizeBill(@PathVariable String id,
+            @RequestParam(value = "allowUnpriced", defaultValue = "false") boolean allowUnpriced,
             jakarta.servlet.http.HttpServletRequest servletRequest) {
         var ctx = TrustContextHolder.require();
-        BillHeaderEntity bill = billService.finalize(id, servletRequest);
+        BillHeaderEntity bill = billService.finalize(id, servletRequest, allowUnpriced);
         return ResponseEntity.ok(ApiResponse.ok(bill, ctx.correlationId().toString()));
     }
 
