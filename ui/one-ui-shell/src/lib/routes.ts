@@ -304,6 +304,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/registry-admin", zone: "admin", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Registry Administration", navLabel: "Registry Admin", navZone: "professional" },
   { path: "/registry-admin/trust-console", zone: "admin", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Trust Console", navLabel: "Trust Console", navZone: "professional" },
   { path: "/registry-admin/activation-letter", zone: "admin", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Activation Letter", navLabel: "Activation Letter", navZone: "professional" },
+  { path: "/registry-admin/fee-schedules", zone: "admin", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Regulatory fee schedule", navLabel: "Fee schedule", navZone: "professional" },
   { path: "/organization-admin", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Organization Administration", navLabel: "Org Admin", navZone: "professional" },
   { path: "/organization-admin/facility", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Facility Administration", navLabel: "Org Facility", navZone: "professional" },
   { path: "/organization-admin/staffing", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ORGANIZATION_ADMIN", pageTitle: "Staffing & Scheduling", navLabel: "Org Staffing", navZone: "professional" },
@@ -853,7 +854,7 @@ export const ROUTES: RouteDefinition[] = [
 // vendor*→VENDOR_FULFILMENT, cart+orders/[id](+pay)→auth (citizens can buy); COMMERCE membership untouched.
 // Gateway W2 (Jul 2026): +2 — /verify/practitioner (public health-professional register verifier)
 // and /welcome/health-info (public citizen health-information pillar).
-export const EXPECTED_ROUTE_COUNT = 705;
+export const EXPECTED_ROUTE_COUNT = 706;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

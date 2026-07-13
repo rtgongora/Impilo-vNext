@@ -817,3 +817,94 @@ export function useVisitProgress(visitId: string | undefined) {
     enabled: !!visitId,
   });
 }
+
+// ---- Fee schedule + application fee (SI 78 of 2017) ------------------------
+
+export interface FeeScheduleView {
+  feeId: string;
+  scheduleCode: string;
+  version: number;
+  feeCode: string;
+  appliesToCatalogueCode: string;
+  appliesToClassCode: string | null;
+  amount: number | null;
+  currency: string | null;
+  sourceInstrument: string;
+  sourceSection: string | null;
+  status: string;
+  effectiveFrom: string | null;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  notes: string | null;
+}
+
+export interface ApplicationFeeView {
+  applicationId: string;
+  catalogueCode: string | null;
+  feeRequired: boolean;
+  feeState: string;
+  feeCode: string | null;
+  amount: number | null;
+  currency: string | null;
+  sourceInstrument: string | null;
+  feeScheduleRef: string | null;
+  feeReference: string | null;
+  paymentReference: string | null;
+  waivedBy: string | null;
+  waivedAt: string | null;
+  waiverReason: string | null;
+  blocksInspection: boolean;
+}
+
+export function useFeeSchedules(scheduleCode = "SI_78_2017") {
+  return useQuery<ApiResponse<FeeScheduleView[]>>({
+    queryKey: ["facility-registry", "fee-schedules", scheduleCode],
+    queryFn: () =>
+      apiClient.get<ApiResponse<FeeScheduleView[]>>(`${BASE}/fee-schedules?scheduleCode=${scheduleCode}`),
+  });
+}
+
+export function useCreateFeeSchedule() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<FeeScheduleView>, unknown, Record<string, unknown>>({
+    mutationFn: (body) => apiClient.post<ApiResponse<FeeScheduleView>>(`${BASE}/fee-schedules`, body),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["facility-registry", "fee-schedules"] }),
+  });
+}
+
+export function useApproveFeeSchedule() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<FeeScheduleView>, unknown, { feeId: string; effectiveFrom?: string }>({
+    mutationFn: ({ feeId, effectiveFrom }) =>
+      apiClient.post<ApiResponse<FeeScheduleView>>(`${BASE}/fee-schedules/${feeId}/approve`, { effectiveFrom }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["facility-registry", "fee-schedules"] }),
+  });
+}
+
+export function useApplicationFee(applicationId: string | undefined) {
+  return useQuery<ApiResponse<ApplicationFeeView>>({
+    queryKey: ["facility-registry", "application-fee", applicationId],
+    queryFn: () => apiClient.get<ApiResponse<ApplicationFeeView>>(`${BASE}/applications/${applicationId}/fee`),
+    enabled: !!applicationId,
+  });
+}
+
+export function useCreateFeePaymentIntent(applicationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<ApplicationFeeView>, unknown, void>({
+    mutationFn: () =>
+      apiClient.post<ApiResponse<ApplicationFeeView>>(`${BASE}/applications/${applicationId}/fee/payment-intent`),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["facility-registry", "application-fee", applicationId] }),
+  });
+}
+
+export function useWaiveFee(applicationId: string) {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<ApplicationFeeView>, unknown, { reason: string }>({
+    mutationFn: (body) =>
+      apiClient.post<ApiResponse<ApplicationFeeView>>(`${BASE}/applications/${applicationId}/fee/waive`, body),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ["facility-registry", "application-fee", applicationId] }),
+  });
+}
