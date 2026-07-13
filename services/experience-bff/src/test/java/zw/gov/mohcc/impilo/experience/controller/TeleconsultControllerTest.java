@@ -662,4 +662,38 @@ class TeleconsultControllerTest {
         assertEquals("NO_ON_CALL_PROVIDER", error.get("code"));
         Mockito.verify(pctClient, Mockito.never()).submitReferral(any());
     }
+
+    @Test
+    void accept_passesReceivingFacilityContextThroughToPct() {
+        ObjectNode accepted = objectMapper.createObjectNode();
+        accepted.put("id", "ref-77");
+        accepted.put("status", "ACCEPTED");
+        Mockito.when(pctClient.acceptReferral(eq("ref-77"), any())).thenReturn(accepted);
+
+        var response = controller.accept(
+                "ref-77", "req-a", "corr-a", "tenant-a", "TREATMENT", "fac-1", "dr-ncube",
+                Map.of("receiving_facility_id", "fac-99", "scheduled_at", "2026-08-01T10:00:00Z", "notes", "review am"));
+
+        assertEquals(200, response.getStatusCode().value());
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(pctClient).acceptReferral(eq("ref-77"), captor.capture());
+        Map<String, Object> sent = captor.getValue();
+        assertEquals("dr-ncube", sent.get("accepted_by"));
+        assertEquals("fac-99", sent.get("receiving_facility_id"));
+        assertEquals("2026-08-01T10:00:00Z", sent.get("scheduled_at"));
+        assertEquals("review am", sent.get("notes"));
+    }
+
+    @Test
+    void decline_requiresAReason() {
+        var response = controller.decline(
+                "ref-88", "req-d", "corr-d", "tenant-a", "TREATMENT", "fac-1", "dr-ncube",
+                Map.of());
+
+        assertEquals(400, response.getStatusCode().value());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("DECLINE_REASON_REQUIRED", error.get("code"));
+        Mockito.verify(pctClient, Mockito.never()).respondReferral(any(), any());
+    }
 }

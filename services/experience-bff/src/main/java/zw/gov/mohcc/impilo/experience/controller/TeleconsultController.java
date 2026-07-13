@@ -744,11 +744,21 @@ public class TeleconsultController {
             @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
             @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
             @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
-            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
         try {
             telemedicineGovernanceService.assertGovernedMutate();
-            var accepted = pctClient.acceptReferral(id, Map.of(
-                    "accepted_by", actorId != null ? actorId : "unknown"));
+            // Carry the acceptance context (receiving facility, planned review time, notes)
+            // through to PCT so it is persisted on the referral — not just the acceptor.
+            Map<String, Object> acceptance = new LinkedHashMap<>();
+            acceptance.put("accepted_by", actorId != null ? actorId : "unknown");
+            if (body != null) {
+                copyIfPresent(body, acceptance, "receiving_facility_id", "receivingFacilityId");
+                copyIfPresent(body, acceptance, "receiving_facility_name", "receivingFacilityName");
+                copyIfPresent(body, acceptance, "scheduled_at", "scheduledAt");
+                copyIfPresent(body, acceptance, "notes", "note");
+            }
+            var accepted = pctClient.acceptReferral(id, acceptance);
             emitTelemedicineNotification("TELECONSULT_ACCEPTED", accepted, actorId, "Teleconsult request accepted.");
             telemedicineGovernanceService.audit(
                     tenantId, correlationId, purposeOfUse, facilityId,
@@ -773,7 +783,17 @@ public class TeleconsultController {
             @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
             @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
-        return accept(id, requestId, correlationId, tenantId, purposeOfUse, facilityId, actorId);
+        return accept(id, requestId, correlationId, tenantId, purposeOfUse, facilityId, actorId, null);
+    }
+
+    private static void copyIfPresent(Map<String, Object> from, Map<String, Object> to, String toKey, String altKey) {
+        Object v = from.get(toKey);
+        if (v == null) {
+            v = from.get(altKey);
+        }
+        if (v != null && !String.valueOf(v).isBlank()) {
+            to.put(toKey, v);
+        }
     }
 
     @PostMapping("/sessions/{id}/decline")
@@ -789,10 +809,16 @@ public class TeleconsultController {
         try {
             telemedicineGovernanceService.assertGovernedMutate();
             String reason = val(body, "reason", "declineReason", "message");
+            // A decline reason is mandatory — silently defaulting it would leave the
+            // audit trail asserting a reason the specialist never gave.
+            if (reason == null || reason.isBlank()) {
+                return error(HttpStatus.BAD_REQUEST, "DECLINE_REASON_REQUIRED",
+                        "A reason is required to decline a teleconsult.", requestId, correlationId);
+            }
             Map<String, Object> decline = new LinkedHashMap<>();
             decline.put("response_type", "DECLINED");
             decline.put("status", "DECLINED");
-            decline.put("message", reason != null ? reason : "Declined by receiving specialist");
+            decline.put("message", reason);
             if (actorId != null && !actorId.isBlank()) {
                 decline.put("responder_id", actorId);
             }
