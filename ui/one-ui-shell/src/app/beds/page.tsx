@@ -263,7 +263,17 @@ export default function BedManagementPage() {
                         </div>
                       )}
                       {/* Quick actions */}
-                      <div className="mt-2 flex gap-1">
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {/* When a patient is in context (from the admit handoff), offer to admit
+                            them straight into an assignable bed — prefilling ward + bed. */}
+                        {patientId && (a.status === "AVAILABLE" || a.status === "RESERVED" || a.status === "CLEANING") && (
+                          <Link
+                            href={`/clinical/inpatient/admissions/new?patientId=${encodeURIComponent(patientId)}${encounterId ? `&encounterId=${encodeURIComponent(encounterId)}` : ""}&wardId=${encodeURIComponent(String(a.wardId ?? ""))}&bedId=${encodeURIComponent(bed.id)}&source=bed-board`}
+                            className="text-[10px] px-1.5 py-0.5 bg-primary text-white rounded hover:bg-primary-hover"
+                          >
+                            Admit here
+                          </Link>
+                        )}
                         {a.status === "CLEANING" && (
                           <button onClick={() => updateBedStatus.mutate({ bedId: bed.id, status: "AVAILABLE" })}
                             className="text-[10px] px-1.5 py-0.5 bg-green-600 text-white rounded hover:bg-green-700">

@@ -18,6 +18,8 @@ export default function NewAdmissionPage() {
   const patientId = searchParams.get("patientId") ?? "";
   const encounterId = searchParams.get("encounterId");
   const source = searchParams.get("source");
+  const initialWardId = searchParams.get("wardId");
+  const initialBedId = searchParams.get("bedId");
 
   return (
     <PlaneWorkspaceShell
@@ -30,7 +32,13 @@ export default function NewAdmissionPage() {
     >
       <TrustContextBanner purposeOfUse="INPATIENT_CARE" />
       {patientId ? (
-        <NewAdmissionForm patientId={patientId} encounterId={encounterId} source={source} />
+        <NewAdmissionForm
+          patientId={patientId}
+          encounterId={encounterId}
+          source={source}
+          initialWardId={initialWardId}
+          initialBedId={initialBedId}
+        />
       ) : (
         <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
           No patient selected. Open a patient&apos;s encounter and admit from the visit outcome.

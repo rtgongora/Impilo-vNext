@@ -50,10 +50,14 @@ export function NewAdmissionForm({
   patientId,
   encounterId,
   source,
+  initialWardId = null,
+  initialBedId = null,
 }: {
   patientId: string;
   encounterId: string | null;
   source: string | null;
+  initialWardId?: string | null;
+  initialBedId?: string | null;
 }) {
   const router = useRouter();
   const facility = useFacilityStore((s) => s.facility);
@@ -68,8 +72,8 @@ export function NewAdmissionForm({
 
   const [admittingDiagnosis, setAdmittingDiagnosis] = useState("");
   const [admissionType, setAdmissionType] = useState("EMERGENCY");
-  const [wardId, setWardId] = useState<string | null>(null);
-  const [bedId, setBedId] = useState<string | null>(null);
+  const [wardId, setWardId] = useState<string | null>(initialWardId || null);
+  const [bedId, setBedId] = useState<string | null>(initialBedId || null);
   const [dietOrders, setDietOrders] = useState("REGULAR");
   const [activityLevel, setActivityLevel] = useState("BED_REST");
 
