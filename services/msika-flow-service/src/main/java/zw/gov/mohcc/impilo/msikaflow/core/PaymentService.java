@@ -63,7 +63,7 @@ public class PaymentService {
         }
 
         Map<String, Object> splits = computeSplits(order);
-        String metadataJson = buildIntentMetadata(order);
+        String metadataJson = buildIntentMetadata(order, splits);
 
         MushexClient.MushexIntentCreated intent = mushexClient.createPaymentIntent(
                 inboundRequest,
@@ -133,9 +133,16 @@ public class PaymentService {
         return splits;
     }
 
-    private String buildIntentMetadata(OrderEntity order) {
+    private String buildIntentMetadata(OrderEntity order, Map<String, Object> splits) {
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("order_id", order.getOrderId());
+        // The payee's share of this intent (vendor goods + delivery, excluding the
+        // platform fee). MusheX settlement aggregates payouts from THIS figure so
+        // a vendor is never paid the platform fee by mistake.
+        Object vendorShare = splits.get("vendorShare");
+        if (vendorShare != null) {
+            metadata.put("payee_amount", vendorShare.toString());
+        }
         if (order.getPatientCpid() != null && !order.getPatientCpid().isBlank()) {
             metadata.put("patient_cpid", order.getPatientCpid());
         }
