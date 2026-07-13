@@ -566,19 +566,15 @@ public class CostaEventConsumer {
                         .findFirst()
                         .orElse(null);
 
-                // Fall back to PENDING refund matched by amount
-                if (target == null) {
+                // Fall back to a PENDING refund matched by EXACT amount. There is
+                // deliberately no "any PENDING refund" last resort: with several
+                // pending refunds on one bill it could mark the WRONG refund
+                // processed. An unmatched event stays unmatched and is logged for
+                // reconciliation instead of being mis-attributed.
+                if (target == null && eventAmount != null) {
                     target = costaRefunds.stream()
                             .filter(r -> r.getStatus() == RefundStatus.PENDING)
-                            .filter(r -> eventAmount == null || r.getAmount().compareTo(eventAmount) == 0)
-                            .findFirst()
-                            .orElse(null);
-                }
-
-                // Last resort: any PENDING refund
-                if (target == null) {
-                    target = costaRefunds.stream()
-                            .filter(r -> r.getStatus() == RefundStatus.PENDING)
+                            .filter(r -> r.getAmount().compareTo(eventAmount) == 0)
                             .findFirst()
                             .orElse(null);
                 }
