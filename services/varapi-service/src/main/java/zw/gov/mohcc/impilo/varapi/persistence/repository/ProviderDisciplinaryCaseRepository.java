@@ -5,10 +5,13 @@ import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderDisciplinaryCaseEntity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface ProviderDisciplinaryCaseRepository extends JpaRepository<ProviderDisciplinaryCaseEntity, Long> {
+
+    Optional<ProviderDisciplinaryCaseEntity> findByIdAndTenantId(Long id, UUID tenantId);
 
     List<ProviderDisciplinaryCaseEntity> findByProviderId(Long providerId);
 
