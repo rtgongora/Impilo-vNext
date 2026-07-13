@@ -19,8 +19,13 @@ import java.util.UUID;
 
 /**
  * Health Payments Wallet API.
- * All mutations INTERNAL only. Balance reads available to both modes.
+ *
+ * <p><b>@deprecated — use mushe-wallet-service.</b> The wallet money + SMART Card stored-value are
+ * owned by {@code mushe-wallet-service} ({@code /internal/v1/wallets} + {@code /internal/v1/cards}),
+ * not VITO. VITO owns the card as an identity credential only. This API is a legacy parallel money
+ * ledger; do not build new callers (no BFF/UI consumes it today). See the SoR map.
  */
+@Deprecated
 @RestController
 @RequestMapping("/v1/wallet")
 public class WalletController {

@@ -19,19 +19,19 @@ import java.util.UUID;
 /**
  * Health Payments Wallet — Double-Entry Ledger.
  *
- * Every monetary movement creates exactly TWO journal entries:
- *   1. DEBIT entry on the source wallet
- *   2. CREDIT entry on the destination wallet (or system account)
+ * <p><b>Deprecated — money is mushe-wallet-service's SoR.</b> This is a parallel money ledger that
+ * duplicates {@code mushe-wallet-service}, which already owns the wallet money
+ * ({@code /internal/v1/wallets}: credit/debit/transfer/balance/transactions) AND the SMART Card
+ * subsystem ({@code /internal/v1/cards}: create/activate/block/replace/verify-pin). The correct split
+ * is: <b>VITO owns the card as an identity credential</b> (Health ID binding, key/DID, revocation);
+ * <b>mushe-wallet-service owns the card's stored value and all money movement</b>. New code must use
+ * mushe-wallet-service; this ledger is retained only until {@code RecoveryService} secure-handover is
+ * repointed to mushe's card-replace/wallet-transfer. See {@code docs/registry/system-of-record-map.md}.
  *
- * Properties:
- *   - Idempotent: duplicate transaction_ref is rejected (DB unique constraint)
- *   - Serialized: wallet balance is updated under pessimistic lock
- *   - Auditable: every entry records running_balance, timestamp, counterparty
- *   - Offline-capable: offline transactions carry JWS signature from card key
- *
- * Wallet is linked to a SMART Card. When card is revoked, wallet balance
- * is transferred to the new card's wallet via Secure Handover.
+ * <p>Every monetary movement creates exactly TWO journal entries (DEBIT source + CREDIT destination);
+ * idempotent, pessimistic-locked, auditable, offline-capable.
  */
+@Deprecated
 @Service
 public class WalletService {
 

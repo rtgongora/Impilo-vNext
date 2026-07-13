@@ -49,7 +49,7 @@
 | `madi-service` | clinical | blood donor registry, donation drives, blood units, crossmatch, transfusion episodes, haemovigilance |
 | `msika-flow-service` | enterprise | Msika Flow canonical records |
 | `msika-service` | enterprise | Msika canonical records |
-| `mushe-wallet-service` | enterprise | Mushe Wallet canonical records |
+| `mushe-wallet-service` | enterprise | Mushe Wallet canonical records. **Wallet money + SMART Card stored-value SoR (G28):** owns the wallet ledger (`/internal/v1/wallets`: credit/debit/transfer/balance/transactions) AND the SMART Card subsystem (`/internal/v1/cards`: create/activate/block/replace/verify-pin). All card stored-value and money movement — including balance transfer on card replacement — is mushe's. Other services must NOT run a parallel wallet ledger (see vito-service). |
 | `mushex-service` | enterprise | Mushex canonical records |
 | `mvumo-service` | trust | Mvumo canonical records |
 | `national-data-repository-service` | data | National Data Repository canonical records |
@@ -89,7 +89,7 @@
 | `tuso-service` | registry | Tuso canonical records; **facility-effective Practitioner-In-Charge (PIC) assignment** via the HPA-2017 nomination lifecycle (`PicNominationService`). SoR split (G30): TUSO owns the assignment; VARAPI owns the PIC eligibility-assessment snapshot each nomination captures verbatim. VARAPI's `pic-assignments` write endpoints are deprecated legacy parallel writers — do not re-introduce a second PIC assignment writer. |
 | `ubomi-service` | registry | Ubomi canonical records |
 | `varapi-service` | registry | Varapi canonical records; **provider PIC eligibility-assessment snapshot** (`TusoInteropController /v1/internal/interop/eligibility/assessments`). SoR split (G30): VARAPI is SoR for the point-in-time eligibility assessment only, NOT the facility-effective PIC assignment (that is tuso-service). VARAPI's own `pic-assignments` write path is `@Deprecated`. |
-| `vito-service` | registry | Vito canonical records |
+| `vito-service` | registry | Vito canonical records. **SMART Card = identity credential only (G28):** VITO owns the card as an identity artifact (Health ID binding, key/DID, revocation) but NOT its stored value — the card's money wallet is `mushe-wallet-service`. VITO's own `WalletController`/`WalletService` money ledger is `@Deprecated` (a parallel duplicate); secure-handover balance movement is to be repointed to mushe's card-replace/wallet-transfer. |
 | `wellness-service` | enterprise | — |
 | `workflow-service` | integration | Workflow canonical records |
 | `workforce-governance-service` | enterprise | Workforce Governance canonical records |
