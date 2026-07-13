@@ -750,6 +750,45 @@ public class AuthSessionController {
         }
     }
 
+    // ── Self-service Certificates ────────────────────────────────────
+
+    /** The authenticated provider's own certificates (resolved from the trust context in VARAPI). */
+    @GetMapping("/identity/certificates")
+    public ResponseEntity<Map<String, Object>> getMyCertificates(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode certs = varapiClient.portalListCertificates();
+            return ResponseEntity.ok(Map.of(
+                    "data", certs != null ? certs : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.debug("No certificates for actor: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    /** Stream the provider's own certificate PDF. VARAPI status-gates (no PDF for suspended/revoked/expired). */
+    @GetMapping("/identity/certificates/{certificateId}/download")
+    public ResponseEntity<byte[]> downloadMyCertificate(@PathVariable long certificateId) {
+        try {
+            ResponseEntity<byte[]> upstream = varapiClient.portalDownloadCertificate(certificateId);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.set(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"certificate-" + certificateId + ".pdf\"");
+            return ResponseEntity.status(upstream.getStatusCode()).headers(headers).body(upstream.getBody());
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            // e.g. certificate not available for a suspended/revoked/expired licence.
+            return ResponseEntity.status(e.getStatusCode().is4xxClientError() ? e.getStatusCode() : HttpStatus.BAD_GATEWAY).build();
+        } catch (Exception e) {
+            log.warn("Certificate download failed for {}: {}", certificateId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
+    }
+
     // ── CDS Alerts Count ─────────────────────────────────────────────
 
     /**

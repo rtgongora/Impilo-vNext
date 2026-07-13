@@ -58,6 +58,53 @@ public class VarapiServiceClient {
         return extractData(response);
     }
 
+    // ── Certificates ────────────────────────────────────────────────────────
+
+    /** Self-service: the authenticated provider's own certificates (resolved from X-Actor-ID). */
+    public JsonNode portalListCertificates() {
+        ResponseEntity<JsonNode> response =
+                restTemplate.getForEntity(baseUrl + "/v1/portal/certificates", JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Self-service certificate PDF (byte[]) — varapi status-gates before streaming. */
+    public ResponseEntity<byte[]> portalDownloadCertificate(long certificateId) {
+        return restTemplate.getForEntity(
+                baseUrl + "/v1/portal/certificates/" + certificateId + "/download", byte[].class);
+    }
+
+    /** Registrar: certificate lifecycle for a provider (numeric registry key). */
+    public JsonNode getCertificatesByProvider(long providerId) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/internal/providers/certificates/provider/" + providerId, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getCurrentCertificate(long providerId) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/internal/providers/certificates/provider/" + providerId + "/current", JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getExpiringCertificates(int daysAhead) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/v1/internal/providers/certificates/expiring?daysAhead=" + daysAhead, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode createCertificate(Map<String, Object> body) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/certificates", body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** action ∈ issue | renew | suspend | reinstate | revoke. */
+    public JsonNode certificateAction(long certificateId, String action, Map<String, Object> body) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/certificates/" + certificateId + "/" + action, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /**
      * Create a provider profile in the canonical registry.
      */
