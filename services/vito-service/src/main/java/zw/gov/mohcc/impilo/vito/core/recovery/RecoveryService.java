@@ -5,36 +5,37 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.vito.core.CardStatus;
 import zw.gov.mohcc.impilo.vito.core.RevocationReason;
 import zw.gov.mohcc.impilo.vito.core.card.CardLifecycleService;
-import zw.gov.mohcc.impilo.vito.core.wallet.WalletService;
 import zw.gov.mohcc.impilo.vito.persistence.entity.SmartCardEntity;
 
 import java.util.UUID;
 
 /**
- * Secure Handover Service — card replacement with DID and wallet transfer.
+ * Secure Handover Service — replacement of the SMART Card as an IDENTITY credential.
  *
  * Process:
  *   1. Revoke the old card (ACTIVE → REVOKED)
  *   2. Request a new card (generates new DID, creates REQUESTED card)
- *   3. Transfer wallet balance from old card's wallet to new card's wallet
- *   4. The did:impilo from the new card becomes the client's active DID
+ *   3. The did:impilo from the new card becomes the client's active DID
  *
- * This ensures continuity of identity and financial state across card
- * replacements without exposing PII during the transfer.
+ * <p><b>Money is mushe-wallet-service's SoR (G28).</b> This flow no longer touches a wallet: VITO
+ * owns the card only as an identity artifact, so the card's stored value + balance-preservation on
+ * replacement are handled by {@code mushe-wallet-service} ({@code /internal/v1/cards/{id}/replace},
+ * which keeps the wallet and swaps the card). VITO's own wallet ledger is deprecated and now has no
+ * business caller. (Cross-service card-identity↔money-card linkage — so one physical-card replacement
+ * drives both — remains an open orchestration decision; see the SoR map / execution report.)
  */
 @Service
 public class RecoveryService {
 
     private final CardLifecycleService cardService;
-    private final WalletService walletService;
 
-    public RecoveryService(CardLifecycleService cardService, WalletService walletService) {
+    public RecoveryService(CardLifecycleService cardService) {
         this.cardService = cardService;
-        this.walletService = walletService;
     }
 
     /**
-     * Execute Secure Handover: revoke old card, issue new card, transfer wallet.
+     * Execute Secure Handover of the identity card: revoke old, issue new (money wallet untouched —
+     * that is mushe-wallet-service's responsibility).
      *
      * @param tenantId  tenant context
      * @param healthId  client health_id
@@ -48,20 +49,10 @@ public class RecoveryService {
     public SmartCardEntity secureHandover(UUID tenantId, UUID healthId,
                                            Long oldCardId, RevocationReason reason,
                                            String newPublicKey, String requestedBy) {
-        // Step 1: Revoke old card
-        SmartCardEntity revokedCard = cardService.revoke(tenantId, oldCardId, reason);
+        // Step 1: Revoke old card (identity credential)
+        cardService.revoke(tenantId, oldCardId, reason);
 
-        // Step 2: Request new card
-        SmartCardEntity newCard = cardService.requestCard(tenantId, healthId, newPublicKey, requestedBy);
-
-        // Step 3: Re-associate wallet with new card
-        // Wallet is keyed by healthId (not cardId), so balance is already preserved.
-        // We only need to update the card reference.
-        walletService.getWallet(tenantId, healthId)
-                .ifPresent(wallet -> {
-                    wallet.setCardId(newCard.getId());
-                });
-
-        return newCard;
+        // Step 2: Request new card (new DID)
+        return cardService.requestCard(tenantId, healthId, newPublicKey, requestedBy);
     }
 }
