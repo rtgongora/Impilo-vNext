@@ -3,12 +3,16 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 import zw.gov.mohcc.impilo.experience.client.MadiServiceClient;
 
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -119,5 +123,41 @@ class MadiControllerTest {
 
         assertEquals(200, response.getStatusCode().value());
         verify(client).nationalHaemovigilanceDashboard();
+    }
+
+    @Test
+    void donorByPerson_treatsUpstream404AsEmptyDonor() {
+        // QA #14: a non-donor lookup must surface as 200 {data:null}, not 502.
+        MadiServiceClient client = mock(MadiServiceClient.class);
+        when(client.donorByPerson("CPID-404")).thenThrow(
+                HttpClientErrorException.create(
+                        HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY, new byte[0], null));
+
+        MadiController controller = new MadiController(client);
+        var response = controller.donorByPerson("CPID-404", "req-1", "corr-1");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertNull(response.getBody().get("data"));
+    }
+
+    @Test
+    void registerDonor_passesUpstream409ConflictThrough() {
+        // QA #13: a duplicate donor (409) must reach the caller with the real
+        // message, not be masked as a 502 MADI_UNAVAILABLE.
+        MadiServiceClient client = mock(MadiServiceClient.class);
+        byte[] body = "{\"error\":\"Donor already registered for person\"}"
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        when(client.registerDonor(any())).thenThrow(
+                HttpClientErrorException.create(
+                        HttpStatus.CONFLICT, "Conflict", HttpHeaders.EMPTY, body, null));
+
+        MadiController controller = new MadiController(client);
+        var response = controller.registerDonor(Map.of("person_cpid", "CPID-DUP"), "req-1", "corr-1");
+
+        assertEquals(409, response.getStatusCode().value());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> error = (Map<String, Object>) response.getBody().get("error");
+        assertEquals("Donor already registered for person", error.get("message"));
     }
 }
