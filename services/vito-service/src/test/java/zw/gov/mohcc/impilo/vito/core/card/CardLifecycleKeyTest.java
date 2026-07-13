@@ -8,10 +8,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.vito.config.VitoProperties;
 import zw.gov.mohcc.impilo.vito.core.CardStatus;
 import zw.gov.mohcc.impilo.vito.core.did.SovereignIdGenerator;
+import zw.gov.mohcc.impilo.vito.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.vito.persistence.entity.SmartCardEntity;
 import zw.gov.mohcc.impilo.vito.persistence.repository.CardStateTransitionRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.SmartCardRepository;
+import org.mockito.ArgumentCaptor;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -19,6 +21,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -61,6 +64,41 @@ class CardLifecycleKeyTest {
         card.setStatus(CardStatus.PRINTED);
         card.setPublicKey(publicKey);
         return card;
+    }
+
+    @Test
+    void requestCard_emitsCanonicalCardCredentialEvent() {
+        when(cardRepository.findByTenantIdAndHealthIdAndStatus(tenantId, healthId, CardStatus.ACTIVE))
+                .thenReturn(Optional.empty());
+
+        service.requestCard(tenantId, healthId, "PUBKEY", "clerk-1");
+
+        ArgumentCaptor<EventOutboxEntity> ev = ArgumentCaptor.forClass(EventOutboxEntity.class);
+        verify(outboxRepository).save(ev.capture());
+        EventOutboxEntity e = ev.getValue();
+        assertEquals("SMART_CARD", e.getAggregateType());
+        assertEquals("CARD_REQUESTED", e.getEventType());
+        // The canonical CardCredential projection (spine) — cardNumber + didUri + status for consumers.
+        assertTrue(e.getPayload().contains("\"cardNumber\""), e.getPayload());
+        assertTrue(e.getPayload().contains("\"didUri\""), e.getPayload());
+        assertTrue(e.getPayload().contains("\"status\":\"REQUESTED\""), e.getPayload());
+        assertTrue(e.getPayload().contains(healthId.toString()), e.getPayload());
+    }
+
+    @Test
+    void recordReplacement_linksChainAndEmitsReplacedEvent() {
+        SmartCardEntity newCard = printedCard(2L, "REAL-KEY");
+        newCard.setCardNumber("CARD-NEW");
+        newCard.setDidUri("did:impilo:new");
+        when(cardRepository.findById(2L)).thenReturn(Optional.of(newCard));
+
+        service.recordReplacement(tenantId, 2L, 1L);
+
+        assertEquals(1L, newCard.getPreviousCardId());
+        ArgumentCaptor<EventOutboxEntity> ev = ArgumentCaptor.forClass(EventOutboxEntity.class);
+        verify(outboxRepository).save(ev.capture());
+        assertEquals("CARD_REPLACED", ev.getValue().getEventType());
+        assertTrue(ev.getValue().getPayload().contains("\"previousCardId\":1"), ev.getValue().getPayload());
     }
 
     @Test

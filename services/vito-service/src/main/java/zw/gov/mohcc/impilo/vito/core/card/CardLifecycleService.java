@@ -96,9 +96,7 @@ public class CardLifecycleService {
         card = cardRepository.save(card);
         recordTransition(card, null, CardStatus.REQUESTED, resolvedRequestedBy, null);
 
-        publishEvent("SMART_CARD", card.getId().toString(), "CARD_REQUESTED",
-                String.format("{\"cardId\":%d,\"healthId\":\"%s\",\"did\":\"%s\"}",
-                        card.getId(), healthId, did));
+        publishEvent("SMART_CARD", card.getId().toString(), "CARD_REQUESTED", cardPayload(card));
 
         return card;
     }
@@ -124,6 +122,8 @@ public class CardLifecycleService {
         card.setPrintedAt(OffsetDateTime.now());
         card = cardRepository.save(card);
         recordTransition(card, from, CardStatus.PRINTED, resolveActor(), null);
+        // Printed = the SE public key is now provisioned — the credential is cryptographically real.
+        publishEvent("SMART_CARD", card.getId().toString(), "CARD_PRINTED", cardPayload(card));
         return card;
     }
 
@@ -150,8 +150,7 @@ public class CardLifecycleService {
         card = cardRepository.save(card);
         recordTransition(card, from, CardStatus.ACTIVE, resolveActor(), null);
 
-        publishEvent("SMART_CARD", card.getId().toString(), "CARD_ACTIVATED",
-                String.format("{\"cardId\":%d,\"healthId\":\"%s\"}", card.getId(), card.getHealthId()));
+        publishEvent("SMART_CARD", card.getId().toString(), "CARD_ACTIVATED", cardPayload(card));
 
         return card;
     }
@@ -169,6 +168,8 @@ public class CardLifecycleService {
         card.setInactivatedAt(OffsetDateTime.now());
         card = cardRepository.save(card);
         recordTransition(card, from, CardStatus.INACTIVE, resolveActor(), null);
+        // Suspension must reach the money + PHR facets (e.g. freeze the card's purse / stop PHR sync).
+        publishEvent("SMART_CARD", card.getId().toString(), "CARD_SUSPENDED", cardPayload(card));
         return card;
     }
 
@@ -191,10 +192,22 @@ public class CardLifecycleService {
         card = cardRepository.save(card);
         recordTransition(card, from, CardStatus.REVOKED, resolveActor(), reason.name());
 
-        publishEvent("SMART_CARD", card.getId().toString(), "CARD_REVOKED",
-                String.format("{\"cardId\":%d,\"healthId\":\"%s\",\"reason\":\"%s\"}",
-                        card.getId(), card.getHealthId(), reason));
+        publishEvent("SMART_CARD", card.getId().toString(), "CARD_REVOKED", cardPayload(card));
 
+        return card;
+    }
+
+    /**
+     * Link a freshly-requested card as the replacement of a revoked one (Secure Handover) and emit
+     * {@code CARD_REPLACED} — carries {@code previousCardId} so downstream facets migrate the money
+     * wallet reference and re-sync the PHR to the new card.
+     */
+    @Transactional
+    public SmartCardEntity recordReplacement(UUID tenantId, Long newCardId, Long oldCardId) {
+        SmartCardEntity card = getCard(tenantId, newCardId);
+        card.setPreviousCardId(oldCardId);
+        card = cardRepository.save(card);
+        publishEvent("SMART_CARD", card.getId().toString(), "CARD_REPLACED", cardPayload(card));
         return card;
     }
 
@@ -269,5 +282,27 @@ public class CardLifecycleService {
         event.setEventType(eventType);
         event.setPayload(payload);
         outboxRepository.save(event);
+    }
+
+    /**
+     * Canonical CardCredential projection carried on every {@code SMART_CARD} lifecycle event — the
+     * shared spine other services (mushe-wallet money facet, PHR carrier) reference by
+     * {@code cardNumber} without minting a second card identity. See
+     * {@code docs/architecture/UNIFIED_SMART_CARD_ARCHITECTURE.md}.
+     */
+    private static String cardPayload(SmartCardEntity card) {
+        return "{"
+                + "\"cardId\":" + card.getId()
+                + ",\"cardNumber\":" + jsonStr(card.getCardNumber())
+                + ",\"healthId\":" + jsonStr(card.getHealthId() != null ? card.getHealthId().toString() : null)
+                + ",\"didUri\":" + jsonStr(card.getDidUri())
+                + ",\"status\":" + jsonStr(card.getStatus() != null ? card.getStatus().name() : null)
+                + ",\"previousCardId\":" + (card.getPreviousCardId() != null ? card.getPreviousCardId().toString() : "null")
+                + ",\"revocationReason\":" + jsonStr(card.getRevocationReason())
+                + "}";
+    }
+
+    private static String jsonStr(String v) {
+        return v == null ? "null" : "\"" + v.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
     }
 }

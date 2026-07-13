@@ -53,6 +53,10 @@ public class RecoveryService {
         cardService.revoke(tenantId, oldCardId, reason);
 
         // Step 2: Request new card (new DID)
-        return cardService.requestCard(tenantId, healthId, newPublicKey, requestedBy);
+        SmartCardEntity newCard = cardService.requestCard(tenantId, healthId, newPublicKey, requestedBy);
+
+        // Step 3: Link the replacement chain + emit CARD_REPLACED so the money + PHR facets migrate
+        // to the new card (the money wallet itself stays with the person in mushe-wallet-service).
+        return cardService.recordReplacement(tenantId, newCard.getId(), oldCardId);
     }
 }
