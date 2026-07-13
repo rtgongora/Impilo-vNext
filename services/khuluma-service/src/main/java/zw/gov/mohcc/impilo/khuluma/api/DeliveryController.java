@@ -30,8 +30,13 @@ public class DeliveryController {
             @RequestHeader("X-Tenant-ID") UUID tenantId, @RequestBody Map<String, Object> body) {
         @SuppressWarnings("unchecked")
         List<String> channels = body.get("channels") instanceof List ? (List<String>) body.get("channels") : List.of();
+        @SuppressWarnings("unchecked")
+        Map<String, String> variables = body.get("variables") instanceof Map ? (Map<String, String>) body.get("variables") : null;
+        // Content for external delivery delegated to notification-service (template-driven).
+        DeliveryService.DispatchContent content = new DeliveryService.DispatchContent(
+                str(body, "templateKey"), variables, str(body, "patientRef"), str(body, "messageKind"));
         List<DeliveryAttemptEntity> attempts = service.dispatch(
-                tenantId, str(body, "messageRef"), str(body, "recipient"), channels);
+                tenantId, str(body, "messageRef"), str(body, "recipient"), channels, content);
         return ResponseEntity.ok(Map.of("data", attempts.stream().map(DeliveryController::attemptView).toList()));
     }
 
