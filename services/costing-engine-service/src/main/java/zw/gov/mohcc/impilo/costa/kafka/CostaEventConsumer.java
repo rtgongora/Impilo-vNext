@@ -127,10 +127,11 @@ public class CostaEventConsumer {
             log.info("Created encounter {} for PCT journey {}", encounter.getEncounterId(), journeyId);
         } catch (Exception e) {
             log.error("Failed to process pct.encounter.started", e);
-            ack.acknowledge(); // poison-pill guard: do not redeliver forever
+            // Do NOT ack: bounded retry then costa.money.dlq — a dropped encounter
+            // event means a patient journey that can never be billed.
+            throw new MoneyEventProcessingException("pct.encounter.started", e);
         } finally {
             zw.gov.mohcc.impilo.shared.auth.TrustContextHolder.clear();
-            ack.acknowledge();
         }
     }
 
@@ -172,7 +173,8 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process pct.encounter.completed", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("pct.encounter.completed", e);
         }
     }
 
@@ -255,7 +257,8 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process oros.order.placed", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("oros.order.placed", e);
         }
     }
 
@@ -334,7 +337,8 @@ public class CostaEventConsumer {
             log.info("Teleconsult referral {} ingested into COSTA (charge created)", referralId);
         } catch (Exception e) {
             log.error("Failed to process clinical.teleconsult.value", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("clinical.teleconsult.value", e);
         }
     }
 
@@ -435,7 +439,8 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process pharmacy.dispense.complete", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("pharmacy.dispense.complete", e);
         }
     }
 
@@ -478,7 +483,8 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process inventory event", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("inventory.ledger.event.created", e);
         }
     }
 
@@ -524,7 +530,8 @@ public class CostaEventConsumer {
             log.info("MUSHEX payment {} -> {}", intentId, toStatus);
         } catch (Exception e) {
             log.error("Failed to process mushex.payment.status.changed", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("mushex.payment.status.changed", e);
         }
     }
 
@@ -613,7 +620,8 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process mushex.refund.status.changed", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("mushex.refund.status.changed", e);
         }
     }
 
@@ -652,7 +660,8 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process msika.flow.order.priced", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("msika.flow.order.priced", e);
         }
     }
 
@@ -689,7 +698,8 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process msika.flow.order.paid", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("msika.flow.order.paid", e);
         }
     }
 
@@ -734,7 +744,8 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process tuso.facility.application.fee", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("tuso.facility.application.fee", e);
         }
     }
 
@@ -770,7 +781,8 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process msika.flow.refund.completed", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("msika.flow.refund.completed", e);
         }
     }
 
@@ -877,7 +889,8 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process MADI blood event", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("madi.blood", e);
         }
     }
 
@@ -890,7 +903,8 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process impilo.costa.cost-signals", e);
-            ack.acknowledge();
+            // Do NOT ack: bounded retry then costa.money.dlq — never drop a money event.
+            throw new MoneyEventProcessingException("impilo.costa.cost-signals", e);
         }
     }
 
