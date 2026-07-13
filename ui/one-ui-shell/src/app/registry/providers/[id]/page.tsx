@@ -21,6 +21,7 @@ import {
 import { AppLayout } from "@/components/AppLayout";
 import { ProviderCertificatesAdminPanel } from "@/components/registry/ProviderCertificatesAdminPanel";
 import { ProviderLifecyclePanel } from "@/components/registry/ProviderLifecyclePanel";
+import { ProviderCompliancePanel } from "@/components/registry/ProviderCompliancePanel";
 import { PageShell } from "@/components/PageShell";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
@@ -149,6 +150,9 @@ export default function ProviderDetailPage() {
 
             {/* Certificates (registrar lifecycle) */}
             <ProviderCertificatesAdminPanel providerPublicId={id} providerId={numericProviderId} />
+
+            {/* Compliance & disciplinary casework */}
+            <ProviderCompliancePanel providerPublicId={id} />
 
 
             {/* Specialties */}
