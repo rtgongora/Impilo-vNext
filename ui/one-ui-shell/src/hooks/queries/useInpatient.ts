@@ -112,6 +112,36 @@ export function useCreateAdmission() {
       apiClient.post<AdmissionDetailResponse>("/internal/v1/inpatient/admissions", body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["inpatient-admissions"] });
+      void queryClient.invalidateQueries({ queryKey: ["beds"] });
+      void queryClient.invalidateQueries({ queryKey: ["wards"] });
+      void queryClient.invalidateQueries({ queryKey: ["inpatient-active-admission"] });
+    },
+  });
+}
+
+/** Start a ward round for an admission (inpatient-service WardRoundController via BFF). */
+export function useStartWardRound() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<unknown>, unknown, Record<string, unknown> & { admissionRef: string }>({
+    mutationFn: (body) => apiClient.post<ApiResponse<unknown>>("/internal/v1/ward-rounds", body),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ["inpatient-ward-rounds", variables.admissionRef] });
+    },
+  });
+}
+
+/** Add an entry (assessment / plan / orders) to an existing ward round. */
+export function useAddWardRoundEntry() {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<unknown>,
+    unknown,
+    { roundId: string; admissionRef: string; assessment: string; plan: string; newOrders?: string; escalation?: string; reviewedBy?: string }
+  >({
+    mutationFn: ({ roundId, ...body }) =>
+      apiClient.post<ApiResponse<unknown>>(`/internal/v1/ward-rounds/${roundId}/entries`, body),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ["inpatient-ward-rounds", variables.admissionRef] });
     },
   });
 }

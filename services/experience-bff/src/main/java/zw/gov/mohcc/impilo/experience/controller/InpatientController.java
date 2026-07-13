@@ -194,6 +194,11 @@ public class InpatientController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
         try {
+            // Inject the tenant from the trust header so the UI doesn't have to carry it
+            // in the body (inpatient-service requires tenantId on the admission request).
+            if (tenantId != null && !tenantId.isBlank()) {
+                body.putIfAbsent("tenantId", tenantId);
+            }
             JsonNode created = requirePayload(inpatientClient.createAdmission(body), "Inpatient createAdmission");
             String admissionRef = extractAdmissionRef(created);
             Map<String, Object> meta = new LinkedHashMap<>();

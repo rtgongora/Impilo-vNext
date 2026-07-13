@@ -23,9 +23,9 @@ export function InpatientAdmissionHandoffBanner({
   const wardBoardHref = patientId
     ? `/clinical/inpatient/ward-board?subjectCpid=${encodeURIComponent(patientId)}`
     : "/clinical/inpatient/ward-board";
-  const bedsHref = patientId
-    ? `/beds?patientId=${encodeURIComponent(patientId)}${encounterId ? `&encounterId=${encodeURIComponent(encounterId)}` : ""}`
-    : "/beds";
+  const admitHref = patientId
+    ? `/clinical/inpatient/admissions/new?patientId=${encodeURIComponent(patientId)}${encounterId ? `&encounterId=${encodeURIComponent(encounterId)}` : ""}&source=handoff`
+    : "/clinical/inpatient/admissions/new";
 
   return (
     <div
@@ -44,7 +44,7 @@ export function InpatientAdmissionHandoffBanner({
             {transactionId ? ` (transaction ${transactionId})` : ""}.
           </p>
           <div className="flex flex-wrap gap-3 pt-1">
-            <Link href={bedsHref} className="inline-flex items-center gap-1 text-xs font-medium text-primary-hover hover:underline">
+            <Link href={admitHref} className="inline-flex items-center gap-1 text-xs font-medium text-primary-hover hover:underline">
               <ArrowRightLeft className="h-3.5 w-3.5" />
               Allocate bed & create admission
             </Link>

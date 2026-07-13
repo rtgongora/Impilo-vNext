@@ -208,10 +208,10 @@ export default function VisitOutcomePage() {
               </button>
               {disposition === "ADMIT" && (
                 <button
-                  onClick={() => router.push(`/beds?patientId=${patientId}&encounterId=${targetEncounter.id}&source=discharge&disposition=ADMIT`)}
+                  onClick={() => router.push(`/clinical/inpatient/admissions/new?patientId=${patientId}&encounterId=${targetEncounter.id}&source=visit-outcome`)}
                   className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
                 >
-                  Assign Bed
+                  Admit patient
                 </button>
               )}
               <button
