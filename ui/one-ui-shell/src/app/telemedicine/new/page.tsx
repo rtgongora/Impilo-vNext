@@ -21,6 +21,8 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useCreateTelemedicineSession } from "@/hooks/queries/useTelemedicine";
 import { useUploadDocumentFile } from "@/hooks/queries/useClinicalDocuments";
+import { usePatientSummary } from "@/hooks/queries/useSummary";
+import { useEncounterVitals } from "@/hooks/queries/useVitals";
 
 function toLocalDateTimeValue(date: Date) {
   const offset = date.getTimezoneOffset();
@@ -67,6 +69,22 @@ const STEPS: { id: Step; label: string; num: string; icon: React.ElementType; re
   { id: "consent", label: "Consent", num: "⑥", icon: Lock, required: true },
 ];
 
+function SummaryList({ title, items, emphasise }: { title: string; items: string[]; emphasise?: boolean }) {
+  return (
+    <div>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
+      {items.length === 0 ? (
+        <p className="text-xs text-muted-foreground">None recorded</p>
+      ) : (
+        <ul className={`mt-0.5 space-y-0.5 text-xs ${emphasise ? "text-red-600" : "text-foreground"}`}>
+          {items.slice(0, 5).map((it, i) => <li key={i}>{it}</li>)}
+          {items.length > 5 && <li className="text-muted-foreground">+{items.length - 5} more</li>}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function NewTeleconsultPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -94,6 +112,11 @@ export default function NewTeleconsultPage() {
   const [attachments, setAttachments] = useState<{ id: string; title: string }[]>([]);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const uploadDoc = useUploadDocumentFile();
+  // Live patient + visit context for the Stage-2/3 summary panels (G33) — no longer hardcoded.
+  const patientSummaryQ = usePatientSummary(patientId || undefined);
+  const summary = patientSummaryQ.data?.data;
+  const vitalsQ = useEncounterVitals(encounterId || "");
+  const latestVitals = (vitalsQ.data?.data ?? [])[0]?.attributes;
   const [routingType, setRoutingType] = useState("");
   const [routingTarget, setRoutingTarget] = useState("");
   const [purposeOfUse, setPurposeOfUse] = useState("TREATMENT");
@@ -332,13 +355,27 @@ export default function NewTeleconsultPage() {
             {activeStep === "summary" && (
               <div className="bg-card rounded-xl border border-border p-6 space-y-4">
                 <h3 className="text-base font-semibold text-foreground">② Patient Summary</h3>
-                <p className="text-sm text-muted-foreground">Auto-generated from the patient record. The consultant will see this.</p>
-                <div className="bg-background rounded-lg p-4 text-sm text-muted-foreground space-y-2">
-                  <p><strong>Patient ID:</strong> {patientId || "Not specified"}</p>
-                  <p><strong>Encounter:</strong> {encounterId || "Active encounter"}</p>
-                  <p><strong>Referring facility:</strong> {facility?.name || "Not selected"}</p>
-                  <p><strong>Referring clinician:</strong> {user?.displayName || user?.email}</p>
-                  <p className="text-xs text-muted-foreground mt-3">Active conditions, medications, allergies, and recent results will be auto-attached when the session is created.</p>
+                <p className="text-sm text-muted-foreground">Live from the patient record. The consultant will see this.</p>
+                <div className="bg-background rounded-lg p-4 text-sm text-muted-foreground space-y-3">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                    <p><strong>Patient ID:</strong> {patientId || "Not specified"}</p>
+                    <p><strong>Encounter:</strong> {encounterId || "Active encounter"}</p>
+                    <p><strong>Referring facility:</strong> {facility?.name || "Not selected"}</p>
+                    <p><strong>Referring clinician:</strong> {user?.displayName || user?.email}</p>
+                  </div>
+                  {!patientId ? (
+                    <p className="text-xs">No patient in context — open this from a patient chart to attach a live summary.</p>
+                  ) : patientSummaryQ.isLoading ? (
+                    <p className="flex items-center gap-2 text-xs"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading patient summary…</p>
+                  ) : summary ? (
+                    <div className="grid gap-3 sm:grid-cols-3 border-t border-border pt-3">
+                      <SummaryList title="Active conditions" items={(summary.conditions ?? []).filter((c) => c.clinicalStatus !== "resolved").map((c) => c.display)} />
+                      <SummaryList title="Medications" items={(summary.medications ?? []).map((m) => m.dosage ? `${m.display} (${m.dosage})` : m.display)} />
+                      <SummaryList title="Allergies" items={(summary.allergies ?? []).map((a) => `${a.substance} — ${a.reaction}`)} emphasise />
+                    </div>
+                  ) : (
+                    <p className="text-xs">Patient summary unavailable.</p>
+                  )}
                 </div>
               </div>
             )}
@@ -347,13 +384,25 @@ export default function NewTeleconsultPage() {
             {activeStep === "visit" && (
               <div className="bg-card rounded-xl border border-border p-6 space-y-4">
                 <h3 className="text-base font-semibold text-foreground">③ Visit Summary</h3>
-                <p className="text-sm text-muted-foreground">Current encounter context — auto-generated from the active visit.</p>
+                <p className="text-sm text-muted-foreground">Current encounter context — live from the active visit.</p>
                 <div className="bg-background rounded-lg p-4 text-sm text-muted-foreground space-y-2">
-                  <p><strong>Encounter type:</strong> Outpatient</p>
                   <p><strong>Chief complaint:</strong> {presentingProblems.split("\n")[0] || "—"}</p>
-                  <p><strong>Vitals:</strong> Will be auto-attached</p>
-                  <p><strong>Investigations:</strong> Will be auto-attached</p>
-                  <p className="text-xs text-muted-foreground mt-3">This panel is read-only and auto-populated from the encounter record.</p>
+                  {!encounterId ? (
+                    <p className="text-xs">No encounter in context.</p>
+                  ) : vitalsQ.isLoading ? (
+                    <p className="flex items-center gap-2 text-xs"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading vitals…</p>
+                  ) : latestVitals ? (
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                      {latestVitals.systolic != null && latestVitals.diastolic != null && <span><strong>BP</strong> {latestVitals.systolic}/{latestVitals.diastolic}</span>}
+                      {latestVitals.heartRate != null && <span><strong>HR</strong> {latestVitals.heartRate}</span>}
+                      {latestVitals.temperature != null && <span><strong>Temp</strong> {latestVitals.temperature}°C</span>}
+                      {latestVitals.respiratoryRate != null && <span><strong>RR</strong> {latestVitals.respiratoryRate}</span>}
+                      {latestVitals.oxygenSaturation != null && <span><strong>SpO₂</strong> {latestVitals.oxygenSaturation}%</span>}
+                      {latestVitals.recordedAt && <span className="text-muted-foreground">· {new Date(latestVitals.recordedAt).toLocaleString()}</span>}
+                    </div>
+                  ) : (
+                    <p className="text-xs">No vitals recorded for this encounter yet.</p>
+                  )}
                 </div>
               </div>
             )}

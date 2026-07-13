@@ -25,6 +25,14 @@ vi.mock("@/hooks/queries/useClinicalDocuments", () => ({
   useUploadDocumentFile: () => ({ mutateAsync: uploadMutateAsync, isPending: false }),
 }));
 
+vi.mock("@/hooks/queries/useSummary", () => ({
+  usePatientSummary: () => ({ data: undefined, isLoading: false }),
+}));
+
+vi.mock("@/hooks/queries/useVitals", () => ({
+  useEncounterVitals: () => ({ data: undefined, isLoading: false }),
+}));
+
 vi.mock("@/components/AppLayout", () => ({
   AppLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
