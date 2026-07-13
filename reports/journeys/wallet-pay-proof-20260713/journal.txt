@@ -1,0 +1,27 @@
+== RIG: infra + services (msika + flow + mushex + mushe-wallet + costa + bff)
+   msika (29086): 200
+   flow (29100): 200
+   mushex (29102): 200
+   wallet (29126): 200
+   costa (29101): 200
+   bff (29160): 200
+   PASS: 6/6 services healthy
+== FIXTURE: published listing
+   PASS: listing published (01KXDB09PGWQ7F6J075J48226P)
+== JW-1: wallet-funded order → intent PAID from REAL debit (no auto-settle)
+   PASS: REAL MusheX intent minted (01KXDB0BXP9BHEWT287C77TNSD)
+   PASS: NO AUTO-SETTLE: intent still CREATED after creation (simulation off)
+   PASS: citizen wallet funded (balance=120.00)
+   PASS: BFF routed confirm through the money SoR (INTENT_WALLET_PAYMENT)
+   PASS: intent PAID from the REAL wallet debit
+   PASS: order PAID via mushex.payment.status.changed
+   PASS: COSTA charge SETTLED
+   PASS: wallet debited EXACTLY the order total (43.14 of 43.14)
+== JW-2: insufficient balance → fail clean, nothing moves
+   PASS: confirm REJECTED on insufficient balance (HTTP 503)
+   PASS: intent NOT paid (CREATED)
+   PASS: wallet balance untouched (1.00)
+== JW-3: double-confirm debits exactly once
+   PASS: second confirm idempotent (HTTP 201, already-PAID short-circuit)
+   PASS: wallet NOT debited twice (balance still 76.86)
+RESULT: PASS=15 FAIL=0
