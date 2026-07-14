@@ -40,6 +40,15 @@ public class SubsidyEnrolmentEntity {
     @Column(name = "enrolled_by", length = 120)
     private String enrolledBy;
 
+    /**
+     * Per-member billing classification (INDIGENT / ELDERLY / HEALTH_WORKER
+     * / ...) that COSTA charging rules key exemptions on. Nullable —
+     * value-only enrolments carry no billing category. Unified from the
+     * deprecated cv_subsidy_enrollments table (V013).
+     */
+    @Column(name = "exemption_category", length = 64)
+    private String exemptionCategory;
+
     @Column(name = "effective_from", nullable = false)
     private LocalDate effectiveFrom;
 
@@ -82,6 +91,8 @@ public class SubsidyEnrolmentEntity {
     public void setCurrency(String currency) { this.currency = currency; }
     public String getEnrolledBy() { return enrolledBy; }
     public void setEnrolledBy(String enrolledBy) { this.enrolledBy = enrolledBy; }
+    public String getExemptionCategory() { return exemptionCategory; }
+    public void setExemptionCategory(String exemptionCategory) { this.exemptionCategory = exemptionCategory; }
     public LocalDate getEffectiveFrom() { return effectiveFrom; }
     public void setEffectiveFrom(LocalDate effectiveFrom) { this.effectiveFrom = effectiveFrom; }
     public LocalDate getEffectiveTo() { return effectiveTo; }

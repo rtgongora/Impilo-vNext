@@ -18,5 +18,7 @@ public record SubsidyEnrolmentRequest(
         String memberCpid,
         @JsonProperty("annual_cap_override") BigDecimal annualCapOverride,
         @JsonProperty("currency") String currency,
-        @JsonProperty("enrolled_by") String enrolledBy
+        @JsonProperty("enrolled_by") String enrolledBy,
+        /** Optional per-member billing classification (e.g. INDIGENT, HEALTH_WORKER) for COSTA exemptions. */
+        @JsonProperty("exemption_category") String exemptionCategory
 ) {}

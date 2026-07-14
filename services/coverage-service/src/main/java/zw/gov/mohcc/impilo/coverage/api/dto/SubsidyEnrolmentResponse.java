@@ -20,13 +20,15 @@ public record SubsidyEnrolmentResponse(
         @JsonProperty("remaining_amount") BigDecimal remainingAmount,
         @JsonProperty("currency") String currency,
         @JsonProperty("effective_from") LocalDate effectiveFrom,
-        @JsonProperty("effective_to") LocalDate effectiveTo
+        @JsonProperty("effective_to") LocalDate effectiveTo,
+        /** NON_NULL: absent for value-only enrolments, so the legacy shape is unchanged. */
+        @JsonProperty("exemption_category") String exemptionCategory
 ) {
     public static SubsidyEnrolmentResponse of(SubsidyEnrolmentEntity e, BigDecimal effectiveCap,
                                               BigDecimal consumed, BigDecimal remaining) {
         return new SubsidyEnrolmentResponse(
                 e.getId(), e.getSubsidyProgramId(), e.getMemberCpid(), e.getStatus(),
                 e.getAnnualCapOverride(), effectiveCap, consumed, remaining, e.getCurrency(),
-                e.getEffectiveFrom(), e.getEffectiveTo());
+                e.getEffectiveFrom(), e.getEffectiveTo(), e.getExemptionCategory());
     }
 }

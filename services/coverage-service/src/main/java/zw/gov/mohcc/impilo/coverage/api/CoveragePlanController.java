@@ -21,7 +21,7 @@ import zw.gov.mohcc.impilo.coverage.domain.CoveragePlanEntity;
 import zw.gov.mohcc.impilo.coverage.domain.MemberCoverageEntity;
 import zw.gov.mohcc.impilo.coverage.repository.CoveragePlanRepository;
 import zw.gov.mohcc.impilo.coverage.repository.MemberCoverageRepository;
-import zw.gov.mohcc.impilo.coverage.repository.SubsidyEnrollmentRepository;
+import zw.gov.mohcc.impilo.coverage.repository.SubsidyEnrolmentRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -44,16 +44,17 @@ public class CoveragePlanController {
 
     private final CoveragePlanRepository planRepository;
     private final MemberCoverageRepository memberCoverageRepository;
-    private final SubsidyEnrollmentRepository subsidyEnrollmentRepository;
+    // V013 unification: billing-category resolution reads the ledgered model.
+    private final SubsidyEnrolmentRepository subsidyEnrolmentRepository;
     private final CoverageEventService eventService;
 
     public CoveragePlanController(CoveragePlanRepository planRepository,
                                   MemberCoverageRepository memberCoverageRepository,
-                                  SubsidyEnrollmentRepository subsidyEnrollmentRepository,
+                                  SubsidyEnrolmentRepository subsidyEnrolmentRepository,
                                   CoverageEventService eventService) {
         this.planRepository = planRepository;
         this.memberCoverageRepository = memberCoverageRepository;
-        this.subsidyEnrollmentRepository = subsidyEnrollmentRepository;
+        this.subsidyEnrolmentRepository = subsidyEnrolmentRepository;
         this.eventService = eventService;
     }
 
@@ -87,11 +88,21 @@ public class CoveragePlanController {
         LocalDate today = LocalDate.now();
 
         // 1) Active subsidy enrolment takes precedence — its exemption category drives waivers.
-        var enrolment = subsidyEnrollmentRepository
-                .findByTenantIdAndClientIdAndStatusOrderByCreatedAtDesc(tid, clientId, "ACTIVE")
+        //    V013: read from the unified ledgered model; only category-bearing rows count.
+        var enrolment = subsidyEnrolmentRepository
+                .findByTenantIdAndMemberCpidAndStatus(tid, clientId, "ACTIVE")
                 .stream()
+                .filter(e -> e.getExemptionCategory() != null && !e.getExemptionCategory().isBlank())
                 .filter(e -> !e.getEffectiveFrom().isAfter(today)
                         && (e.getEffectiveTo() == null || !e.getEffectiveTo().isBefore(today)))
+                .sorted((a, b) -> {
+                    var ca = a.getCreatedAt();
+                    var cb = b.getCreatedAt();
+                    if (ca == null && cb == null) return 0;
+                    if (ca == null) return 1;
+                    if (cb == null) return -1;
+                    return cb.compareTo(ca); // newest first (legacy ORDER BY created_at DESC parity)
+                })
                 .findFirst();
         if (enrolment.isPresent()) {
             return ResponseEntity.ok(new PatientBillingCategoryResponse(

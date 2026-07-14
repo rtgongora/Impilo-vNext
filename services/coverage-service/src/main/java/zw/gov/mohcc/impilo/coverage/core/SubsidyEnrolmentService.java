@@ -72,6 +72,9 @@ public class SubsidyEnrolmentService {
         e.setCurrency(req.currency() != null && !req.currency().isBlank()
                 ? req.currency() : program.getCurrency());
         e.setEnrolledBy(req.enrolledBy());
+        if (req.exemptionCategory() != null && !req.exemptionCategory().isBlank()) {
+            e.setExemptionCategory(req.exemptionCategory().trim().toUpperCase(java.util.Locale.ROOT));
+        }
         e.setEffectiveFrom(LocalDate.now());
         e = enrolmentRepository.save(e);
 

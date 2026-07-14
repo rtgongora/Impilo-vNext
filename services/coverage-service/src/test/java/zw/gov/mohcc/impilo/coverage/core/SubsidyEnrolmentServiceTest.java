@@ -89,7 +89,7 @@ class SubsidyEnrolmentServiceTest {
                 tenantId, programId, "CPID-1", "ACTIVE")).thenReturn(false);
 
         SubsidyEnrolmentResponse r = service.enrol(tenantId, new SubsidyEnrolmentRequest(
-                null, "SUB-TEST", "CPID-1", null, null, "admin"));
+                null, "SUB-TEST", "CPID-1", null, null, "admin", null));
 
         assertEquals("ACTIVE", r.status());
         assertEquals(0, new BigDecimal("1500.00").compareTo(r.effectiveCap()));
@@ -103,7 +103,7 @@ class SubsidyEnrolmentServiceTest {
         when(enrolmentRepository.existsByTenantIdAndSubsidyProgramIdAndMemberCpidAndStatus(
                 tenantId, programId, "CPID-1", "ACTIVE")).thenReturn(true);
 
-        var req = new SubsidyEnrolmentRequest(null, "SUB-TEST", "CPID-1", null, null, null);
+        var req = new SubsidyEnrolmentRequest(null, "SUB-TEST", "CPID-1", null, null, null, null);
         assertThrows(IllegalArgumentException.class, () -> service.enrol(tenantId, req));
     }
 
@@ -111,7 +111,7 @@ class SubsidyEnrolmentServiceTest {
     void enrol_inactiveProgram_isRejected() {
         when(programRepository.findByTenantIdAndProgramCode(tenantId, "SUB-TEST"))
                 .thenReturn(Optional.of(program(new BigDecimal("1500.00"), "ENDED")));
-        var req = new SubsidyEnrolmentRequest(null, "SUB-TEST", "CPID-1", null, null, null);
+        var req = new SubsidyEnrolmentRequest(null, "SUB-TEST", "CPID-1", null, null, null, null);
         assertThrows(IllegalArgumentException.class, () -> service.enrol(tenantId, req));
     }
 
@@ -221,7 +221,7 @@ class SubsidyEnrolmentServiceTest {
         when(enrolmentRepository.existsByTenantIdAndSubsidyProgramIdAndMemberCpidAndStatus(
                 tenantId, programId, "CPID-1", "ACTIVE")).thenReturn(false);
         var req = new SubsidyEnrolmentRequest(
-                null, "SUB-TEST", "CPID-1", new BigDecimal("-1.00"), null, "admin");
+                null, "SUB-TEST", "CPID-1", new BigDecimal("-1.00"), null, "admin", null);
         assertThrows(IllegalArgumentException.class, () -> service.enrol(tenantId, req));
     }
 

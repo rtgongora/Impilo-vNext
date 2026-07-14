@@ -10,10 +10,10 @@ import zw.gov.mohcc.impilo.coverage.api.dto.PatientBillingCategoryResponse;
 import zw.gov.mohcc.impilo.coverage.core.CoverageEventService;
 import zw.gov.mohcc.impilo.coverage.domain.CoveragePlanEntity;
 import zw.gov.mohcc.impilo.coverage.domain.MemberCoverageEntity;
-import zw.gov.mohcc.impilo.coverage.domain.SubsidyEnrollmentEntity;
+import zw.gov.mohcc.impilo.coverage.domain.SubsidyEnrolmentEntity;
 import zw.gov.mohcc.impilo.coverage.repository.CoveragePlanRepository;
 import zw.gov.mohcc.impilo.coverage.repository.MemberCoverageRepository;
-import zw.gov.mohcc.impilo.coverage.repository.SubsidyEnrollmentRepository;
+import zw.gov.mohcc.impilo.coverage.repository.SubsidyEnrolmentRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,13 +25,20 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+/**
+ * Billing-category resolution against the UNIFIED ledgered subsidy model
+ * (V013): active category-bearing enrolments win, value-only enrolments are
+ * transparent, expired rows are ignored, and precedence falls through to
+ * coverage plan then self-pay — behavioural parity with the pre-unification
+ * cv_subsidy_enrollments resolution.
+ */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PatientBillingCategoryResolutionTest {
 
     @Mock CoveragePlanRepository planRepository;
     @Mock MemberCoverageRepository memberCoverageRepository;
-    @Mock SubsidyEnrollmentRepository subsidyEnrollmentRepository;
+    @Mock SubsidyEnrolmentRepository subsidyEnrolmentRepository;
     @Mock CoverageEventService eventService;
 
     private static final String TENANT = "11111111-1111-1111-1111-111111111111";
@@ -40,15 +47,26 @@ class PatientBillingCategoryResolutionTest {
 
     private CoveragePlanController controller() {
         return new CoveragePlanController(planRepository, memberCoverageRepository,
-                subsidyEnrollmentRepository, eventService);
+                subsidyEnrolmentRepository, eventService);
+    }
+
+    private SubsidyEnrolmentEntity enrolment(String exemptionCategory, LocalDate from) {
+        SubsidyEnrolmentEntity e = new SubsidyEnrolmentEntity();
+        e.setId(UUID.randomUUID());
+        e.setTenantId(TID);
+        e.setSubsidyProgramId(UUID.randomUUID());
+        e.setMemberCpid(CPID);
+        e.setStatus("ACTIVE");
+        e.setExemptionCategory(exemptionCategory);
+        e.setEffectiveFrom(from);
+        return e;
     }
 
     @Test
     void activeSubsidyEnrolmentTakesPrecedence() {
-        SubsidyEnrollmentEntity enrolment = new SubsidyEnrollmentEntity(
-                TID, "national-spine", CPID, UUID.randomUUID(), "INDIGENT", LocalDate.now().minusDays(1));
-        when(subsidyEnrollmentRepository.findByTenantIdAndClientIdAndStatusOrderByCreatedAtDesc(
-                eq(TID), eq(CPID), eq("ACTIVE"))).thenReturn(List.of(enrolment));
+        when(subsidyEnrolmentRepository.findByTenantIdAndMemberCpidAndStatus(
+                eq(TID), eq(CPID), eq("ACTIVE")))
+                .thenReturn(List.of(enrolment("INDIGENT", LocalDate.now().minusDays(1))));
 
         PatientBillingCategoryResponse body = controller().resolvePatientCategory(TENANT, CPID).getBody();
 
@@ -58,8 +76,38 @@ class PatientBillingCategoryResolutionTest {
     }
 
     @Test
+    void healthWorkerEnrolmentResolvesLikeAnyCategory_parityWithLegacyPath() {
+        // Parity: a HEALTH_WORKER opt-in written through the unified model
+        // resolves exactly like a legacy category enrolment did.
+        when(subsidyEnrolmentRepository.findByTenantIdAndMemberCpidAndStatus(
+                eq(TID), eq(CPID), eq("ACTIVE")))
+                .thenReturn(List.of(enrolment("HEALTH_WORKER", LocalDate.now())));
+
+        PatientBillingCategoryResponse body = controller().resolvePatientCategory(TENANT, CPID).getBody();
+
+        assertEquals("HEALTH_WORKER", body.category());
+        assertEquals("SUBSIDY_ENROLLMENT", body.source());
+    }
+
+    @Test
+    void valueOnlyLedgerEnrolmentIsTransparentToBillingCategory() {
+        // A cap/value enrolment with NO exemption_category must not hijack the
+        // billing category (that would have been a behaviour change vs legacy).
+        when(subsidyEnrolmentRepository.findByTenantIdAndMemberCpidAndStatus(
+                eq(TID), eq(CPID), eq("ACTIVE")))
+                .thenReturn(List.of(enrolment(null, LocalDate.now().minusDays(3))));
+        when(memberCoverageRepository.findByTenantIdAndClientIdAndStatus(any(), any(), any()))
+                .thenReturn(List.of());
+
+        PatientBillingCategoryResponse body = controller().resolvePatientCategory(TENANT, CPID).getBody();
+
+        assertEquals("CASH", body.category());
+        assertEquals("DEFAULT_SELF_PAY", body.source());
+    }
+
+    @Test
     void fallsBackToCoveragePlanTypeWhenNoEnrolment() {
-        when(subsidyEnrollmentRepository.findByTenantIdAndClientIdAndStatusOrderByCreatedAtDesc(
+        when(subsidyEnrolmentRepository.findByTenantIdAndMemberCpidAndStatus(
                 any(), any(), any())).thenReturn(List.of());
         UUID planId = UUID.randomUUID();
         MemberCoverageEntity coverage = new MemberCoverageEntity(
@@ -79,7 +127,7 @@ class PatientBillingCategoryResolutionTest {
 
     @Test
     void defaultsToCashWhenNoCoverage() {
-        when(subsidyEnrollmentRepository.findByTenantIdAndClientIdAndStatusOrderByCreatedAtDesc(
+        when(subsidyEnrolmentRepository.findByTenantIdAndMemberCpidAndStatus(
                 any(), any(), any())).thenReturn(List.of());
         when(memberCoverageRepository.findByTenantIdAndClientIdAndStatus(any(), any(), any()))
                 .thenReturn(List.of());
@@ -92,10 +140,9 @@ class PatientBillingCategoryResolutionTest {
 
     @Test
     void expiredEnrolmentIsIgnored() {
-        SubsidyEnrollmentEntity expired = new SubsidyEnrollmentEntity(
-                TID, "national-spine", CPID, UUID.randomUUID(), "ELDERLY", LocalDate.now().minusDays(10));
+        SubsidyEnrolmentEntity expired = enrolment("ELDERLY", LocalDate.now().minusDays(10));
         expired.setEffectiveTo(LocalDate.now().minusDays(1)); // ended yesterday
-        when(subsidyEnrollmentRepository.findByTenantIdAndClientIdAndStatusOrderByCreatedAtDesc(
+        when(subsidyEnrolmentRepository.findByTenantIdAndMemberCpidAndStatus(
                 any(), any(), any())).thenReturn(List.of(expired));
         when(memberCoverageRepository.findByTenantIdAndClientIdAndStatus(any(), any(), any()))
                 .thenReturn(List.of());
