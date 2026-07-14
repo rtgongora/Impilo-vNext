@@ -14,6 +14,13 @@ import java.util.UUID;
 @Table(name = "bill_contributions", schema = "mushe")
 public class BillContributionEntity {
 
+    /** Atomic donor-wallet debit + (escrow) credit. */
+    public static final String ORIGIN_WALLET = "WALLET";
+    /** External PSP donation settled through a deposit intent. */
+    public static final String ORIGIN_PSP = "PSP";
+    /** Recorded bare credit (cash physically in hand), flagged as assisted. */
+    public static final String ORIGIN_CASH_ASSISTED = "CASH_ASSISTED";
+
     @Id
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
@@ -26,6 +33,12 @@ public class BillContributionEntity {
 
     @Column(name = "currency", nullable = false, length = 3)
     private String currency = "USD";
+
+    @Column(name = "contributor_wallet_id")
+    private UUID contributorWalletId;
+
+    @Column(name = "origin", nullable = false, length = 24)
+    private String origin = ORIGIN_WALLET;
 
     @Column(name = "contributor_ref", length = 120)
     private String contributorRef;
@@ -50,6 +63,10 @@ public class BillContributionEntity {
     public void setAmount(BigDecimal amount) { this.amount = amount; }
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
+    public UUID getContributorWalletId() { return contributorWalletId; }
+    public void setContributorWalletId(UUID contributorWalletId) { this.contributorWalletId = contributorWalletId; }
+    public String getOrigin() { return origin; }
+    public void setOrigin(String origin) { this.origin = origin; }
     public String getContributorRef() { return contributorRef; }
     public void setContributorRef(String contributorRef) { this.contributorRef = contributorRef; }
     public String getContributorName() { return contributorName; }
