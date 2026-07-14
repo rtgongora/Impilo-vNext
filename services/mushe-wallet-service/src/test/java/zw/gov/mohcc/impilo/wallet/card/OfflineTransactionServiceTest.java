@@ -131,4 +131,31 @@ class OfflineTransactionServiceTest {
         assertThrows(OfflineTransactionService.OfflineTransactionRejected.class,
                 () -> service.redeem("VITO-1", payload, sign(payload)));
     }
+
+    @Test
+    void biometric_pay_succeeds_when_the_signed_payload_asserts_biometric() throws Exception {
+        CardEntity card = linkedCard(0);
+        when(cardRepository.findByVitoCardNumber("VITO-1")).thenReturn(Optional.of(card));
+        when(cardRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        String payload = "{\"amount\":\"10.00\",\"counter\":1,\"nonce\":\"bio1\","
+                + "\"authMethod\":\"BIOMETRIC\",\"biometricType\":\"FACE\"}";
+
+        service.redeem("VITO-1", payload, sign(payload), OfflineTransactionService.UV_BIOMETRIC);
+
+        verify(walletService).debit(eq(walletId), eq(new BigDecimal("10.00")), eq("OFFLINE_PURSE"),
+                eq("CARD_OFFLINE"), eq("bio1"), any(), any(), any(), any(), eq("bio1"));
+        assertEquals(1L, card.getLastOfflineCounter());
+    }
+
+    @Test
+    void biometric_pay_is_rejected_when_the_payload_does_not_assert_biometric() throws Exception {
+        CardEntity card = linkedCard(0);
+        when(cardRepository.findByVitoCardNumber("VITO-1")).thenReturn(Optional.of(card));
+        // Validly signed, but only PIN user-verification — a biometric-pay request must fail closed.
+        String payload = "{\"amount\":\"10.00\",\"counter\":1,\"nonce\":\"pin1\",\"authMethod\":\"PIN\"}";
+
+        assertThrows(OfflineTransactionService.OfflineTransactionRejected.class,
+                () -> service.redeem("VITO-1", payload, sign(payload), OfflineTransactionService.UV_BIOMETRIC));
+        verify(walletService, never()).debit(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+    }
 }

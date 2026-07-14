@@ -34,13 +34,34 @@ public class OfflineTransactionController {
     public ResponseEntity<ApiResponse<TransactionEntity>> redeem(
             @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
             @RequestBody Map<String, Object> body) {
+        return apply(str(body, "vitoCardNumber"), str(body, "payload"), str(body, "signature"),
+                null, correlationId);
+    }
+
+    /**
+     * Biometric scan-to-pay: reconcile a card-signed offline transaction that must assert biometric
+     * user-verification. Fail-closed — a payload that does not claim {@code authMethod=BIOMETRIC} is
+     * rejected 422. The biometric gates the device key (WebAuthn-style); mushe enforces the signed,
+     * key-bound claim rather than matching a template itself (biometrics are VITO's SoR).
+     */
+    @PostMapping("/biometric")
+    public ResponseEntity<ApiResponse<TransactionEntity>> redeemBiometric(
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return apply(str(body, "vitoCardNumber"), str(body, "payload"), str(body, "signature"),
+                OfflineTransactionService.UV_BIOMETRIC, correlationId);
+    }
+
+    private ResponseEntity<ApiResponse<TransactionEntity>> apply(String vitoCardNumber, String payload,
+                                                                 String signature, String requiredUv,
+                                                                 String correlationId) {
         try {
-            TransactionEntity txn = offlineTransactionService.redeem(
-                    str(body, "vitoCardNumber"), str(body, "payload"), str(body, "signature"));
+            TransactionEntity txn = offlineTransactionService.redeem(vitoCardNumber, payload, signature, requiredUv);
             return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(txn, correlationId));
         } catch (OfflineTransactionService.OfflineTransactionRejected e) {
             // Honest 422 — the offline transaction failed verification/policy (bad signature, replay,
-            // stale counter, unlinked/blocked card). Never a fabricated success.
+            // stale counter, unlinked/blocked card, missing required user-verification). Never a
+            // fabricated success.
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(ApiResponse.error("OFFLINE_TXN_REJECTED", e.getMessage(),
                             HttpStatus.UNPROCESSABLE_ENTITY.value(), correlationId));

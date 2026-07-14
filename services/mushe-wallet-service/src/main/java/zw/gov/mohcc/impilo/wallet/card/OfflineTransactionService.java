@@ -49,13 +49,39 @@ public class OfflineTransactionService {
         public OfflineTransactionRejected(String message) { super(message); }
     }
 
+    /** User-verification method asserted in the signed payload — how the cardholder authorized the txn. */
+    public static final String UV_BIOMETRIC = "BIOMETRIC";
+
     /**
+     * Reconcile a card-signed offline transaction. No user-verification method is required
+     * (backward-compatible entry point — e.g. a low-value tap).
+     *
      * @param vitoCardNumber the canonical card the txn was signed on
-     * @param payloadJson    canonical signed payload: {"amount","counter","nonce","currency"}
+     * @param payloadJson    canonical signed payload: {"amount","counter","nonce","currency","authMethod"}
      * @param signatureB64   Base64 DER ECDSA-SHA256 signature over the exact payloadJson bytes
      */
     @Transactional
     public TransactionEntity redeem(String vitoCardNumber, String payloadJson, String signatureB64) {
+        return redeem(vitoCardNumber, payloadJson, signatureB64, null);
+    }
+
+    /**
+     * Reconcile a card-signed offline transaction, optionally enforcing a required user-verification
+     * method carried in the signed payload.
+     *
+     * <p><b>Biometric scan-to-pay</b> ({@code requiredUserVerification=BIOMETRIC}): the payload must
+     * assert {@code "authMethod":"BIOMETRIC"}. This follows the WebAuthn user-verification model — the
+     * device's biometric (Android BiometricPrompt / iOS Face ID / a physical card's on-card sensor)
+     * gates use of the P-256 key, so a valid signature over a payload that claims BIOMETRIC proves the
+     * biometric-bound key was unlocked to sign. mushe does not itself match a biometric template
+     * (identity/biometrics are VITO's SoR); it enforces the signed, key-bound verification claim
+     * fail-closed. Hardware key-attestation of the biometric binding is the deploy-time hardening.</p>
+     *
+     * @param requiredUserVerification {@code BIOMETRIC} to require biometric authorization, or null for none
+     */
+    @Transactional
+    public TransactionEntity redeem(String vitoCardNumber, String payloadJson, String signatureB64,
+                                    String requiredUserVerification) {
         CardEntity card = cardRepository.findByVitoCardNumber(vitoCardNumber)
                 .orElseThrow(() -> new OfflineTransactionRejected("No money card linked to VITO card " + vitoCardNumber));
         if ("BLOCKED".equals(card.getStatus())) {
@@ -89,15 +115,25 @@ public class OfflineTransactionService {
             throw new OfflineTransactionRejected("Amount must be positive");
         }
 
+        // The user-verification method the cardholder authorized with, carried inside the signed
+        // payload (so it cannot be tampered without invalidating the signature).
+        String authMethod = payload.path("authMethod").asText("NONE");
+        if (requiredUserVerification != null && !requiredUserVerification.equalsIgnoreCase(authMethod)) {
+            // Fail-closed: e.g. a biometric-pay request whose signed payload does not assert BIOMETRIC.
+            throw new OfflineTransactionRejected("Requires " + requiredUserVerification
+                    + " user verification; payload asserted " + authMethod);
+        }
+
         // Idempotent ledger debit — the nonce is the idempotency key, so a re-submitted offline txn
         // never double-debits even if the counter check is bypassed by a race.
         TransactionEntity txn = walletService.debit(
                 card.getWalletId(), amount, "OFFLINE_PURSE", "CARD_OFFLINE",
-                nonce, "Offline card transaction", null, null, null, nonce);
+                nonce, "Offline card transaction (auth=" + authMethod + ")", null, null, null, nonce);
 
         card.setLastOfflineCounter(counter);
         cardRepository.save(card);
-        log.info("Reconciled offline txn (card {}, counter {}, nonce {}) into the ledger", vitoCardNumber, counter, nonce);
+        log.info("Reconciled offline txn (card {}, counter {}, nonce {}, auth {}) into the ledger",
+                vitoCardNumber, counter, nonce, authMethod);
         return txn;
     }
 
