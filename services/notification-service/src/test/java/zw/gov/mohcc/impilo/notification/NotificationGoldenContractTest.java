@@ -9,10 +9,10 @@ import zw.gov.mohcc.impilo.notification.config.TestSecurityConfig;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-public class NotificationGoldenContractIT extends GoldenContractSuite {
+public class NotificationGoldenContractTest extends GoldenContractSuite {
 
     @Override
     protected String getFederationEndpointOverride() {
-        return "/internal/v1/templates";
+        return "/internal/v1/test-federation";
     }
 }
