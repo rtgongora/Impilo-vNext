@@ -6,7 +6,7 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
-public class IndawoGoldenContractIT extends GoldenContractSuite {
+public class IndawoGoldenContractTest extends GoldenContractSuite {
 
     @Override
     protected String getReadEndpointOverride() {
