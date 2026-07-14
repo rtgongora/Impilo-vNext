@@ -57,7 +57,8 @@ class ClientUpdateServiceTest {
     @BeforeEach
     void setUp() {
         service = new ClientUpdateService(clientRepository, outboxRepository, identifierRepository,
-                vitoProperties, objectMapper);
+                vitoProperties, objectMapper,
+                new zw.gov.mohcc.impilo.vito.events.ClientAddressDelegationPublisher(outboxRepository, objectMapper));
         tenantId = UUID.randomUUID();
         healthId = UUID.randomUUID();
         when(clientRepository.save(any(ClientEntity.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -212,9 +213,14 @@ class ClientUpdateServiceTest {
 
         service.update(tenantId, healthId, allNineRequest(), "system-actor", UUID.randomUUID().toString());
 
+        // The update now emits two outbox events when the request carries an address: the demographics
+        // event AND the G4 address-delegation event (CLIENT_ADDRESS_UPSERTED). Assert both are present.
         ArgumentCaptor<EventOutboxEntity> ev = ArgumentCaptor.forClass(EventOutboxEntity.class);
-        verify(outboxRepository, times(1)).save(ev.capture());
-        assertEquals("CLIENT_DEMOGRAPHICS_UPDATED", ev.getValue().getEventType());
+        verify(outboxRepository, times(2)).save(ev.capture());
+        java.util.List<String> types = ev.getAllValues().stream()
+                .map(EventOutboxEntity::getEventType).toList();
+        assertTrue(types.contains("CLIENT_DEMOGRAPHICS_UPDATED"), "demographics event still published");
+        assertTrue(types.contains("CLIENT_ADDRESS_UPSERTED"), "address delegated to ndila");
     }
 
     @Test

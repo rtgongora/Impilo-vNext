@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.vito.api.dto.ExternalClientRegistrationRequest;
 import zw.gov.mohcc.impilo.vito.api.dto.ExternalClientRegistrationResponse;
 import zw.gov.mohcc.impilo.vito.config.VitoProperties;
+import zw.gov.mohcc.impilo.vito.events.ClientAddressDelegationPublisher;
 import zw.gov.mohcc.impilo.vito.core.ClientVerificationState;
 import zw.gov.mohcc.impilo.vito.core.IdentityStatus;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientEntity;
@@ -40,6 +41,7 @@ public class ExternalRegistrationService {
     private final ObjectMapper objectMapper;
     private final PhidPoolRepository phidPoolRepository;
     private final PhidPoolService phidPoolService;
+    private final ClientAddressDelegationPublisher addressDelegationPublisher;
 
     public ExternalRegistrationService(ClientRepository clientRepository,
                                        ClientIdentifierRepository clientIdentifierRepository,
@@ -47,7 +49,8 @@ public class ExternalRegistrationService {
                                        VitoProperties vitoProperties,
                                        ObjectMapper objectMapper,
                                        PhidPoolRepository phidPoolRepository,
-                                       PhidPoolService phidPoolService) {
+                                       PhidPoolService phidPoolService,
+                                       ClientAddressDelegationPublisher addressDelegationPublisher) {
         this.clientRepository = clientRepository;
         this.clientIdentifierRepository = clientIdentifierRepository;
         this.outboxRepository = outboxRepository;
@@ -55,6 +58,7 @@ public class ExternalRegistrationService {
         this.objectMapper = objectMapper;
         this.phidPoolRepository = phidPoolRepository;
         this.phidPoolService = phidPoolService;
+        this.addressDelegationPublisher = addressDelegationPublisher;
     }
 
     @Transactional
@@ -117,6 +121,7 @@ public class ExternalRegistrationService {
             applyPreAllocatedHealthId(provisional, request.preAllocatedHealthId(), request.sourceSystemPatientId());
             provisional.setStatus(IdentityStatus.PROVISIONAL);
             provisional = clientRepository.save(provisional);
+            addressDelegationPublisher.emitAddressUpserted(provisional);
             persistNidIdentifier(provisional, request, tenantId);
             persistMrsPhidIdentifier(provisional.getHealthId(), request.mrsPhid(), tenantId, request.sourceSystem());
             publishOutboxEvent(provisional, request, tenantId, correlationId, "PENDING_REVIEW");
@@ -132,6 +137,7 @@ public class ExternalRegistrationService {
         ClientEntity newClient = buildNewClient(tenantId, request, actorId);
         applyPreAllocatedHealthId(newClient, request.preAllocatedHealthId(), request.sourceSystemPatientId());
         newClient = clientRepository.save(newClient);
+        addressDelegationPublisher.emitAddressUpserted(newClient);
         persistNidIdentifier(newClient, request, tenantId);
         persistMrsPhidIdentifier(newClient.getHealthId(), request.mrsPhid(), tenantId, request.sourceSystem());
         publishOutboxEvent(newClient, request, tenantId, correlationId, "CREATED");

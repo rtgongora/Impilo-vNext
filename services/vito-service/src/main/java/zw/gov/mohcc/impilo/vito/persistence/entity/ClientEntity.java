@@ -69,6 +69,10 @@ public class ClientEntity {
     @Column(name = "address", columnDefinition = "jsonb")
     private String address;
 
+    /** Canonical ndila_locations id materialized from {@link #address} (G4 delegation, best-effort cache). */
+    @Column(name = "ndila_location_id")
+    private UUID ndilaLocationId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private IdentityStatus status = IdentityStatus.PROVISIONAL;
@@ -153,6 +157,9 @@ public class ClientEntity {
     public void setContacts(String contacts) { this.contacts = contacts; }
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+
+    public UUID getNdilaLocationId() { return ndilaLocationId; }
+    public void setNdilaLocationId(UUID ndilaLocationId) { this.ndilaLocationId = ndilaLocationId; }
     public IdentityStatus getStatus() { return status; }
     public void setStatus(IdentityStatus status) { this.status = status; }
     public ClientVerificationState getVerificationStatus() { return verificationStatus; }

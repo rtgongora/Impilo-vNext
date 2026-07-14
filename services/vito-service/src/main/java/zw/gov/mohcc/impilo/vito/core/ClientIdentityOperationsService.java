@@ -44,6 +44,7 @@ import zw.gov.mohcc.impilo.vito.persistence.repository.ClientStatusHistoryReposi
 import zw.gov.mohcc.impilo.vito.persistence.repository.ClientStewardshipActionRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.ClientVerificationReviewRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.DedupCaseRepository;
+import zw.gov.mohcc.impilo.vito.events.ClientAddressDelegationPublisher;
 import zw.gov.mohcc.impilo.vito.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.MatchResultRepository;
 
@@ -87,6 +88,7 @@ public class ClientIdentityOperationsService {
     private final ImpiloIdAliasService aliasService;
     private final ImpiloIdFormat impiloIdFormat;
     private final ObjectMapper objectMapper;
+    private final ClientAddressDelegationPublisher addressDelegationPublisher;
 
     public ClientIdentityOperationsService(ClientRepository clientRepository,
                                            ClientRegistrationRepository registrationRepository,
@@ -107,7 +109,8 @@ public class ClientIdentityOperationsService {
                                            MergeService mergeService,
                                            ImpiloIdAliasService aliasService,
                                            ImpiloIdFormat impiloIdFormat,
-                                           ObjectMapper objectMapper) {
+                                           ObjectMapper objectMapper,
+                                           ClientAddressDelegationPublisher addressDelegationPublisher) {
         this.clientRepository = clientRepository;
         this.registrationRepository = registrationRepository;
         this.identifierRepository = identifierRepository;
@@ -128,6 +131,7 @@ public class ClientIdentityOperationsService {
         this.aliasService = aliasService;
         this.impiloIdFormat = impiloIdFormat;
         this.objectMapper = objectMapper;
+        this.addressDelegationPublisher = addressDelegationPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -193,6 +197,7 @@ public class ClientIdentityOperationsService {
         client.setIdentityAssuranceLevel(Math.max(client.getIdentityAssuranceLevel(), initialAssuranceLevel(request.registrationType())));
         client.setActiveFlag(true);
         client = clientRepository.save(client);
+        addressDelegationPublisher.emitAddressUpserted(client);
 
         ClientRegistrationEntity registration = new ClientRegistrationEntity();
         registration.setTenantId(ctx.tenantId());

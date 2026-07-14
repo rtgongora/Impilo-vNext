@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.vito.api.dto.ClientDemographicsUpdateRequest;
 import zw.gov.mohcc.impilo.vito.config.VitoProperties;
+import zw.gov.mohcc.impilo.vito.events.ClientAddressDelegationPublisher;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientEntity;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientIdentifierEntity;
 import zw.gov.mohcc.impilo.vito.persistence.entity.EventOutboxEntity;
@@ -31,17 +32,20 @@ public class ClientUpdateService {
     private final ClientIdentifierRepository identifierRepository;
     private final VitoProperties vitoProperties;
     private final ObjectMapper objectMapper;
+    private final ClientAddressDelegationPublisher addressDelegationPublisher;
 
     public ClientUpdateService(ClientRepository clientRepository,
                                EventOutboxRepository outboxRepository,
                                ClientIdentifierRepository identifierRepository,
                                VitoProperties vitoProperties,
-                               ObjectMapper objectMapper) {
+                               ObjectMapper objectMapper,
+                               ClientAddressDelegationPublisher addressDelegationPublisher) {
         this.clientRepository = clientRepository;
         this.outboxRepository = outboxRepository;
         this.identifierRepository = identifierRepository;
         this.vitoProperties = vitoProperties;
         this.objectMapper = objectMapper;
+        this.addressDelegationPublisher = addressDelegationPublisher;
     }
 
     @Transactional
@@ -94,6 +98,7 @@ public class ClientUpdateService {
         }
 
         client = clientRepository.save(client);
+        addressDelegationPublisher.emitAddressUpserted(client);
 
         // passportReference is held as an identifier row (mirrors create path); upsert
         // so an update changes the existing PASSPORT_REFERENCE rather than duplicating it.

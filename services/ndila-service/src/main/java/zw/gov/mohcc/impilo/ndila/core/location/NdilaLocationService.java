@@ -87,6 +87,33 @@ public class NdilaLocationService {
         });
     }
 
+    /**
+     * Materialize (create-or-update) the canonical location for a delegating owner, idempotently
+     * keyed by {@code (tenantId, ownerService, ownerEntityId)}. Used by the G4 delegation consumer:
+     * a service (e.g. vito) that owns an address registers it here rather than self-owning geography.
+     * Re-running with the same owner updates the existing row instead of creating a duplicate.
+     */
+    @Transactional
+    public NdilaLocationEntity upsertByOwner(CreateLocation cmd, UUID correlationId) {
+        List<NdilaLocationEntity> existing = repository
+                .findByTenantIdAndOwnerServiceAndOwnerEntityId(cmd.tenantId(), cmd.ownerService(), cmd.ownerEntityId());
+        if (existing.isEmpty()) {
+            return create(cmd, correlationId);
+        }
+        NdilaLocationEntity entity = existing.get(0);
+        if (cmd.name() != null && !cmd.name().isBlank()) entity.setName(cmd.name());
+        entity.setAddressLine1(cmd.addressLine1());
+        entity.setLocality(cmd.locality());
+        entity.setWard(cmd.ward());
+        entity.setDistrict(cmd.district());
+        entity.setProvince(cmd.province());
+        if (cmd.source() != null) entity.setSource(cmd.source());
+        entity.touch();
+        repository.save(entity);
+        outbox.publish(buildEvent(NdilaEventTopics.LOCATION_UPDATED, entity, correlationId));
+        return entity;
+    }
+
     public Optional<NdilaLocationEntity> findById(UUID id) { return repository.findById(id); }
 
     public List<NdilaLocationEntity> findByOwner(UUID tenantId, String ownerService, String ownerEntityId) {

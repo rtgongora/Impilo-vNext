@@ -40,6 +40,7 @@ import zw.gov.mohcc.impilo.vito.persistence.repository.ClientStatusHistoryReposi
 import zw.gov.mohcc.impilo.vito.persistence.repository.ClientStewardshipActionRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.ClientVerificationReviewRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.DedupCaseRepository;
+import zw.gov.mohcc.impilo.vito.events.ClientAddressDelegationPublisher;
 import zw.gov.mohcc.impilo.vito.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.MatchResultRepository;
 
@@ -115,7 +116,8 @@ class ClientIdentityOperationsServiceTest {
                 null,
                 null,
                 null,
-                new ObjectMapper()
+                new ObjectMapper(),
+                new ClientAddressDelegationPublisher(outboxRepository, new ObjectMapper())
         );
 
         tenantId = UUID.randomUUID();

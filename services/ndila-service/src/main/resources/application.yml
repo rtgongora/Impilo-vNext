@@ -27,6 +27,12 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       retries: 3
+    consumer:
+      # G4 delegation: consume vito.identity for CLIENT_ADDRESS_UPSERTED (String JSON payloads).
+      group-id: ndila-service
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   security:
     oauth2:
       resourceserver:
