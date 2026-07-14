@@ -110,4 +110,23 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <!-- Docker-backed integration tests (Testcontainers/WireMock). Opt-in: mvn verify -Pit-containers. Skips cleanly without Docker. -->
+        <profile>
+            <id>it-containers</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/ClinicalKnowledgePathwayApiIT.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
