@@ -25,7 +25,7 @@ import zw.gov.mohcc.impilo.pacs.config.TestSecurityConfig;
 )
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-public class GoldenContractIT extends GoldenContractSuite {
+public class GoldenContractTest extends GoldenContractSuite {
     // All tests inherited from GoldenContractSuite.
     // Endpoints are auto-discovered at test time.
 }
