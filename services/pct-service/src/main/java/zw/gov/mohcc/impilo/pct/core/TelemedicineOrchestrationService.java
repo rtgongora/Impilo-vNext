@@ -95,6 +95,22 @@ public class TelemedicineOrchestrationService {
         referral.setResponses("[]");
         referral.setCompletionPayload("{}");
 
+        // Pool routing supplied at creation (citizen virtual-care lane): persist the V020
+        // routing columns immediately so the referral lands in the pool worklist on submit
+        // without requiring a separate /route call.
+        String routingPoolId = optional(request, "routing_pool_id", "routingPoolId", "pool_id", "poolId");
+        if (routingPoolId != null) {
+            String routingKind = defaulted(optional(request, "routing_kind", "routingKind"), "POOL")
+                    .trim().toUpperCase(Locale.ROOT);
+            referral.setRoutingKind(routingKind);
+            referral.setRoutingPoolId(routingPoolId);
+            referral.setRoutedAt(OffsetDateTime.now());
+            Map<String, Object> routingTarget = new LinkedHashMap<>();
+            routingTarget.put("kind", routingKind);
+            routingTarget.put("poolId", routingPoolId);
+            referral.setRoutingTarget(writeJsonObject(routingTarget));
+        }
+
         ReferralEntity saved = referralRepository.save(referral);
         emitOutbox("telemedicine.session.referral_created", saved.getReferralId().toString(), toReferralPayload(saved));
         telemetryService.record("telemedicine.referral.created", null, Map.of(
@@ -124,6 +140,28 @@ public class TelemedicineOrchestrationService {
                     ctx.tenantId(), facilityId, status.trim().toUpperCase(Locale.ROOT));
         }
         return rows.stream().map(this::toReferralPayload).toList();
+    }
+
+    /**
+     * Pool-scoped queue listing (Stage 3 routing): referrals routed to a specialty pool,
+     * oldest first. Defaults to SUBMITTED (awaiting acceptance); {@code status} accepts a
+     * comma-separated status-in list for wider worklists.
+     */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listPoolReferrals(String poolId, String status) {
+        TrustContext ctx = TrustContextHolder.require();
+        List<String> statuses = status == null || status.isBlank()
+                ? List.of("SUBMITTED")
+                : java.util.Arrays.stream(status.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .map(s -> s.toUpperCase(Locale.ROOT))
+                        .toList();
+        return referralRepository
+                .findByTenantIdAndRoutingPoolIdAndStatusInOrderByCreatedAtAsc(ctx.tenantId(), poolId, statuses)
+                .stream()
+                .map(this::toReferralPayload)
+                .toList();
     }
 
     @Transactional(readOnly = true)

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, Activity, FileText, Clock, Receipt, Share2, ArrowRight } from "lucide-react";
+import { AlertTriangle, Activity, FileText, Clock, MonitorSmartphone, Receipt, Share2, ArrowRight } from "lucide-react";
 import { useCitizenHealthSummary } from "@/hooks/queries/useCitizenHealthSummary";
 import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
 
@@ -28,6 +28,7 @@ const CONTINUE_CARE = [
   { href: "/citizen/wallet/records", title: "Health records", desc: "Your full health record", Icon: FileText },
   { href: "/citizen/wallet/payments", title: "Payments & bills", desc: "Charges, cover and receipts", Icon: Receipt },
   { href: "/citizen/record-sharing", title: "Share my record", desc: "Give a provider time-boxed access", Icon: Share2 },
+  { href: "/citizen/virtual-care", title: "My virtual care requests", desc: "Teleconsults you have requested from virtual hospitals", Icon: MonitorSmartphone },
 ] as const;
 
 export default function CitizenMyCarePage() {

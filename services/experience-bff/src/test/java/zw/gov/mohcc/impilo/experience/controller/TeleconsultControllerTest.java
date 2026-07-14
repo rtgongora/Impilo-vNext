@@ -22,6 +22,7 @@ import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.RtcGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
+import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineBillingContextService;
 import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineGovernanceService;
 
 import java.util.Map;
@@ -58,6 +59,10 @@ class TeleconsultControllerTest {
         VarapiServiceClient varapiClient = Mockito.mock(VarapiServiceClient.class);
         TusoServiceClient tusoClient = Mockito.mock(TusoServiceClient.class);
         coverageClient = Mockito.mock(CoverageServiceClient.class);
+        // Real billing-context service over the mocked coverage/tuso clients — the extraction
+        // must keep the exact enrichment behaviour the controller had before.
+        TelemedicineBillingContextService billingContextService =
+                new TelemedicineBillingContextService(coverageClient, tusoClient);
         notificationClient = Mockito.mock(NotificationServiceClient.class);
         FhirGatewayServiceClient fhirGatewayClient = Mockito.mock(FhirGatewayServiceClient.class);
         costaClient = Mockito.mock(CostaServiceClient.class);
@@ -71,7 +76,7 @@ class TeleconsultControllerTest {
         Mockito.when(vitoClient.getPatient(Mockito.anyString()))
                 .thenReturn(objectMapper.createObjectNode().put("id", "known"));
         controller = new TeleconsultController(
-                pctClient, vitoClient, mvumoClient, documentClient, varapiClient, tusoClient, coverageClient,
+                pctClient, vitoClient, mvumoClient, documentClient, varapiClient, tusoClient, billingContextService,
                 notificationClient, fhirGatewayClient, costaClient, analyticsClient, rtcClient,
                 bookingClient, khulumaClient, governanceService, objectMapper
         );
@@ -695,5 +700,65 @@ class TeleconsultControllerTest {
         Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
         assertEquals("DECLINE_REASON_REQUIRED", error.get("code"));
         Mockito.verify(pctClient, Mockito.never()).respondReferral(any(), any());
+    }
+
+    @Test
+    void poolQueue_proxiesPctPoolListingWithGovernedReadAndAudit() {
+        var rows = objectMapper.createArrayNode();
+        ObjectNode row = objectMapper.createObjectNode();
+        row.put("id", "ref-p1");
+        row.put("status", "SUBMITTED");
+        row.put("routingPoolId", "GENERAL_TELEMEDICINE");
+        rows.add(row);
+        Mockito.when(pctClient.listPoolReferrals(eq("GENERAL_TELEMEDICINE"), any(), eq(0), eq(50)))
+                .thenReturn(rows);
+
+        var response = controller.poolQueue(
+                "GENERAL_TELEMEDICINE", "req-pq", "corr-pq", "tenant-a", "TREATMENT",
+                "fac-1", "dr-moyo", null, 0, 50);
+
+        assertEquals(200, response.getStatusCode().value());
+        Mockito.verify(governanceService).assertGovernedRead();
+        Mockito.verify(governanceService).audit(
+                eq("tenant-a"), eq("corr-pq"), eq("TREATMENT"), eq("fac-1"),
+                eq("TELEMEDICINE_POOL_QUEUE_VIEWED"), eq("GET:teleconsult/pool/queue"), eq("SUCCESS"),
+                eq("dr-moyo"), eq("PROVIDER"), any(), eq("TeleconsultPool"), eq("GENERAL_TELEMEDICINE"), any());
+    }
+
+    @Test
+    void routeSession_requiresAPoolId() {
+        var response = controller.routeSession(
+                "ref-r1", "req-r", "corr-r", "tenant-a", "TREATMENT", "fac-1", "dr-moyo",
+                Map.of());
+
+        assertEquals(400, response.getStatusCode().value());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("MISSING_ROUTING_POOL", error.get("code"));
+        Mockito.verify(pctClient, Mockito.never()).routeReferral(any(), any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void routeSession_proxiesPctRouteWithPoolPayload() {
+        ObjectNode routed = objectMapper.createObjectNode();
+        routed.put("id", "ref-r2");
+        routed.put("status", "ROUTED");
+        routed.put("patientCpid", "CPID-7");
+        Mockito.when(pctClient.routeReferral(eq("ref-r2"), any())).thenReturn(routed);
+
+        var response = controller.routeSession(
+                "ref-r2", "req-r2", "corr-r2", "tenant-a", "TREATMENT", "fac-1", "dr-moyo",
+                Map.of("routingPoolId", "MATERNAL_NEWBORN"));
+
+        assertEquals(200, response.getStatusCode().value());
+        ArgumentCaptor<Map<String, Object>> payloadCaptor = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(pctClient).routeReferral(eq("ref-r2"), payloadCaptor.capture());
+        assertEquals("POOL", payloadCaptor.getValue().get("routing_kind"));
+        assertEquals("MATERNAL_NEWBORN", payloadCaptor.getValue().get("routing_pool_id"));
+        Mockito.verify(governanceService).assertGovernedMutate();
+        Mockito.verify(governanceService).audit(
+                eq("tenant-a"), eq("corr-r2"), eq("TREATMENT"), eq("fac-1"),
+                eq("TELEMEDICINE_REFERRAL_ROUTED"), eq("POST:teleconsult/route"), eq("SUCCESS"),
+                eq("dr-moyo"), eq("PROVIDER"), eq("CPID-7"), eq("TeleconsultReferral"), eq("ref-r2"), any());
     }
 }
