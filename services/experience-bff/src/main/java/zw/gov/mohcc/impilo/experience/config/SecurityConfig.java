@@ -409,6 +409,11 @@ public class SecurityConfig {
                     // immediately, never gated on sign-in; abuse controls (per-IP + global rate
                     // limits, callback normalization, body caps) enforced in PublicSosIntakeService.
                     .requestMatchers(HttpMethod.POST, "/internal/v1/public/gateway/sos").permitAll()
+                    // Anonymous WRITE exception (ADR W4, gateway-feedback-claim): complaint/
+                    // safety-concern intake with claim-code tracking. Fail-CLOSED abuse controls
+                    // (per-IP + global rate windows, allow-listed case types, body caps) enforced
+                    // in PublicFeedbackIntakeService; status reads are claim-code-gated.
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/public/gateway/feedback").permitAll()
                     .requestMatchers("/internal/v1/citizen/clients/*/patient-shares/**")
                             .hasAnyRole(CITIZEN_ROLES)
 

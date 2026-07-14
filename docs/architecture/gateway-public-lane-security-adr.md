@@ -78,6 +78,7 @@ Every permitAll route family must have a row here (the guard checks this file).
 | `/internal/v1/public/gateway/guidance/**` | guidance `PublicGuidanceController` (explain-steps + public education: topic index, category filter, article read) | W1 (education article/category reads W2) | Nompilo escalation explainers + citizen-language health-information articles (PD-4: guidance owns citizen education); no personalization |
 | `/internal/v1/public/gateway/practitioners/**` | varapi `PublicPractitionerVerificationController` (verify-by-registration-number) | W2 | exact-match only (enumeration resistance); miss = 200 with uniform NOT_FOUND shape — no existence oracle |
 | `/internal/v1/public/gateway/sos` (POST) | daidzai SOS intake via `PublicSosIntakeService` → `EmergencyController.createRequest` | W2 | **anonymous WRITE** (ADR §5, PD-3); abuse note below |
+| `/internal/v1/public/gateway/feedback` (POST + claim-code GET) | rito `PublicCaseIntakeController` via `PublicFeedbackIntakeService` | W4 | **anonymous WRITE** (`gateway-feedback-claim`); abuse note below |
 
 **Anonymous-write abuse note — `POST /internal/v1/public/gateway/sos`:** rate-limited
 per-IP (5 / 600s fixed window) and globally (60 / 60s), both in Redis mirroring the
@@ -87,6 +88,19 @@ reaches daidzai; free-text fields are length-capped (description 2000, location 
 The rate-limiter fails **open** (unlike OTP) — a life-safety request is never dropped
 because Redis is down. Daidzai captures the request as `PUBLIC_ANONYMOUS` and holds it
 `AWAITING_CALLBACK`: dispatch is gated until a dispatcher verifies the callback (PD-3).
+
+**Anonymous-write abuse note — `POST /internal/v1/public/gateway/feedback`:**
+rate-limited per-IP (3 / 600s) and globally (30 / 60s) in Redis; case types are
+allow-listed (`COMPLAINT`, `SAFETY_CONCERN`); title/description/contact are
+length-capped (200/4000/255). Unlike SOS, this lane fails **CLOSED** when the limiter
+store is down — feedback is not life-safety, and an anonymous write lane without
+working abuse controls stays shut. The one-time claim code is generated in rito and
+stored only as a SHA-256 hash (`rit_case.claim_code_hash`, V002); the case reference
+alone never unlocks status (its 6-char suffix is too guessable to be a secret).
+Status reads (`GET /internal/v1/public/gateway/feedback/{claimCode}`) are
+disclosure-limited (reference/type/status/timestamps) and share a per-IP window to
+throttle brute-force probing. Reporter identity is never captured on this lane
+(`anonymous=true` forced); volunteered contact goes into case metadata only.
 
 Legacy Envoy-only prefixes `/v1/public/verify` and `/v1/public/share` are **deprecated
 as public entries** (not anonymous-capable through Envoy today; live traffic reaches

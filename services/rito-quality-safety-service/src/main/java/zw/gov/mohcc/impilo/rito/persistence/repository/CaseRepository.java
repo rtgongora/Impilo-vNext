@@ -28,4 +28,6 @@ public interface CaseRepository extends JpaRepository<CaseEntity, UUID> {
     long countByTenantIdAndStatus(UUID tenantId, String status);
 
     boolean existsByTenantIdAndCaseReference(UUID tenantId, String caseReference);
+
+    java.util.Optional<CaseEntity> findByTenantIdAndClaimCodeHash(UUID tenantId, String claimCodeHash);
 }

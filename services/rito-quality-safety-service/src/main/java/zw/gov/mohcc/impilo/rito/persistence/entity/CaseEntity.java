@@ -48,6 +48,14 @@ public class CaseEntity {
     @Column(name = "anonymous", nullable = false)
     private Boolean anonymous;
 
+    /**
+     * SHA-256 hex of the one-time claim code issued on anonymous public intake
+     * (gateway-public-lane ADR W4). Null for cases opened through authenticated lanes.
+     * The plaintext code is returned once at creation and never stored.
+     */
+    @Column(name = "claim_code_hash", length = 64)
+    private String claimCodeHash;
+
     @Column(name = "sensitive", nullable = false)
     private Boolean sensitive;
 
@@ -157,6 +165,9 @@ public class CaseEntity {
     public void setId(UUID id) { this.id = id; }
     public UUID getTenantId() { return tenantId; }
     public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
+    public String getClaimCodeHash() { return claimCodeHash; }
+    public void setClaimCodeHash(String claimCodeHash) { this.claimCodeHash = claimCodeHash; }
+
     public String getCaseReference() { return caseReference; }
     public void setCaseReference(String caseReference) { this.caseReference = caseReference; }
     public String getCaseType() { return caseType; }

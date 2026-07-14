@@ -34,6 +34,42 @@ public class RitoServiceClient {
         this.baseUrl = endpoints.ritoBaseUrl();
     }
 
+    // ── Anonymous public intake (gateway-public-lane ADR W4) ─────────
+    // The public lane has no caller trust context (Envoy strips it), so headers are
+    // synthesized here exactly like DaidzaiServiceClient.createPublicSosRequest.
+    private static final String PUBLIC_API = "/v1/public/rito/cases";
+    private static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
+
+    public JsonNode createPublicCase(Map<String, Object> body, String serviceAccountBearer) {
+        return publicExchange(HttpMethod.POST, baseUrl + PUBLIC_API, body, serviceAccountBearer);
+    }
+
+    public JsonNode getPublicCaseStatus(String claimCode, String serviceAccountBearer) {
+        return publicExchange(HttpMethod.GET, baseUrl + PUBLIC_API + "/" + claimCode, null, serviceAccountBearer);
+    }
+
+    private JsonNode publicExchange(HttpMethod method, String url, Object body, String bearer) {
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.TENANT_ID, PUBLIC_DEFAULT_TENANT);
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.POD_ID, "national-spine");
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.ACTOR_ID, "public-gateway");
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.ACTOR_TYPE, "SYSTEM");
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.PURPOSE_OF_USE, "FEEDBACK_INTAKE");
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.CORRELATION_ID,
+                java.util.UUID.randomUUID().toString());
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.REQUEST_ID,
+                java.util.UUID.randomUUID().toString());
+        headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.IDEMPOTENCY_KEY,
+                java.util.UUID.randomUUID().toString());
+        if (bearer != null && !bearer.isBlank()) {
+            headers.set(zw.gov.mohcc.impilo.companion.context.CompanionHeaders.AUTHORIZATION,
+                    zw.gov.mohcc.impilo.companion.context.CompanionHeaders.BEARER_PREFIX + bearer);
+        }
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, method, new HttpEntity<>(body, headers), JsonNode.class);
+        return response.getBody();
+    }
+
     // ── Cases ────────────────────────────────────────────────────────
     public JsonNode listCases(Map<String, String> filters) {
         UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + API + "/cases");
