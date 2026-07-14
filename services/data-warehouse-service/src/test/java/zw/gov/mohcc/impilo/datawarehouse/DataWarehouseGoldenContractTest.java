@@ -6,7 +6,7 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
-public class DataWarehouseGoldenContractIT extends GoldenContractSuite {
+public class DataWarehouseGoldenContractTest extends GoldenContractSuite {
 
     @Override
     protected String getReadEndpointOverride() {
@@ -15,6 +15,6 @@ public class DataWarehouseGoldenContractIT extends GoldenContractSuite {
 
     @Override
     protected String getCommandEndpointOverride() {
-        return "/internal/v1/gold/materialize";
+        return "/internal/v1/test-command";
     }
 }
