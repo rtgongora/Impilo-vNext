@@ -1,0 +1,1 @@
+{"success":true,"data":{"facilityId":3,"facilityUuid":"181b05f0-770e-4474-97d5-71aae413be52","complete":false,"missingFields":["missing_facility_type","missing_ownership","missing_address_line1","missing_city","missing_ward"],"geocodeStatus":"PRESENT"},"correlationId":"d2723eef-bd0e-4da5-8993-57b74511bc58","timestamp":"2026-07-14T02:52:01.784702442Z"}

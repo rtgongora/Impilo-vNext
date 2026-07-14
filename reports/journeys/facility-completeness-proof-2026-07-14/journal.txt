@@ -1,0 +1,32 @@
+== RIG: infra + tuso
+   tuso health: 200
+   PASS: tuso booted
+== J-FC-1: seed facility w/ missing governed fields + ACTIVE admin appointment
+   PASS: facility seeded (id=1, lat/lng/type/ownership NULL)
+   PASS: ACTIVE admin appointment seeded (rig-admin-1)
+   completeness(before): {"facilityId": 1, "facilityUuid": "84abcfd7-79a2-4a3c-9e70-84dc403a5c63", "complete": false, "missingFields": ["missing_latitude", "missing_longitude", "missing_facility_type", "missing_ownership", "missing_address_line1", "missing_city", "missing_ward"], "geocodeStatus": "MISSING"}
+   PASS: completeness reports complete=false
+   PASS: missing field surfaced: missing_latitude
+   PASS: missing field surfaced: missing_longitude
+   PASS: missing field surfaced: missing_facility_type
+   PASS: missing field surfaced: missing_ownership
+   PASS: missing field surfaced: missing_address_line1
+   PASS: geocodeStatus=MISSING
+   PASS: complete-profile accepted for ACTIVE admin (200)
+   PASS: response verdict complete=true
+   PASS: per-field history rows recorded (7 w/ source=COMPLETENESS_PROMPT)
+   PASS: geocode history rows carry DEVICE_GPS provenance
+   PASS: high-accuracy device capture NOT stamped UNVERIFIED
+   PASS: version bumped 1 -> 2
+   PASS: tuso.facility.updated outbox row w/ trigger=COMPLETENESS_PROMPT
+   PASS: facility_geo upserted with address basics
+   PASS: completeness re-read reports complete=true
+== J-FC-2: actor without appointment/PIC -> 403, no writes
+   PASS: stranger rejected with 403
+   PASS: no history rows written on 403
+   PASS: facility untouched (latitude still NULL)
+== J-FC-3: MANUAL low-accuracy geocode -> UNVERIFIED stamp
+   PASS: manual geocode accepted (200)
+   PASS: both geocode history rows stamped geocodeVerification=UNVERIFIED
+   PASS: geocodeStatus=PRESENT after manual capture (verification is history metadata, not a blocker)
+== VERDICT: 25 passed, 0 failed (evidence: /opt/impilo/repos/Impilo-vNext/.claude/worktrees/agent-a8d6a2f0f0346e459/reports/journeys/facility-completeness-proof-2026-07-14/journal.txt)
