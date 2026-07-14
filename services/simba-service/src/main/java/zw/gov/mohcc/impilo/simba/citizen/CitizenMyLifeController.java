@@ -476,40 +476,28 @@ public class CitizenMyLifeController {
         return ResponseEntity.ok(Map.of("data", rows.get(0)));
     }
 
+    // ── Crowdfunding stub RETIRED (2026-07) ─────────────────────────────
+    // The raw-JDBC campaign/donation block split funds outside the money plane. The
+    // crowdfunding CASE now lives in daidzai (assistance requests) and the MONEY in
+    // mushe bill contributions, composed by the BFF at /internal/v1/citizen/fundraisers.
+    // These handlers answer 410 GONE so stale mobile builds fail loud-and-clear instead
+    // of silently writing to the deprecated tables.
+
     @GetMapping("/crowdfunding")
-    public ResponseEntity<Map<String, Object>> getCampaigns(
-            @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam(required = false) String category) {
-        String sql = category != null
-                ? "SELECT * FROM crowdfunding_campaigns WHERE tenant_id = ? AND status = 'ACTIVE' AND category = ? ORDER BY created_at DESC"
-                : "SELECT * FROM crowdfunding_campaigns WHERE tenant_id = ? AND status = 'ACTIVE' ORDER BY created_at DESC";
-        List<Map<String, Object>> rows =
-                category != null ? jdbc.queryForList(sql, tenantId, category) : jdbc.queryForList(sql, tenantId);
-        return ResponseEntity.ok(Map.of("data", rows));
+    public ResponseEntity<Map<String, Object>> getCampaigns() {
+        return crowdfundingMoved();
     }
 
     @PostMapping("/crowdfunding/{id}/donate")
-    @Transactional
-    public ResponseEntity<Map<String, Object>> donate(
-            @PathVariable UUID id, @RequestBody Map<String, Object> body) {
-        UUID donationId = UUID.randomUUID();
-        BigDecimal amount = toBigDecimal(body.get("amount"));
-        jdbc.update(
-                """
-                INSERT INTO crowdfunding_donations (id, campaign_id, donor_id, amount, message, is_anonymous)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                donationId,
-                id,
-                body.get("donorId"),
-                amount,
-                body.getOrDefault("message", ""),
-                Boolean.parseBoolean(body.getOrDefault("isAnonymous", "false").toString()));
-        jdbc.update(
-                "UPDATE crowdfunding_campaigns SET raised_amount = raised_amount + ?, donor_count = donor_count + 1 WHERE id = ?",
-                amount,
-                id);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("donationId", donationId)));
+    public ResponseEntity<Map<String, Object>> donate(@PathVariable UUID id) {
+        return crowdfundingMoved();
+    }
+
+    private static ResponseEntity<Map<String, Object>> crowdfundingMoved() {
+        return ResponseEntity.status(HttpStatus.GONE).body(Map.of("error", Map.of(
+                "code", "MOVED",
+                "message", "Fundraisers have moved",
+                "location", "/internal/v1/citizen/fundraisers")));
     }
 
     @GetMapping("/services/discover")
