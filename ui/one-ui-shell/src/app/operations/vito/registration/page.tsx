@@ -6,11 +6,11 @@ import { UserPlus, Search, ChevronLeft, ChevronRight, Shield, AlertTriangle } fr
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import {
-  useClientRegistrySearch,
+  useClientRegistryClients,
   type IdentityStatus,
   type ClientVerificationState,
   type ClientRegistrySummary,
-} from "@/hooks/queries/useVitoClientRegistry";
+} from "@/hooks/queries/useClientRegistry";
 
 const LIFECYCLE_STYLES: Record<IdentityStatus, string> = {
   DRAFT: "bg-neutral-100 text-muted-foreground border-border",
@@ -82,8 +82,8 @@ function RegistrationRow({ client }: { client: ClientRegistrySummary }) {
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-medium text-foreground truncate">{client.displayName}</p>
-          <LifecycleBadge status={client.lifecycleStatus} />
-          <VerificationBadge state={client.verificationStatus} />
+          <LifecycleBadge status={client.lifecycleStatus as IdentityStatus} />
+          <VerificationBadge state={client.verificationStatus as ClientVerificationState} />
         </div>
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="font-mono">{client.healthId}</span>
@@ -116,7 +116,7 @@ export default function RegistrationListPage() {
 
   const statusParam = statusFilter !== "" ? statusFilter : undefined;
 
-  const results = useClientRegistrySearch(submittedQuery, statusParam, undefined, page, PAGE_SIZE);
+  const results = useClientRegistryClients({ query: submittedQuery, status: statusParam, page, size: PAGE_SIZE });
   const items = results.data?.data?.items ?? [];
   const totalPages = results.data?.data?.totalPages ?? 0;
   const hasNext = results.data?.data?.hasNext ?? false;

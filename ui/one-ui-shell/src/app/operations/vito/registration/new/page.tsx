@@ -9,19 +9,19 @@ import { PageShell } from "@/components/PageShell";
 import { VitoRestrictedLocationCapture } from "@/components/registry/VitoRestrictedLocationCapture";
 import type { NdilaCoordinate } from "@/lib/ndila/ndila-client";
 import {
-  useCreateRegistration,
-  useSubmitRegistration,
-  useAddEvidence,
-  useVerificationReview,
-  useTriggerMatch,
-  useReviewMatchCandidate,
+  useCreateClientRegistration,
+  useSubmitClientRegistration,
+  useAddClientEvidence,
+  useRecordVerificationReview,
+  useRunClientMatching,
+  useReviewClientMatchCandidate,
   useClientProfile,
   type RegistrationDraft,
   type ClientProfile,
   type MatchCandidate,
   type ClientRegistrationType,
   type ClientMatchReviewStatus,
-} from "@/hooks/queries/useVitoClientRegistry";
+} from "@/hooks/queries/useClientRegistry";
 
 type WizardStep = 1 | 2 | 3 | 4;
 
@@ -167,14 +167,15 @@ export default function NewRegistrationPage() {
     reviewNotes: "",
   });
 
-  const createRegistration = useCreateRegistration();
-  const submitRegistration = useSubmitRegistration();
-  const addEvidence = useAddEvidence();
-  const verificationReview = useVerificationReview();
-  const triggerMatch = useTriggerMatch();
-  const reviewMatchCandidate = useReviewMatchCandidate();
-
   const healthId = profile?.master?.healthId;
+
+  const createRegistration = useCreateClientRegistration();
+  const submitRegistration = useSubmitClientRegistration();
+  const addEvidence = useAddClientEvidence(healthId ?? "");
+  const verificationReview = useRecordVerificationReview(healthId ?? "");
+  const triggerMatch = useRunClientMatching(healthId ?? "");
+  const reviewMatchCandidate = useReviewClientMatchCandidate();
+
   const profileQuery = useClientProfile(step >= 3 ? healthId : undefined);
   const liveProfile = profileQuery.data?.data ?? profile;
 
@@ -235,13 +236,10 @@ export default function NewRegistrationPage() {
     if (!healthId || !registrationId) return;
     try {
       await addEvidence.mutateAsync({
-        healthId,
-        body: {
-          registrationId,
-          evidenceType: step2.evidenceType.trim(),
-          evidenceReference: step2.evidenceReference.trim(),
-          notes: step2.evidenceNotes.trim() || undefined,
-        },
+        registrationId,
+        evidenceType: step2.evidenceType.trim(),
+        evidenceReference: step2.evidenceReference.trim(),
+        notes: step2.evidenceNotes.trim() || undefined,
       });
       setStep2({ evidenceType: "", evidenceReference: "", evidenceNotes: "" });
     } catch {
@@ -267,13 +265,10 @@ export default function NewRegistrationPage() {
     if (!healthId) return;
     try {
       await verificationReview.mutateAsync({
-        healthId,
-        body: {
-          registrationId: registrationId ?? undefined,
-          reviewType: step3Form.reviewType,
-          decision: step3Form.decision,
-          notes: step3Form.reviewNotes.trim() || undefined,
-        },
+        registrationId: registrationId ?? undefined,
+        reviewType: step3Form.reviewType,
+        decision: step3Form.decision,
+        notes: step3Form.reviewNotes.trim() || undefined,
       });
       setStep(4);
     } catch {
@@ -285,8 +280,8 @@ export default function NewRegistrationPage() {
     clearError();
     if (!healthId) return;
     try {
-      const res = await triggerMatch.mutateAsync(healthId);
-      setMatchCandidates(res.data ?? []);
+      const res = await triggerMatch.mutateAsync();
+      setMatchCandidates((res.data ?? []) as MatchCandidate[]);
     } catch {
       setError("Match trigger failed. Please retry.");
     }

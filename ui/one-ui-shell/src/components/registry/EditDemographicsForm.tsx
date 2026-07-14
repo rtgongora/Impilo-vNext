@@ -10,7 +10,7 @@ import { useState } from "react";
 import {
   useUpdateClientDemographics,
   type DemographicsUpdate,
-} from "@/hooks/queries/useVitoClientRegistry";
+} from "@/hooks/queries/useClientRegistry";
 
 export interface EditDemographicsFormProps {
   healthId: string;

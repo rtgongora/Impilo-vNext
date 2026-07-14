@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -183,6 +184,20 @@ public class ClientRegistryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
         return ok(requestId, correlationId, vitoServiceClient.recordClientCorrection(healthId, body));
+    }
+
+    /**
+     * Update a client's demographics — canonical typed route consolidating the retired Stack B
+     * raw passthrough ({@code /internal/v1/vito/client-registry/clients/{healthId}/demographics}).
+     * Proxies VITO's SoR write {@code PUT /v1/clients/{healthId}} (G14).
+     */
+    @PutMapping("/clients/{healthId}/demographics")
+    public ResponseEntity<Map<String, Object>> updateDemographics(
+            @PathVariable String healthId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return ok(requestId, correlationId, vitoServiceClient.updateClientDemographics(healthId, body));
     }
 
     @GetMapping("/dashboard/summary")

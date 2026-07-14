@@ -266,6 +266,15 @@ public class VitoServiceClient {
         return postJson(baseUrl + "/v1/client-registry/clients/" + healthId + "/corrections", body);
     }
 
+    /**
+     * Update a client's demographics — canonical SoR write {@code PUT /v1/clients/{healthId}}
+     * (preserves all demographic fields). Typed sibling of the client-registry operations above;
+     * consolidates the former raw {@code rawPut} passthrough (G14 Stack A consolidation).
+     */
+    public JsonNode updateClientDemographics(String healthId, Map<String, Object> body) {
+        return putJson(baseUrl + "/v1/clients/" + healthId, body);
+    }
+
     public JsonNode getClientRegistryDashboard() {
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(
                 baseUrl + "/v1/client-registry/dashboard/summary", JsonNode.class);
@@ -287,6 +296,14 @@ public class VitoServiceClient {
 
     private JsonNode postJson(String url, Map<String, Object> body) {
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    private JsonNode putJson(String url, Map<String, Object> body) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.PUT, new HttpEntity<>(body, headers), JsonNode.class);
         return extractData(response);
     }
 

@@ -3,6 +3,110 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
+// ── Enums (canonical — consolidated from the retired useVitoClientRegistry stack, G14) ──
+
+export type IdentityStatus =
+  | "DRAFT"
+  | "PROVISIONAL"
+  | "REGISTERED"
+  | "PENDING_VERIFICATION"
+  | "PENDING_MATCH_REVIEW"
+  | "VERIFIED"
+  | "ACTIVE"
+  | "FLAGGED_FOR_REVIEW"
+  | "RESTRICTED"
+  | "INACTIVE"
+  | "DECEASED"
+  | "MERGED";
+
+export type ClientVerificationState =
+  | "UNVERIFIED"
+  | "SELF_ASSERTED"
+  | "PROVIDER_CAPTURED"
+  | "PARTIALLY_VERIFIED"
+  | "VERIFIED"
+  | "REVIEW_REQUIRED";
+
+export type ClientRegistrationType =
+  | "SELF_INITIATED"
+  | "PROVIDER_ASSISTED"
+  | "FACILITY_REGISTRATION"
+  | "COMMUNITY_REGISTRATION"
+  | "OUTREACH_REGISTRATION"
+  | "VIRTUAL_REGISTRATION"
+  | "BULK_IMPORT"
+  | "INTEROPERABILITY_IMPORT";
+
+export type ClientMatchReviewStatus =
+  | "OPEN"
+  | "NEEDS_REVIEW"
+  | "CONFIRMED_DUPLICATE"
+  | "CONFIRMED_DISTINCT"
+  | "MERGED"
+  | "CANCELLED";
+
+export type ClientRelationshipType =
+  | "GUARDIAN_OF"
+  | "DEPENDENT_OF"
+  | "CAREGIVER_OF"
+  | "NEXT_OF_KIN"
+  | "PROXY_ACCESS_FOR";
+
+export interface RegistrationDraft {
+  clientHealthId?: string | null;
+  registrationType: ClientRegistrationType;
+  initiatedChannel: string;
+  linkedProviderId?: string | null;
+  linkedFacilityId?: number | null;
+  linkedServiceContextId?: string | null;
+  firstName?: string | null;
+  middleName?: string | null;
+  lastName?: string | null;
+  dateOfBirth?: string | null;
+  estimatedDateOfBirth?: boolean | null;
+  sex?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  nationalIdReference?: string | null;
+  passportReference?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  city?: string | null;
+  district?: string | null;
+  province?: string | null;
+  notes?: string | null;
+  metadata?: Record<string, unknown> | null;
+  previousNames?: string[] | null;
+  issueProvisionalIdentifier?: boolean | null;
+}
+
+export interface MatchCandidate {
+  matchId: number;
+  sourceHealthId: string;
+  candidateHealthId: string;
+  matchScore: number;
+  matchReasonSummary: string | null;
+  status: ClientMatchReviewStatus;
+  generatedAt: string;
+  resolvedBy: string | null;
+  resolvedAt: string | null;
+}
+
+/** Editable demographic fields (subset of VITO's ClientDemographicsUpdateRequest). */
+export interface DemographicsUpdate {
+  givenName?: string;
+  middleName?: string;
+  familyName?: string;
+  dateOfBirth?: string | null;
+  sex?: string;
+  phone?: string;
+  email?: string;
+  addressLine1?: string;
+  city?: string;
+  district?: string;
+  province?: string;
+}
+
 export interface ClientRegistrySummary {
   healthId: string;
   crid: string;
@@ -249,7 +353,7 @@ function invalidateRegistry(queryClient: ReturnType<typeof useQueryClient>) {
 export function useCreateClientRegistration() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: Record<string, unknown>) =>
+    mutationFn: (body: RegistrationDraft | Record<string, unknown>) =>
       apiClient.post<ApiResponse<ClientProfile>>("/internal/v1/client-registry/registrations", body),
     onSuccess: () => invalidateRegistry(queryClient),
   });
@@ -359,6 +463,20 @@ export function useRecordClientCorrection(healthId: string) {
   return useMutation({
     mutationFn: (body: Record<string, unknown>) =>
       apiClient.post<ApiResponse<ClientProfile>>(`/internal/v1/client-registry/clients/${healthId}/corrections`, body),
+    onSuccess: () => invalidateRegistry(queryClient),
+  });
+}
+
+/**
+ * Update a client's demographics — canonical typed hook (consolidated from the retired
+ * useVitoClientRegistry stack, G14). Proxies VITO's SoR write via the BFF
+ * {@code PUT /internal/v1/client-registry/clients/{healthId}/demographics}.
+ */
+export function useUpdateClientDemographics(healthId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: DemographicsUpdate) =>
+      apiClient.put<ApiResponse<ClientProfile>>(`/internal/v1/client-registry/clients/${healthId}/demographics`, body),
     onSuccess: () => invalidateRegistry(queryClient),
   });
 }

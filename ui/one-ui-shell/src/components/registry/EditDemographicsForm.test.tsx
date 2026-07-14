@@ -23,7 +23,7 @@ function renderForm(onSaved?: () => void) {
 describe("EditDemographicsForm — G055 demographics update", () => {
   beforeEach(() => put.mockReset());
 
-  it("PUTs the edited demographics to the BFF VITO route and signals success", async () => {
+  it("PUTs the edited demographics to the canonical client-registry route and signals success", async () => {
     put.mockResolvedValue({ data: {} });
     const onSaved = vi.fn();
     renderForm(onSaved);
@@ -37,7 +37,7 @@ describe("EditDemographicsForm — G055 demographics update", () => {
 
     await waitFor(() => expect(put).toHaveBeenCalledTimes(1));
     expect(put).toHaveBeenCalledWith(
-      "/internal/v1/vito/client-registry/clients/HID-123/demographics",
+      "/internal/v1/client-registry/clients/HID-123/demographics",
       expect.objectContaining({ givenName: "Tendai", familyName: "Moyo", phone: "0772999999" }),
     );
     await waitFor(() => expect(onSaved).toHaveBeenCalled());

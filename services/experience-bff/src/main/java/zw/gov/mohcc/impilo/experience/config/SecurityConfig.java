@@ -430,9 +430,6 @@ public class SecurityConfig {
                             "/internal/v1/registry/provider-council/obligations/*/sync-payment")
                             .hasAnyRole(mergeRoleSets(CLINICAL_ROLES, REGISTRY_OPS_ROLES))
 
-                    // ── VITO client registry (staff / admin) ──────────────
-                    .requestMatchers("/internal/v1/vito/client-registry/**").authenticated()
-
                     // ── All other endpoints — authenticated ───────────────
                     .anyRequest().authenticated()
                 )
