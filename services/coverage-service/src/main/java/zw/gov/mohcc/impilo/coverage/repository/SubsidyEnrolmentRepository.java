@@ -19,4 +19,8 @@ public interface SubsidyEnrolmentRepository extends JpaRepository<SubsidyEnrolme
 
     boolean existsByTenantIdAndSubsidyProgramIdAndMemberCpidAndStatus(
             UUID tenantId, UUID subsidyProgramId, String memberCpid, String status);
+
+    /** Exemption-carrying enrolments for billing-category resolution (newest first). */
+    List<SubsidyEnrolmentEntity> findByTenantIdAndMemberCpidAndStatusAndExemptionCategoryIsNotNullOrderByCreatedAtDesc(
+            UUID tenantId, String memberCpid, String status);
 }
