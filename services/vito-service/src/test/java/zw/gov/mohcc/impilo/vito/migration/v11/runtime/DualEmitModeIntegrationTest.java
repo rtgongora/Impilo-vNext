@@ -23,7 +23,6 @@ import zw.gov.mohcc.impilo.vito.events.VitoEventMapper;
 import zw.gov.mohcc.impilo.vito.events.VitoOutboxPublisher;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientEntity;
 import zw.gov.mohcc.impilo.vito.persistence.repository.ClientRepository;
-import zw.gov.mohcc.impilo.vito.test.TestCompanionConfig;
 import zw.gov.mohcc.impilo.sharedkernel.events.EmitMode;
 
 import java.util.List;
@@ -58,8 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@org.springframework.context.annotation.Import(TestCompanionConfig.class)
-class DualEmitModeIntegrationIT {
+class DualEmitModeIntegrationTest {
 
     private static final UUID TENANT_UUID = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
     private static final String TENANT_ID = TENANT_UUID.toString();

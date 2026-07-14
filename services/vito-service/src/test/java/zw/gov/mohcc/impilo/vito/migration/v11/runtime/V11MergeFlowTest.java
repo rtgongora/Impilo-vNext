@@ -19,7 +19,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import zw.gov.mohcc.impilo.vito.core.IdentityStatus;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientEntity;
 import zw.gov.mohcc.impilo.vito.persistence.repository.ClientRepository;
-import zw.gov.mohcc.impilo.vito.test.TestCompanionConfig;
 
 import java.util.UUID;
 
@@ -48,8 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@org.springframework.context.annotation.Import(TestCompanionConfig.class)
-class V11MergeFlowIT {
+class V11MergeFlowTest {
 
     private static final String MERGE_URL = "/internal/v1/patients/merge";
     private static final UUID TENANT_UUID = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
@@ -180,7 +178,9 @@ class V11MergeFlowIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mergeBody(survivorCrid, mergedCrid)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error.code").value("FEDERATION_AUTHORITY_VIOLATION"))
+                // The federation-connector FederationIdentityFilter fronts the merge endpoint and
+                // rejects an unverified non-national pod on identity before the authority guard runs.
+                .andExpect(jsonPath("$.error.code").value("FEDERATION_IDENTITY_INVALID"))
                 .andExpect(jsonPath("$.error.message").exists())
                 .andExpect(jsonPath("$.error.details.pod_id").value("privatepod-001"));
     }
