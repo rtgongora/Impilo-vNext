@@ -34,6 +34,7 @@ export const SHELL_APPS: AppDefinition[] = [
     activeFlag: true,
     systemAppFlag: true,
     weight: 1,
+    requiredRole: "ADMIN",
   },
   {
     id: "app-learning",
@@ -290,6 +291,7 @@ export const SHELL_APPS: AppDefinition[] = [
     activeFlag: true,
     systemAppFlag: false,
     weight: 22,
+    requiredRole: "OPERATIONS_AGGREGATE",
   },
   {
     id: "app-enterprise",
@@ -302,6 +304,7 @@ export const SHELL_APPS: AppDefinition[] = [
     activeFlag: true,
     systemAppFlag: false,
     weight: 21,
+    requiredRole: "FINANCE",
   },
   {
     id: "app-nhume",
@@ -317,6 +320,7 @@ export const SHELL_APPS: AppDefinition[] = [
     systemAppFlag: false,
     weight: 22,
     serviceSlug: "nhume",
+    requiredRole: "DISPATCH_OPERATIONS",
   },
   {
     id: "app-madi",
@@ -332,6 +336,7 @@ export const SHELL_APPS: AppDefinition[] = [
     systemAppFlag: false,
     weight: 22,
     serviceSlug: "madi",
+    requiredRole: "OPERATIONS_AGGREGATE",
   },
   {
     id: "app-madi-donor",
@@ -362,6 +367,7 @@ export const SHELL_APPS: AppDefinition[] = [
     systemAppFlag: false,
     weight: 23,
     serviceSlug: "ndila",
+    requiredRole: "OPERATIONS_AGGREGATE",
   },
   {
     id: "app-dispatch",
@@ -570,12 +576,14 @@ export const SHELL_COMMANDS: ShellCommand[] = [
     label: "Open Inventory",
     keywords: ["inventory", "stock", "warehouse", "requisition"],
     action: { type: "navigate", href: "/inventory" },
+    requiredRole: "OPERATIONS_AGGREGATE",
   },
   {
     id: "cmd-enterprise",
     label: "Open Enterprise resources",
     keywords: ["enterprise", "erp", "procurement", "commodities", "supply", "resource plane"],
     action: { type: "navigate", href: "/enterprise" },
+    requiredRole: "FINANCE",
   },
   {
     id: "cmd-erp",
@@ -750,6 +758,7 @@ export const SHELL_COMMANDS: ShellCommand[] = [
     label: "Reports",
     keywords: ["reports", "reporting", "exports"],
     action: { type: "navigate", href: "/reports" },
+    requiredRole: "OPERATIONS_AGGREGATE",
   },
   {
     id: "cmd-admin",

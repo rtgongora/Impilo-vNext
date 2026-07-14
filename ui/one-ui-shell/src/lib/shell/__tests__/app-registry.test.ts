@@ -113,6 +113,33 @@ describe("shell app-registry", () => {
     }
   });
 
+  it("a citizen-only user sees no ops/clinical/registry/finance apps in the launcher", () => {
+    const citizenOnly = rolesToHasRole(["CITIZEN"]);
+    const apps = listVisibleShellApps(citizenOnly);
+    const leaked = apps.filter((a) =>
+      ["clinical", "operations", "registry", "finance"].includes(a.category),
+    );
+    expect(leaked.map((a) => a.appCode)).toEqual([]);
+
+    // Citizen-relevant surfaces stay reachable — curation must not remove them.
+    const codes = apps.map((a) => a.appCode);
+    for (const kept of ["home", "madi_donor", "simba", "ubomi", "citizen", "my_documents"]) {
+      expect(codes, `citizen app ${kept}`).toContain(kept);
+    }
+
+    // Ops command-palette entries are gated too.
+    const cmdIds = visibleShellCommands(citizenOnly).map((c) => c.id);
+    for (const gated of ["cmd-inventory", "cmd-enterprise", "cmd-reports"]) {
+      expect(cmdIds).not.toContain(gated);
+    }
+
+    // Operations staff keep exactly what citizens lost.
+    const opsCodes = listVisibleShellApps(rolesToHasRole(["FACILITY_ADMIN"])).map((a) => a.appCode);
+    for (const ops of ["inventory", "enterprise", "nhume", "madi", "ndila", "command_centre"]) {
+      expect(opsCodes, `ops app ${ops}`).toContain(ops);
+    }
+  });
+
   it.each(Object.entries(PERSONAS))("persona visibility: %s", (_persona, roles) => {
     const hasRole = rolesToHasRole(roles);
     const appCodes = listVisibleShellApps(hasRole).map((a) => a.appCode);
