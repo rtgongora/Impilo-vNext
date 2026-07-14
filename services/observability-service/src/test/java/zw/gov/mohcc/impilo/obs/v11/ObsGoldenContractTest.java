@@ -9,20 +9,20 @@ import zw.gov.mohcc.impilo.obs.config.TestSecurityConfig;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-public class ObsGoldenContractIT extends GoldenContractSuite {
+public class ObsGoldenContractTest extends GoldenContractSuite {
 
     @Override
     protected String getCommandEndpointOverride() {
-        return "/internal/v1/dashboards";
+        return "/internal/v1/test-command";
     }
 
     @Override
     protected String getReadEndpointOverride() {
-        return "/internal/v1/alert-rules";
+        return "/internal/v1/health";
     }
 
     @Override
     protected String getFederationEndpointOverride() {
-        return "/internal/v1/dashboards";
+        return "/internal/v1/test-federation";
     }
 }
