@@ -184,4 +184,25 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <!-- Docker-backed integration tests (Testcontainers/WireMock). Opt-in: mvn verify -Pit-containers. Skips cleanly without Docker. -->
+        <profile>
+            <id>it-containers</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/GoldenContractIT.java</include>
+                                <include>**/ImagingExperienceWireMockIT.java</include>
+                                <include>**/MobileProviderTier2ResponseShapeIT.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
