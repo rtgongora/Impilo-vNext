@@ -23,6 +23,25 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
 
+/**
+ * Cross-service consent flow — a MANUAL integration test that requires a real
+ * PostgreSQL instance, so it keeps the {@code *IT} suffix and is not run by the
+ * surefire ({@code *Test}) pass. It cannot run against the H2 test profile the
+ * unit suites use because mvumo binds {@code org.hibernate.dialect.PostgreSQLDialect}
+ * (application.yml), and the consent-event write path is genuinely PostgreSQL-specific:
+ * <ul>
+ *   <li>{@code INSERT ... RETURNING id} for {@code GenerationType.IDENTITY} — H2 rejects it;</li>
+ *   <li>{@code cast(? as jsonb)} for the {@code detail} column;</li>
+ *   <li>{@code TIMESTAMPTZ} semantics for remote-session expiry (H2's TIMESTAMP skews
+ *       by the JVM offset unless the JVM runs in UTC).</li>
+ * </ul>
+ *
+ * <p>To run manually against CLI Postgres (see the runtime-proof harness convention),
+ * point the datasource at a real instance, e.g.
+ * {@code mvn test -Dtest=MvumoCrossServiceFlowIT
+ *   -Dspring.datasource.url=jdbc:postgresql://localhost:5432/mvumo ...}. There is no
+ * maven-failsafe binding, so under {@code mvn test}/{@code verify} this class is skipped.</p>
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 class MvumoCrossServiceFlowIT {
