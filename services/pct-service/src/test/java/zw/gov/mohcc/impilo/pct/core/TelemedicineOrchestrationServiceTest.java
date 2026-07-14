@@ -41,6 +41,7 @@ class TelemedicineOrchestrationServiceTest {
     @Mock private TelemedicineSessionProviderRouter sessionProviderRouter;
     @Mock private TelemedicineProviderProperties providerProperties;
     @Mock private LiveSessionIntegration liveSessionIntegration;
+    @Mock private VirtualPoolQueueService virtualPoolQueueService;
 
     private TelemedicineOrchestrationService service;
     private UUID tenantId;
@@ -49,7 +50,8 @@ class TelemedicineOrchestrationServiceTest {
     void setUp() {
         service = new TelemedicineOrchestrationService(
                 referralRepository, telehealthSessionRepository, outboxRepository, telemetryService,
-                sessionProviderRouter, providerProperties, liveSessionIntegration, new ObjectMapper());
+                sessionProviderRouter, providerProperties, liveSessionIntegration, virtualPoolQueueService,
+                new ObjectMapper());
         tenantId = UUID.randomUUID();
     }
 

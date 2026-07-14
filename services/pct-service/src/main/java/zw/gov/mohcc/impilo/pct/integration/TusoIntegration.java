@@ -133,6 +133,54 @@ public class TusoIntegration {
     }
 
     /**
+     * Retrieve the virtual service-delivery entities (virtual hospitals) whose
+     * activation has been requested or confirmed, including their routing seams
+     * and queue definitions. PCT materialises the queue definitions into
+     * virtual-pool queues (same ownership doctrine as facility queues).
+     *
+     * <p>Returns {@code null} on failure/unavailability (distinct from an empty
+     * list, which means no activatable virtual services exist) so
+     * materialisation stays failure-safe and never wipes pool queues when TUSO
+     * is unreachable.</p>
+     */
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> getVirtualServices(UUID tenantId) {
+        try {
+            String url = baseUrl + "/v1/internal/virtual-services?lifecycleStatus=ACTIVATION_REQUESTED,ACTIVE";
+            // Service-originated call: synthesize the mandatory trust headers.
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            if (tenantId != null) {
+                headers.set("X-Tenant-ID", tenantId.toString());
+            }
+            headers.set("X-Pod-ID", "national-spine");
+            headers.set("X-Request-ID", UUID.randomUUID().toString());
+            headers.set("X-Correlation-ID", UUID.randomUUID().toString());
+            headers.set("X-Actor-ID", "pct-service");
+            headers.set("X-Actor-Type", "SERVICE");
+            headers.set("X-Purpose-Of-Use", "OPERATIONS");
+            ResponseEntity<Map> response = restTemplate.exchange(url,
+                    org.springframework.http.HttpMethod.GET,
+                    new org.springframework.http.HttpEntity<Void>(headers), Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Object data = response.getBody().get("data");
+                if (data instanceof List<?> list) {
+                    log.info("TUSO virtual services retrieved ({} activatable entities)", list.size());
+                    return (List<Map<String, Object>>) list;
+                }
+                log.warn("TUSO virtual-services response had no data array");
+                return null;
+            }
+            log.warn("TUSO returned non-success status {} when retrieving virtual services",
+                    response.getStatusCode());
+            return null;
+        } catch (RestClientException e) {
+            log.warn("TUSO unavailable when retrieving virtual services: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Retrieve the bed list for a specific ward.
      *
      * <p>Returns all beds in the ward including their number, type,

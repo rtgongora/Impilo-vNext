@@ -47,4 +47,18 @@ public interface QueueRepository extends JpaRepository<QueueEntity, UUID> {
 
     /** The materialised queue for a given TUSO source reference — the idempotent upsert key. */
     Optional<QueueEntity> findByTenantIdAndFacilityIdAndSourceRef(UUID tenantId, UUID facilityId, String sourceRef);
+
+    // ---- virtual-pool queues (V034) ------------------------------------
+
+    /** The materialised virtual-pool queue for a TUSO sourceRef ('{vsUid}:{queueKey}') — idempotent upsert key. */
+    Optional<QueueEntity> findByTenantIdAndSourceRefAndVirtualPoolIdIsNotNull(UUID tenantId, String sourceRef);
+
+    /** All TUSO-materialised virtual-pool queues for a tenant — reconcile + retire scope. */
+    List<QueueEntity> findByTenantIdAndSourceAndVirtualPoolIdIsNotNull(UUID tenantId, String source);
+
+    /** Active materialised queues for a pool key (routing seam target_ref), stable order. */
+    List<QueueEntity> findByTenantIdAndVirtualPoolIdAndActiveTrueOrderBySourceRefAsc(UUID tenantId, String virtualPoolId);
+
+    /** Every queue for a pool key (incl. retired) — status/read-back surface. */
+    List<QueueEntity> findByTenantIdAndVirtualPoolIdOrderBySourceRefAsc(UUID tenantId, String virtualPoolId);
 }

@@ -26,8 +26,17 @@ public class QueueItemEntity {
     @Column(name = "queue_id", nullable = false)
     private UUID queueId;
 
-    @Column(name = "journey_id", nullable = false)
+    /** Patient journey — NULL for virtual-pool items, which track a referral via {@code sourceRef} (V034). */
+    @Column(name = "journey_id")
     private String journeyId;
+
+    /** External source reference for non-journey items: the teleconsult referral id (V034). */
+    @Column(name = "source_ref", length = 128)
+    private String sourceRef;
+
+    /** SLA deadline derived from the queue definition rules ({@code slaMinutes}); NULL = no SLA (V034). */
+    @Column(name = "sla_due_at")
+    private OffsetDateTime slaDueAt;
 
     @Column(name = "patient_cpid", nullable = false)
     private String patientCpid;
@@ -127,4 +136,9 @@ public class QueueItemEntity {
     public String getEscalationReason() { return escalationReason; }
     public void setEscalationReason(String escalationReason) { this.escalationReason = escalationReason; }
 
+    public String getSourceRef() { return sourceRef; }
+    public void setSourceRef(String sourceRef) { this.sourceRef = sourceRef; }
+
+    public OffsetDateTime getSlaDueAt() { return slaDueAt; }
+    public void setSlaDueAt(OffsetDateTime slaDueAt) { this.slaDueAt = slaDueAt; }
 }

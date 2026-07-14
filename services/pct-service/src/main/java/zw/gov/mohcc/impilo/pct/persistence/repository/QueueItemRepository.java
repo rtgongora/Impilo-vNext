@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.pct.domain.QueueItemStatus;
 import zw.gov.mohcc.impilo.pct.persistence.entity.QueueItemEntity;
 
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -101,4 +102,20 @@ public interface QueueItemRepository extends JpaRepository<QueueItemEntity, UUID
     List<UUID> findDistinctQueueIdsByFacilityIdAndStatusIn(
             @Param("facilityId") UUID facilityId,
             @Param("statuses") Collection<QueueItemStatus> statuses);
+
+    // ---- virtual-pool items (V034) --------------------------------------
+
+    /** Live item(s) tracking an external source (teleconsult referral id) — accept-side dequeue lookup. */
+    List<QueueItemEntity> findByTenantIdAndSourceRefAndStatusIn(
+            UUID tenantId, String sourceRef, Collection<QueueItemStatus> statuses);
+
+    /** SLA sweep: waiting items past their SLA deadline that have not been escalated yet. */
+    List<QueueItemEntity> findTop100ByStatusAndSlaDueAtBeforeAndEscalatedAtIsNullOrderBySlaDueAtAsc(
+            QueueItemStatus status, OffsetDateTime dueBefore);
+
+    /** Escalated items still waiting in a queue — the honest SLA-breach depth for readbacks. */
+    long countByQueueIdAndStatusAndEscalatedAtIsNotNull(UUID queueId, QueueItemStatus status);
+
+    /** Oldest waiting item in a queue — waiting-age readback. */
+    Optional<QueueItemEntity> findFirstByQueueIdAndStatusOrderByCreatedAtAsc(UUID queueId, QueueItemStatus status);
 }

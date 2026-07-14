@@ -26,9 +26,11 @@ class QueueMaterializationServiceTest {
 
     @Mock private TusoIntegration tuso;
     @Mock private QueueRepository queueRepository;
+    @Mock private zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository outboxRepository;
 
     private QueueMaterializationService service() {
-        return new QueueMaterializationService(tuso, queueRepository);
+        return new QueueMaterializationService(tuso, queueRepository, outboxRepository,
+                new com.fasterxml.jackson.databind.ObjectMapper());
     }
 
     private final UUID tenant = UUID.randomUUID();

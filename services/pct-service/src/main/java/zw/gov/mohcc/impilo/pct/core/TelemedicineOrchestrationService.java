@@ -47,6 +47,7 @@ public class TelemedicineOrchestrationService {
     private final TelemedicineSessionProviderRouter sessionProviderRouter;
     private final TelemedicineProviderProperties providerProperties;
     private final LiveSessionIntegration liveSessionIntegration;
+    private final VirtualPoolQueueService virtualPoolQueueService;
     private final ObjectMapper objectMapper;
 
     public TelemedicineOrchestrationService(
@@ -57,6 +58,7 @@ public class TelemedicineOrchestrationService {
             TelemedicineSessionProviderRouter sessionProviderRouter,
             TelemedicineProviderProperties providerProperties,
             LiveSessionIntegration liveSessionIntegration,
+            VirtualPoolQueueService virtualPoolQueueService,
             ObjectMapper objectMapper) {
         this.referralRepository = referralRepository;
         this.telehealthSessionRepository = telehealthSessionRepository;
@@ -65,6 +67,7 @@ public class TelemedicineOrchestrationService {
         this.sessionProviderRouter = sessionProviderRouter;
         this.providerProperties = providerProperties;
         this.liveSessionIntegration = liveSessionIntegration;
+        this.virtualPoolQueueService = virtualPoolQueueService;
         this.objectMapper = objectMapper;
     }
 
@@ -190,6 +193,10 @@ public class TelemedicineOrchestrationService {
         entity.setStatus("SUBMITTED");
         entity.setSubmittedAt(OffsetDateTime.now());
         ReferralEntity saved = referralRepository.save(entity);
+        // Pool-routed referrals enter the pool's materialised queue (priority from
+        // urgency, SLA deadline from queue rules). No queue materialised → logged
+        // honest degradation inside the service; the referral stays pool-listable.
+        virtualPoolQueueService.enqueueForReferral(saved);
         emitOutbox("telemedicine.session.followup_required", saved.getReferralId().toString(), toReferralPayload(saved));
         return toReferralPayload(saved);
     }
@@ -198,14 +205,32 @@ public class TelemedicineOrchestrationService {
     public Map<String, Object> acceptReferral(String referralId, Map<String, Object> request) {
         ReferralEntity entity = getReferralEntity(referralId);
         entity.setStatus("ACCEPTED");
-        appendResponse(entity, Map.of(
-                "responseType", "ACCEPTED",
-                "acceptedBy", defaulted(optional(request, "accepted_by", "acceptedBy"), "unknown"),
-                "timestamp", OffsetDateTime.now().toString()
-        ));
+        Map<String, Object> acceptance = new LinkedHashMap<>();
+        acceptance.put("responseType", "ACCEPTED");
+        acceptance.put("acceptedBy", defaulted(optional(request, "accepted_by", "acceptedBy"), "unknown"));
+        acceptance.put("timestamp", OffsetDateTime.now().toString());
+        // Soft duty gate (never blocks): pool-routed acceptances record whether
+        // the accepting provider pool had on-duty coverage at accept time. The
+        // BFF supplies on_duty from vashandi; absent/unreachable = UNKNOWN.
+        if ("POOL".equalsIgnoreCase(defaulted(entity.getRoutingKind(), ""))) {
+            acceptance.put("onDuty", normalizeOnDuty(optional(request, "on_duty", "onDuty")));
+        }
+        appendResponse(entity, acceptance);
         ReferralEntity saved = referralRepository.save(entity);
+        // Accepting a pool-routed referral completes (dequeues) its pool queue item.
+        virtualPoolQueueService.completeForReferral(saved,
+                defaulted(optional(request, "accepted_by", "acceptedBy"), "unknown"));
         emitOutbox("telemedicine.session.created", saved.getReferralId().toString(), toReferralPayload(saved));
         return toReferralPayload(saved);
+    }
+
+    /** Duty audit vocabulary: true | false | UNKNOWN (anything unparseable is UNKNOWN). */
+    private static String normalizeOnDuty(String raw) {
+        if (raw == null || raw.isBlank()) return "UNKNOWN";
+        String v = raw.trim().toLowerCase(Locale.ROOT);
+        if ("true".equals(v)) return "true";
+        if ("false".equals(v)) return "false";
+        return "UNKNOWN";
     }
 
     @Transactional
