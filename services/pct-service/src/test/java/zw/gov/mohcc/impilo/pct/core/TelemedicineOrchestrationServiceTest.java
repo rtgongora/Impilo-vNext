@@ -192,6 +192,87 @@ class TelemedicineOrchestrationServiceTest {
     }
 
     @Test
+    void createReferral_persistsPoolRoutingWhenSupplied() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            ArgumentCaptor<ReferralEntity> captor = ArgumentCaptor.forClass(ReferralEntity.class);
+            when(referralRepository.save(captor.capture())).thenAnswer(inv -> {
+                ReferralEntity e = inv.getArgument(0);
+                if (e.getReferralId() == null) e.setReferralId(UUID.randomUUID());
+                return e;
+            });
+
+            service.createReferral(Map.of(
+                    "patient_id", "CPID-9",
+                    "reason", "Persistent cough",
+                    "routing_kind", "POOL",
+                    "routing_pool_id", "GENERAL_TELEMEDICINE"));
+
+            ReferralEntity saved = captor.getValue();
+            assertThat(saved.getRoutingKind()).isEqualTo("POOL");
+            assertThat(saved.getRoutingPoolId()).isEqualTo("GENERAL_TELEMEDICINE");
+            assertThat(saved.getRoutedAt()).isNotNull();
+            assertThat(saved.getRoutingTarget()).contains("GENERAL_TELEMEDICINE");
+            // Creation with routing does NOT skip the lifecycle: still DRAFT until submit.
+            assertThat(saved.getStatus()).isEqualTo("DRAFT");
+        }
+    }
+
+    @Test
+    void createReferral_withoutRouting_leavesRoutingColumnsUnset() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            ArgumentCaptor<ReferralEntity> captor = ArgumentCaptor.forClass(ReferralEntity.class);
+            when(referralRepository.save(captor.capture())).thenAnswer(inv -> {
+                ReferralEntity e = inv.getArgument(0);
+                if (e.getReferralId() == null) e.setReferralId(UUID.randomUUID());
+                return e;
+            });
+
+            service.createReferral(Map.of("patient_id", "CPID-9", "reason", "Persistent cough"));
+
+            ReferralEntity saved = captor.getValue();
+            assertThat(saved.getRoutingKind()).isNull();
+            assertThat(saved.getRoutingPoolId()).isNull();
+            assertThat(saved.getRoutingTarget()).isEqualTo("{}");
+        }
+    }
+
+    @Test
+    void listPoolReferrals_defaultsToSubmittedStatus() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            ReferralEntity referral = newReferral(UUID.randomUUID(), "SUBMITTED");
+            referral.setRoutingKind("POOL");
+            referral.setRoutingPoolId("MATERNAL_NEWBORN");
+            when(referralRepository.findByTenantIdAndRoutingPoolIdAndStatusInOrderByCreatedAtAsc(
+                    tenantId, "MATERNAL_NEWBORN", List.of("SUBMITTED")))
+                    .thenReturn(List.of(referral));
+
+            List<Map<String, Object>> rows = service.listPoolReferrals("MATERNAL_NEWBORN", null);
+
+            assertThat(rows).hasSize(1);
+            assertThat(rows.get(0).get("routingPoolId")).isEqualTo("MATERNAL_NEWBORN");
+        }
+    }
+
+    @Test
+    void listPoolReferrals_acceptsCommaSeparatedStatusIn() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            when(referralRepository.findByTenantIdAndRoutingPoolIdAndStatusInOrderByCreatedAtAsc(
+                    tenantId, "SPECIALIST_POOL", List.of("SUBMITTED", "ACCEPTED")))
+                    .thenReturn(List.of());
+
+            List<Map<String, Object>> rows = service.listPoolReferrals("SPECIALIST_POOL", "submitted, accepted");
+
+            assertThat(rows).isEmpty();
+            verify(referralRepository).findByTenantIdAndRoutingPoolIdAndStatusInOrderByCreatedAtAsc(
+                    tenantId, "SPECIALIST_POOL", List.of("SUBMITTED", "ACCEPTED"));
+        }
+    }
+
+    @Test
     void completeReferral_isIdempotent_doesNotReEmitBillableEvent() {
         try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
             mocked.when(TrustContextHolder::require).thenReturn(context());

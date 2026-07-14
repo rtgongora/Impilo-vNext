@@ -40,6 +40,22 @@ public class TelemedicineController {
         return ResponseEntity.ok(ApiResponse.ok(page(rows, page, size), correlationId));
     }
 
+    /**
+     * Pool-scoped queue (Stage 3 routing): referrals routed to a specialty pool, oldest
+     * first. Default status filter is SUBMITTED; {@code status} accepts a comma-separated
+     * status-in list.
+     */
+    @GetMapping("/referrals/pool/{poolId}")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> listPoolReferrals(
+            @PathVariable String poolId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        List<Map<String, Object>> rows = telemedicineService.listPoolReferrals(poolId, status);
+        return ResponseEntity.ok(ApiResponse.ok(page(rows, page, size), correlationId));
+    }
+
     @GetMapping("/referrals/{id}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getReferral(@PathVariable String id) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
