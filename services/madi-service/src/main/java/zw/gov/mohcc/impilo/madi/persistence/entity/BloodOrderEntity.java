@@ -45,8 +45,11 @@ public class BloodOrderEntity {
 @Column(name = "ordering_provider")
     private String orderingProvider;
 
-@Column(name = "jurisdiction")
-    private String jurisdiction;
+// Honour the schema default ('ZW'). Hibernate always emits the column on INSERT, so a null Java
+    // field is written as SQL NULL and overrides the DB DEFAULT — which violated the NOT NULL constraint
+    // and made every inpatient/theatre blood order fail (best-effort → null madi_order_id). Default here.
+    @Column(name = "jurisdiction", nullable = false)
+    private String jurisdiction = "ZW";
 
 @Column(name = "encounter_ref")
     private String encounterRef;
