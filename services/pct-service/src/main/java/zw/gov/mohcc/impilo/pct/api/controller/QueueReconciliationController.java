@@ -28,9 +28,12 @@ import java.util.UUID;
 public class QueueReconciliationController {
 
     private final QueueMaterializationService materializationService;
+    private final zw.gov.mohcc.impilo.pct.core.VirtualPoolQueueService virtualPoolQueueService;
 
-    public QueueReconciliationController(QueueMaterializationService materializationService) {
+    public QueueReconciliationController(QueueMaterializationService materializationService,
+                                         zw.gov.mohcc.impilo.pct.core.VirtualPoolQueueService virtualPoolQueueService) {
         this.materializationService = materializationService;
+        this.virtualPoolQueueService = virtualPoolQueueService;
     }
 
     /** Reconcile the facility's queues from TUSO's current queue definitions (idempotent, failure-safe). */
@@ -49,5 +52,32 @@ public class QueueReconciliationController {
         TrustContext ctx = TrustContextHolder.require();
         var summary = materializationService.materializationStatus(ctx.tenantId(), facilityId);
         return ResponseEntity.ok(ApiResponse.ok(summary, ctx.correlationId().toString()));
+    }
+
+    /**
+     * On-demand reconcile of the tenant's VIRTUAL-POOL queues from TUSO's
+     * activatable virtual services (idempotent, failure-safe). Complements the
+     * event-driven trigger ({@code impilo.tuso.virtual_service}) — events can be
+     * missed/delayed/replayed.
+     */
+    @PostMapping("/reconcile-virtual-pools")
+    public ResponseEntity<ApiResponse<java.util.List<QueueMaterializationService.PoolMaterializationResult>>>
+            reconcileVirtualPools() {
+        TrustContext ctx = TrustContextHolder.require();
+        var results = materializationService.reconcileVirtualPools(ctx.tenantId());
+        return ResponseEntity.ok(ApiResponse.ok(results, ctx.correlationId().toString()));
+    }
+
+    /**
+     * Per-queue statistics for one virtual pool (depth, oldest wait, SLA
+     * breaches, materialisation state) — the BFF composes LIVE vs
+     * AWAITING_BACKEND from this read-back.
+     */
+    @GetMapping("/virtual-pool-stats")
+    public ResponseEntity<ApiResponse<java.util.List<Map<String, Object>>>> virtualPoolStats(
+            @RequestParam String poolId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var stats = virtualPoolQueueService.poolQueueStats(ctx.tenantId(), poolId);
+        return ResponseEntity.ok(ApiResponse.ok(stats, ctx.correlationId().toString()));
     }
 }

@@ -1,0 +1,1400 @@
+{
+  "virtualHospitals": [
+    {
+      "id": "vh-national-telemedicine",
+      "name": "National Telemedicine Hospital",
+      "level": "NATIONAL",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "MoHCC (national)",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Countrywide telemedicine coordination, national specialist support, overflow support, quality monitoring, and national service continuity.",
+      "catchment": "National — all provinces, all levels of care",
+      "serviceLines": [
+        "General teleconsultation",
+        "Facility support",
+        "Specialist escalation",
+        "Emergency overflow",
+        "Remote monitoring review",
+        "Quality & audit monitoring"
+      ],
+      "providerPoolCadres": [
+        "Telemedicine triage providers",
+        "Medical officers",
+        "Nurses/midwives",
+        "Specialists",
+        "Diagnostics reviewers",
+        "Mental health providers",
+        "Supervisors",
+        "Helpdesk agents"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": true,
+      "allowedCrossBorderPrivileges": [
+        "PROVIDER_TO_PROVIDER_ADVICE_ONLY",
+        "MDT_ONLY",
+        "BLOCKED_PENDING_REGULATORY_APPROVAL"
+      ],
+      "billingModels": [
+        "PUBLIC_SERVICE",
+        "PROGRAMME_FUNDED",
+        "EMERGENCY_DISASTER_FREE"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice",
+        "emergency-advisory",
+        "mdt-case-review"
+      ],
+      "queues": [
+        {
+          "id": "national-general-teleconsult",
+          "name": "National General Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-support",
+          "name": "Facility Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "specialist-escalation",
+          "name": "Specialist Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "emergency-overflow",
+          "name": "Emergency Overflow Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "remote-monitoring-review",
+          "name": "Remote Monitoring Review Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "missed-failed-session",
+          "name": "Missed/Failed Session Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "ROUTABLE_VIA_EXISTING_SEAMS",
+      "currentRoutingSeams": [
+        {
+          "routingType": "SPECIALTY_POOL",
+          "targetRef": "GENERAL_TELEMEDICINE",
+          "note": "Reachable today as a teleconsult SPECIALTY_POOL routing target (real BFF-validated path)."
+        }
+      ]
+    },
+    {
+      "id": "vh-specialist",
+      "name": "Virtual Specialist Hospital",
+      "level": "SPECIALIST",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "MoHCC with central hospital specialist base",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Specialist-care virtual institution: provider-to-provider consultation, specialist teleconsults, MDT reviews, complex case review, procedure support, specialist follow-up.",
+      "catchment": "National, provincial spokes",
+      "serviceLines": [
+        "Internal medicine",
+        "Surgery",
+        "Paediatrics",
+        "Obstetrics & gynaecology",
+        "Anaesthesia",
+        "Psychiatry",
+        "Radiology/diagnostics",
+        "Rehabilitation medicine",
+        "Infectious diseases"
+      ],
+      "providerPoolCadres": [
+        "Specialists",
+        "Medical officers",
+        "Supervisors"
+      ],
+      "linkedFacilityRoles": [
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "HOST_FACILITY",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": true,
+      "allowedCrossBorderPrivileges": [
+        "PROVIDER_TO_PROVIDER_ADVICE_ONLY",
+        "MDT_ONLY",
+        "TEACHING_SUPERVISION_ONLY",
+        "BLOCKED_PENDING_REGULATORY_APPROVAL"
+      ],
+      "billingModels": [
+        "PUBLIC_SERVICE",
+        "MEDICAL_AID_REIMBURSED",
+        "PRIVATE_SELF_PAY"
+      ],
+      "sessionModeIds": [
+        "provider-to-provider-advice",
+        "mdt-case-review",
+        "case-presentation",
+        "diagnostics-review"
+      ],
+      "queues": [
+        {
+          "id": "specialist-request",
+          "name": "General Specialist Request Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "p2p-advice",
+          "name": "Provider-to-Provider Advice Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "mdt-review",
+          "name": "MDT Review Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "procedure-support",
+          "name": "Procedure/Theatre Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "urgent-escalation",
+          "name": "Urgent Specialist Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "ROUTABLE_VIA_EXISTING_SEAMS",
+      "currentRoutingSeams": [
+        {
+          "routingType": "SPECIALTY_POOL",
+          "targetRef": "SPECIALIST_POOL",
+          "note": "Reachable today as a teleconsult SPECIALTY_POOL routing target (real BFF-validated path)."
+        }
+      ]
+    },
+    {
+      "id": "vh-maternal-newborn",
+      "name": "Virtual Maternal and Newborn Unit",
+      "level": "PROGRAMME",
+      "operatingModel": "PROGRAMME_OWNED",
+      "operatingAuthority": "MoHCC maternal & newborn health programme",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Maternal, newborn, pregnancy, postnatal, midwifery, neonatal and high-risk follow-up services with danger-sign escalation.",
+      "catchment": "National programme, facility spokes",
+      "serviceLines": [
+        "ANC teleconsultation",
+        "PNC follow-up",
+        "High-risk pregnancy monitoring",
+        "Neonatal review",
+        "Midwife-to-doctor escalation",
+        "Emergency obstetric advisory"
+      ],
+      "providerPoolCadres": [
+        "Midwives",
+        "Obstetricians",
+        "Neonatologists",
+        "Medical officers"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE",
+        "PROGRAMME_FUNDED",
+        "DONOR_PARTNER_SUPPORTED"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice",
+        "emergency-advisory"
+      ],
+      "queues": [
+        {
+          "id": "anc-teleconsult",
+          "name": "ANC Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "pnc-followup",
+          "name": "PNC Follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "high-risk-pregnancy",
+          "name": "High-Risk Pregnancy Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "neonatal-review",
+          "name": "Neonatal Review Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "emergency-obstetric",
+          "name": "Emergency Obstetric/Newborn Advisory Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "ROUTABLE_VIA_EXISTING_SEAMS",
+      "currentRoutingSeams": [
+        {
+          "routingType": "SPECIALTY_POOL",
+          "targetRef": "MATERNAL_NEWBORN",
+          "note": "Reachable today as a teleconsult SPECIALTY_POOL routing target (real BFF-validated path)."
+        }
+      ]
+    },
+    {
+      "id": "vh-mental-health",
+      "name": "Virtual Mental Health Unit",
+      "level": "PROGRAMME",
+      "operatingModel": "PROGRAMME_OWNED",
+      "operatingAuthority": "MoHCC mental health programme",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Counselling, psychiatric review, follow-up, crisis routing, medication review, psychosocial support and continuity of care — with sensitive-case governance.",
+      "catchment": "National programme",
+      "serviceLines": [
+        "Counselling",
+        "Psychiatric review",
+        "Crisis escalation",
+        "Medication review",
+        "Follow-up/continuity"
+      ],
+      "providerPoolCadres": [
+        "Psychiatrists",
+        "Psychologists",
+        "Counsellors",
+        "Mental health nurses"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE",
+        "PROGRAMME_FUNDED"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "emergency-advisory",
+        "case-notes-review"
+      ],
+      "queues": [
+        {
+          "id": "mh-teleconsult",
+          "name": "General Mental Health Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "counselling",
+          "name": "Counselling Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "psychiatric-review",
+          "name": "Psychiatric Review Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "crisis-escalation",
+          "name": "Crisis/Urgent Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "medication-review",
+          "name": "Medication Review Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": []
+    },
+    {
+      "id": "vh-chronic-disease",
+      "name": "Virtual Chronic Disease Clinic",
+      "level": "PROGRAMME",
+      "operatingModel": "PROGRAMME_OWNED",
+      "operatingAuthority": "MoHCC NCD programme",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Long-term condition management: medication follow-up, adherence support, results review, monitoring and continuity of care.",
+      "catchment": "National programme",
+      "serviceLines": [
+        "Hypertension",
+        "Diabetes",
+        "Asthma/COPD",
+        "Epilepsy",
+        "Medication adherence",
+        "Results review"
+      ],
+      "providerPoolCadres": [
+        "Medical officers",
+        "Nurses",
+        "Pharmacy advisers"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "DISPENSING_SITE"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE",
+        "MEDICAL_AID_REIMBURSED",
+        "SUBSCRIPTION_CONTINUITY_CARE"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "diagnostics-review"
+      ],
+      "queues": [
+        {
+          "id": "ncd-followup",
+          "name": "NCD Tele-follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "results-review",
+          "name": "Results Review Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "medication-review",
+          "name": "Medication Review Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "abnormal-observation",
+          "name": "Abnormal Observation Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "missed-followup",
+          "name": "Missed Follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": []
+    },
+    {
+      "id": "vh-radiology-diagnostics",
+      "name": "Virtual Radiology/Diagnostics Review Centre",
+      "level": "SPECIALIST",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "MoHCC diagnostics network",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Remote interpretation, imaging/lab review, diagnostic escalation, PACS/DICOM-linked case review and specialist diagnostic recommendations.",
+      "catchment": "National, hub-and-spoke",
+      "serviceLines": [
+        "Imaging review",
+        "Radiology opinion",
+        "Lab result interpretation",
+        "Diagnostic MDT",
+        "Facility diagnostic support"
+      ],
+      "providerPoolCadres": [
+        "Radiologists",
+        "Pathologists",
+        "Diagnostics reviewers"
+      ],
+      "linkedFacilityRoles": [
+        "REQUESTER",
+        "DIAGNOSTICS_SITE",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": true,
+      "allowedCrossBorderPrivileges": [
+        "PROVIDER_TO_PROVIDER_ADVICE_ONLY",
+        "MDT_ONLY",
+        "BLOCKED_PENDING_REGULATORY_APPROVAL"
+      ],
+      "billingModels": [
+        "PUBLIC_SERVICE",
+        "MEDICAL_AID_REIMBURSED"
+      ],
+      "sessionModeIds": [
+        "diagnostics-review",
+        "mdt-case-review",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "imaging-review",
+          "name": "Imaging Review Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "urgent-imaging",
+          "name": "Urgent Imaging Review Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "lab-interpretation",
+          "name": "Lab Interpretation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "diagnostic-mdt",
+          "name": "Diagnostic MDT Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "ROUTABLE_VIA_EXISTING_SEAMS",
+      "currentRoutingSeams": [
+        {
+          "routingType": "SPECIALTY_POOL",
+          "targetRef": "RADIOLOGY_DIAGNOSTICS",
+          "note": "Reachable today as a teleconsult SPECIALTY_POOL routing target (real BFF-validated path)."
+        }
+      ]
+    },
+    {
+      "id": "vh-icu-support",
+      "name": "Virtual ICU Support Desk",
+      "level": "SPECIALIST",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "MoHCC critical care network",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "High-acuity remote support: ICU, HDU, ward deterioration, emergency stabilisation, post-operative critical support.",
+      "catchment": "National, facility spokes",
+      "serviceLines": [
+        "Urgent ICU support",
+        "Ward deterioration escalation",
+        "Critical care advice",
+        "Post-op critical review"
+      ],
+      "providerPoolCadres": [
+        "Intensivists",
+        "Anaesthetists",
+        "Critical care nurses"
+      ],
+      "linkedFacilityRoles": [
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": true,
+      "allowedCrossBorderPrivileges": [
+        "EMERGENCY_ADVISORY_ONLY",
+        "BLOCKED_PENDING_REGULATORY_APPROVAL"
+      ],
+      "billingModels": [
+        "PUBLIC_SERVICE",
+        "EMERGENCY_DISASTER_FREE"
+      ],
+      "sessionModeIds": [
+        "emergency-advisory",
+        "hybrid-encounter-support",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "urgent-icu",
+          "name": "Urgent ICU Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "ward-deterioration",
+          "name": "Ward Deterioration Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "critical-advice",
+          "name": "Critical Care Advice Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": []
+    },
+    {
+      "id": "vh-emergency-advisory",
+      "name": "Virtual Emergency Advisory Unit",
+      "level": "EMERGENCY",
+      "operatingModel": "EMERGENCY_ACTIVATED",
+      "operatingAuthority": "MoHCC emergency care / Daidzai coordination",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Rapid-response telemedicine: urgent triage, emergency advice, referral routing, dispatch support, facility escalation with SLA timers.",
+      "catchment": "National, 24/7 when activated",
+      "serviceLines": [
+        "Emergency tele-triage",
+        "Facility emergency advice",
+        "Transfer/referral escalation",
+        "Post-emergency follow-up"
+      ],
+      "providerPoolCadres": [
+        "Emergency physicians",
+        "Medical officers",
+        "Triage nurses"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION"
+      ],
+      "crossBorderParticipation": true,
+      "allowedCrossBorderPrivileges": [
+        "EMERGENCY_ADVISORY_ONLY",
+        "BLOCKED_PENDING_REGULATORY_APPROVAL"
+      ],
+      "billingModels": [
+        "EMERGENCY_DISASTER_FREE",
+        "PUBLIC_SERVICE"
+      ],
+      "sessionModeIds": [
+        "emergency-advisory",
+        "hybrid-encounter-support"
+      ],
+      "queues": [
+        {
+          "id": "emergency-tele-triage",
+          "name": "Emergency Tele-triage Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-emergency-advice",
+          "name": "Facility Emergency Advice Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "transfer-escalation",
+          "name": "Transfer/Referral Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "unanswered-emergency",
+          "name": "Unanswered Emergency Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": []
+    },
+    {
+      "id": "vh-rehabilitation",
+      "name": "Virtual Rehabilitation Clinic",
+      "level": "PROGRAMME",
+      "operatingModel": "PROGRAMME_OWNED",
+      "operatingAuthority": "MoHCC rehabilitation programme",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Rehabilitation, physiotherapy, occupational therapy, speech therapy, assistive-device follow-up and functional recovery monitoring.",
+      "catchment": "National programme",
+      "serviceLines": [
+        "Physiotherapy follow-up",
+        "Occupational therapy",
+        "Speech/swallow review",
+        "Post-stroke rehab",
+        "Assistive device review"
+      ],
+      "providerPoolCadres": [
+        "Physiotherapists",
+        "Occupational therapists",
+        "Speech therapists"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE",
+        "MEDICAL_AID_REIMBURSED"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter"
+      ],
+      "queues": [
+        {
+          "id": "physio-followup",
+          "name": "Physiotherapy Follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "ot",
+          "name": "Occupational Therapy Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "post-stroke",
+          "name": "Post-Stroke Rehab Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "assistive-device",
+          "name": "Assistive Device Review Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": []
+    },
+    {
+      "id": "vh-community-followup",
+      "name": "Virtual Community Follow-up Unit",
+      "level": "COMMUNITY",
+      "operatingModel": "PROGRAMME_OWNED",
+      "operatingAuthority": "MoHCC community health / CHW programme",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Community-based care: CHW-supported follow-up, home monitoring, defaulter tracing, outreach continuity, facility-community linkage.",
+      "catchment": "National, district/community spokes",
+      "serviceLines": [
+        "CHW follow-up",
+        "Home-based care monitoring",
+        "Missed appointment tracing",
+        "Community escalation",
+        "Facility handover"
+      ],
+      "providerPoolCadres": [
+        "CHWs",
+        "Community nurses",
+        "Follow-up coordinators"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE",
+        "PROGRAMME_FUNDED",
+        "DONOR_PARTNER_SUPPORTED"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "chw-followup",
+          "name": "CHW Follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "home-monitoring",
+          "name": "Home-Based Care Monitoring Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "missed-appointment",
+          "name": "Missed Appointment Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-handover",
+          "name": "Facility Handover Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": []
+    },
+    {
+      "id": "vh-learning-supervision",
+      "name": "Virtual Learning and Supervision Hospital",
+      "level": "LEARNING",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "MoHCC training directorate with Fundo",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Governed virtual teaching, mentorship, supervision, case review and CPD — never uncontrolled recording or casual observation of patients.",
+      "catchment": "National",
+      "serviceLines": [
+        "Supervised clinical sessions",
+        "Case review",
+        "MDT teaching",
+        "Procedure observation",
+        "Learning artefact governance"
+      ],
+      "providerPoolCadres": [
+        "Supervisors",
+        "Mentors",
+        "Learners (restricted roles)"
+      ],
+      "linkedFacilityRoles": [
+        "REQUESTER",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": true,
+      "allowedCrossBorderPrivileges": [
+        "TEACHING_SUPERVISION_ONLY",
+        "BLOCKED_PENDING_REGULATORY_APPROVAL"
+      ],
+      "billingModels": [
+        "TEACHING_SUPERVISION_FUNDED",
+        "PUBLIC_SERVICE"
+      ],
+      "sessionModeIds": [
+        "teaching-supervision",
+        "case-presentation",
+        "audit-mortality-review"
+      ],
+      "queues": [
+        {
+          "id": "supervision-request",
+          "name": "Supervision Request Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "teaching-session",
+          "name": "Teaching Session Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "case-review",
+          "name": "Case Review Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "artefact-approval",
+          "name": "Learning Artefact Approval Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "ROUTABLE_VIA_EXISTING_SEAMS",
+      "currentRoutingSeams": [
+        {
+          "routingType": "SPECIALTY_POOL",
+          "targetRef": "LEARNING_SUPERVISION",
+          "note": "LEARNING_LIVE session template exists (W0); supervision requests routable as teleconsults today."
+        }
+      ]
+    },
+    {
+      "id": "vh-provincial-zw-ha",
+      "name": "Harare Provincial Virtual Hospital",
+      "level": "PROVINCIAL",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "Harare provincial health authority",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Decentralised telemedicine operations: local facility support, provincial clinical routing, provincial virtual queues and management.",
+      "catchment": "Harare province — linked districts and facilities",
+      "serviceLines": [
+        "Provincial general teleconsult",
+        "Facility-to-province support",
+        "District escalation",
+        "Provincial tele-follow-up",
+        "Referral handover"
+      ],
+      "providerPoolCadres": [
+        "Medical officers",
+        "Nurses",
+        "Provincial specialists"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "provincial-general",
+          "name": "Provincial General Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-to-province",
+          "name": "Facility-to-Province Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "district-escalation",
+          "name": "District Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "provincial-followup",
+          "name": "Provincial Tele-follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": [],
+      "provinceCode": "ZW-HA"
+    },
+    {
+      "id": "vh-provincial-zw-bu",
+      "name": "Bulawayo Provincial Virtual Hospital",
+      "level": "PROVINCIAL",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "Bulawayo provincial health authority",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Decentralised telemedicine operations: local facility support, provincial clinical routing, provincial virtual queues and management.",
+      "catchment": "Bulawayo province — linked districts and facilities",
+      "serviceLines": [
+        "Provincial general teleconsult",
+        "Facility-to-province support",
+        "District escalation",
+        "Provincial tele-follow-up",
+        "Referral handover"
+      ],
+      "providerPoolCadres": [
+        "Medical officers",
+        "Nurses",
+        "Provincial specialists"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "provincial-general",
+          "name": "Provincial General Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-to-province",
+          "name": "Facility-to-Province Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "district-escalation",
+          "name": "District Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "provincial-followup",
+          "name": "Provincial Tele-follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": [],
+      "provinceCode": "ZW-BU"
+    },
+    {
+      "id": "vh-provincial-zw-ma",
+      "name": "Manicaland Provincial Virtual Hospital",
+      "level": "PROVINCIAL",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "Manicaland provincial health authority",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Decentralised telemedicine operations: local facility support, provincial clinical routing, provincial virtual queues and management.",
+      "catchment": "Manicaland province — linked districts and facilities",
+      "serviceLines": [
+        "Provincial general teleconsult",
+        "Facility-to-province support",
+        "District escalation",
+        "Provincial tele-follow-up",
+        "Referral handover"
+      ],
+      "providerPoolCadres": [
+        "Medical officers",
+        "Nurses",
+        "Provincial specialists"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "provincial-general",
+          "name": "Provincial General Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-to-province",
+          "name": "Facility-to-Province Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "district-escalation",
+          "name": "District Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "provincial-followup",
+          "name": "Provincial Tele-follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": [],
+      "provinceCode": "ZW-MA"
+    },
+    {
+      "id": "vh-provincial-zw-mc",
+      "name": "Mashonaland Central Provincial Virtual Hospital",
+      "level": "PROVINCIAL",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "Mashonaland Central provincial health authority",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Decentralised telemedicine operations: local facility support, provincial clinical routing, provincial virtual queues and management.",
+      "catchment": "Mashonaland Central province — linked districts and facilities",
+      "serviceLines": [
+        "Provincial general teleconsult",
+        "Facility-to-province support",
+        "District escalation",
+        "Provincial tele-follow-up",
+        "Referral handover"
+      ],
+      "providerPoolCadres": [
+        "Medical officers",
+        "Nurses",
+        "Provincial specialists"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "provincial-general",
+          "name": "Provincial General Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-to-province",
+          "name": "Facility-to-Province Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "district-escalation",
+          "name": "District Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "provincial-followup",
+          "name": "Provincial Tele-follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": [],
+      "provinceCode": "ZW-MC"
+    },
+    {
+      "id": "vh-provincial-zw-me",
+      "name": "Mashonaland East Provincial Virtual Hospital",
+      "level": "PROVINCIAL",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "Mashonaland East provincial health authority",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Decentralised telemedicine operations: local facility support, provincial clinical routing, provincial virtual queues and management.",
+      "catchment": "Mashonaland East province — linked districts and facilities",
+      "serviceLines": [
+        "Provincial general teleconsult",
+        "Facility-to-province support",
+        "District escalation",
+        "Provincial tele-follow-up",
+        "Referral handover"
+      ],
+      "providerPoolCadres": [
+        "Medical officers",
+        "Nurses",
+        "Provincial specialists"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "provincial-general",
+          "name": "Provincial General Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-to-province",
+          "name": "Facility-to-Province Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "district-escalation",
+          "name": "District Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "provincial-followup",
+          "name": "Provincial Tele-follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": [],
+      "provinceCode": "ZW-ME"
+    },
+    {
+      "id": "vh-provincial-zw-mw",
+      "name": "Mashonaland West Provincial Virtual Hospital",
+      "level": "PROVINCIAL",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "Mashonaland West provincial health authority",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Decentralised telemedicine operations: local facility support, provincial clinical routing, provincial virtual queues and management.",
+      "catchment": "Mashonaland West province — linked districts and facilities",
+      "serviceLines": [
+        "Provincial general teleconsult",
+        "Facility-to-province support",
+        "District escalation",
+        "Provincial tele-follow-up",
+        "Referral handover"
+      ],
+      "providerPoolCadres": [
+        "Medical officers",
+        "Nurses",
+        "Provincial specialists"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "provincial-general",
+          "name": "Provincial General Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-to-province",
+          "name": "Facility-to-Province Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "district-escalation",
+          "name": "District Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "provincial-followup",
+          "name": "Provincial Tele-follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": [],
+      "provinceCode": "ZW-MW"
+    },
+    {
+      "id": "vh-provincial-zw-mv",
+      "name": "Masvingo Provincial Virtual Hospital",
+      "level": "PROVINCIAL",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "Masvingo provincial health authority",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Decentralised telemedicine operations: local facility support, provincial clinical routing, provincial virtual queues and management.",
+      "catchment": "Masvingo province — linked districts and facilities",
+      "serviceLines": [
+        "Provincial general teleconsult",
+        "Facility-to-province support",
+        "District escalation",
+        "Provincial tele-follow-up",
+        "Referral handover"
+      ],
+      "providerPoolCadres": [
+        "Medical officers",
+        "Nurses",
+        "Provincial specialists"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "provincial-general",
+          "name": "Provincial General Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-to-province",
+          "name": "Facility-to-Province Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "district-escalation",
+          "name": "District Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "provincial-followup",
+          "name": "Provincial Tele-follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": [],
+      "provinceCode": "ZW-MV"
+    },
+    {
+      "id": "vh-provincial-zw-mn",
+      "name": "Matabeleland North Provincial Virtual Hospital",
+      "level": "PROVINCIAL",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "Matabeleland North provincial health authority",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Decentralised telemedicine operations: local facility support, provincial clinical routing, provincial virtual queues and management.",
+      "catchment": "Matabeleland North province — linked districts and facilities",
+      "serviceLines": [
+        "Provincial general teleconsult",
+        "Facility-to-province support",
+        "District escalation",
+        "Provincial tele-follow-up",
+        "Referral handover"
+      ],
+      "providerPoolCadres": [
+        "Medical officers",
+        "Nurses",
+        "Provincial specialists"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "provincial-general",
+          "name": "Provincial General Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-to-province",
+          "name": "Facility-to-Province Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "district-escalation",
+          "name": "District Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "provincial-followup",
+          "name": "Provincial Tele-follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": [],
+      "provinceCode": "ZW-MN"
+    },
+    {
+      "id": "vh-provincial-zw-ms",
+      "name": "Matabeleland South Provincial Virtual Hospital",
+      "level": "PROVINCIAL",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "Matabeleland South provincial health authority",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Decentralised telemedicine operations: local facility support, provincial clinical routing, provincial virtual queues and management.",
+      "catchment": "Matabeleland South province — linked districts and facilities",
+      "serviceLines": [
+        "Provincial general teleconsult",
+        "Facility-to-province support",
+        "District escalation",
+        "Provincial tele-follow-up",
+        "Referral handover"
+      ],
+      "providerPoolCadres": [
+        "Medical officers",
+        "Nurses",
+        "Provincial specialists"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "provincial-general",
+          "name": "Provincial General Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-to-province",
+          "name": "Facility-to-Province Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "district-escalation",
+          "name": "District Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "provincial-followup",
+          "name": "Provincial Tele-follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": [],
+      "provinceCode": "ZW-MS"
+    },
+    {
+      "id": "vh-provincial-zw-mi",
+      "name": "Midlands Provincial Virtual Hospital",
+      "level": "PROVINCIAL",
+      "operatingModel": "NETWORKED",
+      "operatingAuthority": "Midlands provincial health authority",
+      "regulatoryStatus": "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
+      "purpose": "Decentralised telemedicine operations: local facility support, provincial clinical routing, provincial virtual queues and management.",
+      "catchment": "Midlands province — linked districts and facilities",
+      "serviceLines": [
+        "Provincial general teleconsult",
+        "Facility-to-province support",
+        "District escalation",
+        "Provincial tele-follow-up",
+        "Referral handover"
+      ],
+      "providerPoolCadres": [
+        "Medical officers",
+        "Nurses",
+        "Provincial specialists"
+      ],
+      "linkedFacilityRoles": [
+        "ACCESS_POINT",
+        "REQUESTER",
+        "REFERRAL_DESTINATION",
+        "STAFF_CONTRIBUTING"
+      ],
+      "crossBorderParticipation": false,
+      "allowedCrossBorderPrivileges": [],
+      "billingModels": [
+        "PUBLIC_SERVICE"
+      ],
+      "sessionModeIds": [
+        "direct-clinical-encounter",
+        "provider-to-provider-advice"
+      ],
+      "queues": [
+        {
+          "id": "provincial-general",
+          "name": "Provincial General Teleconsult Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "facility-to-province",
+          "name": "Facility-to-Province Support Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "district-escalation",
+          "name": "District Escalation Queue",
+          "status": "AWAITING_BACKEND"
+        },
+        {
+          "id": "provincial-followup",
+          "name": "Provincial Tele-follow-up Queue",
+          "status": "AWAITING_BACKEND"
+        }
+      ],
+      "substrateStatus": "CONFIGURED_AWAITING_SUBSTRATE",
+      "currentRoutingSeams": [],
+      "provinceCode": "ZW-MI"
+    }
+  ]
+}

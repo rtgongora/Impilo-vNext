@@ -29,6 +29,15 @@ public class TelemedicineOperatingModelController {
 
     private final TelemedicineOperatingModelRegistry registry;
 
+    /**
+     * Optional runtime composition (PCT queue stats + vashandi duty) for the
+     * detail route. Optional wiring keeps the registry-only construction used
+     * by existing tests valid; absent → payloads keep their honest
+     * AWAITING_BACKEND defaults.
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private zw.gov.mohcc.impilo.experience.telemedicine.VirtualHospitalCompositionService compositionService;
+
     public TelemedicineOperatingModelController(TelemedicineOperatingModelRegistry registry) {
         this.registry = registry;
     }
@@ -37,8 +46,12 @@ public class TelemedicineOperatingModelController {
     public ResponseEntity<Map<String, Object>> listVirtualHospitals(
             @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
             @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
-        return ok("virtual-hospital-directory", requestId, correlationId,
-                Map.of("virtualHospitals", registry.virtualHospitals()));
+        TelemedicineOperatingModelRegistry.Directory directory = registry.virtualHospitalDirectory();
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("virtualHospitals", directory.virtualHospitals());
+        attributes.put("source", directory.source());
+        attributes.put("registryDegraded", directory.registryDegraded());
+        return ok("virtual-hospital-directory", requestId, correlationId, attributes);
     }
 
     @GetMapping("/virtual-hospitals/{id}")
@@ -46,7 +59,8 @@ public class TelemedicineOperatingModelController {
             @PathVariable String id,
             @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
             @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
-        Optional<Map<String, Object>> hospital = registry.virtualHospital(id);
+        TelemedicineOperatingModelRegistry.Directory directory = registry.virtualHospitalDirectory();
+        Optional<Map<String, Object>> hospital = directory.byId(id);
         if (hospital.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                     "error", Map.of(
@@ -54,7 +68,12 @@ public class TelemedicineOperatingModelController {
                             "message", "No virtual hospital configured with id: " + id),
                     "meta", meta(requestId, correlationId)));
         }
-        return ok("virtual-hospital", requestId, correlationId, hospital.get());
+        Map<String, Object> attributes = compositionService != null
+                ? new LinkedHashMap<>(compositionService.compose(hospital.get()))
+                : new LinkedHashMap<>(hospital.get());
+        attributes.put("source", directory.source());
+        attributes.put("registryDegraded", directory.registryDegraded());
+        return ok("virtual-hospital", requestId, correlationId, attributes);
     }
 
     @GetMapping("/clinical-groups")

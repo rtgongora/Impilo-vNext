@@ -1,9 +1,12 @@
 package zw.gov.mohcc.impilo.vashandi.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.ShiftEntity;
 
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,4 +23,28 @@ public interface ShiftRepository extends JpaRepository<ShiftEntity, UUID> {
     long countByTenantIdAndStatus(UUID tenantId, String status);
 
     long countByTenantIdAndFacilityIdAndStatus(UUID tenantId, UUID facilityId, String status);
+
+    // ---- virtual-pool duty (V006 partial index) --------------------------
+
+    /**
+     * Shifts on duty for a virtual pool RIGHT NOW: window covers {@code at}
+     * (inclusive edges) and the status is an on-duty status
+     * ('confirmed'/'checked_in' — scheduled is a plan, cancelled/swapped are
+     * not coverage).
+     */
+    @Query("SELECT s FROM ShiftEntity s WHERE s.tenantId = :tenantId AND s.virtualPoolId = :poolId "
+            + "AND s.status IN :statuses AND s.startTime <= :at AND s.endTime >= :at "
+            + "ORDER BY s.startTime ASC")
+    List<ShiftEntity> findOnDutyForPool(@Param("tenantId") UUID tenantId,
+                                        @Param("poolId") String poolId,
+                                        @Param("statuses") Collection<String> statuses,
+                                        @Param("at") OffsetDateTime at);
+
+    /** Next upcoming shift start for a pool (rostered coverage lookahead). */
+    @Query("SELECT MIN(s.startTime) FROM ShiftEntity s WHERE s.tenantId = :tenantId "
+            + "AND s.virtualPoolId = :poolId AND s.status IN :statuses AND s.startTime > :after")
+    OffsetDateTime findNextShiftStartForPool(@Param("tenantId") UUID tenantId,
+                                             @Param("poolId") String poolId,
+                                             @Param("statuses") Collection<String> statuses,
+                                             @Param("after") OffsetDateTime after);
 }

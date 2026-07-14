@@ -32,8 +32,17 @@ public class QueueEntity {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    @Column(name = "facility_id", nullable = false)
+    /** Physical facility scope — NULL for virtual-pool queues (V034). */
+    @Column(name = "facility_id")
     private UUID facilityId;
+
+    /**
+     * Virtual-pool scope: the TUSO routing seam target_ref (frozen pool key,
+     * carried by pool-routed referrals as routing_pool_id). NULL for facility
+     * queues. A queue always has exactly one scope (DB CHECK, V034).
+     */
+    @Column(name = "virtual_pool_id", length = 128)
+    private String virtualPoolId;
 
     @Column(name = "workspace_id")
     private UUID workspaceId;
@@ -120,6 +129,9 @@ public class QueueEntity {
 
     public String getSourceRef() { return sourceRef; }
     public void setSourceRef(String sourceRef) { this.sourceRef = sourceRef; }
+
+    public String getVirtualPoolId() { return virtualPoolId; }
+    public void setVirtualPoolId(String virtualPoolId) { this.virtualPoolId = virtualPoolId; }
 
     public String getMaterializationStatus() { return materializationStatus; }
     public void setMaterializationStatus(String materializationStatus) { this.materializationStatus = materializationStatus; }

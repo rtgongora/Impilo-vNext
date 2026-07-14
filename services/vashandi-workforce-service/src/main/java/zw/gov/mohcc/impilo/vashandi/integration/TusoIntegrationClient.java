@@ -53,6 +53,44 @@ public class TusoIntegrationClient {
         return result.payload();
     }
 
+    /**
+     * Soft virtual-pool check: does any TUSO virtual service expose a routing
+     * seam whose target_ref equals {@code poolId}? Returns {@code empty} when
+     * TUSO is unreachable or the response is unusable — callers must treat
+     * empty as "cannot verify" and NEVER hard-fail on it (shift creation must
+     * not depend on TUSO availability).
+     */
+    @SuppressWarnings("unchecked")
+    public Optional<Boolean> virtualPoolKnown(String poolId) {
+        if (poolId == null || poolId.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            String url = baseUrl + "/v1/internal/virtual-services";
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, new HttpEntity<>(buildTrustHeaders()),
+                    new ParameterizedTypeReference<>() {});
+            Object data = response.getBody() == null ? null : response.getBody().get("data");
+            if (!(data instanceof java.util.List<?> entities)) {
+                return Optional.empty();
+            }
+            for (Object entity : entities) {
+                if (!(entity instanceof Map<?, ?> vs)) continue;
+                Object seams = ((Map<String, Object>) vs).get("routingSeams");
+                if (!(seams instanceof java.util.List<?> seamList)) continue;
+                for (Object seam : seamList) {
+                    if (seam instanceof Map<?, ?> s && poolId.equals(s.get("targetRef"))) {
+                        return Optional.of(Boolean.TRUE);
+                    }
+                }
+            }
+            return Optional.of(Boolean.FALSE);
+        } catch (RestClientException ex) {
+            log.warn("TUSO unavailable for virtual-pool check {}: {}", poolId, ex.getMessage());
+            return Optional.empty();
+        }
+    }
+
     private HttpHeaders buildTrustHeaders() {
         HttpHeaders headers = new HttpHeaders();
         try {

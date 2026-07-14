@@ -26,20 +26,47 @@ function unwrap<T>(res: unknown): T | null {
   return (res as RegistryEnvelope<T> | null)?.data?.attributes ?? null;
 }
 
-/** Full governed virtual-hospital directory (strategic + provincial). */
-export function useVirtualHospitalDirectory() {
+/** Directory payload with registry provenance (TUSO-backed since Lane E W2). */
+export interface VirtualHospitalDirectoryPayload {
+  virtualHospitals: VirtualHospitalDefinition[];
+  /** Where the directory came from: the TUSO registry or the static doctrine fallback. */
+  source: "TUSO" | "STATIC_FALLBACK";
+  /** True when TUSO was unreachable and a cached/static document is being served. */
+  registryDegraded: boolean;
+}
+
+/**
+ * Full governed virtual-hospital directory (strategic + provincial), with
+ * source + degradation provenance. Registry data is TUSO-truth; the BFF falls
+ * back to cached-last-good, then the static doctrine document.
+ */
+export function useVirtualHospitals() {
   return useQuery({
     queryKey: ["telemedicine-operating-model", "virtual-hospitals"],
-    staleTime: Infinity,
+    staleTime: 60_000,
     retry: false,
-    queryFn: async (): Promise<VirtualHospitalDefinition[]> => {
+    queryFn: async (): Promise<VirtualHospitalDirectoryPayload> => {
       const res = await apiClient.get<unknown>(
         "/internal/v1/telemedicine/operating-model/virtual-hospitals",
       );
-      const attributes = unwrap<{ virtualHospitals?: VirtualHospitalDefinition[] }>(res);
-      return attributes?.virtualHospitals ?? [];
+      const attributes = unwrap<{
+        virtualHospitals?: VirtualHospitalDefinition[];
+        source?: "TUSO" | "STATIC_FALLBACK";
+        registryDegraded?: boolean;
+      }>(res);
+      return {
+        virtualHospitals: attributes?.virtualHospitals ?? [],
+        source: attributes?.source ?? "STATIC_FALLBACK",
+        registryDegraded: attributes?.registryDegraded ?? false,
+      };
     },
   });
+}
+
+/** Directory list only (back-compat shape for existing pages). */
+export function useVirtualHospitalDirectory() {
+  const query = useVirtualHospitals();
+  return { ...query, data: query.data?.virtualHospitals };
 }
 
 /** One institution by Virtual Hospital ID (null when not configured — honest 404). */

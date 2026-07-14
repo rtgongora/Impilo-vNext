@@ -514,12 +514,65 @@ public class PctServiceClient {
     }
 
     /**
-     * Accept a referral.
+     * Soft accept-gate duty resolver (optional wiring — avoids constructor
+     * churn for the many existing test constructions). When present, every
+     * accept of a POOL-routed referral records the pool's on-duty state
+     * (true|false|UNKNOWN) in the acceptance audit. Advisory only: any
+     * failure here degrades to UNKNOWN/absent and NEVER blocks the accept.
+     */
+    private zw.gov.mohcc.impilo.experience.telemedicine.VirtualPoolDutyService virtualPoolDutyService;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setVirtualPoolDutyService(
+            zw.gov.mohcc.impilo.experience.telemedicine.VirtualPoolDutyService virtualPoolDutyService) {
+        this.virtualPoolDutyService = virtualPoolDutyService;
+    }
+
+    /**
+     * Accept a referral. POOL-routed referrals get the soft duty audit
+     * ({@code on_duty}) attached before delegation to PCT.
      */
     public JsonNode acceptReferral(String referralId, Map<String, Object> request) {
+        Map<String, Object> enriched = enrichAcceptWithDutyAudit(referralId, request);
         String url = baseUrl + "/v1/referrals/" + referralId + "/accept";
         log.info("PCT: Accepting referral id={}", referralId);
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, enriched, JsonNode.class);
+        return extractData(response);
+    }
+
+    private Map<String, Object> enrichAcceptWithDutyAudit(String referralId, Map<String, Object> request) {
+        Map<String, Object> body = request == null ? new LinkedHashMap<>() : new LinkedHashMap<>(request);
+        if (virtualPoolDutyService == null || body.containsKey("on_duty") || body.containsKey("onDuty")) {
+            return body;
+        }
+        try {
+            JsonNode referral = getReferral(referralId);
+            if (referral != null && "POOL".equalsIgnoreCase(referral.path("routingKind").asText(""))) {
+                String poolId = referral.path("routingPoolId").asText(null);
+                if (poolId != null && !poolId.isBlank()) {
+                    body.put("on_duty", virtualPoolDutyService.onDutyFlag(poolId));
+                }
+            }
+        } catch (Exception e) {
+            // Never block an accept on duty resolution — PCT records UNKNOWN when absent.
+            log.warn("Duty audit enrichment skipped for referral {}: {}", referralId, e.getMessage());
+        }
+        return body;
+    }
+
+    /** Per-queue stats for a virtual pool (depth, oldest wait, SLA breaches, materialisation state). */
+    public JsonNode getVirtualPoolStats(String poolId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/queues/virtual-pool-stats")
+                .queryParam("poolId", poolId)
+                .toUriString();
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** On-demand reconcile of the tenant's virtual-pool queues from TUSO. */
+    public JsonNode reconcileVirtualPools() {
+        String url = baseUrl + "/v1/internal/queues/reconcile-virtual-pools";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
         return extractData(response);
     }
 

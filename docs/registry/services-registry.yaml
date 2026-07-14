@@ -2734,6 +2734,10 @@ services:
       # each nomination snapshots verbatim. VARAPI's own pic-assignments write endpoints
       # are deprecated legacy parallel writers; do not re-introduce a second writer.
       - Facility-effective Practitioner-In-Charge (PIC) assignment (HPA-2017 nomination)
+      # Virtual hospitals are service architecture, never tuso.facility rows: a
+      # distinct identifier class (vs_uid) with routing seams (pool keys) and
+      # queue definitions that PCT materialises into pct_queues.
+      - Virtual service-delivery entities (virtual hospitals) and their routing seams/queue definitions
     consumes_from:
       - tshepo-authz-service
     exposes_to:

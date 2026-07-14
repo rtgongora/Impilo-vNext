@@ -30,7 +30,7 @@ import { useEffect, useState } from "react";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useTelemedicineOpsSla, useTelemedicineRtcHealth } from "@/hooks/queries/useTelemedicine";
 import { useTelemedicineSlaAggregates } from "@/hooks/queries/useTelemedicineAnalytics";
-import { ALL_VIRTUAL_HOSPITALS } from "@/lib/telemedicine/virtual-hospitals";
+import { useVirtualHospitals } from "@/hooks/queries/useTelemedicineOperatingModel";
 import { CLINICAL_SESSION_MODES } from "@/lib/telemedicine/session-modes";
 import { loadPins, type PinnedTarget } from "@/lib/telemedicine/pinning";
 
@@ -84,6 +84,7 @@ export default function TelemedicineOperatingModelPage() {
   const rtcHealth = useTelemedicineRtcHealth();
   const opsSla = useTelemedicineOpsSla(facility?.id ?? null);
   const analytics = useTelemedicineSlaAggregates();
+  const directory = useVirtualHospitals();
   const [pins, setPins] = useState<PinnedTarget[]>([]);
 
   useEffect(() => {
@@ -93,8 +94,9 @@ export default function TelemedicineOperatingModelPage() {
   const rtc = rtcHealth.data?.data;
   const ops = opsSla.data?.data;
   const agg = analytics.data?.data;
-  const routableCount = ALL_VIRTUAL_HOSPITALS.filter(
-    (vh) => vh.substrateStatus === "ROUTABLE_VIA_EXISTING_SEAMS",
+  const virtualHospitals = directory.data?.virtualHospitals ?? [];
+  const routableCount = virtualHospitals.filter(
+    (vh) => vh.substrateStatus === "ROUTABLE_VIA_EXISTING_SEAMS" || vh.substrateStatus === "OPERATIONAL",
   ).length;
   const templatedModes = CLINICAL_SESSION_MODES.filter((m) => m.status !== "PLANNED").length;
 
@@ -206,8 +208,11 @@ export default function TelemedicineOperatingModelPage() {
           <ul className="space-y-1 text-sm text-slate-600">
             <li>
               Virtual hospitals configured:{" "}
-              <span className="font-medium text-slate-800">{ALL_VIRTUAL_HOSPITALS.length}</span>{" "}
-              <span className="text-xs text-slate-400">({routableCount} routable today)</span>
+              <span className="font-medium text-slate-800">{virtualHospitals.length}</span>{" "}
+              <span className="text-xs text-slate-400">
+                ({routableCount} routable today
+                {directory.data?.source === "TUSO" ? ", registry-backed" : ""})
+              </span>
             </li>
             <li>
               Session modes governed:{" "}

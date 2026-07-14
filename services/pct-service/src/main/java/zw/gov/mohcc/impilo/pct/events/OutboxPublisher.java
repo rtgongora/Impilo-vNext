@@ -176,6 +176,11 @@ public class OutboxPublisher {
             case "TRIAGE_RECORDED" -> "pct.triage.recorded";
             case "TRANSFER_REQUESTED", "TRANSFER_COMPLETED" -> "pct.transfer.updated";
 
+            // Virtual-pool substrate: TUSO consumes pool.materialized to flip
+            // ACTIVATION_REQUESTED -> ACTIVE; comms plane consumes sla.breached.
+            case "POOL_MATERIALIZED" -> "pct.telemedicine.pool.materialized";
+            case "QUEUE_SLA_BREACHED" -> "pct.telemedicine.queue.sla.breached";
+
             default -> "pct.events";
         };
     }

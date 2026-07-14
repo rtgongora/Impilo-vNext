@@ -879,6 +879,53 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    // ------------------------------------------------------------------
+    // Virtual service registry (virtual hospitals) — TUSO SoR
+    // ------------------------------------------------------------------
+
+    /** List virtual service-delivery entities (virtual hospitals). Throws on transport failure. */
+    public JsonNode listVirtualServices() {
+        String url = baseUrl + "/v1/internal/virtual-services";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** One virtual service by its vs_uid. Throws on transport failure / 404. */
+    public JsonNode getVirtualService(String vsUid) {
+        String url = baseUrl + "/v1/internal/virtual-services/" + vsUid;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Governed-change history for a virtual service. */
+    public JsonNode getVirtualServiceHistory(String vsUid) {
+        String url = baseUrl + "/v1/internal/virtual-services/" + vsUid + "/history";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Governed partial update (seam/queue-def edits) via the POST alias. */
+    public JsonNode updateVirtualService(String vsUid, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/internal/virtual-services/" + vsUid + "/update", body);
+    }
+
+    /** Add a routing seam to a virtual service. */
+    public JsonNode addVirtualServiceRoutingSeam(String vsUid, Map<String, Object> body) {
+        return postJson(baseUrl + "/v1/internal/virtual-services/" + vsUid + "/routing-seams", body);
+    }
+
+    /** Request activation (fail-closed on TUSO side; lands at ACTIVATION_REQUESTED). */
+    public JsonNode activateVirtualService(String vsUid) {
+        return postJson(baseUrl + "/v1/internal/virtual-services/" + vsUid + "/activate", Map.of());
+    }
+
+    /** Suspend a virtual service. */
+    public JsonNode suspendVirtualService(String vsUid, String reason) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        if (reason != null) body.put("reason", reason);
+        return postJson(baseUrl + "/v1/internal/virtual-services/" + vsUid + "/suspend", body);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
