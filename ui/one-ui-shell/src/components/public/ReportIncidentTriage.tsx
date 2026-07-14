@@ -32,6 +32,23 @@ export function ReportIncidentTriage() {
         </span>
       </Link>
 
+      <Link
+        href="/welcome/report/anonymous"
+        data-testid="report-branch-anonymous"
+        className="group rounded-xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50/40"
+      >
+        <h3 className="text-lg font-semibold text-slate-900 group-hover:text-emerald-800">
+          Unsafe care, a safety concern, or a complaint
+        </h3>
+        <p className="mt-1 text-sm text-slate-600">
+          Report without an account. You get a claim code to check the outcome — your
+          identity is never recorded.
+        </p>
+        <span className="mt-3 inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+          No sign-in needed
+        </span>
+      </Link>
+
       <IntentLink
         pillar="feedback-complaints"
         goal="report-incident"
@@ -41,16 +58,29 @@ export function ReportIncidentTriage() {
         className="group rounded-xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50/40"
       >
         <h3 className="text-lg font-semibold text-slate-900 group-hover:text-emerald-800">
-          Unsafe care, a safety concern, or a complaint
+          Report from your account
         </h3>
         <p className="mt-1 text-sm text-slate-600">
-          Something went wrong with care, a facility, or a service. Open a tracked case and
-          follow the outcome. Anonymous submission is available once signed in.
+          Sign in to open a tracked case in your name (or anonymously) and follow it from
+          your feedback list.
         </p>
         <span className="mt-3 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
           Sign in to continue
         </span>
       </IntentLink>
+
+      <Link
+        href="/welcome/report/status"
+        data-testid="report-branch-status"
+        className="group rounded-xl border border-slate-200 bg-white p-6 transition hover:border-emerald-300 hover:bg-emerald-50/40 sm:col-span-2"
+      >
+        <h3 className="font-semibold text-slate-900 group-hover:text-emerald-800">
+          Already reported? Check the outcome
+        </h3>
+        <p className="mt-1 text-sm text-slate-600">
+          Use the claim code you were given to see the status of an anonymous report.
+        </p>
+      </Link>
     </div>
   );
 }

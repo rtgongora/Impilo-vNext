@@ -11,9 +11,9 @@ export const metadata = {
 /**
  * Public "Report a health incident" triage (gateway doctrine §2 — cards attach to the
  * emergency-help and feedback-complaints pillars). Reachable WITHOUT login; routes each
- * branch honestly: emergencies go straight to the always-open emergency surface, safety
- * concerns and complaints continue into the signed-in feedback journey until the
- * anonymous public intake lane lands.
+ * branch honestly: emergencies go straight to the always-open emergency surface; safety
+ * concerns and complaints can be reported fully anonymously (claim-code lane, ADR W4)
+ * or from a signed-in account.
  */
 export default function ReportIncidentPage() {
   return (
@@ -44,8 +44,8 @@ export default function ReportIncidentPage() {
             you can follow the outcome.
           </li>
           <li>
-            You can choose to submit feedback anonymously after signing in. Fully anonymous
-            reporting without an account is coming soon.
+            You can report fully anonymously without an account — you receive a one-time
+            claim code to check the outcome, and your identity is never recorded.
           </li>
         </ul>
       </section>

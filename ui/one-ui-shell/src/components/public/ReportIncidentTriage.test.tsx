@@ -15,9 +15,16 @@ describe("ReportIncidentTriage", () => {
     expect(screen.getByText("Never blocked by sign-in")).toBeInTheDocument();
   });
 
-  it("routes the safety-concern branch through the sign-in gate with the feedback destination", () => {
+  it("offers a fully anonymous branch with no sign-in gate", () => {
     render(<ReportIncidentTriage />);
-    const branch = screen.getByText("Unsafe care, a safety concern, or a complaint").closest("a");
+    const anonymous = screen.getByTestId("report-branch-anonymous");
+    expect(anonymous).toHaveAttribute("href", "/welcome/report/anonymous");
+    expect(screen.getByText(/your\s+identity is never recorded/i)).toBeInTheDocument();
+  });
+
+  it("routes the signed-in branch through the sign-in gate with the feedback destination", () => {
+    render(<ReportIncidentTriage />);
+    const branch = screen.getByText("Report from your account").closest("a");
     expect(branch).not.toBeNull();
     expect(branch).toHaveAttribute(
       "href",
@@ -26,8 +33,11 @@ describe("ReportIncidentTriage", () => {
     expect(screen.getByText("Sign in to continue")).toBeInTheDocument();
   });
 
-  it("states the anonymity posture honestly (anonymous after sign-in)", () => {
+  it("links claim-code status checking", () => {
     render(<ReportIncidentTriage />);
-    expect(screen.getByText(/Anonymous submission is available once signed in/)).toBeInTheDocument();
+    expect(screen.getByTestId("report-branch-status")).toHaveAttribute(
+      "href",
+      "/welcome/report/status",
+    );
   });
 });
