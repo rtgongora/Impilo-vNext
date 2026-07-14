@@ -1,10 +1,13 @@
 package zw.gov.mohcc.impilo.mvumo.integration;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.mvumo.persistence.ConsentEventRepository;
 import zw.gov.mohcc.impilo.mvumo.persistence.ConsentRequestRepository;
@@ -36,15 +39,23 @@ import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
  *       by the JVM offset unless the JVM runs in UTC).</li>
  * </ul>
  *
- * <p>To run manually against CLI Postgres (see the runtime-proof harness convention),
- * point the datasource at a real instance, e.g.
- * {@code mvn test -Dtest=MvumoCrossServiceFlowIT
- *   -Dspring.datasource.url=jdbc:postgresql://localhost:5432/mvumo ...}. There is no
- * maven-failsafe binding, so under {@code mvn test}/{@code verify} this class is skipped.</p>
+ * <p>Wired into the {@code it-postgres} Maven profile (Failsafe). Runs against a real
+ * Postgres supplied via {@code -Dit.pg.url} (CLI/CI harness); self-skips without it.
+ * Uses {@code @ActiveProfiles("it")} so it loads only the production application.yml
+ * (real Postgres + Flyway + PostgreSQL dialect), not the H2 unit profile.
+ * Ordinary {@code mvn test}/{@code mvn verify} never runs it.</p>
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("it")
+@EnabledIfSystemProperty(named = "it.pg.url", matches = ".+")
 class MvumoCrossServiceFlowIT {
+
+    @DynamicPropertySource
+    static void datasourceProps(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", () -> System.getProperty("it.pg.url"));
+        registry.add("spring.datasource.username", () -> System.getProperty("it.pg.user"));
+        registry.add("spring.datasource.password", () -> System.getProperty("it.pg.pass"));
+    }
 
     @Autowired
     private MvumoService mvumoService;
