@@ -12,6 +12,7 @@ import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useMutation } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { HealthWorkerBenefitsCard } from "@/components/common/HealthWorkerBenefitsCard";
 
 export default function ProfilePage() {
   const { user, setAuth, token } = useAuthStore();
@@ -153,6 +154,10 @@ export default function ProfilePage() {
             </button>
           </div>
         </form>
+
+        <div className="mt-6">
+          <HealthWorkerBenefitsCard healthId={user?.healthId ?? user?.id} />
+        </div>
       </PageShell>
     </AppLayout>
   );

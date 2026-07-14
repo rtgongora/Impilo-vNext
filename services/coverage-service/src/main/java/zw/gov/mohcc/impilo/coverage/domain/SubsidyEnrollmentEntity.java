@@ -11,11 +11,13 @@ import java.util.UUID;
 /**
  * Per-member enrolment into a subsidy programme — the CPID ↔ subsidy-programme link.
  *
- * <p>Carries the member's {@code exemptionCategory} (e.g. INDIGENT, ELDERLY, MATERNITY): the
- * billing classification that downstream costing (COSTA charging rules) keys exemptions/waivers
- * on. An active enrolment takes precedence over the coverage plan type when resolving a patient's
- * billing category.</p>
+ * @deprecated V013 unified this model into the ledgered
+ * {@link SubsidyEnrolmentEntity} (cv_subsidy_enrolments), which now carries
+ * {@code exemption_category}. The cv_subsidy_enrollments table is READ-ONLY
+ * (DB trigger) and retained only for audit until a later drop migration.
+ * Do not write through this entity.
  */
+@Deprecated(since = "V013", forRemoval = true)
 @Entity
 @Table(name = "cv_subsidy_enrollments")
 public class SubsidyEnrollmentEntity {

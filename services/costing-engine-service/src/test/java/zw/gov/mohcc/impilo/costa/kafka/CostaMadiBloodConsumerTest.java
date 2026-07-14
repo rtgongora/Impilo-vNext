@@ -29,6 +29,7 @@ class CostaMadiBloodConsumerTest {
     @Mock private PaymentAllocationService paymentAllocationService;
     @Mock private ChargeRecordService chargeRecordService;
     @Mock private CostEventCaptureService costEventCaptureService;
+    @Mock zw.gov.mohcc.impilo.costa.service.HealthWorkerExemptionEnrichment healthWorkerExemptionEnrichment;
     @Mock private Acknowledgment ack;
 
     private CostaEventConsumer consumer;
@@ -38,7 +39,7 @@ class CostaMadiBloodConsumerTest {
     void setUp() {
         consumer = new CostaEventConsumer(billService, inpatientCostingService, paymentService,
                 encounterRepository, refundRepository, idempotencyRepository, paymentAllocationService,
-                chargeRecordService, costEventCaptureService, mapper);
+                chargeRecordService, costEventCaptureService, healthWorkerExemptionEnrichment, mapper);
     }
 
     @Test

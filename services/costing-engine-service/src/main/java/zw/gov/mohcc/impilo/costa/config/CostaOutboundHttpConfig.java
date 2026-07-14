@@ -20,4 +20,18 @@ public class CostaOutboundHttpConfig {
                 .baseUrl(properties.getCoverageBaseUrl().replaceAll("/$", ""))
                 .build();
     }
+
+    @Bean(name = "varapiRestClient")
+    RestClient varapiRestClient(RestClient.Builder builder, ImpiloIntegrationProperties properties) {
+        return builder
+                .baseUrl(properties.getVarapiBaseUrl().replaceAll("/$", ""))
+                .build();
+    }
+
+    @Bean(name = "vashandiRestClient")
+    RestClient vashandiRestClient(RestClient.Builder builder, ImpiloIntegrationProperties properties) {
+        return builder
+                .baseUrl(properties.getVashandiBaseUrl().replaceAll("/$", ""))
+                .build();
+    }
 }

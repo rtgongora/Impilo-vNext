@@ -48,6 +48,7 @@ class CostaEventConsumerTest {
     @Mock PaymentAllocationService paymentAllocationService;
     @Mock ChargeRecordService chargeRecordService;
     @Mock CostEventCaptureService costEventCaptureService;
+    @Mock zw.gov.mohcc.impilo.costa.service.HealthWorkerExemptionEnrichment healthWorkerExemptionEnrichment;
     @Mock Acknowledgment ack;
 
     CostaEventConsumer consumer;
@@ -61,7 +62,7 @@ class CostaEventConsumerTest {
                 billService, inpatientCostingService, paymentService,
                 encounterRepository, refundRepository, idempotencyRepository,
                 paymentAllocationService, chargeRecordService, costEventCaptureService,
-                new ObjectMapper());
+                healthWorkerExemptionEnrichment, new ObjectMapper());
     }
 
     private String teleconsultMessage() {

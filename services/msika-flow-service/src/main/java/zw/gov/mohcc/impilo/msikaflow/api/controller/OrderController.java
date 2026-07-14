@@ -167,6 +167,15 @@ public class OrderController {
                     "Order failed catalog validation", result.items());
         }
 
+        // V009 audit: professional self-authorized regulated purchase leaves an
+        // explicit order-event trail (existing auxiliary-event audit pattern).
+        result.items().stream()
+                .filter(CatalogValidationService.ItemValidation::professionalSelfAuthorized)
+                .forEach(item -> stateMachine.recordAuxiliaryEvent(id, actorId, actorType,
+                        "REGULATED_PRO_PURCHASE",
+                        "Prescriber standing self-satisfied by recognised licensed provider buyer for "
+                                + item.msikaCoreCode()));
+
         OrderEntity updated = stateMachine.transition(id, OrderStatus.VALIDATED, actorId, actorType, "ORDER_VALIDATED", null);
         return ResponseEntity.ok(ApiResponse.ok(OrderView.from(updated, lines), correlationId));
     }

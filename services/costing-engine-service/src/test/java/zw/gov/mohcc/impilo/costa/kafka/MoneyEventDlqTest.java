@@ -58,6 +58,7 @@ class MoneyEventDlqTest {
     @Mock PaymentAllocationService paymentAllocationService;
     @Mock ChargeRecordService chargeRecordService;
     @Mock CostEventCaptureService costEventCaptureService;
+    @Mock zw.gov.mohcc.impilo.costa.service.HealthWorkerExemptionEnrichment healthWorkerExemptionEnrichment;
     @Mock Acknowledgment ack;
     @Mock FailedMoneyEventRepository failedRepo;
     @Mock KafkaTemplate<String, String> kafkaTemplate;
@@ -70,7 +71,7 @@ class MoneyEventDlqTest {
                 billService, inpatientCostingService, paymentService,
                 encounterRepository, refundRepository, idempotencyRepository,
                 paymentAllocationService, chargeRecordService, costEventCaptureService,
-                new ObjectMapper());
+                healthWorkerExemptionEnrichment, new ObjectMapper());
     }
 
     @AfterEach

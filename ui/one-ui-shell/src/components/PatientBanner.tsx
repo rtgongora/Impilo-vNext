@@ -40,6 +40,7 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { maskName, maskDob, safeAge, displayCpid, genderChar } from "@/lib/pii-mask";
+import { RecognisedProviderChip } from "@/components/common/RecognisedProviderChip";
 
 interface GenericResource {
   id: string;
@@ -169,6 +170,10 @@ export function PatientBanner() {
                   {gChar}
                   {age != null ? ` • ${age}y` : ""}
                 </span>
+                {/* Display-only recognition badge — never affects queue order or triage. */}
+                <RecognisedProviderChip
+                  healthId={(attrs.healthId as string | undefined) ?? attrs.cpid}
+                />
               </div>
               <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                 {attrs.dateOfBirth && (

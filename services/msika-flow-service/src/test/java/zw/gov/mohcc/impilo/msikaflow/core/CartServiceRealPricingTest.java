@@ -138,7 +138,7 @@ class CartServiceRealPricingTest {
         when(cartItemRepository.findByCartIdOrderByUpdatedAtDesc(CART)).thenReturn(List.of(i));
         when(catalogValidationService.validateCart(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new CatalogValidationService.ValidationResult(false,
-                        List.of(new CatalogValidationService.ItemValidation("MED-1", false, List.of("blocked"), null))));
+                        List.of(new CatalogValidationService.ItemValidation("MED-1", false, List.of("blocked"), null, false))));
 
         assertThrows(ValidationFailedException.class, () -> service.checkout(CART,
                 new CartDtos.CheckoutRequest("OTC_PRODUCT_ORDER", null, null, "key-1")));

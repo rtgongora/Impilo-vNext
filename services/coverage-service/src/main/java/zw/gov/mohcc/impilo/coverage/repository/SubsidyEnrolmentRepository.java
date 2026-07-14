@@ -19,4 +19,7 @@ public interface SubsidyEnrolmentRepository extends JpaRepository<SubsidyEnrolme
 
     boolean existsByTenantIdAndSubsidyProgramIdAndMemberCpidAndStatus(
             UUID tenantId, UUID subsidyProgramId, String memberCpid, String status);
+
+    /** Recognition-lifecycle sweep: all opt-in enrolments in a status, across tenants. */
+    List<SubsidyEnrolmentEntity> findByStatusAndEnrolledByStartingWith(String status, String enrolledByPrefix);
 }

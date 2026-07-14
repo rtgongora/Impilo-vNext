@@ -70,14 +70,28 @@ public class CatalogValidationService {
                                         String facilityRef,
                                         String providerRef) {
         List<String> errors = new ArrayList<>();
+        boolean professionalSelfAuthorized = false;
 
         try {
             JsonNode catalogItem = msikaCoreClient.lookupItem(item.msikaCoreCode());
             if (catalogItem == null || catalogItem.isMissingNode()) {
-                return new ItemValidation(item.msikaCoreCode(), false, List.of("Item not found in MSIKA Core catalog"), null);
+                return new ItemValidation(item.msikaCoreCode(), false,
+                        List.of("Item not found in MSIKA Core catalog"), null, false);
             }
 
             JsonNode restrictions = catalogItem.path("restrictions");
+
+            // Risk classification + governed friction rule (fetched once; also
+            // drives the V009 professional_self_authorizable convenience).
+            String riskClassification = firstNonBlank(
+                    catalogItem.path("riskClassification").asText(null),
+                    catalogItem.path("risk_classification").asText(null),
+                    restrictions.path("risk_classification").asText(null));
+            JsonNode friction = riskClassification != null
+                    ? msikaCoreClient.getRiskFriction(riskClassification)
+                    : null;
+            boolean proSelfAuthorizableClass = friction != null
+                    && friction.path("professionalSelfAuthorizable").asBoolean(false);
 
             // Check prescription_required
             if (restrictions.path("prescription_required").asBoolean(false)) {
@@ -99,7 +113,16 @@ public class CatalogValidationService {
                 if (actorType == ActorType.PATIENT) {
                     verifyPatientIdentity(patientCpid, 2, errors);
                 }
-                verifyProviderStanding(providerRef, errors);
+                // V009 convenience: for flagged classes ONLY, a recognised
+                // licensed provider buying for themselves self-satisfies the
+                // prescriber-standing requirement (identity checks above are
+                // unchanged; facility legitimacy below is unchanged).
+                if (isBlankRef(providerRef) && proSelfAuthorizableClass
+                        && buyerIsRecognisedLicensedProvider(patientCpid)) {
+                    professionalSelfAuthorized = true;
+                } else {
+                    verifyProviderStanding(providerRef, errors);
+                }
                 verifyFacilityLegitimacy(facilityRef, errors);
             }
 
@@ -115,7 +138,11 @@ public class CatalogValidationService {
             // Check provider_only_order
             if (restrictions.path("provider_only_order").asBoolean(false)) {
                 if (actorType != ActorType.PROVIDER && actorType != ActorType.OPS) {
-                    errors.add("This item can only be ordered by a provider");
+                    if (proSelfAuthorizableClass && buyerIsRecognisedLicensedProvider(patientCpid)) {
+                        professionalSelfAuthorized = true;
+                    } else {
+                        errors.add("This item can only be ordered by a provider");
+                    }
                 } else {
                     verifyProviderStanding(providerRef, errors);
                 }
@@ -124,18 +151,11 @@ public class CatalogValidationService {
             // Risk-friction: enforce the per-order quantity ceiling configured
             // for the item's marketplace risk classification (msika-service
             // msika_risk_friction_mapping). No rule / unreachable ⇒ no ceiling.
-            String riskClassification = firstNonBlank(
-                    catalogItem.path("riskClassification").asText(null),
-                    catalogItem.path("risk_classification").asText(null),
-                    restrictions.path("risk_classification").asText(null));
-            if (riskClassification != null) {
-                JsonNode friction = msikaCoreClient.getRiskFriction(riskClassification);
-                if (friction != null && !friction.isMissingNode()) {
-                    int maxQty = friction.path("maxQtyPerOrder").asInt(0);
-                    if (maxQty > 0 && item.qty() > maxQty) {
-                        errors.add("Quantity " + item.qty() + " exceeds the per-order maximum of "
-                                + maxQty + " for " + riskClassification + " items");
-                    }
+            if (friction != null && !friction.isMissingNode()) {
+                int maxQty = friction.path("maxQtyPerOrder").asInt(0);
+                if (maxQty > 0 && item.qty() > maxQty) {
+                    errors.add("Quantity " + item.qty() + " exceeds the per-order maximum of "
+                            + maxQty + " for " + riskClassification + " items");
                 }
             }
 
@@ -161,12 +181,34 @@ public class CatalogValidationService {
                 log.warn("Failed to serialize restrictions for {}", item.msikaCoreCode());
             }
 
-            return new ItemValidation(item.msikaCoreCode(), errors.isEmpty(), errors, restrictionsJson);
+            return new ItemValidation(item.msikaCoreCode(), errors.isEmpty(), errors,
+                    restrictionsJson, professionalSelfAuthorized && errors.isEmpty());
 
         } catch (Exception e) {
             log.error("Error validating item {}: {}", item.msikaCoreCode(), e.getMessage());
-            return new ItemValidation(item.msikaCoreCode(), false, List.of("Catalog validation error: " + e.getMessage()), null);
+            return new ItemValidation(item.msikaCoreCode(), false,
+                    List.of("Catalog validation error: " + e.getMessage()), null, false);
         }
+    }
+
+    /**
+     * V009 professional self-authorization: is the BUYER (patientCpid carries
+     * the Health ID) a recognised licensed provider in good standing per
+     * VARAPI recognition? FAIL CLOSED: null / unreachable / not recognised
+     * all mean NO — a down registry never authorizes a regulated purchase.
+     * Workforce-only recognition deliberately does NOT satisfy prescriber
+     * standing (only VARAPI licensed providers are consulted).
+     */
+    private boolean buyerIsRecognisedLicensedProvider(String buyerHealthId) {
+        if (buyerHealthId == null || buyerHealthId.isBlank()) {
+            return false;
+        }
+        JsonNode recognition = varapiClient.getRecognitionByHealthId(buyerHealthId);
+        return recognition != null && recognition.path("recognised").asBoolean(false);
+    }
+
+    private static boolean isBlankRef(String ref) {
+        return ref == null || ref.isBlank();
     }
 
     private void verifyFacilityLegitimacy(String facilityRef, List<String> errors) {
@@ -259,6 +301,9 @@ public class CatalogValidationService {
     }
 
     public record CartItem(String msikaCoreCode, int qty) {}
-    public record ItemValidation(String msikaCoreCode, boolean valid, List<String> errors, String restrictionsSnapshot) {}
+    public record ItemValidation(String msikaCoreCode, boolean valid, List<String> errors,
+                                 String restrictionsSnapshot,
+                                 /** V009: prescriber standing satisfied by the buyer's own recognised licence. */
+                                 boolean professionalSelfAuthorized) {}
     public record ValidationResult(boolean valid, List<ItemValidation> items) {}
 }

@@ -90,6 +90,15 @@ public class VashandiServiceClient {
         return unwrap(post("/workforce-profiles/reconcile", body));
     }
 
+    /**
+     * Workforce recognition read-model by Health ID — {recognised, cadre,
+     * profession}. Enumeration-resistant upstream; null on transport failure
+     * so callers fail open to "not recognised".
+     */
+    public JsonNode getRecognitionByHealthId(String healthId) {
+        return unwrap(get("/workforce/by-health-id/" + healthId + "/recognition", Map.of()));
+    }
+
     public JsonNode fetchSessionContext(String healthId, String providerWorkerId) {
         Map<String, String> params = new LinkedHashMap<>();
         if (healthId != null && !healthId.isBlank()) {

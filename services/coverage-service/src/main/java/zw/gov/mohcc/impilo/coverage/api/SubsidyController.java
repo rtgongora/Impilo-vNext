@@ -13,9 +13,9 @@ import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyEnrolmentResponse;
 import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyEnrollmentResponse;
 import zw.gov.mohcc.impilo.coverage.api.dto.SubsidyProgramResponse;
 import zw.gov.mohcc.impilo.coverage.core.SubsidyEnrolmentService;
-import zw.gov.mohcc.impilo.coverage.domain.SubsidyEnrollmentEntity;
+import zw.gov.mohcc.impilo.coverage.domain.SubsidyEnrolmentEntity;
 import zw.gov.mohcc.impilo.coverage.domain.SubsidyProgramEntity;
-import zw.gov.mohcc.impilo.coverage.repository.SubsidyEnrollmentRepository;
+import zw.gov.mohcc.impilo.coverage.repository.SubsidyEnrolmentRepository;
 import zw.gov.mohcc.impilo.coverage.repository.SubsidyProgramRepository;
 
 import java.time.LocalDate;
@@ -28,17 +28,23 @@ import java.util.UUID;
 public class SubsidyController {
 
     private final SubsidyProgramRepository subsidyProgramRepository;
-    // PT: subsidy value enrolment with annual-cap drawdown (/enrolments)
+    // Subsidy value enrolment with annual-cap drawdown (/enrolments)
     private final SubsidyEnrolmentService enrolmentService;
-    // OROS: per-member exemption-category enrolment link that downstream costing consumes (/enrollments)
-    private final SubsidyEnrollmentRepository subsidyEnrollmentRepository;
+    // V013 unification: /enrollments (exemption-category link) is now served by
+    // the SAME ledgered cv_subsidy_enrolments model; DTO shapes are unchanged.
+    private final SubsidyEnrolmentRepository subsidyEnrolmentRepository;
+
+    // Health-worker recognition opt-in + suspension lifecycle (Lane C).
+    private final zw.gov.mohcc.impilo.coverage.core.HealthWorkerSubsidyService healthWorkerSubsidyService;
 
     public SubsidyController(SubsidyProgramRepository subsidyProgramRepository,
                              SubsidyEnrolmentService enrolmentService,
-                             SubsidyEnrollmentRepository subsidyEnrollmentRepository) {
+                             SubsidyEnrolmentRepository subsidyEnrolmentRepository,
+                             zw.gov.mohcc.impilo.coverage.core.HealthWorkerSubsidyService healthWorkerSubsidyService) {
         this.subsidyProgramRepository = subsidyProgramRepository;
         this.enrolmentService = enrolmentService;
-        this.subsidyEnrollmentRepository = subsidyEnrollmentRepository;
+        this.subsidyEnrolmentRepository = subsidyEnrolmentRepository;
+        this.healthWorkerSubsidyService = healthWorkerSubsidyService;
     }
 
     @GetMapping
@@ -78,6 +84,24 @@ public class SubsidyController {
         return ResponseEntity.ok(enrolmentService.get(tid, id));
     }
 
+    /**
+     * Explicit health-worker opt-in enrolment into a recognition-gated
+     * programme (e.g. SUB-HEALTH-WORKER-RECOGNITION). The recognition check
+     * is SERVER-SIDE and fail-closed; the caller cannot assert their own
+     * recognition. Records enrolled_by = SELF_OPT_IN:RECOGNITION:&lt;class&gt;
+     * and exemption_category = HEALTH_WORKER.
+     */
+    @PostMapping("/{programId}/enrolments")
+    public ResponseEntity<SubsidyEnrolmentResponse> optIn(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable("programId") UUID programId,
+            @Valid @RequestBody zw.gov.mohcc.impilo.coverage.api.dto.HealthWorkerOptInRequest body) {
+        UUID tid = UUID.fromString(tenantId);
+        healthWorkerSubsidyService.requireProgram(tid, programId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(healthWorkerSubsidyService.optIn(tid, programId, body.healthId()));
+    }
+
     /** Draw down subsidy value against the annual cap (enforces the cap). */
     @PostMapping("/enrolments/{id}/consume")
     public ResponseEntity<SubsidyEnrolmentResponse> consume(
@@ -88,11 +112,13 @@ public class SubsidyController {
         return ResponseEntity.ok(enrolmentService.consume(tid, id, body));
     }
 
-    // ── Per-member exemption-category enrolment (OROS; drives costing waivers) ──
+    // ── Per-member exemption-category enrolment (unified onto the ledgered model, V013) ──
 
     /**
      * Enrol a member into a subsidy programme, recording the per-member exemption category that
-     * downstream costing uses to apply waivers/exemptions.
+     * downstream costing uses to apply waivers/exemptions. Since V013 this writes the UNIFIED
+     * ledgered model (cv_subsidy_enrolments) — the legacy cv_subsidy_enrollments table is
+     * read-only deprecated. The external DTO shape is unchanged.
      */
     @PostMapping("/enrollments")
     @Transactional
@@ -106,11 +132,15 @@ public class SubsidyController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Active subsidy programme not found: " + request.programCode()));
 
-        SubsidyEnrollmentEntity enrollment = new SubsidyEnrollmentEntity(
-                tid, "national-spine", request.memberCpid(), program.getId(),
-                request.exemptionCategory().trim().toUpperCase(Locale.ROOT),
-                request.effectiveFrom() != null ? request.effectiveFrom() : LocalDate.now());
-        SubsidyEnrollmentEntity saved = subsidyEnrollmentRepository.save(enrollment);
+        SubsidyEnrolmentEntity enrolment = new SubsidyEnrolmentEntity();
+        enrolment.setTenantId(tid);
+        enrolment.setSubsidyProgramId(program.getId());
+        enrolment.setMemberCpid(request.memberCpid());
+        enrolment.setStatus("ACTIVE");
+        enrolment.setCurrency(program.getCurrency() != null ? program.getCurrency() : "USD");
+        enrolment.setExemptionCategory(request.exemptionCategory().trim().toUpperCase(Locale.ROOT));
+        enrolment.setEffectiveFrom(request.effectiveFrom() != null ? request.effectiveFrom() : LocalDate.now());
+        SubsidyEnrolmentEntity saved = subsidyEnrolmentRepository.save(enrolment);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved, program.getProgramCode()));
     }
 
@@ -119,8 +149,10 @@ public class SubsidyController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(name = "member_cpid") String memberCpid) {
         UUID tid = UUID.fromString(tenantId);
-        List<SubsidyEnrollmentResponse> rows = subsidyEnrollmentRepository
-                .findByTenantIdAndClientIdOrderByCreatedAtDesc(tid, memberCpid).stream()
+        List<SubsidyEnrollmentResponse> rows = subsidyEnrolmentRepository
+                .findByTenantIdAndMemberCpid(tid, memberCpid).stream()
+                .filter(e -> e.getExemptionCategory() != null)
+                .sorted((a, b) -> nullSafeCompare(b.getCreatedAt(), a.getCreatedAt()))
                 .map(e -> toResponse(e, programCode(e.getSubsidyProgramId())))
                 .toList();
         return ResponseEntity.ok(rows);
@@ -133,12 +165,11 @@ public class SubsidyController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable UUID id) {
         UUID tid = UUID.fromString(tenantId);
-        SubsidyEnrollmentEntity enrollment = subsidyEnrollmentRepository.findById(id)
-                .filter(e -> e.getTenantId().equals(tid))
+        SubsidyEnrolmentEntity enrolment = subsidyEnrolmentRepository.findByIdAndTenantId(id, tid)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrolment not found"));
-        enrollment.setStatus("ENDED");
-        enrollment.setEffectiveTo(LocalDate.now());
-        SubsidyEnrollmentEntity saved = subsidyEnrollmentRepository.save(enrollment);
+        enrolment.setStatus("ENDED");
+        enrolment.setEffectiveTo(LocalDate.now());
+        SubsidyEnrolmentEntity saved = subsidyEnrolmentRepository.save(enrolment);
         return ResponseEntity.ok(toResponse(saved, programCode(saved.getSubsidyProgramId())));
     }
 
@@ -162,15 +193,23 @@ public class SubsidyController {
                 entity.getEffectiveTo());
     }
 
-    private SubsidyEnrollmentResponse toResponse(SubsidyEnrollmentEntity e, String programCode) {
+    /** Legacy /enrollments DTO shape, now sourced from the unified ledgered entity. */
+    private SubsidyEnrollmentResponse toResponse(SubsidyEnrolmentEntity e, String programCode) {
         return new SubsidyEnrollmentResponse(
                 e.getId(),
-                e.getClientId(),
+                e.getMemberCpid(),
                 e.getSubsidyProgramId(),
                 programCode,
                 e.getExemptionCategory(),
                 e.getStatus(),
                 e.getEffectiveFrom(),
                 e.getEffectiveTo());
+    }
+
+    private static int nullSafeCompare(java.time.OffsetDateTime a, java.time.OffsetDateTime b) {
+        if (a == null && b == null) return 0;
+        if (a == null) return -1;
+        if (b == null) return 1;
+        return a.compareTo(b);
     }
 }
