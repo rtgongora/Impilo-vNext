@@ -548,6 +548,31 @@ public class PctServiceClient {
     }
 
     /**
+     * List teleconsult referrals routed to a specialty pool (virtual-hospital queue),
+     * oldest first. {@code status} is optional (PCT defaults to SUBMITTED) and accepts a
+     * comma-separated status-in list.
+     */
+    public JsonNode listPoolReferrals(String poolId, String status, int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/referrals/pool/" + poolId)
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (status != null && !status.isBlank()) builder.queryParam("status", status);
+        log.info("PCT: Listing pool referrals for pool={}", poolId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Route a referral to a team/pool/on-call roster (Stage 3 routing).
+     */
+    public JsonNode routeReferral(String referralId, Map<String, Object> request) {
+        String url = baseUrl + "/v1/referrals/" + referralId + "/route";
+        log.info("PCT: Routing referral id={}", referralId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * List telehealth sessions for a facility/workspace operational hub.
      */
     public JsonNode listTelehealthSessions(String facilityId, String status, int page, int size) {

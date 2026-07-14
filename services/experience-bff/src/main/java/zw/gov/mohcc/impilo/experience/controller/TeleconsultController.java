@@ -18,7 +18,6 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.AnalyticsPipelineServiceClient;
 import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
-import zw.gov.mohcc.impilo.experience.client.CoverageServiceClient;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.KhulumaServiceClient;
@@ -29,6 +28,7 @@ import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.RtcGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
+import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineBillingContextService;
 import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineGovernanceService;
 
 import java.time.OffsetDateTime;
@@ -62,7 +62,7 @@ public class TeleconsultController {
     private final DocumentServiceClient documentClient;
     private final VarapiServiceClient varapiClient;
     private final TusoServiceClient tusoClient;
-    private final CoverageServiceClient coverageClient;
+    private final TelemedicineBillingContextService billingContextService;
     private final NotificationServiceClient notificationClient;
     private final FhirGatewayServiceClient fhirGatewayClient;
     private final CostaServiceClient costaClient;
@@ -80,7 +80,7 @@ public class TeleconsultController {
                                  DocumentServiceClient documentClient,
                                  VarapiServiceClient varapiClient,
                                  TusoServiceClient tusoClient,
-                                 CoverageServiceClient coverageClient,
+                                 TelemedicineBillingContextService billingContextService,
                                  NotificationServiceClient notificationClient,
                                  FhirGatewayServiceClient fhirGatewayClient,
                                  CostaServiceClient costaClient,
@@ -96,7 +96,7 @@ public class TeleconsultController {
         this.documentClient = documentClient;
         this.varapiClient = varapiClient;
         this.tusoClient = tusoClient;
-        this.coverageClient = coverageClient;
+        this.billingContextService = billingContextService;
         this.notificationClient = notificationClient;
         this.fhirGatewayClient = fhirGatewayClient;
         this.costaClient = costaClient;
@@ -977,6 +977,95 @@ public class TeleconsultController {
         return complete(id, requestId, correlationId, tenantId, purposeOfUse, facilityId, actorId, payload);
     }
 
+    /**
+     * Virtual-hospital pool queue (Lane E Wave 1): governed read of PCT's pool-scoped
+     * teleconsult worklist — referrals routed to a specialty pool (oldest first). Any
+     * telemedicine-authorized provider may view/accept; per-pool duty rosters are Wave 2.
+     */
+    @GetMapping("/pool/{poolId}/queue")
+    public ResponseEntity<Map<String, Object>> poolQueue(
+            @PathVariable String poolId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        try {
+            telemedicineGovernanceService.assertGovernedRead();
+            JsonNode rows = pctClient.listPoolReferrals(poolId, status, page, Math.min(Math.max(size, 1), 100));
+            if (rows == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No pool queue payload returned", requestId, correlationId);
+            }
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_POOL_QUEUE_VIEWED", "GET:teleconsult/pool/queue", "SUCCESS",
+                    actorId, "PROVIDER", null, "TeleconsultPool", poolId,
+                    Map.of("status", defaultString(status, "SUBMITTED")));
+            return ok(normalizeReferralPayload(rows), requestId, correlationId, HttpStatus.OK);
+        } catch (ResponseStatusException e) {
+            HttpStatus resolved = HttpStatus.resolve(e.getStatusCode().value());
+            return error(resolved == null ? HttpStatus.FORBIDDEN : resolved,
+                    "TELEMEDICINE_GOVERNANCE_INVALID",
+                    e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
+                    requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    /**
+     * Route (or re-route) a teleconsult referral to a team/pool (HO-1 closure): governed
+     * proxy of PCT's Stage-3 {@code POST /v1/referrals/{id}/route}.
+     */
+    @PostMapping("/sessions/{id}/route")
+    public ResponseEntity<Map<String, Object>> routeSession(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            String poolId = val(body, "routingPoolId", "routing_pool_id", "poolId", "pool_id");
+            if (poolId == null || poolId.isBlank()) {
+                return error(HttpStatus.BAD_REQUEST, "MISSING_ROUTING_POOL",
+                        "routingPoolId is required to route a teleconsult to a pool", requestId, correlationId);
+            }
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("routing_kind", defaultString(val(body, "routingKind", "routing_kind"), "POOL"));
+            payload.put("routing_pool_id", poolId);
+            String rosterId = val(body, "onCallRosterId", "on_call_roster_id");
+            if (rosterId != null && !rosterId.isBlank()) {
+                payload.put("on_call_roster_id", rosterId);
+            }
+            JsonNode routed = pctClient.routeReferral(id, payload);
+            if (routed == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No referral route payload returned", requestId, correlationId);
+            }
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_REFERRAL_ROUTED", "POST:teleconsult/route", "SUCCESS",
+                    actorId, "PROVIDER", extractPatient(routed), "TeleconsultReferral",
+                    id, Map.of("poolId", poolId));
+            return ok(normalizeReferralPayload(routed), requestId, correlationId, HttpStatus.OK);
+        } catch (ResponseStatusException e) {
+            HttpStatus resolved = HttpStatus.resolve(e.getStatusCode().value());
+            return error(resolved == null ? HttpStatus.FORBIDDEN : resolved,
+                    "TELEMEDICINE_GOVERNANCE_INVALID",
+                    e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
+                    requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
     @GetMapping("/routing/providers")
     public ResponseEntity<Map<String, Object>> searchProviders(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -1072,42 +1161,7 @@ public class TeleconsultController {
      */
     private void applyBillingContext(Map<String, Object> payload, String patientCpid,
                                      String facilityRef, Map<String, Object> body) {
-        String patientCategory = val(body, "patientCategory", "patient_category");
-        if ((patientCategory == null || patientCategory.isBlank())
-                && patientCpid != null && !patientCpid.isBlank()) {
-            try {
-                patientCategory = nodeText(coverageClient.resolvePatientCategory(patientCpid), "category");
-            } catch (Exception e) {
-                log.debug("Coverage patient-category lookup failed for {}: {}", patientCpid, e.getMessage());
-            }
-        }
-        if (patientCategory != null && !patientCategory.isBlank()) {
-            payload.put("patient_category", patientCategory);
-        }
-
-        String facilityCategory = val(body, "facilityCategory", "facility_category");
-        if ((facilityCategory == null || facilityCategory.isBlank())
-                && facilityRef != null && facilityRef.matches("\\d+")) {
-            try {
-                JsonNode facility = tusoClient.getFacility(Long.parseLong(facilityRef));
-                facilityCategory = firstNonBlank(
-                        nodeText(facility, "facilityCategory"),
-                        nodeText(facility, "level"));
-            } catch (Exception e) {
-                log.debug("TUSO facility-category lookup failed for {}: {}", facilityRef, e.getMessage());
-            }
-        }
-        if (facilityCategory != null && !facilityCategory.isBlank()) {
-            payload.put("facility_category", facilityCategory);
-        }
-    }
-
-    private String nodeText(JsonNode node, String field) {
-        if (node == null) return null;
-        JsonNode v = node.get(field);
-        if (v == null || v.isNull()) return null;
-        String s = v.asText();
-        return s == null || s.isBlank() ? null : s;
+        billingContextService.applyBillingContext(payload, patientCpid, facilityRef, body);
     }
 
     private ResponseEntity<Map<String, Object>> ok(Object data, String requestId, String correlationId, HttpStatus status) {
