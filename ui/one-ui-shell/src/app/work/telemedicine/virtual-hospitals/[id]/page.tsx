@@ -35,6 +35,7 @@ import {
 } from "@/lib/telemedicine/virtual-hospitals";
 import { getSessionMode, SESSION_MODE_STATUS_LABELS } from "@/lib/telemedicine/session-modes";
 import { PrivacyBadge } from "@/components/telemedicine/PrivacyBadge";
+import { VirtualServiceGovernancePanel } from "@/components/telemedicine/VirtualServiceGovernancePanel";
 import {
   addPin,
   isPinned,
@@ -372,6 +373,8 @@ export default function VirtualHospitalDetailPage() {
           context; per-institution billing configuration awaits the substrate.
         </p>
       </section>
+
+      <VirtualServiceGovernancePanel vsUid={id} />
     </div>
   );
 }

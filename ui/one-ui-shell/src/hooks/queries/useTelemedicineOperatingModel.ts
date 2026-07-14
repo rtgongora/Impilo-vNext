@@ -7,12 +7,14 @@
  *   GET /internal/v1/telemedicine/operating-model/virtual-hospitals/{id}
  *   GET /internal/v1/telemedicine/operating-model/clinical-groups
  *
- * Read-only consumers: the registry is versioned configuration (no tenant
- * data), the BFF resources being the canonical serialization of the TS seed
- * spec in `@/lib/telemedicine` (pinned by a drift test there).
+ * The virtual-hospital directory is TUSO-truth since Lane E Wave 2 (the BFF
+ * falls back to cached-last-good, then the static doctrine document); the
+ * clinical-group taxonomy is still versioned configuration. Governance
+ * mutations (activate/suspend/seams) are registry-admin only and enforced
+ * fail-closed by TUSO.
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { ClinicalGroupTypeDescriptor } from "@/lib/telemedicine/clinical-groups";
 import type { VirtualHospitalDefinition } from "@/lib/telemedicine/virtual-hospitals";
@@ -110,4 +112,55 @@ export function useClinicalGroupTaxonomy() {
       return unwrap<ClinicalGroupTaxonomy>(res);
     },
   });
+}
+
+// ── Governance (registry-admin) ──────────────────────────────────────────
+
+const GOV_BASE = "/internal/v1/telemedicine/virtual-services";
+
+export interface VirtualServiceReadbacks {
+  vsUid: string;
+  lifecycleStatus: string | null;
+  primaryPoolId: string | null;
+  materialization?: unknown;
+  materializationDegraded?: boolean;
+  duty?: { onDutyCount?: number; nextShiftStart?: string | null } | null;
+}
+
+/** Live governance read-backs: lifecycle, materialisation, on-duty coverage. */
+export function useVirtualServiceReadbacks(vsUid: string) {
+  return useQuery({
+    queryKey: ["virtual-service-readbacks", vsUid],
+    enabled: !!vsUid,
+    retry: false,
+    refetchInterval: 15_000,
+    queryFn: async (): Promise<VirtualServiceReadbacks | null> => {
+      return (await apiClient.get<VirtualServiceReadbacks>(`${GOV_BASE}/${vsUid}/readbacks`)) ?? null;
+    },
+  });
+}
+
+/** Governed lifecycle mutations. Server (TUSO) enforces fail-closed preconditions. */
+export function useVirtualServiceGovernance(vsUid: string) {
+  const qc = useQueryClient();
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["virtual-service-readbacks", vsUid] });
+    qc.invalidateQueries({ queryKey: ["telemedicine-operating-model"] });
+  };
+
+  const addSeam = useMutation({
+    mutationFn: (body: { routingType: string; targetRef: string; note?: string }) =>
+      apiClient.post(`${GOV_BASE}/${vsUid}/routing-seams`, body),
+    onSuccess: invalidate,
+  });
+  const activate = useMutation({
+    mutationFn: () => apiClient.post(`${GOV_BASE}/${vsUid}/activate`, {}),
+    onSuccess: invalidate,
+  });
+  const suspend = useMutation({
+    mutationFn: (body: { reason?: string }) => apiClient.post(`${GOV_BASE}/${vsUid}/suspend`, body),
+    onSuccess: invalidate,
+  });
+
+  return { addSeam, activate, suspend };
 }
