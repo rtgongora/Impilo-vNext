@@ -41,6 +41,10 @@ public final class EndpointDiscovery {
      * Find a POST/PUT/PATCH endpoint on /internal/v1/ for idempotency testing.
      */
     public static Optional<String> findCommandEndpoint(RequestMappingHandlerMapping mapping) {
+        Optional<String> probe = findExactPath(mapping, "/internal/v1/test-command");
+        if (probe.isPresent()) {
+            return probe;
+        }
         Map<RequestMappingInfo, HandlerMethod> handlerMethods = mapping.getHandlerMethods();
 
         for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : handlerMethods.entrySet()) {
@@ -61,6 +65,7 @@ public final class EndpointDiscovery {
                 Optional<String> match = info.getPathPatternsCondition().getPatterns().stream()
                         .map(Object::toString)
                         .filter(p -> p.startsWith("/internal/v1/"))
+                        .filter(EndpointDiscovery::isConcretePath)
                         .findFirst();
                 if (match.isPresent()) {
                     return match;
@@ -71,6 +76,7 @@ public final class EndpointDiscovery {
             if (info.getDirectPaths() != null) {
                 Optional<String> match = info.getDirectPaths().stream()
                         .filter(p -> p.startsWith("/internal/v1/"))
+                        .filter(EndpointDiscovery::isConcretePath)
                         .findFirst();
                 if (match.isPresent()) {
                     return match;
@@ -86,6 +92,12 @@ public final class EndpointDiscovery {
     private static Optional<String> findEndpointByMethod(
             RequestMappingHandlerMapping mapping, String httpMethod) {
 
+        if ("GET".equals(httpMethod)) {
+            Optional<String> probe = findExactPath(mapping, "/internal/v1/health");
+            if (probe.isPresent()) {
+                return probe;
+            }
+        }
         Map<RequestMappingInfo, HandlerMethod> handlerMethods = mapping.getHandlerMethods();
 
         for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : handlerMethods.entrySet()) {
@@ -105,6 +117,7 @@ public final class EndpointDiscovery {
                 Optional<String> match = info.getPathPatternsCondition().getPatterns().stream()
                         .map(Object::toString)
                         .filter(EndpointDiscovery::isV11Path)
+                        .filter(EndpointDiscovery::isConcretePath)
                         .findFirst();
                 if (match.isPresent()) {
                     return match;
@@ -115,6 +128,7 @@ public final class EndpointDiscovery {
             if (info.getDirectPaths() != null) {
                 Optional<String> match = info.getDirectPaths().stream()
                         .filter(EndpointDiscovery::isV11Path)
+                        .filter(EndpointDiscovery::isConcretePath)
                         .findFirst();
                 if (match.isPresent()) {
                     return match;
@@ -122,6 +136,29 @@ public final class EndpointDiscovery {
             }
         }
         return Optional.empty();
+    }
+
+    private static Optional<String> findExactPath(RequestMappingHandlerMapping mapping, String path) {
+        for (RequestMappingInfo info : mapping.getHandlerMethods().keySet()) {
+            if (info.getPathPatternsCondition() != null
+                    && info.getPathPatternsCondition().getPatterns().stream()
+                            .map(Object::toString).anyMatch(path::equals)) {
+                return Optional.of(path);
+            }
+            if (info.getDirectPaths() != null && info.getDirectPaths().contains(path)) {
+                return Optional.of(path);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * A path MockMvc can call verbatim: no {template} variables or wildcards.
+     * Discovery must skip templated mappings — expanding them requires values
+     * the harness does not have.
+     */
+    public static boolean isConcretePath(String path) {
+        return path != null && !path.contains("{") && !path.contains("*");
     }
 
     /**
