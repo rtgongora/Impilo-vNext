@@ -33,8 +33,8 @@ public class TransfusionOutcomeEntity {
 @Column(name = "facility_id")
     private UUID facilityId;
 
-@Column(name = "jurisdiction")
-    private String jurisdiction;
+@Column(name = "jurisdiction", nullable = false)
+    private String jurisdiction = "ZW";
 
 @Column(name = "recorded_at")
     private OffsetDateTime recordedAt;

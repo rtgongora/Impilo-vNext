@@ -43,8 +43,8 @@ public class TransfusionEpisodeEntity {
 @Column(name = "started_by")
     private String startedBy;
 
-@Column(name = "jurisdiction")
-    private String jurisdiction;
+@Column(name = "jurisdiction", nullable = false)
+    private String jurisdiction = "ZW";
 
 @Column(name = "started_at")
     private OffsetDateTime startedAt;
