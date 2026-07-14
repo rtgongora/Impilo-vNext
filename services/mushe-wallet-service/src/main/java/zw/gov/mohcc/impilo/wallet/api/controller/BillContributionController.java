@@ -158,6 +158,27 @@ public class BillContributionController {
         }
     }
 
+    /**
+     * Cancel a campaign and refund contributions from escrow (batched, resumable, newest-first).
+     * Re-invoke to retry rows held REFUND_PENDING after an escrow shortfall.
+     */
+    @PostMapping("/{requestId}/cancel-and-refund")
+    public ResponseEntity<ApiResponse<Object>> cancelAndRefund(
+            @PathVariable String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+        try {
+            var request = service.cancelAndRefund(UUID.fromString(requestId), actorId);
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("request", request);
+            data.put("contributions", service.contributions(request.getId()));
+            return ResponseEntity.ok(ApiResponse.ok(data, correlationId));
+        } catch (BillContributionService.ContributionRejected e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(ApiResponse.error("CANCEL_REFUND_REJECTED", e.getMessage(), 422, correlationId));
+        }
+    }
+
     @PostMapping("/{requestId}/close")
     public ResponseEntity<ApiResponse<Object>> close(
             @PathVariable String requestId,

@@ -380,6 +380,143 @@ class BillContributionServiceTest {
         verify(walletService, never()).transfer(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
+    // ── cancel-and-refund ───────────────────────────────────────────────────
+
+    private BillContributionEntity contribution(UUID requestId, String amount, UUID contributorWallet,
+                                                String contributorRef, String origin) {
+        BillContributionEntity c = new BillContributionEntity();
+        c.setId(UUID.randomUUID());
+        c.setRequestId(requestId);
+        c.setAmount(new BigDecimal(amount));
+        c.setCurrency("USD");
+        c.setContributorWalletId(contributorWallet);
+        c.setContributorRef(contributorRef);
+        c.setOrigin(origin);
+        return c;
+    }
+
+    /** Simulates a live escrow balance that transfers out of the escrow wallet deplete. */
+    private java.util.concurrent.atomic.AtomicReference<BigDecimal> simulateEscrowBalance(String initial) {
+        var balance = new java.util.concurrent.atomic.AtomicReference<>(new BigDecimal(initial));
+        when(walletService.getBalance(escrowWalletId)).thenAnswer(i -> balance.get());
+        when(walletService.transfer(eq(escrowWalletId), any(), any(), any(), any(), any(), any(), any()))
+                .thenAnswer(i -> {
+                    balance.set(balance.get().subtract(i.getArgument(2)));
+                    TransactionEntity t = new TransactionEntity();
+                    t.setTxnId(UUID.randomUUID());
+                    return t;
+                });
+        return balance;
+    }
+
+    @Test
+    void cancel_refunds_all_rows_newest_first_across_wallet_resolvable_and_unclaimed_legs() {
+        var request = openCampaignRequest();
+        when(requestRepo.findById(request.getId())).thenReturn(Optional.of(request));
+        var newestWallet = contribution(request.getId(), "30.00", donorWalletId, "cpid-9",
+                BillContributionEntity.ORIGIN_WALLET);
+        var middleResolvable = contribution(request.getId(), "20.00", null, "cpid-7",
+                BillContributionEntity.ORIGIN_PSP);
+        var oldestUnresolvable = contribution(request.getId(), "10.00", null, null,
+                BillContributionEntity.ORIGIN_PSP);
+        when(contribRepo.findByRequestIdOrderByCreatedAtDesc(request.getId()))
+                .thenReturn(java.util.List.of(newestWallet, middleResolvable, oldestUnresolvable));
+        simulateEscrowBalance("60.00");
+
+        UUID resolvedDonorWallet = UUID.randomUUID();
+        WalletEntity donor = new WalletEntity();
+        donor.setWalletId(resolvedDonorWallet);
+        when(walletService.createWallet(any(), eq("INDIVIDUAL"), eq("cpid-7"), any(), any()))
+                .thenReturn(donor);
+        UUID unclaimedWalletId = UUID.randomUUID();
+        WalletEntity unclaimed = new WalletEntity();
+        unclaimed.setWalletId(unclaimedWalletId);
+        when(walletService.createWallet(any(), eq("SYSTEM_UNCLAIMED"), eq("UNCLAIMED_DONATIONS"), any(), any()))
+                .thenReturn(unclaimed);
+
+        var result = service.cancelAndRefund(request.getId(), "case-officer");
+
+        var inOrder = org.mockito.Mockito.inOrder(walletService);
+        inOrder.verify(walletService).transfer(eq(escrowWalletId), eq(donorWalletId),
+                eq(new BigDecimal("30.00")), any(), any(), any(), any(), eq("refund:" + newestWallet.getId()));
+        inOrder.verify(walletService).transfer(eq(escrowWalletId), eq(resolvedDonorWallet),
+                eq(new BigDecimal("20.00")), any(), any(), any(), any(), eq("refund:" + middleResolvable.getId()));
+        inOrder.verify(walletService).transfer(eq(escrowWalletId), eq(unclaimedWalletId),
+                eq(new BigDecimal("10.00")), any(), any(), any(), any(), eq("refund:" + oldestUnresolvable.getId()));
+        assertEquals(BillContributionEntity.REFUND_REFUNDED, newestWallet.getRefundStatus());
+        assertEquals(BillContributionEntity.REFUND_REFUNDED, middleResolvable.getRefundStatus());
+        assertEquals(BillContributionEntity.REFUND_UNCLAIMED, oldestUnresolvable.getRefundStatus());
+        assertNotNull(newestWallet.getRefundTxnId());
+        assertEquals(BillContributionRequestEntity.STATUS_CANCELLED_SETTLED, result.getStatus());
+
+        ArgumentCaptor<EventOutboxEntity> cap = ArgumentCaptor.forClass(EventOutboxEntity.class);
+        verify(outboxRepo, times(3)).save(cap.capture());
+        assertTrue(cap.getAllValues().stream()
+                .allMatch(e -> BillContributionService.EVENT_REFUNDED.equals(e.getEventType())));
+        assertTrue(cap.getAllValues().get(2).getPayloadJson().contains("\"refundOutcome\":\"UNCLAIMED\""));
+    }
+
+    @Test
+    void cancel_replay_never_refunds_a_terminal_row_twice() {
+        var request = openCampaignRequest();
+        request.setStatus("OPEN");
+        when(requestRepo.findById(request.getId())).thenReturn(Optional.of(request));
+        var done = contribution(request.getId(), "30.00", donorWalletId, null,
+                BillContributionEntity.ORIGIN_WALLET);
+        done.setRefundStatus(BillContributionEntity.REFUND_REFUNDED);
+        var unclaimedDone = contribution(request.getId(), "10.00", null, null,
+                BillContributionEntity.ORIGIN_PSP);
+        unclaimedDone.setRefundStatus(BillContributionEntity.REFUND_UNCLAIMED);
+        when(contribRepo.findByRequestIdOrderByCreatedAtDesc(request.getId()))
+                .thenReturn(java.util.List.of(done, unclaimedDone));
+        simulateEscrowBalance("0.00");
+
+        var result = service.cancelAndRefund(request.getId(), "case-officer");
+
+        verify(walletService, never()).transfer(any(), any(), any(), any(), any(), any(), any(), any());
+        assertEquals(BillContributionRequestEntity.STATUS_CANCELLED_SETTLED, result.getStatus());
+
+        // And a replay on the settled request is a pure no-op.
+        var replay = service.cancelAndRefund(request.getId(), "case-officer");
+        assertEquals(BillContributionRequestEntity.STATUS_CANCELLED_SETTLED, replay.getStatus());
+    }
+
+    @Test
+    void escrow_shortfall_holds_refund_pending_and_never_goes_negative() {
+        var request = openCampaignRequest();
+        when(requestRepo.findById(request.getId())).thenReturn(Optional.of(request));
+        var newestBig = contribution(request.getId(), "50.00", donorWalletId, null,
+                BillContributionEntity.ORIGIN_WALLET);
+        UUID olderDonorWallet = UUID.randomUUID();
+        var olderSmall = contribution(request.getId(), "10.00", olderDonorWallet, null,
+                BillContributionEntity.ORIGIN_WALLET);
+        when(contribRepo.findByRequestIdOrderByCreatedAtDesc(request.getId()))
+                .thenReturn(java.util.List.of(newestBig, olderSmall));
+        // 40.00 escrow: 20.00 was already released to the beneficiary before cancellation.
+        var balance = simulateEscrowBalance("40.00");
+
+        var result = service.cancelAndRefund(request.getId(), "case-officer");
+
+        assertEquals(BillContributionEntity.REFUND_PENDING, newestBig.getRefundStatus());
+        assertEquals(BillContributionEntity.REFUND_REFUNDED, olderSmall.getRefundStatus());
+        assertEquals(BillContributionRequestEntity.STATUS_CANCELLED_REFUNDING, result.getStatus());
+        assertEquals(new BigDecimal("30.00"), balance.get()); // 40 - 10, never negative
+        verify(walletService, never()).transfer(eq(escrowWalletId), eq(donorWalletId),
+                any(), any(), any(), any(), any(), any());
+        verify(outboxRepo, times(1)).save(any()); // only the actually-refunded row emits
+    }
+
+    @Test
+    void cancel_and_refund_is_refused_for_non_campaign_requests() {
+        var bill = openRequest(new BigDecimal("100.00"), BigDecimal.ZERO);
+        bill.setTenantId(UUID.randomUUID());
+        when(requestRepo.findById(bill.getId())).thenReturn(Optional.of(bill));
+
+        assertThrows(BillContributionService.ContributionRejected.class,
+                () -> service.cancelAndRefund(bill.getId(), "x"));
+        verify(walletService, never()).transfer(any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
     @Test
     void every_contribution_emits_a_recorded_outbox_event() {
         var request = openCampaignRequest();

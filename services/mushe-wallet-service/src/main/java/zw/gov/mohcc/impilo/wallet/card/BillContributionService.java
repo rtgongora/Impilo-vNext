@@ -424,6 +424,109 @@ public class BillContributionService {
         return debitTxn;
     }
 
+    /**
+     * Cancel a campaign and refund its contributions from the escrow wallet — a batched,
+     * resumable engine, newest-first:
+     * <ul>
+     *   <li>WALLET origin — transfer escrow → contributor wallet, idempotency key
+     *       {@code 'refund:' + contributionId} → REFUNDED.</li>
+     *   <li>PSP / CASH_ASSISTED with a resolvable person ref — resolve-or-create the donor's
+     *       INDIVIDUAL wallet and credit-as-refund (escrow transfer) → REFUNDED.</li>
+     *   <li>No resolvable donor — transfer to the per-tenant UNCLAIMED_DONATIONS system wallet
+     *       (ownerType {@code SYSTEM_UNCLAIMED}) → UNCLAIMED.</li>
+     *   <li>Escrow cannot cover the row (funds already released) — REFUND_PENDING with the
+     *       shortfall logged; the escrow never goes negative and nothing is invented. A re-run
+     *       retries only PENDING/unprocessed rows (terminal rows are skipped; every transfer is
+     *       idempotency-keyed).</li>
+     * </ul>
+     * Emits {@code wallet.bill_contribution.refunded} per refunded/unclaimed row. The request
+     * ends {@code CANCELLED_SETTLED} when no REFUND_PENDING remain, else
+     * {@code CANCELLED_REFUNDING}. Calling on an already-settled cancellation is a no-op.
+     */
+    @Transactional
+    public BillContributionRequestEntity cancelAndRefund(UUID requestId, String cancelledBy) {
+        BillContributionRequestEntity request = getById(requestId);
+        if (!BillContributionRequestEntity.ORIGIN_CAMPAIGN.equals(request.getOrigin())) {
+            throw new ContributionRejected("Only campaign contribution requests can cancel-and-refund");
+        }
+        if (BillContributionRequestEntity.STATUS_CANCELLED_SETTLED.equals(request.getStatus())) {
+            return request; // idempotent replay — everything already refunded
+        }
+        UUID escrowWalletId = request.getBeneficiaryWalletId();
+
+        boolean anyPending = false;
+        List<BillContributionEntity> rows =
+                contributionRepository.findByRequestIdOrderByCreatedAtDesc(request.getId());
+        for (BillContributionEntity c : rows) {
+            if (BillContributionEntity.REFUND_REFUNDED.equals(c.getRefundStatus())
+                    || BillContributionEntity.REFUND_UNCLAIMED.equals(c.getRefundStatus())) {
+                continue; // terminal — never refund twice
+            }
+            BigDecimal escrowBalance = walletService.getBalance(escrowWalletId);
+            if (escrowBalance.compareTo(c.getAmount()) < 0) {
+                // Honest shortfall: the money left escrow (released) — hold, never go negative.
+                c.setRefundStatus(BillContributionEntity.REFUND_PENDING);
+                contributionRepository.save(c);
+                anyPending = true;
+                log.warn("Refund shortfall on contribution {}: escrow balance {} < {} — held REFUND_PENDING",
+                        c.getId(), escrowBalance, c.getAmount());
+                continue;
+            }
+
+            UUID destinationWalletId;
+            String outcome;
+            if (c.getContributorWalletId() != null) {
+                destinationWalletId = c.getContributorWalletId();
+                outcome = BillContributionEntity.REFUND_REFUNDED;
+            } else if (c.getContributorRef() != null && !c.getContributorRef().isBlank()) {
+                WalletEntity donorWallet = walletService.createWallet(request.getTenantId(),
+                        "INDIVIDUAL", c.getContributorRef(),
+                        c.getContributorName() != null ? c.getContributorName() : c.getContributorRef(),
+                        request.getCurrency()); // get-or-create by owner
+                destinationWalletId = donorWallet.getWalletId();
+                outcome = BillContributionEntity.REFUND_REFUNDED;
+            } else {
+                WalletEntity unclaimed = walletService.createWallet(request.getTenantId(),
+                        "SYSTEM_UNCLAIMED", "UNCLAIMED_DONATIONS",
+                        "Unclaimed crowdfund donations", request.getCurrency());
+                destinationWalletId = unclaimed.getWalletId();
+                outcome = BillContributionEntity.REFUND_UNCLAIMED;
+            }
+
+            TransactionEntity debitTxn = walletService.transfer(escrowWalletId, destinationWalletId,
+                    c.getAmount(), request.getShareToken(),
+                    "Crowdfund refund — " + request.getTitle(), "SOCIAL_FUNDING", null,
+                    "refund:" + c.getId());
+            c.setRefundStatus(outcome);
+            c.setRefundTxnId(debitTxn.getTxnId());
+            contributionRepository.save(c);
+
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("requestId", request.getId().toString());
+            if (request.getCampaignRef() != null) {
+                payload.put("campaignRef", request.getCampaignRef().toString());
+            }
+            payload.put("contributionId", c.getId().toString());
+            if (c.getContributorRef() != null) {
+                payload.put("contributorRef", c.getContributorRef());
+            }
+            payload.put("amount", c.getAmount().toPlainString());
+            payload.put("currency", request.getCurrency());
+            payload.put("refundOutcome", outcome);
+            payload.put("idempotencyKey", "refund:" + c.getId());
+            emitEvent(EVENT_REFUNDED, request, c.getId().toString(), "refund:" + c.getId(), payload);
+        }
+
+        request.setStatus(anyPending
+                ? BillContributionRequestEntity.STATUS_CANCELLED_REFUNDING
+                : BillContributionRequestEntity.STATUS_CANCELLED_SETTLED);
+        request.setUpdatedAt(OffsetDateTime.now());
+        requestRepository.save(request);
+        log.info("Campaign request {} cancelled by {} — refunds {}", requestId, cancelledBy,
+                request.getStatus());
+        return request;
+    }
+
     @Transactional
     public BillContributionRequestEntity close(UUID requestId) {
         BillContributionRequestEntity r = requestRepository.findById(requestId)

@@ -25,6 +25,11 @@ public class BillContributionRequestEntity {
     public static final String ORIGIN_BILL = "BILL";
     public static final String ORIGIN_CAMPAIGN = "CAMPAIGN";
 
+    /** Cancelled but at least one contribution is still awaiting refund (escrow shortfall). */
+    public static final String STATUS_CANCELLED_REFUNDING = "CANCELLED_REFUNDING";
+    /** Cancelled and every contribution has a terminal refund outcome. */
+    public static final String STATUS_CANCELLED_SETTLED = "CANCELLED_SETTLED";
+
     @Id
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
@@ -62,7 +67,7 @@ public class BillContributionRequestEntity {
     @Column(name = "currency", nullable = false, length = 3)
     private String currency = "USD";
 
-    @Column(name = "status", nullable = false, length = 16)
+    @Column(name = "status", nullable = false, length = 24)
     private String status = "OPEN";
 
     @Column(name = "created_by", length = 120)
