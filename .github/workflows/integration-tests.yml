@@ -1,0 +1,111 @@
+name: Integration Tests
+
+# Selective, infrastructure-aware integration tests (maven-failsafe, opt-in it-* profiles).
+# Ordinary CI (ci.yml) runs only the fast Surefire unit tests; this workflow provisions the
+# real infrastructure and runs the *IT classes, split by category so failures are easy to
+# locate. A guard (scripts/test/assert-integration-tests-ran.sh) proves the expected tests
+# actually executed — a job cannot pass with the integration tests silently skipped.
+#
+# Nothing here deploys an application or touches Kubernetes, and no production/shared
+# database is used — each job provisions its own throwaway infrastructure.
+
+on:
+  push:
+    branches: [main, develop, 'claude/**']
+  pull_request:
+    branches: [main, develop]
+
+env:
+  JAVA_VERSION: '21'
+
+jobs:
+  # ── Category: PostgreSQL-only + runtime-proof (external Postgres, Mode 2) ─────────────
+  integration-postgres:
+    name: Integration — PostgreSQL + runtime-proof
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: it_db
+          POSTGRES_USER: it
+          POSTGRES_PASSWORD: it
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build reactor (skip tests)
+        working-directory: services
+        run: mvn -B -q install -DskipTests
+
+      - name: Run PostgreSQL + runtime-proof integration tests
+        working-directory: services
+        env:
+          IT_PG_URL: jdbc:postgresql://localhost:5432/it_db
+          IT_PG_USER: it
+          IT_PG_PASS: it
+        run: |
+          mvn -B verify -Pit-postgres,it-runtime-proof \
+            -pl costing-engine-service,share-slip-service,tshepo-audit-service,mvumo-service,data-access-governance-service,identity-assurance-service,tshepo-authz-service,tshepo-keys-service \
+            -Dit.pg.url="$IT_PG_URL" -Dit.pg.user="$IT_PG_USER" -Dit.pg.pass="$IT_PG_PASS"
+
+      - name: Guard — assert PostgreSQL integration tests actually ran
+        run: bash scripts/test/assert-integration-tests-ran.sh --category postgres
+
+      - name: Guard — assert runtime-proof integration tests actually ran
+        # TshepoConsentDevInstanceIT needs a live TSHEPO instance (MVUMO_IT_TSHEPO_BASE),
+        # which this job does not provision, so it is expected to skip here; assert the
+        # six real-Postgres runtime-proof ITs ran.
+        run: |
+          bash scripts/test/assert-integration-tests-ran.sh \
+            PermitEnforcementRuntimeProofIT AssuranceWorkflowRuntimeProofIT \
+            GdhcnReadinessRuntimeProofIT StepUpVerificationIT \
+            TrustAuthorityRegistryRuntimeProofIT SigningRuntimeProofIT
+
+      - name: Upload failsafe reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failsafe-reports-postgres
+          path: services/*/target/failsafe-reports/**
+          retention-days: 7
+
+  # ── Category: Testcontainers / WireMock (Docker, Mode 1) ─────────────────────────────
+  integration-containers:
+    name: Integration — Testcontainers / WireMock
+    runs-on: ubuntu-latest   # GitHub-hosted runners provide a working Docker engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build reactor (skip tests)
+        working-directory: services
+        run: mvn -B -q install -DskipTests
+
+      - name: Run container-backed integration tests
+        working-directory: services
+        run: |
+          mvn -B verify -Pit-containers \
+            -pl search-service,clinical-knowledge-platform-service,experience-bff
+
+      - name: Guard — assert container integration tests actually ran
+        run: bash scripts/test/assert-integration-tests-ran.sh --category containers
+
+      - name: Upload failsafe reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failsafe-reports-containers
+          path: services/*/target/failsafe-reports/**
+          retention-days: 7
