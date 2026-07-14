@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
+import zw.gov.mohcc.impilo.companion.federation.FederationAuthority;
 
 /**
  * v1.1 probe controller for BUTANO FHIR.
@@ -45,5 +46,18 @@ public class ButanoFhirV11ProbeController {
         body.put("correlation_id", ctx.correlationId());
         body.put("echo", payload);
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    }
+
+    @PostMapping("/test-federation")
+    public ResponseEntity<Map<String, Object>> testFederation(@RequestBody Map<String, Object> payload) {
+        var ctx = RequestContextHolder.require();
+        FederationAuthority.requireNational(ctx.podId());
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("service", "butano-fhir");
+        body.put("action", "test-federation");
+        body.put("pod_id", ctx.podId());
+        body.put("request_id", ctx.requestId());
+        body.put("correlation_id", ctx.correlationId());
+        return ResponseEntity.ok(body);
     }
 }

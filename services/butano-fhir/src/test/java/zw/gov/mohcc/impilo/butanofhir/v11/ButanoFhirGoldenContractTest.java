@@ -9,7 +9,7 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-public class ButanoFhirGoldenContractIT extends GoldenContractSuite {
+public class ButanoFhirGoldenContractTest extends GoldenContractSuite {
 
     @Override
     protected String getCommandEndpointOverride() {
@@ -23,6 +23,6 @@ public class ButanoFhirGoldenContractIT extends GoldenContractSuite {
 
     @Override
     protected String getFederationEndpointOverride() {
-        return "/internal/v1/fhir/resources";
+        return "/internal/v1/test-federation";
     }
 }
