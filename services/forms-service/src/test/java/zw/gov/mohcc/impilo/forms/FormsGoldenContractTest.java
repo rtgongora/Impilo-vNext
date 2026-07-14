@@ -6,7 +6,7 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
-public class FormsGoldenContractIT extends GoldenContractSuite {
+public class FormsGoldenContractTest extends GoldenContractSuite {
     // All v1.1 contract tests inherited from GoldenContractSuite.
     // Endpoints auto-discovered via RequestMappingHandlerMapping.
 }
