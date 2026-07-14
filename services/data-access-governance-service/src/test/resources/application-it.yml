@@ -1,0 +1,8 @@
+# Integration-test profile (@ActiveProfiles("it")) for the runtime-proof IT, which
+# runs against a REAL Postgres supplied via -Dit.pg.url (datasource/Flyway/dialect are
+# overridden in the test's @DynamicPropertySource). Unlike the H2 "test" unit profile,
+# this profile does NOT force H2/disable-oauth; it only supplies the non-datasource test
+# config the enforcement service requires to start (a strong, test-only signing key).
+dags:
+  enforcement:
+    signing-key: test-only-dags-permit-signing-key-not-for-production-0123456789

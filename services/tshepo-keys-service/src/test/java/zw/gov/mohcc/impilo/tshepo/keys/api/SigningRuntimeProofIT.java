@@ -47,10 +47,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles("it")
 @EnabledIfSystemProperty(named = "it.pg.url", matches = ".+")
 class SigningRuntimeProofIT {
 
+    // Profile "it" loads ONLY the production application.yml (there is no
+    // application-it.yml), i.e. real Postgres + Flyway + PostgreSQL dialect + the
+    // production SecurityConfig (lazy issuer-uri JwtDecoder, so no Keycloak fetch at
+    // startup). This deliberately avoids the H2 unit profile ("test") the golden
+    // suites use. The datasource points at the real Postgres supplied via -Dit.pg.url.
     @DynamicPropertySource
     static void datasourceProps(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", () -> System.getProperty("it.pg.url"));

@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * and does not raise; dual-control blocks a self-review. Self-skips without -Dit.pg.url.
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("it")
 @EnabledIfSystemProperty(named = "it.pg.url", matches = ".+")
 class AssuranceWorkflowRuntimeProofIT {
 

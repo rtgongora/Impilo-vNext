@@ -50,7 +50,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * CLI-started / CI-service Postgres instead.)</p>
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("it")
 @EnabledIfSystemProperty(named = "it.pg.url", matches = ".+")
 class StepUpVerificationIT {
 

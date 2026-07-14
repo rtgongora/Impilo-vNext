@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * when no step-up exists. Self-skips without {@code -Dit.pg.url}.
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("it")
 @EnabledIfSystemProperty(named = "it.pg.url", matches = ".+")
 class GdhcnReadinessRuntimeProofIT {
 

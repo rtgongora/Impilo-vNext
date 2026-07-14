@@ -187,4 +187,23 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <!-- Runtime-proof integration tests (real PostgreSQL via -Dit.pg.url). Opt-in: mvn verify -Pit-runtime-proof -Dit.pg.url=... . Self-skips without it.pg.url. -->
+        <profile>
+            <id>it-runtime-proof</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <includes>
+                                <include>**/SigningRuntimeProofIT.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
