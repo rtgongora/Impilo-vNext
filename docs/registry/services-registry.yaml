@@ -530,6 +530,7 @@ services:
     system_of_record_for:
       - Daidzai emergency/disaster response command canonical records
       - emergency_request, emergency_incident, mission status timeline, resource_request, affected_site
+      - assistance_request (crowdfunding case aggregate, verification lifecycle, timeline; money in mushe, attestation in credential-verification — referenced by id)
     consumes_from:
       - tshepo-authz-service
       - nhume-service

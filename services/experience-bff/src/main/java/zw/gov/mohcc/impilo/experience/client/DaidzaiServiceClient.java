@@ -147,6 +147,32 @@ public class DaidzaiServiceClient {
     }
 
     // ── helpers ──────────────────────────────────────────────────────
+    // ── Assistance cases (crowdfunding — Daidzai owns the case, mushe the money) ──
+
+    public JsonNode createAssistance(Map<String, Object> body) {
+        return post(baseUrl + API + "/assistance", body, "createAssistance");
+    }
+
+    public JsonNode listPublicAssistance() {
+        return get(baseUrl + API + "/assistance", "listPublicAssistance");
+    }
+
+    public JsonNode listMyAssistance() {
+        return get(baseUrl + API + "/assistance/mine", "listMyAssistance");
+    }
+
+    public JsonNode getAssistance(String id) {
+        return get(baseUrl + API + "/assistance/" + id, "getAssistance");
+    }
+
+    public JsonNode assistanceSubResource(String id, String sub) {
+        return get(baseUrl + API + "/assistance/" + id + "/" + sub, "assistance:" + sub);
+    }
+
+    public JsonNode assistanceAction(String id, String action, Map<String, Object> body) {
+        return post(baseUrl + API + "/assistance/" + id + "/" + action, body, "assistance:" + action);
+    }
+
     private JsonNode get(String url, String op) {
         log.debug("DAIDZAI {}: GET {}", op, url);
         return restTemplate.getForEntity(url, JsonNode.class).getBody();
