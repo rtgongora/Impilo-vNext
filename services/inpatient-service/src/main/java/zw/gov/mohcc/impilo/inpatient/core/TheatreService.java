@@ -1040,7 +1040,13 @@ public class TheatreService {
         outbox.setSchemaVersion(1);
         outbox.setOccurredAt(OffsetDateTime.now());
         try {
-            outbox.setPayloadJson(objectMapper.writeValueAsString(payload));
+            // Inject event_type + tenant_id so downstream consumers of the LEGACY inpatient.events /
+            // inpatient.safety streams (COSTA billing + reporting projection) can self-describe/filter
+            // every theatre event from the raw payload map.
+            Map<String, Object> enriched = new LinkedHashMap<>(payload);
+            enriched.put("event_type", eventType);
+            enriched.put("tenant_id", tenant().toString());
+            outbox.setPayloadJson(objectMapper.writeValueAsString(enriched));
         } catch (JsonProcessingException ex) {
             throw new RuntimeException("Failed to serialize theatre outbox payload", ex);
         }

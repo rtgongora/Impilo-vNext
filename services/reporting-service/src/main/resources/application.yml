@@ -59,3 +59,5 @@ reporting:
     topics:
       aggregate: ${REPORTING_KAFKA_TOPICS_AGGREGATE:analytics.reporting.aggregate}
       surveillance-event: ${REPORTING_KAFKA_TOPICS_SURVEILLANCE_EVENT:analytics.surveillance.event}
+      # Wave 4 §20 — theatre.* projection: the legacy inpatient theatre event streams.
+      theatre: ${REPORTING_KAFKA_TOPICS_THEATRE:inpatient.events,inpatient.safety}

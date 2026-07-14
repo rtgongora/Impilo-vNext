@@ -500,10 +500,8 @@ public class ProcedureEpisodeService {
         int bloodUnits = bloodLinkRepository.findByEpisodeIdOrderByCreatedAtAsc(episodeId).size();
         UUID facilityId = currentFacility();
         Map<String, Object> completed = new LinkedHashMap<>();
-        // event_type + tenant_id are carried IN the payload so the legacy inpatient.events consumer
-        // (COSTA) — which receives the raw payload map, not an envelope — can filter + synthesize context.
-        completed.put("event_type", "theatre.case.completed");
-        completed.put("tenant_id", episode.getTenantId() != null ? episode.getTenantId().toString() : "");
+        // event_type + tenant_id are injected by appendOutbox so the legacy inpatient.events consumers
+        // (COSTA billing + reporting) can filter/synthesize context from the raw payload map.
         completed.put("episode_id", episodeId.toString());
         completed.put("patient_id", episode.getSubjectCpid());
         completed.put("encounter_id", episode.getEncounterId() != null ? episode.getEncounterId().toString() : "");
@@ -1078,7 +1076,13 @@ public class ProcedureEpisodeService {
         outbox.setSchemaVersion(1);
         outbox.setOccurredAt(OffsetDateTime.now());
         try {
-            outbox.setPayloadJson(objectMapper.writeValueAsString(payload));
+            // Inject event_type + tenant_id so downstream consumers of the LEGACY inpatient.events
+            // stream (which receives the raw payload map, not an envelope) — COSTA billing + reporting
+            // projection — can self-describe/filter every theatre event.
+            Map<String, Object> enriched = new LinkedHashMap<>(payload);
+            enriched.put("event_type", eventType);
+            enriched.put("tenant_id", currentTenant().toString());
+            outbox.setPayloadJson(objectMapper.writeValueAsString(enriched));
         } catch (JsonProcessingException ex) {
             throw new RuntimeException("Failed to serialize anaesthesia-chart outbox payload", ex);
         }
