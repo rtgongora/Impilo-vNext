@@ -6,7 +6,7 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
-public class SearchGoldenContractIT extends GoldenContractSuite {
+public class SearchGoldenContractTest extends GoldenContractSuite {
 
     /**
      * Search requires {@code q}; discovery alone yields {@code /internal/v1/search} which 400s without it.
