@@ -312,7 +312,9 @@ export function useCoverageSubsidiesList() {
   });
 }
 
-// ── Subsidy value enrolment + annual-cap drawdown (Model X) ──────────────────
+// ── Subsidy member enrolment (consolidated SoR: cv_subsidy_enrolments) ───────
+// One enrolment lane carries both the annual-cap/value concern and the optional
+// exemption category; rows are snake_case (member_cpid, exemption_category, ...).
 
 export function useSubsidyEnrolments(memberCpid?: string | null) {
   return useQuery({
@@ -349,7 +351,9 @@ export function useConsumeSubsidy() {
   });
 }
 
-// ── Subsidy exemption-category enrolment (Model Y — costing waivers) ─────────
+// ── Subsidy exemption-category view (costing waivers) ────────────────────────
+// BFF paths kept stable, but rows are now consolidated enrolment-shaped
+// (snake_case member_cpid/exemption_category; no programCode field).
 
 export function useSubsidyExemptions(memberCpid?: string | null) {
   return useQuery({
