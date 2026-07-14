@@ -32,7 +32,9 @@ import zw.gov.mohcc.impilo.tuso.api.dto.FacilityResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilitySearchRequest;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityStatusSummary;
 import zw.gov.mohcc.impilo.tuso.api.dto.UpdateFacilityRequest;
+import zw.gov.mohcc.impilo.tuso.api.dto.FacilityCompletenessDtos;
 import zw.gov.mohcc.impilo.tuso.core.FacilityCompletenessService;
+import zw.gov.mohcc.impilo.tuso.core.FacilityProfileCompletionService;
 import zw.gov.mohcc.impilo.tuso.core.FacilityService;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityGeoEntity;
@@ -53,11 +55,34 @@ public class FacilityController {
 
     private final FacilityService facilityService;
     private final FacilityCompletenessService completenessService;
+    private final FacilityProfileCompletionService profileCompletionService;
 
     public FacilityController(FacilityService facilityService,
-                              FacilityCompletenessService completenessService) {
+                              FacilityCompletenessService completenessService,
+                              FacilityProfileCompletionService profileCompletionService) {
         this.facilityService = facilityService;
         this.completenessService = completenessService;
+        this.profileCompletionService = profileCompletionService;
+    }
+
+    /**
+     * Governed completion of missing facility profile fields (esp. geocodes) from the
+     * facility-mode completeness prompt. FAIL-CLOSED: only an ACTIVE facility
+     * administrator or the active practitioner-in-charge at this facility may write
+     * (403 otherwise, enforced in the service on the TrustContext actor id).
+     */
+    @PostMapping("/{id}/complete-profile")
+    public ResponseEntity<ApiResponse<FacilityCompletenessService.FacilityCompleteness>> completeProfile(
+            @PathVariable Long id,
+            @RequestBody FacilityCompletenessDtos.CompleteFacilityProfileRequest request) {
+
+        TrustContext ctx = TrustContextHolder.require();
+        log.info("Completing facility profile [id={}, actor={}] correlationId={}",
+                id, ctx.actorId(), ctx.correlationId());
+
+        FacilityCompletenessService.FacilityCompleteness completeness =
+                profileCompletionService.completeProfile(id, request);
+        return ResponseEntity.ok(ApiResponse.ok(completeness, ctx.correlationId().toString()));
     }
 
     /**
