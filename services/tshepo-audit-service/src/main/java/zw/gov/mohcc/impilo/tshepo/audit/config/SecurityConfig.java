@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.tshepo.audit.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,6 +13,8 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
+    @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests",
+            havingValue = "false", matchIfMissing = true)
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
@@ -31,6 +34,25 @@ public class SecurityConfig {
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
 
+        return http.build();
+    }
+
+    /**
+     * Test-only chain (estate idiom): opened by disable-oauth-for-tests so the golden
+     * contract suite can drive the v1.1 probe endpoints without a token issuer. The
+     * production chain (with oauth2ResourceServer/JwtDecoder) is disabled under this
+     * flag, so no JwtDecoder bean is required. Never active in production.
+     */
+    @Bean
+    @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests", havingValue = "true")
+    public SecurityFilterChain testFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/internal/v1/**", "/external/v1/**").permitAll()
+                .anyRequest().authenticated());
         return http.build();
     }
 }
