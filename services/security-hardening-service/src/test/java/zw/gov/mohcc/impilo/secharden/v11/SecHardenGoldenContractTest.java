@@ -9,20 +9,20 @@ import zw.gov.mohcc.impilo.secharden.config.TestSecurityConfig;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-public class SecHardenGoldenContractIT extends GoldenContractSuite {
+public class SecHardenGoldenContractTest extends GoldenContractSuite {
 
     @Override
     protected String getCommandEndpointOverride() {
-        return "/internal/v1/policy-packs";
+        return "/internal/v1/test-command";
     }
 
     @Override
     protected String getReadEndpointOverride() {
-        return "/internal/v1/scans";
+        return "/internal/v1/health";
     }
 
     @Override
     protected String getFederationEndpointOverride() {
-        return "/internal/v1/policy-packs";
+        return "/internal/v1/test-federation";
     }
 }
