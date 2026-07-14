@@ -18,7 +18,11 @@ import java.nio.charset.StandardCharsets;
  * bean would replace this one (this one steps aside via {@link ConditionalOnMissingBean}).</p>
  */
 @Component
-@ConditionalOnMissingBean(CardDataKeyProvider.class)
+// `ignored = self`: on a component-scanned class the condition sees this class's OWN bean
+// definition (already registered when the condition is evaluated) and would skip itself,
+// leaving NO CardDataKeyProvider and failing every boot. A KMS-backed provider bean still
+// displaces this one.
+@ConditionalOnMissingBean(value = CardDataKeyProvider.class, ignored = MasterKeyCardDataKeyProvider.class)
 public class MasterKeyCardDataKeyProvider implements CardDataKeyProvider {
 
     private static final String INSECURE_DEFAULT = "change-me";
