@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class InpatientTenantIsolationIT {
+class InpatientTenantIsolationTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private AdmissionRepository admissionRepository;

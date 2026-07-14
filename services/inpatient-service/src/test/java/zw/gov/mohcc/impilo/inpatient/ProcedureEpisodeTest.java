@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class ProcedureEpisodeIT {
+class ProcedureEpisodeTest {
 
     private static final String CPID = "CPID-ZW-00001";
     private static final ObjectMapper MAPPER = new ObjectMapper();

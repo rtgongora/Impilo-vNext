@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class TheatreDepthIT {
+class TheatreDepthTest {
 
     private static final String CPID = "CPID-ZW-THEATRE-1";
     private static final ObjectMapper MAPPER = new ObjectMapper();

@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class WardRoundIT {
+class WardRoundTest {
 
     private static final UUID TENANT = UUID.fromString("00000000-0000-4000-8000-000000000001");
     private static final UUID ADMISSION_REF = UUID.fromString("f2000000-0000-0000-0000-000000000001");
