@@ -345,7 +345,7 @@ async function attemptRefresh(): Promise<boolean> {
 /**
  * Clear auth state and redirect to login.
  */
-const AUTH_BYPASS_PREFIXES = ["/auth", "/consent", "/privacy", "/terms"];
+const AUTH_BYPASS_PREFIXES = ["/auth", "/consent", "/privacy", "/terms", "/share"];
 
 function handleAuthFailure(): void {
   if (typeof window !== "undefined") {
@@ -376,7 +376,8 @@ async function request<T>(
   const headers = { ...getV11Headers(), ...opts?.extraHeaders };
 
   if (["POST", "PUT", "PATCH"].includes(method) || (method === "DELETE" && body !== undefined)) {
-    headers["Idempotency-Key"] = randomUUID();
+    // Respect a caller-provided key (e.g. one key per donation attempt) — only auto-generate.
+    headers["Idempotency-Key"] = headers["Idempotency-Key"] ?? randomUUID();
   }
 
   const response = await fetch(`${BFF_BASE_URL}${path}`, {
@@ -400,7 +401,8 @@ async function request<T>(
       // Retry the original request with the new token
       const retryHeaders = { ...getV11Headers(), ...opts?.extraHeaders };
       if (["POST", "PUT", "PATCH"].includes(method) || (method === "DELETE" && body !== undefined)) {
-        retryHeaders["Idempotency-Key"] = randomUUID();
+        // Same logical attempt after token refresh — reuse a caller-provided key.
+        retryHeaders["Idempotency-Key"] = retryHeaders["Idempotency-Key"] ?? randomUUID();
       }
       const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
         method,
