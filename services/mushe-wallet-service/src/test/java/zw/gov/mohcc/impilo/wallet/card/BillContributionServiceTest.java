@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import zw.gov.mohcc.impilo.wallet.core.FundingService;
 import zw.gov.mohcc.impilo.wallet.core.WalletService;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.BillContributionEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.BillContributionRequestEntity;
+import zw.gov.mohcc.impilo.wallet.persistence.entity.DepositIntentEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.TransactionEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.WalletEntity;
@@ -35,6 +37,7 @@ class BillContributionServiceTest {
     private BillContributionRequestRepository requestRepo;
     private BillContributionRepository contribRepo;
     private WalletService walletService;
+    private FundingService fundingService;
     private EventOutboxRepository outboxRepo;
     private BillContributionService service;
     private final UUID walletId = UUID.randomUUID();
@@ -48,9 +51,10 @@ class BillContributionServiceTest {
         requestRepo = mock(BillContributionRequestRepository.class);
         contribRepo = mock(BillContributionRepository.class);
         walletService = mock(WalletService.class);
+        fundingService = mock(FundingService.class);
         outboxRepo = mock(EventOutboxRepository.class);
         service = new BillContributionService(requestRepo, contribRepo, walletService,
-                outboxRepo, new ObjectMapper());
+                fundingService, outboxRepo, new ObjectMapper());
         when(requestRepo.save(any())).thenAnswer(i -> i.getArgument(0));
         when(contribRepo.save(any())).thenAnswer(i -> i.getArgument(0));
         when(contribRepo.findByIdempotencyKey(any())).thenReturn(Optional.empty());
@@ -240,6 +244,83 @@ class BillContributionServiceTest {
         service.contribute("tok-1", new BigDecimal("10.00"), "x", "y", null, "idem-dup");
 
         verify(walletService, never()).credit(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void psp_donate_raises_a_pending_crowdfunding_intent_against_the_escrow() {
+        var request = openCampaignRequest();
+        when(requestRepo.findByShareToken("tok-1")).thenReturn(Optional.of(request));
+        DepositIntentEntity pending = new DepositIntentEntity();
+        when(fundingService.requestPurposedDeposit(eq(escrowWalletId), eq("MOBILE_MONEY"),
+                eq(new BigDecimal("15.00")), eq("USD"), eq(DepositIntentEntity.PURPOSE_CROWDFUNDING),
+                eq("tok-1"), any(), any())).thenReturn(pending);
+
+        var intent = service.pspDonate("tok-1", new BigDecimal("15.00"), "USD",
+                "MOBILE_MONEY", "Gogo", "Makorokoto", false);
+
+        assertEquals(pending, intent);
+        // Never credits or records at request time — settlement does that on confirm.
+        verify(walletService, never()).credit(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+        verify(contribRepo, never()).save(any());
+        verify(outboxRepo, never()).save(any());
+    }
+
+    @Test
+    void psp_donate_is_refused_for_non_campaign_and_closed_requests() {
+        var bill = openRequest(new BigDecimal("100.00"), BigDecimal.ZERO);
+        when(requestRepo.findByShareToken("tok-1")).thenReturn(Optional.of(bill));
+        assertThrows(BillContributionService.ContributionRejected.class,
+                () -> service.pspDonate("tok-1", new BigDecimal("15.00"), null, "CARD", null, null, false));
+
+        var closed = openCampaignRequest();
+        closed.setStatus("CLOSED");
+        when(requestRepo.findByShareToken("tok-1")).thenReturn(Optional.of(closed));
+        assertThrows(BillContributionService.ContributionRejected.class,
+                () -> service.pspDonate("tok-1", new BigDecimal("15.00"), null, "CARD", null, null, false));
+
+        verify(fundingService, never()).requestPurposedDeposit(any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    private DepositIntentEntity settledCrowdfundIntent(String metadata) {
+        DepositIntentEntity intent = new DepositIntentEntity();
+        intent.setDepositId(UUID.randomUUID());
+        intent.setWalletId(escrowWalletId);
+        intent.setAmount(new BigDecimal("15.00"));
+        intent.setCurrency("USD");
+        intent.setPurpose(DepositIntentEntity.PURPOSE_CROWDFUNDING);
+        intent.setPurposeRef("tok-1");
+        intent.setMetadata(metadata);
+        return intent;
+    }
+
+    @Test
+    void settled_psp_intent_records_the_contribution_once_with_no_second_credit() {
+        var request = openCampaignRequest();
+        when(requestRepo.findByShareToken("tok-1")).thenReturn(Optional.of(request));
+        DepositIntentEntity intent = settledCrowdfundIntent(
+                "{\"contributorName\":\"Gogo\",\"message\":\"Makorokoto\",\"isAnonymous\":true}");
+
+        BillContributionEntity c = service.recordSettledContribution(intent);
+
+        assertEquals(BillContributionEntity.ORIGIN_PSP, c.getOrigin());
+        assertEquals("Gogo", c.getContributorName());
+        assertEquals("deposit:" + intent.getDepositId(), c.getIdempotencyKey());
+        assertEquals(new BigDecimal("15.00"), request.getRaisedAmount());
+        // The confirm path already credited the escrow — recording must NOT credit again.
+        verify(walletService, never()).credit(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+        verify(walletService, never()).transfer(any(), any(), any(), any(), any(), any(), any(), any());
+        ArgumentCaptor<EventOutboxEntity> cap = ArgumentCaptor.forClass(EventOutboxEntity.class);
+        verify(outboxRepo).save(cap.capture());
+        assertEquals(BillContributionService.EVENT_RECORDED, cap.getValue().getEventType());
+        assertTrue(cap.getValue().getPayloadJson().contains("\"isAnonymousHint\":true"));
+
+        // Replay (e.g. re-imported statement): row exists under 'deposit:'+id → returned, no re-advance.
+        when(contribRepo.findByIdempotencyKey("deposit:" + intent.getDepositId()))
+                .thenReturn(Optional.of(c));
+        BillContributionEntity replay = service.recordSettledContribution(intent);
+        assertEquals(c, replay);
+        assertEquals(new BigDecimal("15.00"), request.getRaisedAmount());
+        verify(outboxRepo, times(1)).save(any());
     }
 
     @Test

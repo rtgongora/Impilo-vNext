@@ -5,8 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fasterxml.jackson.databind.JsonNode;
+import zw.gov.mohcc.impilo.wallet.core.FundingService;
 import zw.gov.mohcc.impilo.wallet.core.WalletService;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.BillContributionEntity;
+import zw.gov.mohcc.impilo.wallet.persistence.entity.DepositIntentEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.BillContributionRequestEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.TransactionEntity;
@@ -58,17 +61,20 @@ public class BillContributionService {
     private final BillContributionRequestRepository requestRepository;
     private final BillContributionRepository contributionRepository;
     private final WalletService walletService;
+    private final FundingService fundingService;
     private final EventOutboxRepository eventOutboxRepository;
     private final ObjectMapper objectMapper;
 
     public BillContributionService(BillContributionRequestRepository requestRepository,
                                    BillContributionRepository contributionRepository,
                                    WalletService walletService,
+                                   FundingService fundingService,
                                    EventOutboxRepository eventOutboxRepository,
                                    ObjectMapper objectMapper) {
         this.requestRepository = requestRepository;
         this.contributionRepository = contributionRepository;
         this.walletService = walletService;
+        this.fundingService = fundingService;
         this.eventOutboxRepository = eventOutboxRepository;
         this.objectMapper = objectMapper;
     }
@@ -247,6 +253,113 @@ public class BillContributionService {
         advanceRaised(request, amount);
         emitContributionEvent(EVENT_RECORDED, request, c, amount, isAnonymous, idem);
         log.info("Bill contribution {} ({}) to request {} (raised {}/{})", amount, origin, request.getId(),
+                request.getRaisedAmount(), request.getTargetAmount());
+        return c;
+    }
+
+    /**
+     * PSP donation entry point: a donor without a Mushe wallet pays through an external PSP
+     * channel (EcoCash/OneMoney/card/bank via the Paynow aggregator). Creates a PENDING deposit
+     * intent against the campaign's ESCROW wallet — purpose {@code CROWDFUNDING},
+     * purpose_ref = shareToken, donor context in metadata — and returns it with the quotable
+     * reference code. The escrow is credited and the contribution recorded ONLY when the money's
+     * arrival is confirmed ({@link FundingService} confirm path: PSP callback or statement
+     * match), which then calls {@link #recordSettledContribution}.
+     *
+     * <p>SEAM (documented, not faked): PSP collection INITIATION (the Paynow protocol hop) lives
+     * in mushex-service ({@code PaynowGatewayAdapter}/{@code PaynowClient}); mushe has no client
+     * to it. Callers initiate collection out-of-band (or the depositor quotes the reference code
+     * in the transfer narrative for statement matching); this method never pretends a PSP call
+     * happened.</p>
+     */
+    @Transactional
+    public DepositIntentEntity pspDonate(String shareToken, BigDecimal amount, String currency,
+                                         String channel, String contributorName, String message,
+                                         boolean isAnonymous) {
+        if (amount == null || amount.signum() <= 0) {
+            throw new ContributionRejected("Donation amount must be positive");
+        }
+        BillContributionRequestEntity request = getByToken(shareToken);
+        if (!BillContributionRequestEntity.ORIGIN_CAMPAIGN.equals(request.getOrigin())) {
+            throw new ContributionRejected("PSP donations are only available for campaign requests");
+        }
+        if (!"OPEN".equals(request.getStatus())) {
+            throw new ContributionRejected("This contribution request is " + request.getStatus().toLowerCase());
+        }
+        if (currency != null && !currency.isBlank() && !currency.equals(request.getCurrency())) {
+            throw new ContributionRejected("Donation currency " + currency
+                    + " does not match the campaign currency " + request.getCurrency());
+        }
+
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        if (contributorName != null && !contributorName.isBlank()) {
+            metadata.put("contributorName", contributorName);
+        }
+        if (message != null && !message.isBlank()) {
+            metadata.put("message", message);
+        }
+        metadata.put("isAnonymous", isAnonymous);
+        metadata.put("shareToken", shareToken);
+
+        return fundingService.requestPurposedDeposit(request.getBeneficiaryWalletId(), channel,
+                amount, request.getCurrency(), DepositIntentEntity.PURPOSE_CROWDFUNDING,
+                shareToken, toJson(metadata), null);
+    }
+
+    /**
+     * Called by {@link FundingService} inside the deposit-confirm transaction after a
+     * CROWDFUNDING intent's credit has landed in the escrow wallet: records the contribution row
+     * (origin PSP — NO second wallet credit), advances the raised total, and emits
+     * {@code wallet.bill_contribution.recorded}. Exactly once per intent — idempotency key
+     * {@code 'deposit:' + depositId} (UNIQUE on bill_contributions) guards replays.
+     */
+    @Transactional
+    public BillContributionEntity recordSettledContribution(DepositIntentEntity intent) {
+        String idem = "deposit:" + intent.getDepositId();
+        var existing = contributionRepository.findByIdempotencyKey(idem);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        BillContributionRequestEntity request = requestRepository.findByShareToken(intent.getPurposeRef())
+                .orElseThrow(() -> new IllegalStateException(
+                        "CROWDFUNDING deposit " + intent.getDepositId()
+                                + " has no contribution request for purposeRef=" + intent.getPurposeRef()));
+
+        String contributorName = null;
+        String contributorRef = null;
+        String message = null;
+        boolean isAnonymous = false;
+        if (intent.getMetadata() != null) {
+            try {
+                JsonNode meta = objectMapper.readTree(intent.getMetadata());
+                contributorName = meta.hasNonNull("contributorName") ? meta.get("contributorName").asText() : null;
+                // A person anchor (CPID) if the case layer supplied one; a PSP/bank txn ref is
+                // NOT a person and must not masquerade as one (refunds would mint junk wallets).
+                contributorRef = meta.hasNonNull("contributorRef") ? meta.get("contributorRef").asText() : null;
+                message = meta.hasNonNull("message") ? meta.get("message").asText() : null;
+                isAnonymous = meta.path("isAnonymous").asBoolean(false);
+            } catch (Exception e) {
+                log.warn("Unparseable metadata on deposit {} — recording contribution without donor context",
+                        intent.getDepositId(), e);
+            }
+        }
+
+        BillContributionEntity c = new BillContributionEntity();
+        c.setId(UUID.randomUUID());
+        c.setRequestId(request.getId());
+        c.setAmount(intent.getAmount());
+        c.setCurrency(intent.getCurrency());
+        c.setOrigin(BillContributionEntity.ORIGIN_PSP);
+        c.setContributorRef(contributorRef);
+        c.setContributorName(contributorName);
+        c.setMessage(message);
+        c.setIdempotencyKey(idem);
+        c = contributionRepository.save(c);
+
+        advanceRaised(request, intent.getAmount());
+        emitContributionEvent(EVENT_RECORDED, request, c, intent.getAmount(), isAnonymous, idem);
+        log.info("PSP contribution {} settled onto request {} via deposit {} (raised {}/{})",
+                intent.getAmount(), request.getId(), intent.getDepositId(),
                 request.getRaisedAmount(), request.getTargetAmount());
         return c;
     }

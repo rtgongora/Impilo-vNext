@@ -21,6 +21,11 @@ public class DepositIntentEntity {
     public static final String STATUS_CONFIRMED = "CONFIRMED";
     public static final String STATUS_CANCELLED = "CANCELLED";
 
+    /** Ordinary cash-in: confirmation credits the wallet and that is all. */
+    public static final String PURPOSE_WALLET_TOPUP = "WALLET_TOPUP";
+    /** PSP donation to a crowdfunding escrow: confirmation also records the contribution. */
+    public static final String PURPOSE_CROWDFUNDING = "CROWDFUNDING";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,6 +59,18 @@ public class DepositIntentEntity {
 
     @Column(name = "status", nullable = false, length = 16)
     private String status = STATUS_PENDING;
+
+    @Column(name = "purpose", nullable = false, length = 32)
+    private String purpose = PURPOSE_WALLET_TOPUP;
+
+    /** Purpose-specific anchor — for CROWDFUNDING: the contribution request's share token. */
+    @Column(name = "purpose_ref", length = 64)
+    private String purposeRef;
+
+    /** Purpose-specific context (JSON) — e.g. donor name / message / anonymity for CROWDFUNDING. */
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "metadata", columnDefinition = "jsonb")
+    private String metadata;
 
     @Column(name = "credited_txn_id")
     private UUID creditedTxnId;
@@ -94,6 +111,12 @@ public class DepositIntentEntity {
     public void setExternalRef(String externalRef) { this.externalRef = externalRef; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getPurpose() { return purpose; }
+    public void setPurpose(String purpose) { this.purpose = purpose; }
+    public String getPurposeRef() { return purposeRef; }
+    public void setPurposeRef(String purposeRef) { this.purposeRef = purposeRef; }
+    public String getMetadata() { return metadata; }
+    public void setMetadata(String metadata) { this.metadata = metadata; }
     public UUID getCreditedTxnId() { return creditedTxnId; }
     public void setCreditedTxnId(UUID creditedTxnId) { this.creditedTxnId = creditedTxnId; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

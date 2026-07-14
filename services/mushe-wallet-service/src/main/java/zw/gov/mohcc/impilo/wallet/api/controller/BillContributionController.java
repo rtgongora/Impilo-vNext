@@ -95,6 +95,43 @@ public class BillContributionController {
     }
 
     /**
+     * PSP donation to a campaign: creates a PENDING deposit intent against the campaign's escrow
+     * wallet (purpose CROWDFUNDING) and returns the quotable reference code. The escrow is only
+     * credited — and the contribution only recorded — when the money's arrival is confirmed
+     * (PSP callback / statement match). PSP collection initiation is a documented seam in
+     * mushex-service; nothing here pretends the PSP was called.
+     */
+    @PostMapping("/{shareToken}/psp-donate")
+    public ResponseEntity<ApiResponse<Object>> pspDonate(
+            @PathVariable String shareToken,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            var intent = service.pspDonate(shareToken,
+                    new BigDecimal(str(body, "amount")),
+                    str(body, "currency"),
+                    str(body, "channel"),
+                    str(body, "contributorName"),
+                    str(body, "message"),
+                    Boolean.parseBoolean(str(body, "isAnonymous")));
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("depositId", intent.getDepositId());
+            data.put("referenceCode", intent.getReferenceCode());
+            data.put("amount", intent.getAmount());
+            data.put("currency", intent.getCurrency());
+            data.put("channel", intent.getChannel());
+            data.put("status", intent.getStatus());
+            data.put("confirmation", "Donation is recorded once the payment is confirmed —"
+                    + " quote reference " + intent.getReferenceCode() + " with the transfer,"
+                    + " or complete the PSP checkout initiated by the payments layer.");
+            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(data, correlationId));
+        } catch (BillContributionService.ContributionRejected e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(ApiResponse.error("PSP_DONATION_REJECTED", e.getMessage(), 422, correlationId));
+        }
+    }
+
+    /**
      * Release escrowed campaign funds to the real beneficiary. Body: {@code {amount?}} — omit
      * amount to release the full escrow balance. The case layer (Daidzai) gates on campaign
      * governance before calling; mushe enforces the mechanical invariants (no over-release).
