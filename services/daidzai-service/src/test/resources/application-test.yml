@@ -34,6 +34,11 @@ spring:
 daidzai:
   outbox:
     poll-interval-ms: 60000
+  assistance:
+    projection:
+      # KafkaAutoConfiguration is excluded above; the projection consumer is
+      # @ConditionalOnProperty on this flag so the context can start without it.
+      enabled: false
 
 impilo:
   security:
