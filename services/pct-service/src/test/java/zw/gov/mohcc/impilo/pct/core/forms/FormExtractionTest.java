@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class FormExtractionIT {
+class FormExtractionTest {
 
     private static final String TENANT = "00000000-0000-4000-8000-000000000001";
     private static final String CPID = "it-extract-cpid-001";
