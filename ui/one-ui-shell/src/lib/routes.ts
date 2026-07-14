@@ -161,6 +161,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/home/appointments/[appointmentId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Appointment Details", navLabel: "Appointment", navZone: "life" },
   { path: "/citizen", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Citizen Services", navLabel: "Citizen Services", navZone: "life" },
   { path: "/citizen/my-care", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Care", navLabel: "My Care", navZone: "life" },
+  { path: "/citizen/virtual-care", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Virtual Care Requests", navLabel: "Virtual Care", navZone: "life" },
+  { path: "/citizen/virtual-care/request", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Request a Teleconsult", navLabel: "Request Teleconsult", navZone: "life" },
   { path: "/citizen/health-id/qr", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Health ID QR", navLabel: "Health ID QR", navZone: "life" },
   { path: "/citizen/health-id/request", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Request Health ID", navLabel: "Request Health ID", navZone: "life" },
   { path: "/citizen/id-recovery", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "ID Recovery", navLabel: "ID Recovery", navZone: "life" },
@@ -518,6 +520,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/discover/providers", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Find a Provider", navLabel: "Providers", navZone: "life" },
   { path: "/discover/facilities", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Find a Facility", navLabel: "Facilities", navZone: "life" },
   { path: "/discover/services", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Browse Services", navLabel: "Services", navZone: "life" },
+  { path: "/discover/virtual-care", zone: "discovery", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Virtual Care", navLabel: "Virtual Care", navZone: "life" },
 
   // â”€â”€ Zone: Laboratory (absorbs oros-web sidecar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/lab", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Laboratory", navLabel: "Lab", navZone: "work" },
@@ -858,7 +861,7 @@ export const ROUTES: RouteDefinition[] = [
 // vendor*→VENDOR_FULFILMENT, cart+orders/[id](+pay)→auth (citizens can buy); COMMERCE membership untouched.
 // Gateway W2 (Jul 2026): +2 — /verify/practitioner (public health-professional register verifier)
 // and /welcome/health-info (public citizen health-information pillar).
-export const EXPECTED_ROUTE_COUNT = 706;
+export const EXPECTED_ROUTE_COUNT = 712;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
