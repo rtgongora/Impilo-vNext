@@ -9,13 +9,13 @@ import zw.gov.mohcc.impilo.devportal.config.TestSecurityConfig;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-public class DeveloperPortalGoldenContractIT extends GoldenContractSuite {
+public class DeveloperPortalGoldenContractTest extends GoldenContractSuite {
     @Override
     protected String getReadEndpointOverride() {
-        return "/internal/v1/developer/clients";
+        return "/internal/v1/health";
     }
     @Override
     protected String getCommandEndpointOverride() {
-        return "/internal/v1/developer/clients";
+        return "/internal/v1/test-command";
     }
 }
