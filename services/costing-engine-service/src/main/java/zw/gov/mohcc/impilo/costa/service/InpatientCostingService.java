@@ -120,6 +120,50 @@ public class InpatientCostingService {
                 CostMethodType.STOCK_AVG, "inventory.issue", implantCode, ctx);
     }
 
+    /**
+     * Wave 4 §5 — compose a surgical-case BUNDLE onto one bill: theatre time + anaesthesia + implant +
+     * consumables + blood, each an itemised line over the seeded theatre tariff codes (V024). The counts
+     * come from the real intra-op usage recorded on the episode (Waves 1/3). One bill, N reconcilable
+     * lines — {@code BillService.recalculateTotals} sums them into the composite total.
+     */
+    @Transactional
+    public void postSurgicalCaseBundle(String billId, String procedureCode, int theatreMinutes,
+                                       boolean hasAnaesthesia, int implantCount, int consumableCount,
+                                       int bloodUnits, String episodeRef) {
+        Map<String, Object> base = new LinkedHashMap<>();
+        base.put("procedure_code", procedureCode);
+        base.put("episode_ref", episodeRef);
+        base.put("bundle", "SURGICAL_CASE");
+
+        if (theatreMinutes > 0) {
+            billService.postLine(billId, "THEATRE-TIME", "Theatre time — " + theatreMinutes + " min",
+                    BillLineKind.THEATRE, BigDecimal.valueOf(theatreMinutes),
+                    CostMethodType.TARIFF, "theatre.case.completed", episodeRef, base);
+        }
+        if (hasAnaesthesia) {
+            billService.postLine(billId, "ANAESTHESIA-GA", "Anaesthesia (general) — " + theatreMinutes + " min",
+                    BillLineKind.THEATRE, BigDecimal.valueOf(Math.max(theatreMinutes, 1)),
+                    CostMethodType.TARIFF, "theatre.case.completed", episodeRef, base);
+        }
+        if (implantCount > 0) {
+            billService.postLine(billId, "THEATRE-IMPLANT", "Surgical implants (" + implantCount + ")",
+                    BillLineKind.IMPLANT, BigDecimal.valueOf(implantCount),
+                    CostMethodType.TARIFF, "theatre.case.completed", episodeRef, base);
+        }
+        if (consumableCount > 0) {
+            billService.postLine(billId, "THEATRE-CONSUMABLE", "Theatre consumables (" + consumableCount + ")",
+                    BillLineKind.PRODUCT, BigDecimal.valueOf(consumableCount),
+                    CostMethodType.TARIFF, "theatre.case.completed", episodeRef, base);
+        }
+        if (bloodUnits > 0) {
+            billService.postLine(billId, "THEATRE-BLOOD", "Blood products (" + bloodUnits + " unit(s))",
+                    BillLineKind.OTHER, BigDecimal.valueOf(bloodUnits),
+                    CostMethodType.TARIFF, "theatre.case.completed", episodeRef, base);
+        }
+        log.info("COSTA: composed surgical-case bundle on bill {} (min={}, anaes={}, implants={}, consumables={}, blood={})",
+                billId, theatreMinutes, hasAnaesthesia, implantCount, consumableCount, bloodUnits);
+    }
+
     @Transactional
     public void postNursingTime(String billId, BigDecimal hours, String cadre) {
         Map<String, Object> ctx = new LinkedHashMap<>();

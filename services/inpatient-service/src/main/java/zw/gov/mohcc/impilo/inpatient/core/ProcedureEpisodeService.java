@@ -500,6 +500,10 @@ public class ProcedureEpisodeService {
         int bloodUnits = bloodLinkRepository.findByEpisodeIdOrderByCreatedAtAsc(episodeId).size();
         UUID facilityId = currentFacility();
         Map<String, Object> completed = new LinkedHashMap<>();
+        // event_type + tenant_id are carried IN the payload so the legacy inpatient.events consumer
+        // (COSTA) — which receives the raw payload map, not an envelope — can filter + synthesize context.
+        completed.put("event_type", "theatre.case.completed");
+        completed.put("tenant_id", episode.getTenantId() != null ? episode.getTenantId().toString() : "");
         completed.put("episode_id", episodeId.toString());
         completed.put("patient_id", episode.getSubjectCpid());
         completed.put("encounter_id", episode.getEncounterId() != null ? episode.getEncounterId().toString() : "");

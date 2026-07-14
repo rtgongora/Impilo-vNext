@@ -185,6 +185,75 @@ public class CostaEventConsumer {
         }
     }
 
+    /**
+     * Wave 4 §5 — surgical-case bundle value trigger. Theatre completion (inpatient emits
+     * {@code theatre.case.completed} on the legacy inpatient.events stream, where the message IS the raw
+     * payload map) composes a bundled bill: theatre time + anaesthesia + implant + consumables + blood.
+     * This is the FIRST COSTA consumer of a theatre.* event. Idempotent on episode_id.
+     */
+    @KafkaListener(topics = "inpatient.events", groupId = "costa-costing-engine")
+    @Transactional
+    public void onTheatreCaseCompleted(String message, Acknowledgment ack) {
+        try {
+            JsonNode event = objectMapper.readTree(message);
+            String eventType = text(event, "event_type");
+            if (!"theatre.case.completed".equals(eventType)) { ack.acknowledge(); return; }
+
+            String episodeId = text(event, "episode_id");
+            if (isProcessed(episodeId, "THEATRE_CASE")) { ack.acknowledge(); return; }
+
+            String tenantId = text(event, "tenant_id");
+            String facilityId = text(event, "facility_id");
+            String patientCpid = text(event, "patient_id");
+            String encounterRef = text(event, "encounter_id");
+            if (tenantId == null || tenantId.isBlank()) {
+                log.warn("theatre.case.completed missing tenant_id: {}", message);
+                markProcessed(episodeId, "THEATRE_CASE");
+                ack.acknowledge();
+                return;
+            }
+            zw.gov.mohcc.impilo.shared.auth.TrustContextHolder.set(new zw.gov.mohcc.impilo.shared.auth.TrustContext(
+                    UUID.fromString(tenantId), "THEATRE-SYSTEM", "SYSTEM", "BILLING", null, UUID.randomUUID(),
+                    (facilityId != null && !facilityId.isBlank()) ? UUID.fromString(facilityId) : null, null, null, null));
+
+            EncounterEntity encounter = resolveEncounter(encounterRef, patientCpid);
+            if (encounter == null && facilityId != null && !facilityId.isBlank()) {
+                encounter = new EncounterEntity();
+                encounter.setEncounterId(zw.gov.mohcc.impilo.costa.service.UlidGenerator.generate());
+                encounter.setTenantId(UUID.fromString(tenantId));
+                encounter.setFacilityId(UUID.fromString(facilityId));
+                encounter.setPatientCpid(patientCpid);
+                encounter.setEncounterType(EncounterType.INPATIENT);
+                encounter.setStatus(EncounterStatus.OPEN);
+                encounterRepository.save(encounter);
+            }
+            if (encounter == null) {
+                log.warn("theatre.case.completed: cannot resolve/create encounter for episode {} (no facility)", episodeId);
+                markProcessed(episodeId, "THEATRE_CASE");
+                ack.acknowledge();
+                return;
+            }
+
+            BillHeaderEntity bill = billService.findActiveBillForEncounter(encounter.getEncounterId());
+            if (bill == null) {
+                bill = billService.createDraft(encounter.getEncounterId(), null, BillType.ENCOUNTER);
+            }
+            inpatientCostingService.postSurgicalCaseBundle(bill.getBillId(), text(event, "procedure_code"),
+                    event.path("theatre_minutes").asInt(0), event.path("has_anaesthesia").asBoolean(false),
+                    event.path("implant_count").asInt(0), event.path("consumable_count").asInt(0),
+                    event.path("blood_units").asInt(0), episodeId);
+
+            markProcessed(episodeId, "THEATRE_CASE");
+            ack.acknowledge();
+            log.info("COSTA: surgical-case bundle billed for episode {} on bill {}", episodeId, bill.getBillId());
+        } catch (Exception e) {
+            log.error("Failed to process theatre.case.completed", e);
+            throw new MoneyEventProcessingException("inpatient.events(theatre.case.completed)", e);
+        } finally {
+            zw.gov.mohcc.impilo.shared.auth.TrustContextHolder.clear();
+        }
+    }
+
     @KafkaListener(topics = "oros.order.placed", groupId = "costa-costing-engine")
     @Transactional
     public void onOrderPlaced(String message, Acknowledgment ack) {
