@@ -37,15 +37,23 @@ public class BillContributionController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
             @RequestBody Map<String, Object> body) {
-        var request = service.createRequest(
-                UUID.fromString(tenantId),
-                UUID.fromString(str(body, "beneficiaryWalletId")),
-                str(body, "title"),
-                str(body, "billRef"),
-                body.get("targetAmount") != null ? new BigDecimal(str(body, "targetAmount")) : null,
-                str(body, "currency"),
-                str(body, "createdBy"));
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(request, correlationId));
+        try {
+            var request = service.createRequest(
+                    UUID.fromString(tenantId),
+                    uuid(body, "beneficiaryWalletId"),
+                    str(body, "title"),
+                    str(body, "billRef"),
+                    body.get("targetAmount") != null ? new BigDecimal(str(body, "targetAmount")) : null,
+                    str(body, "currency"),
+                    str(body, "createdBy"),
+                    str(body, "origin"),
+                    uuid(body, "campaignRef"),
+                    uuid(body, "beneficiaryTargetWalletId"));
+            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(request, correlationId));
+        } catch (BillContributionService.ContributionRejected e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(ApiResponse.error("CONTRIBUTION_REQUEST_REJECTED", e.getMessage(), 422, correlationId));
+        }
     }
 
     /** The share-link target — anyone with the token can view the request + progress. */
@@ -75,7 +83,10 @@ public class BillContributionController {
             var contribution = service.contribute(shareToken,
                     new BigDecimal(str(body, "amount")),
                     str(body, "contributorRef"), str(body, "contributorName"), str(body, "message"),
-                    idempotencyKey);
+                    idempotencyKey,
+                    uuid(body, "contributorWalletId"),
+                    str(body, "origin"),
+                    Boolean.parseBoolean(str(body, "isAnonymous")));
             return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(contribution, correlationId));
         } catch (BillContributionService.ContributionRejected e) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -93,5 +104,10 @@ public class BillContributionController {
     private static String str(Map<String, Object> body, String key) {
         Object v = body == null ? null : body.get(key);
         return v == null ? null : v.toString();
+    }
+
+    private static UUID uuid(Map<String, Object> body, String key) {
+        String v = str(body, key);
+        return v == null || v.isBlank() ? null : UUID.fromString(v);
     }
 }
