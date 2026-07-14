@@ -2,12 +2,19 @@
 
 import { NdilaLocationPicker } from "@/components/ndila/NdilaLocationPicker";
 import { NdilaMap } from "@/components/ndila/NdilaMap";
-import type { NdilaCoordinate } from "@/lib/ndila/ndila-client";
+import type { NdilaCoordinate, NdilaGeocodeResult } from "@/lib/ndila/ndila-client";
 import { DEFAULT_MAP_CENTER } from "@/lib/ndila/geo-map-markers";
+
+/** Capture meta forwarded from NdilaLocationPicker — provenance for governed geocode writes. */
+export interface FacilityLocationCaptureMeta {
+  source: "ADDRESS_SEARCH" | "MANUAL" | "DEVICE_GPS";
+  result?: NdilaGeocodeResult;
+  accuracyMeters?: number;
+}
 
 interface FacilityLocationCaptureProps {
   value?: NdilaCoordinate | null;
-  onChange?: (next: NdilaCoordinate | null) => void;
+  onChange?: (next: NdilaCoordinate | null, meta?: FacilityLocationCaptureMeta) => void;
   label?: string;
   purposeOfUse?: string;
 }

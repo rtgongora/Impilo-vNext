@@ -15,6 +15,7 @@ import { Loader2, AlertTriangle, ArrowLeft, BadgeCheck, ShieldCheck } from "luci
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { CockpitOverview } from "@/components/facility-mode/CockpitOverview";
+import { FacilityCompletenessBanner } from "@/components/facility/FacilityCompletenessBanner";
 import { useFacilityModeContext } from "@/components/facility-mode/useFacilityMode";
 import { useFacilityProfile } from "@/hooks/queries/useFacilityRegulatory";
 
@@ -53,6 +54,9 @@ export default function FacilityCockpitPage() {
           </div>
         ) : (
           <div className="max-w-4xl space-y-6">
+            {/* Completeness prompt for the facility manager / PIC — the cockpit is a
+                management surface (display gate); TUSO enforces the write authz. */}
+            <FacilityCompletenessBanner facilityId={id} />
             <CockpitOverview facilityId={id} envelope={data} />
             <RegulatoryStatusPanel facilityId={id} />
           </div>
