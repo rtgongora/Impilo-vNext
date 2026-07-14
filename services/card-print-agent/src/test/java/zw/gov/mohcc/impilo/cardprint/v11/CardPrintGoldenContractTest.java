@@ -12,7 +12,7 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
-public class CardPrintGoldenContractIT extends GoldenContractSuite {
+public class CardPrintGoldenContractTest extends GoldenContractSuite {
     // All tests inherited from GoldenContractSuite.
     // Endpoints are auto-discovered at test time.
 }
