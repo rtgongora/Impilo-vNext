@@ -126,11 +126,16 @@ public class NhumeTransportClient {
             TrustContext ctx = TrustContextHolder.require();
             if (ctx.tenantId() != null) headers.set(TrustContext.H_TENANT_ID, ctx.tenantId().toString());
             if (ctx.actorId() != null) headers.set(TrustContext.H_ACTOR_ID, ctx.actorId());
+            // NHUME's TrustLayerGuard denies delivery.create unless BOTH X-Actor-ID and X-Actor-Type are
+            // present. The previous omission of X-Actor-Type made every theatre transport leg (patient
+            // movement / specimen / blood-product) come back UNAVAILABLE. Always send an actor type.
+            headers.set(TrustContext.H_ACTOR_TYPE, ctx.actorType() != null ? ctx.actorType() : "PROVIDER");
             headers.set(TrustContext.H_CORRELATION_ID,
                     ctx.correlationId() != null ? ctx.correlationId().toString() : UUID.randomUUID().toString());
             if (ctx.facilityId() != null) headers.set(TrustContext.H_FACILITY_ID, ctx.facilityId().toString());
             headers.set(TrustContext.H_PURPOSE_OF_USE, ctx.purposeOfUse() != null ? ctx.purposeOfUse() : "TREATMENT");
         } catch (IllegalStateException ignored) {
+            headers.set(TrustContext.H_ACTOR_TYPE, "PROVIDER");
             headers.set(TrustContext.H_CORRELATION_ID, UUID.randomUUID().toString());
             headers.set(TrustContext.H_PURPOSE_OF_USE, "TREATMENT");
         }
