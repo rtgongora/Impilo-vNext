@@ -60,6 +60,9 @@ public abstract class GoldenContractSuite {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    // Tenant IDs are UUIDs estate-wide; services may parse this header with UUID.fromString.
+    private static final String TENANT_ID = "00000000-0000-4000-8000-000000000001";
+
     // Discovered endpoints (resolved in @BeforeAll)
     private String readEndpoint;
     private String commandEndpoint;
@@ -193,7 +196,7 @@ public abstract class GoldenContractSuite {
                     "SKIPPED: No v1.1 read endpoint discovered for header enforcement test");
 
             MvcResult result = mockMvc.perform(get(readEndpoint)
-                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Request-ID", "req-1")
                             .header("X-Correlation-ID", "corr-1"))
                     .andExpect(status().isBadRequest())
@@ -209,7 +212,7 @@ public abstract class GoldenContractSuite {
                     "SKIPPED: No v1.1 read endpoint discovered for header enforcement test");
 
             MvcResult result = mockMvc.perform(get(readEndpoint)
-                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
                             .header("X-Correlation-ID", "corr-1"))
                     .andExpect(status().isBadRequest())
@@ -226,7 +229,7 @@ public abstract class GoldenContractSuite {
                     "SKIPPED: No v1.1 read endpoint discovered for header enforcement test");
 
             MvcResult result = mockMvc.perform(get(readEndpoint)
-                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-1"))
                     .andExpect(status().isBadRequest())
@@ -280,7 +283,7 @@ public abstract class GoldenContractSuite {
                     "SKIPPED: No v1.1 read endpoint discovered for header enforcement test");
 
             mockMvc.perform(get(readEndpoint)
-                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-1")
                             .header("X-Correlation-ID", "corr-1"))
@@ -345,7 +348,7 @@ public abstract class GoldenContractSuite {
                     "SKIPPED: No v1.1 command endpoint discovered for idempotency test");
 
             MockHttpServletRequestBuilder req = buildCommandRequest(commandEndpoint, commandMethod)
-                    .header("X-Tenant-ID", "moh-zw")
+                    .header("X-Tenant-ID", TENANT_ID)
                     .header("X-Pod-ID", "national")
                     .header("X-Request-ID", "req-1")
                     .header("X-Correlation-ID", "corr-1")
@@ -369,7 +372,7 @@ public abstract class GoldenContractSuite {
             String body = "{\"name\":\"replay-test\"}";
 
             MvcResult first = mockMvc.perform(buildCommandRequest(commandEndpoint, commandMethod)
-                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-1")
                             .header("X-Correlation-ID", "corr-1")
@@ -382,7 +385,7 @@ public abstract class GoldenContractSuite {
             String firstBody = first.getResponse().getContentAsString();
 
             MvcResult second = mockMvc.perform(buildCommandRequest(commandEndpoint, commandMethod)
-                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-2")
                             .header("X-Correlation-ID", "corr-1")
@@ -404,7 +407,7 @@ public abstract class GoldenContractSuite {
             String idempotencyKey = "idem-conflict-" + System.nanoTime();
 
             mockMvc.perform(buildCommandRequest(commandEndpoint, commandMethod)
-                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-1")
                             .header("X-Correlation-ID", "corr-1")
@@ -414,7 +417,7 @@ public abstract class GoldenContractSuite {
                     .andReturn();
 
             MvcResult result = mockMvc.perform(buildCommandRequest(commandEndpoint, commandMethod)
-                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-2")
                             .header("X-Correlation-ID", "corr-1")
@@ -443,7 +446,7 @@ public abstract class GoldenContractSuite {
                     "SKIPPED: No v1.1 read endpoint discovered for timeout enforcement test");
 
             MvcResult result = mockMvc.perform(get(readEndpoint)
-                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-timeout-1")
                             .header("X-Correlation-ID", "corr-timeout-1")
@@ -463,7 +466,7 @@ public abstract class GoldenContractSuite {
                     "SKIPPED: No v1.1 read endpoint discovered for timeout enforcement test");
 
             MvcResult result = mockMvc.perform(get(readEndpoint)
-                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-timeout-2")
                             .header("X-Correlation-ID", "corr-timeout-2")
@@ -497,7 +500,7 @@ public abstract class GoldenContractSuite {
                     "SKIPPED: No federation-gated endpoint configured for this service");
 
             MvcResult result = mockMvc.perform(post(federationEndpoint)
-                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "private-harare")
                             .header("X-Request-ID", "req-1")
                             .header("X-Correlation-ID", "corr-1")
@@ -517,7 +520,7 @@ public abstract class GoldenContractSuite {
                     "SKIPPED: No federation-gated endpoint configured for this service");
 
             mockMvc.perform(post(federationEndpoint)
-                            .header("X-Tenant-ID", "moh-zw")
+                            .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-1")
                             .header("X-Correlation-ID", "corr-1")
