@@ -62,6 +62,8 @@ public class ProcedureEpisodeService {
     private final ProcedureChecklistItemRepository checklistRepository;
     private final ProcedureIntraopEventRepository intraopRepository;
     private final ProcedurePostopRecordRepository postopRepository;
+    // ── Wave 4 §12: time-series PACU (recovery) observation set ──
+    private final ProcedurePacuObservationRepository pacuObservationRepository;
     private final ProcedureEpisodeDocumentRepository documentRepository;
     private final ProcedureConsumableRepository consumableRepository;
     private final ProcedureAnaesthesiaScoreRepository anaesthesiaScoreRepository;
@@ -80,6 +82,7 @@ public class ProcedureEpisodeService {
             ProcedureChecklistItemRepository checklistRepository,
             ProcedureIntraopEventRepository intraopRepository,
             ProcedurePostopRecordRepository postopRepository,
+            ProcedurePacuObservationRepository pacuObservationRepository,
             ProcedureEpisodeDocumentRepository documentRepository,
             ProcedureConsumableRepository consumableRepository,
             ProcedureAnaesthesiaScoreRepository anaesthesiaScoreRepository,
@@ -94,6 +97,7 @@ public class ProcedureEpisodeService {
         this.checklistRepository = checklistRepository;
         this.intraopRepository = intraopRepository;
         this.postopRepository = postopRepository;
+        this.pacuObservationRepository = pacuObservationRepository;
         this.documentRepository = documentRepository;
         this.consumableRepository = consumableRepository;
         this.anaesthesiaScoreRepository = anaesthesiaScoreRepository;
@@ -483,6 +487,158 @@ public class ProcedureEpisodeService {
         return episodeDetail(episodeId);
     }
 
+    // ── Wave 4 §12: time-series PACU recovery observations + Aldrete discharge-readiness ─────────────
+    /**
+     * Record one time-series PACU observation (airway/breathing/haemodynamics/consciousness/pain/
+     * nausea/bleeding/temperature/fluids/drains/medications). When an Aldrete score is supplied, the
+     * discharge-readiness band is computed via {@link AnaesthesiaScoringEngine} and mirrored onto the
+     * postop record so the discharge decision can gate on it. The patient stays a tracked case: the
+     * PACU stay is its own phase, not an afterthought once surgery is COMPLETED.
+     */
+    @Transactional
+    public Map<String, Object> recordPacuObservation(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity episode = requireEpisode(episodeId);
+        ProcedurePacuObservationEntity obs = new ProcedurePacuObservationEntity();
+        obs.setTenantId(episode.getTenantId());
+        obs.setEpisodeId(episodeId);
+        obs.setSeq(pacuObservationRepository.countByEpisodeId(episodeId) + 1);
+        obs.setAirway(ClinicalPayloadMapper.str(body, "airway"));
+        obs.setBreathing(ClinicalPayloadMapper.str(body, "breathing"));
+        obs.setSpo2(ClinicalPayloadMapper.integer(body, "spo2", "oxygen_saturation"));
+        obs.setSystolicBp(ClinicalPayloadMapper.integer(body, "systolicBp", "systolic_bp", "sbp"));
+        obs.setDiastolicBp(ClinicalPayloadMapper.integer(body, "diastolicBp", "diastolic_bp", "dbp"));
+        obs.setHeartRate(ClinicalPayloadMapper.integer(body, "heartRate", "heart_rate", "hr"));
+        obs.setConsciousness(ClinicalPayloadMapper.str(body, "consciousness", "loc"));
+        obs.setPainScore(ClinicalPayloadMapper.integer(body, "painScore", "pain_score"));
+        obs.setNauseaVomiting(ClinicalPayloadMapper.str(body, "nauseaVomiting", "nausea_vomiting", "ponv"));
+        obs.setBleedingWound(ClinicalPayloadMapper.str(body, "bleedingWound", "bleeding_wound", "wound"));
+        Object temp = body.containsKey("temperatureC") ? body.get("temperatureC")
+                : body.get("temperature_c") != null ? body.get("temperature_c") : body.get("temperature");
+        if (temp != null) {
+            try { obs.setTemperatureC(new java.math.BigDecimal(String.valueOf(temp))); }
+            catch (NumberFormatException ignored) { /* leave null */ }
+        }
+        obs.setUrineOutputMl(ClinicalPayloadMapper.integer(body, "urineOutputMl", "urine_output_ml"));
+        obs.setFluids(ClinicalPayloadMapper.str(body, "fluids"));
+        obs.setDrainsDevices(ClinicalPayloadMapper.str(body, "drainsDevices", "drains_devices", "drains"));
+        obs.setMedications(ClinicalPayloadMapper.str(body, "medications", "meds"));
+        obs.setNotes(ClinicalPayloadMapper.str(body, "notes"));
+        obs.setRecordedBy(Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "recordedBy", "recorded_by"), currentActor()));
+
+        Integer aldrete = ClinicalPayloadMapper.integer(body, "aldreteScore", "aldrete_score");
+        obs.setAldreteScore(aldrete);
+        if (aldrete != null) {
+            AnaesthesiaScoringEngine.ScoreResult r =
+                    AnaesthesiaScoringEngine.calculate("ALDRETE", "PACU", Map.of("aldreteScore", aldrete));
+            obs.setDischargeReadinessBand(r.riskBand());
+        }
+        pacuObservationRepository.save(obs);
+
+        // Mirror the latest scored snapshot onto the postop record (the discharge-readiness gate reads it).
+        ProcedurePostopRecordEntity postop = postopRepository.findByEpisodeId(episodeId)
+                .orElseGet(ProcedurePostopRecordEntity::new);
+        postop.setEpisodeId(episodeId);
+        if (postop.getPacuArrivalAt() == null) postop.setPacuArrivalAt(OffsetDateTime.now());
+        if (aldrete != null) {
+            postop.setAldreteScore(aldrete);
+            postop.setDischargeReadinessScore(aldrete);
+            postop.setDischargeReadinessBand(obs.getDischargeReadinessBand());
+            // keep the anaesthesia score chart continuous
+            recordAnaesthesiaScore(episodeId, Map.of("scoreType", "ALDRETE", "phase", "PACU",
+                    "components", Map.of("aldreteScore", aldrete), "recordedBy", obs.getRecordedBy()));
+        }
+        if (obs.getPainScore() != null) {
+            postop.setPainScore(obs.getPainScore());
+            recordAnaesthesiaScore(episodeId, Map.of("scoreType", "PAIN", "phase", "PACU",
+                    "components", Map.of("painScore", obs.getPainScore()), "recordedBy", obs.getRecordedBy()));
+        }
+        postopRepository.save(postop);
+        return pacuObservationRow(obs);
+    }
+
+    public List<Map<String, Object>> listPacuObservations(UUID episodeId) {
+        requireEpisode(episodeId);
+        return pacuObservationRepository.findByEpisodeIdOrderBySeqAsc(episodeId).stream()
+                .map(this::pacuObservationRow).toList();
+    }
+
+    /**
+     * Aldrete-based PACU discharge readiness (Wave 4 §12). Uses the most-recent scored observation;
+     * band LOW (Aldrete ≥ 9) = ready for ward, MODERATE = continue monitoring, HIGH = remain in PACU.
+     */
+    public Map<String, Object> computeDischargeReadiness(UUID episodeId) {
+        requireEpisode(episodeId);
+        Optional<ProcedurePacuObservationEntity> latest = pacuObservationRepository
+                .findByEpisodeIdOrderBySeqAsc(episodeId).stream()
+                .filter(o -> o.getAldreteScore() != null)
+                .reduce((a, b) -> b);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("episode_id", episodeId.toString());
+        if (latest.isEmpty()) {
+            out.put("ready", false);
+            out.put("band", "UNSCORED");
+            out.put("interpretation", "No Aldrete score recorded — record a PACU observation with an Aldrete score");
+            return out;
+        }
+        ProcedurePacuObservationEntity o = latest.get();
+        AnaesthesiaScoringEngine.ScoreResult r = AnaesthesiaScoringEngine.calculate(
+                "ALDRETE", "PACU", Map.of("aldreteScore", o.getAldreteScore()));
+        out.put("aldrete_score", o.getAldreteScore());
+        out.put("band", r.riskBand());
+        out.put("ready", "LOW".equals(r.riskBand()));
+        out.put("interpretation", r.interpretation());
+        return out;
+    }
+
+    /**
+     * Return-to-theatre: a PACU/recovery patient who deteriorates and needs re-operation goes back to a
+     * re-operative state (READY_FOR_THEATRE) rather than being closed. Keeps the SAME episode/case.
+     */
+    @Transactional
+    public Map<String, Object> returnToTheatre(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity episode = requireEpisode(episodeId);
+        if (!List.of("PACU", "RECOVERED", "IN_PROGRESS").contains(episode.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Return-to-theatre only from a PACU/RECOVERED case (was " + episode.getStatus() + ")");
+        }
+        episode.setStatus("READY_FOR_THEATRE");
+        episodeRepository.save(episode);
+        ProcedurePostopRecordEntity postop = postopRepository.findByEpisodeId(episodeId)
+                .orElseGet(ProcedurePostopRecordEntity::new);
+        postop.setEpisodeId(episodeId);
+        postop.setReturnToTheatre(true);
+        postopRepository.save(postop);
+        return episodeDetail(episodeId);
+    }
+
+    private Map<String, Object> pacuObservationRow(ProcedurePacuObservationEntity o) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", o.getObservationId() != null ? o.getObservationId().toString() : null);
+        m.put("seq", o.getSeq());
+        m.put("observed_at", o.getObservedAt());
+        m.put("airway", o.getAirway());
+        m.put("breathing", o.getBreathing());
+        m.put("spo2", o.getSpo2());
+        m.put("systolic_bp", o.getSystolicBp());
+        m.put("diastolic_bp", o.getDiastolicBp());
+        m.put("heart_rate", o.getHeartRate());
+        m.put("consciousness", o.getConsciousness());
+        m.put("pain_score", o.getPainScore());
+        m.put("nausea_vomiting", o.getNauseaVomiting());
+        m.put("bleeding_wound", o.getBleedingWound());
+        m.put("temperature_c", o.getTemperatureC());
+        m.put("urine_output_ml", o.getUrineOutputMl());
+        m.put("fluids", o.getFluids());
+        m.put("drains_devices", o.getDrainsDevices());
+        m.put("medications", o.getMedications());
+        m.put("aldrete_score", o.getAldreteScore());
+        m.put("discharge_readiness_band", o.getDischargeReadinessBand());
+        m.put("notes", o.getNotes());
+        m.put("recorded_by", o.getRecordedBy());
+        return m;
+    }
+
     private void seedChecklist(UUID episodeId) {
         for (var entry : WHO_CHECKLIST.entrySet()) {
             for (String[] item : entry.getValue()) {
@@ -529,6 +685,9 @@ public class ProcedureEpisodeService {
         m.put("intraop_events", intraopRepository.findByEpisodeIdOrderByRecordedAtAsc(episodeId)
                 .stream().map(this::intraopRow).toList());
         postopRepository.findByEpisodeId(episodeId).ifPresent(p -> m.put("postop", postopRow(p)));
+        m.put("pacu_observations", pacuObservationRepository.findByEpisodeIdOrderBySeqAsc(episodeId)
+                .stream().map(this::pacuObservationRow).toList());
+        m.put("discharge_readiness", computeDischargeReadiness(episodeId));
         m.put("documents", listDocuments(episodeId));
         m.put("consumables", listConsumables(episodeId));
         m.put("anaesthesia_scores", listAnaesthesiaScores(episodeId));
@@ -921,6 +1080,8 @@ public class ProcedureEpisodeService {
         m.put("tshepo_consent_id", e.getTshepoConsentId() != null ? e.getTshepoConsentId().toString() : null);
         m.put("consent_proof_ref", e.getConsentProofRef());
         m.put("booking_id", e.getBookingId());
+        // Wave 4 §13 — theatre→inpatient continuity: the case references its inpatient admission episode.
+        m.put("admission_ref", e.getAdmissionRef() != null ? e.getAdmissionRef().toString() : null);
         return m;
     }
 
@@ -1022,6 +1183,19 @@ public class ProcedureEpisodeService {
         m.put("complications", p.getComplications());
         m.put("disposition", p.getDisposition());
         m.put("recorded_at", p.getRecordedAt());
+        // Wave 4 §12/§13 — PACU discharge decision + continuity
+        m.put("destination", p.getDestination());
+        m.put("unplanned_icu", p.isUnplannedIcu());
+        m.put("return_to_theatre", p.isReturnToTheatre());
+        m.put("discharge_readiness_band", p.getDischargeReadinessBand());
+        m.put("discharge_readiness_score", p.getDischargeReadinessScore());
+        m.put("nhume_delivery_id", p.getNhumeDeliveryId());
+        m.put("linked_admission_ref", p.getLinkedAdmissionRef() != null ? p.getLinkedAdmissionRef().toString() : null);
+        m.put("escalated_to", p.getEscalatedTo());
+        m.put("escalation_ref", p.getEscalationRef());
+        m.put("escalated_at", p.getEscalatedAt());
+        m.put("discharge_decided_at", p.getDischargeDecidedAt());
+        m.put("discharge_decided_by", p.getDischargeDecidedBy());
         return m;
     }
 }

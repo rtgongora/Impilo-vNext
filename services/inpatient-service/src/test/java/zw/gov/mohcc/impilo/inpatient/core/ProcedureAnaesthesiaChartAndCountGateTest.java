@@ -33,6 +33,7 @@ class ProcedureAnaesthesiaChartAndCountGateTest {
     @Mock ProcedureChecklistItemRepository checklistRepository;
     @Mock ProcedureIntraopEventRepository intraopRepository;
     @Mock ProcedurePostopRecordRepository postopRepository;
+    @Mock ProcedurePacuObservationRepository pacuObservationRepository;
     @Mock ProcedureEpisodeDocumentRepository documentRepository;
     @Mock ProcedureConsumableRepository consumableRepository;
     @Mock ProcedureAnaesthesiaScoreRepository anaesthesiaScoreRepository;
@@ -49,7 +50,7 @@ class ProcedureAnaesthesiaChartAndCountGateTest {
     @BeforeEach
     void setUp() {
         service = new ProcedureEpisodeService(episodeRepository, preopRepository, checklistRepository,
-                intraopRepository, postopRepository, documentRepository, consumableRepository,
+                intraopRepository, postopRepository, pacuObservationRepository, documentRepository, consumableRepository,
                 anaesthesiaScoreRepository, countRepository, chartRepository, bloodLinkRepository,
                 outboxRepository, procedureConsentRepository, new ObjectMapper());
         TrustContextHolder.set(new TrustContext(tenant, "actor-anaesthetist", "PROVIDER", "TREATMENT",

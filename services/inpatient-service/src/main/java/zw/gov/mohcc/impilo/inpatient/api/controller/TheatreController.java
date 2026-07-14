@@ -84,6 +84,42 @@ public class TheatreController {
         return theatreService.recordPacuDisposition(id, body);
     }
 
+    // ── Wave 4 §12 — PACU recovery depth ──
+    @PostMapping("/cases/{id}/pacu/observations")
+    public ResponseEntity<Map<String, Object>> recordPacuObservation(@PathVariable UUID id,
+                                                                     @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.recordPacuObservation(id, body));
+    }
+
+    @GetMapping("/cases/{id}/pacu/observations")
+    public List<Map<String, Object>> listPacuObservations(@PathVariable UUID id) {
+        return theatreService.listPacuObservations(id);
+    }
+
+    @GetMapping("/cases/{id}/pacu/readiness")
+    public Map<String, Object> dischargeReadiness(@PathVariable UUID id) {
+        return theatreService.dischargeReadiness(id);
+    }
+
+    @PostMapping("/cases/{id}/pacu/escalate")
+    public ResponseEntity<Map<String, Object>> escalatePacu(@PathVariable UUID id,
+                                                            @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(theatreService.escalatePacu(id, body != null ? body : Map.of()));
+    }
+
+    @PostMapping("/cases/{id}/pacu/discharge")
+    public Map<String, Object> pacuDischargeDecision(@PathVariable UUID id,
+                                                     @RequestBody(required = false) Map<String, Object> body) {
+        return theatreService.pacuDischargeDecision(id, body != null ? body : Map.of());
+    }
+
+    @PostMapping("/cases/{id}/return-to-theatre")
+    public Map<String, Object> returnToTheatre(@PathVariable UUID id,
+                                               @RequestBody(required = false) Map<String, Object> body) {
+        return theatreService.returnToTheatre(id, body != null ? body : Map.of());
+    }
+
     // cancellation
     @PostMapping("/cases/{id}/cancel")
     public Map<String, Object> cancel(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
