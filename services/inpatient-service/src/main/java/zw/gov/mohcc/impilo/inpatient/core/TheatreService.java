@@ -1040,21 +1040,26 @@ public class TheatreService {
         String event = "theatre.count.recorded";
         if (bothSides && discrepancy != 0) {
             // RETAINED-ITEM RISK — raise a RITO sentinel incident (RITO owns the safety case).
-            String idem = idempotency(episodeId, "rito-count-" + kind + "-" + seq);
+            // RITO case severity must be one of RITO's LOW|MODERATE|HIGH|CRITICAL — a retained item is
+            // CRITICAL (previously sent the invalid "SEVERE", which RITO 400-rejected so no case opened).
+            // Each RITO call carries a DISTINCT idempotency key: reusing one key made the 2nd/3rd call
+            // 409 on RITO's idempotency filter (same key, different body).
+            String idemBase = idempotency(episodeId, "rito-count-" + kind + "-" + seq);
             String caseId = ritoSafetyClient.createCase("SAFETY_INCIDENT",
                     "Surgical count discrepancy (" + kind + ")",
                     "Theatre count discrepancy of " + discrepancy + " " + kind + "(s) at Sign-Out",
-                    "SEVERE", "PATIENT_SAFETY", e.getSubjectCpid(),
-                    Map.of("episode_id", episodeId.toString(), "count_kind", kind, "discrepancy", discrepancy), idem);
+                    "CRITICAL", "PATIENT_SAFETY", e.getSubjectCpid(),
+                    Map.of("episode_id", episodeId.toString(), "count_kind", kind, "discrepancy", discrepancy),
+                    idemBase + ":case");
             if (caseId != null) {
                 c.setRitoCaseRef(caseId);
                 countRepository.save(c);
-                ritoSafetyClient.recordSafetyIncident(caseId, "RETAINED_ITEM", "SEVERE",
-                        "Reconcile count and perform imaging per retained-item protocol", true, idem);
+                ritoSafetyClient.recordSafetyIncident(caseId, "RETAINED_ITEM", "CRITICAL",
+                        "Reconcile count and perform imaging per retained-item protocol", true, idemBase + ":incident");
             }
             ritoSafetyClient.ingestQualitySignal("CHECKLIST_NONCOMPLIANCE",
                     "episode:" + episodeId, "HIGH", facilityRef(),
-                    "Surgical " + kind + " count discrepancy of " + discrepancy, null, idem);
+                    "Surgical " + kind + " count discrepancy of " + discrepancy, null, idemBase + ":signal");
             // Route through the existing procedure_safety_event ownerFor path (RETAINED_ITEM → rito).
             routeSafetyEventInternal(episodeId, "RETAINED_ITEM", "SENTINEL",
                     kind + " count discrepancy of " + discrepancy, caseId);

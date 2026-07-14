@@ -48,7 +48,9 @@ public class RitoSafetyClient {
             payload.put("title", title);
             payload.put("description", description);
             payload.put("severity", severity);
-            payload.put("source", "THEATRE");
+            // RITO validates source against its enum (NOMPILO|KHULUMA|...|INTEGRATION_API); a theatre
+            // service-to-service case is INTEGRATION_API. "THEATRE" was rejected 400 so no case opened.
+            payload.put("source", "INTEGRATION_API");
             payload.put("category", category);
             if (subjectHealthId != null) payload.put("subjectHealthId", subjectHealthId);
             payload.put("metadata", metadata != null ? metadata : Map.of());
