@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.inpatient.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.inpatient.core.SurgicalDischargeService;
 import zw.gov.mohcc.impilo.inpatient.core.TheatreService;
 
 import java.util.List;
@@ -19,9 +20,29 @@ import java.util.UUID;
 public class TheatreController {
 
     private final TheatreService theatreService;
+    private final SurgicalDischargeService surgicalDischargeService;
 
-    public TheatreController(TheatreService theatreService) {
+    public TheatreController(TheatreService theatreService,
+                             SurgicalDischargeService surgicalDischargeService) {
         this.theatreService = theatreService;
+        this.surgicalDischargeService = surgicalDischargeService;
+    }
+
+    // ── Wave 4 §14 — surgery-specialised discharge summary ──
+    @PostMapping("/cases/{id}/discharge")
+    public Map<String, Object> saveDischargeDraft(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return surgicalDischargeService.saveDraft(id, body);
+    }
+
+    @GetMapping("/cases/{id}/discharge")
+    public Map<String, Object> getDischarge(@PathVariable UUID id) {
+        return surgicalDischargeService.get(id);
+    }
+
+    @PostMapping("/cases/{id}/discharge/complete")
+    public Map<String, Object> completeDischarge(@PathVariable UUID id,
+                                                 @RequestBody(required = false) Map<String, Object> body) {
+        return surgicalDischargeService.complete(id, body != null ? body : Map.of());
     }
 
     // intake + triage
