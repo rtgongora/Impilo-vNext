@@ -9,7 +9,7 @@ import zw.gov.mohcc.impilo.workflow.config.TestSecurityConfig;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-public class WorkflowGoldenContractIT extends GoldenContractSuite {
+public class WorkflowGoldenContractTest extends GoldenContractSuite {
     @Override
     protected String getReadEndpointOverride() {
         return "/internal/v1/workflows/definitions";
