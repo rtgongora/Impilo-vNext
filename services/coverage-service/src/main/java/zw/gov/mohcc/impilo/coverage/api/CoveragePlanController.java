@@ -21,7 +21,7 @@ import zw.gov.mohcc.impilo.coverage.domain.CoveragePlanEntity;
 import zw.gov.mohcc.impilo.coverage.domain.MemberCoverageEntity;
 import zw.gov.mohcc.impilo.coverage.repository.CoveragePlanRepository;
 import zw.gov.mohcc.impilo.coverage.repository.MemberCoverageRepository;
-import zw.gov.mohcc.impilo.coverage.repository.SubsidyEnrollmentRepository;
+import zw.gov.mohcc.impilo.coverage.repository.SubsidyEnrolmentRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -44,16 +44,16 @@ public class CoveragePlanController {
 
     private final CoveragePlanRepository planRepository;
     private final MemberCoverageRepository memberCoverageRepository;
-    private final SubsidyEnrollmentRepository subsidyEnrollmentRepository;
+    private final SubsidyEnrolmentRepository subsidyEnrolmentRepository;
     private final CoverageEventService eventService;
 
     public CoveragePlanController(CoveragePlanRepository planRepository,
                                   MemberCoverageRepository memberCoverageRepository,
-                                  SubsidyEnrollmentRepository subsidyEnrollmentRepository,
+                                  SubsidyEnrolmentRepository subsidyEnrolmentRepository,
                                   CoverageEventService eventService) {
         this.planRepository = planRepository;
         this.memberCoverageRepository = memberCoverageRepository;
-        this.subsidyEnrollmentRepository = subsidyEnrollmentRepository;
+        this.subsidyEnrolmentRepository = subsidyEnrolmentRepository;
         this.eventService = eventService;
     }
 
@@ -86,9 +86,13 @@ public class CoveragePlanController {
         UUID tid = UUID.fromString(tenantId);
         LocalDate today = LocalDate.now();
 
-        // 1) Active subsidy enrolment takes precedence — its exemption category drives waivers.
-        var enrolment = subsidyEnrollmentRepository
-                .findByTenantIdAndClientIdAndStatusOrderByCreatedAtDesc(tid, clientId, "ACTIVE")
+        // 1) Active exemption-carrying subsidy enrolment takes precedence — its exemption
+        //    category drives waivers. Reads the consolidated cv_subsidy_enrolments SoR;
+        //    the response source string "SUBSIDY_ENROLLMENT" is a wire contract (BFF
+        //    teleconsult costing consumes it) and is kept as-is.
+        var enrolment = subsidyEnrolmentRepository
+                .findByTenantIdAndMemberCpidAndStatusAndExemptionCategoryIsNotNullOrderByCreatedAtDesc(
+                        tid, clientId, "ACTIVE")
                 .stream()
                 .filter(e -> !e.getEffectiveFrom().isAfter(today)
                         && (e.getEffectiveTo() == null || !e.getEffectiveTo().isBefore(today)))
