@@ -9,7 +9,7 @@ import zw.gov.mohcc.impilo.fhirgateway.config.TestSecurityConfig;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-public class FhirGatewayGoldenContractIT extends GoldenContractSuite {
+public class FhirGatewayGoldenContractTest extends GoldenContractSuite {
 
     @Override
     protected String getCommandEndpointOverride() {
@@ -18,11 +18,11 @@ public class FhirGatewayGoldenContractIT extends GoldenContractSuite {
 
     @Override
     protected String getReadEndpointOverride() {
-        return "/internal/v1/gateway/routes";
+        return "/internal/v1/health";
     }
 
     @Override
     protected String getFederationEndpointOverride() {
-        return "/internal/v1/gateway/routes";
+        return "/internal/v1/test-federation";
     }
 }
