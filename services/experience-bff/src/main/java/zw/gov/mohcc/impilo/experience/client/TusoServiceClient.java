@@ -330,6 +330,26 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** Governed profile-completeness verdict (missing fields / geocode status). */
+    public JsonNode getFacilityCompleteness(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/completeness";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Governed completion of missing facility profile fields (esp. geocodes).
+     * TUSO enforces the facility-administrator / PIC authz fail-closed; 4xx
+     * (403 / validation) surfaces as HttpStatusCodeException for the controller
+     * to pass through verbatim.
+     */
+    public JsonNode completeFacilityProfile(long facilityId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/complete-profile";
+        log.info("TUSO: Completing facility profile id={}", facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Facility-mode setup-wizard state. */
     public JsonNode getFacilitySetupState(long facilityId) {
         String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/setup";

@@ -154,6 +154,56 @@ public class FacilityModeController {
         }
     }
 
+    /**
+     * Governed profile-completeness verdict (TUSO SoR, computed on read).
+     * Backs the facility-mode cockpit prompt asking the facility administrator /
+     * practitioner-in-charge to complete missing governed fields (esp. geocodes).
+     */
+    @GetMapping("/{facilityId}/completeness")
+    public ResponseEntity<Map<String, Object>> getCompleteness(
+            @PathVariable long facilityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode completeness = tusoClient.getFacilityCompleteness(facilityId);
+            return ResponseEntity.ok(Map.of("data", completeness, "meta", meta(requestId, correlationId)));
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of(
+                    "error", Map.of("code", "FACILITY_COMPLETENESS_REJECTED",
+                            "message", e.getResponseBodyAsString()),
+                    "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "FACILITY_COMPLETENESS_UNAVAILABLE",
+                    "Unable to load facility completeness from TUSO");
+        }
+    }
+
+    /**
+     * Governed completion of missing facility profile fields (TUSO SoR). The BFF is
+     * a stateless pass-through: actor trust headers are forwarded on the service
+     * RestTemplate, and TUSO's fail-closed authz (403) / validation (400) verdicts
+     * surface verbatim (status + body) so the shell shows the honest reason.
+     */
+    @PostMapping("/{facilityId}/complete-profile")
+    public ResponseEntity<Map<String, Object>> completeProfile(
+            @PathVariable long facilityId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode completeness = tusoClient.completeFacilityProfile(facilityId, body);
+            return ResponseEntity.ok(Map.of("data", completeness, "meta", meta(requestId, correlationId)));
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of(
+                    "error", Map.of("code", "FACILITY_COMPLETE_PROFILE_REJECTED",
+                            "message", e.getResponseBodyAsString()),
+                    "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "FACILITY_COMPLETE_PROFILE_UNAVAILABLE",
+                    "Unable to complete facility profile in TUSO");
+        }
+    }
+
     /** Create a facility unit (department) — TUSO SoR. */
     @PostMapping("/{facilityId}/units")
     public ResponseEntity<Map<String, Object>> createUnit(
