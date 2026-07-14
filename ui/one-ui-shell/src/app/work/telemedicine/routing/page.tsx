@@ -35,7 +35,9 @@ import {
   useRoutingWorkspaces,
   type RoutingFacilityHit,
 } from "@/hooks/queries/useTeleconsultRouting";
-import { ALL_VIRTUAL_HOSPITALS, SUBSTRATE_STATUS_LABELS } from "@/lib/telemedicine/virtual-hospitals";
+import { SUBSTRATE_STATUS_LABELS } from "@/lib/telemedicine/virtual-hospitals";
+import { useVirtualHospitals } from "@/hooks/queries/useTelemedicineOperatingModel";
+import type { VirtualHospitalDefinition } from "@/lib/telemedicine/virtual-hospitals";
 import {
   addPin,
   isPinned,
@@ -389,16 +391,28 @@ function VirtualHospitalsTab({
   pins: PinnedTarget[];
   togglePin: (kind: PinnedTargetKind, id: string, label: string, detail?: string) => void;
 }) {
+  const directory = useVirtualHospitals();
+  const hospitals = useMemo(() => directory.data?.virtualHospitals ?? [], [directory.data]);
   const routable = useMemo(
-    () => ALL_VIRTUAL_HOSPITALS.filter((vh) => vh.substrateStatus === "ROUTABLE_VIA_EXISTING_SEAMS"),
-    [],
+    () =>
+      hospitals.filter(
+        (vh) =>
+          vh.substrateStatus === "ROUTABLE_VIA_EXISTING_SEAMS" ||
+          vh.substrateStatus === "OPERATIONAL",
+      ),
+    [hospitals],
   );
   const configured = useMemo(
-    () => ALL_VIRTUAL_HOSPITALS.filter((vh) => vh.substrateStatus !== "ROUTABLE_VIA_EXISTING_SEAMS"),
-    [],
+    () =>
+      hospitals.filter(
+        (vh) =>
+          vh.substrateStatus !== "ROUTABLE_VIA_EXISTING_SEAMS" &&
+          vh.substrateStatus !== "OPERATIONAL",
+      ),
+    [hospitals],
   );
 
-  const renderRow = (vhList: typeof ALL_VIRTUAL_HOSPITALS, canRequest: boolean) => (
+  const renderRow = (vhList: VirtualHospitalDefinition[], canRequest: boolean) => (
     <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white shadow-sm">
       {vhList.map((vh) => {
         const pinned = isPinned(pins, "VIRTUAL_HOSPITAL", vh.id);

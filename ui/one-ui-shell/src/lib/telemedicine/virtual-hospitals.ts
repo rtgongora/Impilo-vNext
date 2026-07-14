@@ -99,8 +99,41 @@ export interface CurrentRoutingSeam {
 export interface VirtualHospitalQueueSpec {
   id: string;
   name: string;
-  /** Every queue is a spec until the virtual queue engine exists. */
-  status: "AWAITING_BACKEND";
+  /**
+   * Computed by the BFF from PCT materialisation state: LIVE only when a
+   * materialised, active pct queue backs this definition. Never stored.
+   */
+  status: "AWAITING_BACKEND" | "LIVE";
+  /** Runtime read-backs (present only when PCT stats are available). */
+  depth?: number | null;
+  oldestWaitingMinutes?: number | null;
+  slaBreaches?: number | null;
+  slaMinutes?: number | null;
+}
+
+/** Vashandi duty composition for the institution's primary pool. */
+export interface VirtualPoolDuty {
+  poolId: string;
+  /** "true" | "false" | "UNKNOWN" — UNKNOWN when vashandi is unreachable. */
+  status: "true" | "false" | "UNKNOWN";
+  onDutyCount?: number;
+  onDuty?: Array<{
+    workforceProfileId: string | null;
+    shiftType: string | null;
+    status: string | null;
+    startTime: string | null;
+    endTime: string | null;
+  }>;
+  nextShiftStart?: string | null;
+}
+
+/** Full routing seam row (governance panel; includes inactive seams). */
+export interface VirtualServiceRoutingSeam {
+  id?: number;
+  routingType: string;
+  targetRef: string;
+  note?: string | null;
+  active: boolean;
 }
 
 export interface VirtualHospitalDefinition {
@@ -135,6 +168,20 @@ export interface VirtualHospitalDefinition {
   currentRoutingSeams: CurrentRoutingSeam[];
   /** For provincial instances: ISO-style province code. */
   provinceCode?: string;
+
+  // ---- TUSO-backed governance/runtime fields (absent on static fallback) ----
+  /** Fail-closed lifecycle: CONFIGURED → ACTIVATION_REQUESTED → ACTIVE → SUSPENDED. */
+  lifecycleStatus?: "CONFIGURED" | "ACTIVATION_REQUESTED" | "ACTIVE" | "SUSPENDED" | null;
+  activatedAt?: string | null;
+  activatedBy?: string | null;
+  /** Every seam incl. inactive ones (governance panel). */
+  routingSeams?: VirtualServiceRoutingSeam[];
+  /** The pool key (first active seam target_ref) the runtime composition used. */
+  primaryPoolId?: string | null;
+  /** True when PCT queue stats could not be read (queues stay AWAITING_BACKEND). */
+  queueStatsDegraded?: boolean;
+  /** Vashandi duty snapshot for the primary pool. */
+  duty?: VirtualPoolDuty;
 }
 
 /**
@@ -156,467 +203,15 @@ export const ZW_PROVINCES: ReadonlyArray<{ code: string; name: string }> = [
   { code: "ZW-MI", name: "Midlands" },
 ];
 
-const TELECONSULT_SEAM = (specialty: string): CurrentRoutingSeam => ({
-  routingType: "SPECIALTY_POOL",
-  targetRef: specialty,
-  note: "Reachable today as a teleconsult SPECIALTY_POOL routing target (real BFF-validated path).",
-});
-
-const queue = (id: string, name: string): VirtualHospitalQueueSpec => ({
-  id,
-  name,
-  status: "AWAITING_BACKEND",
-});
-
-/** The 12 strategic virtual hospitals (deliberately NOT one per facility). */
-export const STRATEGIC_VIRTUAL_HOSPITALS: VirtualHospitalDefinition[] = [
-  {
-    id: "vh-national-telemedicine",
-    name: "National Telemedicine Hospital",
-    level: "NATIONAL",
-    operatingModel: "NETWORKED",
-    operatingAuthority: "MoHCC (national)",
-    regulatoryStatus: "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
-    purpose:
-      "Countrywide telemedicine coordination, national specialist support, overflow support, quality monitoring, and national service continuity.",
-    catchment: "National — all provinces, all levels of care",
-    serviceLines: [
-      "General teleconsultation",
-      "Facility support",
-      "Specialist escalation",
-      "Emergency overflow",
-      "Remote monitoring review",
-      "Quality & audit monitoring",
-    ],
-    providerPoolCadres: [
-      "Telemedicine triage providers",
-      "Medical officers",
-      "Nurses/midwives",
-      "Specialists",
-      "Diagnostics reviewers",
-      "Mental health providers",
-      "Supervisors",
-      "Helpdesk agents",
-    ],
-    linkedFacilityRoles: ["ACCESS_POINT", "REQUESTER", "REFERRAL_DESTINATION", "STAFF_CONTRIBUTING"],
-    crossBorderParticipation: true,
-    allowedCrossBorderPrivileges: [
-      "PROVIDER_TO_PROVIDER_ADVICE_ONLY",
-      "MDT_ONLY",
-      "BLOCKED_PENDING_REGULATORY_APPROVAL",
-    ],
-    billingModels: ["PUBLIC_SERVICE", "PROGRAMME_FUNDED", "EMERGENCY_DISASTER_FREE"],
-    sessionModeIds: [
-      "direct-clinical-encounter",
-      "provider-to-provider-advice",
-      "emergency-advisory",
-      "mdt-case-review",
-    ],
-    queues: [
-      queue("national-general-teleconsult", "National General Teleconsult Queue"),
-      queue("facility-support", "Facility Support Queue"),
-      queue("specialist-escalation", "Specialist Escalation Queue"),
-      queue("emergency-overflow", "Emergency Overflow Queue"),
-      queue("remote-monitoring-review", "Remote Monitoring Review Queue"),
-      queue("missed-failed-session", "Missed/Failed Session Queue"),
-    ],
-    substrateStatus: "ROUTABLE_VIA_EXISTING_SEAMS",
-    currentRoutingSeams: [TELECONSULT_SEAM("GENERAL_TELEMEDICINE")],
-  },
-  {
-    id: "vh-specialist",
-    name: "Virtual Specialist Hospital",
-    level: "SPECIALIST",
-    operatingModel: "NETWORKED",
-    operatingAuthority: "MoHCC with central hospital specialist base",
-    regulatoryStatus: "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
-    purpose:
-      "Specialist-care virtual institution: provider-to-provider consultation, specialist teleconsults, MDT reviews, complex case review, procedure support, specialist follow-up.",
-    catchment: "National, provincial spokes",
-    serviceLines: [
-      "Internal medicine",
-      "Surgery",
-      "Paediatrics",
-      "Obstetrics & gynaecology",
-      "Anaesthesia",
-      "Psychiatry",
-      "Radiology/diagnostics",
-      "Rehabilitation medicine",
-      "Infectious diseases",
-    ],
-    providerPoolCadres: ["Specialists", "Medical officers", "Supervisors"],
-    linkedFacilityRoles: ["REQUESTER", "REFERRAL_DESTINATION", "HOST_FACILITY", "STAFF_CONTRIBUTING"],
-    crossBorderParticipation: true,
-    allowedCrossBorderPrivileges: [
-      "PROVIDER_TO_PROVIDER_ADVICE_ONLY",
-      "MDT_ONLY",
-      "TEACHING_SUPERVISION_ONLY",
-      "BLOCKED_PENDING_REGULATORY_APPROVAL",
-    ],
-    billingModels: ["PUBLIC_SERVICE", "MEDICAL_AID_REIMBURSED", "PRIVATE_SELF_PAY"],
-    sessionModeIds: ["provider-to-provider-advice", "mdt-case-review", "case-presentation", "diagnostics-review"],
-    queues: [
-      queue("specialist-request", "General Specialist Request Queue"),
-      queue("p2p-advice", "Provider-to-Provider Advice Queue"),
-      queue("mdt-review", "MDT Review Queue"),
-      queue("procedure-support", "Procedure/Theatre Support Queue"),
-      queue("urgent-escalation", "Urgent Specialist Escalation Queue"),
-    ],
-    substrateStatus: "ROUTABLE_VIA_EXISTING_SEAMS",
-    currentRoutingSeams: [TELECONSULT_SEAM("SPECIALIST_POOL")],
-  },
-  {
-    id: "vh-maternal-newborn",
-    name: "Virtual Maternal and Newborn Unit",
-    level: "PROGRAMME",
-    operatingModel: "PROGRAMME_OWNED",
-    operatingAuthority: "MoHCC maternal & newborn health programme",
-    regulatoryStatus: "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
-    purpose:
-      "Maternal, newborn, pregnancy, postnatal, midwifery, neonatal and high-risk follow-up services with danger-sign escalation.",
-    catchment: "National programme, facility spokes",
-    serviceLines: [
-      "ANC teleconsultation",
-      "PNC follow-up",
-      "High-risk pregnancy monitoring",
-      "Neonatal review",
-      "Midwife-to-doctor escalation",
-      "Emergency obstetric advisory",
-    ],
-    providerPoolCadres: ["Midwives", "Obstetricians", "Neonatologists", "Medical officers"],
-    linkedFacilityRoles: ["ACCESS_POINT", "REQUESTER", "REFERRAL_DESTINATION", "STAFF_CONTRIBUTING"],
-    crossBorderParticipation: false,
-    allowedCrossBorderPrivileges: [],
-    billingModels: ["PUBLIC_SERVICE", "PROGRAMME_FUNDED", "DONOR_PARTNER_SUPPORTED"],
-    sessionModeIds: ["direct-clinical-encounter", "provider-to-provider-advice", "emergency-advisory"],
-    queues: [
-      queue("anc-teleconsult", "ANC Teleconsult Queue"),
-      queue("pnc-followup", "PNC Follow-up Queue"),
-      queue("high-risk-pregnancy", "High-Risk Pregnancy Queue"),
-      queue("neonatal-review", "Neonatal Review Queue"),
-      queue("emergency-obstetric", "Emergency Obstetric/Newborn Advisory Queue"),
-    ],
-    substrateStatus: "ROUTABLE_VIA_EXISTING_SEAMS",
-    currentRoutingSeams: [TELECONSULT_SEAM("MATERNAL_NEWBORN")],
-  },
-  {
-    id: "vh-mental-health",
-    name: "Virtual Mental Health Unit",
-    level: "PROGRAMME",
-    operatingModel: "PROGRAMME_OWNED",
-    operatingAuthority: "MoHCC mental health programme",
-    regulatoryStatus: "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
-    purpose:
-      "Counselling, psychiatric review, follow-up, crisis routing, medication review, psychosocial support and continuity of care — with sensitive-case governance.",
-    catchment: "National programme",
-    serviceLines: [
-      "Counselling",
-      "Psychiatric review",
-      "Crisis escalation",
-      "Medication review",
-      "Follow-up/continuity",
-    ],
-    providerPoolCadres: ["Psychiatrists", "Psychologists", "Counsellors", "Mental health nurses"],
-    linkedFacilityRoles: ["ACCESS_POINT", "REQUESTER", "REFERRAL_DESTINATION"],
-    crossBorderParticipation: false,
-    allowedCrossBorderPrivileges: [],
-    billingModels: ["PUBLIC_SERVICE", "PROGRAMME_FUNDED"],
-    sessionModeIds: ["direct-clinical-encounter", "emergency-advisory", "case-notes-review"],
-    queues: [
-      queue("mh-teleconsult", "General Mental Health Teleconsult Queue"),
-      queue("counselling", "Counselling Queue"),
-      queue("psychiatric-review", "Psychiatric Review Queue"),
-      queue("crisis-escalation", "Crisis/Urgent Escalation Queue"),
-      queue("medication-review", "Medication Review Queue"),
-    ],
-    substrateStatus: "CONFIGURED_AWAITING_SUBSTRATE",
-    currentRoutingSeams: [],
-  },
-  {
-    id: "vh-chronic-disease",
-    name: "Virtual Chronic Disease Clinic",
-    level: "PROGRAMME",
-    operatingModel: "PROGRAMME_OWNED",
-    operatingAuthority: "MoHCC NCD programme",
-    regulatoryStatus: "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
-    purpose:
-      "Long-term condition management: medication follow-up, adherence support, results review, monitoring and continuity of care.",
-    catchment: "National programme",
-    serviceLines: [
-      "Hypertension",
-      "Diabetes",
-      "Asthma/COPD",
-      "Epilepsy",
-      "Medication adherence",
-      "Results review",
-    ],
-    providerPoolCadres: ["Medical officers", "Nurses", "Pharmacy advisers"],
-    linkedFacilityRoles: ["ACCESS_POINT", "REQUESTER", "REFERRAL_DESTINATION", "DISPENSING_SITE"],
-    crossBorderParticipation: false,
-    allowedCrossBorderPrivileges: [],
-    billingModels: ["PUBLIC_SERVICE", "MEDICAL_AID_REIMBURSED", "SUBSCRIPTION_CONTINUITY_CARE"],
-    sessionModeIds: ["direct-clinical-encounter", "diagnostics-review"],
-    queues: [
-      queue("ncd-followup", "NCD Tele-follow-up Queue"),
-      queue("results-review", "Results Review Queue"),
-      queue("medication-review", "Medication Review Queue"),
-      queue("abnormal-observation", "Abnormal Observation Escalation Queue"),
-      queue("missed-followup", "Missed Follow-up Queue"),
-    ],
-    substrateStatus: "CONFIGURED_AWAITING_SUBSTRATE",
-    currentRoutingSeams: [],
-  },
-  {
-    id: "vh-radiology-diagnostics",
-    name: "Virtual Radiology/Diagnostics Review Centre",
-    level: "SPECIALIST",
-    operatingModel: "NETWORKED",
-    operatingAuthority: "MoHCC diagnostics network",
-    regulatoryStatus: "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
-    purpose:
-      "Remote interpretation, imaging/lab review, diagnostic escalation, PACS/DICOM-linked case review and specialist diagnostic recommendations.",
-    catchment: "National, hub-and-spoke",
-    serviceLines: [
-      "Imaging review",
-      "Radiology opinion",
-      "Lab result interpretation",
-      "Diagnostic MDT",
-      "Facility diagnostic support",
-    ],
-    providerPoolCadres: ["Radiologists", "Pathologists", "Diagnostics reviewers"],
-    linkedFacilityRoles: ["REQUESTER", "DIAGNOSTICS_SITE", "STAFF_CONTRIBUTING"],
-    crossBorderParticipation: true,
-    allowedCrossBorderPrivileges: [
-      "PROVIDER_TO_PROVIDER_ADVICE_ONLY",
-      "MDT_ONLY",
-      "BLOCKED_PENDING_REGULATORY_APPROVAL",
-    ],
-    billingModels: ["PUBLIC_SERVICE", "MEDICAL_AID_REIMBURSED"],
-    sessionModeIds: ["diagnostics-review", "mdt-case-review", "provider-to-provider-advice"],
-    queues: [
-      queue("imaging-review", "Imaging Review Queue"),
-      queue("urgent-imaging", "Urgent Imaging Review Queue"),
-      queue("lab-interpretation", "Lab Interpretation Queue"),
-      queue("diagnostic-mdt", "Diagnostic MDT Queue"),
-    ],
-    substrateStatus: "ROUTABLE_VIA_EXISTING_SEAMS",
-    currentRoutingSeams: [TELECONSULT_SEAM("RADIOLOGY_DIAGNOSTICS")],
-  },
-  {
-    id: "vh-icu-support",
-    name: "Virtual ICU Support Desk",
-    level: "SPECIALIST",
-    operatingModel: "NETWORKED",
-    operatingAuthority: "MoHCC critical care network",
-    regulatoryStatus: "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
-    purpose:
-      "High-acuity remote support: ICU, HDU, ward deterioration, emergency stabilisation, post-operative critical support.",
-    catchment: "National, facility spokes",
-    serviceLines: [
-      "Urgent ICU support",
-      "Ward deterioration escalation",
-      "Critical care advice",
-      "Post-op critical review",
-    ],
-    providerPoolCadres: ["Intensivists", "Anaesthetists", "Critical care nurses"],
-    linkedFacilityRoles: ["REQUESTER", "REFERRAL_DESTINATION", "STAFF_CONTRIBUTING"],
-    crossBorderParticipation: true,
-    allowedCrossBorderPrivileges: ["EMERGENCY_ADVISORY_ONLY", "BLOCKED_PENDING_REGULATORY_APPROVAL"],
-    billingModels: ["PUBLIC_SERVICE", "EMERGENCY_DISASTER_FREE"],
-    sessionModeIds: ["emergency-advisory", "hybrid-encounter-support", "provider-to-provider-advice"],
-    queues: [
-      queue("urgent-icu", "Urgent ICU Support Queue"),
-      queue("ward-deterioration", "Ward Deterioration Queue"),
-      queue("critical-advice", "Critical Care Advice Queue"),
-    ],
-    substrateStatus: "CONFIGURED_AWAITING_SUBSTRATE",
-    currentRoutingSeams: [],
-  },
-  {
-    id: "vh-emergency-advisory",
-    name: "Virtual Emergency Advisory Unit",
-    level: "EMERGENCY",
-    operatingModel: "EMERGENCY_ACTIVATED",
-    operatingAuthority: "MoHCC emergency care / Daidzai coordination",
-    regulatoryStatus: "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
-    purpose:
-      "Rapid-response telemedicine: urgent triage, emergency advice, referral routing, dispatch support, facility escalation with SLA timers.",
-    catchment: "National, 24/7 when activated",
-    serviceLines: [
-      "Emergency tele-triage",
-      "Facility emergency advice",
-      "Transfer/referral escalation",
-      "Post-emergency follow-up",
-    ],
-    providerPoolCadres: ["Emergency physicians", "Medical officers", "Triage nurses"],
-    linkedFacilityRoles: ["ACCESS_POINT", "REQUESTER", "REFERRAL_DESTINATION"],
-    crossBorderParticipation: true,
-    allowedCrossBorderPrivileges: ["EMERGENCY_ADVISORY_ONLY", "BLOCKED_PENDING_REGULATORY_APPROVAL"],
-    billingModels: ["EMERGENCY_DISASTER_FREE", "PUBLIC_SERVICE"],
-    sessionModeIds: ["emergency-advisory", "hybrid-encounter-support"],
-    queues: [
-      queue("emergency-tele-triage", "Emergency Tele-triage Queue"),
-      queue("facility-emergency-advice", "Facility Emergency Advice Queue"),
-      queue("transfer-escalation", "Transfer/Referral Escalation Queue"),
-      queue("unanswered-emergency", "Unanswered Emergency Queue"),
-    ],
-    substrateStatus: "CONFIGURED_AWAITING_SUBSTRATE",
-    currentRoutingSeams: [],
-  },
-  {
-    id: "vh-rehabilitation",
-    name: "Virtual Rehabilitation Clinic",
-    level: "PROGRAMME",
-    operatingModel: "PROGRAMME_OWNED",
-    operatingAuthority: "MoHCC rehabilitation programme",
-    regulatoryStatus: "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
-    purpose:
-      "Rehabilitation, physiotherapy, occupational therapy, speech therapy, assistive-device follow-up and functional recovery monitoring.",
-    catchment: "National programme",
-    serviceLines: [
-      "Physiotherapy follow-up",
-      "Occupational therapy",
-      "Speech/swallow review",
-      "Post-stroke rehab",
-      "Assistive device review",
-    ],
-    providerPoolCadres: ["Physiotherapists", "Occupational therapists", "Speech therapists"],
-    linkedFacilityRoles: ["ACCESS_POINT", "REQUESTER", "REFERRAL_DESTINATION"],
-    crossBorderParticipation: false,
-    allowedCrossBorderPrivileges: [],
-    billingModels: ["PUBLIC_SERVICE", "MEDICAL_AID_REIMBURSED"],
-    sessionModeIds: ["direct-clinical-encounter"],
-    queues: [
-      queue("physio-followup", "Physiotherapy Follow-up Queue"),
-      queue("ot", "Occupational Therapy Queue"),
-      queue("post-stroke", "Post-Stroke Rehab Queue"),
-      queue("assistive-device", "Assistive Device Review Queue"),
-    ],
-    substrateStatus: "CONFIGURED_AWAITING_SUBSTRATE",
-    currentRoutingSeams: [],
-  },
-  {
-    id: "vh-community-followup",
-    name: "Virtual Community Follow-up Unit",
-    level: "COMMUNITY",
-    operatingModel: "PROGRAMME_OWNED",
-    operatingAuthority: "MoHCC community health / CHW programme",
-    regulatoryStatus: "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
-    purpose:
-      "Community-based care: CHW-supported follow-up, home monitoring, defaulter tracing, outreach continuity, facility-community linkage.",
-    catchment: "National, district/community spokes",
-    serviceLines: [
-      "CHW follow-up",
-      "Home-based care monitoring",
-      "Missed appointment tracing",
-      "Community escalation",
-      "Facility handover",
-    ],
-    providerPoolCadres: ["CHWs", "Community nurses", "Follow-up coordinators"],
-    linkedFacilityRoles: ["ACCESS_POINT", "REQUESTER", "REFERRAL_DESTINATION"],
-    crossBorderParticipation: false,
-    allowedCrossBorderPrivileges: [],
-    billingModels: ["PUBLIC_SERVICE", "PROGRAMME_FUNDED", "DONOR_PARTNER_SUPPORTED"],
-    sessionModeIds: ["direct-clinical-encounter", "provider-to-provider-advice"],
-    queues: [
-      queue("chw-followup", "CHW Follow-up Queue"),
-      queue("home-monitoring", "Home-Based Care Monitoring Queue"),
-      queue("missed-appointment", "Missed Appointment Queue"),
-      queue("facility-handover", "Facility Handover Queue"),
-    ],
-    substrateStatus: "CONFIGURED_AWAITING_SUBSTRATE",
-    currentRoutingSeams: [],
-  },
-  {
-    id: "vh-learning-supervision",
-    name: "Virtual Learning and Supervision Hospital",
-    level: "LEARNING",
-    operatingModel: "NETWORKED",
-    operatingAuthority: "MoHCC training directorate with Fundo",
-    regulatoryStatus: "POLICY_CONFIGURABLE_PENDING_DETERMINATION",
-    purpose:
-      "Governed virtual teaching, mentorship, supervision, case review and CPD — never uncontrolled recording or casual observation of patients.",
-    catchment: "National",
-    serviceLines: [
-      "Supervised clinical sessions",
-      "Case review",
-      "MDT teaching",
-      "Procedure observation",
-      "Learning artefact governance",
-    ],
-    providerPoolCadres: ["Supervisors", "Mentors", "Learners (restricted roles)"],
-    linkedFacilityRoles: ["REQUESTER", "STAFF_CONTRIBUTING"],
-    crossBorderParticipation: true,
-    allowedCrossBorderPrivileges: ["TEACHING_SUPERVISION_ONLY", "BLOCKED_PENDING_REGULATORY_APPROVAL"],
-    billingModels: ["TEACHING_SUPERVISION_FUNDED", "PUBLIC_SERVICE"],
-    sessionModeIds: ["teaching-supervision", "case-presentation", "audit-mortality-review"],
-    queues: [
-      queue("supervision-request", "Supervision Request Queue"),
-      queue("teaching-session", "Teaching Session Queue"),
-      queue("case-review", "Case Review Queue"),
-      queue("artefact-approval", "Learning Artefact Approval Queue"),
-    ],
-    substrateStatus: "ROUTABLE_VIA_EXISTING_SEAMS",
-    currentRoutingSeams: [
-      {
-        routingType: "SPECIALTY_POOL",
-        targetRef: "LEARNING_SUPERVISION",
-        note: "LEARNING_LIVE session template exists (W0); supervision requests routable as teleconsults today.",
-      },
-    ],
-  },
-];
-
-/** One provincial virtual hospital per province — instances of one model. */
-export const PROVINCIAL_VIRTUAL_HOSPITALS: VirtualHospitalDefinition[] = ZW_PROVINCES.map(
-  (province) => ({
-    id: `vh-provincial-${province.code.toLowerCase()}`,
-    name: `${province.name} Provincial Virtual Hospital`,
-    level: "PROVINCIAL" as const,
-    operatingModel: "NETWORKED" as const,
-    operatingAuthority: `${province.name} provincial health authority`,
-    regulatoryStatus: "POLICY_CONFIGURABLE_PENDING_DETERMINATION" as const,
-    purpose:
-      "Decentralised telemedicine operations: local facility support, provincial clinical routing, provincial virtual queues and management.",
-    catchment: `${province.name} province — linked districts and facilities`,
-    serviceLines: [
-      "Provincial general teleconsult",
-      "Facility-to-province support",
-      "District escalation",
-      "Provincial tele-follow-up",
-      "Referral handover",
-    ],
-    providerPoolCadres: ["Medical officers", "Nurses", "Provincial specialists"],
-    linkedFacilityRoles: [
-      "ACCESS_POINT",
-      "REQUESTER",
-      "REFERRAL_DESTINATION",
-      "STAFF_CONTRIBUTING",
-    ] as LinkedFacilityRole[],
-    crossBorderParticipation: false,
-    allowedCrossBorderPrivileges: [],
-    billingModels: ["PUBLIC_SERVICE"] as BillingModel[],
-    sessionModeIds: ["direct-clinical-encounter", "provider-to-provider-advice"],
-    queues: [
-      queue("provincial-general", "Provincial General Teleconsult Queue"),
-      queue("facility-to-province", "Facility-to-Province Support Queue"),
-      queue("district-escalation", "District Escalation Queue"),
-      queue("provincial-followup", "Provincial Tele-follow-up Queue"),
-    ],
-    substrateStatus: "CONFIGURED_AWAITING_SUBSTRATE" as const,
-    currentRoutingSeams: [],
-    provinceCode: province.code,
-  }),
-);
-
-export const ALL_VIRTUAL_HOSPITALS: VirtualHospitalDefinition[] = [
-  ...STRATEGIC_VIRTUAL_HOSPITALS,
-  ...PROVINCIAL_VIRTUAL_HOSPITALS,
-];
-
-export function getVirtualHospital(id: string): VirtualHospitalDefinition | undefined {
-  return ALL_VIRTUAL_HOSPITALS.find((vh) => vh.id === id);
-}
+/**
+ * The virtual-hospital DATA now lives in the TUSO virtual-service registry
+ * (canonical document: contracts/telemedicine/virtual-hospitals.json, seeded
+ * into tuso.virtual_service_* by tools/generate-virtual-service-seed.mjs).
+ * UI surfaces read it through the BFF via useVirtualHospitals()
+ * (@/hooks/queries/useTelemedicineOperatingModel) — the static
+ * ALL_VIRTUAL_HOSPITALS constant has been deleted deliberately; only the
+ * types, labels and province reference remain here.
+ */
 
 export const OPERATING_MODEL_LABELS: Record<VirtualHospitalOperatingModel, string> = {
   HOSTED: "Hosted by a physical facility",

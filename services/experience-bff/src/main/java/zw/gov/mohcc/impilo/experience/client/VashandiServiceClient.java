@@ -114,6 +114,16 @@ public class VashandiServiceClient {
         return unwrap(get("/work-context", params));
     }
 
+    /** Virtual-pool duty snapshot (who is on duty now); null when vashandi is unreachable. */
+    public JsonNode getVirtualPoolOnDuty(String poolId) {
+        return unwrap(get("/virtual-pools/" + poolId + "/on-duty", Map.of()));
+    }
+
+    /** Batch virtual-pool coverage (onDutyCount + nextShiftStart per pool); null when unreachable. */
+    public JsonNode getVirtualPoolCoverage(String poolIdsCsv) {
+        return unwrap(get("/virtual-pools/coverage", Map.of("poolIds", poolIdsCsv)));
+    }
+
     private VashandiDtos.UpstreamResult exchange(HttpMethod method,
                                                  String relativePath,
                                                  Map<String, String> queryParams,

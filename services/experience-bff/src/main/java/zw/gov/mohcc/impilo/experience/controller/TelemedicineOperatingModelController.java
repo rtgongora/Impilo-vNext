@@ -29,6 +29,15 @@ public class TelemedicineOperatingModelController {
 
     private final TelemedicineOperatingModelRegistry registry;
 
+    /**
+     * Optional runtime composition (PCT queue stats + vashandi duty) for the
+     * detail route. Optional wiring keeps the registry-only construction used
+     * by existing tests valid; absent → payloads keep their honest
+     * AWAITING_BACKEND defaults.
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private zw.gov.mohcc.impilo.experience.telemedicine.VirtualHospitalCompositionService compositionService;
+
     public TelemedicineOperatingModelController(TelemedicineOperatingModelRegistry registry) {
         this.registry = registry;
     }
@@ -59,7 +68,9 @@ public class TelemedicineOperatingModelController {
                             "message", "No virtual hospital configured with id: " + id),
                     "meta", meta(requestId, correlationId)));
         }
-        Map<String, Object> attributes = new LinkedHashMap<>(hospital.get());
+        Map<String, Object> attributes = compositionService != null
+                ? new LinkedHashMap<>(compositionService.compose(hospital.get()))
+                : new LinkedHashMap<>(hospital.get());
         attributes.put("source", directory.source());
         attributes.put("registryDegraded", directory.registryDegraded());
         return ok("virtual-hospital", requestId, correlationId, attributes);

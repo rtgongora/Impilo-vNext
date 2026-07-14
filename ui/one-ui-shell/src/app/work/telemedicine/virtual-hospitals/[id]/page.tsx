@@ -267,21 +267,54 @@ export default function VirtualHospitalDetailPage() {
       {/* Queues + routing today */}
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-3 text-base font-semibold text-slate-800">Queue specifications</h2>
+          <h2 className="mb-3 text-base font-semibold text-slate-800">Queues</h2>
           <ul className="space-y-2 text-sm">
             {vh.queues.map((q) => (
               <li key={q.id} className="flex items-center justify-between gap-2">
                 <span className="text-slate-700">{q.name}</span>
-                <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700">
-                  awaiting backend
-                </span>
+                {q.status === "LIVE" ? (
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-700">
+                    live · {q.depth ?? 0} waiting
+                    {q.oldestWaitingMinutes != null ? ` · oldest ${q.oldestWaitingMinutes}m` : ""}
+                    {(q.slaBreaches ?? 0) > 0 ? ` · ${q.slaBreaches} SLA breach(es)` : ""}
+                  </span>
+                ) : (
+                  <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] text-amber-700">
+                    awaiting backend
+                  </span>
+                )}
               </li>
             ))}
           </ul>
           <p className="mt-3 text-xs text-slate-400">
-            The virtual queue engine does not exist yet (routing metadata ≠ queue engine — see the
-            capability map). These specs seed that build; no counts are shown because none exist.
+            {vh.queues.some((q) => q.status === "LIVE")
+              ? "Live queues are materialised in PCT from this institution's TUSO queue definitions; counts are real PCT read-backs."
+              : "No queue is live for this institution yet — queues materialise in PCT once the institution is activated (governed, fail-closed). No pretend counts are shown."}
+            {vh.queueStatsDegraded
+              ? " Queue statistics are temporarily unavailable (PCT unreachable) — statuses shown conservatively."
+              : ""}
           </p>
+          {vh.duty ? (
+            <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs">
+              <span className="font-medium text-slate-700">Pool duty: </span>
+              {vh.duty.status === "UNKNOWN" ? (
+                <span className="text-slate-500">
+                  unknown — workforce service unreachable (advisory only, never blocks care)
+                </span>
+              ) : vh.duty.status === "true" ? (
+                <span className="text-emerald-700">
+                  {vh.duty.onDutyCount} provider(s) on duty now
+                </span>
+              ) : (
+                <span className="text-amber-700">
+                  nobody on duty now
+                  {vh.duty.nextShiftStart
+                    ? ` — next rostered shift ${new Date(vh.duty.nextShiftStart).toLocaleString()}`
+                    : " — no upcoming rostered shift"}
+                </span>
+              )}
+            </div>
+          ) : null}
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">

@@ -877,6 +877,13 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** Governed-change history for a virtual service. */
+    public JsonNode getVirtualServiceHistory(String vsUid) {
+        String url = baseUrl + "/v1/internal/virtual-services/" + vsUid + "/history";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Governed partial update (seam/queue-def edits) via the POST alias. */
     public JsonNode updateVirtualService(String vsUid, Map<String, Object> body) {
         return postJson(baseUrl + "/v1/internal/virtual-services/" + vsUid + "/update", body);
