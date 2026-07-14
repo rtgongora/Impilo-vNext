@@ -84,6 +84,16 @@ public class CoverageServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    /**
+     * Health-worker recognition subsidy self opt-in. Coverage performs the
+     * recognition check SERVER-SIDE (fail-closed); this is a pure proxy.
+     */
+    public JsonNode healthWorkerSubsidyOptIn(String programId, String healthId) {
+        String url = baseUrl + "/internal/v1/coverage/subsidies/" + programId + "/enrolments";
+        log.info("COVERAGE: Health-worker subsidy opt-in");
+        return extractData(restTemplate.postForEntity(url, Map.of("health_id", healthId), JsonNode.class));
+    }
+
     // ── Subsidy value enrolment + annual-cap drawdown (Model X: cv_subsidy_enrolments) ──
 
     public JsonNode enrolSubsidy(Map<String, Object> body) {

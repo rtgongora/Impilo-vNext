@@ -10,5 +10,7 @@ public record RiskFrictionView(
         boolean requiresProvider,
         boolean requiresFacility,
         Integer maxQtyPerOrder,
+        /** V009: recognised licensed provider may self-satisfy prescriber standing for own purchase. */
+        boolean professionalSelfAuthorizable,
         String notes
 ) {}

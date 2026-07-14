@@ -48,7 +48,8 @@ public class ValidationService {
     public RiskFrictionView riskFriction(String classification) {
         return riskFrictionRepository.findById(classification)
                 .map(m -> new RiskFrictionView(m.getRiskClassification(), m.getFrictionLevel(),
-                        m.isRequiresProvider(), m.isRequiresFacility(), m.getMaxQtyPerOrder(), m.getNotes()))
+                        m.isRequiresProvider(), m.isRequiresFacility(), m.getMaxQtyPerOrder(),
+                        m.isProfessionalSelfAuthorizable(), m.getNotes()))
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Unknown risk classification: " + classification));
     }

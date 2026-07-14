@@ -30,6 +30,14 @@ public class RiskFrictionMappingEntity {
     @Column(name = "max_qty_per_order")
     private Integer maxQtyPerOrder;
 
+    /**
+     * V009: when TRUE, a recognised licensed provider in good standing may
+     * self-satisfy the prescriber-standing requirement for their own purchase
+     * of items in this class (identity checks unchanged). Governed: default FALSE.
+     */
+    @Column(name = "professional_self_authorizable", nullable = false)
+    private boolean professionalSelfAuthorizable;
+
     @Column(name = "notes")
     private String notes;
 
@@ -43,6 +51,8 @@ public class RiskFrictionMappingEntity {
     public void setRequiresFacility(boolean requiresFacility) { this.requiresFacility = requiresFacility; }
     public Integer getMaxQtyPerOrder() { return maxQtyPerOrder; }
     public void setMaxQtyPerOrder(Integer maxQtyPerOrder) { this.maxQtyPerOrder = maxQtyPerOrder; }
+    public boolean isProfessionalSelfAuthorizable() { return professionalSelfAuthorizable; }
+    public void setProfessionalSelfAuthorizable(boolean professionalSelfAuthorizable) { this.professionalSelfAuthorizable = professionalSelfAuthorizable; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
 }

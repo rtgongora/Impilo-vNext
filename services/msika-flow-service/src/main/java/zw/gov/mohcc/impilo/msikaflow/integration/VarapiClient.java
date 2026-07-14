@@ -36,4 +36,28 @@ public class VarapiClient {
         }
         return null;
     }
+
+    /**
+     * Provider recognition by Health ID — {recognised, licenceStatus,
+     * profession, cadre}. Upstream is enumeration-resistant (generic
+     * recognised=false for unknown ids). Returns null on transport failure so
+     * callers FAIL CLOSED for authorization decisions (a down registry never
+     * self-authorizes a regulated purchase).
+     */
+    public JsonNode getRecognitionByHealthId(String healthId) {
+        if (healthId == null || healthId.isBlank()) {
+            return null;
+        }
+        try {
+            String url = varapiBaseUrl + "/v1/internal/providers/by-health-id/"
+                    + healthId.trim() + "/recognition";
+            String response = restTemplate.getForObject(url, String.class);
+            if (response != null) {
+                return objectMapper.readTree(response).path("data");
+            }
+        } catch (Exception e) {
+            log.warn("VARAPI recognition lookup failed: {}", e.getMessage());
+        }
+        return null;
+    }
 }
