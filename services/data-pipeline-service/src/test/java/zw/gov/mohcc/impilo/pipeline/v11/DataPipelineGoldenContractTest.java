@@ -16,7 +16,7 @@ import zw.gov.mohcc.impilo.pipeline.config.TestSecurityConfig;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-public class DataPipelineGoldenContractIT extends GoldenContractSuite {
+public class DataPipelineGoldenContractTest extends GoldenContractSuite {
     // All tests inherited from GoldenContractSuite.
     // Endpoints are auto-discovered at test time.
 }
