@@ -407,18 +407,27 @@ export interface ProfessionalPage {
 
 /* ── Crowdfunding ── */
 
+/**
+ * Fundraiser case (BFF /internal/v1/citizen/fundraisers — Daidzai case + mushe money).
+ * verificationStatus lifecycle: DRAFT → PENDING_VERIFICATION → ACTIVE → FULFILLED |
+ * CANCELLED | REJECTED | REVOKED. "Verified" is ONLY ACTIVE/FULFILLED (provider-attested).
+ */
 export interface CrowdfundingCampaign {
   id: string;
+  assistanceReference?: string;
   title: string;
   story: string;
   category: string;
-  goalAmount: number;
+  targetAmount: number;
   raisedAmount: number;
   currency: string;
   donorCount: number;
-  imageUrl?: string;
-  status: string;
-  verified: boolean;
+  verificationStatus: string;
+  shareToken?: string;
+  /** Independent-verification URL donors can open to check the facility attestation. */
+  attestationPublicToken?: string;
+  subjectIdentityMode?: string;
+  createdAt?: string;
   endsAt?: string;
 }
 
