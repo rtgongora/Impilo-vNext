@@ -6,7 +6,7 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
-public class ConnectorFhirGoldenContractIT extends GoldenContractSuite {
+public class ConnectorFhirGoldenContractTest extends GoldenContractSuite {
     @Override
     protected String getReadEndpointOverride() {
         return "/internal/v1/fhir/destinations";
