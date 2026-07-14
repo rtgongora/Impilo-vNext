@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { LuminousStage } from "shared-ui";
@@ -37,8 +38,16 @@ function errMessage(e: unknown): string {
   return "Could not submit your feedback. Please try again.";
 }
 
+function isCaseType(value: string | null): value is (typeof CASE_TYPES)[number] {
+  return value !== null && (CASE_TYPES as readonly string[]).includes(value);
+}
+
 export default function ShareFeedbackPage() {
-  const [caseType, setCaseType] = useState<(typeof CASE_TYPES)[number]>("COMPLAINT");
+  const searchParams = useSearchParams();
+  const requestedType = searchParams.get("type");
+  const [caseType, setCaseType] = useState<(typeof CASE_TYPES)[number]>(
+    isCaseType(requestedType) ? requestedType : "COMPLAINT",
+  );
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [anonymous, setAnonymous] = useState(false);

@@ -11,9 +11,10 @@ export const metadata = {
 
 /**
  * Public L0 landing (G-CZO-02) and the gateway intent home ("How can we help you
- * today?"). Reachable WITHOUT login. Explains what Impilo is, routes each of the nine
- * service intents honestly (open now / sign in to continue / coming soon), and never
- * makes authenticated calls or shows personal/health data.
+ * today?"). Reachable WITHOUT login. Explains what Impilo is, routes the nine intent
+ * pillars honestly (open now / sign in to continue / coming soon; cards may share or
+ * split a pillar — e.g. incident reporting spans emergency-help and feedback-complaints),
+ * and never makes authenticated calls or shows personal/health data.
  */
 const INTENT_PILLARS: Array<{
   title: string;
@@ -28,6 +29,13 @@ const INTENT_PILLARS: Array<{
     title: "Get care",
     description: "Find a facility near you, learn how to visit, and how booking works.",
     href: "/welcome/find-care",
+    access: "open",
+  },
+  {
+    title: "Report a health incident",
+    description:
+      "Report an emergency, unsafe care, a safety concern or a complaint — we'll route you to the right place.",
+    href: "/welcome/report",
     access: "open",
   },
   {
