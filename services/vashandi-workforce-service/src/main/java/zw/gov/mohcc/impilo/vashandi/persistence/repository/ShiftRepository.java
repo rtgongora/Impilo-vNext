@@ -22,6 +22,12 @@ public interface ShiftRepository extends JpaRepository<ShiftEntity, UUID> {
 
     long countByTenantIdAndStatus(UUID tenantId, String status);
 
+    // ---- theatre case-team shift coverage (V007) -------------------------
+
+    /** Count a member's rostered/on-duty shifts (soft coverage signal). */
+    long countByTenantIdAndWorkforceProfileIdAndStatusIn(
+            UUID tenantId, UUID workforceProfileId, Collection<String> statuses);
+
     long countByTenantIdAndFacilityIdAndStatus(UUID tenantId, UUID facilityId, String status);
 
     // ---- virtual-pool duty (V006 partial index) --------------------------
