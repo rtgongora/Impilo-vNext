@@ -14,6 +14,20 @@ import java.util.UUID;
 @Table(name = "bill_contributions", schema = "mushe")
 public class BillContributionEntity {
 
+    /** Atomic donor-wallet debit + (escrow) credit. */
+    public static final String ORIGIN_WALLET = "WALLET";
+    /** External PSP donation settled through a deposit intent. */
+    public static final String ORIGIN_PSP = "PSP";
+    /** Recorded bare credit (cash physically in hand), flagged as assisted. */
+    public static final String ORIGIN_CASH_ASSISTED = "CASH_ASSISTED";
+
+    public static final String REFUND_NONE = "NONE";
+    public static final String REFUND_REFUNDED = "REFUNDED";
+    /** Escrow could not cover it (funds already released) — honest shortfall, retried on re-run. */
+    public static final String REFUND_PENDING = "REFUND_PENDING";
+    /** No resolvable donor — refunded to the per-tenant UNCLAIMED_DONATIONS system wallet. */
+    public static final String REFUND_UNCLAIMED = "UNCLAIMED";
+
     @Id
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
@@ -27,6 +41,12 @@ public class BillContributionEntity {
     @Column(name = "currency", nullable = false, length = 3)
     private String currency = "USD";
 
+    @Column(name = "contributor_wallet_id")
+    private UUID contributorWalletId;
+
+    @Column(name = "origin", nullable = false, length = 24)
+    private String origin = ORIGIN_WALLET;
+
     @Column(name = "contributor_ref", length = 120)
     private String contributorRef;
 
@@ -39,6 +59,12 @@ public class BillContributionEntity {
     @Column(name = "idempotency_key", unique = true, length = 80)
     private String idempotencyKey;
 
+    @Column(name = "refund_status", nullable = false, length = 16)
+    private String refundStatus = REFUND_NONE;
+
+    @Column(name = "refund_txn_id")
+    private UUID refundTxnId;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
@@ -50,6 +76,10 @@ public class BillContributionEntity {
     public void setAmount(BigDecimal amount) { this.amount = amount; }
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
+    public UUID getContributorWalletId() { return contributorWalletId; }
+    public void setContributorWalletId(UUID contributorWalletId) { this.contributorWalletId = contributorWalletId; }
+    public String getOrigin() { return origin; }
+    public void setOrigin(String origin) { this.origin = origin; }
     public String getContributorRef() { return contributorRef; }
     public void setContributorRef(String contributorRef) { this.contributorRef = contributorRef; }
     public String getContributorName() { return contributorName; }
@@ -58,6 +88,10 @@ public class BillContributionEntity {
     public void setMessage(String message) { this.message = message; }
     public String getIdempotencyKey() { return idempotencyKey; }
     public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
+    public String getRefundStatus() { return refundStatus; }
+    public void setRefundStatus(String refundStatus) { this.refundStatus = refundStatus; }
+    public UUID getRefundTxnId() { return refundTxnId; }
+    public void setRefundTxnId(UUID refundTxnId) { this.refundTxnId = refundTxnId; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 }

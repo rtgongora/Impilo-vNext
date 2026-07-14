@@ -1,0 +1,30 @@
+== RIG: scratch postgres + redpanda + mushe-wallet-service
+   PASS: mushe-wallet healthy (29127)
+== CFM-1: campaign escrow + idempotent donor-debit contribution
+   PASS: campaign request created (27d4f676-1f56-4a46-a869-05f3687b0251)
+   PASS: escrow wallet minted (CROWDFUND_ESCROW:d983167f-7e15-444b-a56a-1a5fcdaf3984)
+   PASS: donor debited EXACTLY once on double-submit (balance 75.00)
+   PASS: escrow credited once (25.00)
+   PASS: exactly 1 contribution row
+   PASS: recorded outbox event written
+== CFM-2: PSP donation — PENDING intent, double-confirm credits once
+   PASS: PSP intent minted with reference code IMP-NJDJVBY2
+   PASS: intent PENDING/CROWDFUNDING against the share token
+   PASS: no credit before confirmation (escrow still 25.00)
+   PASS: double-confirm credited escrow exactly once (40.00)
+   PASS: exactly 1 PSP contribution row (idem deposit:47e6ae19-351b-4de5-97f1-8da87657f218)
+   PASS: raised total advanced to 40.00
+== CFM-3: second donor + partial release to beneficiary; over-release rejected
+   PASS: beneficiary received the release (10.00)
+   PASS: escrow reduced to 35.00
+   PASS: over-release rejected (HTTP 422)
+   PASS: released outbox event written
+== CFM-4: cancel-and-refund drains escrow newest-first, honestly
+   PASS: request CANCELLED_REFUNDING (shortfall remains)
+   PASS: donor2 made whole (5.00 back, balance 20.00)
+   PASS: unresolvable PSP donation parked in UNCLAIMED_DONATIONS (15.00)
+   PASS: released-away 25.00 held REFUND_PENDING (no invented money)
+   PASS: escrow never negative (remaining 15.00 reserved for the pending refund)
+   PASS: refunded outbox events for the 2 moved rows
+   PASS: donor1 untouched while pending (75.00)
+RESULT: PASS=24 FAIL=0

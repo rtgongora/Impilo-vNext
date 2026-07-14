@@ -1,0 +1,1 @@
+{"success":false,"error":{"code":"RELEASE_REJECTED","message":"Cannot release 999.0 — escrow balance is only 35.00","status":422},"correlationId":"1a7a156a-bd04-40b2-83b2-344a4d886458","timestamp":"2026-07-14T03:06:41.139538548Z"}

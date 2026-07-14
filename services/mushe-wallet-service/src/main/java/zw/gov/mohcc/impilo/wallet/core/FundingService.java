@@ -2,8 +2,10 @@ package zw.gov.mohcc.impilo.wallet.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.wallet.card.BillContributionService;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.DepositIntentEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.FundingSourceEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.TransactionEntity;
@@ -43,15 +45,19 @@ public class FundingService {
     private final WalletRepository walletRepository;
     private final WalletService walletService;
     private final DepositIntentRepository depositIntentRepository;
+    /** Lazy to break the constructor cycle (BillContributionService → FundingService → here). */
+    private final ObjectProvider<BillContributionService> billContributionService;
 
     public FundingService(FundingSourceRepository fundingSourceRepository,
                           WalletRepository walletRepository,
                           WalletService walletService,
-                          DepositIntentRepository depositIntentRepository) {
+                          DepositIntentRepository depositIntentRepository,
+                          ObjectProvider<BillContributionService> billContributionService) {
         this.fundingSourceRepository = fundingSourceRepository;
         this.walletRepository = walletRepository;
         this.walletService = walletService;
         this.depositIntentRepository = depositIntentRepository;
+        this.billContributionService = billContributionService;
     }
 
     /**
@@ -131,6 +137,44 @@ public class FundingService {
     }
 
     /**
+     * Requests a PURPOSED deposit — an inbound external payment that is not a plain wallet
+     * top-up (currently: a CROWDFUNDING donation raised against a campaign's escrow wallet).
+     * PENDING like every external deposit: the wallet is credited only on confirmation
+     * (PSP callback or statement match on the reference code).
+     */
+    @Transactional
+    public DepositIntentEntity requestPurposedDeposit(UUID walletId,
+                                                      String channel,
+                                                      BigDecimal amount,
+                                                      String currency,
+                                                      String purpose,
+                                                      String purposeRef,
+                                                      String metadataJson,
+                                                      String externalRef) {
+        WalletEntity wallet = walletRepository.findByWalletId(walletId)
+                .orElseThrow(() -> new NoSuchElementException("Wallet not found: " + walletId));
+
+        DepositIntentEntity intent = new DepositIntentEntity();
+        intent.setTenantId(wallet.getTenantId());
+        intent.setWalletId(walletId);
+        intent.setChannel(channel != null && !channel.isBlank() ? channel : "MOBILE_MONEY");
+        intent.setAmount(amount);
+        intent.setCurrency(currency != null ? currency
+                : wallet.getCurrency() != null ? wallet.getCurrency() : "USD");
+        intent.setReferenceCode(newReferenceCode());
+        intent.setExternalRef(externalRef);
+        intent.setPurpose(purpose);
+        intent.setPurposeRef(purposeRef);
+        intent.setMetadata(metadataJson);
+        intent = depositIntentRepository.save(intent);
+
+        log.info("Purposed deposit REQUESTED (pending external confirmation): depositId={} walletId={} "
+                        + "amount={} purpose={} purposeRef={} referenceCode={}",
+                intent.getDepositId(), walletId, amount, purpose, purposeRef, intent.getReferenceCode());
+        return intent;
+    }
+
+    /**
      * Confirms that a requested deposit's money has ARRIVED (provider callback
      * or matched statement line) and credits the wallet. Idempotent: an
      * already-confirmed deposit returns unchanged; the wallet credit itself is
@@ -188,6 +232,14 @@ public class FundingService {
 
         log.info("Deposit CONFIRMED and credited: depositId={} walletId={} amount={} txnId={}",
                 intent.getDepositId(), intent.getWalletId(), intent.getAmount(), txn.getTxnId());
+
+        // Crowdfunding donations: the credit above landed in the campaign's escrow wallet;
+        // now record the contribution row + raised-total advance + outbox event, exactly once
+        // (bill_contributions idempotency_key = 'deposit:' + depositId). Same transaction —
+        // a failure rolls the confirm back too, leaving the intent PENDING and retriable.
+        if (DepositIntentEntity.PURPOSE_CROWDFUNDING.equals(intent.getPurpose())) {
+            billContributionService.getObject().recordSettledContribution(intent);
+        }
         return intent;
     }
 

@@ -7,6 +7,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.beans.factory.ObjectProvider;
+import zw.gov.mohcc.impilo.wallet.card.BillContributionService;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.DepositIntentEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.FundingSourceEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.TransactionEntity;
@@ -38,6 +40,8 @@ class FundingServiceCollectionIntentTest {
     @Mock WalletRepository walletRepo;
     @Mock WalletService walletService;
     @Mock DepositIntentRepository depositRepo;
+    @Mock ObjectProvider<BillContributionService> billContributionProvider;
+    @Mock BillContributionService billContributionService;
 
     FundingService service;
 
@@ -47,7 +51,9 @@ class FundingServiceCollectionIntentTest {
 
     @BeforeEach
     void setUp() {
-        service = new FundingService(sourceRepo, walletRepo, walletService, depositRepo);
+        service = new FundingService(sourceRepo, walletRepo, walletService, depositRepo,
+                billContributionProvider);
+        when(billContributionProvider.getObject()).thenReturn(billContributionService);
 
         WalletEntity wallet = new WalletEntity();
         wallet.setWalletId(walletId);
@@ -150,6 +156,51 @@ class FundingServiceCollectionIntentTest {
         verify(depositRepo).save(argThat(d ->
                 DepositIntentEntity.STATUS_CONFIRMED.equals(d.getStatus())
                         && "CASH".equals(d.getChannel())));
+    }
+
+    @Test
+    void purposedCrowdfundDeposit_staysPending_andConfirmRecordsTheContributionOnce() {
+        DepositIntentEntity intent = service.requestPurposedDeposit(walletId, "MOBILE_MONEY",
+                new BigDecimal("15.00"), "USD", DepositIntentEntity.PURPOSE_CROWDFUNDING,
+                "tok-1", "{\"isAnonymous\":false}", null);
+        intent.setDepositId(UUID.randomUUID());
+
+        assertEquals(DepositIntentEntity.STATUS_PENDING, intent.getStatus());
+        assertEquals(DepositIntentEntity.PURPOSE_CROWDFUNDING, intent.getPurpose());
+        assertEquals("tok-1", intent.getPurposeRef());
+        assertNotNull(intent.getReferenceCode());
+        verify(walletService, never()).credit(any(), any(), any(), any(), any(), any(),
+                any(), any(), any(), any());
+        verify(billContributionService, never()).recordSettledContribution(any());
+
+        when(depositRepo.findByDepositId(intent.getDepositId())).thenReturn(Optional.of(intent));
+        TransactionEntity txn = new TransactionEntity();
+        txn.setTxnId(UUID.randomUUID());
+        when(walletService.credit(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(txn);
+
+        service.confirmDeposit(intent.getDepositId(), "PSP-REF-1", "psp-callback");
+        // Replay: already CONFIRMED → short-circuits before credit AND before recording.
+        service.confirmDeposit(intent.getDepositId(), "PSP-REF-1", "psp-callback");
+
+        verify(walletService, times(1)).credit(any(), any(), any(), any(), any(), any(),
+                any(), any(), any(), any());
+        verify(billContributionService, times(1)).recordSettledContribution(intent);
+    }
+
+    @Test
+    void walletTopupConfirm_neverTouchesTheContributionRecorder() {
+        DepositIntentEntity intent = pendingIntent();
+        when(depositRepo.findByDepositId(intent.getDepositId())).thenReturn(Optional.of(intent));
+        TransactionEntity txn = new TransactionEntity();
+        txn.setTxnId(UUID.randomUUID());
+        when(walletService.credit(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(txn);
+
+        service.confirmDeposit(intent.getDepositId(), "ZIPIT-77", "recon");
+
+        assertEquals(DepositIntentEntity.PURPOSE_WALLET_TOPUP, intent.getPurpose());
+        verify(billContributionService, never()).recordSettledContribution(any());
     }
 
     private DepositIntentEntity pendingIntent() {

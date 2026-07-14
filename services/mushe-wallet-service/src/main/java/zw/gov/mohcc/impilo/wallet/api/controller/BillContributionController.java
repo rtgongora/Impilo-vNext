@@ -37,15 +37,23 @@ public class BillContributionController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
             @RequestBody Map<String, Object> body) {
-        var request = service.createRequest(
-                UUID.fromString(tenantId),
-                UUID.fromString(str(body, "beneficiaryWalletId")),
-                str(body, "title"),
-                str(body, "billRef"),
-                body.get("targetAmount") != null ? new BigDecimal(str(body, "targetAmount")) : null,
-                str(body, "currency"),
-                str(body, "createdBy"));
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(request, correlationId));
+        try {
+            var request = service.createRequest(
+                    UUID.fromString(tenantId),
+                    uuid(body, "beneficiaryWalletId"),
+                    str(body, "title"),
+                    str(body, "billRef"),
+                    body.get("targetAmount") != null ? new BigDecimal(str(body, "targetAmount")) : null,
+                    str(body, "currency"),
+                    str(body, "createdBy"),
+                    str(body, "origin"),
+                    uuid(body, "campaignRef"),
+                    uuid(body, "beneficiaryTargetWalletId"));
+            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(request, correlationId));
+        } catch (BillContributionService.ContributionRejected e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(ApiResponse.error("CONTRIBUTION_REQUEST_REJECTED", e.getMessage(), 422, correlationId));
+        }
     }
 
     /** The share-link target — anyone with the token can view the request + progress. */
@@ -75,11 +83,99 @@ public class BillContributionController {
             var contribution = service.contribute(shareToken,
                     new BigDecimal(str(body, "amount")),
                     str(body, "contributorRef"), str(body, "contributorName"), str(body, "message"),
-                    idempotencyKey);
+                    idempotencyKey,
+                    uuid(body, "contributorWalletId"),
+                    str(body, "origin"),
+                    Boolean.parseBoolean(str(body, "isAnonymous")));
             return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(contribution, correlationId));
         } catch (BillContributionService.ContributionRejected e) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(ApiResponse.error("CONTRIBUTION_REJECTED", e.getMessage(), 422, correlationId));
+        }
+    }
+
+    /**
+     * PSP donation to a campaign: creates a PENDING deposit intent against the campaign's escrow
+     * wallet (purpose CROWDFUNDING) and returns the quotable reference code. The escrow is only
+     * credited — and the contribution only recorded — when the money's arrival is confirmed
+     * (PSP callback / statement match). PSP collection initiation is a documented seam in
+     * mushex-service; nothing here pretends the PSP was called.
+     */
+    @PostMapping("/{shareToken}/psp-donate")
+    public ResponseEntity<ApiResponse<Object>> pspDonate(
+            @PathVariable String shareToken,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            var intent = service.pspDonate(shareToken,
+                    new BigDecimal(str(body, "amount")),
+                    str(body, "currency"),
+                    str(body, "channel"),
+                    str(body, "contributorName"),
+                    str(body, "message"),
+                    Boolean.parseBoolean(str(body, "isAnonymous")));
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("depositId", intent.getDepositId());
+            data.put("referenceCode", intent.getReferenceCode());
+            data.put("amount", intent.getAmount());
+            data.put("currency", intent.getCurrency());
+            data.put("channel", intent.getChannel());
+            data.put("status", intent.getStatus());
+            data.put("confirmation", "Donation is recorded once the payment is confirmed —"
+                    + " quote reference " + intent.getReferenceCode() + " with the transfer,"
+                    + " or complete the PSP checkout initiated by the payments layer.");
+            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(data, correlationId));
+        } catch (BillContributionService.ContributionRejected e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(ApiResponse.error("PSP_DONATION_REJECTED", e.getMessage(), 422, correlationId));
+        }
+    }
+
+    /**
+     * Release escrowed campaign funds to the real beneficiary. Body: {@code {amount?}} — omit
+     * amount to release the full escrow balance. The case layer (Daidzai) gates on campaign
+     * governance before calling; mushe enforces the mechanical invariants (no over-release).
+     */
+    @PostMapping("/{requestId}/release")
+    public ResponseEntity<ApiResponse<Object>> release(
+            @PathVariable String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            var txn = service.release(UUID.fromString(requestId),
+                    body != null && body.get("amount") != null ? new BigDecimal(str(body, "amount")) : null,
+                    idempotencyKey, actorId);
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("requestId", requestId);
+            data.put("amount", txn.getAmount());
+            data.put("txnId", txn.getTxnId());
+            return ResponseEntity.ok(ApiResponse.ok(data, correlationId));
+        } catch (BillContributionService.ContributionRejected e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(ApiResponse.error("RELEASE_REJECTED", e.getMessage(), 422, correlationId));
+        }
+    }
+
+    /**
+     * Cancel a campaign and refund contributions from escrow (batched, resumable, newest-first).
+     * Re-invoke to retry rows held REFUND_PENDING after an escrow shortfall.
+     */
+    @PostMapping("/{requestId}/cancel-and-refund")
+    public ResponseEntity<ApiResponse<Object>> cancelAndRefund(
+            @PathVariable String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+        try {
+            var request = service.cancelAndRefund(UUID.fromString(requestId), actorId);
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("request", request);
+            data.put("contributions", service.contributions(request.getId()));
+            return ResponseEntity.ok(ApiResponse.ok(data, correlationId));
+        } catch (BillContributionService.ContributionRejected e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(ApiResponse.error("CANCEL_REFUND_REJECTED", e.getMessage(), 422, correlationId));
         }
     }
 
@@ -93,5 +189,10 @@ public class BillContributionController {
     private static String str(Map<String, Object> body, String key) {
         Object v = body == null ? null : body.get(key);
         return v == null ? null : v.toString();
+    }
+
+    private static UUID uuid(Map<String, Object> body, String key) {
+        String v = str(body, key);
+        return v == null || v.isBlank() ? null : UUID.fromString(v);
     }
 }
