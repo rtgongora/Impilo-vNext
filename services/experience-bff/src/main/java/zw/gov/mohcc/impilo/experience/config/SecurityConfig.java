@@ -397,6 +397,11 @@ public class SecurityConfig {
                     // ── Patient-mediated external provider collaboration (VITO-backed) ──
                     .requestMatchers("/internal/v1/public/patient-shares/**").permitAll()
 
+                    // ── Fundraiser share links (claim-token pattern): the tokenized money view
+                    // is readable by whoever holds the unguessable share token — the public
+                    // /share/fund page. Read-only; donations still require sign-in.
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/wallet/bill-contributions/*").permitAll()
+
                     // ── Public facility-certificate verification (disclosure-limited) ──
                     .requestMatchers("/internal/v1/public/facility-certificates/verify/**").permitAll()
 

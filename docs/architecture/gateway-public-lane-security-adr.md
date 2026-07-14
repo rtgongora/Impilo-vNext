@@ -79,6 +79,7 @@ Every permitAll route family must have a row here (the guard checks this file).
 | `/internal/v1/public/gateway/practitioners/**` | varapi `PublicPractitionerVerificationController` (verify-by-registration-number) | W2 | exact-match only (enumeration resistance); miss = 200 with uniform NOT_FOUND shape — no existence oracle |
 | `/internal/v1/public/gateway/sos` (POST) | daidzai SOS intake via `PublicSosIntakeService` → `EmergencyController.createRequest` | W2 | **anonymous WRITE** (ADR §5, PD-3); abuse note below |
 | `/internal/v1/public/gateway/feedback` (POST + claim-code GET) | rito `PublicCaseIntakeController` via `PublicFeedbackIntakeService` | W4 | **anonymous WRITE** (`gateway-feedback-claim`); abuse note below |
+| `/internal/v1/wallet/bill-contributions/{shareToken}` (GET only) | mushe bill-contribution view via `CitizenCardController` | W4 | fundraiser share-link read (claim-token pattern, unguessable token); read-only, donations require sign-in |
 
 **Anonymous-write abuse note — `POST /internal/v1/public/gateway/sos`:** rate-limited
 per-IP (5 / 600s fixed window) and globally (60 / 60s), both in Redis mirroring the
