@@ -23,7 +23,7 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.LearningOutboxReposit
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class FundoRegistrationIT {
+class FundoRegistrationTest {
 
     private static final UUID TENANT = UUID.fromString("a6a6a6a6-0000-4000-8000-000000000001");
 

@@ -32,7 +32,7 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.LearningOutboxReposit
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class FundoAuthoringIT {
+class FundoAuthoringTest {
 
     private static final UUID TENANT = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 

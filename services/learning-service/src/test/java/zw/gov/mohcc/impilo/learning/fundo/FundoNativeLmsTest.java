@@ -55,7 +55,7 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.LearningOutboxReposit
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class FundoNativeLmsIT {
+class FundoNativeLmsTest {
 
     private static final UUID TENANT = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd");
 

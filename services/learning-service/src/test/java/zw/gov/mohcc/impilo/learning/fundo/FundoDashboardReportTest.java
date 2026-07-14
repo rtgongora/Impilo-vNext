@@ -19,7 +19,7 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.CourseRepository;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class FundoDashboardReportIT {
+class FundoDashboardReportTest {
 
     private static final UUID TENANT = UUID.fromString("b4b4b4b4-0000-4000-8000-000000000001");
 

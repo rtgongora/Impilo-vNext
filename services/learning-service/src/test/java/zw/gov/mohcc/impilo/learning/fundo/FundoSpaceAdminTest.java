@@ -23,7 +23,7 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.LearningSpaceReposito
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class FundoSpaceAdminIT {
+class FundoSpaceAdminTest {
 
     private static final UUID TENANT = UUID.fromString("c3c3c3c3-0000-4000-8000-000000000001");
 

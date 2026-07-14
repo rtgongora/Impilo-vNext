@@ -18,7 +18,7 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.CourseRepository;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class LearningSpaceScopeIT {
+class LearningSpaceScopeTest {
 
     private static final UUID TENANT = UUID.fromString("c0c0c0c0-0000-4000-8000-000000000001");
 

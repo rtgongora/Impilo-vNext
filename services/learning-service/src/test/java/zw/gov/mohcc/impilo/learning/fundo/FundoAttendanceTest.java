@@ -23,7 +23,7 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.ScheduledLearningSess
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class FundoAttendanceIT {
+class FundoAttendanceTest {
 
     private static final UUID TENANT = UUID.fromString("a2a2a2a2-0000-4000-8000-000000000001");
 

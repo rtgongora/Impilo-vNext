@@ -30,7 +30,7 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.FundoPathwayRepositor
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class FundoCohortReportIT {
+class FundoCohortReportTest {
 
     private static final UUID TENANT = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
 

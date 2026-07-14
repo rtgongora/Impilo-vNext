@@ -17,7 +17,7 @@ import zw.gov.mohcc.impilo.learning.integration.MoodleWebServiceClient;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class FundoAccreditationIT {
+class FundoAccreditationTest {
 
     private static final UUID TENANT = UUID.fromString("c2c2c2c2-0000-4000-8000-000000000001");
 

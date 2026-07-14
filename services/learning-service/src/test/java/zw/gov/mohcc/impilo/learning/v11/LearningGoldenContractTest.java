@@ -89,8 +89,8 @@ import zw.gov.mohcc.impilo.companion.idempotency.InMemoryIdempotencyRepository;
         "impilo.companion.enabled=true",
         "learning.outbox.publisher.enabled=false"
 })
-@Import(LearningGoldenContractIT.TestConfig.class)
-public class LearningGoldenContractIT extends GoldenContractSuite {
+@Import(LearningGoldenContractTest.TestConfig.class)
+public class LearningGoldenContractTest extends GoldenContractSuite {
 
     /**
      * Phase 5H — target the native LMS catalogue read endpoint introduced
