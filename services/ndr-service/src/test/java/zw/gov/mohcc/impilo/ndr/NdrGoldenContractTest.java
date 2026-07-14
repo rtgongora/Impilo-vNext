@@ -6,15 +6,15 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
-public class NdrGoldenContractIT extends GoldenContractSuite {
+public class NdrGoldenContractTest extends GoldenContractSuite {
 
     @Override
     protected String getReadEndpointOverride() {
-        return "/internal/v1/ndr/query/bronze";
+        return "/internal/v1/health";
     }
 
     @Override
     protected String getCommandEndpointOverride() {
-        return "/internal/v1/ndr/ingest/events";
+        return "/internal/v1/test-command";
     }
 }
