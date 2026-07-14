@@ -32,6 +32,7 @@ public final class ExperienceBffSovereignWireMockSupport {
                 stubSupport();
                 stubPct();
                 stubInpatientBeds();
+                stubProviderTier2();
                 started = true;
             }
         }
@@ -42,6 +43,8 @@ public final class ExperienceBffSovereignWireMockSupport {
         registry.add("impilo.services.support-base-url", () -> base);
         registry.add("impilo.services.pct-base-url", () -> base);
         registry.add("impilo.services.inpatient-base-url", () -> base);
+        registry.add("impilo.services.oros-base-url", () -> base);
+        registry.add("impilo.services.reporting-base-url", () -> base);
     }
 
     private static void stubPharmacy() {
@@ -150,6 +153,74 @@ public final class ExperienceBffSovereignWireMockSupport {
      * {@code BedManagementService.listWardResources}: a JSON:API-style
      * {@code {"data":[{id,type:"ward",attributes:{…}}]}} envelope.
      */
+    /**
+     * Mobile-provider tier-2 verticals used by MobileProviderTier2ResponseShapeIT:
+     * OROS lab orders, reporting runs, single-prescription five-rights + dispense, and
+     * PCT journey lookup. Concrete matchers only; realistic JSON:API-style payloads. The
+     * single-prescription stub carries the {@code attributes} PharmacyFiveRightsVerifier
+     * checks (status + patient + drug + dose + route + frequency) so a five-rights
+     * verification passes for the deterministic prescription id the test sends.
+     */
+    private static void stubProviderTier2() {
+        // OROS — resulted orders for a patient (labs/results list). More specific than the
+        // patient-orders path below, so register it first.
+        SERVER.stubFor(get(urlPathMatching("/v1/orders/patient/[^/]+/results"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{\"data\":[]}")));
+        // OROS — patient lab orders (labs list): GET /v1/orders/patient/{cpid}
+        SERVER.stubFor(get(urlPathMatching("/v1/orders/patient/[^/]+"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{\"data\":[]}")));
+        // OROS — single lab order (labs get): GET /v1/orders/{uuid}
+        SERVER.stubFor(get(urlPathMatching("/v1/orders/[0-9a-fA-F-]{36}"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{\"data\":{\"type\":\"LabOrder\",\"id\":\"lab-order-1\",\"attributes\":{\"status\":\"ORDERED\"}}}")));
+        // OROS — place lab order (labs create): POST /v1/orders
+        SERVER.stubFor(post(urlPathEqualTo("/v1/orders"))
+                .willReturn(aResponse().withStatus(201).withHeader("Content-Type", "application/json")
+                        .withBody("{\"data\":{\"type\":\"LabOrder\",\"id\":\"lab-order-1\",\"attributes\":{\"status\":\"ORDERED\"}}}")));
+        // OROS — acknowledge a resulted order: POST /v1/orders/{uuid}/ack
+        SERVER.stubFor(post(urlPathMatching("/v1/orders/[0-9a-fA-F-]{36}/ack"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{\"data\":{\"type\":\"LabOrder\",\"id\":\"lab-order-1\",\"attributes\":{\"status\":\"ACKNOWLEDGED\"}}}")));
+
+        // Reporting — tenant-wide runs (reports list) + a named report run (facility KPIs)
+        SERVER.stubFor(get(urlPathEqualTo("/internal/v1/reports/tenant-runs"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{\"data\":[{\"id\":\"run-1\",\"category\":\"CLINICAL\",\"status\":\"COMPLETED\"}]}")));
+        SERVER.stubFor(post(urlPathMatching("/internal/v1/reports/[^/]+/run"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{\"data\":{\"report_id\":\"facility-kpis\",\"status\":\"COMPLETED\",\"entries\":[{\"key\":\"total_visits\",\"value\":42}]}}")));
+
+        // Pharmacy — worklist (pending), single prescription (five-rights), dispense
+        SERVER.stubFor(get(urlPathEqualTo("/v1/worklists"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{\"data\":[]}")));
+        SERVER.stubFor(get(urlPathMatching("/v1/prescriptions/[0-9a-fA-F-]{36}"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                {"data":{"id":"rx-1","attributes":{"status":"ACTIVE",\
+                                "patient_id":"pat-verify-1","medication_name":"Amoxicillin",\
+                                "dosage":"500mg","route":"ORAL","frequency":"TID"}}}\
+                                """)));
+        SERVER.stubFor(post(urlPathMatching("/v1/prescriptions/[0-9a-fA-F-]{36}/dispense"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{\"data\":{\"id\":\"rx-1\",\"attributes\":{\"status\":\"DISPENSED\"}}}")));
+
+        // PCT — journey lookup (triage list). The BFF reads the journey's "triage" node,
+        // so the payload must carry one.
+        SERVER.stubFor(get(urlPathMatching("/v1/journeys/[^/]+"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                {"data":{"id":"journey-1","triage":{"acuity":2,"status":"COMPLETE",\
+                                "triaged_by":"provider-1"}}}\
+                                """)));
+        // PCT — record triage: POST /v1/journeys/{id}/triage
+        SERVER.stubFor(post(urlPathMatching("/v1/journeys/[^/]+/triage"))
+                .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json")
+                        .withBody("{\"acuity\":2,\"status\":\"COMPLETE\",\"triaged_by\":\"provider-1\"}")));
+    }
+
     private static void stubInpatientBeds() {
         SERVER.stubFor(get(urlPathEqualTo("/internal/v1/beds/wards"))
                 .withQueryParam("facility_id", matching("[0-9a-fA-F-]{36}"))

@@ -107,7 +107,8 @@ class MobileProviderTier2ResponseShapeIT {
     void pharmacyEndpoints_matchContractShapes() throws Exception {
         String rid = UUID.randomUUID().toString();
         String cid = UUID.randomUUID().toString();
-        mvc.perform(withCompanionV11(get("/internal/v1/mobile/provider/pharmacy/pending"), rid, cid))
+        mvc.perform(withCompanionV11(get("/internal/v1/mobile/provider/pharmacy/pending")
+                        .header("X-Facility-ID", "00000000-0000-0000-0000-000000000001"), rid, cid))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray());
 
@@ -116,7 +117,7 @@ class MobileProviderTier2ResponseShapeIT {
         mvc.perform(withIdempotency(withCompanionV11(
                                 post("/internal/v1/mobile/provider/pharmacy/verify-five-rights")
                                         .contentType(MediaType.APPLICATION_JSON)
-                                        .content("{}"),
+                                        .content("{\"prescriptionId\":\"11111111-2222-4333-8444-555555555555\",\"patient_id\":\"pat-verify-1\"}"),
                                 rid,
                                 cid)))
                 .andExpect(status().isOk())
@@ -141,13 +142,14 @@ class MobileProviderTier2ResponseShapeIT {
     void triageEndpoints_matchContractShapes() throws Exception {
         String rid = UUID.randomUUID().toString();
         String cid = UUID.randomUUID().toString();
-        mvc.perform(withCompanionV11(get("/internal/v1/mobile/provider/triage"), rid, cid))
+        mvc.perform(withCompanionV11(get("/internal/v1/mobile/provider/triage").param("encounter_id", "enc-triage-1"), rid, cid))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.meta.request_id").value(rid))
                 .andExpect(jsonPath("$.meta.correlation_id").value(cid));
 
         String record = objectMapper.writeValueAsString(Map.of(
+                "encounter_id", "enc-triage-1",
                 "patient_id", "pat-1",
                 "acuity", 2,
                 "triaged_by", "provider-1"));
@@ -159,7 +161,7 @@ class MobileProviderTier2ResponseShapeIT {
                                         .content(record),
                                 rid,
                                 cid)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.meta.request_id").value(rid));
     }
@@ -230,7 +232,7 @@ class MobileProviderTier2ResponseShapeIT {
     void labEndpoints_matchContractShapes() throws Exception {
         String rid = UUID.randomUUID().toString();
         String cid = UUID.randomUUID().toString();
-        mvc.perform(withCompanionV11(get("/internal/v1/mobile/provider/labs"), rid, cid))
+        mvc.perform(withCompanionV11(get("/internal/v1/mobile/provider/labs").param("patient_id", "pat-verify-1"), rid, cid))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists());
 
