@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class SchedulingSlotServiceIT {
+class SchedulingSlotServiceTest {
 
     private static final UUID TENANT = UUID.fromString("00000000-0000-4000-8000-000000000002");
 
