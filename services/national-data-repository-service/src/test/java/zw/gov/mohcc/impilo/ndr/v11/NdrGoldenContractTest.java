@@ -19,7 +19,7 @@ import zw.gov.mohcc.impilo.ndr.config.NdrTestSecurityBeans;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 @Import(NdrTestSecurityBeans.class)
-public class NdrGoldenContractIT extends GoldenContractSuite {
+public class NdrGoldenContractTest extends GoldenContractSuite {
 
     @MockBean
     @SuppressWarnings("unused")
