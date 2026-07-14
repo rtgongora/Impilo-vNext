@@ -186,7 +186,8 @@ public class CoverageController {
                 () -> coverageClient.consumeSubsidy(id, body), HttpStatus.OK, requestId, correlationId);
     }
 
-    // ── Subsidy exemption-category enrolment (Model Y — costing waivers) ─────
+    // ── Subsidy exemption-category enrolment (costing waivers; consolidated view
+    //    over cv_subsidy_enrolments — paths kept stable, rows are enrolment-shaped) ──
 
     @GetMapping("/subsidies/enrollments")
     public ResponseEntity<Map<String, Object>> listSubsidyExemptions(

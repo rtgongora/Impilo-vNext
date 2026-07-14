@@ -84,7 +84,9 @@ public class CoverageServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
-    // ── Subsidy value enrolment + annual-cap drawdown (Model X: cv_subsidy_enrolments) ──
+    // ── Subsidy member enrolment (consolidated SoR: cv_subsidy_enrolments) ──
+    // One enrolment lane carries both the annual-cap/value concern and the optional
+    // exemption category that costing keys waivers on.
 
     public JsonNode enrolSubsidy(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/coverage/subsidies/enrolments";
@@ -110,24 +112,45 @@ public class CoverageServiceClient {
         return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
     }
 
-    // ── Subsidy exemption-category enrolment (Model Y: cv_subsidy_enrollments) ──
+    // ── Subsidy exemption-category view over the consolidated enrolment lane ──
+    // The BFF's outward /subsidies/enrollments paths are kept stable; upstream they
+    // hit the consolidated /enrolments endpoints (the legacy cv_subsidy_enrollments
+    // model was retired by coverage V013).
 
     public JsonNode enrollSubsidyExemption(Map<String, Object> body) {
-        String url = baseUrl + "/internal/v1/coverage/subsidies/enrollments";
-        log.info("COVERAGE: Enrolling member exemption category (costing lane)");
-        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+        String url = baseUrl + "/internal/v1/coverage/subsidies/enrolments";
+        log.info("COVERAGE: Enrolling member exemption category (consolidated enrolment lane)");
+        return extractData(restTemplate.postForEntity(url, toEnrolmentBody(body), JsonNode.class));
     }
 
     public JsonNode listSubsidyExemptions(String memberCpid) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/subsidies/enrollments")
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/subsidies/enrolments")
                 .queryParam("member_cpid", memberCpid)
+                .queryParam("exemption_only", "true")
                 .toUriString();
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
     public JsonNode endSubsidyExemption(String id) {
-        String url = baseUrl + "/internal/v1/coverage/subsidies/enrollments/" + id + "/end";
+        String url = baseUrl + "/internal/v1/coverage/subsidies/enrolments/" + id + "/end";
         return extractData(restTemplate.postForEntity(url, Map.of(), JsonNode.class));
+    }
+
+    /**
+     * The legacy exemption write accepted camelCase keys; the consolidated enrolment
+     * endpoint speaks snake_case. Translate the known keys, pass everything else through
+     * so callers already sending snake_case are unaffected.
+     */
+    private static Map<String, Object> toEnrolmentBody(Map<String, Object> body) {
+        Map<String, String> renames = Map.of(
+                "memberCpid", "member_cpid",
+                "programCode", "program_code",
+                "subsidyProgramId", "subsidy_program_id",
+                "exemptionCategory", "exemption_category",
+                "effectiveFrom", "effective_from");
+        java.util.LinkedHashMap<String, Object> translated = new java.util.LinkedHashMap<>();
+        body.forEach((k, v) -> translated.put(renames.getOrDefault(k, k), v));
+        return translated;
     }
 
     public JsonNode listEligibilityForMember(String memberCpid) {
