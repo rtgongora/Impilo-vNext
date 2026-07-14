@@ -1,0 +1,1 @@
+{"id":"a568e92a-060b-42a8-a32b-c5d56dac08ff","kind":"PATIENT_MOVEMENT","leg":"WARD_TO_THEATRE","seq":1,"status":"REQUESTED","overdue":false,"nhume_delivery_id":"dff0b000-fa7c-417b-83c0-2323fe1646e3","nhume_delivery_type":"PATIENT","oros_specimen_ref":null,"sla_due_at":"2026-07-14T23:24:26.036771537+02:00","updated_at":"2026-07-14T22:54:26.159048729+02:00"}

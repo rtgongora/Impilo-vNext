@@ -1,0 +1,36 @@
+== RIG: infra (postgres + redis) + commodities substrate
+   tuso-service health: 200
+   inventory-service health: 200
+   oros-service health: 200
+   madi-service health: 200
+   inpatient-service health: 200
+== J-TC-1: implant UDI recorded → traceable, recall query finds the patient
+   PASS: theatre case created (ac0de576-27ce-40b0-91ba-69b5505683c4)
+HTTP 201
+   PASS: implant recorded IMPLANTED (inventory unit issued)
+   PASS: inventory inv_implant_registry row exists for UDI-18f2d078
+   PASS: inventory inv_patient_implant link for patient
+   PASS: inpatient procedure_implant projection for UDI-18f2d078
+   PASS: case-side recall by lot LOT-HIP-42 found 1 implant(s)
+== J-TC-2: STERILE set issued → SOILED on return → reprocessed → STERILE
+   PASS: seeded STERILE instrument set (ef881794-e6ba-4294-b34c-08b46ed1c37f)
+   PASS: set issued to case (procedure_instrument_set_use=ISSUED)
+   PASS: TUSO set moved STERILE→IN_USE
+   PASS: TUSO set returned IN_USE→SOILED
+   PASS: CSSD cycle reprocessed SOILED→STERILE (sterile_until re-stamped)
+   PASS: CSSD cycle audit-log row written
+== J-TC-3: administer controlled drug requires a witness (400), then balances
+   PASS: administer without witness rejected 400
+   PASS: witnessed administer recorded
+   PASS: running balance after ISSUE(10)-ADMINISTER(2) = 8.0
+   PASS: inventory controlled-drug register rows for the case
+== J-TC-4: requestBlood creates a real MADI order; no-transfusion case is NOT_REQUIRED
+   PASS: requestBlood created MADI order ec9e8820-8e3a-4feb-89fd-62b970bb3214
+   PASS: madi.blood_orders row exists (jurisdiction defaulted)
+   PASS: no-transfusion case: BLOOD gate NOT_REQUIRED
+== J-TC-5: histopath report signed out FINAL (critical) + acknowledged
+   PASS: OROS histopath order placed (01KXH6PJMQ0YW8K7T2YC587AQE)
+   PASS: histopath report signed out FINAL
+   PASS: FINAL histopath result created (Butano-bound via ReportService)
+   PASS: critical histopath acknowledged
+== SUMMARY: PASS=23 FAIL=0 (evidence in /opt/impilo/repos/Impilo-vNext/reports/journeys/theatre-commodities-proof-2026-07-14)
