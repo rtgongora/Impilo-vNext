@@ -1,15 +1,17 @@
 # =============================================================================
-# INDAWO — Site & Address Registry API (OpenAPI 3.0)
-# Phase B baseline: internal addresses and site snapshots.
+# INDAWO — Site Registry API (OpenAPI 3.0)
+# Phase B baseline: site snapshots. (The orphaned /internal/v1/addresses route
+# and ind_addresses table were retired under G4 — ndila-service is the geography SoR.)
 # =============================================================================
 openapi: "3.0.3"
 
 info:
-  title: INDAWO — Site & Address Registry API
+  title: INDAWO — Site Registry API
   version: "1.0.0"
   description: |
-    INDAWO holds canonical addresses and site snapshot feeds for facility context
-    and public-health surfaces. Internal routes are consumed via BFF or batch jobs.
+    INDAWO holds canonical site snapshot feeds for facility context and
+    public-health surfaces. Internal routes are consumed via BFF or batch jobs.
+    Geocoding and geography are owned by ndila-service (G4).
   contact:
     name: Impilo Platform Team
   license:
@@ -28,71 +30,10 @@ security:
   - bearerAuth: []
 
 tags:
-  - name: Internal-Address
-    description: Tenant-scoped address register
   - name: Internal-Snapshot
     description: Site snapshot pagination for sync
 
 paths:
-  /internal/v1/addresses:
-    get:
-      operationId: indawoListAddresses
-      tags:
-        - Internal-Address
-      summary: List addresses for tenant
-      parameters:
-        - $ref: '#/components/parameters/TenantId'
-      responses:
-        '200':
-          description: Address list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  additionalProperties: true
-    post:
-      operationId: indawoCreateAddress
-      tags:
-        - Internal-Address
-      summary: Create address
-      parameters:
-        - $ref: '#/components/parameters/TenantId'
-        - $ref: '#/components/parameters/PodId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties: true
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-  /internal/v1/addresses/{id}:
-    get:
-      operationId: indawoGetAddress
-      tags:
-        - Internal-Address
-      summary: Get address by id
-      parameters:
-        - $ref: '#/components/parameters/AddressId'
-      responses:
-        '200':
-          description: Address
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: true
-        '404':
-          description: Not found
   /internal/v1/snapshots/sites:
     get:
       operationId: indawoSnapshotSites
@@ -410,13 +351,6 @@ components:
     CorrelationId:
       name: X-Correlation-ID
       in: header
-      required: true
-      schema:
-        type: string
-        format: uuid
-    AddressId:
-      name: id
-      in: path
       required: true
       schema:
         type: string

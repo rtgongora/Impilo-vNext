@@ -1,0 +1,17 @@
+-- G4 Phase 3: retire the orphaned ind_addresses table.
+--
+-- ind_addresses was created in V001 with a full Java stack (AddressEntity /
+-- AddressRepository / AddressController at /internal/v1/addresses, plus a
+-- best-effort NdilaGeocodeClient added under G21). Re-verification for G4 proved
+-- the endpoint has ZERO runtime callers: no BFF client method, no UI fetch, no
+-- other service. The earlier "LIVE via registry-intake (RegistryIntakeService /
+-- IndawoPlaceModeController)" note on V008 was stale — those classes do not exist
+-- in the codebase, and SiteEntity carries its own address_json JSONB column that
+-- is entirely independent of this table.
+--
+-- ndila-service (ndila_locations) is the platform geography/geocoding/catchment
+-- SoR; indawo does not own a parallel address store. The Java (controller, entity,
+-- repository, DTOs, geocode client, test) is removed in the same change, so the
+-- table is now truly dead. Drop it. (Unqualified name to match V001/V008 —
+-- indawo-service migrations run against the default schema; there is no "indawo" schema.)
+DROP TABLE IF EXISTS ind_addresses;

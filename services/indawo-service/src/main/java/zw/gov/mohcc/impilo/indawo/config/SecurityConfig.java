@@ -83,7 +83,6 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.GET, "/internal/v1/sites/**").hasAnyRole(MOH_VIEWER_ROLES)
                             .requestMatchers(HttpMethod.PUT, "/internal/v1/sites/**").hasAnyRole(LICENSING_ROLES)
                             .requestMatchers(HttpMethod.GET, "/internal/v1/snapshots/**").hasAnyRole(MOH_VIEWER_ROLES)
-                            .requestMatchers("/internal/v1/addresses/**").hasAnyRole(MOH_VIEWER_ROLES)
 
                             // Site-registry ops (fine-grained via method security)
                             .requestMatchers("/internal/v1/site-registry/**").authenticated()
