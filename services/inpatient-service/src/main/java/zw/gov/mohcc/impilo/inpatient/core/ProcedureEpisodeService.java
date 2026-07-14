@@ -65,6 +65,8 @@ public class ProcedureEpisodeService {
     private final ProcedureEpisodeDocumentRepository documentRepository;
     private final ProcedureConsumableRepository consumableRepository;
     private final ProcedureAnaesthesiaScoreRepository anaesthesiaScoreRepository;
+    // ── Wave 2: perioperative consent bundle (references MVUMO, the consent SoR) ──
+    private final ProcedureConsentRepository procedureConsentRepository;
     private final ObjectMapper objectMapper;
 
     public ProcedureEpisodeService(
@@ -76,6 +78,7 @@ public class ProcedureEpisodeService {
             ProcedureEpisodeDocumentRepository documentRepository,
             ProcedureConsumableRepository consumableRepository,
             ProcedureAnaesthesiaScoreRepository anaesthesiaScoreRepository,
+            ProcedureConsentRepository procedureConsentRepository,
             ObjectMapper objectMapper) {
         this.episodeRepository = episodeRepository;
         this.preopRepository = preopRepository;
@@ -85,6 +88,7 @@ public class ProcedureEpisodeService {
         this.documentRepository = documentRepository;
         this.consumableRepository = consumableRepository;
         this.anaesthesiaScoreRepository = anaesthesiaScoreRepository;
+        this.procedureConsentRepository = procedureConsentRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -217,13 +221,47 @@ public class ProcedureEpisodeService {
         }
         String status = Objects.requireNonNullElse(
                 ClinicalPayloadMapper.str(body, "consentStatus", "consent_status"), "PENDING");
-        episode.setConsentStatus(status);
-        if ("GRANTED".equals(status)) {
-            episode.setConsentVerified(true);
-            autoCompleteConsentChecklist(episodeId);
+
+        // ── Wave 2: multi-type consent bundle. A consentType binds a specific
+        // required consent (PROCEDURE/ANAESTHESIA/TRANSFUSION) to its MVUMO request.
+        // The episode-level consent_status still reflects the PROCEDURE consent for
+        // backward compatibility.
+        String consentType = ClinicalPayloadMapper.str(body, "consentType", "consent_type");
+        if (consentType != null && !consentType.isBlank()) {
+            upsertConsentBundle(episodeId, consentType.toUpperCase(), mvumoId, status,
+                    !Boolean.FALSE.equals(body.get("required")));
+        }
+        boolean isProcedureConsent = consentType == null || consentType.isBlank()
+                || ProcedureConsentEntity.TYPE_PROCEDURE.equalsIgnoreCase(consentType);
+        if (isProcedureConsent) {
+            episode.setConsentStatus(status);
+            if ("GRANTED".equals(status)) {
+                episode.setConsentVerified(true);
+                autoCompleteConsentChecklist(episodeId);
+            }
         }
         episodeRepository.save(episode);
         return episodeDetail(episodeId);
+    }
+
+    /** Upsert a perioperative consent-bundle row (Wave 2). Idempotent per type. */
+    private void upsertConsentBundle(UUID episodeId, String consentType, UUID mvumoId, String status,
+                                     boolean required) {
+        ProcedureConsentEntity row = procedureConsentRepository
+                .findByEpisodeIdAndConsentType(episodeId, consentType)
+                .orElseGet(() -> {
+                    ProcedureConsentEntity fresh = new ProcedureConsentEntity();
+                    fresh.setEpisodeId(episodeId);
+                    fresh.setConsentType(consentType);
+                    return fresh;
+                });
+        if (mvumoId != null) {
+            row.setMvumoConsentRequestId(mvumoId);
+        }
+        row.setStatus(status);
+        row.setRequired(required);
+        row.setWithdrawn("WITHDRAWN".equals(status));
+        procedureConsentRepository.save(row);
     }
 
     public Map<String, Object> getConsentStatus(UUID episodeId) {
@@ -310,6 +348,22 @@ public class ProcedureEpisodeService {
         if (!"GRANTED".equals(episode.getConsentStatus()) || episode.getMvumoConsentRequestId() == null) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "MVUMO surgical consent must be GRANTED with evidence before theatre start");
+        }
+        // ── Wave 2: multi-type consent gate. Every REQUIRED consent in the bundle
+        // must be GRANTED and none may be WITHDRAWN. Anaesthesia consent gates
+        // start; transfusion consent gates the BLOOD readiness domain (Wave 1).
+        for (ProcedureConsentEntity consent : procedureConsentRepository.findByEpisodeId(episodeId)) {
+            if (!consent.isRequired()) {
+                continue;
+            }
+            if (consent.isWithdrawn()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        consent.getConsentType() + " consent has been WITHDRAWN — theatre start blocked");
+            }
+            if (!"GRANTED".equals(consent.getStatus())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        consent.getConsentType() + " consent must be GRANTED before theatre start");
+            }
         }
         episode.setStatus("IN_PROGRESS");
         episode.setConsentVerified(true);
