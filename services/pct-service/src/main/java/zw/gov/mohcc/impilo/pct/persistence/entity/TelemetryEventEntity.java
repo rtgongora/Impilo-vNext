@@ -21,7 +21,8 @@ public class TelemetryEventEntity {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    @Column(name = "facility_id", nullable = false)
+    /** Nullable since V034: citizen-originated events (virtual-care lane) have no facility context. */
+    @Column(name = "facility_id")
     private UUID facilityId;
 
     @Column(name = "workspace_id")
