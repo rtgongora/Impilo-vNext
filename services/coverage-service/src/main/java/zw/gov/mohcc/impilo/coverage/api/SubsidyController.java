@@ -34,12 +34,17 @@ public class SubsidyController {
     // the SAME ledgered cv_subsidy_enrolments model; DTO shapes are unchanged.
     private final SubsidyEnrolmentRepository subsidyEnrolmentRepository;
 
+    // Health-worker recognition opt-in + suspension lifecycle (Lane C).
+    private final zw.gov.mohcc.impilo.coverage.core.HealthWorkerSubsidyService healthWorkerSubsidyService;
+
     public SubsidyController(SubsidyProgramRepository subsidyProgramRepository,
                              SubsidyEnrolmentService enrolmentService,
-                             SubsidyEnrolmentRepository subsidyEnrolmentRepository) {
+                             SubsidyEnrolmentRepository subsidyEnrolmentRepository,
+                             zw.gov.mohcc.impilo.coverage.core.HealthWorkerSubsidyService healthWorkerSubsidyService) {
         this.subsidyProgramRepository = subsidyProgramRepository;
         this.enrolmentService = enrolmentService;
         this.subsidyEnrolmentRepository = subsidyEnrolmentRepository;
+        this.healthWorkerSubsidyService = healthWorkerSubsidyService;
     }
 
     @GetMapping
@@ -77,6 +82,24 @@ public class SubsidyController {
             @PathVariable("id") UUID id) {
         UUID tid = UUID.fromString(tenantId);
         return ResponseEntity.ok(enrolmentService.get(tid, id));
+    }
+
+    /**
+     * Explicit health-worker opt-in enrolment into a recognition-gated
+     * programme (e.g. SUB-HEALTH-WORKER-RECOGNITION). The recognition check
+     * is SERVER-SIDE and fail-closed; the caller cannot assert their own
+     * recognition. Records enrolled_by = SELF_OPT_IN:RECOGNITION:&lt;class&gt;
+     * and exemption_category = HEALTH_WORKER.
+     */
+    @PostMapping("/{programId}/enrolments")
+    public ResponseEntity<SubsidyEnrolmentResponse> optIn(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable("programId") UUID programId,
+            @Valid @RequestBody zw.gov.mohcc.impilo.coverage.api.dto.HealthWorkerOptInRequest body) {
+        UUID tid = UUID.fromString(tenantId);
+        healthWorkerSubsidyService.requireProgram(tid, programId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(healthWorkerSubsidyService.optIn(tid, programId, body.healthId()));
     }
 
     /** Draw down subsidy value against the annual cap (enforces the cap). */
