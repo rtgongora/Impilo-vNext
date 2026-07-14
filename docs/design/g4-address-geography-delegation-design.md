@@ -1,7 +1,8 @@
 # Design — G4: Delegate address/geography ownership to ndila
 
-**Status:** design-first (scheduled, not yet built). **Type:** consolidation refactor of live systems.
-**SoR target:** `ndila-service` (canonical geospatial location registry).
+**Status:** Phase 0 (seam) + Phase 3 (retire orphan) **BUILT & pushed** (`eb92b9fe3`); Phase 1
+(backfill) + Phase 2 (reads-authoritative) **remain** — they need the migration run on live data /
+a deploy. **Type:** consolidation refactor of live systems. **SoR target:** `ndila-service`.
 
 > Scheduled per PO decision (2026-07-14) to plan both consolidation refactors ahead of a driving
 > need. This is a **design**, not a build — it touches live identity data (client addresses), so it

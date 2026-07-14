@@ -1,7 +1,8 @@
 # Design — G14: Consolidate the duplicated VITO client-registry plumbing
 
-**Status:** design-first (scheduled, not yet built). **Type:** consolidation refactor of live systems.
-**SoR:** unchanged — `vito-service` remains the single person-identity SoR.
+**Status:** Phases 0–2 (plumbing consolidation) **BUILT & pushed** (`eb92b9fe3`); Phase 3
+(dedup-model reconciliation) **remains** as a separate design pass. **Type:** consolidation refactor
+of live systems. **SoR:** unchanged — `vito-service` remains the single person-identity SoR.
 
 > Scheduled per PO decision (2026-07-14). Lower risk than G4 (no data migration — this is
 > API/UI plumbing consolidation), but it touches **live UI paths**, so it is staged consumer-by-
