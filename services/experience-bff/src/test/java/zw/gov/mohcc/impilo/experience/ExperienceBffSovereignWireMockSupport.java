@@ -5,7 +5,9 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
@@ -29,6 +31,7 @@ public final class ExperienceBffSovereignWireMockSupport {
                 stubMarketplace();
                 stubSupport();
                 stubPct();
+                stubInpatientBeds();
                 started = true;
             }
         }
@@ -38,6 +41,7 @@ public final class ExperienceBffSovereignWireMockSupport {
         registry.add("impilo.services.msika-flow-base-url", () -> base);
         registry.add("impilo.services.support-base-url", () -> base);
         registry.add("impilo.services.pct-base-url", () -> base);
+        registry.add("impilo.services.inpatient-base-url", () -> base);
     }
 
     private static void stubPharmacy() {
@@ -135,5 +139,31 @@ public final class ExperienceBffSovereignWireMockSupport {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"data\":[]}")));
+    }
+
+    /**
+     * Inpatient-service bed/ward management. The BFF {@code BedController} proxies
+     * {@code GET /internal/v1/beds/wards?facility_id=…} to inpatient-service via
+     * {@code InpatientServiceClient.listWards}; without this stub the call reaches the
+     * default {@code localhost:8121}, is refused, and the controller correctly surfaces
+     * a 502 {@code INPATIENT_UNAVAILABLE}. The payload mirrors
+     * {@code BedManagementService.listWardResources}: a JSON:API-style
+     * {@code {"data":[{id,type:"ward",attributes:{…}}]}} envelope.
+     */
+    private static void stubInpatientBeds() {
+        SERVER.stubFor(get(urlPathEqualTo("/internal/v1/beds/wards"))
+                .withQueryParam("facility_id", matching("[0-9a-fA-F-]{36}"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                {"data":[{"id":"11111111-2222-4333-8444-555555555555",\
+                                "type":"ward","attributes":{"name":"General Ward A",\
+                                "facilityId":"00000000-0000-0000-0000-000000000001",\
+                                "wardType":"GENERAL","totalBeds":24,"occupiedBeds":18,\
+                                "availableBeds":5,"maintenanceBeds":1,"genderDesignation":"MIXED",\
+                                "ageGroup":"ADULT","isolationCapable":false,"oxygenAvailable":true,\
+                                "monitoringCapable":true,"icuCapable":false}}]}\
+                                """)));
     }
 }
