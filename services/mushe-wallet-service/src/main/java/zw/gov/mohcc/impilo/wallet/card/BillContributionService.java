@@ -9,6 +9,7 @@ import zw.gov.mohcc.impilo.wallet.core.WalletService;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.BillContributionEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.BillContributionRequestEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.wallet.persistence.entity.TransactionEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.WalletEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.repository.BillContributionRepository;
 import zw.gov.mohcc.impilo.wallet.persistence.repository.BillContributionRequestRepository;
@@ -248,6 +249,66 @@ public class BillContributionService {
         log.info("Bill contribution {} ({}) to request {} (raised {}/{})", amount, origin, request.getId(),
                 request.getRaisedAmount(), request.getTargetAmount());
         return c;
+    }
+
+    /**
+     * Release escrowed campaign funds to the real beneficiary
+     * ({@code beneficiaryTargetWalletId}). {@code amount == null} releases the full current
+     * escrow balance. Only CAMPAIGN requests that are not cancelled can release; mushe enforces
+     * the mechanical invariants (no over-release beyond the escrow balance, positive amount) —
+     * the case layer (Daidzai) gates on campaign governance (verified-ACTIVE) before calling.
+     * Emits {@code wallet.bill_contribution.released}.
+     *
+     * @return the escrow-side debit transaction
+     */
+    @Transactional
+    public TransactionEntity release(UUID requestId, BigDecimal amount, String idempotencyKey,
+                                     String releasedBy) {
+        BillContributionRequestEntity request = getById(requestId);
+        if (!BillContributionRequestEntity.ORIGIN_CAMPAIGN.equals(request.getOrigin())) {
+            throw new ContributionRejected("Only campaign contribution requests can release escrow");
+        }
+        if (request.getStatus() != null && request.getStatus().startsWith("CANCELLED")) {
+            throw new ContributionRejected("This contribution request is cancelled — funds are refunding");
+        }
+        if (request.getBeneficiaryTargetWalletId() == null) {
+            throw new ContributionRejected("Campaign request has no beneficiary target wallet");
+        }
+        BigDecimal escrowBalance = walletService.getBalance(request.getBeneficiaryWalletId());
+        BigDecimal toRelease = amount != null ? amount : escrowBalance;
+        if (toRelease.signum() <= 0) {
+            throw new ContributionRejected("Release amount must be positive (escrow balance is "
+                    + escrowBalance.toPlainString() + ")");
+        }
+        if (toRelease.compareTo(escrowBalance) > 0) {
+            throw new ContributionRejected("Cannot release " + toRelease.toPlainString()
+                    + " — escrow balance is only " + escrowBalance.toPlainString());
+        }
+
+        String idem = idempotencyKey != null && !idempotencyKey.isBlank()
+                ? idempotencyKey : "release:" + requestId + ":" + UUID.randomUUID();
+        TransactionEntity debitTxn = walletService.transfer(request.getBeneficiaryWalletId(),
+                request.getBeneficiaryTargetWalletId(), toRelease, request.getShareToken(),
+                "Crowdfund release — " + request.getTitle(), "SOCIAL_FUNDING", null, idem);
+
+        request.setUpdatedAt(OffsetDateTime.now());
+        requestRepository.save(request);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("requestId", request.getId().toString());
+        if (request.getCampaignRef() != null) {
+            payload.put("campaignRef", request.getCampaignRef().toString());
+        }
+        payload.put("amount", toRelease.toPlainString());
+        payload.put("currency", request.getCurrency());
+        payload.put("idempotencyKey", idem);
+        if (releasedBy != null) {
+            payload.put("releasedBy", releasedBy);
+        }
+        emitEvent(EVENT_RELEASED, request, request.getId().toString(), idem, payload);
+        log.info("Crowdfund release {} from escrow {} to beneficiary {} (request {})", toRelease,
+                request.getBeneficiaryWalletId(), request.getBeneficiaryTargetWalletId(), requestId);
+        return debitTxn;
     }
 
     @Transactional

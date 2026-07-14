@@ -243,6 +243,63 @@ class BillContributionServiceTest {
     }
 
     @Test
+    void partial_release_transfers_the_requested_amount_to_the_beneficiary() {
+        var request = openCampaignRequest();
+        when(requestRepo.findById(request.getId())).thenReturn(Optional.of(request));
+        when(walletService.getBalance(escrowWalletId)).thenReturn(new BigDecimal("200.00"));
+
+        service.release(request.getId(), new BigDecimal("80.00"), "rel-1", "case-officer");
+
+        verify(walletService).transfer(eq(escrowWalletId), eq(beneficiaryWalletId),
+                eq(new BigDecimal("80.00")), eq("tok-1"), any(), eq("SOCIAL_FUNDING"), any(), eq("rel-1"));
+        ArgumentCaptor<EventOutboxEntity> cap = ArgumentCaptor.forClass(EventOutboxEntity.class);
+        verify(outboxRepo).save(cap.capture());
+        assertEquals(BillContributionService.EVENT_RELEASED, cap.getValue().getEventType());
+        assertTrue(cap.getValue().getPayloadJson().contains("\"amount\":\"80.00\""));
+    }
+
+    @Test
+    void full_release_with_no_amount_transfers_the_whole_escrow_balance() {
+        var request = openCampaignRequest();
+        when(requestRepo.findById(request.getId())).thenReturn(Optional.of(request));
+        when(walletService.getBalance(escrowWalletId)).thenReturn(new BigDecimal("135.50"));
+
+        service.release(request.getId(), null, null, null);
+
+        verify(walletService).transfer(eq(escrowWalletId), eq(beneficiaryWalletId),
+                eq(new BigDecimal("135.50")), eq("tok-1"), any(), eq("SOCIAL_FUNDING"), any(), any());
+    }
+
+    @Test
+    void over_release_beyond_escrow_balance_is_rejected() {
+        var request = openCampaignRequest();
+        when(requestRepo.findById(request.getId())).thenReturn(Optional.of(request));
+        when(walletService.getBalance(escrowWalletId)).thenReturn(new BigDecimal("50.00"));
+
+        assertThrows(BillContributionService.ContributionRejected.class,
+                () -> service.release(request.getId(), new BigDecimal("50.01"), null, null));
+        verify(walletService, never()).transfer(any(), any(), any(), any(), any(), any(), any(), any());
+        verify(outboxRepo, never()).save(any());
+    }
+
+    @Test
+    void release_is_refused_for_non_campaign_and_cancelled_requests() {
+        var bill = openRequest(new BigDecimal("100.00"), BigDecimal.ZERO);
+        bill.setTenantId(UUID.randomUUID());
+        when(requestRepo.findById(bill.getId())).thenReturn(Optional.of(bill));
+        assertThrows(BillContributionService.ContributionRejected.class,
+                () -> service.release(bill.getId(), null, null, null));
+
+        var cancelled = openCampaignRequest();
+        cancelled.setStatus("CANCELLED_REFUNDING");
+        when(requestRepo.findById(cancelled.getId())).thenReturn(Optional.of(cancelled));
+        assertThrows(BillContributionService.ContributionRejected.class,
+                () -> service.release(cancelled.getId(), null, null, null));
+
+        verify(walletService, never()).transfer(any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
     void every_contribution_emits_a_recorded_outbox_event() {
         var request = openCampaignRequest();
         when(requestRepo.findByShareToken("tok-1")).thenReturn(Optional.of(request));

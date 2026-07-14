@@ -94,6 +94,33 @@ public class BillContributionController {
         }
     }
 
+    /**
+     * Release escrowed campaign funds to the real beneficiary. Body: {@code {amount?}} — omit
+     * amount to release the full escrow balance. The case layer (Daidzai) gates on campaign
+     * governance before calling; mushe enforces the mechanical invariants (no over-release).
+     */
+    @PostMapping("/{requestId}/release")
+    public ResponseEntity<ApiResponse<Object>> release(
+            @PathVariable String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            var txn = service.release(UUID.fromString(requestId),
+                    body != null && body.get("amount") != null ? new BigDecimal(str(body, "amount")) : null,
+                    idempotencyKey, actorId);
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("requestId", requestId);
+            data.put("amount", txn.getAmount());
+            data.put("txnId", txn.getTxnId());
+            return ResponseEntity.ok(ApiResponse.ok(data, correlationId));
+        } catch (BillContributionService.ContributionRejected e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(ApiResponse.error("RELEASE_REJECTED", e.getMessage(), 422, correlationId));
+        }
+    }
+
     @PostMapping("/{requestId}/close")
     public ResponseEntity<ApiResponse<Object>> close(
             @PathVariable String requestId,
