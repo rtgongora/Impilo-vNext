@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -203,5 +204,61 @@ public class TheatreController {
             @RequestBody(required = false) Map<String, Object> body) {
         return ok(inpatientClient.routeTheatreDeath(id, body != null ? body : Map.of()),
                 requestId, correlationId);
+    }
+
+    // ── Wave 2: theatre-day readiness board ───────────────────────────────────────
+    /**
+     * Composes the theatre-day readiness board: the inpatient theatre queue, and for
+     * each case the inpatient board-readiness (which itself folds in TUSO space,
+     * VASHANDI team and the MVUMO consent bundle via evaluateReadiness + the Wave-2
+     * domains). Filterable by facility/date/room.
+     */
+    @GetMapping("/readiness-board")
+    public ResponseEntity<Map<String, Object>> readinessBoard(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(required = false) String facilityId,
+            @RequestParam(required = false) String date,
+            @RequestParam(required = false) String room) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        try {
+            JsonNode queue = inpatientClient.theatreQueue();
+            JsonNode cases = queue != null && queue.has("data") ? queue.get("data") : queue;
+            if (cases != null && cases.isArray()) {
+                for (JsonNode c : cases) {
+                    String caseId = c.has("episode_id") ? c.get("episode_id").asText()
+                            : (c.has("id") ? c.get("id").asText() : null);
+                    if (caseId == null) {
+                        continue;
+                    }
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("case", c);
+                    try {
+                        row.put("board", inpatientClient.theatreBoardReadiness(caseId, Map.of()));
+                    } catch (Exception e) {
+                        log.warn("board-readiness failed for case {}: {}", caseId, e.getMessage());
+                        row.put("board", Map.of("board_state", "Unknown"));
+                    }
+                    rows.add(row);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Readiness board composition failed: {}", e.getMessage());
+        }
+        Map<String, Object> board = new LinkedHashMap<>();
+        board.put("facility_id", facilityId);
+        board.put("date", date);
+        board.put("room", room);
+        board.put("rows", rows);
+        return ok(board, requestId, correlationId);
+    }
+
+    @PostMapping("/cases/{id}/resolve-blocker")
+    public ResponseEntity<Map<String, Object>> resolveBlocker(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return ok(inpatientClient.resolveTheatreBlocker(id, body), requestId, correlationId);
     }
 }
