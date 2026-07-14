@@ -89,11 +89,42 @@ class SubsidyEnrolmentServiceTest {
                 tenantId, programId, "CPID-1", "ACTIVE")).thenReturn(false);
 
         SubsidyEnrolmentResponse r = service.enrol(tenantId, new SubsidyEnrolmentRequest(
-                null, "SUB-TEST", "CPID-1", null, null, "admin"));
+                null, "SUB-TEST", "CPID-1", null, null, null, "admin", null));
 
         assertEquals("ACTIVE", r.status());
         assertEquals(0, new BigDecimal("1500.00").compareTo(r.effectiveCap()));
         assertEquals(0, new BigDecimal("1500.00").compareTo(r.remainingAmount()));
+        assertNull(r.exemptionCategory());
+    }
+
+    @Test
+    void enrol_withExemptionCategory_persistsNormalised() {
+        when(programRepository.findByTenantIdAndProgramCode(tenantId, "SUB-TEST"))
+                .thenReturn(Optional.of(program(new BigDecimal("1500.00"), "ACTIVE")));
+        when(enrolmentRepository.existsByTenantIdAndSubsidyProgramIdAndMemberCpidAndStatus(
+                tenantId, programId, "CPID-1", "ACTIVE")).thenReturn(false);
+
+        SubsidyEnrolmentResponse r = service.enrol(tenantId, new SubsidyEnrolmentRequest(
+                null, "SUB-TEST", "CPID-1", null, "  indigent ", null, "admin",
+                LocalDate.of(2026, 1, 15)));
+
+        assertEquals("INDIGENT", r.exemptionCategory());
+        assertEquals(LocalDate.of(2026, 1, 15), r.effectiveFrom());
+        verify(enrolmentRepository).save(argThat(e -> "INDIGENT".equals(e.getExemptionCategory())));
+    }
+
+    @Test
+    void enrol_blankExemptionCategory_leavesNull() {
+        when(programRepository.findByTenantIdAndProgramCode(tenantId, "SUB-TEST"))
+                .thenReturn(Optional.of(program(new BigDecimal("1500.00"), "ACTIVE")));
+        when(enrolmentRepository.existsByTenantIdAndSubsidyProgramIdAndMemberCpidAndStatus(
+                tenantId, programId, "CPID-1", "ACTIVE")).thenReturn(false);
+
+        SubsidyEnrolmentResponse r = service.enrol(tenantId, new SubsidyEnrolmentRequest(
+                null, "SUB-TEST", "CPID-1", null, "   ", null, "admin", null));
+
+        assertNull(r.exemptionCategory());
+        verify(enrolmentRepository).save(argThat(e -> e.getExemptionCategory() == null));
     }
 
     @Test
@@ -103,7 +134,7 @@ class SubsidyEnrolmentServiceTest {
         when(enrolmentRepository.existsByTenantIdAndSubsidyProgramIdAndMemberCpidAndStatus(
                 tenantId, programId, "CPID-1", "ACTIVE")).thenReturn(true);
 
-        var req = new SubsidyEnrolmentRequest(null, "SUB-TEST", "CPID-1", null, null, null);
+        var req = new SubsidyEnrolmentRequest(null, "SUB-TEST", "CPID-1", null, null, null, null, null);
         assertThrows(IllegalArgumentException.class, () -> service.enrol(tenantId, req));
     }
 
@@ -111,7 +142,7 @@ class SubsidyEnrolmentServiceTest {
     void enrol_inactiveProgram_isRejected() {
         when(programRepository.findByTenantIdAndProgramCode(tenantId, "SUB-TEST"))
                 .thenReturn(Optional.of(program(new BigDecimal("1500.00"), "ENDED")));
-        var req = new SubsidyEnrolmentRequest(null, "SUB-TEST", "CPID-1", null, null, null);
+        var req = new SubsidyEnrolmentRequest(null, "SUB-TEST", "CPID-1", null, null, null, null, null);
         assertThrows(IllegalArgumentException.class, () -> service.enrol(tenantId, req));
     }
 
@@ -221,8 +252,72 @@ class SubsidyEnrolmentServiceTest {
         when(enrolmentRepository.existsByTenantIdAndSubsidyProgramIdAndMemberCpidAndStatus(
                 tenantId, programId, "CPID-1", "ACTIVE")).thenReturn(false);
         var req = new SubsidyEnrolmentRequest(
-                null, "SUB-TEST", "CPID-1", new BigDecimal("-1.00"), null, "admin");
+                null, "SUB-TEST", "CPID-1", new BigDecimal("-1.00"), null, null, "admin", null);
         assertThrows(IllegalArgumentException.class, () -> service.enrol(tenantId, req));
+    }
+
+    @Test
+    void end_activeEnrolment_setsEndedAndEffectiveTo() {
+        UUID enrolId = UUID.randomUUID();
+        SubsidyEnrolmentEntity e = enrolment(enrolId);
+        when(enrolmentRepository.findByIdAndTenantId(enrolId, tenantId)).thenReturn(Optional.of(e));
+        when(programRepository.findByIdAndTenantId(programId, tenantId))
+                .thenReturn(Optional.of(program(new BigDecimal("1000.00"), "ACTIVE")));
+        when(balanceRepository.findByEnrolmentIdAndPeriodYear(eq(enrolId), anyInt()))
+                .thenReturn(Optional.empty());
+
+        SubsidyEnrolmentResponse r = service.end(tenantId, enrolId);
+
+        assertEquals("ENDED", r.status());
+        assertEquals(LocalDate.now(), r.effectiveTo());
+        verify(enrolmentRepository).save(e);
+    }
+
+    @Test
+    void end_alreadyEnded_isIdempotent() {
+        UUID enrolId = UUID.randomUUID();
+        SubsidyEnrolmentEntity e = enrolment(enrolId);
+        e.setStatus("ENDED");
+        LocalDate endedOn = LocalDate.now().minusDays(3);
+        e.setEffectiveTo(endedOn);
+        when(enrolmentRepository.findByIdAndTenantId(enrolId, tenantId)).thenReturn(Optional.of(e));
+        when(programRepository.findByIdAndTenantId(programId, tenantId))
+                .thenReturn(Optional.of(program(new BigDecimal("1000.00"), "ACTIVE")));
+        when(balanceRepository.findByEnrolmentIdAndPeriodYear(eq(enrolId), anyInt()))
+                .thenReturn(Optional.empty());
+
+        SubsidyEnrolmentResponse r = service.end(tenantId, enrolId);
+
+        assertEquals("ENDED", r.status());
+        assertEquals(endedOn, r.effectiveTo());  // original end date kept, not re-stamped
+        verify(enrolmentRepository, never()).save(any());
+    }
+
+    @Test
+    void end_unknownEnrolment_isRejected() {
+        UUID enrolId = UUID.randomUUID();
+        when(enrolmentRepository.findByIdAndTenantId(enrolId, tenantId)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> service.end(tenantId, enrolId));
+    }
+
+    @Test
+    void listForMember_exemptionOnly_filtersValueOnlyRows() {
+        SubsidyEnrolmentEntity valueOnly = enrolment(UUID.randomUUID());
+        SubsidyEnrolmentEntity exempt = enrolment(UUID.randomUUID());
+        exempt.setExemptionCategory("INDIGENT");
+        when(enrolmentRepository.findByTenantIdAndMemberCpid(tenantId, "CPID-1"))
+                .thenReturn(List.of(valueOnly, exempt));
+        when(programRepository.findByIdAndTenantId(programId, tenantId))
+                .thenReturn(Optional.of(program(new BigDecimal("1000.00"), "ACTIVE")));
+        when(balanceRepository.findByEnrolmentIdAndPeriodYear(any(), anyInt()))
+                .thenReturn(Optional.empty());
+
+        List<SubsidyEnrolmentResponse> all = service.listForMember(tenantId, "CPID-1", false);
+        List<SubsidyEnrolmentResponse> exemptOnly = service.listForMember(tenantId, "CPID-1", true);
+
+        assertEquals(2, all.size());
+        assertEquals(1, exemptOnly.size());
+        assertEquals("INDIGENT", exemptOnly.get(0).exemptionCategory());
     }
 
     @Test

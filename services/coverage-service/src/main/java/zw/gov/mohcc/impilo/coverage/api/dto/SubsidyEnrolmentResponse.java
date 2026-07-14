@@ -15,6 +15,7 @@ public record SubsidyEnrolmentResponse(
         @JsonProperty("member_cpid") String memberCpid,
         @JsonProperty("status") String status,
         @JsonProperty("annual_cap_override") BigDecimal annualCapOverride,
+        @JsonProperty("exemption_category") String exemptionCategory,
         @JsonProperty("effective_cap") BigDecimal effectiveCap,
         @JsonProperty("consumed_amount") BigDecimal consumedAmount,
         @JsonProperty("remaining_amount") BigDecimal remainingAmount,
@@ -26,7 +27,7 @@ public record SubsidyEnrolmentResponse(
                                               BigDecimal consumed, BigDecimal remaining) {
         return new SubsidyEnrolmentResponse(
                 e.getId(), e.getSubsidyProgramId(), e.getMemberCpid(), e.getStatus(),
-                e.getAnnualCapOverride(), effectiveCap, consumed, remaining, e.getCurrency(),
-                e.getEffectiveFrom(), e.getEffectiveTo());
+                e.getAnnualCapOverride(), e.getExemptionCategory(), effectiveCap, consumed,
+                remaining, e.getCurrency(), e.getEffectiveFrom(), e.getEffectiveTo());
     }
 }

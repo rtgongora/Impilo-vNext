@@ -65,9 +65,10 @@ public class SubsidyController {
     @GetMapping("/enrolments")
     public ResponseEntity<List<SubsidyEnrolmentResponse>> listEnrolments(
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestParam("member_cpid") String memberCpid) {
+            @RequestParam("member_cpid") String memberCpid,
+            @RequestParam(name = "exemption_only", defaultValue = "false") boolean exemptionOnly) {
         UUID tid = UUID.fromString(tenantId);
-        return ResponseEntity.ok(enrolmentService.listForMember(tid, memberCpid));
+        return ResponseEntity.ok(enrolmentService.listForMember(tid, memberCpid, exemptionOnly));
     }
 
     @GetMapping("/enrolments/{id}")
@@ -86,6 +87,15 @@ public class SubsidyController {
             @Valid @RequestBody SubsidyConsumeRequest body) {
         UUID tid = UUID.fromString(tenantId);
         return ResponseEntity.ok(enrolmentService.consume(tid, id, body));
+    }
+
+    /** End an enrolment (e.g. eligibility lapsed). Idempotent. */
+    @PostMapping("/enrolments/{id}/end")
+    public ResponseEntity<SubsidyEnrolmentResponse> endEnrolment(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable("id") UUID id) {
+        UUID tid = UUID.fromString(tenantId);
+        return ResponseEntity.ok(enrolmentService.end(tid, id));
     }
 
     // ── Per-member exemption-category enrolment (OROS; drives costing waivers) ──

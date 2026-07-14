@@ -20,6 +20,7 @@ import zw.gov.mohcc.impilo.coverage.repository.SubsidyProgramRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -69,10 +70,11 @@ public class SubsidyEnrolmentService {
         e.setMemberCpid(req.memberCpid().trim());
         e.setStatus("ACTIVE");
         e.setAnnualCapOverride(req.annualCapOverride());
+        e.setExemptionCategory(normaliseExemptionCategory(req.exemptionCategory()));
         e.setCurrency(req.currency() != null && !req.currency().isBlank()
                 ? req.currency() : program.getCurrency());
         e.setEnrolledBy(req.enrolledBy());
-        e.setEffectiveFrom(LocalDate.now());
+        e.setEffectiveFrom(req.effectiveFrom() != null ? req.effectiveFrom() : LocalDate.now());
         e = enrolmentRepository.save(e);
 
         BigDecimal cap = effectiveCap(e, program);
@@ -84,9 +86,34 @@ public class SubsidyEnrolmentService {
 
     @Transactional(readOnly = true)
     public List<SubsidyEnrolmentResponse> listForMember(UUID tenantId, String memberCpid) {
+        return listForMember(tenantId, memberCpid, false);
+    }
+
+    /** List a member's enrolments; {@code exemptionOnly} restricts to exemption-carrying rows. */
+    @Transactional(readOnly = true)
+    public List<SubsidyEnrolmentResponse> listForMember(UUID tenantId, String memberCpid, boolean exemptionOnly) {
         return enrolmentRepository.findByTenantIdAndMemberCpid(tenantId, memberCpid).stream()
+                .filter(e -> !exemptionOnly || e.getExemptionCategory() != null)
                 .map(e -> toResponse(tenantId, e))
                 .toList();
+    }
+
+    /**
+     * End an enrolment (e.g. eligibility lapsed). Idempotent: ending an already-ENDED
+     * enrolment returns its current snapshot. Balances and the drawdown ledger are left
+     * intact (audit history); {@link #consume} already rejects non-ACTIVE enrolments.
+     */
+    @Transactional
+    public SubsidyEnrolmentResponse end(UUID tenantId, UUID enrolmentId) {
+        SubsidyEnrolmentEntity e = enrolmentRepository.findByIdAndTenantId(enrolmentId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Subsidy enrolment not found: " + enrolmentId));
+        if (!"ENDED".equalsIgnoreCase(e.getStatus())) {
+            e.setStatus("ENDED");
+            e.setEffectiveTo(LocalDate.now());
+            e = enrolmentRepository.save(e);
+            log.info("Ended subsidy enrolment {} for member {}", enrolmentId, e.getMemberCpid());
+        }
+        return toResponse(tenantId, e);
     }
 
     @Transactional(readOnly = true)
@@ -268,6 +295,12 @@ public class SubsidyEnrolmentService {
 
     private static BigDecimal effectiveCap(SubsidyEnrolmentEntity e, SubsidyProgramEntity program) {
         return e.getAnnualCapOverride() != null ? e.getAnnualCapOverride() : program.getAnnualCap();
+    }
+
+    /** Billing categories are matched upper-case downstream (e.g. "indigent" → INDIGENT). */
+    private static String normaliseExemptionCategory(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        return raw.trim().toUpperCase(Locale.ROOT);
     }
 
     private SubsidyProgramEntity resolveProgram(UUID tenantId, UUID programId, String programCode) {
