@@ -8,7 +8,7 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
-public class LiveGoldenContractIT extends GoldenContractSuite {
+public class LiveGoldenContractTest extends GoldenContractSuite {
 
     @MockBean
     private KafkaTemplate<String, String> kafkaTemplate;
