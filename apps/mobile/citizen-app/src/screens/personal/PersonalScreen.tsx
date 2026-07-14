@@ -15,6 +15,7 @@ import { RecordsScreen } from "./RecordsScreen";
 import { RemindersScreen } from "./RemindersScreen";
 import { HealthTimelineScreen } from "./HealthTimelineScreen";
 import { HealthIdSection } from "./HealthIdSection";
+import { SmartCardSection } from "./SmartCardSection";
 import { WellnessSection } from "./WellnessSection";
 import { WellnessJourneysSection } from "./WellnessJourneysSection";
 import { WalletSection } from "./WalletSection";
@@ -54,6 +55,7 @@ type PersonalTab =
   | "wallet-home"
   | "profile"
   | "health-id"
+  | "smart-card"
   | "allergies"
   | "conditions"
   | "immunizations"
@@ -104,6 +106,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "wallet-home", label: "Wallet", icon: "wallet-outline" },
   { id: "profile", label: "Profile", icon: "person" },
   { id: "health-id", label: "Health ID", icon: "card" },
+  { id: "smart-card", label: "SMART Card", icon: "card-outline" },
   { id: "allergies", label: "Allergies", icon: "medical" },
   { id: "conditions", label: "Conditions", icon: "medical-outline" },
   { id: "immunizations", label: "Immunizations", icon: "shield-checkmark" },
@@ -154,6 +157,7 @@ const SECTIONS: Partial<Record<PersonalTab, React.FC>> = {
   "marketplace-store": MarketplaceStoreSection,
   profile: ProfileSection,
   "health-id": HealthIdSection,
+  "smart-card": SmartCardSection,
   allergies: AllergiesSection,
   conditions: ConditionsSection,
   immunizations: ImmunizationsSection,
