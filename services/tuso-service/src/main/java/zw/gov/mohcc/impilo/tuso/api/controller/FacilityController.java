@@ -32,6 +32,7 @@ import zw.gov.mohcc.impilo.tuso.api.dto.FacilityResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilitySearchRequest;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityStatusSummary;
 import zw.gov.mohcc.impilo.tuso.api.dto.UpdateFacilityRequest;
+import zw.gov.mohcc.impilo.tuso.core.FacilityCompletenessService;
 import zw.gov.mohcc.impilo.tuso.core.FacilityService;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityGeoEntity;
@@ -51,9 +52,27 @@ public class FacilityController {
     private static final Logger log = LoggerFactory.getLogger(FacilityController.class);
 
     private final FacilityService facilityService;
+    private final FacilityCompletenessService completenessService;
 
-    public FacilityController(FacilityService facilityService) {
+    public FacilityController(FacilityService facilityService,
+                              FacilityCompletenessService completenessService) {
         this.facilityService = facilityService;
+        this.completenessService = completenessService;
+    }
+
+    /**
+     * Governed profile-completeness verdict for a facility (computed on read; no table).
+     * Consumed by the facility-mode cockpit to prompt the facility administrator / PIC
+     * to complete missing governed fields, especially geocodes.
+     */
+    @GetMapping("/{id}/completeness")
+    public ResponseEntity<ApiResponse<FacilityCompletenessService.FacilityCompleteness>> getCompleteness(
+            @PathVariable Long id) {
+
+        TrustContext ctx = TrustContextHolder.require();
+        FacilityCompletenessService.FacilityCompleteness completeness =
+                completenessService.computeCompleteness(id);
+        return ResponseEntity.ok(ApiResponse.ok(completeness, ctx.correlationId().toString()));
     }
 
     @PostMapping
