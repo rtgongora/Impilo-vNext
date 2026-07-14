@@ -86,6 +86,30 @@ public class ButanoProcedureClient {
         return write("DocumentReference", doc);
     }
 
+    /**
+     * Attach a specimen's pathology result to the clinical record as a FHIR DocumentReference (type =
+     * Pathology report). Butano is the SoR — theatre only authors the resource and links the ref.
+     * Returns the FHIR resource id or null.
+     */
+    public String attachPathology(String cpid, String encounterRef, String specimenLabel,
+                                  String orosResultId, String summary) {
+        Map<String, Object> doc = new LinkedHashMap<>();
+        doc.put("resourceType", "DocumentReference");
+        doc.put("status", "current");
+        doc.put("docStatus", "final");
+        doc.put("type", Map.of("text", "Pathology report"));
+        doc.put("subject", Map.of("identifier", Map.of("value", cpid)));
+        doc.put("date", OffsetDateTime.now().toString());
+        if (encounterRef != null) doc.put("context", Map.of("encounter",
+                List.of(Map.of("reference", "Encounter/" + encounterRef))));
+        doc.put("description", "Pathology: " + (specimenLabel != null ? specimenLabel : "theatre specimen")
+                + (orosResultId != null ? " (OROS result " + orosResultId + ")" : ""));
+        if (summary != null) {
+            doc.put("content", List.of(Map.of("attachment", Map.of("contentType", "text/plain", "title", summary))));
+        }
+        return write("DocumentReference", doc);
+    }
+
     @SuppressWarnings("unchecked")
     private String write(String resourceType, Map<String, Object> resource) {
         try {

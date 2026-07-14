@@ -60,6 +60,17 @@ inpatient:
       enabled: ${INPATIENT_INVENTORY_CONSUMPTION_ENABLED:true}
     oros:
       base-url: ${OROS_BASE_URL:http://localhost:8089}
+    # Wave 1 clinical-safety peers (orchestration-by-reference; peers stay source-of-truth)
+    madi:
+      base-url: ${MADI_BASE_URL:http://localhost:8300}
+    nhume:
+      base-url: ${NHUME_BASE_URL:http://localhost:8210}
+    rito:
+      base-url: ${RITO_BASE_URL:http://localhost:8391}
+  theatre:
+    reconciler:
+      # TheatreProjectionReconciler poll cadence (ms). Disabled under the "test" profile.
+      enabled: ${INPATIENT_THEATRE_RECONCILER_ENABLED:true}
   ews:
     # NEWS2 aggregate at/above which a deterioration escalation is raised
     escalation-threshold: ${INPATIENT_EWS_ESCALATION_THRESHOLD:5}

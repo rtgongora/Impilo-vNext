@@ -106,6 +106,82 @@ public class TheatreController {
         return theatreService.routeDeathInTheatre(id, body != null ? body : Map.of());
     }
 
+    // ── Wave 1 clinical-safety: blood pipeline (MADI-backed) ──
+    @PostMapping("/cases/{id}/blood/request")
+    public ResponseEntity<Map<String, Object>> requestBlood(@PathVariable UUID id,
+                                                            @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.requestBlood(id, body != null ? body : Map.of()));
+    }
+
+    @PostMapping("/cases/{id}/blood/issue")
+    public Map<String, Object> issueBlood(@PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
+        return theatreService.issueAndTransport(id, body != null ? body : Map.of());
+    }
+
+    @PostMapping("/cases/{id}/blood/administer")
+    public Map<String, Object> administerBlood(@PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
+        return theatreService.administerBlood(id, body != null ? body : Map.of());
+    }
+
+    @PostMapping("/cases/{id}/blood/resolve")
+    public Map<String, Object> resolveBlood(@PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
+        return theatreService.resolveBlood(id, body != null ? body : Map.of());
+    }
+
+    @GetMapping("/cases/{id}/blood")
+    public List<Map<String, Object>> listBlood(@PathVariable UUID id) {
+        return theatreService.listBloodLinks(id);
+    }
+
+    // ── Wave 1 clinical-safety: transport (NHUME-backed) ──
+    @PostMapping("/cases/{id}/transport/movement")
+    public ResponseEntity<Map<String, Object>> requestMovement(@PathVariable UUID id,
+                                                               @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.requestPatientMovement(id, body));
+    }
+
+    @PostMapping("/cases/{id}/transport/specimen")
+    public ResponseEntity<Map<String, Object>> requestSpecimenTransport(@PathVariable UUID id,
+                                                                        @RequestBody Map<String, Object> body) {
+        String specimenRef = body != null ? String.valueOf(body.getOrDefault("specimenRef",
+                body.getOrDefault("specimen_ref", body.get("orosSpecimenId")))) : null;
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(theatreService.requestSpecimenTransport(id, specimenRef, body != null ? body : Map.of()));
+    }
+
+    @PostMapping("/cases/{id}/pacu")
+    public Map<String, Object> enterPacu(@PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
+        return theatreService.enterPacu(id, body != null ? body : Map.of());
+    }
+
+    @GetMapping("/cases/{id}/transport")
+    public List<Map<String, Object>> listTransport(@PathVariable UUID id) {
+        return theatreService.listTransport(id);
+    }
+
+    // ── Wave 1 clinical-safety: specimens (OROS-backed) ──
+    @GetMapping("/cases/{id}/specimens")
+    public List<Map<String, Object>> listSpecimens(@PathVariable UUID id) {
+        return theatreService.listSpecimens(id);
+    }
+
+    @PostMapping("/cases/{id}/specimens/{specimenId}/acknowledge-critical")
+    public Map<String, Object> acknowledgeCritical(@PathVariable UUID id, @PathVariable UUID specimenId,
+                                                   @RequestBody(required = false) Map<String, Object> body) {
+        return theatreService.acknowledgeCritical(id, specimenId, body != null ? body : Map.of());
+    }
+
+    // ── Wave 1 clinical-safety: surgical counts (RITO-backed on discrepancy) ──
+    @PostMapping("/cases/{id}/counts")
+    public ResponseEntity<Map<String, Object>> recordCount(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.recordCount(id, body));
+    }
+
+    @GetMapping("/cases/{id}/counts")
+    public List<Map<String, Object>> listCounts(@PathVariable UUID id) {
+        return theatreService.listCounts(id);
+    }
+
     @ExceptionHandler(TheatreService.BookingBlockedException.class)
     public ResponseEntity<Map<String, Object>> handleBookingBlocked(TheatreService.BookingBlockedException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.detail());

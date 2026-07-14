@@ -65,6 +65,11 @@ public class ProcedureEpisodeService {
     private final ProcedureEpisodeDocumentRepository documentRepository;
     private final ProcedureConsumableRepository consumableRepository;
     private final ProcedureAnaesthesiaScoreRepository anaesthesiaScoreRepository;
+    // ── Wave 1 clinical-safety collaborators (count gate, anaesthesia chart, blood-channel projection) ──
+    private final ProcedureCountRepository countRepository;
+    private final ProcedureAnaesthesiaChartEntryRepository chartRepository;
+    private final ProcedureBloodLinkRepository bloodLinkRepository;
+    private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
 
     public ProcedureEpisodeService(
@@ -76,6 +81,10 @@ public class ProcedureEpisodeService {
             ProcedureEpisodeDocumentRepository documentRepository,
             ProcedureConsumableRepository consumableRepository,
             ProcedureAnaesthesiaScoreRepository anaesthesiaScoreRepository,
+            ProcedureCountRepository countRepository,
+            ProcedureAnaesthesiaChartEntryRepository chartRepository,
+            ProcedureBloodLinkRepository bloodLinkRepository,
+            EventOutboxRepository outboxRepository,
             ObjectMapper objectMapper) {
         this.episodeRepository = episodeRepository;
         this.preopRepository = preopRepository;
@@ -85,6 +94,10 @@ public class ProcedureEpisodeService {
         this.documentRepository = documentRepository;
         this.consumableRepository = consumableRepository;
         this.anaesthesiaScoreRepository = anaesthesiaScoreRepository;
+        this.countRepository = countRepository;
+        this.chartRepository = chartRepository;
+        this.bloodLinkRepository = bloodLinkRepository;
+        this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -182,6 +195,12 @@ public class ProcedureEpisodeService {
     public Map<String, Object> completeChecklistItems(UUID episodeId, String phase, Map<String, Object> body) {
         requireEpisode(episodeId);
         String normalizedPhase = phase.toUpperCase();
+        // ── Wave 1 clinical-safety: WHO Sign-Out surgical-count gate ──────────────────────────────
+        // A retained-item risk (unreconciled swab/instrument/needle count) BLOCKS Sign-Out completion
+        // unless the theatre team explicitly reconciles or overrides with a reason. Never silent.
+        if ("SIGN_OUT".equals(normalizedPhase)) {
+            enforceCountGate(episodeId, body);
+        }
         @SuppressWarnings("unchecked")
         List<String> itemIds = body.get("itemIds") instanceof List<?> raw
                 ? (List<String>) raw : List.of();
@@ -549,7 +568,85 @@ public class ProcedureEpisodeService {
             event.setVitalsJson(vitals.components().toString());
         }
         intraopRepository.save(event);
+
+        // ── Wave 1 clinical-safety: also append a VITAL entry on the multi-channel anaesthesia chart ──
+        ProcedureAnaesthesiaChartEntryEntity vitalEntry = newChartEntry(episodeId, "VITAL");
+        vitalEntry.setLabel("Intra-op vitals");
+        vitalEntry.setValueText(vitals.interpretation());
+        vitalEntry.setRecordedBy(ClinicalPayloadMapper.str(body, "recordedBy", "recorded_by"));
+        try {
+            vitalEntry.setDetailJson(objectMapper.writeValueAsString(vitals.components()));
+        } catch (JsonProcessingException ex) {
+            vitalEntry.setDetailJson(String.valueOf(vitals.components()));
+        }
+        chartRepository.save(vitalEntry);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.anaesthesia.charted",
+                Map.of("episode_id", episodeId.toString(), "channel", "VITAL", "seq", vitalEntry.getSeq()));
         return Map.of("score", anaesthesiaScoreRow(row), "event_type", "VITALS");
+    }
+
+    // ── Wave 1 clinical-safety: anaesthesia chart (multi-channel time series) ──────────────────────
+    @Transactional
+    public Map<String, Object> recordChartEntry(UUID episodeId, Map<String, Object> body) {
+        requireEpisode(episodeId);
+        String channel = Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "channel"), "EVENT").toUpperCase();
+        if (!Set.of("AGENT", "FLUID", "BLOOD", "MEDICATION", "MONITORING", "VITAL", "EVENT").contains(channel)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown anaesthesia chart channel: " + channel);
+        }
+        ProcedureAnaesthesiaChartEntryEntity entry = newChartEntry(episodeId, channel);
+        entry.setTechnique(normaliseTechnique(ClinicalPayloadMapper.str(body, "technique")));
+        entry.setLabel(ClinicalPayloadMapper.str(body, "label"));
+        entry.setValueText(ClinicalPayloadMapper.str(body, "valueText", "value_text"));
+        entry.setUnit(ClinicalPayloadMapper.str(body, "unit"));
+        Object v = body.getOrDefault("valueNumeric", body.get("value_numeric"));
+        if (v != null && !String.valueOf(v).isBlank()) {
+            try { entry.setValueNumeric(new java.math.BigDecimal(String.valueOf(v))); }
+            catch (NumberFormatException ignored) { /* leave null — keep the text value */ }
+        }
+        entry.setRecordedBy(ClinicalPayloadMapper.str(body, "recordedBy", "recorded_by"));
+        Object detail = body.get("detail");
+        if (detail != null) {
+            try { entry.setDetailJson(detail instanceof String s ? s : objectMapper.writeValueAsString(detail)); }
+            catch (JsonProcessingException ex) { entry.setDetailJson(String.valueOf(detail)); }
+        }
+        entry.setIdempotencyKey(ClinicalPayloadMapper.str(body, "idempotencyKey", "idempotency_key"));
+        chartRepository.save(entry);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.anaesthesia.charted",
+                Map.of("episode_id", episodeId.toString(), "channel", channel, "seq", entry.getSeq()));
+        return chartEntryRow(entry);
+    }
+
+    /**
+     * Ordered multi-channel anaesthesia chart. Persisted chart entries + a PROJECTED BLOOD channel
+     * derived from procedure_blood_link (madi_transfusion_episode_id) so administered blood shows on
+     * the chart without duplicate entry (single source of truth: MADI owns the transfusion episode).
+     */
+    public Map<String, Object> getAnaesthesiaChart(UUID episodeId) {
+        requireEpisode(episodeId);
+        List<Map<String, Object>> series = new ArrayList<>();
+        for (ProcedureAnaesthesiaChartEntryEntity e : chartRepository.findByEpisodeIdOrderByRecordedAtAscChannelAsc(episodeId)) {
+            series.add(chartEntryRow(e));
+        }
+        // Project the BLOOD channel from the blood link (no re-entry).
+        for (ProcedureBloodLinkEntity link : bloodLinkRepository.findByEpisodeIdOrderByCreatedAtAsc(episodeId)) {
+            if (link.getMadiTransfusionEpisodeId() != null) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("channel", "BLOOD");
+                m.put("projected", true);
+                m.put("madi_transfusion_episode_id", link.getMadiTransfusionEpisodeId());
+                m.put("label", link.getComponentType() != null ? link.getComponentType() : "Blood");
+                m.put("value_text", link.getStatus());
+                m.put("unit", link.getUnitsRequested() != null ? "units:" + link.getUnitsRequested() : null);
+                m.put("recorded_at", link.getUpdatedAt());
+                series.add(m);
+            }
+        }
+        series.sort(Comparator.comparing(r -> String.valueOf(r.getOrDefault("recorded_at", ""))));
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("episode_id", episodeId.toString());
+        out.put("entries", series);
+        return out;
     }
 
     private void persistScoreFromPreop(UUID episodeId, Map<String, Object> body, ProcedurePreopAssessmentEntity a) {
@@ -663,6 +760,84 @@ public class ProcedureEpisodeService {
     private ProcedureEpisodeEntity requireEpisode(UUID episodeId) {
         return episodeRepository.findById(episodeId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Procedure episode not found"));
+    }
+
+    /**
+     * WHO Sign-Out surgical-count gate. Throws 409 when any swab/instrument/needle count is
+     * unreconciled (discrepancy != 0 and not overridden). An explicit override reason on the request
+     * (countOverrideReason) reconciles-by-override the outstanding counts and lets Sign-Out proceed —
+     * the override + reason are persisted for audit. Real retained-item safety is never bypassed silently.
+     */
+    private void enforceCountGate(UUID episodeId, Map<String, Object> body) {
+        List<ProcedureCountEntity> unreconciled =
+                countRepository.findByEpisodeIdAndReconciledFalseAndOverrideFalse(episodeId);
+        if (unreconciled.isEmpty()) {
+            return;
+        }
+        String overrideReason = ClinicalPayloadMapper.str(body,
+                "countOverrideReason", "count_override_reason", "overrideReason", "override_reason");
+        if (overrideReason == null || overrideReason.isBlank()) {
+            String kinds = unreconciled.stream().map(ProcedureCountEntity::getKind).distinct()
+                    .reduce((a, b) -> a + "," + b).orElse("");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "WHO Sign-Out blocked: unreconciled surgical count(s) [" + kinds
+                            + "] — reconcile the count or supply countOverrideReason to override");
+        }
+        for (ProcedureCountEntity c : unreconciled) {
+            c.setOverride(true);
+            c.setOverrideReason(overrideReason);
+            countRepository.save(c);
+        }
+    }
+
+    private ProcedureAnaesthesiaChartEntryEntity newChartEntry(UUID episodeId, String channel) {
+        ProcedureAnaesthesiaChartEntryEntity entry = new ProcedureAnaesthesiaChartEntryEntity();
+        entry.setTenantId(currentTenant());
+        entry.setEpisodeId(episodeId);
+        entry.setChannel(channel);
+        entry.setSeq(chartRepository.countByEpisodeIdAndChannel(episodeId, channel) + 1);
+        entry.setRecordedAt(OffsetDateTime.now());
+        return entry;
+    }
+
+    private static String normaliseTechnique(String raw) {
+        if (raw == null) return null;
+        String t = raw.trim().toUpperCase().replace('-', '_').replace(' ', '_');
+        return Set.of("GA", "REGIONAL_SPINAL", "LOCAL_SEDATION", "CONVERSION", "COMPLICATION").contains(t) ? t : null;
+    }
+
+    private Map<String, Object> chartEntryRow(ProcedureAnaesthesiaChartEntryEntity e) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", e.getEntryId().toString());
+        m.put("channel", e.getChannel());
+        m.put("seq", e.getSeq());
+        m.put("technique", e.getTechnique());
+        m.put("label", e.getLabel());
+        m.put("value_numeric", e.getValueNumeric());
+        m.put("value_text", e.getValueText());
+        m.put("unit", e.getUnit());
+        m.put("detail_json", e.getDetailJson());
+        m.put("recorded_at", e.getRecordedAt());
+        m.put("recorded_by", e.getRecordedBy());
+        return m;
+    }
+
+    private void appendOutbox(String aggregateType, String aggregateId, String eventType, Map<String, Object> payload) {
+        EventOutboxEntity outbox = new EventOutboxEntity();
+        outbox.setAggregateType(aggregateType);
+        outbox.setAggregateId(aggregateId);
+        outbox.setTenantId(currentTenant().toString());
+        outbox.setPodId(System.getenv("HOSTNAME") != null ? System.getenv("HOSTNAME") : "local");
+        outbox.setCorrelationId(UUID.randomUUID().toString());
+        outbox.setEventType(eventType);
+        outbox.setSchemaVersion(1);
+        outbox.setOccurredAt(OffsetDateTime.now());
+        try {
+            outbox.setPayloadJson(objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException ex) {
+            throw new RuntimeException("Failed to serialize anaesthesia-chart outbox payload", ex);
+        }
+        outboxRepository.save(outbox);
     }
 
     private static String requirePatient(Map<String, Object> body) {

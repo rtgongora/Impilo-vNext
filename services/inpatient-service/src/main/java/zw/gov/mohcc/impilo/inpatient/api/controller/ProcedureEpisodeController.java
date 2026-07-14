@@ -134,4 +134,16 @@ public class ProcedureEpisodeController {
             @PathVariable UUID id, @RequestBody Map<String, Object> body) {
         return ResponseEntity.status(HttpStatus.CREATED).body(procedureService.recordIntraopVitals(id, body));
     }
+
+    // ── Wave 1 clinical-safety: multi-channel anaesthesia chart ──
+    @PostMapping("/{id}/anaesthesia/chart")
+    public ResponseEntity<Map<String, Object>> recordChartEntry(
+            @PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(procedureService.recordChartEntry(id, body));
+    }
+
+    @GetMapping("/{id}/anaesthesia/chart")
+    public Map<String, Object> getAnaesthesiaChart(@PathVariable UUID id) {
+        return procedureService.getAnaesthesiaChart(id);
+    }
 }
