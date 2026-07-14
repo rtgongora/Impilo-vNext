@@ -137,6 +137,11 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- spring-security-test: jwt() request post-processor for the /v1/sign runtime proof. -->
         <dependency>
             <groupId>org.springframework.security</groupId>
