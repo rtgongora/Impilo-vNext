@@ -41,7 +41,7 @@ PASS=0; FAIL=0
 ok(){ echo "   PASS: $1" | tee -a "$EV/journal.txt"; PASS=$((PASS+1)); }
 bad(){ echo "   FAIL: $1" | tee -a "$EV/journal.txt"; FAIL=$((FAIL+1)); }
 say(){ echo "== $1" | tee -a "$EV/journal.txt"; }
-PSQL(){ docker exec te-rig-pg psql -U impilo -d "$1" -tAc "$2"; }
+PSQL(){ docker exec te-rig-pg psql -U impilo -d "impilo_$1" -tAc "$2"; }
 hdr(){ local a=${1:-rig-surgeon} r=${2:-PROVIDER}
   echo "-H Content-Type:application/json -H X-Tenant-ID:$TEN -H X-Pod-ID:national-spine -H X-Request-ID:$(uuidgen) -H X-Correlation-ID:$(uuidgen) -H X-Actor-ID:$a -H X-Actor-Type:$r -H X-Purpose-Of-Use:TREATMENT -H X-Access-Mode:INTERNAL"; }
 jval(){ python3 -c "import json,sys;d=json.load(sys.stdin);
@@ -70,6 +70,8 @@ boot(){ # $1 svc $2 port $3 dburl-env $4 db
   local svc=$1 port=$2 env=$3 db=$4
   env SERVER_PORT=$port ${env}=jdbc:postgresql://localhost:$PGPORT/impilo_$db \
     ${env%_URL}_USER=impilo ${env%_URL}_PASSWORD=impilo \
+    SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:$PGPORT/impilo_$db \
+    SPRING_DATASOURCE_USERNAME=impilo SPRING_DATASOURCE_PASSWORD=impilo \
     POSTGRES_HOST=localhost POSTGRES_PORT=$PGPORT POSTGRES_USER=impilo POSTGRES_PASSWORD=impilo POSTGRES_DB=impilo_$db \
     IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true SPRING_KAFKA_LISTENER_AUTO_STARTUP=false \
     SPRING_DATA_REDIS_HOST=localhost SPRING_DATA_REDIS_PORT=$RPORT \
