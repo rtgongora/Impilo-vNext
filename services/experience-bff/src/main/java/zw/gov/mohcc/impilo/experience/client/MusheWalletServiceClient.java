@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -467,6 +469,105 @@ public class MusheWalletServiceClient {
         String url = baseUrl + "/internal/v1/cards/" + cardId + "/pending-updates";
         log.debug("MusheWallet: Getting pending updates for card={}", cardId);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Set the card's PHR-carry opt-in (the card's health-record function). Fail-closed server-side.
+     *
+     * @param cardId the card UUID
+     * @param body   {@code {"enabled": true|false}}
+     * @return the updated card
+     */
+    public JsonNode setCardPhrCarry(UUID cardId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/cards/" + cardId + "/phr-carry";
+        log.info("MusheWallet: Setting PHR-carry for card={} enabled={}", cardId, body.get("enabled"));
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.PUT, entity, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Offline (stored-value) transactions — tap / scan / biometric pay ──
+
+    /**
+     * Reconcile a card-signed offline transaction into the ledger.
+     *
+     * @param body {@code {"vitoCardNumber","payload","signature"}}
+     * @return the reconciled transaction
+     */
+    public JsonNode redeemOfflineTransaction(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/wallets/offline-transactions";
+        log.info("MusheWallet: Reconciling offline transaction for card={}", body.get("vitoCardNumber"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Biometric scan-to-pay: reconcile a card-signed offline transaction that must assert biometric
+     * user-verification (the signed payload must claim {@code authMethod=BIOMETRIC}; enforced fail-closed).
+     *
+     * @param body {@code {"vitoCardNumber","payload","signature"}}
+     * @return the reconciled transaction
+     */
+    public JsonNode redeemBiometricTransaction(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/wallets/offline-transactions/biometric";
+        log.info("MusheWallet: Reconciling biometric offline transaction for card={}", body.get("vitoCardNumber"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Bill contributions — shareable "help pay my bill" links ──────────
+
+    /**
+     * Create a shareable bill-contribution request for a wallet.
+     *
+     * @param body {@code {"beneficiaryWalletId","title","billRef","targetAmount","currency","createdBy"}}
+     * @return the created request (carries the shareToken)
+     */
+    public JsonNode createBillContribution(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/bill-contributions";
+        log.info("MusheWallet: Creating bill-contribution for wallet={}", body.get("beneficiaryWalletId"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * View a bill-contribution request by its share token (the link target) + its contributions.
+     *
+     * @param shareToken the share token
+     * @return the request + contributions
+     */
+    public JsonNode getBillContribution(String shareToken) {
+        String url = baseUrl + "/internal/v1/bill-contributions/" + shareToken;
+        log.debug("MusheWallet: Getting bill-contribution shareToken={}", shareToken);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Contribute toward a shared bill request.
+     *
+     * @param shareToken the share token
+     * @param body       {@code {"amount","contributorRef","contributorName","message"}}
+     * @return the recorded contribution
+     */
+    public JsonNode contributeToBill(String shareToken, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/bill-contributions/" + shareToken + "/contribute";
+        log.info("MusheWallet: Contributing to bill shareToken={}", shareToken);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Close a bill-contribution request (no further contributions).
+     *
+     * @param requestId the request UUID
+     * @return the closed request
+     */
+    public JsonNode closeBillContribution(UUID requestId) {
+        String url = baseUrl + "/internal/v1/bill-contributions/" + requestId + "/close";
+        log.info("MusheWallet: Closing bill-contribution request={}", requestId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
         return extractData(response);
     }
 
