@@ -34,6 +34,8 @@ import {
 } from "@/hooks/queries/useBookings";
 import { useFacilities, type FacilityResource } from "@/hooks/queries/useFacilities";
 import type { BookingChannel, BookingTargetType } from "@/lib/booking-bff";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { RecognisedProviderChip } from "@/components/common/RecognisedProviderChip";
 
 const TARGET_TYPES: {
   id: BookingTargetType;
@@ -82,6 +84,7 @@ const STEPS: { id: WizardStep; label: string }[] = [
 
 export default function BookServiceWizardPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [step, setStep] = useState<WizardStep>("target");
   const [targetType, setTargetType] = useState<BookingTargetType | "">("");
   const [targetRef, setTargetRef] = useState("");
@@ -216,9 +219,13 @@ export default function BookServiceWizardPage() {
   return (
     <AppLayout>
       <PageShell title="Book a service" subtitle="Request access to care — bookings become appointments when confirmed">
-        <Link href="/home/bookings" className="mb-4 inline-flex text-sm text-muted-foreground hover:text-foreground">
-          ← My Bookings
-        </Link>
+        <div className="mb-4 flex items-center gap-3">
+          <Link href="/home/bookings" className="inline-flex text-sm text-muted-foreground hover:text-foreground">
+            ← My Bookings
+          </Link>
+          {/* Display-only recognition badge for the booking citizen — never affects slot ordering. */}
+          <RecognisedProviderChip healthId={user?.healthId ?? user?.id} />
+        </div>
 
         <nav className="mb-6 flex flex-wrap gap-2">
           {STEPS.map((s, i) => (

@@ -369,6 +369,25 @@ public class VarapiServiceClient {
     }
 
     /**
+     * Recognition read-model by Health ID — {recognised, licenceStatus,
+     * profession, cadre}. Enumeration-resistant upstream (unknown ids yield
+     * a generic recognised=false body). Returns null on transport failure so
+     * callers can fail open to "not recognised" (advantages must never block
+     * a journey).
+     */
+    public JsonNode getRecognitionByHealthId(String healthId) {
+        String url = baseUrl + "/v1/internal/providers/by-health-id/" + healthId + "/recognition";
+        log.debug("VARAPI: Resolving provider recognition by health id");
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+            return extractData(response);
+        } catch (Exception e) {
+            log.debug("VARAPI: recognition lookup unavailable: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * List facility affiliations for a provider identified by Health ID.
      */
     public JsonNode getProviderAffiliations(String healthId) {
