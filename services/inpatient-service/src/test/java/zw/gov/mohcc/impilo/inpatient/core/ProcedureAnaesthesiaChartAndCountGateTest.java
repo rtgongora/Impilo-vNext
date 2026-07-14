@@ -40,6 +40,7 @@ class ProcedureAnaesthesiaChartAndCountGateTest {
     @Mock ProcedureAnaesthesiaChartEntryRepository chartRepository;
     @Mock ProcedureBloodLinkRepository bloodLinkRepository;
     @Mock EventOutboxRepository outboxRepository;
+    @Mock ProcedureConsentRepository procedureConsentRepository;
 
     private ProcedureEpisodeService service;
     private final UUID tenant = UUID.randomUUID();
@@ -50,7 +51,7 @@ class ProcedureAnaesthesiaChartAndCountGateTest {
         service = new ProcedureEpisodeService(episodeRepository, preopRepository, checklistRepository,
                 intraopRepository, postopRepository, documentRepository, consumableRepository,
                 anaesthesiaScoreRepository, countRepository, chartRepository, bloodLinkRepository,
-                outboxRepository, new ObjectMapper());
+                outboxRepository, procedureConsentRepository, new ObjectMapper());
         TrustContextHolder.set(new TrustContext(tenant, "actor-anaesthetist", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), UUID.randomUUID(), null, null, AccessMode.INTERNAL));
         ProcedureEpisodeEntity e = new ProcedureEpisodeEntity();

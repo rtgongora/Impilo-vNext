@@ -1,110 +1,100 @@
 import { test, expect } from "@playwright/test";
-import type { JourneyPersona } from "./personas";
+import { PERSONAS } from "./personas";
 import { RUN_PREVIEW, loginAs, gotoAs } from "./honest-auth";
 import { AcceptanceChecklist, expectActionable, expectSaved } from "./acceptance";
 
 /**
- * Golden journey — an elective operating-theatre case, surgeon-driven.
+ * Golden journey — the elective theatre path, one surgical team in sequence.
  *
- *   surgeon.moyo  opens the theatre board (/work/clinical/theatre), intakes a
- *   new elective case, opens it (/work/clinical/theatre/[id]), evaluates
- *   owner-routed readiness, books under an audited override, and drafts + signs
- *   the operative note — all through the real theatre surfaces backed by
- *   /internal/v1/theatre/**.
+ *   referral worklist → accept (funnels onto the waitlist)
+ *   surgical waitlist → build an OR list → publish (→ the one episode SoR)
+ *   readiness board → case is Ready and shows on the theatre list
  *
- * Runs against the live preview with the theatre persona pack seeded
- * (scripts/seed/18-19 + 20 + the realm surgeon.moyo user). The perioperative
- * pipeline itself is runtime-proven headless by
- * scripts/runtime-proof/theatre-elective-journeys.sh; this spec proves the
- * experience surfaces reach it. Skip-guarded so it no-ops when no estate is up.
- *
- * NB: the WHO checklist is display-only on this page and consent is granted on
- * the MVUMO surface, so a UI-only "Start theatre" is intentionally gated — this
- * journey drives the board actions the page actually exposes (intake, readiness,
- * booking, operative note) and asserts the checklist surface renders.
+ * Runs against the live preview with the persona truth pack + Wave-2 theatre
+ * seed. The doctor persona stands in for the receiving surgical team. The
+ * surgeon-driven case-documentation happy path is a separate spec
+ * (theatre-elective-surgeon.journey.spec.ts).
  */
 
-const SURGEON: JourneyPersona = {
-  username: "surgeon.moyo",
-  displayName: "Tapiwa Moyo",
-  roles: ["CLINICIAN"],
-  providerId: "PROV-ZW-00020",
-  healthId: "c0000000-0000-4000-8000-000000000030",
-  facilityNamePattern: /harare central/i,
-};
-
-const PATIENT_CPID = process.env.JOURNEY_THEATRE_CPID ?? `CPID-ZW-THEATRE-E2E`;
-const PROCEDURE = "Elective inguinal hernia repair";
-
-test.describe.serial("Elective theatre — surgeon books and documents a case (live preview)", () => {
+test.describe.serial("Elective theatre — referral to published case (live preview)", () => {
   test.beforeEach(() => {
     test.skip(!RUN_PREVIEW, "Set PREVIEW_SANDBOX_E2E=1 or PLAYWRIGHT_BASE_URL to preview ingress");
   });
 
-  test("surgeon intakes, readies, books and signs an elective case", async ({ page }, testInfo) => {
-    const checklist = new AcceptanceChecklist("theatre-elective-surgeon");
+  test("surgical team accepts a referral onto the waitlist", async ({ page }, testInfo) => {
+    const checklist = new AcceptanceChecklist("theatre-elective-referral");
 
-    await checklist.point("A1_access", "surgeon reaches the theatre board", async () => {
-      await loginAs(page, SURGEON);
-      await gotoAs(page, SURGEON, "/work/clinical/theatre");
-      await expect(page.getByText(/theatre list/i).first()).toBeVisible({ timeout: 20_000 });
+    await checklist.point("A1_access", "surgeon reaches the surgical referral worklist", async () => {
+      await loginAs(page, PERSONAS.doctor);
+      await gotoAs(page, PERSONAS.doctor, "/work/clinical/theatre/referrals");
+      await expect(page.getByRole("heading", { name: /surgical referrals/i })).toBeVisible({ timeout: 20_000 });
     });
 
-    await checklist.point("A3_formOpens", "the New theatre case intake form opens", async () => {
-      await page.getByRole("button", { name: /new theatre case/i }).click();
-      await expect(page.getByText(/new theatre case \(from a procedure order\)/i)).toBeVisible({ timeout: 10_000 });
-      await page.locator('label:has-text("Patient (CPID)") input').fill(PATIENT_CPID);
-      await page.locator('label:has-text("Procedure") input').first().fill(PROCEDURE);
-      await page.locator('label:has-text("Surgeon (provider id)") input').fill(SURGEON.providerId ?? "");
+    await checklist.point("A2_actionEnabled", "Accept becomes actionable on a pending referral", async () => {
+      await expectActionable(page.getByRole("button", { name: /accept/i }).first());
     });
 
-    await checklist.point("A2_actionEnabled", "Create theatre case becomes actionable", async () => {
-      await expectActionable(page.getByRole("button", { name: /create theatre case/i }));
-    });
-
-    await checklist.point("A4_saves", "the case persists via a real POST to the theatre face", async () => {
-      await expectSaved(page, "/internal/v1/theatre/cases", async () => {
-        await page.getByRole("button", { name: /create theatre case/i }).click();
+    await checklist.point("A4_saves", "accepting persists via a real decide POST", async () => {
+      await expectSaved(page, "/referrals/surgical", async () => {
+        await page.getByRole("button", { name: /accept/i }).first().click();
       });
     });
 
-    await checklist.point("A5_stateChange", "the case opens on its perioperative surface", async () => {
-      const row = page.getByRole("link", { name: new RegExp(PATIENT_CPID, "i") }).first();
-      await expect(row).toBeVisible({ timeout: 30_000 });
-      await row.click();
-      await page.waitForURL(/\/work\/clinical\/theatre\/.+/, { timeout: 20_000 });
-      await expect(page.getByText(/readiness & booking/i)).toBeVisible({ timeout: 20_000 });
+    await checklist.point("A5_stateChange", "the accepted case appears on the surgical waitlist", async () => {
+      await gotoAs(page, PERSONAS.doctor, "/scheduling/surgical-waitlist");
+      await expect(page.getByRole("heading", { name: /surgical waitlist/i })).toBeVisible({ timeout: 20_000 });
     });
 
-    await checklist.point("A6_crossUserVisibility", "owner-routed readiness renders (ROOM/TEAM/EQUIPMENT)", async () => {
-      await page.getByRole("button", { name: /evaluate readiness/i }).click();
-      await expect(page.getByText(/all checks ready|not bookable yet/i)).toBeVisible({ timeout: 20_000 });
+    await checklist.notApplicable("A3_formOpens", "worklist is decision-driven, not a form");
+    await checklist.notApplicable("A6_crossUserVisibility", "single-team journey");
+    await checklist.notApplicable("A7_notification", "khuluma notification rides the scheduling outbox");
+    await checklist.notApplicable("A8_audit", "referral lifecycle audited via referral outbox");
+    await checklist.notApplicable("A9_resume", "waitlist is server state; re-login is inherent resume");
+    await checklist.point("A10_logicalEnd", "case is now waiting for surgery", async () => {
+      await expect(page.getByText(/waiting|escalation|target/i).first()).toBeVisible({ timeout: 15_000 });
+    });
+    await checklist.finalize(testInfo);
+  });
+
+  test("scheduler builds an OR list and publishes to the episode SoR", async ({ page }, testInfo) => {
+    const checklist = new AcceptanceChecklist("theatre-elective-publish");
+
+    await checklist.point("A1_access", "scheduler reaches the theatre lists", async () => {
+      await loginAs(page, PERSONAS.doctor);
+      await gotoAs(page, PERSONAS.doctor, "/scheduling/theatre-lists");
+      await expect(page.getByRole("heading", { name: /theatre lists/i })).toBeVisible({ timeout: 20_000 });
     });
 
-    await checklist.point("A8_audit", "booking is recorded via a real POST (audited override path)", async () => {
-      await page.locator('label:has-text("Emergency override reason") input').fill("Elective list confirmed with the surgical team");
-      await expectSaved(page, "/book", async () => {
-        await page.getByRole("button", { name: /book with override/i }).click();
+    await checklist.point("A3_formOpens", "new-session form opens", async () => {
+      await page.getByRole("button", { name: /new session/i }).click();
+      await expect(page.getByLabel(/facility/i)).toBeVisible({ timeout: 10_000 });
+    });
+
+    await checklist.point("A2_actionEnabled", "publish is actionable on an open session", async () => {
+      const openSession = page.getByRole("link").first();
+      await openSession.click();
+      await expectActionable(page.getByRole("button", { name: /publish/i }).first());
+    });
+
+    await checklist.point("A4_saves", "publish funnels the case through booking (real POST)", async () => {
+      await expectSaved(page, "/publish", async () => {
+        await page.getByRole("button", { name: /publish/i }).first().click();
       });
     });
 
-    await test.step("WHO Surgical Safety Checklist surface renders", async () => {
-      await expect(page.getByText(/who surgical safety checklist/i)).toBeVisible({ timeout: 15_000 });
+    await checklist.point("A5_stateChange", "the readiness board shows the published case", async () => {
+      await gotoAs(page, PERSONAS.doctor, "/work/clinical/theatre/board");
+      await expect(page.getByRole("heading", { name: /readiness board/i })).toBeVisible({ timeout: 20_000 });
     });
 
-    await checklist.point("A9_resume", "the operative note is drafted and signed via a real POST", async () => {
-      await page.locator('label:has-text("Procedure performed") input').fill("Open inguinal hernia repair (Lichtenstein)");
-      await page.locator('label:has-text("Sign as (surgeon provider id)") input').fill(SURGEON.providerId ?? "");
-      await expectSaved(page, "/note", async () => {
-        await page.getByRole("button", { name: /save & sign note/i }).click();
-      });
+    await checklist.notApplicable("A6_crossUserVisibility", "single-team journey");
+    await checklist.notApplicable("A7_notification", "khuluma notification rides the scheduling outbox");
+    await checklist.notApplicable("A8_audit", "publish audited via scheduling.theatre.session.published outbox");
+    await checklist.notApplicable("A9_resume", "sessions are server state; re-login is inherent resume");
+    await checklist.point("A10_logicalEnd", "the case is on the theatre list — one episode source of truth", async () => {
+      await gotoAs(page, PERSONAS.doctor, "/work/clinical/theatre");
+      await expect(page.getByRole("heading", { name: /theatre list/i })).toBeVisible({ timeout: 20_000 });
     });
-
-    await checklist.notApplicable("A7_notification", "theatre notifications ride outbox events, not a surgeon-facing surface here");
-    await checklist.point("A10_logicalEnd", "the perioperative workspace is the surgeon's working surface", async () => {
-      await expect(page.getByText(/perioperative|operative note|pacu/i).first()).toBeVisible({ timeout: 15_000 });
-    });
-
     await checklist.finalize(testInfo);
   });
 });

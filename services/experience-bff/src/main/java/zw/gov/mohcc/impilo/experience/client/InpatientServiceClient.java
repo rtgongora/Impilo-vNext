@@ -659,6 +659,19 @@ public class InpatientServiceClient {
         return response.getBody();
     }
 
+    // ── Wave 2: theatre-day readiness board ────────────────────────────────────────
+    public JsonNode theatreBoardReadiness(String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/board-readiness";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode resolveTheatreBlocker(String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/resolve-blocker";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
     public JsonNode listTheatreReadiness(String caseId) {
         String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/readiness";
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);

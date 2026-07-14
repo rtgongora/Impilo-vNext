@@ -19,6 +19,12 @@ spring:
     enabled: true
     schemas: referral
     default-schema: referral
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${KAFKA_BOOTSTRAP:localhost:9092}}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
 
 referral:
   security:
