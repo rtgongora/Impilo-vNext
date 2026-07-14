@@ -12,7 +12,7 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
-public class MushexGoldenContractIT extends GoldenContractSuite {
+public class MushexGoldenContractTest extends GoldenContractSuite {
     @Override
     protected String getCommandEndpointOverride() {
         // Use a concrete internal command path (no URI template segments). The companion
