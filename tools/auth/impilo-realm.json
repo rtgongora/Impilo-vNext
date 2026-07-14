@@ -1235,6 +1235,209 @@
       "realmRoles": [
         "VENDOR"
       ]
+    },
+    {
+      "username": "surgeon.moyo",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tapiwa",
+      "lastName": "Moyo",
+      "email": "tapiwa.moyo@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000030"
+        ],
+        "provider_id": [
+          "PROV-ZW-00020"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CLINICIAN"
+      ]
+    },
+    {
+      "username": "anaes.ndlovu",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Chiedza",
+      "lastName": "Ndlovu",
+      "email": "chiedza.ndlovu@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000031"
+        ],
+        "provider_id": [
+          "PROV-ZW-00021"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CLINICIAN"
+      ]
+    },
+    {
+      "username": "scrub.ncube",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tendai",
+      "lastName": "Ncube",
+      "email": "tendai.ncube@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000032"
+        ],
+        "provider_id": [
+          "PROV-ZW-00022"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "NURSE"
+      ]
+    },
+    {
+      "username": "pacu.sibanda",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Ruvimbo",
+      "lastName": "Sibanda",
+      "email": "ruvimbo.sibanda@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000033"
+        ],
+        "provider_id": [
+          "PROV-ZW-00023"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "NURSE"
+      ]
+    },
+    {
+      "username": "ward.dube",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Farai",
+      "lastName": "Dube",
+      "email": "farai.dube@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000034"
+        ],
+        "provider_id": [
+          "PROV-ZW-00024"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "NURSE"
+      ]
+    },
+    {
+      "username": "porter.chuma",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Blessing",
+      "lastName": "Chuma",
+      "email": "blessing.chuma@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000035"
+        ],
+        "provider_id": [
+          "PROV-ZW-00025"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SUPPORT_AGENT"
+      ]
+    },
+    {
+      "username": "coord.mutasa",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Netsai",
+      "lastName": "Mutasa",
+      "email": "netsai.mutasa@mohcc.gov.zw",
+      "attributes": {
+        "facility_id": [
+          "f1000000-0000-0000-0000-000000000001"
+        ],
+        "health_id": [
+          "c0000000-0000-4000-8000-000000000036"
+        ],
+        "provider_id": [
+          "PROV-ZW-00026"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ImpiloTest123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SUPPORT_AGENT"
+      ]
     }
   ]
 }

@@ -67,6 +67,9 @@ apply_seed varapi "$SEED_DIR/12-seed-scenario-personas-varapi.sql" "Scenario per
 apply_seed workforce_governance "$SEED_DIR/13-seed-scenario-personas-wgv.sql" "Scenario personas WGV (nurse.chienda)" "SELECT count(*) FROM wgv_assignment WHERE id='f5000000-0000-4000-8000-000000000007'::uuid;"
 apply_seed varapi "$SEED_DIR/14-seed-persona-truth-pack-varapi.sql" "Persona truth pack VARAPI" "SELECT count(*) FROM varapi.provider WHERE provider_public_id='PROV-ZW-00014';"
 apply_seed workforce_governance "$SEED_DIR/15-seed-persona-truth-pack-wgv.sql" "Persona truth pack WGV" "SELECT count(*) FROM wgv_assignment WHERE id='f5000000-0000-4000-8000-000000000037'::uuid;"
+apply_seed varapi "$SEED_DIR/18-seed-theatre-personas-varapi.sql" "Theatre personas VARAPI" "SELECT count(*) FROM varapi.provider WHERE provider_public_id='PROV-ZW-00026';"
+apply_seed workforce_governance "$SEED_DIR/19-seed-theatre-personas-wgv.sql" "Theatre personas WGV" "SELECT count(*) FROM wgv_assignment WHERE id='f5000000-0000-4000-8000-00000000004d'::uuid;"
+apply_seed tuso "$SEED_DIR/20-seed-theatre-rooms-tuso.sql" "Theatre rooms (TUSO service points)" "SELECT count(*) FROM tuso.service_point WHERE service_point_type='THEATRE';"
 
 echo ""
 echo "Verification:"
