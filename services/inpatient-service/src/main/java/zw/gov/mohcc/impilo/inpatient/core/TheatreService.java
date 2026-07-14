@@ -9,7 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.inpatient.integration.ButanoProcedureClient;
+import zw.gov.mohcc.impilo.inpatient.integration.MadiBloodClient;
+import zw.gov.mohcc.impilo.inpatient.integration.NhumeTransportClient;
 import zw.gov.mohcc.impilo.inpatient.integration.OrosOrderClient;
+import zw.gov.mohcc.impilo.inpatient.integration.OrosSpecimenClient;
+import zw.gov.mohcc.impilo.inpatient.integration.RitoSafetyClient;
 import zw.gov.mohcc.impilo.inpatient.integration.TheatreDeathClient;
 import zw.gov.mohcc.impilo.inpatient.integration.TheatreReadinessClient;
 import zw.gov.mohcc.impilo.inpatient.integration.TheatreReadinessClient.ReadinessResult;
@@ -48,6 +52,15 @@ public class TheatreService {
     private final TheatreReadinessClient readinessClient;
     private final TheatreDeathClient deathClient;
     private final ButanoProcedureClient butanoClient;
+    // ── Wave 1 clinical-safety collaborators (peers stay source-of-truth; these hold ref + projection) ──
+    private final ProcedureBloodLinkRepository bloodLinkRepository;
+    private final ProcedureTransportRepository transportRepository;
+    private final ProcedureSpecimenRepository specimenRepository;
+    private final ProcedureCountRepository countRepository;
+    private final MadiBloodClient madiBloodClient;
+    private final NhumeTransportClient nhumeTransportClient;
+    private final OrosSpecimenClient orosSpecimenClient;
+    private final RitoSafetyClient ritoSafetyClient;
     private final ObjectMapper objectMapper;
 
     public TheatreService(ProcedureEpisodeRepository episodeRepository,
@@ -61,6 +74,14 @@ public class TheatreService {
                           TheatreReadinessClient readinessClient,
                           TheatreDeathClient deathClient,
                           ButanoProcedureClient butanoClient,
+                          ProcedureBloodLinkRepository bloodLinkRepository,
+                          ProcedureTransportRepository transportRepository,
+                          ProcedureSpecimenRepository specimenRepository,
+                          ProcedureCountRepository countRepository,
+                          MadiBloodClient madiBloodClient,
+                          NhumeTransportClient nhumeTransportClient,
+                          OrosSpecimenClient orosSpecimenClient,
+                          RitoSafetyClient ritoSafetyClient,
                           ObjectMapper objectMapper) {
         this.episodeRepository = episodeRepository;
         this.readinessRepository = readinessRepository;
@@ -73,6 +94,14 @@ public class TheatreService {
         this.readinessClient = readinessClient;
         this.deathClient = deathClient;
         this.butanoClient = butanoClient;
+        this.bloodLinkRepository = bloodLinkRepository;
+        this.transportRepository = transportRepository;
+        this.specimenRepository = specimenRepository;
+        this.countRepository = countRepository;
+        this.madiBloodClient = madiBloodClient;
+        this.nhumeTransportClient = nhumeTransportClient;
+        this.orosSpecimenClient = orosSpecimenClient;
+        this.ritoSafetyClient = ritoSafetyClient;
         this.objectMapper = objectMapper;
     }
 
@@ -178,7 +207,9 @@ public class TheatreService {
         }
 
         // TEAM — surgeon scope (varapi) + roster availability (vashandi).
-        ReadinessResult surgeon = readinessClient.checkProviderScope(e.getSurgeonId(), "SURGEON");
+        // Wave 1 fix: the varapi domain scope value is "SURGERY" (V002: GENERAL_PRACTICE/SURGERY/PRESCRIBE),
+        // not "SURGEON" — the previous literal never matched a seeded privilege.
+        ReadinessResult surgeon = readinessClient.checkProviderScope(e.getSurgeonId(), "SURGERY");
         results.add(record(episodeId, "TEAM", "varapi", surgeon.status(), surgeon.ownerRef(),
                 surgeon.blockers(), Map.of("role", "SURGEON", "provider_id", nullSafe(e.getSurgeonId()))));
         collectBlockers(allBlockers, surgeon, "surgeon");
@@ -200,25 +231,60 @@ public class TheatreService {
                 anaesthesia.blockers(), anaesthesia.detail()));
         collectBlockers(allBlockers, anaesthesia, "anaesthesia");
 
-        // BLOOD — readiness routed through OROS BLOOD_BANK → Madi (only when requested).
+        // ══ Wave 1 clinical-safety: BLOOD readiness gate rewrite ═════════════════════════════════════
+        // WAS a false-ready: merely PLACING an OROS BLOOD_BANK order returned READY. Now the gate
+        // requires REAL MADI truth — a live reservation (reservation_status=RESERVED) backed by a
+        // COMPATIBLE crossmatch — read through MadiBloodClient.getOrderDetail. Anything short of that
+        // is BLOCKED with the real MADI blocker. bloodRequired=false → NOT_REQUIRED (gate skipped, both
+        // ±transfusion cases reach COMPLETED). Coordinator: this whole block is the reconciled BLOOD gate.
         boolean bloodRequired = Boolean.TRUE.equals(body.get("bloodRequired"))
-                || Boolean.parseBoolean(String.valueOf(body.getOrDefault("blood_required", "false")));
+                || Boolean.parseBoolean(String.valueOf(body.getOrDefault("blood_required", "false")))
+                || bloodLinkRepository.findFirstByEpisodeIdOrderByCreatedAtDesc(episodeId)
+                        .map(ProcedureBloodLinkEntity::isRequired).orElse(false);
         if (bloodRequired) {
-            String bloodOrderId = orosOrderClient.placeOrder("BLOOD_BANK", "URGENT", e.getSubjectCpid(),
-                    nullSafe(e.getEncounterId() != null ? e.getEncounterId().toString() : null),
-                    "Theatre blood readiness", List.of(buildOrderItem("Crossmatch units", "BLOOD")));
-            if (bloodOrderId != null) {
-                results.add(record(episodeId, "BLOOD", "madi", "READY", "oros-blood:" + bloodOrderId,
-                        List.of(), Map.of("oros_blood_order_id", bloodOrderId,
-                                "note", "Blood request placed via OROS BLOOD_BANK → Madi")));
+            ProcedureBloodLinkEntity link = bloodLinkRepository
+                    .findFirstByEpisodeIdOrderByCreatedAtDesc(episodeId).orElse(null);
+            if (link == null || link.getMadiOrderId() == null) {
+                results.add(record(episodeId, "BLOOD", "madi", "BLOCKED", null,
+                        List.of(Map.of("code", "NO_BLOOD_REQUEST",
+                                "message", "Blood required but no MADI blood request placed (call requestBlood)")), Map.of()));
+                allBlockers.add(Map.of("code", "NO_BLOOD_REQUEST", "message", "Blood not requested from MADI"));
             } else {
-                results.add(record(episodeId, "BLOOD", "madi", "UNAVAILABLE", null,
-                        List.of(Map.of("code", "BLOOD_ROUTE_UNAVAILABLE",
-                                "message", "Could not place OROS BLOOD_BANK order to Madi")), Map.of()));
-                allBlockers.add(Map.of("code", "BLOOD_ROUTE_UNAVAILABLE",
-                        "message", "Blood readiness could not be confirmed"));
+                MadiBloodClient.BloodOrderView view = madiBloodClient.getOrderDetail(link.getMadiOrderId());
+                // Project MADI truth back onto the link (read-through; MADI stays SoR).
+                if (view.available()) {
+                    link.setReservationStatus(view.reservationStatus());
+                    link.setCrossmatchStatus(view.crossmatchStatus());
+                    bloodLinkRepository.save(link);
+                }
+                boolean reserved = view.reserved() && "COMPATIBLE".equals(view.crossmatchStatus());
+                if (!view.available()) {
+                    results.add(record(episodeId, "BLOOD", "madi", "UNAVAILABLE", link.getMadiOrderId(),
+                            List.of(Map.of("code", "MADI_UNAVAILABLE",
+                                    "message", "MADI unavailable — blood reservation could not be confirmed")), Map.of()));
+                    allBlockers.add(Map.of("code", "MADI_UNAVAILABLE", "message", "Blood readiness unconfirmed (MADI down)"));
+                } else if (reserved) {
+                    results.add(record(episodeId, "BLOOD", "madi", "READY", "madi:" + link.getMadiOrderId(),
+                            List.of(), Map.of("madi_order_id", link.getMadiOrderId(),
+                                    "reservation_status", "RESERVED", "crossmatch_status", "COMPATIBLE")));
+                } else {
+                    results.add(record(episodeId, "BLOOD", "madi", "BLOCKED", link.getMadiOrderId(),
+                            List.of(Map.of("code", "BLOOD_NOT_RESERVED",
+                                    "message", "MADI order " + view.status()
+                                            + " — needs RESERVED + COMPATIBLE crossmatch before theatre")),
+                            Map.of("madi_status", nullSafe(view.status()),
+                                    "reservation_status", nullSafe(view.reservationStatus()),
+                                    "crossmatch_status", nullSafe(view.crossmatchStatus()))));
+                    allBlockers.add(Map.of("code", "BLOOD_NOT_RESERVED",
+                            "message", "Blood not yet reserved/crossmatched by MADI"));
+                }
             }
+        } else {
+            // Explicitly NOT_REQUIRED — recorded so the projection is honest, gate contributes no blocker.
+            results.add(record(episodeId, "BLOOD", "madi", "NOT_REQUIRED", null, List.of(),
+                    Map.of("note", "No blood required for this case")));
         }
+        // ═════════════════════════════════════════════════════════════════════════════════════════════
 
         boolean bookable = allBlockers.isEmpty();
         Map<String, Object> out = new LinkedHashMap<>();
@@ -362,10 +428,11 @@ public class TheatreService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "signedProviderId is required to sign an operative note");
         }
         // Authorise the signer's surgical scope through Varapi (owner of provider scope).
-        ReadinessResult scope = readinessClient.checkProviderScope(providerId, "SURGEON");
+        // Wave 1 fix: domain scope value is "SURGERY" (not "SURGEON").
+        ReadinessResult scope = readinessClient.checkProviderScope(providerId, "SURGERY");
         if ("BLOCKED".equals(scope.status())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Signer " + providerId + " lacks an active SURGEON scope to sign the operative note");
+                    "Signer " + providerId + " lacks an active SURGERY scope to sign the operative note");
         }
         note.setStatus("SIGNED");
         note.setSignedBy(actor());
@@ -381,6 +448,9 @@ public class TheatreService {
                 e.getEncounterId() != null ? e.getEncounterId().toString() : null, note);
         if (docRef != null) note.setButanoDocumentRef(docRef);
         note = noteRepository.save(note);
+
+        // Wave 1 clinical-safety: parse note specimens → OROS orders + NHUME dispatch + procedure_specimen.
+        processSpecimensFromNote(e, note);
 
         appendOutbox("PROCEDURE", episodeId.toString(), "theatre.note.signed", Map.of(
                 "episode_id", episodeId.toString(), "signed_provider_id", providerId,
@@ -673,6 +743,527 @@ public class TheatreService {
             throw new RuntimeException("Failed to serialize theatre outbox payload", ex);
         }
         outboxRepository.save(outbox);
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+    // ── Wave 1 clinical-safety ──────────────────────────────────────────────────────────────────────
+    // Blood / transport / specimen / count orchestration-by-reference. Peers (MADI/NHUME/OROS/RITO/
+    // Butano) remain the SoR; the *_link rows below hold peer ids + a status projection, written in the
+    // SAME transaction as the episode FSM mutation. Peer calls carry an Idempotency-Key. HAZARD: never
+    // put null values in an outbox payload map (EventEnvelope Map.copyOf NPEs on null).
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+
+    private static final List<String> BLOOD_TERMINAL = List.of("TRANSFUSED", "RECONCILED", "RETURNED", "NOT_REQUIRED");
+
+    // ── 1. Blood: request → issue&transport → administer → resolve ────────────────────────────────
+    @Transactional
+    public Map<String, Object> requestBlood(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        ProcedureBloodLinkEntity link = bloodLinkRepository.findFirstByEpisodeIdOrderByCreatedAtDesc(episodeId)
+                .filter(l -> l.getMadiOrderId() == null)
+                .orElseGet(() -> newBloodLink(episodeId));
+        link.setRequired(true);
+        link.setUnitsRequested(ClinicalPayloadMapper.integer(body, "units", "units_requested"));
+        link.setBloodGroup(ClinicalPayloadMapper.str(body, "bloodGroup", "blood_group"));
+        link.setComponentType(ClinicalPayloadMapper.str(body, "componentType", "component_type"));
+        String idem = idempotency(episodeId, "blood-request");
+        link.setIdempotencyKey(idem);
+        String madiOrderId = madiBloodClient.requestBlood(e.getSubjectCpid(), link.getBloodGroup(),
+                link.getComponentType(), link.getUnitsRequested(),
+                e.getOrosOrderId(), e.getSurgeonId(), idem);
+        link.setMadiOrderId(madiOrderId);
+        link.setStatus(madiOrderId != null ? "GROUP_SCREEN" : "UNAVAILABLE");
+        link.setCreatedBy(actor());
+        bloodLinkRepository.save(link);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.blood.requested", Map.of(
+                "episode_id", episodeId.toString(), "madi_order_id", nullSafe(madiOrderId),
+                "status", link.getStatus()));
+        return bloodLinkRow(link);
+    }
+
+    @Transactional
+    public Map<String, Object> issueAndTransport(UUID episodeId, Map<String, Object> body) {
+        requireEpisode(episodeId);
+        ProcedureBloodLinkEntity link = requireBloodLink(episodeId);
+        MadiBloodClient.BloodOrderView view = madiBloodClient.getOrderDetail(link.getMadiOrderId());
+        if (view.available()) {
+            link.setReservationStatus(view.reservationStatus());
+            link.setCrossmatchStatus(view.crossmatchStatus());
+        }
+        if (!view.reserved()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Blood order " + nullSafe(view.status()) + " — MADI reservation (RESERVED + COMPATIBLE) required before issue/transport");
+        }
+        // Blood is reserved/issued in MADI: route the physical unit through NHUME (BLOOD_PRODUCT).
+        String idem = idempotency(episodeId, "blood-transport");
+        NhumeTransportClient.DeliveryView delivery = nhumeTransportClient.createDelivery(
+                "BLOOD_PRODUCT", "BLOOD_BANK_TO_THEATRE", link.getMadiOrderId(),
+                episodeId.toString(), facilityRef(), idem);
+        link.setNhumeDeliveryId(delivery.deliveryId());
+        link.setStatus(delivery.deliveryId() != null ? "IN_TRANSIT" : "ISSUED");
+        bloodLinkRepository.save(link);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.blood.issued", Map.of(
+                "episode_id", episodeId.toString(), "madi_order_id", nullSafe(link.getMadiOrderId()),
+                "nhume_delivery_id", nullSafe(link.getNhumeDeliveryId()), "status", link.getStatus()));
+        return bloodLinkRow(link);
+    }
+
+    @Transactional
+    public Map<String, Object> administerBlood(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        ProcedureBloodLinkEntity link = requireBloodLink(episodeId);
+        String idem = idempotency(episodeId, "blood-administer");
+        String transfusionEpisodeId = link.getMadiTransfusionEpisodeId();
+        if (transfusionEpisodeId == null) {
+            transfusionEpisodeId = madiBloodClient.startTransfusion(link.getMadiOrderId(), e.getSubjectCpid(), actor(), idem);
+            link.setMadiTransfusionEpisodeId(transfusionEpisodeId);
+        }
+        // Bedside two-step verify (patient + unit) — never skip the identity check.
+        boolean verified = madiBloodClient.preVerify(transfusionEpisodeId, e.getSubjectCpid(),
+                ClinicalPayloadMapper.str(body, "bloodUnitId", "blood_unit_id"),
+                ClinicalPayloadMapper.str(body, "patientMethod", "patient_method"),
+                ClinicalPayloadMapper.str(body, "unitMethod", "unit_method"), actor(), idem);
+        madiBloodClient.recordObservation(transfusionEpisodeId, "BASELINE",
+                ClinicalPayloadMapper.str(body, "baselineObservation", "baseline_observation"), actor(), idem);
+        link.setStatus("TRANSFUSING");
+        bloodLinkRepository.save(link);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.blood.administered", Map.of(
+                "episode_id", episodeId.toString(),
+                "madi_transfusion_episode_id", nullSafe(transfusionEpisodeId),
+                "bedside_verified", verified, "status", link.getStatus()));
+        return bloodLinkRow(link);
+    }
+
+    @Transactional
+    public Map<String, Object> resolveBlood(UUID episodeId, Map<String, Object> body) {
+        requireEpisode(episodeId);
+        ProcedureBloodLinkEntity link = requireBloodLink(episodeId);
+        String outcome = Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "outcome", "outcome_status"), "COMPLETED").toUpperCase();
+        boolean reaction = "REACTION".equals(outcome) || Boolean.TRUE.equals(body.get("reaction"));
+        String idem = idempotency(episodeId, "blood-resolve");
+        if (reaction) {
+            madiBloodClient.recordObservation(link.getMadiTransfusionEpisodeId(), "REACTION",
+                    ClinicalPayloadMapper.str(body, "reactionNotes", "reaction_notes"), actor(), idem);
+        }
+        madiBloodClient.completeTransfusion(link.getMadiTransfusionEpisodeId(),
+                reaction ? "REACTION" : "COMPLETED",
+                ClinicalPayloadMapper.str(body, "outcomeNotes", "outcome_notes"), actor(), idem);
+        boolean returned = Boolean.TRUE.equals(body.get("unitsReturned")) || Boolean.TRUE.equals(body.get("returned"));
+        link.setStatus(reaction ? "REACTION" : returned ? "RETURNED" : "TRANSFUSED");
+        // Reconciled once the transfusion is closed and (if reaction) routed to Madi haemovigilance.
+        if (!reaction && !returned) link.setStatus("RECONCILED");
+        bloodLinkRepository.save(link);
+        if (reaction) {
+            // A transfusion reaction is a safety event routed to Madi (owner of haemovigilance).
+            reportSafetyEvent(episodeId, Map.of("category", "BLOOD_REACTION", "severity", "SEVERE",
+                    "description", "Transfusion reaction during theatre case"));
+        }
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.blood.reconciled", Map.of(
+                "episode_id", episodeId.toString(), "outcome", outcome, "status", link.getStatus(),
+                "madi_transfusion_episode_id", nullSafe(link.getMadiTransfusionEpisodeId())));
+        return bloodLinkRow(link);
+    }
+
+    public List<Map<String, Object>> listBloodLinks(UUID episodeId) {
+        requireEpisode(episodeId);
+        return bloodLinkRepository.findByEpisodeIdOrderByCreatedAtAsc(episodeId).stream().map(this::bloodLinkRow).toList();
+    }
+
+    // ── 2. Transport: patient movement + specimen legs (NHUME) ────────────────────────────────────
+    @Transactional
+    public Map<String, Object> requestPatientMovement(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        String leg = normaliseLeg(ClinicalPayloadMapper.str(body, "leg"));
+        if (!List.of("WARD_TO_THEATRE", "THEATRE_TO_PACU", "THEATRE_TO_WARD").contains(leg)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "leg must be WARD_TO_THEATRE | THEATRE_TO_PACU | THEATRE_TO_WARD");
+        }
+        return createTransportLeg(e, "PATIENT_MOVEMENT", leg, "PATIENT", e.getSubjectCpid(), null);
+    }
+
+    @Transactional
+    public Map<String, Object> requestSpecimenTransport(UUID episodeId, String specimenRef, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        return createTransportLeg(e, "SPECIMEN", "THEATRE_TO_LAB", "LAB_SAMPLE_PICKUP", specimenRef, specimenRef);
+    }
+
+    /** Theatre-governed PACU entry: advance the FSM then auto-request the THEATRE_TO_PACU movement. */
+    @Transactional
+    public Map<String, Object> enterPacu(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        boolean wasInProgress = "IN_PROGRESS".equals(e.getStatus());
+        Map<String, Object> result = episodeService.enterPacu(episodeId, body);
+        if (wasInProgress) {
+            // Auto-request THEATRE_TO_PACU on IN_PROGRESS → PACU (no silent hand-off).
+            createTransportLeg(e, "PATIENT_MOVEMENT", "THEATRE_TO_PACU", "PATIENT", e.getSubjectCpid(), null);
+        }
+        return result;
+    }
+
+    private Map<String, Object> createTransportLeg(ProcedureEpisodeEntity e, String kind, String leg,
+                                                   String deliveryType, String subjectRef, String specimenRef) {
+        UUID episodeId = e.getEpisodeId();
+        int seq = transportRepository.countByEpisodeIdAndLeg(episodeId, leg) + 1;
+        ProcedureTransportEntity t = new ProcedureTransportEntity();
+        t.setTenantId(tenant());
+        t.setEpisodeId(episodeId);
+        t.setKind(kind);
+        t.setLeg(leg);
+        t.setSeq(seq);
+        t.setNhumeDeliveryType(deliveryType);
+        t.setOrosSpecimenRef(specimenRef);
+        t.setCreatedBy(actor());
+        String idem = idempotency(episodeId, "transport-" + leg + "-" + seq);
+        t.setIdempotencyKey(idem);
+        NhumeTransportClient.DeliveryView delivery = nhumeTransportClient.createDelivery(
+                deliveryType, leg, subjectRef, episodeId.toString(), facilityRef(), idem);
+        t.setNhumeDeliveryId(delivery.deliveryId());
+        t.setStatus(delivery.deliveryId() != null ? mapNhumeStatus(delivery.status()) : "UNAVAILABLE");
+        t.setSlaDueAt(delivery.slaDueAt());
+        transportRepository.save(t);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.transport.requested", Map.of(
+                "episode_id", episodeId.toString(), "leg", leg, "kind", kind,
+                "nhume_delivery_id", nullSafe(delivery.deliveryId()), "status", t.getStatus()));
+        return transportRow(t);
+    }
+
+    public List<Map<String, Object>> listTransport(UUID episodeId) {
+        requireEpisode(episodeId);
+        return transportRepository.findByEpisodeIdOrderByCreatedAtAsc(episodeId).stream().map(this::transportRow).toList();
+    }
+
+    // ── 3. Specimens: parse note → OROS order → NHUME dispatch → result → critical → acknowledge ──
+    /** Parse the operative-note specimens and open the OROS specimen orders + transport legs. */
+    @Transactional
+    public void processSpecimensFromNote(ProcedureEpisodeEntity e, ProcedureNoteEntity note) {
+        String raw = note.getSpecimens();
+        if (raw == null || raw.isBlank()) return;
+        String encounterRef = e.getEncounterId() != null ? e.getEncounterId().toString() : null;
+        for (String label : raw.split("[;,\\n]")) {
+            String specimenLabel = label.trim();
+            if (specimenLabel.isEmpty()) continue;
+            int seq = specimenRepository.countByEpisodeId(e.getEpisodeId()) + 1;
+            ProcedureSpecimenEntity s = new ProcedureSpecimenEntity();
+            s.setTenantId(tenant());
+            s.setEpisodeId(e.getEpisodeId());
+            s.setSeq(seq);
+            s.setSpecimenLabel(specimenLabel);
+            s.setSpecimenType("HISTOPATH");
+            s.setBodySite(specimenLabel);
+            s.setCreatedBy(actor());
+            String idem = idempotency(e.getEpisodeId(), "specimen-" + seq);
+            s.setIdempotencyKey(idem);
+            String orosOrderId = orosSpecimenClient.placeLabOrder(e.getSubjectCpid(), encounterRef,
+                    specimenLabel, "HISTOPATH", specimenLabel, idem);
+            s.setOrosOrderId(orosOrderId);
+            if (orosOrderId != null) {
+                OrosSpecimenClient.SpecimenView sv = orosSpecimenClient.collect(orosOrderId, "HISTOPATH", specimenLabel, idem);
+                s.setOrosSpecimenId(sv.specimenId());
+                s.setStatus(sv.specimenId() != null ? "COLLECTED" : "ORDERED");
+            } else {
+                s.setStatus("PARSED");
+            }
+            specimenRepository.save(s);
+            // NHUME leg to lab, linked back to the OROS specimen ref.
+            if (s.getOrosSpecimenId() != null) {
+                Map<String, Object> leg = createTransportLeg(e, "SPECIMEN", "THEATRE_TO_LAB",
+                        "LAB_SAMPLE_PICKUP", s.getOrosSpecimenId(), s.getOrosSpecimenId());
+                Object tid = leg.get("id");
+                if (tid != null) s.setTransportId(UUID.fromString(tid.toString()));
+                orosSpecimenClient.dispatch(s.getOrosSpecimenId(), idem);
+                s.setStatus("DISPATCHED");
+                specimenRepository.save(s);
+            }
+            appendOutbox("PROCEDURE", e.getEpisodeId().toString(), "theatre.specimen.ordered", Map.of(
+                    "episode_id", e.getEpisodeId().toString(), "specimen_label", specimenLabel,
+                    "oros_order_id", nullSafe(orosOrderId), "status", s.getStatus()));
+        }
+    }
+
+    @Transactional
+    public Map<String, Object> acknowledgeCritical(UUID episodeId, UUID specimenId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        ProcedureSpecimenEntity s = specimenRepository.findById(specimenId)
+                .filter(x -> x.getEpisodeId().equals(episodeId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Specimen not found for episode"));
+        s.setAcknowledgedAt(OffsetDateTime.now());
+        s.setAcknowledgedBy(actor());
+        s.setStatus("ACKNOWLEDGED");
+        // Attach the pathology to the clinical record (Butano owns the record).
+        String docRef = butanoClient.attachPathology(e.getSubjectCpid(),
+                e.getEncounterId() != null ? e.getEncounterId().toString() : null,
+                s.getSpecimenLabel(), s.getOrosResultId(),
+                ClinicalPayloadMapper.str(body, "summary"));
+        if (docRef != null) s.setButanoDocumentRef(docRef);
+        specimenRepository.save(s);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.specimen.acknowledged", Map.of(
+                "episode_id", episodeId.toString(), "specimen_id", specimenId.toString(),
+                "butano_document_ref", nullSafe(s.getButanoDocumentRef())));
+        return specimenRow(s);
+    }
+
+    public List<Map<String, Object>> listSpecimens(UUID episodeId) {
+        requireEpisode(episodeId);
+        return specimenRepository.findByEpisodeIdOrderBySeqAsc(episodeId).stream().map(this::specimenRow).toList();
+    }
+
+    // ── 4. Surgical counts (swab/instrument/needle) + RITO RETAINED_ITEM sentinel on discrepancy ──
+    @Transactional
+    public Map<String, Object> recordCount(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        String kind = Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "kind", "countType", "count_type"), "")
+                .trim().toUpperCase();
+        if (!List.of("SWAB", "INSTRUMENT", "NEEDLE").contains(kind)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "kind must be SWAB | INSTRUMENT | NEEDLE");
+        }
+        Integer baseline = ClinicalPayloadMapper.integer(body, "baselineCount", "baseline_count");
+        Integer closing = ClinicalPayloadMapper.integer(body, "closingCount", "closing_count");
+        int seq = countRepository.countByEpisodeIdAndKind(episodeId, kind) + 1;
+        ProcedureCountEntity c = countRepository
+                .findByTenantIdAndEpisodeIdAndKindAndSeq(tenant(), episodeId, kind, seq)
+                .orElseGet(ProcedureCountEntity::new);
+        c.setTenantId(tenant());
+        c.setEpisodeId(episodeId);
+        c.setKind(kind);
+        c.setSeq(seq);
+        if (baseline != null) c.setBaselineCount(baseline);
+        if (closing != null) c.setClosingCount(closing);
+        c.setRecordedBy(actor());
+        c.setIdempotencyKey(idempotency(episodeId, "count-" + kind + "-" + seq));
+        boolean bothSides = c.getBaselineCount() != null && c.getClosingCount() != null;
+        int discrepancy = bothSides ? c.getBaselineCount() - c.getClosingCount() : 0;
+        c.setDiscrepancy(bothSides ? discrepancy : null);
+        c.setReconciled(bothSides && discrepancy == 0);
+        countRepository.save(c);
+
+        String event = "theatre.count.recorded";
+        if (bothSides && discrepancy != 0) {
+            // RETAINED-ITEM RISK — raise a RITO sentinel incident (RITO owns the safety case).
+            String idem = idempotency(episodeId, "rito-count-" + kind + "-" + seq);
+            String caseId = ritoSafetyClient.createCase("SAFETY_INCIDENT",
+                    "Surgical count discrepancy (" + kind + ")",
+                    "Theatre count discrepancy of " + discrepancy + " " + kind + "(s) at Sign-Out",
+                    "SEVERE", "PATIENT_SAFETY", e.getSubjectCpid(),
+                    Map.of("episode_id", episodeId.toString(), "count_kind", kind, "discrepancy", discrepancy), idem);
+            if (caseId != null) {
+                c.setRitoCaseRef(caseId);
+                countRepository.save(c);
+                ritoSafetyClient.recordSafetyIncident(caseId, "RETAINED_ITEM", "SEVERE",
+                        "Reconcile count and perform imaging per retained-item protocol", true, idem);
+            }
+            ritoSafetyClient.ingestQualitySignal("CHECKLIST_NONCOMPLIANCE",
+                    "episode:" + episodeId, "HIGH", facilityRef(),
+                    "Surgical " + kind + " count discrepancy of " + discrepancy, null, idem);
+            // Route through the existing procedure_safety_event ownerFor path (RETAINED_ITEM → rito).
+            routeSafetyEventInternal(episodeId, "RETAINED_ITEM", "SENTINEL",
+                    kind + " count discrepancy of " + discrepancy, caseId);
+            event = "theatre.count.discrepancy";
+        }
+        appendOutbox(event.equals("theatre.count.discrepancy") ? "SAFETY" : "PROCEDURE",
+                episodeId.toString(), event, Map.of(
+                        "episode_id", episodeId.toString(), "kind", kind,
+                        "discrepancy", c.getDiscrepancy() != null ? c.getDiscrepancy() : 0,
+                        "reconciled", c.isReconciled(), "rito_case_ref", nullSafe(c.getRitoCaseRef())));
+        return countRow(c);
+    }
+
+    public List<Map<String, Object>> listCounts(UUID episodeId) {
+        requireEpisode(episodeId);
+        return countRepository.findByEpisodeIdOrderByKindAscSeqAsc(episodeId).stream().map(this::countRow).toList();
+    }
+
+    // ── Reconciler read-through hooks (called by TheatreProjectionReconciler; idempotent) ─────────
+    @Transactional
+    public void reconcileBloodLink(ProcedureBloodLinkEntity link) {
+        if (link.getMadiOrderId() == null) return;
+        MadiBloodClient.BloodOrderView view = madiBloodClient.getOrderDetail(link.getMadiOrderId());
+        if (!view.available()) return;
+        link.setReservationStatus(view.reservationStatus());
+        link.setCrossmatchStatus(view.crossmatchStatus());
+        if (view.reserved() && List.of("REQUESTED", "GROUP_SCREEN").contains(link.getStatus())) {
+            link.setStatus("RESERVED");
+        }
+        bloodLinkRepository.save(link);
+    }
+
+    @Transactional
+    public void reconcileTransport(ProcedureTransportEntity t) {
+        if (t.getNhumeDeliveryId() != null) {
+            NhumeTransportClient.DeliveryView view = nhumeTransportClient.getDelivery(t.getNhumeDeliveryId());
+            if (view.available() && view.status() != null) {
+                t.setStatus(mapNhumeStatus(view.status()));
+                if (view.slaDueAt() != null) t.setSlaDueAt(view.slaDueAt());
+            }
+        }
+        // Overdue detection (SLA breach) → SAFETY signal, once.
+        if (!t.isOverdue() && t.getSlaDueAt() != null && OffsetDateTime.now().isAfter(t.getSlaDueAt())
+                && !List.of("DELIVERED", "FAILED", "CANCELLED").contains(t.getStatus())) {
+            t.setOverdue(true);
+            t.setStatus("OVERDUE");
+            appendOutbox("SAFETY", t.getEpisodeId().toString(), "theatre.transport.overdue", Map.of(
+                    "episode_id", t.getEpisodeId().toString(), "leg", t.getLeg(),
+                    "nhume_delivery_id", nullSafe(t.getNhumeDeliveryId()),
+                    "sla_due_at", t.getSlaDueAt().toString()));
+        }
+        transportRepository.save(t);
+    }
+
+    @Transactional
+    public void reconcileSpecimen(ProcedureSpecimenEntity s) {
+        if (s.getOrosOrderId() == null) return;
+        List<OrosSpecimenClient.ResultView> results = orosSpecimenClient.getResults(s.getOrosOrderId());
+        if (results.isEmpty()) return;
+        OrosSpecimenClient.ResultView r = results.get(results.size() - 1);
+        s.setOrosResultId(r.resultId());
+        boolean wasCritical = s.isCritical();
+        if (r.critical()) {
+            s.setCritical(true);
+            if (!"CRITICAL".equals(s.getStatus()) && !"ACKNOWLEDGED".equals(s.getStatus())) {
+                s.setStatus("CRITICAL");
+            }
+        } else if (!"ACKNOWLEDGED".equals(s.getStatus())) {
+            s.setStatus("RESULTED");
+        }
+        specimenRepository.save(s);
+        if (r.critical() && !wasCritical) {
+            // Mirror OROS critical escalation to a SAFETY outbox (once).
+            appendOutbox("SAFETY", s.getEpisodeId().toString(), "theatre.specimen.critical", Map.of(
+                    "episode_id", s.getEpisodeId().toString(), "specimen_id", s.getSpecimenId().toString(),
+                    "oros_result_id", nullSafe(r.resultId()), "specimen_label", nullSafe(s.getSpecimenLabel())));
+        }
+    }
+
+    public List<ProcedureBloodLinkEntity> openBloodLinks() {
+        return bloodLinkRepository.findByTenantIdAndStatusNotIn(tenant(), BLOOD_TERMINAL);
+    }
+    public List<ProcedureTransportEntity> openTransportLegs() {
+        return transportRepository.findByTenantIdAndStatusNotIn(tenant(), List.of("DELIVERED", "FAILED", "CANCELLED"));
+    }
+    public List<ProcedureSpecimenEntity> pendingSpecimens() {
+        return specimenRepository.findByTenantIdAndStatusNotIn(tenant(), List.of("RESULTED", "ACKNOWLEDGED", "REJECTED"));
+    }
+
+    // ── Wave 1 helpers ────────────────────────────────────────────────────────────────────────────
+    private ProcedureBloodLinkEntity newBloodLink(UUID episodeId) {
+        ProcedureBloodLinkEntity link = new ProcedureBloodLinkEntity();
+        link.setTenantId(tenant());
+        link.setEpisodeId(episodeId);
+        link.setKind("BLOOD");
+        link.setSeq(1);
+        return link;
+    }
+
+    private ProcedureBloodLinkEntity requireBloodLink(UUID episodeId) {
+        return bloodLinkRepository.findFirstByEpisodeIdOrderByCreatedAtDesc(episodeId)
+                .filter(l -> l.getMadiOrderId() != null)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,
+                        "No MADI blood request placed for this episode (call requestBlood first)"));
+    }
+
+    private void routeSafetyEventInternal(UUID episodeId, String category, String severity,
+                                          String description, String ownerRef) {
+        ProcedureSafetyEventEntity ev = new ProcedureSafetyEventEntity();
+        ev.setEpisodeId(episodeId);
+        ev.setCategory(category);
+        ev.setSeverity(severity);
+        ev.setDescription(description);
+        ev.setRoutedOwner(ownerFor(category));
+        ev.setOwnerRef(ownerRef);
+        ev.setRoutedStatus(ownerRef != null ? "ROUTED" : "OWNER_UNAVAILABLE");
+        ev.setReportedBy(actor());
+        safetyRepository.save(ev);
+    }
+
+    private String idempotency(UUID episodeId, String op) {
+        return "inpatient-theatre:" + episodeId + ":" + op;
+    }
+
+    private static String normaliseLeg(String raw) {
+        if (raw == null) return "";
+        return raw.trim().toUpperCase().replace('-', '_').replace(' ', '_');
+    }
+
+    private static String mapNhumeStatus(String nhume) {
+        if (nhume == null) return "REQUESTED";
+        return switch (nhume.toUpperCase()) {
+            case "CREATED", "DRAFT", "SUBMITTED", "PENDING", "APPROVED" -> "REQUESTED";
+            case "ASSIGNED", "ACCEPTED" -> "ASSIGNED";
+            case "IN_TRANSIT", "PICKED_UP", "STARTED", "EN_ROUTE" -> "IN_TRANSIT";
+            case "DELIVERED", "COMPLETED", "ARRIVED" -> "DELIVERED";
+            case "FAILED", "RETURNED" -> "FAILED";
+            case "CANCELLED" -> "CANCELLED";
+            default -> "IN_TRANSIT";
+        };
+    }
+
+    private Map<String, Object> bloodLinkRow(ProcedureBloodLinkEntity l) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", l.getLinkId().toString());
+        m.put("episode_id", l.getEpisodeId().toString());
+        m.put("status", l.getStatus());
+        m.put("required", l.isRequired());
+        m.put("madi_order_id", l.getMadiOrderId());
+        m.put("madi_transfusion_episode_id", l.getMadiTransfusionEpisodeId());
+        m.put("nhume_delivery_id", l.getNhumeDeliveryId());
+        m.put("reservation_status", l.getReservationStatus());
+        m.put("crossmatch_status", l.getCrossmatchStatus());
+        m.put("units_requested", l.getUnitsRequested());
+        m.put("blood_group", l.getBloodGroup());
+        m.put("component_type", l.getComponentType());
+        m.put("updated_at", l.getUpdatedAt());
+        return m;
+    }
+
+    private Map<String, Object> transportRow(ProcedureTransportEntity t) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", t.getTransportId().toString());
+        m.put("kind", t.getKind());
+        m.put("leg", t.getLeg());
+        m.put("seq", t.getSeq());
+        m.put("status", t.getStatus());
+        m.put("overdue", t.isOverdue());
+        m.put("nhume_delivery_id", t.getNhumeDeliveryId());
+        m.put("nhume_delivery_type", t.getNhumeDeliveryType());
+        m.put("oros_specimen_ref", t.getOrosSpecimenRef());
+        m.put("sla_due_at", t.getSlaDueAt());
+        m.put("updated_at", t.getUpdatedAt());
+        return m;
+    }
+
+    private Map<String, Object> specimenRow(ProcedureSpecimenEntity s) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", s.getSpecimenId().toString());
+        m.put("seq", s.getSeq());
+        m.put("specimen_label", s.getSpecimenLabel());
+        m.put("specimen_type", s.getSpecimenType());
+        m.put("body_site", s.getBodySite());
+        m.put("status", s.getStatus());
+        m.put("is_critical", s.isCritical());
+        m.put("oros_order_id", s.getOrosOrderId());
+        m.put("oros_specimen_id", s.getOrosSpecimenId());
+        m.put("oros_result_id", s.getOrosResultId());
+        m.put("transport_id", s.getTransportId() != null ? s.getTransportId().toString() : null);
+        m.put("acknowledged_at", s.getAcknowledgedAt());
+        m.put("acknowledged_by", s.getAcknowledgedBy());
+        m.put("butano_document_ref", s.getButanoDocumentRef());
+        return m;
+    }
+
+    private Map<String, Object> countRow(ProcedureCountEntity c) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", c.getCountId().toString());
+        m.put("kind", c.getKind());
+        m.put("seq", c.getSeq());
+        m.put("baseline_count", c.getBaselineCount());
+        m.put("closing_count", c.getClosingCount());
+        m.put("discrepancy", c.getDiscrepancy());
+        m.put("reconciled", c.isReconciled());
+        m.put("override", c.isOverride());
+        m.put("override_reason", c.getOverrideReason());
+        m.put("rito_case_ref", c.getRitoCaseRef());
+        m.put("recorded_by", c.getRecordedBy());
+        return m;
     }
 
     /** 409 carrier for booking blockers (owner-specific), so the controller returns the blocker list. */

@@ -108,16 +108,25 @@ public class TheatreReadinessClient {
             return ReadinessResult.blocked("NO_PROVIDER", "No " + requiredPrivilege + " assigned", Map.of());
         }
         try {
-            ResponseEntity<List> resp = restTemplate.exchange(
+            // Wave 1 fix: varapi PrivilegeController wraps the list in an ApiResponse envelope
+            // ({data:[...]}). Deserialising straight to List silently failed → UNAVAILABLE. Read the
+            // envelope and unwrap .data (falls back to a raw list body).
+            ResponseEntity<Map> resp = restTemplate.exchange(
                     varapiBaseUrl + "/v1/internal/providers/" + providerId + "/privileges",
                     org.springframework.http.HttpMethod.GET,
-                    new HttpEntity<>(trustHeaders()), List.class);
-            List<Map<String, Object>> privileges = resp.getBody();
-            if (privileges == null) {
+                    new HttpEntity<>(trustHeaders()), Map.class);
+            Map<String, Object> envelope = resp.getBody();
+            if (envelope == null) {
                 return ReadinessResult.unavailable("varapi");
             }
+            Object data = envelope.getOrDefault("data", envelope.get("privileges"));
+            if (!(data instanceof List<?> rawList)) {
+                return ReadinessResult.unavailable("varapi");
+            }
+            List<Map<String, Object>> privileges = (List<Map<String, Object>>) (List<?>) rawList;
+            // Wave 1 fix: the varapi privilege lifecycle has no ACTIVE status — it uses APPROVED.
             boolean ok = privileges.stream().anyMatch(p ->
-                    "ACTIVE".equalsIgnoreCase(String.valueOf(p.getOrDefault("status", p.get("state"))))
+                    "APPROVED".equalsIgnoreCase(String.valueOf(p.getOrDefault("status", p.get("state"))))
                             && privilegeMatches(p, requiredPrivilege));
             return ok
                     ? ReadinessResult.ready("varapi:" + providerId, Map.of("provider_id", providerId))

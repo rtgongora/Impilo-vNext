@@ -6,6 +6,8 @@ public enum DeliveryType {
     PRESCRIPTION_REFILL,
     LAB_SAMPLE_PICKUP,
     LAB_RESULT_DELIVERY,
+    // Intra-facility patient movement (theatre clinical-safety wave): ward ↔ theatre ↔ PACU.
+    PATIENT,
     DOCUMENT_DELIVERY,
     COLD_CHAIN,
     VACCINE,
