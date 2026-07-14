@@ -141,6 +141,25 @@ public class TheatreController {
         return theatreService.returnToTheatre(id, body != null ? body : Map.of());
     }
 
+    // ── Wave 4 T&L — tele-PACU/ICU teleconsult link + surgical-case completion (trainee CPD + bill) ──
+    @PostMapping("/cases/{id}/teleconsult")
+    public ResponseEntity<Map<String, Object>> linkTeleconsult(@PathVariable UUID id,
+                                                              @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(theatreService.linkTeleconsult(id, body != null ? body : Map.of()));
+    }
+
+    @GetMapping("/cases/{id}/teleconsult")
+    public List<Map<String, Object>> listTeleconsult(@PathVariable UUID id) {
+        return theatreService.listTeleconsultLinks(id);
+    }
+
+    @PostMapping("/cases/{id}/complete")
+    public Map<String, Object> completeCase(@PathVariable UUID id,
+                                            @RequestBody(required = false) Map<String, Object> body) {
+        return theatreService.completeCase(id, body != null ? body : Map.of());
+    }
+
     // cancellation
     @PostMapping("/cases/{id}/cancel")
     public Map<String, Object> cancel(@PathVariable UUID id, @RequestBody Map<String, Object> body) {

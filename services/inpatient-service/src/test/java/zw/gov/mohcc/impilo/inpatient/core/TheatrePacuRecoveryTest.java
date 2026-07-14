@@ -52,6 +52,9 @@ class TheatrePacuRecoveryTest {
     @Mock RitoSafetyClient ritoSafetyClient;
     @Mock ProcedurePostopRecordRepository postopRepository;
     @Mock AdmissionService admissionService;
+    @Mock ProcedureTeleconsultLinkRepository teleconsultLinkRepository;
+    @Mock PctTeleconsultClient pctTeleconsultClient;
+    @Mock FundoSurgicalLogbookClient fundoSurgicalLogbookClient;
 
     private TheatreService service;
     private final UUID tenant = UUID.randomUUID();
@@ -64,7 +67,8 @@ class TheatrePacuRecoveryTest {
                 checklistRepository, outboxRepository, episodeService, orosOrderClient, readinessClient,
                 deathClient, butanoClient, bloodLinkRepository, transportRepository, specimenRepository,
                 countRepository, madiBloodClient, nhumeTransportClient, orosSpecimenClient, ritoSafetyClient,
-                postopRepository, admissionService, new ObjectMapper());
+                postopRepository, admissionService, teleconsultLinkRepository, pctTeleconsultClient,
+                fundoSurgicalLogbookClient, new ObjectMapper());
         TrustContextHolder.set(new TrustContext(tenant, "actor-recovery-nurse", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), facilityId, null, null, AccessMode.INTERNAL));
         ProcedureEpisodeEntity e = new ProcedureEpisodeEntity();
@@ -151,6 +155,30 @@ class TheatrePacuRecoveryTest {
 
         assertEquals(Boolean.TRUE, out.get("unplanned_icu"));
         verify(nhumeTransportClient).createDelivery(eq("PATIENT"), eq("PACU_TO_ICU"), any(), any(), any(), any());
+    }
+
+    @Test
+    void completeCasePostsTraineeCpdAndIsFailSafe() {
+        when(episodeService.completeEpisode(eq(episodeId), anyMap()))
+                .thenReturn(new java.util.LinkedHashMap<>(Map.of("status", "COMPLETED")));
+        // Simulate a learning-service outage — the client returns false; completion must NOT be blocked.
+        when(fundoSurgicalLogbookClient.postSurgicalLogbook(any(), eq("PROV-TRAINEE"), any(), any(), anyInt(), any()))
+                .thenReturn(false);
+
+        Map<String, Object> out = service.completeCase(episodeId, Map.of("traineeProviderId", "PROV-TRAINEE"));
+
+        assertEquals("COMPLETED", out.get("status"));
+        verify(fundoSurgicalLogbookClient).postSurgicalLogbook(any(), eq("PROV-TRAINEE"), any(), any(), anyInt(), any());
+    }
+
+    @Test
+    void completeCaseWithoutTraineeSkipsCpd() {
+        when(episodeService.completeEpisode(eq(episodeId), anyMap()))
+                .thenReturn(new java.util.LinkedHashMap<>(Map.of("status", "COMPLETED")));
+
+        service.completeCase(episodeId, Map.of());
+
+        verifyNoInteractions(fundoSurgicalLogbookClient);
     }
 
     @Test

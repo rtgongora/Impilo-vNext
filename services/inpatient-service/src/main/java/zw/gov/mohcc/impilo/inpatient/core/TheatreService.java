@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.inpatient.integration.ButanoProcedureClient;
+import zw.gov.mohcc.impilo.inpatient.integration.FundoSurgicalLogbookClient;
 import zw.gov.mohcc.impilo.inpatient.integration.MadiBloodClient;
+import zw.gov.mohcc.impilo.inpatient.integration.PctTeleconsultClient;
 import zw.gov.mohcc.impilo.inpatient.integration.NhumeTransportClient;
 import zw.gov.mohcc.impilo.inpatient.integration.OrosOrderClient;
 import zw.gov.mohcc.impilo.inpatient.integration.OrosSpecimenClient;
@@ -65,6 +67,10 @@ public class TheatreService {
     // ── Wave 4 §12/§13 — PACU discharge decision + theatre→inpatient continuity ──
     private final ProcedurePostopRecordRepository postopRepository;
     private final AdmissionService admissionService;
+    // ── Wave 4 T&L — tele-PACU/ICU (PCT) + trainee surgical logbook/CPD (Fundo) ──
+    private final ProcedureTeleconsultLinkRepository teleconsultLinkRepository;
+    private final PctTeleconsultClient pctTeleconsultClient;
+    private final FundoSurgicalLogbookClient fundoSurgicalLogbookClient;
     private final ObjectMapper objectMapper;
 
     public TheatreService(ProcedureEpisodeRepository episodeRepository,
@@ -88,6 +94,9 @@ public class TheatreService {
                           RitoSafetyClient ritoSafetyClient,
                           ProcedurePostopRecordRepository postopRepository,
                           AdmissionService admissionService,
+                          ProcedureTeleconsultLinkRepository teleconsultLinkRepository,
+                          PctTeleconsultClient pctTeleconsultClient,
+                          FundoSurgicalLogbookClient fundoSurgicalLogbookClient,
                           ObjectMapper objectMapper) {
         this.episodeRepository = episodeRepository;
         this.readinessRepository = readinessRepository;
@@ -110,6 +119,9 @@ public class TheatreService {
         this.ritoSafetyClient = ritoSafetyClient;
         this.postopRepository = postopRepository;
         this.admissionService = admissionService;
+        this.teleconsultLinkRepository = teleconsultLinkRepository;
+        this.pctTeleconsultClient = pctTeleconsultClient;
+        this.fundoSurgicalLogbookClient = fundoSurgicalLogbookClient;
         this.objectMapper = objectMapper;
     }
 
@@ -681,6 +693,91 @@ public class TheatreService {
         if (raw == null) return "HIGH";
         String s = raw.toUpperCase();
         return List.of("LOW", "MODERATE", "HIGH", "CRITICAL").contains(s) ? s : "HIGH";
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+    // ── Wave 4 T&L — tele-PACU/ICU teleconsult link + surgical-case completion (trainee CPD + bill) ──
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Link a deteriorating recovery patient to a PCT teleconsult session (tele-PACU / tele-ICU support).
+     * PCT owns the session (session id = referral id); we hold the ref + purpose. Best-effort — a PCT
+     * outage records a REQUESTED link with no session id rather than fabricating one.
+     */
+    @Transactional
+    public Map<String, Object> linkTeleconsult(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        String purpose = Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "purpose"), "POSTOP_SUPPORT").toUpperCase();
+        String specialty = ClinicalPayloadMapper.str(body, "specialty");
+        String urgency = Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "urgency"), "EMERGENCY");
+        String question = ClinicalPayloadMapper.str(body, "clinicalQuestion", "clinical_question", "reason");
+        String idem = idempotency(episodeId, "teleconsult-" + purpose);
+        ProcedureTeleconsultLinkEntity existing =
+                teleconsultLinkRepository.findByTenantIdAndIdempotencyKey(tenant(), idem).orElse(null);
+        if (existing != null && existing.getPctSessionId() != null) return teleconsultLinkRow(existing);
+
+        PctTeleconsultClient.SessionView session = pctTeleconsultClient.createSession(
+                e.getSubjectCpid(), e.getEncounterId() != null ? e.getEncounterId().toString() : null,
+                specialty, urgency, purpose, question, idem);
+
+        ProcedureTeleconsultLinkEntity link = existing != null ? existing : new ProcedureTeleconsultLinkEntity();
+        link.setTenantId(tenant());
+        link.setEpisodeId(episodeId);
+        link.setPurpose(purpose);
+        link.setSessionMode(urgency);
+        link.setIdempotencyKey(idem);
+        link.setRequestedBy(actor());
+        link.setPctSessionId(session.sessionId());
+        link.setStatus(session.sessionId() != null ? "LINKED" : "REQUESTED");
+        teleconsultLinkRepository.save(link);
+
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.teleconsult.linked", Map.of(
+                "episode_id", episodeId.toString(), "purpose", purpose,
+                "pct_session_id", nullSafe(session.sessionId()), "status", link.getStatus()));
+        return teleconsultLinkRow(link);
+    }
+
+    public List<Map<String, Object>> listTeleconsultLinks(UUID episodeId) {
+        requireEpisode(episodeId);
+        return teleconsultLinkRepository.findByEpisodeIdOrderByCreatedAtAsc(episodeId).stream()
+                .map(this::teleconsultLinkRow).toList();
+    }
+
+    /**
+     * Complete the surgical case (episode → COMPLETED, which emits the theatre.case.completed billing
+     * trigger consumed by COSTA), then — if a trainee was supervised — post a Fundo surgical logbook /
+     * CPD record. FAIL-SAFE BY REFERENCE: a learning-record failure never blocks clinical completion.
+     */
+    @Transactional
+    public Map<String, Object> completeCase(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        Map<String, Object> result = episodeService.completeEpisode(episodeId, body);
+
+        String traineeProviderId = ClinicalPayloadMapper.str(body, "traineeProviderId", "trainee_provider_id");
+        if (traineeProviderId != null && !traineeProviderId.isBlank()) {
+            Integer credits = ClinicalPayloadMapper.integer(body, "cpdCredits", "cpd_credits");
+            boolean posted = fundoSurgicalLogbookClient.postSurgicalLogbook(
+                    tenant().toString(), traineeProviderId, e.getProcedureCode(), e.getProcedureName(),
+                    credits != null ? credits : 1, episodeId.toString());
+            appendOutbox("PROCEDURE", episodeId.toString(), "theatre.trainee.logbook", Map.of(
+                    "episode_id", episodeId.toString(), "trainee_provider_id", traineeProviderId,
+                    "posted", posted));
+        }
+        return result;
+    }
+
+    private Map<String, Object> teleconsultLinkRow(ProcedureTeleconsultLinkEntity link) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", link.getLinkId() != null ? link.getLinkId().toString() : null);
+        m.put("episode_id", link.getEpisodeId().toString());
+        m.put("pct_session_id", link.getPctSessionId());
+        m.put("purpose", link.getPurpose());
+        m.put("session_mode", link.getSessionMode());
+        m.put("status", link.getStatus());
+        m.put("requested_by", link.getRequestedBy());
+        m.put("created_at", link.getCreatedAt());
+        return m;
     }
 
     // ── 16. Cancellation — release owner reservations, audit ─────────────────────────────────────

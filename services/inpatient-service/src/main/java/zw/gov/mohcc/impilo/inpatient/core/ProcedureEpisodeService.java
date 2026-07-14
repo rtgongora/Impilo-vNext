@@ -66,6 +66,8 @@ public class ProcedureEpisodeService {
     private final ProcedurePacuObservationRepository pacuObservationRepository;
     private final ProcedureEpisodeDocumentRepository documentRepository;
     private final ProcedureConsumableRepository consumableRepository;
+    // ── Wave 4 §5: surgical-case completion event carries implant/consumable/blood counts for COSTA ──
+    private final ProcedureImplantRepository implantRepository;
     private final ProcedureAnaesthesiaScoreRepository anaesthesiaScoreRepository;
     // ── Wave 1 clinical-safety collaborators (count gate, anaesthesia chart, blood-channel projection) ──
     private final ProcedureCountRepository countRepository;
@@ -85,6 +87,7 @@ public class ProcedureEpisodeService {
             ProcedurePacuObservationRepository pacuObservationRepository,
             ProcedureEpisodeDocumentRepository documentRepository,
             ProcedureConsumableRepository consumableRepository,
+            ProcedureImplantRepository implantRepository,
             ProcedureAnaesthesiaScoreRepository anaesthesiaScoreRepository,
             ProcedureCountRepository countRepository,
             ProcedureAnaesthesiaChartEntryRepository chartRepository,
@@ -100,6 +103,7 @@ public class ProcedureEpisodeService {
         this.pacuObservationRepository = pacuObservationRepository;
         this.documentRepository = documentRepository;
         this.consumableRepository = consumableRepository;
+        this.implantRepository = implantRepository;
         this.anaesthesiaScoreRepository = anaesthesiaScoreRepository;
         this.countRepository = countRepository;
         this.chartRepository = chartRepository;
@@ -484,6 +488,30 @@ public class ProcedureEpisodeService {
         episode.setStatus("COMPLETED");
         episode.setCompletedAt(OffsetDateTime.now());
         episodeRepository.save(episode);
+
+        // Wave 4 §5 — theatre completion is the COSTA value trigger: emit theatre.case.completed carrying
+        // the billable composition (theatre time + anaesthesia + implant/consumable/blood usage counts).
+        int theatreMinutes = Optional.ofNullable(ClinicalPayloadMapper.integer(body, "theatreMinutes", "theatre_minutes"))
+                .orElse(60);
+        boolean hasAnaesthesia = episode.getAnaesthetistId() != null
+                || Boolean.TRUE.equals(body.get("hasAnaesthesia")) || Boolean.TRUE.equals(body.get("has_anaesthesia"));
+        int implantCount = implantRepository.countByEpisodeId(episodeId);
+        int consumableCount = consumableRepository.findByEpisodeIdOrderByRecordedAtDesc(episodeId).size();
+        int bloodUnits = bloodLinkRepository.findByEpisodeIdOrderByCreatedAtAsc(episodeId).size();
+        UUID facilityId = currentFacility();
+        Map<String, Object> completed = new LinkedHashMap<>();
+        completed.put("episode_id", episodeId.toString());
+        completed.put("patient_id", episode.getSubjectCpid());
+        completed.put("encounter_id", episode.getEncounterId() != null ? episode.getEncounterId().toString() : "");
+        completed.put("facility_id", facilityId != null ? facilityId.toString() : "");
+        completed.put("procedure_code", episode.getProcedureCode() != null ? episode.getProcedureCode() : "");
+        completed.put("procedure_name", episode.getProcedureName() != null ? episode.getProcedureName() : "");
+        completed.put("theatre_minutes", theatreMinutes);
+        completed.put("has_anaesthesia", hasAnaesthesia);
+        completed.put("implant_count", implantCount);
+        completed.put("consumable_count", consumableCount);
+        completed.put("blood_units", bloodUnits);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.case.completed", completed);
         return episodeDetail(episodeId);
     }
 
