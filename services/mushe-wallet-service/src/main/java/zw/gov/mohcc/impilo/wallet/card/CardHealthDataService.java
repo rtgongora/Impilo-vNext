@@ -27,10 +27,10 @@ import java.util.zip.GZIPOutputStream;
  *
  * <p>Health data (critical summaries and IPS bundles) is serialized, compressed,
  * and encrypted before storage. Encryption is AES-256-GCM with a per-record data key
- * derived (HMAC-SHA256) from a fail-closed deployment master key (≥32 chars or the
- * service refuses to start); centralized key custody via tshepo-keys-service is a
- * planned enhancement. Data integrity is additionally verified via SHA-256 hashing
- * of the plaintext.</p>
+ * supplied by a {@link CardDataKeyProvider} — the single key-custody seam. The default
+ * provider derives the key from a fail-closed deployment master secret; a KMS-backed
+ * provider can replace it without touching this service. Data integrity is additionally
+ * verified via SHA-256 hashing of the plaintext.</p>
  *
  * <p>Updates are queued in {@code card_update_queue} for eventual synchronization
  * to the physical smart card via the card-print-agent or NFC writer.</p>
@@ -40,34 +40,23 @@ public class CardHealthDataService {
 
     private static final Logger log = LoggerFactory.getLogger(CardHealthDataService.class);
 
-    private static final String INSECURE_DEFAULT = "change-me";
-
     private final CardRepository cardRepository;
     private final CardHealthDataRepository healthDataRepository;
     private final CardUpdateQueueRepository updateQueueRepository;
     private final ObjectMapper objectMapper;
-    /** Configured secret master key — the AES key is derived from this + the per-record keyRef. */
-    private final byte[] dataEncryptionKey;
+    /** The key-custody seam — supplies the per-record AES-256 key. Default = master-key derivation. */
+    private final CardDataKeyProvider dataKeyProvider;
 
     public CardHealthDataService(CardRepository cardRepository,
                                   CardHealthDataRepository healthDataRepository,
                                   CardUpdateQueueRepository updateQueueRepository,
                                   ObjectMapper objectMapper,
-                                  @org.springframework.beans.factory.annotation.Value(
-                                          "${wallet.card.encryption-master-key:}") String encryptionMasterKey) {
+                                  CardDataKeyProvider dataKeyProvider) {
         this.cardRepository = cardRepository;
         this.healthDataRepository = healthDataRepository;
         this.updateQueueRepository = updateQueueRepository;
         this.objectMapper = objectMapper;
-        if (encryptionMasterKey == null || encryptionMasterKey.isBlank()
-                || encryptionMasterKey.length() < 32
-                || INSECURE_DEFAULT.equalsIgnoreCase(encryptionMasterKey)) {
-            throw new IllegalStateException(
-                    "wallet.card.encryption-master-key must be a strong secret of at least 32 characters. "
-                    + "Refusing to start: card health data must be encrypted with key material that is NOT "
-                    + "derivable from the stored encryption_key_ref.");
-        }
-        this.dataEncryptionKey = encryptionMasterKey.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        this.dataKeyProvider = dataKeyProvider;
     }
 
     // ── Update Critical Summary ─────────────────────────────────────────
@@ -258,16 +247,15 @@ public class CardHealthDataService {
     }
 
     /**
-     * AES-256-GCM encryption of card health data at rest. The per-record key is derived as
-     * HMAC-SHA256(masterKey, keyRef) — NOT SHA-256(keyRef) — so it depends on a configured
-     * secret that is never stored alongside the ciphertext. Previously the key was a pure
-     * function of the stored encryption_key_ref, so anyone with DB access could reconstruct it
-     * and decrypt. (A future tshepo-keys/KMS data-key API can replace the configured master key;
-     * the platform has no data-encryption-key service today — tshepo-keys is signing-only.)
+     * AES-256-GCM encryption of card health data at rest. The per-record key comes from the
+     * {@link CardDataKeyProvider} seam (default: HMAC-SHA256(masterKey, keyRef), which depends on a
+     * configured secret that is never stored alongside the ciphertext — so the key cannot be
+     * reconstructed from the stored encryption_key_ref alone). Swapping in a KMS-backed provider
+     * changes key custody with no change here.
      */
     byte[] encrypt(byte[] data, String keyRef) {
         try {
-            byte[] keyBytes = deriveDataKey(keyRef);
+            byte[] keyBytes = dataKeyProvider.dataKey(keyRef);
             javax.crypto.SecretKey secretKey = new javax.crypto.spec.SecretKeySpec(keyBytes, "AES");
             javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding");
             byte[] iv = new byte[12];
@@ -281,21 +269,6 @@ public class CardHealthDataService {
             return result;
         } catch (Exception e) {
             throw new RuntimeException("Health data encryption failed", e);
-        }
-    }
-
-    /**
-     * Derive the AES-256 data key for a record as HMAC-SHA256(masterKey, keyRef). Binds the key
-     * to both the configured secret (not stored with the data) and the per-record key reference,
-     * so the key cannot be reconstructed from the stored encryption_key_ref alone.
-     */
-    private byte[] deriveDataKey(String keyRef) {
-        try {
-            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
-            mac.init(new javax.crypto.spec.SecretKeySpec(dataEncryptionKey, "HmacSHA256"));
-            return mac.doFinal(keyRef.getBytes(java.nio.charset.StandardCharsets.UTF_8)); // 32 bytes = AES-256
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to derive card data key", e);
         }
     }
 }

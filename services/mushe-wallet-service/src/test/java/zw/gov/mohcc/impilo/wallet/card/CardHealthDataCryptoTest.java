@@ -24,7 +24,8 @@ class CardHealthDataCryptoTest {
     private static final String MASTER_KEY = "wallet-card-master-secret-key-of-sufficient-length-2026";
 
     private CardHealthDataService service() {
-        return new CardHealthDataService(null, null, null, new ObjectMapper(), MASTER_KEY);
+        return new CardHealthDataService(null, null, null, new ObjectMapper(),
+                new MasterKeyCardDataKeyProvider(MASTER_KEY));
     }
 
     @Test
@@ -60,13 +61,14 @@ class CardHealthDataCryptoTest {
     }
 
     @Test
-    void constructor_failsClosed_onBlankOrWeakMasterKey() {
-        ObjectMapper om = new ObjectMapper();
-        assertThatThrownBy(() -> new CardHealthDataService(null, null, null, om, ""))
+    void masterKeyProvider_failsClosed_onBlankOrWeakMasterKey() {
+        assertThatThrownBy(() -> new MasterKeyCardDataKeyProvider(""))
                 .isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(() -> new CardHealthDataService(null, null, null, om, "too-short"))
+        assertThatThrownBy(() -> new MasterKeyCardDataKeyProvider("too-short"))
                 .isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(() -> new CardHealthDataService(null, null, null, om, null))
+        assertThatThrownBy(() -> new MasterKeyCardDataKeyProvider(null))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> new MasterKeyCardDataKeyProvider("change-me"))
                 .isInstanceOf(IllegalStateException.class);
     }
 
