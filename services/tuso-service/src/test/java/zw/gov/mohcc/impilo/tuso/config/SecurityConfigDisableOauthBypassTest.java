@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.security.oauth2.resourceserver.jwt.issuer-uri=",
         "impilo.security.disable-oauth-for-tests=true"
 })
-class SecurityConfigDisableOauthBypassIT {
+class SecurityConfigDisableOauthBypassTest {
 
     @Autowired
     private MockMvc mockMvc;

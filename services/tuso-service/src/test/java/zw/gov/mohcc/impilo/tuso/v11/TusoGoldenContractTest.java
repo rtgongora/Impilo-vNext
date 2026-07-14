@@ -12,7 +12,7 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
-public class TusoGoldenContractIT extends GoldenContractSuite {
+public class TusoGoldenContractTest extends GoldenContractSuite {
 
     @Override
     protected String getFederationEndpointOverride() {

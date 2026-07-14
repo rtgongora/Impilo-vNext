@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = {
         "spring.security.oauth2.resourceserver.jwt.issuer-uri="
 })
-class SecurityConfigDefaultAuthRequiredIT {
+class SecurityConfigDefaultAuthRequiredTest {
 
     @Autowired
     private MockMvc mockMvc;
