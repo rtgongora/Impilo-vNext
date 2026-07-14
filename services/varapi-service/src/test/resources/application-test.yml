@@ -1,0 +1,28 @@
+# Auto-generated H2 test profile so the golden-contract @SpringBootTest boots offline.
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    listener:
+      auto-startup: false
+  datasource:
+    url: "jdbc:h2:mem:varapi_service;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;NON_KEYWORDS=VALUE,SYSTEM,KEY,YEAR,MONTH,DAY,HOUR;INIT=CREATE SCHEMA IF NOT EXISTS varapi\\;SET SCHEMA varapi\\;CREATE TABLE IF NOT EXISTS varapi.idempotency_keys (tenant_id VARCHAR(255) NOT NULL,pod_id VARCHAR(255) NOT NULL,idempotency_key VARCHAR(255) NOT NULL,request_hash VARCHAR(512) NOT NULL,response_status INT NOT NULL,response_body CLOB NOT NULL,created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,expires_at TIMESTAMP NULL,PRIMARY KEY(tenant_id,pod_id,idempotency_key))"
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ""
+
+impilo:
+  security:
+    disable-oauth-for-tests: true
