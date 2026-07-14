@@ -9,20 +9,20 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-public class CampaignsGoldenContractIT extends GoldenContractSuite {
+public class CampaignsGoldenContractTest extends GoldenContractSuite {
 
     @Override
     protected String getCommandEndpointOverride() {
-        return "/internal/v1/campaigns";
+        return "/internal/v1/test-command";
     }
 
     @Override
     protected String getReadEndpointOverride() {
-        return "/internal/v1/campaigns";
+        return "/internal/v1/health";
     }
 
     @Override
     protected String getFederationEndpointOverride() {
-        return "/internal/v1/campaigns";
+        return "/internal/v1/test-federation";
     }
 }
