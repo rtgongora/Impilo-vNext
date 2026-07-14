@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
@@ -38,6 +39,7 @@ public class SecurityConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests", havingValue = "false", matchIfMissing = true)
     public SecurityFilterChain filterChain(HttpSecurity http, TrustContextFilter trustContextFilter,
             @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri) throws Exception {
         http
@@ -61,6 +63,24 @@ public class SecurityConfig {
             http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
         }
 
+        return http.build();
+    }
+
+    /**
+     * Test-only chain (estate idiom): opened by disable-oauth-for-tests so the
+     * golden contract suite can drive the v1.1 probe endpoints without a token
+     * issuer. TrustContextFilter still runs so companion filters behave as in prod.
+     */
+    @Bean
+    @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests", havingValue = "true")
+    public SecurityFilterChain testFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/internal/v1/**", "/external/v1/**").permitAll()
+                .anyRequest().authenticated());
         return http.build();
     }
 }
