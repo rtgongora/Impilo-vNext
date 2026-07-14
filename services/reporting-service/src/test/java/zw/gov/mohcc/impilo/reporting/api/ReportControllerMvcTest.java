@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 import zw.gov.mohcc.impilo.reporting.dto.CreateReportRequest;
 import zw.gov.mohcc.impilo.reporting.dto.CreateScheduleRequest;
@@ -29,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-class ReportControllerIT {
+class ReportControllerMvcTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -60,6 +61,11 @@ class ReportControllerIT {
         runRepository.deleteAll();
         definitionRepository.deleteAll();
         outboxRepository.deleteAll();
+        // MockMvc runs with addFilters=false, so the companion V11HeaderFilter that
+        // normally populates the RequestContext from trust headers does not run.
+        // Seed it directly to match the constants the requests send.
+        RequestContextHolder.set(RequestContext.of(
+                TENANT_ID, POD_ID, REQUEST_ID, CORRELATION_ID, null, null, null));
     }
 
     @AfterEach
