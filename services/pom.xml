@@ -415,6 +415,10 @@
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <configuration>
                         <argLine>-Dnet.bytebuddy.experimental=true -XX:+EnableDynamicAgentLoading</argLine>
+                        <!-- Each IT class runs in a fresh JVM: integration tests boot full
+                             application contexts that bind singleton resources (e.g. a fixed
+                             gRPC server port), which collide if several run in one JVM. -->
+                        <reuseForks>false</reuseForks>
                         <!--
                             Integration tests self-skip when their infrastructure is absent
                             (e.g. runtime-proof ITs @EnabledIfSystemProperty(it.pg.url),
