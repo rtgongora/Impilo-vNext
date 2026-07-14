@@ -402,6 +402,39 @@
                         <failOnError>false</failOnError>
                     </configuration>
                 </plugin>
+                <!--
+                    Selective integration-test wiring. Failsafe is MANAGED here (version +
+                    shared config + the integration-test/verify executions) but NOT activated:
+                    only modules that opt in via one of the it-* profiles inherit these
+                    executions, so an ordinary `mvn test`/`mvn verify` never scans or runs
+                    *IT.java. This deliberately avoids enabling Failsafe estate-wide.
+                    See docs/runbooks/integration-tests.md.
+                -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <configuration>
+                        <argLine>-Dnet.bytebuddy.experimental=true -XX:+EnableDynamicAgentLoading</argLine>
+                        <!--
+                            Integration tests self-skip when their infrastructure is absent
+                            (e.g. runtime-proof ITs @EnabledIfSystemProperty(it.pg.url),
+                            Testcontainers @Testcontainers(disabledWithoutDocker)), so we do
+                            NOT set failIfNoTests here — an opt-in local run without infra
+                            must skip cleanly, not fail. CI proves the tests actually ran via
+                            scripts/test/assert-integration-tests-ran.sh (parses failsafe
+                            reports), which is the "no all-skipped green" guard.
+                        -->
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>integration-tests</id>
+                            <goals>
+                                <goal>integration-test</goal>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
