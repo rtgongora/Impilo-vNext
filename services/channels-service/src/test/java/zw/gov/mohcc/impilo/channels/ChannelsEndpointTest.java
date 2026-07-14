@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class ChannelsEndpointIT {
+class ChannelsEndpointTest {
 
     @Autowired
     private MockMvc mockMvc;
