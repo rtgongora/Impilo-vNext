@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.inpatient.persistence.entity.ProcedureReadinessCheckE
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureBlockerResolutionRepository;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureConsentRepository;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureEpisodeRepository;
+import zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureInstrumentSetUseRepository;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureReadinessCheckRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -54,6 +55,7 @@ public class TheatreReadinessBoardService {
     private final ProcedureConsentRepository consentRepository;
     private final ProcedureReadinessCheckRepository readinessRepository;
     private final ProcedureBlockerResolutionRepository resolutionRepository;
+    private final ProcedureInstrumentSetUseRepository instrumentSetUseRepository;
     private final ObjectMapper objectMapper;
 
     public TheatreReadinessBoardService(TheatreService theatreService,
@@ -61,12 +63,14 @@ public class TheatreReadinessBoardService {
                                         ProcedureConsentRepository consentRepository,
                                         ProcedureReadinessCheckRepository readinessRepository,
                                         ProcedureBlockerResolutionRepository resolutionRepository,
+                                        ProcedureInstrumentSetUseRepository instrumentSetUseRepository,
                                         ObjectMapper objectMapper) {
         this.theatreService = theatreService;
         this.episodeRepository = episodeRepository;
         this.consentRepository = consentRepository;
         this.readinessRepository = readinessRepository;
         this.resolutionRepository = resolutionRepository;
+        this.instrumentSetUseRepository = instrumentSetUseRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -98,7 +102,7 @@ public class TheatreReadinessBoardService {
         addDomain(domains, blockers, episodeId, "BED", flagStatus(body, "bedAvailable", "bed_available"));
         addDomain(domains, blockers, episodeId, "RECOVERY", flagStatus(body, "recoveryBedAvailable", "recovery_bed_available"));
         addDomain(domains, blockers, episodeId, "ICU", conditionalStatus(body, "icuRequired", "icuBedAvailable"));
-        addDomain(domains, blockers, episodeId, "INSTRUMENT_SET", flagStatus(body, "instrumentSetSterile", "instrument_set_sterile"));
+        addDomain(domains, blockers, episodeId, "INSTRUMENT_SET", instrumentSetStatus(episodeId, body));
         addDomain(domains, blockers, episodeId, "IMPLANT", conditionalStatus(body, "implantRequired", "implantAvailable"));
         addDomain(domains, blockers, episodeId, "FASTING", flagStatus(body, "fastingConfirmed", "fasting_confirmed"));
         addDomain(domains, blockers, episodeId, "IDENTITY", flagStatus(body, "identityConfirmed", "identity_confirmed"));
@@ -180,6 +184,20 @@ public class TheatreReadinessBoardService {
             r.setBlockersJson("[]");
         }
         readinessRepository.save(r);
+    }
+
+    /**
+     * INSTRUMENT_SET domain (Wave 3): READY when a REAL sterile set has been issued to the case through
+     * TUSO CSSD (an ISSUED procedure_instrument_set_use row) — the gate now consumes owner truth, not a
+     * self-asserted flag. Falls back to the Wave-2 evidence flag when no set has been issued yet.
+     */
+    private String instrumentSetStatus(UUID episodeId, Map<String, Object> body) {
+        boolean issued = instrumentSetUseRepository.findByEpisodeIdAndIssueStatus(episodeId, "ISSUED").stream()
+                .findAny().isPresent();
+        if (issued) {
+            return "READY";
+        }
+        return flagStatus(body, "instrumentSetSterile", "instrument_set_sterile");
     }
 
     /** CONSENT domain from the multi-type bundle: all required GRANTED, none withdrawn. */

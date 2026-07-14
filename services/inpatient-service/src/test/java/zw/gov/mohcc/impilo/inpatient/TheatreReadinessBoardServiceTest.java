@@ -39,8 +39,12 @@ class TheatreReadinessBoardServiceTest {
         consentRepository = mock(ProcedureConsentRepository.class);
         readinessRepository = mock(ProcedureReadinessCheckRepository.class);
         resolutionRepository = mock(ProcedureBlockerResolutionRepository.class);
+        zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureInstrumentSetUseRepository instrumentSetUseRepository =
+                mock(zw.gov.mohcc.impilo.inpatient.persistence.repository.ProcedureInstrumentSetUseRepository.class);
+        when(instrumentSetUseRepository.findByEpisodeIdAndIssueStatus(any(), any()))
+                .thenReturn(java.util.List.of());
         service = new TheatreReadinessBoardService(theatreService, episodeRepository, consentRepository,
-                readinessRepository, resolutionRepository, new ObjectMapper());
+                readinessRepository, resolutionRepository, instrumentSetUseRepository, new ObjectMapper());
         episodeId = UUID.randomUUID();
         ProcedureEpisodeEntity episode = new ProcedureEpisodeEntity();
         episode.setStatus("BOOKED");

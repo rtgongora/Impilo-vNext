@@ -60,6 +60,9 @@ inpatient:
       enabled: ${INPATIENT_INVENTORY_CONSUMPTION_ENABLED:true}
     oros:
       base-url: ${OROS_BASE_URL:http://localhost:8089}
+    # Wave 3 commodities peer: TUSO instrument-set registry + CSSD lifecycle (SoR).
+    tuso:
+      base-url: ${TUSO_BASE_URL:http://localhost:8084}
     # Wave 1 clinical-safety peers (orchestration-by-reference; peers stay source-of-truth)
     madi:
       base-url: ${MADI_BASE_URL:http://localhost:8300}
