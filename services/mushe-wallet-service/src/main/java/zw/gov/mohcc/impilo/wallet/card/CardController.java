@@ -319,6 +319,7 @@ public class CardController {
         map.put("expiryMonth", card.getExpiryMonth());
         map.put("expiryYear", card.getExpiryYear());
         map.put("status", card.getStatus());
+        map.put("vitoCardNumber", card.getVitoCardNumber()); // the canonical SMART card (identity facet), for offline pay
         map.put("phrEnabled", card.isPhrEnabled());
         map.put("phrConsentAt", card.getPhrConsentAt());
         map.put("pinTriesRemaining", card.getPinTriesRemaining());
