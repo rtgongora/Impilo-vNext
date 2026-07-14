@@ -13,6 +13,7 @@ public class CostaProperties {
     private String currency = "USD";
     private String defaultCostMethod = "TARIFF";
     private StepUp stepUp = new StepUp();
+    private Recognition recognition = new Recognition();
 
     public Outbox getOutbox() { return outbox; }
     public void setOutbox(Outbox outbox) { this.outbox = outbox; }
@@ -22,6 +23,29 @@ public class CostaProperties {
     public void setDefaultCostMethod(String defaultCostMethod) { this.defaultCostMethod = defaultCostMethod; }
     public StepUp getStepUp() { return stepUp; }
     public void setStepUp(StepUp stepUp) { this.stepUp = stepUp; }
+    public Recognition getRecognition() { return recognition; }
+    public void setRecognition(Recognition recognition) { this.recognition = recognition; }
+
+    /**
+     * Health-worker recognition enrichment (provider-as-patient fee perks).
+     * DISABLED by default: even with the DB rule ACTIVE, no encounter is
+     * enriched until a tenant deployment flips {@code costa.recognition.enabled}.
+     */
+    public static class Recognition {
+        private boolean enabled = false;
+        /** Recognition classes tenant policy accepts for HEALTH_WORKER billing. */
+        private java.util.List<String> allowedClasses =
+                java.util.List.of("LICENSED_PROVIDER", "HEALTH_WORKFORCE", "BOTH");
+        /** Short TTL for the recognition lookup cache (seconds). */
+        private long cacheTtlSeconds = 60;
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public java.util.List<String> getAllowedClasses() { return allowedClasses; }
+        public void setAllowedClasses(java.util.List<String> allowedClasses) { this.allowedClasses = allowedClasses; }
+        public long getCacheTtlSeconds() { return cacheTtlSeconds; }
+        public void setCacheTtlSeconds(long cacheTtlSeconds) { this.cacheTtlSeconds = cacheTtlSeconds; }
+    }
 
     public static class Outbox {
         private long pollIntervalMs = 2000;

@@ -32,4 +32,30 @@ public class ImpiloIntegrationProperties {
     public void setCoverageBaseUrl(String coverageBaseUrl) {
         this.coverageBaseUrl = coverageBaseUrl;
     }
+
+    /**
+     * Base URL for VARAPI provider registry (recognition lookups). No trailing slash.
+     */
+    private String varapiBaseUrl = "http://localhost:8083";
+
+    public String getVarapiBaseUrl() {
+        return varapiBaseUrl;
+    }
+
+    public void setVarapiBaseUrl(String varapiBaseUrl) {
+        this.varapiBaseUrl = varapiBaseUrl;
+    }
+
+    /**
+     * Base URL for Vashandi workforce service (recognition lookups). No trailing slash.
+     */
+    private String vashandiBaseUrl = "http://localhost:8167";
+
+    public String getVashandiBaseUrl() {
+        return vashandiBaseUrl;
+    }
+
+    public void setVashandiBaseUrl(String vashandiBaseUrl) {
+        this.vashandiBaseUrl = vashandiBaseUrl;
+    }
 }

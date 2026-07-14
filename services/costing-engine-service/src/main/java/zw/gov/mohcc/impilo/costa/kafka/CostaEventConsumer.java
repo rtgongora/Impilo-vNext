@@ -17,6 +17,7 @@ import zw.gov.mohcc.impilo.costa.domain.repository.RefundRepository;
 import java.util.List;
 import zw.gov.mohcc.impilo.costa.service.BillService;
 import zw.gov.mohcc.impilo.costa.service.ChargeRecordService;
+import zw.gov.mohcc.impilo.costa.service.HealthWorkerExemptionEnrichment;
 import zw.gov.mohcc.impilo.costa.service.InpatientCostingService;
 import zw.gov.mohcc.impilo.costa.service.CostEventCaptureService;
 import zw.gov.mohcc.impilo.costa.service.PaymentAllocationService;
@@ -41,6 +42,7 @@ public class CostaEventConsumer {
     private final PaymentAllocationService paymentAllocationService;
     private final ChargeRecordService chargeRecordService;
     private final CostEventCaptureService costEventCaptureService;
+    private final HealthWorkerExemptionEnrichment healthWorkerExemptionEnrichment;
     private final ObjectMapper objectMapper;
 
     public CostaEventConsumer(BillService billService,
@@ -52,6 +54,7 @@ public class CostaEventConsumer {
                               PaymentAllocationService paymentAllocationService,
                               ChargeRecordService chargeRecordService,
                               CostEventCaptureService costEventCaptureService,
+                              HealthWorkerExemptionEnrichment healthWorkerExemptionEnrichment,
                               ObjectMapper objectMapper) {
         this.billService = billService;
         this.inpatientCostingService = inpatientCostingService;
@@ -62,6 +65,7 @@ public class CostaEventConsumer {
         this.paymentAllocationService = paymentAllocationService;
         this.chargeRecordService = chargeRecordService;
         this.costEventCaptureService = costEventCaptureService;
+        this.healthWorkerExemptionEnrichment = healthWorkerExemptionEnrichment;
         this.objectMapper = objectMapper;
     }
 
@@ -96,6 +100,9 @@ public class CostaEventConsumer {
             encounter.setPctJourneyId(journeyId);
             encounter.setEncounterType(mapEncounterType(encounterType));
             encounter.setStatus(EncounterStatus.OPEN);
+            // Governed provider-as-patient perk: tag HEALTH_WORKER when the
+            // patient is a recognised health worker (config-gated, fail-open).
+            healthWorkerExemptionEnrichment.enrich(encounter);
             encounterRepository.save(encounter);
 
             var encMeta = objectMapper.createObjectNode();
@@ -310,6 +317,7 @@ public class CostaEventConsumer {
                 encounter.setPctJourneyId(encounterId);
                 encounter.setEncounterType(EncounterType.OUTPATIENT);
                 encounter.setStatus(EncounterStatus.OPEN);
+                healthWorkerExemptionEnrichment.enrich(encounter);
                 encounterRepository.save(encounter);
                 log.info("Created COSTA encounter {} for teleconsult referral {}",
                         encounter.getEncounterId(), referralId);
