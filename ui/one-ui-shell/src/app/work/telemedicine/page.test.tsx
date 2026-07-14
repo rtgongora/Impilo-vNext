@@ -1,8 +1,32 @@
 import type { ReactNode } from "react";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TelemedicineOperatingModelPage from "./page";
+
+// The virtual-hospital directory now comes from the BFF (Wave-2 de-dup); load the
+// canonical seed to feed the registry mock.
+const VH_SEED = (
+  JSON.parse(
+    readFileSync(
+      path.resolve(
+        path.dirname(fileURLToPath(import.meta.url)),
+        "../../../../../../contracts/telemedicine/virtual-hospitals.json",
+      ),
+      "utf8",
+    ),
+  ) as { virtualHospitals: unknown[] }
+).virtualHospitals;
+
+const VH_DIRECTORY_ENVELOPE = {
+  data: {
+    type: "virtual-hospital-directory",
+    attributes: { virtualHospitals: VH_SEED, source: "TUSO", registryDegraded: false },
+  },
+};
 
 const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
 
@@ -21,7 +45,12 @@ describe("/work/telemedicine hub", () => {
   beforeEach(() => {
     get.mockReset();
     window.localStorage.clear();
-    get.mockResolvedValue({ data: null });
+    get.mockImplementation(async (p: string) => {
+      if (p === "/internal/v1/telemedicine/operating-model/virtual-hospitals") {
+        return VH_DIRECTORY_ENVELOPE;
+      }
+      return { data: null };
+    });
   });
 
   it("renders the operating-model doctrine and navigation sections", async () => {
@@ -72,10 +101,10 @@ describe("/work/telemedicine hub", () => {
     ).toBeInTheDocument();
   });
 
-  it("reports governance coverage from the config substrate (never fake ops metrics)", () => {
+  it("reports governance coverage from the registry (never fake ops metrics)", async () => {
     renderWithQuery(<TelemedicineOperatingModelPage />);
     expect(screen.getByText("Governance coverage")).toBeInTheDocument();
-    // 11 strategic + 10 provincial institutions configured
-    expect(screen.getByText("21")).toBeInTheDocument();
+    // 11 strategic + 10 provincial institutions in the registry
+    expect(await screen.findByText("21")).toBeInTheDocument();
   });
 });

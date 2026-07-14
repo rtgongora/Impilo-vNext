@@ -2,8 +2,24 @@ import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import VirtualHospitalDetailPage from "./page";
-import { ALL_VIRTUAL_HOSPITALS } from "@/lib/telemedicine/virtual-hospitals";
+
+// The UI's ALL_VIRTUAL_HOSPITALS constant was deleted in the Wave-2 registry
+// de-dup; the detail page now comes from the BFF. Feed the mock the canonical seed.
+const ALL_VIRTUAL_HOSPITALS = (
+  JSON.parse(
+    readFileSync(
+      path.resolve(
+        path.dirname(fileURLToPath(import.meta.url)),
+        "../../../../../../../../contracts/telemedicine/virtual-hospitals.json",
+      ),
+      "utf8",
+    ),
+  ) as { virtualHospitals: Array<{ id: string }> }
+).virtualHospitals;
 
 const { paramsRef, get } = vi.hoisted(() => ({
   paramsRef: { current: { id: "vh-national-telemedicine" } as { id: string } },

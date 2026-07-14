@@ -1,21 +1,24 @@
 /**
- * Drift guard: the experience-bff operating-model registry resources are the
- * canonical serialization of the TS seed spec in this directory. The BFF
- * serves them to /work/telemedicine/groups and
- * /work/telemedicine/virtual-hospitals; if either side changes without the
- * other, these tests fail rather than letting the UI seed spec and the served
- * document diverge silently.
+ * Drift guard for the virtual-service registry.
  *
- * Regenerate the JSON from the TS spec (never edit the JSON by hand):
- * serialize { virtualHospitals: ALL_VIRTUAL_HOSPITALS } and the clinical-group
- * taxonomy document with JSON.stringify(…, null, 2).
+ * The virtual-hospital directory is now sovereign in TUSO (V022/V023), served
+ * through the experience-bff operating-model registry with the canonical
+ * document `contracts/telemedicine/virtual-hospitals.json` as the static
+ * fallback (the UI's ALL_VIRTUAL_HOSPITALS data constant was deleted in the
+ * Wave-2 de-dup; the UI now reads the BFF via useVirtualHospitals()). This test
+ * pins the two file copies together — the canonical contracts doc and the BFF
+ * resource copy it is generated into — so they can never diverge silently.
+ * Regenerate both from the seed generator (tools/generate-virtual-service-seed.mjs),
+ * never edit the JSON by hand.
+ *
+ * The clinical-group taxonomy is still a TS seed spec in this directory, so its
+ * drift assertion against the served document is unchanged.
  */
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { ALL_VIRTUAL_HOSPITALS } from "../virtual-hospitals";
 import {
   CLINICAL_GROUP_TYPES,
   GROUP_CREATION_BLOCKED_REASON,
@@ -27,14 +30,23 @@ const RESOURCE_DIR = path.resolve(
   "../../../../../../services/experience-bff/src/main/resources/telemedicine/operating-model",
 );
 
+const CONTRACTS_DIR = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../../../../../../contracts/telemedicine",
+);
+
 function readResource(name: string): unknown {
   return JSON.parse(readFileSync(path.join(RESOURCE_DIR, name), "utf8"));
 }
 
-describe("operating-model registry drift (TS seed spec ↔ BFF resources)", () => {
-  it("virtual-hospitals.json matches ALL_VIRTUAL_HOSPITALS exactly", () => {
+function readContract(name: string): unknown {
+  return JSON.parse(readFileSync(path.join(CONTRACTS_DIR, name), "utf8"));
+}
+
+describe("operating-model registry drift (canonical contract ↔ BFF resources)", () => {
+  it("BFF virtual-hospitals.json fallback matches the canonical contracts document", () => {
     expect(readResource("virtual-hospitals.json")).toEqual(
-      JSON.parse(JSON.stringify({ virtualHospitals: ALL_VIRTUAL_HOSPITALS })),
+      readContract("virtual-hospitals.json"),
     );
   });
 
