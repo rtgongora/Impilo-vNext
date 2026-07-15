@@ -41,3 +41,46 @@ MinIO — Simba never stores bytes.
 - **Reel PENDING→READY async processing** — marked READY on register (prior wave); async media
   processing pipeline not built.
 - **V013 `official` column** — Postgres migration (H2 tests exercise it via `ADD COLUMN IF NOT EXISTS`).
+
+## Yypyl integration + UI-completion wave (2026-07-15)
+
+Integrated onto `claude/staging-ux-orchestration-remediation-Yypyl` (Flyway block renumbered so the
+wellness migrations seat after Yypyl's `V006__retire_crowdfunding_stub.sql`: assessment→V007,
+social_core→V008 … official_posts→V014; sequence V001→V014, no duplicate version). The following
+UI/vertical gaps were then closed.
+
+| Capability | Persistence | Endpoints | Surfaces | Tests | Status |
+|---|---|---|---|---|---|
+| **Ephemeral statuses ("Right now")** | `simba_social_status` (V008 social_core — reused, no new migration) | `SocialStatusController` `POST/GET/DELETE /wellness/social/statuses` | Web `WellnessStatusStrip` in the feed (composer: mood/visibility/expiry + own-status delete); citizen mobile `WellnessSocialFeedScreen` strip+composer | `SocialStatusServiceTest` (7: create/emit/audit, visibility filter, owner-delete, expiry sweep) + web `WellnessStatusStrip.test` (2) | **COMPLETE** |
+| **Post detail + discussion** | existing `simba_social_post` / `simba_social_comment` | existing `GET /posts/{id}`, `GET/POST /posts/{id}/comments`, `/react` | Web `wellness/social/posts/[id]` (thread + 6-type reaction picker + save) | `post-detail.test` (2) | **COMPLETE** |
+| **Saved / My activity** | existing `simba_social_bookmark` / feed `MY_ACTIVITY` | existing `GET /saved`, `GET /feed?filter=MY_ACTIVITY` | Web `wellness/social/saved`, `wellness/social/my-activity` | `saved.test` (2) | **COMPLETE** |
+| **Provider social workbench (web)** | n/a (composition) | existing moderation / announcement / engagement / report endpoints | Web `provider-workspace/wellness/social` (official post / announcement / moderation inbox / engagement / flag-to-PCT) | covered by hook + endpoint tests | **COMPLETE** |
+| **Status expiry sweep** | `simba_social_status.moderation_status` | — | `SocialStatusExpiryScheduler` (`@Scheduled @Profile("!test")`, flips expired→HIDDEN) | `SocialStatusServiceTest.expireOverdue_*` | **COMPLETE** |
+
+### Additional surfaces registered
+- **Web routes** (all previously shipped-but-unregistered now in the route registry, guarded + nav-resolved):
+  `wellness/assessment`, `wellness/timeline`, `wellness/reminders`, `wellness/follow-ups`,
+  `wellness/insights` (aggregate dashboard, role-gated), `wellness/settings/consent`,
+  `wellness/social/feed`, `wellness/social/reels`, `wellness/social/posts/[id]`, `wellness/social/saved`,
+  `wellness/social/my-activity`, `provider-workspace/wellness(/social)`. `EXPECTED_ROUTE_COUNT` 712→735;
+  route-parity 735/735.
+- **Citizen mobile**: `AssessmentsSection` rebuilt from a dead `onAction={()=>{}}` empty-state button into
+  a real multi-step wizard driving `wellnessAssessmentService` (start/resume → save step → complete →
+  risk band + care-linkage result); new sovereign `WellnessSocialFeedScreen` (status strip + feed +
+  post composer) registered as a Personal-tab section. Mobile status methods added to
+  `wellnessSocialService` (`fetchActiveStatuses`/`createStatus`/`deleteStatus`).
+
+### Gate results (this wave)
+- Backend: `mvn -pl services/simba-service test` → **85 tests, 0 failures** (15 classes).
+- Web: `one-ui-shell` `tsc --noEmit` clean; route-parity **735/735**; no-stub guard OK; new vitest green.
+- Mobile: `tsc --noEmit` — provider-app **0 errors** (fixed a merge regression: `useAppStore` selector +
+  missing `<Select label>`); citizen-app **0 new errors** (7 pre-existing baseline in
+  CoursePlayerScreen/SmartCardSection/smartCardKey native-dep resolution). Mobile vitest is not runnable
+  in this workspace (pnpm `workspace:*`) — documented honest partial.
+
+### Honest deferred (this wave)
+- **Status FOLLOWER visibility** degrades to owner-only until a follow-graph repository exists (no
+  `simba_social_follow` repo is wired yet); PRIVATE and PUBLIC_WITHIN_IMPILO are fully enforced via the
+  reused `SocialVisibilityService`.
+- Citizen mobile reels/group-detail/moderation dedicated screens and the core timeline/reminders/consent
+  mobile screens remain follow-ups (service methods exist; screens not built this wave).
