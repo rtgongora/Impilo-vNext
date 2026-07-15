@@ -90,11 +90,13 @@ deploy.
 **Pre-fullboot deploy-hygiene gates (both programs — these ghosts only surface on a CLEAN full-boot):**
 1. **Clean build** — `mvn clean` / no reused `target/` dirs after any migration rename (stale-jar V034/V030
    ghosts otherwise carry into the packaged jar and Flyway-fail at boot).
-2. **No duplicate migration versions on any LIVE-Flyway service** —
-   `for d in services/*/src/main/resources/db/migration; do ls "$d" | grep -oE '^V[0-9]+' | sort | uniq -d; done`
-   must be empty. Known duplicates found + dispositioned 2026-07-15: pct V034 (fixed W0), tshepo-authz V030
-   (theatre Wave 6 → V035), experience-bff V41 (NON-blocker — bff has no datasource/flyway-core, dead
-   scaffolding; cleanup chipped).
+2. **No duplicate migration versions on any LIVE-Flyway service** — print-and-review (auto-fail only for
+   live-Flyway services; datasource-less services are dispositioned false-positives, not hard-fails):
+   `for d in services/*/src/main/resources/db/migration; do dup=$(ls "$d" 2>/dev/null | grep -oE '^V[0-9]+' | sort | uniq -d); [ -n "$dup" ] && echo "DUP $(echo "$d" | cut -d/ -f2): $dup"; done`
+   → empty = clean; any line = investigate. Known duplicates found + dispositioned 2026-07-15: pct V034
+   (fixed W0), tshepo-authz V030 (theatre Wave 6 → V035, re-verified Flyway-enabled boot 11/0),
+   experience-bff V41 (NON-blocker — bff has no datasource/flyway-core, dead scaffolding; cleanup chipped
+   task_2b123668).
 
 **J-TR-M1 (mobile ePCR) evidence standard — PO decision 2026-07-15:** for the PREVIEW gate, the mobile
 ePCR is satisfied by the RN unit/integration tests (provider-app suite green) + the live backend rig
