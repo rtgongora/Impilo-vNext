@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { SurgicalBundleCard } from "@/components/finance/SurgicalBundleCard";
 import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
 import { FINANCE_MUTATION_COLUMNS } from "@/lib/json-api/finance-table-columns";
 import { useCostaIntelCostEvents, useCostaIntelInvoiceFromEstimate } from "@/hooks/queries/useCostaIntel";
@@ -407,6 +408,9 @@ export default function CostaEncounterTimelinePage() {
               </div>
             </div>
           </section>
+
+          {/* Surgical case bundle — only renders when theatre bundle lines exist */}
+          {encounterId ? <SurgicalBundleCard encounterId={encounterId} /> : null}
 
           {/* Chronological merged timeline */}
           <section className="rounded-xl border border-border bg-card p-5 shadow-sm">

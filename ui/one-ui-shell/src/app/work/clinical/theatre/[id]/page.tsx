@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Stethoscope, Loader2, RefreshCw, ArrowLeft, ShieldAlert, ClipboardCheck, FileText, HeartPulse, Ban, TriangleAlert, Maximize2, Minimize2 } from "lucide-react";
+import { Stethoscope, Loader2, RefreshCw, ArrowLeft, ShieldAlert, ClipboardCheck, FileText, HeartPulse, Ban, TriangleAlert, Maximize2, Minimize2, Receipt } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
@@ -35,6 +35,7 @@ interface SafetyEvent { id?: string; category?: string; severity?: string; descr
 interface TheatreCaseDetail {
   id?: string;
   patient_id?: string;
+  encounter_id?: string;
   patient_name?: string;
   procedure_name?: string;
   status?: string;
@@ -228,6 +229,15 @@ export default function TheatreCaseDetailPage() {
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{data.triage_priority ?? "ELECTIVE"}</span>
               {data.surgeon_id && <span className="text-xs text-muted-foreground">Surgeon: {data.surgeon_id}</span>}
               {data.death_case_ref && <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs font-medium text-white">Death case: {data.death_case_ref.slice(0, 8)}</span>}
+              {data.encounter_id && (
+                <Link
+                  href={`/finance/costa/encounter/${data.encounter_id}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground hover:bg-background"
+                  data-testid="view-case-billing"
+                >
+                  <Receipt className="h-3.5 w-3.5" /> View case billing
+                </Link>
+              )}
               <button
                 type="button"
                 aria-pressed={focusMode}
