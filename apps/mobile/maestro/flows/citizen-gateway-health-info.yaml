@@ -1,0 +1,43 @@
+# Guest public health-information browse/search — the anonymous gateway pillar (no sign-in).
+#
+# Drives the REAL public guidance lane (governed disclosure only, no PII):
+#   GET /internal/v1/public/gateway/guidance/education?q=&category=&page=&size=
+#   GET /internal/v1/public/gateway/guidance/education/categories
+#   GET /internal/v1/public/gateway/guidance/education/{id}
+#
+# Parameterize:
+#   MAESTRO_HEALTH_QUERY — a search term expected to match seeded public education content
+#
+# Preconditions: preview stack reachable; experience-bff PublicGatewayGuidanceBffController
+# live with at least one published public education topic.
+appId: zw.gov.impilo.citizen
+tags:
+  - gateway
+  - public-health
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    id: "login-screen"
+    timeout: 120000
+
+# "No account needed" → Health info
+- tapOn:
+    id: "guest-health-info"
+- extendedWaitUntil:
+    id: "health-info-screen"
+    timeout: 30000
+
+# Search the public topics
+- tapOn:
+    id: "health-info-search"
+- inputText: ${MAESTRO_HEALTH_QUERY}
+- hideKeyboard
+- tapOn:
+    id: "health-info-search-go"
+
+# The list renders the governed public disclosure (topic rows). Open the first result.
+- extendedWaitUntil:
+    id: "health-info-screen"
+    timeout: 30000
