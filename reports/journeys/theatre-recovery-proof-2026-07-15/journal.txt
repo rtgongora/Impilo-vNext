@@ -1,0 +1,56 @@
+== RIG: infra (postgres + redis + kafka)
+   nhume-service health: 200
+   booking-service health: 200
+   learning-service health: 200
+   reporting-service health: 200
+   costing-engine-service health: 200
+   inpatient-service health: 200
+   pct-service health: 000 (best-effort peer)
+== J-RR: intake → operative → PACU recovery → discharge → completion
+   PASS: case intake (f883976e-162f-4fd6-9a6a-6f736953cc20)
+   FAIL: J-RR-1 expected 2 PACU observations, got ''
+   FAIL: J-RR-1 readiness not READY (got '')
+   FAIL: J-RR-2 expected 409, got 404
+   FAIL: J-RR-3 admission_ref not stamped
+   FAIL: J-RR-3 admission census row missing
+   FAIL: J-RR-3 PACU_TO_WARD transport leg missing (got '0')
+   FAIL: J-RR-8 teleconsult link missing
+   FAIL: J-RR-4 discharge not COMPLETED (got '')
+   FAIL: J-RR-4 pending histopath not surfaced (got '')
+   FAIL: J-RR-5 case not COMPLETED (got 'PACU')
+   FAIL: J-RR-5 trainee logbook event missing
+== waiting for async outbox → kafka → COSTA bundle + reporting projection
+   FAIL: J-RR-6 COSTA bundle not produced (got '0')
+   FAIL: J-RR-6 anaesthesia line missing (got '0')
+   FAIL: J-RR-7 reporting projection missing (got '0')
+   FAIL: J-RR-7 utilisation report did not reconcile (total='0' completed='0')
+   theatre-utilisation /run HTTP status: 201 (export-visibility gated)
+== RESULT: PASS=1 FAIL=15
+== RIG: infra (postgres + redis + kafka)
+   nhume-service health: 200
+   booking-service health: 200
+   learning-service health: 200
+   reporting-service health: 200
+   costing-engine-service health: 200
+   inpatient-service health: 200
+   pct-service health: 000 (best-effort peer)
+== J-RR: intake → operative → PACU recovery → discharge → completion
+   PASS: case intake (fdf1511a-ccfe-4f7e-b264-4e5fb25f367f)
+   PASS: J-RR-1 PACU time-series recorded (2 observations)
+   PASS: J-RR-1 discharge readiness READY after Aldrete 10
+   PASS: J-RR-2 ward discharge BLOCKED (409) when not discharge-ready
+   PASS: J-RR-3 postop admission linked (admission_ref=c1a9e46e-e259-4360-9061-892ef71b5e56)
+   PASS: J-RR-3 inpatient admission census row exists
+   PASS: J-RR-3 NHUME PACU_TO_WARD movement routed
+   PASS: J-RR-8 tele-PACU teleconsult link recorded
+   PASS: J-RR-4 surgical discharge completed
+   PASS: J-RR-4 pending histopathology surfaced on discharge summary (1)
+   PASS: J-RR-5 case COMPLETED (theatre.case.completed emitted)
+   PASS: J-RR-5 trainee logbook/CPD event emitted (fail-safe by reference)
+== waiting for async outbox → kafka → COSTA bundle + reporting projection
+   PASS: J-RR-6 COSTA surgical-case bundle billed (THEATRE-TIME line present)
+   PASS: J-RR-6 anaesthesia line composed in bundle
+   PASS: J-RR-7 theatre.* projected into rpt_theatre_case_metric (COMPLETED)
+   PASS: J-RR-7 theatre-utilisation report reconciles (total=2 completed=1)
+   theatre-utilisation /run HTTP status: 201 (export-visibility gated)
+== RESULT: PASS=16 FAIL=0
