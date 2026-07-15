@@ -39,6 +39,16 @@ public class DaidzaiController {
         return ResponseEntity.ok(daidzai.listRequests(status));
     }
 
+    /**
+     * Dispatcher callback verification — releases the PD-3 dispatch gate for an AWAITING_CALLBACK
+     * request. Authenticated operator lane (rides the daidzai authenticated fall-through, not the
+     * public lane); the inbound operator trust context is forwarded to daidzai, which audits it.
+     */
+    @PostMapping("/requests/{id}/verify-callback")
+    public ResponseEntity<JsonNode> verifyCallback(@PathVariable String id) {
+        return ResponseEntity.ok(daidzai.verifyCallback(id));
+    }
+
     @PostMapping("/requests/{id}/triage")
     public ResponseEntity<JsonNode> triage(@PathVariable String id) {
         return ResponseEntity.status(HttpStatus.CREATED).body(daidzai.triageRequest(id));

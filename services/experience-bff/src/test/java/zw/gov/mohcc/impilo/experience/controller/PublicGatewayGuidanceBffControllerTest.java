@@ -65,7 +65,7 @@ class PublicGatewayGuidanceBffControllerTest {
     void listAndEducationFailClosedAs502WhenGuidanceUnavailable() {
         ThrowingRestTemplate restTemplate = new ThrowingRestTemplate();
         assertEquals(502, controller(restTemplate).listExplainSteps().getStatusCode().value());
-        assertEquals(502, controller(restTemplate).education("all", "", 0, 20).getStatusCode().value());
+        assertEquals(502, controller(restTemplate).education("all", "", null, 0, 20).getStatusCode().value());
         assertEquals(502, controller(restTemplate).educationCategories().getStatusCode().value());
         assertEquals(502, controller(restTemplate).educationArticle("any-id").getStatusCode().value());
     }
@@ -73,7 +73,7 @@ class PublicGatewayGuidanceBffControllerTest {
     @Test
     void educationProxiesTheServiceSidePublicEducationEndpoint() {
         CapturingRestTemplate restTemplate = new CapturingRestTemplate("{\"data\":[]}");
-        var response = controller(restTemplate).education("prevention", "", 0, 10);
+        var response = controller(restTemplate).education("prevention", "", null, 0, 10);
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(restTemplate.lastGetUrl);
@@ -85,12 +85,35 @@ class PublicGatewayGuidanceBffControllerTest {
     @Test
     void educationPassesTheCategoryFilterDownstream() {
         CapturingRestTemplate restTemplate = new CapturingRestTemplate("{\"data\":[]}");
-        var response = controller(restTemplate).education("all", "vaccination", 0, 10);
+        var response = controller(restTemplate).education("all", "vaccination", null, 0, 10);
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(restTemplate.lastGetUrl);
         assertTrue(restTemplate.lastGetUrl.contains("category=vaccination"),
                 "category filter must reach the downstream url: " + restTemplate.lastGetUrl);
+    }
+
+    @Test
+    void educationPassesTheTextQueryDownstream() {
+        CapturingRestTemplate restTemplate = new CapturingRestTemplate("{\"data\":[]}");
+        var response = controller(restTemplate).education("all", "", "fever", 0, 10);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(restTemplate.lastGetUrl);
+        assertTrue(restTemplate.lastGetUrl.contains("/v1/public/guidance/education"),
+                "unexpected downstream url: " + restTemplate.lastGetUrl);
+        assertTrue(restTemplate.lastGetUrl.contains("q=fever"),
+                "text query must reach the downstream url: " + restTemplate.lastGetUrl);
+    }
+
+    @Test
+    void educationOmitsBlankTextQueryDownstream() {
+        CapturingRestTemplate restTemplate = new CapturingRestTemplate("{\"data\":[]}");
+        controller(restTemplate).education("all", "", "   ", 0, 10);
+
+        assertNotNull(restTemplate.lastGetUrl);
+        assertTrue(!restTemplate.lastGetUrl.contains("q="),
+                "a blank query must not be forwarded: " + restTemplate.lastGetUrl);
     }
 
     @Test

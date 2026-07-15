@@ -1,0 +1,25 @@
+==================================================================
+ CHECK 1 — SOS: create → worklist → public status (PII-free) → verify → worklist drop
+==================================================================
+PASS  1a anonymous SOS captured (202), reference=SOS-20260715-29CD8
+PASS  1b worklist lists the request (id=7d61715a-cdad-4cde-b6dd-84b8aad868d7)
+keys: ['callbackPending', 'createdAt', 'requestReference', 'stage', 'status']
+status: AWAITING_CALLBACK callbackPending: True stage: Awaiting callback confirmation
+extra_keys: []
+PII_LEAKS: []
+PASS  1c public status is AWAITING_CALLBACK + callbackPending + PII-free (no callback#/description/location/subject)
+PASS  1d verify-callback flipped status→RECEIVED, callbackVerified=true
+PASS  1e worklist no longer lists the verified request
+PASS  1f public status now RECEIVED + callbackPending=false
+PASS  1g unknown reference → 404
+
+==================================================================
+ CHECK 2 — Guidance: seed PUBLISHED article → public education text search
+==================================================================
+PASS  2a seeded PUBLISHED article
+PASS  2b education?q=malaria returned the seeded article (allow-listed fields only)
+PASS  2c non-matching query returns 0 rows (genuine search)
+
+==================================================================
+ RESULT: pass=10 fail=0
+==================================================================

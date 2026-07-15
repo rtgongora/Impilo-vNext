@@ -81,11 +81,52 @@ public class DaidzaiServiceClient {
         return get(baseUrl + API + "/requests/" + id, "getRequest");
     }
 
+    /**
+     * Anonymous public-lane SOS status read (gateway ADR disclosure-limited status lane). The status
+     * endpoint lives in a service-side {@code Public*Controller} that returns an allow-listed,
+     * PII-free status view (reference/status/stage/created/callback-pending only — never the callback
+     * number, description, location, or subject). Like the public write, the inbound anonymous request
+     * carries no user trust context, so the BFF supplies service-originated headers plus, when
+     * available, its own service-account bearer so the emergency service authenticates the BFF as a
+     * SYSTEM caller. A missing reference surfaces as a 404 for the controller to map.
+     *
+     * @param serviceAccountBearer raw access token, or {@code null} when Keycloak is unreachable
+     */
+    public JsonNode publicSosStatus(String reference, String serviceAccountBearer) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(CompanionHeaders.TENANT_ID, PUBLIC_DEFAULT_TENANT);
+        headers.set(CompanionHeaders.POD_ID, "national-spine");
+        headers.set(CompanionHeaders.ACTOR_ID, "public-gateway");
+        headers.set(CompanionHeaders.ACTOR_TYPE, "SYSTEM");
+        headers.set(CompanionHeaders.PURPOSE_OF_USE, "PUBLIC_ACCESS");
+        headers.set(CompanionHeaders.CORRELATION_ID, UUID.randomUUID().toString());
+        headers.set(CompanionHeaders.REQUEST_ID, UUID.randomUUID().toString());
+        if (serviceAccountBearer != null && !serviceAccountBearer.isBlank()) {
+            headers.set(CompanionHeaders.AUTHORIZATION,
+                    CompanionHeaders.BEARER_PREFIX + serviceAccountBearer);
+        }
+        String url = baseUrl + "/v1/public/emergency/requests/"
+                + java.net.URLEncoder.encode(reference, java.nio.charset.StandardCharsets.UTF_8) + "/status";
+        log.debug("DAIDZAI publicSosStatus: GET {} (bearer={})", url, serviceAccountBearer != null);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.GET, new HttpEntity<>(headers), JsonNode.class);
+        return response.getBody();
+    }
+
     /** Call-taker queue: pending (or status-filtered) SOS requests. WU5/WU6 passthrough. */
     public JsonNode listRequests(String status) {
         UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + API + "/requests");
         if (status != null && !status.isBlank()) b.queryParam("status", status);
         return get(b.toUriString(), "listRequests");
+    }
+
+    /**
+     * Dispatcher callback verification (PD-3 dispatch-gate release). Authenticated operator action —
+     * the inbound operator trust context is forwarded by the shared interceptor; daidzai audits the
+     * verification and moves an AWAITING_CALLBACK request to RECEIVED so it can be triaged.
+     */
+    public JsonNode verifyCallback(String id) {
+        return post(baseUrl + API + "/requests/" + id + "/verify-callback", Map.of(), "verifyCallback");
     }
 
     public JsonNode triageRequest(String id) {

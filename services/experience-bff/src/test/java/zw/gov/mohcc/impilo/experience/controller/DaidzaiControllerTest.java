@@ -98,6 +98,23 @@ class DaidzaiControllerTest {
     }
 
     @Test
+    void verifyCallback_delegatesAndReturns200() {
+        DaidzaiServiceClient client = mock(DaidzaiServiceClient.class);
+        ObjectNode verified = mapper.createObjectNode();
+        verified.put("status", "RECEIVED");
+        verified.put("callbackVerified", true);
+        when(client.verifyCallback("r1")).thenReturn(verified);
+
+        DaidzaiController controller = new DaidzaiController(client);
+        var resp = controller.verifyCallback("r1");
+
+        assertEquals(200, resp.getStatusCode().value());
+        assertEquals("RECEIVED", resp.getBody().get("status").asText());
+        assertEquals(true, resp.getBody().get("callbackVerified").asBoolean());
+        verify(client).verifyCallback("r1");
+    }
+
+    @Test
     void traumaEpisode_delegatesAndReturnsTimeline() {
         DaidzaiServiceClient client = mock(DaidzaiServiceClient.class);
         ObjectNode ep = mapper.createObjectNode();

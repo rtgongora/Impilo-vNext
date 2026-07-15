@@ -25,7 +25,7 @@ import zw.gov.mohcc.impilo.experience.client.GuidanceServiceClient;
  * <ul>
  *   <li>GET /guidance/explain-steps            — active trust-escalation explainers</li>
  *   <li>GET /guidance/explain-steps/{stepKey}  — one explainer (why / level / next / help)</li>
- *   <li>GET /guidance/education                — published public education topics (?domain= / ?category=)</li>
+ *   <li>GET /guidance/education                — published public education topics (?domain= / ?category= / ?q= text search)</li>
  *   <li>GET /guidance/education/categories     — published-topic categories with counts</li>
  *   <li>GET /guidance/education/{id}           — one published article incl. plain-language body</li>
  * </ul>
@@ -68,10 +68,11 @@ public class PublicGatewayGuidanceBffController {
     public ResponseEntity<JsonNode> education(
             @RequestParam(defaultValue = "all") String domain,
             @RequestParam(defaultValue = "") String category,
+            @RequestParam(required = false, name = "q") String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         try {
-            return ResponseEntity.ok(guidanceClient.getPublicEducation(domain, category, page, size));
+            return ResponseEntity.ok(guidanceClient.getPublicEducation(domain, category, q, page, size));
         } catch (Exception e) {
             log.warn("Public gateway education read failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();

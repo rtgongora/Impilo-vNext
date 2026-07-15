@@ -132,14 +132,20 @@ public class GuidanceServiceClient {
         return response.getBody();
     }
 
-    /** Published public education topics (safe fields only; optional category filter). */
-    public JsonNode getPublicEducation(String domain, String category, int page, int size) {
+    /**
+     * Published public education topics (safe fields only). Optional category filter and optional
+     * free-text query — a non-blank {@code q} runs the PUBLISHED-only title/summary search downstream.
+     */
+    public JsonNode getPublicEducation(String domain, String category, String q, int page, int size) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/public/guidance/education")
                 .queryParam("domain", domain)
                 .queryParam("page", page)
                 .queryParam("size", size);
         if (category != null && !category.isBlank()) {
             builder.queryParam("category", category);
+        }
+        if (q != null && !q.isBlank()) {
+            builder.queryParam("q", q);
         }
         java.net.URI url = builder.encode().build().toUri();
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);

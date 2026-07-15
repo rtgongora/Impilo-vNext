@@ -129,6 +129,45 @@ class PublicGatewaySosBffControllerTest {
         assertThat(rendered).doesNotContain("daidzai").doesNotContain("keycloak").doesNotContain("localhost");
     }
 
+    @Test
+    void status_happyPath_returns200WithPiiFreeStatus() {
+        ObjectNode statusNode = MAPPER.createObjectNode();
+        statusNode.put("requestReference", "SOS-TEST-1");
+        statusNode.put("status", "AWAITING_CALLBACK");
+        statusNode.put("stage", "Awaiting callback confirmation");
+        statusNode.put("callbackPending", true);
+        daidzai.statusNode = statusNode;
+
+        ResponseEntity<JsonNode> response = controller.status("SOS-TEST-1");
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody().get("requestReference").asText()).isEqualTo("SOS-TEST-1");
+        assertThat(response.getBody().get("status").asText()).isEqualTo("AWAITING_CALLBACK");
+        assertThat(daidzai.lastStatusReference).isEqualTo("SOS-TEST-1");
+        // Disclosure-limited: never a callback number, description, location, or subject.
+        String rendered = response.getBody().toString().toLowerCase();
+        assertThat(rendered)
+                .doesNotContain("callbacknumber")
+                .doesNotContain("+263")
+                .doesNotContain("description")
+                .doesNotContain("location")
+                .doesNotContain("subject");
+    }
+
+    @Test
+    void status_unknownReference_maps404() {
+        daidzai.statusNotFound = true;
+        ResponseEntity<JsonNode> response = controller.status("SOS-NONE");
+        assertThat(response.getStatusCode().value()).isEqualTo(404);
+    }
+
+    @Test
+    void status_downstreamFailure_maps502() {
+        daidzai.statusExplode = true;
+        ResponseEntity<JsonNode> response = controller.status("SOS-TEST-1");
+        assertThat(response.getStatusCode().value()).isEqualTo(502);
+    }
+
     private static HttpServletRequest request(String ip) {
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setRemoteAddr(ip);
@@ -139,6 +178,10 @@ class PublicGatewaySosBffControllerTest {
     private static final class StubDaidzaiClient extends DaidzaiServiceClient {
         Map<String, Object> lastBody = new HashMap<>();
         int calls;
+        String lastStatusReference;
+        ObjectNode statusNode;
+        boolean statusNotFound;
+        boolean statusExplode;
 
         StubDaidzaiClient() {
             super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints());
@@ -153,6 +196,21 @@ class PublicGatewaySosBffControllerTest {
             node.put("status", "AWAITING_CALLBACK");
             node.put("callbackVerified", false);
             return node;
+        }
+
+        @Override
+        public JsonNode publicSosStatus(String reference, String serviceAccountBearer) {
+            lastStatusReference = reference;
+            if (statusExplode) {
+                throw new RuntimeException("downstream unavailable");
+            }
+            if (statusNotFound) {
+                throw org.springframework.web.client.HttpClientErrorException.NotFound.create(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "not found",
+                        org.springframework.http.HttpHeaders.EMPTY, new byte[0],
+                        java.nio.charset.StandardCharsets.UTF_8);
+            }
+            return statusNode;
         }
     }
 }

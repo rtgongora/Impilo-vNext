@@ -120,7 +120,7 @@ class PublicGuidanceControllerTest {
         when(guidanceService.getEducation(PublicGuidanceController.PUBLIC_TENANT, "all", 0, 20))
                 .thenReturn(new PageImpl<>(List.of(article)));
 
-        var response = controller.education("all", "", 0, 20);
+        var response = controller.education("all", "", null, 0, 20);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         List<Map<String, Object>> data = (List<Map<String, Object>>) response.getBody().get("data");
@@ -134,7 +134,7 @@ class PublicGuidanceControllerTest {
         when(guidanceService.getEducation(PublicGuidanceController.PUBLIC_TENANT, "all", 0, 50))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        var response = controller.education("all", "", -3, 5000);
+        var response = controller.education("all", "", null, -3, 5000);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
@@ -145,13 +145,45 @@ class PublicGuidanceControllerTest {
                 PublicGuidanceController.PUBLIC_TENANT, "vaccination", 0, 20))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        var response = controller.education("all", "  Vaccination ", 0, 20);
+        var response = controller.education("all", "  Vaccination ", null, 0, 20);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         org.mockito.Mockito.verify(guidanceService)
                 .getEducationByCategory(PublicGuidanceController.PUBLIC_TENANT, "vaccination", 0, 20);
         org.mockito.Mockito.verify(guidanceService, org.mockito.Mockito.never())
                 .getEducation(org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyInt(),
+                        org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void educationTextQueryRoutesToPublishedSearchAndTakesPrecedenceOverBrowse() {
+        // A non-blank q runs the PUBLISHED-only title/summary search (BE-3), not the browse branch.
+        var article = org.mockito.Mockito.mock(
+                zw.gov.mohcc.impilo.guidance.persistence.entity.KnowledgeArticleEntity.class);
+        when(article.getId()).thenReturn(java.util.UUID.randomUUID());
+        when(article.getTitle()).thenReturn("Malaria warning signs");
+        when(article.getSummary()).thenReturn("When fever needs urgent care.");
+        when(article.getCategory()).thenReturn("disease");
+        when(article.getDomain()).thenReturn("public-health");
+        when(guidanceService.search(PublicGuidanceController.PUBLIC_TENANT, "malaria", 0, 20))
+                .thenReturn(new PageImpl<>(List.of(article)));
+
+        // Category is also supplied; the text query must win.
+        var response = controller.education("all", "disease", "  malaria ", 0, 20);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        List<Map<String, Object>> data = (List<Map<String, Object>>) response.getBody().get("data");
+        assertThat(data).hasSize(1);
+        assertThat(data.get(0).get("title")).isEqualTo("Malaria warning signs");
+        // Allow-listed topic fields only — the search branch reuses the same PII-free mapper.
+        assertThat(data.get(0).keySet()).containsExactly("id", "title", "summary", "category", "domain");
+        org.mockito.Mockito.verify(guidanceService)
+                .search(PublicGuidanceController.PUBLIC_TENANT, "malaria", 0, 20);
+        org.mockito.Mockito.verify(guidanceService, org.mockito.Mockito.never())
+                .getEducationByCategory(org.mockito.ArgumentMatchers.anyString(),
                         org.mockito.ArgumentMatchers.anyString(),
                         org.mockito.ArgumentMatchers.anyInt(),
                         org.mockito.ArgumentMatchers.anyInt());
