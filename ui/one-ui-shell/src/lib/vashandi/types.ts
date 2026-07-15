@@ -167,6 +167,31 @@ export interface Shift {
   checkInRequired?: boolean;
 }
 
+/** A virtual (on-call) pool summary — a distinct `vsh_shift.virtual_pool_id` with coverage. */
+export interface VirtualPool {
+  poolId: string;
+  shiftCount?: number;
+  onDutyCount?: number;
+  nextShiftStart?: string | null;
+}
+
+export interface VirtualPoolDutyMember {
+  shiftId: string;
+  workforceProfileId: string;
+  shiftType?: string;
+  status?: ShiftStatus;
+  startTime?: string;
+  endTime?: string;
+}
+
+export interface VirtualPoolOnDuty {
+  poolId: string;
+  asOf?: string;
+  onDutyCount?: number;
+  onDuty?: VirtualPoolDutyMember[];
+  nextShiftStart?: string | null;
+}
+
 export interface AttendanceEvent {
   id: string;
   shiftId?: string;

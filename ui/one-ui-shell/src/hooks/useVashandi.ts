@@ -55,6 +55,14 @@ import {
   deactivateTrainingRequirement,
   trainingRequirementsFromResponse,
 } from "@/lib/vashandi/api/trainingRequirements";
+import {
+  listVirtualPools,
+  getPoolOnDuty,
+  getPoolShifts,
+  poolsFromResponse,
+  poolShiftsFromResponse,
+  onDutyFromResponse,
+} from "@/lib/vashandi/api/virtualPools";
 import type { CheckInRequest, CheckOutRequest, CreateAssignmentRequest, VashandiActionResponse } from "@/lib/vashandi/types";
 import { isUpstreamUnavailable } from "@/lib/vashandi/api/client";
 
@@ -223,6 +231,9 @@ export function useCreateShift() {
     onSuccess: (_data, body) => {
       void queryClient.invalidateQueries({ queryKey: ["vashandi", "roster-shifts", String(body.rosterId ?? "")] });
       void queryClient.invalidateQueries({ queryKey: ["vashandi", "rosters"] });
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "virtual-pools"] });
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "virtual-pool-shifts"] });
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "virtual-pool-on-duty"] });
     },
   });
 }
@@ -234,7 +245,45 @@ export function useUpdateShift() {
       updateShift(shiftId, body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["vashandi", "roster-shifts"] });
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "virtual-pools"] });
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "virtual-pool-shifts"] });
+      void queryClient.invalidateQueries({ queryKey: ["vashandi", "virtual-pool-on-duty"] });
     },
+  });
+}
+
+export function useVirtualPools() {
+  return useQuery({
+    queryKey: ["vashandi", "virtual-pools"],
+    queryFn: async () => {
+      const response = await listVirtualPools();
+      return { response, items: poolsFromResponse(response) };
+    },
+    staleTime: 15_000,
+  });
+}
+
+export function usePoolOnDuty(poolId: string) {
+  return useQuery({
+    queryKey: ["vashandi", "virtual-pool-on-duty", poolId],
+    queryFn: async () => {
+      const response = await getPoolOnDuty(poolId);
+      return { response, onDuty: onDutyFromResponse(response) };
+    },
+    enabled: Boolean(poolId),
+    staleTime: 10_000,
+  });
+}
+
+export function usePoolShifts(poolId: string) {
+  return useQuery({
+    queryKey: ["vashandi", "virtual-pool-shifts", poolId],
+    queryFn: async () => {
+      const response = await getPoolShifts(poolId);
+      return { response, items: poolShiftsFromResponse(response) };
+    },
+    enabled: Boolean(poolId),
+    staleTime: 10_000,
   });
 }
 

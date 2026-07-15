@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Users, CalendarDays, ClipboardList, Clock, GraduationCap, Palmtree, Upload, ShieldAlert, BarChart3 } from "lucide-react";
+import { Users, CalendarDays, ClipboardList, Clock, GraduationCap, Palmtree, Upload, ShieldAlert, BarChart3, RadioTower } from "lucide-react";
 import { VashandiShell } from "@/components/vashandi/VashandiShell";
 import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
 import { ADMINISTRATION_SURFACES } from "@/lib/administration-governance/surfaces";
@@ -11,6 +11,7 @@ const SECTION_LINKS = [
   { href: "/work/vashandi/workforce", label: "Workforce", icon: Users, workspace: "vashandi.workforce_registry" },
   { href: "/work/vashandi/assignments", label: "Assignments", icon: ClipboardList, workspace: "vashandi.assignments" },
   { href: "/work/vashandi/rosters", label: "Rosters", icon: CalendarDays, workspace: "vashandi.rosters" },
+  { href: "/work/vashandi/on-call", label: "On-call pools", icon: RadioTower, workspace: "vashandi.rosters" },
   { href: "/work/vashandi/attendance", label: "Attendance", icon: Clock, workspace: "vashandi.my_attendance" },
   { href: "/work/vashandi/leave-availability", label: "Leave", icon: Palmtree, workspace: "vashandi.leave_availability" },
   { href: "/work/vashandi/access-review", label: "Access review", icon: ShieldAlert, workspace: "vashandi.access_review" },
