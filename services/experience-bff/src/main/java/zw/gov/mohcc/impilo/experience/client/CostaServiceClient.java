@@ -137,6 +137,30 @@ public class CostaServiceClient {
     }
 
     /**
+     * List insurance plans (optionally filtered by status, e.g. PENDING_TERMS).
+     */
+    public JsonNode listInsurancePlans(String status) {
+        String url = baseUrl + "/costa/v1/insurance-plans";
+        if (status != null && !status.isBlank()) {
+            url = UriComponentsBuilder.fromHttpUrl(url).queryParam("status", status).toUriString();
+        }
+        log.info("COSTA: Listing insurance plans (status={})", status);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Configure a plan's finance-entered terms and activate it (PENDING_TERMS → ACTIVE).
+     */
+    public JsonNode configureInsurancePlan(String planCode, Object body) {
+        String url = baseUrl + "/costa/v1/insurance-plans/" + planCode;
+        log.info("COSTA: Configuring insurance plan {}", planCode);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.PUT, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Issue an invoice for a finalized bill.
      */
     public JsonNode issueInvoice(String billId) {

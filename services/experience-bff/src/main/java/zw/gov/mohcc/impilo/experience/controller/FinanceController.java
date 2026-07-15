@@ -564,8 +564,8 @@ public class FinanceController {
 
     // ── Failed money events (dead-letter replay) ─────────────────────
 
-    /** Actor types permitted to view and replay dead-lettered money events. */
-    static final java.util.Set<String> FAILED_EVENT_ROLES = java.util.Set.of(
+    /** Actor types permitted to run finance-ops actions (dead-letter replay, plan terms). */
+    static final java.util.Set<String> FINANCE_OPS_ROLES = java.util.Set.of(
             "FINANCE", "FINANCE_ADMIN", "FACILITY_FINANCE", "PAYER_OPS", "SYSTEM", "SYSTEM_ADMIN");
 
     /**
@@ -579,7 +579,7 @@ public class FinanceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @RequestParam(required = false) String status) {
-        if (!FAILED_EVENT_ROLES.contains(actorType)) {
+        if (!FINANCE_OPS_ROLES.contains(actorType)) {
             return financeRoleRequired(requestId, correlationId);
         }
         try {
@@ -611,7 +611,7 @@ public class FinanceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
             @PathVariable long id) {
-        if (!FAILED_EVENT_ROLES.contains(actorType)) {
+        if (!FINANCE_OPS_ROLES.contains(actorType)) {
             return financeRoleRequired(requestId, correlationId);
         }
         try {
@@ -628,8 +628,75 @@ public class FinanceController {
     private ResponseEntity<Map<String, Object>> financeRoleRequired(String requestId, String correlationId) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
                 "error", Map.of("code", "FINANCE_ROLE_REQUIRED",
-                        "message", "Dead-letter replay is a finance-ops action"),
+                        "message", "This is a finance-ops action"),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    // ── Insurance-plan terms governance ──────────────────────────────
+
+    /**
+     * GET /internal/v1/finance/insurance-plans?status=PENDING_TERMS
+     *
+     * Lists insurance plans (optionally filtered) so finance can find
+     * PENDING_TERMS placeholders awaiting configuration.
+     */
+    @GetMapping("/insurance-plans")
+    public ResponseEntity<Map<String, Object>> listInsurancePlans(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
+            @RequestParam(required = false) String status) {
+        if (!FINANCE_OPS_ROLES.contains(actorType)) {
+            return financeRoleRequired(requestId, correlationId);
+        }
+        try {
+            JsonNode data = costaClient.listInsurancePlans(status);
+            ArrayNode resources = objectMapper.createArrayNode();
+            if (data != null && data.isArray()) {
+                for (JsonNode row : data) {
+                    resources.add(row);
+                }
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", resources,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Failed to fetch insurance plans from COSTA: {}", e.getMessage());
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to fetch insurance plans", requestId, correlationId);
+        }
+    }
+
+    /**
+     * PUT /internal/v1/finance/insurance-plans/{planCode}
+     *
+     * Configure a plan's finance-entered terms and activate it. Terms are never
+     * invented — the caller supplies coveragePct/copayPct/etc.
+     */
+    @PutMapping("/insurance-plans/{planCode}")
+    public ResponseEntity<Map<String, Object>> configureInsurancePlan(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
+            @PathVariable String planCode,
+            @RequestBody Map<String, Object> body) {
+        if (!FINANCE_OPS_ROLES.contains(actorType)) {
+            return financeRoleRequired(requestId, correlationId);
+        }
+        try {
+            JsonNode result = costaClient.configureInsurancePlan(planCode, body);
+            return ResponseEntity.ok(Map.of(
+                    "data", result != null ? result : objectMapper.createObjectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            // Surface COSTA's validation (TERMS_REQUIRED, TERMS_OUT_OF_RANGE, PLAN_NOT_FOUND).
+            log.warn("Insurance plan {} configure rejected: {}", planCode, e.getStatusCode());
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of(
+                    "error", Map.of("code", "PLAN_CONFIG_REJECTED", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Failed to configure insurance plan {}: {}", planCode, e.getMessage());
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to configure insurance plan", requestId, correlationId);
+        }
     }
 
     // ── Resource Mappers ─────────────────────────────────────────────

@@ -23,4 +23,6 @@ public interface InsurancePlanRepository extends JpaRepository<InsurancePlanEnti
 
     Optional<InsurancePlanEntity> findByTenantIdAndPlanCodeAndStatus(UUID tenantId, String planCode, String status);
     List<InsurancePlanEntity> findByTenantIdAndStatus(UUID tenantId, String status);
+    List<InsurancePlanEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
+    List<InsurancePlanEntity> findByTenantIdAndPlanCode(UUID tenantId, String planCode);
 }
