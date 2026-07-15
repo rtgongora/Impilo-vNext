@@ -372,28 +372,43 @@ public class ProcedureEpisodeService {
         if (!List.of("READY_FOR_THEATRE", "PREOP", "BOOKED").contains(episode.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Episode not ready for theatre");
         }
-        if (!"GRANTED".equals(episode.getConsentStatus()) || episode.getMvumoConsentRequestId() == null) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "MVUMO surgical consent must be GRANTED with evidence before theatre start");
-        }
-        // ── Wave 2: multi-type consent gate. Every REQUIRED consent in the bundle
-        // must be GRANTED and none may be WITHDRAWN. Anaesthesia consent gates
-        // start; transfusion consent gates the BLOOD readiness domain (Wave 1).
-        for (ProcedureConsentEntity consent : procedureConsentRepository.findByEpisodeId(episodeId)) {
-            if (!consent.isRequired()) {
-                continue;
-            }
-            if (consent.isWithdrawn()) {
+        // ── Wave 5b §15: emergency consent exception. Life-saving surgery must NOT be blocked on absent
+        // consent. When the emergency-exception basis (deferred / proxy / two-doctor) has been recorded
+        // and AUDITED (via TheatreService.recordEmergencyConsentException, which sets consent_status =
+        // EMERGENCY_EXCEPTION + emergency_override), the GRANTED consent gate is bypassed. Consent is NOT
+        // marked verified — honest: it was legally excepted, not obtained. Every override is auditable.
+        boolean emergencyException = "EMERGENCY_EXCEPTION".equals(episode.getConsentStatus());
+        if (emergencyException) {
+            if (!episode.isEmergencyOverride()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        consent.getConsentType() + " consent has been WITHDRAWN — theatre start blocked");
+                        "Emergency consent exception requires an emergency override before theatre start");
             }
-            if (!"GRANTED".equals(consent.getStatus())) {
+        } else {
+            if (!"GRANTED".equals(episode.getConsentStatus()) || episode.getMvumoConsentRequestId() == null) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        consent.getConsentType() + " consent must be GRANTED before theatre start");
+                        "MVUMO surgical consent must be GRANTED with evidence before theatre start");
+            }
+            // ── Wave 2: multi-type consent gate. Every REQUIRED consent in the bundle
+            // must be GRANTED and none may be WITHDRAWN. Anaesthesia consent gates
+            // start; transfusion consent gates the BLOOD readiness domain (Wave 1).
+            for (ProcedureConsentEntity consent : procedureConsentRepository.findByEpisodeId(episodeId)) {
+                if (!consent.isRequired()) {
+                    continue;
+                }
+                if (consent.isWithdrawn()) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,
+                            consent.getConsentType() + " consent has been WITHDRAWN — theatre start blocked");
+                }
+                if (!"GRANTED".equals(consent.getStatus())) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,
+                            consent.getConsentType() + " consent must be GRANTED before theatre start");
+                }
             }
         }
         episode.setStatus("IN_PROGRESS");
-        episode.setConsentVerified(true);
+        if (!emergencyException) {
+            episode.setConsentVerified(true);
+        }
         episodeRepository.save(episode);
         return episodeDetail(episodeId);
     }
@@ -513,6 +528,11 @@ public class ProcedureEpisodeService {
         completed.put("implant_count", implantCount);
         completed.put("consumable_count", consumableCount);
         completed.put("blood_units", bloodUnits);
+        // Wave 5b: carry the trauma_episode_id (when trauma-originated) so the daidzai episode-timeline
+        // consumer correlates the COMPLETED theatre phase to the ONE shared trauma episode.
+        if (episode.getTraumaEpisodeId() != null) {
+            completed.put("trauma_episode_id", episode.getTraumaEpisodeId().toString());
+        }
         appendOutbox("PROCEDURE", episodeId.toString(), "theatre.case.completed", completed);
         return episodeDetail(episodeId);
     }

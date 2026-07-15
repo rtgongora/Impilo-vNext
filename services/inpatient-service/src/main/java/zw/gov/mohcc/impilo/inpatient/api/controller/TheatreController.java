@@ -3,9 +3,11 @@ package zw.gov.mohcc.impilo.inpatient.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.inpatient.core.SurgicalDischargeService;
 import zw.gov.mohcc.impilo.inpatient.core.TheatreService;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -47,13 +49,54 @@ public class TheatreController {
 
     // intake + triage
     @PostMapping("/cases")
-    public ResponseEntity<Map<String, Object>> intake(@RequestBody Map<String, Object> body) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.intakeFromOrosOrder(body));
+    public ResponseEntity<Map<String, Object>> intake(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.TRAUMA_EPISODE_ID, required = false) String traumaEpisodeId) {
+        Map<String, Object> payload = withTraumaHeader(body, traumaEpisodeId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.intakeFromOrosOrder(payload));
     }
 
     @PostMapping("/cases/{id}/triage")
     public Map<String, Object> triage(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
         return theatreService.setTriage(id, body);
+    }
+
+    // ── Wave 5b §15 — EMERGENCY SURGERY rapid activation + emergency consent exception ──
+    @PostMapping("/cases/emergency")
+    public ResponseEntity<Map<String, Object>> activateEmergency(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.TRAUMA_EPISODE_ID, required = false) String traumaEpisodeId) {
+        Map<String, Object> payload = withTraumaHeader(body, traumaEpisodeId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.activateEmergencySurgery(payload));
+    }
+
+    @PostMapping("/cases/{id}/consent/emergency-exception")
+    public Map<String, Object> emergencyConsentException(@PathVariable UUID id,
+                                                         @RequestBody Map<String, Object> body) {
+        return theatreService.recordEmergencyConsentException(id, body);
+    }
+
+    // ── Wave 5b §15 — OBSTETRIC EMERGENCY C-SECTION (maternal + fetal + neonatal) ──
+    @PostMapping("/cases/{id}/obstetric/context")
+    public Map<String, Object> obstetricContext(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return theatreService.recordObstetricContext(id, body);
+    }
+
+    @PostMapping("/cases/{id}/obstetric/neonatal-alert")
+    public ResponseEntity<Map<String, Object>> neonatalAlert(@PathVariable UUID id,
+                                                             @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(theatreService.notifyNeonatalTeam(id, body != null ? body : Map.of()));
+    }
+
+    @PostMapping("/cases/{id}/obstetric/delivery")
+    public ResponseEntity<Map<String, Object>> delivery(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.recordDelivery(id, body));
+    }
+
+    @PostMapping("/cases/{id}/obstetric/neonatal-handover")
+    public Map<String, Object> neonatalHandover(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return theatreService.recordNeonatalHandover(id, body);
     }
 
     @GetMapping("/queue")
@@ -261,5 +304,19 @@ public class TheatreController {
     @ExceptionHandler(TheatreService.BookingBlockedException.class)
     public ResponseEntity<Map<String, Object>> handleBookingBlocked(TheatreService.BookingBlockedException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.detail());
+    }
+
+    /**
+     * Fold the inbound {@code X-Trauma-Episode-ID} header (the daidzai/PCT-minted trauma episode id,
+     * carried as the UUID canonical string) into the intake body so the service stamps it onto
+     * {@code procedure_episode.trauma_episode_id}. CONSUME, never mint — a surgery indicated for a
+     * trauma patient already carries the episode id on its context. Absent header → elective, unaffected.
+     */
+    private static Map<String, Object> withTraumaHeader(Map<String, Object> body, String traumaEpisodeId) {
+        Map<String, Object> payload = new LinkedHashMap<>(body != null ? body : Map.of());
+        if (traumaEpisodeId != null && !traumaEpisodeId.isBlank()) {
+            payload.putIfAbsent("traumaEpisodeId", traumaEpisodeId);
+        }
+        return payload;
     }
 }
