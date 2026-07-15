@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -64,6 +66,24 @@ public class PublicGatewaySosBffController {
             log.warn("Public SOS intake failed: {}", e.getMessage());
             return error(HttpStatus.BAD_GATEWAY, "SOS_UNAVAILABLE",
                     "We could not capture your request just now. If this is an emergency, call the numbers shown.");
+        }
+    }
+
+    /**
+     * Anonymous status check by the reference the 202 receipt returned. Proxies to the emergency
+     * service's disclosure-limited status endpoint (PII-free: reference/status/stage/created/
+     * callback-pending only — never the callback number, description, location, or subject). A miss
+     * is a 404; any downstream failure is a 502 with no internal detail leaked.
+     */
+    @GetMapping("/{reference}")
+    public ResponseEntity<com.fasterxml.jackson.databind.JsonNode> status(@PathVariable String reference) {
+        try {
+            return ResponseEntity.ok(sosIntakeService.status(reference));
+        } catch (org.springframework.web.client.HttpClientErrorException.NotFound nf) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            log.warn("Public SOS status read failed for {}: {}", reference, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
         }
     }
 

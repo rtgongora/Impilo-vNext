@@ -128,6 +128,17 @@ public class PublicSosIntakeService {
                         + "the emergency numbers shown now.");
     }
 
+    /**
+     * Anonymous public-lane SOS status read. Proxies to the emergency service's disclosure-limited
+     * status endpoint (a service-side {@code Public*Controller} returning a PII-free view) using the
+     * same anonymous-safe header + service-account bearer synthesis the write lane uses. This is a
+     * read: no abuse-control window is applied. A missing reference propagates as an
+     * {@code HttpClientErrorException.NotFound} for the controller to map to 404.
+     */
+    public JsonNode status(String reference) {
+        return daidzai.publicSosStatus(reference, resolveBearer());
+    }
+
     private String resolveBearer() {
         try {
             return keycloakAdminClient.serviceAccountBearer();
