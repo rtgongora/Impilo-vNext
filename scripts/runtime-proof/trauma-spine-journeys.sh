@@ -38,6 +38,8 @@ DAI=http://localhost:29392
 PCT=http://localhost:29388
 INP=http://localhost:29321
 MADI=http://localhost:29300
+VASH=http://localhost:29387
+NOTIF=http://localhost:29200
 PASS=0; FAIL=0
 ok(){ echo "   PASS: $1" | tee -a "$EV/journal.txt"; PASS=$((PASS+1)); }
 bad(){ echo "   FAIL: $1" | tee -a "$EV/journal.txt"; FAIL=$((FAIL+1)); }
@@ -46,6 +48,8 @@ DAISQL(){ docker exec tr-rig-pg psql -U impilo -d daidzai -tAc "$1"; }
 PCTSQL(){ docker exec tr-rig-pg psql -U impilo -d pct -tAc "$1"; }
 INPSQL(){ docker exec tr-rig-pg psql -U impilo -d inpatient -tAc "$1"; }
 MADISQL(){ docker exec tr-rig-pg psql -U impilo -d madi -tAc "$1"; }
+VASHSQL(){ docker exec tr-rig-pg psql -U impilo -d vashandi -tAc "$1"; }
+NOTIFSQL(){ docker exec tr-rig-pg psql -U impilo -d notification -tAc "$1"; }
 hdr(){ local pou=${1:-TREATMENT} ep=${2:-} idem=${3:-idem-$(uuidgen)}
   local base="-H Content-Type:application/json -H X-Tenant-ID:$TEN -H X-Pod-ID:national-spine -H X-Request-ID:$(uuidgen) -H X-Correlation-ID:$(uuidgen) -H X-Facility-ID:$FAC -H X-Actor-ID:$ACTOR -H X-Actor-Type:PROVIDER -H X-Purpose-Of-Use:$pou -H Idempotency-Key:$idem"
   [ -n "$ep" ] && base="$base -H X-Trauma-Episode-ID:$ep"
@@ -61,13 +65,13 @@ docker rm -f tr-rig-pg tr-rig-redis >/dev/null 2>&1
 docker run -d --name tr-rig-pg -e POSTGRES_USER=impilo -e POSTGRES_PASSWORD=impilo -p $PGPORT:5432 postgres:16-alpine >/dev/null
 docker run -d --name tr-rig-redis -p $RPORT:6379 redis:7-alpine >/dev/null
 sleep 8
-for db in daidzai pct inpatient madi; do
+for db in daidzai pct inpatient madi vashandi notification; do
   docker exec tr-rig-pg psql -U impilo -d postgres -c "CREATE DATABASE $db" >/dev/null 2>&1
 done
 
 svcjar(){ ls "$REPO/services/$1/target/$1-"*.jar 2>/dev/null | grep -v original | head -1; }
-for s in daidzai-service pct-service inpatient-service madi-service; do
-  [ -n "$(svcjar "$s")" ] || { echo "$s jar missing — run: mvn -f services/pom.xml -pl daidzai-service,pct-service,inpatient-service,madi-service -am package -DskipTests"; exit 2; }
+for s in daidzai-service pct-service inpatient-service madi-service vashandi-workforce-service notification-service; do
+  [ -n "$(svcjar "$s")" ] || { echo "$s jar missing — run: mvn -f services/pom.xml -pl daidzai-service,pct-service,inpatient-service,madi-service,vashandi-workforce-service,notification-service -am package -DskipTests"; exit 2; }
 done
 
 boot(){ # $1 service-dir  $2 db  $3 port  $4..extra env KEY=VAL
@@ -91,14 +95,44 @@ wait_health(){ local url=$1 name=$2 c=000
 # kafka-events-enabled=false → the no-Kafka outbox drainer marks daidzai.ems.* rows published.
 # DAIDZAI_PCT_BASE_URL → the EMS ePCR pre-arrival push lands on PCT's ED projection.
 boot daidzai-service daidzai 29392 DAIDZAI_KAFKA_EVENTS_ENABLED=false DAIDZAI_PCT_BASE_URL=$PCT
-boot pct-service pct 29388 PCT_INTEGRATION_DAIDZAI_BASE_URL=$DAI
+boot vashandi-workforce-service vashandi 29387
+boot notification-service notification 29200
+# PCT resolves the on-call trauma team from VASHANDI + raises delivery-intents via notification-service.
+boot pct-service pct 29388 PCT_INTEGRATION_DAIDZAI_BASE_URL=$DAI \
+  PCT_INTEGRATION_VASHANDI_BASE_URL=$VASH PCT_INTEGRATION_NOTIFICATION_BASE_URL=$NOTIF
 boot madi-service madi 29300 MADI_INTEGRATION_DAIDZAI_BASE_URL=$DAI
 boot inpatient-service inpatient 29321 INPATIENT_INTEGRATION_DAIDZAI_BASE_URL=$DAI
 
 wait_health $DAI daidzai-service
+wait_health $VASH vashandi-workforce-service
+wait_health $NOTIF notification-service
 wait_health $PCT pct-service
 wait_health $MADI madi-service
 wait_health $INP inpatient-service
+
+# ── Seed the VASHANDI trauma on-call pool (rig test data; resolution stays REAL) ─────
+# A roster + 4 profiles + 4 shifts tagged virtual_pool_id='trauma-oncall:<FAC>', on-duty NOW.
+# J-TR-3 resolves this via the live /virtual-pools/{poolId}/on-duty endpoint — not hardcoded.
+POOL="trauma-oncall:$FAC"
+seed_vashandi(){
+  local roster="a0000000-0000-4000-8000-00000000r001"
+  roster="a0000000-0000-4000-8000-0000000000c1"
+  VASHSQL "INSERT INTO vashandi.vsh_roster (id, tenant_id, organisation_id, roster_type, period_start, period_end, status)
+           VALUES ('$roster','$TEN','$FAC','TRAUMA_ONCALL', current_date - 1, current_date + 7, 'published')
+           ON CONFLICT DO NOTHING" >/dev/null
+  local i=1
+  for role in EM_PHYSICIAN TRAUMA_SURGEON ANAESTHETIST EM_NURSE; do
+    local prof; prof=$(printf 'b0000000-0000-4000-8000-0000000000%02d' "$i")
+    VASHSQL "INSERT INTO vashandi.vsh_workforce_profile (id, tenant_id, provider_worker_id, worker_type, profession, cadre, current_status)
+             VALUES ('$prof','$TEN','PRV-TR-$i','clinical','$role','$role','active') ON CONFLICT DO NOTHING" >/dev/null
+    VASHSQL "INSERT INTO vashandi.vsh_shift (id, tenant_id, roster_id, workforce_profile_id, shift_type, start_time, end_time, status, check_in_required, virtual_pool_id, facility_id)
+             VALUES (gen_random_uuid(),'$TEN','$roster','$prof','$role', now() - interval '1 hour', now() + interval '8 hours', 'confirmed', false, '$POOL', '$FAC')
+             ON CONFLICT DO NOTHING" >/dev/null
+    i=$((i+1))
+  done
+  echo "   seeded vashandi trauma on-call pool ($POOL): $(VASHSQL "SELECT count(*) FROM vashandi.vsh_shift WHERE virtual_pool_id='$POOL'") shifts" | tee -a "$EV/journal.txt"
+}
+seed_vashandi
 
 cleanup(){ if [ -z "${KEEP_RIG:-}" ]; then
   for p in "$RIGLOG"/*.pid; do kill "$(cat "$p")" >/dev/null 2>&1; done
@@ -306,6 +340,75 @@ grep -q '"sbp"' "$EV/prearrival-json.txt" && ok "pre-arrival snapshot carries pr
 curl -sS -o "$EV/prearrival-board.json" $(hdr) "$PCT/v1/ed/pre-arrival?facilityId=$FAC" >/dev/null
 python3 -c "import json;r=json.load(open('$EV/prearrival-board.json'));d=r.get('data',r);exit(0 if isinstance(d,list) and len(d)>=1 else 1)" \
   && ok "ED pre-arrival board API lists the inbound patient" || bad "pre-arrival board API empty: $(cat "$EV/prearrival-board.json")"
+
+# ═════ J-TR-3a: ED arrival/handover reuses the PRE_ARRIVAL visit (no duplicate) ══════
+say "J-TR-3a: EMS handover transitions the SAME pre-arrival ed_visit to active"
+PREV_VISIT=$(PCTSQL "SELECT visit_id FROM pct.ed_visit WHERE trauma_episode_id='$EP2' AND status='PRE_ARRIVAL'")
+[ -n "$PREV_VISIT" ] && ok "pre-arrival ed_visit exists pre-handover ($PREV_VISIT, PRE_ARRIVAL)" || bad "no PRE_ARRIVAL visit for $EP2 before handover"
+# Advance the J-TR-2 mission the rest of the way: EN_ROUTE_FACILITY → ARRIVED_FACILITY → HANDOVER.
+for st in ARRIVED_FACILITY HANDOVER; do
+  body='{"toState":"'$st'"}'
+  [ "$st" = HANDOVER ] && body='{"toState":"HANDOVER","pctEncounterRef":"'$PREV_VISIT'"}'
+  curl -sS -o /dev/null $(hdr) -X POST $DAI/internal/v1/daidzai/ems/missions/$MISSION_B/advance -d "$body"
+done
+sleep 2  # allow the daidzai→pct arrival push to land
+NOWV=$(PCTSQL "SELECT visit_id FROM pct.ed_visit WHERE trauma_episode_id='$EP2'")
+NOWSTATUS=$(PCTSQL "SELECT status FROM pct.ed_visit WHERE trauma_episode_id='$EP2'")
+NCOUNT=$(PCTSQL "SELECT count(*) FROM pct.ed_visit WHERE trauma_episode_id='$EP2'")
+[ "$NOWV" = "$PREV_VISIT" ] && ok "SAME ed_visit row after handover (no duplicate: $NOWV)" || bad "handover created a new visit: $NOWV != $PREV_VISIT"
+[ "$NOWSTATUS" != "PRE_ARRIVAL" ] && ok "visit transitioned out of PRE_ARRIVAL (now $NOWSTATUS)" || bad "visit still PRE_ARRIVAL after handover"
+[ "$NCOUNT" = 1 ] && ok "exactly one ed_visit for the episode (arrival reused pre-arrival)" || bad "$NCOUNT ed_visit rows for episode $EP2 (duplicate)"
+
+# ═════ J-TR-3b: trauma-team roster → notify-per-member → ack → escalate ═══════════
+say "J-TR-3b: trauma-team activation resolves the VASHANDI on-call panel, notifies, acks, escalates"
+SEEDED=$(VASHSQL "SELECT count(*) FROM vashandi.vsh_shift WHERE virtual_pool_id='$POOL' AND status IN ('confirmed','checked_in')")
+# Fresh ED walk-in at the facility to activate a trauma team on.
+curl -sS -o "$EV/team-visit.json" $(hdr) -X POST $PCT/v1/ed/visits \
+  -d "{\"patientCpid\":\"TEMP-ED-TEAM\",\"facilityId\":\"$FAC\",\"chiefComplaint\":\"polytrauma\",\"arrivalMode\":\"WALK_IN\"}"
+TVISIT=$(jget2 "$EV/team-visit.json" visit_id)
+curl -sS -o "$EV/team-activate.json" $(hdr) -X POST $PCT/v1/ed/visits/$TVISIT/trauma/activate -d '{"traumaLevel":1,"mechanism":"BLUNT"}'
+# Parse trauma id + member ids from the activation response.
+python3 - "$EV/team-activate.json" > "$EV/team.env" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1])); d=d.get("data",d)
+tid=d.get("active_trauma_id","")
+members=d.get("trauma_team",[]) or []
+print("TRAUMA_ID="+str(tid))
+print("MEMBER_COUNT="+str(len(members)))
+print("FIRST_MEMBER="+(members[0]["id"] if members else ""))
+PY
+. "$EV/team.env"
+[ -n "$TRAUMA_ID" ] && ok "trauma activated ($TRAUMA_ID)" || bad "trauma activation failed: $(cat "$EV/team-activate.json")"
+# Real resolution: one member row per on-duty pool member (matches the seeded panel).
+MROWS=$(PCTSQL "SELECT count(*) FROM pct.ed_trauma_team_member WHERE trauma_id='$TRAUMA_ID'")
+[ "$MROWS" = "$SEEDED" ] && [ "$MROWS" -ge 1 ] && ok "resolved $MROWS trauma-team members from the live VASHANDI on-call pool (== $SEEDED seeded)" || bad "resolved $MROWS members != $SEEDED seeded pool"
+# A REAL notification delivery-intent PER member (not a fabricated 'sent').
+NROWS=$(NOTIFSQL "SELECT count(*) FROM ns_notifications WHERE template_key='ED_TRAUMA_TEAM'")
+[ "$NROWS" -ge "$SEEDED" ] && ok "notification delivery-intent row per member in ns_notifications ($NROWS, template ED_TRAUMA_TEAM)" || bad "expected >=$SEEDED ED_TRAUMA_TEAM notifications, got $NROWS"
+# The honest check: a DISTINCT recipient per rostered member (genuine per-member intent, not one
+# blanket 'sent'). Each to_addr is a resolved workforce_profile_id.
+DISTINCT_TO=$(NOTIFSQL "SELECT count(DISTINCT to_addr) FROM ns_notifications WHERE template_key='ED_TRAUMA_TEAM'")
+[ "$DISTINCT_TO" = "$SEEDED" ] && ok "delivery-intent targets $DISTINCT_TO distinct rostered recipients (per-member, not a blanket send)" || bad "expected $SEEDED distinct recipients, got $DISTINCT_TO"
+MEMBER_TO=$(PCTSQL "SELECT workforce_profile_id FROM pct.ed_trauma_team_member WHERE trauma_id='$TRAUMA_ID' ORDER BY workforce_profile_id LIMIT 1")
+[ "$(NOTIFSQL "SELECT count(*) FROM ns_notifications WHERE template_key='ED_TRAUMA_TEAM' AND to_addr='$MEMBER_TO'")" -ge 1 ] \
+  && ok "a resolved member's profile id is a notification recipient (real targeting)" || bad "member $MEMBER_TO not found as a notification recipient"
+[ "$(PCTSQL "SELECT notification_ref FROM pct.ed_trauma_team_member WHERE trauma_id='$TRAUMA_ID' AND notification_ref IS NOT NULL LIMIT 1")" ] \
+  && ok "member rows carry the notification delivery ref" || bad "no notification_ref recorded on members"
+
+# Ack ONE member.
+curl -sS -o /dev/null $(hdr) -X POST $PCT/v1/ed/trauma/$TRAUMA_ID/team/$FIRST_MEMBER/ack -d '{"ackBy":"'$ACTOR'"}'
+[ "$(PCTSQL "SELECT ack_status FROM pct.ed_trauma_team_member WHERE id='$FIRST_MEMBER'")" = "ACKED" ] \
+  && ok "member ack recorded (ACKED)" || bad "ack not recorded on member $FIRST_MEMBER"
+
+# Escalate on no-ack (timeout 0 = all still-PENDING escalate immediately).
+curl -sS -o "$EV/team-escalate.json" $(hdr) -X POST $PCT/v1/ed/trauma/$TRAUMA_ID/team/escalate -d '{"timeoutSeconds":0}'
+ESCALATED=$(PCTSQL "SELECT count(*) FROM pct.ed_trauma_team_member WHERE trauma_id='$TRAUMA_ID' AND ack_status='ESCALATED'")
+EXPECT_ESC=$((SEEDED-1))
+[ "$ESCALATED" = "$EXPECT_ESC" ] && ok "no-ack members escalated ($ESCALATED == $EXPECT_ESC un-acked)" || bad "escalated $ESCALATED != expected $EXPECT_ESC"
+[ "$(PCTSQL "SELECT ack_status FROM pct.ed_trauma_team_member WHERE id='$FIRST_MEMBER'")" = "ACKED" ] \
+  && ok "the acked member was NOT escalated" || bad "acked member got escalated"
+ESCN=$(NOTIFSQL "SELECT count(*) FROM ns_notifications WHERE template_key='ED_TRAUMA_ESCALATION'")
+[ "$ESCN" -ge "$EXPECT_ESC" ] && ok "escalation delivery-intent row per no-ack member ($ESCN, template ED_TRAUMA_ESCALATION)" || bad "expected >=$EXPECT_ESC escalation notifications, got $ESCN"
 
 # ── Summary ────────────────────────────────────────────────────────────────────
 say "SUMMARY: PASS=$PASS FAIL=$FAIL"
