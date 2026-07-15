@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.pct.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -73,6 +75,17 @@ public class EdVisitEntity {
     @Column(name = "news2_score")
     private Integer news2Score;
 
+    /** ED pre-arrival projection: the latest prehospital ePCR snapshot pushed by DAIDZAI EMS (W3). */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "pre_arrival_json", columnDefinition = "jsonb")
+    private String preArrivalJson;
+
+    @Column(name = "ems_mission_ref")
+    private String emsMissionRef;
+
+    @Column(name = "pre_arrival_at")
+    private OffsetDateTime preArrivalAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -134,6 +147,12 @@ public class EdVisitEntity {
     public void setCurrentAcuity(Integer currentAcuity) { this.currentAcuity = currentAcuity; }
     public Integer getNews2Score() { return news2Score; }
     public void setNews2Score(Integer news2Score) { this.news2Score = news2Score; }
+    public String getPreArrivalJson() { return preArrivalJson; }
+    public void setPreArrivalJson(String preArrivalJson) { this.preArrivalJson = preArrivalJson; }
+    public String getEmsMissionRef() { return emsMissionRef; }
+    public void setEmsMissionRef(String emsMissionRef) { this.emsMissionRef = emsMissionRef; }
+    public OffsetDateTime getPreArrivalAt() { return preArrivalAt; }
+    public void setPreArrivalAt(OffsetDateTime preArrivalAt) { this.preArrivalAt = preArrivalAt; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 }

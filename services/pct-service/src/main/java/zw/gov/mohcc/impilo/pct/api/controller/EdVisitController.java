@@ -40,6 +40,22 @@ public class EdVisitController {
         return merged;
     }
 
+    /** ED pre-arrival projection upsert — DAIDZAI EMS pushes the prehospital ePCR snapshot here. */
+    @PostMapping("/pre-arrival")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> upsertPreArrival(@RequestBody Map<String, Object> body) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(edVisitService.upsertPreArrival(body), correlationId));
+    }
+
+    /** ED pre-arrival board: incoming EMS patients not yet physically arrived. */
+    @GetMapping("/pre-arrival")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> listPreArrival(
+            @RequestParam(required = false) UUID facilityId) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(edVisitService.listPreArrival(facilityId), correlationId));
+    }
+
     @GetMapping("/visits")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> listVisits(
             @RequestParam(required = false) UUID facilityId,

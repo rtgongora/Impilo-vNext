@@ -12,4 +12,8 @@ public interface EdVisitRepository extends JpaRepository<EdVisitEntity, UUID> {
     List<EdVisitEntity> findByTenantIdAndFacilityIdAndStatusInOrderByCreatedAtDesc(
             UUID tenantId, UUID facilityId, List<String> statuses);
     List<EdVisitEntity> findByTenantIdAndPatientCpidOrderByCreatedAtDesc(UUID tenantId, String patientCpid);
+    Optional<EdVisitEntity> findFirstByTenantIdAndTraumaEpisodeIdOrderByCreatedAtDesc(
+            UUID tenantId, UUID traumaEpisodeId);
+    List<EdVisitEntity> findByTenantIdAndFacilityIdAndStatusOrderByPreArrivalAtDesc(
+            UUID tenantId, UUID facilityId, String status);
 }

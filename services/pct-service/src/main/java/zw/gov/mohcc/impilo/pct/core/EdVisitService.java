@@ -101,6 +101,65 @@ public class EdVisitService {
         return visitDetail(visit.getVisitId());
     }
 
+    /**
+     * ED pre-arrival projection (W3): materialise the prehospital ePCR snapshot DAIDZAI pushes for an
+     * incoming EMS patient, so the ED sees them BEFORE arrival. Upsert keyed by trauma_episode_id — the
+     * first push creates a PRE_ARRIVAL ed_visit (with its journey); later pushes refresh the snapshot.
+     * On physical arrival (W4 handover) the same visit becomes an active ED visit — no duplicate record.
+     */
+    @Transactional
+    public Map<String, Object> upsertPreArrival(Map<String, Object> body) {
+        TrustContext ctx = TrustContextHolder.require();
+        UUID episodeId = EdPayloadMapper.uuid(body, "traumaEpisodeId", "trauma_episode_id");
+        if (episodeId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "traumaEpisodeId is required");
+        }
+        UUID facilityId = EdPayloadMapper.uuid(body, "facilityId", "facility_id");
+        if (facilityId == null) facilityId = ctx.facilityId();
+        String patientCpid = EdPayloadMapper.str(body, "patientCpid", "patient_cpid");
+        if (patientCpid == null || patientCpid.isBlank()) {
+            patientCpid = "TEMP-EMS-" + episodeId.toString().substring(0, 8).toUpperCase();
+        }
+
+        EdVisitEntity visit = visitRepository
+                .findFirstByTenantIdAndTraumaEpisodeIdOrderByCreatedAtDesc(ctx.tenantId(), episodeId)
+                .orElse(null);
+        if (visit == null) {
+            if (facilityId == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "facilityId is required to open a pre-arrival record");
+            }
+            JourneyEntity journey = journeyStateMachine.createJourney(facilityId, patientCpid, "EMERGENCY", null);
+            visit = new EdVisitEntity();
+            visit.setTenantId(ctx.tenantId());
+            visit.setFacilityId(facilityId);
+            visit.setJourneyId(journey.getJourneyId());
+            visit.setPatientCpid(patientCpid);
+            visit.setArrivalMode("AMBULANCE");
+            visit.setTraumaEpisodeId(episodeId);
+            visit.setStatus("PRE_ARRIVAL");
+        }
+        visit.setEmsMissionRef(EdPayloadMapper.str(body, "emsMissionRef", "ems_mission_ref"));
+        Map<String, Object> projection = new LinkedHashMap<>();
+        projection.put("snapshot", body.get("snapshot"));
+        projection.put("missionState", body.get("missionState"));
+        projection.put("emsMissionRef", body.get("emsMissionRef"));
+        visit.setPreArrivalJson(jsonField(projection, "{}"));
+        visit.setPreArrivalAt(OffsetDateTime.now());
+        visit = visitRepository.save(visit);
+        return visitDetail(visit.getVisitId());
+    }
+
+    /** The ED pre-arrival board for a facility: incoming EMS patients not yet physically arrived. */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listPreArrival(UUID facilityId) {
+        TrustContext ctx = TrustContextHolder.require();
+        UUID fac = facilityId != null ? facilityId : ctx.facilityId();
+        return visitRepository
+                .findByTenantIdAndFacilityIdAndStatusOrderByPreArrivalAtDesc(ctx.tenantId(), fac, "PRE_ARRIVAL")
+                .stream().map(v -> visitDetail(v.getVisitId())).toList();
+    }
+
     @Transactional
     public Map<String, Object> openEmergencyCase(Map<String, Object> body) {
         TrustContext ctx = TrustContextHolder.require();
@@ -552,6 +611,10 @@ public class EdVisitService {
         m.put("news2_score", v.getNews2Score());
         m.put("presenting_problem_code", v.getPresentingProblemCode());
         m.put("ambulance_call_sign", v.getAmbulanceCallSign());
+        m.put("trauma_episode_id", v.getTraumaEpisodeId() != null ? v.getTraumaEpisodeId().toString() : null);
+        m.put("ems_mission_ref", v.getEmsMissionRef());
+        m.put("pre_arrival", v.getPreArrivalJson());
+        m.put("pre_arrival_at", v.getPreArrivalAt() != null ? v.getPreArrivalAt().toString() : null);
         m.put("triage_assessments", triageAssessmentRepository.findByVisitIdOrderByCreatedAtDesc(visitId)
                 .stream().map(this::triageRow).toList());
         m.put("trauma_activations", traumaRepository.findByVisitIdOrderByActivatedAtDesc(visitId)
