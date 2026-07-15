@@ -242,6 +242,20 @@ public class VitoServiceClient {
         return postJson(baseUrl + "/v1/client-registry/merge-cases", body);
     }
 
+    // ── Trauma unknown-patient identity (WU5) — passthrough to VITO v1.1 ──────────────
+    // Provisional mint issues a PROVISIONAL CPID for an unidentified trauma patient; the
+    // reconcile merge runs VITO MergeService (reversible MergeHistory + emits
+    // vito.merge.executed), which is what fans out the repoint to every trauma anchor.
+    // The web MUST use this merge, never the per-service internal repoint hooks.
+
+    public JsonNode mintProvisionalIdentity(Map<String, Object> body) {
+        return postJson(baseUrl + "/internal/v1/identities/provisional", body);
+    }
+
+    public JsonNode mergePatients(Map<String, Object> body) {
+        return postJson(baseUrl + "/internal/v1/patients/merge", body);
+    }
+
     public JsonNode decideClientMergeCase(String mergeCaseId, Map<String, Object> body) {
         return postJson(baseUrl + "/v1/client-registry/merge-cases/" + mergeCaseId + "/decision", body);
     }
