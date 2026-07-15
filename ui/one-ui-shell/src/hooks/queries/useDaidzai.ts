@@ -142,6 +142,87 @@ export function useEdPreArrival(facilityId?: string) {
   });
 }
 
+// ── SOS call-taker intake + triage (WU5) ──────────────────────────────────────
+
+export type SosRequest = Record<string, unknown> & {
+  id?: string;
+  requestReference?: string;
+  status?: string;
+  incidentId?: string;
+};
+
+export function useDaidzaiRequest(requestId?: string) {
+  return useQuery({
+    queryKey: ["daidzai-request", requestId],
+    queryFn: async () => apiClient.get<SosRequest>(`${DZ}/requests/${requestId}`),
+    enabled: !!requestId,
+    retry: false,
+  });
+}
+
+export function useCreateSosRequest() {
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) => apiClient.post<SosRequest>(`${DZ}/requests`, body),
+  });
+}
+
+/** Triage a received SOS request → mints the incident (+ trauma episode for trauma). */
+export function useTriageRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (requestId: string) => apiClient.post<Record<string, unknown>>(`${DZ}/requests/${requestId}/triage`, {}),
+    onSuccess: (_data, requestId) => {
+      void qc.invalidateQueries({ queryKey: ["daidzai-request", requestId] });
+      void qc.invalidateQueries({ queryKey: ["daidzai-incidents"] });
+    },
+  });
+}
+
+// ── Consolidated trauma-episode timeline (WU5) ────────────────────────────────
+
+export type TraumaEpisode = Record<string, unknown> & {
+  traumaEpisodeId?: string;
+  episodeReference?: string;
+  status?: string;
+  currentPhase?: string;
+  subjectIdentityMode?: string;
+  subjectHealthId?: string;
+  timeline?: Array<Record<string, unknown>>;
+};
+
+export function useTraumaEpisode(episodeId?: string) {
+  return useQuery({
+    queryKey: ["trauma-episode", episodeId],
+    queryFn: async () => apiClient.get<TraumaEpisode>(`${DZ}/trauma-episodes/${episodeId}`),
+    enabled: !!episodeId,
+    refetchInterval: 20_000,
+  });
+}
+
+// ── Unknown-patient temp identity + reconcile (WU5) ────────────────────────────
+
+const TID = "/internal/v1/trauma/identity";
+
+export function useMintProvisionalIdentity() {
+  return useMutation({
+    mutationFn: (body: { estimated_sex?: string; estimated_date_of_birth?: string; descriptor?: string }) => {
+      type Wrapped = { data: Record<string, unknown> };
+      return apiClient.post<Wrapped>(`${TID}/provisional`, body).then((r) => r.data);
+    },
+  });
+}
+
+export function useReconcileTraumaIdentity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { survivor_crid: string; merged_crids: string[]; reason?: string }) => {
+      type Wrapped = { data: Record<string, unknown> };
+      return apiClient.post<Wrapped>(`${TID}/merge`, body).then((r) => r.data);
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["trauma-episode"] }),
+  });
+}
+
 /** Blood-readiness gate for a MADI order (read-through of MADI truth; never false-ready). */
 export function useBloodReadiness(orderId?: string) {
   return useQuery({
