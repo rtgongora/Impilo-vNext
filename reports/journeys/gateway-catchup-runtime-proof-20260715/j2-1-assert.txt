@@ -1,0 +1,5 @@
+keys: ['callbackPending', 'createdAt', 'requestReference', 'stage', 'status']
+status: AWAITING_CALLBACK callbackPending: True stage: Awaiting callback confirmation
+missing_required: []
+extra_keys: []
+PII_LEAKS: []
