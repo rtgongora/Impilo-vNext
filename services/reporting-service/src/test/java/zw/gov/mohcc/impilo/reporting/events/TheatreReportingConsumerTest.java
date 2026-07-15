@@ -85,4 +85,41 @@ class TheatreReportingConsumerTest {
         consumer.consumeTheatreEvent("{\"event_type\":\"inpatient.admission.created\"}");
         verify(repo, never()).save(any());
     }
+
+    /**
+     * Wave 7 §17 — REPLAY SAFETY. At-least-once Kafka delivery means a completed-case event can be
+     * re-delivered (rebalance / offset replay). The projection must upsert the SAME per-case row via the
+     * (tenant_id, episode_id) key — never mint a second metric — and the terminal values must be stable.
+     * This is the unit twin of the live drainage-rig assertion that a replay produces no duplicate row.
+     */
+    @Test
+    void replayedCompletedCaseUpsertsSameRowNoDuplicateMetric() {
+        String completed = event("theatre.case.completed",
+                "\"procedure_code\":\"LAP-CHOLE\",\"theatre_minutes\":90,\"has_anaesthesia\":true,"
+                + "\"implant_count\":2,\"consumable_count\":5,\"blood_units\":1");
+
+        // First delivery: no existing row → a new metric is created and saved.
+        when(repo.findByTenantIdAndEpisodeId(tenant, episode)).thenReturn(Optional.empty());
+        consumer.consumeTheatreEvent(completed);
+        ArgumentCaptor<RptTheatreCaseMetricEntity> firstCap = ArgumentCaptor.forClass(RptTheatreCaseMetricEntity.class);
+        verify(repo).save(firstCap.capture());
+        RptTheatreCaseMetricEntity row = firstCap.getValue();
+        assertEquals("COMPLETED", row.getStatus());
+        assertEquals(90, row.getTheatreMinutes());
+
+        // Second (replayed) delivery: the SAME keyed row is now found and re-saved in place — no new row.
+        row.setId(42L); // simulate persistence-assigned id on the existing projection
+        when(repo.findByTenantIdAndEpisodeId(tenant, episode)).thenReturn(Optional.of(row));
+        consumer.consumeTheatreEvent(completed);
+
+        ArgumentCaptor<RptTheatreCaseMetricEntity> replayCap = ArgumentCaptor.forClass(RptTheatreCaseMetricEntity.class);
+        verify(repo, times(2)).save(replayCap.capture());
+        RptTheatreCaseMetricEntity replayed = replayCap.getValue();
+        assertSame(row, replayed, "replay must re-save the SAME keyed metric, not a fresh entity");
+        assertEquals(42L, replayed.getId(), "replay must not mint a second row");
+        assertEquals("COMPLETED", replayed.getStatus());
+        assertEquals(90, replayed.getTheatreMinutes());
+        assertEquals(2, replayed.getImplantCount());
+        assertEquals(1, replayed.getBloodUnits());
+    }
 }
