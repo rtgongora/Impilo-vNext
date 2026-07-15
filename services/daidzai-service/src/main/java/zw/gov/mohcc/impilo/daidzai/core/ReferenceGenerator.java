@@ -12,6 +12,8 @@ public class ReferenceGenerator {
     public String requestReference() { return prefixed("SOS"); }
     public String incidentReference() { return prefixed("INC"); }
     public String traumaEpisodeReference() { return prefixed("TEP"); }
+    public String emsMissionReference() { return prefixed("EMS"); }
+    public String emsUnitReference() { return prefixed("UNIT"); }
 
     private String prefixed(String prefix) {
         OffsetDateTime now = OffsetDateTime.now();

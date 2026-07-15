@@ -29,9 +29,7 @@ public class OwnerRoutedGateway {
                 tenantId, channel, recipientRole, templateKey, context);
     }
 
-    /** Request Nhume to execute a dispatch mission for an incident (Nhume returns the mission ref). */
-    public void requestDispatch(UUID tenantId, UUID incidentId, Map<String, Object> need) {
-        log.info("daidzai->nhume dispatch-request tenant={} incident={} need={}",
-                tenantId, incidentId, need);
-    }
+    // requestDispatch(...) was a log-only stub — EMS clinical dispatch is now a real bounded context
+    // (daidzai.ems, architecture decision #2). See EmsDispatchService.dispatch, called from
+    // EmergencyService.requestDispatch. NHUME/dispatch remain the courier/logistics lane.
 }

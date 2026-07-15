@@ -33,13 +33,14 @@ public class EmergencyService {
     private final DaidzaiEventEmitter emitter;
     private final zw.gov.mohcc.impilo.daidzai.integration.NdilaCatchmentClient catchment;
     private final TraumaEpisodeService traumaEpisodes;
+    private final EmsDispatchService emsDispatch;
 
     public EmergencyService(EmergencyRequestRepository requestRepo, EmergencyIncidentRepository incidentRepo,
                             MissionEventRepository missionRepo, ResourceRequestRepository resourceRepo,
                             TriageClassifier triage, ReferenceGenerator refs,
                             OwnerRoutedGateway gateway, DaidzaiEventEmitter emitter,
                             zw.gov.mohcc.impilo.daidzai.integration.NdilaCatchmentClient catchment,
-                            TraumaEpisodeService traumaEpisodes) {
+                            TraumaEpisodeService traumaEpisodes, EmsDispatchService emsDispatch) {
         this.requestRepo = requestRepo;
         this.incidentRepo = incidentRepo;
         this.missionRepo = missionRepo;
@@ -50,6 +51,7 @@ public class EmergencyService {
         this.emitter = emitter;
         this.catchment = catchment;
         this.traumaEpisodes = traumaEpisodes;
+        this.emsDispatch = emsDispatch;
     }
 
     /**
@@ -245,10 +247,10 @@ public class EmergencyService {
         inc.setStatus("DISPATCH_REQUESTED");
         incidentRepo.save(inc);
 
-        gateway.requestDispatch(tenantId, incidentId, Map.of(
-                "category", inc.getEmergencyCategory(), "severity", inc.getSeverity(),
-                "lat", inc.getLocationLat() == null ? "" : inc.getLocationLat(),
-                "lng", inc.getLocationLng() == null ? "" : inc.getLocationLng()));
+        // Real EMS clinical dispatch (architecture decision #2) — replaces the OwnerRoutedGateway
+        // log-stub. Creates the crew/vehicle mission (CREATED→DISPATCHED) bound to this incident +
+        // the trauma episode; idempotent per incident. NHUME/dispatch remain the courier lane.
+        emsDispatch.dispatch(tenantId, incidentId, null, null, null, inc.getSeverity());
 
         MissionEventEntity ev = recordMissionEvent(tenantId, incidentId, "DISPATCH_REQUESTED",
                 null, note, actorId, "DISPATCHER");

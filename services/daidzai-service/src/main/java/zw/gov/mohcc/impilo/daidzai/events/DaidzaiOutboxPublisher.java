@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.daidzai.events;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -18,9 +19,14 @@ import zw.gov.mohcc.impilo.sharedkernel.events.EventTopicRegistry;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-/** Relays unpublished Daidzai outbox rows to Kafka. Disabled under {@code test}. */
+/**
+ * Relays unpublished Daidzai outbox rows to Kafka. Disabled under {@code test}, and disabled when
+ * {@code daidzai.kafka-events-enabled=false} (no-broker contexts — local/CI/runtime-proof rigs),
+ * where {@link DaidzaiOutboxNoKafkaDrainer} drains the outbox instead. Defaults ON (prod).
+ */
 @Component
 @Profile("!test")
+@ConditionalOnProperty(name = "daidzai.kafka-events-enabled", havingValue = "true", matchIfMissing = true)
 public class DaidzaiOutboxPublisher extends CompanionOutboxPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(DaidzaiOutboxPublisher.class);
