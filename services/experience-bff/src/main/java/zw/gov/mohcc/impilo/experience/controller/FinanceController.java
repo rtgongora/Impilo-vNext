@@ -557,6 +557,76 @@ public class FinanceController {
         }
     }
 
+    // ── Failed money events (dead-letter replay) ─────────────────────
+
+    /** Actor types permitted to view and replay dead-lettered money events. */
+    static final java.util.Set<String> FAILED_EVENT_ROLES = java.util.Set.of(
+            "FINANCE", "FINANCE_ADMIN", "FACILITY_FINANCE", "PAYER_OPS", "SYSTEM", "SYSTEM_ADMIN");
+
+    /**
+     * GET /internal/v1/finance/failed-money-events?status=DEAD
+     *
+     * Lists COSTA's dead-lettered money events for the ops dead-letter surface.
+     */
+    @GetMapping("/failed-money-events")
+    public ResponseEntity<Map<String, Object>> listFailedMoneyEvents(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
+            @RequestParam(required = false) String status) {
+        if (!FAILED_EVENT_ROLES.contains(actorType)) {
+            return financeRoleRequired(requestId, correlationId);
+        }
+        try {
+            JsonNode data = costaClient.listFailedMoneyEvents(status);
+            ArrayNode resources = objectMapper.createArrayNode();
+            if (data != null && data.isArray()) {
+                for (JsonNode row : data) {
+                    resources.add(row);
+                }
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", resources,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Failed to fetch dead-lettered money events from COSTA: {}", e.getMessage());
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to fetch failed money events", requestId, correlationId);
+        }
+    }
+
+    /**
+     * POST /internal/v1/finance/failed-money-events/{id}/replay
+     *
+     * Replays a dead-lettered money event (re-publishes original payload onto
+     * original topic). Safe — every money consumer is idempotent.
+     */
+    @PostMapping("/failed-money-events/{id}/replay")
+    public ResponseEntity<Map<String, Object>> replayFailedMoneyEvent(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
+            @PathVariable long id) {
+        if (!FAILED_EVENT_ROLES.contains(actorType)) {
+            return financeRoleRequired(requestId, correlationId);
+        }
+        try {
+            JsonNode result = costaClient.replayFailedMoneyEvent(id);
+            return ResponseEntity.ok(Map.of(
+                    "data", result != null ? result : objectMapper.createObjectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Failed to replay money event {}: {}", id, e.getMessage());
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to replay failed money event", requestId, correlationId);
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> financeRoleRequired(String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "error", Map.of("code", "FINANCE_ROLE_REQUIRED",
+                        "message", "Dead-letter replay is a finance-ops action"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
     // ── Resource Mappers ─────────────────────────────────────────────
 
     /**

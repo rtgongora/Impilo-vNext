@@ -90,8 +90,48 @@ public class CostaServiceClient {
     }
 
     public JsonNode finalizeBill(String billId) {
+        return finalizeBill(billId, false);
+    }
+
+    /**
+     * Finalize an approved bill. When {@code allowUnpriced} is true, COSTA will
+     * finalize a bill that still carries pending-priced (no configured tariff)
+     * lines, treating them as zero — an explicit governed override, never the
+     * default. Fail-closed remains the norm.
+     */
+    public JsonNode finalizeBill(String billId, boolean allowUnpriced) {
         String url = baseUrl + "/costa/v1/bills/" + billId + "/finalize";
-        log.info("COSTA: Finalizing bill {}", billId);
+        if (allowUnpriced) {
+            url = UriComponentsBuilder.fromHttpUrl(url).queryParam("allowUnpriced", true).toUriString();
+        }
+        log.info("COSTA: Finalizing bill {} (allowUnpriced={})", billId, allowUnpriced);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * List dead-lettered money events from COSTA's ops surface.
+     *
+     * @param status optional filter (DEAD, REPLAYED); null/blank = all
+     * @return array of failed money events (newest first)
+     */
+    public JsonNode listFailedMoneyEvents(String status) {
+        String url = baseUrl + "/internal/v1/finance/failed-money-events";
+        if (status != null && !status.isBlank()) {
+            url = UriComponentsBuilder.fromHttpUrl(url).queryParam("status", status).toUriString();
+        }
+        log.info("COSTA: Listing failed money events (status={})", status);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Replay a dead-lettered money event by re-publishing its original payload
+     * onto the original topic. Safe: money consumers are idempotent.
+     */
+    public JsonNode replayFailedMoneyEvent(long id) {
+        String url = baseUrl + "/internal/v1/finance/failed-money-events/" + id + "/replay";
+        log.info("COSTA: Replaying failed money event {}", id);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
         return extractData(response);
     }
