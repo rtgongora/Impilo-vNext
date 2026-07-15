@@ -24,6 +24,10 @@ public class ProcedureEpisodeEntity {
     @Column(name = "admission_ref")
     private UUID admissionRef;
 
+    /** daidzai-minted trauma episode this surgery originates from (null for elective/non-trauma). */
+    @Column(name = "trauma_episode_id")
+    private UUID traumaEpisodeId;
+
     @Column(name = "booking_id")
     private String bookingId;
 
@@ -126,6 +130,8 @@ public class ProcedureEpisodeEntity {
     public void setEncounterId(UUID encounterId) { this.encounterId = encounterId; }
     public UUID getAdmissionRef() { return admissionRef; }
     public void setAdmissionRef(UUID admissionRef) { this.admissionRef = admissionRef; }
+    public UUID getTraumaEpisodeId() { return traumaEpisodeId; }
+    public void setTraumaEpisodeId(UUID traumaEpisodeId) { this.traumaEpisodeId = traumaEpisodeId; }
     public String getBookingId() { return bookingId; }
     public void setBookingId(String bookingId) { this.bookingId = bookingId; }
     public UUID getTheatreId() { return theatreId; }
