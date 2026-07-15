@@ -1,18 +1,20 @@
 "use client";
 
 /**
- * Dispatch console — lists incidents awaiting/needing dispatch and lets a dispatcher
- * raise the dispatch need (POST /internal/v1/daidzai/incidents/{id}/dispatch). Nhume
- * executes; this creates the need + starts the mission timeline. No fake fleet tracker.
- * Route: /work/daidzai/dispatch
+ * EMS dispatch console — lists incidents needing an ambulance and dispatches a clinical
+ * EMS mission onto the validated daidzai state machine (POST /daidzai/ems/incidents/{id}
+ * /dispatch, idempotent per incident). On dispatch the mission board opens to advance the
+ * crew and capture the prehospital ePCR. Route: /work/daidzai/dispatch
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, Loader2, RefreshCw, Ambulance } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
 import { apiClient } from "@/lib/api-client";
+import { useDispatchEmsMission } from "@/hooks/queries/useDaidzai";
 
 interface Incident {
   id: string;
@@ -36,6 +38,8 @@ function errMessage(e: unknown): string {
 }
 
 export default function DaidzaiDispatchPage() {
+  const router = useRouter();
+  const dispatchEms = useDispatchEmsMission();
   const [data, setData] = useState<Incident[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,11 +64,10 @@ export default function DaidzaiDispatchPage() {
 
   const dispatch = async (id: string) => {
     setBusy(id);
+    setError(null);
     try {
-      await apiClient.post(`/internal/v1/daidzai/incidents/${encodeURIComponent(id)}/dispatch`, {
-        note: "Dispatch requested from console",
-      });
-      await load();
+      await dispatchEms.mutateAsync({ incidentId: id, priority: "CRITICAL" });
+      router.push(`/work/daidzai/missions?incident=${encodeURIComponent(id)}`);
     } catch (e) {
       setError(errMessage(e));
     } finally {
@@ -75,8 +78,8 @@ export default function DaidzaiDispatchPage() {
   return (
     <AppLayout>
       <PageShell
-        title="Dispatch console"
-        subtitle="Raise the dispatch need — Nhume executes the mission"
+        title="EMS dispatch"
+        subtitle="Dispatch a clinical ambulance mission — advance the crew + capture the ePCR"
         serviceSlug="daidzai"
       >
         <div className="mb-4 flex justify-end">
@@ -96,7 +99,7 @@ export default function DaidzaiDispatchPage() {
         ) : error ? (
           <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">
             <div className="mb-2 flex items-center gap-2 font-semibold">
-              <AlertTriangle className="h-4 w-4" /> Could not load incidents
+              <AlertTriangle className="h-4 w-4" /> Could not dispatch
             </div>
             <p>{error}</p>
           </div>
@@ -127,12 +130,8 @@ export default function DaidzaiDispatchPage() {
                   disabled={busy === inc.id}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
                 >
-                  {busy === inc.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Ambulance className="h-4 w-4" />
-                  )}
-                  Request dispatch
+                  {busy === inc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ambulance className="h-4 w-4" />}
+                  Dispatch EMS
                 </button>
               </li>
             ))}
