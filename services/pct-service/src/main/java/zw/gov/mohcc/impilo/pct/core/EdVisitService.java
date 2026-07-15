@@ -536,9 +536,11 @@ public class EdVisitService {
         }
         String surveyType = Objects.requireNonNullElse(
                 EdPayloadMapper.str(body, "surveyType", "survey_type"), "PRIMARY").toUpperCase();
+        EdVisitEntity visit = requireVisit(visitId);
         EdTraumaSurveyEntity survey = new EdTraumaSurveyEntity();
         survey.setTraumaId(traumaId);
         survey.setTenantId(ctx.tenantId());
+        survey.setTraumaEpisodeId(visit.getTraumaEpisodeId());
         survey.setSurveyType(surveyType);
         survey.setSectionKey(EdPayloadMapper.str(body, "sectionKey", "section_key"));
         survey.setChecklistJson(jsonField(body.get("checklist"), "{}"));
@@ -546,7 +548,26 @@ public class EdVisitService {
         survey.setNotes(EdPayloadMapper.str(body, "notes"));
         survey.setRecordedBy(Objects.requireNonNullElse(
                 EdPayloadMapper.str(body, "recordedBy", "recorded_by"), ctx.actorId()));
-        traumaSurveyRepository.save(survey);
+        // AMEND without overwriting: a later survey that amends an earlier one (new injuries found on
+        // re-examination) is a NEW revision referencing the superseded row, which is RETAINED.
+        String amendsRaw = EdPayloadMapper.str(body, "amendsSurveyId", "amends_survey_id");
+        Long amendsId = (amendsRaw != null && !amendsRaw.isBlank()) ? Long.valueOf(amendsRaw.trim()) : null;
+        if (amendsId != null) {
+            EdTraumaSurveyEntity original = traumaSurveyRepository.findById(amendsId)
+                    .filter(o -> ctx.tenantId().equals(o.getTenantId()))
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amended survey not found"));
+            survey.setAmendsSurveyId(original.getId());
+            survey.setRevision(original.getRevision() + 1);
+            original.setStatus("AMENDED");   // preserved, not overwritten
+            traumaSurveyRepository.save(original);
+        }
+        survey = traumaSurveyRepository.save(survey);
+        if (visit.getTraumaEpisodeId() != null) {
+            daidzaiEpisodes.registerPhase(ctx.tenantId(), visit.getTraumaEpisodeId(),
+                    "SECONDARY".equals(surveyType) ? "DEFINITIVE" : "RESUS",
+                    survey.getId().toString(), surveyType + "_SURVEY_R" + survey.getRevision(),
+                    "pct.ed.trauma_survey");
+        }
         return visitDetail(visitId);
     }
 
@@ -737,6 +758,9 @@ public class EdVisitService {
                 "id", s.getId(),
                 "survey_type", s.getSurveyType(),
                 "section_key", Objects.requireNonNullElse(s.getSectionKey(), ""),
+                "revision", s.getRevision(),
+                "status", s.getStatus(),
+                "amends_survey_id", s.getAmendsSurveyId() != null ? s.getAmendsSurveyId() : "",
                 "recorded_by", s.getRecordedBy(),
                 "recorded_at", s.getRecordedAt().toString());
     }

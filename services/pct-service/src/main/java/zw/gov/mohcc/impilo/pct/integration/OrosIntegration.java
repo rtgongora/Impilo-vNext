@@ -3,13 +3,20 @@ package zw.gov.mohcc.impilo.pct.integration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Integration service for the OROS Order Registry Service.
@@ -99,5 +106,88 @@ public class OrosIntegration {
             log.warn("OROS unavailable when querying order {}: {}", orderId, e.getMessage());
             return Collections.emptyMap();
         }
+    }
+
+    /**
+     * Place a trauma ED diagnostic order on OROS with {@code encounter_ref = trauma_episode_id}
+     * (uses the OROS API; no OROS code change). Returns the OROS order id, or null on failure.
+     */
+    @SuppressWarnings("unchecked")
+    public String placeOrder(String orderType, String patientCpid, String encounterRef,
+                             String priority, String clinicalNotes) {
+        try {
+            java.util.Map<String, Object> body = new java.util.LinkedHashMap<>();
+            body.put("orderType", orderType);
+            if (priority != null) body.put("priority", priority);
+            body.put("patientCpid", patientCpid);
+            if (encounterRef != null) body.put("encounterRef", encounterRef);
+            if (clinicalNotes != null) body.put("clinicalNotes", clinicalNotes);
+            ResponseEntity<Map> response = restTemplate.exchange(baseUrl + "/v1/orders",
+                    HttpMethod.POST, new HttpEntity<>(body, trustHeaders()), Map.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Object data = response.getBody().getOrDefault("data", response.getBody());
+                Object id = data instanceof Map ? ((Map<String, Object>) data).get("orderId") : null;
+                return id != null ? id.toString() : null;
+            }
+            return null;
+        } catch (RestClientException e) {
+            log.warn("OROS unavailable placing order for patient {}: {}", patientCpid, e.getMessage());
+            return null;
+        }
+    }
+
+    /** Read an OROS order (for the trauma read-through: resolve its encounter_ref = trauma episode). */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getOrder(String orderId) {
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(baseUrl + "/v1/orders/" + orderId,
+                    HttpMethod.GET, new HttpEntity<>(trustHeaders()), Map.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Object data = response.getBody().getOrDefault("data", response.getBody());
+                return data instanceof Map ? (Map<String, Object>) data : response.getBody();
+            }
+            return Collections.emptyMap();
+        } catch (RestClientException e) {
+            log.warn("OROS unavailable reading order {}: {}", orderId, e.getMessage());
+            return Collections.emptyMap();
+        }
+    }
+
+    /**
+     * Acknowledge a critical result via OROS's existing order-scoped ack endpoint
+     * ({@code POST /v1/orders/{orderId}/ack}, ackType=CRITICAL → oros_acknowledgements). Uses the
+     * OROS API only (no OROS code change). Returns true on success. Never throws.
+     */
+    public boolean acknowledgeCriticalOrder(String orderId, String reason) {
+        try {
+            Map<String, Object> body = Map.of("ackType", "CRITICAL",
+                    "notes", reason == null ? "trauma ED critical-result acknowledgement" : reason);
+            ResponseEntity<Map> response = restTemplate.exchange(baseUrl + "/v1/orders/" + orderId + "/ack",
+                    HttpMethod.POST, new HttpEntity<>(body, trustHeaders()), Map.class);
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (RestClientException e) {
+            log.warn("OROS unavailable acking critical order {}: {}", orderId, e.getMessage());
+            return false;
+        }
+    }
+
+    /** Propagate the inbound trust context so OROS (tenant-scoped) resolves the order. */
+    private HttpHeaders trustHeaders() {
+        HttpHeaders h = new HttpHeaders();
+        h.setContentType(MediaType.APPLICATION_JSON);
+        h.set("X-Pod-ID", "national-spine");
+        h.set("X-Request-ID", UUID.randomUUID().toString());
+        try {
+            TrustContext ctx = TrustContextHolder.require();
+            if (ctx.tenantId() != null) h.set("X-Tenant-ID", ctx.tenantId().toString());
+            if (ctx.actorId() != null) h.set("X-Actor-ID", ctx.actorId());
+            h.set("X-Correlation-ID", ctx.correlationId() != null ? ctx.correlationId().toString() : UUID.randomUUID().toString());
+            if (ctx.facilityId() != null) h.set("X-Facility-ID", ctx.facilityId().toString());
+            if (ctx.purposeOfUse() != null) h.set("X-Purpose-Of-Use", ctx.purposeOfUse());
+        } catch (IllegalStateException e) {
+            h.set("X-Correlation-ID", UUID.randomUUID().toString());
+        }
+        h.set("X-Actor-Type", "SERVICE");
+        return h;
     }
 }

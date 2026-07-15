@@ -19,11 +19,14 @@ public class EdVisitController {
 
     private final EdVisitService edVisitService;
     private final zw.gov.mohcc.impilo.pct.core.EdTraumaTeamService traumaTeamService;
+    private final zw.gov.mohcc.impilo.pct.core.EdDiagnosticsService diagnosticsService;
 
     public EdVisitController(EdVisitService edVisitService,
-                            zw.gov.mohcc.impilo.pct.core.EdTraumaTeamService traumaTeamService) {
+                            zw.gov.mohcc.impilo.pct.core.EdTraumaTeamService traumaTeamService,
+                            zw.gov.mohcc.impilo.pct.core.EdDiagnosticsService diagnosticsService) {
         this.edVisitService = edVisitService;
         this.traumaTeamService = traumaTeamService;
+        this.diagnosticsService = diagnosticsService;
     }
 
     @PostMapping("/visits")
@@ -135,6 +138,23 @@ public class EdVisitController {
         String correlationId = TrustContextHolder.require().correlationId().toString();
         return ResponseEntity.ok(ApiResponse.ok(
                 edVisitService.activateTrauma(id, withTraumaEpisode(body, traumaEpisodeId)), correlationId));
+    }
+
+    /** Place a trauma ED diagnostic order on OROS (encounter_ref=episode) + keep the PCT link (G1.9). */
+    @PostMapping("/visits/{visitId}/diagnostics")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> orderDiagnostic(
+            @PathVariable UUID visitId, @RequestBody(required = false) Map<String, Object> body) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(diagnosticsService.orderDiagnostic(visitId, body != null ? body : Map.of()), correlationId));
+    }
+
+    /** Reconcile an OROS CRITICAL diagnostic result onto the trauma episode (G1.9). */
+    @PostMapping("/diagnostics/reconcile-critical")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> reconcileCriticalResult(
+            @RequestBody Map<String, Object> body) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(diagnosticsService.reconcileCriticalResult(body), correlationId));
     }
 
     // ── Trauma-team roster → ack → escalate (G1.7) ──────────────────────────
