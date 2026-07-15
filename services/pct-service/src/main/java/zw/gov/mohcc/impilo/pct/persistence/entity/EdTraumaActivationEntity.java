@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.pct.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -27,6 +29,10 @@ public class EdTraumaActivationEntity {
     @Column(name = "team_leader")
     private String teamLeader;
 
+    // Bind the String as JSON so PostgreSQL accepts it into the jsonb column. Without this
+    // Hibernate binds a varchar and PG refuses the implicit cast (SQLSTATE 42804), 500-ing every
+    // trauma-team activation on Postgres — a latent bug H2 (varchar-tolerant) never surfaced.
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "team_assignments", columnDefinition = "jsonb")
     private String teamAssignmentsJson = "[]";
 
