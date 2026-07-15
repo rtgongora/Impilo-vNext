@@ -25,7 +25,7 @@ import {
   useMerchantByProvider,
   useWallet,
   useBalance,
-  useTransactions,
+  useWalletTransactions,
   useRegisterMerchant,
 } from "@/hooks/queries/useMusheWallet";
 
@@ -119,11 +119,27 @@ export default function MerchantDashboardPage() {
   }, [balanceQ.data]);
   const merchantBalance = readNum(balanceData, "availableBalance", "available_balance", "balance");
 
-  const txQ = useTransactions(merchantWalletId || null, 0, 20);
+  const txQ = useWalletTransactions(merchantWalletId || null, 0, 50);
   const txRows = useMemo(() => {
     const raw = asRecord(txQ.data).data ?? txQ.data;
     return unwrapItems(raw).map(asRecord);
   }, [txQ.data]);
+
+  // Earnings = settlement/payout credits into the merchant wallet
+  // (WalletDisbursementRail credits with txnType SETTLEMENT, ref payout:batch:item).
+  const earnings = useMemo(
+    () =>
+      txRows.filter((t) => {
+        const type = readStr(t, "transactionType", "txnType", "txn_type").toUpperCase();
+        const dir = readStr(t, "direction").toUpperCase();
+        return type === "SETTLEMENT" && (dir === "" || dir === "CREDIT");
+      }),
+    [txRows],
+  );
+  const earningsTotal = useMemo(
+    () => earnings.reduce((sum, t) => sum + Number(t.amount ?? 0), 0),
+    [earnings],
+  );
 
   const registerMerchant = useRegisterMerchant();
 
@@ -326,6 +342,57 @@ export default function MerchantDashboardPage() {
                   {formatMoney(merchantBalance, currency)}
                 </div>
               )}
+            </section>
+
+            {/* Earnings / payouts received — settlement disbursements into this wallet */}
+            <section className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="border-b border-border px-4 py-3 bg-background/80 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-foreground">Earnings — payouts received</h2>
+                {earnings.length > 0 && (
+                  <span className="text-sm font-semibold text-primary-hover tabular-nums">
+                    {formatMoney(earningsTotal, currency)}
+                  </span>
+                )}
+              </div>
+              <div className="overflow-x-auto">
+                {txQ.isLoading && (
+                  <div className="p-6 flex items-center gap-2 text-muted-foreground text-sm">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+                  </div>
+                )}
+                {!txQ.isLoading && !txQ.isError && earnings.length === 0 && (
+                  <p className="p-4 text-sm text-muted-foreground">
+                    No payouts received yet. When your marketplace settlements are released,
+                    the payout to your merchant wallet appears here.
+                  </p>
+                )}
+                {!txQ.isLoading && earnings.length > 0 && (
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-background text-left text-xs text-muted-foreground uppercase tracking-wide">
+                      <tr>
+                        <th className="px-4 py-2 font-medium">Date</th>
+                        <th className="px-4 py-2 font-medium">Settlement reference</th>
+                        <th className="px-4 py-2 font-medium text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {earnings.map((row, i) => (
+                        <tr key={readStr(row, "txnId", "txn_id") || i} className="border-t border-border">
+                          <td className="px-4 py-2 text-muted-foreground">
+                            {readStr(row, "createdAt", "created_at").slice(0, 10) || "—"}
+                          </td>
+                          <td className="px-4 py-2 font-mono text-xs">
+                            {readStr(row, "reference") || "—"}
+                          </td>
+                          <td className="px-4 py-2 text-right tabular-nums text-primary-hover">
+                            +{formatMoney(readNum(row, "amount"), currency)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </section>
 
             {/* Recent Payments Received */}

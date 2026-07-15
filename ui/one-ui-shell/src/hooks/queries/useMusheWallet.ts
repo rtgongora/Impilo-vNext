@@ -52,6 +52,21 @@ export function useTransactions(walletId?: string | null, page?: number, size?: 
   });
 }
 
+/**
+ * Transactions for a SPECIFIC wallet (not the caller's self wallet) — used by
+ * the merchant/vendor earnings view. Hits the ownership-guarded BFF route.
+ */
+export function useWalletTransactions(walletId?: string | null, page = 0, size = 50) {
+  return useQuery<TransactionResponse>({
+    queryKey: ["mushe-wallet-txns", walletId, page, size],
+    queryFn: () =>
+      apiClient.get<TransactionResponse>(
+        `/internal/v1/wallets/${walletId}/transactions?page=${page}&size=${size}`,
+      ),
+    enabled: !!walletId,
+  });
+}
+
 export function useFundingSources(walletId?: string | null) {
   return useQuery<FundingSourceResponse>({
     queryKey: ["mushe-funding-sources", walletId],
