@@ -81,6 +81,13 @@ public class DaidzaiServiceClient {
         return get(baseUrl + API + "/requests/" + id, "getRequest");
     }
 
+    /** Call-taker queue: pending (or status-filtered) SOS requests. WU5/WU6 passthrough. */
+    public JsonNode listRequests(String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + API + "/requests");
+        if (status != null && !status.isBlank()) b.queryParam("status", status);
+        return get(b.toUriString(), "listRequests");
+    }
+
     public JsonNode triageRequest(String id) {
         return post(baseUrl + API + "/requests/" + id + "/triage", Map.of(), "triageRequest");
     }

@@ -83,6 +83,21 @@ class DaidzaiControllerTest {
     }
 
     @Test
+    void listRequests_delegatesWithStatus() {
+        DaidzaiServiceClient client = mock(DaidzaiServiceClient.class);
+        ArrayNode arr = mapper.createArrayNode();
+        arr.add(mapper.createObjectNode().put("status", "RECEIVED"));
+        when(client.listRequests("RECEIVED")).thenReturn(arr);
+
+        DaidzaiController controller = new DaidzaiController(client);
+        var resp = controller.listRequests("RECEIVED");
+
+        assertEquals(200, resp.getStatusCode().value());
+        assertEquals(1, resp.getBody().size());
+        verify(client).listRequests("RECEIVED");
+    }
+
+    @Test
     void traumaEpisode_delegatesAndReturnsTimeline() {
         DaidzaiServiceClient client = mock(DaidzaiServiceClient.class);
         ObjectNode ep = mapper.createObjectNode();

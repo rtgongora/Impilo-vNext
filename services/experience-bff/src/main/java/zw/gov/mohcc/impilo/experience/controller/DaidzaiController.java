@@ -34,6 +34,11 @@ public class DaidzaiController {
         return ResponseEntity.ok(daidzai.getRequest(id));
     }
 
+    @GetMapping("/requests")
+    public ResponseEntity<JsonNode> listRequests(@RequestParam(required = false) String status) {
+        return ResponseEntity.ok(daidzai.listRequests(status));
+    }
+
     @PostMapping("/requests/{id}/triage")
     public ResponseEntity<JsonNode> triage(@PathVariable String id) {
         return ResponseEntity.status(HttpStatus.CREATED).body(daidzai.triageRequest(id));
