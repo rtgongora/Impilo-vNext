@@ -2,9 +2,20 @@ import React, { useCallback, useReducer } from "react";
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Button, GlassSurface, useTier } from "@impilo/mobile-design-system";
+import { captureCurrentLocation } from "@impilo/mobile-ndila";
 import { createSos } from "../../services/emergencyService";
 import { TrackEmergencyScreen } from "../../screens/emergency/TrackEmergencyScreen";
 import { buildDefaultSosInput, initialSosState, sosReducer } from "./sosFlow";
+
+/** Best-effort GPS — never blocks the SOS. Denied/slow location just sends without coordinates. */
+async function bestEffortLocation(): Promise<{ lat?: number; lng?: number }> {
+  try {
+    const fix = await captureCurrentLocation({ highAccuracy: true, timeoutMs: 6000 });
+    return { lat: fix.coordinate.latitude, lng: fix.coordinate.longitude };
+  } catch {
+    return {};
+  }
+}
 
 /**
  * FloatingSosButton — the Future-Realism flagship "wow" slice: a persistent, glass, danger-glow
@@ -27,7 +38,8 @@ export function FloatingSosButton({ bottomOffset = 96, testID = "citizen-sos-fab
   const send = useCallback(async () => {
     dispatch({ type: "SEND" });
     try {
-      const req = await createSos(buildDefaultSosInput());
+      const location = await bestEffortLocation();
+      const req = await createSos(buildDefaultSosInput(location));
       if (req?.id) {
         dispatch({ type: "SENT", requestId: req.id });
       } else {

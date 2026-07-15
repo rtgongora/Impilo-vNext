@@ -105,6 +105,64 @@ export function buildTrustHeaders(
 }
 
 /**
+ * Context for an anonymous (pre-authentication) request on a public gateway lane.
+ * There is no actor and no bearer token — only the platform-identity headers the
+ * v1.1 companion filter hard-requires on every /internal/v1/** route.
+ */
+export interface PublicHeaderContext {
+  /** Tenant identifier (the public/default tenant when the caller is anonymous). */
+  tenantId: string;
+  /** Pod identifier (typically the national spine). */
+  podId: string;
+  /** Optional purpose-of-use hint (e.g. PUBLIC_HEALTH). Never carries actor identity. */
+  purposeOfUse?: string;
+}
+
+/**
+ * Builds the minimal trust-header map for an ANONYMOUS public-lane request.
+ *
+ * Includes only the four hard-required platform headers (tenant, pod, request,
+ * correlation), content-type, an idempotency key on command methods, and an
+ * optional purpose-of-use. Crucially it NEVER attaches an Authorization header or
+ * an actor identity — the caller is unauthenticated. Used by the public API client
+ * for the gateway's permitAll lanes (/internal/v1/public/gateway/**,
+ * /internal/v1/auth/contact/otp/**, /internal/v1/auth/register*).
+ */
+export function buildPublicTrustHeaders(
+  context: PublicHeaderContext,
+  options?: {
+    method?: string;
+    correlationId?: string;
+    clientTimeoutMs?: number;
+  }
+): Record<string, string> {
+  const requestId = generateId();
+  const correlationId = options?.correlationId ?? generateId();
+
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    [TRUST_HEADERS.TENANT_ID]: context.tenantId,
+    [TRUST_HEADERS.POD_ID]: context.podId,
+    [TRUST_HEADERS.REQUEST_ID]: requestId,
+    [TRUST_HEADERS.CORRELATION_ID]: correlationId,
+  };
+
+  if (context.purposeOfUse) {
+    headers[TRUST_HEADERS.PURPOSE_OF_USE] = context.purposeOfUse;
+  }
+  if (options?.clientTimeoutMs) {
+    headers[TRUST_HEADERS.CLIENT_TIMEOUT_MS] = String(options.clientTimeoutMs);
+  }
+
+  const method = options?.method?.toUpperCase();
+  if (method && (COMMAND_METHODS as readonly string[]).includes(method)) {
+    headers[TRUST_HEADERS.IDEMPOTENCY_KEY] = generateId();
+  }
+
+  return headers;
+}
+
+/**
  * Validates that all hard-required headers are present and non-blank.
  * Throws MissingHeaderError on first missing header.
  */

@@ -10,6 +10,10 @@ import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { useAuth } from "@impilo/mobile-auth";
 import { LoginScreen } from "../screens/LoginScreen";
 import { SignUpScreen } from "../screens/auth/SignUpScreen";
+import { ContactSignUpScreen } from "../screens/gateway/ContactSignUpScreen";
+import { HealthInfoScreen } from "../screens/gateway/HealthInfoScreen";
+import { GatewayVerifyScreen } from "../screens/gateway/GatewayVerifyScreen";
+import { TrackByReferenceScreen } from "../screens/gateway/TrackByReferenceScreen";
 import { AssuranceChoiceScreen } from "../screens/auth/AssuranceChoiceScreen";
 import { appStore, useAppStore } from "../stores/appStore";
 import { fetchProfile } from "../services/profileService";
@@ -44,16 +48,27 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   if (!auth.isAuthenticated) {
+    const clear = () => appStore.getState().setOnboardingScreen(null);
     if (onboardingScreen === "signup") {
-      return (
-        <SignUpScreen
-          onBack={() => appStore.getState().setOnboardingScreen(null)}
-        />
-      );
+      return <SignUpScreen onBack={clear} />;
+    }
+    if (onboardingScreen === "contact-signup") {
+      return <ContactSignUpScreen onBack={clear} />;
+    }
+    if (onboardingScreen === "health-info") {
+      return <HealthInfoScreen onBack={clear} />;
+    }
+    if (onboardingScreen === "verify") {
+      return <GatewayVerifyScreen onBack={clear} />;
+    }
+    if (onboardingScreen === "track-emergency") {
+      return <TrackByReferenceScreen onBack={clear} />;
     }
     return (
       <LoginScreen
         onSignUp={() => appStore.getState().setOnboardingScreen("signup")}
+        onContactSignUp={() => appStore.getState().setOnboardingScreen("contact-signup")}
+        onGuestDestination={(dest) => appStore.getState().setOnboardingScreen(dest)}
       />
     );
   }

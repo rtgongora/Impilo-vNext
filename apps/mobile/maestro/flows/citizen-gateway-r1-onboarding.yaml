@@ -1,0 +1,63 @@
+# Citizen R1 "Reachable" contact-first OTP onboarding — the anonymous gateway signup path.
+#
+# Drives the REAL public gateway lanes end-to-end (no session before the token is minted):
+#   POST /internal/v1/auth/contact/otp/request   (issue OTP)
+#   POST /internal/v1/auth/contact/otp/verify     (purpose=REGISTER → auto-login)
+#
+# Parameterize (Maestro auto-injects MAESTRO_-prefixed shell env vars):
+#   MAESTRO_R1_NAME      — the new person's display name (e.g. "Test Citizen")
+#   MAESTRO_R1_CONTACT   — a fresh, deliverable phone number for the OTP
+#   MAESTRO_R1_OTP       — the code delivered to that contact (from the OTP sink / preview log)
+#   MAESTRO_R1_PASSWORD  — a >= 12 char password meeting complexity rules
+#
+# Preconditions: preview stack reachable; experience-bff AuthContactOtpController live;
+# an OTP delivery sink the operator can read to obtain MAESTRO_R1_OTP.
+appId: zw.gov.impilo.citizen
+tags:
+  - gateway
+  - onboarding
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    id: "login-screen"
+    timeout: 120000
+
+# "Create account with phone" → contact-first OTP onboarding
+- tapOn:
+    id: "contact-signup-link"
+- extendedWaitUntil:
+    id: "contact-signup-screen"
+    timeout: 30000
+
+# Step 1 — name + contact → request an OTP
+- tapOn:
+    id: "contact-signup-name"
+- inputText: ${MAESTRO_R1_NAME}
+- tapOn:
+    id: "contact-signup-contact"
+- inputText: ${MAESTRO_R1_CONTACT}
+- hideKeyboard
+- tapOn:
+    id: "contact-signup-send"
+
+# Step 2 — OTP + password → verify & register (auto-login on success)
+- extendedWaitUntil:
+    id: "contact-signup-otp-field"
+    timeout: 30000
+- tapOn:
+    id: "contact-signup-otp-field"
+- inputText: ${MAESTRO_R1_OTP}
+- tapOn:
+    id: "contact-signup-password"
+- inputText: ${MAESTRO_R1_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: "contact-signup-verify"
+
+# On the auth_token envelope the app establishes a session and continues to assurance,
+# then into the citizen tabs.
+- extendedWaitUntil:
+    id: "citizen-tabs"
+    timeout: 180000

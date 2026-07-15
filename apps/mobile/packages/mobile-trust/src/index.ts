@@ -23,10 +23,12 @@ export type {
 
 export {
   buildTrustHeaders,
+  buildPublicTrustHeaders,
   validateRequiredHeaders,
   generateId,
   MissingHeaderError,
 } from "./headerBuilder";
+export type { PublicHeaderContext } from "./headerBuilder";
 
 export {
   PUSH_APP_NAME,

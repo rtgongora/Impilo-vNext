@@ -14,6 +14,9 @@ export type { ApiClientConfig } from "./config";
 export { apiClient, onStepUpRequired } from "./client";
 export type { RequestOptions, ApiResponse } from "./client";
 
+// Public (anonymous, pre-authentication) client — guest gateway lanes only
+export { publicApiClient } from "./publicClient";
+
 // Errors
 export { ApiError, NetworkError, TimeoutError, StepUpRequiredError, isRetryable } from "./errors";
 

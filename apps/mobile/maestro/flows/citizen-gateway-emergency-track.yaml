@@ -1,0 +1,43 @@
+# Guest emergency track-by-reference — the anonymous gateway SOS status path (no sign-in).
+#
+# A person who raised an SOS anonymously has only the human reference from their receipt.
+# Drives the REAL public status lane (PII-free):
+#   GET /internal/v1/public/gateway/sos/{reference}
+#
+# Parameterize:
+#   MAESTRO_SOS_REFERENCE — a reference for a previously-submitted public SOS
+#                           (e.g. from POST /internal/v1/public/gateway/sos)
+#
+# Preconditions: preview stack reachable; experience-bff PublicGatewaySosBffController
+# status-by-reference lane live; a submitted public SOS whose reference is known.
+appId: zw.gov.impilo.citizen
+tags:
+  - gateway
+  - emergency
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    id: "login-screen"
+    timeout: 120000
+
+# "No account needed" → Track SOS
+- tapOn:
+    id: "guest-track-emergency"
+- extendedWaitUntil:
+    id: "track-by-reference-screen"
+    timeout: 30000
+
+# Enter the reference from the SOS receipt and track live status
+- tapOn:
+    id: "track-by-reference-input"
+- inputText: ${MAESTRO_SOS_REFERENCE}
+- hideKeyboard
+- tapOn:
+    id: "track-by-reference-go"
+
+# PII-free live status renders (reference mode)
+- extendedWaitUntil:
+    id: "track-by-reference-status"
+    timeout: 30000
