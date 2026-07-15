@@ -269,6 +269,47 @@ public class SimbaServiceClient {
                 baseUrl + "/internal/v1/wellness/care-linkages", request, JsonNode.class));
     }
 
+    // ── Wellness completion (assessments / follow-ups / timeline) ─────────────
+    public JsonNode listAssessments(String cpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/wellness/assessments")
+                .queryParam("person_cpid", cpid).encode().toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode getAssessment(String assessmentId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/internal/v1/wellness/assessments/" + assessmentId, JsonNode.class));
+    }
+
+    public JsonNode listFollowUpsForPerson(String cpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/wellness/follow-ups")
+                .queryParam("person_cpid", cpid).encode().toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode listFollowUpsForProvider(String providerId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/wellness/follow-ups")
+                .queryParam("provider_id", providerId).encode().toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode createFollowUp(Map<String, Object> request) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/wellness/follow-ups", request, JsonNode.class));
+    }
+
+    public JsonNode recordManualReading(Map<String, Object> request) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/wellness/personal-data/readings/manual", request, JsonNode.class));
+    }
+
+    public JsonNode providerHealthSummary(String cpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(
+                        baseUrl + "/internal/v1/wellness/personal-data/provider-summary")
+                .queryParam("person_cpid", cpid).encode().toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     private static String requirePersonCpidForMembership() {
         ServletRequestAttributes attrs =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

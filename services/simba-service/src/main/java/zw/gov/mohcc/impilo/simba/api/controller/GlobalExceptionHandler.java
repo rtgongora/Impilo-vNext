@@ -5,16 +5,32 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import zw.gov.mohcc.impilo.simba.core.WellnessAccessGuard;
+import zw.gov.mohcc.impilo.simba.social.core.SocialCommunityService;
+import zw.gov.mohcc.impilo.simba.social.core.SocialGroupService;
 
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler({SocialGroupService.GroupAccessException.class,
+            SocialCommunityService.CommunityAccessException.class})
+    public ResponseEntity<Map<String, String>> socialForbidden(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", ex.getMessage() != null ? ex.getMessage() : "Access denied"));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> badRequest(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(WellnessAccessGuard.WellnessAccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> forbidden(WellnessAccessGuard.WellnessAccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", ex.getMessage() != null ? ex.getMessage() : "Access denied"));
     }
 
     @ExceptionHandler(IllegalStateException.class)

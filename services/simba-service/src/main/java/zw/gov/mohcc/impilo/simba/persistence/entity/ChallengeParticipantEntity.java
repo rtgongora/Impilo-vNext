@@ -26,6 +26,15 @@ public class ChallengeParticipantEntity {
     @Column(name = "progress_value", precision = 10, scale = 2)
     private BigDecimal progressValue = BigDecimal.ZERO;
 
+    @Column(name = "shared_to_feed", nullable = false)
+    private boolean sharedToFeed = false;
+
+    @Column(name = "share_post_id")
+    private UUID sharePostId;
+
+    @Column(name = "rank")
+    private Integer rank;
+
     @Column(name = "joined_at", nullable = false)
     private OffsetDateTime joinedAt;
 
@@ -77,6 +86,30 @@ public class ChallengeParticipantEntity {
 
     public void setProgressValue(BigDecimal progressValue) {
         this.progressValue = progressValue;
+    }
+
+    public boolean isSharedToFeed() {
+        return sharedToFeed;
+    }
+
+    public void setSharedToFeed(boolean sharedToFeed) {
+        this.sharedToFeed = sharedToFeed;
+    }
+
+    public UUID getSharePostId() {
+        return sharePostId;
+    }
+
+    public void setSharePostId(UUID sharePostId) {
+        this.sharePostId = sharePostId;
+    }
+
+    public Integer getRank() {
+        return rank;
+    }
+
+    public void setRank(Integer rank) {
+        this.rank = rank;
     }
 
     public OffsetDateTime getJoinedAt() {
