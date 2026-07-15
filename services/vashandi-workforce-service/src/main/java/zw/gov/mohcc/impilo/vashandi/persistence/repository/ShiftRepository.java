@@ -53,4 +53,12 @@ public interface ShiftRepository extends JpaRepository<ShiftEntity, UUID> {
                                              @Param("poolId") String poolId,
                                              @Param("statuses") Collection<String> statuses,
                                              @Param("after") OffsetDateTime after);
+
+    /** Distinct virtual-pool keys that have at least one rostered shift for this tenant. */
+    @Query("SELECT DISTINCT s.virtualPoolId FROM ShiftEntity s WHERE s.tenantId = :tenantId "
+            + "AND s.virtualPoolId IS NOT NULL ORDER BY s.virtualPoolId ASC")
+    List<String> findDistinctVirtualPools(@Param("tenantId") UUID tenantId);
+
+    /** Every shift rostered against a pool, any status (management read). */
+    List<ShiftEntity> findByTenantIdAndVirtualPoolIdOrderByStartTimeAsc(UUID tenantId, String virtualPoolId);
 }

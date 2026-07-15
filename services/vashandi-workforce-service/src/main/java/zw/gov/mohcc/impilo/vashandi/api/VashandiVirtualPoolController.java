@@ -28,6 +28,20 @@ public class VashandiVirtualPoolController {
         this.dutyService = dutyService;
     }
 
+    /** All virtual pools with rostered coverage for this tenant (management pool picker). */
+    @GetMapping("/v1/internal/vashandi/virtual-pools")
+    public List<Map<String, Object>> listPools(@RequestParam(value = "at", required = false) String at) {
+        TrustContext ctx = TrustContextHolder.require();
+        return dutyService.listPools(ctx.tenantId(), parseOrNow(at));
+    }
+
+    /** Every shift rostered against a pool, any status (management read). */
+    @GetMapping("/v1/internal/vashandi/virtual-pools/{poolId}/shifts")
+    public Map<String, Object> poolShifts(@PathVariable String poolId) {
+        TrustContext ctx = TrustContextHolder.require();
+        return dutyService.poolShifts(ctx.tenantId(), poolId);
+    }
+
     /** Who is on duty for this pool right now (confirmed/checked_in, window covers now). */
     @GetMapping("/v1/internal/vashandi/virtual-pools/{poolId}/on-duty")
     public Map<String, Object> onDuty(@PathVariable String poolId,

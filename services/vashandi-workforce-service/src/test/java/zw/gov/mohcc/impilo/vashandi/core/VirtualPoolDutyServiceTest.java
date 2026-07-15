@@ -89,6 +89,49 @@ class VirtualPoolDutyServiceTest {
     }
 
     @Test
+    void listPoolsSummarisesEachPoolCoverageAndRosterSize() {
+        OffsetDateTime now = OffsetDateTime.now();
+        ShiftEntity live = shift("checked_in", now.minusHours(1), now.plusHours(2));
+        ShiftEntity planned = shift("scheduled", now.plusHours(6), now.plusHours(10));
+        when(shiftRepository.findDistinctVirtualPools(tenant))
+                .thenReturn(List.of("trauma-oncall:fac-1"));
+        when(shiftRepository.findOnDutyForPool(eq(tenant), eq("trauma-oncall:fac-1"),
+                eq(VirtualPoolDutyService.ON_DUTY_STATUSES), any())).thenReturn(List.of(live));
+        when(shiftRepository.findByTenantIdAndVirtualPoolIdOrderByStartTimeAsc(tenant, "trauma-oncall:fac-1"))
+                .thenReturn(List.of(live, planned));
+        when(shiftRepository.findNextShiftStartForPool(eq(tenant), eq("trauma-oncall:fac-1"),
+                eq(VirtualPoolDutyService.ROSTERED_STATUSES), any())).thenReturn(planned.getStartTime());
+
+        List<Map<String, Object>> pools = service().listPools(tenant, now);
+
+        assertThat(pools).hasSize(1);
+        assertThat(pools.get(0))
+                .containsEntry("poolId", "trauma-oncall:fac-1")
+                .containsEntry("shiftCount", 2)
+                .containsEntry("onDutyCount", 1)
+                .containsEntry("nextShiftStart", planned.getStartTime().toString());
+    }
+
+    @Test
+    void poolShiftsReturnsEveryShiftAnyStatus() {
+        OffsetDateTime now = OffsetDateTime.now();
+        ShiftEntity live = shift("checked_in", now.minusHours(1), now.plusHours(2));
+        ShiftEntity cancelled = shift("cancelled", now.minusHours(5), now.minusHours(2));
+        when(shiftRepository.findByTenantIdAndVirtualPoolIdOrderByStartTimeAsc(tenant, "trauma-oncall:fac-1"))
+                .thenReturn(List.of(cancelled, live));
+
+        Map<String, Object> out = service().poolShifts(tenant, "trauma-oncall:fac-1");
+
+        assertThat(out).containsEntry("poolId", "trauma-oncall:fac-1").containsEntry("shiftCount", 2);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> rows = (List<Map<String, Object>>) out.get("shifts");
+        assertThat(rows).hasSize(2);
+        assertThat(rows.get(0)).containsEntry("status", "cancelled");
+        assertThat(rows.get(1)).containsEntry("status", "checked_in")
+                .containsKey("rosterId").containsKey("workforceProfileId");
+    }
+
+    @Test
     void batchCoverageReturnsOneRowPerPool() {
         OffsetDateTime now = OffsetDateTime.now();
         when(shiftRepository.findOnDutyForPool(eq(tenant), eq("POOL_A"), any(), any()))

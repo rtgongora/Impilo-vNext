@@ -57,6 +57,49 @@ public class VirtualPoolDutyService {
         return out;
     }
 
+    /**
+     * All virtual pools with at least one rostered shift, each with its live
+     * coverage count, total roster size and next rostered start. Powers the
+     * on-call pool management screen (pool picker + coverage-at-a-glance).
+     */
+    public List<Map<String, Object>> listPools(UUID tenantId, OffsetDateTime at) {
+        return shiftRepository.findDistinctVirtualPools(tenantId).stream().map(poolId -> {
+            List<ShiftEntity> onDuty = shiftRepository.findOnDutyForPool(tenantId, poolId, ON_DUTY_STATUSES, at);
+            List<ShiftEntity> all = shiftRepository.findByTenantIdAndVirtualPoolIdOrderByStartTimeAsc(tenantId, poolId);
+            OffsetDateTime nextStart = shiftRepository.findNextShiftStartForPool(
+                    tenantId, poolId, ROSTERED_STATUSES, at);
+            Map<String, Object> row = new LinkedHashMap<String, Object>();
+            row.put("poolId", poolId);
+            row.put("shiftCount", all.size());
+            row.put("onDutyCount", onDuty.size());
+            row.put("nextShiftStart", nextStart == null ? null : nextStart.toString());
+            return row;
+        }).toList();
+    }
+
+    /** Every shift rostered against a pool (any status) — management read. */
+    public Map<String, Object> poolShifts(UUID tenantId, String poolId) {
+        List<ShiftEntity> shifts = shiftRepository.findByTenantIdAndVirtualPoolIdOrderByStartTimeAsc(tenantId, poolId);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("poolId", poolId);
+        out.put("shiftCount", shifts.size());
+        out.put("shifts", shifts.stream().map(VirtualPoolDutyService::shiftRow).toList());
+        return out;
+    }
+
+    private static Map<String, Object> shiftRow(ShiftEntity s) {
+        Map<String, Object> row = new LinkedHashMap<String, Object>();
+        row.put("shiftId", s.getId().toString());
+        row.put("rosterId", s.getRosterId() == null ? null : s.getRosterId().toString());
+        row.put("workforceProfileId", s.getWorkforceProfileId().toString());
+        row.put("shiftType", s.getShiftType());
+        row.put("status", s.getStatus());
+        row.put("facilityId", s.getFacilityId() == null ? null : s.getFacilityId().toString());
+        row.put("startTime", s.getStartTime().toString());
+        row.put("endTime", s.getEndTime().toString());
+        return row;
+    }
+
     /** Batch coverage counts for several pools (BFF composition read). */
     public List<Map<String, Object>> coverage(UUID tenantId, List<String> poolIds, OffsetDateTime at) {
         return poolIds.stream().map(poolId -> {
