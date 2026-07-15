@@ -89,7 +89,8 @@ wait_health(){ local url=$1 name=$2 c=000
 
 # DAIDZAI is the spine; the phase owners point their DaidzaiEpisodeClient at it.
 # kafka-events-enabled=false → the no-Kafka outbox drainer marks daidzai.ems.* rows published.
-boot daidzai-service daidzai 29392 DAIDZAI_KAFKA_EVENTS_ENABLED=false
+# DAIDZAI_PCT_BASE_URL → the EMS ePCR pre-arrival push lands on PCT's ED projection.
+boot daidzai-service daidzai 29392 DAIDZAI_KAFKA_EVENTS_ENABLED=false DAIDZAI_PCT_BASE_URL=$PCT
 boot pct-service pct 29388 PCT_INTEGRATION_DAIDZAI_BASE_URL=$DAI
 boot madi-service madi 29300 MADI_INTEGRATION_DAIDZAI_BASE_URL=$DAI
 boot inpatient-service inpatient 29321 INPATIENT_INTEGRATION_DAIDZAI_BASE_URL=$DAI
@@ -254,6 +255,57 @@ MISSION3=$(jget "$EV/ems-redispatch2.json" id)
 [ "$MISSION3" = "$MISSION" ] && ok "fresh-key re-dispatch returns the existing mission (idempotent per incident)" || bad "fresh-key re-dispatch forked: $MISSION3 != $MISSION"
 [ "$(DAISQL "SELECT count(*) FROM daidzai.dai_ems_mission WHERE incident_id='$INC'")" = 1 ] \
   && ok "exactly one EMS mission for the incident (no duplicate crew dispatched)" || bad "duplicate EMS missions for incident $INC"
+
+# ═════ J-TR-2: prehospital ePCR reaches the ED BEFORE arrival ════════════════════
+say "J-TR-2: ePCR obs persist + land on the ED pre-arrival projection before arrival"
+# Fresh incident via escalation so the mission carries a destination facility (the ED to pre-warn).
+curl -sS -o "$EV/incident2.json" $(hdr) -X POST $DAI/internal/v1/daidzai/incidents \
+  -d "{\"emergencyCategory\":\"TRAUMA\",\"severity\":\"CRITICAL\",\"description\":\"fall from height\",\"facilityId\":\"$FAC\",\"subjectIdentityMode\":\"ANONYMOUS\"}"
+INC2=$(jget "$EV/incident2.json" id)
+EP2=$(jget "$EV/incident2.json" traumaEpisodeId)
+[ -n "$EP2" ] && ok "escalated incident minted an episode ($EP2)" || bad "no episode on escalated incident: $(cat "$EV/incident2.json")"
+
+curl -sS -o "$EV/ems-dispatch2.json" $(hdr) -X POST $DAI/internal/v1/daidzai/ems/incidents/$INC2/dispatch \
+  -d '{"callSign":"AMB-12","ambulanceAssetId":"ASSET-AMB-12","priority":"CRITICAL"}'
+MISSION_B=$(jget "$EV/ems-dispatch2.json" id)
+[ -n "$MISSION_B" ] && ok "EMS mission dispatched for the incoming patient ($MISSION_B)" || bad "dispatch failed: $(cat "$EV/ems-dispatch2.json")"
+
+# Advance only to EN_ROUTE_FACILITY — the ambulance is inbound but has NOT arrived yet.
+for st in ACKNOWLEDGED ACCEPTED EN_ROUTE_SCENE ON_SCENE PATIENT_CONTACT DEPARTED_SCENE EN_ROUTE_FACILITY; do
+  curl -sS -o /dev/null $(hdr) -X POST $DAI/internal/v1/daidzai/ems/missions/$MISSION_B/advance -d '{"toState":"'$st'"}'
+done
+INROUTE=$(DAISQL "SELECT state FROM daidzai.dai_ems_mission WHERE id='$MISSION_B'")
+[ "$INROUTE" = "EN_ROUTE_FACILITY" ] && ok "mission is EN_ROUTE_FACILITY (inbound, not yet arrived)" || bad "mission state '$INROUTE' != EN_ROUTE_FACILITY"
+
+# Responder captures the ePCR + timed obs EN ROUTE.
+curl -sS -o "$EV/epcr.json" $(hdr) -X POST $DAI/internal/v1/daidzai/ems/missions/$MISSION_B/epcr \
+  -d '{"patientHealthId":"TEMP-EMS-B","primarySurvey":{"airway":"patent","breathing":"laboured","circulation":"weak radial"},"narrative":"Fall ~6m, chest + pelvic pain"}'
+curl -sS -o /dev/null $(hdr) -X POST $DAI/internal/v1/daidzai/ems/missions/$MISSION_B/epcr/events \
+  -d '{"eventType":"VITALS","channel":"OBS","payload":{"hr":128,"sbp":86,"spo2":89,"rr":28}}'
+curl -sS -o /dev/null $(hdr) -X POST $DAI/internal/v1/daidzai/ems/missions/$MISSION_B/epcr/events \
+  -d '{"eventType":"GCS","channel":"OBS","payload":{"gcs":13,"e":3,"v":4,"m":6}}'
+curl -sS -o "$EV/epcr-vitals2.json" $(hdr) -X POST $DAI/internal/v1/daidzai/ems/missions/$MISSION_B/epcr/events \
+  -d '{"eventType":"VITALS","channel":"OBS","payload":{"hr":120,"sbp":92,"spo2":93,"rr":24}}'
+
+# ePCR time-series persists in daidzai.
+EPCRROWS=$(DAISQL "SELECT count(*) FROM daidzai.dai_ems_epcr_event WHERE mission_id='$MISSION_B'")
+[ "${EPCRROWS:-0}" -ge 3 ] && ok "dai_ems_epcr_event time-series persisted ($EPCRROWS obs)" || bad "expected >=3 ePCR events, got $EPCRROWS"
+[ "$(DAISQL "SELECT count(*) FROM daidzai.dai_ems_epcr WHERE mission_id='$MISSION_B' AND trauma_episode_id='$EP2'")" = 1 ] \
+  && ok "dai_ems_epcr bound to the mission + trauma episode" || bad "ePCR not bound to mission/episode"
+
+# The obs reached the ED pre-arrival projection BEFORE the ambulance arrived.
+PREARR=$(PCTSQL "SELECT count(*) FROM pct.ed_visit WHERE trauma_episode_id='$EP2' AND status='PRE_ARRIVAL' AND pre_arrival_json IS NOT NULL")
+[ "$PREARR" = 1 ] && ok "ePCR obs landed on the PCT ed_visit PRE_ARRIVAL projection (before arrival)" || bad "no PRE_ARRIVAL ed_visit projection for episode $EP2 (got $PREARR)"
+[ "$(PCTSQL "SELECT ems_mission_ref FROM pct.ed_visit WHERE trauma_episode_id='$EP2' AND status='PRE_ARRIVAL'")" = "$MISSION_B" ] \
+  && ok "pre-arrival projection references the EMS mission" || bad "pre-arrival ed_visit missing/incorrect ems_mission_ref"
+# The projection snapshot actually carries the latest vitals (sbp 92 from the last obs).
+PCTSQL "SELECT pre_arrival_json FROM pct.ed_visit WHERE trauma_episode_id='$EP2' AND status='PRE_ARRIVAL'" > "$EV/prearrival-json.txt"
+grep -q '"sbp"' "$EV/prearrival-json.txt" && ok "pre-arrival snapshot carries prehospital vitals" || bad "pre-arrival snapshot has no vitals: $(cat "$EV/prearrival-json.txt")"
+
+# And it is visible on the ED pre-arrival board API before arrival.
+curl -sS -o "$EV/prearrival-board.json" $(hdr) "$PCT/v1/ed/pre-arrival?facilityId=$FAC" >/dev/null
+python3 -c "import json;r=json.load(open('$EV/prearrival-board.json'));d=r.get('data',r);exit(0 if isinstance(d,list) and len(d)>=1 else 1)" \
+  && ok "ED pre-arrival board API lists the inbound patient" || bad "pre-arrival board API empty: $(cat "$EV/prearrival-board.json")"
 
 # ── Summary ────────────────────────────────────────────────────────────────────
 say "SUMMARY: PASS=$PASS FAIL=$FAIL"

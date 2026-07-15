@@ -4,33 +4,33 @@
    madi-service health: 200
    inpatient-service health: 200
 == J-TR-0: incident triage mints the episode; all phase owners carry it
-   PASS: SOS request created (b9b7290f-c785-4851-ac29-d3e055b0abb3)
-   PASS: incident triaged (609ac3ab-3dc3-44a8-9f27-9d6cf508ac0b)
-   PASS: incident triage MINTED a trauma episode (88cc2c1a-d584-4ae3-a589-7e1694da5120)
+   PASS: SOS request created (3a197188-1f46-4241-baa5-08b7fd91106c)
+   PASS: incident triaged (dd4c04cf-4c9a-42cd-bc03-2d4a6ff894c2)
+   PASS: incident triage MINTED a trauma episode (41523ce2-4290-47ea-8201-46e0612f5690)
    PASS: dai_trauma_episode row exists (origin_kind=INCIDENT, origin_key=incident)
    PASS: dai_emergency_incident stamped with the episode id
    PASS: timeline seeded with the INCIDENT phase
-   PASS: ED visit opened (ae510bf6-90e8-47a0-9d25-56d1314f1f41)
+   PASS: ED visit opened (29bf2f75-d45b-46fb-a8a6-01ac6689b87f)
    PASS: pct.ed_visit carries the SAME trauma_episode_id
-   PASS: emergency activation created (6974a856-f0f4-4f8c-831c-ec24e6c78ab5)
-   PASS: resuscitation recorded (0ecf03ba-62e0-4a27-b478-1fb0e85cea8a)
+   PASS: emergency activation created (1d905e7d-3d81-4592-b34f-bd5360374388)
+   PASS: resuscitation recorded (fb47a824-9713-4046-94af-3b112f6f8742)
    PASS: inpatient.resuscitation_record carries the SAME trauma_episode_id
-   PASS: blood order placed (793a914a-7283-43b0-9ee8-306c9c73c266)
+   PASS: blood order placed (f440f4ef-cd43-4b4e-a8fa-5619cc2137a0)
    PASS: madi.blood_orders carries the SAME trauma_episode_id
    PASS: timeline has the INCIDENT phase
    PASS: timeline has the ED phase
    PASS: timeline has the RESUS phase
    PASS: timeline has the BLOOD phase
    PASS: all phase-owner rows resolve to ONE trauma_episode_id (no fork)
-   PASS: re-mint on the same origin key returned the SAME episode (88cc2c1a-d584-4ae3-a589-7e1694da5120)
+   PASS: re-mint on the same origin key returned the SAME episode (41523ce2-4290-47ea-8201-46e0612f5690)
    PASS: exactly one episode row for the origin key (idempotent)
 == J-TR-0b: ED-first walk-in trauma mints a distinct episode via PCT
-   PASS: ED walk-in visit opened (baadd970-4f5c-4d72-b687-7d65c82d06c8)
-   PASS: ED-first walk-in minted a distinct episode (16f7fe66-1a8c-4d69-87e0-8a73f82ebcb6)
+   PASS: ED walk-in visit opened (624ce3ca-46ef-48d0-a1cf-bc82027ac507)
+   PASS: ED-first walk-in minted a distinct episode (96f5344f-0ce0-4720-bfb1-a8d0b2e8dfc6)
    PASS: walk-in episode is origin_kind=ED_WALK_IN, origin_service=pct-service
    PASS: walk-in ed_visit stamped with its own episode id
 == J-TR-1: EMS mission walks CREATED→HANDOVER; daidzai.ems.* outbox; dispatch idempotent
-   PASS: EMS mission dispatched (bd1e5b40-58ff-4835-8056-4d3df5ed442c)
+   PASS: EMS mission dispatched (223588a3-7617-4d7c-b3fe-ffbb2c8d96ef)
    PASS: mission is DISPATCHED after dispatch (CREATED→DISPATCHED)
    PASS: dai_ems_mission row bound to the incident
    PASS: mission carries the canonical trauma_episode_id
@@ -40,7 +40,17 @@
    PASS: daidzai.dai_outbox has daidzai.ems.* rows (11)
    PASS: daidzai.ems.handover event emitted
    PASS: no-Kafka drainer marked all daidzai.ems.* rows published
-   PASS: same Idempotency-Key replays the SAME mission (bd1e5b40-58ff-4835-8056-4d3df5ed442c)
+   PASS: same Idempotency-Key replays the SAME mission (223588a3-7617-4d7c-b3fe-ffbb2c8d96ef)
    PASS: fresh-key re-dispatch returns the existing mission (idempotent per incident)
    PASS: exactly one EMS mission for the incident (no duplicate crew dispatched)
-== SUMMARY: PASS=37 FAIL=0
+== J-TR-2: ePCR obs persist + land on the ED pre-arrival projection before arrival
+   PASS: escalated incident minted an episode (7f40d9b0-51e6-4876-b7a5-d189c73f1a85)
+   PASS: EMS mission dispatched for the incoming patient (5161d909-522e-4688-8b74-cac9c2bdb769)
+   PASS: mission is EN_ROUTE_FACILITY (inbound, not yet arrived)
+   PASS: dai_ems_epcr_event time-series persisted (3 obs)
+   PASS: dai_ems_epcr bound to the mission + trauma episode
+   PASS: ePCR obs landed on the PCT ed_visit PRE_ARRIVAL projection (before arrival)
+   PASS: pre-arrival projection references the EMS mission
+   PASS: pre-arrival snapshot carries prehospital vitals
+   PASS: ED pre-arrival board API lists the inbound patient
+== SUMMARY: PASS=46 FAIL=0
