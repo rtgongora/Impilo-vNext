@@ -350,6 +350,156 @@ public class TheatreService {
         return out;
     }
 
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+    // ── Wave 5b §15 — OBSTETRIC EMERGENCY C-SECTION journey ─────────────────────────────────────────
+    // The highest-value obstetric journey, modelled coherently WITHOUT duplicating identity (VITO owns
+    // identity; we reference). The C-section is ONE procedure_episode for the MOTHER. Maternal + fetal
+    // context is recorded as episode-scoped intra-op events; the NEONATAL team is paged (khuluma/
+    // notification, by reference); the baby is delivered under a PROVISIONAL identity minted UPSTREAM in
+    // VITO and LINKED to the mother's episode; recovery routes mother→ward and baby→postnatal/neonatal.
+    // No new tables/columns — existing intra-op-event + outbox storage; identity is referenced, not copied.
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+
+    /** Record maternal + fetal clinical context on the (mother's) C-section episode. */
+    @Transactional
+    public Map<String, Object> recordObstetricContext(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+
+        Map<String, Object> maternal = new LinkedHashMap<>();
+        maternal.put("gravida", ClinicalPayloadMapper.integer(body, "gravida"));
+        maternal.put("para", ClinicalPayloadMapper.integer(body, "para"));
+        maternal.put("gestation_weeks", ClinicalPayloadMapper.integer(body, "gestationWeeks", "gestation_weeks"));
+        maternal.put("indication", ClinicalPayloadMapper.str(body, "indication", "csIndication", "cs_indication"));
+        maternal.put("urgency", Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "urgency", "category"), "CATEGORY_1"));
+        episodeService.recordIntraopEvent(episodeId, Map.of(
+                "eventType", "MATERNAL_CONTEXT", "description", "Maternal obstetric context",
+                "recordedBy", actor(), "vitals", maternal));
+
+        Map<String, Object> fetal = new LinkedHashMap<>();
+        fetal.put("presentation", ClinicalPayloadMapper.str(body, "fetalPresentation", "presentation"));
+        fetal.put("fetal_heart_rate", ClinicalPayloadMapper.integer(body, "fetalHeartRate", "fetal_heart_rate", "fhr"));
+        fetal.put("fetal_count", Objects.requireNonNullElse(
+                ClinicalPayloadMapper.integer(body, "fetalCount", "fetal_count"), 1));
+        fetal.put("liquor", ClinicalPayloadMapper.str(body, "liquor"));
+        episodeService.recordIntraopEvent(episodeId, Map.of(
+                "eventType", "FETAL_CONTEXT", "description", "Fetal assessment",
+                "recordedBy", actor(), "vitals", fetal));
+
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.obstetric.context", withTrauma(e, Map.of(
+                "episode_id", episodeId.toString(),
+                "gestation_weeks", String.valueOf(maternal.get("gestation_weeks")),
+                "fetal_count", String.valueOf(fetal.get("fetal_count")),
+                "urgency", String.valueOf(maternal.get("urgency")))));
+
+        Map<String, Object> out = new LinkedHashMap<>(episodeService.getEpisode(episodeId));
+        out.put("maternal_context", maternal);
+        out.put("fetal_context", fetal);
+        return out;
+    }
+
+    /** Page the NEONATAL/paediatric resuscitation team ahead of delivery (khuluma/notification, by ref). */
+    @Transactional
+    public Map<String, Object> notifyNeonatalTeam(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        String urgency = Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "urgency", "category"), "CATEGORY_1");
+        String reason = Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "reason", "indication"),
+                "Emergency caesarean — neonatal resuscitation team requested at delivery");
+        String expectedNeonates = String.valueOf(Objects.requireNonNullElse(
+                ClinicalPayloadMapper.integer(body, "expectedNeonates", "fetalCount", "fetal_count"), 1));
+        // Emitted for the khuluma/notification consumer to page the on-call neonatal team. By reference —
+        // never edits notification-service; a paging outage does not block the caesarean.
+        appendOutbox("SAFETY", episodeId.toString(), "theatre.obstetric.neonatal-alert", withTrauma(e, Map.of(
+                "episode_id", episodeId.toString(), "patient_id", e.getSubjectCpid(),
+                "urgency", urgency, "reason", reason, "expected_neonates", expectedNeonates,
+                "requested_by", actor())));
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("episode_id", episodeId.toString());
+        out.put("neonatal_team", "PAGED");
+        out.put("urgency", urgency);
+        return out;
+    }
+
+    /**
+     * Record the delivery of a neonate under the mother's C-section episode. The baby carries a
+     * PROVISIONAL identity (CPID) minted UPSTREAM in VITO (call-only) — we accept and LINK it, never mint
+     * identity. The delivery is a mother-scoped record; the neonate is referenced by CPID (VITO owns
+     * identity). Emits the delivery event carrying the baby CPID (+ trauma_episode_id when present) so
+     * the postnatal/neonatal consumers correlate mother↔baby.
+     */
+    @Transactional
+    public Map<String, Object> recordDelivery(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        String babyCpid = ClinicalPayloadMapper.str(body, "babyCpid", "baby_cpid", "neonateCpid", "neonate_cpid");
+        if (babyCpid == null || babyCpid.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "babyCpid is required — mint a provisional VITO identity for the neonate first");
+        }
+        Map<String, Object> delivery = new LinkedHashMap<>();
+        delivery.put("baby_cpid", babyCpid);
+        delivery.put("mother_cpid", e.getSubjectCpid());
+        delivery.put("mother_episode_id", episodeId.toString());
+        delivery.put("sex", ClinicalPayloadMapper.str(body, "sex", "neonateSex"));
+        delivery.put("birth_order", Objects.requireNonNullElse(
+                ClinicalPayloadMapper.integer(body, "birthOrder", "birth_order"), 1));
+        delivery.put("apgar_1", ClinicalPayloadMapper.integer(body, "apgar1", "apgar_1"));
+        delivery.put("apgar_5", ClinicalPayloadMapper.integer(body, "apgar5", "apgar_5"));
+        delivery.put("delivery_time", Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "deliveryTime", "delivery_time"), OffsetDateTime.now().toString()));
+        delivery.put("outcome", Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "outcome"), "LIVE_BIRTH"));
+        delivery.put("resuscitation", Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "resuscitation"), "NONE"));
+        // Persist as a mother-episode-scoped intra-op DELIVERY event (existing storage; no schema change).
+        episodeService.recordIntraopEvent(episodeId, Map.of(
+                "eventType", "DELIVERY",
+                "description", "Neonate delivered (provisional identity " + babyCpid + ")",
+                "recordedBy", actor(), "vitals", delivery));
+
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.obstetric.delivery", withTrauma(e, Map.of(
+                "episode_id", episodeId.toString(), "mother_cpid", e.getSubjectCpid(),
+                "baby_cpid", babyCpid, "outcome", String.valueOf(delivery.get("outcome")),
+                "apgar_5", String.valueOf(delivery.get("apgar_5")))));
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("episode_id", episodeId.toString());
+        out.put("mother_cpid", e.getSubjectCpid());
+        out.put("baby_cpid", babyCpid);
+        out.put("delivery", delivery);
+        return out;
+    }
+
+    static String normaliseNeonatalDestination(String raw) {
+        if (raw == null || raw.isBlank()) return "POSTNATAL";
+        String d = raw.trim().toUpperCase().replace('-', '_').replace(' ', '_');
+        return List.of("POSTNATAL", "NEONATAL", "NICU", "SCBU", "MORTUARY").contains(d) ? d : "POSTNATAL";
+    }
+
+    /**
+     * Route the neonate to its postnatal destination (POSTNATAL cot with mother, or NEONATAL/NICU/SCBU
+     * for complication handling). The mother's own PACU→ward discharge is the ordinary
+     * pacuDischargeDecision path; this handover is the baby's parallel leg, referenced by CPID.
+     */
+    @Transactional
+    public Map<String, Object> recordNeonatalHandover(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        String babyCpid = ClinicalPayloadMapper.str(body, "babyCpid", "baby_cpid");
+        if (babyCpid == null || babyCpid.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "babyCpid is required for the neonatal handover");
+        }
+        String destination = normaliseNeonatalDestination(ClinicalPayloadMapper.str(body, "destination"));
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.obstetric.neonatal-handover",
+                withTrauma(e, Map.of("episode_id", episodeId.toString(), "baby_cpid", babyCpid,
+                        "mother_cpid", e.getSubjectCpid(), "destination", destination,
+                        "handover_by", actor())));
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("episode_id", episodeId.toString());
+        out.put("baby_cpid", babyCpid);
+        out.put("destination", destination);
+        return out;
+    }
+
     @Transactional
     public Map<String, Object> setTriage(UUID episodeId, Map<String, Object> body) {
         ProcedureEpisodeEntity e = requireEpisode(episodeId);

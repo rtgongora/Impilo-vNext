@@ -76,6 +76,29 @@ public class TheatreController {
         return theatreService.recordEmergencyConsentException(id, body);
     }
 
+    // ── Wave 5b §15 — OBSTETRIC EMERGENCY C-SECTION (maternal + fetal + neonatal) ──
+    @PostMapping("/cases/{id}/obstetric/context")
+    public Map<String, Object> obstetricContext(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return theatreService.recordObstetricContext(id, body);
+    }
+
+    @PostMapping("/cases/{id}/obstetric/neonatal-alert")
+    public ResponseEntity<Map<String, Object>> neonatalAlert(@PathVariable UUID id,
+                                                             @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(theatreService.notifyNeonatalTeam(id, body != null ? body : Map.of()));
+    }
+
+    @PostMapping("/cases/{id}/obstetric/delivery")
+    public ResponseEntity<Map<String, Object>> delivery(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.recordDelivery(id, body));
+    }
+
+    @PostMapping("/cases/{id}/obstetric/neonatal-handover")
+    public Map<String, Object> neonatalHandover(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return theatreService.recordNeonatalHandover(id, body);
+    }
+
     @GetMapping("/queue")
     public List<Map<String, Object>> queue() {
         return theatreService.triageQueue();
