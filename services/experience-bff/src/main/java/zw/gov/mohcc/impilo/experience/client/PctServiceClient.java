@@ -1307,6 +1307,22 @@ public class PctServiceClient {
         return extractData(restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class));
     }
 
+    // ── Blood-readiness gate + ED pre-arrival board (WU4) — passthrough to pct-service ──
+    // Read-through views: blood readiness reflects MADI truth (never fabricated); the
+    // pre-arrival board lists inbound EMS patients with prehospital snapshots.
+
+    public JsonNode edBloodReadiness(String orderId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/ed/blood-readiness")
+                .queryParam("orderId", orderId).toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode edPreArrival(UUID facilityId) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/ed/pre-arrival");
+        if (facilityId != null) b.queryParam("facilityId", facilityId);
+        return extractData(restTemplate.getForEntity(b.toUriString(), JsonNode.class));
+    }
+
     /**
      * Resolve a Cadre Engine decision (shared read-model C9). The Encounter Cockpit renders its adaptive spine
      * strictly from {@code cockpitSpine}; disabled actions are never live buttons. PCT owns the decision and

@@ -335,6 +335,32 @@ public class EdWorkflowController {
         }
     }
 
+    // ── Blood-readiness gate + ED pre-arrival board (WU4) — passthrough to pct-service ──
+
+    @GetMapping("/blood-readiness")
+    public ResponseEntity<Map<String, Object>> bloodReadiness(@RequestParam String orderId) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(pctClient.edBloodReadiness(orderId), "PCT edBloodReadiness")));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("PCT edBloodReadiness", e);
+        }
+    }
+
+    @GetMapping("/pre-arrival")
+    public ResponseEntity<Map<String, Object>> preArrival(@RequestParam(required = false) UUID facilityId) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(pctClient.edPreArrival(facilityId), "PCT edPreArrival")));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("PCT edPreArrival", e);
+        }
+    }
+
     @GetMapping("/pathways")
     public ResponseEntity<Map<String, Object>> listEdPathways() {
         try {

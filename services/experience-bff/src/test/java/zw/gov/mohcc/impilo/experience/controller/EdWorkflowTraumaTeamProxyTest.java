@@ -87,4 +87,34 @@ class EdWorkflowTraumaTeamProxyTest {
         assertEquals(3, ((JsonNode) resp.getBody().get("data")).get("escalated").asInt());
         verify(pct).edTraumaTeamEscalate(eq(traumaId.toString()), any());
     }
+
+    @Test
+    void bloodReadiness_delegatesWithOrderId() {
+        PctServiceClient pct = mock(PctServiceClient.class);
+        ObjectNode readiness = mapper.createObjectNode();
+        readiness.put("status", "BLOCKED");
+        readiness.put("blocker", "needs RESERVED + COMPATIBLE");
+        when(pct.edBloodReadiness("ord-1")).thenReturn(readiness);
+
+        var resp = controllerWith(pct).bloodReadiness("ord-1");
+
+        assertEquals(200, resp.getStatusCode().value());
+        assertEquals("BLOCKED", ((JsonNode) resp.getBody().get("data")).get("status").asText());
+        verify(pct).edBloodReadiness("ord-1");
+    }
+
+    @Test
+    void preArrival_delegatesWithFacility() {
+        PctServiceClient pct = mock(PctServiceClient.class);
+        UUID fac = UUID.randomUUID();
+        ArrayNode board = mapper.createArrayNode();
+        board.add(mapper.createObjectNode().put("status", "PRE_ARRIVAL").put("arrival_mode", "AMBULANCE"));
+        when(pct.edPreArrival(fac)).thenReturn(board);
+
+        var resp = controllerWith(pct).preArrival(fac);
+
+        assertEquals(200, resp.getStatusCode().value());
+        assertEquals(1, ((JsonNode) resp.getBody().get("data")).size());
+        verify(pct).edPreArrival(fac);
+    }
 }
