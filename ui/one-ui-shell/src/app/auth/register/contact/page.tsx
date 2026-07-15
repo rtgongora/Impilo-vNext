@@ -179,9 +179,10 @@ export default function ContactRegisterPage() {
         displayName: user.displayName,
         roles: user.roles,
         actorType: user.actorType as "PROVIDER" | "OPERATOR" | "CITIZEN" | "SYSTEM",
-        // R1 contact registration mints a TEMPORARY-assurance session; the person
-        // becomes VERIFIED only after a stronger rung (LOA2+).
-        assuranceLevel: "TEMPORARY",
+        // R1 "Reachable" = verified contact only, no identity proofing and no
+        // temporary Health ID — that is UNVERIFIED (LOA1). The person moves to
+        // TEMPORARY/VERIFIED only when a stronger rung (R2+, LOA2+) is reached.
+        assuranceLevel: "UNVERIFIED",
         providerActivated: false,
         // Contact-OTP (phone-otp/email-otp) is a contact-channel login; the auth
         // store's loginMethod enum has no phone variant, so map to the closest.

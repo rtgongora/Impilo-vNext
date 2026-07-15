@@ -309,7 +309,15 @@ export default function LoginPage() {
           New to Impilo?
         </p>
         <Link
-          href="/auth/register"
+          href={(() => {
+            // R1 "Reachable" is the low-friction front door (doctrine: help before
+            // identity). Carry any gateway intent + returnTo into the contact flow.
+            const qs = new URLSearchParams();
+            if (returnTo) qs.set("returnTo", returnTo);
+            if (intentToken) qs.set(INTENT_QUERY_PARAM, intentToken);
+            const suffix = qs.toString();
+            return suffix ? `/auth/register/contact?${suffix}` : "/auth/register/contact";
+          })()}
           className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-impilo-500 text-primary text-sm font-medium rounded-lg hover:bg-primary-soft transition-colors"
         >
           Create an account

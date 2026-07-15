@@ -112,7 +112,7 @@ export default function WelcomePage() {
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
-            href="/auth/register"
+            href="/auth/register/contact"
             className="rounded-lg bg-emerald-600 px-5 py-2.5 font-semibold text-white hover:bg-emerald-700"
           >
             Create an account

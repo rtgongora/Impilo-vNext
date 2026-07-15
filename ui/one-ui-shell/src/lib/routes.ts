@@ -53,6 +53,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/auth/logout", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Signing Out", navLabel: "Sign Out" },
   { path: "/auth", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Authentication", navLabel: "Auth" },
   { path: "/auth/register", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Create Account", navLabel: "Register" },
+  { path: "/auth/register/contact", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Create account with phone or email", navLabel: "Contact Sign-up" },
   { path: "/auth/register/assurance", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Identity Assurance", navLabel: "Assurance" },
   { path: "/auth/register/status", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Registration Status", navLabel: "Registration Status" },
   { path: "/auth/resolving", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Resolving Session", navLabel: "Resolving" },
@@ -897,7 +898,8 @@ export const ROUTES: RouteDefinition[] = [
 // Money-stack UI closure (Jul 2026): +3 — /finance/bank-reconciliation (MU3 bank→wallet statement
 // matching), /finance/failed-money-events (MU4 DLQ replay), /finance/insurance-plans (MU6
 // PENDING_TERMS plan-terms configuration).
-export const EXPECTED_ROUTE_COUNT = 738;
+// Gateway UI catch-up (Jul 2026): +1 — /auth/register/contact (R1 contact-first OTP account creation).
+export const EXPECTED_ROUTE_COUNT = 739;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

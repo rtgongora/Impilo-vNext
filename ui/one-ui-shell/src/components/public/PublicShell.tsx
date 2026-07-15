@@ -30,7 +30,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
               Sign in
             </Link>
             <Link
-              href="/auth/register"
+              href="/auth/register/contact"
               className="rounded-md bg-emerald-600 px-3 py-1.5 font-medium text-white hover:bg-emerald-700"
             >
               Create account
