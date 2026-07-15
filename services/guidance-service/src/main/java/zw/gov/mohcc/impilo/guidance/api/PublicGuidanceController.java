@@ -28,7 +28,7 @@ import java.util.Map;
  * <ul>
  *   <li>GET /v1/public/guidance/explain-steps            — all active escalation explainers</li>
  *   <li>GET /v1/public/guidance/explain-steps/{stepKey}  — one explainer (why / level / next / help)</li>
- *   <li>GET /v1/public/guidance/education                — published education topics (safe fields; ?domain= / ?category=)</li>
+ *   <li>GET /v1/public/guidance/education                — published education topics (safe fields; ?domain= / ?category= / ?q= text search)</li>
  *   <li>GET /v1/public/guidance/education/categories     — published-topic categories with counts</li>
  *   <li>GET /v1/public/guidance/education/{id}           — one published article incl. plain-language body</li>
  * </ul>
@@ -76,14 +76,23 @@ public class PublicGuidanceController {
     public ResponseEntity<Map<String, Object>> education(
             @RequestParam(defaultValue = "all") String domain,
             @RequestParam(defaultValue = "") String category,
+            @RequestParam(required = false, name = "q") String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         int safeSize = Math.min(Math.max(size, 1), 50);
         int safePage = Math.max(page, 0);
         String safeCategory = category == null ? "" : category.trim().toLowerCase(Locale.ROOT);
-        Page<KnowledgeArticleEntity> articles = safeCategory.isEmpty()
-                ? guidanceService.getEducation(PUBLIC_TENANT, domain, safePage, safeSize)
-                : guidanceService.getEducationByCategory(PUBLIC_TENANT, safeCategory, safePage, safeSize);
+        String safeQuery = q == null ? "" : q.trim();
+        // A text query takes precedence over the domain/category browse: it runs the PUBLISHED-only
+        // title/summary search (guidanceService.search already scopes status='PUBLISHED').
+        Page<KnowledgeArticleEntity> articles;
+        if (!safeQuery.isEmpty()) {
+            articles = guidanceService.search(PUBLIC_TENANT, safeQuery, safePage, safeSize);
+        } else if (safeCategory.isEmpty()) {
+            articles = guidanceService.getEducation(PUBLIC_TENANT, domain, safePage, safeSize);
+        } else {
+            articles = guidanceService.getEducationByCategory(PUBLIC_TENANT, safeCategory, safePage, safeSize);
+        }
         List<Map<String, Object>> data = articles.getContent().stream()
                 .map(PublicGuidanceController::toPublicEducationTopic)
                 .toList();
