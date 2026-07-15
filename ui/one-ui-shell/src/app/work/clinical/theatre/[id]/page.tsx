@@ -68,6 +68,7 @@ export default function TheatreCaseDetailPage() {
   const [safety, setSafety] = useState<SafetyEvent[]>([]);
   const [overrideReason, setOverrideReason] = useState("");
   const [note, setNote] = useState({ performedProcedure: "", findings: "", complications: "", postopPlan: "", signedProviderId: "" });
+  const [cancelReasonCode, setCancelReasonCode] = useState("");
   const [cancelReason, setCancelReason] = useState("");
   const [safetyForm, setSafetyForm] = useState({ category: "NEAR_MISS", severity: "MODERATE", description: "" });
 
@@ -145,7 +146,14 @@ export default function TheatreCaseDetailPage() {
     act(() => apiClient.post(`/internal/v1/theatre/cases/${id}/pacu/disposition`, { disposition }), `PACU disposition recorded (${disposition}).`);
 
   const cancel = () =>
-    act(() => apiClient.post(`/internal/v1/theatre/cases/${id}/cancel`, { reason: cancelReason }), "Case cancelled; owner reservations released.");
+    act(
+      () =>
+        apiClient.post(`/internal/v1/theatre/cases/${id}/cancel`, {
+          ...(cancelReasonCode ? { reasonCode: cancelReasonCode } : {}),
+          reason: cancelReason,
+        }),
+      "Case cancelled; owner reservations released.",
+    );
 
   const reportSafety = () =>
     act(() => apiClient.post(`/internal/v1/theatre/cases/${id}/safety-events`, safetyForm), "Safety event routed to its owner.");
@@ -323,9 +331,24 @@ export default function TheatreCaseDetailPage() {
             <section className="rounded-xl border border-red-200 bg-red-50/40 p-4">
               <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-red-700"><Ban className="h-4 w-4" /> Cancel case</h3>
               <div className="flex flex-wrap items-end gap-2">
-                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Reason</span><input type="text" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} className="w-64 rounded-lg border border-border bg-background px-3 py-1.5" /></label>
-                <button type="button" disabled={busy || !cancelReason} onClick={() => void cancel()} className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50">Cancel & release</button>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Reason code</span>
+                  <select value={cancelReasonCode} onChange={(e) => setCancelReasonCode(e.target.value)} className="w-56 rounded-lg border border-border bg-background px-3 py-1.5">
+                    <option value="">Other (free text)</option>
+                    <option value="PATIENT_NOT_FIT">Patient not fit</option>
+                    <option value="NO_CONSENT">No consent</option>
+                    <option value="NO_BLOOD">No blood</option>
+                    <option value="NO_IMPLANT">No implant</option>
+                    <option value="EQUIPMENT_FAILURE">Equipment failure</option>
+                    <option value="STAFF_UNAVAILABILITY">Staff unavailability</option>
+                    <option value="NO_BED">No bed</option>
+                    <option value="EMERGENCY_DISPLACEMENT">Emergency displacement</option>
+                    <option value="PATIENT_NON_ATTENDANCE">Patient non-attendance</option>
+                  </select>
+                </label>
+                <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Notes</span><input type="text" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} className="w-64 rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+                <button type="button" disabled={busy || (!cancelReasonCode && !cancelReason)} onClick={() => void cancel()} className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50">Cancel &amp; release</button>
               </div>
+              <p className="mt-1.5 text-xs text-muted-foreground">A structured reason drives rescheduling — most reasons return the case to the surgical waitlist; a patient non-attendance takes it off the list.</p>
             </section>
           </div>
         )}

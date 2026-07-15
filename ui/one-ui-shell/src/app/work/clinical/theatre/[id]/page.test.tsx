@@ -55,4 +55,16 @@ describe("TheatreCaseDetailPage", () => {
       expect(post).toHaveBeenCalledWith("/internal/v1/theatre/cases/c-1/book", { emergencyOverride: true, emergencyOverrideReason: "Life-threatening" }),
     );
   });
+
+  it("cancellation sends a structured reason code (§15 cancelled case → rescheduling)", async () => {
+    post.mockResolvedValue({ status: "CANCELLED", reason_code: "NO_BLOOD", reschedulable: true });
+    render(<TheatreCaseDetailPage />);
+    await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
+    await userEvent.selectOptions(screen.getByText("Reason code").parentElement!.querySelector("select")!, "NO_BLOOD");
+    await userEvent.type(screen.getByText("Notes").parentElement!.querySelector("input")!, "cross-match not ready");
+    await userEvent.click(screen.getByRole("button", { name: /Cancel .*release/ }));
+    await waitFor(() =>
+      expect(post).toHaveBeenCalledWith("/internal/v1/theatre/cases/c-1/cancel", { reasonCode: "NO_BLOOD", reason: "cross-match not ready" }),
+    );
+  });
 });

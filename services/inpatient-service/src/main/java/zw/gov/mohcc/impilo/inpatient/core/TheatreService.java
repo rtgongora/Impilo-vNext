@@ -780,30 +780,87 @@ public class TheatreService {
         return m;
     }
 
-    // ── 16. Cancellation — release owner reservations, audit ─────────────────────────────────────
+    // ── 16. Cancellation — structured reason codes, release owner reservations, audit ────────────
+    /**
+     * §15 cancelled case — the structured, governed cancellation reason codes. A cancellation carries
+     * one of these codes (or, for backward compatibility, free text) so the reason is analysable and
+     * drives rescheduling. Most reasons keep the case reschedulable (it returns to the surgical
+     * waitlist for a new slot); a patient DNA takes the case off the list (re-referral required).
+     */
+    static final java.util.Set<String> CANCELLATION_REASON_CODES = java.util.Set.of(
+            "PATIENT_NOT_FIT", "NO_CONSENT", "NO_BLOOD", "NO_IMPLANT", "EQUIPMENT_FAILURE",
+            "STAFF_UNAVAILABILITY", "NO_BED", "EMERGENCY_DISPLACEMENT", "PATIENT_NON_ATTENDANCE");
+
+    /** Reasons that do NOT return the case to the waitlist automatically (case comes off the list). */
+    static final java.util.Set<String> CANCELLATION_NON_RESCHEDULABLE = java.util.Set.of(
+            "PATIENT_NON_ATTENDANCE");
+
+    /** Normalise a free-form reason code to a canonical structured code, or null if unrecognised. */
+    static String normaliseCancellationReasonCode(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String c = raw.trim().toUpperCase().replace('-', '_').replace(' ', '_');
+        return CANCELLATION_REASON_CODES.contains(c) ? c : null;
+    }
+
+    /** A cancelled elective case with a reschedulable reason returns to the surgical waitlist. */
+    static boolean isReschedulableCancellation(String reasonCode) {
+        return reasonCode != null && !CANCELLATION_NON_RESCHEDULABLE.contains(reasonCode);
+    }
+
     @Transactional
     public Map<String, Object> cancel(UUID episodeId, Map<String, Object> body) {
         ProcedureEpisodeEntity e = requireEpisode(episodeId);
         if (List.of("COMPLETED", "RECOVERED", "CANCELLED").contains(e.getStatus())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot cancel a " + e.getStatus() + " case");
         }
-        String reason = ClinicalPayloadMapper.str(body, "reason", "cancellationReason", "cancellation_reason");
-        if (reason == null || reason.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "cancellation reason is required");
+        String rawCode = ClinicalPayloadMapper.str(body, "reasonCode", "reason_code",
+                "cancellationReasonCode", "cancellation_reason_code");
+        String notes = ClinicalPayloadMapper.str(body, "reason", "cancellationReason", "cancellation_reason",
+                "notes", "reasonText", "reason_text");
+        String reasonCode = normaliseCancellationReasonCode(rawCode);
+        if (rawCode != null && !rawCode.isBlank() && reasonCode == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Unknown cancellation reason code '" + rawCode + "'. Allowed: "
+                    + String.join(", ", new java.util.TreeSet<>(CANCELLATION_REASON_CODES)));
         }
+        if (reasonCode == null && (notes == null || notes.isBlank())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "A cancellation reason is required (reasonCode one of "
+                    + String.join(", ", new java.util.TreeSet<>(CANCELLATION_REASON_CODES))
+                    + ", or a free-text reason)");
+        }
+        boolean reschedulable = reasonCode != null ? isReschedulableCancellation(reasonCode) : true;
+        // Single reason column (no schema change): persist the structured code plus any free text.
+        String persisted = reasonCode != null
+                ? (notes != null && !notes.isBlank() ? reasonCode + " — " + notes : reasonCode)
+                : notes;
+
         e.setStatus("CANCELLED");
-        e.setCancellationReason(reason);
+        e.setCancellationReason(persisted);
         e.setCancelledBy(actor());
         e.setCancelledAt(OffsetDateTime.now());
         episodeRepository.save(e);
 
         // Release the OROS PROCEDURE order (owner releases its own reservation/state).
         if (e.getOrosOrderId() != null) {
-            orosOrderClient.cancelOrder(e.getOrosOrderId(), "Theatre case cancelled: " + reason);
+            orosOrderClient.cancelOrder(e.getOrosOrderId(), "Theatre case cancelled: " + persisted);
         }
-        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.case.cancelled", Map.of(
-                "episode_id", episodeId.toString(), "reason", reason, "cancelled_by", actor()));
-        return episodeService.getEpisode(episodeId);
+        Map<String, Object> event = new LinkedHashMap<>();
+        event.put("episode_id", episodeId.toString());
+        event.put("reason_code", nullSafe(reasonCode));
+        event.put("reason_text", nullSafe(notes));
+        event.put("reason", persisted);
+        event.put("reschedulable", reschedulable);
+        event.put("triage_priority", nullSafe(e.getTriagePriority()));
+        event.put("booking_id", nullSafe(e.getBookingId()));
+        event.put("cancelled_by", actor());
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.case.cancelled", event);
+
+        Map<String, Object> out = new LinkedHashMap<>(episodeService.getEpisode(episodeId));
+        out.put("reason_code", reasonCode);
+        out.put("reason_text", notes);
+        out.put("reschedulable", reschedulable);
+        return out;
     }
 
     // ── 17. Safety event → owner routing (Rito/Madi/asset-registry/PCT-death) ────────────────────
