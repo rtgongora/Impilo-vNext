@@ -5,9 +5,23 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Screen, Header, Card, CardBody, Button, TextField, ErrorState } from "@impilo/mobile-design-system";
+import { captureCurrentLocation } from "@impilo/mobile-ndila";
 import { createSos, type CreateSosInput } from "../../services/emergencyService";
 
 const CATEGORIES = ["MEDICAL", "CARDIAC", "RESPIRATORY", "TRAUMA", "OBSTETRIC", "MENTAL_HEALTH", "OTHER"];
+
+/**
+ * Best-effort GPS capture — NEVER blocks a life-safety SOS. If the device denies location or
+ * times out, the request still goes out (with the free-text location the person typed).
+ */
+async function bestEffortLocation(): Promise<{ lat?: number; lng?: number }> {
+  try {
+    const fix = await captureCurrentLocation({ highAccuracy: true, timeoutMs: 6000 });
+    return { lat: fix.coordinate.latitude, lng: fix.coordinate.longitude };
+  } catch {
+    return {};
+  }
+}
 
 export function SosScreen({ onTrack }: { onTrack?: (requestId: string) => void }) {
   const [forSelf, setForSelf] = useState(true);
@@ -21,11 +35,14 @@ export function SosScreen({ onTrack }: { onTrack?: (requestId: string) => void }
     setSubmitting(true);
     setError(null);
     try {
+      const { lat, lng } = await bestEffortLocation();
       const input: CreateSosInput = {
         forSelf,
         emergencyCategory: category,
         severity,
         locationDescription: where || undefined,
+        lat,
+        lng,
       };
       const req = await createSos(input);
       if (req?.id) onTrack?.(req.id);
