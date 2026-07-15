@@ -40,6 +40,7 @@ INP=http://localhost:29321
 MADI=http://localhost:29300
 VASH=http://localhost:29387
 NOTIF=http://localhost:29200
+OROS=http://localhost:29089
 PASS=0; FAIL=0
 ok(){ echo "   PASS: $1" | tee -a "$EV/journal.txt"; PASS=$((PASS+1)); }
 bad(){ echo "   FAIL: $1" | tee -a "$EV/journal.txt"; FAIL=$((FAIL+1)); }
@@ -50,6 +51,7 @@ INPSQL(){ docker exec tr-rig-pg psql -U impilo -d inpatient -tAc "$1"; }
 MADISQL(){ docker exec tr-rig-pg psql -U impilo -d madi -tAc "$1"; }
 VASHSQL(){ docker exec tr-rig-pg psql -U impilo -d vashandi -tAc "$1"; }
 NOTIFSQL(){ docker exec tr-rig-pg psql -U impilo -d notification -tAc "$1"; }
+OROSSQL(){ docker exec tr-rig-pg psql -U impilo -d oros -tAc "$1"; }
 hdr(){ local pou=${1:-TREATMENT} ep=${2:-} idem=${3:-idem-$(uuidgen)}
   local base="-H Content-Type:application/json -H X-Tenant-ID:$TEN -H X-Pod-ID:national-spine -H X-Request-ID:$(uuidgen) -H X-Correlation-ID:$(uuidgen) -H X-Facility-ID:$FAC -H X-Actor-ID:$ACTOR -H X-Actor-Type:PROVIDER -H X-Purpose-Of-Use:$pou -H Idempotency-Key:$idem"
   [ -n "$ep" ] && base="$base -H X-Trauma-Episode-ID:$ep"
@@ -65,13 +67,13 @@ docker rm -f tr-rig-pg tr-rig-redis >/dev/null 2>&1
 docker run -d --name tr-rig-pg -e POSTGRES_USER=impilo -e POSTGRES_PASSWORD=impilo -p $PGPORT:5432 postgres:16-alpine >/dev/null
 docker run -d --name tr-rig-redis -p $RPORT:6379 redis:7-alpine >/dev/null
 sleep 8
-for db in daidzai pct inpatient madi vashandi notification; do
+for db in daidzai pct inpatient madi vashandi notification oros; do
   docker exec tr-rig-pg psql -U impilo -d postgres -c "CREATE DATABASE $db" >/dev/null 2>&1
 done
 
 svcjar(){ ls "$REPO/services/$1/target/$1-"*.jar 2>/dev/null | grep -v original | head -1; }
-for s in daidzai-service pct-service inpatient-service madi-service vashandi-workforce-service notification-service; do
-  [ -n "$(svcjar "$s")" ] || { echo "$s jar missing — run: mvn -f services/pom.xml -pl daidzai-service,pct-service,inpatient-service,madi-service,vashandi-workforce-service,notification-service -am package -DskipTests"; exit 2; }
+for s in daidzai-service pct-service inpatient-service madi-service vashandi-workforce-service notification-service oros-service; do
+  [ -n "$(svcjar "$s")" ] || { echo "$s jar missing — run: mvn -f services/pom.xml -pl daidzai-service,pct-service,inpatient-service,madi-service,vashandi-workforce-service,notification-service,oros-service -am package -DskipTests"; exit 2; }
 done
 
 boot(){ # $1 service-dir  $2 db  $3 port  $4..extra env KEY=VAL
@@ -96,16 +98,18 @@ wait_health(){ local url=$1 name=$2 c=000
 # DAIDZAI_PCT_BASE_URL → the EMS ePCR pre-arrival push lands on PCT's ED projection.
 boot daidzai-service daidzai 29392 DAIDZAI_KAFKA_EVENTS_ENABLED=false DAIDZAI_PCT_BASE_URL=$PCT
 boot vashandi-workforce-service vashandi 29387
-boot notification-service notification 29200
+boot notification-service notification 29200 KAFKA_OROS_CONSUMER_ENABLED=false
+boot oros-service oros 29089
 # PCT resolves the on-call trauma team from VASHANDI + raises delivery-intents via notification-service.
 boot pct-service pct 29388 PCT_INTEGRATION_DAIDZAI_BASE_URL=$DAI \
-  PCT_INTEGRATION_VASHANDI_BASE_URL=$VASH PCT_INTEGRATION_NOTIFICATION_BASE_URL=$NOTIF
+  PCT_INTEGRATION_VASHANDI_BASE_URL=$VASH PCT_INTEGRATION_NOTIFICATION_BASE_URL=$NOTIF PCT_INTEGRATION_OROS_BASE_URL=$OROS
 boot madi-service madi 29300 MADI_INTEGRATION_DAIDZAI_BASE_URL=$DAI
 boot inpatient-service inpatient 29321 INPATIENT_INTEGRATION_DAIDZAI_BASE_URL=$DAI
 
 wait_health $DAI daidzai-service
 wait_health $VASH vashandi-workforce-service
 wait_health $NOTIF notification-service
+wait_health $OROS oros-service
 wait_health $PCT pct-service
 wait_health $MADI madi-service
 wait_health $INP inpatient-service
@@ -409,6 +413,68 @@ EXPECT_ESC=$((SEEDED-1))
   && ok "the acked member was NOT escalated" || bad "acked member got escalated"
 ESCN=$(NOTIFSQL "SELECT count(*) FROM ns_notifications WHERE template_key='ED_TRAUMA_ESCALATION'")
 [ "$ESCN" -ge "$EXPECT_ESC" ] && ok "escalation delivery-intent row per no-ack member ($ESCN, template ED_TRAUMA_ESCALATION)" || bad "expected >=$EXPECT_ESC escalation notifications, got $ESCN"
+
+# ═════ J-TR-4a: ABCDE resuscitation time-series reads back on the episode ═════════
+say "J-TR-4a: ordered multi-channel resuscitation_event series on the episode"
+# Reuse the J-TR-0 activation ($ACT) + episode ($EP): stream ABCDE observations en resus.
+i=0
+for ch in AIRWAY:INTUBATED BREATHING:SPO2:88:% CIRCULATION:SBP:86:mmHg DISABILITY:GCS:9 EXPOSURE:TEMP:35.1:C DRUG:ADRENALINE:1:mg RHYTHM:PEA CPR:CYCLES:4; do
+  chan=$(echo "$ch" | cut -d: -f1); code=$(echo "$ch" | cut -d: -f2); val=$(echo "$ch" | cut -d: -f3); unit=$(echo "$ch" | cut -d: -f4)
+  body="{\"channel\":\"$chan\",\"code\":\"$code\""
+  [ -n "$val" ] && body="$body,\"valueNumeric\":\"$val\""
+  [ -n "$unit" ] && body="$body,\"unit\":\"$unit\""
+  body="$body}"
+  curl -sS -o /dev/null $(hdr EMERGENCY $EP) -X POST $INP/internal/v1/emergency/$ACT/resuscitation/events -d "$body"
+  i=$((i+1))
+done
+EVN=$(INPSQL "SELECT count(*) FROM inpatient.resuscitation_event WHERE activation_id='$ACT'")
+[ "${EVN:-0}" -ge 8 ] && ok "resuscitation_event time-series persisted ($EVN observations)" || bad "expected >=8 resus events, got $EVN"
+[ "$(INPSQL "SELECT count(DISTINCT channel) FROM inpatient.resuscitation_event WHERE activation_id='$ACT'")" -ge 5 ] \
+  && ok "multi-channel ABCDE series (>=5 distinct channels)" || bad "resus series not multi-channel"
+[ "$(INPSQL "SELECT count(*) FROM inpatient.resuscitation_event WHERE activation_id='$ACT' AND trauma_episode_id='$EP'")" = "$EVN" ] \
+  && ok "every resus_event re-keyed onto the canonical trauma_episode_id" || bad "resus events not all on episode $EP"
+curl -sS -o "$EV/resus-events.json" $(hdr) $INP/internal/v1/emergency/$ACT/resuscitation/events >/dev/null
+python3 -c "import json;e=json.load(open('$EV/resus-events.json')).get('events',[]);ts=[str(x.get('recorded_at','')) for x in e];exit(0 if ts==sorted(ts) and len(e)>=8 else 1)" \
+  && ok "series reads back ordered by recorded_at" || bad "resus series not ordered/short"
+
+# ═════ J-TR-4b: OROS critical result → episode projection + ack + SAFETY outbox ═══
+# HONEST LIMITATION: the OROS critical event payload omits encounter_ref, so the episode correlation
+# is a PCT-side order→episode LINK (ed_diagnostic_order), not a self-correlating OROS event. Enriching
+# the OROS payload with encounterRef is a post-gate follow-up (an OROS write we deliberately avoid).
+say "J-TR-4b: OROS critical diagnostic result reconciles onto the trauma episode (PCT link correlation)"
+# PCT places the trauma diagnostics order on OROS (encounter_ref=episode) and keeps the link.
+curl -sS -o "$EV/order.json" $(hdr) -X POST $PCT/v1/ed/visits/$VISIT/diagnostics \
+  -d '{"orderType":"LAB","testCode":"UECR","priority":"STAT","clinicalNotes":"trauma panel"}'
+ORDERID=$(jget2 "$EV/order.json" oros_order_id)
+[ -n "$ORDERID" ] && ok "PCT placed the OROS order (encounter_ref=episode) ($ORDERID)" || bad "PCT order-place failed: $(cat "$EV/order.json")"
+[ "$(OROSSQL "SELECT encounter_ref FROM oros_orders WHERE order_id='$ORDERID'")" = "$EP" ] \
+  && ok "oros_orders.encounter_ref carries the trauma episode id" || bad "order encounter_ref != $EP"
+[ "$(PCTSQL "SELECT trauma_episode_id FROM pct.ed_diagnostic_order WHERE oros_order_id='$ORDERID'")" = "$EP" ] \
+  && ok "PCT ed_diagnostic_order LINK row maps oros_order_id → episode (authoritative correlation)" || bad "no PCT order link for $ORDERID"
+
+# Post a CRITICAL result on OROS (its own flow flags it + drops a critical event into its outbox).
+curl -sS -o "$EV/oros-result.json" $(hdr) -X POST $OROS/v1/orders/$ORDERID/results \
+  -d '{"kind":"LAB","summary":{"analyte":"K","value":7.2},"isCritical":true}'
+RESULTID=$(jget2 "$EV/oros-result.json" resultId)
+[ -n "$RESULTID" ] && ok "OROS critical result posted ($RESULTID)" || bad "OROS result not posted: $(cat "$EV/oros-result.json")"
+CRITROWS=$(OROSSQL "SELECT count(*) FROM oros_event_outbox WHERE event_type IN ('CRITICAL_RESULT_POSTED','RESULT_CRITICAL','RESULT_MARKED_CRITICAL')")
+[ "${CRITROWS:-0}" -ge 1 ] && ok "OROS critical event in oros_event_outbox (SAFETY source, Kafka off): $CRITROWS" || bad "no OROS critical outbox event"
+[ "$(OROSSQL "SELECT is_critical FROM oros_results WHERE result_id='$RESULTID'")" = "t" ] \
+  && ok "oros_results.is_critical = true" || bad "result not flagged critical"
+
+# PCT reconciles the critical result onto the episode via the PCT order→episode link.
+curl -sS -o "$EV/reconcile.json" $(hdr) -X POST $PCT/v1/ed/diagnostics/reconcile-critical \
+  -d "{\"orderId\":\"$ORDERID\",\"resultId\":\"$RESULTID\",\"criticalReason\":\"Serum K+ 7.2 mmol/L\"}"
+RECEP=$(jget2 "$EV/reconcile.json" trauma_episode_id)
+[ "$RECEP" = "$EP" ] && ok "PCT resolved the episode from the order→episode link (event lacks encounter_ref)" || bad "reconcile episode '$RECEP' != $EP"
+[ "$(DAISQL "SELECT count(*) FROM daidzai.dai_trauma_episode_phase WHERE trauma_episode_id='$EP' AND phase='DIAGNOSTICS'")" -ge 1 ] \
+  && ok "episode projection: DIAGNOSTICS phase on the timeline" || bad "no DIAGNOSTICS phase on episode $EP"
+[ "$(PCTSQL "SELECT count(*) FROM pct.pct_event_outbox WHERE event_type='pct.ed.critical_result'")" -ge 1 ] \
+  && ok "SAFETY outbox row emitted (pct.ed.critical_result)" || bad "no pct.ed.critical_result SAFETY outbox row"
+[ "$(OROSSQL "SELECT count(*) FROM oros_acknowledgements WHERE order_id='$ORDERID' AND ack_type='CRITICAL'")" -ge 1 ] \
+  && ok "critical result acknowledged (ack row in oros_acknowledgements, type=CRITICAL)" || bad "no CRITICAL ack row for order $ORDERID"
+[ "$(PCTSQL "SELECT status FROM pct.ed_diagnostic_order WHERE oros_order_id='$ORDERID'")" = "ACKED" ] \
+  && ok "PCT order link reconciled to ACKED (read-through projection of OROS truth)" || bad "PCT order link not reconciled"
 
 # ── Summary ────────────────────────────────────────────────────────────────────
 say "SUMMARY: PASS=$PASS FAIL=$FAIL"
