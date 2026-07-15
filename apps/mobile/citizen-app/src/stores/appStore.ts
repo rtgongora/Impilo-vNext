@@ -12,6 +12,16 @@
 import { createStore } from "zustand/vanilla";
 import type { CitizenTab, CitizenProfile } from "../types";
 
+/** Pre-auth onboarding + anonymous gateway one-shot destinations. */
+export type OnboardingScreen =
+  | "signup"
+  | "contact-signup"
+  | "assurance"
+  | "health-info"
+  | "verify"
+  | "track-emergency"
+  | null;
+
 export interface AppState {
   activeTab: CitizenTab;
   isOnline: boolean;
@@ -31,8 +41,13 @@ export interface AppState {
   personalSectionRequest: string | null;
   /** Seed the Rito "Track Feedback" section with a case reference (e.g. right after submitting). */
   ritoTrackReference: string | null;
-  /** Post-registration onboarding: assurance tier before main app. */
-  onboardingScreen: "signup" | "assurance" | null;
+  /**
+   * Pre-auth onboarding + guest gateway one-shot intent. "assurance" is post-auth
+   * (checked only when authenticated); the rest are anonymous gateway surfaces the
+   * AuthGuard renders while signed out (contact-first OTP signup, guest health info,
+   * guest practitioner/facility verify, guest emergency track-by-reference).
+   */
+  onboardingScreen: OnboardingScreen;
 
   setActiveTab: (tab: CitizenTab) => void;
   setOnlineStatus: (online: boolean) => void;
@@ -48,7 +63,7 @@ export interface AppState {
   setGlobalError: (error: { code: string; message: string } | null) => void;
   setPersonalSectionRequest: (section: string | null) => void;
   setRitoTrackReference: (reference: string | null) => void;
-  setOnboardingScreen: (screen: "signup" | "assurance" | null) => void;
+  setOnboardingScreen: (screen: OnboardingScreen) => void;
 }
 
 export const appStore = createStore<AppState>((set) => ({

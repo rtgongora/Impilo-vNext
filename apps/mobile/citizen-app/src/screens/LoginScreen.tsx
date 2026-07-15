@@ -23,11 +23,16 @@ const GREEN = "#059669";
 const GREEN_DARK = "#047857";
 const GREEN_LIGHT = "#D1FAE5";
 
+/** Anonymous gateway destinations reachable before sign-in ("help before identity"). */
+export type GuestDestination = "health-info" | "verify" | "track-emergency";
+
 interface LoginScreenProps {
   onSignUp?: () => void;
+  onContactSignUp?: () => void;
+  onGuestDestination?: (destination: GuestDestination) => void;
 }
 
-export function LoginScreen({ onSignUp }: LoginScreenProps) {
+export function LoginScreen({ onSignUp, onContactSignUp, onGuestDestination }: LoginScreenProps) {
   const auth = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [pendingState, setPendingState] = useState<string | null>(null);
@@ -178,6 +183,46 @@ export function LoginScreen({ onSignUp }: LoginScreenProps) {
           </Pressable>
         ) : null}
 
+        {onContactSignUp ? (
+          <Pressable onPress={onContactSignUp} testID="contact-signup-link" style={styles.signUpRow}>
+            <Text style={styles.signUpPrompt}>
+              <Text style={styles.footerLink}>Create account with phone</Text>
+            </Text>
+          </Pressable>
+        ) : null}
+
+        {onGuestDestination ? (
+          <View style={styles.guestSection}>
+            <Text style={styles.guestLabel}>No account needed</Text>
+            <View style={styles.guestRow}>
+              <Pressable
+                testID="guest-health-info"
+                style={styles.guestTile}
+                onPress={() => onGuestDestination("health-info")}
+              >
+                <Ionicons name="book-outline" size={20} color={GREEN} />
+                <Text style={styles.guestTileText}>Health info</Text>
+              </Pressable>
+              <Pressable
+                testID="guest-verify"
+                style={styles.guestTile}
+                onPress={() => onGuestDestination("verify")}
+              >
+                <Ionicons name="shield-checkmark-outline" size={20} color={GREEN} />
+                <Text style={styles.guestTileText}>Verify</Text>
+              </Pressable>
+              <Pressable
+                testID="guest-track-emergency"
+                style={styles.guestTile}
+                onPress={() => onGuestDestination("track-emergency")}
+              >
+                <Ionicons name="pulse-outline" size={20} color="#DC2626" />
+                <Text style={styles.guestTileText}>Track SOS</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
+
         <View style={styles.divider} />
 
         <Text style={styles.footerText}>
@@ -316,6 +361,27 @@ const styles = StyleSheet.create({
   },
   signUpRow: { alignItems: "center" },
   signUpPrompt: { fontSize: 14, color: "#374151", textAlign: "center" },
+  guestSection: { gap: 8 },
+  guestLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#9CA3AF",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    textAlign: "center",
+  },
+  guestRow: { flexDirection: "row", gap: 8 },
+  guestTile: {
+    flex: 1,
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+  },
+  guestTileText: { fontSize: 12, fontWeight: "600", color: "#374151" },
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: "#E5E7EB",
