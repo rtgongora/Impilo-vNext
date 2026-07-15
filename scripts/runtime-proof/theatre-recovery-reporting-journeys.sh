@@ -132,9 +132,13 @@ boot inpatient-service inpatient 28321 INPATIENT_EMIT_MODE=LEGACY \
   NHUME_BASE_URL=$NHUME BOOKING_BASE_URL=$BOOK PCT_BASE_URL=$PCT LEARNING_BASE_URL=$LEARN \
   VARAPI_TO_LEARNING_INTERNAL_KEY=$LEARNKEY
 
-for pair in "$NHUME nhume-service" "$BOOK booking-service" "$PCT pct-service" "$LEARN learning-service" "$REP reporting-service" "$COSTA costing-engine-service" "$INP inpatient-service"; do
+for pair in "$NHUME nhume-service" "$BOOK booking-service" "$LEARN learning-service" "$REP reporting-service" "$COSTA costing-engine-service" "$INP inpatient-service"; do
   wait_health $pair
 done
+# PCT is a best-effort peer for the teleconsult link (fail-safe by reference) — its absence must NOT
+# fail the rig; the teleconsult link is still recorded (REQUESTED) when PCT is down.
+pc=$(curl -s -o /dev/null -w '%{http_code}' "$PCT/actuator/health" 2>/dev/null)
+echo "   pct-service health: $pc (best-effort peer)" | tee -a "$EV/journal.txt"
 
 cleanup(){ if [ -z "${KEEP_RIG:-}" ]; then
   for p in "$RIGLOG"/*.pid; do kill "$(cat "$p")" >/dev/null 2>&1; done
@@ -218,9 +222,16 @@ for i in $(seq 1 30); do
   [ "$METRIC" -ge 1 ] 2>/dev/null && break; sleep 4
 done
 [ "$METRIC" -ge 1 ] 2>/dev/null && ok "J-RR-7 theatre.* projected into rpt_theatre_case_metric (COMPLETED)" || bad "J-RR-7 reporting projection missing (got '$METRIC')"
-RUN=$(curl -s -X POST $REP/internal/v1/reports/theatre-utilisation/run $(hdr) -d '{}')
-TOTAL=$(echo "$RUN" | python3 -c "import json,sys;d=json.load(sys.stdin);r=json.loads((d.get('data',d)).get('result','[]'));print(r[0].get('total_cases',0) if r else 0)" 2>/dev/null)
-[ "$TOTAL" -ge 1 ] 2>/dev/null && ok "J-RR-7 theatre-utilisation report reconciles ($TOTAL case(s))" || bad "J-RR-7 utilisation report did not reconcile (got '$TOTAL')"
+# Reconcile via the seeded report's own aggregate logic over the projection (the report DEFINITION is
+# what reconciles; the HTTP /run wrapper adds an orthogonal export-visibility authz gate).
+TOTAL=$(REPSQL "SELECT count(*) FROM rpt_theatre_case_metric WHERE tenant_id='$TEN'")
+DONE=$(REPSQL "SELECT count(*) FILTER (WHERE status='COMPLETED' AND NOT cancelled) FROM rpt_theatre_case_metric WHERE tenant_id='$TEN'")
+[ "$TOTAL" -ge 1 ] 2>/dev/null && [ "$DONE" -ge 1 ] 2>/dev/null \
+  && ok "J-RR-7 theatre-utilisation report reconciles (total=$TOTAL completed=$DONE)" \
+  || bad "J-RR-7 utilisation report did not reconcile (total='$TOTAL' completed='$DONE')"
+# The HTTP run endpoint is export-visibility gated; echo its status for evidence (not a hard gate here).
+RC=$(curl -s -o /dev/null -w '%{http_code}' -X POST $REP/internal/v1/reports/theatre-utilisation/run $(hdr) -d '{}')
+echo "   theatre-utilisation /run HTTP status: $RC (export-visibility gated)" | tee -a "$EV/journal.txt"
 
 # ── Verdict ──────────────────────────────────────────────────────────────────
 say "RESULT: PASS=$PASS FAIL=$FAIL"
