@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -36,6 +37,32 @@ public class DaidzaiEpisodeClient {
                                 @Value("${inpatient.integration.daidzai.base-url:http://localhost:8392}") String baseUrl) {
         this.restTemplate = inpatientRestTemplate;
         this.baseUrl = baseUrl;
+    }
+
+    /**
+     * DEFENSIVE mint of a trauma episode for a trauma-originated surgery whose {@code X-Trauma-Episode-ID}
+     * header was absent (should not happen in the normal flow — daidzai/PCT mint upstream). Idempotent on
+     * {@code (tenant, originKey)}: a retry returns the same id. Best-effort — returns {@code null} on
+     * failure so life-saving surgery is never blocked. CONSUME-first: only call after the header path.
+     */
+    @SuppressWarnings("rawtypes")
+    public UUID mintForProcedure(String originKey, String firstPhase) {
+        if (originKey == null || originKey.isBlank()) return null;
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("originService", "inpatient");
+        body.put("originKind", "PROCEDURE");
+        body.put("originKey", originKey);
+        if (firstPhase != null) body.put("firstPhase", firstPhase);
+        try {
+            ResponseEntity<Map> resp = restTemplate.postForEntity(baseUrl + "/internal/v1/daidzai/trauma-episodes",
+                    new HttpEntity<>(body, trustHeaders()), Map.class);
+            Object id = resp.getBody() != null ? resp.getBody().get("traumaEpisodeId") : null;
+            return id != null ? UUID.fromString(id.toString()) : null;
+        } catch (RestClientException | IllegalArgumentException e) {
+            log.warn("DAIDZAI defensive mint for procedure {} failed: {} — surgery proceeds, link deferred",
+                    originKey, e.getMessage());
+            return null;
+        }
     }
 
     public void registerPhase(UUID episodeId, String phase, String ownerRef, String status, String eventType) {

@@ -59,6 +59,7 @@ class TheatreTraumaLinkTest {
     @Mock ProcedureTeleconsultLinkRepository teleconsultLinkRepository;
     @Mock PctTeleconsultClient pctTeleconsultClient;
     @Mock FundoSurgicalLogbookClient fundoSurgicalLogbookClient;
+    @Mock DaidzaiEpisodeClient daidzaiEpisodeClient;
 
     private TheatreService service;
     private final UUID tenant = UUID.randomUUID();
@@ -70,7 +71,7 @@ class TheatreTraumaLinkTest {
                 deathClient, butanoClient, bloodLinkRepository, transportRepository, specimenRepository,
                 countRepository, madiBloodClient, nhumeTransportClient, orosSpecimenClient, ritoSafetyClient,
                 postopRepository, admissionService, teleconsultLinkRepository, pctTeleconsultClient,
-                fundoSurgicalLogbookClient, new ObjectMapper());
+                fundoSurgicalLogbookClient, daidzaiEpisodeClient, new ObjectMapper());
         TrustContextHolder.set(new TrustContext(tenant, "actor-theatre-coordinator", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), UUID.randomUUID(), null, null, AccessMode.INTERNAL));
         lenient().when(episodeRepository.save(any())).thenAnswer(i -> i.getArgument(0));

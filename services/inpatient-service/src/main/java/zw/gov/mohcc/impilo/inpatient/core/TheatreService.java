@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.inpatient.integration.ButanoProcedureClient;
+import zw.gov.mohcc.impilo.inpatient.integration.DaidzaiEpisodeClient;
 import zw.gov.mohcc.impilo.inpatient.integration.FundoSurgicalLogbookClient;
 import zw.gov.mohcc.impilo.inpatient.integration.MadiBloodClient;
 import zw.gov.mohcc.impilo.inpatient.integration.PctTeleconsultClient;
@@ -71,6 +72,8 @@ public class TheatreService {
     private final ProcedureTeleconsultLinkRepository teleconsultLinkRepository;
     private final PctTeleconsultClient pctTeleconsultClient;
     private final FundoSurgicalLogbookClient fundoSurgicalLogbookClient;
+    // ── Wave 5b — trauma↔theatre episode-timeline registration (best-effort, by reference) ──
+    private final DaidzaiEpisodeClient daidzaiEpisodeClient;
     private final ObjectMapper objectMapper;
 
     public TheatreService(ProcedureEpisodeRepository episodeRepository,
@@ -97,6 +100,7 @@ public class TheatreService {
                           ProcedureTeleconsultLinkRepository teleconsultLinkRepository,
                           PctTeleconsultClient pctTeleconsultClient,
                           FundoSurgicalLogbookClient fundoSurgicalLogbookClient,
+                          DaidzaiEpisodeClient daidzaiEpisodeClient,
                           ObjectMapper objectMapper) {
         this.episodeRepository = episodeRepository;
         this.readinessRepository = readinessRepository;
@@ -122,6 +126,7 @@ public class TheatreService {
         this.teleconsultLinkRepository = teleconsultLinkRepository;
         this.pctTeleconsultClient = pctTeleconsultClient;
         this.fundoSurgicalLogbookClient = fundoSurgicalLogbookClient;
+        this.daidzaiEpisodeClient = daidzaiEpisodeClient;
         this.objectMapper = objectMapper;
     }
 
@@ -221,6 +226,19 @@ public class TheatreService {
         Map<String, Object> created = intakeFromOrosOrder(intake);
         UUID episodeId = UUID.fromString(String.valueOf(created.get("id")));
         ProcedureEpisodeEntity e = requireEpisode(episodeId);
+
+        // DEFENSIVE trauma-episode mint: ONLY for a trauma-originated case that somehow arrived WITHOUT the
+        // X-Trauma-Episode-ID header (should not happen — daidzai/PCT mint upstream). NEVER mints for a
+        // non-trauma emergency (ruptured appendix, ectopic, etc.). Idempotent on (tenant, originKey).
+        boolean traumaOriginated = Boolean.TRUE.equals(intake.get("trauma"))
+                || Boolean.TRUE.equals(intake.get("traumaOriginated"))
+                || Boolean.parseBoolean(String.valueOf(intake.getOrDefault("traumaOriginated", "false")));
+        if (e.getTraumaEpisodeId() == null && traumaOriginated) {
+            UUID minted = daidzaiEpisodeClient.mintForProcedure(episodeId.toString(), "THEATRE");
+            if (minted != null) {
+                e.setTraumaEpisodeId(minted);
+            }
+        }
 
         // Arm the emergency override so the downstream booking-readiness + WHO Sign-In gates can be
         // crossed under a recorded justification. Life-saving surgery is never blocked by process.
@@ -718,6 +736,8 @@ public class TheatreService {
         Map<String, Object> result = episodeService.startProcedure(episodeId, body);
         appendOutbox("PROCEDURE", episodeId.toString(), "theatre.case.started", withTrauma(e, Map.of(
                 "episode_id", episodeId.toString(), "override", override && !signInComplete)));
+        // Register the THEATRE phase on the shared trauma-episode timeline (INCIDENT→ED→RESUS→BLOOD→THEATRE).
+        registerTheatrePhase(e, "IN_PROGRESS", "procedure.started");
         return result;
     }
 
@@ -1065,6 +1085,9 @@ public class TheatreService {
     public Map<String, Object> completeCase(UUID episodeId, Map<String, Object> body) {
         ProcedureEpisodeEntity e = requireEpisode(episodeId);
         Map<String, Object> result = episodeService.completeEpisode(episodeId, body);
+        // Close the THEATRE phase on the shared trauma-episode timeline. NOTE: this is a PHASE update, NOT
+        // an episode close — trauma-episode close is owned by the PCT disposition flow, never by surgery.
+        registerTheatrePhase(e, "COMPLETE", "procedure.completed");
 
         String traineeProviderId = ClinicalPayloadMapper.str(body, "traineeProviderId", "trainee_provider_id");
         if (traineeProviderId != null && !traineeProviderId.isBlank()) {
@@ -1408,6 +1431,23 @@ public class TheatreService {
         Map<String, Object> m = new LinkedHashMap<>(payload);
         m.put("trauma_episode_id", e.getTraumaEpisodeId().toString());
         return m;
+    }
+
+    /**
+     * Best-effort THEATRE-phase registration on the shared trauma-episode timeline so the trauma journey
+     * resolves INCIDENT→ED→RESUS→BLOOD→THEATRE as ONE coherent episode. No-op for non-trauma cases. NEVER
+     * blocks surgery — a daidzai outage is swallowed. This registers a PHASE only; it never closes the
+     * trauma episode (close is owned by the PCT disposition flow).
+     */
+    private void registerTheatrePhase(ProcedureEpisodeEntity e, String status, String eventType) {
+        if (e == null || e.getTraumaEpisodeId() == null) return;
+        try {
+            daidzaiEpisodeClient.registerPhase(e.getTraumaEpisodeId(), "THEATRE",
+                    e.getEpisodeId().toString(), status, eventType);
+        } catch (RuntimeException ex) {
+            log.warn("INPATIENT-THEATRE: THEATRE-phase registration for episode {} failed: {} — timeline deferred",
+                    e.getEpisodeId(), ex.getMessage());
+        }
     }
 
     private void appendOutbox(String aggregateType, String aggregateId, String eventType, Map<String, Object> payload) {

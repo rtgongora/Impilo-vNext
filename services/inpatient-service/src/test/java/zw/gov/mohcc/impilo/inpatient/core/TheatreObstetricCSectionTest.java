@@ -58,6 +58,7 @@ class TheatreObstetricCSectionTest {
     @Mock ProcedureTeleconsultLinkRepository teleconsultLinkRepository;
     @Mock PctTeleconsultClient pctTeleconsultClient;
     @Mock FundoSurgicalLogbookClient fundoSurgicalLogbookClient;
+    @Mock DaidzaiEpisodeClient daidzaiEpisodeClient;
 
     private TheatreService service;
     private final UUID tenant = UUID.randomUUID();
@@ -70,7 +71,7 @@ class TheatreObstetricCSectionTest {
                 deathClient, butanoClient, bloodLinkRepository, transportRepository, specimenRepository,
                 countRepository, madiBloodClient, nhumeTransportClient, orosSpecimenClient, ritoSafetyClient,
                 postopRepository, admissionService, teleconsultLinkRepository, pctTeleconsultClient,
-                fundoSurgicalLogbookClient, new ObjectMapper());
+                fundoSurgicalLogbookClient, daidzaiEpisodeClient, new ObjectMapper());
         TrustContextHolder.set(new TrustContext(tenant, "actor-obstetrician", "PROVIDER", "TREATMENT",
                 null, UUID.randomUUID(), UUID.randomUUID(), null, null, AccessMode.INTERNAL));
     }
