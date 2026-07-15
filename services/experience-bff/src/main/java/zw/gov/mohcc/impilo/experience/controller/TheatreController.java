@@ -261,4 +261,220 @@ public class TheatreController {
             @RequestBody Map<String, Object> body) {
         return ok(inpatientClient.resolveTheatreBlocker(id, body), requestId, correlationId);
     }
+
+    // ── Perioperative depth passthrough (UI-completion) ────────────────────────────────────────────
+    // Stateless forwarders composing inpatient-service's theatre clinical-safety, commodities/
+    // traceability, emergency + obstetric activation and case-detail endpoints. {data,meta} envelope,
+    // trust headers forwarded by the RestTemplate interceptor; this BFF persists/decides nothing.
+
+    /** Read-only theatre case detail (episode + theatre-scoped triage/emergency/death state). */
+    @GetMapping("/cases/{id}")
+    public ResponseEntity<Map<String, Object>> caseDetail(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ok(inpatientClient.getTheatreCase(id), requestId, correlationId);
+    }
+
+    // ── blood (MADI-backed) ──
+    @GetMapping("/cases/{id}/blood")
+    public ResponseEntity<Map<String, Object>> listBlood(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ok(inpatientClient.listTheatreBlood(id), requestId, correlationId);
+        } catch (Exception e) {
+            log.warn("Theatre blood list failed: {}", e.getMessage());
+            return ok(List.of(), requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/cases/{id}/blood/{action}")
+    public ResponseEntity<Map<String, Object>> bloodAction(
+            @PathVariable String id, @PathVariable String action,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return created(inpatientClient.theatreBloodAction(id, action, body != null ? body : Map.of()),
+                requestId, correlationId);
+    }
+
+    // ── specimens (OROS-backed) + specimen transport (NHUME-backed) ──
+    @GetMapping("/cases/{id}/specimens")
+    public ResponseEntity<Map<String, Object>> listSpecimens(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ok(inpatientClient.listTheatreSpecimens(id), requestId, correlationId);
+        } catch (Exception e) {
+            log.warn("Theatre specimen list failed: {}", e.getMessage());
+            return ok(List.of(), requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/cases/{id}/specimens/{specimenId}/acknowledge-critical")
+    public ResponseEntity<Map<String, Object>> acknowledgeSpecimen(
+            @PathVariable String id, @PathVariable String specimenId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return ok(inpatientClient.acknowledgeTheatreSpecimen(id, specimenId, body != null ? body : Map.of()),
+                requestId, correlationId);
+    }
+
+    @PostMapping("/cases/{id}/transport/specimen")
+    public ResponseEntity<Map<String, Object>> dispatchSpecimen(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return created(inpatientClient.requestTheatreSpecimenTransport(id, body), requestId, correlationId);
+    }
+
+    // ── surgical counts (WHO Sign-Out gate; RITO sentinel on discrepancy) ──
+    @GetMapping("/cases/{id}/counts")
+    public ResponseEntity<Map<String, Object>> listCounts(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ok(inpatientClient.listTheatreCounts(id), requestId, correlationId);
+        } catch (Exception e) {
+            log.warn("Theatre count list failed: {}", e.getMessage());
+            return ok(List.of(), requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/cases/{id}/counts")
+    public ResponseEntity<Map<String, Object>> recordCount(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return created(inpatientClient.recordTheatreCount(id, body), requestId, correlationId);
+    }
+
+    // ── emergency activation + emergency consent exception ──
+    @PostMapping("/cases/emergency")
+    public ResponseEntity<Map<String, Object>> activateEmergency(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return created(inpatientClient.activateEmergencyCase(body), requestId, correlationId);
+    }
+
+    @PostMapping("/cases/{id}/consent/emergency-exception")
+    public ResponseEntity<Map<String, Object>> emergencyConsentException(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return ok(inpatientClient.recordEmergencyConsentException(id, body), requestId, correlationId);
+    }
+
+    // ── obstetric emergency caesarean (context / neonatal-alert / delivery / neonatal-handover) ──
+    @PostMapping("/cases/{id}/obstetric/{action}")
+    public ResponseEntity<Map<String, Object>> obstetricAction(
+            @PathVariable String id, @PathVariable String action,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return created(inpatientClient.theatreObstetricAction(id, action, body != null ? body : Map.of()),
+                requestId, correlationId);
+    }
+
+    // ── implants (UDI/serial/lot traceability + recall trace) ──
+    @GetMapping("/cases/{id}/implants")
+    public ResponseEntity<Map<String, Object>> listImplants(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ok(inpatientClient.listTheatreImplants(id), requestId, correlationId);
+        } catch (Exception e) {
+            log.warn("Theatre implant list failed: {}", e.getMessage());
+            return ok(List.of(), requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/cases/{id}/implants")
+    public ResponseEntity<Map<String, Object>> recordImplant(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return created(inpatientClient.recordTheatreImplant(id, body), requestId, correlationId);
+    }
+
+    @GetMapping("/implants/recall")
+    public ResponseEntity<Map<String, Object>> traceRecall(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(required = false) String udi,
+            @RequestParam(required = false) String lot) {
+        try {
+            return ok(inpatientClient.traceImplantRecall(udi, lot), requestId, correlationId);
+        } catch (Exception e) {
+            log.warn("Implant recall trace failed: {}", e.getMessage());
+            return ok(List.of(), requestId, correlationId);
+        }
+    }
+
+    // ── sterile instrument sets (TUSO CSSD) ──
+    @GetMapping("/cases/{id}/instrument-sets")
+    public ResponseEntity<Map<String, Object>> listInstrumentSets(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ok(inpatientClient.listInstrumentSets(id), requestId, correlationId);
+        } catch (Exception e) {
+            log.warn("Theatre instrument-set list failed: {}", e.getMessage());
+            return ok(List.of(), requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/cases/{id}/instrument-sets/issue")
+    public ResponseEntity<Map<String, Object>> issueInstrumentSet(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return created(inpatientClient.issueInstrumentSet(id, body), requestId, correlationId);
+    }
+
+    @PostMapping("/cases/{id}/instrument-sets/return")
+    public ResponseEntity<Map<String, Object>> returnInstrumentSet(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return ok(inpatientClient.returnInstrumentSet(id, body != null ? body : Map.of()),
+                requestId, correlationId);
+    }
+
+    // ── controlled-drug register (two-person witness) ──
+    @GetMapping("/cases/{id}/controlled-drugs")
+    public ResponseEntity<Map<String, Object>> listControlledDrugs(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ok(inpatientClient.listControlledDrugs(id), requestId, correlationId);
+        } catch (Exception e) {
+            log.warn("Theatre controlled-drug list failed: {}", e.getMessage());
+            return ok(List.of(), requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/cases/{id}/controlled-drugs")
+    public ResponseEntity<Map<String, Object>> recordControlledDrug(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return created(inpatientClient.recordControlledDrug(id, body), requestId, correlationId);
+    }
 }
