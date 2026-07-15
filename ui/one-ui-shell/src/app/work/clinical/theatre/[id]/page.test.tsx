@@ -30,9 +30,41 @@ describe("TheatreCaseDetailPage", () => {
   it("renders the real case with status, triage and the WHO checklist", async () => {
     render(<TheatreCaseDetailPage />);
     await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
-    expect(screen.getByText("BOOKED")).toBeInTheDocument();
+    // §19: the persistent banner shows the human stage label for the status
+    expect(screen.getByTestId("banner-stage")).toHaveTextContent("Booked");
     expect(screen.getByText("Consent verified")).toBeInTheDocument();
     expect(screen.getByText(/WHO Surgical Safety Checklist/)).toBeInTheDocument();
+  });
+
+  it("§19 shows the persistent context banner with an unconfirmed-allergy safety flag", async () => {
+    render(<TheatreCaseDetailPage />);
+    await waitFor(() => expect(screen.getByTestId("theatre-case-banner")).toBeInTheDocument());
+    expect(screen.getByTestId("theatre-case-banner").className).toContain("sticky");
+    expect(screen.getByTestId("banner-allergies")).toHaveTextContent(/unconfirmed/i);
+    expect(screen.getByTestId("banner-site")).toHaveTextContent(/not marked/i);
+  });
+
+  it("§19 the operative note carries a DRAFT document-state badge until signed", async () => {
+    render(<TheatreCaseDetailPage />);
+    await waitFor(() => expect(screen.getByTestId("doc-state-badge")).toBeInTheDocument());
+    expect(screen.getByTestId("doc-state-badge")).toHaveAttribute("data-state", "DRAFT");
+  });
+
+  it("§19 focus mode auto-hides surrounding sections when a note field is focused", async () => {
+    // NB: jsdom does not load Tailwind CSS, so the `hidden` utility (display:none) is asserted
+    // via the class rather than computed visibility.
+    render(<TheatreCaseDetailPage />);
+    await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
+    const whoSection = () => screen.getByText(/WHO Surgical Safety Checklist/).closest("section")!;
+    // the WHO checklist section is shown before entering data
+    expect(whoSection().className).not.toContain("hidden");
+    await userEvent.click(screen.getByText("Procedure performed").parentElement!.querySelector("input")!);
+    // focusing a note field enables focus mode → surrounding sections collapse (hidden), banner stays
+    await waitFor(() => expect(screen.getByRole("button", { name: /Show all sections/ })).toBeInTheDocument());
+    expect(screen.getByTestId("theatre-case-banner")).toBeVisible();
+    expect(whoSection().className).toContain("hidden");
+    // the operative-note surface itself stays visible during entry
+    expect(screen.getByTestId("operative-note-section").className).not.toContain("hidden");
   });
 
   it("evaluate readiness calls the BFF and shows owner blockers (no fake READY)", async () => {

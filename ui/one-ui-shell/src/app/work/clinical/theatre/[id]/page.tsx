@@ -12,10 +12,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Stethoscope, Loader2, RefreshCw, ArrowLeft, ShieldAlert, ClipboardCheck, FileText, HeartPulse, Ban, TriangleAlert } from "lucide-react";
+import { Stethoscope, Loader2, RefreshCw, ArrowLeft, ShieldAlert, ClipboardCheck, FileText, HeartPulse, Ban, TriangleAlert, Maximize2, Minimize2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
+import { TheatreCaseBanner } from "@/components/clinical/theatre/TheatreCaseBanner";
+import { DocumentStateBadge, type DocumentState } from "@/components/clinical/theatre/DocumentStateBadge";
 import { apiClient } from "@/lib/api-client";
 
 interface Blocker { code?: string; message?: string }
@@ -26,12 +28,19 @@ interface SafetyEvent { id?: string; category?: string; severity?: string; descr
 interface TheatreCaseDetail {
   id?: string;
   patient_id?: string;
+  patient_name?: string;
   procedure_name?: string;
   status?: string;
   triage_priority?: string;
   surgeon_id?: string;
   checklist?: ChecklistItem[];
   death_case_ref?: string;
+  // §19 banner context (optional — surfaced when the record carries them, never fabricated)
+  allergies?: string[];
+  no_known_allergies?: boolean;
+  surgical_site?: string;
+  surgical_side?: string;
+  operative_note_state?: DocumentState;
 }
 
 function errMessage(e: unknown): string {
@@ -43,18 +52,6 @@ function errMessage(e: unknown): string {
   }
   return "Action failed. Please try again.";
 }
-
-const STATUS_TONE: Record<string, string> = {
-  BOOKED: "bg-slate-100 text-slate-600",
-  PREOP: "bg-blue-100 text-blue-700",
-  READY_FOR_THEATRE: "bg-emerald-100 text-emerald-700",
-  IN_PROGRESS: "bg-amber-100 text-amber-700",
-  PACU: "bg-violet-100 text-violet-700",
-  RECOVERED: "bg-emerald-100 text-emerald-700",
-  COMPLETED: "bg-emerald-100 text-emerald-700",
-  CANCELLED: "bg-red-100 text-red-700",
-  DECEASED: "bg-slate-800 text-white",
-};
 
 export default function TheatreCaseDetailPage() {
   const params = useParams<{ id: string }>();
@@ -71,6 +68,10 @@ export default function TheatreCaseDetailPage() {
   const [cancelReasonCode, setCancelReasonCode] = useState("");
   const [cancelReason, setCancelReason] = useState("");
   const [safetyForm, setSafetyForm] = useState({ category: "NEAR_MISS", severity: "MODERATE", description: "" });
+  // §19 ergonomics: track the operative-note document state locally after a sign, and a focus
+  // mode that auto-hides the surrounding sections during active data entry to minimise scrolling.
+  const [noteSigned, setNoteSigned] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -139,6 +140,7 @@ export default function TheatreCaseDetailPage() {
       });
       if (note.signedProviderId) {
         await apiClient.post(`/internal/v1/theatre/cases/${id}/note/sign`, { signedProviderId: note.signedProviderId });
+        setNoteSigned(true);
       }
     }, "Operative note saved" + (note.signedProviderId ? " and signed." : " as a draft."));
 
@@ -160,6 +162,16 @@ export default function TheatreCaseDetailPage() {
 
   const checklist = data?.checklist ?? [];
   const phases = ["SIGN_IN", "TIME_OUT", "SIGN_OUT"] as const;
+
+  // §19: derive the operative-note document state — FINAL once the case is completed/recovered,
+  // otherwise SIGNED (persisted or just signed here), AMENDED when the record says so, else DRAFT.
+  const noteState: DocumentState = ["COMPLETED", "RECOVERED"].includes(data?.status ?? "")
+    ? "FINAL"
+    : noteSigned || data?.operative_note_state === "SIGNED"
+      ? "SIGNED"
+      : data?.operative_note_state === "AMENDED"
+        ? "AMENDED"
+        : "DRAFT";
 
   return (
     <AppLayout>
@@ -190,19 +202,37 @@ export default function TheatreCaseDetailPage() {
           <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">Case not found.</div>
         ) : (
           <div className="space-y-5">
-            {/* Header card */}
-            <div className="rounded-xl border border-border bg-card p-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-sm font-semibold">{data.patient_id ?? "—"}</span>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_TONE[data.status ?? "BOOKED"] ?? "bg-slate-100 text-slate-600"}`}>{data.status ?? "BOOKED"}</span>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{data.triage_priority ?? "ELECTIVE"}</span>
-                {data.surgeon_id && <span className="text-xs text-muted-foreground">Surgeon: {data.surgeon_id}</span>}
-                {data.death_case_ref && <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs font-medium text-white">Death case: {data.death_case_ref.slice(0, 8)}</span>}
-              </div>
+            {/* §19 PERSISTENT context banner — sticky, always visible through the data-entry journey */}
+            <TheatreCaseBanner
+              patientId={data.patient_id}
+              patientName={data.patient_name}
+              procedureName={data.procedure_name}
+              status={data.status}
+              allergies={data.allergies}
+              noKnownAllergies={data.no_known_allergies}
+              surgicalSite={data.surgical_site}
+              surgicalSide={data.surgical_side}
+            />
+
+            {/* Secondary identity chips + focus-mode toggle */}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{data.triage_priority ?? "ELECTIVE"}</span>
+              {data.surgeon_id && <span className="text-xs text-muted-foreground">Surgeon: {data.surgeon_id}</span>}
+              {data.death_case_ref && <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs font-medium text-white">Death case: {data.death_case_ref.slice(0, 8)}</span>}
+              <button
+                type="button"
+                aria-pressed={focusMode}
+                onClick={() => setFocusMode((v) => !v)}
+                className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-medium hover:bg-background"
+                data-testid="focus-mode-toggle"
+              >
+                {focusMode ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                {focusMode ? "Show all sections" : "Focus mode"}
+              </button>
             </div>
 
             {/* Readiness + booking */}
-            <section className="rounded-xl border border-border bg-card p-4">
+            <section className={`rounded-xl border border-border bg-card p-4${focusMode ? " hidden" : ""}`}>
               <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold"><ShieldAlert className="h-4 w-4" /> Readiness & booking</h3>
               <button type="button" disabled={busy} onClick={() => void evaluateReadiness()} className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:bg-card disabled:opacity-50">
                 Evaluate readiness
@@ -244,7 +274,7 @@ export default function TheatreCaseDetailPage() {
             </section>
 
             {/* WHO checklist */}
-            <section className="rounded-xl border border-border bg-card p-4">
+            <section className={`rounded-xl border border-border bg-card p-4${focusMode ? " hidden" : ""}`}>
               <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold"><ClipboardCheck className="h-4 w-4" /> WHO Surgical Safety Checklist</h3>
               {checklist.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No checklist seeded for this case.</p>
@@ -271,9 +301,16 @@ export default function TheatreCaseDetailPage() {
               </div>
             </section>
 
-            {/* Operative note */}
-            <section className="rounded-xl border border-border bg-card p-4">
-              <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold"><FileText className="h-4 w-4" /> Operative note</h3>
+            {/* Operative note — data-entry surface; focusing a field auto-enables focus mode */}
+            <section
+              className="rounded-xl border border-border bg-card p-4"
+              onFocusCapture={() => setFocusMode(true)}
+              data-testid="operative-note-section"
+            >
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold"><FileText className="h-4 w-4" /> Operative note</h3>
+                <DocumentStateBadge state={noteState} />
+              </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Procedure performed</span><input type="text" value={note.performedProcedure} onChange={(e) => setNote({ ...note, performedProcedure: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
                 <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Findings</span><input type="text" value={note.findings} onChange={(e) => setNote({ ...note, findings: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
@@ -287,7 +324,7 @@ export default function TheatreCaseDetailPage() {
             </section>
 
             {/* PACU */}
-            <section className="rounded-xl border border-border bg-card p-4">
+            <section className={`rounded-xl border border-border bg-card p-4${focusMode ? " hidden" : ""}`}>
               <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold"><HeartPulse className="h-4 w-4" /> PACU / recovery disposition</h3>
               <div className="flex flex-wrap gap-2">
                 {["WARD", "ICU", "DISCHARGE", "TRANSFER"].map((d) => (
@@ -298,7 +335,7 @@ export default function TheatreCaseDetailPage() {
             </section>
 
             {/* Safety + cancel */}
-            <section className="rounded-xl border border-border bg-card p-4">
+            <section className={`rounded-xl border border-border bg-card p-4${focusMode ? " hidden" : ""}`}>
               <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold"><TriangleAlert className="h-4 w-4" /> Safety event</h3>
               <div className="grid gap-3 sm:grid-cols-3">
                 <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Category</span>
@@ -328,7 +365,7 @@ export default function TheatreCaseDetailPage() {
             </section>
 
             {/* Cancel */}
-            <section className="rounded-xl border border-red-200 bg-red-50/40 p-4">
+            <section className={`rounded-xl border border-red-200 bg-red-50/40 p-4${focusMode ? " hidden" : ""}`}>
               <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-red-700"><Ban className="h-4 w-4" /> Cancel case</h3>
               <div className="flex flex-wrap items-end gap-2">
                 <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Reason code</span>
