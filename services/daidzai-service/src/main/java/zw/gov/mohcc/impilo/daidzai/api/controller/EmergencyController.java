@@ -49,6 +49,14 @@ public class EmergencyController {
         return service.getRequest(tenantId, id);
     }
 
+    // ---- Call-taker queue: list pending (or status-filtered) SOS requests ----
+    @GetMapping("/requests")
+    public List<EmergencyRequestEntity> listRequests(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestParam(required = false) String status) {
+        return service.listRequests(tenantId, status);
+    }
+
     // ---- Dispatcher callback verification (PD-3 dispatch gate release) ----
     // Operator/dispatcher-only: rides the authenticated daidzai lane through the PDP (NOT the public
     // lane). Sets the request's callback as verified and releases it for triage/dispatch.

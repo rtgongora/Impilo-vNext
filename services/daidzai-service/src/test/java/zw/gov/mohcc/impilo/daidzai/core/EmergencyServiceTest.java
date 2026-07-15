@@ -157,4 +157,38 @@ class EmergencyServiceTest {
         assertThat(rr.getStatus()).isEqualTo("REQUESTED");
         assertThat(service.resources(tenant, inc.getId())).hasSize(1);
     }
+
+    @Test
+    void listRequestsReturnsPendingQueueAndExcludesTriagedAndOtherTenants() {
+        UUID tenant = UUID.randomUUID();
+        UUID otherTenant = UUID.randomUUID();
+        // Fresh tenant → empty pending queue.
+        assertThat(service.listRequests(tenant, "RECEIVED")).isEmpty();
+
+        EmergencyRequestEntity pending = service.createRequest(tenant, "BYSTANDER", null,
+                "ANONYMOUS", null, null, "adult male RTC", "TRAUMA", "CRITICAL",
+                "RTC on highway", -17.83, 31.05, "highway", null, "MOBILE");
+        EmergencyRequestEntity toTriage = service.createRequest(tenant, "CITIZEN", "actor-1",
+                "KNOWN", "HID-9", null, null, "MEDICAL", "MODERATE", "fever",
+                null, null, "home", null, "WEB");
+
+        // Both are RECEIVED and visible on the pending queue.
+        assertThat(service.listRequests(tenant, "RECEIVED"))
+                .extracting(EmergencyRequestEntity::getId)
+                .contains(pending.getId(), toTriage.getId());
+
+        // Triage moves one to LINKED — it drops off the RECEIVED queue.
+        service.triageRequestToIncident(tenant, toTriage.getId(), "triager-1");
+        assertThat(service.listRequests(tenant, "RECEIVED"))
+                .extracting(EmergencyRequestEntity::getId)
+                .contains(pending.getId())
+                .doesNotContain(toTriage.getId());
+
+        // Tenant isolation: another tenant sees none of these.
+        assertThat(service.listRequests(otherTenant, "RECEIVED")).isEmpty();
+        // No status filter → all requests for the tenant (both).
+        assertThat(service.listRequests(tenant, null))
+                .extracting(EmergencyRequestEntity::getId)
+                .contains(pending.getId(), toTriage.getId());
+    }
 }

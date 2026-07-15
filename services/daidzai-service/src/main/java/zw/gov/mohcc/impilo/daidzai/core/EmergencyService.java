@@ -145,6 +145,14 @@ public class EmergencyService {
                 .orElseThrow(() -> new NoSuchElementException("Emergency request not found: " + id));
     }
 
+    /** Call-taker queue: pending (or status-filtered) SOS requests for the tenant, newest first. */
+    public List<EmergencyRequestEntity> listRequests(UUID tenantId, String status) {
+        if (status != null && !status.isBlank()) {
+            return requestRepo.findByTenantIdAndStatusOrderByCreatedAtDesc(tenantId, status.toUpperCase());
+        }
+        return requestRepo.findByTenantIdOrderByCreatedAtDesc(tenantId);
+    }
+
     /**
      * Dispatcher/responder verifies that they reached the caller on the callback number, releasing
      * the PD-3 dispatch gate. This rides the authenticated daidzai lane (operator action, audited);

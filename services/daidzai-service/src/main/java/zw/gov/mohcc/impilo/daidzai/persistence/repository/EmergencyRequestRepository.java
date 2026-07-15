@@ -13,4 +13,5 @@ public interface EmergencyRequestRepository extends JpaRepository<EmergencyReque
     Optional<EmergencyRequestEntity> findByIdAndTenantId(UUID id, UUID tenantId);
     List<EmergencyRequestEntity> findByTenantIdAndIncidentId(UUID tenantId, UUID incidentId);
     List<EmergencyRequestEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
+    List<EmergencyRequestEntity> findByTenantIdAndStatusOrderByCreatedAtDesc(UUID tenantId, String status);
 }
