@@ -31,6 +31,7 @@ public class EdVisitService {
     private final EmergencyCaseRepository emergencyCaseRepository;
     private final JourneyRepository journeyRepository;
     private final ObjectMapper objectMapper;
+    private final zw.gov.mohcc.impilo.pct.integration.DaidzaiEpisodeClient daidzaiEpisodes;
 
     public EdVisitService(JourneyStateMachine journeyStateMachine,
                           TriageService triageService,
@@ -44,7 +45,8 @@ public class EdVisitService {
                           EdClinicalPageRepository pageRepository,
                           EmergencyCaseRepository emergencyCaseRepository,
                           JourneyRepository journeyRepository,
-                          ObjectMapper objectMapper) {
+                          ObjectMapper objectMapper,
+                          zw.gov.mohcc.impilo.pct.integration.DaidzaiEpisodeClient daidzaiEpisodes) {
         this.journeyStateMachine = journeyStateMachine;
         this.triageService = triageService;
         this.encounterService = encounterService;
@@ -58,6 +60,7 @@ public class EdVisitService {
         this.emergencyCaseRepository = emergencyCaseRepository;
         this.journeyRepository = journeyRepository;
         this.objectMapper = objectMapper;
+        this.daidzaiEpisodes = daidzaiEpisodes;
     }
 
     @Transactional
@@ -84,8 +87,17 @@ public class EdVisitService {
         visit.setChiefComplaint(EdPayloadMapper.str(body, "chiefComplaint", "chief_complaint"));
         visit.setPresentingProblemCode(EdPayloadMapper.str(body, "presentingProblemCode", "presenting_problem_code"));
         visit.setEmergencyCaseId(EdPayloadMapper.uuid(body, "emergencyCaseId", "emergency_case_id"));
+        // Canonical trauma spine: an arriving trauma patient's ED visit inherits the episode id
+        // minted upstream by DAIDZAI (carried on X-Trauma-Episode-ID, injected into the body by the
+        // controller, or passed explicitly). PCT keeps its own SoR row and merely stamps the id.
+        UUID traumaEpisodeId = EdPayloadMapper.uuid(body, "traumaEpisodeId", "trauma_episode_id");
+        visit.setTraumaEpisodeId(traumaEpisodeId);
         visit.setStatus("REGISTERED");
         visit = visitRepository.save(visit);
+        if (traumaEpisodeId != null) {
+            daidzaiEpisodes.registerPhase(ctx.tenantId(), traumaEpisodeId, "ED", visit.getVisitId().toString(),
+                    "ARRIVED", "pct.ed.visit_opened");
+        }
         return visitDetail(visit.getVisitId());
     }
 
@@ -342,10 +354,38 @@ public class EdVisitService {
         visit.setProtocolRef("TRAUMA");
         visit.setPathwayRef("f0000001-0001-4001-8001-000000000106");
         visit.setZone("RESUS");
+        // ED-first walk-in trauma: trauma-team activation IS the trauma declaration. If this visit
+        // did not arrive on an existing episode (no upstream incident), PCT mints the canonical
+        // episode against itself (origin_kind=ED_WALK_IN, idempotent on the ed_visit id) and stamps
+        // it. A degraded DAIDZAI never blocks the activation — the id simply stays null this pass.
+        UUID episodeId = visit.getTraumaEpisodeId();
+        if (episodeId == null) {
+            episodeId = EdPayloadMapper.uuid(body, "traumaEpisodeId", "trauma_episode_id");
+        }
+        if (episodeId == null) {
+            // No upstream episode → ED-first walk-in trauma: PCT mints against itself.
+            episodeId = daidzaiEpisodes.mintEdWalkIn(ctx.tenantId(), visitId, visit.getPatientCpid(),
+                    isProvisionalCpid(visit.getPatientCpid()) ? "PROVISIONAL" : "KNOWN");
+        }
+        if (episodeId != null) {
+            visit.setTraumaEpisodeId(episodeId);
+        }
         visitRepository.save(visit);
+        if (episodeId != null) {
+            daidzaiEpisodes.registerPhase(ctx.tenantId(), episodeId, "TRIAGE", trauma.getTraumaId().toString(),
+                    "TRAUMA_ACTIVATED", "pct.ed.trauma_activated");
+        }
         Map<String, Object> detail = visitDetail(visitId);
         detail.put("active_trauma_id", trauma.getTraumaId().toString());
+        if (episodeId != null) detail.put("trauma_episode_id", episodeId.toString());
         return detail;
+    }
+
+    /** An ED temp/provisional cpid (unknown patient) carries a TEMP-/PROV- prefix rather than a real Health ID. */
+    private static boolean isProvisionalCpid(String cpid) {
+        if (cpid == null) return true;
+        String c = cpid.toUpperCase();
+        return c.startsWith("TEMP-") || c.startsWith("PROV-") || c.startsWith("TEMP-ED-");
     }
 
     @Transactional

@@ -27,6 +27,10 @@ public class EdVisitEntity {
     @Column(name = "emergency_case_id")
     private UUID emergencyCaseId;
 
+    /** Canonical trauma-episode correlation id (DAIDZAI-minted). Null for non-trauma ED visits. */
+    @Column(name = "trauma_episode_id")
+    private UUID traumaEpisodeId;
+
     @Column(name = "arrival_mode", nullable = false)
     private String arrivalMode = "WALK_IN";
 
@@ -100,6 +104,8 @@ public class EdVisitEntity {
     public void setPatientCpid(String patientCpid) { this.patientCpid = patientCpid; }
     public UUID getEmergencyCaseId() { return emergencyCaseId; }
     public void setEmergencyCaseId(UUID emergencyCaseId) { this.emergencyCaseId = emergencyCaseId; }
+    public UUID getTraumaEpisodeId() { return traumaEpisodeId; }
+    public void setTraumaEpisodeId(UUID traumaEpisodeId) { this.traumaEpisodeId = traumaEpisodeId; }
     public String getArrivalMode() { return arrivalMode; }
     public void setArrivalMode(String arrivalMode) { this.arrivalMode = arrivalMode; }
     public String getAmbulanceCallSign() { return ambulanceCallSign; }

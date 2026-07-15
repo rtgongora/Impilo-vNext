@@ -3,10 +3,12 @@ package zw.gov.mohcc.impilo.pct.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.pct.core.EdVisitService;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -22,10 +24,20 @@ public class EdVisitController {
     }
 
     @PostMapping("/visits")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> openVisit(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> openVisit(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.TRAUMA_EPISODE_ID, required = false) String traumaEpisodeId) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok(edVisitService.openVisit(body), correlationId));
+                .body(ApiResponse.ok(edVisitService.openVisit(withTraumaEpisode(body, traumaEpisodeId)), correlationId));
+    }
+
+    /** Fold the X-Trauma-Episode-ID header into the payload (body value wins if already present). */
+    private static Map<String, Object> withTraumaEpisode(Map<String, Object> body, String traumaEpisodeId) {
+        if (traumaEpisodeId == null || traumaEpisodeId.isBlank()) return body;
+        Map<String, Object> merged = new LinkedHashMap<>(body != null ? body : Map.of());
+        merged.putIfAbsent("traumaEpisodeId", traumaEpisodeId);
+        return merged;
     }
 
     @GetMapping("/visits")
@@ -91,9 +103,11 @@ public class EdVisitController {
 
     @PostMapping("/visits/{id}/trauma/activate")
     public ResponseEntity<ApiResponse<Map<String, Object>>> activateTrauma(
-            @PathVariable UUID id, @RequestBody Map<String, Object> body) {
+            @PathVariable UUID id, @RequestBody Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.TRAUMA_EPISODE_ID, required = false) String traumaEpisodeId) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
-        return ResponseEntity.ok(ApiResponse.ok(edVisitService.activateTrauma(id, body), correlationId));
+        return ResponseEntity.ok(ApiResponse.ok(
+                edVisitService.activateTrauma(id, withTraumaEpisode(body, traumaEpisodeId)), correlationId));
     }
 
     @PostMapping("/visits/{id}/trauma/survey")
