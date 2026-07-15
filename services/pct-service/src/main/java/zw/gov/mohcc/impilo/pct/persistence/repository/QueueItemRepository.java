@@ -103,7 +103,7 @@ public interface QueueItemRepository extends JpaRepository<QueueItemEntity, UUID
             @Param("facilityId") UUID facilityId,
             @Param("statuses") Collection<QueueItemStatus> statuses);
 
-    // ---- virtual-pool items (V034) --------------------------------------
+    // ---- virtual-pool items (V035) --------------------------------------
 
     /** Live item(s) tracking an external source (teleconsult referral id) — accept-side dequeue lookup. */
     List<QueueItemEntity> findByTenantIdAndSourceRefAndStatusIn(

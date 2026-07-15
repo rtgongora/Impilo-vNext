@@ -48,7 +48,7 @@ public interface QueueRepository extends JpaRepository<QueueEntity, UUID> {
     /** The materialised queue for a given TUSO source reference — the idempotent upsert key. */
     Optional<QueueEntity> findByTenantIdAndFacilityIdAndSourceRef(UUID tenantId, UUID facilityId, String sourceRef);
 
-    // ---- virtual-pool queues (V034) ------------------------------------
+    // ---- virtual-pool queues (V035) ------------------------------------
 
     /** The materialised virtual-pool queue for a TUSO sourceRef ('{vsUid}:{queueKey}') — idempotent upsert key. */
     Optional<QueueEntity> findByTenantIdAndSourceRefAndVirtualPoolIdIsNotNull(UUID tenantId, String sourceRef);

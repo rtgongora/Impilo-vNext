@@ -32,14 +32,14 @@ public class QueueEntity {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    /** Physical facility scope — NULL for virtual-pool queues (V034). */
+    /** Physical facility scope — NULL for virtual-pool queues (V035). */
     @Column(name = "facility_id")
     private UUID facilityId;
 
     /**
      * Virtual-pool scope: the TUSO routing seam target_ref (frozen pool key,
      * carried by pool-routed referrals as routing_pool_id). NULL for facility
-     * queues. A queue always has exactly one scope (DB CHECK, V034).
+     * queues. A queue always has exactly one scope (DB CHECK, V035).
      */
     @Column(name = "virtual_pool_id", length = 128)
     private String virtualPoolId;
