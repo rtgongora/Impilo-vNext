@@ -296,6 +296,28 @@ green.
 Mobile (`apps/mobile/citizen-app`) is a standing lane inside each wave (guest-first
 shell in W1, pillar parity per wave, Maestro proofs), not a separate wave — doctrine §10.
 
+### UI catch-up pass (2026-07-12/15) — bring UI up to the shipped backend
+
+A dedicated pass closed the nonexistent/thin UIs the W0–W2 backend had outrun, on
+**both surfaces**:
+- **R1 onboarding front door (was backend-only):** web `/auth/register/contact` (shared
+  `OtpCodeInput`, intent-preserving, now the primary Create-account CTA) + mobile
+  `ContactSignUpScreen` over a new anonymous `publicApiClient` seam (the mobile api-client
+  had no pre-auth path — that gap also broke on-device password registration, now fixed).
+- **Dispatcher callback console (was API-only):** `/work/daidzai/verify-callbacks`
+  worklist + verify action releasing the PD-3 gate (BFF verify proxy added).
+- **Emergency thickening:** public SOS status-by-reference tracking
+  (`/welcome/emergency/track` → PII-free `GET /public/gateway/sos/{reference}`,
+  rig-proven 10/10) + receipt "Track this request" link + GPS "share my location"; mobile
+  SOS GPS + track-by-reference.
+- **Health-info search:** `q` text search on the public education lane (web + mobile),
+  reusing the existing `guidanceService.search`.
+- **Nompilo explainer coverage:** broadened beyond login to the R1 register page and the
+  welcome intent home.
+- **Mobile parity:** guest health-info browse/search + practitioner/facility verify
+  screens. Verified: web tsc + vitest + guard-strict; mobile tsc + 209 tests +
+  parity-guard (no-mocks); BE additions rig-proven 10/10.
+
 ## 5. Coordination gates
 
 | Gate | Protects | Rule |
