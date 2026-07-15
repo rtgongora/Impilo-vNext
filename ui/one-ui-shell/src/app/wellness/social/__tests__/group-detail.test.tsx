@@ -14,6 +14,9 @@ vi.mock("@/components/AppLayout", () => ({
 }));
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "G1" }),
+  usePathname: () => "/wellness/social/groups/G1",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 import { apiClient } from "@/lib/api-client";

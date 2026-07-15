@@ -79,6 +79,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/core-transaction/[transactionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Core Transaction Detail", navLabel: "Transaction Detail", navZone: "work" },
   { path: "/client-journey", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Client Journey", navLabel: "Client Journey", navZone: "life" },
   { path: "/provider-workspace", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Provider Workspace", navLabel: "Provider Workspace", navZone: "work" },
+  { path: "/provider-workspace/wellness", zone: "wellness", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Wellness Workbench", navLabel: "Wellness workbench", navZone: "professional" },
+  { path: "/provider-workspace/wellness/social", zone: "wellness", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Wellness-Social Workbench", navLabel: "Wellness-social workbench", navZone: "professional" },
   { path: "/platform-journey", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Platform Journey", navLabel: "Platform Journey", navZone: "professional" },
 
   // â”€â”€ Zone: Clinical Tools â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -491,6 +493,17 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/wellness/care", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Connect to Care", navLabel: "Care linkage", navZone: "life" },
   { path: "/wellness/commodities", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Programme commodities (Dura)", navLabel: "Commodities (Dura)", navZone: "life" },
   { path: "/wellness/community", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Community", navLabel: "Community", navZone: "life" },
+  { path: "/wellness/assessment", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Assessment", navLabel: "Assessment", navZone: "life" },
+  { path: "/wellness/timeline", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Timeline", navLabel: "Timeline", navZone: "life" },
+  { path: "/wellness/reminders", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Preventive Reminders", navLabel: "Reminders", navZone: "life" },
+  { path: "/wellness/follow-ups", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Follow-ups", navLabel: "Follow-ups", navZone: "life" },
+  { path: "/wellness/insights", zone: "wellness", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Wellness Insights", navLabel: "Insights", navZone: "professional" },
+  { path: "/wellness/settings/consent", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Consent", navLabel: "Consent", navZone: "life" },
+  { path: "/wellness/social/feed", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Community Feed", navLabel: "Feed", navZone: "life" },
+  { path: "/wellness/social/reels", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Reels", navLabel: "Reels", navZone: "life" },
+  { path: "/wellness/social/posts/[id]", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Post", navLabel: "Post", navZone: "life" },
+  { path: "/wellness/social/saved", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Saved", navLabel: "Saved", navZone: "life" },
+  { path: "/wellness/social/my-activity", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Activity", navLabel: "My activity", navZone: "life" },
   { path: "/wellness/social/groups", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Groups", navLabel: "Groups", navZone: "life" },
   { path: "/wellness/social/groups/new", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "New Group", navLabel: "New group", navZone: "life" },
   { path: "/wellness/social/groups/[id]", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Group", navLabel: "Group", navZone: "life" },
@@ -873,8 +886,12 @@ export const ROUTES: RouteDefinition[] = [
 // and /welcome/health-info (public citizen health-information pillar).
 // Simba wellness integration (Jul 2026): merged the wellness-social + assessment/timeline/reminders
 // route block from claude/simba-wellness-completion-7c1a2f (assessment, timeline, reminders,
-// settings/consent, provider-workspace/wellness, and the /wellness/social/** surfaces). New total is 722.
-export const EXPECTED_ROUTE_COUNT = 722;
+// settings/consent, provider-workspace/wellness, and the /wellness/social/** surfaces). Total was 722.
+// Simba wellness UI-completion (Jul 2026, Phase B1): registered the previously-unregistered wellness
+// surfaces so all are guarded/nav-governed — citizen assessment/timeline/reminders/follow-ups/insights/
+// consent + social feed/reels/posts/[id]/saved/my-activity + provider-workspace/wellness(/social).
+// +13 routes. New total is 735.
+export const EXPECTED_ROUTE_COUNT = 735;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

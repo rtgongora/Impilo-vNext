@@ -169,6 +169,31 @@ export function useReportContent() {
   });
 }
 
+/** Single wellness-social post (detail view). */
+export function usePost(postId?: string | null) {
+  return useQuery<ApiResponse<SocialPost>>({
+    queryKey: ["simba-social-post", postId ?? null],
+    queryFn: () => apiClient.get(`/internal/v1/wellness/social/posts/${postId}`),
+    enabled: !!postId,
+  });
+}
+
+/** A saved/bookmarked item (references a post/reel — resolve via the post detail route). */
+export interface SavedBookmark {
+  bookmarkId: string;
+  subjectType: string;
+  subjectId: string;
+  createdAt: string;
+}
+
+/** The signed-in person's saved/bookmarked wellness-social content. */
+export function useSavedFeed() {
+  return useQuery<ApiResponse<SavedBookmark[]>>({
+    queryKey: ["simba-social-saved"],
+    queryFn: () => apiClient.get("/internal/v1/wellness/social/saved"),
+  });
+}
+
 /** Flatten paginated feed pages. */
 export function flattenFeed(pages?: { data: SocialPost[] }[]): SocialPost[] {
   if (!pages) return [];

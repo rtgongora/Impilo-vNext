@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
+  Bookmark,
   Flag,
   Heart,
   Loader2,
@@ -13,6 +15,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   flattenFeed,
+  useBookmark,
   useCreatePost,
   useReact,
   useReportContent,
@@ -25,17 +28,29 @@ const FILTERS: [string, string][] = [
   ["MY_ACTIVITY", "My activity"],
 ];
 
+/** The six supportive wellness-social reactions (mirrors SocialInteractionService allow-list). */
+const REACTIONS: [string, string][] = [
+  ["ENCOURAGE", "💪 Encourage"],
+  ["LIKE", "👍 Like"],
+  ["CELEBRATE", "🎉 Celebrate"],
+  ["HELPFUL", "💡 Helpful"],
+  ["SUPPORT", "🤝 Support"],
+  ["THANK_YOU", "🙏 Thank you"],
+];
+
 /** Wellness-social feed — supportive, consent-governed posts (distinct from the generic social feed). */
 export default function WellnessSocialFeedPage() {
   const [filter, setFilter] = useState("ALL");
   const feed = useSocialFeed(filter);
   const createPost = useCreatePost();
   const react = useReact();
+  const bookmark = useBookmark();
   const report = useReportContent();
 
   const [body, setBody] = useState("");
   const [visibility, setVisibility] = useState("PUBLIC_WITHIN_IMPILO");
   const [error, setError] = useState<string | null>(null);
+  const [reactionMenu, setReactionMenu] = useState<string | null>(null);
 
   const posts = useMemo(() => flattenFeed(feed.data?.pages), [feed.data]);
 
@@ -140,22 +155,56 @@ export default function WellnessSocialFeedPage() {
                     <Flag className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="whitespace-pre-wrap text-sm text-slate-800">{p.body}</p>
-                <div className="mt-3 flex items-center gap-4 text-sm text-slate-500">
+                <Link href={`/wellness/social/posts/${p.postId}`} className="block">
+                  <p className="whitespace-pre-wrap text-sm text-slate-800 hover:text-slate-900">{p.body}</p>
+                </Link>
+                <div className="relative mt-3 flex items-center gap-4 text-sm text-slate-500">
                   <button
                     type="button"
-                    onClick={() =>
-                      react.mutate({ subjectType: "POST", subjectId: p.postId, reaction: "ENCOURAGE" })
-                    }
+                    onClick={() => setReactionMenu(reactionMenu === p.postId ? null : p.postId)}
                     className="inline-flex items-center gap-1 hover:text-emerald-600"
+                    aria-haspopup="menu"
+                    aria-expanded={reactionMenu === p.postId}
                   >
                     <Heart className="h-4 w-4" />
                     {p.reactionCount}
                   </button>
-                  <span className="inline-flex items-center gap-1">
+                  {reactionMenu === p.postId && (
+                    <div
+                      role="menu"
+                      className="absolute bottom-8 left-0 z-10 flex flex-wrap gap-1 rounded-lg border border-slate-200 bg-white p-2 shadow-lg"
+                    >
+                      {REACTIONS.map(([value, label]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            react.mutate({ subjectType: "POST", subjectId: p.postId, reaction: value });
+                            setReactionMenu(null);
+                          }}
+                          className="rounded-md px-2 py-1 text-xs hover:bg-emerald-50"
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <Link
+                    href={`/wellness/social/posts/${p.postId}`}
+                    className="inline-flex items-center gap-1 hover:text-emerald-600"
+                  >
                     <MessageCircle className="h-4 w-4" />
                     {p.commentCount}
-                  </span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => bookmark.mutate({ subjectType: "POST", subjectId: p.postId })}
+                    title="Save"
+                    className="inline-flex items-center gap-1 hover:text-emerald-600"
+                  >
+                    <Bookmark className="h-4 w-4" />
+                  </button>
                 </div>
               </article>
             ))}
