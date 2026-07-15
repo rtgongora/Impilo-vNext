@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.client.ReportingServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
+import zw.gov.mohcc.impilo.tshepo.contracts.headers.TrustHeaders;
 
 import java.util.Map;
 
@@ -16,9 +18,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class ReportJobControllerTest {
 
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     @Test
     void getJobReturnsNotFoundWhenRunMissing() {
-        ReportJobController controller = new ReportJobController(new EmptyReportingClient());
+        ReportJobController controller = new ReportJobController(new EmptyReportingClient(), MAPPER);
 
         var response = controller.getJob("run-x", "tenant-1", "req-job-1", "corr-job-1");
 
@@ -29,7 +33,7 @@ class ReportJobControllerTest {
 
     @Test
     void getJobReturnsBadGatewayWhenReportingUnavailable() {
-        ReportJobController controller = new ReportJobController(new FailingReportingClient());
+        ReportJobController controller = new ReportJobController(new FailingReportingClient(), MAPPER);
 
         var response = controller.getJob("run-x", "tenant-1", "req-job-2", "corr-job-2");
 
@@ -40,7 +44,7 @@ class ReportJobControllerTest {
 
     @Test
     void generateThenGetJob_roundTripWhenReportingSucceeds() {
-        ReportJobController controller = new ReportJobController(new RoundTripReportingClient());
+        ReportJobController controller = new ReportJobController(new RoundTripReportingClient(), MAPPER);
         ReportJobController.GenerateReportRequest request = new ReportJobController.GenerateReportRequest(
                 "clinical_summary",
                 Map.of("facility_id", "f-1"),
@@ -59,7 +63,7 @@ class ReportJobControllerTest {
 
     @Test
     void generateReportFailsClosedWhenReportingReturnsEmptyPayload() {
-        ReportJobController controller = new ReportJobController(new EmptyCreateReportClient());
+        ReportJobController controller = new ReportJobController(new EmptyCreateReportClient(), MAPPER);
         ReportJobController.GenerateReportRequest request = new ReportJobController.GenerateReportRequest(
                 "clinical_summary",
                 Map.of("facility_id", "f-1"),
@@ -73,8 +77,46 @@ class ReportJobControllerTest {
         assertEquals("REPORTING_UNAVAILABLE", error.get("code"));
     }
 
+    @Test
+    void runReport_delegatesAndWraps201_whenVisibilityAllows() {
+        ReportJobController controller = new ReportJobController(new RunReportingClient(), MAPPER);
+
+        ResponseEntity<Map<String, Object>> response = controller.runReport(
+                "theatre-utilisation", "req-run", "corr-run", Map.of(), new MockHttpServletRequest());
+
+        assertEquals(201, response.getStatusCode().value());
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertEquals("run-99", data.get("runId").asText());
+    }
+
+    @Test
+    void runReport_failsFastWith403_whenExportVisibilityDenies() {
+        ReportJobController controller = new ReportJobController(new RunReportingClient(), MAPPER);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader(TrustHeaders.EXPORT_POLICY, "AGGREGATE_ONLY");
+
+        ResponseEntity<Map<String, Object>> response = controller.runReport(
+                "theatre-utilisation", "req-deny", "corr-deny", Map.of(), request);
+
+        assertEquals(403, response.getStatusCode().value());
+        assertEquals("EXPORT_VISIBILITY_DENIED", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
+    }
+
+    private static final class RunReportingClient extends ReportingServiceClient {
+        private static final ObjectMapper M = new ObjectMapper();
+
+        private RunReportingClient() {
+            super(new RestTemplate(), endpoints());
+        }
+
+        @Override
+        public JsonNode runReport(String reportKey, Map<String, Object> requestOrNull) {
+            return M.createObjectNode().put("runId", "run-99").put("reportKey", reportKey).put("status", "QUEUED");
+        }
     }
 
     private static final class EmptyReportingClient extends ReportingServiceClient {

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
@@ -10,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.ReportingServiceClient;
+import zw.gov.mohcc.impilo.shared.visibility.ExportVisibilityGuard;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityHeaderParser;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,9 +31,11 @@ public class ReportJobController {
     private static final Logger log = LoggerFactory.getLogger(ReportJobController.class);
 
     private final ReportingServiceClient reportingClient;
+    private final ObjectMapper objectMapper;
 
-    public ReportJobController(ReportingServiceClient reportingClient) {
+    public ReportJobController(ReportingServiceClient reportingClient, ObjectMapper objectMapper) {
         this.reportingClient = reportingClient;
+        this.objectMapper = objectMapper;
     }
 
     public record GenerateReportRequest(
@@ -93,6 +99,44 @@ public class ReportJobController {
             log.error("Report generation failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                     "error", Map.of("code", "REPORTING_UNAVAILABLE", "message", "Unable to generate report while reporting-service is unavailable"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    /**
+     * Run a report by key. First-class BFF proxy for the perioperative (and other) report surfaces
+     * that previously reached reporting-service only via raw gateway passthrough. Fails fast at the BFF
+     * when the caller's export/visibility policy forbids a row-level run (the sovereign
+     * {@code ReportController} re-enforces the same guard); otherwise delegates to reporting-service.
+     */
+    @PostMapping("/{reportKey}/run")
+    public ResponseEntity<Map<String, Object>> runReport(
+            @PathVariable String reportKey,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body,
+            HttpServletRequest httpRequest) {
+        var visibility = VisibilityHeaderParser.resolve(httpRequest, objectMapper);
+        if (ExportVisibilityGuard.deniesReportRun(visibility)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "error", Map.of(
+                            "code", "EXPORT_VISIBILITY_DENIED",
+                            "message", "Report execution is not permitted for the current data visibility and export policy.",
+                            "report_key", reportKey),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+        try {
+            JsonNode data = reportingClient.runReport(reportKey, body);
+            if (data == null || data.isNull()) {
+                throw new IllegalStateException("reporting-service returned empty report run payload");
+            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", data,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Report run failed [key={}]: {}", reportKey, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "REPORTING_UNAVAILABLE", "message", "Unable to run report while reporting-service is unavailable"),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
