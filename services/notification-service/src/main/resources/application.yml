@@ -50,7 +50,10 @@ impilo:
       topic: ${KAFKA_MVUMO_TOPIC:platform.mvumo.events}
       group-id: ${KAFKA_MVUMO_GROUP:notification-service-mvumo}
     oros:
-      enabled: ${KAFKA_OROS_CONSUMER_ENABLED:false}
+      # Default ON: the OROS critical-result consumer was wrongly shipped disabled, so critical lab/
+      # imaging alerts never reached clinicians. Flip the default to true so they deliver (W5, G1.9).
+      # Overridable per-env via KAFKA_OROS_CONSUMER_ENABLED.
+      enabled: ${KAFKA_OROS_CONSUMER_ENABLED:true}
       critical-topic: ${KAFKA_OROS_CRITICAL_TOPIC:oros.result.critical}
       group-id: ${KAFKA_OROS_GROUP:notification-service-oros}
   ops:

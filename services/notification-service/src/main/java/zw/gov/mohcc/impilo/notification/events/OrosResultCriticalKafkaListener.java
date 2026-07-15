@@ -20,8 +20,10 @@ import java.util.Map;
  * notification to the requesting provider, requiring follow-up acknowledgement (spec §B —
  * critical result workflow). Clinical detail stays in-platform; external channels are notify-only.
  *
- * <p>Disabled by default ({@code impilo.kafka.oros.enabled=false}) so it neither requires a Kafka
- * broker in tests nor activates outside configured environments — matching the Mvumo listener.</p>
+ * <p>Enabled by default ({@code impilo.kafka.oros.enabled=true}) — critical lab/imaging alerts must
+ * reach clinicians, so the consumer was corrected from its previously-wrong disabled default (W5,
+ * G1.9). {@code @ConditionalOnProperty(havingValue="true")} + the yml default {@code true} make it
+ * active; set {@code KAFKA_OROS_CONSUMER_ENABLED=false} to opt out (e.g. broker-less test rigs).</p>
  */
 @Component
 @ConditionalOnProperty(name = "impilo.kafka.oros.enabled", havingValue = "true")
