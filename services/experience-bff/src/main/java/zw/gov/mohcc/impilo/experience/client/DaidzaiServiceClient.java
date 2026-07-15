@@ -202,6 +202,11 @@ public class DaidzaiServiceClient {
         return get(baseUrl + API + "/ems/missions/" + missionId + "/epcr", "epcr");
     }
 
+    /** Trauma-episode timeline read-model (episode + ordered phases). WU5 passthrough. */
+    public JsonNode traumaEpisode(String episodeId) {
+        return get(baseUrl + API + "/trauma-episodes/" + episodeId, "traumaEpisode");
+    }
+
     private JsonNode get(String url, String op) {
         log.debug("DAIDZAI {}: GET {}", op, url);
         return restTemplate.getForEntity(url, JsonNode.class).getBody();

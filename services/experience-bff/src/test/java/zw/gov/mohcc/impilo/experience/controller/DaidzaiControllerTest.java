@@ -83,6 +83,23 @@ class DaidzaiControllerTest {
     }
 
     @Test
+    void traumaEpisode_delegatesAndReturnsTimeline() {
+        DaidzaiServiceClient client = mock(DaidzaiServiceClient.class);
+        ObjectNode ep = mapper.createObjectNode();
+        ep.put("traumaEpisodeId", "ep-1");
+        ep.put("status", "OPEN");
+        ep.set("timeline", mapper.createArrayNode());
+        when(client.traumaEpisode("ep-1")).thenReturn(ep);
+
+        DaidzaiController controller = new DaidzaiController(client);
+        var resp = controller.traumaEpisode("ep-1");
+
+        assertEquals(200, resp.getStatusCode().value());
+        assertEquals("OPEN", resp.getBody().get("status").asText());
+        verify(client).traumaEpisode("ep-1");
+    }
+
+    @Test
     void closeDisaster_handlesNullBody() {
         DaidzaiServiceClient client = mock(DaidzaiServiceClient.class);
         when(client.closeDisaster(eq("inc1"), any())).thenReturn(mapper.createObjectNode().put("status", "CLOSED"));

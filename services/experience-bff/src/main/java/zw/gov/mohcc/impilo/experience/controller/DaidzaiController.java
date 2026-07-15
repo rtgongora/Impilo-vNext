@@ -152,4 +152,10 @@ public class DaidzaiController {
     public ResponseEntity<JsonNode> epcr(@PathVariable String id) {
         return ResponseEntity.ok(daidzai.epcr(id));
     }
+
+    // ── Trauma-episode timeline (WU5) — consolidated INCIDENT→…→DISPOSITION read-model ──
+    @GetMapping("/trauma-episodes/{id}")
+    public ResponseEntity<JsonNode> traumaEpisode(@PathVariable String id) {
+        return ResponseEntity.ok(daidzai.traumaEpisode(id));
+    }
 }
