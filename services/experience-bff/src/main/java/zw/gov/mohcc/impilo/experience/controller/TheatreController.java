@@ -165,6 +165,97 @@ public class TheatreController {
         return ok(inpatientClient.recordTheatrePacuDisposition(id, body), requestId, correlationId);
     }
 
+    // ── PACU recovery depth: scored observations + readiness gate + escalation + gated discharge ──
+
+    @GetMapping("/cases/{id}/pacu/observations")
+    public ResponseEntity<Map<String, Object>> listPacuObservations(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ok(inpatientClient.listTheatrePacuObservations(id), requestId, correlationId);
+        } catch (Exception e) {
+            log.warn("Theatre PACU observation list failed: {}", e.getMessage());
+            return ok(List.of(), requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/cases/{id}/pacu/observations")
+    public ResponseEntity<Map<String, Object>> recordPacuObservation(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return created(inpatientClient.recordTheatrePacuObservation(id, body), requestId, correlationId);
+    }
+
+    @GetMapping("/cases/{id}/pacu/readiness")
+    public ResponseEntity<Map<String, Object>> pacuReadiness(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ok(inpatientClient.theatrePacuReadiness(id), requestId, correlationId);
+        } catch (Exception e) {
+            log.warn("Theatre PACU readiness failed: {}", e.getMessage());
+            return ok(Map.of("band", "UNSCORED", "ready", false), requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/cases/{id}/pacu/escalate")
+    public ResponseEntity<Map<String, Object>> escalatePacu(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return created(inpatientClient.escalateTheatrePacu(id, body != null ? body : Map.of()),
+                requestId, correlationId);
+    }
+
+    @PostMapping("/cases/{id}/pacu/discharge")
+    public ResponseEntity<Map<String, Object>> pacuDischarge(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return ok(inpatientClient.theatrePacuDischarge(id, body != null ? body : Map.of()),
+                requestId, correlationId);
+    }
+
+    // ── Surgical discharge summary: draft → complete (FHIR Composition → Butano) ──────────────────
+
+    @GetMapping("/cases/{id}/discharge")
+    public ResponseEntity<Map<String, Object>> getDischarge(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ok(inpatientClient.getTheatreDischarge(id), requestId, correlationId);
+        } catch (Exception e) {
+            log.warn("Theatre discharge get failed: {}", e.getMessage());
+            return ok(Map.of("status", "NONE"), requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/cases/{id}/discharge")
+    public ResponseEntity<Map<String, Object>> saveDischarge(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        return ok(inpatientClient.saveTheatreDischarge(id, body), requestId, correlationId);
+    }
+
+    @PostMapping("/cases/{id}/discharge/complete")
+    public ResponseEntity<Map<String, Object>> completeDischarge(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return ok(inpatientClient.completeTheatreDischarge(id, body != null ? body : Map.of()),
+                requestId, correlationId);
+    }
+
     @PostMapping("/cases/{id}/cancel")
     public ResponseEntity<Map<String, Object>> cancel(
             @PathVariable String id,

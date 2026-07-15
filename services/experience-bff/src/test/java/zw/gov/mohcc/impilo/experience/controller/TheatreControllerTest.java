@@ -137,6 +137,55 @@ class TheatreControllerTest {
         assertEquals("nurse-2", ((JsonNode) r.getBody().get("data")).get("witness_provider").asText());
     }
 
+    // ── PACU recovery depth + surgical discharge passthrough ──
+
+    @Test
+    void recordPacuObservation_wrapsAldreteScore_and201() {
+        ResponseEntity<Map<String, Object>> r = controller().recordPacuObservation("c1", "req-p", "corr-p",
+                Map.of("aldreteScore", 8, "painScore", 2));
+        assertEquals(201, r.getStatusCode().value());
+        assertEquals(8, ((JsonNode) r.getBody().get("data")).get("aldrete_score").asInt());
+    }
+
+    @Test
+    void pacuReadiness_passesThroughBand() {
+        ResponseEntity<Map<String, Object>> r = controller().pacuReadiness("c1", "req-pr", "corr-pr");
+        JsonNode data = (JsonNode) r.getBody().get("data");
+        assertEquals("LOW", data.get("band").asText());
+        assertTrue(data.get("ready").asBoolean());
+    }
+
+    @Test
+    void pacuReadiness_failsSoftToUnscored() {
+        ResponseEntity<Map<String, Object>> r = controller().pacuReadiness("boom", "req-pr2", "corr-pr2");
+        assertEquals(200, r.getStatusCode().value());
+        assertEquals("UNSCORED", ((Map<?, ?>) r.getBody().get("data")).get("band"));
+    }
+
+    @Test
+    void pacuDischarge_passesThroughDestination() {
+        ResponseEntity<Map<String, Object>> r = controller().pacuDischarge("c1", "req-pd", "corr-pd",
+                Map.of("destination", "WARD", "readinessOverride", true));
+        assertEquals(200, r.getStatusCode().value());
+        assertEquals("WARD", ((JsonNode) r.getBody().get("data")).get("destination").asText());
+    }
+
+    @Test
+    void getDischarge_failsSoftToNone() {
+        ResponseEntity<Map<String, Object>> r = controller().getDischarge("boom", "req-g", "corr-g");
+        assertEquals(200, r.getStatusCode().value());
+        assertEquals("NONE", ((Map<?, ?>) r.getBody().get("data")).get("status"));
+    }
+
+    @Test
+    void completeDischarge_wrapsCompletedAndButanoRef() {
+        ResponseEntity<Map<String, Object>> r = controller().completeDischarge("c1", "req-cd2", "corr-cd2", Map.of());
+        assertEquals(200, r.getStatusCode().value());
+        JsonNode data = (JsonNode) r.getBody().get("data");
+        assertEquals("COMPLETED", data.get("status").asText());
+        assertEquals("shr-doc-1", data.get("butano_document_ref").asText());
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -207,6 +256,28 @@ class TheatreControllerTest {
 
         @Override public JsonNode recordControlledDrug(String caseId, Map<String, Object> body) {
             return mapper.createObjectNode().put("witness_provider", "nurse-2").put("status", "RECORDED");
+        }
+
+        @Override public JsonNode recordTheatrePacuObservation(String caseId, Map<String, Object> body) {
+            return mapper.createObjectNode().put("aldrete_score", 8).put("discharge_readiness_band", "MODERATE");
+        }
+
+        @Override public JsonNode theatrePacuReadiness(String caseId) {
+            if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
+            return mapper.createObjectNode().put("band", "LOW").put("ready", true).put("aldrete_score", 9);
+        }
+
+        @Override public JsonNode theatrePacuDischarge(String caseId, Map<String, Object> body) {
+            return mapper.createObjectNode().put("destination", "WARD").put("status", "DISCHARGED");
+        }
+
+        @Override public JsonNode getTheatreDischarge(String caseId) {
+            if ("boom".equals(caseId)) { throw new RuntimeException("upstream down"); }
+            return mapper.createObjectNode().put("status", "DRAFT");
+        }
+
+        @Override public JsonNode completeTheatreDischarge(String caseId, Map<String, Object> body) {
+            return mapper.createObjectNode().put("status", "COMPLETED").put("butano_document_ref", "shr-doc-1");
         }
     }
 }
