@@ -87,6 +87,26 @@ class EmergencyServiceTest {
     }
 
     @Test
+    void findRequestByReferenceResolvesTenantScopedAndMissesReturnEmpty() {
+        UUID tenant = UUID.randomUUID();
+        UUID otherTenant = UUID.randomUUID();
+        EmergencyRequestEntity r = service.createRequest(tenant, "PUBLIC_ANONYMOUS", null,
+                "ANONYMOUS", null, null, null, "MEDICAL", "HIGH", "collapsed",
+                null, null, "rank", null, "PUBLIC_WEB", "+263771234567");
+        String ref = r.getRequestReference();
+
+        // Resolves for the owning tenant.
+        assertThat(service.findRequestByReference(tenant, ref)).isPresent()
+                .get().extracting(EmergencyRequestEntity::getId).isEqualTo(r.getId());
+        // Tenant isolation: a reference never resolves under another tenant.
+        assertThat(service.findRequestByReference(otherTenant, ref)).isEmpty();
+        // Unknown / blank references are empty, never an existence oracle.
+        assertThat(service.findRequestByReference(tenant, "SOS-DOES-NOT-EXIST")).isEmpty();
+        assertThat(service.findRequestByReference(tenant, "   ")).isEmpty();
+        assertThat(service.findRequestByReference(tenant, null)).isEmpty();
+    }
+
+    @Test
     void authenticatedSosWithoutCallbackKeepsReceivedDefault() {
         UUID tenant = UUID.randomUUID();
         EmergencyRequestEntity r = service.createRequest(tenant, "CITIZEN", "actor-1",

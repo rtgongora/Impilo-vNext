@@ -145,6 +145,19 @@ public class EmergencyService {
                 .orElseThrow(() -> new NoSuchElementException("Emergency request not found: " + id));
     }
 
+    /**
+     * Look up a request by its human {@code requestReference} (the reference the 202 receipt returned
+     * to an anonymous requester). Returns empty when unknown so the public status lane can 404 without
+     * leaking existence detail. Tenant-scoped: a reference from another tenant never resolves.
+     */
+    @Transactional(readOnly = true)
+    public Optional<EmergencyRequestEntity> findRequestByReference(UUID tenantId, String requestReference) {
+        if (requestReference == null || requestReference.isBlank()) {
+            return Optional.empty();
+        }
+        return requestRepo.findByTenantIdAndRequestReference(tenantId, requestReference.trim());
+    }
+
     /** Call-taker queue: pending (or status-filtered) SOS requests for the tenant, newest first. */
     public List<EmergencyRequestEntity> listRequests(UUID tenantId, String status) {
         if (status != null && !status.isBlank()) {
