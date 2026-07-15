@@ -173,6 +173,35 @@ public class DaidzaiServiceClient {
         return post(baseUrl + API + "/assistance/" + id + "/" + action, body, "assistance:" + action);
     }
 
+    // ── EMS clinical dispatch + prehospital ePCR (responder mobile app) ──────
+    public JsonNode emsDispatch(String incidentId, Map<String, Object> body) {
+        return post(baseUrl + API + "/ems/incidents/" + incidentId + "/dispatch", body, "emsDispatch");
+    }
+
+    public JsonNode emsAdvance(String missionId, Map<String, Object> body) {
+        return post(baseUrl + API + "/ems/missions/" + missionId + "/advance", body, "emsAdvance");
+    }
+
+    public JsonNode emsMission(String missionId) {
+        return get(baseUrl + API + "/ems/missions/" + missionId, "emsMission");
+    }
+
+    public JsonNode emsMissionByIncident(String incidentId) {
+        return get(baseUrl + API + "/ems/incidents/" + incidentId + "/mission", "emsMissionByIncident");
+    }
+
+    public JsonNode epcrUpsert(String missionId, Map<String, Object> body) {
+        return post(baseUrl + API + "/ems/missions/" + missionId + "/epcr", body, "epcrUpsert");
+    }
+
+    public JsonNode epcrEvent(String missionId, Map<String, Object> body) {
+        return post(baseUrl + API + "/ems/missions/" + missionId + "/epcr/events", body, "epcrEvent");
+    }
+
+    public JsonNode epcr(String missionId) {
+        return get(baseUrl + API + "/ems/missions/" + missionId + "/epcr", "epcr");
+    }
+
     private JsonNode get(String url, String op) {
         log.debug("DAIDZAI {}: GET {}", op, url);
         return restTemplate.getForEntity(url, JsonNode.class).getBody();

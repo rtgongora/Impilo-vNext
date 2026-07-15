@@ -114,4 +114,42 @@ public class DaidzaiController {
                                           @RequestBody(required = false) Map<String, Object> body) {
         return ResponseEntity.ok(daidzai.closeDisaster(id, body != null ? body : Map.of()));
     }
+
+    // ── EMS clinical dispatch + prehospital ePCR (responder mobile app) ──────
+    @PostMapping("/ems/incidents/{id}/dispatch")
+    public ResponseEntity<JsonNode> emsDispatch(@PathVariable String id,
+                                                @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(daidzai.emsDispatch(id, body != null ? body : Map.of()));
+    }
+
+    @PostMapping("/ems/missions/{id}/advance")
+    public ResponseEntity<JsonNode> emsAdvance(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(daidzai.emsAdvance(id, body));
+    }
+
+    @GetMapping("/ems/missions/{id}")
+    public ResponseEntity<JsonNode> emsMission(@PathVariable String id) {
+        return ResponseEntity.ok(daidzai.emsMission(id));
+    }
+
+    @GetMapping("/ems/incidents/{id}/mission")
+    public ResponseEntity<JsonNode> emsMissionByIncident(@PathVariable String id) {
+        return ResponseEntity.ok(daidzai.emsMissionByIncident(id));
+    }
+
+    @PostMapping("/ems/missions/{id}/epcr")
+    public ResponseEntity<JsonNode> epcrUpsert(@PathVariable String id,
+                                               @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(daidzai.epcrUpsert(id, body != null ? body : Map.of()));
+    }
+
+    @PostMapping("/ems/missions/{id}/epcr/events")
+    public ResponseEntity<JsonNode> epcrEvent(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(daidzai.epcrEvent(id, body));
+    }
+
+    @GetMapping("/ems/missions/{id}/epcr")
+    public ResponseEntity<JsonNode> epcr(@PathVariable String id) {
+        return ResponseEntity.ok(daidzai.epcr(id));
+    }
 }
