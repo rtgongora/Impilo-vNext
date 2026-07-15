@@ -325,6 +325,18 @@ public class MusheWalletServiceClient {
     }
 
     /**
+     * Cancel a still-pending deposit intent. Confirmation stays an ops/system
+     * action (provider callback / statement reconciliation); a citizen can only
+     * cancel a deposit they no longer intend to fund.
+     */
+    public JsonNode cancelDeposit(UUID depositId) {
+        String url = baseUrl + "/internal/v1/funding/deposits/" + depositId + "/cancel";
+        log.info("MusheWallet: Cancelling deposit intent={}", depositId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Deposit cash into a wallet.
      *
      * @param walletId the wallet UUID

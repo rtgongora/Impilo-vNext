@@ -91,6 +91,25 @@ public class FundingBffController {
         return ok(musheClient.listDeposits(walletId), requestId, correlationId);
     }
 
+    /**
+     * Cancel a still-pending deposit the citizen no longer intends to fund.
+     * Self-wallet-only: the wallet path is ownership-checked, and deposit ids are
+     * only ever obtained from the caller's own deposit list. Confirmation is NOT
+     * exposed here — money arrival is confirmed by ops/system (statement recon /
+     * provider callback), never self-served.
+     */
+    @PostMapping("/{walletId}/deposits/{depositId}/cancel")
+    public ResponseEntity<Map<String, Object>> cancelDeposit(
+            @PathVariable UUID walletId,
+            @PathVariable UUID depositId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+        ResponseEntity<Map<String, Object>> denial = requireOwnWallet(walletId, actorId, requestId, correlationId);
+        if (denial != null) return denial;
+        return ok(musheClient.cancelDeposit(depositId), requestId, correlationId);
+    }
+
     /** Cash over the counter — cashier-gated; the citizen never self-serves cash-in. */
     @PostMapping("/{walletId}/cash-deposit")
     public ResponseEntity<Map<String, Object>> cashDeposit(
