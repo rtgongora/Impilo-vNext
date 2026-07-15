@@ -70,6 +70,14 @@ inpatient:
       base-url: ${NHUME_BASE_URL:http://localhost:8210}
     rito:
       base-url: ${RITO_BASE_URL:http://localhost:8391}
+    # Wave 4 peers — death/teleconsult (PCT), discharge follow-up booking, trainee CPD (learning/Fundo)
+    pct:
+      base-url: ${PCT_BASE_URL:http://localhost:8088}
+    booking:
+      base-url: ${BOOKING_BASE_URL:http://localhost:8265}
+    learning:
+      base-url: ${LEARNING_BASE_URL:http://localhost:8235}
+      internal-key: ${VARAPI_TO_LEARNING_INTERNAL_KEY:}
   theatre:
     reconciler:
       # TheatreProjectionReconciler poll cadence (ms). Disabled under the "test" profile.

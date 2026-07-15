@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.inpatient.integration.ButanoProcedureClient;
+import zw.gov.mohcc.impilo.inpatient.integration.FundoSurgicalLogbookClient;
 import zw.gov.mohcc.impilo.inpatient.integration.MadiBloodClient;
+import zw.gov.mohcc.impilo.inpatient.integration.PctTeleconsultClient;
 import zw.gov.mohcc.impilo.inpatient.integration.NhumeTransportClient;
 import zw.gov.mohcc.impilo.inpatient.integration.OrosOrderClient;
 import zw.gov.mohcc.impilo.inpatient.integration.OrosSpecimenClient;
@@ -17,6 +19,7 @@ import zw.gov.mohcc.impilo.inpatient.integration.RitoSafetyClient;
 import zw.gov.mohcc.impilo.inpatient.integration.TheatreDeathClient;
 import zw.gov.mohcc.impilo.inpatient.integration.TheatreReadinessClient;
 import zw.gov.mohcc.impilo.inpatient.integration.TheatreReadinessClient.ReadinessResult;
+import zw.gov.mohcc.impilo.inpatient.api.dto.CreateAdmissionRequest;
 import zw.gov.mohcc.impilo.inpatient.persistence.entity.*;
 import zw.gov.mohcc.impilo.inpatient.persistence.repository.*;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -61,6 +64,13 @@ public class TheatreService {
     private final NhumeTransportClient nhumeTransportClient;
     private final OrosSpecimenClient orosSpecimenClient;
     private final RitoSafetyClient ritoSafetyClient;
+    // ── Wave 4 §12/§13 — PACU discharge decision + theatre→inpatient continuity ──
+    private final ProcedurePostopRecordRepository postopRepository;
+    private final AdmissionService admissionService;
+    // ── Wave 4 T&L — tele-PACU/ICU (PCT) + trainee surgical logbook/CPD (Fundo) ──
+    private final ProcedureTeleconsultLinkRepository teleconsultLinkRepository;
+    private final PctTeleconsultClient pctTeleconsultClient;
+    private final FundoSurgicalLogbookClient fundoSurgicalLogbookClient;
     private final ObjectMapper objectMapper;
 
     public TheatreService(ProcedureEpisodeRepository episodeRepository,
@@ -82,6 +92,11 @@ public class TheatreService {
                           NhumeTransportClient nhumeTransportClient,
                           OrosSpecimenClient orosSpecimenClient,
                           RitoSafetyClient ritoSafetyClient,
+                          ProcedurePostopRecordRepository postopRepository,
+                          AdmissionService admissionService,
+                          ProcedureTeleconsultLinkRepository teleconsultLinkRepository,
+                          PctTeleconsultClient pctTeleconsultClient,
+                          FundoSurgicalLogbookClient fundoSurgicalLogbookClient,
                           ObjectMapper objectMapper) {
         this.episodeRepository = episodeRepository;
         this.readinessRepository = readinessRepository;
@@ -102,6 +117,11 @@ public class TheatreService {
         this.nhumeTransportClient = nhumeTransportClient;
         this.orosSpecimenClient = orosSpecimenClient;
         this.ritoSafetyClient = ritoSafetyClient;
+        this.postopRepository = postopRepository;
+        this.admissionService = admissionService;
+        this.teleconsultLinkRepository = teleconsultLinkRepository;
+        this.pctTeleconsultClient = pctTeleconsultClient;
+        this.fundoSurgicalLogbookClient = fundoSurgicalLogbookClient;
         this.objectMapper = objectMapper;
     }
 
@@ -478,6 +498,288 @@ public class TheatreService {
         return result;
     }
 
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+    // ── Wave 4 §12/§13 — PACU depth: time-series obs, discharge-readiness gate, escalation,
+    //    unplanned-ICU / return-to-theatre, and a governed PACU discharge decision with a REAL NHUME
+    //    movement + theatre→inpatient admission link. The PACU stay is its own tracked case phase.
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+
+    /** Record one time-series PACU observation (delegates to the episode service, then emits the event). */
+    @Transactional
+    public Map<String, Object> recordPacuObservation(UUID episodeId, Map<String, Object> body) {
+        requireEpisode(episodeId);
+        Map<String, Object> row = episodeService.recordPacuObservation(episodeId, body);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.pacu.observation", Map.of(
+                "episode_id", episodeId.toString(),
+                "seq", row.getOrDefault("seq", 0),
+                "aldrete_score", row.get("aldrete_score") != null ? row.get("aldrete_score") : -1,
+                "discharge_readiness_band", nullSafe((String) row.get("discharge_readiness_band"))));
+        return row;
+    }
+
+    public List<Map<String, Object>> listPacuObservations(UUID episodeId) {
+        return episodeService.listPacuObservations(episodeId);
+    }
+
+    public Map<String, Object> dischargeReadiness(UUID episodeId) {
+        return episodeService.computeDischargeReadiness(episodeId);
+    }
+
+    /**
+     * Escalate a deteriorating recovery patient to the anaesthetist/surgeon. Routes a best-effort
+     * RITO quality/safety signal (RITO owns quality) and emits a SAFETY event that khuluma/rito
+     * consume — never fabricating an owner record. The escalation is stamped on the postop record.
+     */
+    @Transactional
+    public Map<String, Object> escalatePacu(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        String target = Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "escalateTo", "escalate_to", "target"), "ANAESTHETIST").toUpperCase();
+        String reason = Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "reason", "description"), "PACU deterioration — clinician escalation");
+        String severity = normaliseCaseSeverity(ClinicalPayloadMapper.str(body, "severity"));
+        String idem = idempotency(episodeId, "pacu-escalate-" + target);
+        String caseRef = ritoSafetyClient.createCase("CLINICAL_INCIDENT",
+                "PACU escalation to " + target, reason, severity, "PERIOPERATIVE",
+                e.getSubjectCpid(), Map.of("episode_id", episodeId.toString(), "escalate_to", target), idem);
+
+        ProcedureSafetyEventEntity ev = new ProcedureSafetyEventEntity();
+        ev.setEpisodeId(episodeId);
+        ev.setCategory("PACU_ESCALATION");
+        ev.setSeverity(severity);
+        ev.setDescription(reason);
+        ev.setRoutedOwner("rito");
+        ev.setOwnerRef(caseRef);
+        ev.setRoutedStatus(caseRef != null ? "ROUTED" : "OWNER_UNAVAILABLE");
+        ev.setReportedBy(actor());
+        safetyRepository.save(ev);
+
+        ProcedurePostopRecordEntity postop = postopRepository.findByEpisodeId(episodeId)
+                .orElseGet(ProcedurePostopRecordEntity::new);
+        postop.setEpisodeId(episodeId);
+        postop.setEscalatedTo(target);
+        postop.setEscalationRef(caseRef);
+        postop.setEscalatedAt(OffsetDateTime.now());
+        postopRepository.save(postop);
+
+        appendOutbox("SAFETY", episodeId.toString(), "theatre.pacu.escalated", Map.of(
+                "episode_id", episodeId.toString(), "escalate_to", target, "severity", severity,
+                "reason", reason, "patient_id", e.getSubjectCpid(),
+                "rito_case_ref", nullSafe(caseRef),
+                "routed_status", caseRef != null ? "ROUTED" : "OWNER_UNAVAILABLE"));
+        return safetyRow(ev);
+    }
+
+    /** Return-to-theatre: a deteriorating PACU patient goes back to a re-operative state (same episode). */
+    @Transactional
+    public Map<String, Object> returnToTheatre(UUID episodeId, Map<String, Object> body) {
+        requireEpisode(episodeId);
+        Map<String, Object> result = episodeService.returnToTheatre(episodeId, body);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.returned-to-theatre", Map.of(
+                "episode_id", episodeId.toString(),
+                "reason", nullSafe(ClinicalPayloadMapper.str(body, "reason", "description"))));
+        return result;
+    }
+
+    /**
+     * The PACU discharge decision (§12) → destination + a REAL NHUME movement + (for WARD/ICU/HDU) a
+     * create-or-link inpatient admission so postop orders/observations/outcome tie back to the case.
+     * Aldrete discharge-readiness gates a ward discharge unless explicitly overridden with justification.
+     */
+    @Transactional
+    public Map<String, Object> pacuDischargeDecision(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        String destination = Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "destination", "disposition"), "WARD").toUpperCase();
+        if (List.of("DEATH", "MORTUARY", "DECEASED").contains(destination)) {
+            return routeDeathInTheatre(episodeId, body);
+        }
+
+        Map<String, Object> readiness = episodeService.computeDischargeReadiness(episodeId);
+        boolean ready = Boolean.TRUE.equals(readiness.get("ready"));
+        boolean override = Boolean.TRUE.equals(body.get("readinessOverride"))
+                || Boolean.TRUE.equals(body.get("readiness_override"));
+        if (List.of("WARD", "DISCHARGE").contains(destination) && !ready && !override) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "PACU discharge blocked — Aldrete discharge-readiness not met (band "
+                    + readiness.get("band") + "). Record a ready observation or set readinessOverride with justification.");
+        }
+
+        Map<String, Object> result = episodeService.completePostop(episodeId, body);
+        ProcedurePostopRecordEntity postop = postopRepository.findByEpisodeId(episodeId).orElseThrow();
+        postop.setDestination(destination);
+        postop.setDischargeDecidedAt(OffsetDateTime.now());
+        postop.setDischargeDecidedBy(actor());
+        boolean unplannedIcu = "ICU".equals(destination)
+                && (Boolean.TRUE.equals(body.get("unplanned")) || Boolean.TRUE.equals(body.get("unplannedIcu")));
+        postop.setUnplannedIcu(unplannedIcu);
+
+        String transportLeg = null;
+        if (List.of("WARD", "ICU", "HDU").contains(destination)) {
+            UUID admissionRef = ensureAdmissionLink(e, destination, body);
+            if (admissionRef != null) {
+                e.setAdmissionRef(admissionRef);
+                episodeRepository.save(e);
+                postop.setLinkedAdmissionRef(admissionRef);
+            }
+            transportLeg = List.of("ICU", "HDU").contains(destination) ? "PACU_TO_ICU" : "PACU_TO_WARD";
+        }
+        if (transportLeg != null) {
+            Map<String, Object> leg = createTransportLeg(e, "PATIENT_MOVEMENT", transportLeg, "PATIENT",
+                    e.getSubjectCpid(), null);
+            Object deliveryId = leg.get("nhume_delivery_id");
+            if (deliveryId != null) postop.setNhumeDeliveryId(String.valueOf(deliveryId));
+        }
+        postopRepository.save(postop);
+
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.pacu.discharge-decision", Map.of(
+                "episode_id", episodeId.toString(), "destination", destination,
+                "unplanned_icu", unplannedIcu, "ready", ready,
+                "readiness_band", nullSafe(String.valueOf(readiness.getOrDefault("band", ""))),
+                "admission_ref", nullSafe(e.getAdmissionRef() != null ? e.getAdmissionRef().toString() : null),
+                "nhume_delivery_id", nullSafe(postop.getNhumeDeliveryId())));
+
+        Map<String, Object> out = new LinkedHashMap<>(result);
+        out.put("destination", destination);
+        out.put("admission_ref", e.getAdmissionRef() != null ? e.getAdmissionRef().toString() : null);
+        out.put("nhume_delivery_id", postop.getNhumeDeliveryId());
+        out.put("unplanned_icu", unplannedIcu);
+        return out;
+    }
+
+    /**
+     * Continuity link: prefer an existing active admission for the patient at this facility, else create a
+     * post-operative census admission (inpatient owns the ward census; theatre only references it).
+     * Best-effort — a census failure never blocks the PACU discharge decision.
+     */
+    private UUID ensureAdmissionLink(ProcedureEpisodeEntity e, String destination, Map<String, Object> body) {
+        if (e.getAdmissionRef() != null) return e.getAdmissionRef();
+        UUID facilityId;
+        try {
+            facilityId = TrustContextHolder.require().facilityId();
+        } catch (IllegalStateException ex) {
+            facilityId = null;
+        }
+        if (facilityId == null) {
+            log.warn("INPATIENT-THEATRE: no facility context — cannot link postop admission for episode {}", e.getEpisodeId());
+            return null;
+        }
+        try {
+            List<AdmissionEntity> active =
+                    admissionService.findActiveAdmissionsForPatientAtFacility(e.getSubjectCpid(), facilityId);
+            if (!active.isEmpty()) return active.get(0).getAdmissionRef();
+
+            CreateAdmissionRequest req = new CreateAdmissionRequest();
+            req.setTenantId(tenant());
+            req.setSubjectCpid(e.getSubjectCpid());
+            req.setEncounterId(e.getEncounterId() != null ? e.getEncounterId()
+                    : UUID.nameUUIDFromBytes(("theatre-episode:" + e.getEpisodeId()).getBytes()));
+            req.setFacilityId(facilityId);
+            req.setWardId(ClinicalPayloadMapper.uuid(body, "wardId", "ward_id"));
+            req.setBedId(ClinicalPayloadMapper.uuid(body, "bedId", "bed_id"));
+            req.setAdmittingDiagnosis("Post-operative — " + Objects.requireNonNullElse(e.getProcedureName(), "procedure"));
+            req.setAdmissionType("POST_OPERATIVE");
+            if (List.of("ICU", "HDU").contains(destination)) req.setActivityLevel("CRITICAL_CARE");
+            AdmissionEntity a = admissionService.createAdmission(req);
+            return a.getAdmissionRef();
+        } catch (RuntimeException ex) {
+            log.warn("INPATIENT-THEATRE: postop admission link best-effort failed for episode {}: {}",
+                    e.getEpisodeId(), ex.getMessage());
+            return null;
+        }
+    }
+
+    private static String normaliseCaseSeverity(String raw) {
+        if (raw == null) return "HIGH";
+        String s = raw.toUpperCase();
+        return List.of("LOW", "MODERATE", "HIGH", "CRITICAL").contains(s) ? s : "HIGH";
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+    // ── Wave 4 T&L — tele-PACU/ICU teleconsult link + surgical-case completion (trainee CPD + bill) ──
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Link a deteriorating recovery patient to a PCT teleconsult session (tele-PACU / tele-ICU support).
+     * PCT owns the session (session id = referral id); we hold the ref + purpose. Best-effort — a PCT
+     * outage records a REQUESTED link with no session id rather than fabricating one.
+     */
+    @Transactional
+    public Map<String, Object> linkTeleconsult(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        String purpose = Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "purpose"), "POSTOP_SUPPORT").toUpperCase();
+        String specialty = ClinicalPayloadMapper.str(body, "specialty");
+        String urgency = Objects.requireNonNullElse(ClinicalPayloadMapper.str(body, "urgency"), "EMERGENCY");
+        String question = ClinicalPayloadMapper.str(body, "clinicalQuestion", "clinical_question", "reason");
+        String idem = idempotency(episodeId, "teleconsult-" + purpose);
+        ProcedureTeleconsultLinkEntity existing =
+                teleconsultLinkRepository.findByTenantIdAndIdempotencyKey(tenant(), idem).orElse(null);
+        if (existing != null && existing.getPctSessionId() != null) return teleconsultLinkRow(existing);
+
+        PctTeleconsultClient.SessionView session = pctTeleconsultClient.createSession(
+                e.getSubjectCpid(), e.getEncounterId() != null ? e.getEncounterId().toString() : null,
+                specialty, urgency, purpose, question, idem);
+
+        ProcedureTeleconsultLinkEntity link = existing != null ? existing : new ProcedureTeleconsultLinkEntity();
+        link.setTenantId(tenant());
+        link.setEpisodeId(episodeId);
+        link.setPurpose(purpose);
+        link.setSessionMode(urgency);
+        link.setIdempotencyKey(idem);
+        link.setRequestedBy(actor());
+        link.setPctSessionId(session.sessionId());
+        link.setStatus(session.sessionId() != null ? "LINKED" : "REQUESTED");
+        teleconsultLinkRepository.save(link);
+
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.teleconsult.linked", Map.of(
+                "episode_id", episodeId.toString(), "purpose", purpose,
+                "pct_session_id", nullSafe(session.sessionId()), "status", link.getStatus()));
+        return teleconsultLinkRow(link);
+    }
+
+    public List<Map<String, Object>> listTeleconsultLinks(UUID episodeId) {
+        requireEpisode(episodeId);
+        return teleconsultLinkRepository.findByEpisodeIdOrderByCreatedAtAsc(episodeId).stream()
+                .map(this::teleconsultLinkRow).toList();
+    }
+
+    /**
+     * Complete the surgical case (episode → COMPLETED, which emits the theatre.case.completed billing
+     * trigger consumed by COSTA), then — if a trainee was supervised — post a Fundo surgical logbook /
+     * CPD record. FAIL-SAFE BY REFERENCE: a learning-record failure never blocks clinical completion.
+     */
+    @Transactional
+    public Map<String, Object> completeCase(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        Map<String, Object> result = episodeService.completeEpisode(episodeId, body);
+
+        String traineeProviderId = ClinicalPayloadMapper.str(body, "traineeProviderId", "trainee_provider_id");
+        if (traineeProviderId != null && !traineeProviderId.isBlank()) {
+            Integer credits = ClinicalPayloadMapper.integer(body, "cpdCredits", "cpd_credits");
+            boolean posted = fundoSurgicalLogbookClient.postSurgicalLogbook(
+                    tenant().toString(), traineeProviderId, e.getProcedureCode(), e.getProcedureName(),
+                    credits != null ? credits : 1, episodeId.toString());
+            appendOutbox("PROCEDURE", episodeId.toString(), "theatre.trainee.logbook", Map.of(
+                    "episode_id", episodeId.toString(), "trainee_provider_id", traineeProviderId,
+                    "posted", posted));
+        }
+        return result;
+    }
+
+    private Map<String, Object> teleconsultLinkRow(ProcedureTeleconsultLinkEntity link) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", link.getLinkId() != null ? link.getLinkId().toString() : null);
+        m.put("episode_id", link.getEpisodeId().toString());
+        m.put("pct_session_id", link.getPctSessionId());
+        m.put("purpose", link.getPurpose());
+        m.put("session_mode", link.getSessionMode());
+        m.put("status", link.getStatus());
+        m.put("requested_by", link.getRequestedBy());
+        m.put("created_at", link.getCreatedAt());
+        return m;
+    }
+
     // ── 16. Cancellation — release owner reservations, audit ─────────────────────────────────────
     @Transactional
     public Map<String, Object> cancel(UUID episodeId, Map<String, Object> body) {
@@ -738,7 +1040,13 @@ public class TheatreService {
         outbox.setSchemaVersion(1);
         outbox.setOccurredAt(OffsetDateTime.now());
         try {
-            outbox.setPayloadJson(objectMapper.writeValueAsString(payload));
+            // Inject event_type + tenant_id so downstream consumers of the LEGACY inpatient.events /
+            // inpatient.safety streams (COSTA billing + reporting projection) can self-describe/filter
+            // every theatre event from the raw payload map.
+            Map<String, Object> enriched = new LinkedHashMap<>(payload);
+            enriched.put("event_type", eventType);
+            enriched.put("tenant_id", tenant().toString());
+            outbox.setPayloadJson(objectMapper.writeValueAsString(enriched));
         } catch (JsonProcessingException ex) {
             throw new RuntimeException("Failed to serialize theatre outbox payload", ex);
         }

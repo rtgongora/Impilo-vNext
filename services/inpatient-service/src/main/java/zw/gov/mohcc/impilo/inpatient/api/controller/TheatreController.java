@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.inpatient.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.inpatient.core.SurgicalDischargeService;
 import zw.gov.mohcc.impilo.inpatient.core.TheatreService;
 
 import java.util.List;
@@ -19,9 +20,29 @@ import java.util.UUID;
 public class TheatreController {
 
     private final TheatreService theatreService;
+    private final SurgicalDischargeService surgicalDischargeService;
 
-    public TheatreController(TheatreService theatreService) {
+    public TheatreController(TheatreService theatreService,
+                             SurgicalDischargeService surgicalDischargeService) {
         this.theatreService = theatreService;
+        this.surgicalDischargeService = surgicalDischargeService;
+    }
+
+    // ── Wave 4 §14 — surgery-specialised discharge summary ──
+    @PostMapping("/cases/{id}/discharge")
+    public Map<String, Object> saveDischargeDraft(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        return surgicalDischargeService.saveDraft(id, body);
+    }
+
+    @GetMapping("/cases/{id}/discharge")
+    public Map<String, Object> getDischarge(@PathVariable UUID id) {
+        return surgicalDischargeService.get(id);
+    }
+
+    @PostMapping("/cases/{id}/discharge/complete")
+    public Map<String, Object> completeDischarge(@PathVariable UUID id,
+                                                 @RequestBody(required = false) Map<String, Object> body) {
+        return surgicalDischargeService.complete(id, body != null ? body : Map.of());
     }
 
     // intake + triage
@@ -82,6 +103,61 @@ public class TheatreController {
     @PostMapping("/cases/{id}/pacu/disposition")
     public Map<String, Object> pacuDisposition(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
         return theatreService.recordPacuDisposition(id, body);
+    }
+
+    // ── Wave 4 §12 — PACU recovery depth ──
+    @PostMapping("/cases/{id}/pacu/observations")
+    public ResponseEntity<Map<String, Object>> recordPacuObservation(@PathVariable UUID id,
+                                                                     @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.recordPacuObservation(id, body));
+    }
+
+    @GetMapping("/cases/{id}/pacu/observations")
+    public List<Map<String, Object>> listPacuObservations(@PathVariable UUID id) {
+        return theatreService.listPacuObservations(id);
+    }
+
+    @GetMapping("/cases/{id}/pacu/readiness")
+    public Map<String, Object> dischargeReadiness(@PathVariable UUID id) {
+        return theatreService.dischargeReadiness(id);
+    }
+
+    @PostMapping("/cases/{id}/pacu/escalate")
+    public ResponseEntity<Map<String, Object>> escalatePacu(@PathVariable UUID id,
+                                                            @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(theatreService.escalatePacu(id, body != null ? body : Map.of()));
+    }
+
+    @PostMapping("/cases/{id}/pacu/discharge")
+    public Map<String, Object> pacuDischargeDecision(@PathVariable UUID id,
+                                                     @RequestBody(required = false) Map<String, Object> body) {
+        return theatreService.pacuDischargeDecision(id, body != null ? body : Map.of());
+    }
+
+    @PostMapping("/cases/{id}/return-to-theatre")
+    public Map<String, Object> returnToTheatre(@PathVariable UUID id,
+                                               @RequestBody(required = false) Map<String, Object> body) {
+        return theatreService.returnToTheatre(id, body != null ? body : Map.of());
+    }
+
+    // ── Wave 4 T&L — tele-PACU/ICU teleconsult link + surgical-case completion (trainee CPD + bill) ──
+    @PostMapping("/cases/{id}/teleconsult")
+    public ResponseEntity<Map<String, Object>> linkTeleconsult(@PathVariable UUID id,
+                                                              @RequestBody(required = false) Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(theatreService.linkTeleconsult(id, body != null ? body : Map.of()));
+    }
+
+    @GetMapping("/cases/{id}/teleconsult")
+    public List<Map<String, Object>> listTeleconsult(@PathVariable UUID id) {
+        return theatreService.listTeleconsultLinks(id);
+    }
+
+    @PostMapping("/cases/{id}/complete")
+    public Map<String, Object> completeCase(@PathVariable UUID id,
+                                            @RequestBody(required = false) Map<String, Object> body) {
+        return theatreService.completeCase(id, body != null ? body : Map.of());
     }
 
     // cancellation
