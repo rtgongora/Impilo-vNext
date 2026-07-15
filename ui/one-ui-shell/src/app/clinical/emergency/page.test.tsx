@@ -41,6 +41,18 @@ vi.mock("@/components/trust/BreakGlassRequestPanel", () => ({
   BreakGlassRequestPanel: () => <div data-testid="break-glass-request-panel" />,
 }));
 
+vi.mock("@/components/clinical/CriticalResultsPanel", () => ({
+  CriticalResultsPanel: () => <div data-testid="critical-results-panel" />,
+}));
+
+vi.mock("@/components/clinical/EdPreArrivalBoard", () => ({
+  EdPreArrivalBoard: () => <div data-testid="ed-pre-arrival-board" />,
+}));
+
+vi.mock("@/components/clinical/BloodReadinessPanel", () => ({
+  BloodReadinessPanel: () => <div data-testid="blood-readiness-panel" />,
+}));
+
 vi.mock("@/hooks/useAuthStore", () => ({
   useAuthStore: () => ({
     user: { id: "actor-1", displayName: "Test Clinician" },
