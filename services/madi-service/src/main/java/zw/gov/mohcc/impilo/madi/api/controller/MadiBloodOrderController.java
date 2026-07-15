@@ -137,6 +137,28 @@ public class MadiBloodOrderController {
                 uuid(body, "reservation_id"), str(body, "issued_by"), facilityId));
     }
 
+    /**
+     * Emergency O-neg / uncrossmatched blood release under break-glass (G1.14). Requires an
+     * EMERGENCY/BREAK_GLASS purpose-of-use; the shared EmergencyAccessGuard DENIES (403) otherwise —
+     * an emergency override is audited, never a silent bypass.
+     */
+    @PostMapping("/{orderId}/emergency-release")
+    public ResponseEntity<BloodOrderEntity> emergencyRelease(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @PathVariable UUID orderId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            Map<String, Object> b = body != null ? body : Map.of();
+            BloodOrderEntity order = bloodOrderService.emergencyRelease(tenantId, orderId, purposeOfUse,
+                    actorId, str(b, "reason"), str(b, "bloodUnitId"));
+            return ResponseEntity.ok(order);
+        } catch (zw.gov.mohcc.impilo.sharedkernel.security.EmergencyAccessGuard.EmergencyAccessDeniedException e) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+        }
+    }
+
     /** Delivery-side completion (e.g. Nhume drop-off sign-off): ISSUED -> COMPLETED. */
     @PostMapping("/{orderId}/complete")
     public ResponseEntity<BloodOrderEntity> complete(

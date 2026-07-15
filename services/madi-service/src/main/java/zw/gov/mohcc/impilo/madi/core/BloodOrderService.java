@@ -6,6 +6,7 @@ import zw.gov.mohcc.impilo.madi.domain.BloodOrderStatus;
 import zw.gov.mohcc.impilo.madi.domain.BloodUnitStatus;
 import zw.gov.mohcc.impilo.madi.domain.CrossmatchResultStatus;
 import zw.gov.mohcc.impilo.madi.events.MadiEventEmitter;
+import zw.gov.mohcc.impilo.sharedkernel.security.EmergencyAccessGuard;
 import zw.gov.mohcc.impilo.madi.integration.OrosIntegration;
 import zw.gov.mohcc.impilo.madi.persistence.entity.*;
 import zw.gov.mohcc.impilo.madi.persistence.repository.*;
@@ -217,6 +218,39 @@ public class BloodOrderService {
                 orderId.toString(), refPayload(order, Map.of(
                         "completedBy", completedBy == null ? "" : completedBy,
                         "deliveryRef", deliveryRef == null ? "" : deliveryRef)), tenantId);
+        return order;
+    }
+
+    /**
+     * Emergency (O-negative / uncrossmatched) blood release under break-glass (G1.14). Life-saving
+     * release bypasses the RESERVED+COMPATIBLE gate, but ONLY under an EMERGENCY/BREAK_GLASS
+     * purpose-of-use (else the shared {@link EmergencyAccessGuard} DENIES it — never a silent bypass),
+     * and it writes an ELEVATED break-glass audit event carrying the trauma-episode link. The blood
+     * bank still reconciles crossmatch retrospectively; this only authorises the emergency issue.
+     */
+    @Transactional
+    public BloodOrderEntity emergencyRelease(UUID tenantId, UUID orderId, String purposeOfUse,
+                                             String actorId, String reason, String bloodUnitId) {
+        BloodOrderEntity order = requireOrder(tenantId, orderId);
+        // Throws EmergencyAccessDeniedException (→ 403) unless the purpose is EMERGENCY/BREAK_GLASS.
+        EmergencyAccessGuard.requireBreakGlass(purposeOfUse, "O_NEG_EMERGENCY_RELEASE",
+                order.getPatientCpid(), actorId);
+        order.setStatus(BloodOrderStatus.ISSUED.name());
+        order.setUpdatedAt(OffsetDateTime.now());
+        orderRepository.save(order);
+
+        Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("patientCpid", order.getPatientCpid());
+        payload.put("bloodGroup", order.getBloodGroup());
+        payload.put("bloodUnitId", bloodUnitId == null ? "" : bloodUnitId);
+        payload.put("breakGlass", true);
+        payload.put("purposeOfUse", purposeOfUse);
+        payload.put("reason", reason == null ? "emergency uncrossmatched release" : reason);
+        payload.put("actorId", actorId == null ? "" : actorId);
+        payload.put("traumaEpisodeId", order.getTraumaEpisodeId() != null ? order.getTraumaEpisodeId().toString() : null);
+        // Elevated-audit outbox event — an emergency override is recorded, never a silent bypass.
+        eventEmitter.emit("BLOOD_ORDER", orderId.toString(), "EMERGENCY_RELEASE_BREAK_GLASS", "BLOOD_ORDER",
+                orderId.toString(), payload, tenantId);
         return order;
     }
 
