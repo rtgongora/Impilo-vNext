@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.inpatient.api.controller;
 
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,6 +26,20 @@ public class GlobalExceptionHandler {
         error.put("message", ex.getMessage());
         error.put("violations", ex.getViolations());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", error));
+    }
+
+    /**
+     * A concurrent edit of the same aggregate (Wave 6 §18) — the JPA @Version guard
+     * detected a stale write. Surfaced as a clean 409 STALE_WRITE so the experience layer
+     * can prompt the user to reload the latest state, rather than silently losing an update
+     * or returning a generic 500. Covers Spring's OptimisticLockingFailureException, which
+     * wraps JPA's ObjectOptimisticLockingFailureException / OptimisticLockException.
+     */
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<Map<String, Object>> staleWrite(OptimisticLockingFailureException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", Map.of("code", "STALE_WRITE",
+                        "message", "This record was changed by someone else. Reload the latest version and retry.")));
     }
 
     @ExceptionHandler(IllegalStateException.class)

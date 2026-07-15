@@ -52,6 +52,16 @@ public class ProcedureEpisodeEntity {
     @Column(name = "status", nullable = false)
     private String status = "BOOKED";
 
+    /**
+     * Optimistic-lock version (Wave 6 §18). Guards against a lost update when two
+     * clinicians edit the SAME episode concurrently: a stale write throws an
+     * optimistic-lock failure that {@code GlobalExceptionHandler} surfaces as HTTP 409
+     * STALE_WRITE, rather than silently clobbering the concurrent change.
+     */
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
+
     @Column(name = "consent_verified", nullable = false)
     private boolean consentVerified;
 
@@ -148,6 +158,8 @@ public class ProcedureEpisodeEntity {
     public void setAnaesthetistId(String anaesthetistId) { this.anaesthetistId = anaesthetistId; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public long getVersion() { return version; }
+    public void setVersion(long version) { this.version = version; }
     public boolean isConsentVerified() { return consentVerified; }
     public void setConsentVerified(boolean consentVerified) { this.consentVerified = consentVerified; }
     public UUID getMvumoConsentRequestId() { return mvumoConsentRequestId; }
