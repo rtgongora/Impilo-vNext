@@ -163,6 +163,12 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
           </section>
         )}
 
+        {step === 1 && status !== "REGISTERED" && (
+          <section className="rounded-xl border p-4 text-sm text-muted-foreground">
+            Triage is captured at registration. This visit is <strong>{status || "—"}</strong>; open the Treatment or Trauma steps to continue care.
+          </section>
+        )}
+
         {step === 2 && (
           <section className="rounded-xl border p-4 space-y-3">
             <h2 className="font-semibold">Treatment / encounter</h2>
@@ -314,6 +320,11 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
         {step === 5 && (
           <section className="rounded-xl border p-4 space-y-3">
             <h2 className="font-semibold">Assessment protocol (CKP)</h2>
+            {suggestions.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No protocol suggestions yet. Complete triage (or activate trauma) to generate CKP pathway suggestions.
+              </p>
+            )}
             <ul className="space-y-2 text-sm">
               {suggestions.map((s) => (
                 <li key={String(s.protocol_code)} className="flex items-center justify-between rounded border p-2">
@@ -376,8 +387,14 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
           </section>
         )}
 
-        {Boolean(visit.disposition) && (
-          <p className="text-sm text-green-700">Disposition recorded — visit complete.</p>
+        {step === 6 && Boolean(visit.disposition) && (
+          <section className="rounded-xl border border-green-200 bg-success-soft p-4 text-sm text-primary-hover">
+            Disposition recorded: <strong>{String(visit.disposition)}</strong>. The trauma episode closes on ED disposition.
+          </section>
+        )}
+
+        {Boolean(visit.disposition) && step !== 6 && (
+          <p className="mt-3 text-sm text-green-700">Disposition recorded — visit complete.</p>
         )}
       </PageShell>
     </AppLayout>

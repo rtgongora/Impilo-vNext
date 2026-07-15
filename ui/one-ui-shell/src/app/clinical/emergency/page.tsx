@@ -32,6 +32,7 @@ import {
 import { BreakGlassRequestPanel } from "@/components/trust/BreakGlassRequestPanel";
 import { EdPreArrivalBoard } from "@/components/clinical/EdPreArrivalBoard";
 import { BloodReadinessPanel } from "@/components/clinical/BloodReadinessPanel";
+import { PatientSearchField, type PatientHit } from "@/components/clinical/PatientSearchField";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useEdVisits, useOpenEdVisit } from "@/hooks/queries/useEdVisit";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -57,7 +58,7 @@ export default function EmergencyDepartmentPage() {
 
   const { data: edVisits = [], refetch: refetchEd } = useEdVisits(facility?.id);
   const openEdVisit = useOpenEdVisit();
-  const [newPatientId, setNewPatientId] = useState("");
+  const [newPatient, setNewPatient] = useState<PatientHit | null>(null);
   const [newComplaint, setNewComplaint] = useState("");
 
   const { data, isLoading, error, refetch } = useEmergencyActivations();
@@ -71,7 +72,7 @@ export default function EmergencyDepartmentPage() {
   );
 
   const [protocolType, setProtocolType] = useState<string>(PROTOCOL_OPTIONS[0]);
-  const [patientId, setPatientId] = useState("");
+  const [activatePatient, setActivatePatient] = useState<PatientHit | null>(null);
   const [encounterId, setEncounterId] = useState("");
   const [teamLeader, setTeamLeader] = useState("");
   const [location, setLocation] = useState("");
@@ -93,7 +94,7 @@ export default function EmergencyDepartmentPage() {
     e.preventDefault();
     activate.mutate({
       protocolType,
-      patientId: patientId.trim() || null,
+      patientId: activatePatient?.healthId || null,
       encounterId: encounterId.trim() || null,
       teamLeader: teamLeader.trim(),
       location: location.trim(),
@@ -150,12 +151,13 @@ export default function EmergencyDepartmentPage() {
               Sovereign ED visits via <code>/internal/v1/ed/*</code> — arrival through triage, trauma, protocols, disposition.
             </p>
             <form
-              className="mt-4 flex flex-wrap gap-2"
+              className="mt-4 flex flex-wrap items-end gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
+                if (!newPatient?.healthId) return;
                 openEdVisit.mutate({
                   facilityId: facility?.id,
-                  patientCpid: newPatientId.trim(),
+                  patientCpid: newPatient.healthId,
                   chiefComplaint: newComplaint.trim(),
                   arrivalMode: "WALK_IN",
                 }, {
@@ -166,20 +168,16 @@ export default function EmergencyDepartmentPage() {
                 });
               }}
             >
-              <input
-                value={newPatientId}
-                onChange={(e) => setNewPatientId(e.target.value)}
-                placeholder="Patient CPID"
-                className="rounded border px-2 py-1 text-sm"
-                required
-              />
+              <div className="min-w-[220px]">
+                <PatientSearchField label="Patient" value={newPatient} onSelect={setNewPatient} />
+              </div>
               <input
                 value={newComplaint}
                 onChange={(e) => setNewComplaint(e.target.value)}
                 placeholder="Chief complaint"
                 className="min-w-[200px] flex-1 rounded border px-2 py-1 text-sm"
               />
-              <button type="submit" disabled={openEdVisit.isPending} className="rounded-lg bg-red-600 px-3 py-1 text-sm text-white">
+              <button type="submit" disabled={openEdVisit.isPending || !newPatient?.healthId} className="rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-50">
                 Register ED arrival
               </button>
             </form>
@@ -275,15 +273,9 @@ export default function EmergencyDepartmentPage() {
                   ))}
                 </select>
               </label>
-              <label className="text-xs font-medium text-muted-foreground">
-                Patient ID (UUID, optional)
-                <input
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                  placeholder="00000000-0000-0000-0000-000000000000"
-                  className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm font-mono"
-                />
-              </label>
+              <div>
+                <PatientSearchField label="Patient (optional)" value={activatePatient} onSelect={setActivatePatient} />
+              </div>
               <label className="text-xs font-medium text-muted-foreground">
                 Encounter ID (UUID, optional)
                 <input
