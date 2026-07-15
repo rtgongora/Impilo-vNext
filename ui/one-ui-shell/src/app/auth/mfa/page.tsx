@@ -5,11 +5,12 @@
  * Route: /auth/mfa | pageTitle: "Multi-Factor Authentication"
  */
 
-import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent, type ClipboardEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Loader2 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
+import { OtpCodeInput } from "@/components/auth/OtpCodeInput";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
 import { useConsentStore } from "@/hooks/useConsentStore";
@@ -24,60 +25,13 @@ export default function MfaPage() {
   const returnTo = searchParams.get("returnTo");
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
+  const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  useEffect(() => {
-    inputRefs.current[0]?.focus();
-  }, []);
-
-  function handleChange(index: number, value: string) {
-    if (!/^\d*$/.test(value)) return;
-
-    const newDigits = [...digits];
-    newDigits[index] = value.slice(-1);
-    setDigits(newDigits);
+  function handleCodeChange(next: string) {
+    setCode(next);
     setError(null);
-
-    // Auto-advance to next input
-    if (value && index < CODE_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
-
-    // Auto-submit when all digits are filled
-    const code = newDigits.join("");
-    if (code.length === CODE_LENGTH && newDigits.every((d) => d !== "")) {
-      submitCode(code);
-    }
-  }
-
-  function handleKeyDown(index: number, e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Backspace" && !digits[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  }
-
-  function handlePaste(e: ClipboardEvent<HTMLInputElement>) {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, CODE_LENGTH);
-    if (!pasted) return;
-
-    const newDigits = [...digits];
-    for (let i = 0; i < pasted.length; i++) {
-      newDigits[i] = pasted[i];
-    }
-    setDigits(newDigits);
-
-    // Focus the next empty input or the last one
-    const nextEmpty = newDigits.findIndex((d) => d === "");
-    inputRefs.current[nextEmpty >= 0 ? nextEmpty : CODE_LENGTH - 1]?.focus();
-
-    if (pasted.length === CODE_LENGTH) {
-      submitCode(pasted);
-    }
   }
 
   async function submitCode(code: string) {
@@ -121,8 +75,7 @@ export default function MfaPage() {
       router.push(buildPostLoginResolvingPath(returnTo));
     } catch {
       setError("Invalid verification code. Please try again.");
-      setDigits(Array(CODE_LENGTH).fill(""));
-      inputRefs.current[0]?.focus();
+      setCode("");
     } finally {
       setIsSubmitting(false);
     }
@@ -130,7 +83,6 @@ export default function MfaPage() {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const code = digits.join("");
     if (code.length !== CODE_LENGTH) {
       setError("Please enter the full 6-digit code.");
       return;
@@ -167,30 +119,18 @@ export default function MfaPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="flex justify-center gap-2">
-          {digits.map((digit, index) => (
-            <input
-              key={index}
-              ref={(el) => {
-                inputRefs.current[index] = el;
-              }}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleChange(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              onPaste={index === 0 ? handlePaste : undefined}
-              disabled={isSubmitting}
-              className="w-12 h-14 text-center text-xl font-semibold border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400 disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label={`Digit ${index + 1}`}
-            />
-          ))}
-        </div>
+        <OtpCodeInput
+          length={CODE_LENGTH}
+          value={code}
+          onChange={handleCodeChange}
+          onComplete={submitCode}
+          disabled={isSubmitting}
+          autoFocus
+        />
 
         <button
           type="submit"
-          disabled={isSubmitting || digits.some((d) => d === "")}
+          disabled={isSubmitting || code.length !== CODE_LENGTH}
           className="w-full py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
         >
           {isSubmitting ? (
