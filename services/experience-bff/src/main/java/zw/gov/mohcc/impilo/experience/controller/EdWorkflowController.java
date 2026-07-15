@@ -30,15 +30,18 @@ public class EdWorkflowController {
     private final ClinicalKnowledgePlatformClient ckpClient;
     private final NotificationServiceClient notificationClient;
     private final SupportServiceClient supportClient;
+    private final zw.gov.mohcc.impilo.experience.client.InpatientServiceClient inpatientClient;
 
     public EdWorkflowController(PctServiceClient pctClient,
                                 ClinicalKnowledgePlatformClient ckpClient,
                                 NotificationServiceClient notificationClient,
-                                SupportServiceClient supportClient) {
+                                SupportServiceClient supportClient,
+                                zw.gov.mohcc.impilo.experience.client.InpatientServiceClient inpatientClient) {
         this.pctClient = pctClient;
         this.ckpClient = ckpClient;
         this.notificationClient = notificationClient;
         this.supportClient = supportClient;
+        this.inpatientClient = inpatientClient;
     }
 
     private static JsonNode requirePayload(JsonNode node, String operation) {
@@ -216,6 +219,74 @@ public class EdWorkflowController {
             throw e;
         } catch (Exception e) {
             throw upstreamFailure("PCT openEmergencyCase", e);
+        }
+    }
+
+    // ── Resuscitation, folded under the single ED surface (W4 ED unification) ────────
+    // ED resuscitation is inpatient-backed but belongs to the ED journey; the UI now reaches it
+    // under /internal/v1/ed/resuscitation/*. /internal/v1/emergency/* remains as a deprecated
+    // forwarding alias on CareEmergencyInpatientController until UI cutover.
+
+    @GetMapping("/resuscitation/activations")
+    public ResponseEntity<Map<String, Object>> edResusActivations() {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(inpatientClient.listEmergencyActivations(), "Inpatient listEmergencyActivations")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient listEmergencyActivations", e);
+        }
+    }
+
+    @PostMapping("/resuscitation/activate")
+    public ResponseEntity<Map<String, Object>> edResusActivate(@RequestBody Map<String, Object> body) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data",
+                    requirePayload(inpatientClient.activateEmergency(body), "Inpatient activateEmergency")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient activateEmergency", e);
+        }
+    }
+
+    @PostMapping("/resuscitation/{activationId}/action")
+    public ResponseEntity<Map<String, Object>> edResusAction(@PathVariable UUID activationId,
+                                                             @RequestBody Map<String, Object> body) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data",
+                    requirePayload(inpatientClient.logEmergencyAction(activationId.toString(), body), "Inpatient logEmergencyAction")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient logEmergencyAction", e);
+        }
+    }
+
+    @PostMapping("/resuscitation/{activationId}/record")
+    public ResponseEntity<Map<String, Object>> edResusRecord(@PathVariable UUID activationId,
+                                                             @RequestBody Map<String, Object> body) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data",
+                    requirePayload(inpatientClient.recordResuscitation(activationId.toString(), body), "Inpatient recordResuscitation")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient recordResuscitation", e);
+        }
+    }
+
+    @GetMapping("/resuscitation/{activationId}")
+    public ResponseEntity<Map<String, Object>> edResusGet(@PathVariable UUID activationId) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(inpatientClient.getResuscitation(activationId.toString()), "Inpatient getResuscitation")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient getResuscitation", e);
+        }
+    }
+
+    @PostMapping("/resuscitation/{activationId}/end")
+    public ResponseEntity<Map<String, Object>> edResusEnd(@PathVariable UUID activationId,
+                                                          @RequestBody Map<String, Object> body) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(inpatientClient.endEmergency(activationId.toString(), body), "Inpatient endEmergency")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient endEmergency", e);
         }
     }
 

@@ -113,6 +113,11 @@ public class CareEmergencyInpatientController {
 
     // ── Emergency Activations ───────────────────────────────────────
 
+    // ── /internal/v1/emergency/* — DEPRECATED forwarding aliases (W4 ED unification) ──────────
+    // ED resuscitation now lives on the single ED surface at /internal/v1/ed/resuscitation/*.
+    // These paths are retained (no table drops, unchanged behaviour) until the UI cuts over.
+
+    @Deprecated
     @GetMapping("/emergency/activations")
     public ResponseEntity<Map<String, Object>> listActivations(@RequestHeader("X-Tenant-ID") String tenantId) {
         try {
@@ -463,6 +468,82 @@ public class CareEmergencyInpatientController {
         try {
             JsonNode data = requirePayload(inpatientClient.acknowledgeWardAlert(id.toString(), body), "Inpatient acknowledgeWardAlert");
             return ResponseEntity.ok(Map.of("data", data));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient acknowledgeWardAlert", e);
+        }
+    }
+
+    // ── /internal/v1/ward/* — genuinely-ward items on the ward surface (W4 ED unification) ─────
+    // The ED surface is /internal/v1/ed/*; ward items move under /internal/v1/ward/*. The legacy
+    // paths above are kept working (no table drops) until the UI cuts over to these.
+
+    @GetMapping("/ward/admissions")
+    public ResponseEntity<Map<String, Object>> wardListAdmissions(@RequestParam String patientId) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(inpatientClient.listAdmissions(patientId), "Inpatient listAdmissions")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient listAdmissions", e);
+        }
+    }
+
+    @PostMapping("/ward/admissions")
+    public ResponseEntity<Map<String, Object>> wardCreateAdmission(@RequestBody Map<String, Object> body) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data",
+                    requirePayload(inpatientClient.createAdmission(body), "Inpatient createAdmission")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient createAdmission", e);
+        }
+    }
+
+    @GetMapping("/ward/rounds")
+    public ResponseEntity<Map<String, Object>> wardRounds(@RequestParam String wardId) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(inpatientClient.listWardRoundsByWard(wardId), "Inpatient listWardRoundsByWard")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient listWardRoundsByWard", e);
+        }
+    }
+
+    @PostMapping("/ward/observations")
+    public ResponseEntity<Map<String, Object>> wardObservations(@RequestBody Map<String, Object> body) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data",
+                    requirePayload(inpatientClient.recordObservation(body), "Inpatient recordObservation")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient recordObservation", e);
+        }
+    }
+
+    @GetMapping("/ward/care-plans")
+    public ResponseEntity<Map<String, Object>> wardCarePlans(@RequestParam String patientId) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(inpatientClient.listCarePlans(patientId), "Inpatient listCarePlans")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient listCarePlans", e);
+        }
+    }
+
+    @GetMapping("/ward/alerts")
+    public ResponseEntity<Map<String, Object>> wardAlerts(@RequestParam String wardId,
+                                                          @RequestParam(required = false) String status) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(inpatientClient.listWardAlerts(wardId, status), "Inpatient listWardAlerts")));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient listWardAlerts", e);
+        }
+    }
+
+    @PostMapping("/ward/alerts/{id}/acknowledge")
+    public ResponseEntity<Map<String, Object>> wardAckAlert(@PathVariable UUID id,
+                                                            @RequestBody Map<String, Object> body) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(inpatientClient.acknowledgeWardAlert(id.toString(), body), "Inpatient acknowledgeWardAlert")));
         } catch (Exception e) {
             throw upstreamFailure("Inpatient acknowledgeWardAlert", e);
         }
