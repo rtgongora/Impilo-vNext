@@ -378,6 +378,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/finance/settlements", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Settlements", navLabel: "Settlements", navZone: "work" },
   { path: "/finance/remittances", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Remittances", navLabel: "Remittances", navZone: "work" },
   { path: "/finance/reconciliation", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Reconciliation", navLabel: "Reconciliation", navZone: "work" },
+  { path: "/finance/bank-reconciliation", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Bank Reconciliation", navLabel: "Bank reconciliation", navZone: "work" },
   { path: "/finance/refunds", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Refunds", navLabel: "Refunds", navZone: "work" },
   { path: "/finance/payer-ops", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Operations", navLabel: "Payer Ops", navZone: "work" },
   { path: "/finance/payer-claims", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Claims Queue", navLabel: "Payer Claims", navZone: "work" },
@@ -891,7 +892,9 @@ export const ROUTES: RouteDefinition[] = [
 // surfaces so all are guarded/nav-governed — citizen assessment/timeline/reminders/follow-ups/insights/
 // consent + social feed/reels/posts/[id]/saved/my-activity + provider-workspace/wellness(/social).
 // +13 routes. New total is 735.
-export const EXPECTED_ROUTE_COUNT = 735;
+// Money-stack UI closure (Jul 2026): +1 — /finance/bank-reconciliation (MU3 bank→wallet
+// statement matching). MU4/MU6 add their finance routes in the following commits.
+export const EXPECTED_ROUTE_COUNT = 736;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -337,6 +337,18 @@ public class MusheWalletServiceClient {
     }
 
     /**
+     * Match bank/ZIPIT statement lines against pending deposit intents by
+     * reference code. Matched lines confirm the deposit and credit the wallet;
+     * unmatched lines are returned for the ops reconciliation view.
+     */
+    public JsonNode matchStatement(Object body) {
+        String url = baseUrl + "/internal/v1/statements/match";
+        log.info("MusheWallet: Matching bank statement lines");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Deposit cash into a wallet.
      *
      * @param walletId the wallet UUID
