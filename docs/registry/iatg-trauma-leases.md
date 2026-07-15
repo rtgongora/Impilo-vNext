@@ -45,7 +45,7 @@ not feasible. Both lanes co-edit it under the commit-token, split at class/file 
 |---|---|
 | **Theatre** | `core/{TheatreService,ProcedureEpisodeService,TheatreReadinessBoardService,AnaesthesiaScoringEngine}`, `procedure_*` entities/repos/migrations, `api/controller/{Theatre*,ProcedureEpisode*}`, theatre-scoped integration clients, PACU/scheduling |
 | **Trauma** | `resuscitation_*` entities/repos/services (EXCLUSIVE — theatre does not touch), ED-emergency-activation linkage, `resuscitation_event` (new), and additive `trauma_episode_id` column migrations (block V035–V064) |
-| **Shared / commit-token-serialised** | `AdmissionController` + admission tables (theatre stamps `admission_ref` on PACU→ward; trauma reads for ED disposition) — flag before editing. `procedure_episode` is theatre-owned; trauma stamps `trauma_episode_id` on it ONLY via the co-designed emergency-surgery wave, NOT in Gate-1. |
+| **Shared / commit-token-serialised** | `AdmissionController` + admission tables (theatre stamps `admission_ref` on PACU→ward; trauma reads for ED disposition) — flag before editing. **Trauma does NOT migrate the admission table in Gate-1** (deferred to a post-gate token window). `procedure_episode` is theatre-owned; **theatre** adds the nullable `procedure_episode.trauma_episode_id` in inpatient **V034** and stamps it from your `X-Trauma-Episode-ID` on emergency-surgery/C-section intake — trauma never migrates procedure_episode. |
 
 **Preserve, don't strip:** `inpatient.events` raw outbox payload now carries `event_type` + `tenant_id`
 (theatre closed the dead `theatre.*` seams); the trauma episode-timeline consumer READS this — never strip it.
