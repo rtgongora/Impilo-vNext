@@ -32,6 +32,7 @@ import {
   type ProviderSocialGroup,
   type ProviderSocialPost,
 } from "../../services/providerSocialService";
+import { useAppStore } from "../../stores/appStore";
 
 const SCOPES: Array<{ value: ProviderFeedScope; label: string }> = [
   { value: "home", label: "Home" },
@@ -46,9 +47,19 @@ type Tab = (typeof TABS)[number];
 
 export function ProviderSocialScreen() {
   const [tab, setTab] = useState<Tab>("Feed");
+  const setProviderTab = useAppStore((s) => s.setProviderTab);
   return (
     <Screen>
       <Header title="Professional Network" />
+      <View style={styles.workbenchLink}>
+        <Button
+          title="Wellness Social Workbench"
+          size="sm"
+          variant="secondary"
+          onPress={() => setProviderTab("wellnessSocial")}
+          testID="open-wellness-social-workbench"
+        />
+      </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll} contentContainerStyle={styles.tabsRow}>
         {TABS.map((t) => (
           <Button
@@ -310,6 +321,7 @@ function formatTimestamp(value?: string | null): string {
 }
 
 const styles = StyleSheet.create({
+  workbenchLink: { paddingHorizontal: 12, paddingTop: 6, alignItems: "flex-start" },
   tabsScroll: { flexGrow: 0, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "#FFFFFF" },
   tabsRow: { gap: 6 },
   body: { flex: 1 },

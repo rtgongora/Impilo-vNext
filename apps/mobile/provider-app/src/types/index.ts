@@ -14,6 +14,7 @@ export type ProviderTabKey =
   | "queue"
   | "messaging"
   | "social"
+  | "wellnessSocial"
   | "tools"
   | "apps"
   | "professional"

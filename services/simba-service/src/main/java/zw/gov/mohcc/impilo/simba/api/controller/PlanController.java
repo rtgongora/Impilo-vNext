@@ -4,11 +4,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.simba.core.PlanRecommendationService;
 import zw.gov.mohcc.impilo.simba.core.PlanService;
 import zw.gov.mohcc.impilo.simba.core.WellnessAuditService;
 import zw.gov.mohcc.impilo.simba.persistence.entity.PlanEnrollmentEntity;
 import zw.gov.mohcc.impilo.simba.persistence.entity.WellnessPlanEntity;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,11 +26,58 @@ import java.util.UUID;
 public class PlanController {
 
     private final PlanService planService;
+    private final PlanRecommendationService recommendationService;
     private final WellnessAuditService audit;
 
-    public PlanController(PlanService planService, WellnessAuditService audit) {
+    public PlanController(PlanService planService,
+                          PlanRecommendationService recommendationService,
+                          WellnessAuditService audit) {
         this.planService = planService;
+        this.recommendationService = recommendationService;
         this.audit = audit;
+    }
+
+    // ── Recommendations ──────────────────────────────────────────
+    @GetMapping("/programs/recommendations")
+    public Map<String, Object> recommendations(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestParam("person_cpid") String personCpid) {
+        List<Map<String, Object>> recs = new ArrayList<>();
+        for (PlanRecommendationService.Recommendation r :
+                recommendationService.recommend(tenantId, personCpid)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("plan", r.plan());
+            m.put("reason", r.reason());
+            m.put("score", r.score());
+            recs.add(m);
+        }
+        return Map.of("data", recs);
+    }
+
+    @PostMapping("/programs/recommendations")
+    public ResponseEntity<Map<String, Object>> assembleRecommendation(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_TYPE, required = false) String actorType,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestBody Map<String, Object> body) {
+        UUID planId = UUID.fromString(required(body, "plan_id"));
+        String personCpid = required(body, "person_cpid");
+        String enrolledBy = actorId != null ? actorId : personCpid;
+        PlanRecommendationService.AssembledPlan assembled =
+                recommendationService.assemble(tenantId, planId, personCpid, enrolledBy);
+
+        String relationship = personCpid.equals(actorId) || actorId == null
+                ? WellnessAuditService.SELF : WellnessAuditService.DEPENDANT;
+        audit.record(tenantId, actorId, actorType, null, personCpid, relationship, null, null,
+                "wellness.plan.assemble", "ALLOW", null, correlationId, requestId);
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("data", assembled.enrollment());
+        out.put("clinical_caution", assembled.clinicalCaution());
+        out.put("reminders_created", assembled.remindersCreated());
+        return ResponseEntity.status(HttpStatus.CREATED).body(out);
     }
 
     // ── Plan catalogue ───────────────────────────────────────────
