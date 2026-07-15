@@ -531,6 +531,8 @@ services:
       - Daidzai emergency/disaster response command canonical records
       - emergency_request, emergency_incident, mission status timeline, resource_request, affected_site
       - assistance_request (crowdfunding case aggregate, verification lifecycle, timeline; money in mushe, attestation in credential-verification — referenced by id)
+      - EMS clinical dispatch — ems_mission crew/vehicle clinical state machine (CREATED..HANDOVER) and prehospital ePCR (patient vitals/GCS/interventions time-series), bound to the trauma incident and trauma_episode_id. This is the clinical dispatch of a crew to a patient, distinct from nhume logistics (parcel) dispatch; crew resolves from vashandi, routing/ETA from ndila, ambulance is an asset-registry Object ID.
+      - canonical trauma_episode correlation spine (trauma_episode + trauma_episode_phase read-model); phase-owner SoR rows (pct/inpatient/madi) carry trauma_episode_id and remain owned by their services
     consumes_from:
       - tshepo-authz-service
       - nhume-service
@@ -543,9 +545,9 @@ services:
     exposes_to:
       - experience-bff
     forbidden_responsibilities:
-      - must-not-own-dispatch-execution
+      - must-not-own-logistics-dispatch-execution   # parcel/last-mile logistics dispatch is nhume; daidzai DOES own EMS clinical (crew-to-patient) dispatch
       - must-not-own-maps-routing
-      - must-not-own-clinical-record-source-of-truth
+      - must-not-own-clinical-record-source-of-truth  # owns the ePCR prehospital record + trauma_episode spine; does NOT own facility clinical encounter/record (pct/butano)
       - must-not-bypass-bff-authz-audit-controls
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
@@ -1713,7 +1715,7 @@ services:
       - Nhume
     owner_team: TBD
     system_of_record_for:
-      - dispatch request and assignment lifecycle
+      - logistics dispatch request and assignment lifecycle — parcel/cargo/specimen/blood-product courier movement only (NOT EMS clinical crew-to-patient dispatch, which is daidzai)
       - courier and fleet operational registry
       - last-mile tracking and proof-of-delivery telemetry
       - delivery chain-of-custody and exception workflow
@@ -1731,6 +1733,7 @@ services:
       - integration-hub
     forbidden_responsibilities:
       - must-not-own-clinical-record-source-of-truth
+      - must-not-own-ems-clinical-dispatch   # crew-to-patient EMS dispatch + prehospital ePCR (patient vitals/GCS) are daidzai; nhume carries things, not patients
       - must-not-own-patient-identity-source-of-truth
       - must-not-own-provider-identity-source-of-truth
       - must-not-own-consent-policy-authority
