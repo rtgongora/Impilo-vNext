@@ -29,31 +29,43 @@ public class FundoStudioController {
 
     @GetMapping("/studio/dashboard")
     public ResponseEntity<Map<String, Object>> studioDashboard() {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.studioDashboard(tenantId()));
     }
 
     @GetMapping("/studio/courses/{courseId}/readiness")
     public ResponseEntity<Map<String, Object>> readiness(@PathVariable String courseId) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.courseReadiness(tenantId(), courseId));
     }
 
     @PostMapping("/ai/generate")
     public ResponseEntity<Map<String, Object>> aiGenerate(@RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.aiGenerate(tenantId(), actorId(), body));
     }
 
     @PostMapping("/nompilo/assist")
     public ResponseEntity<Map<String, Object>> nompiloAssist(@RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.nompiloAssist(body));
     }
 
     @GetMapping("/library/resources")
     public ResponseEntity<Map<String, Object>> library(@RequestParam(defaultValue = "50") int limit) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.listLibraryResources(tenantId(), limit));
     }
 
     @PostMapping("/library/resources")
     public ResponseEntity<Map<String, Object>> createLibrary(@RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.createLibraryResource(tenantId(), actorId(), body));
     }
 
@@ -61,21 +73,29 @@ public class FundoStudioController {
     public ResponseEntity<Map<String, Object>> linkResource(
             @PathVariable String resourceId,
             @RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.linkLibraryResource(tenantId(), resourceId, body));
     }
 
     @PostMapping("/library/uploads")
     public ResponseEntity<Map<String, Object>> uploadLibrary(@RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.createLibraryResource(tenantId(), actorId(), body));
     }
 
     @GetMapping("/media/assets")
     public ResponseEntity<Map<String, Object>> media(@RequestParam(defaultValue = "50") int limit) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.listMedia(tenantId(), limit));
     }
 
     @PostMapping("/media/assets")
     public ResponseEntity<Map<String, Object>> createMedia(@RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.createMedia(tenantId(), actorId(), body));
     }
 
@@ -84,16 +104,22 @@ public class FundoStudioController {
             @RequestParam String subjectType,
             @RequestParam String subjectId,
             @RequestParam(defaultValue = "50") int limit) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.listNotifications(tenantId(), subjectType, subjectId, limit));
     }
 
     @PostMapping("/notifications")
     public ResponseEntity<Map<String, Object>> scheduleNotification(@RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.scheduleNotification(tenantId(), actorId(), body));
     }
 
     @PostMapping("/interactive/activities")
     public ResponseEntity<Map<String, Object>> createActivity(@RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.createInteractiveActivity(tenantId(), actorId(), body));
     }
 
@@ -102,6 +128,8 @@ public class FundoStudioController {
             @RequestParam(required = false) String courseId,
             @RequestParam(required = false) String lessonId,
             @RequestParam(defaultValue = "50") int limit) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.listInteractiveActivities(tenantId(), courseId, lessonId, limit));
     }
 
@@ -109,6 +137,8 @@ public class FundoStudioController {
     public ResponseEntity<Map<String, Object>> submitInteractiveResponse(
             @PathVariable String activityId,
             @RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.submitInteractiveResponse(tenantId(), activityId, body));
     }
 
@@ -116,16 +146,22 @@ public class FundoStudioController {
     public ResponseEntity<Map<String, Object>> responses(
             @PathVariable String activityId,
             @RequestParam(defaultValue = "50") int limit) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.listInteractiveResponses(tenantId(), activityId, limit));
     }
 
     @PostMapping("/cohorts")
     public ResponseEntity<Map<String, Object>> createCohort(@RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.createCohort(tenantId(), actorId(), body));
     }
 
     @GetMapping("/cohorts")
     public ResponseEntity<Map<String, Object>> listCohorts(@RequestParam(defaultValue = "50") int limit) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.listCohorts(tenantId(), limit));
     }
 
@@ -133,21 +169,29 @@ public class FundoStudioController {
     public ResponseEntity<Map<String, Object>> addMember(
             @PathVariable String cohortId,
             @RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.addCohortMember(tenantId(), cohortId, actorId(), body));
     }
 
     @PostMapping("/sessions")
     public ResponseEntity<Map<String, Object>> createSession(@RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.createScheduledSession(tenantId(), actorId(), body));
     }
 
     @GetMapping("/sessions")
     public ResponseEntity<Map<String, Object>> listSessions(@RequestParam(defaultValue = "50") int limit) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(service.listScheduledSessions(tenantId(), limit));
     }
 
     @PostMapping("/sessions/live-completion")
     public ResponseEntity<Map<String, Object>> recordLiveCompletion(@RequestBody Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         return FundoApiSupport.dataEnvelope(liveCompletionService.recordLiveCompletion(tenantId(), body));
     }
 

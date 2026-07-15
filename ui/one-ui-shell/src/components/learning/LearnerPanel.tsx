@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowLeft, CheckCircle2, Plus, Search } from "lucide-react";
-import { asArray, asRecord, asText, type ModalKey, type Row } from "@/components/learning/learningUtils";
+import { asArray, asRecord, asText, type ModalKey, type Row, type SectionKey } from "@/components/learning/learningUtils";
 import { Panel, CourseCard, QuickActionCard, PathwayCard, CertificateCard, EmptyState, ActionText, rowTitle, rowDetail, learningProgressPercent, isLearningRowEnrolled } from "@/components/learning/SharedComponents";
 
 export function Learner({ data, openSection, setModal }: { data: Record<string, unknown>; openSection: (s: SectionKey) => void; setModal: (m: ModalKey, defaults?: Row) => void }) {
@@ -262,5 +262,3 @@ function LearningProgressCard({ row, onResume }: { row: Row; onResume: () => voi
     </div>
   );
 }
-
-type SectionKey = string;

@@ -67,10 +67,11 @@ public class FundoCohortReportService {
 
         for (UUID courseId : targetCourseIds) {
             Optional<CourseEntity> course = courseRepository.findById(courseId)
-                    .filter(c -> c.getTenantId().equals(tenantId));
+                    .filter(c -> tenantId == null || c.getTenantId().equals(tenantId));
             if (course.isEmpty()) continue;
+            UUID rowTenantId = course.get().getTenantId();
 
-            List<EnrolmentEntity> enrolments = enrolmentRepository.findByTenantIdAndCourseId(tenantId, courseId);
+            List<EnrolmentEntity> enrolments = enrolmentRepository.findByTenantIdAndCourseId(rowTenantId, courseId);
             int enrolled = 0;
             int inProgress = 0;
             int completed = 0;
@@ -85,10 +86,11 @@ public class FundoCohortReportService {
                 }
             }
             List<CertificateEntity> certs =
-                    certificateRepository.findByTenantIdAndCourseId(tenantId, courseId);
+                    certificateRepository.findByTenantIdAndCourseId(rowTenantId, courseId);
             long issuedCount = certs.stream().filter(c -> "ISSUED".equals(c.getStatus())).count();
 
             Map<String, Object> row = new LinkedHashMap<>();
+            row.put("tenantId", rowTenantId.toString());
             row.put("courseId", courseId.toString());
             row.put("courseCode", course.get().getCode());
             row.put("courseTitle", course.get().getTitle());
@@ -134,21 +136,26 @@ public class FundoCohortReportService {
     private List<UUID> resolveCourseIds(UUID tenantId, CohortReportFilter filter) {
         if (filter.courseId() != null) {
             return courseRepository.findById(filter.courseId())
-                    .filter(c -> c.getTenantId().equals(tenantId))
+                    .filter(c -> tenantId == null || c.getTenantId().equals(tenantId))
                     .map(c -> List.of(c.getId()))
                     .orElseGet(List::of);
         }
         if (filter.pathwayId() != null) {
+            if (tenantId == null) return List.of();
             return pathwayRepository.findByTenantIdAndId(tenantId, filter.pathwayId())
                     .map(p -> pathwayItemRepository.findByPathwayIdOrderBySequenceNoAsc(p.getId()).stream()
                             .map(FundoPathwayItemEntity::getCourseId)
                             .toList())
                     .orElseGet(List::of);
         }
-        // No filter — operate on the tenant's published catalogue (capped via PageRequest in the calling controller).
-        return courseRepository.findByTenantIdAndStatus(
-                        tenantId, "PUBLISHED", org.springframework.data.domain.PageRequest.of(0, 50))
-                .stream().map(CourseEntity::getId).toList();
+        // No filter — operate on the published catalogue.
+        return (tenantId == null
+                        ? courseRepository.findByStatus("PUBLISHED", org.springframework.data.domain.PageRequest.of(0, 500))
+                        : courseRepository.findByTenantIdAndStatus(
+                                tenantId, "PUBLISHED", org.springframework.data.domain.PageRequest.of(0, 50)))
+                .stream()
+                .map(CourseEntity::getId)
+                .toList();
     }
 
     private static double round(double v) {

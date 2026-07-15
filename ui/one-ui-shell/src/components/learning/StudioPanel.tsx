@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import * as React from "react";
 import {
   Activity,
   ArrowLeft,
@@ -13,21 +14,43 @@ import {
   Radio,
   Trash2,
   Users,
+  Loader2,
 } from "lucide-react";
 import { asArray, asRecord, asText, type ModalKey, type Row } from "@/components/learning/learningUtils";
 import { Panel, CreationCard, CreationTemplate, StatusPill, countOf } from "@/components/learning/SharedComponents";
 import { SectionFormComponent } from "./SectionFormComponent";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
+import { apiClient } from "@/lib/api-client";
+
+const FUNDO = "/internal/v1/learning/fundo";
 
 type ContentType = "courses" | "resources" | "media" | "activities" | "cohorts" | "sessions";
+
+export interface CourseStructure extends Row {
+  modules?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    sequence: number;
+    lessons?: Array<{
+      id: string;
+      title: string;
+      contentType: string;
+      sequence: number;
+      status: string;
+    }>;
+  }>;
+}
 
 export function Studio({ data, setModal }: { data: Record<string, unknown>; setModal: (m: ModalKey, defaults?: Row) => void }) {
   const [activeTab, setActiveTab] = useState<ContentType>("courses");
   const [courseView, setCourseView] = useState<"sections" | null>(null);
-  const [selectedCourseForSections, setSelectedCourseForSections] = useState<Row | null>(null);
-  const [sections, setSections] = useState<Row[]>([]);
+  const [selectedCourseForSections, setSelectedCourseForSections] = useState<CourseStructure | null>(null);
+  const [modules, setModules] = useState<Array<any>>([]);
   const [showAddSection, setShowAddSection] = useState(false);
   const [deletingCourse, setDeletingCourse] = useState<Row | null>(null);
+  const [loadingStructure, setLoadingStructure] = useState(false);
+  const [structureError, setStructureError] = useState<string | null>(null);
 
   const studio = asRecord(data.studio);
   const library = asArray(asRecord(data.library).items);
@@ -43,11 +66,47 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
   const publishedCount = countOf(studio.publishedCourses, 0);
   const courseCount = Math.max(visibleCourses.length, draftCount + publishedCount);
 
-  // Show section management view
+  // Handler to fetch course structure on demand
+  const handleManageSections = async (course: Row) => {
+    setLoadingStructure(true);
+    setStructureError(null);
+    try {
+      const courseId = asText(course.id);
+      if (!courseId) {
+        setStructureError("Invalid course ID");
+        return;
+      }
+
+      const response = await apiClient.get<{ data?: any }>(`${FUNDO}/courses/${courseId}/structure`);
+      const structure = asRecord(response.data);
+
+      setSelectedCourseForSections(structure as CourseStructure);
+      setModules(asArray(structure.modules));
+      setCourseView("sections");
+      setShowAddSection(false);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to load course structure";
+      setStructureError(errorMsg);
+      console.error("Failed to fetch course structure:", err);
+    } finally {
+      setLoadingStructure(false);
+    }
+  };
+
+  // Show module management view (formerly section view)
   if (courseView === "sections" && selectedCourseForSections) {
     return (
       <>
-        <SectionManagementView courseView={courseView} setCourseView={setCourseView} selectedCourseForSections={selectedCourseForSections} setSelectedCourseForSections={setSelectedCourseForSections} sections={sections} setSections={setSections} showAddSection={showAddSection} setShowAddSection={setShowAddSection} />
+        <ModuleManagementView
+          courseView={courseView}
+          setCourseView={setCourseView}
+          selectedCourseForSections={selectedCourseForSections}
+          setSelectedCourseForSections={setSelectedCourseForSections}
+          modules={modules}
+          setModules={setModules}
+          structureError={structureError}
+          setStructureError={setStructureError}
+        />
         {deletingCourse && (
           <DeleteConfirmationDialog
             title="Delete Course"
@@ -116,7 +175,7 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
             {visibleCourses.length > 0 ? (
               <div className="space-y-2">
                 {visibleCourses.map((row, index) => (
-                  <ContentListItem key={String(row.id ?? row.code ?? index)} row={row} type="course" onEdit={() => setModal("course", row)} onManage={() => { setSelectedCourseForSections(row); setSections([]); setShowAddSection(false); setCourseView("sections"); }} onDelete={() => setDeletingCourse(row)} />
+                  <ContentListItem key={String(row.id ?? row.code ?? index)} row={row} type="course" onEdit={() => setModal("course", row)} onManage={() => handleManageSections(row)} onDelete={() => setDeletingCourse(row)} />
                 ))}
               </div>
             ) : (
@@ -233,32 +292,142 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
   );
 }
 
-function SectionManagementView({
+function ModuleManagementView({
   courseView,
   setCourseView,
   selectedCourseForSections,
   setSelectedCourseForSections,
-  sections,
-  setSections,
-  showAddSection,
-  setShowAddSection,
+  modules,
+  setModules,
+  structureError,
+  setStructureError,
 }: {
   courseView: string | null;
   setCourseView: (view: "sections" | null) => void;
-  selectedCourseForSections: Row | null;
-  setSelectedCourseForSections: (row: Row | null) => void;
-  sections: Row[];
-  setSections: (sections: Row[]) => void;
-  showAddSection: boolean;
-  setShowAddSection: (show: boolean) => void;
+  selectedCourseForSections: CourseStructure | null;
+  setSelectedCourseForSections: (row: CourseStructure | null) => void;
+  modules: Array<any>;
+  setModules: (modules: Array<any>) => void;
+  structureError: string | null;
+  setStructureError: (error: string | null) => void;
 }) {
+  const [selectedModule, setSelectedModule] = useState<any | null>(null);
+  const [showAddModule, setShowAddModule] = useState(false);
+  const [newModuleTitle, setNewModuleTitle] = useState("");
+  const [newModuleDescription, setNewModuleDescription] = useState("");
+  const [moduleCreating, setModuleCreating] = useState(false);
+  const [showAddSection, setShowAddSection] = useState(false);
+  const [allSections, setAllSections] = useState<Array<any>>([]);
+
+  // Initialize with first module if available
+  React.useEffect(() => {
+    if (modules.length > 0 && !selectedModule) {
+      const firstModule = modules[0];
+      setSelectedModule(firstModule);
+      setAllSections(asArray(firstModule.lessons || []));
+    }
+  }, [modules]);
+
+  const handleAddModule = async () => {
+    if (!newModuleTitle.trim()) {
+      setStructureError("Module title is required");
+      return;
+    }
+
+    setModuleCreating(true);
+    try {
+      const courseId = asText(selectedCourseForSections?.id);
+      if (!courseId) {
+        setStructureError("Invalid course ID");
+        return;
+      }
+
+      const moduleResponse = await apiClient.post(`${FUNDO}/courses/${courseId}/modules`, {
+        title: newModuleTitle,
+        description: newModuleDescription || null,
+        sequence: modules.length + 1,
+        status: "PUBLISHED",
+      });
+
+      const moduleData = asRecord(asRecord(moduleResponse).data);
+      const createdModule = asRecord(moduleData.module || moduleData);
+
+      const newModule = {
+        id: asText(createdModule.id),
+        title: asText(createdModule.title),
+        description: asText(createdModule.description),
+        sequence: createdModule.sequence || modules.length + 1,
+        status: asText(createdModule.status),
+        lessons: [],
+      };
+
+      setModules([...modules, newModule]);
+      setSelectedModule(newModule);
+      setAllSections([]);
+      setNewModuleTitle("");
+      setNewModuleDescription("");
+      setShowAddModule(false);
+      setStructureError(null);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to create module";
+      setStructureError(`Failed to create module: ${errorMsg}`);
+      console.error("Module creation error:", err);
+    } finally {
+      setModuleCreating(false);
+    }
+  };
+
+  const handleSectionSubmit = async (newSection: Row) => {
+    if (!selectedModule) {
+      setStructureError("No module selected. Please try again.");
+      return;
+    }
+
+    try {
+      // Create lesson via backend API
+      const lessonResponse = await apiClient.post(`${FUNDO}/modules/${selectedModule.id}/lessons`, {
+        title: newSection.title,
+        contentType: newSection.contentType || newSection.type,
+        contentBody: newSection.contentBody,
+        contentRef: newSection.contentRef,
+        contentFormat: newSection.contentFormat,
+        contentBlocksJson: newSection.contentBlocksJson,
+        sequence: (asArray(selectedModule.lessons).length || 0) + 1,
+        required: newSection.required ?? true,
+        status: newSection.status || "DRAFT",
+      });
+
+      const lessonData = asRecord(asRecord(lessonResponse).data);
+      const createdLesson = asRecord(lessonData.lesson || lessonData);
+
+      // Update local state
+      const newLesson = {
+        id: asText(createdLesson.id),
+        title: asText(createdLesson.title),
+        contentType: asText(createdLesson.contentType),
+        sequence: createdLesson.sequence || allSections.length + 1,
+        status: asText(createdLesson.status),
+      };
+
+      setAllSections([...allSections, newLesson]);
+      setShowAddSection(false);
+      setStructureError(null);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to save section to backend";
+      setStructureError(`Failed to save section: ${errorMsg}`);
+      console.error("Section save error:", err);
+    }
+  };
+
   return (
     <div className="space-y-3 pb-20 md:pb-3">
       <button
         onClick={() => {
           setCourseView(null);
           setSelectedCourseForSections(null);
-          setSections([]);
+          setSelectedModule(null);
+          setAllSections([]);
+          setStructureError(null);
         }}
         className="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-900 text-sm font-semibold mb-2"
       >
@@ -266,74 +435,177 @@ function SectionManagementView({
         Back to Courses
       </button>
 
+      {structureError && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-3">
+          <p className="text-xs text-red-700 font-medium">{structureError}</p>
+        </div>
+      )}
+
+      {/* Modules List */}
       <Panel
-        title={`Sections for: ${asText(selectedCourseForSections?.title ?? "Course", "Course")}`}
+        title="Modules"
         action={
           <button
-            onClick={() => setShowAddSection(!showAddSection)}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-teal-700 text-white px-3 text-xs font-semibold hover:bg-teal-800 transition"
+            onClick={() => setShowAddModule(!showAddModule)}
+            disabled={moduleCreating}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-teal-700 text-white px-3 text-xs font-semibold hover:bg-teal-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Add Section</span>
+            <span className="hidden sm:inline">Add Module</span>
           </button>
         }
       >
-        {showAddSection && (
-          <SectionFormComponent
-            onCancel={() => setShowAddSection(false)}
-            onSubmit={(newSection) => {
-              setSections([...sections, newSection]);
-              setShowAddSection(false);
-            }}
-            courseId={asText(selectedCourseForSections?.id as string)}
-            sequenceNo={sections.length + 1}
-          />
+        {showAddModule && (
+          <div className="mb-4 p-3 rounded-lg border border-teal-200 bg-teal-50">
+            <div className="space-y-2">
+              <input
+                type="text"
+                placeholder="Module title (e.g., Module 1: Basics)"
+                value={newModuleTitle}
+                onChange={(e) => setNewModuleTitle(e.target.value)}
+                className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+              />
+              <textarea
+                placeholder="Module description (optional)"
+                value={newModuleDescription}
+                onChange={(e) => setNewModuleDescription(e.target.value)}
+                rows={2}
+                className="w-full rounded-md border border-slate-200 px-3 py-2 text-xs outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAddModule}
+                  disabled={moduleCreating || !newModuleTitle.trim()}
+                  className="flex-1 h-8 rounded-md bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                >
+                  {moduleCreating ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    "Create Module"
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddModule(false);
+                    setNewModuleTitle("");
+                    setNewModuleDescription("");
+                  }}
+                  disabled={moduleCreating}
+                  className="flex-1 h-8 rounded-md border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
-        {sections.length > 0 ? (
+        {modules.length > 0 ? (
           <div className="space-y-2">
-            {sections.map((section, index) => (
-              <div key={String(section.id ?? index)} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 hover:shadow-md transition">
-                <GripVertical className="h-4 w-4 text-slate-400 cursor-grab shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-teal-700 text-xs font-bold">
-                      {index + 1}
-                    </span>
-                    <p className="font-semibold text-slate-950 text-sm truncate">{asText(section.title ?? section.name, "Section")}</p>
+            {modules.map((module, idx) => (
+              <button
+                key={module.id}
+                onClick={() => {
+                  setSelectedModule(module);
+                  setAllSections(asArray(module.lessons || []));
+                }}
+                className={`w-full text-left p-3 rounded-lg border-2 transition ${
+                  selectedModule?.id === module.id
+                    ? "border-teal-500 bg-teal-50"
+                    : "border-slate-200 bg-white hover:border-teal-300"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-teal-700 text-xs font-bold">
+                    {idx + 1}
+                  </span>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-slate-950">{module.title}</p>
+                    <p className="text-xs text-slate-500">{asArray(module.lessons || []).length} section(s)</p>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">{asText(section.contentType ?? section.type, "TEXT")}</p>
                 </div>
-                <div className="flex gap-1 shrink-0">
-                  <button
-                    onClick={() => {
-                      // Future: Edit section
-                    }}
-                    className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
-                    title="Edit section"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSections(sections.filter((_, i) => i !== index));
-                    }}
-                    className="inline-flex h-8 items-center rounded-md border border-red-200 bg-red-50 px-2 text-red-700 hover:bg-red-100 transition"
-                    title="Delete section"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
+              </button>
             ))}
           </div>
         ) : (
           <div className="text-center py-8 px-4 rounded-lg border border-dashed border-slate-200 bg-slate-50">
-            <p className="text-sm font-semibold text-slate-900">No sections yet</p>
-            <p className="text-xs text-slate-500 mt-1">Click "Add Section" to start building your course</p>
+            <p className="text-sm font-semibold text-slate-900">No modules yet</p>
+            <p className="text-xs text-slate-500 mt-1">Click "Add Module" to create your first module</p>
           </div>
         )}
       </Panel>
+
+      {/* Sections for Selected Module */}
+      {selectedModule && (
+        <Panel
+          title={`Sections in: ${selectedModule.title}`}
+          action={
+            <button
+              onClick={() => setShowAddSection(!showAddSection)}
+              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-teal-700 text-white px-3 text-xs font-semibold hover:bg-teal-800 transition"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Add Section</span>
+            </button>
+          }
+        >
+          {showAddSection && (
+            <SectionFormComponent
+              onCancel={() => setShowAddSection(false)}
+              onSubmit={handleSectionSubmit}
+              courseId={asText(selectedCourseForSections?.id as string)}
+              sequenceNo={allSections.length + 1}
+            />
+          )}
+
+          {allSections.length > 0 ? (
+            <div className="space-y-2">
+              {allSections.map((section, index) => (
+                <div key={section.id} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 hover:shadow-md transition">
+                  <GripVertical className="h-4 w-4 text-slate-400 cursor-grab shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-teal-100 text-teal-700 text-xs font-bold">
+                        {index + 1}
+                      </span>
+                      <p className="font-semibold text-slate-950 text-sm truncate">{section.title}</p>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">{section.contentType}</p>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        // Future: Edit section
+                      }}
+                      className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+                      title="Edit section"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAllSections(allSections.filter((_, i) => i !== index));
+                      }}
+                      className="inline-flex h-8 items-center rounded-md border border-red-200 bg-red-50 px-2 text-red-700 hover:bg-red-100 transition"
+                      title="Delete section"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 px-4 rounded-lg border border-dashed border-slate-200 bg-slate-50">
+              <p className="text-sm font-semibold text-slate-900">No sections yet</p>
+              <p className="text-xs text-slate-500 mt-1">Click "Add Section" to start building this module</p>
+            </div>
+          )}
+        </Panel>
+      )}
     </div>
   );
 }
@@ -385,9 +657,9 @@ function ContentListItem({
           <button
             onClick={onManage}
             className="inline-flex h-8 items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
-            title="Manage sections"
+            title="Manage modules"
           >
-            Sections
+            Modules
           </button>
         )}
         <button

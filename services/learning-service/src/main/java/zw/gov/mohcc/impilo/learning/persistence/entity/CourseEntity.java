@@ -58,6 +58,12 @@ public class CourseEntity {
     @Column(name = "mandatory", nullable = false)
     private boolean mandatory;
 
+    @Column(name = "audience_type", nullable = false, length = 32)
+    private String audienceType = "ALL_LEARNERS";
+
+    @Column(name = "audience_roles", columnDefinition = "TEXT")
+    private String audienceRoles;
+
     @Column(name = "cpd_eligible", nullable = false)
     private boolean cpdEligible;
 
@@ -118,6 +124,10 @@ public class CourseEntity {
     public void setEstimatedDurationMinutes(Integer m) { this.estimatedDurationMinutes = m; }
     public boolean isMandatory() { return mandatory; }
     public void setMandatory(boolean mandatory) { this.mandatory = mandatory; }
+    public String getAudienceType() { return audienceType; }
+    public void setAudienceType(String audienceType) { this.audienceType = audienceType; }
+    public String getAudienceRoles() { return audienceRoles; }
+    public void setAudienceRoles(String audienceRoles) { this.audienceRoles = audienceRoles; }
     public boolean isCpdEligible() { return cpdEligible; }
     public void setCpdEligible(boolean cpdEligible) { this.cpdEligible = cpdEligible; }
     public Integer getCpdPoints() { return cpdPoints; }

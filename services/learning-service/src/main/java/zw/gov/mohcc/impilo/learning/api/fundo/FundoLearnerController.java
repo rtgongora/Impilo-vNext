@@ -26,6 +26,8 @@ public class FundoLearnerController {
     public ResponseEntity<Map<String, Object>> myLearning(
             @RequestParam String subjectType,
             @RequestParam String subjectId) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireLearnerAccess();
+        if (forbidden != null) return forbidden;
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
         if (tenantId == null) {
@@ -41,13 +43,16 @@ public class FundoLearnerController {
                     "certificates", java.util.List.of(),
                     "cpdEligibleCompletions", java.util.List.of()));
         }
-        return FundoApiSupport.dataEnvelope(learnerJourneyService.myLearning(tenantId, subjectType, subjectId));
+        return FundoApiSupport.dataEnvelope(learnerJourneyService.myLearning(
+                tenantId, subjectType, subjectId, FundoApiSupport.currentActorType(), FundoApiSupport.currentRoles()));
     }
 
     @GetMapping("/cpd/evidence")
     public ResponseEntity<Map<String, Object>> cpdEvidence(
             @RequestParam String subjectType,
             @RequestParam String subjectId) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireLearnerAccess();
+        if (forbidden != null) return forbidden;
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
         if (tenantId == null) {
@@ -60,6 +65,8 @@ public class FundoLearnerController {
     public ResponseEntity<Map<String, Object>> cpdEligibleCompletions(
             @RequestParam String subjectType,
             @RequestParam String subjectId) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireLearnerAccess();
+        if (forbidden != null) return forbidden;
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
         if (tenantId == null) {

@@ -2,7 +2,7 @@
 
 import { FormEvent, ReactNode } from "react";
 import { CheckCircle2, Loader2, X } from "lucide-react";
-import { asText, type ModalKey, type Row, type SectionKey } from "@/components/learning/learningUtils";
+import { type ModalKey, type Row, type SectionKey } from "@/components/learning/learningUtils";
 import { LearningWorkspaceHeader } from "./LearningWorkspaceHeader";
 import { Studio } from "./StudioPanel";
 import { Learner } from "./LearnerPanel";
@@ -22,16 +22,39 @@ export function LearningWorkspaceMain({
   data,
   openSection,
   setModal,
+  canLearn,
+  canUseStudio,
+  canViewReports,
 }: {
   section: SectionKey;
   data: Record<string, unknown>;
   openSection: (section: SectionKey) => void;
   setModal: (modal: ModalKey, defaults?: Row) => void;
+  canLearn: boolean;
+  canUseStudio: boolean;
+  canViewReports: boolean;
 }) {
-  if (section === "learner") return <Learner data={data} openSection={openSection} setModal={setModal} />;
-  if (section === "studio") return <Studio data={data} setModal={setModal} />;
-  if (section === "reports") return <Reports data={data} />;
-  return <Overview data={data} openSection={openSection} setModal={setModal} />;
+  if (section === "learner" && canLearn) return <Learner data={data} openSection={openSection} setModal={setModal} />;
+  if (section === "studio" && canUseStudio) return <Studio data={data} setModal={setModal} />;
+  if (section === "reports" && canViewReports) return <Reports data={data} />;
+  return (
+    <Overview
+      data={data}
+      openSection={openSection}
+      setModal={setModal}
+      canLearn={canLearn}
+      canUseStudio={canUseStudio}
+    />
+  );
+}
+
+export function Banner({ tone, children }: { tone: "error" | "success"; children: ReactNode }) {
+  const classes =
+    tone === "error"
+      ? "border-red-200 bg-red-50 text-red-800"
+      : "border-emerald-200 bg-emerald-50 text-emerald-800";
+
+  return <div className={["rounded-md border px-3 py-2 text-sm font-medium", classes].join(" ")}>{children}</div>;
 }
 
 export function LearningModal({ title, busy, onClose, onSubmit, children }: { title: string; busy: boolean; onClose: () => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; children: ReactNode }) {

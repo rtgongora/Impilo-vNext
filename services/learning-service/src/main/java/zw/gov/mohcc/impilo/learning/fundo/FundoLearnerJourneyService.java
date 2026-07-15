@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -45,6 +46,16 @@ public class FundoLearnerJourneyService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> myLearning(UUID tenantId, String subjectType, String subjectId) {
+        return myLearning(tenantId, subjectType, subjectId, null, Set.of());
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> myLearning(
+            UUID tenantId,
+            String subjectType,
+            String subjectId,
+            String actorType,
+            Set<String> roles) {
         List<EnrolmentEntity> enrolments = enrolmentRepository
                 .findByTenantIdAndSubjectTypeAndSubjectIdOrderByCreatedAtDesc(
                         tenantId, subjectType, subjectId, PageRequest.of(0, 200));
@@ -94,8 +105,9 @@ public class FundoLearnerJourneyService {
                 .findByTenantIdAndStatus(tenantId, "PUBLISHED", PageRequest.of(0, 30))
                 .stream()
                 .filter(c -> !unavailableCourseIds.contains(c.getId()))
+                .filter(c -> audienceMatches(c, actorType, roles))
                 .limit(12)
-                .map(FundoCatalogService::toView)
+                .map(this::toRecommendationView)
                 .toList();
 
         List<Map<String, Object>> assignedPathways = pathwayIds.stream()
@@ -128,6 +140,47 @@ public class FundoLearnerJourneyService {
         out.put("certificates", certificates);
         out.put("cpdEligibleCompletions", cpdEligible);
         return out;
+    }
+
+    private Map<String, Object> toRecommendationView(CourseEntity c) {
+        Map<String, Object> view = new LinkedHashMap<>(FundoCatalogService.toView(c));
+        if (c.isMandatory()) {
+            view.put("mandatoryIncomplete", true);
+            view.put("recommendationNotice", "Required learning");
+        }
+        return view;
+    }
+
+    private boolean audienceMatches(CourseEntity course, String actorType, Set<String> roles) {
+        String audienceType = normalize(course.getAudienceType(), "ALL_LEARNERS");
+        Set<String> normalizedRoles = roles == null ? Set.of() : roles.stream()
+                .filter(r -> r != null && !r.isBlank())
+                .map(r -> r.trim().toUpperCase(Locale.ROOT))
+                .collect(Collectors.toSet());
+        if (normalizedRoles.contains("SYSTEM_ADMIN")) {
+            return false;
+        }
+        String normalizedActorType = normalize(actorType, "");
+        boolean citizen = "CITIZEN".equals(normalizedActorType) || normalizedRoles.contains("CITIZEN");
+        return switch (audienceType) {
+            case "ALL_LEARNERS" -> true;
+            case "SYSTEM_USERS" -> !citizen;
+            case "CITIZENS" -> citizen;
+            case "SPECIFIC_ROLES" -> roleIntersects(normalizedRoles, course.getAudienceRoles());
+            default -> true;
+        };
+    }
+
+    private boolean roleIntersects(Set<String> roles, String audienceRoles) {
+        if (audienceRoles == null || audienceRoles.isBlank() || roles.isEmpty()) return false;
+        for (String role : audienceRoles.split(",")) {
+            if (roles.contains(role.trim().toUpperCase(Locale.ROOT))) return true;
+        }
+        return false;
+    }
+
+    private String normalize(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value.trim().toUpperCase(Locale.ROOT);
     }
 
     @Transactional(readOnly = true)

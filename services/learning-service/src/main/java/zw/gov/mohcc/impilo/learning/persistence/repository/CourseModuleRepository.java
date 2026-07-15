@@ -7,4 +7,6 @@ import zw.gov.mohcc.impilo.learning.persistence.entity.CourseModuleEntity;
 
 public interface CourseModuleRepository extends JpaRepository<CourseModuleEntity, UUID> {
     List<CourseModuleEntity> findByCourseIdOrderBySequenceNoAsc(UUID courseId);
+
+    List<CourseModuleEntity> findByTenantIdAndCourseIdOrderBySequenceNoAsc(UUID tenantId, UUID courseId);
 }

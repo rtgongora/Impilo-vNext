@@ -1,10 +1,14 @@
 package zw.gov.mohcc.impilo.learning.fundo;
 
+import java.time.OffsetDateTime;
 import java.util.HashMap;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +47,9 @@ import zw.gov.mohcc.impilo.learning.persistence.repository.FundoPathwayRepositor
 @Service
 public class FundoAuthoringService {
 
+    private static final Set<String> COURSE_AUDIENCE_TYPES = Set.of(
+            "ALL_LEARNERS", "SYSTEM_USERS", "CITIZENS", "SPECIFIC_ROLES");
+
     private final CourseRepository courseRepository;
     private final CourseModuleRepository moduleRepository;
     private final CourseLessonRepository lessonRepository;
@@ -78,6 +85,14 @@ public class FundoAuthoringService {
         if (req == null || isBlank(req.code()) || isBlank(req.title())) {
             return AuthoringResult.badRequest("BAD_REQUEST", "code and title are required");
         }
+        AuthoringResult<Void> audienceValidation = validateCourseAudience(req, null);
+        if (audienceValidation.kind() != AuthoringResult.Kind.OK) {
+            return AuthoringResult.badRequest(audienceValidation.code(), audienceValidation.message());
+        }
+        AuthoringResult<Void> dueDateValidation = validateCourseDueDate(req, null);
+        if (dueDateValidation.kind() != AuthoringResult.Kind.OK) {
+            return AuthoringResult.badRequest(dueDateValidation.code(), dueDateValidation.message());
+        }
         Optional<CourseEntity> existing = courseRepository.findByTenantIdAndCode(tenantId, req.code());
         if (existing.isPresent()) {
             return AuthoringResult.conflict("COURSE_CODE_TAKEN", "Course code already exists");
@@ -99,6 +114,14 @@ public class FundoAuthoringService {
                 .filter(c -> c.getTenantId().equals(tenantId));
         if (row.isEmpty()) return AuthoringResult.notFound("COURSE_NOT_FOUND", "Course not found");
         CourseEntity c = row.get();
+        AuthoringResult<Void> audienceValidation = validateCourseAudience(req, c);
+        if (audienceValidation.kind() != AuthoringResult.Kind.OK) {
+            return AuthoringResult.badRequest(audienceValidation.code(), audienceValidation.message());
+        }
+        AuthoringResult<Void> dueDateValidation = validateCourseDueDate(req, c);
+        if (dueDateValidation.kind() != AuthoringResult.Kind.OK) {
+            return AuthoringResult.badRequest(dueDateValidation.code(), dueDateValidation.message());
+        }
         String oldStatus = c.getStatus();
         if (req.code() != null && !req.code().equals(c.getCode())) {
             Optional<CourseEntity> clash = courseRepository.findByTenantIdAndCode(tenantId, req.code());
@@ -122,8 +145,98 @@ public class FundoAuthoringService {
         if (req.language() != null) c.setLanguage(req.language());
         if (req.estimatedDurationMinutes() != null) c.setEstimatedDurationMinutes(req.estimatedDurationMinutes());
         if (req.mandatory() != null) c.setMandatory(req.mandatory());
+        applyAudienceFields(c, req);
+        applyDueDateFields(c, req);
         if (req.cpdEligible() != null) c.setCpdEligible(req.cpdEligible());
         if (req.cpdPoints() != null) c.setCpdPoints(req.cpdPoints());
+    }
+
+    private AuthoringResult<Void> validateCourseAudience(CourseUpsert req, CourseEntity existing) {
+        String audienceType = normalizeAudienceType(req.audienceType());
+        String effectiveAudienceType = audienceType != null
+                ? audienceType
+                : existing == null ? "ALL_LEARNERS" : existing.getAudienceType();
+        String roles = normalizeRoles(req.audienceRoles());
+        boolean rolesProvided = req.audienceRoles() != null;
+
+        if (!COURSE_AUDIENCE_TYPES.contains(effectiveAudienceType)) {
+            return AuthoringResult.badRequest("INVALID_AUDIENCE_TYPE",
+                    "audienceType must be one of ALL_LEARNERS, SYSTEM_USERS, CITIZENS, SPECIFIC_ROLES");
+        }
+        if ("SPECIFIC_ROLES".equals(effectiveAudienceType)) {
+            String effectiveRoles = rolesProvided ? roles : existing == null ? null : existing.getAudienceRoles();
+            if (isBlank(effectiveRoles)) {
+                return AuthoringResult.badRequest("AUDIENCE_ROLES_REQUIRED",
+                        "audienceRoles is required when audienceType is SPECIFIC_ROLES");
+            }
+            return AuthoringResult.ok(null);
+        }
+        if (rolesProvided && !isBlank(roles)) {
+            return AuthoringResult.badRequest("AUDIENCE_ROLES_NOT_ALLOWED",
+                    "audienceRoles is only allowed when audienceType is SPECIFIC_ROLES");
+        }
+        return AuthoringResult.ok(null);
+    }
+
+    private void applyAudienceFields(CourseEntity c, CourseUpsert req) {
+        String audienceType = normalizeAudienceType(req.audienceType());
+        boolean audienceTypeProvided = audienceType != null;
+        boolean rolesProvided = req.audienceRoles() != null;
+        if (audienceTypeProvided) {
+            c.setAudienceType(audienceType);
+            if (!"SPECIFIC_ROLES".equals(audienceType)) {
+                c.setAudienceRoles(null);
+            }
+        }
+        if (rolesProvided) {
+            c.setAudienceRoles(normalizeRoles(req.audienceRoles()));
+        }
+        if (isBlank(c.getAudienceType())) {
+            c.setAudienceType("ALL_LEARNERS");
+        }
+    }
+
+    private AuthoringResult<Void> validateCourseDueDate(CourseUpsert req, CourseEntity existing) {
+        String dueDateType = normalizeDueDateType(req.dueDateType());
+        String effectiveDueDateType = dueDateType != null
+                ? dueDateType
+                : existing == null ? null : existing.getDueDateType();
+        OffsetDateTime effectiveDueDate = req.dueDate() != null
+                ? req.dueDate()
+                : existing == null ? null : existing.getDueDate();
+        Integer effectiveDays = req.dueDateDaysFromEnrollment() != null
+                ? req.dueDateDaysFromEnrollment()
+                : existing == null ? null : existing.getDueDateDaysFromEnrollment();
+
+        if (effectiveDueDateType == null) return AuthoringResult.ok(null);
+        if (!Set.of("FIXED", "RELATIVE").contains(effectiveDueDateType)) {
+            return AuthoringResult.badRequest("INVALID_DUE_DATE_TYPE", "dueDateType must be FIXED or RELATIVE");
+        }
+        if ("FIXED".equals(effectiveDueDateType) && effectiveDueDate == null) {
+            return AuthoringResult.badRequest("DUE_DATE_REQUIRED", "dueDate is required when dueDateType is FIXED");
+        }
+        if ("RELATIVE".equals(effectiveDueDateType) && (effectiveDays == null || effectiveDays < 1)) {
+            return AuthoringResult.badRequest("DUE_DATE_DAYS_REQUIRED", "dueDateDaysFromEnrollment must be at least 1 when dueDateType is RELATIVE");
+        }
+        return AuthoringResult.ok(null);
+    }
+
+    private void applyDueDateFields(CourseEntity c, CourseUpsert req) {
+        String dueDateType = normalizeDueDateType(req.dueDateType());
+        if (dueDateType == null && req.dueDate() == null && req.dueDateDaysFromEnrollment() == null) {
+            return;
+        }
+        c.setDueDateType(dueDateType);
+        if ("FIXED".equals(dueDateType)) {
+            c.setDueDate(req.dueDate());
+            c.setDueDateDaysFromEnrollment(null);
+        } else if ("RELATIVE".equals(dueDateType)) {
+            c.setDueDate(null);
+            c.setDueDateDaysFromEnrollment(req.dueDateDaysFromEnrollment());
+        } else {
+            c.setDueDate(null);
+            c.setDueDateDaysFromEnrollment(null);
+        }
     }
 
     private void maybeEmitCoursePublished(CourseEntity c, String oldStatus) {
@@ -135,6 +248,8 @@ public class FundoAuthoringService {
             payload.put("title", c.getTitle());
             payload.put("cpdEligible", c.isCpdEligible());
             payload.put("mandatory", c.isMandatory());
+            payload.put("audienceType", c.getAudienceType());
+            payload.put("audienceRoles", c.getAudienceRoles());
             payload.put("version", c.getVersion());
             outbox.append("FundoCourse", c.getId().toString(),
                     FundoNativeEventTypes.COURSE_PUBLISHED, payload);
@@ -503,6 +618,27 @@ public class FundoAuthoringService {
         return s == null || s.isBlank();
     }
 
+    private static String normalizeAudienceType(String value) {
+        return isBlank(value) ? null : value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private static String normalizeDueDateType(String value) {
+        return isBlank(value) ? null : value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private static String normalizeRoles(String value) {
+        if (value == null) return null;
+        String normalized = Arrays.stream(value.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .map(s -> s.toUpperCase(Locale.ROOT))
+                .distinct()
+                .sorted()
+                .reduce((a, b) -> a + "," + b)
+                .orElse("");
+        return normalized.isBlank() ? null : normalized;
+    }
+
     // ───────────────────────── DTOs ─────────────────────────
 
     /**
@@ -520,8 +656,29 @@ public class FundoAuthoringService {
             String language,
             Integer estimatedDurationMinutes,
             Boolean mandatory,
+            String audienceType,
+            String audienceRoles,
+            String dueDateType,
+            OffsetDateTime dueDate,
+            Integer dueDateDaysFromEnrollment,
             Boolean cpdEligible,
-            Integer cpdPoints) {}
+            Integer cpdPoints) {
+        public CourseUpsert(
+                String code,
+                String title,
+                String description,
+                String category,
+                String level,
+                String status,
+                String language,
+                Integer estimatedDurationMinutes,
+                Boolean mandatory,
+                Boolean cpdEligible,
+                Integer cpdPoints) {
+            this(code, title, description, category, level, status, language,
+                    estimatedDurationMinutes, mandatory, null, null, null, null, null, cpdEligible, cpdPoints);
+        }
+    }
 
     public record ModuleUpsert(
             String title,

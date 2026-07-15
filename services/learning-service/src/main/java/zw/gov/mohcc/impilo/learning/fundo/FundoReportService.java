@@ -43,14 +43,15 @@ public class FundoReportService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> overview(UUID tenantId) {
-        List<CourseEntity> courses = courseRepository.findByTenantIdAndStatus(tenantId, "PUBLISHED", PageRequest.of(0, 200));
+        List<CourseEntity> courses = publishedCourses(tenantId);
         int enrolments = 0;
         int inProgress = 0;
         int completed = 0;
         int overdue = 0;
         OffsetDateTime now = OffsetDateTime.now();
         for (CourseEntity c : courses) {
-            List<EnrolmentEntity> courseEnrolments = enrolmentRepository.findByTenantIdAndCourseId(tenantId, c.getId());
+            UUID reportTenantId = c.getTenantId();
+            List<EnrolmentEntity> courseEnrolments = enrolmentRepository.findByTenantIdAndCourseId(reportTenantId, c.getId());
             enrolments += courseEnrolments.size();
             for (EnrolmentEntity e : courseEnrolments) {
                 if ("IN_PROGRESS".equals(e.getStatus())) inProgress++;
@@ -72,12 +73,11 @@ public class FundoReportService {
     @Transactional(readOnly = true)
     public Map<String, Object> courseCompletions(
             UUID tenantId, UUID courseId, String subjectType, String statusFilter, Integer limit) {
-        List<CourseEntity> target = courseId == null
-                ? courseRepository.findByTenantIdAndStatus(tenantId, "PUBLISHED", PageRequest.of(0, 200))
-                : courseRepository.findById(courseId).filter(c -> tenantId.equals(c.getTenantId())).stream().toList();
+        List<CourseEntity> target = targetCourses(tenantId, courseId);
         List<Map<String, Object>> items = new ArrayList<>();
         for (CourseEntity c : target) {
-            List<EnrolmentEntity> es = enrolmentRepository.findByTenantIdAndCourseId(tenantId, c.getId()).stream()
+            UUID reportTenantId = c.getTenantId();
+            List<EnrolmentEntity> es = enrolmentRepository.findByTenantIdAndCourseId(reportTenantId, c.getId()).stream()
                     .filter(e -> subjectType == null || subjectType.isBlank()
                             || subjectType.equalsIgnoreCase(e.getSubjectType()))
                     .filter(e -> statusFilter == null || statusFilter.isBlank()
@@ -87,6 +87,7 @@ public class FundoReportService {
             long active = es.stream().filter(e -> "ENROLLED".equals(e.getStatus()) || "IN_PROGRESS".equals(e.getStatus())).count();
             double completionRate = es.isEmpty() ? 0.0 : Math.round((completed * 1000.0 / es.size())) / 10.0;
             items.add(Map.of(
+                    "tenantId", reportTenantId.toString(),
                     "courseId", c.getId().toString(),
                     "courseCode", c.getCode(),
                     "courseTitle", c.getTitle(),
@@ -102,12 +103,11 @@ public class FundoReportService {
     public Map<String, Object> overdueLearning(
             UUID tenantId, UUID courseId, String subjectType, String statusFilter, Integer limit) {
         OffsetDateTime now = OffsetDateTime.now();
-        List<CourseEntity> courses = courseId == null
-                ? courseRepository.findByTenantIdAndStatus(tenantId, "PUBLISHED", PageRequest.of(0, 200))
-                : courseRepository.findById(courseId).filter(c -> tenantId.equals(c.getTenantId())).stream().toList();
+        List<CourseEntity> courses = targetCourses(tenantId, courseId);
         List<Map<String, Object>> items = new ArrayList<>();
         for (CourseEntity c : courses) {
-            for (EnrolmentEntity e : enrolmentRepository.findByTenantIdAndCourseId(tenantId, c.getId())) {
+            UUID reportTenantId = c.getTenantId();
+            for (EnrolmentEntity e : enrolmentRepository.findByTenantIdAndCourseId(reportTenantId, c.getId())) {
                 if (e.getDueAt() != null
                         && e.getDueAt().isBefore(now)
                         && !"COMPLETED".equals(e.getStatus())
@@ -117,6 +117,7 @@ public class FundoReportService {
                         && (statusFilter == null || statusFilter.isBlank()
                             || statusFilter.equalsIgnoreCase(e.getStatus()))) {
                     Map<String, Object> row = new LinkedHashMap<>(FundoEnrolmentService.toView(e));
+                    row.put("tenantId", reportTenantId.toString());
                     row.put("courseCode", c.getCode());
                     row.put("courseTitle", c.getTitle());
                     items.add(row);
@@ -129,16 +130,15 @@ public class FundoReportService {
     @Transactional(readOnly = true)
     public Map<String, Object> assessmentPerformance(
             UUID tenantId, UUID courseId, String subjectType, Integer limit) {
-        List<CourseEntity> target = courseId == null
-                ? courseRepository.findByTenantIdAndStatus(tenantId, "PUBLISHED", PageRequest.of(0, 200))
-                : courseRepository.findById(courseId).filter(c -> tenantId.equals(c.getTenantId())).stream().toList();
+        List<CourseEntity> target = targetCourses(tenantId, courseId);
         List<Map<String, Object>> items = new ArrayList<>();
         for (CourseEntity c : target) {
+            UUID reportTenantId = c.getTenantId();
             List<AssessmentEntity> assessments = assessmentRepository.findByTenantIdAndCourseIdAndStatus(
-                    tenantId, c.getId(), "PUBLISHED");
+                    reportTenantId, c.getId(), "PUBLISHED");
             for (AssessmentEntity a : assessments) {
                 List<AssessmentAttemptEntity> attemptsForAssessment =
-                        attemptRepository.findByTenantIdAndAssessmentId(tenantId, a.getId()).stream()
+                        attemptRepository.findByTenantIdAndAssessmentId(reportTenantId, a.getId()).stream()
                                 .filter(at -> subjectType == null || subjectType.isBlank()
                                         || subjectType.equalsIgnoreCase(at.getSubjectType()))
                                 .toList();
@@ -153,6 +153,7 @@ public class FundoReportService {
                 double avg = scored.isEmpty() ? 0.0 : Math.round((scored.stream().mapToInt(Integer::intValue).average().orElse(0) * 10.0)) / 10.0;
                 double passRate = attempts == 0 ? 0.0 : Math.round((pass * 1000.0 / attempts)) / 10.0;
                 items.add(Map.of(
+                        "tenantId", reportTenantId.toString(),
                         "courseId", c.getId().toString(),
                         "courseCode", c.getCode(),
                         "assessmentId", a.getId().toString(),
@@ -173,5 +174,19 @@ public class FundoReportService {
     private static List<Map<String, Object>> limit(List<Map<String, Object>> items, Integer limit) {
         int max = Math.max(1, Math.min(limit == null ? 100 : limit, 500));
         return items.size() <= max ? items : items.subList(0, max);
+    }
+
+    private List<CourseEntity> publishedCourses(UUID tenantId) {
+        return tenantId == null
+                ? courseRepository.findByStatus("PUBLISHED", PageRequest.of(0, 500))
+                : courseRepository.findByTenantIdAndStatus(tenantId, "PUBLISHED", PageRequest.of(0, 200));
+    }
+
+    private List<CourseEntity> targetCourses(UUID tenantId, UUID courseId) {
+        if (courseId == null) return publishedCourses(tenantId);
+        return courseRepository.findById(courseId)
+                .filter(c -> tenantId == null || tenantId.equals(c.getTenantId()))
+                .stream()
+                .toList();
     }
 }

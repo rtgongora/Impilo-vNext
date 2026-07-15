@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { Activity, ArrowLeft, GraduationCap, Loader2, Menu } from "lucide-react";
-import { learningSections } from "./LearningWorkspace";
 import { type SectionKey } from "@/components/learning/learningUtils";
+import { learningSections } from "./LearningWorkspace";
 
 export function LearningWorkspaceHeader({
   section,
   busy,
   historyLength,
+  sections = learningSections,
   onSectionChange,
   onBack,
   onRefresh,
@@ -16,12 +17,12 @@ export function LearningWorkspaceHeader({
   section: SectionKey;
   busy: boolean;
   historyLength: number;
+  sections?: typeof learningSections;
   onSectionChange: (section: SectionKey) => void;
   onBack: () => void;
   onRefresh: () => void;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const currentSection = learningSections.find((s) => s.key === section);
 
   return (
     <>
@@ -41,7 +42,7 @@ export function LearningWorkspaceHeader({
 
           {/* Desktop Navigation - Hidden on Mobile */}
           <nav className="hidden md:flex gap-1" aria-label="Learning sections">
-            {learningSections.map((item) => {
+            {sections.map((item) => {
               const active = section === item.key;
               return (
                 <button
@@ -101,7 +102,7 @@ export function LearningWorkspaceHeader({
         {/* Mobile Navigation Menu */}
         {mobileMenuOpen && (
           <nav className="md:hidden border-t border-slate-200 bg-slate-50 px-3 py-2 grid grid-cols-2 gap-1 sm:grid-cols-5">
-            {learningSections.map((item) => {
+            {sections.map((item) => {
               const active = section === item.key;
               return (
                 <button
@@ -128,7 +129,7 @@ export function LearningWorkspaceHeader({
 
       {/* Mobile Bottom Tab Bar - Visible on small screens */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white flex gap-1 px-1 py-1 safe-area-inset-bottom">
-        {learningSections.map((item) => {
+        {sections.map((item) => {
           const active = section === item.key;
           return (
             <button

@@ -43,6 +43,8 @@ public class FundoEnrolmentController {
     @PostMapping("/enrolments")
     public ResponseEntity<Map<String, Object>> createEnrolment(
             @RequestBody(required = false) Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = learnerForbidden();
+        if (forbidden != null) return forbidden;
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
         if (tenantId == null || body == null) {
@@ -84,6 +86,8 @@ public class FundoEnrolmentController {
             @RequestParam(required = false) String subjectType,
             @RequestParam(required = false) String subjectId,
             @RequestParam(defaultValue = "25") int limit) {
+        ResponseEntity<Map<String, Object>> forbidden = learnerForbidden();
+        if (forbidden != null) return forbidden;
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
         Map<String, Object> data = new LinkedHashMap<>();
@@ -100,6 +104,8 @@ public class FundoEnrolmentController {
 
     @GetMapping("/enrolments/{enrolmentId}")
     public ResponseEntity<Map<String, Object>> getEnrolment(@PathVariable String enrolmentId) {
+        ResponseEntity<Map<String, Object>> forbidden = learnerForbidden();
+        if (forbidden != null) return forbidden;
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
         UUID eid = FundoApiSupport.tryParseUuid(enrolmentId);
@@ -115,6 +121,8 @@ public class FundoEnrolmentController {
     public ResponseEntity<Map<String, Object>> cancel(
             @PathVariable String enrolmentId,
             @RequestBody(required = false) Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = learnerForbidden();
+        if (forbidden != null) return forbidden;
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
         UUID eid = FundoApiSupport.tryParseUuid(enrolmentId);
@@ -129,6 +137,8 @@ public class FundoEnrolmentController {
 
     @PostMapping("/enrolments/{enrolmentId}/start")
     public ResponseEntity<Map<String, Object>> start(@PathVariable String enrolmentId) {
+        ResponseEntity<Map<String, Object>> forbidden = learnerForbidden();
+        if (forbidden != null) return forbidden;
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
         UUID eid = FundoApiSupport.tryParseUuid(enrolmentId);
@@ -142,6 +152,8 @@ public class FundoEnrolmentController {
 
     @GetMapping("/enrolments/{enrolmentId}/progress")
     public ResponseEntity<Map<String, Object>> progressByEnrolment(@PathVariable String enrolmentId) {
+        ResponseEntity<Map<String, Object>> forbidden = learnerForbidden();
+        if (forbidden != null) return forbidden;
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
         UUID eid = FundoApiSupport.tryParseUuid(enrolmentId);
@@ -157,6 +169,8 @@ public class FundoEnrolmentController {
 
     @PostMapping("/enrolments/{enrolmentId}/certificate")
     public ResponseEntity<Map<String, Object>> issueCertificate(@PathVariable String enrolmentId) {
+        ResponseEntity<Map<String, Object>> forbidden = learnerForbidden();
+        if (forbidden != null) return forbidden;
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
         UUID eid = FundoApiSupport.tryParseUuid(enrolmentId);
@@ -176,5 +190,9 @@ public class FundoEnrolmentController {
             return FundoApiSupport.conflict("ENROLMENT_NOT_COMPLETED",
                     "Certificate may only be issued for COMPLETED enrolments");
         }
+    }
+
+    private ResponseEntity<Map<String, Object>> learnerForbidden() {
+        return FundoApiSupport.requireLearnerAccess();
     }
 }

@@ -1,10 +1,22 @@
 "use client";
 
 import { BookOpenCheck, CheckCircle2, Clock3, FileText, Library, PlayCircle, Radio, Route, Search, Activity } from "lucide-react";
-import { asArray, asRecord, asText, type ModalKey, type Row } from "@/components/learning/learningUtils";
+import { asArray, asRecord, type ModalKey, type Row, type SectionKey } from "@/components/learning/learningUtils";
 import { Panel, CreationCard, CourseCard, QuickActionCard, StatCard, ActionText, countOf, rowTitle, learningProgressPercent } from "@/components/learning/SharedComponents";
 
-export function Overview({ data, openSection, setModal }: { data: Record<string, unknown>; openSection: (s: string) => void; setModal: (m: ModalKey, defaults?: Row) => void }) {
+export function Overview({
+  data,
+  openSection,
+  setModal,
+  canLearn = true,
+  canUseStudio = false,
+}: {
+  data: Record<string, unknown>;
+  openSection: (s: SectionKey) => void;
+  setModal: (m: ModalKey, defaults?: Row) => void;
+  canLearn?: boolean;
+  canUseStudio?: boolean;
+}) {
   const catalog = asRecord(data.catalog);
   const studio = asRecord(data.studio);
   const myLearning = asRecord(data.myLearning);
@@ -27,7 +39,7 @@ export function Overview({ data, openSection, setModal }: { data: Record<string,
   return (
     <div className="space-y-3 pb-20 md:pb-3">
       {/* Primary Action - Continue Learning */}
-      {nextCourse && (
+      {canLearn && nextCourse && (
         <div className="rounded-lg bg-gradient-to-r from-teal-50 to-teal-100/50 border border-teal-200 p-4 sm:p-5">
           <div className="flex items-start gap-3 justify-between">
             <div className="min-w-0 flex-1">
@@ -50,7 +62,7 @@ export function Overview({ data, openSection, setModal }: { data: Record<string,
       )}
 
       {/* Recommended Courses Section */}
-      {relevantRows.length > 0 && (
+      {canLearn && relevantRows.length > 0 && (
         <Panel title="Recommended for you" action={<ActionText onClick={() => openSection("learner")}>See all</ActionText>}>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {relevantRows.map((row, index) => (
@@ -66,26 +78,28 @@ export function Overview({ data, openSection, setModal }: { data: Record<string,
       )}
 
       {/* Learning Path */}
-      <Panel title="My learning path" action={<ActionText onClick={() => openSection("learner")}>View all</ActionText>}>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <QuickActionCard
-            icon={<Route />}
-            title="Continue learning"
-            detail={`${enrolmentCount} active enrollments`}
-            onClick={() => openSection("learner")}
-            teal
-          />
-          <QuickActionCard
-            icon={<Search />}
-            title="Browse courses"
-            detail={`${courseCount} courses available`}
-            onClick={() => openSection("learner")}
-          />
-        </div>
-      </Panel>
+      {canLearn ? (
+        <Panel title="My learning path" action={<ActionText onClick={() => openSection("learner")}>View all</ActionText>}>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <QuickActionCard
+              icon={<Route />}
+              title="Continue learning"
+              detail={`${enrolmentCount} active enrollments`}
+              onClick={() => openSection("learner")}
+              teal
+            />
+            <QuickActionCard
+              icon={<Search />}
+              title="Browse courses"
+              detail={`${courseCount} courses available`}
+              onClick={() => openSection("learner")}
+            />
+          </div>
+        </Panel>
+      ) : null}
 
       {/* Creation Tools - Navigation to dedicated list pages */}
-      {draftCount >= 0 && (
+      {canUseStudio && draftCount >= 0 && (
         <Panel title="Create & coordinate" action={<ActionText onClick={() => openSection("studio")}>Full studio</ActionText>}>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <CreationCard icon={<BookOpenCheck />} label="Courses" onClick={() => openSection("studio")} />

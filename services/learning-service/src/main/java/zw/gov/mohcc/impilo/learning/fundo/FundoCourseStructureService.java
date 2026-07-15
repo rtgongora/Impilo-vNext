@@ -39,7 +39,7 @@ public class FundoCourseStructureService {
                 .filter(c -> c.getTenantId().equals(tenantId));
         if (course.isEmpty()) return Optional.empty();
 
-        List<CourseModuleEntity> modules = moduleRepository.findByCourseIdOrderBySequenceNoAsc(courseId);
+        List<CourseModuleEntity> modules = moduleRepository.findByTenantIdAndCourseIdOrderBySequenceNoAsc(tenantId, courseId);
         Map<UUID, List<Map<String, Object>>> lessonsByModule = new HashMap<>();
         if (!modules.isEmpty()) {
             List<UUID> moduleIds = modules.stream().map(CourseModuleEntity::getId).toList();

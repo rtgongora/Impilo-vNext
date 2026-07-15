@@ -73,6 +73,11 @@ public class FundoCatalogService {
         m.put("language", c.getLanguage());
         m.put("estimatedDurationMinutes", c.getEstimatedDurationMinutes());
         m.put("mandatory", c.isMandatory());
+        m.put("audienceType", c.getAudienceType());
+        m.put("audienceRoles", c.getAudienceRoles());
+        m.put("dueDateType", c.getDueDateType());
+        m.put("dueDate", c.getDueDate() == null ? null : c.getDueDate().toString());
+        m.put("dueDateDaysFromEnrollment", c.getDueDateDaysFromEnrollment());
         m.put("cpdEligible", c.isCpdEligible());
         m.put("cpdPoints", c.getCpdPoints());
         m.put("version", c.getVersion());

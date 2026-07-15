@@ -67,7 +67,7 @@ public class FundoEnrolmentService {
         if (req.enrolmentType() != null && !"SELF".equals(req.enrolmentType())) {
             row.setAssignedAt(now);
         }
-        row.setDueAt(req.dueAt());
+        row.setDueAt(resolveDueAt(req.dueAt(), course, now));
         enrolmentRepository.save(row);
 
         outbox.append("FundoEnrolment", row.getId().toString(),
@@ -162,6 +162,17 @@ public class FundoEnrolmentService {
         m.put("completedAt", e.getCompletedAt() == null ? null : e.getCompletedAt().toString());
         m.put("createdAt", e.getCreatedAt() == null ? null : e.getCreatedAt().toString());
         return m;
+    }
+
+    private static OffsetDateTime resolveDueAt(OffsetDateTime requestedDueAt, CourseEntity course, OffsetDateTime enrolledAt) {
+        if (requestedDueAt != null) return requestedDueAt;
+        if ("FIXED".equals(course.getDueDateType())) {
+            return course.getDueDate();
+        }
+        if ("RELATIVE".equals(course.getDueDateType()) && course.getDueDateDaysFromEnrollment() != null) {
+            return enrolledAt.plusDays(course.getDueDateDaysFromEnrollment());
+        }
+        return null;
     }
 
     public record EnrolmentRequest(

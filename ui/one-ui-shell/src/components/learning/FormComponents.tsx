@@ -48,14 +48,44 @@ export function ModalFields({ kind, defaults = {} }: { kind: ModalKey; defaults?
   const courseId = asText(defaults.courseId ?? defaults.course_id ?? defaults.id ?? defaults.code, "");
   const courseTitle = asText(defaults.title ?? defaults.name ?? defaults.courseTitle, "");
   const languages = useLanguageOptions();
+  const [audienceType, setAudienceType] = useState(asText(defaults.audienceType, "ALL_LEARNERS"));
+  const [dueDateType, setDueDateType] = useState(asText(defaults.dueDateType, ""));
+  const selectedRoles = asText(defaults.audienceRoles, "")
+    .split(",")
+    .map((role) => role.trim())
+    .filter(Boolean);
 
   if (kind === "course")
     return (
       <>
         <Field name="code" label="Code" defaultValue={asText(defaults.code, "")} required />
         <Field name="title" label="Title" defaultValue={courseTitle} required />
-        <Field name="category" label="Category" defaultValue={asText(defaults.category, "")} />
-        <Field name="level" label="Level" defaultValue={asText(defaults.level, "")} />
+        <FieldSelect
+          name="category"
+          label="Category"
+          defaultValue={asText(defaults.category, "GENERAL")}
+          options={[
+            { value: "GENERAL", label: "General", detail: "" },
+            { value: "CLINICAL_GOVERNANCE", label: "Clinical Governance", detail: "" },
+            { value: "PATIENT_SAFETY", label: "Patient Safety", detail: "" },
+            { value: "DIGITAL_HEALTH", label: "Digital Health", detail: "" },
+            { value: "DATA_QUALITY", label: "Data Quality", detail: "" },
+            { value: "PUBLIC_HEALTH", label: "Public Health", detail: "" },
+            { value: "OPERATIONS", label: "Operations", detail: "" },
+            { value: "COMPLIANCE", label: "Compliance", detail: "" },
+          ]}
+        />
+        <FieldSelect
+          name="level"
+          label="Level"
+          defaultValue={asText(defaults.level, "FOUNDATION")}
+          options={[
+            { value: "FOUNDATION", label: "Foundation", detail: "" },
+            { value: "INTERMEDIATE", label: "Intermediate", detail: "" },
+            { value: "ADVANCED", label: "Advanced", detail: "" },
+            { value: "REFRESHER", label: "Refresher", detail: "" },
+          ]}
+        />
         <FieldSelect
           name="language"
           label="Course Language"
@@ -65,16 +95,73 @@ export function ModalFields({ kind, defaults = {} }: { kind: ModalKey; defaults?
         />
         <Field name="estimatedDurationMinutes" label="Duration (minutes)" type="number" defaultValue={asText(defaults.estimatedDurationMinutes, "30")} />
         <FieldSelect
-          name="dueDateType"
-          label="Due Date Type"
-          defaultValue={asText(defaults.dueDateType, "FIXED")}
+          name="status"
+          label="Status"
+          defaultValue={asText(defaults.status, "DRAFT")}
           options={[
-            { value: "FIXED", label: "Fixed Date", detail: "Exact due date for all users" },
-            { value: "RELATIVE", label: "Relative", detail: "Days from enrollment date" },
+            { value: "DRAFT", label: "Draft", detail: "" },
+            { value: "PUBLISHED", label: "Published", detail: "" },
+            { value: "ARCHIVED", label: "Archived", detail: "" },
           ]}
         />
-        {asText(defaults.dueDateType, "FIXED") === "FIXED" && <Field name="dueDate" label="Due Date" type="datetime-local" placeholder="2026-12-31T23:59" />}
-        {asText(defaults.dueDateType, "FIXED") === "RELATIVE" && <Field name="dueDateDaysFromEnrollment" label="Days from Enrollment" type="number" placeholder="14" />}
+        <FieldCheckbox name="mandatory" label="Mandatory" defaultChecked={defaults.mandatory === true || defaults.mandatory === "true"} />
+        <FieldSelect
+          name="audienceType"
+          label="Participants"
+          defaultValue={audienceType}
+          onChange={setAudienceType}
+          wide={audienceType !== "SPECIFIC_ROLES"}
+          options={[
+            { value: "ALL_LEARNERS", label: "All Learners", detail: "" },
+            { value: "SYSTEM_USERS", label: "System Users", detail: "" },
+            { value: "CITIZENS", label: "Citizens", detail: "" },
+            { value: "SPECIFIC_ROLES", label: "Specific Roles", detail: "" },
+          ]}
+        />
+        {audienceType === "SPECIFIC_ROLES" ? (
+          <FieldMultiSelect
+            name="audienceRoles"
+            label="Roles"
+            defaultValues={selectedRoles}
+            options={[
+              "FACILITY_ADMIN",
+              "CLINICIAN",
+              "NURSE",
+              "PHARMACIST",
+              "FINANCE",
+              "SUPPORT_AGENT",
+              "PUBLIC_HEALTH_OFFICER",
+              "ENV_HEALTH",
+              "CHW",
+              "CAREGIVER",
+              "CARE_PARTNER",
+            ]}
+          />
+        ) : null}
+        <FieldSelect
+          name="dueDateType"
+          label="Due Date Type"
+          defaultValue={dueDateType}
+          onChange={setDueDateType}
+          options={[
+            { value: "", label: "No Due Date", detail: "" },
+            { value: "FIXED", label: "Fixed Date", detail: "" },
+            { value: "RELATIVE", label: "Relative", detail: "" },
+          ]}
+        />
+        {dueDateType === "FIXED" ? (
+          <Field name="dueDate" label="Due Date" type="datetime-local" defaultValue={toDateTimeLocal(defaults.dueDate)} placeholder="2026-12-31T23:59" required />
+        ) : null}
+        {dueDateType === "RELATIVE" ? (
+          <Field
+            name="dueDateDaysFromEnrollment"
+            label="Days after Enrollment"
+            type="number"
+            defaultValue={asText(defaults.dueDateDaysFromEnrollment, "")}
+            placeholder="14"
+            required
+          />
+        ) : null}
         <Field name="description" label="Description" defaultValue={asText(defaults.description, "")} area wide />
       </>
     );
@@ -217,24 +304,69 @@ export function FieldSelect({
   defaultValue,
   options,
   wide = false,
+  onChange,
 }: {
   name: string;
   label: string;
   defaultValue: string;
   options: Array<{ value: string; label: string; detail: string }>;
   wide?: boolean;
+  onChange?: (value: string) => void;
 }) {
   const className = "mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100";
   return (
     <label className={wide ? "sm:col-span-2" : ""}>
       <span className="text-xs font-medium text-slate-600">{label}</span>
-      <select name={name} defaultValue={defaultValue} className={className}>
+      <select name={name} defaultValue={defaultValue} onChange={(event) => onChange?.(event.target.value)} className={className}>
         {options.map((opt) => (
           <option key={opt.value} value={opt.value} title={opt.detail}>
             {opt.label}
           </option>
         ))}
       </select>
+    </label>
+  );
+}
+
+export function FieldMultiSelect({
+  name,
+  label,
+  defaultValues,
+  options,
+}: {
+  name: string;
+  label: string;
+  defaultValues: string[];
+  options: string[];
+}) {
+  const className = "mt-1 h-32 w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100";
+  return (
+    <label>
+      <span className="text-xs font-medium text-slate-600">{label}</span>
+      <select name={name} defaultValue={defaultValues} multiple required className={className}>
+        {options.map((role) => (
+          <option key={role} value={role}>
+            {role.replace(/_/g, " ")}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+export function FieldCheckbox({
+  name,
+  label,
+  defaultChecked,
+}: {
+  name: string;
+  label: string;
+  defaultChecked?: boolean;
+}) {
+  return (
+    <label className="mt-5 inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700">
+      <input type="checkbox" name={name} value="true" defaultChecked={defaultChecked} className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500" />
+      <span>{label}</span>
     </label>
   );
 }
@@ -251,4 +383,10 @@ export function modalTitle(kind: ModalKey) {
     cohort: "Create cohort",
     session: "Schedule session",
   }[kind];
+}
+
+function toDateTimeLocal(value: unknown) {
+  const text = asText(value, "");
+  if (!text) return "";
+  return text.slice(0, 16);
 }

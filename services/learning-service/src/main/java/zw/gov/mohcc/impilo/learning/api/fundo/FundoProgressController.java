@@ -32,6 +32,8 @@ public class FundoProgressController {
     @PostMapping("/progress")
     public ResponseEntity<Map<String, Object>> recordProgress(
             @RequestBody(required = false) Map<String, Object> body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireLearnerAccess();
+        if (forbidden != null) return forbidden;
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
         if (tenantId == null || body == null) {
@@ -74,6 +76,8 @@ public class FundoProgressController {
     public ResponseEntity<Map<String, Object>> listProgress(
             @RequestParam(required = false) String subjectType,
             @RequestParam(required = false) String subjectId) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireLearnerAccess();
+        if (forbidden != null) return forbidden;
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
         Map<String, Object> data = new LinkedHashMap<>();

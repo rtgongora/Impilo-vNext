@@ -32,6 +32,8 @@ public class FundoAuthoringController {
     @PostMapping("/catalog")
     public ResponseEntity<Map<String, Object>> createCourse(
             @RequestBody(required = false) FundoAuthoringService.CourseUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         if (tenantId == null) return tenantInvalid();
         return respond("course", authoring.createCourse(tenantId, body));
@@ -41,6 +43,8 @@ public class FundoAuthoringController {
     public ResponseEntity<Map<String, Object>> updateCourse(
             @PathVariable String courseId,
             @RequestBody(required = false) FundoAuthoringService.CourseUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         UUID cid = FundoApiSupport.tryParseUuid(courseId);
         if (tenantId == null || cid == null) {
@@ -57,6 +61,8 @@ public class FundoAuthoringController {
     public ResponseEntity<Map<String, Object>> createModule(
             @PathVariable String courseId,
             @RequestBody(required = false) FundoAuthoringService.ModuleUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         UUID cid = FundoApiSupport.tryParseUuid(courseId);
         if (tenantId == null || cid == null) {
@@ -69,6 +75,8 @@ public class FundoAuthoringController {
     public ResponseEntity<Map<String, Object>> updateModule(
             @PathVariable String moduleId,
             @RequestBody(required = false) FundoAuthoringService.ModuleUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         UUID mid = FundoApiSupport.tryParseUuid(moduleId);
         if (tenantId == null || mid == null) {
@@ -84,6 +92,8 @@ public class FundoAuthoringController {
     public ResponseEntity<Map<String, Object>> createLesson(
             @PathVariable String moduleId,
             @RequestBody(required = false) FundoAuthoringService.LessonUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         UUID mid = FundoApiSupport.tryParseUuid(moduleId);
         if (tenantId == null || mid == null) {
@@ -96,6 +106,8 @@ public class FundoAuthoringController {
     public ResponseEntity<Map<String, Object>> updateLesson(
             @PathVariable String lessonId,
             @RequestBody(required = false) FundoAuthoringService.LessonUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         UUID lid = FundoApiSupport.tryParseUuid(lessonId);
         if (tenantId == null || lid == null) {
@@ -111,6 +123,8 @@ public class FundoAuthoringController {
     @PostMapping("/pathways")
     public ResponseEntity<Map<String, Object>> createPathway(
             @RequestBody(required = false) FundoAuthoringService.PathwayUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         if (tenantId == null) return tenantInvalid();
         return respond("pathway", authoring.createPathway(tenantId, body));
@@ -120,6 +134,8 @@ public class FundoAuthoringController {
     public ResponseEntity<Map<String, Object>> updatePathway(
             @PathVariable String pathwayId,
             @RequestBody(required = false) FundoAuthoringService.PathwayUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         UUID pid = FundoApiSupport.tryParseUuid(pathwayId);
         if (tenantId == null || pid == null) {
@@ -134,6 +150,8 @@ public class FundoAuthoringController {
     public ResponseEntity<Map<String, Object>> addPathwayItem(
             @PathVariable String pathwayId,
             @RequestBody(required = false) FundoAuthoringService.PathwayItemUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         UUID pid = FundoApiSupport.tryParseUuid(pathwayId);
         if (tenantId == null || pid == null) {
@@ -147,6 +165,8 @@ public class FundoAuthoringController {
     @PostMapping("/assessments")
     public ResponseEntity<Map<String, Object>> createAssessment(
             @RequestBody(required = false) FundoAuthoringService.AssessmentUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         if (tenantId == null) return tenantInvalid();
         return respond("assessment", authoring.createAssessment(tenantId, body));
@@ -156,6 +176,8 @@ public class FundoAuthoringController {
     public ResponseEntity<Map<String, Object>> updateAssessment(
             @PathVariable String assessmentId,
             @RequestBody(required = false) FundoAuthoringService.AssessmentUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         UUID aid = FundoApiSupport.tryParseUuid(assessmentId);
         if (tenantId == null || aid == null) {
@@ -170,6 +192,8 @@ public class FundoAuthoringController {
     public ResponseEntity<Map<String, Object>> addQuestion(
             @PathVariable String assessmentId,
             @RequestBody(required = false) FundoAuthoringService.QuestionUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         UUID aid = FundoApiSupport.tryParseUuid(assessmentId);
         if (tenantId == null || aid == null) {
@@ -183,6 +207,8 @@ public class FundoAuthoringController {
             @PathVariable String assessmentId,
             @PathVariable String questionId,
             @RequestBody(required = false) FundoAuthoringService.QuestionUpsert body) {
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireSystemAdmin();
+        if (forbidden != null) return forbidden;
         UUID tenantId = currentTenant();
         UUID aid = FundoApiSupport.tryParseUuid(assessmentId);
         UUID qid = FundoApiSupport.tryParseUuid(questionId);

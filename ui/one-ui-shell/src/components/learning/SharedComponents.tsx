@@ -41,19 +41,22 @@ export function StatusPill({ children }: { children: ReactNode | string }) {
 export function CourseCard({ row, onEnroll, onDetails }: { row: Row; onEnroll: () => void; onDetails: () => void }) {
   const progress = learningProgressPercent(row);
   const isEnrolled = isLearningRowEnrolled(row);
+  const required = row.mandatory === true || row.mandatoryIncomplete === true || row.mandatory === "true";
 
   return (
-    <div className="flex flex-col rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden hover:shadow-md transition">
+    <div className={["flex flex-col rounded-lg border bg-white shadow-sm overflow-hidden hover:shadow-md transition", required ? "border-amber-300" : "border-slate-200"].join(" ")}>
       {/* Status pills */}
       <div className="flex flex-wrap items-center gap-1 px-3 pt-2">
         <StatusPill>{asText(row.status ?? row.courseStatus, "Open")}</StatusPill>
         {row.level ? <StatusPill>{asText(row.level as string)}</StatusPill> : null}
+        {required ? <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-800">Required</span> : null}
       </div>
 
       {/* Content */}
       <div className="flex-1 flex flex-col px-3 py-2 min-w-0">
         <p className="font-semibold text-slate-950 text-sm truncate">{rowTitle(row, "Course")}</p>
         <p className="text-xs text-slate-500 mt-1 line-clamp-2">{rowDetail(row)}</p>
+        {required ? <p className="mt-2 text-xs font-semibold text-amber-700">{asText(row.recommendationNotice, "Required learning")}</p> : null}
 
         {/* Progress bar if enrolled */}
         {isEnrolled && (

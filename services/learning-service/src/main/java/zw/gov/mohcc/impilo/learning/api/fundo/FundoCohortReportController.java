@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import zw.gov.mohcc.impilo.companion.context.RequestContext;
-import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 import zw.gov.mohcc.impilo.learning.fundo.FundoCohortReportService;
 
 /**
@@ -36,20 +34,12 @@ public class FundoCohortReportController {
     public ResponseEntity<Map<String, Object>> cohortCompletions(
             @RequestParam(required = false) String pathwayId,
             @RequestParam(required = false) String courseId) {
-        RequestContext ctx = RequestContextHolder.require();
-        UUID tenantId = FundoApiSupport.requireTenantOrNull(ctx);
-        if (tenantId == null) {
-            return FundoApiSupport.dataEnvelope(Map.of(
-                    "filter", Map.of("pathwayId", pathwayId, "courseId", courseId),
-                    "totals", Map.of(
-                            "courses", 0, "enrolledCount", 0, "inProgressCount", 0,
-                            "completedCount", 0, "cancelledCount", 0, "certificatesIssued", 0),
-                    "items", java.util.List.of()));
-        }
+        ResponseEntity<Map<String, Object>> forbidden = FundoApiSupport.requireReportAccess();
+        if (forbidden != null) return forbidden;
         UUID pid = FundoApiSupport.tryParseUuid(pathwayId);
         UUID cid = FundoApiSupport.tryParseUuid(courseId);
         Map<String, Object> data = reportService.cohortCompletions(
-                tenantId, new FundoCohortReportService.CohortReportFilter(pid, cid));
+                null, new FundoCohortReportService.CohortReportFilter(pid, cid));
         return FundoApiSupport.dataEnvelope(data);
     }
 }
