@@ -1,0 +1,47 @@
+==================================================================
+ J1 — Dispatcher callback console (BE-1)  [all THROUGH the BFF]
+==================================================================
+PASS  J1.1 anonymous SOS captured (202), ref=SOS-20260715-5FD13, psql status=AWAITING_CALLBACK
+PASS  J1.2 AWAITING_CALLBACK worklist (through BFF) lists the request (id=26632e02-9d89-4286-8d41-e66cf6becb1d)
+
+==================================================================
+ J2 — Public SOS status-by-reference (BE-2)  [THROUGH the BFF public lane]
+==================================================================
+keys: ['callbackPending', 'createdAt', 'requestReference', 'stage', 'status']
+status: AWAITING_CALLBACK callbackPending: True stage: Awaiting callback confirmation
+missing_required: []
+extra_keys: []
+PII_LEAKS: []
+PASS  J2.1 public status = EXACTLY {requestReference,status,stage,callbackPending,createdAt}, AWAITING_CALLBACK, PII-free
+PASS  J2.2 unknown reference → 404 (no existence oracle)
+
+==================================================================
+ J1 (cont.) — gate 409-before → verify → drop → triage 201-after
+==================================================================
+PASS  J1.3 triage before verify → 409 CALLBACK_VERIFICATION_REQUIRED at the daidzai SoR (PD-3 gate holds; BFF proxy surfaces it as HTTP 500 — journalled)
+PASS  J1.4 verify-callback (through BFF) → 200, status→RECEIVED, callbackVerified=true (psql: RECEIVED|true)
+PASS  J1.5 request no longer on the AWAITING_CALLBACK worklist
+PASS  J2.3 public status now RECEIVED + callbackPending=false (release reflected to the citizen tracker)
+PASS  J1.6 triage AFTER verify → 201 TRIAGED (console action released the PD-3 gate)
+
+==================================================================
+ J3 — Public health-info search (BE-3)  [THROUGH the BFF public lane]
+==================================================================
+PASS  J3.0 seeded 3 PUBLISHED national-spine articles
+PASS  J3.1 education?q=malaria → the one matching article, allow-listed fields only
+PASS  J3.2 non-matching query → 0 rows (genuine search)
+PASS  J3.3 category=immunisation (no q) → the one immunisation article (browse lane intact)
+
+==================================================================
+ J4 — R1 contact-OTP register  [BFF public auth lane, contract-level
+      live; the Keycloak+IA hop is proven live in gateway-w1-runtime-proof]
+==================================================================
+PASS  J4.1 POST otp/request blank value → 400 VALIDATION (endpoint reachable through BFF)
+PASS  J4.2 POST otp/request malformed phone → 400 VALIDATION (R1 normalize gate)
+PASS  J4.3 POST otp/verify REGISTER, no prior OTP → 400 OTP_EXPIRED (real Redis store consulted)
+PASS  J4.4 POST otp/verify bad purpose → 400 VALIDATION (purpose must be REGISTER or ATTACH)
+PASS  J4.5 POST otp/verify missing code → 400 VALIDATION
+
+==================================================================
+ RESULT: pass=18 fail=0
+==================================================================
