@@ -196,6 +196,160 @@ public class TheatreService {
         return episodeService.getEpisode(episodeId);
     }
 
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+    // ── Wave 5b §15 — EMERGENCY SURGERY journey ─────────────────────────────────────────────────────
+    // ED/ward decision → RAPID theatre activation. Unscheduled use BYPASSES the elective waitlist/
+    // scheduler (intake places no slot). Triage is IMMEDIATE/EMERGENCY; an emergency override is armed
+    // so booking-readiness + the WHO Sign-In gate can be crossed under a recorded, AUDITED justification;
+    // a MINIMAL safe preop (a reduced set, not the full elective assessment) is recorded; the on-call
+    // team is mobilised. If trauma-originated the episode already carries trauma_episode_id (consumed at
+    // intake from X-Trauma-Episode-ID). Consent follows the emergency-exception path — see
+    // recordEmergencyConsentException — never blocking life-saving surgery on absent consent.
+    // ══════════════════════════════════════════════════════════════════════════════════════════════
+
+    @Transactional
+    public Map<String, Object> activateEmergencySurgery(Map<String, Object> body) {
+        Map<String, Object> intake = new LinkedHashMap<>(body != null ? body : Map.of());
+        String priority = normalisePriority(
+                ClinicalPayloadMapper.str(intake, "triagePriority", "triage_priority", "priority"));
+        if (!List.of("IMMEDIATE", "EMERGENCY").contains(priority)) {
+            priority = "EMERGENCY"; // rapid activation is never elective
+        }
+        intake.put("triagePriority", priority);
+
+        // RAPID intake (also consumes trauma_episode_id + places a STAT OROS order; no elective slot).
+        Map<String, Object> created = intakeFromOrosOrder(intake);
+        UUID episodeId = UUID.fromString(String.valueOf(created.get("id")));
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+
+        // Arm the emergency override so the downstream booking-readiness + WHO Sign-In gates can be
+        // crossed under a recorded justification. Life-saving surgery is never blocked by process.
+        String reason = Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(intake, "emergencyReason", "emergency_reason", "reason", "indication"),
+                "Emergency surgery — rapid theatre activation");
+        e.setEmergencyOverride(true);
+        e.setEmergencyOverrideReason(reason);
+        episodeRepository.save(e);
+
+        // MINIMAL safe preop — reduced safety-critical set only; full assessment deferred.
+        recordMinimalPreop(episodeId, intake);
+
+        // Emergency team mobilisation (surgeon + anaesthetist + scrub/theatre) — emitted for the roster/
+        // notification consumers to page the on-call team. By reference; never fabricates a roster row.
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.emergency.team-mobilised",
+                withTrauma(e, Map.of("episode_id", episodeId.toString(), "triage_priority", priority,
+                        "surgeon_id", nullSafe(e.getSurgeonId()),
+                        "anaesthetist_id", nullSafe(e.getAnaesthetistId()))));
+        appendOutbox("SAFETY", episodeId.toString(), "theatre.emergency.activated",
+                withTrauma(e, Map.of("episode_id", episodeId.toString(), "triage_priority", priority,
+                        "reason", reason, "activated_by", actor())));
+
+        Map<String, Object> out = new LinkedHashMap<>(episodeService.getEpisode(episodeId));
+        out.put("emergency_override", true);
+        out.put("triage_priority", priority);
+        return out;
+    }
+
+    /** Record a MINIMAL safe preop (reduced set) for an emergency case — best-effort, never blocks. */
+    private void recordMinimalPreop(UUID episodeId, Map<String, Object> body) {
+        Map<String, Object> preop = new LinkedHashMap<>();
+        preop.put("assessmentType", "NURSING");
+        preop.put("assessedBy", actor());
+        preop.put("allergiesReviewed",
+                body.getOrDefault("allergiesReviewed", body.getOrDefault("allergies_reviewed", Boolean.TRUE)));
+        preop.put("fastingVerified",
+                body.getOrDefault("fastingVerified", body.getOrDefault("fasting_verified", Boolean.FALSE)));
+        String notes = ClinicalPayloadMapper.str(body, "minimalPreopNotes", "minimal_preop_notes", "preopNotes");
+        preop.put("nursingNotes", notes != null ? notes
+                : "EMERGENCY RAPID PREOP — reduced safety-critical set (allergies, aspiration risk, airway); "
+                + "full assessment deferred");
+        try {
+            episodeService.submitPreop(episodeId, preop);
+        } catch (RuntimeException ex) {
+            log.warn("INPATIENT-THEATRE: minimal emergency preop best-effort failed for {}: {}",
+                    episodeId, ex.getMessage());
+        }
+    }
+
+    /** Allowed emergency consent-exception bases (per the MVUMO emergency-exception path). */
+    static final java.util.Set<String> CONSENT_EXCEPTION_BASES =
+            java.util.Set.of("DEFERRED", "PROXY", "TWO_DOCTOR");
+
+    static String normaliseConsentExceptionBasis(String raw) {
+        if (raw == null || raw.isBlank()) return "DEFERRED";
+        String b = raw.trim().toUpperCase().replace('-', '_').replace(' ', '_');
+        if (b.equals("TWODOCTOR")) return "TWO_DOCTOR";
+        return CONSENT_EXCEPTION_BASES.contains(b) ? b : "DEFERRED";
+    }
+
+    /**
+     * §15 emergency consent exception — record (and AUDIT) that surgery proceeds without ordinary
+     * informed consent. Basis is one of DEFERRED (unable to consent, no proxy — proceed to save life),
+     * PROXY (next-of-kin/surrogate) or TWO_DOCTOR (two independent clinicians authorise). This does NOT
+     * fabricate a GRANTED consent: it sets consent_status = EMERGENCY_EXCEPTION + arms the emergency
+     * override, which {@code startProcedure} recognises to bypass the consent gate. Every override emits
+     * a SAFETY audit event. Never blocks life-saving surgery on absent consent.
+     */
+    @Transactional
+    public Map<String, Object> recordEmergencyConsentException(UUID episodeId, Map<String, Object> body) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        String basis = normaliseConsentExceptionBasis(
+                ClinicalPayloadMapper.str(body, "basis", "exceptionBasis", "exception_basis"));
+        String reason = ClinicalPayloadMapper.str(body, "reason", "justification", "clinicalJustification");
+        if (reason == null || reason.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "An emergency consent exception requires a clinical justification (reason)");
+        }
+        String authorisedBy = Objects.requireNonNullElse(
+                ClinicalPayloadMapper.str(body, "authorisedBy", "authorised_by", "authorisingClinician"), actor());
+
+        Map<String, Object> proof = new LinkedHashMap<>();
+        proof.put("basis", basis);
+        proof.put("reason", reason);
+        proof.put("authorised_by", authorisedBy);
+        if ("TWO_DOCTOR".equals(basis)) {
+            String second = ClinicalPayloadMapper.str(body, "secondClinician", "second_clinician", "secondDoctor");
+            if (second == null || second.isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "TWO_DOCTOR emergency consent requires a second authorising clinician (secondClinician)");
+            }
+            proof.put("second_clinician", second);
+        } else if ("PROXY".equals(basis)) {
+            String proxy = ClinicalPayloadMapper.str(body, "proxyName", "proxy_name", "nextOfKin");
+            if (proxy == null || proxy.isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "PROXY emergency consent requires the proxy / next-of-kin (proxyName)");
+            }
+            proof.put("proxy_name", proxy);
+            proof.put("proxy_relationship",
+                    nullSafe(ClinicalPayloadMapper.str(body, "proxyRelationship", "proxy_relationship")));
+        }
+        String proofRef;
+        try {
+            proofRef = objectMapper.writeValueAsString(proof);
+        } catch (JsonProcessingException ex) {
+            proofRef = "EMERGENCY_EXCEPTION:" + basis;
+        }
+
+        e.setConsentStatus("EMERGENCY_EXCEPTION");
+        e.setEmergencyOverride(true);
+        if (e.getEmergencyOverrideReason() == null || e.getEmergencyOverrideReason().isBlank()) {
+            e.setEmergencyOverrideReason("Emergency consent exception (" + basis + "): " + reason);
+        }
+        e.setConsentProofRef(proofRef);
+        episodeRepository.save(e);
+
+        appendOutbox("SAFETY", episodeId.toString(), "theatre.consent.emergency-exception",
+                withTrauma(e, Map.of("episode_id", episodeId.toString(), "basis", basis, "reason", reason,
+                        "authorised_by", authorisedBy, "patient_id", e.getSubjectCpid())));
+
+        Map<String, Object> out = new LinkedHashMap<>(episodeService.getEpisode(episodeId));
+        out.put("consent_status", "EMERGENCY_EXCEPTION");
+        out.put("emergency_consent_basis", basis);
+        out.put("emergency_override", true);
+        return out;
+    }
+
     @Transactional
     public Map<String, Object> setTriage(UUID episodeId, Map<String, Object> body) {
         ProcedureEpisodeEntity e = requireEpisode(episodeId);
@@ -1151,6 +1305,17 @@ public class TheatreService {
         link.setUnitsRequested(ClinicalPayloadMapper.integer(body, "units", "units_requested"));
         link.setBloodGroup(ClinicalPayloadMapper.str(body, "bloodGroup", "blood_group"));
         link.setComponentType(ClinicalPayloadMapper.str(body, "componentType", "component_type"));
+        // ── Wave 5b §15: emergency uncrossmatched path. In a life-threatening haemorrhage, blood is
+        // needed before a crossmatch can complete — issue universal-donor O-negative uncrossmatched.
+        // MADI remains the SoR for the reservation/issue; we default the group + flag the request so the
+        // event stream and MADI can honour the emergency-issue protocol.
+        boolean emergencyBlood = Boolean.TRUE.equals(body.get("emergency"))
+                || Boolean.parseBoolean(String.valueOf(body.getOrDefault("emergency", "false")))
+                || Boolean.TRUE.equals(body.get("uncrossmatched"))
+                || Boolean.parseBoolean(String.valueOf(body.getOrDefault("uncrossmatched", "false")));
+        if (emergencyBlood && (link.getBloodGroup() == null || link.getBloodGroup().isBlank())) {
+            link.setBloodGroup("O_NEG");
+        }
         String idem = idempotency(episodeId, "blood-request");
         link.setIdempotencyKey(idem);
         String madiOrderId = madiBloodClient.requestBlood(e.getSubjectCpid(), link.getBloodGroup(),
@@ -1162,7 +1327,8 @@ public class TheatreService {
         bloodLinkRepository.save(link);
         appendOutbox("PROCEDURE", episodeId.toString(), "theatre.blood.requested", Map.of(
                 "episode_id", episodeId.toString(), "madi_order_id", nullSafe(madiOrderId),
-                "status", link.getStatus()));
+                "status", link.getStatus(), "emergency", emergencyBlood,
+                "blood_group", nullSafe(link.getBloodGroup())));
         return bloodLinkRow(link);
     }
 

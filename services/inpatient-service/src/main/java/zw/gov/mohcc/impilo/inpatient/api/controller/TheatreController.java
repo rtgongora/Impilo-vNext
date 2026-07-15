@@ -61,6 +61,21 @@ public class TheatreController {
         return theatreService.setTriage(id, body);
     }
 
+    // ── Wave 5b §15 — EMERGENCY SURGERY rapid activation + emergency consent exception ──
+    @PostMapping("/cases/emergency")
+    public ResponseEntity<Map<String, Object>> activateEmergency(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.TRAUMA_EPISODE_ID, required = false) String traumaEpisodeId) {
+        Map<String, Object> payload = withTraumaHeader(body, traumaEpisodeId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.activateEmergencySurgery(payload));
+    }
+
+    @PostMapping("/cases/{id}/consent/emergency-exception")
+    public Map<String, Object> emergencyConsentException(@PathVariable UUID id,
+                                                         @RequestBody Map<String, Object> body) {
+        return theatreService.recordEmergencyConsentException(id, body);
+    }
+
     @GetMapping("/queue")
     public List<Map<String, Object>> queue() {
         return theatreService.triageQueue();
