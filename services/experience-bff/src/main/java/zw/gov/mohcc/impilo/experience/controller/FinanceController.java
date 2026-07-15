@@ -163,12 +163,17 @@ public class FinanceController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @PathVariable String id) {
+            @PathVariable String id,
+            @RequestParam(value = "allowUnpriced", defaultValue = "false") boolean allowUnpriced) {
         try {
-            JsonNode result = costaClient.finalizeBill(id);
+            // allowUnpriced is an explicit governed override: finalize a bill that
+            // still carries pending-priced (no configured tariff) lines, treating
+            // them as zero. Default stays fail-closed — COSTA rejects unpriced
+            // lines unless this is true.
+            JsonNode result = costaClient.finalizeBill(id, allowUnpriced);
             return ResponseEntity.ok(Map.of("data", toBillingResource(result)));
         } catch (Exception e) {
-            log.error("Failed to finalize bill {}: {}", id, e.getMessage());
+            log.error("Failed to finalize bill {} (allowUnpriced={}): {}", id, allowUnpriced, e.getMessage());
             return upstreamFailure("COSTA_UNAVAILABLE", "Unable to finalize bill", requestId, correlationId);
         }
     }

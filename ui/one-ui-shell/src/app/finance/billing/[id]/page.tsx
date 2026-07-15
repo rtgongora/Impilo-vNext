@@ -28,6 +28,8 @@ interface BillLineItem {
   qty?: number;
   unitPrice?: number;
   amount?: number;
+  /** COSTA flags a line with no configured tariff: amount=0 until priced. */
+  pendingPricing?: boolean;
   [key: string]: unknown;
 }
 
@@ -147,8 +149,10 @@ function useBillPayments(billId: string) {
 function useBillAction(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ action, body }: { action: string; body?: Record<string, string> }) =>
-      apiClient.post(`/internal/v1/finance/billing/${id}/${action}`, body ?? {}),
+    mutationFn: ({ action, body, query }: { action: string; body?: Record<string, string>; query?: Record<string, string> }) => {
+      const qs = query ? `?${new URLSearchParams(query).toString()}` : "";
+      return apiClient.post(`/internal/v1/finance/billing/${id}/${action}${qs}`, body ?? {});
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["finance-billing", id] });
       queryClient.invalidateQueries({ queryKey: ["finance-billing"] });
@@ -170,6 +174,7 @@ export default function BillingDetailPage() {
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [refundAmount, setRefundAmount] = useState("");
   const [refundReason, setRefundReason] = useState("");
+  const [allowUnpriced, setAllowUnpriced] = useState(false);
 
   const { data, isLoading, error } = useBillingDetail(id);
   const { data: paymentsData, refetch: refetchPayments } = useBillPayments(id);
@@ -226,6 +231,9 @@ export default function BillingDetailPage() {
   const refunds: RefundResource[] = refundsData?.data ?? [];
   const hasPaidPayment = payments.some((p) => p.attributes.status === "PAID");
   const status = bill?.attributes.status ?? "";
+  // Lines COSTA could not price (no configured tariff) — finalizing these
+  // requires an explicit governed override.
+  const pendingLineCount = (bill?.attributes.lineItems ?? []).filter((l) => l.pendingPricing).length;
   const nextAction =
     status === "DRAFT" || status === "ACCUMULATING"
       ? "Submit for approval"
@@ -509,14 +517,46 @@ export default function BillingDetailPage() {
                 )}
 
                 {status === "APPROVED" && (
-                  <button
-                    onClick={() => billAction.mutate({ action: "finalize" })}
-                    disabled={billAction.isPending}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
-                  >
-                    {billAction.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-                    Finalize Bill
-                  </button>
+                  <div className="flex flex-col gap-3 w-full">
+                    {pendingLineCount > 0 && (
+                      <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="mt-0.5 h-4 w-4 text-amber-600" />
+                          <div className="text-xs text-amber-800">
+                            <p className="font-medium">
+                              {pendingLineCount} line{pendingLineCount === 1 ? "" : "s"} have no configured tariff (pending pricing).
+                            </p>
+                            <p className="mt-1">
+                              By default the bill cannot be finalized while lines are unpriced. To proceed,
+                              record an explicit override — those lines will be finalized as zero (free).
+                            </p>
+                          </div>
+                        </div>
+                        <label className="mt-2 flex items-center gap-2 text-xs font-medium text-amber-900">
+                          <input
+                            type="checkbox"
+                            checked={allowUnpriced}
+                            onChange={(e) => setAllowUnpriced(e.target.checked)}
+                            className="h-3.5 w-3.5 rounded border-amber-400"
+                          />
+                          Override: finalize with unpriced (free) lines
+                        </label>
+                      </div>
+                    )}
+                    <button
+                      onClick={() =>
+                        billAction.mutate({
+                          action: "finalize",
+                          query: allowUnpriced ? { allowUnpriced: "true" } : undefined,
+                        })
+                      }
+                      disabled={billAction.isPending || (pendingLineCount > 0 && !allowUnpriced)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors self-start"
+                    >
+                      {billAction.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+                      Finalize Bill
+                    </button>
+                  </div>
                 )}
 
                 {status === "FINAL" && (
@@ -664,6 +704,11 @@ export default function BillingDetailPage() {
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">
                           {line.description || "—"}
+                          {line.pendingPricing && (
+                            <span className="ml-2 inline-block px-2 py-0.5 text-[10px] font-medium rounded-full bg-amber-100 text-amber-700 align-middle">
+                              No configured tariff — pending pricing
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-neutral-100 text-muted-foreground">
