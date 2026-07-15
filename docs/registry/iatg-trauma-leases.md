@@ -87,6 +87,15 @@ all `J-TR-0..9` PASS in `scripts/runtime-proof/trauma-spine-journeys.sh` + `mvn 
 test` green + no new dead-letter rows. See the plan's Gate-1 checklist (G1.1–G1.16). No self-authorised
 deploy.
 
+**Pre-fullboot deploy-hygiene gates (both programs — these ghosts only surface on a CLEAN full-boot):**
+1. **Clean build** — `mvn clean` / no reused `target/` dirs after any migration rename (stale-jar V034/V030
+   ghosts otherwise carry into the packaged jar and Flyway-fail at boot).
+2. **No duplicate migration versions on any LIVE-Flyway service** —
+   `for d in services/*/src/main/resources/db/migration; do ls "$d" | grep -oE '^V[0-9]+' | sort | uniq -d; done`
+   must be empty. Known duplicates found + dispositioned 2026-07-15: pct V034 (fixed W0), tshepo-authz V030
+   (theatre Wave 6 → V035), experience-bff V41 (NON-blocker — bff has no datasource/flyway-core, dead
+   scaffolding; cleanup chipped).
+
 **J-TR-M1 (mobile ePCR) evidence standard — PO decision 2026-07-15:** for the PREVIEW gate, the mobile
 ePCR is satisfied by the RN unit/integration tests (provider-app suite green) + the live backend rig
 (J-TR-2). Maestro cannot run in the headless build env (no emulator/SDK); the flow
