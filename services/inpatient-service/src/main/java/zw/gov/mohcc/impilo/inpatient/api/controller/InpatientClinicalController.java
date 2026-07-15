@@ -162,8 +162,14 @@ public class InpatientClinicalController {
 
     @PostMapping("/emergency/{activationId}/resuscitation")
     public ResponseEntity<Map<String, Object>> recordResuscitation(@PathVariable UUID activationId,
-                                                                   @RequestBody Map<String, Object> body) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(clinicalService.recordResuscitation(activationId, body));
+                                                                   @RequestBody Map<String, Object> body,
+                                                                   @RequestHeader(value = "X-Trauma-Episode-ID", required = false) String traumaEpisodeId) {
+        Map<String, Object> payload = body;
+        if (traumaEpisodeId != null && !traumaEpisodeId.isBlank()) {
+            payload = new java.util.LinkedHashMap<>(body != null ? body : Map.of());
+            payload.putIfAbsent("traumaEpisodeId", traumaEpisodeId);
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(clinicalService.recordResuscitation(activationId, payload));
     }
 
     @GetMapping("/emergency/{activationId}/resuscitation")

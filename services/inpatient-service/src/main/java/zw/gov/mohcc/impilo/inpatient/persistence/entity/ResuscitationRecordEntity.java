@@ -15,6 +15,10 @@ public class ResuscitationRecordEntity {
     @Column(name = "activation_id", nullable = false)
     private UUID activationId;
 
+    /** Canonical trauma-episode correlation id (DAIDZAI-minted). Re-keyed onto the episode in W5. */
+    @Column(name = "trauma_episode_id")
+    private UUID traumaEpisodeId;
+
     @Column(name = "cpr_cycles")
     private Integer cprCycles;
 
@@ -49,6 +53,8 @@ public class ResuscitationRecordEntity {
     public void setResusId(UUID resusId) { this.resusId = resusId; }
     public UUID getActivationId() { return activationId; }
     public void setActivationId(UUID activationId) { this.activationId = activationId; }
+    public UUID getTraumaEpisodeId() { return traumaEpisodeId; }
+    public void setTraumaEpisodeId(UUID traumaEpisodeId) { this.traumaEpisodeId = traumaEpisodeId; }
     public Integer getCprCycles() { return cprCycles; }
     public void setCprCycles(Integer cprCycles) { this.cprCycles = cprCycles; }
     public Integer getDefibrillations() { return defibrillations; }

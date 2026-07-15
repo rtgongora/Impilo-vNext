@@ -73,6 +73,14 @@ public class InpatientClinicalService {
     private final OrosOrderClient orosOrderClient;
     private final EventOutboxRepository outboxRepository;
 
+    /**
+     * Trauma-episode spine client. Field-injected (not constructor) to keep the large shared
+     * constructor a stable merge surface with the parallel theatre session; only the
+     * resuscitation-scoped path uses it, and all call sites null-guard it.
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private zw.gov.mohcc.impilo.inpatient.integration.DaidzaiEpisodeClient daidzaiEpisodes;
+
     private static final List<String> CLEARANCE_TYPES = List.of(
             "CLINICAL", "NURSING", "PHARMACY", "LABORATORY", "IMAGING",
             "FINANCIAL", "ADMINISTRATIVE", "RECORDS", "CRVS");
@@ -732,8 +740,23 @@ public class InpatientClinicalService {
         }
         String medsJson = ClinicalPayloadMapper.str(body, "medicationsJson", "medications_json", "medications");
         if (medsJson != null) record.setMedicationsJson(medsJson);
+        // Canonical trauma spine: a resuscitation on a trauma patient carries the DAIDZAI-minted
+        // episode id (from X-Trauma-Episode-ID, folded into the body by the controller). Inpatient
+        // keeps its own resuscitation SoR row and stamps the shared id (re-keyed fully in W5).
+        UUID traumaEpisodeId = ClinicalPayloadMapper.uuid(body, "traumaEpisodeId", "trauma_episode_id");
+        if (traumaEpisodeId != null) record.setTraumaEpisodeId(traumaEpisodeId);
         record = resuscitationRecordRepository.save(record);
-        return Map.of("id", record.getResusId().toString(), "activation_id", activationId.toString());
+        UUID episodeId = record.getTraumaEpisodeId();
+        if (episodeId != null && daidzaiEpisodes != null) {
+            daidzaiEpisodes.registerPhase(episodeId, "RESUS", record.getResusId().toString(),
+                    Boolean.TRUE.equals(record.getRoscAchieved()) ? "ROSC" : "IN_PROGRESS",
+                    "inpatient.resuscitation.recorded");
+        }
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("id", record.getResusId().toString());
+        result.put("activation_id", activationId.toString());
+        if (episodeId != null) result.put("trauma_episode_id", episodeId.toString());
+        return result;
     }
 
     public Map<String, Object> getResuscitation(UUID activationId) {
