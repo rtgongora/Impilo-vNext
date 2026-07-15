@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Stethoscope, Loader2, RefreshCw, ArrowLeft, ShieldAlert, ClipboardCheck, FileText, HeartPulse, Ban, TriangleAlert, Maximize2, Minimize2, Receipt } from "lucide-react";
+import { Stethoscope, Loader2, RefreshCw, ArrowLeft, ShieldAlert, ClipboardCheck, FileText, Ban, TriangleAlert, Maximize2, Minimize2, Receipt } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
@@ -23,6 +23,8 @@ import { TheatreSpecimenPanel } from "@/components/clinical/theatre/TheatreSpeci
 import { TheatreCountPanel } from "@/components/clinical/theatre/TheatreCountPanel";
 import { AnaesthesiaChartPanel } from "@/components/clinical/theatre/AnaesthesiaChartPanel";
 import { TheatreCommoditiesPanel } from "@/components/clinical/theatre/TheatreCommoditiesPanel";
+import { TheatrePacuPanel } from "@/components/clinical/theatre/TheatrePacuPanel";
+import { TheatreSurgicalDischargePanel } from "@/components/clinical/theatre/TheatreSurgicalDischargePanel";
 import { EmergencyConsentExceptionPanel } from "@/components/clinical/theatre/EmergencyConsentExceptionPanel";
 import { ObstetricSection } from "@/components/clinical/theatre/ObstetricSection";
 import { apiClient } from "@/lib/api-client";
@@ -153,9 +155,6 @@ export default function TheatreCaseDetailPage() {
         setNoteSigned(true);
       }
     }, "Operative note saved" + (note.signedProviderId ? " and signed." : " as a draft."));
-
-  const pacu = (disposition: string) =>
-    act(() => apiClient.post(`/internal/v1/theatre/cases/${id}/pacu/disposition`, { disposition }), `PACU disposition recorded (${disposition}).`);
 
   const cancel = () =>
     act(
@@ -369,16 +368,15 @@ export default function TheatreCaseDetailPage() {
               </button>
             </section>
 
-            {/* PACU */}
-            <section className={`rounded-xl border border-border bg-card p-4${focusMode ? " hidden" : ""}`}>
-              <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold"><HeartPulse className="h-4 w-4" /> PACU / recovery disposition</h3>
-              <div className="flex flex-wrap gap-2">
-                {["WARD", "ICU", "DISCHARGE", "TRANSFER"].map((d) => (
-                  <button key={d} type="button" disabled={busy} onClick={() => void pacu(d)} className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium hover:bg-card disabled:opacity-50">{d}</button>
-                ))}
-                <button type="button" disabled={busy} onClick={() => void pacu("DEATH")} className="rounded-lg border border-slate-800 bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50">Death (routes to PCT)</button>
-              </div>
-            </section>
+            {/* PACU recovery depth (Aldrete-scored) + gated discharge + disposition */}
+            <div className={focusMode ? "hidden" : undefined}>
+              <TheatrePacuPanel caseId={id} />
+            </div>
+
+            {/* Surgical discharge summary (draft → complete → SHR) */}
+            <div className={focusMode ? "hidden" : undefined}>
+              <TheatreSurgicalDischargePanel caseId={id} />
+            </div>
 
             {/* Safety + cancel */}
             <section className={`rounded-xl border border-border bg-card p-4${focusMode ? " hidden" : ""}`}>
