@@ -142,12 +142,26 @@ public class CardLifecycleService {
     /**
      * Transition: PRINTED → ACTIVE (card has been handed to client and activated).
      *
+     * <p>VIRTUAL cards may activate from REQUESTED when a device public key was supplied at
+     * request time — they have no physical print step. That path records a device-provisioned
+     * PRINTED transition then ACTIVATES, so the audit trail stays complete.
+     *
      * <p>G032: fails closed — a card cannot become usable without a real, provisioned public
      * key. A missing key or a legacy {@code DEV-PLACEHOLDER-} value is rejected.
      */
     @Transactional
     public SmartCardEntity activate(UUID tenantId, Long cardId) {
         SmartCardEntity card = getCard(tenantId, cardId);
+
+        if (card.getStatus() == CardStatus.REQUESTED
+                && "VIRTUAL".equalsIgnoreCase(card.getCardForm())) {
+            if (!hasRealPublicKey(card)) {
+                throw new IllegalStateException(
+                        "Cannot activate virtual card " + cardId + ": no device public key provisioned.");
+            }
+            card = markPrinted(tenantId, cardId, null);
+        }
+
         assertStatus(card, CardStatus.PRINTED, "activate");
 
         if (!hasRealPublicKey(card)) {
@@ -164,6 +178,25 @@ public class CardLifecycleService {
 
         publishEvent("SMART_CARD", card.getId().toString(), "CARD_ACTIVATED", cardPayload(card));
 
+        return card;
+    }
+
+    /**
+     * Re-provision the device/SE public key on an existing VIRTUAL card (e.g. citizen re-enrolls
+     * a phone). Publishes {@code CARD_PRINTED} so mushe can refresh its verification key cache.
+     */
+    @Transactional
+    public SmartCardEntity provisionDevicePublicKey(UUID tenantId, Long cardId, String publicKey) {
+        if (publicKey == null || publicKey.isBlank()) {
+            throw new IllegalArgumentException("publicKey is required");
+        }
+        SmartCardEntity card = getCard(tenantId, cardId);
+        if (!"VIRTUAL".equalsIgnoreCase(card.getCardForm())) {
+            throw new IllegalStateException("Device key re-provisioning is only for VIRTUAL cards");
+        }
+        card.setPublicKey(publicKey);
+        card = cardRepository.save(card);
+        publishEvent("SMART_CARD", card.getId().toString(), "CARD_PRINTED", cardPayload(card));
         return card;
     }
 

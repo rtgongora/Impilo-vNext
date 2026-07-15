@@ -222,6 +222,29 @@ public class CardController {
         return ResponseEntity.ok(toCardResponse(card));
     }
 
+    /**
+     * Link this money card to a VITO CardCredential and cache the device/SE public key used for
+     * offline-txn verification. Body: {@code {"vitoCardNumber","publicKey"?}}.
+     */
+    @PostMapping("/{cardId}/link-vito")
+    public ResponseEntity<Map<String, Object>> linkVitoCard(
+            @PathVariable UUID cardId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+        Object numberRaw = body != null ? body.get("vitoCardNumber") : null;
+        if (numberRaw == null || numberRaw.toString().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "vitoCardNumber is required"));
+        }
+        String vitoCardNumber = numberRaw.toString().trim();
+        CardEntity card = cardService.linkVitoCard(cardId, vitoCardNumber, UUID.fromString(tenantId));
+        Object keyRaw = body.get("publicKey");
+        if (keyRaw != null && !keyRaw.toString().isBlank()) {
+            cardService.cacheVitoCardKey(vitoCardNumber, keyRaw.toString().trim());
+            card = cardService.findCardOrThrow(cardId);
+        }
+        return ResponseEntity.ok(toCardResponse(card));
+    }
+
     // ── Health Data Status ──────────────────────────────────────────────
 
     @GetMapping("/{cardId}/health-data")

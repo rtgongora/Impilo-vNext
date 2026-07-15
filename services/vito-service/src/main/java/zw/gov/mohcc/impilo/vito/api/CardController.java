@@ -48,8 +48,12 @@ public class CardController {
         }
 
         String requestedBy = ctx.actorId() != null ? ctx.actorId() : "system";
+        String cardForm = request.cardForm() != null && !request.cardForm().isBlank()
+                ? request.cardForm()
+                : (request.cardType() != null && !request.cardType().isBlank()
+                        ? request.cardType() : "PHYSICAL");
         SmartCardEntity card = cardService.requestCard(
-                ctx.tenantId(), healthId, request.publicKey(), requestedBy);
+                ctx.tenantId(), healthId, request.publicKey(), requestedBy, cardForm);
         return ResponseEntity.status(201).body(
                 ApiResponse.ok(card, ctx.correlationId().toString()));
     }
@@ -71,6 +75,21 @@ public class CardController {
         TrustContext ctx = TrustContextHolder.require();
         requireInternal(ctx);
         SmartCardEntity card = cardService.activate(ctx.tenantId(), cardId);
+        return ResponseEntity.ok(ApiResponse.ok(card, ctx.correlationId().toString()));
+    }
+
+    /**
+     * Re-provision a VIRTUAL card's device public key (citizen re-enrols a phone).
+     * Body: {@code {"publicKey":"-----BEGIN PUBLIC KEY-----..."}}.
+     */
+    @PostMapping("/{cardId}/provision-device-key")
+    public ResponseEntity<ApiResponse<SmartCardEntity>> provisionDeviceKey(
+            @PathVariable Long cardId,
+            @RequestBody CardPrintRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        requireInternal(ctx);
+        String publicKey = request != null ? request.publicKey() : null;
+        SmartCardEntity card = cardService.provisionDevicePublicKey(ctx.tenantId(), cardId, publicKey);
         return ResponseEntity.ok(ApiResponse.ok(card, ctx.correlationId().toString()));
     }
 
@@ -127,7 +146,11 @@ public class CardController {
         }
     }
 
-    record CardRequest(String healthId, String publicKey) {}
+    /**
+     * {@code cardForm} is preferred ({@code PHYSICAL}|{@code VIRTUAL}); {@code cardType} is accepted
+     * as an OpenAPI alias for the same field.
+     */
+    record CardRequest(String healthId, String publicKey, String cardForm, String cardType) {}
 
     /** Body for the print step; carries the secure-element public key provisioned at print (G032). */
     record CardPrintRequest(String publicKey) {}

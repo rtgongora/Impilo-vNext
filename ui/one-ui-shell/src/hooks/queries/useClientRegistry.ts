@@ -105,6 +105,8 @@ export interface DemographicsUpdate {
   city?: string;
   district?: string;
   province?: string;
+  /** Optional MEDICAL_AID_NUMBER identifier tied to the Health ID (not coverage membership). */
+  medicalAidNumber?: string;
 }
 
 export interface ClientRegistrySummary {

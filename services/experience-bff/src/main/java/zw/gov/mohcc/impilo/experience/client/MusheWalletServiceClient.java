@@ -511,6 +511,16 @@ public class MusheWalletServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Link a Mushe money card to a VITO CardCredential and optionally cache the device public key.
+     */
+    public JsonNode linkVitoCard(UUID cardId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/cards/" + cardId + "/link-vito";
+        log.info("MusheWallet: Linking card={} to VITO card={}", cardId, body.get("vitoCardNumber"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Offline (stored-value) transactions — tap / scan / biometric pay ──
 
     /**

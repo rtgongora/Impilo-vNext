@@ -6,6 +6,7 @@
  * is implied by the `x-actor-id` trust header the API client injects — no id query params.
  *
  *   GET  /internal/v1/wallet/cards                          → my card(s)
+ *   POST /internal/v1/wallet/cards/enroll-device             → enroll device P-256 key with VITO
  *   PUT  /internal/v1/wallet/cards/{cardId}/phr-carry       → toggle PHR-carry function
  *   POST /internal/v1/wallet/cards/pay/biometric            → biometric scan-to-pay
  *   POST /internal/v1/wallet/bill-contributions             → create a "help pay my bill" link
@@ -43,6 +44,18 @@ export interface BillContributionRequest {
 export async function fetchMyCards(): Promise<SmartCard[]> {
   const response = await apiClient.get<Envelope<unknown>>(`${V1}/cards`);
   return adaptCards(response.data?.data);
+}
+
+/**
+ * Enroll this device's public key with VITO as a VIRTUAL SMART card and link the Mushe money card.
+ * Body is bound to the authenticated Health ID server-side.
+ */
+export async function enrollDeviceCard(input: {
+  cardId: string;
+  publicKey: string;
+}): Promise<SmartCard | null> {
+  const response = await apiClient.post<Envelope<unknown>>(`${V1}/cards/enroll-device`, input);
+  return adaptCard(response.data?.data);
 }
 
 /** Toggle the card's PHR-carry function (carry my health record on the card). Fail-closed server-side. */

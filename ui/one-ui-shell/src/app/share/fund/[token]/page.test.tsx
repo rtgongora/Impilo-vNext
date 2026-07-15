@@ -75,6 +75,20 @@ describe("ShareFundPage", () => {
     );
   });
 
+  it("offers direct chip-in when signed in and no fundraiser case matches the token", async () => {
+    authState.user = { id: "user-1" };
+    authState.token = "tok";
+    get.mockImplementation((url: string) =>
+      url === "/internal/v1/citizen/fundraisers"
+        ? Promise.resolve([])
+        : Promise.resolve(SHARE_VIEW),
+    );
+    render(<ShareFundPage />);
+
+    expect(await screen.findByTestId("share-chip-in")).toBeInTheDocument();
+    expect(screen.getByTestId("share-chip-in-submit")).toBeInTheDocument();
+  });
+
   it("shows an honest unknown-link state on 404", async () => {
     get.mockRejectedValue({ status: 404, error: { code: "CONTRIBUTION_LINK_UNKNOWN" } });
     render(<ShareFundPage />);

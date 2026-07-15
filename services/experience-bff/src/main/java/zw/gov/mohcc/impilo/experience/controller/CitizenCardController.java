@@ -10,20 +10,21 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.MusheWalletServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * Unified SMART card — citizen-facing endpoints (proxies to mushe-wallet-service).
+ * Unified SMART card — citizen-facing endpoints (proxies to mushe-wallet-service / VITO).
  *
  * <p>Surfaces the card's three functions to the citizen app under the authenticated
  * {@code /internal/v1/wallet/**} space: view my card(s), toggle the PHR-carry function, pay from the
- * card's offline purse (tap / scan / biometric), and raise/share a "help pay my bill" contribution
- * link. The actor→wallet binding is resolved server-side from {@code X-Actor-ID}; the BFF never
- * fabricates card or money state — it proxies and, on upstream failure, fails clean (503) or
- * propagates the upstream rejection status (e.g. 422 for a rejected offline transaction).</p>
+ * card's offline purse (tap / scan / biometric), enroll a device key with VITO, and raise/share a
+ * "help pay my bill" contribution link. The actor→wallet binding is resolved server-side from
+ * {@code X-Actor-ID}; the BFF never fabricates card or money state — it proxies and, on upstream
+ * failure, fails clean (503) or propagates the upstream rejection status.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/wallet")
@@ -36,10 +37,14 @@ public class CitizenCardController {
     private static final Logger log = LoggerFactory.getLogger(CitizenCardController.class);
 
     private final MusheWalletServiceClient musheClient;
+    private final VitoServiceClient vitoClient;
     private final ObjectMapper objectMapper;
 
-    public CitizenCardController(MusheWalletServiceClient musheClient, ObjectMapper objectMapper) {
+    public CitizenCardController(MusheWalletServiceClient musheClient,
+                                 VitoServiceClient vitoClient,
+                                 ObjectMapper objectMapper) {
         this.musheClient = musheClient;
+        this.vitoClient = vitoClient;
         this.objectMapper = objectMapper;
     }
 
@@ -65,6 +70,64 @@ public class CitizenCardController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return proxy(() -> musheClient.getCard(cardId), "getCard", requestId, correlationId);
+    }
+
+    // ── Device enrollment (VIRTUAL card key → VITO → mushe link) ────────
+
+    /**
+     * Enroll this device's P-256 public key as the citizen's VIRTUAL SMART card credential,
+     * then link the caller's Mushe money card so offline/biometric pay can verify signatures.
+     * Body: {@code {"cardId":"<mushe card uuid>","publicKey":"-----BEGIN PUBLIC KEY-----..."}}.
+     * Health ID is taken from {@code X-Actor-ID} (never from the client body).
+     */
+    @PostMapping("/cards/enroll-device")
+    public ResponseEntity<Map<String, Object>> enrollDevice(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+        if (body == null) {
+            return validation("cardId and publicKey are required", requestId, correlationId);
+        }
+        String publicKey = str(body.get("publicKey"));
+        UUID musheCardId = uuidOrNull(body.get("cardId"));
+        if (publicKey == null || musheCardId == null) {
+            return validation("cardId and publicKey are required", requestId, correlationId);
+        }
+        UUID healthId = uuidOrNull(actorId);
+        if (healthId == null) {
+            return validation("X-Actor-ID must be the citizen Health ID UUID", requestId, correlationId);
+        }
+
+        try {
+            JsonNode vitoCard = resolveOrCreateVirtualCard(healthId, publicKey);
+            String vitoCardNumber = text(vitoCard, "cardNumber");
+            if (vitoCardNumber == null || vitoCardNumber.isBlank()) {
+                return upstreamUnavailable("enrollDevice", "VITO card missing cardNumber",
+                        requestId, correlationId);
+            }
+
+            Map<String, Object> linkBody = new LinkedHashMap<>();
+            linkBody.put("vitoCardNumber", vitoCardNumber);
+            linkBody.put("publicKey", publicKey);
+            JsonNode linked = musheClient.linkVitoCard(musheCardId, linkBody);
+            return ok(linked, requestId, correlationId);
+        } catch (HttpStatusCodeException ex) {
+            Map<String, Object> error = Map.of("code", "UPSTREAM_REJECTED",
+                    "message", ex.getStatusText(), "upstreamBody", safeBody(ex));
+            log.info("enrollDevice upstream rejected: {} {}", ex.getStatusCode(), safeBody(ex));
+            return ResponseEntity.status(ex.getStatusCode()).body(Map.of(
+                    "error", error,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "error", Map.of("code", "ENROLL_CONFLICT", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return upstreamUnavailable("enrollDevice",
+                    "upstream exception: " + e.getClass().getSimpleName() + ": " + e.getMessage(),
+                    requestId, correlationId);
+        }
     }
 
     // ── PHR-carry function opt-in ───────────────────────────────────────
@@ -142,16 +205,29 @@ public class CitizenCardController {
                 requestId, correlationId);
     }
 
-    /** Contribute toward a shared bill. Body: {@code {"amount","contributorName","message"}}. */
+    /**
+     * Contribute toward a shared bill. Body: {@code {"amount","contributorName","message"}}.
+     * Contributor wallet is resolved server-side from the signed-in actor (real debit).
+     */
     @PostMapping("/bill-contributions/{shareToken}/contribute")
     public ResponseEntity<Map<String, Object>> contribute(
             @PathVariable String shareToken,
             @RequestBody Map<String, Object> body,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
+        UUID donorWallet = resolveMyWalletId(actorId);
+        if (donorWallet == null) {
+            return upstreamUnavailable("contribute", "could not resolve contributor wallet",
+                    requestId, correlationId);
+        }
         Map<String, Object> upstream = new LinkedHashMap<>(body != null ? body : Map.of());
-        upstream.putIfAbsent("contributorRef", actorId); // attribute to the signed-in contributor
+        upstream.put("contributorWalletId", donorWallet.toString());
+        upstream.putIfAbsent("contributorRef", actorId);
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            upstream.put("idempotencyKey", idempotencyKey);
+        }
         return proxy(() -> musheClient.contributeToBill(shareToken, upstream), "contribute",
                 requestId, correlationId);
     }
@@ -167,6 +243,68 @@ public class CitizenCardController {
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────
+
+    /**
+     * Prefer an existing ACTIVE VITO card (re-provision device key when VIRTUAL); otherwise
+     * request + activate a new VIRTUAL credential with the supplied public key.
+     */
+    private JsonNode resolveOrCreateVirtualCard(UUID healthId, String publicKey) {
+        try {
+            ResponseEntity<String> active = vitoClient.rawGet("/v1/cards/active/" + healthId);
+            JsonNode existing = unwrapVitoData(active.getBody());
+            if (existing != null && !existing.isNull()) {
+                long id = existing.path("id").asLong(0);
+                String form = existing.path("cardForm").asText("PHYSICAL");
+                if (id > 0 && "VIRTUAL".equalsIgnoreCase(form)) {
+                    ResponseEntity<String> reprovisioned = vitoClient.rawPost(
+                            "/v1/cards/" + id + "/provision-device-key",
+                            Map.of("publicKey", publicKey));
+                    JsonNode updated = unwrapVitoData(reprovisioned.getBody());
+                    return updated != null ? updated : existing;
+                }
+                // Physical active card — link that credential; mushe caches the device key for pay.
+                return existing;
+            }
+        } catch (HttpStatusCodeException ex) {
+            if (ex.getStatusCode().value() != 404) {
+                throw ex;
+            }
+            // No active card — create VIRTUAL below.
+        }
+
+        Map<String, Object> requestBody = new LinkedHashMap<>();
+        requestBody.put("healthId", healthId.toString());
+        requestBody.put("publicKey", publicKey);
+        requestBody.put("cardForm", "VIRTUAL");
+        ResponseEntity<String> createdResp = vitoClient.rawPost("/v1/cards/request", requestBody);
+        JsonNode created = unwrapVitoData(createdResp.getBody());
+        if (created == null) {
+            throw new IllegalStateException("VITO did not return a card on request");
+        }
+        long id = created.path("id").asLong(0);
+        if (id <= 0) {
+            throw new IllegalStateException("VITO card missing id");
+        }
+        ResponseEntity<String> activatedResp = vitoClient.rawPost("/v1/cards/" + id + "/activate", Map.of());
+        JsonNode activated = unwrapVitoData(activatedResp.getBody());
+        return activated != null ? activated : created;
+    }
+
+    private JsonNode unwrapVitoData(String body) {
+        if (body == null || body.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode root = objectMapper.readTree(body);
+            if (root.has("data") && !root.get("data").isNull()) {
+                return root.get("data");
+            }
+            return root;
+        } catch (Exception e) {
+            log.debug("Failed to parse VITO response: {}", e.getMessage());
+            return null;
+        }
+    }
 
     /** Resolve the caller's mushe wallet id from their actor id, or null if unavailable. */
     private UUID resolveMyWalletId(String actorId) {
@@ -237,6 +375,32 @@ public class CitizenCardController {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
                 "error", Map.of("code", UPSTREAM_UNAVAILABLE_CODE, "message", UPSTREAM_UNAVAILABLE_MESSAGE),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private static String str(Object value) {
+        if (value == null) {
+            return null;
+        }
+        String s = value.toString().trim();
+        return s.isEmpty() ? null : s;
+    }
+
+    private static String text(JsonNode node, String field) {
+        if (node == null || !node.has(field) || node.get(field).isNull()) {
+            return null;
+        }
+        return node.get(field).asText(null);
+    }
+
+    private static UUID uuidOrNull(Object value) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            return UUID.fromString(value.toString().trim());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     @FunctionalInterface

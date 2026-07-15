@@ -34,7 +34,7 @@ class CitizenCardControllerTest {
     void payBiometric_upstreamSucceeds_wrapsInEnvelope() {
         Stub stub = new Stub();
         stub.biometricResult = obj().put("txnId", "txn-bio-1").put("status", "COMPLETED");
-        CitizenCardController controller = new CitizenCardController(stub, new ObjectMapper());
+        CitizenCardController controller = new CitizenCardController(stub, null, new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.payBiometric(
                 Map.of("vitoCardNumber", "VITO-1", "payload", "{...}", "signature", "sig"), REQ, CORR);
@@ -50,7 +50,7 @@ class CitizenCardControllerTest {
         stub.biometricError = HttpClientErrorException.create(HttpStatus.UNPROCESSABLE_ENTITY,
                 "Unprocessable Entity", org.springframework.http.HttpHeaders.EMPTY,
                 "{\"error\":{\"code\":\"OFFLINE_TXN_REJECTED\"}}".getBytes(), null);
-        CitizenCardController controller = new CitizenCardController(stub, new ObjectMapper());
+        CitizenCardController controller = new CitizenCardController(stub, null, new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.payBiometric(
                 Map.of("vitoCardNumber", "VITO-1", "payload", "{}", "signature", "bad"), REQ, CORR);
@@ -65,7 +65,7 @@ class CitizenCardControllerTest {
     void createContribution_bindsBeneficiaryWalletToCaller() {
         Stub stub = new Stub();
         stub.wallet = obj().put("id", "00000000-0000-0000-0000-000000000009");
-        CitizenCardController controller = new CitizenCardController(stub, new ObjectMapper());
+        CitizenCardController controller = new CitizenCardController(stub, null, new ObjectMapper());
 
         controller.createContribution(Map.of("title", "Hospital bill", "beneficiaryWalletId", "SPOOFED"),
                 REQ, CORR, ACTOR);
@@ -79,7 +79,7 @@ class CitizenCardControllerTest {
     void myCards_walletUnavailable_failsClean503() {
         Stub stub = new Stub(); // wallet resolution throws
         stub.walletThrows = true;
-        CitizenCardController controller = new CitizenCardController(stub, new ObjectMapper());
+        CitizenCardController controller = new CitizenCardController(stub, null, new ObjectMapper());
 
         ResponseEntity<Map<String, Object>> response = controller.myCards(REQ, CORR, ACTOR);
 
@@ -90,7 +90,7 @@ class CitizenCardControllerTest {
 
     @Test
     void setPhrCarry_missingEnabled_isRejected400() {
-        CitizenCardController controller = new CitizenCardController(new Stub(), new ObjectMapper());
+        CitizenCardController controller = new CitizenCardController(new Stub(), null, new ObjectMapper());
         ResponseEntity<Map<String, Object>> response = controller.setPhrCarry(
                 UUID.randomUUID(), Map.of(), REQ, CORR);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());

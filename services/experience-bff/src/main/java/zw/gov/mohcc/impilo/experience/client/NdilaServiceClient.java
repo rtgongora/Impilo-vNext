@@ -104,6 +104,16 @@ public class NdilaServiceClient {
         return restTemplate.getForEntity(url, JsonNode.class).getBody();
     }
 
+    public JsonNode locationsByOwner(String ownerService, String ownerEntityId) {
+        String url = baseUrl + "/api/v1/ndila/locations/by-owner/" + ownerService + "/" + ownerEntityId;
+        return restTemplate.getForEntity(url, JsonNode.class).getBody();
+    }
+
+    public JsonNode getLocation(String locationId) {
+        String url = baseUrl + "/api/v1/ndila/locations/" + locationId;
+        return restTemplate.getForEntity(url, JsonNode.class).getBody();
+    }
+
     public JsonNode createCatchment(Map<String, Object> body) {
         String url = baseUrl + "/api/v1/ndila/catchments";
         return restTemplate.postForEntity(url, body, JsonNode.class).getBody();

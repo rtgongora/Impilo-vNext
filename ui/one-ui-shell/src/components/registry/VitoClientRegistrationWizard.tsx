@@ -74,6 +74,7 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
 
   const [coverageStatus, setCoverageStatus] = useState("NO_COVER");
   const [membershipNumber, setMembershipNumber] = useState("");
+  const [medicalAidNumber, setMedicalAidNumber] = useState("");
   const [schemeName, setSchemeName] = useState("");
   const [planCode, setPlanCode] = useState("");
   const [patientCpidPreview, setPatientCpidPreview] = useState("");
@@ -170,6 +171,7 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
         emergency_contact_phone: emergencyContactPhone || undefined,
         facility_id: facilityId,
         source_workflow: sourceWorkflow ?? "EXPERIENCE_VITO_WIZARD",
+        medical_aid_number: medicalAidNumber || undefined,
         coverage: {
           coverage_status: coverageStatus,
           membership_number: membershipNumber || undefined,
@@ -433,6 +435,21 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
       />
 
       <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+        <p className="text-sm font-medium text-foreground">Medical aid number (Health ID identifier)</p>
+        <p className="text-xs text-muted-foreground">
+          Optional person identifier tied to the Health ID in VITO (like a national ID), separate from
+          scheme membership below.
+        </p>
+        <input
+          value={medicalAidNumber}
+          onChange={(e) => setMedicalAidNumber(e.target.value)}
+          placeholder="e.g. MA-123456"
+          aria-label="Medical aid number"
+          className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+        />
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-3 space-y-2">
         <p className="text-sm font-medium text-foreground">Coverage / medical aid (non-blocking)</p>
         <p className="text-xs text-muted-foreground">
           Canonical coverage is owned by Vito + MusheX + COSTA. Values here are forwarded as a summary payload on
@@ -468,11 +485,11 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
             />
           </div>
           <div>
-            <label className="block text-xs text-muted-foreground mb-1">Medical aid number (optional)</label>
+            <label className="block text-xs text-muted-foreground mb-1">Scheme membership number (optional)</label>
             <input
               value={membershipNumber}
               onChange={(e) => setMembershipNumber(e.target.value)}
-              placeholder="Tied to this person's Health ID"
+              placeholder="Coverage membership — not the Health ID identifier"
               className="w-full px-3 py-2 border border-border rounded-lg text-sm"
             />
           </div>

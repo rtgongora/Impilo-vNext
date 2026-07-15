@@ -78,8 +78,53 @@ export function useFundingSources(walletId?: string | null) {
 export function useCards(walletId?: string | null) {
   return useQuery<CardResponse>({
     queryKey: ["mushe-cards", walletId],
-    queryFn: () => apiClient.get<CardResponse>(`/internal/v1/wallet/me/cards`),
+    // Citizen BFF: GET /internal/v1/wallet/cards (actor-bound; walletId is for cache key only)
+    queryFn: () => apiClient.get<CardResponse>(`/internal/v1/wallet/cards`),
     enabled: !!walletId,
+  });
+}
+
+/** My unified SMART cards via the citizen wallet BFF (no walletId required). */
+export function useMySmartCards(enabled = true) {
+  return useQuery<CardResponse>({
+    queryKey: ["citizen-smart-cards"],
+    queryFn: () => apiClient.get<CardResponse>(`/internal/v1/wallet/cards`),
+    enabled,
+  });
+}
+
+export function useSetPhrCarry() {
+  const queryClient = useQueryClient();
+  return useMutation<CardResponse, unknown, { cardId: string; enabled: boolean }>({
+    mutationFn: ({ cardId, enabled }) =>
+      apiClient.put<CardResponse>(`/internal/v1/wallet/cards/${cardId}/phr-carry`, { enabled }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["citizen-smart-cards"] });
+      void queryClient.invalidateQueries({ queryKey: ["mushe-cards"] });
+    },
+  });
+}
+
+export function useCreateBillContribution() {
+  return useMutation<
+    ApiResponse<{ shareToken?: string; id?: string; title?: string }>,
+    unknown,
+    { title: string; targetAmount?: string; currency?: string; billRef?: string }
+  >({
+    mutationFn: (body) =>
+      apiClient.post(`/internal/v1/wallet/bill-contributions`, body),
+  });
+}
+
+export function useEnrollDeviceCard() {
+  const queryClient = useQueryClient();
+  return useMutation<CardResponse, unknown, { cardId: string; publicKey: string }>({
+    mutationFn: (body) =>
+      apiClient.post<CardResponse>(`/internal/v1/wallet/cards/enroll-device`, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["citizen-smart-cards"] });
+      void queryClient.invalidateQueries({ queryKey: ["mushe-cards"] });
+    },
   });
 }
 

@@ -105,18 +105,33 @@ class PatientControllerTest {
     }
 
     @Test
-    void toClientRegistryRegistration_mapsMedicalAidNumberFromCoverage() {
+    void toClientRegistryRegistration_mapsMedicalAidNumberFromTopLevelOnly() {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("given_name", "Tendai");
         body.put("family_name", "Moyo");
+        body.put("medical_aid_number", "MA-99881");
         Map<String, Object> coverage = new LinkedHashMap<>();
-        coverage.put("membership_number", "MA-99881");
+        coverage.put("membership_number", "SCHEME-MEMBER-9");
         body.put("coverage", coverage);
 
         Map<String, Object> reg = PatientController.toClientRegistryRegistration(body);
 
-        // The medical-aid number is threaded to VITO so it is tied to the Health ID (optional).
+        // Health ID identifier — not scheme membership.
         assertEquals("MA-99881", reg.get("medicalAidNumber"));
+    }
+
+    @Test
+    void toClientRegistryRegistration_doesNotConflateCoverageMembershipWithMedicalAidIdentifier() {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("given_name", "Tendai");
+        body.put("family_name", "Moyo");
+        Map<String, Object> coverage = new LinkedHashMap<>();
+        coverage.put("membership_number", "SCHEME-ONLY");
+        body.put("coverage", coverage);
+
+        Map<String, Object> reg = PatientController.toClientRegistryRegistration(body);
+
+        assertFalse(reg.containsKey("medicalAidNumber"));
     }
 
     @Test

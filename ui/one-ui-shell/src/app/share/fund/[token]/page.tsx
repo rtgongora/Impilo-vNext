@@ -1,13 +1,13 @@
 "use client";
 
 /**
- * Public fundraiser share target — /share/fund/[token].
+ * Public fundraiser / bill-contribution share target — /share/fund/[token].
  *
- * Shows the tokenized money view (title + progress) from the BFF bill-contribution
- * endpoint GET /internal/v1/wallet/bill-contributions/{shareToken}. Signed-out visitors
- * get a Donate CTA that routes to login with returnTo back here; signed-in visitors are
- * routed to the fundraiser detail (resolved from the public list by share token) where
- * the governed donate flow lives. Honest empty/error states — no fabricated progress.
+ * Loads the tokenized money view from GET /internal/v1/wallet/bill-contributions/{shareToken}.
+ * Signed-out visitors get a Donate CTA that routes to login. Signed-in visitors:
+ *   - Prefer the governed Daidzai fundraiser donate flow when a public case matches the token
+ *   - Otherwise chip in directly via POST .../bill-contributions/{token}/contribute (card "help
+ *     pay my bill" links are mushe-only and have no fundraiser case)
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -58,6 +58,13 @@ export default function ShareFundPage() {
   const [needsSignIn, setNeedsSignIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [caseId, setCaseId] = useState<string | null>(null);
+  const [caseLookupDone, setCaseLookupDone] = useState(false);
+
+  const [chipAmount, setChipAmount] = useState("");
+  const [chipMessage, setChipMessage] = useState("");
+  const [chipBusy, setChipBusy] = useState(false);
+  const [chipError, setChipError] = useState<string | null>(null);
+  const [chipDone, setChipDone] = useState(false);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -75,7 +82,6 @@ export default function ShareFundPage() {
       if (status === 404) {
         setNotFound(true);
       } else if (status === 401 || status === 403) {
-        // Honest state: this deployment requires sign-in to view the tokenized money view.
         setNeedsSignIn(true);
       } else {
         setError(errMessage(e, "We couldn't load this fundraiser right now."));
@@ -90,18 +96,23 @@ export default function ShareFundPage() {
     void load();
   }, [load]);
 
-  // Signed-in visitors: resolve the fundraiser case id from the public list so the
-  // Donate CTA can land on the governed donate flow (wallet-debiting, idempotent).
   useEffect(() => {
-    if (!isAuthenticated || !token) return;
+    if (!isAuthenticated || !token) {
+      setCaseId(null);
+      setCaseLookupDone(!isAuthenticated);
+      return;
+    }
     let cancelled = false;
+    setCaseLookupDone(false);
     void (async () => {
       try {
         const res = await apiClient.get<unknown>("/internal/v1/citizen/fundraisers");
         const match = asArray<FundraiserCase>(res).find((f) => f.shareToken === token);
         if (!cancelled && match?.id) setCaseId(match.id);
       } catch {
-        // Non-fatal — the share view still renders; donation entry just stays generic.
+        // Non-fatal — fall through to direct chip-in.
+      } finally {
+        if (!cancelled) setCaseLookupDone(true);
       }
     })();
     return () => {
@@ -112,6 +123,34 @@ export default function ShareFundPage() {
   const req = view?.request;
   const returnTo = encodeURIComponent(`/share/fund/${token}`);
   const loginHref = `/auth/login?returnTo=${returnTo}`;
+  const openForChipIn = !req?.status || req.status === "OPEN";
+
+  const chipIn = async () => {
+    const amount = chipAmount.trim();
+    if (!amount || Number(amount) <= 0) {
+      setChipError("Enter an amount greater than 0.");
+      return;
+    }
+    setChipBusy(true);
+    setChipError(null);
+    try {
+      await apiClient.post(
+        `/internal/v1/wallet/bill-contributions/${encodeURIComponent(token)}/contribute`,
+        {
+          amount,
+          message: chipMessage.trim() || undefined,
+        },
+      );
+      setChipDone(true);
+      setChipAmount("");
+      setChipMessage("");
+      await load();
+    } catch (e) {
+      setChipError(errMessage(e, "Contribution could not be recorded. Nothing was charged if the wallet debit failed."));
+    } finally {
+      setChipBusy(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -189,7 +228,7 @@ export default function ShareFundPage() {
             </div>
           </div>
 
-          <div className="mt-5">
+          <div className="mt-5 space-y-3">
             {!isAuthenticated ? (
               <Link
                 href={loginHref}
@@ -206,10 +245,64 @@ export default function ShareFundPage() {
               >
                 <HandHeart className="h-4 w-4" /> Donate
               </Link>
-            ) : (
-              <p className="text-sm text-muted-foreground" data-testid="share-not-open">
-                This fundraiser is not currently open for donations through the public list.
+            ) : !caseLookupDone ? (
+              <p className="text-sm text-muted-foreground" data-testid="share-lookup">
+                Checking donation options…
               </p>
+            ) : !openForChipIn ? (
+              <p className="text-sm text-muted-foreground" data-testid="share-not-open">
+                This contribution link is not open for further donations ({req.status}).
+              </p>
+            ) : chipDone ? (
+              <p className="text-sm text-emerald-700" data-testid="share-chip-done" role="status">
+                Thank you — your contribution was recorded.
+              </p>
+            ) : (
+              <div className="space-y-2" data-testid="share-chip-in">
+                <p className="text-sm text-muted-foreground">
+                  Chip in from your Impilo wallet toward this bill.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    inputMode="decimal"
+                    placeholder={`Amount (${req.currency ?? "USD"})`}
+                    value={chipAmount}
+                    onChange={(e) => setChipAmount(e.target.value)}
+                    aria-label="Contribution amount"
+                    className="w-36 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Message (optional)"
+                    value={chipMessage}
+                    onChange={(e) => setChipMessage(e.target.value)}
+                    aria-label="Contribution message"
+                    className="min-w-[12rem] flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void chipIn()}
+                    disabled={chipBusy}
+                    data-testid="share-chip-in-submit"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-60"
+                  >
+                    {chipBusy ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <HandHeart className="h-4 w-4" />
+                    )}
+                    Chip in
+                  </button>
+                </div>
+                {chipError && (
+                  <p className="text-sm text-red-700" role="alert">
+                    {chipError}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </div>

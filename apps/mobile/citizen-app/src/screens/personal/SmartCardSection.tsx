@@ -20,6 +20,7 @@ import {
   setPhrCarry,
   payBiometric,
   createBillContribution,
+  enrollDeviceCard,
   type SmartCard,
 } from "../../services/smartCardService";
 import {
@@ -56,12 +57,19 @@ export function SmartCardSection() {
   const card: SmartCard | undefined = cards?.[0];
 
   const setupKeyMutation = useMutation({
-    mutationFn: ensureDeviceCardKey,
+    mutationFn: async () => {
+      if (!card?.cardId) {
+        throw new Error("No wallet card is available to enroll this device against.");
+      }
+      const publicKey = await ensureDeviceCardKey();
+      return enrollDeviceCard({ cardId: card.cardId, publicKey });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["smart-card-device-key"] });
+      queryClient.invalidateQueries({ queryKey: ["smart-cards"] });
       Alert.alert(
-        "Card ready on this device",
-        "A secure card key was created on this phone. To use tap/scan/biometric pay, this device must be enrolled to your card.",
+        "Device enrolled",
+        "This phone's card key is enrolled. You can use biometric pay when the card is active.",
       );
     },
     onError: (e: unknown) => Alert.alert("Setup failed", errText(e)),
@@ -124,7 +132,7 @@ export function SmartCardSection() {
       setBillTitle("");
       setBillTarget("");
       if (req?.shareToken) {
-        const url = `https://impilo.mohcc.gov.zw/give/${req.shareToken}`;
+        const url = `https://impilo.mohcc.gov.zw/share/fund/${req.shareToken}`;
         await Share.share({
           message: `Please help me with my health bill on Impilo: ${url}`,
         });
@@ -212,9 +220,9 @@ export function SmartCardSection() {
             the device.
           </Text>
           <Button
-            title={setupKeyMutation.isPending ? "Setting up…" : "Set up card on this device"}
+            title={setupKeyMutation.isPending ? "Enrolling…" : "Set up card on this device"}
             onPress={() => setupKeyMutation.mutate()}
-            disabled={setupKeyMutation.isPending}
+            disabled={setupKeyMutation.isPending || !card?.cardId}
           />
         </View>
       ) : null}

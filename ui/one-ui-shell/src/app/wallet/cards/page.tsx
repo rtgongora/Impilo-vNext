@@ -34,6 +34,7 @@ import {
 } from "@/hooks/queries/useMusheWallet";
 import { apiClient } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
+import { CitizenSmartCardPanel } from "@/components/wallet/CitizenSmartCardPanel";
 
 function asRecord(v: unknown): Record<string, unknown> {
   return v && typeof v === "object" ? (v as Record<string, unknown>) : {};
@@ -176,6 +177,8 @@ export default function CardManagementPage() {
             No wallet found. Please set up your wallet first.
           </p>
         )}
+
+        {cpid && <CitizenSmartCardPanel enabled={Boolean(cpid)} />}
 
         {cpid && walletId && (
           <div className="space-y-6">

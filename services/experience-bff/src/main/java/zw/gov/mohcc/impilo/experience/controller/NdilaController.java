@@ -256,6 +256,45 @@ public class NdilaController {
         }
     }
 
+    /** Canonical Ndila locations owned by a domain entity (G4 — e.g. ownerService=vito, ownerEntityId=healthId). */
+    @GetMapping("/locations/by-owner/{ownerService}/{ownerEntityId}")
+    public ResponseEntity<Map<String, Object>> locationsByOwner(
+            @PathVariable String ownerService,
+            @PathVariable String ownerEntityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.locationsByOwner(ownerService, ownerEntityId);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : List.of(), "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.warn("Ndila locations by-owner failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "data", List.of(), "error", Map.of("code", "NDILA_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", meta(requestId, correlationId)));
+        }
+    }
+
+    @GetMapping("/locations/{id}")
+    public ResponseEntity<Map<String, Object>> getLocation(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.getLocation(id);
+            if (data == null || data.isNull()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "error", Map.of("code", "LOCATION_NOT_FOUND", "message", "No Ndila location with that id"),
+                        "meta", meta(requestId, correlationId)));
+            }
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.warn("Ndila get location failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "NDILA_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", meta(requestId, correlationId)));
+        }
+    }
+
     @PostMapping("/catchments")
     public ResponseEntity<Map<String, Object>> createCatchment(
             @RequestBody Map<String, Object> body,

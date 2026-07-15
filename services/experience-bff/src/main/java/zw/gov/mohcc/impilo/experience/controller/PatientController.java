@@ -314,14 +314,9 @@ public class PatientController {
         reg.put("emergencyContactName", strVal(body, "emergency_contact_name", "emergencyContactName"));
         reg.put("emergencyContactPhone", strVal(body, "emergency_contact_phone", "emergencyContactPhone"));
         reg.put("issueProvisionalIdentifier", true);
-        // Optional medical-aid number: from a top-level field or the coverage sub-object (wizard).
-        // VITO ties it to the Health ID as a MEDICAL_AID_NUMBER identifier.
+        // Optional medical-aid number: Health ID identifier (MEDICAL_AID_NUMBER). Distinct from
+        // coverage.membership_number (scheme membership) — do not fall back across the two.
         String medicalAid = strVal(body, "medical_aid_number", "medicalAidNumber");
-        if ((medicalAid == null || medicalAid.isBlank()) && body.get("coverage") instanceof Map<?, ?> coverage) {
-            Object mn = coverage.get("membership_number");
-            if (mn == null) mn = coverage.get("membershipNumber");
-            if (mn != null) medicalAid = mn.toString();
-        }
         if (medicalAid != null && !medicalAid.isBlank()) {
             reg.put("medicalAidNumber", medicalAid.trim());
         }
