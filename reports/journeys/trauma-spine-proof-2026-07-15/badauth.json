@@ -1,0 +1,1 @@
+{"error":{"code":"MISSING_REQUIRED_HEADER","message":"Required v1.1 headers missing: [X-Tenant-ID]","details":{"missing":["X-Tenant-ID"]},"request_id":"a571e82d-6271-49d2-a138-ff6954b5ea7c","correlation_id":"09f57dd9-cc0a-4bc1-8e67-38fdcf4c70e5"}}

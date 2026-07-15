@@ -3,38 +3,39 @@
    vashandi-workforce-service health: 200
    notification-service health: 200
    oros-service health: 200
+   vito-service health: 200
    pct-service health: 200
    madi-service health: 200
    inpatient-service health: 200
    seeded vashandi trauma on-call pool (trauma-oncall:00000000-0000-4000-8000-0000000000fa): 4 shifts
 == J-TR-0: incident triage mints the episode; all phase owners carry it
-   PASS: SOS request created (4730d6dc-2d9c-476a-9c3e-8ced04ff81e2)
-   PASS: incident triaged (168fcbf1-e3be-4ec0-b758-f77ce42e5b4d)
-   PASS: incident triage MINTED a trauma episode (7d3ecf3b-ffe9-416e-9964-83b8e9371960)
+   PASS: SOS request created (8de33373-32d2-4729-a4d9-2c4b7ea139ef)
+   PASS: incident triaged (fca017cb-ae96-4dae-804b-bf2e8c68e303)
+   PASS: incident triage MINTED a trauma episode (6b190538-11ad-481c-9ff3-e3f22599a580)
    PASS: dai_trauma_episode row exists (origin_kind=INCIDENT, origin_key=incident)
    PASS: dai_emergency_incident stamped with the episode id
    PASS: timeline seeded with the INCIDENT phase
-   PASS: ED visit opened (bd1bcdce-af14-4399-b58c-0a5194960fe0)
+   PASS: ED visit opened (a5ac698a-a3b9-40f6-994e-cb2d56ea5dc6)
    PASS: pct.ed_visit carries the SAME trauma_episode_id
-   PASS: emergency activation created (9251afbe-1467-48d5-ad80-ffc6abbc851f)
-   PASS: resuscitation recorded (c0f93598-91f8-46ed-af4b-6285efc3ee8c)
+   PASS: emergency activation created (8b450657-78e0-49f5-a745-adf32f8d5e27)
+   PASS: resuscitation recorded (0b5f49ab-c5ce-42fb-9834-9c4b3db03022)
    PASS: inpatient.resuscitation_record carries the SAME trauma_episode_id
-   PASS: blood order placed (9954fe69-8b82-4e8b-a4af-aa5fb10a1933)
+   PASS: blood order placed (9e8c998b-180a-4a8c-9bca-7bf1c5888acb)
    PASS: madi.blood_orders carries the SAME trauma_episode_id
    PASS: timeline has the INCIDENT phase
    PASS: timeline has the ED phase
    PASS: timeline has the RESUS phase
    PASS: timeline has the BLOOD phase
    PASS: all phase-owner rows resolve to ONE trauma_episode_id (no fork)
-   PASS: re-mint on the same origin key returned the SAME episode (7d3ecf3b-ffe9-416e-9964-83b8e9371960)
+   PASS: re-mint on the same origin key returned the SAME episode (6b190538-11ad-481c-9ff3-e3f22599a580)
    PASS: exactly one episode row for the origin key (idempotent)
 == J-TR-0b: ED-first walk-in trauma mints a distinct episode via PCT
-   PASS: ED walk-in visit opened (b6c5f6e5-d5a4-4d0d-89f5-ad9288ba9c31)
-   PASS: ED-first walk-in minted a distinct episode (00a1185a-d60c-42cf-b364-d81958113e29)
+   PASS: ED walk-in visit opened (2134d305-5f30-4b0d-b9b5-1a1473e6efbe)
+   PASS: ED-first walk-in minted a distinct episode (d0987966-b741-4be5-bbde-885588e89569)
    PASS: walk-in episode is origin_kind=ED_WALK_IN, origin_service=pct-service
    PASS: walk-in ed_visit stamped with its own episode id
 == J-TR-1: EMS mission walks CREATED→HANDOVER; daidzai.ems.* outbox; dispatch idempotent
-   PASS: EMS mission dispatched (6b8b009b-a393-4ad3-974a-dd8ea4a2bd95)
+   PASS: EMS mission dispatched (f24e9487-7e40-4f02-96a9-7d48a2c3c858)
    PASS: mission is DISPATCHED after dispatch (CREATED→DISPATCHED)
    PASS: dai_ems_mission row bound to the incident
    PASS: mission carries the canonical trauma_episode_id
@@ -44,12 +45,12 @@
    PASS: daidzai.dai_outbox has daidzai.ems.* rows (11)
    PASS: daidzai.ems.handover event emitted
    PASS: no-Kafka drainer marked all daidzai.ems.* rows published
-   PASS: same Idempotency-Key replays the SAME mission (6b8b009b-a393-4ad3-974a-dd8ea4a2bd95)
+   PASS: same Idempotency-Key replays the SAME mission (f24e9487-7e40-4f02-96a9-7d48a2c3c858)
    PASS: fresh-key re-dispatch returns the existing mission (idempotent per incident)
    PASS: exactly one EMS mission for the incident (no duplicate crew dispatched)
 == J-TR-2: ePCR obs persist + land on the ED pre-arrival projection before arrival
-   PASS: escalated incident minted an episode (1a011050-e75b-4404-b04d-ed0bfde72151)
-   PASS: EMS mission dispatched for the incoming patient (dedfa7a8-451c-48b9-a2be-a259633bc0d5)
+   PASS: escalated incident minted an episode (0ac2391d-4ff9-4857-b726-8568f9de5301)
+   PASS: EMS mission dispatched for the incoming patient (1037032d-b02a-4814-a0c2-79598c52892d)
    PASS: mission is EN_ROUTE_FACILITY (inbound, not yet arrived)
    PASS: dai_ems_epcr_event time-series persisted (3 obs)
    PASS: dai_ems_epcr bound to the mission + trauma episode
@@ -58,12 +59,12 @@
    PASS: pre-arrival snapshot carries prehospital vitals
    PASS: ED pre-arrival board API lists the inbound patient
 == J-TR-3a: EMS handover transitions the SAME pre-arrival ed_visit to active
-   PASS: pre-arrival ed_visit exists pre-handover (e46ba553-479e-4132-aee2-4bbe57e15922, PRE_ARRIVAL)
-   PASS: SAME ed_visit row after handover (no duplicate: e46ba553-479e-4132-aee2-4bbe57e15922)
+   PASS: pre-arrival ed_visit exists pre-handover (76f049db-baeb-4dda-ab84-0145e863a258, PRE_ARRIVAL)
+   PASS: SAME ed_visit row after handover (no duplicate: 76f049db-baeb-4dda-ab84-0145e863a258)
    PASS: visit transitioned out of PRE_ARRIVAL (now REGISTERED)
    PASS: exactly one ed_visit for the episode (arrival reused pre-arrival)
 == J-TR-3b: trauma-team activation resolves the VASHANDI on-call panel, notifies, acks, escalates
-   PASS: trauma activated (cf3a3db4-5a01-4c48-aba3-6419236ded02)
+   PASS: trauma activated (05a44c84-7e29-457d-b3a1-c740d996446d)
    PASS: resolved 4 trauma-team members from the live VASHANDI on-call pool (== 4 seeded)
    PASS: notification delivery-intent row per member in ns_notifications (8, template ED_TRAUMA_TEAM)
    PASS: delivery-intent targets 4 distinct rostered recipients (per-member, not a blanket send)
@@ -79,10 +80,10 @@
    PASS: every resus_event re-keyed onto the canonical trauma_episode_id
    PASS: series reads back ordered by recorded_at
 == J-TR-4b: OROS critical diagnostic result reconciles onto the trauma episode (PCT link correlation)
-   PASS: PCT placed the OROS order (encounter_ref=episode) (01KXHYWGJPN1HH2S5G8YTVVRHM)
+   PASS: PCT placed the OROS order (encounter_ref=episode) (01KXJ4J45P0JCCXSJ50GK9FBJS)
    PASS: oros_orders.encounter_ref carries the trauma episode id
    PASS: PCT ed_diagnostic_order LINK row maps oros_order_id → episode (authoritative correlation)
-   PASS: OROS critical result posted (dfd4d4aa-4b88-4b19-817e-6856da40c963)
+   PASS: OROS critical result posted (348962ed-7c42-48ff-8d58-0c44c710dae0)
    PASS: OROS critical event in oros_event_outbox (SAFETY source, Kafka off): 1
    PASS: oros_results.is_critical = true
    PASS: PCT resolved the episode from the order→episode link (event lacks encounter_ref)
@@ -90,4 +91,36 @@
    PASS: SAFETY outbox row emitted (pct.ed.critical_result)
    PASS: critical result acknowledged (ack row in oros_acknowledgements, type=CRITICAL)
    PASS: PCT order link reconciled to ACKED (read-through projection of OROS truth)
-== SUMMARY: PASS=75 FAIL=0
+== J-TR-5: blood gate BLOCKED until MADI RESERVED+COMPATIBLE, then READY
+   PASS: trauma blood order placed (81fc0cb0-040a-4521-9c9e-4d61a59665b6)
+   PASS: episode references the MADI blood order (trauma_episode_id link)
+   PASS: blood readiness BLOCKED before reservation (no false-ready)
+   PASS: blood readiness READY once MADI RESERVED+COMPATIBLE (read-through)
+== J-TR-6: VITO reconcile — every trauma link repoints, zero orphans, per correct column
+   PASS: VITO minted provisional (merged 1ed217ee-fc43-4581-87e5-8d0e475f9b51) + survivor (6162fb45-3039-44a8-810c-b08285276277)
+   PASS: trauma footprint on the provisional Health ID across 5 owners (6 rows)
+   PASS: VITO emitted vito.merge.executed (the missing propagation channel)
+   repoint daidzai HTTP 200
+   repoint pct HTTP 200
+   repoint inpatient HTTP 200
+   repoint madi HTTP 200
+   PASS: ZERO orphans — no trauma row left on the tombstoned provisional Health ID
+   PASS: daidzai.dai_trauma_episode.subject_health_id → survivor
+   PASS: pct.ed_visit.patient_cpid → survivor
+   PASS: pct.emergency_cases.known_health_id → survivor
+   PASS: inpatient.emergency_activation.subject_cpid → survivor (resus anchor)
+   PASS: inpatient.procedure_episode.subject_cpid → survivor (theatre hook auto-collected)
+   PASS: madi.blood_orders.patient_cpid → survivor
+== J-TR-7: trauma outbox drains; duplicate Idempotency-Key ⇒ no duplicate row
+   PASS: all daidzai trauma outbox events drained (no-Kafka drainer)
+   PASS: duplicate Idempotency-Key ⇒ exactly one mission (no dup row)
+== J-TR-8: missing headers rejected; emergency O-neg release is break-glass + audited
+   PASS: missing mandatory header rejected (HTTP 400)
+   PASS: emergency O-neg release DENIED without break-glass purpose (403, not a bypass)
+   PASS: emergency O-neg release ALLOWED under break-glass (200)
+   PASS: break-glass release wrote an elevated audit outbox event (override recorded)
+== J-TR-9: ED disposition closes the trauma episode (surgery does not)
+   PASS: trauma episode CLOSED on ED disposition (G1.11)
+   PASS: episode closed_at recorded
+   PASS: closed episode timeline reconstructs coherently (INCIDENT..DISPOSITION)
+== SUMMARY: PASS=98 FAIL=0

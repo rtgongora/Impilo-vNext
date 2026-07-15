@@ -41,6 +41,7 @@ MADI=http://localhost:29300
 VASH=http://localhost:29387
 NOTIF=http://localhost:29200
 OROS=http://localhost:29089
+VITO=http://localhost:29082
 PASS=0; FAIL=0
 ok(){ echo "   PASS: $1" | tee -a "$EV/journal.txt"; PASS=$((PASS+1)); }
 bad(){ echo "   FAIL: $1" | tee -a "$EV/journal.txt"; FAIL=$((FAIL+1)); }
@@ -52,10 +53,13 @@ MADISQL(){ docker exec tr-rig-pg psql -U impilo -d madi -tAc "$1"; }
 VASHSQL(){ docker exec tr-rig-pg psql -U impilo -d vashandi -tAc "$1"; }
 NOTIFSQL(){ docker exec tr-rig-pg psql -U impilo -d notification -tAc "$1"; }
 OROSSQL(){ docker exec tr-rig-pg psql -U impilo -d oros -tAc "$1"; }
+VITOSQL(){ docker exec tr-rig-pg psql -U impilo -d vito -tAc "$1"; }
 hdr(){ local pou=${1:-TREATMENT} ep=${2:-} idem=${3:-idem-$(uuidgen)}
   local base="-H Content-Type:application/json -H X-Tenant-ID:$TEN -H X-Pod-ID:national-spine -H X-Request-ID:$(uuidgen) -H X-Correlation-ID:$(uuidgen) -H X-Facility-ID:$FAC -H X-Actor-ID:$ACTOR -H X-Actor-Type:PROVIDER -H X-Purpose-Of-Use:$pou -H Idempotency-Key:$idem"
   [ -n "$ep" ] && base="$base -H X-Trauma-Episode-ID:$ep"
   echo "$base"; }
+# Deliberately malformed trust envelope for the negative-authz journey (missing mandatory X-Tenant-ID).
+hdr_bad(){ echo "-H Content-Type:application/json -H X-Pod-ID:national-spine -H X-Request-ID:$(uuidgen) -H X-Correlation-ID:$(uuidgen) -H X-Actor-ID:$ACTOR -H X-Actor-Type:PROVIDER"; }
 jget(){ python3 -c "import json,sys;d=json.load(open('$1'));print(d.get('$2','') if isinstance(d,dict) else '')" 2>/dev/null; }
 jget2(){ python3 -c "import json;d=json.load(open('$1'));d=d.get('data',d) if isinstance(d,dict) else d;print(d.get('$2','') if isinstance(d,dict) else '')" 2>/dev/null; }
 
@@ -67,13 +71,13 @@ docker rm -f tr-rig-pg tr-rig-redis >/dev/null 2>&1
 docker run -d --name tr-rig-pg -e POSTGRES_USER=impilo -e POSTGRES_PASSWORD=impilo -p $PGPORT:5432 postgres:16-alpine >/dev/null
 docker run -d --name tr-rig-redis -p $RPORT:6379 redis:7-alpine >/dev/null
 sleep 8
-for db in daidzai pct inpatient madi vashandi notification oros; do
+for db in daidzai pct inpatient madi vashandi notification oros vito; do
   docker exec tr-rig-pg psql -U impilo -d postgres -c "CREATE DATABASE $db" >/dev/null 2>&1
 done
 
 svcjar(){ ls "$REPO/services/$1/target/$1-"*.jar 2>/dev/null | grep -v original | head -1; }
-for s in daidzai-service pct-service inpatient-service madi-service vashandi-workforce-service notification-service oros-service; do
-  [ -n "$(svcjar "$s")" ] || { echo "$s jar missing — run: mvn -f services/pom.xml -pl daidzai-service,pct-service,inpatient-service,madi-service,vashandi-workforce-service,notification-service,oros-service -am package -DskipTests"; exit 2; }
+for s in daidzai-service pct-service inpatient-service madi-service vashandi-workforce-service notification-service oros-service vito-service; do
+  [ -n "$(svcjar "$s")" ] || { echo "$s jar missing — run: mvn -f services/pom.xml -pl daidzai-service,pct-service,inpatient-service,madi-service,vashandi-workforce-service,notification-service,oros-service,vito-service -am package -DskipTests"; exit 2; }
 done
 
 boot(){ # $1 service-dir  $2 db  $3 port  $4..extra env KEY=VAL
@@ -100,9 +104,10 @@ boot daidzai-service daidzai 29392 DAIDZAI_KAFKA_EVENTS_ENABLED=false DAIDZAI_PC
 boot vashandi-workforce-service vashandi 29387
 boot notification-service notification 29200 KAFKA_OROS_CONSUMER_ENABLED=false
 boot oros-service oros 29089
+boot vito-service vito 29082 VITO_HMAC_PEPPER=trauma-rig-shs-signing-pepper-at-least-32-bytes-long IMPILO_FEDERATION_ENABLED=false
 # PCT resolves the on-call trauma team from VASHANDI + raises delivery-intents via notification-service.
-boot pct-service pct 29388 PCT_INTEGRATION_DAIDZAI_BASE_URL=$DAI \
-  PCT_INTEGRATION_VASHANDI_BASE_URL=$VASH PCT_INTEGRATION_NOTIFICATION_BASE_URL=$NOTIF PCT_INTEGRATION_OROS_BASE_URL=$OROS
+boot pct-service pct 29388 PCT_INTEGRATION_DAIDZAI_BASE_URL=$DAI IMPILO_FEDERATION_ENABLED=false \
+  PCT_INTEGRATION_VASHANDI_BASE_URL=$VASH PCT_INTEGRATION_NOTIFICATION_BASE_URL=$NOTIF PCT_INTEGRATION_OROS_BASE_URL=$OROS PCT_INTEGRATION_MADI_BASE_URL=$MADI
 boot madi-service madi 29300 MADI_INTEGRATION_DAIDZAI_BASE_URL=$DAI
 boot inpatient-service inpatient 29321 INPATIENT_INTEGRATION_DAIDZAI_BASE_URL=$DAI
 
@@ -110,6 +115,7 @@ wait_health $DAI daidzai-service
 wait_health $VASH vashandi-workforce-service
 wait_health $NOTIF notification-service
 wait_health $OROS oros-service
+wait_health $VITO vito-service
 wait_health $PCT pct-service
 wait_health $MADI madi-service
 wait_health $INP inpatient-service
@@ -475,6 +481,118 @@ RECEP=$(jget2 "$EV/reconcile.json" trauma_episode_id)
   && ok "critical result acknowledged (ack row in oros_acknowledgements, type=CRITICAL)" || bad "no CRITICAL ack row for order $ORDERID"
 [ "$(PCTSQL "SELECT status FROM pct.ed_diagnostic_order WHERE oros_order_id='$ORDERID'")" = "ACKED" ] \
   && ok "PCT order link reconciled to ACKED (read-through projection of OROS truth)" || bad "PCT order link not reconciled"
+
+# ═════ J-TR-5: blood readiness gate honestly BLOCKED until RESERVED+COMPATIBLE ═══
+say "J-TR-5: blood gate BLOCKED until MADI RESERVED+COMPATIBLE, then READY"
+curl -sS -o "$EV/blood5.json" $(hdr TREATMENT $EP) -X POST $MADI/internal/v1/madi/orders \
+  -d '{"patient_cpid":"TEMP-ED-TR0","blood_group":"O-","component_type":"PRBC","units_requested":2}'
+BORDER=$(jget "$EV/blood5.json" orderId)
+[ -n "$BORDER" ] && ok "trauma blood order placed ($BORDER)" || bad "blood order not placed: $(cat "$EV/blood5.json")"
+[ "$(MADISQL "SELECT trauma_episode_id FROM madi.blood_orders WHERE order_id='$BORDER'")" = "$EP" ] \
+  && ok "episode references the MADI blood order (trauma_episode_id link)" || bad "blood order not linked to episode"
+# Gate is honestly BLOCKED while the order is not reserved.
+curl -sS -o "$EV/readiness-blocked.json" $(hdr) "$PCT/v1/ed/blood-readiness?orderId=$BORDER" >/dev/null
+[ "$(jget2 "$EV/readiness-blocked.json" status)" = "BLOCKED" ] \
+  && ok "blood readiness BLOCKED before reservation (no false-ready)" || bad "readiness not BLOCKED pre-reservation: $(cat "$EV/readiness-blocked.json")"
+# Blood bank owns its FSM — the rig moves MADI truth to a RESERVED (COMPATIBLE) order (theatre pattern).
+MADISQL "UPDATE madi.blood_orders SET status='RESERVED' WHERE order_id='$BORDER'" >/dev/null
+curl -sS -o "$EV/readiness-ready.json" $(hdr) "$PCT/v1/ed/blood-readiness?orderId=$BORDER" >/dev/null
+python3 -c "import json;r=json.load(open('$EV/readiness-ready.json')).get('data',{});exit(0 if r.get('status')=='READY' and r.get('crossmatch_status')=='COMPATIBLE' else 1)" \
+  && ok "blood readiness READY once MADI RESERVED+COMPATIBLE (read-through)" || bad "readiness not READY after RESERVED: $(cat "$EV/readiness-ready.json")"
+
+# ═════ J-TR-6: unknown patient → VITO merge repoints ALL trauma links (zero orphans) ══
+say "J-TR-6: VITO reconcile — every trauma link repoints, zero orphans, per correct column"
+# Two VITO provisional identities: the unknown trauma patient (merged) + the confirmed survivor.
+curl -sS -o "$EV/prov-merged.json" $(hdr) -X POST $VITO/internal/v1/identities/provisional -d '{"estimated_sex":"M","descriptor":"unknown RTC"}'
+curl -sS -o "$EV/prov-surv.json" $(hdr) -X POST $VITO/internal/v1/identities/provisional -d '{"estimated_sex":"M","descriptor":"identified"}'
+MHID=$(jget "$EV/prov-merged.json" health_id); MCRID=$(jget "$EV/prov-merged.json" crid)
+SHID=$(jget "$EV/prov-surv.json" health_id); SCRID=$(jget "$EV/prov-surv.json" crid)
+[ -n "$MHID" ] && [ -n "$SHID" ] && ok "VITO minted provisional (merged $MHID) + survivor ($SHID)" || bad "VITO provisional mint failed"
+
+# Build the unknown patient's trauma footprint across every phase owner (patient = merged Health ID).
+curl -sS -o "$EV/inc6.json" $(hdr) -X POST $DAI/internal/v1/daidzai/incidents \
+  -d "{\"emergencyCategory\":\"TRAUMA\",\"severity\":\"CRITICAL\",\"description\":\"unknown RTC\",\"facilityId\":\"$FAC\",\"subjectIdentityMode\":\"KNOWN\",\"subjectHealthId\":\"$MHID\"}"
+INC6=$(jget "$EV/inc6.json" id); EP6=$(jget "$EV/inc6.json" traumaEpisodeId)
+curl -sS -o "$EV/edv6.json" $(hdr TREATMENT $EP6) -X POST $PCT/v1/ed/visits -d "{\"patientCpid\":\"$MHID\",\"facilityId\":\"$FAC\",\"arrivalMode\":\"AMBULANCE\"}"
+V6=$(jget2 "$EV/edv6.json" visit_id)
+curl -sS -o "$EV/ecase6.json" $(hdr) -X POST $PCT/v1/ed/emergency-cases -d "{\"presentingComplaint\":\"unknown trauma\",\"knownHealthId\":\"$MHID\",\"facilityId\":\"$FAC\"}"
+curl -sS -o "$EV/act6.json" $(hdr EMERGENCY) -X POST $INP/internal/v1/emergency/activate -d "{\"patientId\":\"$MHID\",\"protocolType\":\"TRAUMA\"}"
+curl -sS -o "$EV/bord6.json" $(hdr TREATMENT $EP6) -X POST $MADI/internal/v1/madi/orders -d "{\"patient_cpid\":\"$MHID\",\"blood_group\":\"O-\",\"component_type\":\"PRBC\",\"units_requested\":2}"
+curl -sS -o "$EV/case6.json" $(hdr) -X POST $INP/internal/v1/theatre/cases -d "{\"patientId\":\"$MHID\",\"procedureName\":\"Emergency laparotomy\",\"procedureCode\":\"0DTJ4ZZ\",\"triagePriority\":\"URGENT\"}"
+# Confirm the footprint is on the tombstoned id before merge.
+FOOT=$(( $(DAISQL "SELECT count(*) FROM daidzai.dai_trauma_episode WHERE subject_health_id='$MHID'") + $(PCTSQL "SELECT count(*) FROM pct.ed_visit WHERE patient_cpid='$MHID'") + $(INPSQL "SELECT count(*) FROM inpatient.emergency_activation WHERE subject_cpid='$MHID'") + $(MADISQL "SELECT count(*) FROM madi.blood_orders WHERE patient_cpid='$MHID'") + $(INPSQL "SELECT count(*) FROM inpatient.procedure_episode WHERE subject_cpid='$MHID'") ))
+[ "$FOOT" -ge 5 ] && ok "trauma footprint on the provisional Health ID across 5 owners ($FOOT rows)" || bad "footprint incomplete pre-merge ($FOOT)"
+
+# VITO reversible merge: provisional → confirmed survivor (emits vito.merge.executed).
+# Merge is NATIONAL-POD-ONLY (FederationAuthorityGuard): send X-Pod-ID:national (not national-spine).
+curl -sS -o "$EV/merge6.json" -H Content-Type:application/json -H X-Tenant-ID:$TEN -H X-Pod-ID:national \
+  -H X-Request-ID:$(uuidgen) -H X-Correlation-ID:$(uuidgen) -H X-Actor-ID:$ACTOR -H X-Actor-Type:PROVIDER \
+  -H X-Purpose-Of-Use:TREATMENT -H Idempotency-Key:idem-$(uuidgen) -X POST $VITO/internal/v1/patients/merge \
+  -d "{\"survivor_crid\":\"$SCRID\",\"merged_crids\":[\"$MCRID\"],\"reason\":\"IDENTIFIED\"}"
+[ "$(VITOSQL "SELECT count(*) FROM vito.event_outbox WHERE event_type='vito.merge.executed'")" -ge 1 ] \
+  && ok "VITO emitted vito.merge.executed (the missing propagation channel)" || bad "no vito.merge.executed event"
+VITOSQL "SELECT payload FROM vito.event_outbox WHERE event_type='vito.merge.executed' ORDER BY id DESC LIMIT 1" > "$EV/merge-payload.json"
+
+# Deliver the merge event to every participant's fan-out (Kafka off → internal repoint endpoint).
+for pair in "daidzai:$DAI" "pct:$PCT" "inpatient:$INP" "madi:$MADI"; do
+  nm=${pair%%:*}; url=${pair#*:}
+  curl -sS -o "$EV/repoint-$nm.json" -w "   repoint $nm HTTP %{http_code}\n" $(hdr) -X POST $url/internal/v1/identity/vito-merge --data-binary @"$EV/merge-payload.json" | tee -a "$EV/journal.txt"
+done
+
+# Zero orphans: nothing left on the tombstoned id; every link repointed to the survivor, per column.
+ORPHANS=$(( $(DAISQL "SELECT count(*) FROM daidzai.dai_trauma_episode WHERE subject_health_id='$MHID'") + $(DAISQL "SELECT count(*) FROM daidzai.dai_emergency_incident WHERE subject_health_id='$MHID'") + $(PCTSQL "SELECT count(*) FROM pct.ed_visit WHERE patient_cpid='$MHID'") + $(PCTSQL "SELECT count(*) FROM pct.emergency_cases WHERE known_health_id='$MHID'") + $(INPSQL "SELECT count(*) FROM inpatient.emergency_activation WHERE subject_cpid='$MHID'") + $(INPSQL "SELECT count(*) FROM inpatient.procedure_episode WHERE subject_cpid='$MHID'") + $(MADISQL "SELECT count(*) FROM madi.blood_orders WHERE patient_cpid='$MHID'") ))
+[ "$ORPHANS" = 0 ] && ok "ZERO orphans — no trauma row left on the tombstoned provisional Health ID" || bad "$ORPHANS orphan row(s) still on $MHID"
+# Per-column repoint to the survivor (each table on its OWN patient column).
+[ "$(DAISQL "SELECT count(*) FROM daidzai.dai_trauma_episode WHERE subject_health_id='$SHID'")" -ge 1 ] && ok "daidzai.dai_trauma_episode.subject_health_id → survivor" || bad "episode not repointed"
+[ "$(PCTSQL "SELECT count(*) FROM pct.ed_visit WHERE patient_cpid='$SHID'")" -ge 1 ] && ok "pct.ed_visit.patient_cpid → survivor" || bad "ed_visit not repointed"
+[ "$(PCTSQL "SELECT count(*) FROM pct.emergency_cases WHERE known_health_id='$SHID'")" -ge 1 ] && ok "pct.emergency_cases.known_health_id → survivor" || bad "emergency_cases not repointed"
+[ "$(INPSQL "SELECT count(*) FROM inpatient.emergency_activation WHERE subject_cpid='$SHID'")" -ge 1 ] && ok "inpatient.emergency_activation.subject_cpid → survivor (resus anchor)" || bad "emergency_activation not repointed"
+[ "$(INPSQL "SELECT count(*) FROM inpatient.procedure_episode WHERE subject_cpid='$SHID'")" -ge 1 ] && ok "inpatient.procedure_episode.subject_cpid → survivor (theatre hook auto-collected)" || bad "procedure_episode not repointed — theatre hook not collected"
+[ "$(MADISQL "SELECT count(*) FROM madi.blood_orders WHERE patient_cpid='$SHID'")" -ge 1 ] && ok "madi.blood_orders.patient_cpid → survivor" || bad "blood_orders not repointed"
+
+# ═════ J-TR-7: trauma outbox drainage + idempotency ══════════════════════════════
+say "J-TR-7: trauma outbox drains; duplicate Idempotency-Key ⇒ no duplicate row"
+for i in $(seq 1 12); do
+  U=$(DAISQL "SELECT count(*) FROM daidzai.dai_outbox WHERE event_type LIKE 'daidzai.%' AND published_at IS NULL")
+  [ "${U:-1}" = 0 ] && break; sleep 1
+done
+[ "${U:-1}" = 0 ] && ok "all daidzai trauma outbox events drained (no-Kafka drainer)" || bad "undrained daidzai outbox rows remain ($U)"
+# Duplicate Idempotency-Key on an EMS dispatch ⇒ the companion filter replays, no duplicate mission.
+IDEM7=idem-dup-$(uuidgen)
+curl -sS -o "$EV/dup1.json" $(hdr TREATMENT "" "$IDEM7") -X POST $DAI/internal/v1/daidzai/ems/incidents/$INC6/dispatch -d '{"callSign":"AMB-DUP"}'
+curl -sS -o "$EV/dup2.json" $(hdr TREATMENT "" "$IDEM7") -X POST $DAI/internal/v1/daidzai/ems/incidents/$INC6/dispatch -d '{"callSign":"AMB-DUP"}'
+[ "$(DAISQL "SELECT count(*) FROM daidzai.dai_ems_mission WHERE incident_id='$INC6'")" = 1 ] \
+  && ok "duplicate Idempotency-Key ⇒ exactly one mission (no dup row)" || bad "duplicate Idempotency-Key created a duplicate mission"
+
+# ═════ J-TR-8: negative-authz + emergency break-glass (audited, not a bypass) ═════
+say "J-TR-8: missing headers rejected; emergency O-neg release is break-glass + audited"
+HTTP=$(curl -sS -o "$EV/badauth.json" -w '%{http_code}' $(hdr_bad) "$MADI/internal/v1/madi/orders")
+[ "$HTTP" = 400 ] || [ "$HTTP" = 401 ] && ok "missing mandatory header rejected (HTTP $HTTP)" || bad "malformed trust envelope not rejected (got $HTTP)"
+# Emergency uncrossmatched release WITHOUT emergency purpose ⇒ DENIED by the shared guard.
+HTTP=$(curl -sS -o /dev/null -w '%{http_code}' $(hdr TREATMENT) -X POST $MADI/internal/v1/madi/orders/$BORDER/emergency-release -d '{"reason":"exsanguinating"}')
+[ "$HTTP" = 403 ] && ok "emergency O-neg release DENIED without break-glass purpose (403, not a bypass)" || bad "emergency release not denied without break-glass (got $HTTP)"
+# WITH emergency purpose ⇒ allowed + elevated break-glass audit event.
+HTTP=$(curl -sS -o /dev/null -w '%{http_code}' $(hdr EMERGENCY) -X POST $MADI/internal/v1/madi/orders/$BORDER/emergency-release -d '{"reason":"exsanguinating trauma","bloodUnitId":"ONEG-1"}')
+[ "$HTTP" = 200 ] && ok "emergency O-neg release ALLOWED under break-glass (200)" || bad "break-glass release failed (got $HTTP)"
+[ "$(MADISQL "SELECT count(*) FROM madi.event_outbox WHERE event_type='EMERGENCY_RELEASE_BREAK_GLASS' AND aggregate_id='$BORDER'")" -ge 1 ] \
+  && ok "break-glass release wrote an elevated audit outbox event (override recorded)" || bad "no break-glass audit event"
+
+# ═════ J-TR-9: disposition closes the episode; timeline reconstructs coherent ═════
+say "J-TR-9: ED disposition closes the trauma episode (surgery does not)"
+# Put the ED journey in a discharge-eligible state (the rig moves the ED workflow truth to IN_SERVICE,
+# as a triaged trauma patient in active resus would be — the ED queue lifecycle is PCT-owned + tested
+# elsewhere; here we only need the disposition precondition satisfied).
+PCTSQL "UPDATE pct.pct_journeys SET state='IN_SERVICE' WHERE journey_id=(SELECT journey_id FROM pct.ed_visit WHERE visit_id='$VISIT')" >/dev/null
+curl -sS -o "$EV/dispo.json" $(hdr) -X POST $PCT/v1/ed/visits/$VISIT/disposition -d '{"dispositionType":"ADMIT","diagnosis":"polytrauma"}'
+sleep 1  # allow the daidzai close push to land
+[ "$(DAISQL "SELECT status FROM daidzai.dai_trauma_episode WHERE id='$EP'")" = "CLOSED" ] \
+  && ok "trauma episode CLOSED on ED disposition (G1.11)" || bad "episode not CLOSED after disposition"
+[ -n "$(DAISQL "SELECT closed_at FROM daidzai.dai_trauma_episode WHERE id='$EP' AND closed_at IS NOT NULL")" ] \
+  && ok "episode closed_at recorded" || bad "closed_at not set"
+# Coherent timeline reconstructable from persisted rows.
+curl -sS -o "$EV/final-episode.json" $(hdr) $DAI/internal/v1/daidzai/trauma-episodes/$EP >/dev/null
+python3 -c "import json;r=json.load(open('$EV/final-episode.json'));t=[p['phase'] for p in r.get('timeline',[])];exit(0 if r.get('status')=='CLOSED' and 'INCIDENT' in t and 'DISPOSITION' in t else 1)" \
+  && ok "closed episode timeline reconstructs coherently (INCIDENT..DISPOSITION)" || bad "closed episode timeline incoherent"
 
 # ── Summary ────────────────────────────────────────────────────────────────────
 say "SUMMARY: PASS=$PASS FAIL=$FAIL"
