@@ -55,6 +55,11 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 .requestMatchers("/v1/client-registry/**").permitAll()
+                // Preview/test only: the internal service-plane (v1.1) endpoints — provisional
+                // identity mint, patient merge, etc. — are reachable without a broker/Envoy so
+                // runtime-proof rigs can exercise the identity-reconcile path. Production keeps the
+                // strict chain (authenticated + upstream ext_authz).
+                .requestMatchers("/internal/v1/**").permitAll()
                 .anyRequest().authenticated());
         return http.build();
     }
