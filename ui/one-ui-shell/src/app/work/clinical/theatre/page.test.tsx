@@ -1,10 +1,13 @@
 import type { ReactNode } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TheatreBoardPage from "./page";
 
 const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
 
+const push = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/components/AppLayout", () => ({ AppLayout: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 vi.mock("@/components/PageShell", () => ({
   PageShell: ({ children, title }: { children: ReactNode; title: string }) => (<div><h1>{title}</h1>{children}</div>),
@@ -36,5 +39,21 @@ describe("TheatreBoardPage", () => {
     get.mockRejectedValueOnce({ error: { message: "Upstream theatre service unavailable" } });
     render(<TheatreBoardPage />);
     await waitFor(() => expect(screen.getByText(/Upstream theatre service unavailable/)).toBeInTheDocument());
+  });
+
+  it("Lane 1: emergency activation POSTs to the real endpoint and routes to the new case", async () => {
+    get.mockResolvedValue([]);
+    push.mockReset();
+    post.mockResolvedValueOnce({ data: { id: "c-emg-1", emergency_override: true, triage_priority: "EMERGENCY" } });
+    render(<TheatreBoardPage />);
+    await waitFor(() => expect(screen.getByText(/No theatre cases on the board/)).toBeInTheDocument());
+    await userEvent.click(screen.getByTestId("emergency-activate-toggle"));
+    await userEvent.type(screen.getByTestId("em-patient"), "CPID-9");
+    await userEvent.type(screen.getByTestId("em-procedure"), "Emergency laparotomy");
+    await userEvent.click(screen.getByTestId("em-submit"));
+    await waitFor(() =>
+      expect(post).toHaveBeenCalledWith("/internal/v1/theatre/cases/emergency", expect.objectContaining({ patientId: "CPID-9", procedureName: "Emergency laparotomy" })),
+    );
+    expect(push).toHaveBeenCalledWith("/work/clinical/theatre/c-emg-1");
   });
 });

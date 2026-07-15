@@ -61,6 +61,12 @@ public class TheatreController {
         return theatreService.setTriage(id, body);
     }
 
+    /** Read-only theatre case detail (episode detail + theatre-scoped triage/emergency/death state). */
+    @GetMapping("/cases/{id}")
+    public Map<String, Object> caseDetail(@PathVariable UUID id) {
+        return theatreService.caseDetail(id);
+    }
+
     // ── Wave 5b §15 — EMERGENCY SURGERY rapid activation + emergency consent exception ──
     @PostMapping("/cases/emergency")
     public ResponseEntity<Map<String, Object>> activateEmergency(

@@ -536,6 +536,22 @@ public class TheatreService {
                 .map(this::queueRow).toList();
     }
 
+    /**
+     * Read-only theatre case detail. A theatre case IS the procedure episode (same id); this returns the
+     * canonical episode detail ENRICHED with the theatre-scoped triage priority, emergency-override state
+     * and death-routing reference that {@code episodeSummary} omits but the perioperative case surface
+     * needs (e.g. an EMERGENCY case must not render as ELECTIVE). Pure read — no state transition.
+     */
+    public Map<String, Object> caseDetail(UUID episodeId) {
+        ProcedureEpisodeEntity e = requireEpisode(episodeId);
+        Map<String, Object> out = new LinkedHashMap<>(episodeService.getEpisode(episodeId));
+        out.put("triage_priority", e.getTriagePriority());
+        out.put("emergency_override", e.isEmergencyOverride());
+        out.put("emergency_override_reason", e.getEmergencyOverrideReason());
+        out.put("death_case_ref", e.getDeathCaseRef());
+        return out;
+    }
+
     // ── 2/3. Booking readiness — owner-routed, fails safely with blockers ─────────────────────────
     @Transactional
     public Map<String, Object> evaluateReadiness(UUID episodeId, Map<String, Object> body) {

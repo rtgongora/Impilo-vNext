@@ -737,4 +737,109 @@ public class InpatientServiceClient {
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return response.getBody();
     }
+
+    // ── Theatre perioperative depth — UI-completion passthrough ────────────────────────────────────
+    // Pure stateless forwarding of the inpatient-service (SoR) theatre endpoints the BFF surface did not
+    // yet expose: case detail, the clinical-safety trio (blood / specimen / counts), the commodities /
+    // traceability set (implant / instrument-set / controlled-drug), the emergency + obstetric activation
+    // journey, and the multi-channel anaesthesia chart. No new domain logic, no schema.
+
+    /** Read-only theatre case detail (inpatient TheatreController GET /cases/{id}). */
+    public JsonNode getTheatreCase(String caseId) {
+        return restTemplate.getForEntity(baseUrl + "/internal/v1/theatre/cases/" + caseId, JsonNode.class).getBody();
+    }
+
+    // blood (MADI-backed)
+    public JsonNode listTheatreBlood(String caseId) {
+        return restTemplate.getForEntity(baseUrl + "/internal/v1/theatre/cases/" + caseId + "/blood", JsonNode.class).getBody();
+    }
+    public JsonNode theatreBloodAction(String caseId, String action, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/blood/" + action;
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
+    // specimens (OROS-backed) + specimen transport (NHUME-backed)
+    public JsonNode listTheatreSpecimens(String caseId) {
+        return restTemplate.getForEntity(baseUrl + "/internal/v1/theatre/cases/" + caseId + "/specimens", JsonNode.class).getBody();
+    }
+    public JsonNode acknowledgeTheatreSpecimen(String caseId, String specimenId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/specimens/" + specimenId + "/acknowledge-critical";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+    public JsonNode requestTheatreSpecimenTransport(String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/transport/specimen";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
+    // surgical counts (RITO-backed on discrepancy)
+    public JsonNode listTheatreCounts(String caseId) {
+        return restTemplate.getForEntity(baseUrl + "/internal/v1/theatre/cases/" + caseId + "/counts", JsonNode.class).getBody();
+    }
+    public JsonNode recordTheatreCount(String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/counts";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
+    // emergency activation + emergency consent exception
+    public JsonNode activateEmergencyCase(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/emergency";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+    public JsonNode recordEmergencyConsentException(String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/consent/emergency-exception";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
+    // obstetric emergency caesarean (maternal + fetal + neonatal)
+    public JsonNode theatreObstetricAction(String caseId, String action, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/obstetric/" + action;
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
+    // implants (UDI/serial/lot traceability + recall trace)
+    public JsonNode listTheatreImplants(String caseId) {
+        return restTemplate.getForEntity(baseUrl + "/internal/v1/theatre/cases/" + caseId + "/implants", JsonNode.class).getBody();
+    }
+    public JsonNode recordTheatreImplant(String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/implants";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+    public JsonNode traceImplantRecall(String udi, String lot) {
+        org.springframework.web.util.UriComponentsBuilder b =
+                org.springframework.web.util.UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/theatre/implants/recall");
+        if (udi != null && !udi.isBlank()) b.queryParam("udi", udi);
+        if (lot != null && !lot.isBlank()) b.queryParam("lot", lot);
+        return restTemplate.getForEntity(b.encode().toUriString(), JsonNode.class).getBody();
+    }
+
+    // sterile instrument sets (TUSO CSSD)
+    public JsonNode listInstrumentSets(String caseId) {
+        return restTemplate.getForEntity(baseUrl + "/internal/v1/theatre/cases/" + caseId + "/instrument-sets", JsonNode.class).getBody();
+    }
+    public JsonNode issueInstrumentSet(String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/instrument-sets/issue";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+    public JsonNode returnInstrumentSet(String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/instrument-sets/return";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
+    // controlled-drug register (two-person witness)
+    public JsonNode listControlledDrugs(String caseId) {
+        return restTemplate.getForEntity(baseUrl + "/internal/v1/theatre/cases/" + caseId + "/controlled-drugs", JsonNode.class).getBody();
+    }
+    public JsonNode recordControlledDrug(String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/theatre/cases/" + caseId + "/controlled-drugs";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
+    // multi-channel anaesthesia chart (procedure-keyed)
+    public JsonNode getAnaesthesiaChart(String caseId) {
+        return restTemplate.getForEntity(baseUrl + "/internal/v1/procedures/" + caseId + "/anaesthesia/chart", JsonNode.class).getBody();
+    }
+    public JsonNode recordAnaesthesiaChartEntry(String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/" + caseId + "/anaesthesia/chart";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
 }

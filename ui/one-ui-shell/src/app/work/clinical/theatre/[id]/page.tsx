@@ -18,6 +18,13 @@ import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
 import { TheatreCaseBanner } from "@/components/clinical/theatre/TheatreCaseBanner";
 import { DocumentStateBadge, type DocumentState } from "@/components/clinical/theatre/DocumentStateBadge";
+import { TheatreBloodPanel } from "@/components/clinical/theatre/TheatreBloodPanel";
+import { TheatreSpecimenPanel } from "@/components/clinical/theatre/TheatreSpecimenPanel";
+import { TheatreCountPanel } from "@/components/clinical/theatre/TheatreCountPanel";
+import { AnaesthesiaChartPanel } from "@/components/clinical/theatre/AnaesthesiaChartPanel";
+import { TheatreCommoditiesPanel } from "@/components/clinical/theatre/TheatreCommoditiesPanel";
+import { EmergencyConsentExceptionPanel } from "@/components/clinical/theatre/EmergencyConsentExceptionPanel";
+import { ObstetricSection } from "@/components/clinical/theatre/ObstetricSection";
 import { apiClient } from "@/lib/api-client";
 
 interface Blocker { code?: string; message?: string }
@@ -35,6 +42,8 @@ interface TheatreCaseDetail {
   surgeon_id?: string;
   checklist?: ChecklistItem[];
   death_case_ref?: string;
+  consent_status?: string;
+  emergency_override?: boolean;
   // §19 banner context (optional — surfaced when the record carries them, never fabricated)
   allergies?: string[];
   no_known_allergies?: boolean;
@@ -300,6 +309,33 @@ export default function TheatreCaseDetailPage() {
                 <button type="button" disabled={busy || !overrideReason} onClick={() => void start(true)} className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50">Start with override</button>
               </div>
             </section>
+
+            {/* Emergency consent exception — shown for emergency/immediate/override cases */}
+            {(["EMERGENCY", "IMMEDIATE"].includes(data.triage_priority ?? "") || data.emergency_override || data.consent_status === "EMERGENCY_EXCEPTION") && (
+              <div className={focusMode ? "hidden" : undefined}>
+                <EmergencyConsentExceptionPanel caseId={id} consentStatus={data.consent_status} onRecorded={() => void load()} />
+              </div>
+            )}
+
+            {/* Obstetric emergency caesarean — shown for obstetric procedures */}
+            {/(caesar|c-section|section|obstetr|lscs)/i.test(data.procedure_name ?? "") && (
+              <div className={focusMode ? "hidden" : undefined}>
+                <ObstetricSection caseId={id} />
+              </div>
+            )}
+
+            {/* Clinical-safety management (Lane 3): blood, specimens, counts, anaesthesia chart */}
+            <div className={`grid gap-5${focusMode ? " hidden" : ""}`} data-testid="clinical-management">
+              <TheatreBloodPanel caseId={id} />
+              <TheatreSpecimenPanel caseId={id} />
+              <TheatreCountPanel caseId={id} />
+              <AnaesthesiaChartPanel caseId={id} />
+            </div>
+
+            {/* Commodities & traceability (Lane 2): implants, instrument sets, controlled drugs */}
+            <div className={focusMode ? "hidden" : undefined}>
+              <TheatreCommoditiesPanel caseId={id} />
+            </div>
 
             {/* Operative note — data-entry surface; focusing a field auto-enables focus mode */}
             <section

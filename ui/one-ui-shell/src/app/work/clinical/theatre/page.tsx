@@ -9,7 +9,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Stethoscope, Loader2, RefreshCw, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Stethoscope, Loader2, RefreshCw, Plus, Siren } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
@@ -55,6 +56,11 @@ export default function TheatreBoardPage() {
   const [intaking, setIntaking] = useState(false);
   const [intakeMsg, setIntakeMsg] = useState<string | null>(null);
   const [form, setForm] = useState({ patientId: "", procedureName: "", procedureCode: "", surgeonId: "", triagePriority: "ELECTIVE" });
+  const [showEmergency, setShowEmergency] = useState(false);
+  const [activating, setActivating] = useState(false);
+  const [emergencyMsg, setEmergencyMsg] = useState<string | null>(null);
+  const [emForm, setEmForm] = useState({ patientId: "", procedureName: "", surgeonId: "", emergencyReason: "" });
+  const router = useRouter();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -91,6 +97,33 @@ export default function TheatreBoardPage() {
     }
   }, [form, load]);
 
+  const activateEmergency = useCallback(async () => {
+    if (!emForm.patientId || !emForm.procedureName) return;
+    setActivating(true);
+    setEmergencyMsg(null);
+    try {
+      const res = await apiClient.post<unknown>("/internal/v1/theatre/cases/emergency", {
+        patientId: emForm.patientId,
+        procedureName: emForm.procedureName,
+        surgeonId: emForm.surgeonId || undefined,
+        emergencyReason: emForm.emergencyReason || undefined,
+      });
+      const o = res as { data?: { id?: string } };
+      const newId = (o?.data?.id) ?? (res as { id?: string })?.id;
+      if (newId) {
+        router.push(`/work/clinical/theatre/${newId}`);
+      } else {
+        setEmergencyMsg("Emergency case activated. Refresh the board to see it.");
+        setShowEmergency(false);
+        void load();
+      }
+    } catch (e) {
+      setEmergencyMsg(errMessage(e));
+    } finally {
+      setActivating(false);
+    }
+  }, [emForm, router, load]);
+
   useEffect(() => {
     void load();
   }, [load]);
@@ -102,10 +135,32 @@ export default function TheatreBoardPage() {
           <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium hover:bg-background">
             <RefreshCw className="h-3.5 w-3.5" /> Refresh
           </button>
-          <button type="button" onClick={() => setShowIntake((v) => !v)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90">
-            <Plus className="h-3.5 w-3.5" /> New theatre case
-          </button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => setShowEmergency((v) => !v)} className="inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100" data-testid="emergency-activate-toggle">
+              <Siren className="h-3.5 w-3.5" /> Emergency activation
+            </button>
+            <button type="button" onClick={() => setShowIntake((v) => !v)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90">
+              <Plus className="h-3.5 w-3.5" /> New theatre case
+            </button>
+          </div>
         </div>
+
+        {showEmergency && (
+          <div className="mb-5 rounded-xl border border-red-200 bg-red-50/50 p-4" data-testid="emergency-activate-form">
+            <h3 className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-red-700"><Siren className="h-4 w-4" /> Emergency surgery — rapid activation</h3>
+            <p className="mb-3 text-xs text-muted-foreground">Forces EMERGENCY triage, arms the audited override and records a minimal safe pre-op. Life-saving surgery is never blocked by process.</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Patient (CPID)</span><input type="text" value={emForm.patientId} onChange={(e) => setEmForm({ ...emForm, patientId: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" data-testid="em-patient" /></label>
+              <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Procedure</span><input type="text" value={emForm.procedureName} onChange={(e) => setEmForm({ ...emForm, procedureName: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" data-testid="em-procedure" /></label>
+              <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Surgeon (provider id)</span><input type="text" value={emForm.surgeonId} onChange={(e) => setEmForm({ ...emForm, surgeonId: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+              <label className="block text-sm"><span className="mb-1 block text-xs font-medium text-muted-foreground">Indication / reason</span><input type="text" value={emForm.emergencyReason} onChange={(e) => setEmForm({ ...emForm, emergencyReason: e.target.value })} className="w-full rounded-lg border border-border bg-background px-3 py-1.5" /></label>
+            </div>
+            {emergencyMsg && <p className="mt-3 rounded-lg border border-red-200 bg-white p-3 text-sm text-red-700">{emergencyMsg}</p>}
+            <button type="button" disabled={activating || !emForm.patientId || !emForm.procedureName} onClick={() => void activateEmergency()} className="mt-3 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50" data-testid="em-submit">
+              {activating ? "Activating…" : "Activate emergency case"}
+            </button>
+          </div>
+        )}
 
         {showIntake && (
           <div className="mb-5 rounded-xl border border-border bg-card p-4">

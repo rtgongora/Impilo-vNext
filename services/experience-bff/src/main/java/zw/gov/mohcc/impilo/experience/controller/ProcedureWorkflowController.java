@@ -581,6 +581,34 @@ public class ProcedureWorkflowController {
         }
     }
 
+    // ── Multi-channel anaesthesia chart (procedure-keyed time series; BLOOD channel projected from MADI) ──
+    @GetMapping("/{id}/anaesthesia/chart")
+    public ResponseEntity<Map<String, Object>> getAnaesthesiaChart(@PathVariable UUID id) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.getAnaesthesiaChart(id.toString()),
+                    "Inpatient anaesthesia chart");
+            return ResponseEntity.ok(Map.of("data", data));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Anaesthesia chart", e);
+        }
+    }
+
+    @PostMapping("/{id}/anaesthesia/chart")
+    public ResponseEntity<Map<String, Object>> recordAnaesthesiaChartEntry(
+            @PathVariable UUID id, @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.recordAnaesthesiaChartEntry(id.toString(), body),
+                    "Inpatient record anaesthesia chart entry");
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", data));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Record anaesthesia chart entry", e);
+        }
+    }
+
     private void maybePlacePreopOrders(Map<String, Object> body, JsonNode created) {
         if (!Boolean.TRUE.equals(body.get("placePreopOrders"))) {
             return;
