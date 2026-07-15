@@ -3,9 +3,11 @@ package zw.gov.mohcc.impilo.inpatient.api.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.inpatient.core.SurgicalDischargeService;
 import zw.gov.mohcc.impilo.inpatient.core.TheatreService;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -47,8 +49,11 @@ public class TheatreController {
 
     // intake + triage
     @PostMapping("/cases")
-    public ResponseEntity<Map<String, Object>> intake(@RequestBody Map<String, Object> body) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.intakeFromOrosOrder(body));
+    public ResponseEntity<Map<String, Object>> intake(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.TRAUMA_EPISODE_ID, required = false) String traumaEpisodeId) {
+        Map<String, Object> payload = withTraumaHeader(body, traumaEpisodeId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(theatreService.intakeFromOrosOrder(payload));
     }
 
     @PostMapping("/cases/{id}/triage")
@@ -261,5 +266,19 @@ public class TheatreController {
     @ExceptionHandler(TheatreService.BookingBlockedException.class)
     public ResponseEntity<Map<String, Object>> handleBookingBlocked(TheatreService.BookingBlockedException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.detail());
+    }
+
+    /**
+     * Fold the inbound {@code X-Trauma-Episode-ID} header (the daidzai/PCT-minted trauma episode id,
+     * carried as the UUID canonical string) into the intake body so the service stamps it onto
+     * {@code procedure_episode.trauma_episode_id}. CONSUME, never mint — a surgery indicated for a
+     * trauma patient already carries the episode id on its context. Absent header → elective, unaffected.
+     */
+    private static Map<String, Object> withTraumaHeader(Map<String, Object> body, String traumaEpisodeId) {
+        Map<String, Object> payload = new LinkedHashMap<>(body != null ? body : Map.of());
+        if (traumaEpisodeId != null && !traumaEpisodeId.isBlank()) {
+            payload.putIfAbsent("traumaEpisodeId", traumaEpisodeId);
+        }
+        return payload;
     }
 }

@@ -513,6 +513,11 @@ public class ProcedureEpisodeService {
         completed.put("implant_count", implantCount);
         completed.put("consumable_count", consumableCount);
         completed.put("blood_units", bloodUnits);
+        // Wave 5b: carry the trauma_episode_id (when trauma-originated) so the daidzai episode-timeline
+        // consumer correlates the COMPLETED theatre phase to the ONE shared trauma episode.
+        if (episode.getTraumaEpisodeId() != null) {
+            completed.put("trauma_episode_id", episode.getTraumaEpisodeId().toString());
+        }
         appendOutbox("PROCEDURE", episodeId.toString(), "theatre.case.completed", completed);
         return episodeDetail(episodeId);
     }

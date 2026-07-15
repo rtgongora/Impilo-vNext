@@ -178,13 +178,21 @@ public class TheatreService {
         ProcedureEpisodeEntity e = episodeRepository.findById(episodeId).orElseThrow();
         e.setOrosOrderId(orosOrderId);
         e.setTriagePriority(priority);
+        // ── Wave 5b trauma↔theatre link: CONSUME the daidzai/PCT-minted trauma_episode_id (never mint).
+        // Carried as the UUID canonical string on X-Trauma-Episode-ID; stamped straight onto the episode
+        // (the V034 column) so surgery for a trauma patient is ONE coherent episode, not a parallel record.
+        UUID traumaEpisodeId = ClinicalPayloadMapper.uuid(body, "traumaEpisodeId", "trauma_episode_id");
+        if (traumaEpisodeId != null) {
+            e.setTraumaEpisodeId(traumaEpisodeId);
+        }
         episodeRepository.save(e);
 
-        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.case.intake", Map.of(
-                "episode_id", episodeId.toString(),
-                "patient_id", cpid,
-                "oros_order_id", orosOrderId != null ? orosOrderId : "",
-                "triage_priority", priority));
+        Map<String, Object> intakeEvent = new LinkedHashMap<>();
+        intakeEvent.put("episode_id", episodeId.toString());
+        intakeEvent.put("patient_id", cpid);
+        intakeEvent.put("oros_order_id", orosOrderId != null ? orosOrderId : "");
+        intakeEvent.put("triage_priority", priority);
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.case.intake", withTrauma(e, intakeEvent));
         return episodeService.getEpisode(episodeId);
     }
 
@@ -353,9 +361,9 @@ public class TheatreService {
         String scheduled = ClinicalPayloadMapper.str(body, "scheduledAt", "scheduled_at");
         if (scheduled != null) e.setScheduledAt(OffsetDateTime.parse(scheduled));
         episodeRepository.save(e);
-        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.case.booked", Map.of(
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.case.booked", withTrauma(e, Map.of(
                 "episode_id", episodeId.toString(), "override", !bookable,
-                "triage_priority", e.getTriagePriority()));
+                "triage_priority", e.getTriagePriority())));
         Map<String, Object> out = new LinkedHashMap<>(episodeService.getEpisode(episodeId));
         out.put("booking_override", !bookable);
         return out;
@@ -404,8 +412,8 @@ public class TheatreService {
         }
         // Delegate the actual start (consent gate etc.) to the pipeline.
         Map<String, Object> result = episodeService.startProcedure(episodeId, body);
-        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.case.started", Map.of(
-                "episode_id", episodeId.toString(), "override", override && !signInComplete));
+        appendOutbox("PROCEDURE", episodeId.toString(), "theatre.case.started", withTrauma(e, Map.of(
+                "episode_id", episodeId.toString(), "override", override && !signInComplete)));
         return result;
     }
 
@@ -1083,6 +1091,18 @@ public class TheatreService {
         m.put("routed_status", ev.getRoutedStatus());
         m.put("reported_by", ev.getReportedBy());
         m.put("reported_at", ev.getReportedAt());
+        return m;
+    }
+
+    /**
+     * Merge the case's {@code trauma_episode_id} (when trauma-originated) into an outbox payload so the
+     * trauma lane's daidzai episode-timeline consumer correlates the theatre phase back to the ONE shared
+     * trauma episode. No-op (returns the payload unchanged) for elective/non-trauma cases.
+     */
+    private Map<String, Object> withTrauma(ProcedureEpisodeEntity e, Map<String, Object> payload) {
+        if (e == null || e.getTraumaEpisodeId() == null) return payload;
+        Map<String, Object> m = new LinkedHashMap<>(payload);
+        m.put("trauma_episode_id", e.getTraumaEpisodeId().toString());
         return m;
     }
 
