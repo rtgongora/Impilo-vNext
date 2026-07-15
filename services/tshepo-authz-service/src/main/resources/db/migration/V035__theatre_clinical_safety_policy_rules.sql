@@ -1,12 +1,16 @@
 -- ============================================================================
--- V030 — Theatre clinical-safety (Wave 1) policy rules.
+-- V035 — Theatre clinical-safety (Wave 1) policy rules.
 -- ext_authz ALLOW rules for the NEW blood / transport / specimen / count segments under
 -- /internal/v1/theatre/cases/{id}/... and the anaesthesia chart under
 -- /internal/v1/procedures/{id}/anaesthesia/chart, served by inpatient-service.
 -- Mirrors V029 (theatre perioperative) style: actor_type=PROVIDER, theatre clinical roles, action POST,
 -- facility_scope true, purpose TREATMENT.
 --
--- Next free authz migration: latest was V029 (theatre perioperative). This clinical-safety wave = V030.
+-- Renumbered V030 -> V035 (Wave 6): this clinical-safety migration (added 2026-07-14) collided with
+-- the earlier V030__encounter_form_policy_rules.sql (added 2026-07-01), which Flyway refuses to boot
+-- past ("more than one migration with version 030"). These are order-independent additive policy-rule
+-- INSERTs, so moving this one to the next free version (after V034 theatre-authz-matrix) is behaviour-
+-- preserving and clears the boot blocker. Original intent: this clinical-safety wave followed V029.
 --
 -- COLLISION SAFETY: the PDP derives resource_type from the last path segment, which collides for
 -- generic words (request/issue/administer/resolve/movement/specimen/pacu/counts/chart). Each rule pins
