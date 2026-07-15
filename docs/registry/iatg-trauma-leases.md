@@ -83,9 +83,16 @@ migrations so an unrelated session never collides with the trauma block.
 ## 4. Gate-1 deploy gate
 
 The fullboot preview deploy is **coordinator-owned** and blocked until, in one run:
-all `J-TR-0..9` PASS in `scripts/runtime-proof/trauma-spine-journeys.sh` + `J-TR-M1` (mobile ePCR
-Maestro) green + `mvn -pl <touched services> test` green + no new dead-letter rows. See the plan's
-Gate-1 checklist (G1.1–G1.16). No self-authorised deploy.
+all `J-TR-0..9` PASS in `scripts/runtime-proof/trauma-spine-journeys.sh` + `mvn -pl <touched services>
+test` green + no new dead-letter rows. See the plan's Gate-1 checklist (G1.1–G1.16). No self-authorised
+deploy.
+
+**J-TR-M1 (mobile ePCR) evidence standard — PO decision 2026-07-15:** for the PREVIEW gate, the mobile
+ePCR is satisfied by the RN unit/integration tests (provider-app suite green) + the live backend rig
+(J-TR-2). Maestro cannot run in the headless build env (no emulator/SDK); the flow
+(`apps/mobile/maestro/flows/emergency-prehospital-epcr.yaml`) is authored with real testIDs and its
+**device execution is deferred to a pre-PRODUCTION gate**, not the preview. So the preview deploy is NOT
+blocked on emulator availability.
 
 ## 5. Wave / journey index
 
