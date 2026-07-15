@@ -38,13 +38,26 @@ public class PctPreArrivalClient {
     }
 
     /**
+     * On EMS handover, transition the PRE_ARRIVAL ed_visit to an active ED visit (PCT reuses the
+     * same row — no duplicate). Never throws. Body carries traumaEpisodeId + emsMissionRef +
+     * pctEncounterRef + facilityId.
+     */
+    public void pushArrival(UUID tenantId, Map<String, Object> body) {
+        post("/v1/ed/arrival", tenantId, body);
+    }
+
+    /**
      * Upsert the ED pre-arrival projection for a trauma episode. Idempotent on the PCT side
      * (keyed by trauma_episode_id). Never throws.
      */
     public void pushPreArrival(UUID tenantId, Map<String, Object> body) {
+        post("/v1/ed/pre-arrival", tenantId, body);
+    }
+
+    private void post(String path, UUID tenantId, Map<String, Object> body) {
         try {
             restClient.post()
-                    .uri(baseUrl + "/v1/ed/pre-arrival")
+                    .uri(baseUrl + path)
                     .contentType(MediaType.APPLICATION_JSON)
                     .headers(h -> {
                         h.set("X-Tenant-ID", tenantId.toString());

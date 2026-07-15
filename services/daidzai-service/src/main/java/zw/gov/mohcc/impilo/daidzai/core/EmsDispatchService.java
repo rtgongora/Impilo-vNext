@@ -43,11 +43,13 @@ public class EmsDispatchService {
     private final DaidzaiEventEmitter emitter;
     private final TraumaEpisodeService traumaEpisodes;
     private final NdilaCatchmentClient catchment;
+    private final zw.gov.mohcc.impilo.daidzai.integration.PctPreArrivalClient pctPreArrival;
 
     public EmsDispatchService(EmsMissionRepository missionRepo, EmsUnitRepository unitRepo,
                               EmergencyIncidentRepository incidentRepo, ReferenceGenerator refs,
                               DaidzaiEventEmitter emitter, TraumaEpisodeService traumaEpisodes,
-                              NdilaCatchmentClient catchment) {
+                              NdilaCatchmentClient catchment,
+                              zw.gov.mohcc.impilo.daidzai.integration.PctPreArrivalClient pctPreArrival) {
         this.missionRepo = missionRepo;
         this.unitRepo = unitRepo;
         this.incidentRepo = incidentRepo;
@@ -55,6 +57,7 @@ public class EmsDispatchService {
         this.emitter = emitter;
         this.traumaEpisodes = traumaEpisodes;
         this.catchment = catchment;
+        this.pctPreArrival = pctPreArrival;
     }
 
     /**
@@ -151,6 +154,13 @@ public class EmsDispatchService {
 
         if (to == EmsMissionState.HANDOVER) {
             registerPhase(m, "PREHOSPITAL", "HANDOVER", "daidzai.ems.handover");
+            // Transition the ED PRE_ARRIVAL visit to active on handover (PCT reuses the same row).
+            Map<String, Object> arrival = new LinkedHashMap<>();
+            arrival.put("traumaEpisodeId", m.getTraumaEpisodeId() != null ? m.getTraumaEpisodeId().toString() : null);
+            arrival.put("emsMissionRef", m.getId().toString());
+            arrival.put("pctEncounterRef", m.getPctEncounterRef());
+            arrival.put("facilityId", m.getDestinationFacilityId() != null ? m.getDestinationFacilityId().toString() : null);
+            pctPreArrival.pushArrival(m.getTenantId(), arrival);
         }
         return m;
     }

@@ -3,7 +3,9 @@ package zw.gov.mohcc.impilo.daidzai.core;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import zw.gov.mohcc.impilo.daidzai.integration.PctPreArrivalClient;
 import zw.gov.mohcc.impilo.daidzai.persistence.entity.EmergencyIncidentEntity;
 import zw.gov.mohcc.impilo.daidzai.persistence.entity.EmsMissionEntity;
 import zw.gov.mohcc.impilo.daidzai.persistence.repository.EmsMissionRepository;
@@ -27,6 +29,7 @@ class EmsDispatchServiceTest {
     @Autowired private TraumaEpisodeService episodes;
     @Autowired private EmsMissionRepository missionRepo;
     @Autowired private EventOutboxRepository outboxRepo;
+    @MockBean private PctPreArrivalClient pctPreArrival; // don't hit the network on HANDOVER
 
     private EmergencyIncidentEntity newIncident(UUID tenant) {
         return emergency.escalateToIncident(tenant, "TRAUMA", "CRITICAL", "RTC",
