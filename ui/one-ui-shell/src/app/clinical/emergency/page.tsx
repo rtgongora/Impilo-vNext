@@ -33,6 +33,7 @@ import { BreakGlassRequestPanel } from "@/components/trust/BreakGlassRequestPane
 import { EdPreArrivalBoard } from "@/components/clinical/EdPreArrivalBoard";
 import { BloodReadinessPanel } from "@/components/clinical/BloodReadinessPanel";
 import { PatientSearchField, type PatientHit } from "@/components/clinical/PatientSearchField";
+import { CriticalResultsPanel } from "@/components/clinical/CriticalResultsPanel";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useEdVisits, useOpenEdVisit } from "@/hooks/queries/useEdVisit";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -141,6 +142,8 @@ export default function EmergencyDepartmentPage() {
         subtitle="ED trackboard, full patient journey, critical event activations"
       >
         <div className="space-y-6">
+          <CriticalResultsPanel />
+
           <EdPreArrivalBoard facilityId={facility?.id} />
 
           <section className="rounded-xl border border-red-100 bg-danger-soft/40 p-5">
