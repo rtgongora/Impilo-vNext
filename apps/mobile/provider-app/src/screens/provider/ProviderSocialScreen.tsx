@@ -47,7 +47,7 @@ type Tab = (typeof TABS)[number];
 
 export function ProviderSocialScreen() {
   const [tab, setTab] = useState<Tab>("Feed");
-  const setProviderTab = useAppStore((s) => s.setProviderTab);
+  const { setProviderTab } = useAppStore();
   return (
     <Screen>
       <Header title="Professional Network" />

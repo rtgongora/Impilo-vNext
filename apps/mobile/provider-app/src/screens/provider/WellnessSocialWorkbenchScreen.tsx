@@ -131,6 +131,7 @@ export function OfficialPostComposer() {
         <CardBody>
           <Text style={styles.label}>Group</Text>
           <Select
+            label="Group"
             value={groupId}
             onChange={setGroupId}
             options={groups.map((g) => ({ value: g.groupId, label: g.name }))}
@@ -183,6 +184,7 @@ export function AnnouncementComposer() {
         <CardBody>
           <Text style={styles.label}>Group</Text>
           <Select
+            label="Group"
             value={groupId}
             onChange={setGroupId}
             options={groups.map((g) => ({ value: g.groupId, label: g.name }))}
@@ -356,6 +358,7 @@ export function FlagToPct() {
           </Text>
           <Text style={styles.label}>Subject type</Text>
           <Select
+            label="Subject type"
             value={subjectType}
             onChange={setSubjectType}
             options={[
@@ -370,6 +373,7 @@ export function FlagToPct() {
           <TextField value={owner} onChangeText={setOwner} placeholder="person cpid" />
           <Text style={styles.label}>Reason</Text>
           <Select
+            label="Reason"
             value={reason}
             onChange={(v) => setReason(v as "SELF_HARM" | "ABUSE")}
             options={[
