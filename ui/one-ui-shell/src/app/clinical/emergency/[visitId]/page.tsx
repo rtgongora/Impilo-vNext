@@ -6,9 +6,11 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { EdTriageDiscriminatorPanel } from "@/components/clinical/EdTriageDiscriminatorPanel";
 import { Icd11SearchField, type Icd11Hit } from "@/components/clinical/Icd11SearchField";
+import { ResuscitationWorkspace } from "@/components/clinical/ResuscitationWorkspace";
 import { useEdVisit, useEdVisitActions } from "@/hooks/queries/useEdVisit";
+import { useActivateEmergency, useEmergencyActivations } from "@/hooks/queries/useEmergency";
 
-const STEPS = ["Arrival", "Triage", "Treatment", "Trauma", "Protocol", "Disposition"] as const;
+const STEPS = ["Arrival", "Triage", "Treatment", "Trauma", "Resus", "Protocol", "Disposition"] as const;
 const ACUITY = [
   { level: 1, label: "Red", desc: "Resuscitation" },
   { level: 2, label: "Orange", desc: "Emergency" },
@@ -20,6 +22,9 @@ const ACUITY = [
 export default function EdVisitPage({ params }: { params: { visitId: string } }) {
   const { data: visit, isLoading } = useEdVisit(params.visitId);
   const actions = useEdVisitActions(params.visitId);
+  const emergencyActivations = useEmergencyActivations();
+  const activateResus = useActivateEmergency();
+  const [resusActivationId, setResusActivationId] = useState<string | undefined>();
   const [step, setStep] = useState(1);
   const [acuity, setAcuity] = useState(3);
   const [triageSystem, setTriageSystem] = useState<"ESI" | "MTS" | "IMPILO_5">("ESI");
@@ -49,6 +54,15 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
 
   const status = String(visit.status ?? "");
   const patientId = String(visit.patient_cpid ?? "");
+  const traumaEpisodeId = visit.trauma_episode_id ? String(visit.trauma_episode_id) : undefined;
+
+  // Reconnect an in-flight resuscitation for this patient across reloads: prefer the
+  // activation we just started, else the latest non-ended tenant activation for the CPID.
+  const activationRows = (emergencyActivations.data?.data ?? []) as Array<Record<string, unknown>>;
+  const patientActivation = activationRows.find(
+    (r) => String(r.patient_id ?? "") === patientId && String(r.status ?? "").toUpperCase() !== "ENDED",
+  );
+  const resolvedActivationId = resusActivationId ?? (patientActivation?.id ? String(patientActivation.id) : undefined);
 
   return (
     <AppLayout>
@@ -205,6 +219,53 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
         )}
 
         {step === 4 && (
+          <section className="space-y-3">
+            <h2 className="font-semibold">Resuscitation</h2>
+            {resolvedActivationId ? (
+              <ResuscitationWorkspace
+                activationId={resolvedActivationId}
+                traumaEpisodeId={traumaEpisodeId}
+                patientLabel={patientId}
+                traumaId={visit.active_trauma_id ? String(visit.active_trauma_id) : undefined}
+                mechanism={visit.chief_complaint ? String(visit.chief_complaint) : undefined}
+                triageCategory={visit.current_acuity ? `Acuity ${String(visit.current_acuity)}` : undefined}
+                location={visit.zone ? String(visit.zone) : "ED"}
+                onEnded={() => void emergencyActivations.refetch()}
+              />
+            ) : (
+              <div className="rounded-xl border p-4 space-y-3 text-sm">
+                <p className="text-muted-foreground">
+                  No active resuscitation for this patient. Start one to open the ABCDE workspace —
+                  CPR cycles, medications, and phase timings stream onto the trauma episode.
+                </p>
+                <button
+                  type="button"
+                  disabled={activateResus.isPending}
+                  onClick={() =>
+                    activateResus.mutate(
+                      { patientId, protocolType: "TRAUMA", location: String(visit.zone ?? "RESUS") },
+                      {
+                        onSuccess: (res) => {
+                          const id = String((res as { data?: { id?: string } }).data?.id ?? "");
+                          if (id) setResusActivationId(id);
+                          void emergencyActivations.refetch();
+                        },
+                      },
+                    )
+                  }
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {activateResus.isPending ? "Starting…" : "Start resuscitation"}
+                </button>
+                {activateResus.isError && (
+                  <p className="text-xs text-danger">Could not start resuscitation — check facility context and retry.</p>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
+        {step === 5 && (
           <section className="rounded-xl border p-4 space-y-3">
             <h2 className="font-semibold">Assessment protocol (CKP)</h2>
             <ul className="space-y-2 text-sm">
@@ -245,7 +306,7 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
           </section>
         )}
 
-        {step === 5 && !visit.disposition && (
+        {step === 6 && !visit.disposition && (
           <section className="rounded-xl border p-4 space-y-3">
             <h2 className="font-semibold">Disposition & coding</h2>
             <select value={disposition} onChange={(e) => setDisposition(e.target.value)} className="rounded border px-2 py-1 text-sm">
