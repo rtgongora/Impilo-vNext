@@ -18,9 +18,12 @@ import java.util.UUID;
 public class MadiBloodOrderController {
 
     private final BloodOrderService bloodOrderService;
+    private final zw.gov.mohcc.impilo.madi.integration.DaidzaiEpisodeClient daidzaiEpisodes;
 
-    public MadiBloodOrderController(BloodOrderService bloodOrderService) {
+    public MadiBloodOrderController(BloodOrderService bloodOrderService,
+                                    zw.gov.mohcc.impilo.madi.integration.DaidzaiEpisodeClient daidzaiEpisodes) {
         this.bloodOrderService = bloodOrderService;
+        this.daidzaiEpisodes = daidzaiEpisodes;
     }
 
     @GetMapping
@@ -36,6 +39,7 @@ public class MadiBloodOrderController {
     public ResponseEntity<BloodOrderEntity> create(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
             @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) UUID facilityId,
+            @RequestHeader(value = CompanionHeaders.TRAUMA_EPISODE_ID, required = false) String traumaEpisodeId,
             @RequestBody Map<String, Object> body) {
         BloodOrderEntity order = new BloodOrderEntity();
         order.setTenantId(tenantId);
@@ -46,6 +50,11 @@ public class MadiBloodOrderController {
         order.setUnitsRequested(Integer.parseInt(body.getOrDefault("units_requested", "1").toString()));
         order.setFacilityId(facilityId);
         order.setOrderingProvider(str(body, "ordering_provider"));
+        // Canonical trauma spine: a trauma blood order inherits the DAIDZAI-minted episode id from
+        // X-Trauma-Episode-ID (or the body). MADI keeps its own SoR row and stamps the shared id.
+        UUID episodeId = traumaEpisodeId != null && !traumaEpisodeId.isBlank()
+                ? UUID.fromString(traumaEpisodeId) : uuid(body, "trauma_episode_id");
+        order.setTraumaEpisodeId(episodeId);
         List<BloodOrderItemEntity> items = new ArrayList<>();
         if (body.get("items") instanceof List<?> rawItems) {
             for (Object raw : rawItems) {
@@ -59,7 +68,12 @@ public class MadiBloodOrderController {
                 }
             }
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(bloodOrderService.createOrder(order, items));
+        BloodOrderEntity saved = bloodOrderService.createOrder(order, items);
+        if (episodeId != null) {
+            daidzaiEpisodes.registerPhase(tenantId, episodeId, "BLOOD", saved.getOrderId().toString(),
+                    saved.getStatus() != null ? saved.getStatus() : "DRAFT", "madi.blood.ordered");
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping("/{orderId}")

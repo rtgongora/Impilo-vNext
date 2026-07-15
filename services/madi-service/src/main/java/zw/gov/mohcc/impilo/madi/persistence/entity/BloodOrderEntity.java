@@ -57,6 +57,10 @@ public class BloodOrderEntity {
     @Column(name = "oros_integration_status")
     private String orosIntegrationStatus;
 
+    /** Canonical trauma-episode correlation id (DAIDZAI-minted). Null for non-trauma blood orders. */
+    @Column(name = "trauma_episode_id")
+    private UUID traumaEpisodeId;
+
 @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
@@ -115,6 +119,9 @@ public class BloodOrderEntity {
 
     public String getOrosIntegrationStatus() { return orosIntegrationStatus; }
     public void setOrosIntegrationStatus(String orosIntegrationStatus) { this.orosIntegrationStatus = orosIntegrationStatus; }
+
+    public UUID getTraumaEpisodeId() { return traumaEpisodeId; }
+    public void setTraumaEpisodeId(UUID traumaEpisodeId) { this.traumaEpisodeId = traumaEpisodeId; }
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
