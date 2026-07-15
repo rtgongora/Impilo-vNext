@@ -284,6 +284,36 @@ export function useCashDeposit() {
   });
 }
 
+/**
+ * Deposit intents (pending + confirmed) for a wallet — the citizen's cash-in
+ * history. A PENDING deposit shows the reference code to quote with the
+ * transfer; the balance rises only once arrival is confirmed (ops/statement).
+ */
+export function useDeposits(walletId?: string | null) {
+  return useQuery<ApiResponse<unknown>>({
+    queryKey: ["mushe-deposits", walletId],
+    queryFn: () =>
+      apiClient.get<ApiResponse<unknown>>(`/internal/v1/funding/${walletId}/deposits`),
+    enabled: !!walletId,
+  });
+}
+
+/** Cancel a still-pending deposit the citizen no longer intends to fund. */
+export function useCancelDeposit() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<unknown>, unknown, { walletId: string; depositId: string }>({
+    mutationFn: ({ walletId, depositId }) =>
+      apiClient.post<ApiResponse<unknown>>(
+        `/internal/v1/funding/${walletId}/deposits/${depositId}/cancel`,
+        {},
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["mushe-deposits"] });
+      void queryClient.invalidateQueries({ queryKey: ["mushe-wallet-balance"] });
+    },
+  });
+}
+
 // ── Card Mutations ─────────────────────────────────────────────────
 
 export function useIssueCard() {

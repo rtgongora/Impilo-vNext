@@ -25,6 +25,8 @@ import {
   useFundingSources,
   useDeposit,
   useCashDeposit,
+  useDeposits,
+  useCancelDeposit,
 } from "@/hooks/queries/useMusheWallet";
 
 function asRecord(v: unknown): Record<string, unknown> {
@@ -37,6 +39,17 @@ function readStr(r: Record<string, unknown>, ...keys: string[]) {
     if (typeof x === "string" && x.length > 0) return x;
   }
   return "";
+}
+
+function depositStatusBadge(status: string): string {
+  switch (status) {
+    case "CONFIRMED":
+      return "bg-success-soft text-primary-hover";
+    case "CANCELLED":
+      return "bg-muted text-muted-foreground";
+    default: // PENDING
+      return "bg-warning-soft text-warning-foreground";
+  }
 }
 
 function unwrapList(v: unknown): unknown[] {
@@ -81,6 +94,13 @@ export default function DepositPage() {
 
   const deposit = useDeposit();
   const cashDeposit = useCashDeposit();
+  const cancelDeposit = useCancelDeposit();
+
+  const depositsQ = useDeposits(walletId || null);
+  const deposits = useMemo(() => {
+    const raw = asRecord(depositsQ.data).data ?? depositsQ.data;
+    return unwrapList(raw).map(asRecord);
+  }, [depositsQ.data]);
 
   const submitLinkedDeposit = () => {
     if (!walletId || !selectedSourceId || !linkedAmount.trim()) return;
@@ -383,6 +403,84 @@ export default function DepositPage() {
                 )}
               </>
             )}
+
+            {/* Your deposits — cash-in history + cancel pending */}
+            <section className="rounded-xl border border-border bg-card shadow-sm">
+              <div className="flex items-center justify-between border-b border-border px-4 py-3 bg-background/80">
+                <h3 className="text-sm font-semibold text-foreground">Your deposits</h3>
+                {depositsQ.isFetching && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              </div>
+              <div className="p-4">
+                {depositsQ.isLoading && (
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading deposits...
+                  </div>
+                )}
+                {depositsQ.isError && (
+                  <p className="text-sm text-danger">Could not load your deposits.</p>
+                )}
+                {!depositsQ.isLoading && !depositsQ.isError && deposits.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No deposits yet.</p>
+                )}
+                {deposits.length > 0 && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-xs text-muted-foreground">
+                          <th className="pb-2 pr-3 font-medium">Reference</th>
+                          <th className="pb-2 pr-3 font-medium">Channel</th>
+                          <th className="pb-2 pr-3 font-medium text-right">Amount</th>
+                          <th className="pb-2 pr-3 font-medium">Status</th>
+                          <th className="pb-2 font-medium"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {deposits.map((d, i) => {
+                          const status = readStr(d, "status") || "PENDING";
+                          const depositId = readStr(d, "depositId", "deposit_id");
+                          const amount = Number(d.amount ?? 0);
+                          return (
+                            <tr key={depositId || i} className="border-t border-border">
+                              <td className="py-2 pr-3 font-mono text-xs">
+                                {readStr(d, "referenceCode", "reference_code") || "—"}
+                              </td>
+                              <td className="py-2 pr-3 text-muted-foreground">
+                                {readStr(d, "channel") || "—"}
+                              </td>
+                              <td className="py-2 pr-3 text-right tabular-nums">
+                                {(d.currency ? `${d.currency} ` : "")}{amount.toFixed(2)}
+                              </td>
+                              <td className="py-2 pr-3">
+                                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${depositStatusBadge(status)}`}>
+                                  {status}
+                                </span>
+                              </td>
+                              <td className="py-2 text-right">
+                                {status === "PENDING" && depositId && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      cancelDeposit.mutate({ walletId, depositId })
+                                    }
+                                    disabled={cancelDeposit.isPending}
+                                    className="text-xs font-medium text-danger hover:underline disabled:opacity-50"
+                                  >
+                                    Cancel
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                    {cancelDeposit.isError && (
+                      <p className="mt-2 text-xs text-danger">Could not cancel that deposit.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
         )}
       </PageShell>
