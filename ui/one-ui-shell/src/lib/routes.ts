@@ -380,6 +380,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/finance/reconciliation", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Reconciliation", navLabel: "Reconciliation", navZone: "work" },
   { path: "/finance/bank-reconciliation", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Bank Reconciliation", navLabel: "Bank reconciliation", navZone: "work" },
   { path: "/finance/failed-money-events", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Failed Money Events", navLabel: "Failed money events", navZone: "work" },
+  { path: "/finance/insurance-plans", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Insurance Plan Terms", navLabel: "Insurance plan terms", navZone: "work" },
   { path: "/finance/refunds", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Refunds", navLabel: "Refunds", navZone: "work" },
   { path: "/finance/payer-ops", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Operations", navLabel: "Payer Ops", navZone: "work" },
   { path: "/finance/payer-claims", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Claims Queue", navLabel: "Payer Claims", navZone: "work" },
@@ -893,9 +894,10 @@ export const ROUTES: RouteDefinition[] = [
 // surfaces so all are guarded/nav-governed — citizen assessment/timeline/reminders/follow-ups/insights/
 // consent + social feed/reels/posts/[id]/saved/my-activity + provider-workspace/wellness(/social).
 // +13 routes. New total is 735.
-// Money-stack UI closure (Jul 2026): +2 so far — /finance/bank-reconciliation (MU3) and
-// /finance/failed-money-events (MU4). MU6 adds its finance route in the following commit.
-export const EXPECTED_ROUTE_COUNT = 737;
+// Money-stack UI closure (Jul 2026): +3 — /finance/bank-reconciliation (MU3 bank→wallet statement
+// matching), /finance/failed-money-events (MU4 DLQ replay), /finance/insurance-plans (MU6
+// PENDING_TERMS plan-terms configuration).
+export const EXPECTED_ROUTE_COUNT = 738;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
