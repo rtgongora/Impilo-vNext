@@ -64,6 +64,8 @@ const UNAVAILABLE_MESSAGE =
 export function PublicHealthInfo() {
   const [categories, setCategories] = useState<PublicEducationCategory[]>([]);
   const [activeCategory, setActiveCategory] = useState("");
+  const [query, setQuery] = useState("");
+  const [activeQuery, setActiveQuery] = useState("");
   const [page, setPage] = useState(0);
   const [result, setResult] = useState<PublicEducationPage | null>(null);
   const [listLoading, setListLoading] = useState(true);
@@ -73,19 +75,22 @@ export function PublicHealthInfo() {
   const [articleLoading, setArticleLoading] = useState(false);
   const [articleError, setArticleError] = useState("");
 
-  const loadList = useCallback(async (category: string, nextPage: number) => {
+  const loadList = useCallback(async (category: string, nextPage: number, q = "") => {
     setListLoading(true);
     setListError("");
     try {
       const params = new URLSearchParams();
-      if (category) params.set("category", category);
+      // A text search spans all topics; category chips filter without a query.
+      if (q.trim()) params.set("q", q.trim());
+      else if (category) params.set("category", category);
       params.set("page", String(nextPage));
       params.set("size", "10");
       const res = await apiClient.get<PublicEducationPage>(
         `/internal/v1/public/gateway/guidance/education?${params.toString()}`,
       );
       setResult(res);
-      setActiveCategory(category);
+      setActiveCategory(q.trim() ? "" : category);
+      setActiveQuery(q.trim());
       setPage(nextPage);
     } catch {
       setResult(null);
@@ -176,7 +181,50 @@ export function PublicHealthInfo() {
         sign-in needed.
       </p>
 
-      {categories.length > 0 && (
+      <form
+        className="mt-4 flex flex-wrap gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void loadList("", 0, query);
+        }}
+      >
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search health topics… e.g. malaria, blood pressure"
+          aria-label="Search health information"
+          data-testid="health-info-search"
+          className="min-w-56 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+        />
+        <button
+          type="submit"
+          disabled={listLoading}
+          className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+        >
+          Search
+        </button>
+        {activeQuery && (
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              void loadList("", 0);
+            }}
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+          >
+            Clear
+          </button>
+        )}
+      </form>
+
+      {activeQuery && (
+        <p className="mt-3 text-sm text-slate-600" data-testid="health-info-search-active">
+          Showing results for “{activeQuery}”.
+        </p>
+      )}
+
+      {categories.length > 0 && !activeQuery && (
         <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Health topics">
           <button
             type="button"
@@ -259,7 +307,7 @@ export function PublicHealthInfo() {
             <div className="mt-3 flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => void loadList(activeCategory, page - 1)}
+                onClick={() => void loadList(activeCategory, page - 1, activeQuery)}
                 disabled={listLoading || page === 0}
                 className="rounded-md border border-slate-300 px-3 py-1.5 text-sm disabled:opacity-40"
               >
@@ -267,7 +315,7 @@ export function PublicHealthInfo() {
               </button>
               <button
                 type="button"
-                onClick={() => void loadList(activeCategory, page + 1)}
+                onClick={() => void loadList(activeCategory, page + 1, activeQuery)}
                 disabled={listLoading || page >= result.meta.totalPages - 1}
                 className="rounded-md border border-slate-300 px-3 py-1.5 text-sm disabled:opacity-40"
               >

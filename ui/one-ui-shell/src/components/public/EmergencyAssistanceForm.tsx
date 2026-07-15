@@ -8,7 +8,8 @@
  */
 
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Loader2, MapPin } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 
 interface SosReceipt {
@@ -36,6 +37,21 @@ export function EmergencyAssistanceForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [receipt, setReceipt] = useState<SosReceipt | null>(null);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+
+  function shareLocation() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { timeout: 8000, enableHighAccuracy: true },
+    );
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -52,6 +68,8 @@ export function EmergencyAssistanceForm() {
         emergencyCategory: category,
         locationDescription: location.trim() || undefined,
         description: description.trim() || undefined,
+        lat: coords?.lat,
+        lng: coords?.lng,
       });
       setReceipt(res);
     } catch (e) {
@@ -95,6 +113,15 @@ export function EmergencyAssistanceForm() {
           If the situation is life-threatening, call the emergency numbers above now — do not wait
           for the callback.
         </p>
+        {receipt.requestReference && (
+          <Link
+            href={`/welcome/emergency/track?ref=${encodeURIComponent(receipt.requestReference)}`}
+            data-testid="sos-track-link"
+            className="mt-4 inline-block text-sm font-semibold text-emerald-800 underline hover:text-emerald-900"
+          >
+            Track this request →
+          </Link>
+        )}
       </section>
     );
   }
@@ -163,6 +190,21 @@ export function EmergencyAssistanceForm() {
             placeholder="e.g. Mbare Musika, near the bus rank"
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
           />
+          <button
+            type="button"
+            data-testid="sos-share-location"
+            onClick={shareLocation}
+            disabled={locating}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          >
+            {locating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
+            {coords ? "Location shared" : "Share my current location"}
+          </button>
+          {coords && (
+            <p className="mt-1 text-xs text-emerald-700">
+              Your location will be sent to help responders find you faster.
+            </p>
+          )}
         </div>
 
         <div>

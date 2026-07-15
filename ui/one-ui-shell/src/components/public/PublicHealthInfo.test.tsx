@@ -112,4 +112,19 @@ describe("PublicHealthInfo (gateway pillar 3, anonymous R0)", () => {
       await screen.findByText(/No articles are published under this topic yet/i),
     ).toBeInTheDocument();
   });
+
+  it("passes a text query to the education lane and shows the active-search note", async () => {
+    mockRoutes();
+    render(<PublicHealthInfo />);
+    await screen.findByText(TOPIC.title);
+
+    fireEvent.change(screen.getByTestId("health-info-search"), { target: { value: "malaria" } });
+    fireEvent.click(screen.getByRole("button", { name: /^search$/i }));
+
+    await waitFor(() => {
+      const listCalls = get.mock.calls.filter(([p]) => (p as string).includes("/education?"));
+      expect(listCalls.some(([p]) => (p as string).includes("q=malaria"))).toBe(true);
+    });
+    expect(await screen.findByTestId("health-info-search-active")).toHaveTextContent(/malaria/);
+  });
 });

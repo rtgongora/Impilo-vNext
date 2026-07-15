@@ -63,6 +63,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/welcome", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Welcome to Impilo", navLabel: "Welcome" },
   { path: "/welcome/find-care", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Find Care", navLabel: "Find Care" },
   { path: "/welcome/emergency", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Emergency & Public Health", navLabel: "Emergency" },
+  { path: "/welcome/emergency/track", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Track an Emergency Request", navLabel: "Track Request" },
   { path: "/welcome/health-info", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Health Information", navLabel: "Health Info" },
   { path: "/welcome/accessibility", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Accessibility & Language", navLabel: "Accessibility" },
 
@@ -816,6 +817,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/emergency/track/[id]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Emergency", navLabel: "Track", navZone: "life" },
   { path: "/work/daidzai", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Emergency Command", navLabel: "Emergency Command", navZone: "work" },
   { path: "/work/daidzai/dispatch", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Dispatch Console", navLabel: "Dispatch", navZone: "work" },
+  { path: "/work/daidzai/verify-callbacks", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Callback Verification", navLabel: "Callbacks", navZone: "work" },
   { path: "/work/daidzai/missions", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mission Tracking", navLabel: "Missions", navZone: "work" },
   { path: "/work/daidzai/disasters", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Disaster Command", navLabel: "Disasters", navZone: "work" },
   // Sorting desk — pre-triage visit-type sort (G12).
@@ -898,8 +900,10 @@ export const ROUTES: RouteDefinition[] = [
 // Money-stack UI closure (Jul 2026): +3 — /finance/bank-reconciliation (MU3 bank→wallet statement
 // matching), /finance/failed-money-events (MU4 DLQ replay), /finance/insurance-plans (MU6
 // PENDING_TERMS plan-terms configuration).
-// Gateway UI catch-up (Jul 2026): +1 — /auth/register/contact (R1 contact-first OTP account creation).
-export const EXPECTED_ROUTE_COUNT = 739;
+// Gateway UI catch-up (Jul 2026): +3 — /auth/register/contact (R1 contact-first OTP account
+// creation), /welcome/emergency/track (public SOS status-by-reference), /work/daidzai/verify-callbacks
+// (dispatcher callback-verification console).
+export const EXPECTED_ROUTE_COUNT = 741;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

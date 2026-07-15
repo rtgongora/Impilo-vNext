@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
 import { IntentLink } from "@/components/public/IntentLink";
+import { GatewayEscalationExplainer } from "@/components/intelligent/GatewayEscalationExplainer";
 import type { GatewayPillar } from "@/lib/gateway-intent";
 
 export const metadata = {
@@ -224,6 +225,9 @@ export default function WelcomePage() {
               </Link>
             );
           })}
+        </div>
+        <div className="mt-6 max-w-2xl">
+          <GatewayEscalationExplainer stepKey="signin-to-personal" continueWithoutHref={null} />
         </div>
       </section>
 
