@@ -36,6 +36,26 @@ cross-service Kafka seams). Gate 1 (single-patient trauma spine) **blocks the fu
 **Shared-file rule:** `services/pom.xml`, `docker-compose.runtime.yml`, and everything under
 `docs/registry/` are **coordinator-only** edits. A lane needing one requests it via coordinator handoff.
 
+### 2a. `inpatient-service` is a CO-EDITED shared service (both lanes) — class-level split
+
+`inpatient-service` is the heart of BOTH the trauma and theatre programs; whole-service exclusivity is
+not feasible. Both lanes co-edit it under the commit-token, split at class/file level:
+
+| Sub-lane | Owns (inpatient-service) |
+|---|---|
+| **Theatre** | `core/{TheatreService,ProcedureEpisodeService,TheatreReadinessBoardService,AnaesthesiaScoringEngine}`, `procedure_*` entities/repos/migrations, `api/controller/{Theatre*,ProcedureEpisode*}`, theatre-scoped integration clients, PACU/scheduling |
+| **Trauma** | `resuscitation_*` entities/repos/services (EXCLUSIVE — theatre does not touch), ED-emergency-activation linkage, `resuscitation_event` (new), and additive `trauma_episode_id` column migrations (block V035–V064) |
+| **Shared / commit-token-serialised** | `AdmissionController` + admission tables (theatre stamps `admission_ref` on PACU→ward; trauma reads for ED disposition) — flag before editing. `procedure_episode` is theatre-owned; trauma stamps `trauma_episode_id` on it ONLY via the co-designed emergency-surgery wave, NOT in Gate-1. |
+
+**Preserve, don't strip:** `inpatient.events` raw outbox payload now carries `event_type` + `tenant_id`
+(theatre closed the dead `theatre.*` seams); the trauma episode-timeline consumer READS this — never strip it.
+
+**Emergency surgery = theatre-owned, trauma-referenced (no duplicate build).** Emergency surgery + obstetric
+emergency C-section are built by the theatre lane (their W5) on `procedure_episode`; the trauma lane does
+NOT build a parallel surgery episode — it links via `trauma_episode_id`. Trauma hands theatre the
+`trauma_episode_id` contract (`X-Trauma-Episode-ID` + mint endpoint) so their emergency-surgery
+`procedure_episode` carries it → one coherent trauma↔theatre episode.
+
 ## 3. Reserved migration blocks (same-branch collision guard)
 
 **Blocker fixed first:** `pct-service` had a live duplicate `V034` (`V034__telemetry_facility_nullable.sql`
@@ -46,7 +66,7 @@ before any new pct migration.
 |---|---|---|---|
 | daidzai | V003 | **V010–V049** | episode V010–14 · EMS V015–29 · ePCR V030–39 · merge/events V040–44 |
 | pct | V034 (dup) | **V035 dedupe, then V036–V069** | episode-stamp V036–40 · ED-unify V041–50 · provisional/reconcile V051–56 · merge V057–60 |
-| inpatient | V030 | **V035–V064** | episode-stamp V035–39 · resus re-key + `resuscitation_event` V040–49 · ward-namespace V050–54 · merge V055–59 |
+| inpatient | **V033** (re-baselined; theatre took V031–33, V034 reserved for residual theatre) | **V035–V064** | episode-stamp V035–39 · resus re-key + `resuscitation_event` V040–49 · ward-namespace V050–54 · merge V055–59 |
 | madi | V007 | **V015–V044** | episode-stamp V015–18 · MTP/O-neg/ratio/transport V019–34 · guard V035–38 · merge V039–42 |
 | nhume | V006 | **V015–V024** | emergency-priority authz + audit |
 | dispatch | V004 | **V010–V019** | emergency-priority authz + audit |
