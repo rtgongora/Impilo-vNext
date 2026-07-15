@@ -1,0 +1,75 @@
+appId: zw.gov.impilo.provider
+# ============================================================================
+# J-TR-M1 — Prehospital ePCR capture on the responder (provider) app.
+#
+# Drives the ambulance crew flow: sign in + activate, open Clinical Tools → ePCR,
+# bind to the dispatched EMS mission for an incident, capture a primary survey and
+# a timed vitals observation, then record the ED handover. The observations reach
+# the destination ED's pre-arrival board (proven server-side by J-TR-2 in
+# scripts/runtime-proof/trauma-spine-journeys.sh).
+#
+# RUN REQUIREMENTS: an Android/iOS emulator or device + the `maestro` CLI + a
+# running preview/compose stack (experience-bff → daidzai EMS). This environment
+# has NO emulator/adb/maestro, so this flow is AUTHORED but not run here; the ePCR
+# screen + service are proven by the vitest suite (epcrService.test.ts +
+# PrehospitalEpcrScreen.test.tsx). Run with:
+#   maestro test apps/mobile/maestro/flows/emergency-prehospital-epcr.yaml \
+#     -e INCIDENT_ID=<a dispatched daidzai incident id>
+# ============================================================================
+---
+- launchApp
+- extendedWaitUntil: { id: "provider-tabs", timeout: 120000 }
+- assertNotVisible: { id: "login-screen" }
+
+# Activation prelude mirrors provider-gap5-activation-happy.yaml.
+- runFlow:
+    when:
+      visible: { id: "provider-activation-screen" }
+    commands:
+      - tapOn: { id: "provider-id-input" }
+      - inputText: "PRV-2024-00147"
+      - tapOn: { id: "activate-provider-button" }
+      - extendedWaitUntil: { id: "select-facility-screen", timeout: 120000 }
+      - tapOn: { id: "facility-option-0" }
+
+# Open Clinical Tools → the ePCR sub-tab.
+- tapOn: { id: "provider-tab-tools" }
+- extendedWaitUntil: { id: "tools-tab-prehospital_epcr", timeout: 60000 }
+- tapOn: { id: "tools-tab-prehospital_epcr" }
+- assertVisible: { id: "epcr-screen" }
+
+# Bind to the dispatched EMS mission for the incident.
+- tapOn: { id: "epcr-incident-input" }
+- inputText: "${INCIDENT_ID}"
+- tapOn: { id: "epcr-load-mission" }
+- extendedWaitUntil: { id: "epcr-capture-vitals", timeout: 60000 }
+
+# Primary survey.
+- tapOn: { id: "epcr-airway" }
+- inputText: "patent"
+- tapOn: { id: "epcr-breathing" }
+- inputText: "laboured"
+- tapOn: { id: "epcr-circulation" }
+- inputText: "weak radial"
+- tapOn: { id: "epcr-save-survey" }
+- assertVisible: { id: "epcr-status" }
+
+# Capture a timed vitals observation en route.
+- tapOn: { id: "epcr-hr" }
+- inputText: "128"
+- tapOn: { id: "epcr-sbp" }
+- inputText: "86"
+- tapOn: { id: "epcr-spo2" }
+- inputText: "89"
+- tapOn: { id: "epcr-capture-vitals" }
+- assertVisible: { id: "epcr-obs-0" }
+
+# Capture a GCS observation.
+- tapOn: { id: "epcr-gcs" }
+- inputText: "13"
+- tapOn: { id: "epcr-capture-gcs" }
+- assertVisible: { id: "epcr-obs-1" }
+
+# Arrival + handover to the ED.
+- tapOn: { id: "epcr-handover" }
+- assertVisible: { id: "epcr-status" }

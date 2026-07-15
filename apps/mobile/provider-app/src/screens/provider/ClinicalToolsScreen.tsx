@@ -48,6 +48,7 @@ import { MadiReactionReportScreen } from "../madi/MadiReactionReportScreen";
 import { MadiCentralBankScreen } from "../madi/MadiCentralBankScreen";
 import { ProviderLiveHubScreen } from "../live/ProviderLiveHubScreen";
 import { TriageScreen } from "./TriageScreen";
+import { PrehospitalEpcrScreen } from "./PrehospitalEpcrScreen";
 import { BillingScreen } from "./BillingScreen";
 import { PACSViewerScreen } from "./PACSViewerScreen";
 import { DischargeScreen } from "./DischargeScreen";
@@ -58,6 +59,7 @@ import { appStore, useAppStore } from "../../stores/appStore";
 type ToolTab =
   | "soap"
   | "triage"
+  | "prehospital_epcr"
   | "drugs"
   | "orders"
   | "care"
@@ -105,7 +107,7 @@ type ToolTab =
   | "impilo_live";
 
 const TABS: { id: ToolTab; label: string }[] = [
-  { id: "soap", label: "SOAP" }, { id: "triage", label: "Triage" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
+  { id: "soap", label: "SOAP" }, { id: "triage", label: "Triage" }, { id: "prehospital_epcr", label: "ePCR" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
   { id: "care", label: "Care Plan" }, { id: "mar", label: "MAR" }, { id: "cds", label: "CDS" },
   { id: "paging", label: "Paging" }, { id: "barcode", label: "Barcode" }, { id: "workspaces", label: "Specialty" },
   { id: "inpatient", label: "Inpatient" }, { id: "facility", label: "Facility" }, { id: "control_tower", label: "Control Tower" }, { id: "place_mode", label: "Place Mode" }, { id: "regulators", label: "Regulators" }, { id: "facility_setup", label: "Setup" }, { id: "queue_definitions", label: "Queues" }, { id: "reports", label: "Reports" },
@@ -165,6 +167,7 @@ export function ClinicalToolsScreen() {
       <ScrollView style={styles.content} contentContainerStyle={styles.contentPad}>
         {tab === "soap" && <SOAPPanel />}
         {tab === "triage" && <TriageScreen />}
+        {tab === "prehospital_epcr" && <PrehospitalEpcrScreen />}
         {tab === "telemedicine" && <TelemedicineScreen />}
         {tab === "drugs" && <DrugInteractionPanel />}
         {tab === "orders" && <OrderSetsPanel />}
