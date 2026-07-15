@@ -48,6 +48,7 @@ public class VashandiPolicyService {
             Map.entry("ROSTER_APPROVE", List.of("vashandi.rosters", "vashandi.facility_staff")),
             Map.entry("SHIFT_CREATE", List.of("vashandi.rosters", "vashandi.facility_staff")),
             Map.entry("SHIFT_UPDATE", List.of("vashandi.rosters", "vashandi.facility_staff")),
+            Map.entry("VIRTUAL_POOL_READ", List.of("vashandi.rosters", "vashandi.facility_staff")),
             Map.entry("ATTENDANCE_CHECK_IN", List.of("vashandi.my_attendance", "vashandi.facility_staff")),
             Map.entry("ATTENDANCE_CHECK_OUT", List.of("vashandi.my_attendance", "vashandi.facility_staff")),
             Map.entry("ATTENDANCE_SUPERVISOR_CONFIRM", List.of("vashandi.facility_staff", "vashandi.my_attendance")),

@@ -345,6 +345,54 @@ public class VashandiController {
                 "vashandi.shift.updated"));
     }
 
+    // ---- virtual-pool (on-call) management reads -------------------------
+
+    @GetMapping("/virtual-pools")
+    public ResponseEntity<Map<String, Object>> listVirtualPools(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestParam Map<String, String> queryParams) {
+        return wrap(vashandiService.proxyGet("VIRTUAL_POOL_READ", "/virtual-pools", queryParams,
+                tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId, purposeOfUse,
+                "vashandi.virtual_pool.read"));
+    }
+
+    @GetMapping("/virtual-pools/{poolId}/on-duty")
+    public ResponseEntity<Map<String, Object>> virtualPoolOnDuty(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @PathVariable String poolId,
+            @RequestParam Map<String, String> queryParams) {
+        return wrap(vashandiService.proxyGet("VIRTUAL_POOL_READ", "/virtual-pools/" + poolId + "/on-duty",
+                queryParams, tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId,
+                purposeOfUse, "vashandi.virtual_pool.read"));
+    }
+
+    @GetMapping("/virtual-pools/{poolId}/shifts")
+    public ResponseEntity<Map<String, Object>> virtualPoolShifts(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @PathVariable String poolId) {
+        return wrap(vashandiService.proxyGet("VIRTUAL_POOL_READ", "/virtual-pools/" + poolId + "/shifts",
+                Map.of(), tenantId, actorId, providerId, hasFacility(facilityId), requestId, correlationId,
+                purposeOfUse, "vashandi.virtual_pool.read"));
+    }
+
     @PostMapping("/attendance/check-in")
     public ResponseEntity<Map<String, Object>> checkIn(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,

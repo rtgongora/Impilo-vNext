@@ -57,6 +57,44 @@ class VashandiPolicyServiceTest {
     }
 
     @Test
+    void allowsVirtualPoolReadWithRosterAuthority() {
+        Map<String, Object> contract = Map.of(
+                "visibleVashandiWorkspaces", List.of("vashandi.rosters", "vashandi.facility_staff")
+        );
+        VashandiDtos.PrecheckRequest request = new VashandiDtos.PrecheckRequest(
+                "VIRTUAL_POOL_READ",
+                "/work/vashandi/on-call",
+                null,
+                "trauma-oncall:FAC-1",
+                "FAC-1",
+                "vashandi_facility_workforce_manager",
+                null,
+                Map.of()
+        );
+        VashandiDtos.PolicyDecision decision = policyService.evaluate(contract, request);
+        assertTrue(decision.allowed());
+    }
+
+    @Test
+    void deniesVirtualPoolReadWithoutRosterAuthority() {
+        Map<String, Object> contract = Map.of(
+                "visibleVashandiWorkspaces", List.of("vashandi.my_attendance")
+        );
+        VashandiDtos.PrecheckRequest request = new VashandiDtos.PrecheckRequest(
+                "VIRTUAL_POOL_READ",
+                "/work/vashandi/on-call",
+                null,
+                "trauma-oncall:FAC-1",
+                null,
+                null,
+                null,
+                Map.of()
+        );
+        VashandiDtos.PolicyDecision decision = policyService.evaluate(contract, request);
+        assertFalse(decision.allowed());
+    }
+
+    @Test
     void deniesCheckInWhenProviderSuspended() {
         Map<String, Object> contract = Map.of(
                 "visibleVashandiWorkspaces", List.of("vashandi.my_attendance"),
