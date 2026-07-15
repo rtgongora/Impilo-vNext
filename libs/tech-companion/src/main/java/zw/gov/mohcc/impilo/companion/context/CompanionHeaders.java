@@ -21,6 +21,9 @@ package zw.gov.mohcc.impilo.companion.context;
  * <h3>Idempotency and timeout</h3>
  * Idempotency-Key, X-Client-Timeout-MS
  *
+ * <h3>Domain correlation (cross-service episode spines)</h3>
+ * X-Trauma-Episode-ID (server-minted trauma-episode correlation id)
+ *
  * <h3>Policy response headers (injected by gateway after OPA/TSHEPO allow)</h3>
  * X-Policy-Decision, X-Policy-Version, X-Decision-Reason
  */
@@ -61,6 +64,19 @@ public final class CompanionHeaders {
     public static final String SUBJECT_ID       = "X-Subject-ID";       // Patient/subject of action
     public static final String ACCESS_MODE      = "X-Access-Mode";      // INTERNAL, EXTERNAL
     public static final String WORKFLOW_STATE   = "X-Workflow-State";   // e.g. DRAFT, ACTIVE, DISCHARGED
+
+    // ── Domain correlation (cross-service episode/journey spines) ────────
+    /**
+     * Canonical trauma-episode correlation id. Server-minted by DAIDZAI (or PCT on ED-first
+     * walk-in trauma) as a UUID and carried on the wire as its ULID string form. Present on
+     * every internal trauma-pipeline call and in every trauma event payload; each phase-owner
+     * (pct / inpatient / madi) stamps it on its own SoR rows so one injured patient's records
+     * across services resolve to a single episode. Not a client-originated header — it is minted
+     * inside the trust boundary via {@code POST /internal/v1/daidzai/trauma-episodes} (idempotent
+     * on {@code (tenant, originKey)}) and propagated service-to-service. See
+     * {@code docs/registry/iatg-trauma-leases.md} and the trauma pipeline plan.
+     */
+    public static final String TRAUMA_EPISODE_ID = "X-Trauma-Episode-ID";
 
     // ── Service identity (Health OS Extensibility Doctrine §4 / §9) ──────
     /** Stable registered identifier of the calling sovereign service (e.g. "experience-bff", "msika-apps-service"). */
