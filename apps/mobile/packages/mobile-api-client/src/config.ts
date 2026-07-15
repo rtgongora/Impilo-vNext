@@ -16,6 +16,14 @@ export interface ApiClientConfig {
   retryBaseDelayMs: number;
   /** TLS certificate pins (SHA-256 hashes) for certificate pinning. */
   certificatePins?: string[];
+  /**
+   * Tenant identifier sent on ANONYMOUS public-lane requests (pre-authentication).
+   * Matches the BFF's public default tenant so anonymous gateway traffic is
+   * consistent server-side.
+   */
+  publicTenantId: string;
+  /** Pod identifier sent on ANONYMOUS public-lane requests (pre-authentication). */
+  publicPodId: string;
 }
 
 const DEFAULT_CONFIG: ApiClientConfig = {
@@ -23,6 +31,9 @@ const DEFAULT_CONFIG: ApiClientConfig = {
   defaultTimeoutMs: 30_000,
   maxRetries: 3,
   retryBaseDelayMs: 1_000,
+  // Mirrors PublicGatewayAnonymousDefaultsFilter.PUBLIC_DEFAULT_TENANT / PUBLIC_POD.
+  publicTenantId: "00000000-0000-0000-0000-000000000001",
+  publicPodId: "national-spine",
 };
 
 let currentConfig: ApiClientConfig = { ...DEFAULT_CONFIG };
