@@ -4,29 +4,43 @@
    madi-service health: 200
    inpatient-service health: 200
 == J-TR-0: incident triage mints the episode; all phase owners carry it
-   PASS: SOS request created (18d9b887-e197-448b-ab54-1ad466c72092)
-   PASS: incident triaged (b21aa2c7-179d-4018-b8f3-eedd31f58098)
-   PASS: incident triage MINTED a trauma episode (641459d4-e752-4765-9db4-d1daef37b531)
+   PASS: SOS request created (b9b7290f-c785-4851-ac29-d3e055b0abb3)
+   PASS: incident triaged (609ac3ab-3dc3-44a8-9f27-9d6cf508ac0b)
+   PASS: incident triage MINTED a trauma episode (88cc2c1a-d584-4ae3-a589-7e1694da5120)
    PASS: dai_trauma_episode row exists (origin_kind=INCIDENT, origin_key=incident)
    PASS: dai_emergency_incident stamped with the episode id
    PASS: timeline seeded with the INCIDENT phase
-   PASS: ED visit opened (39ba02a1-cb30-4028-910f-56ace0276fea)
+   PASS: ED visit opened (ae510bf6-90e8-47a0-9d25-56d1314f1f41)
    PASS: pct.ed_visit carries the SAME trauma_episode_id
-   PASS: emergency activation created (4c867c9b-f725-4cf5-ab00-69e12703dc62)
-   PASS: resuscitation recorded (0c6f294a-39e7-4014-9d7b-e5e8566ec3d9)
+   PASS: emergency activation created (6974a856-f0f4-4f8c-831c-ec24e6c78ab5)
+   PASS: resuscitation recorded (0ecf03ba-62e0-4a27-b478-1fb0e85cea8a)
    PASS: inpatient.resuscitation_record carries the SAME trauma_episode_id
-   PASS: blood order placed (a3c49ed5-60f8-414c-a2bf-6c17dff7df86)
+   PASS: blood order placed (793a914a-7283-43b0-9ee8-306c9c73c266)
    PASS: madi.blood_orders carries the SAME trauma_episode_id
    PASS: timeline has the INCIDENT phase
    PASS: timeline has the ED phase
    PASS: timeline has the RESUS phase
    PASS: timeline has the BLOOD phase
    PASS: all phase-owner rows resolve to ONE trauma_episode_id (no fork)
-   PASS: re-mint on the same origin key returned the SAME episode (641459d4-e752-4765-9db4-d1daef37b531)
+   PASS: re-mint on the same origin key returned the SAME episode (88cc2c1a-d584-4ae3-a589-7e1694da5120)
    PASS: exactly one episode row for the origin key (idempotent)
 == J-TR-0b: ED-first walk-in trauma mints a distinct episode via PCT
-   PASS: ED walk-in visit opened (991db173-609e-4f06-8c87-b4237743641a)
-   PASS: ED-first walk-in minted a distinct episode (d851f72b-56b6-4df0-b6bf-1f96c40af24f)
+   PASS: ED walk-in visit opened (baadd970-4f5c-4d72-b687-7d65c82d06c8)
+   PASS: ED-first walk-in minted a distinct episode (16f7fe66-1a8c-4d69-87e0-8a73f82ebcb6)
    PASS: walk-in episode is origin_kind=ED_WALK_IN, origin_service=pct-service
    PASS: walk-in ed_visit stamped with its own episode id
-== SUMMARY: PASS=24 FAIL=0
+== J-TR-1: EMS mission walks CREATED→HANDOVER; daidzai.ems.* outbox; dispatch idempotent
+   PASS: EMS mission dispatched (bd1e5b40-58ff-4835-8056-4d3df5ed442c)
+   PASS: mission is DISPATCHED after dispatch (CREATED→DISPATCHED)
+   PASS: dai_ems_mission row bound to the incident
+   PASS: mission carries the canonical trauma_episode_id
+   PASS: EMS mission walked the state machine to HANDOVER
+   PASS: handover_at timestamp recorded
+   PASS: illegal state transition rejected (HTTP 409, not 200)
+   PASS: daidzai.dai_outbox has daidzai.ems.* rows (11)
+   PASS: daidzai.ems.handover event emitted
+   PASS: no-Kafka drainer marked all daidzai.ems.* rows published
+   PASS: same Idempotency-Key replays the SAME mission (bd1e5b40-58ff-4835-8056-4d3df5ed442c)
+   PASS: fresh-key re-dispatch returns the existing mission (idempotent per incident)
+   PASS: exactly one EMS mission for the incident (no duplicate crew dispatched)
+== SUMMARY: PASS=37 FAIL=0

@@ -46,8 +46,8 @@ DAISQL(){ docker exec tr-rig-pg psql -U impilo -d daidzai -tAc "$1"; }
 PCTSQL(){ docker exec tr-rig-pg psql -U impilo -d pct -tAc "$1"; }
 INPSQL(){ docker exec tr-rig-pg psql -U impilo -d inpatient -tAc "$1"; }
 MADISQL(){ docker exec tr-rig-pg psql -U impilo -d madi -tAc "$1"; }
-hdr(){ local pou=${1:-TREATMENT} ep=${2:-}
-  local base="-H Content-Type:application/json -H X-Tenant-ID:$TEN -H X-Pod-ID:national-spine -H X-Request-ID:$(uuidgen) -H X-Correlation-ID:$(uuidgen) -H X-Facility-ID:$FAC -H X-Actor-ID:$ACTOR -H X-Actor-Type:PROVIDER -H X-Purpose-Of-Use:$pou -H Idempotency-Key:idem-$(uuidgen)"
+hdr(){ local pou=${1:-TREATMENT} ep=${2:-} idem=${3:-idem-$(uuidgen)}
+  local base="-H Content-Type:application/json -H X-Tenant-ID:$TEN -H X-Pod-ID:national-spine -H X-Request-ID:$(uuidgen) -H X-Correlation-ID:$(uuidgen) -H X-Facility-ID:$FAC -H X-Actor-ID:$ACTOR -H X-Actor-Type:PROVIDER -H X-Purpose-Of-Use:$pou -H Idempotency-Key:$idem"
   [ -n "$ep" ] && base="$base -H X-Trauma-Episode-ID:$ep"
   echo "$base"; }
 jget(){ python3 -c "import json,sys;d=json.load(open('$1'));print(d.get('$2','') if isinstance(d,dict) else '')" 2>/dev/null; }
@@ -88,7 +88,8 @@ wait_health(){ local url=$1 name=$2 c=000
 }
 
 # DAIDZAI is the spine; the phase owners point their DaidzaiEpisodeClient at it.
-boot daidzai-service daidzai 29392
+# kafka-events-enabled=false → the no-Kafka outbox drainer marks daidzai.ems.* rows published.
+boot daidzai-service daidzai 29392 DAIDZAI_KAFKA_EVENTS_ENABLED=false
 boot pct-service pct 29388 PCT_INTEGRATION_DAIDZAI_BASE_URL=$DAI
 boot madi-service madi 29300 MADI_INTEGRATION_DAIDZAI_BASE_URL=$DAI
 boot inpatient-service inpatient 29321 INPATIENT_INTEGRATION_DAIDZAI_BASE_URL=$DAI
@@ -197,6 +198,62 @@ EPW=$(jget2 "$EV/activate2.json" trauma_episode_id)
   && ok "walk-in episode is origin_kind=ED_WALK_IN, origin_service=pct-service" || bad "walk-in episode not recorded as PCT ED_WALK_IN"
 [ "$(PCTSQL "SELECT trauma_episode_id FROM pct.ed_visit WHERE visit_id='$VISIT2'")" = "$EPW" ] \
   && ok "walk-in ed_visit stamped with its own episode id" || bad "walk-in ed_visit not stamped with $EPW"
+
+# ═════ J-TR-1: EMS clinical dispatch — state machine + outbox + idempotency ══════
+say "J-TR-1: EMS mission walks CREATED→HANDOVER; daidzai.ems.* outbox; dispatch idempotent"
+# Dispatch a clinical EMS mission for the incident INC minted in J-TR-0.
+IDEM=idem-emsdispatch-$(uuidgen)
+curl -sS -o "$EV/ems-dispatch.json" $(hdr TREATMENT "" "$IDEM") -X POST $DAI/internal/v1/daidzai/ems/incidents/$INC/dispatch \
+  -d '{"callSign":"AMB-07","ambulanceAssetId":"ASSET-AMB-07","priority":"CRITICAL"}'
+MISSION=$(jget "$EV/ems-dispatch.json" id)
+MSTATE=$(jget "$EV/ems-dispatch.json" state)
+[ -n "$MISSION" ] && ok "EMS mission dispatched ($MISSION)" || bad "dispatch failed: $(cat "$EV/ems-dispatch.json")"
+[ "$MSTATE" = "DISPATCHED" ] && ok "mission is DISPATCHED after dispatch (CREATED→DISPATCHED)" || bad "mission state '$MSTATE' != DISPATCHED"
+[ "$(DAISQL "SELECT count(*) FROM daidzai.dai_ems_mission WHERE id='$MISSION' AND incident_id='$INC'")" = 1 ] \
+  && ok "dai_ems_mission row bound to the incident" || bad "no dai_ems_mission for $MISSION/$INC"
+[ "$(DAISQL "SELECT trauma_episode_id FROM daidzai.dai_ems_mission WHERE id='$MISSION'")" = "$EP" ] \
+  && ok "mission carries the canonical trauma_episode_id" || bad "mission episode != $EP"
+
+# Walk the validated state machine to HANDOVER.
+for st in ACKNOWLEDGED ACCEPTED EN_ROUTE_SCENE ON_SCENE PATIENT_CONTACT DEPARTED_SCENE EN_ROUTE_FACILITY ARRIVED_FACILITY HANDOVER; do
+  body='{"toState":"'$st'"}'
+  [ "$st" = HANDOVER ] && body='{"toState":"HANDOVER","pctEncounterRef":"'$VISIT'"}'
+  curl -sS -o "$EV/ems-$st.json" $(hdr) -X POST $DAI/internal/v1/daidzai/ems/missions/$MISSION/advance -d "$body" >/dev/null
+done
+FINAL=$(DAISQL "SELECT state FROM daidzai.dai_ems_mission WHERE id='$MISSION'")
+[ "$FINAL" = "HANDOVER" ] && ok "EMS mission walked the state machine to HANDOVER" || bad "mission state '$FINAL' != HANDOVER"
+[ -n "$(DAISQL "SELECT handover_at FROM daidzai.dai_ems_mission WHERE id='$MISSION' AND handover_at IS NOT NULL")" ] \
+  && ok "handover_at timestamp recorded" || bad "handover_at not set at HANDOVER"
+
+# Illegal transition is rejected (HANDOVER cannot jump back to EN_ROUTE_SCENE).
+HTTP=$(curl -sS -o /dev/null -w '%{http_code}' $(hdr) -X POST $DAI/internal/v1/daidzai/ems/missions/$MISSION/advance -d '{"toState":"EN_ROUTE_SCENE"}')
+[ "$HTTP" != 200 ] && ok "illegal state transition rejected (HTTP $HTTP, not 200)" || bad "illegal transition was accepted (200)"
+
+# Outbox: every transition landed as a daidzai.ems.* row, drained by the no-Kafka drainer.
+EMSROWS=$(DAISQL "SELECT count(*) FROM daidzai.dai_outbox WHERE event_type LIKE 'daidzai.ems.%' AND aggregate_id='$MISSION'")
+[ "${EMSROWS:-0}" -ge 10 ] && ok "daidzai.dai_outbox has daidzai.ems.* rows ($EMSROWS)" || bad "expected >=10 daidzai.ems.* outbox rows, got $EMSROWS"
+[ "$(DAISQL "SELECT count(*) FROM daidzai.dai_outbox WHERE event_type='daidzai.ems.handover' AND aggregate_id='$MISSION'")" -ge 1 ] \
+  && ok "daidzai.ems.handover event emitted" || bad "no daidzai.ems.handover outbox row"
+# The no-Kafka drainer polls every 2s — wait for it to catch the last batch before asserting.
+for i in $(seq 1 12); do
+  U=$(DAISQL "SELECT count(*) FROM daidzai.dai_outbox WHERE event_type LIKE 'daidzai.ems.%' AND published_at IS NULL")
+  [ "${U:-1}" = 0 ] && break; sleep 1
+done
+[ "${U:-1}" = 0 ] && ok "no-Kafka drainer marked all daidzai.ems.* rows published" || bad "undrained daidzai.ems.* outbox rows remain ($U)"
+
+# Idempotency: re-dispatch the same incident with the SAME Idempotency-Key AND identical request ⇒
+# the companion IdempotencyFilter replays the original mission (no duplicate).
+curl -sS -o "$EV/ems-redispatch.json" $(hdr TREATMENT "" "$IDEM") -X POST $DAI/internal/v1/daidzai/ems/incidents/$INC/dispatch \
+  -d '{"callSign":"AMB-07","ambulanceAssetId":"ASSET-AMB-07","priority":"CRITICAL"}'
+MISSION2=$(jget "$EV/ems-redispatch.json" id)
+[ "$MISSION2" = "$MISSION" ] && ok "same Idempotency-Key replays the SAME mission ($MISSION2)" || bad "re-dispatch forked a mission: $MISSION2 != $MISSION"
+# Service-level idempotency: a FRESH key on the same incident still returns the one mission (unique per incident).
+curl -sS -o "$EV/ems-redispatch2.json" $(hdr) -X POST $DAI/internal/v1/daidzai/ems/incidents/$INC/dispatch \
+  -d '{"callSign":"AMB-08","ambulanceAssetId":"ASSET-AMB-08","priority":"CRITICAL"}'
+MISSION3=$(jget "$EV/ems-redispatch2.json" id)
+[ "$MISSION3" = "$MISSION" ] && ok "fresh-key re-dispatch returns the existing mission (idempotent per incident)" || bad "fresh-key re-dispatch forked: $MISSION3 != $MISSION"
+[ "$(DAISQL "SELECT count(*) FROM daidzai.dai_ems_mission WHERE incident_id='$INC'")" = 1 ] \
+  && ok "exactly one EMS mission for the incident (no duplicate crew dispatched)" || bad "duplicate EMS missions for incident $INC"
 
 # ── Summary ────────────────────────────────────────────────────────────────────
 say "SUMMARY: PASS=$PASS FAIL=$FAIL"
