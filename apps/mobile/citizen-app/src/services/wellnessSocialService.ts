@@ -99,6 +99,53 @@ export async function reportContent(
   return { escalated: Boolean(res.data?.escalated) };
 }
 
+export interface SocialStatus {
+  statusId: string;
+  actorCpid: string;
+  actorType: string;
+  text: string;
+  mood?: string;
+  visibility: string;
+  moderationStatus: string;
+  expiresAt?: string;
+  createdAt: string;
+}
+
+function mapStatus(row: Row): SocialStatus {
+  return {
+    statusId: str(row.statusId ?? row.status_id),
+    actorCpid: str(row.actorCpid ?? row.actor_cpid),
+    actorType: str(row.actorType ?? row.actor_type, "CLIENT"),
+    text: str(row.text),
+    mood: row.mood != null ? str(row.mood) : undefined,
+    visibility: str(row.visibility, "PRIVATE"),
+    moderationStatus: str(row.moderationStatus ?? row.moderation_status, "VISIBLE"),
+    expiresAt: row.expiresAt != null || row.expires_at != null
+      ? str(row.expiresAt ?? row.expires_at)
+      : undefined,
+    createdAt: str(row.createdAt ?? row.created_at),
+  };
+}
+
+/** Active (non-expired, visibility-filtered) wellness-social statuses. */
+export async function fetchActiveStatuses(limit = 50): Promise<SocialStatus[]> {
+  const res = await apiClient.get<unknown>(`${SOCIAL}/statuses?limit=${limit}`);
+  return rowsOf(res.data).map(mapStatus);
+}
+
+export async function createStatus(
+  text: string,
+  mood?: string,
+  visibility = "PUBLIC_WITHIN_IMPILO",
+  ttlHours = 24,
+): Promise<void> {
+  await apiClient.post(`${SOCIAL}/statuses`, { text, mood, visibility, ttl_hours: ttlHours });
+}
+
+export async function deleteStatus(statusId: string): Promise<void> {
+  await apiClient.delete(`${SOCIAL}/statuses/${statusId}`);
+}
+
 export async function fetchReels(cursor?: number | null): Promise<{ reels: Reel[]; nextCursor: number | null }> {
   const params = new URLSearchParams();
   params.set("limit", "10");

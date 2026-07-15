@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { WellnessStatusStrip } from "@/components/wellness/WellnessStatusStrip";
 import {
   flattenFeed,
   useBookmark,
@@ -74,6 +75,8 @@ export default function WellnessSocialFeedPage() {
         icon={<Users className="h-6 w-6" />}
       >
         <div className="mx-auto max-w-2xl space-y-6">
+          <WellnessStatusStrip />
+
           <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
             <textarea
               value={body}

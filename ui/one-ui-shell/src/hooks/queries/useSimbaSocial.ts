@@ -169,6 +169,48 @@ export function useReportContent() {
   });
 }
 
+// ── Ephemeral statuses ────────────────────────────────────────────────────────
+export interface SocialStatus {
+  statusId: string;
+  actorCpid: string;
+  actorType: string;
+  text: string;
+  mood?: string | null;
+  visibility: string;
+  moderationStatus: string;
+  expiresAt?: string | null;
+  createdAt: string;
+}
+
+/** Active (non-expired, visibility-filtered) wellness-social statuses. */
+export function useActiveStatuses(limit = 50) {
+  return useQuery<ApiResponse<SocialStatus[]>>({
+    queryKey: ["simba-social-statuses", limit],
+    queryFn: () => apiClient.get(`/internal/v1/wellness/social/statuses?limit=${limit}`),
+  });
+}
+
+export function useCreateStatus() {
+  const qc = useQueryClient();
+  return useMutation<
+    ApiResponse<SocialStatus>,
+    Error,
+    { text: string; mood?: string; visibility?: string; ttl_hours?: number }
+  >({
+    mutationFn: (payload) => apiClient.post("/internal/v1/wellness/social/statuses", payload),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["simba-social-statuses"] }),
+  });
+}
+
+export function useDeleteStatus() {
+  const qc = useQueryClient();
+  return useMutation<ApiResponse<SocialStatus>, Error, { statusId: string }>({
+    mutationFn: ({ statusId }) =>
+      apiClient.delete(`/internal/v1/wellness/social/statuses/${statusId}`),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["simba-social-statuses"] }),
+  });
+}
+
 /** Single wellness-social post (detail view). */
 export function usePost(postId?: string | null) {
   return useQuery<ApiResponse<SocialPost>>({
