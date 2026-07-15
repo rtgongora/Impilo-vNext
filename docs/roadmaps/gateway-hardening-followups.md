@@ -83,11 +83,14 @@ SOS lane's fail-open posture (never drop a life-safety request if SMS/Redis is d
 failed OTP falls back to the manual dispatcher path). Web + mobile UI: an optional "enter the
 code we texted you" step on the receipt. Rig-proven; dispatcher console reflects the new state.
 
-### Phase E — Rig extension for the catch-up flows (S; DOABLE NOW; no gate)
-Extend the gateway rig to cover what the UI catch-up added, against booted jars + scratch DB:
-dispatcher worklist → `verify-callback` → gate release; SOS status-by-reference; health-info
-`?q=` search; R1 register → auto-login. Strongest proof available short of a deploy; needs
-nothing external. **This is the immediate next action.**
+### Phase E — Rig extension for the catch-up flows (S; **DONE 2026-07-15, 18/18 PASS**)
+Extended the gateway rig against booted daidzai+guidance+bff jars + scratch pg/redis
+(`reports/journeys/gateway-catchup-runtime-proof-20260715/`): dispatcher worklist →
+409 gate → `verify-callback` → gate release → triage succeeds; SOS status-by-reference
+(5-field PII-free); health-info `?q=` search; R1 contact-OTP register surface. Proven
+through the BFF (booted fully open) — stronger than the BE rig. **Rig-caught + fixed
+(`5493cfaea`):** the BFF daidzai proxy collapsed downstream 4xx into 500, masking the
+PD-3 409 gate as an opaque 500 — `get()`/`post()` now preserve daidzai's real status.
 
 ### Phase F — Maestro headless in CI (M; environment, not this sandbox)
 A CI job (GitHub Actions) with an Android emulator + an ephemeral backend (the compose stack
