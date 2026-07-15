@@ -8,6 +8,7 @@ import { EdTriageDiscriminatorPanel } from "@/components/clinical/EdTriageDiscri
 import { Icd11SearchField, type Icd11Hit } from "@/components/clinical/Icd11SearchField";
 import { ResuscitationWorkspace } from "@/components/clinical/ResuscitationWorkspace";
 import { TraumaTeamPanel } from "@/components/clinical/TraumaTeamPanel";
+import { TraumaSurveyPanel } from "@/components/clinical/TraumaSurveyPanel";
 import { useEdVisit, useEdVisitActions } from "@/hooks/queries/useEdVisit";
 import { useActivateEmergency, useEmergencyActivations } from "@/hooks/queries/useEmergency";
 
@@ -253,6 +254,11 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
                   </button>
                 </div>
                 <TraumaTeamPanel traumaId={String(visit.active_trauma_id)} visitId={params.visitId} />
+                <TraumaSurveyPanel
+                  visitId={params.visitId}
+                  traumaId={String(visit.active_trauma_id)}
+                  surveys={(visit.trauma_surveys as Array<Record<string, unknown>>) ?? []}
+                />
               </>
             )}
           </section>
