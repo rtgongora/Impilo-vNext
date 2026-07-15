@@ -32,6 +32,7 @@ public class EdVisitService {
     private final JourneyRepository journeyRepository;
     private final ObjectMapper objectMapper;
     private final zw.gov.mohcc.impilo.pct.integration.DaidzaiEpisodeClient daidzaiEpisodes;
+    private final EdTraumaTeamService traumaTeamService;
 
     public EdVisitService(JourneyStateMachine journeyStateMachine,
                           TriageService triageService,
@@ -46,7 +47,8 @@ public class EdVisitService {
                           EmergencyCaseRepository emergencyCaseRepository,
                           JourneyRepository journeyRepository,
                           ObjectMapper objectMapper,
-                          zw.gov.mohcc.impilo.pct.integration.DaidzaiEpisodeClient daidzaiEpisodes) {
+                          zw.gov.mohcc.impilo.pct.integration.DaidzaiEpisodeClient daidzaiEpisodes,
+                          EdTraumaTeamService traumaTeamService) {
         this.journeyStateMachine = journeyStateMachine;
         this.triageService = triageService;
         this.encounterService = encounterService;
@@ -61,6 +63,7 @@ public class EdVisitService {
         this.journeyRepository = journeyRepository;
         this.objectMapper = objectMapper;
         this.daidzaiEpisodes = daidzaiEpisodes;
+        this.traumaTeamService = traumaTeamService;
     }
 
     @Transactional
@@ -147,6 +150,58 @@ public class EdVisitService {
         visit.setPreArrivalJson(jsonField(projection, "{}"));
         visit.setPreArrivalAt(OffsetDateTime.now());
         visit = visitRepository.save(visit);
+        return visitDetail(visit.getVisitId());
+    }
+
+    /**
+     * ED arrival/handover from EMS (W4): the ambulance physically arrives and hands over. Transition
+     * the EXISTING PRE_ARRIVAL ed_visit (opened in W3, keyed by trauma_episode_id) to an active ED
+     * visit — the SAME row, never a duplicate. If no pre-arrival record exists (an ePCR-less mission),
+     * open the active visit here. Idempotent: arriving an already-active episode returns it unchanged.
+     */
+    @Transactional
+    public Map<String, Object> arriveFromEms(Map<String, Object> body) {
+        TrustContext ctx = TrustContextHolder.require();
+        UUID episodeId = EdPayloadMapper.uuid(body, "traumaEpisodeId", "trauma_episode_id");
+        if (episodeId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "traumaEpisodeId is required");
+        }
+        String emsMissionRef = EdPayloadMapper.str(body, "emsMissionRef", "ems_mission_ref");
+        UUID facilityId = EdPayloadMapper.uuid(body, "facilityId", "facility_id");
+        if (facilityId == null) facilityId = ctx.facilityId();
+        String patientCpid = EdPayloadMapper.str(body, "patientCpid", "patient_cpid");
+
+        EdVisitEntity visit = visitRepository
+                .findFirstByTenantIdAndTraumaEpisodeIdOrderByCreatedAtDesc(ctx.tenantId(), episodeId)
+                .orElse(null);
+        if (visit == null) {
+            // No pre-arrival projection was pushed — open the active visit now (still one row).
+            if (facilityId == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "facilityId is required to open an ED arrival");
+            }
+            String cpid = (patientCpid != null && !patientCpid.isBlank())
+                    ? patientCpid : "TEMP-EMS-" + episodeId.toString().substring(0, 8).toUpperCase();
+            JourneyEntity journey = journeyStateMachine.createJourney(facilityId, cpid, "EMERGENCY", null);
+            visit = new EdVisitEntity();
+            visit.setTenantId(ctx.tenantId());
+            visit.setFacilityId(facilityId);
+            visit.setJourneyId(journey.getJourneyId());
+            visit.setPatientCpid(cpid);
+            visit.setArrivalMode("AMBULANCE");
+            visit.setTraumaEpisodeId(episodeId);
+        }
+        // Reuse the pre-arrival row: PRE_ARRIVAL → REGISTERED (active). No duplicate ed_visit.
+        if (visit.getStatus() == null || "PRE_ARRIVAL".equals(visit.getStatus())) {
+            visit.setStatus("REGISTERED");
+        }
+        if (emsMissionRef != null) visit.setEmsMissionRef(emsMissionRef);
+        visit = visitRepository.save(visit);
+
+        if (visit.getTraumaEpisodeId() != null) {
+            daidzaiEpisodes.registerPhase(ctx.tenantId(), visit.getTraumaEpisodeId(), "ED",
+                    visit.getVisitId().toString(), "ARRIVED", "pct.ed.ems_arrival");
+        }
         return visitDetail(visit.getVisitId());
     }
 
@@ -328,6 +383,11 @@ public class EdVisitService {
         }
         visit.setStatus("TRIAGED");
         visitRepository.save(visit);
+        // Trauma spine: link the triage level to the canonical episode timeline (G1.6).
+        if (visit.getTraumaEpisodeId() != null) {
+            daidzaiEpisodes.registerPhase(ctx.tenantId(), visit.getTraumaEpisodeId(), "TRIAGE",
+                    assessment.getId().toString(), "ACUITY_" + acuity, "pct.ed.triaged");
+        }
         return visitDetail(visitId);
     }
 
@@ -434,10 +494,27 @@ public class EdVisitService {
             daidzaiEpisodes.registerPhase(ctx.tenantId(), episodeId, "TRIAGE", trauma.getTraumaId().toString(),
                     "TRAUMA_ACTIVATED", "pct.ed.trauma_activated");
         }
+        // Trauma-team activation (G1.7): resolve the on-call team from VASHANDI and raise a real
+        // notification delivery-intent per rostered member. Best-effort — never blocks the activation.
+        var team = traumaTeamService.activateTeam(ctx.tenantId(), visit, trauma);
         Map<String, Object> detail = visitDetail(visitId);
         detail.put("active_trauma_id", trauma.getTraumaId().toString());
         if (episodeId != null) detail.put("trauma_episode_id", episodeId.toString());
+        detail.put("trauma_team", team.stream().map(this::traumaTeamMemberRow).toList());
         return detail;
+    }
+
+    private Map<String, Object> traumaTeamMemberRow(zw.gov.mohcc.impilo.pct.persistence.entity.EdTraumaTeamMemberEntity m) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("id", m.getId().toString());
+        row.put("workforce_profile_id", m.getWorkforceProfileId());
+        row.put("role", m.getRole());
+        row.put("ack_status", m.getAckStatus());
+        row.put("notification_ref", m.getNotificationRef());
+        row.put("notified_at", m.getNotifiedAt() != null ? m.getNotifiedAt().toString() : null);
+        row.put("ack_at", m.getAckAt() != null ? m.getAckAt().toString() : null);
+        row.put("escalated_at", m.getEscalatedAt() != null ? m.getEscalatedAt().toString() : null);
+        return row;
     }
 
     /** An ED temp/provisional cpid (unknown patient) carries a TEMP-/PROV- prefix rather than a real Health ID. */

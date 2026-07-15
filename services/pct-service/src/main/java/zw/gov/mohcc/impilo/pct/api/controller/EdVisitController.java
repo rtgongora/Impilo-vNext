@@ -18,9 +18,12 @@ import java.util.UUID;
 public class EdVisitController {
 
     private final EdVisitService edVisitService;
+    private final zw.gov.mohcc.impilo.pct.core.EdTraumaTeamService traumaTeamService;
 
-    public EdVisitController(EdVisitService edVisitService) {
+    public EdVisitController(EdVisitService edVisitService,
+                            zw.gov.mohcc.impilo.pct.core.EdTraumaTeamService traumaTeamService) {
         this.edVisitService = edVisitService;
+        this.traumaTeamService = traumaTeamService;
     }
 
     @PostMapping("/visits")
@@ -46,6 +49,14 @@ public class EdVisitController {
         String correlationId = TrustContextHolder.require().correlationId().toString();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(edVisitService.upsertPreArrival(body), correlationId));
+    }
+
+    /** ED arrival/handover from EMS — transitions the existing PRE_ARRIVAL visit to active (no dup). */
+    @PostMapping("/arrival")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> arrival(@RequestBody Map<String, Object> body) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(edVisitService.arriveFromEms(body), correlationId));
     }
 
     /** ED pre-arrival board: incoming EMS patients not yet physically arrived. */
@@ -124,6 +135,48 @@ public class EdVisitController {
         String correlationId = TrustContextHolder.require().correlationId().toString();
         return ResponseEntity.ok(ApiResponse.ok(
                 edVisitService.activateTrauma(id, withTraumaEpisode(body, traumaEpisodeId)), correlationId));
+    }
+
+    // ── Trauma-team roster → ack → escalate (G1.7) ──────────────────────────
+    @GetMapping("/trauma/{traumaId}/team")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> traumaTeam(@PathVariable UUID traumaId) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        List<Map<String, Object>> team = traumaTeamService.listTeam(traumaId).stream().map(this::memberRow).toList();
+        return ResponseEntity.ok(ApiResponse.ok(team, correlationId));
+    }
+
+    @PostMapping("/trauma/{traumaId}/team/{memberId}/ack")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> ackTraumaMember(
+            @PathVariable UUID traumaId, @PathVariable UUID memberId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        var ctx = TrustContextHolder.require();
+        String ackBy = body != null && body.get("ackBy") != null ? body.get("ackBy").toString() : ctx.actorId();
+        var m = traumaTeamService.acknowledge(ctx.tenantId(), memberId, ackBy);
+        return ResponseEntity.ok(ApiResponse.ok(memberRow(m), ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/trauma/{traumaId}/team/escalate")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> escalateTraumaTeam(
+            @PathVariable UUID traumaId, @RequestBody(required = false) Map<String, Object> body) {
+        var ctx = TrustContextHolder.require();
+        long timeout = 0L;
+        if (body != null && body.get("timeoutSeconds") != null) {
+            timeout = Long.parseLong(body.get("timeoutSeconds").toString());
+        }
+        var escalated = traumaTeamService.escalateNoAck(ctx.tenantId(), traumaId, timeout)
+                .stream().map(this::memberRow).toList();
+        return ResponseEntity.ok(ApiResponse.ok(escalated, ctx.correlationId().toString()));
+    }
+
+    private Map<String, Object> memberRow(zw.gov.mohcc.impilo.pct.persistence.entity.EdTraumaTeamMemberEntity m) {
+        Map<String, Object> row = new java.util.LinkedHashMap<>();
+        row.put("id", m.getId().toString());
+        row.put("workforce_profile_id", m.getWorkforceProfileId());
+        row.put("role", m.getRole());
+        row.put("ack_status", m.getAckStatus());
+        row.put("notification_ref", m.getNotificationRef());
+        row.put("escalation_ref", m.getEscalationRef());
+        return row;
     }
 
     @PostMapping("/visits/{id}/trauma/survey")
