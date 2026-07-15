@@ -8,7 +8,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
@@ -257,11 +259,31 @@ public class DaidzaiServiceClient {
 
     private JsonNode get(String url, String op) {
         log.debug("DAIDZAI {}: GET {}", op, url);
-        return restTemplate.getForEntity(url, JsonNode.class).getBody();
+        try {
+            return restTemplate.getForEntity(url, JsonNode.class).getBody();
+        } catch (HttpStatusCodeException e) {
+            throw preserveDownstreamStatus(op, e);
+        }
     }
 
     private JsonNode post(String url, Map<String, Object> body, String op) {
         log.debug("DAIDZAI {}: POST {}", op, url);
-        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+        try {
+            return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+        } catch (HttpStatusCodeException e) {
+            throw preserveDownstreamStatus(op, e);
+        }
+    }
+
+    /**
+     * Surface daidzai's real HTTP status through the BFF instead of collapsing every
+     * downstream 4xx into a generic 500. Without this, the PD-3 dispatch gate
+     * ({@code 409 CALLBACK_VERIFICATION_REQUIRED} on triage of an unverified anonymous
+     * request) reached the operator as an opaque 500 — the rig-caught defect. The daidzai
+     * error body is preserved as the reason so the client keeps the domain error code.
+     */
+    private ResponseStatusException preserveDownstreamStatus(String op, HttpStatusCodeException e) {
+        log.warn("DAIDZAI {}: downstream {} — {}", op, e.getStatusCode(), e.getResponseBodyAsString());
+        return new ResponseStatusException(e.getStatusCode(), e.getResponseBodyAsString(), e);
     }
 }
