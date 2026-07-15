@@ -177,6 +177,25 @@ public class InpatientClinicalController {
         return clinicalService.getResuscitation(activationId);
     }
 
+    /** Append one timed ABCDE resuscitation observation to the episode time-series (W5). */
+    @PostMapping("/emergency/{activationId}/resuscitation/events")
+    public ResponseEntity<Map<String, Object>> recordResuscitationEvent(@PathVariable UUID activationId,
+                                                                        @RequestBody Map<String, Object> body,
+                                                                        @RequestHeader(value = "X-Trauma-Episode-ID", required = false) String traumaEpisodeId) {
+        Map<String, Object> payload = body;
+        if (traumaEpisodeId != null && !traumaEpisodeId.isBlank()) {
+            payload = new java.util.LinkedHashMap<>(body != null ? body : Map.of());
+            payload.putIfAbsent("traumaEpisodeId", traumaEpisodeId);
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(clinicalService.recordResuscitationEvent(activationId, payload));
+    }
+
+    /** The ordered multi-channel ABCDE resuscitation time-series for an activation. */
+    @GetMapping("/emergency/{activationId}/resuscitation/events")
+    public Map<String, Object> listResuscitationEvents(@PathVariable UUID activationId) {
+        return clinicalService.listResuscitationEvents(activationId);
+    }
+
     @PostMapping("/apgar")
     public ResponseEntity<Map<String, Object>> recordApgar(@RequestBody Map<String, Object> body) {
         return ResponseEntity.status(HttpStatus.CREATED).body(clinicalService.recordApgar(body));

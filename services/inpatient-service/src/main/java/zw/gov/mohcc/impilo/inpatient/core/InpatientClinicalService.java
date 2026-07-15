@@ -81,6 +81,14 @@ public class InpatientClinicalService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private zw.gov.mohcc.impilo.inpatient.integration.DaidzaiEpisodeClient daidzaiEpisodes;
 
+    /**
+     * ABCDE resuscitation time-series repository (W5). Field-injected (not constructor) to keep the
+     * large shared constructor a stable merge surface with the parallel theatre session; only the
+     * resuscitation-scoped path uses it. Part of the trauma lane's exclusive resuscitation_* class.
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private zw.gov.mohcc.impilo.inpatient.persistence.repository.ResuscitationEventRepository resuscitationEventRepository;
+
     private static final List<String> CLEARANCE_TYPES = List.of(
             "CLINICAL", "NURSING", "PHARMACY", "LABORATORY", "IMAGING",
             "FINANCIAL", "ADMINISTRATIVE", "RECORDS", "CRVS");
@@ -757,6 +765,80 @@ public class InpatientClinicalService {
         result.put("activation_id", activationId.toString());
         if (episodeId != null) result.put("trauma_episode_id", episodeId.toString());
         return result;
+    }
+
+    /**
+     * Append one timed ABCDE resuscitation observation to the episode time-series (W5). Re-keys onto
+     * the canonical trauma_episode_id (from the header/body, else inherited from the resuscitation
+     * record). Multi-channel repeated entry — the real replacement for the hardcoded-vitals demo.
+     */
+    @Transactional
+    public Map<String, Object> recordResuscitationEvent(UUID activationId, Map<String, Object> body) {
+        requireActivation(activationId);
+        String channel = ClinicalPayloadMapper.str(body, "channel");
+        if (channel == null || channel.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "channel is required");
+        }
+        ResuscitationEventEntity ev = new ResuscitationEventEntity();
+        ev.setTenantId(currentTenant());
+        ev.setActivationId(activationId);
+        UUID episodeId = ClinicalPayloadMapper.uuid(body, "traumaEpisodeId", "trauma_episode_id");
+        var record = resuscitationRecordRepository.findFirstByActivationIdOrderByCreatedAtDesc(activationId);
+        if (episodeId == null) {
+            episodeId = record.map(ResuscitationRecordEntity::getTraumaEpisodeId).orElse(null);
+        }
+        ev.setTraumaEpisodeId(episodeId);
+        record.ifPresent(r -> ev.setResusId(r.getResusId()));
+        ev.setChannel(channel.toUpperCase());
+        ev.setCode(ClinicalPayloadMapper.str(body, "code"));
+        ev.setValueText(ClinicalPayloadMapper.str(body, "valueText", "value_text", "value"));
+        Object vn = body.get("valueNumeric") != null ? body.get("valueNumeric") : body.get("value_numeric");
+        if (vn != null && !vn.toString().isBlank()) {
+            try { ev.setValueNumeric(new java.math.BigDecimal(vn.toString())); }
+            catch (NumberFormatException ignored) { /* keep numeric null; value_text still carries it */ }
+        }
+        ev.setUnit(ClinicalPayloadMapper.str(body, "unit"));
+        ev.setNotes(ClinicalPayloadMapper.str(body, "notes"));
+        try { ev.setActorId(TrustContextHolder.require().actorId()); } catch (RuntimeException ignored) { /* async/no ctx */ }
+        ResuscitationEventEntity saved = resuscitationEventRepository.save(ev);
+
+        if (episodeId != null && daidzaiEpisodes != null) {
+            daidzaiEpisodes.registerPhase(episodeId, "RESUS", saved.getId().toString(),
+                    saved.getChannel(), "inpatient.resuscitation.event");
+        }
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("id", saved.getId().toString());
+        result.put("activation_id", activationId.toString());
+        result.put("channel", saved.getChannel());
+        if (episodeId != null) result.put("trauma_episode_id", episodeId.toString());
+        return result;
+    }
+
+    /** The ordered multi-channel ABCDE resuscitation time-series for an activation. */
+    @Transactional(readOnly = true)
+    public Map<String, Object> listResuscitationEvents(UUID activationId) {
+        requireActivation(activationId);
+        List<ResuscitationEventEntity> events = resuscitationEventRepository != null
+                ? resuscitationEventRepository.findByActivationIdOrderByRecordedAtAsc(activationId)
+                : List.of();
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("activation_id", activationId.toString());
+        out.put("events", events.stream().map(this::resuscitationEventRow).toList());
+        return out;
+    }
+
+    private Map<String, Object> resuscitationEventRow(ResuscitationEventEntity e) {
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("id", e.getId().toString());
+        m.put("channel", e.getChannel());
+        m.put("code", e.getCode());
+        m.put("value_text", e.getValueText());
+        m.put("value_numeric", e.getValueNumeric());
+        m.put("unit", e.getUnit());
+        m.put("recorded_at", e.getRecordedAt() != null ? e.getRecordedAt().toString() : null);
+        m.put("trauma_episode_id", e.getTraumaEpisodeId() != null ? e.getTraumaEpisodeId().toString() : null);
+        m.put("actor_id", e.getActorId());
+        return m;
     }
 
     public Map<String, Object> getResuscitation(UUID activationId) {
