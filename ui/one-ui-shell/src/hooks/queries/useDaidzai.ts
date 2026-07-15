@@ -151,6 +151,18 @@ export type SosRequest = Record<string, unknown> & {
   incidentId?: string;
 };
 
+/** Call-taker pending queue — live incoming SOS requests (default RECEIVED). */
+export function useDaidzaiRequests(status: string = "RECEIVED") {
+  return useQuery({
+    queryKey: ["daidzai-requests", status],
+    queryFn: async () => {
+      const res = await apiClient.get<unknown>(`${DZ}/requests${status ? `?status=${encodeURIComponent(status)}` : ""}`);
+      return Array.isArray(res) ? (res as SosRequest[]) : [];
+    },
+    refetchInterval: 15_000,
+  });
+}
+
 export function useDaidzaiRequest(requestId?: string) {
   return useQuery({
     queryKey: ["daidzai-request", requestId],
@@ -173,6 +185,7 @@ export function useTriageRequest() {
     mutationFn: (requestId: string) => apiClient.post<Record<string, unknown>>(`${DZ}/requests/${requestId}/triage`, {}),
     onSuccess: (_data, requestId) => {
       void qc.invalidateQueries({ queryKey: ["daidzai-request", requestId] });
+      void qc.invalidateQueries({ queryKey: ["daidzai-requests"] });
       void qc.invalidateQueries({ queryKey: ["daidzai-incidents"] });
     },
   });

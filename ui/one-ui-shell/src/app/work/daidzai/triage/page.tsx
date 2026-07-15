@@ -18,7 +18,8 @@ import { AlertTriangle, Loader2, PhoneCall } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
-import { useCreateSosRequest, useDaidzaiRequest, useTriageRequest } from "@/hooks/queries/useDaidzai";
+import { RefreshCw } from "lucide-react";
+import { useCreateSosRequest, useDaidzaiRequest, useDaidzaiRequests, useTriageRequest } from "@/hooks/queries/useDaidzai";
 
 const CATEGORIES = ["TRAUMA", "CARDIAC", "OBSTETRIC", "RESPIRATORY", "MEDICAL", "OTHER"] as const;
 const SEVERITIES = ["CRITICAL", "SERIOUS", "STABLE"] as const;
@@ -30,6 +31,7 @@ function str(v: unknown): string {
 export default function DaidzaiTriagePage() {
   const create = useCreateSosRequest();
   const triage = useTriageRequest();
+  const pending = useDaidzaiRequests("RECEIVED");
 
   const [requestId, setRequestId] = useState<string | null>(null);
   const request = useDaidzaiRequest(requestId ?? undefined);
@@ -75,6 +77,47 @@ export default function DaidzaiTriagePage() {
       <PageShell title="Call-taker triage" subtitle="Intake an emergency call and triage it into an incident" serviceSlug="daidzai">
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <div className="space-y-5">
+            {/* Live pending queue */}
+            <section className="rounded-xl border border-teal-200 bg-teal-50/40 p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-teal-900">
+                  <PhoneCall className="h-4 w-4" /> Pending calls
+                  <span className="text-xs font-normal text-teal-800/70">{pending.data?.length ?? 0} awaiting triage</span>
+                </h2>
+                <button type="button" onClick={() => void pending.refetch()} className="inline-flex items-center gap-1 text-xs text-teal-800 hover:underline">
+                  <RefreshCw className="h-3 w-3" /> Refresh
+                </button>
+              </div>
+              {pending.isLoading ? (
+                <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading queue…</div>
+              ) : pending.isError ? (
+                <p className="mt-3 text-sm text-red-700">Could not load the pending queue.</p>
+              ) : (pending.data?.length ?? 0) === 0 ? (
+                <p className="mt-3 rounded-lg border border-dashed border-teal-200 bg-white/60 px-3 py-3 text-center text-xs text-muted-foreground">
+                  No calls awaiting triage. Log a new call below.
+                </p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {pending.data!.map((r) => (
+                    <li key={str(r.id)}>
+                      <button
+                        type="button"
+                        onClick={() => { setIncident(null); setRequestId(str(r.id)); }}
+                        className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm hover:border-teal-400 ${requestId === str(r.id) ? "border-teal-500 bg-white" : "border-teal-200 bg-white/70"}`}
+                      >
+                        <span>
+                          <span className="font-medium text-foreground">{str(r.emergencyCategory) || "SOS"}</span>
+                          <span className="ml-2 text-xs text-muted-foreground">{str(r.severity)}</span>
+                          <span className="ml-2 text-xs text-muted-foreground">{str(r.subjectLabel)}</span>
+                        </span>
+                        <span className="font-mono text-[11px] text-muted-foreground">{str(r.requestReference) || str(r.id).slice(0, 8)}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
             {/* Intake */}
             <form onSubmit={submitIntake} className="rounded-xl border border-border bg-card p-4 shadow-sm space-y-3">
               <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground"><PhoneCall className="h-4 w-4 text-teal-600" /> New emergency call</h2>
