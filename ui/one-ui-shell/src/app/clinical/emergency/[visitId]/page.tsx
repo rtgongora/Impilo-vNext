@@ -7,6 +7,7 @@ import { PageShell } from "@/components/PageShell";
 import { EdTriageDiscriminatorPanel } from "@/components/clinical/EdTriageDiscriminatorPanel";
 import { Icd11SearchField, type Icd11Hit } from "@/components/clinical/Icd11SearchField";
 import { ResuscitationWorkspace } from "@/components/clinical/ResuscitationWorkspace";
+import { TraumaTeamPanel } from "@/components/clinical/TraumaTeamPanel";
 import { useEdVisit, useEdVisitActions } from "@/hooks/queries/useEdVisit";
 import { useActivateEmergency, useEmergencyActivations } from "@/hooks/queries/useEmergency";
 
@@ -33,6 +34,9 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
   const [discriminators, setDiscriminators] = useState<Record<string, boolean | number>>({ resources_needed: 1 });
   const [dx, setDx] = useState<Icd11Hit | null>(null);
   const [disposition, setDisposition] = useState("DISCHARGE");
+  const [traumaLevel, setTraumaLevel] = useState(2);
+  const [mechanism, setMechanism] = useState("BLUNT");
+  const [teamLeader, setTeamLeader] = useState("");
 
   const handleRecommendedAcuity = useCallback((level: number) => setAcuity(level), []);
   const handleDiscriminatorChange = useCallback((id: string, value: boolean | number) => {
@@ -181,38 +185,74 @@ export default function EdVisitPage({ params }: { params: { visitId: string } })
         )}
 
         {step === 3 && (
-          <section className="rounded-xl border p-4 space-y-3">
-            <h2 className="font-semibold">Trauma activation & survey</h2>
+          <section className="space-y-4">
+            <h2 className="font-semibold">Trauma activation &amp; team</h2>
             {!visit.active_trauma_id ? (
-              <button
-                type="button"
-                onClick={() => actions.activateTrauma.mutate({ traumaLevel: 2, mechanism: "RTA Driver", teamLeader: "ED lead" })}
-                className="rounded-lg bg-orange-600 px-4 py-2 text-sm text-white"
+              <form
+                className="rounded-xl border p-4 space-y-3"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  actions.activateTrauma.mutate({ traumaLevel, mechanism, teamLeader: teamLeader.trim() || undefined });
+                }}
               >
-                Activate trauma team
-              </button>
+                <p className="text-xs text-muted-foreground">
+                  Activation resolves the on-call trauma panel from the facility roster and pages every member.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <label className="text-sm">
+                    <span className="mb-1 block font-medium">Trauma level</span>
+                    <div className="flex gap-2">
+                      {[1, 2, 3].map((l) => (
+                        <button
+                          key={l}
+                          type="button"
+                          onClick={() => setTraumaLevel(l)}
+                          className={`rounded-lg px-3 py-2 text-sm font-medium ${traumaLevel === l ? "bg-orange-600 text-white" : "bg-neutral-100 hover:bg-neutral-200"}`}
+                        >
+                          Level {l}
+                        </button>
+                      ))}
+                    </div>
+                  </label>
+                  <label className="text-sm">
+                    <span className="mb-1 block font-medium">Mechanism</span>
+                    <select value={mechanism} onChange={(e) => setMechanism(e.target.value)} className="rounded-lg border px-3 py-2 text-sm">
+                      {["BLUNT", "PENETRATING", "RTA", "FALL", "BURN", "CRUSH", "BLAST", "OTHER"].map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="text-sm">
+                    <span className="mb-1 block font-medium">Team leader (optional)</span>
+                    <input value={teamLeader} onChange={(e) => setTeamLeader(e.target.value)} placeholder="e.g. EM consultant" className="rounded-lg border px-3 py-2 text-sm" />
+                  </label>
+                </div>
+                <button
+                  type="submit"
+                  disabled={actions.activateTrauma.isPending}
+                  className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {actions.activateTrauma.isPending ? "Activating…" : `Activate trauma team (Level ${traumaLevel})`}
+                </button>
+                {actions.activateTrauma.isError && (
+                  <p className="text-xs text-danger">Activation failed — check facility context and retry.</p>
+                )}
+              </form>
             ) : (
               <>
-                <p className="text-sm text-green-700">Trauma active: {String(visit.active_trauma_id)}</p>
-                <button
-                  type="button"
-                  onClick={() => actions.recordTraumaSurvey.mutate({
-                    surveyType: "PRIMARY",
-                    sectionKey: "A",
-                    checklist: { "Airway patent": true, "C-spine maintained": true },
-                    vitals: { hr: 100, sbp: 110, spo2: 96 },
-                  })}
-                  className="rounded-lg border px-4 py-2 text-sm"
-                >
-                  Record primary survey (A)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => actions.endTrauma.mutate({ outcome: "STABILISED" })}
-                  className="rounded-lg border border-red-300 px-4 py-2 text-sm text-danger"
-                >
-                  End trauma activation
-                </button>
+                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-green-200 bg-success-soft px-3 py-2 text-sm text-primary-hover">
+                  <span>Trauma active</span>
+                  <code className="font-mono text-xs">{String(visit.active_trauma_id)}</code>
+                  <button
+                    type="button"
+                    onClick={() => actions.endTrauma.mutate({ outcome: "STABILISED" })}
+                    disabled={actions.endTrauma.isPending}
+                    className="ml-auto rounded-lg border border-red-300 px-3 py-1 text-xs text-danger hover:bg-danger-soft disabled:opacity-50"
+                  >
+                    End activation
+                  </button>
+                </div>
+                <TraumaTeamPanel traumaId={String(visit.active_trauma_id)} visitId={params.visitId} />
               </>
             )}
           </section>

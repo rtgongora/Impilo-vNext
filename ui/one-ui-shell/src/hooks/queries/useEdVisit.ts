@@ -104,3 +104,53 @@ export function useOpenEdVisit() {
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["ed-visits"] }),
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Trauma-team roster / acknowledgement / escalation (WU2).
+// The roster is resolved from the live VASHANDI on-call pool at activation and
+// returned inside the trauma/activate response; these hooks read it back and drive
+// per-member acknowledgement + no-ack escalation via the pct-backed BFF proxies.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type TraumaTeamMember = Record<string, unknown> & {
+  id?: string;
+  workforce_profile_id?: string;
+  role?: string;
+  ack_status?: string;
+  notification_ref?: string;
+  notified_at?: string;
+  ack_at?: string;
+  escalated_at?: string;
+};
+
+export function useTraumaTeam(traumaId?: string, visitId?: string) {
+  const qc = useQueryClient();
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: ["trauma-team", traumaId] });
+    if (visitId) void qc.invalidateQueries({ queryKey: ["ed-visit", visitId] });
+  };
+
+  const team = useQuery({
+    queryKey: ["trauma-team", traumaId],
+    queryFn: async () => {
+      const res = await apiClient.get<{ data: TraumaTeamMember[] }>(`${BASE}/trauma/${traumaId}/team`);
+      return res.data ?? [];
+    },
+    enabled: !!traumaId,
+    refetchInterval: 15_000,
+  });
+
+  const ack = useMutation({
+    mutationFn: ({ memberId, ackBy }: { memberId: string; ackBy?: string }) =>
+      apiClient.post(`${BASE}/trauma/${traumaId}/team/${memberId}/ack`, { ackBy: ackBy ?? "" }),
+    onSuccess: invalidate,
+  });
+
+  const escalate = useMutation({
+    mutationFn: (body?: { timeoutSeconds?: number }) =>
+      apiClient.post(`${BASE}/trauma/${traumaId}/team/escalate`, body ?? { timeoutSeconds: 0 }),
+    onSuccess: invalidate,
+  });
+
+  return { team, ack, escalate };
+}
