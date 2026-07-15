@@ -20,13 +20,16 @@ public class EdVisitController {
     private final EdVisitService edVisitService;
     private final zw.gov.mohcc.impilo.pct.core.EdTraumaTeamService traumaTeamService;
     private final zw.gov.mohcc.impilo.pct.core.EdDiagnosticsService diagnosticsService;
+    private final zw.gov.mohcc.impilo.pct.integration.MadiBloodReadinessClient bloodReadinessClient;
 
     public EdVisitController(EdVisitService edVisitService,
                             zw.gov.mohcc.impilo.pct.core.EdTraumaTeamService traumaTeamService,
-                            zw.gov.mohcc.impilo.pct.core.EdDiagnosticsService diagnosticsService) {
+                            zw.gov.mohcc.impilo.pct.core.EdDiagnosticsService diagnosticsService,
+                            zw.gov.mohcc.impilo.pct.integration.MadiBloodReadinessClient bloodReadinessClient) {
         this.edVisitService = edVisitService;
         this.traumaTeamService = traumaTeamService;
         this.diagnosticsService = diagnosticsService;
+        this.bloodReadinessClient = bloodReadinessClient;
     }
 
     @PostMapping("/visits")
@@ -138,6 +141,13 @@ public class EdVisitController {
         String correlationId = TrustContextHolder.require().correlationId().toString();
         return ResponseEntity.ok(ApiResponse.ok(
                 edVisitService.activateTrauma(id, withTraumaEpisode(body, traumaEpisodeId)), correlationId));
+    }
+
+    /** Trauma blood-readiness gate (G1.10) — read-through MADI; BLOCKED until RESERVED+COMPATIBLE. */
+    @GetMapping("/blood-readiness")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> bloodReadiness(@RequestParam String orderId) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(bloodReadinessClient.readiness(orderId), correlationId));
     }
 
     /** Place a trauma ED diagnostic order on OROS (encounter_ref=episode) + keep the PCT link (G1.9). */

@@ -95,6 +95,23 @@ public class DaidzaiEpisodeClient {
         }
     }
 
+    /**
+     * Close the trauma episode on disposition (best-effort). ED disposition ends the trauma journey;
+     * surgery does NOT close (theatre proved that). Idempotent on the DAIDZAI side.
+     */
+    public void close(UUID tenantId, UUID episodeId, String reason) {
+        if (episodeId == null) return;
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("reason", reason);
+        try {
+            restTemplate.exchange(baseUrl + "/internal/v1/daidzai/trauma-episodes/" + episodeId + "/close",
+                    HttpMethod.POST, new HttpEntity<>(body, headers(tenantId)), Void.class);
+        } catch (RestClientException e) {
+            log.warn("DAIDZAI episode close for {} failed: {} — disposition still recorded",
+                    episodeId, e.getMessage());
+        }
+    }
+
     private HttpHeaders headers(UUID tenantId) {
         HttpHeaders h = new HttpHeaders();
         if (tenantId != null) h.set("X-Tenant-ID", tenantId.toString());

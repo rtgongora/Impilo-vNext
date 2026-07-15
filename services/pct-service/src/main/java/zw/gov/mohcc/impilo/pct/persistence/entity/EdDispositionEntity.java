@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.pct.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -27,6 +29,9 @@ public class EdDispositionEntity {
     @Column(name = "primary_diagnosis_display")
     private String primaryDiagnosisDisplay;
 
+    // Bind as JSON so PostgreSQL accepts the String into jsonb (avoids the 42804 500 — same fix
+    // family as team_assignments / ed_trauma_survey; part of chip task_bbada4f4).
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "secondary_diagnoses", columnDefinition = "jsonb")
     private String secondaryDiagnosesJson = "[]";
 
@@ -36,6 +41,7 @@ public class EdDispositionEntity {
     @Column(name = "external_cause_display")
     private String externalCauseDisplay;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "procedure_codes", columnDefinition = "jsonb")
     private String procedureCodesJson = "[]";
 

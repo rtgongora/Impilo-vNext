@@ -661,6 +661,14 @@ public class EdVisitService {
             String dischargeType = mapDispositionToDischarge(dispositionType);
             dischargeWorkflow.startDischarge(visit.getJourneyId(), dischargeType);
         }
+        // Trauma spine (G1.11): ED disposition ends the trauma journey → close the canonical episode
+        // (register the DISPOSITION phase, then close). Surgery does NOT close (theatre owns that).
+        if (visit.getTraumaEpisodeId() != null) {
+            daidzaiEpisodes.registerPhase(TrustContextHolder.require().tenantId(), visit.getTraumaEpisodeId(),
+                    "DISPOSITION", visitId.toString(), dispositionType, "pct.ed.disposition");
+            daidzaiEpisodes.close(TrustContextHolder.require().tenantId(), visit.getTraumaEpisodeId(),
+                    "ED disposition: " + dispositionType);
+        }
         return visitDetail(visitId);
     }
 
