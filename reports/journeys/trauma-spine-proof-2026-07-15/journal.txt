@@ -1,0 +1,32 @@
+== RIG: infra (postgres + redis) + daidzai/pct/inpatient/madi substrate
+   daidzai-service health: 200
+   pct-service health: 200
+   madi-service health: 200
+   inpatient-service health: 200
+== J-TR-0: incident triage mints the episode; all phase owners carry it
+   PASS: SOS request created (18d9b887-e197-448b-ab54-1ad466c72092)
+   PASS: incident triaged (b21aa2c7-179d-4018-b8f3-eedd31f58098)
+   PASS: incident triage MINTED a trauma episode (641459d4-e752-4765-9db4-d1daef37b531)
+   PASS: dai_trauma_episode row exists (origin_kind=INCIDENT, origin_key=incident)
+   PASS: dai_emergency_incident stamped with the episode id
+   PASS: timeline seeded with the INCIDENT phase
+   PASS: ED visit opened (39ba02a1-cb30-4028-910f-56ace0276fea)
+   PASS: pct.ed_visit carries the SAME trauma_episode_id
+   PASS: emergency activation created (4c867c9b-f725-4cf5-ab00-69e12703dc62)
+   PASS: resuscitation recorded (0c6f294a-39e7-4014-9d7b-e5e8566ec3d9)
+   PASS: inpatient.resuscitation_record carries the SAME trauma_episode_id
+   PASS: blood order placed (a3c49ed5-60f8-414c-a2bf-6c17dff7df86)
+   PASS: madi.blood_orders carries the SAME trauma_episode_id
+   PASS: timeline has the INCIDENT phase
+   PASS: timeline has the ED phase
+   PASS: timeline has the RESUS phase
+   PASS: timeline has the BLOOD phase
+   PASS: all phase-owner rows resolve to ONE trauma_episode_id (no fork)
+   PASS: re-mint on the same origin key returned the SAME episode (641459d4-e752-4765-9db4-d1daef37b531)
+   PASS: exactly one episode row for the origin key (idempotent)
+== J-TR-0b: ED-first walk-in trauma mints a distinct episode via PCT
+   PASS: ED walk-in visit opened (991db173-609e-4f06-8c87-b4237743641a)
+   PASS: ED-first walk-in minted a distinct episode (d851f72b-56b6-4df0-b6bf-1f96c40af24f)
+   PASS: walk-in episode is origin_kind=ED_WALK_IN, origin_service=pct-service
+   PASS: walk-in ed_visit stamped with its own episode id
+== SUMMARY: PASS=24 FAIL=0
