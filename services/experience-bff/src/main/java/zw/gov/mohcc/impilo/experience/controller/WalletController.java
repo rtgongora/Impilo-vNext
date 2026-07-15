@@ -255,6 +255,50 @@ public class WalletController {
         return walletUpstreamUnavailable("getFundingSources", failureReason, requestId, correlationId);
     }
 
+    /**
+     * Transactions for a SPECIFIC wallet — the merchant/vendor earnings surface.
+     * Ownership-guarded: the wallet's ownerRef must be the caller's actor id
+     * (individual) or provider id (a merchant wallet the provider owns). Fails
+     * clean, never serves another party's ledger.
+     */
+    @GetMapping("/{walletId}/transactions")
+    public ResponseEntity<Map<String, Object>> getWalletTransactions(
+            @PathVariable UUID walletId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "50") int size,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId) {
+        try {
+            JsonNode wallet = musheClient.getWallet(walletId);
+            if (wallet == null) {
+                return walletUpstreamUnavailable("getWalletTransactions", "wallet not found",
+                        requestId, correlationId);
+            }
+            String ownerRef = wallet.path("ownerRef").asText("");
+            boolean owns = (actorId != null && actorId.equals(ownerRef))
+                    || (providerId != null && providerId.equals(ownerRef));
+            if (!owns) {
+                log.warn("Wallet transactions denied: wallet {} owner {} != actor {} / provider {}",
+                        walletId, ownerRef, actorId, providerId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "error", Map.of("code", "NOT_WALLET_OWNER",
+                                "message", "You can only view your own wallet's transactions"),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+            JsonNode txns = musheClient.getTransactions(walletId, page, size);
+            if (txns == null) {
+                return walletUpstreamUnavailable("getWalletTransactions",
+                        "upstream transactions null", requestId, correlationId);
+            }
+            return ok(txns, requestId, correlationId);
+        } catch (Exception e) {
+            return walletUpstreamUnavailable("getWalletTransactions",
+                    "upstream exception: " + e.getClass().getSimpleName(), requestId, correlationId);
+        }
+    }
+
     // ── Payment methods (static reference) ────────────────────────────
 
     @GetMapping("/payment-methods")
