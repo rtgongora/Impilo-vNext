@@ -99,4 +99,39 @@ describe("TheatreCaseDetailPage", () => {
       expect(post).toHaveBeenCalledWith("/internal/v1/theatre/cases/c-1/cancel", { reasonCode: "NO_BLOOD", reason: "cross-match not ready" }),
     );
   });
+
+  it("mounts the Lane 2/3 management panels bound to their real endpoints", async () => {
+    render(<TheatreCaseDetailPage />);
+    await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
+    expect(screen.getByTestId("blood-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("specimen-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("count-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("anaesthesia-chart-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("commodities-panel")).toBeInTheDocument();
+    // each panel drove its own GET against the real path
+    expect(get).toHaveBeenCalledWith("/internal/v1/theatre/cases/c-1/blood");
+    expect(get).toHaveBeenCalledWith("/internal/v1/theatre/cases/c-1/counts");
+    expect(get).toHaveBeenCalledWith("/internal/v1/procedures/c-1/anaesthesia/chart");
+  });
+
+  it("gates Lane 1 surfaces: no obstetric/emergency-consent panel for an elective non-obstetric case", async () => {
+    render(<TheatreCaseDetailPage />);
+    await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
+    expect(screen.queryByTestId("obstetric-section")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("emergency-consent-panel")).not.toBeInTheDocument();
+  });
+
+  it("shows the Lane 1 obstetric + emergency-consent surfaces for an EMERGENCY caesarean", async () => {
+    get.mockImplementation((url: string) => {
+      if (url.endsWith("/safety-events")) return Promise.resolve([]);
+      if (/\/theatre\/cases\/c-1$/.test(url)) {
+        return Promise.resolve({ id: "c-1", patient_id: "CPID-1", procedure_name: "Emergency Caesarean Section", status: "IN_PROGRESS", triage_priority: "EMERGENCY", emergency_override: true, consent_status: "EMERGENCY_EXCEPTION", checklist: [] });
+      }
+      return Promise.resolve({ data: [] });
+    });
+    render(<TheatreCaseDetailPage />);
+    await waitFor(() => expect(screen.getByText("CPID-1")).toBeInTheDocument());
+    expect(screen.getByTestId("obstetric-section")).toBeInTheDocument();
+    expect(screen.getByTestId("emergency-consent-panel")).toBeInTheDocument();
+  });
 });
