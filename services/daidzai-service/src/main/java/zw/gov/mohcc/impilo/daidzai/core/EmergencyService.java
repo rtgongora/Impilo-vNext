@@ -32,12 +32,14 @@ public class EmergencyService {
     private final OwnerRoutedGateway gateway;
     private final DaidzaiEventEmitter emitter;
     private final zw.gov.mohcc.impilo.daidzai.integration.NdilaCatchmentClient catchment;
+    private final TraumaEpisodeService traumaEpisodes;
 
     public EmergencyService(EmergencyRequestRepository requestRepo, EmergencyIncidentRepository incidentRepo,
                             MissionEventRepository missionRepo, ResourceRequestRepository resourceRepo,
                             TriageClassifier triage, ReferenceGenerator refs,
                             OwnerRoutedGateway gateway, DaidzaiEventEmitter emitter,
-                            zw.gov.mohcc.impilo.daidzai.integration.NdilaCatchmentClient catchment) {
+                            zw.gov.mohcc.impilo.daidzai.integration.NdilaCatchmentClient catchment,
+                            TraumaEpisodeService traumaEpisodes) {
         this.requestRepo = requestRepo;
         this.incidentRepo = incidentRepo;
         this.missionRepo = missionRepo;
@@ -47,6 +49,21 @@ public class EmergencyService {
         this.gateway = gateway;
         this.emitter = emitter;
         this.catchment = catchment;
+        this.traumaEpisodes = traumaEpisodes;
+    }
+
+    /**
+     * Mint (idempotently) the canonical trauma episode for a freshly-triaged incident and stamp the
+     * shared {@code trauma_episode_id} back onto the incident row. DAIDZAI is the INCIDENT phase
+     * owner; the episode is the correlation spine every downstream phase owner will carry. Runs in
+     * the incident-creation transaction — an incident and its episode are minted atomically.
+     */
+    private void mintEpisodeForIncident(EmergencyIncidentEntity inc) {
+        var ep = traumaEpisodes.mint(inc.getTenantId(), TraumaEpisodeService.OWNER_DAIDZAI, "INCIDENT",
+                inc.getId().toString(), inc.getId(), inc.getSubjectIdentityMode(),
+                inc.getSubjectHealthId(), inc.getSubjectTempRef(), "INCIDENT", inc.getId().toString());
+        inc.setTraumaEpisodeId(ep.getId());
+        incidentRepo.save(inc);
     }
 
     // ---- 1. SOS request intake (self / caregiver / provider / facility / bystander) ----
@@ -191,6 +208,9 @@ public class EmergencyService {
         inc.setLocationLng(r.getLocationLng());
         inc.setLocationDescription(r.getLocationDescription());
         incidentRepo.save(inc);
+
+        // Canonical trauma episode spine: mint on incident triage and stamp the incident (idempotent).
+        mintEpisodeForIncident(inc);
 
         r.setIncidentId(inc.getId());
         r.setSeverity(severity);
@@ -388,6 +408,8 @@ public class EmergencyService {
         inc.setLocationLng(lng);
         inc.setLocationDescription(locationDescription);
         incidentRepo.save(inc);
+        // Canonical trauma episode spine: mint on provider/facility escalation too (idempotent).
+        mintEpisodeForIncident(inc);
         emitter.emit("EMERGENCY_INCIDENT", inc.getId().toString(), "daidzai.incident.escalated",
                 "EMERGENCY_INCIDENT", inc.getId().toString(),
                 Map.of("triageCategory", triageCat, "category", inc.getEmergencyCategory(),

@@ -31,6 +31,7 @@ public class EmergencyIncidentEntity {
     @Column(name = "nhume_mission_ref", length = 128) private String nhumeMissionRef;
     @Column(name = "pct_encounter_ref", length = 128) private String pctEncounterRef;
     @Column(name = "rito_case_ref", length = 128) private String ritoCaseRef;
+    @Column(name = "trauma_episode_id") private UUID traumaEpisodeId;
     @Column(name = "command_post", length = 255) private String commandPost;
     @Column(name = "incident_commander", length = 128) private String incidentCommander;
     @Column(name = "opened_at", nullable = false) private OffsetDateTime openedAt;
@@ -93,6 +94,8 @@ public class EmergencyIncidentEntity {
     public void setPctEncounterRef(String v) { this.pctEncounterRef = v; }
     public String getRitoCaseRef() { return ritoCaseRef; }
     public void setRitoCaseRef(String v) { this.ritoCaseRef = v; }
+    public UUID getTraumaEpisodeId() { return traumaEpisodeId; }
+    public void setTraumaEpisodeId(UUID v) { this.traumaEpisodeId = v; }
     public String getCommandPost() { return commandPost; }
     public void setCommandPost(String v) { this.commandPost = v; }
     public String getIncidentCommander() { return incidentCommander; }
