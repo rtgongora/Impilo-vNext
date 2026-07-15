@@ -60,35 +60,16 @@ docker run -d --name ta-rig-redis -p $RPORT:6379 redis:7-alpine >/dev/null
 sleep 8
 docker exec ta-rig-pg psql -U impilo -d postgres -c "CREATE DATABASE tshepo_authz" >/dev/null 2>&1
 
-# ── Apply migrations via psql (real-Postgres proof of V034 SQL) ──────────────
-# NOTE: the shipped tshepo-authz jar currently carries a DUPLICATE V030 (theatre
-# clinical-safety AND encounter-form) — a PRE-EXISTING cross-wave collision that makes
-# the Flyway auto-migrate REFUSE to start ("Found more than one migration with version
-# 030"). That is flagged to the coordinator; it is NOT introduced by this wave and V034
-# is correctly numbered. To prove V034's SQL is valid on a REAL Postgres regardless, the
-# rig applies every migration file in version order via psql (both V030 files coexist at
-# the SQL level — distinct rule names + ON CONFLICT DO NOTHING) and then boots the service
-# with Flyway DISABLED against the already-migrated schema so the live HTTP deny path is
-# still exercised.
-say "MIGRATE: apply V001..V034 via psql (proves V034 SQL on real Postgres; both V030 coexist)"
-MIGDIR="$REPO/services/tshepo-authz-service/src/main/resources/db/migration"
-mig_fail=0
-for f in $(ls "$MIGDIR"/V*.sql | sort -t V -k2 -n); do
-  docker cp "$f" ta-rig-pg:/tmp/mig.sql >/dev/null 2>&1
-  if ! docker exec ta-rig-pg psql -v ON_ERROR_STOP=1 -U impilo -d tshepo_authz -f /tmp/mig.sql >>"$RIGLOG/migrate.log" 2>&1; then
-    echo "   migration failed: $(basename "$f")" | tee -a "$EV/journal.txt"; mig_fail=1;
-    [ "$(basename "$f")" = "V034__theatre_authz_matrix_hardening.sql" ] && { bad "V034 SQL FAILED to apply on real Postgres"; }
-  fi
-done
-[ "$mig_fail" = "0" ] && ok "MIGRATE all V001..V034 applied cleanly on real Postgres (incl. V034)" \
-  || echo "   (some non-V034 migrations reported issues — see $RIGLOG/migrate.log)" | tee -a "$EV/journal.txt"
-
-# ── Boot the service (Flyway DISABLED — schema already migrated above) ─────────
-say "BOOT: tshepo-authz (Flyway disabled; schema pre-migrated)"
+# ── Boot the service with Flyway ENABLED (real clean-boot proof) ──────────────
+# The duplicate V030 (theatre clinical-safety vs encounter-form) that previously forced a
+# psql-apply + Flyway-disabled workaround is now FIXED (clinical-safety renumbered
+# V030 -> V035), so Flyway auto-migrates every version on a FRESH DB. A healthy boot IS the
+# proof the collision is gone and V034/V035 SQL is valid on real Postgres.
+say "BOOT: tshepo-authz (Flyway ENABLED — clean auto-migrate on a fresh DB)"
 POSTGRES_HOST=localhost POSTGRES_PORT=$PGPORT POSTGRES_USER=impilo POSTGRES_PASSWORD=impilo \
   REDIS_HOST=localhost REDIS_PORT=$RPORT \
   KAFKA_BOOTSTRAP_SERVERS=localhost:59092 \
-  SERVER_PORT=$PORT SPRING_FLYWAY_ENABLED=false \
+  SERVER_PORT=$PORT \
   java -jar "$JAR" > "$RIGLOG/tshepo.log" 2>&1 &
 SVC_PID=$!
 
@@ -100,8 +81,8 @@ for i in $(seq 1 45); do
   sleep 2
 done
 
-# J-TA-1 boot (against the pre-migrated schema)
-if [ "$booted" = "1" ]; then ok "J-TA-1 tshepo-authz booted healthy against the V034-migrated schema"
+# J-TA-1 boot (Flyway auto-migrated a fresh DB — proves no duplicate-version collision)
+if [ "$booted" = "1" ]; then ok "J-TA-1 tshepo-authz booted healthy — Flyway applied all migrations clean (no dup V030)"
 else bad "J-TA-1 tshepo-authz did not become healthy"; tail -40 "$RIGLOG/tshepo.log" | tee -a "$EV/journal.txt"; echo "PASS=$PASS FAIL=$FAIL"; exit 1; fi
 
 # J-TA-2 the six V034 ALLOW families present

@@ -54,11 +54,18 @@ say "RIG: infra (postgres + redis) + inpatient-service (real FSM + Flyway V001..
 docker rm -f tp-rig-pg tp-rig-redis >/dev/null 2>&1
 docker run -d --name tp-rig-pg -e POSTGRES_USER=impilo -e POSTGRES_PASSWORD=impilo -p $PGPORT:5432 postgres:16-alpine >/dev/null
 docker run -d --name tp-rig-redis -p $RPORT:6379 redis:7-alpine >/dev/null
-sleep 8
-docker exec tp-rig-pg psql -U impilo -d postgres -c "CREATE DATABASE inpatient" >/dev/null 2>&1
+# Wait for Postgres to accept connections BEFORE creating the DB (a fixed sleep raced the boot —
+# createdb silently failed, then Flyway hit "database inpatient does not exist").
+pg_ready=0
+for i in $(seq 1 30); do docker exec tp-rig-pg pg_isready -U impilo >/dev/null 2>&1 && { pg_ready=1; break; }; sleep 1; done
+[ "$pg_ready" = "1" ] || { echo "postgres did not become ready"; exit 2; }
+docker exec tp-rig-pg psql -U impilo -d postgres -c "CREATE DATABASE inpatient" >/dev/null 2>&1 || \
+  docker exec tp-rig-pg psql -U impilo -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='inpatient'" | grep -q 1 \
+  || { echo "failed to create database 'inpatient'"; exit 2; }
 
 say "BOOT: inpatient-service (Flyway migrates V001..V065)"
 POSTGRES_HOST=localhost POSTGRES_PORT=$PGPORT POSTGRES_USER=impilo POSTGRES_PASSWORD=impilo \
+  SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:$PGPORT/inpatient \
   REDIS_HOST=localhost REDIS_PORT=$RPORT SPRING_DATA_REDIS_HOST=localhost SPRING_DATA_REDIS_PORT=$RPORT \
   KAFKA_BOOTSTRAP_SERVERS=localhost:59092 KAFKA_BOOTSTRAP=localhost:59092 \
   IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true SPRING_KAFKA_LISTENER_AUTO_STARTUP=false \
