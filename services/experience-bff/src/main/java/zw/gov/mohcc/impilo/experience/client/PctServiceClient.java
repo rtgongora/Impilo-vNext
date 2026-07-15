@@ -1288,6 +1288,25 @@ public class PctServiceClient {
         return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
     }
 
+    // ── ED trauma-team roster / acknowledgement / escalation (WU2) ───────────────
+    // Pure passthrough to pct-service EdVisitController; trust context is forwarded by
+    // the RestTemplate interceptor. No composition — the sovereign roster is authoritative.
+
+    public JsonNode edTraumaTeam(String traumaId) {
+        String url = baseUrl + "/v1/ed/trauma/" + traumaId + "/team";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode edTraumaTeamAck(String traumaId, String memberId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/trauma/" + traumaId + "/team/" + memberId + "/ack";
+        return extractData(restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class));
+    }
+
+    public JsonNode edTraumaTeamEscalate(String traumaId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/trauma/" + traumaId + "/team/escalate";
+        return extractData(restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class));
+    }
+
     /**
      * Resolve a Cadre Engine decision (shared read-model C9). The Encounter Cockpit renders its adaptive spine
      * strictly from {@code cockpitSpine}; disabled actions are never live buttons. PCT owns the decision and

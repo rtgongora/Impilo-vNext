@@ -290,6 +290,51 @@ public class EdWorkflowController {
         }
     }
 
+    // ── Trauma-team roster / ack / escalate (WU2) — passthrough to pct-service ────────
+    // The sovereign roster (resolved from the VASHANDI on-call pool at activation) is
+    // authoritative; the BFF only forwards the trust context and returns pct's view.
+
+    @GetMapping("/trauma/{traumaId}/team")
+    public ResponseEntity<Map<String, Object>> traumaTeam(@PathVariable UUID traumaId) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(pctClient.edTraumaTeam(traumaId.toString()), "PCT edTraumaTeam")));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("PCT edTraumaTeam", e);
+        }
+    }
+
+    @PostMapping("/trauma/{traumaId}/team/{memberId}/ack")
+    public ResponseEntity<Map<String, Object>> traumaTeamAck(@PathVariable UUID traumaId,
+                                                             @PathVariable UUID memberId,
+                                                             @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(pctClient.edTraumaTeamAck(traumaId.toString(), memberId.toString(),
+                            body != null ? body : Map.of()), "PCT edTraumaTeamAck")));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("PCT edTraumaTeamAck", e);
+        }
+    }
+
+    @PostMapping("/trauma/{traumaId}/team/escalate")
+    public ResponseEntity<Map<String, Object>> traumaTeamEscalate(@PathVariable UUID traumaId,
+                                                                  @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            return ResponseEntity.ok(Map.of("data",
+                    requirePayload(pctClient.edTraumaTeamEscalate(traumaId.toString(),
+                            body != null ? body : Map.of()), "PCT edTraumaTeamEscalate")));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("PCT edTraumaTeamEscalate", e);
+        }
+    }
+
     @GetMapping("/pathways")
     public ResponseEntity<Map<String, Object>> listEdPathways() {
         try {
