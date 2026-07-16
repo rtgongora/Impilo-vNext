@@ -371,18 +371,30 @@ if [[ "${FULL_BOOT_SKIP_IMPORT:-}" == "1" ]]; then
   echo "SKIP: FULL_BOOT_SKIP_IMPORT=1 (k3s images already verified)"
   echo "WARN: deploy may use stale containerd layers if import was not run for tag $IMAGE_TAG"
 elif [[ -f "$DIGESTS_VALUES" ]] && [[ "${IMPILO_DEPLOY_NO_DIGEST_PIN:-}" != "1" ]]; then
-  export FULL_BOOT_DIGEST_PIN_FORCE_IMPORT=1
-  RUNTIME_ONLY_IDS="$(bash scripts/full-boot/list-runtime-service-ids.sh)"
-  RUNTIME_IMPORT_COUNT="$(echo "$RUNTIME_ONLY_IDS" | tr ',' '\n' | grep -c . || echo 0)"
-  echo "--- Import images (digest-pinned: force-sync all $RUNTIME_IMPORT_COUNT runtime images into k3s) ---"
-  if [[ -x /usr/local/sbin/impilo-k3s-import-images ]] && sudo -n true 2>/dev/null; then
-    if ! sudo -n /usr/local/sbin/impilo-k3s-import-images "$IMAGE_TAG" "$REPO_PATH" \
-      --runtime-only --only "$RUNTIME_ONLY_IDS" --force; then
-      echo "ABORT: digest-pinned k3s runtime image force-import failed."
+  # Default: import required spine only, then Helm pulls digest-pinned images from
+  # the local registry (imagePullPolicy=Always). Force-importing all ~97 runtime
+  # images into unused containerd fills the node and trips kubelet image-GC at 85%,
+  # which deletes the imports before Helm can pin them.
+  if [[ "${FULL_BOOT_FORCE_IMPORT_RUNTIME:-}" == "1" ]]; then
+    export FULL_BOOT_DIGEST_PIN_FORCE_IMPORT=1
+    RUNTIME_ONLY_IDS="$(bash scripts/full-boot/list-runtime-service-ids.sh)"
+    RUNTIME_IMPORT_COUNT="$(echo "$RUNTIME_ONLY_IDS" | tr ',' '\n' | grep -c . || echo 0)"
+    echo "--- Import images (digest-pinned: force-sync all $RUNTIME_IMPORT_COUNT runtime images into k3s) ---"
+    if [[ -x /usr/local/sbin/impilo-k3s-import-images ]] && sudo -n true 2>/dev/null; then
+      if ! sudo -n /usr/local/sbin/impilo-k3s-import-images "$IMAGE_TAG" "$REPO_PATH" \
+        --runtime-only --only "$RUNTIME_ONLY_IDS" --force; then
+        echo "ABORT: digest-pinned k3s runtime image force-import failed."
+        exit 1
+      fi
+    elif ! bash scripts/operator/fullboot.sh import-images; then
       exit 1
     fi
-  elif ! bash scripts/operator/fullboot.sh import-images; then
-    exit 1
+  else
+    echo "--- Import images (required spine only; runtime estate pulls via local registry) ---"
+    echo "NOTE: set FULL_BOOT_FORCE_IMPORT_RUNTIME=1 to restore full ~97 force-import."
+    if ! bash scripts/operator/fullboot.sh import-images; then
+      exit 1
+    fi
   fi
   echo "--- Verify image presence in k3s ---"
   if ! bash scripts/operator/fullboot.sh verify-images; then

@@ -4,7 +4,7 @@
 [[ -n "${_IMPILO_K3S_HELPER_COMMON_LOADED:-}" ]] && return 0
 _IMPILO_K3S_HELPER_COMMON_LOADED=1
 
-IMPILO_HELPER_VERSION="7"
+IMPILO_HELPER_VERSION="8"
 IMPILO_DEFAULT_REPO="/opt/impilo/repos/Impilo-vNext"
 IMPILO_HELPER_LOG="/var/log/impilo-k3s-image-helper.log"
 IMPILO_IMPORT_LOCK="/tmp/impilo-k3s-import.lock"

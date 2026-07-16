@@ -195,7 +195,14 @@ fi
 echo "MODE: required+infra missing-only (use --all-local-preview for full tag sweep)"
 for ref in "${REQUIRED[@]}"; do
   [[ -n "$ref" ]] || continue
-  import_ref "$ref" 1 || true
+  # Prefer registry-prefixed local tags so containerd refs match digest-pinned pulls.
+  sid="${ref#impilo/}"
+  sid="${sid%%:*}"
+  if [[ "$ref" == impilo/* ]] && resolved="$(resolve_docker_ref "$sid")"; then
+    import_ref "$resolved" 1 || true
+  else
+    import_ref "$ref" 1 || true
+  fi
 done
 
 while read -r ref; do
