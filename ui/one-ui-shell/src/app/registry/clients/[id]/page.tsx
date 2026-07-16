@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { ClientIntakeStatusBadges } from "@/components/registry/ClientIntakeStatusBadges";
+import { ClientLocationPanel } from "@/components/registry/ClientLocationPanel";
 import { EditDemographicsForm } from "@/components/registry/EditDemographicsForm";
 import { PageShell } from "@/components/PageShell";
 import {
@@ -347,6 +348,10 @@ export default function ClientDetailPage() {
                       onSaved={() => profileQuery.refetch()}
                     />
                   </div>
+                </div>
+
+                <div className="lg:col-span-2">
+                  <ClientLocationPanel healthId={id} />
                 </div>
               </div>
             ) : null}
