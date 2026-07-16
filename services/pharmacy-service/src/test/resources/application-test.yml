@@ -23,6 +23,8 @@ spring:
       host: localhost
       port: 6379
   kafka:
+    listener:
+      auto-startup: false
     bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -39,7 +41,6 @@ spring:
           issuer-uri: http://localhost:8080/realms/impilo
   autoconfigure:
     exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
 

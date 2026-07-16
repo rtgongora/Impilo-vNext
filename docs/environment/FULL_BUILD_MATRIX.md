@@ -1,6 +1,6 @@
 # Full Build Matrix
 
-> 135 buildable targets. Regenerate after classification.
+> 131 buildable targets. Regenerate after classification.
 
 | Service | Plane | Path | Tool | Command | Artifact | Status | Failure | Log |
 |---|---|---|---|---|---|---|---|---|
@@ -59,12 +59,8 @@
 | llm-orchestration-service | integration | services/llm-orchestration-service | maven | cd services/llm-orchestration-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | madi-service | clinical | services/madi-service | maven | cd services/madi-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | msika-apps-service | enterprise | services/msika-apps-service | maven | cd services/msika-apps-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
-| msika-flow-ops | experience | ui/msika-flow-ops | npm | cd ui/msika-flow-ops && npm run build | jar\|dist | not_run | — | — |
-| msika-flow-portal | experience | ui/msika-flow-portal | npm | cd ui/msika-flow-portal && npm run build | jar\|dist | not_run | — | — |
 | msika-flow-service | enterprise | services/msika-flow-service | maven | cd services/msika-flow-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
-| msika-flow-vendor | experience | ui/msika-flow-vendor | npm | cd ui/msika-flow-vendor && npm run build | jar\|dist | not_run | — | — |
 | msika-service | enterprise | services/msika-service | maven | cd services/msika-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
-| msika-web | experience | ui/msika-web | npm | cd ui/msika-web && npm run build | jar\|dist | not_run | — | — |
 | mushe-wallet-service | enterprise | services/mushe-wallet-service | maven | cd services/mushe-wallet-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | mushex-finance-console | experience | ui/mushex-finance-console | npm | cd ui/mushex-finance-console && npm run build | jar\|dist | not_run | — | — |
 | mushex-ops-console | experience | ui/mushex-ops-console | npm | cd ui/mushex-ops-console && npm run build | jar\|dist | not_run | — | — |

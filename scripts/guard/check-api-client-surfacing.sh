@@ -14,6 +14,11 @@ NEW_PAGES=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- 'ui/one-ui-sh
 while IFS= read -r page; do
   [[ -z "$page" || ! -f "$page" ]] && continue
   parity_is_allowlisted "$page" && continue
+  # Pure Next.js redirect shims (legacy URL → canonical route) are not product surfaces.
+  if grep -qE 'from[[:space:]]+["'\'']next/navigation["'\'']' "$page" 2>/dev/null \
+    && grep -qE 'redirect[[:space:]]*\(' "$page" 2>/dev/null; then
+    continue
+  fi
   if ! grep -qE 'use[A-Z]|api-client|/lib/|fetch|useQuery' "$page" 2>/dev/null; then
     guard_fail "new page without API client/hook: $page"
     BLOCKING=1

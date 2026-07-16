@@ -53,6 +53,10 @@ vi.mock("@/hooks/queries/useBookings", () => ({
   }),
 }));
 
+vi.mock("@/components/common/RecognisedProviderChip", () => ({
+  RecognisedProviderChip: () => null,
+}));
+
 describe("BookServiceWizardPage", () => {
   it("renders target type picker like telemedicine routing", async () => {
     const user = userEvent.setup();

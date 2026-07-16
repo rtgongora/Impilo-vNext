@@ -1,19 +1,19 @@
 # Contract Implementation Matrix
 
-> Generated: 2026-07-09T05:04:53.635Z
-> OpenAPI operations: **4803** | AsyncAPI channels: **84**
+> Generated: 2026-07-15T23:39:12.332Z
+> OpenAPI operations: **4800** | AsyncAPI channels: **84**
 
 ## Summary
 
 | Status | Count |
 |--------|------:|
-| implemented | 4856 |
+| implemented | 4850 |
 | partial | 0 |
-| missing | 8 |
+| missing | 11 |
 | unowned-contract | 23 |
-| contract-gap (handler exists — extend OpenAPI) | 24 |
+| contract-gap (handler exists — extend OpenAPI) | 37 |
 | contract-parse-errors | 0 |
-| **violations (partial + missing + orphan + invalid contract)** | **32** |
+| **violations (partial + missing + orphan + invalid contract)** | **48** |
 
 ## Remediation doctrine: complete — never delete
 
@@ -31,6 +31,7 @@ Forbidden: deleting controllers, removing routes, or trimming contracts to make 
 
 ## Sample violations (first 40)
 
+- `missing` experiencebff_get__clients_healthId_identity_summary (experience-bff.openapi.yaml)
 - `missing` hrLeaveTypes (hr-payroll.openapi.yaml)
 - `missing` hrpayroll_post__internal_v1_hr_leave_types (hr-payroll.openapi.yaml)
 - `missing` hrLeaveRequests (hr-payroll.openapi.yaml)
@@ -39,6 +40,8 @@ Forbidden: deleting controllers, removing routes, or trimming contracts to make 
 - `missing` hrpayroll_post__internal_v1_hr_attendance (hr-payroll.openapi.yaml)
 - `missing` hrpayroll_get__internal_v1_hr_leave_balances (hr-payroll.openapi.yaml)
 - `missing` hrpayroll_post__internal_v1_hr_leave_balances (hr-payroll.openapi.yaml)
+- `missing` indawo_get__ (indawo.openapi.yaml)
+- `missing` indawo_post__ (indawo.openapi.yaml)
 - `contract-gap` GET /internal/v1/governance/decision-audit (data-governance-service)
 - `contract-gap` POST /internal/v1/governance/data-subject-requests (data-governance-service)
 - `contract-gap` GET /internal/v1/governance/data-subject-requests (data-governance-service)

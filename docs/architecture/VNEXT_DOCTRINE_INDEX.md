@@ -38,7 +38,6 @@
 | `docs/architecture/experience-plane-production-readiness-final-report.md` | human-review | all planes | advisory |
 | `docs/architecture/experience-plane-route-inventory.md` | partial-auto | all planes | yes |
 | `docs/architecture/gateway-experience-capability-map.md` | partial-auto | all planes | yes |
-| `docs/architecture/gateway-public-lane-security-adr.md` | partial-auto | all planes | yes |
 | `docs/architecture/impilo-mobile-web-visual-style.md` | human-review | all planes | advisory |
 | `docs/architecture/mobile-kiosk-ui-patterns.md` | human-review | all planes | advisory |
 | `docs/architecture/nompilo-journey-companion-architecture.md` | human-review | all planes | advisory |

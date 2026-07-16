@@ -54,8 +54,8 @@ describe("DiscoverVirtualCarePage", () => {
       "/citizen/virtual-care/request?vh=vh-national-telemedicine",
     );
 
-    // Coming soon: badge + section heading, honest copy, and exactly one CTA on the whole page.
-    expect(screen.getAllByText("Coming soon").length).toBeGreaterThanOrEqual(1);
+    // Not-yet-open: badge + section heading, honest copy, and exactly one CTA on the whole page.
+    expect(screen.getAllByText("Not open yet").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole("link", { name: "Request a teleconsult" })).toHaveLength(1);
     expect(
       screen.getByText(/Not yet taking requests — this service opens once its care team is connected./),

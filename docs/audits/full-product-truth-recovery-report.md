@@ -1,7 +1,7 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-07-13T23:03:52.555Z
-> Branch: `claude/bold-moore-f6010a`
+> Generated: 2026-07-15T23:33:15.009Z
+> Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 
 ## Executive summary
 
@@ -10,9 +10,9 @@
 | Total services audited | 97 |
 | Backend services | 97 |
 | Shared libraries | 12 |
-| Frontend surfaces (routes) | 772 |
-| Mobile screens | 204 |
-| BFF route handlers | 2921 |
+| Frontend surfaces (routes) | 823 |
+| Mobile screens | 212 |
+| BFF route handlers | 3046 |
 | OpenAPI contracts | 107 |
 | Services with DB persistence | 97 |
 | **Phase 6 complete (user-facing + documented internal)** | **97** |

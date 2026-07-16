@@ -3,7 +3,7 @@
 /**
  * Virtual care discovery — the governed virtual-hospital directory for citizens, with
  * HONEST availability from the BFF: only virtual hospitals routable over an existing
- * specialty-pool seam are requestable today; the rest are shown as "Coming soon" with
+ * specialty-pool seam are requestable today; the rest are shown as not yet open, with
  * no call-to-action. No static copies — cards come from /internal/v1/virtual-care.
  */
 
@@ -25,7 +25,7 @@ function HospitalCard({ hospital }: { hospital: VirtualHospitalCard }) {
           </span>
         ) : (
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
-            <Clock className="h-3 w-3" aria-hidden /> Coming soon
+            <Clock className="h-3 w-3" aria-hidden /> Not open yet
           </span>
         )}
       </div>
@@ -122,7 +122,7 @@ export default function DiscoverVirtualCarePage() {
 
               {comingSoon.length > 0 && (
                 <section>
-                  <h2 className="mb-3 text-sm font-semibold text-foreground">Coming soon</h2>
+                  <h2 className="mb-3 text-sm font-semibold text-foreground">Not open yet</h2>
                   <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {comingSoon.map((h) => (
                       <HospitalCard key={h.id} hospital={h} />

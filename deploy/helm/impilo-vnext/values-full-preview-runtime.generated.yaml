@@ -307,6 +307,7 @@ fullBootServices:
     env:
       KEYCLOAK_ISSUER: ''
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ''
+      PCT_INTEGRATION_TUSO_BASE_URL: http://tuso-service:8084
   pharmacy-elmis-adapter:
     enabled: true
     port: 8099
@@ -419,6 +420,8 @@ fullBootServices:
     enabled: true
     port: 8084
     database: tuso
+    env:
+      VARAPI_BASE_URL: http://varapi-service:8083
   ubomi-service:
     enabled: true
     port: 8087

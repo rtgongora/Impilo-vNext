@@ -1,8 +1,8 @@
 metadata:
-  generated_at: '2026-07-09T05:04:58.903Z'
+  generated_at: '2026-07-15T23:39:17.245Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
-  total_entries: 152
+  total_entries: 148
 classifications:
   - id: ai-model-registry-service
     canonical_name: ai-model-registry-service
@@ -2820,88 +2820,6 @@ classifications:
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
     run_not_applicable_reason: null
-  - id: msika-flow-ops
-    canonical_name: msika-flow-ops
-    plane: experience
-    domain: ui-workspace
-    component_type: frontend_app
-    full_boot_classification: wave_sequenced_full_boot
-    classification: wave_sequenced_full_boot
-    estate_role: wave_sequenced_full_estate
-    runtime_kind: frontend
-    deploy_order_group: experience_layer
-    build_required: true
-    image_required: false
-    runtime_image_required: false
-    image_strategy: buildpacks
-    image_strategy_reclass: buildpack-candidate
-    image_strategy_status: not_required
-    image_build_command: pack build (optional) or bundled in one-ui-shell
-    image_name: impilo/msika-flow-ops
-    official_image: null
-    official_chart: null
-    dockerfile_path: null
-    shared_template: null
-    jib_module: null
-    buildpack_builder: paketobuildpacks/nodejs
-    container_required: false
-    helm_required: false
-    health_check_required: false
-    contract_check_required: false
-    frontend_surface_expected: false
-    mobile_surface_expected: false
-    doctrine_compliance_required: false
-    source_path: ui/msika-flow-ops
-    build_tool: npm
-    default_http_port: null
-    priority: P2
-    blocker: null
-    reason: UI workspace not independently deployed — not a missing Dockerfile failure
-    classification_confidence: certain
-    deployment_lane: build_validate_only
-    run_applicable: false
-    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
-  - id: msika-flow-portal
-    canonical_name: msika-flow-portal
-    plane: experience
-    domain: ui-workspace
-    component_type: frontend_app
-    full_boot_classification: wave_sequenced_full_boot
-    classification: wave_sequenced_full_boot
-    estate_role: wave_sequenced_full_estate
-    runtime_kind: frontend
-    deploy_order_group: experience_layer
-    build_required: true
-    image_required: false
-    runtime_image_required: false
-    image_strategy: buildpacks
-    image_strategy_reclass: buildpack-candidate
-    image_strategy_status: not_required
-    image_build_command: pack build (optional) or bundled in one-ui-shell
-    image_name: impilo/msika-flow-portal
-    official_image: null
-    official_chart: null
-    dockerfile_path: null
-    shared_template: null
-    jib_module: null
-    buildpack_builder: paketobuildpacks/nodejs
-    container_required: false
-    helm_required: false
-    health_check_required: false
-    contract_check_required: false
-    frontend_surface_expected: false
-    mobile_surface_expected: false
-    doctrine_compliance_required: false
-    source_path: ui/msika-flow-portal
-    build_tool: npm
-    default_http_port: null
-    priority: P2
-    blocker: null
-    reason: UI workspace not independently deployed — not a missing Dockerfile failure
-    classification_confidence: certain
-    deployment_lane: build_validate_only
-    run_applicable: false
-    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: msika-flow-service
     canonical_name: msika-flow-service
     plane: enterprise
@@ -2943,47 +2861,6 @@ classifications:
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
     run_not_applicable_reason: null
-  - id: msika-flow-vendor
-    canonical_name: msika-flow-vendor
-    plane: experience
-    domain: ui-workspace
-    component_type: frontend_app
-    full_boot_classification: wave_sequenced_full_boot
-    classification: wave_sequenced_full_boot
-    estate_role: wave_sequenced_full_estate
-    runtime_kind: frontend
-    deploy_order_group: experience_layer
-    build_required: true
-    image_required: false
-    runtime_image_required: false
-    image_strategy: buildpacks
-    image_strategy_reclass: buildpack-candidate
-    image_strategy_status: not_required
-    image_build_command: pack build (optional) or bundled in one-ui-shell
-    image_name: impilo/msika-flow-vendor
-    official_image: null
-    official_chart: null
-    dockerfile_path: null
-    shared_template: null
-    jib_module: null
-    buildpack_builder: paketobuildpacks/nodejs
-    container_required: false
-    helm_required: false
-    health_check_required: false
-    contract_check_required: false
-    frontend_surface_expected: false
-    mobile_surface_expected: false
-    doctrine_compliance_required: false
-    source_path: ui/msika-flow-vendor
-    build_tool: npm
-    default_http_port: null
-    priority: P2
-    blocker: null
-    reason: UI workspace not independently deployed — not a missing Dockerfile failure
-    classification_confidence: certain
-    deployment_lane: build_validate_only
-    run_applicable: false
-    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: msika-service
     canonical_name: msika-service
     plane: enterprise
@@ -3025,47 +2902,6 @@ classifications:
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
     run_not_applicable_reason: null
-  - id: msika-web
-    canonical_name: msika-web
-    plane: experience
-    domain: ui-workspace
-    component_type: frontend_app
-    full_boot_classification: wave_sequenced_full_boot
-    classification: wave_sequenced_full_boot
-    estate_role: wave_sequenced_full_estate
-    runtime_kind: frontend
-    deploy_order_group: experience_layer
-    build_required: true
-    image_required: false
-    runtime_image_required: false
-    image_strategy: buildpacks
-    image_strategy_reclass: buildpack-candidate
-    image_strategy_status: not_required
-    image_build_command: pack build (optional) or bundled in one-ui-shell
-    image_name: impilo/msika-web
-    official_image: null
-    official_chart: null
-    dockerfile_path: null
-    shared_template: null
-    jib_module: null
-    buildpack_builder: paketobuildpacks/nodejs
-    container_required: false
-    helm_required: false
-    health_check_required: false
-    contract_check_required: false
-    frontend_surface_expected: false
-    mobile_surface_expected: false
-    doctrine_compliance_required: false
-    source_path: ui/msika-web
-    build_tool: npm
-    default_http_port: null
-    priority: P2
-    blocker: null
-    reason: UI workspace not independently deployed — not a missing Dockerfile failure
-    classification_confidence: certain
-    deployment_lane: build_validate_only
-    run_applicable: false
-    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: mushe-wallet-service
     canonical_name: mushe-wallet-service
     plane: enterprise
@@ -3470,7 +3306,7 @@ classifications:
     doctrine_compliance_required: false
     source_path: services/nhume-service
     build_tool: maven
-    default_http_port: null
+    default_http_port: 8210
     priority: P2
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template

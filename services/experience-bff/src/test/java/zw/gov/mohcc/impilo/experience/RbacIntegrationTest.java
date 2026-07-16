@@ -148,17 +148,19 @@ class RbacIntegrationTest {
 
     // ── Bed endpoints should work ────────────────────────────────
 
+    // Beds pass RBAC and fail clean when inpatient-service is not in this JVM —
+    // 502 INPATIENT_UNAVAILABLE (not 401/403) proves the request reached the sovereign client.
     @Test
     @Order(7)
-    void bedWardsListShouldWork() throws Exception {
+    void bedWardsListPassesRbacAndFailsCleanWhenInpatientUnavailable() throws Exception {
         mockMvc.perform(get("/internal/v1/beds/wards")
                 .param("facility_id", "00000000-0000-0000-0000-000000000001")
                 .header("X-Tenant-ID", "tenant-moh-zw")
                 .header("X-Pod-ID", "national-spine")
                 .header("X-Request-ID", requestId())
                 .header("X-Correlation-ID", correlationId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error.code").value("INPATIENT_UNAVAILABLE"));
     }
 
     // ── Clinical tools sync status should work ───────────────────

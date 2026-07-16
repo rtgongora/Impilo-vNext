@@ -6,7 +6,7 @@
 
 - **shared-dockerfile-template**: 76
 - **jib**: 20
-- **buildpacks**: 19
+- **buildpacks**: 15
 - **not-required-internal-package**: 12
 - **not-required-generated-client**: 9
 - **official-helm-chart**: 8
@@ -84,12 +84,8 @@
 | minio | integration | infrastructure | required_full_boot | yes | official-helm-chart | valid | — | — | — | — | minio/minio:latest | minio/minio:latest | no local build — pull/chart deploy | pass | not_deployed_in_preview | Deploy in impilo-full-preview when authorized |
 | mosip | trust_governance | external_dependency | external_dependency | no | not-required-generated-client | not_required | — | — | — | — | — | impilo/mosip | — | not_required | — | External or contract-only dependency |
 | msika-apps-service | enterprise | backend_service | wave_sequenced_full_boot | no | shared-dockerfile-template | valid | services/msika-apps-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/msika-apps-service | — | — | impilo/msika-apps-service | docker build -f services/msika-apps-service/Dockerfile OR build-runtime-image-from-jar.sh msika-apps-service | not_required | — | Thin JAR-copy Dockerfile — equivalent to shared template |
-| msika-flow-ops | experience | frontend_app | wave_sequenced_full_boot | no | buildpacks | not_required | — | — | — | paketobuildpacks/nodejs | — | impilo/msika-flow-ops | pack build (optional) or bundled in one-ui-shell | not_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
-| msika-flow-portal | experience | frontend_app | wave_sequenced_full_boot | no | buildpacks | not_required | — | — | — | paketobuildpacks/nodejs | — | impilo/msika-flow-portal | pack build (optional) or bundled in one-ui-shell | not_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
 | msika-flow-service | enterprise | backend_service | wave_sequenced_full_boot | no | shared-dockerfile-template | valid | services/msika-flow-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/msika-flow-service | — | — | impilo/msika-flow-service | docker build -f services/msika-flow-service/Dockerfile OR build-runtime-image-from-jar.sh msika-flow-service | not_required | — | Thin JAR-copy Dockerfile — equivalent to shared template |
-| msika-flow-vendor | experience | frontend_app | wave_sequenced_full_boot | no | buildpacks | not_required | — | — | — | paketobuildpacks/nodejs | — | impilo/msika-flow-vendor | pack build (optional) or bundled in one-ui-shell | not_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
 | msika-service | enterprise | backend_service | wave_sequenced_full_boot | no | shared-dockerfile-template | valid | services/msika-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/msika-service | — | — | impilo/msika-service | docker build -f services/msika-service/Dockerfile OR build-runtime-image-from-jar.sh msika-service | not_required | — | Thin JAR-copy Dockerfile — equivalent to shared template |
-| msika-web | experience | frontend_app | wave_sequenced_full_boot | no | buildpacks | not_required | — | — | — | paketobuildpacks/nodejs | — | impilo/msika-web | pack build (optional) or bundled in one-ui-shell | not_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
 | mushe-wallet-service | enterprise | backend_service | wave_sequenced_full_boot | no | shared-dockerfile-template | valid | services/mushe-wallet-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/mushe-wallet-service | — | — | impilo/mushe-wallet-service | docker build -f services/mushe-wallet-service/Dockerfile OR build-runtime-image-from-jar.sh mushe-wallet-service | not_required | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | mushex-finance-console | experience | frontend_app | deprecated_retired | no | not-required-doctrine-only-component | not_required | — | — | — | — | — | impilo/mushex-finance-console | — | not_required | — | Deprecated or future-only |
 | mushex-ops-console | experience | frontend_app | deprecated_retired | no | not-required-doctrine-only-component | not_required | — | — | — | — | — | impilo/mushex-ops-console | — | not_required | — | Deprecated or future-only |

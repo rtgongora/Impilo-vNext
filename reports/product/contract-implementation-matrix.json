@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-07-09T05:04:53.635Z",
+  "generatedAt": "2026-07-15T23:39:12.332Z",
   "counts": {
-    "totalOpenApiOperations": 4803,
+    "totalOpenApiOperations": 4800,
     "totalAsyncChannels": 84,
-    "implemented": 4856,
+    "implemented": 4850,
     "partial": 0,
-    "missing": 8,
+    "missing": 11,
     "unownedContract": 23,
-    "orphanHandlers": 24,
-    "violations": 32,
+    "orphanHandlers": 37,
+    "violations": 48,
     "contractParseErrors": 0
   },
   "openApiOperations": [
@@ -2709,7 +2709,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoreTransactionController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenCrowdfundingController.java",
       "stubPattern": null
     },
     {
@@ -3977,7 +3977,7 @@
         "costing-engine-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/costing-engine-service/src/main/java/zw/gov/mohcc/impilo/costa/api/finance/CostCenterController.java",
+      "serviceHandler": "services/costing-engine-service/src/main/java/zw/gov/mohcc/impilo/costa/api/InsurancePlanController.java",
       "stubPattern": null
     },
     {
@@ -5163,7 +5163,7 @@
         "daidzai-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DisasterController.java",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/AssistanceController.java",
       "stubPattern": null
     },
     {
@@ -5176,7 +5176,7 @@
         "daidzai-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/DisasterController.java",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/AssistanceController.java",
       "stubPattern": null
     },
     {
@@ -5228,7 +5228,7 @@
         "daidzai-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/AssistanceController.java",
       "stubPattern": null
     },
     {
@@ -5540,7 +5540,7 @@
         "daidzai-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/EmergencyController.java",
+      "serviceHandler": "services/daidzai-service/src/main/java/zw/gov/mohcc/impilo/daidzai/api/controller/AssistanceController.java",
       "stubPattern": null
     },
     {
@@ -7152,7 +7152,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoreTransactionController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenCrowdfundingController.java",
       "stubPattern": null
     },
     {
@@ -10389,7 +10389,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityImportController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityClassificationController.java",
       "stubPattern": null
     },
     {
@@ -10454,7 +10454,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BookingMvumoController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
       "stubPattern": null
     },
     {
@@ -12547,7 +12547,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoreTransactionController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenCrowdfundingController.java",
       "stubPattern": null
     },
     {
@@ -12755,7 +12755,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoverageController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenCrowdfundingController.java",
       "stubPattern": null
     },
     {
@@ -12898,7 +12898,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DataAccessGovernanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DaidzaiController.java",
       "stubPattern": null
     },
     {
@@ -12950,7 +12950,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ClientRegistryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityClassificationController.java",
       "stubPattern": null
     },
     {
@@ -13574,7 +13574,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DataAccessGovernanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DaidzaiController.java",
       "stubPattern": null
     },
     {
@@ -13990,7 +13990,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminUserController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityClassificationController.java",
       "stubPattern": null
     },
     {
@@ -15160,7 +15160,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BookingMvumoController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
       "stubPattern": null
     },
     {
@@ -15212,7 +15212,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenStepUpController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
       "stubPattern": null
     },
     {
@@ -16980,7 +16980,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LiveController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DaidzaiController.java",
       "stubPattern": null
     },
     {
@@ -18007,7 +18007,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MadiController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenCrowdfundingController.java",
       "stubPattern": null
     },
     {
@@ -18293,7 +18293,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenStepUpController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
       "stubPattern": null
     },
     {
@@ -18696,7 +18696,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenStepUpController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
       "stubPattern": null
     },
     {
@@ -20009,7 +20009,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoverageController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenCrowdfundingController.java",
       "stubPattern": null
     },
     {
@@ -20516,7 +20516,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PolicyConsentController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenCrowdfundingController.java",
       "stubPattern": null
     },
     {
@@ -20737,7 +20737,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FacilityModeController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CareEmergencyInpatientController.java",
       "stubPattern": null
     },
     {
@@ -20750,7 +20750,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FacilityModeController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CareEmergencyInpatientController.java",
       "stubPattern": null
     },
     {
@@ -21062,7 +21062,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenStepUpController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
       "stubPattern": null
     },
     {
@@ -22219,7 +22219,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DeathPathwayController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityClassificationController.java",
       "stubPattern": null
     },
     {
@@ -22258,7 +22258,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/SettlementController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ReportJobController.java",
       "stubPattern": null
     },
     {
@@ -22908,7 +22908,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileTaskController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VirtualServiceGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -23103,7 +23103,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityImportController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityClassificationController.java",
       "stubPattern": null
     },
     {
@@ -23324,7 +23324,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VarapiBiometricBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicGatewayFacilityBffController.java",
       "stubPattern": null
     },
     {
@@ -23454,7 +23454,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VarapiBiometricBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicGatewayFacilityBffController.java",
       "stubPattern": null
     },
     {
@@ -23609,8 +23609,8 @@
       "modules": [
         "experience-bff"
       ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VitoClientRegistryBffController.java",
+      "implStatus": "missing",
+      "serviceHandler": null,
       "stubPattern": null
     },
     {
@@ -23662,7 +23662,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VitoDedupBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TraumaIdentityController.java",
       "stubPattern": null
     },
     {
@@ -23792,7 +23792,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityImportController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityClassificationController.java",
       "stubPattern": null
     },
     {
@@ -24117,7 +24117,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/WalletController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VendorOperationsController.java",
       "stubPattern": null
     },
     {
@@ -24143,7 +24143,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CommerceFlowController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenCardController.java",
       "stubPattern": null
     },
     {
@@ -24221,7 +24221,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/WellnessController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoverageController.java",
       "stubPattern": null
     },
     {
@@ -24234,7 +24234,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/WellnessController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoverageController.java",
       "stubPattern": null
     },
     {
@@ -24299,7 +24299,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/WellnessController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VirtualServiceGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -24832,7 +24832,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileSupervisorController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EdWorkflowController.java",
       "stubPattern": null
     },
     {
@@ -25105,7 +25105,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenStepUpController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
       "stubPattern": null
     },
     {
@@ -25131,7 +25131,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VarapiBiometricBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicGatewayFacilityBffController.java",
       "stubPattern": null
     },
     {
@@ -25313,7 +25313,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoreTransactionController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenCrowdfundingController.java",
       "stubPattern": null
     },
     {
@@ -25365,7 +25365,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileTaskController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VirtualServiceGovernanceController.java",
       "stubPattern": null
     },
     {
@@ -27788,45 +27788,6 @@
     },
     {
       "contract": "indawo.openapi.yaml",
-      "operationId": "indawoListAddresses",
-      "method": "GET",
-      "path": "/internal/v1/addresses",
-      "summary": "List addresses for tenant",
-      "modules": [
-        "indawo-service"
-      ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/AddressController.java",
-      "stubPattern": null
-    },
-    {
-      "contract": "indawo.openapi.yaml",
-      "operationId": "indawoCreateAddress",
-      "method": "POST",
-      "path": "/internal/v1/addresses",
-      "summary": "Create address",
-      "modules": [
-        "indawo-service"
-      ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/AddressController.java",
-      "stubPattern": null
-    },
-    {
-      "contract": "indawo.openapi.yaml",
-      "operationId": "indawoGetAddress",
-      "method": "GET",
-      "path": "/internal/v1/addresses/{id}",
-      "summary": "Get address by id",
-      "modules": [
-        "indawo-service"
-      ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/AddressController.java",
-      "stubPattern": null
-    },
-    {
-      "contract": "indawo.openapi.yaml",
       "operationId": "indawoSnapshotSites",
       "method": "GET",
       "path": "/internal/v1/snapshots/sites",
@@ -27847,8 +27808,8 @@
       "modules": [
         "indawo-service"
       ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/AddressController.java",
+      "implStatus": "missing",
+      "serviceHandler": null,
       "stubPattern": null
     },
     {
@@ -27860,8 +27821,8 @@
       "modules": [
         "indawo-service"
       ],
-      "implStatus": "implemented",
-      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/AddressController.java",
+      "implStatus": "missing",
+      "serviceHandler": null,
       "stubPattern": null
     },
     {
@@ -27874,7 +27835,7 @@
         "indawo-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/AddressController.java",
+      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/SiteController.java",
       "stubPattern": null
     },
     {
@@ -27900,7 +27861,7 @@
         "indawo-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/AddressController.java",
+      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/SiteController.java",
       "stubPattern": null
     },
     {
@@ -27939,7 +27900,7 @@
         "indawo-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/AddressController.java",
+      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/SiteController.java",
       "stubPattern": null
     },
     {
@@ -27965,7 +27926,7 @@
         "indawo-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/AddressController.java",
+      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/SiteController.java",
       "stubPattern": null
     },
     {
@@ -28030,7 +27991,7 @@
         "indawo-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/AddressController.java",
+      "serviceHandler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/SiteRegulatoryController.java",
       "stubPattern": null
     },
     {
@@ -29213,7 +29174,7 @@
         "inventory-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/inventory-service/src/main/java/zw/gov/mohcc/impilo/inventory/api/controller/DuraBatchController.java",
+      "serviceHandler": "services/inventory-service/src/main/java/zw/gov/mohcc/impilo/inventory/api/controller/ControlledDrugController.java",
       "stubPattern": null
     },
     {
@@ -33958,7 +33919,7 @@
         "madi-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/madi-service/src/main/java/zw/gov/mohcc/impilo/madi/api/controller/MadiTransfusionController.java",
+      "serviceHandler": "services/madi-service/src/main/java/zw/gov/mohcc/impilo/madi/api/controller/MadiBloodOrderController.java",
       "stubPattern": null
     },
     {
@@ -34907,7 +34868,7 @@
         "madi-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/madi-service/src/main/java/zw/gov/mohcc/impilo/madi/api/controller/MadiTransfusionController.java",
+      "serviceHandler": "services/madi-service/src/main/java/zw/gov/mohcc/impilo/madi/api/controller/MadiBloodOrderController.java",
       "stubPattern": null
     },
     {
@@ -34998,7 +34959,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminUserController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityClassificationController.java",
       "stubPattern": null
     },
     {
@@ -35037,7 +34998,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenStepUpController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
       "stubPattern": null
     },
     {
@@ -35141,7 +35102,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminUserController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityClassificationController.java",
       "stubPattern": null
     },
     {
@@ -37832,7 +37793,7 @@
         "mushe-wallet-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/MerchantController.java",
+      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/BillContributionController.java",
       "stubPattern": null
     },
     {
@@ -37936,7 +37897,7 @@
         "mushe-wallet-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/MerchantController.java",
+      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/BillContributionController.java",
       "stubPattern": null
     },
     {
@@ -38001,7 +37962,7 @@
         "mushe-wallet-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/HoldController.java",
+      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/BillContributionController.java",
       "stubPattern": null
     },
     {
@@ -38079,7 +38040,7 @@
         "mushe-wallet-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/MerchantController.java",
+      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/BillContributionController.java",
       "stubPattern": null
     },
     {
@@ -38183,7 +38144,7 @@
         "mushe-wallet-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/MerchantController.java",
+      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/BillContributionController.java",
       "stubPattern": null
     },
     {
@@ -38248,7 +38209,7 @@
         "mushe-wallet-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/HoldController.java",
+      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/BillContributionController.java",
       "stubPattern": null
     },
     {
@@ -38274,7 +38235,7 @@
         "mushe-wallet-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/HoldController.java",
+      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/BillContributionController.java",
       "stubPattern": null
     },
     {
@@ -38287,7 +38248,7 @@
         "mushe-wallet-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/MerchantController.java",
+      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/BillContributionController.java",
       "stubPattern": null
     },
     {
@@ -38352,7 +38313,7 @@
         "mushe-wallet-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/MerchantController.java",
+      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/BillContributionController.java",
       "stubPattern": null
     },
     {
@@ -38534,7 +38495,7 @@
         "mushe-wallet-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/MerchantController.java",
+      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/BillContributionController.java",
       "stubPattern": null
     },
     {
@@ -38547,7 +38508,7 @@
         "mushe-wallet-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/MerchantController.java",
+      "serviceHandler": "services/mushe-wallet-service/src/main/java/zw/gov/mohcc/impilo/wallet/api/controller/BillContributionController.java",
       "stubPattern": null
     },
     {
@@ -41966,7 +41927,7 @@
         "notification-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/notification-service/src/main/java/zw/gov/mohcc/impilo/notification/api/DeliveryReceiptController.java",
+      "serviceHandler": "services/notification-service/src/main/java/zw/gov/mohcc/impilo/notification/api/ChannelStatusController.java",
       "stubPattern": null
     },
     {
@@ -47556,7 +47517,7 @@
         "rito-quality-safety-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoCaseController.java",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/PublicCaseIntakeController.java",
       "stubPattern": null
     },
     {
@@ -47790,7 +47751,7 @@
         "rito-quality-safety-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/RitoAuditController.java",
+      "serviceHandler": "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/PublicCaseIntakeController.java",
       "stubPattern": null
     },
     {
@@ -48839,7 +48800,7 @@
         "simba-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/simba-service/src/main/java/zw/gov/mohcc/impilo/simba/api/controller/WellnessProfileController.java",
+      "serviceHandler": "services/simba-service/src/main/java/zw/gov/mohcc/impilo/simba/api/controller/AssessmentController.java",
       "stubPattern": null
     },
     {
@@ -49489,7 +49450,7 @@
         "simba-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/simba-service/src/main/java/zw/gov/mohcc/impilo/simba/api/controller/PlanController.java",
+      "serviceHandler": "services/simba-service/src/main/java/zw/gov/mohcc/impilo/simba/api/controller/AssessmentController.java",
       "stubPattern": null
     },
     {
@@ -53545,7 +53506,7 @@
         "tuso-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityController.java",
+      "serviceHandler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityCapabilityController.java",
       "stubPattern": null
     },
     {
@@ -53922,7 +53883,7 @@
         "tuso-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityController.java",
+      "serviceHandler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityCapabilityController.java",
       "stubPattern": null
     },
     {
@@ -55274,7 +55235,7 @@
         "varapi-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderApplicationController.java",
+      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderAccessRequestController.java",
       "stubPattern": null
     },
     {
@@ -56236,7 +56197,7 @@
         "varapi-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderApplicationController.java",
+      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderAccessRequestController.java",
       "stubPattern": null
     },
     {
@@ -56262,7 +56223,7 @@
         "varapi-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderApplicationController.java",
+      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/DisciplinaryCaseController.java",
       "stubPattern": null
     },
     {
@@ -56288,7 +56249,7 @@
         "varapi-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderApplicationController.java",
+      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/DisciplinaryCaseController.java",
       "stubPattern": null
     },
     {
@@ -56587,7 +56548,7 @@
         "varapi-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderApplicationController.java",
+      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/DisciplinaryCaseController.java",
       "stubPattern": null
     },
     {
@@ -56990,7 +56951,7 @@
         "varapi-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderApplicationController.java",
+      "serviceHandler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderAccessRequestController.java",
       "stubPattern": null
     },
     {
@@ -63174,7 +63135,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63185,7 +63146,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63196,7 +63157,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63207,7 +63168,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63218,7 +63179,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63229,7 +63190,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63240,7 +63201,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63251,7 +63212,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63262,7 +63223,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63273,7 +63234,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63284,7 +63245,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63295,7 +63256,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63306,7 +63267,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63317,7 +63278,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63328,7 +63289,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63339,7 +63300,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63350,7 +63311,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63361,7 +63322,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63372,7 +63333,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63383,7 +63344,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63394,7 +63355,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63405,7 +63366,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63416,7 +63377,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63427,7 +63388,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "ndila-events.asyncapi.yaml",
@@ -63438,7 +63399,7 @@
         "ndila-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "ndila-service:outbox-or-kafka"
+      "serviceHandler": "ndila-service:kafka-listener"
     },
     {
       "contract": "pct-clinical-encounter.asyncapi.yaml",
@@ -63608,6 +63569,30 @@
       "remediation": "add OpenAPI operation — complete contract; do not delete handler"
     },
     {
+      "module": "ndila-service",
+      "method": "GET",
+      "path": "/api/v1/ndila/tiles/{z}/{x}/{y}.mvt",
+      "handler": "services/ndila-service/src/main/java/zw/gov/mohcc/impilo/ndila/api/NdilaTileRasterController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "ndila-service",
+      "method": "GET",
+      "path": "/api/v1/maps/tiles/{z}/{x}/{y}.mvt",
+      "handler": "services/ndila-service/src/main/java/zw/gov/mohcc/impilo/ndila/api/NdilaTileRasterController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "nhume-service",
+      "method": "POST",
+      "path": "/internal/v1/nhume/deliveries/{id}/links",
+      "handler": "services/nhume-service/src/main/java/zw/gov/mohcc/impilo/nhume/api/NhumeDeliveryController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
       "module": "oros-service",
       "method": "GET",
       "path": "/v1/reconcile/diagnostics/summary",
@@ -63673,6 +63658,14 @@
     },
     {
       "module": "tuso-service",
+      "method": "GET",
+      "path": "/v1/internal/facility-admin-appointments",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityClaimController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
       "method": "POST",
       "path": "/v1/internal/facility-admin-appointments/{appointmentId}/approve",
       "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityClaimController.java",
@@ -63716,6 +63709,78 @@
       "method": "POST",
       "path": "/v1/internal/vashandi/leave/types",
       "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiLeaveController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/theatre-teams",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiTheatreTeamController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/theatre-teams/{teamId}",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiTheatreTeamController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/theatre-teams/{teamId}/members",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiTheatreTeamController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/theatre-teams/{teamId}/confirm",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiTheatreTeamController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "POST",
+      "path": "/v1/internal/vashandi/theatre-teams/{teamId}/stand-down",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiTheatreTeamController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/virtual-pools",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiVirtualPoolController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/virtual-pools/{poolId}/shifts",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiVirtualPoolController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/virtual-pools/{poolId}/on-duty",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiVirtualPoolController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "vashandi-workforce-service",
+      "method": "GET",
+      "path": "/v1/internal/vashandi/virtual-pools/coverage",
+      "handler": "services/vashandi-workforce-service/src/main/java/zw/gov/mohcc/impilo/vashandi/api/VashandiVirtualPoolController.java",
       "implStatus": "contract-gap",
       "remediation": "add OpenAPI operation — complete contract; do not delete handler"
     }

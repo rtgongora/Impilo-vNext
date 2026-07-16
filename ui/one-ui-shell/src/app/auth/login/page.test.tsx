@@ -72,7 +72,7 @@ describe("LoginPage", () => {
     );
     expect(screen.getByRole("link", { name: /Create an account/i })).toHaveAttribute(
       "href",
-      "/auth/register",
+      "/auth/register/contact",
     );
   });
 

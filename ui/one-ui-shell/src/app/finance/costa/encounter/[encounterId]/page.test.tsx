@@ -35,6 +35,10 @@ vi.mock("@/components/common/QueryResultPanel", () => ({
   QueryResultPanel: () => <div data-testid="query-result-panel" />,
 }));
 
+vi.mock("@/components/finance/SurgicalBundleCard", () => ({
+  SurgicalBundleCard: () => <div data-testid="surgical-bundle-card" />,
+}));
+
 vi.mock("next/navigation", () => ({
   useParams: () => ({ encounterId: "enc-001" }),
   useSearchParams: () => ({

@@ -64,12 +64,8 @@
 | `madi-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `services/madi-service` | triage |
 | `minio` | health-os-doctrine, core-transaction (if domain) | boot + surface | external-image | — | see MOBILE_PARITY_MATRIX | — | missing | `docker-compose.yml` | not_deployed_in_preview |
 | `msika-apps-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/msika-apps-service` | triage |
-| `msika-flow-ops` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/msika-flow-ops` | triage |
-| `msika-flow-portal` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/msika-flow-portal` | triage |
 | `msika-flow-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/msika-flow-service` | triage |
-| `msika-flow-vendor` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/msika-flow-vendor` | triage |
 | `msika-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/msika-service` | triage |
-| `msika-web` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/msika-web` | triage |
 | `mushe-wallet-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/mushe-wallet-service` | triage |
 | `mushex-finance-console` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/mushex-finance-console` | triage |
 | `mushex-ops-console` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/mushex-ops-console` | triage |

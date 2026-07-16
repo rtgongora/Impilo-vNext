@@ -14,7 +14,7 @@
 | clinical | Clinical Execution & Shared Health Record | `docs/architecture/planes/03-clinical-execution-shared-health-record.md` | 20 |
 | data | Data, Intelligence & Public Health | `docs/architecture/planes/04-data-intelligence-public-health.md` | 12 |
 | integration | Integration, Interoperability & Edge | `docs/architecture/planes/05-integration-interoperability-edge.md` | 46 |
-| experience | Experience, Workflow & Orchestration | `docs/architecture/planes/06-experience-workflow-orchestration.md` | 34 |
+| experience | Experience, Workflow & Orchestration | `docs/architecture/planes/06-experience-workflow-orchestration.md` | 30 |
 | enterprise | Enterprise Resource & Market Operations | `docs/architecture/planes/07-enterprise-resource-market-operations.md` | 17 |
 
 ## Trust, Identity Assurance & Governance
@@ -170,10 +170,6 @@ Evidence: [`docs/architecture/planes/06-experience-workflow-orchestration.md`](d
 | `knowledge-admin` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `learning-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
 | `live-service` | backend_service | wave_sequenced_full_boot | image_strategy_defined | certain |
-| `msika-flow-ops` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
-| `msika-flow-portal` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
-| `msika-flow-vendor` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
-| `msika-web` | frontend_app | wave_sequenced_full_boot | no_runtime_image_required | certain |
 | `mushex-finance-console` | frontend_app | deprecated_retired | no_runtime_image_required | certain |
 | `mushex-ops-console` | frontend_app | deprecated_retired | no_runtime_image_required | certain |
 | `mushex-payer-portal` | frontend_app | deprecated_retired | no_runtime_image_required | certain |

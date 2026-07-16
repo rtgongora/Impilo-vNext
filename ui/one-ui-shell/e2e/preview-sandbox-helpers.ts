@@ -132,10 +132,17 @@ export function uniqueMarker(prefix: string) {
 }
 
 export async function isPreviewLoginScreen(page: import("@playwright/test").Page) {
-  return page
-    .getByText(/Sign in to continue to Impilo/i)
-    .isVisible({ timeout: 5_000 })
-    .catch(() => false);
+  const markers = [
+    page.getByText(/Sign in to continue to Impilo/i),
+    page.getByRole("heading", { name: /^Welcome back$/i }),
+    page.getByRole("textbox", { name: /Email or phone/i }),
+  ];
+  for (const marker of markers) {
+    if (await marker.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /** Wait for a BFF POST to succeed (2xx). Returns null if none observed. */

@@ -303,10 +303,6 @@ ui/developer-console/package.json
 ui/ehr/package.json
 ui/inventory-web/package.json
 ui/knowledge-admin/package.json
-ui/msika-flow-ops/package.json
-ui/msika-flow-portal/package.json
-ui/msika-flow-vendor/package.json
-ui/msika-web/package.json
 ui/mushex-finance-console/package.json
 ui/mushex-ops-console/package.json
 ui/mushex-payer-portal/package.json

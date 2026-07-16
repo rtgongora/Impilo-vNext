@@ -20,6 +20,8 @@ spring:
     enabled: false
   kafka:
     bootstrap-servers: localhost:9092
+    listener:
+      auto-startup: false
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -28,9 +30,6 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: pacs-adapter-service-test
       auto-offset-reset: earliest
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
 
 # Narrow actuator + disable springdoc in tests so only one RequestMappingHandlerMapping is registered
 # (GoldenContractSuite autowires RequestMappingHandlerMapping without a qualifier).

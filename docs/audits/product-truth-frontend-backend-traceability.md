@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-07-13T23:03:52.555Z
-> Web surfaces: **772** | Mobile screens: **204**
+> Generated: 2026-07-15T23:33:15.009Z
+> Web surfaces: **823** | Mobile screens: **212**
 
 ## Web routes (one-ui-shell)
 
@@ -18,6 +18,7 @@
 | /auth/logout | Signing Out | auth | yes | no | yes | yes | yes | — |
 | /auth | Authentication | auth | no | no | yes | no | no | — |
 | /auth/register | Create Account | auth | yes | no | yes | yes | yes | — |
+| /auth/register/contact | Create account with phone or email | auth | yes | no | yes | yes | yes | — |
 | /auth/register/assurance | Identity Assurance | auth | yes | no | yes | yes | yes | — |
 | /auth/register/status | Registration Status | auth | no | no | yes | no | yes | — |
 | /auth/resolving | Resolving Session | auth | yes | no | yes | no | yes | — |
@@ -25,6 +26,7 @@
 | /welcome | Welcome to Impilo | auth | no | no | yes | no | yes | — |
 | /welcome/find-care | Find Care | auth | no | no | yes | no | yes | — |
 | /welcome/emergency | Emergency & Public Health | auth | yes | no | yes | no | yes | — |
+| /welcome/emergency/track | Track an Emergency Request | auth | no | no | yes | no | yes | — |
 | /welcome/health-info | Health Information | auth | yes | no | yes | no | yes | — |
 | /welcome/accessibility | Accessibility & Language | auth | no | no | yes | no | yes | — |
 | /privacy | Privacy Policy | auth | no | no | yes | no | no | — |
@@ -37,6 +39,8 @@
 | /core-transaction/[transactionId] | Core Transaction Detail | queue | yes | no | yes | yes | yes | — |
 | /client-journey | Client Journey | home | yes | no | yes | yes | yes | — |
 | /provider-workspace | Provider Workspace | queue | yes | no | yes | yes | yes | — |
+| /provider-workspace/wellness | Wellness Workbench | wellness | yes | no | yes | yes | yes | — |
+| /provider-workspace/wellness/social | Wellness-Social Workbench | wellness | yes | no | yes | yes | yes | — |
 | /platform-journey | Platform Journey | admin | yes | no | yes | yes | yes | — |
 | /clinical-tools | Clinical Tools | queue | yes | no | yes | yes | yes | — |
 | /clinical-tools/rules | Rules Engine | queue | yes | no | yes | yes | yes | — |
@@ -97,6 +101,8 @@
 | /home/appointments/[appointmentId] | Appointment Details | home | yes | no | yes | yes | yes | — |
 | /citizen | Citizen Services | home | yes | no | yes | yes | yes | — |
 | /citizen/my-care | My Care | home | yes | no | yes | no | yes | — |
+| /citizen/virtual-care | My Virtual Care Requests | home | yes | no | yes | yes | yes | — |
+| /citizen/virtual-care/request | Request a Teleconsult | home | yes | no | yes | yes | yes | — |
 | /citizen/health-id/qr | My Health ID QR | home | yes | no | yes | no | yes | — |
 | /citizen/health-id/request | Request Health ID | home | yes | no | yes | yes | yes | — |
 | /citizen/id-recovery | ID Recovery | home | yes | no | yes | no | yes | — |
@@ -278,6 +284,9 @@
 | /finance/settlements | Settlements | finance | yes | no | yes | yes | yes | — |
 | /finance/remittances | Remittances | finance | yes | no | yes | yes | yes | — |
 | /finance/reconciliation | Reconciliation | finance | yes | no | yes | yes | yes | — |
+| /finance/bank-reconciliation | Bank Reconciliation | finance | yes | no | yes | yes | yes | — |
+| /finance/failed-money-events | Failed Money Events | finance | yes | no | yes | yes | yes | — |
+| /finance/insurance-plans | Insurance Plan Terms | finance | yes | no | yes | yes | yes | — |
 | /finance/refunds | Refunds | finance | yes | no | yes | yes | yes | — |
 | /finance/payer-ops | Payer Operations | finance | yes | no | yes | yes | yes | — |
 | /finance/payer-claims | Payer Claims Queue | finance | yes | no | yes | yes | yes | — |
@@ -340,9 +349,9 @@
 | /telemedicine/session/[sessionId] | Teleconsult Session | queue | yes | no | yes | yes | yes | — |
 | /telemedicine/analytics | Telemedicine Analytics | queue | yes | no | yes | yes | yes | — |
 | /work/telemedicine/worklist | Specialist Worklist | queue | yes | no | yes | yes | yes | — |
-| /work/telemedicine/groups | Clinical Groups | queue | yes | no | yes | no | yes | — |
-| /work/telemedicine/virtual-hospitals | Virtual Hospitals | queue | yes | no | yes | no | yes | — |
-| /work/telemedicine/virtual-hospitals/[id] | Virtual Hospital | queue | yes | no | yes | no | yes | — |
+| /work/telemedicine/groups | Clinical Groups | queue | yes | no | yes | yes | yes | — |
+| /work/telemedicine/virtual-hospitals | Virtual Hospitals | queue | yes | no | yes | yes | yes | — |
+| /work/telemedicine/virtual-hospitals/[id] | Virtual Hospital | queue | yes | no | yes | yes | yes | — |
 | /provider/activate | Activate Provider Role | auth | yes | no | yes | no | yes | — |
 | /provider/status | Provider Status | auth | yes | no | yes | no | yes | — |
 | /citizen/provider-claim | Claim Provider Profile | home | yes | no | yes | yes | yes | — |
@@ -357,14 +366,35 @@
 | /wellness/connect | Health Connect ingest | wellness | yes | no | yes | no | yes | — |
 | /wellness/diet | Diet & Nutrition | wellness | yes | no | yes | yes | yes | — |
 | /wellness/sleep | Sleep & Recovery | wellness | yes | no | yes | yes | yes | — |
-| /wellness/clubs | Clubs & Communities | wellness | yes | no | yes | yes | yes | — |
-| /wellness/challenges | Challenges | wellness | yes | no | yes | yes | yes | — |
+| /wellness/clubs | Clubs & Communities | wellness | no | no | yes | no | no | — |
+| /wellness/challenges | Challenges | wellness | no | no | yes | no | no | — |
 | /wellness/routes | Routes & Places | wellness | yes | no | yes | yes | yes | — |
 | /wellness/coaching | Coaching & Habits | wellness | yes | no | yes | yes | yes | — |
 | /wellness/plans | Plans & Journeys | wellness | yes | no | yes | yes | yes | — |
 | /wellness/care | Connect to Care | wellness | yes | no | yes | yes | yes | — |
 | /wellness/commodities | Programme commodities (Dura) | wellness | yes | no | yes | yes | yes | — |
 | /wellness/community | Wellness Community | wellness | yes | no | yes | yes | yes | — |
+| /wellness/assessment | Wellness Assessment | wellness | yes | no | yes | yes | yes | — |
+| /wellness/timeline | Wellness Timeline | wellness | yes | no | yes | yes | yes | — |
+| /wellness/reminders | Preventive Reminders | wellness | yes | no | yes | yes | yes | — |
+| /wellness/follow-ups | My Follow-ups | wellness | yes | no | yes | yes | yes | — |
+| /wellness/insights | Wellness Insights | wellness | yes | no | yes | yes | yes | — |
+| /wellness/settings/consent | Wellness Consent | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/feed | Wellness Community Feed | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/reels | Wellness Reels | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/posts/[id] | Post | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/saved | Saved | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/my-activity | My Activity | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/groups | Wellness Groups | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/groups/new | New Group | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/groups/[id] | Group | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/communities | Wellness Communities | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/communities/[id] | Community | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/challenges | Wellness Challenges | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/challenges/[id] | Challenge | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/notifications | Social Notifications | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/moderation | Social Moderation | wellness | yes | no | yes | yes | yes | — |
+| /wellness/social/programme-dashboard | Programme Engagement | wellness | yes | no | yes | yes | yes | — |
 | /social | Social Timeline | wellness | yes | no | yes | yes | yes | — |
 | /social/drafts | Draft Posts | wellness | yes | no | yes | yes | yes | — |
 | /social/saved | Saved Posts | wellness | yes | no | yes | yes | yes | — |
@@ -388,6 +418,7 @@
 | /discover/providers | Find a Provider | discovery | yes | no | yes | no | yes | — |
 | /discover/facilities | Find a Facility | discovery | yes | no | yes | yes | yes | — |
 | /discover/services | Browse Services | discovery | yes | no | yes | no | yes | — |
+| /discover/virtual-care | Virtual Care | discovery | yes | no | yes | yes | yes | — |
 | /lab | Laboratory | lab | yes | no | yes | yes | yes | — |
 | /lab/worklist | Lab Worklist | lab | yes | no | yes | yes | yes | — |
 | /imaging/worklist | Imaging Worklist | lab | yes | no | yes | yes | yes | — |
@@ -476,37 +507,6 @@
 | /learning/certificates | Certificates | professional | yes | no | yes | no | yes | — |
 | /learning/certificates/[certificateId] | Certificate Detail | professional | yes | no | yes | no | yes | — |
 | /learning/cpd | CPD Evidence | professional | yes | no | yes | yes | yes | — |
-| /learning/reports | Learning Reports | professional | yes | no | yes | no | yes | — |
-| /learning/reports/cohorts | Cohort Report | professional | yes | no | yes | no | yes | — |
-| /learning/reports/courses | Course Report | professional | yes | no | yes | no | yes | — |
-| /learning/reports/overdue | Overdue Learning | professional | yes | no | yes | no | yes | — |
-| /learning/reports/assessments | Assessment Report | professional | yes | no | yes | no | yes | — |
-| /learning/studio | Fundo Studio | professional | yes | no | yes | no | yes | — |
-| /learning/studio/courses | Studio Courses | professional | no | no | yes | no | yes | — |
-| /learning/studio/courses/new | Studio New Course | professional | yes | no | yes | yes | yes | — |
-| /learning/studio/courses/[courseId] | Studio Course Detail | professional | yes | no | yes | no | yes | — |
-| /learning/studio/courses/[courseId]/builder | Studio Course Builder | professional | yes | no | yes | yes | yes | — |
-| /learning/studio/library | Studio Library | professional | yes | no | yes | yes | yes | — |
-| /learning/studio/media | Studio Media | professional | yes | no | yes | yes | yes | — |
-| /learning/studio/media/recordings | Media Recordings | professional | yes | no | yes | no | yes | — |
-| /learning/studio/media/scripts | Media Scripts | professional | yes | no | yes | yes | yes | — |
-| /learning/studio/media/voiceovers | Media Voiceovers | professional | yes | no | yes | no | yes | — |
-| /learning/studio/media/[mediaId] | Media Asset | professional | yes | no | yes | no | yes | — |
-| /learning/studio/assessments | Studio Assessments | professional | yes | no | yes | yes | yes | — |
-| /learning/studio/surveys | Studio Surveys | professional | yes | no | yes | yes | yes | — |
-| /learning/studio/ai | Studio AI | professional | yes | no | yes | yes | yes | — |
-| /learning/studio/publish | Studio Publish | professional | yes | no | yes | yes | yes | — |
-| /learning/studio/analytics | Studio Analytics | professional | yes | no | yes | no | yes | — |
-| /learning/library | Fundo Library | professional | yes | no | yes | no | yes | — |
-| /learning/library/resources | Library Resources | professional | yes | no | yes | no | yes | — |
-| /learning/library/uploads | Library Uploads | professional | yes | no | yes | yes | yes | — |
-| /learning/library/[resourceId] | Library Resource Detail | professional | yes | no | yes | no | yes | — |
-| /learning/notifications | Learning Notifications | professional | yes | no | yes | yes | yes | — |
-| /learning/surveys/[surveyId] | Learning Survey | professional | yes | no | yes | no | yes | — |
-| /learning/surveys/[surveyId]/respond | Respond to Survey | professional | yes | no | yes | yes | yes | — |
-| /learning/feedback/course/[courseId] | Course Feedback | professional | yes | no | yes | yes | yes | — |
-| /learning/admin | Fundo Admin | professional | yes | no | yes | no | yes | — |
-| /learning/admin/courses | Admin Courses | professional | no | no | yes | no | yes | — |
 
 ## Mobile screens
 
@@ -530,6 +530,10 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/discover/ProviderDiscoveryScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/emergency/SosScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/emergency/TrackEmergencyScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/gateway/ContactSignUpScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/gateway/GatewayVerifyScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/gateway/HealthInfoScreen.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/gateway/TrackByReferenceScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/learning/CoursePlayerScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/learning/LearningClassroomScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/live/EventDiscussionSection.tsx | 0 | no |
@@ -584,6 +588,7 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/RemindersScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/ResultsSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/SettingsSection.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/personal/SmartCardSection.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/TermsOfUseScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/VerifyCredentialScreen.tsx | 1 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/personal/WalletOverviewSection.tsx | 0 | no |
@@ -601,6 +606,7 @@
 | citizen-app | apps/mobile/citizen-app/src/screens/social/SocialFeedScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/social/SocialHubScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx | 0 | no |
+| citizen-app | apps/mobile/citizen-app/src/screens/social/WellnessSocialFeedScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/support/SupportScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/telehealth/TelehealthListScreen.tsx | 0 | no |
 | citizen-app | apps/mobile/citizen-app/src/screens/telehealth/TelehealthSessionScreen.tsx | 0 | no |
@@ -677,6 +683,7 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/PharmacyDispensingScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/PharmacyHubScreen.tsx | 0 | no |
+| provider-app | apps/mobile/provider-app/src/screens/provider/PrehospitalEpcrScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/PrescriptionPanel.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ProductionReadinessJourneyScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/ProfessionalChannelsHubScreen.tsx | 0 | no |
@@ -705,10 +712,3 @@
 | provider-app | apps/mobile/provider-app/src/screens/provider/VashandiFacilityStaffScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/VashandiRosterScreen.tsx | 0 | no |
 | provider-app | apps/mobile/provider-app/src/screens/provider/VashandiWorkforceHubScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/VitalsMonitorScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/VitalsPanel.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/WardAlertsScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/provider/WorkflowDispatchOpsScreen.tsx | 0 | yes |
-| provider-app | apps/mobile/provider-app/src/screens/rito/MySafetyCasesScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/rito/ReportSafetyScreen.tsx | 0 | no |
-| provider-app | apps/mobile/provider-app/src/screens/supervisor/EscalationsScreen.tsx | 0 | no |

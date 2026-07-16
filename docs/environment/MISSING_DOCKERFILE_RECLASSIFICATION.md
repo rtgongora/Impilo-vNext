@@ -11,10 +11,6 @@ These are primarily **frontend workspaces** without `ui/<name>/Dockerfile`. They
 | developer-console | ui/developer-console | experience | frontend_app | MISSING Dockerfile (legacy) | buildpacks | no | UI workspace not independently deployed — not a missing Dockerfile failure | No Dockerfile unless independent deploy required |
 | inventory-web | ui/inventory-web | experience | frontend_app | MISSING Dockerfile (legacy) | buildpacks | no | UI workspace not independently deployed — not a missing Dockerfile failure | No Dockerfile unless independent deploy required |
 | knowledge-admin | ui/knowledge-admin | experience | frontend_app | MISSING Dockerfile (legacy) | buildpacks | no | UI workspace not independently deployed — not a missing Dockerfile failure | No Dockerfile unless independent deploy required |
-| msika-flow-ops | ui/msika-flow-ops | experience | frontend_app | MISSING Dockerfile (legacy) | buildpacks | no | UI workspace not independently deployed — not a missing Dockerfile failure | No Dockerfile unless independent deploy required |
-| msika-flow-portal | ui/msika-flow-portal | experience | frontend_app | MISSING Dockerfile (legacy) | buildpacks | no | UI workspace not independently deployed — not a missing Dockerfile failure | No Dockerfile unless independent deploy required |
-| msika-flow-vendor | ui/msika-flow-vendor | experience | frontend_app | MISSING Dockerfile (legacy) | buildpacks | no | UI workspace not independently deployed — not a missing Dockerfile failure | No Dockerfile unless independent deploy required |
-| msika-web | ui/msika-web | experience | frontend_app | MISSING Dockerfile (legacy) | buildpacks | no | UI workspace not independently deployed — not a missing Dockerfile failure | No Dockerfile unless independent deploy required |
 | ops-console | ui/ops-console | experience | frontend_app | MISSING Dockerfile (legacy) | buildpacks | no | UI workspace not independently deployed — not a missing Dockerfile failure | No Dockerfile unless independent deploy required |
 | ops-docs | ui/ops-docs | experience | frontend_app | MISSING Dockerfile (legacy) | buildpacks | no | UI workspace not independently deployed — not a missing Dockerfile failure | No Dockerfile unless independent deploy required |
 | oros-web | ui/oros-web | experience | frontend_app | MISSING Dockerfile (legacy) | buildpacks | no | UI workspace not independently deployed — not a missing Dockerfile failure | No Dockerfile unless independent deploy required |
@@ -26,4 +22,4 @@ These are primarily **frontend workspaces** without `ui/<name>/Dockerfile`. They
 | support-console | ui/support-console | experience | frontend_app | MISSING Dockerfile (legacy) | buildpacks | no | UI workspace not independently deployed — not a missing Dockerfile failure | No Dockerfile unless independent deploy required |
 | zibo-web | ui/zibo-web | experience | frontend_app | MISSING Dockerfile (legacy) | buildpacks | no | UI workspace not independently deployed — not a missing Dockerfile failure | No Dockerfile unless independent deploy required |
 
-**Count:** 19 UI/buildpack workspaces reclassified as non-blocking.
+**Count:** 15 UI/buildpack workspaces reclassified as non-blocking.

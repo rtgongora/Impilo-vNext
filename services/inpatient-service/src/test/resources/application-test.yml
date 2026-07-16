@@ -24,6 +24,10 @@ spring:
     enabled: false
   kafka:
     bootstrap-servers: localhost:9092
+    listener:
+      # Provide KafkaAutoConfiguration beans (@EnableKafka + @KafkaListener) without
+      # connecting to a broker during unit/integration tests.
+      auto-startup: false
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -32,9 +36,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: inpatient-service-test
       auto-offset-reset: earliest
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
 impilo:
   security:
     disable-oauth-for-tests: true

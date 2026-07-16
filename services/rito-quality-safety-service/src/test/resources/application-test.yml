@@ -20,6 +20,8 @@ spring:
   flyway:
     enabled: false
   kafka:
+    listener:
+      auto-startup: false
     bootstrap-servers: localhost:9092
   security:
     oauth2:
@@ -28,7 +30,6 @@ spring:
           issuer-uri: http://localhost:8080/realms/impilo
   autoconfigure:
     exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
       - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
 
 rito:

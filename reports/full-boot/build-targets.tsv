@@ -50,12 +50,8 @@ live-service		services/live-service	wave_sequenced_full_boot
 llm-orchestration-service		services/llm-orchestration-service	wave_sequenced_full_boot
 madi-service		services/madi-service	wave_sequenced_full_boot
 msika-apps-service		services/msika-apps-service	wave_sequenced_full_boot
-msika-flow-ops		ui/msika-flow-ops	wave_sequenced_full_boot
-msika-flow-portal		ui/msika-flow-portal	wave_sequenced_full_boot
 msika-flow-service		services/msika-flow-service	wave_sequenced_full_boot
-msika-flow-vendor		ui/msika-flow-vendor	wave_sequenced_full_boot
 msika-service		services/msika-service	wave_sequenced_full_boot
-msika-web		ui/msika-web	wave_sequenced_full_boot
 mushe-wallet-service		services/mushe-wallet-service	wave_sequenced_full_boot
 mushex-service		services/mushex-service	wave_sequenced_full_boot
 mvumo-service		services/mvumo-service	wave_sequenced_full_boot

@@ -1,10 +1,10 @@
 {
-  "total_discovered": 152,
+  "total_discovered": 148,
   "by_plane": {
     "data": 12,
     "integration": 46,
     "enterprise": 17,
-    "experience": 34,
+    "experience": 30,
     "clinical": 20,
     "registry_spine": 1,
     "trust": 12,
@@ -12,7 +12,7 @@
     "registry": 8
   },
   "by_classification": {
-    "wave_sequenced_full_boot": 104,
+    "wave_sequenced_full_boot": 100,
     "external_dependency": 9,
     "required_full_boot": 22,
     "internal_package": 12,
@@ -22,7 +22,7 @@
     "shared-dockerfile-template": 76,
     "not-required-generated-client": 9,
     "jib": 20,
-    "buildpacks": 19,
+    "buildpacks": 15,
     "not-required-mobile-artifact": 2,
     "not-required-internal-package": 12,
     "not-required-doctrine-only-component": 5,

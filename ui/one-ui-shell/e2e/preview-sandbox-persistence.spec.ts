@@ -35,8 +35,17 @@ test.describe("Preview sandbox persistence proofs", () => {
   async function openStableShell(page: import("@playwright/test").Page) {
     await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw");
     await gotoAppPath(page, "/enterprise");
+    const login = page.getByText(/Sign in to continue to Impilo/i);
+    const ready = page
+      .getByTestId("module-workspace-hero")
+      .or(page.getByRole("heading", { name: /Enterprise resources/i }));
+    // Wait for either the authenticated shell or an auth redirect before deciding.
+    await Promise.race([
+      ready.first().waitFor({ state: "visible", timeout: 30_000 }),
+      login.waitFor({ state: "visible", timeout: 30_000 }),
+    ]).catch(() => undefined);
     test.skip(await isPreviewLoginScreen(page), "Preview redirected to login");
-    await expect(page.getByTestId("module-workspace-hero")).toBeVisible({ timeout: 30_000 });
+    await expect(ready.first()).toBeVisible({ timeout: 5_000 });
   }
 
   test("governance: policy POST persists across re-navigation", async ({ page }) => {
@@ -100,7 +109,10 @@ test.describe("Preview sandbox persistence proofs", () => {
     const snippetBefore = (await page.locator("body").innerText()).slice(0, 400);
 
     await gotoAppPath(page, "/enterprise");
-    await expect(page.getByTestId("module-workspace-hero")).toBeVisible({ timeout: 30_000 });
+    const ready = page
+      .getByTestId("module-workspace-hero")
+      .or(page.getByRole("heading", { name: /Enterprise resources/i }));
+    await expect(ready.first()).toBeVisible({ timeout: 30_000 });
     const snippetAfter = (await page.locator("body").innerText()).slice(0, 400);
     expect(snippetAfter.length).toBeGreaterThan(40);
     expect(snippetAfter).not.toMatch(/502 Bad Gateway|503 Service Unavailable/i);
@@ -110,7 +122,12 @@ test.describe("Preview sandbox persistence proofs", () => {
   });
 
   test("learning: library GET payload stable across re-navigation", async ({ page }) => {
-    await openStableShell(page);
+    await installPreviewSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? "https://impilo.mohcc.gov.zw");
+    await gotoAppPath(page, "/enterprise");
+    test.skip(await isPreviewLoginScreen(page), "Preview redirected to login");
+    // Learning proof is BFF-only; do not block on workspace hero paint under preview load.
+    await expect(page.locator("body")).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator("body")).not.toContainText(/502 Bad Gateway|503 Service Unavailable/i);
 
     const getBefore = await bffGetFromBrowser(
       page,

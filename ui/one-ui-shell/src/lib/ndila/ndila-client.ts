@@ -28,6 +28,11 @@ export interface NdilaGeocodeResult {
   latitude: number;
   longitude: number;
   address?: string;
+  /** Locality / city — mirrors Ndila GeocodeResultDto.locality */
+  locality?: string;
+  district?: string;
+  province?: string;
+  country?: string;
   confidence?: number;
   provider?: string;
   providerPlaceId?: string;

@@ -159,6 +159,7 @@ vi.mock("@/hooks/queries/useTelemedicine", () => ({
     isLoading: false,
   }),
   useCreateTelemedicineSession: () => ({ mutate, isPending: false }),
+  useAcceptTeleconsultSession: () => ({ mutate, isPending: false }),
 }));
 
 vi.mock("@/hooks/queries/useClinicalNotes", () => ({

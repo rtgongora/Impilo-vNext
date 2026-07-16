@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-09T05:04:58.903Z",
+  "generated_at": "2026-07-15T23:39:13.079Z",
   "targets": [
     {
       "id": "ai-model-registry-service",
@@ -716,34 +716,6 @@
       "classification_confidence": "certain"
     },
     {
-      "id": "msika-flow-ops",
-      "path": "ui/msika-flow-ops",
-      "component_name": "msika-flow-ops",
-      "type": "frontend_app",
-      "plane": "experience",
-      "classification": "wave_sequenced_full_boot",
-      "build_required": true,
-      "image_required": false,
-      "image_strategy": "buildpacks",
-      "image_strategy_status": "not_required",
-      "reason": "UI workspace not independently deployed \u2014 not a missing Dockerfile failure",
-      "classification_confidence": "certain"
-    },
-    {
-      "id": "msika-flow-portal",
-      "path": "ui/msika-flow-portal",
-      "component_name": "msika-flow-portal",
-      "type": "frontend_app",
-      "plane": "experience",
-      "classification": "wave_sequenced_full_boot",
-      "build_required": true,
-      "image_required": false,
-      "image_strategy": "buildpacks",
-      "image_strategy_status": "not_required",
-      "reason": "UI workspace not independently deployed \u2014 not a missing Dockerfile failure",
-      "classification_confidence": "certain"
-    },
-    {
       "id": "msika-flow-service",
       "path": "services/msika-flow-service",
       "component_name": "msika-flow-service",
@@ -758,20 +730,6 @@
       "classification_confidence": "certain"
     },
     {
-      "id": "msika-flow-vendor",
-      "path": "ui/msika-flow-vendor",
-      "component_name": "msika-flow-vendor",
-      "type": "frontend_app",
-      "plane": "experience",
-      "classification": "wave_sequenced_full_boot",
-      "build_required": true,
-      "image_required": false,
-      "image_strategy": "buildpacks",
-      "image_strategy_status": "not_required",
-      "reason": "UI workspace not independently deployed \u2014 not a missing Dockerfile failure",
-      "classification_confidence": "certain"
-    },
-    {
       "id": "msika-service",
       "path": "services/msika-service",
       "component_name": "msika-service",
@@ -783,20 +741,6 @@
       "image_strategy": "shared-dockerfile-template",
       "image_strategy_status": "valid",
       "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
-      "classification_confidence": "certain"
-    },
-    {
-      "id": "msika-web",
-      "path": "ui/msika-web",
-      "component_name": "msika-web",
-      "type": "frontend_app",
-      "plane": "experience",
-      "classification": "wave_sequenced_full_boot",
-      "build_required": true,
-      "image_required": false,
-      "image_strategy": "buildpacks",
-      "image_strategy_status": "not_required",
-      "reason": "UI workspace not independently deployed \u2014 not a missing Dockerfile failure",
       "classification_confidence": "certain"
     },
     {
