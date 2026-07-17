@@ -9,9 +9,31 @@ import { create } from "zustand";
  * In-memory only: conversations are not persisted to storage.
  */
 
+export interface AssistantChatAction {
+  label: string;
+  href: string;
+}
+
+export interface AssistantChatSource {
+  label?: string;
+  title?: string;
+  href?: string;
+}
+
 export interface AssistantChatMessage {
   role: "user" | "assistant";
   text: string;
+  /** Genuine next-step destinations returned with the reply (rendered as real links). */
+  actions?: AssistantChatAction[];
+  /**
+   * True when the backend answered from a degraded/unavailable state. Nompilo must present
+   * the honest degraded message + safe actions and NEVER a fabricated answer.
+   */
+  degraded?: boolean;
+  /** Optional safety/scope disclaimer to show verbatim with the reply. */
+  disclaimer?: string;
+  /** Optional provenance for the reply (guidance/knowledge references). */
+  sources?: AssistantChatSource[];
 }
 
 export interface AssistantUiStore {
