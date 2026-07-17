@@ -67,6 +67,15 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/welcome/health-info", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Health Information", navLabel: "Health Info" },
   { path: "/welcome/accessibility", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Accessibility & Language", navLabel: "Accessibility" },
 
+  // ── Get Involved (public co-design, no login — gateway ADR W4) ──────
+  { path: "/get-involved", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Get Involved", navLabel: "Get Involved" },
+  { path: "/get-involved/idea", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Share an Idea", navLabel: "Share an Idea" },
+  { path: "/get-involved/board", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Ideas Board", navLabel: "Ideas Board" },
+  { path: "/get-involved/track", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Track Your Idea", navLabel: "Track Idea" },
+  { path: "/get-involved/test", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Help Test Impilo", navLabel: "Help Test" },
+  // Public service-status board (indicative; live status backend is a later wave).
+  { path: "/status", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Service Status", navLabel: "Service Status" },
+
   // â”€â”€ Zone: Legal / Consent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/privacy", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Privacy Policy", navLabel: "Privacy Policy" },
   { path: "/terms", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Terms of Use", navLabel: "Terms of Use" },
@@ -903,7 +912,10 @@ export const ROUTES: RouteDefinition[] = [
 // Gateway UI catch-up (Jul 2026): +3 — /auth/register/contact (R1 contact-first OTP account
 // creation), /welcome/emergency/track (public SOS status-by-reference), /work/daidzai/verify-callbacks
 // (dispatcher callback-verification console).
-export const EXPECTED_ROUTE_COUNT = 741;
+// Nompilo Advisory + Get Involved + Feedback (Jul 2026): +6 — public co-design lane
+// /get-involved (+ /idea, /board, /track, /test) and the indicative /status board. All
+// public (guard:none), no login. New total is 747.
+export const EXPECTED_ROUTE_COUNT = 747;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

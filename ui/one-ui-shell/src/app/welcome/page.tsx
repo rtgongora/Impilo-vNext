@@ -67,6 +67,13 @@ const INTENT_PILLARS: Array<{
     access: "open",
   },
   {
+    title: "Get involved",
+    description:
+      "Impilo is growing — with you. Share an idea, tell us your experience, or help test what comes next.",
+    href: "/get-involved",
+    access: "open",
+  },
+  {
     title: "Health cover & payments",
     description: "Check your cover, view bills and receipts, and pay for care.",
     href: "/auth/login?returnTo=%2Fcoverage",
