@@ -13,6 +13,8 @@ import { ShellSearchPalette } from "./ShellSearchPalette";
 import { ShellStartMenu } from "./ShellStartMenu";
 import { ShellTaskbar } from "./ShellTaskbar";
 import { ShellTaskManagerModal } from "./ShellTaskManagerModal";
+import { NompiloGlobalCommandBar } from "@/components/intelligent/NompiloGlobalCommandBar";
+import { ProactiveAssistant } from "@/components/intelligent/ProactiveAssistant";
 
 /**
  * Global OS-like shell: route sync + bottom taskbar + Start + search + task manager overlay.
@@ -93,6 +95,8 @@ export function ShellChrome() {
       {show && startOpen ? <ShellStartMenu /> : null}
       {show && searchOpen ? <ShellSearchPalette /> : null}
       {show ? <ShellTaskManagerModal /> : null}
+      {show ? <NompiloGlobalCommandBar /> : null}
+      {show ? <ProactiveAssistant /> : null}
     </>
   );
 }
