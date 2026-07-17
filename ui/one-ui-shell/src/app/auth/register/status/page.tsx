@@ -10,7 +10,6 @@
  * - Full/Verified: full access confirmation
  */
 
-import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -20,23 +19,18 @@ import {
   MapPin,
   ArrowRight,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { CitizenOnboardingOrchestrationRail } from "@/components/onboarding/CitizenOnboardingOrchestrationRail";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useProvisionalHealthId } from "@/hooks/queries/useIdentity";
 
-/** Generate a deterministic temporary Health ID from the user's account ID. */
-function generateTmpHealthId(userId: string): string {
-  const hash = userId.replace(/[^A-Z0-9]/gi, "").toUpperCase();
-  const seg1 = hash.substring(0, 4).padEnd(4, "0");
-  const seg2 = hash.substring(4, 8).padEnd(4, "0");
-  return `TMP-${seg1}-${seg2}`;
-}
-
-/** Calculate 90-day expiry from now. */
-function getTemporaryExpiry(): string {
-  const date = new Date();
-  date.setDate(date.getDate() + 90);
+/** Format a server-issued ISO expiry for display, or null if absent/invalid. */
+function formatExpiry(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
   return date.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
@@ -50,11 +44,18 @@ export default function IdStatusPage() {
 
   const assurance = user?.assuranceLevel ?? "UNVERIFIED";
 
-  const tmpHealthId = useMemo(
-    () => (user?.id ? generateTmpHealthId(user.id) : "TMP-0000-0000"),
-    [user?.id],
-  );
-  const tmpExpiry = useMemo(() => getTemporaryExpiry(), []);
+  // Real provisional Health ID from VITO (via the BFF). Only requested for the TEMPORARY
+  // tier; we render exactly what the server returns — a real id + server expiry, or an
+  // honest PENDING state. Never a fabricated id.
+  const provisional = useProvisionalHealthId(assurance === "TEMPORARY");
+  const provisionalData = provisional.data?.data;
+  const provisionalId = provisionalData?.provisionalHealthId ?? null;
+  const provisionalExpiry = formatExpiry(provisionalData?.expiresAt);
+  const isPending =
+    provisional.isLoading ||
+    provisional.isError ||
+    provisionalData?.status === "PENDING" ||
+    !provisionalId;
 
   function handleContinue() {
     router.push("/home");
@@ -122,24 +123,50 @@ export default function IdStatusPage() {
             Temporary Health Access
           </h2>
 
-          <div className="mt-4 rounded-xl border border-warning/35 bg-warning-soft p-4 text-left space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Provisional Health ID
-              </span>
-              <span className="text-sm font-mono font-semibold text-warning-foreground">
-                {tmpHealthId}
-              </span>
+          {isPending ? (
+            /* Honest PENDING state — the id is still being issued (or could not be
+               retrieved). We never show a fabricated id or a made-up expiry. */
+            <div className="mt-4 rounded-xl border border-warning/35 bg-warning-soft p-4 text-left">
+              <div className="flex items-center gap-2">
+                {provisional.isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-amber-600" aria-hidden />
+                ) : (
+                  <Clock className="h-4 w-4 text-amber-600" aria-hidden />
+                )}
+                <span className="text-sm font-medium text-warning-foreground">
+                  {provisional.isLoading
+                    ? "Issuing your provisional Health ID…"
+                    : "Your provisional Health ID is being prepared"}
+                </span>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                {provisional.isError
+                  ? "We could not retrieve your provisional Health ID just now. It will appear here once it is ready — you can continue and check again shortly."
+                  : "This usually only takes a moment. You can continue to Impilo and your provisional Health ID will be available from your profile once issued."}
+              </p>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Valid until
-              </span>
-              <span className="text-sm font-medium text-warning-foreground">
-                {tmpExpiry}
-              </span>
+          ) : (
+            <div className="mt-4 rounded-xl border border-warning/35 bg-warning-soft p-4 text-left space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Provisional Health ID
+                </span>
+                <span className="text-sm font-mono font-semibold text-warning-foreground">
+                  {provisionalId}
+                </span>
+              </div>
+              {provisionalExpiry ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Valid until
+                  </span>
+                  <span className="text-sm font-medium text-warning-foreground">
+                    {provisionalExpiry}
+                  </span>
+                </div>
+              ) : null}
             </div>
-          </div>
+          )}
 
           <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
             Visit a facility to complete verification and receive your permanent

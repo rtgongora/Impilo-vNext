@@ -106,6 +106,37 @@ export function useRequestAssuranceUpgrade() {
   });
 }
 
+// ── Provisional Health ID ───────────────────────────────────────────────────
+//
+// The real VITO-issued provisional identity for a TEMPORARY-tier citizen. The BFF either
+// returns a genuine provisional Health ID with a server-computed expiry, or an honest
+// PENDING state (id still being issued). The UI must render exactly what the server says —
+// never fabricate an id or a client-side expiry.
+
+export interface ProvisionalHealthId {
+  /** The VITO-issued provisional Health ID, or null while PENDING. */
+  provisionalHealthId: string | null;
+  /** TEMPORARY once issued; PENDING while the id is still being provisioned. */
+  status: "TEMPORARY" | "PENDING";
+  assuranceLevel: string;
+  /** Server-computed expiry (ISO 8601), or null while PENDING. */
+  expiresAt: string | null;
+}
+
+/**
+ * Request (idempotently) the caller's provisional Health ID. Identity is bound server-side
+ * from trust headers — no id is sent. Enabled only for TEMPORARY-tier citizens.
+ */
+export function useProvisionalHealthId(enabled = true) {
+  return useQuery({
+    queryKey: ["identity", "health-id", "provisional"],
+    queryFn: () =>
+      apiClient.post<ApiResponse<ProvisionalHealthId>>("/internal/v1/identity/health-id/provisional", {}),
+    enabled,
+    retry: 1,
+  });
+}
+
 export function useResolveIdentity() {
   return useMutation({
     mutationFn: (body: { aliasType: string; aliasValue: string }) =>
