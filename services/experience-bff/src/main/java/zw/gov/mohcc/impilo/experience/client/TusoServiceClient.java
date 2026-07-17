@@ -174,6 +174,33 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Service-aware public facility search (anonymous-safe). Adds the {@code service}
+     * capability facet to the disclosure-limited directory search: TUSO returns only
+     * facilities carrying an ACTIVE matching capability. All other params are optional
+     * geo/type filters. Returns the paged disclosure-limited summaries (id, name, type,
+     * level, district, province, lat/lng, operationalStatus).
+     */
+    public JsonNode publicFacilityServiceSearch(String service, String query, String province,
+                                                String district, String facilityType,
+                                                int page, int size) {
+        Map<String, String> params = new LinkedHashMap<>();
+        putIfPresent(params, "service", service);
+        putIfPresent(params, "query", query);
+        putIfPresent(params, "province", province);
+        putIfPresent(params, "district", district);
+        putIfPresent(params, "facilityType", facilityType);
+        params.put("page", String.valueOf(Math.max(0, page)));
+        params.put("size", String.valueOf(size));
+        return publicFacilitySearch(params);
+    }
+
+    private static void putIfPresent(Map<String, String> params, String key, String value) {
+        if (value != null && !value.isBlank()) {
+            params.put(key, value.trim());
+        }
+    }
+
     private static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
 
     /**

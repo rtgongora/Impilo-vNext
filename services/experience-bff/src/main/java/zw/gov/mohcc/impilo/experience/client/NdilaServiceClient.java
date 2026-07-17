@@ -79,6 +79,32 @@ public class NdilaServiceClient {
         return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
     }
 
+    /**
+     * Road distance + ETA from one origin to a list of facility coordinates, via Ndila's
+     * distance-matrix (the geography/routing SoR). Returns the raw
+     * {@code DistanceMatrixResponse} node: {@code success}, {@code distancesMeters[0][j]} and
+     * {@code durationsSeconds[0][j]} align 1:1 with the {@code destinations} order. Used by the
+     * public "find care" orchestrator to rank service-matched facilities by travel distance.
+     *
+     * @param originLat    origin latitude
+     * @param originLng    origin longitude
+     * @param destinations facility coordinates in candidate order (each a
+     *                     {@code {latitude, longitude}} map)
+     */
+    public JsonNode distanceMatrixFromOrigin(java.math.BigDecimal originLat,
+                                             java.math.BigDecimal originLng,
+                                             java.util.List<Map<String, Object>> destinations) {
+        String url = baseUrl + "/api/v1/ndila/distance-matrix";
+        Map<String, Object> origin = new java.util.LinkedHashMap<>();
+        origin.put("latitude", originLat);
+        origin.put("longitude", originLng);
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("origins", java.util.List.of(origin));
+        body.put("destinations", destinations);
+        body.put("mode", "DRIVING");
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
     // ── Catchment resolution (R6/G4) — ndila is the geography SoR ─────────────
 
     /** Which catchments contain a point ({@code {point:{latitude,longitude}}}). */

@@ -75,6 +75,7 @@ Every permitAll route family must have a row here (the guard checks this file).
 | `/v1/public/patient-safety/**` | patient-safety | pre-gateway | public reports lane |
 | `/internal/v1/public/gateway/**` | per-pillar `Public*Controller`s | W1+ | THE gateway lane (GET-only until an anonymous-write wave); sub-paths below |
 | `/internal/v1/public/gateway/facilities/**` | tuso `PublicFacilityController` (search + profile) | W1 | disclosure-limited facility directory |
+| `/internal/v1/public/gateway/find-care/**` | tuso `PublicFacilityController` (service-facet search + profile) + ndila distance-matrix, composed by `FindCareOrchestrationService` | W2 | service-aware access-to-care search; read-only composition; abuse note below |
 | `/internal/v1/public/gateway/guidance/**` | guidance `PublicGuidanceController` (explain-steps + public education: topic index, category filter, article read) | W1 (education article/category reads W2) | Nompilo escalation explainers + citizen-language health-information articles (PD-4: guidance owns citizen education); no personalization |
 | `/internal/v1/public/gateway/practitioners/**` | varapi `PublicPractitionerVerificationController` (verify-by-registration-number) | W2 | exact-match only (enumeration resistance); miss = 200 with uniform NOT_FOUND shape — no existence oracle |
 | `/internal/v1/public/gateway/sos` (POST) | daidzai SOS intake via `PublicSosIntakeService` → `EmergencyController.createRequest` | W2 | **anonymous WRITE** (ADR §5, PD-3); abuse note below |
@@ -126,6 +127,37 @@ Extends the existing golden-journey harness conventions (`reports/journeys/`):
 | `gateway-cover-pay` | W5 | enrol → eligibility → bill → step-up → receipt; public plan-browse has zero member data |
 | `gateway-marketplace-guest` | W6 | anonymous browse → guest cart → sign-in claim → order → track |
 | `gateway-delegated` | W7 | delegated booking + anti-self-grant negative test |
+
+## Find-care public lane (service-aware access-to-care search)
+
+The find-care lane (`/internal/v1/public/gateway/find-care/**`, GET-only, anonymous) upgrades
+the flat facility directory into an access-to-care search without adding any new source of truth.
+It is a **read-only composition** governed by the same discipline as the rest of this ADR:
+
+- **Registry truth, never a guess.** A facility appears for a service only if TUSO (the facility
+  registry, system of record) holds an **ACTIVE** matching capability for it
+  (`FacilityCapabilityRepository.findFacilityIdsByActiveServiceToken` → `FacilityService.searchFacilitiesByService`,
+  exposed via the existing `PublicFacilityController` `search` with an optional `service` facet).
+  The BFF (`FindCareOrchestrationService`) composes; it does not decide what a facility offers.
+- **Deterministic interpretation.** Free text is mapped to a capability token by a seeded, in-code
+  synonym table (`FindCareServiceTaxonomy.interpret`) — no PII, no model, fully auditable. The
+  single `interpret(...)` seam is where a later LLM/semantic path plugs in without touching the
+  orchestrator. An unrecognized phrase degrades to a plain name search (surfaced in `notes`).
+- **Service-aware distance.** Only facilities that offer the service are ranked. When the caller
+  shares a location, travel distance + ETA come from Ndila's distance-matrix (geography/routing
+  SoR); if Ndila is unavailable the lane falls back to a straight-line (haversine) estimate for
+  distance and leaves ETA null — it never fabricates a travel time. No location → no distance,
+  stated in `notes`.
+- **Never presents stale status as live.** Register `operationalStatus` is returned flagged
+  `operationalStatusUnverified=true`; `openNow` is `null` (operating hours are not in the search
+  summary — only the profile endpoint carries them), and per-facility telemedicine availability is
+  `null` (not yet held in the register). These honest gaps are surfaced, not smoothed over.
+- **Abuse note.** Reads are lighter than the SOS write lane: a per-IP fixed window
+  (`60`/`60s`) and a global window (`600`/`60s`) in `FindCareOrchestrationService`, both
+  **fail-open** (a public read must not be lost because Redis is down). Free-text is capped at 200
+  chars and page size at 50; the distance fan-out is capped at 50 candidates per call. Responses
+  are PII-free (facility name/type/level/district/province/coordinates only — no contacts, no
+  internal identifiers, no internal service names).
 
 ## Gate handshake notes (W0)
 
