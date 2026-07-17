@@ -230,7 +230,9 @@ hapiFhir:
 
 experienceBff:
   enabled: true
-  replicaCount: 1
+  # Public front door → 2 replicas for HA + zero-downtime RollingUpdate (node maxPods=250,
+  # ample headroom). Rest of estate stays replicas:1 / Recreate.
+  replicaCount: 2
   secretEnv:
     KEYCLOAK_BACKEND_SECRET:
       name: impilo-app-secrets
@@ -274,7 +276,8 @@ experienceBff:
 
 oneUiShell:
   enabled: true
-  replicaCount: 1
+  # Public front door → 2 replicas for HA + zero-downtime RollingUpdate.
+  replicaCount: 2
   env:
     NEXT_PUBLIC_BFF_URL: ""
     NEXT_PUBLIC_IMPILO_ENV: full-preview

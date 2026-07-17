@@ -5,8 +5,18 @@ metadata:
   name: experience-bff
   namespace: {{ .Release.Namespace }}
 spec:
+  # Public front door: zero-downtime rollout. RollingUpdate maxUnavailable=0 keeps
+  # the old pod serving until the new one is Ready (readinessProbe-gated), maxSurge=1
+  # brings the replacement up first. Overridable, but defaults to RollingUpdate here
+  # (NOT the estate-wide global.deploymentStrategy=Recreate) because this pod is what
+  # citizens hit at impilo.mohcc.gov.zw.
   strategy:
-    type: {{ .Values.global.deploymentStrategy | default "Recreate" }}
+    type: {{ .Values.experienceBff.deploymentStrategy | default "RollingUpdate" }}
+    {{- if eq (.Values.experienceBff.deploymentStrategy | default "RollingUpdate") "RollingUpdate" }}
+    rollingUpdate:
+      maxSurge: {{ .Values.experienceBff.maxSurge | default 1 }}
+      maxUnavailable: {{ .Values.experienceBff.maxUnavailable | default 0 }}
+    {{- end }}
   replicas: {{ .Values.experienceBff.replicaCount }}
   selector:
     matchLabels:

@@ -5,8 +5,17 @@ metadata:
   name: one-ui-shell
   namespace: {{ .Release.Namespace }}
 spec:
+  # Public front door: zero-downtime rollout (see experience-bff.yaml). RollingUpdate
+  # maxUnavailable=0 keeps the old shell serving until the new one is Ready. This is the
+  # page citizens land on at impilo.mohcc.gov.zw, so it does NOT use the estate-wide
+  # global.deploymentStrategy=Recreate.
   strategy:
-    type: {{ .Values.global.deploymentStrategy | default "Recreate" }}
+    type: {{ .Values.oneUiShell.deploymentStrategy | default "RollingUpdate" }}
+    {{- if eq (.Values.oneUiShell.deploymentStrategy | default "RollingUpdate") "RollingUpdate" }}
+    rollingUpdate:
+      maxSurge: {{ .Values.oneUiShell.maxSurge | default 1 }}
+      maxUnavailable: {{ .Values.oneUiShell.maxUnavailable | default 0 }}
+    {{- end }}
   replicas: {{ .Values.oneUiShell.replicaCount }}
   selector:
     matchLabels:
