@@ -1,0 +1,638 @@
+# =============================================================================
+# Participation — Citizen "Get Involved" & Co-Design (OpenAPI 3.0)
+# Sovereign: participation-service (port 8393). Two lanes:
+#   * PUBLIC  /v1/public/participation      — anonymous gateway-public lane. Envoy
+#     strips actor context; only tenant/pod/request headers arrive. Responses are
+#     disclosure-limited (no claim-code hashes, submitter refs, or internal metadata).
+#   * INTERNAL /internal/v1/participation    — authenticated management lane reached
+#     through the experience-BFF with the caller's TSHEPO TrustContext.
+# Routes mirror the live handlers in api/controller/{PublicContribution,Contribution}Controller.
+# The service returns plain JSON objects/arrays (no envelope wrapper).
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Participation Service API
+  version: "1.0.0"
+  x-service: participation-service
+  description: |
+    Citizen co-design: ideas, experience contributions, a moderated public idea board with
+    support/merge, testing-cohort enrolment, and the contribution lifecycle (received through
+    released). Anonymous submissions receive a real reference (IDEA-YYYY-XXXXXX) plus a one-time
+    claim code; only the SHA-256 hash of that code is stored and status is readable only with it.
+    This is the "something could be better" surface — distinct from Rito's "something went wrong".
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8393
+    description: Local development
+  - url: https://{tenant}.impilo.health
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+tags:
+  - name: Public-Intake
+    description: Anonymous citizen contribution intake, public idea board and testing sign-up
+  - name: Contributions
+    description: Authenticated contribution CRUD, lifecycle, moderation, merge and roadmap linkage
+  - name: Cohorts
+    description: Testing-cohort administration and enrolment
+
+paths:
+  # ── Public (anonymous) lane ───────────────────────────────────────────────
+  /v1/public/participation/contributions:
+    post:
+      operationId: publicSubmitContribution
+      tags: [Public-Intake]
+      summary: Submit an anonymous idea or experience contribution
+      description: |
+        Opens a contribution on the public lane (type is restricted to IDEA or EXPERIENCE).
+        Returns a human-readable reference and a one-time claim code — the ONLY key to the
+        submission's status. Landed contributions are PENDING moderation and are not shown on
+        the public board until approved.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicContributionRequest' }
+      responses:
+        '201':
+          description: Contribution accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicIntakeResult' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /v1/public/participation/contributions/{claimCode}:
+    get:
+      operationId: publicContributionStatus
+      tags: [Public-Intake]
+      summary: Read a contribution's status with its one-time claim code
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: claimCode, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Disclosure-limited status view
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicContributionStatus' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/public/participation/board:
+    get:
+      operationId: publicBoard
+      tags: [Public-Intake]
+      summary: List moderator-approved contributions on the public idea board
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Approved board items
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PublicBoardItem' }
+
+  /v1/public/participation/board/{id}/support:
+    post:
+      operationId: publicSupport
+      tags: [Public-Intake]
+      summary: Add an anonymous "support this idea" vote
+      description: A supporter key may support a given contribution at most once.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ContributionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SupportRequest' }
+      responses:
+        '200':
+          description: Updated support tally
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SupportResult' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /v1/public/participation/cohorts:
+    get:
+      operationId: publicCohorts
+      tags: [Public-Intake]
+      summary: List open testing cohorts a citizen can sign up to
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Open cohorts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PublicCohortItem' }
+
+  /v1/public/participation/cohorts/{id}/enroll:
+    post:
+      operationId: publicEnroll
+      tags: [Public-Intake]
+      summary: Sign up to help test a product experience
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CohortId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicEnrollRequest' }
+      responses:
+        '201':
+          description: Enrolment accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EnrollAck' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  # ── Authenticated management lane ─────────────────────────────────────────
+  /internal/v1/participation/contributions:
+    get:
+      operationId: listContributions
+      tags: [Contributions]
+      summary: List contributions (optionally filtered by status or type)
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: status, in: query, schema: { type: string } }
+        - { name: type, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Contributions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Contribution' }
+    post:
+      operationId: createContribution
+      tags: [Contributions]
+      summary: Open an authenticated contribution
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuthenticatedContributionRequest' }
+      responses:
+        '201':
+          description: Contribution created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Contribution' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /internal/v1/participation/contributions/{id}:
+    get:
+      operationId: getContribution
+      tags: [Contributions]
+      summary: Get a single contribution
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ContributionId'
+      responses:
+        '200':
+          description: Contribution
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Contribution' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /internal/v1/participation/contributions/{id}/timeline:
+    get:
+      operationId: contributionTimeline
+      tags: [Contributions]
+      summary: Append-only event history for a contribution
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ContributionId'
+      responses:
+        '200':
+          description: Ordered contribution events
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ContributionEvent' }
+
+  /internal/v1/participation/contributions/{id}/transition:
+    post:
+      operationId: transitionContribution
+      tags: [Contributions]
+      summary: Guarded lifecycle transition (illegal jumps are rejected)
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ContributionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TransitionRequest' }
+      responses:
+        '200':
+          description: Updated contribution
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Contribution' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /internal/v1/participation/contributions/{id}/moderate:
+    post:
+      operationId: moderateContribution
+      tags: [Contributions]
+      summary: Set public-board visibility (PENDING / APPROVED / REJECTED)
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ContributionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ModerateRequest' }
+      responses:
+        '200':
+          description: Updated contribution
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Contribution' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /internal/v1/participation/contributions/{id}/merge:
+    post:
+      operationId: mergeContribution
+      tags: [Contributions]
+      summary: Merge this contribution into a canonical target (marks it MERGED)
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ContributionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MergeRequest' }
+      responses:
+        '200':
+          description: Updated (merged) contribution
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Contribution' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /internal/v1/participation/contributions/{id}/roadmap-link:
+    post:
+      operationId: linkRoadmap
+      tags: [Contributions]
+      summary: Link a contribution to a delivery roadmap item (id reference only)
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ContributionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RoadmapLinkRequest' }
+      responses:
+        '200':
+          description: Updated contribution
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Contribution' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /internal/v1/participation/contributions/{id}/support:
+    post:
+      operationId: authenticatedSupport
+      tags: [Contributions]
+      summary: Add a support vote as the authenticated actor
+      description: The supporter key is taken from the caller's X-Actor-ID.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ContributionId'
+      responses:
+        '200':
+          description: Updated contribution
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Contribution' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /internal/v1/participation/board:
+    get:
+      operationId: moderationBoard
+      tags: [Contributions]
+      summary: Full moderation board view (all contributions, unmasked)
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Contributions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Contribution' }
+
+  /internal/v1/participation/cohorts:
+    get:
+      operationId: listCohorts
+      tags: [Cohorts]
+      summary: List all testing cohorts (active and inactive)
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Cohorts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TestingCohort' }
+
+  /internal/v1/participation/cohorts/{id}/enroll:
+    post:
+      operationId: enrollCohort
+      tags: [Cohorts]
+      summary: Enrol the authenticated actor (or a volunteered contact) into a cohort
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/CohortId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuthenticatedEnrollRequest' }
+      responses:
+        '201':
+          description: Enrolment created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TestingEnrollment' }
+
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    ActorId:
+      name: X-Actor-ID
+      in: header
+      required: false
+      schema: { type: string }
+    ContributionId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    CohortId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ProblemDetail' }
+
+  schemas:
+    ProblemDetail:
+      type: object
+      description: Spring ResponseStatusException / ProblemDetail body
+      properties:
+        status: { type: integer }
+        error: { type: string }
+        message: { type: string }
+        path: { type: string }
+
+    PublicContributionRequest:
+      type: object
+      description: |
+        Anonymous submission. A title OR a description of what could be better is required.
+        `type` is optional and defaults to IDEA; only IDEA and EXPERIENCE are accepted here.
+      properties:
+        type: { type: string, enum: [IDEA, EXPERIENCE], default: IDEA }
+        needArea: { type: string, maxLength: 255 }
+        title: { type: string, maxLength: 512 }
+        problemOrOpportunity: { type: string, maxLength: 8000 }
+        betterExperience: { type: string, maxLength: 8000 }
+        beneficiary: { type: string, maxLength: 255 }
+        willingToHelp: { type: boolean }
+        contact:
+          type: string
+          maxLength: 255
+          description: Optional volunteered contact; stored in metadata only, never as an identity.
+
+    PublicIntakeResult:
+      type: object
+      properties:
+        reference: { type: string, example: "IDEA-2026-4F9A2C" }
+        claimCode:
+          type: string
+          description: One-time 20-char code — the only key to this submission's status. Shown once.
+        status: { type: string, example: "RECEIVED" }
+
+    PublicContributionStatus:
+      type: object
+      description: Disclosure-limited status view returned to the claim-code holder.
+      properties:
+        reference: { type: string }
+        type: { type: string }
+        status: { type: string }
+        moderationState: { type: string, enum: [PENDING, APPROVED, REJECTED] }
+        supportCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    PublicBoardItem:
+      type: object
+      description: A moderator-approved contribution as shown on the public board.
+      properties:
+        id: { type: string, format: uuid }
+        reference: { type: string }
+        type: { type: string }
+        needArea: { type: string }
+        title: { type: string }
+        problemOrOpportunity: { type: string }
+        betterExperience: { type: string }
+        beneficiary: { type: string }
+        status: { type: string }
+        supportCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+
+    SupportRequest:
+      type: object
+      required: [supporterKey]
+      properties:
+        supporterKey:
+          type: string
+          maxLength: 128
+          description: Opaque anonymous supporter key (one support per key per contribution).
+
+    SupportResult:
+      type: object
+      properties:
+        reference: { type: string }
+        supportCount: { type: integer }
+
+    PublicCohortItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        segment: { type: string }
+        description: { type: string }
+
+    PublicEnrollRequest:
+      type: object
+      required: [contact]
+      properties:
+        contact: { type: string, maxLength: 255, description: Contact so we can reach you about testing. }
+        segment: { type: string }
+
+    EnrollAck:
+      type: object
+      properties:
+        status: { type: string, example: "ENROLLED" }
+        message: { type: string }
+
+    AuthenticatedContributionRequest:
+      type: object
+      description: Authenticated submission. A title OR problemOrOpportunity is required.
+      properties:
+        type: { type: string, enum: [IDEA, EXPERIENCE, TESTING_SIGNUP, COP_MEMBERSHIP] }
+        needArea: { type: string }
+        title: { type: string }
+        problemOrOpportunity: { type: string }
+        betterExperience: { type: string }
+        beneficiary: { type: string }
+        willingToHelp: { type: boolean }
+        metadata: { type: object, additionalProperties: true }
+
+    TransitionRequest:
+      type: object
+      required: [toStatus]
+      properties:
+        toStatus:
+          type: string
+          description: Target lifecycle status; validated against the contribution state machine.
+        note: { type: string }
+
+    ModerateRequest:
+      type: object
+      required: [moderationState]
+      properties:
+        moderationState: { type: string, enum: [PENDING, APPROVED, REJECTED] }
+        note: { type: string }
+
+    MergeRequest:
+      type: object
+      required: [targetId]
+      properties:
+        targetId: { type: string, format: uuid, description: Canonical contribution to merge into. }
+        note: { type: string }
+
+    RoadmapLinkRequest:
+      type: object
+      required: [roadmapRef]
+      properties:
+        roadmapRef: { type: string, description: Opaque delivery-roadmap item reference. }
+        note: { type: string }
+
+    AuthenticatedEnrollRequest:
+      type: object
+      properties:
+        contact: { type: string }
+
+    Contribution:
+      type: object
+      description: The citizen contribution aggregate (as serialized by the management lane).
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        reference: { type: string }
+        type: { type: string }
+        needArea: { type: string }
+        title: { type: string }
+        problemOrOpportunity: { type: string }
+        betterExperience: { type: string }
+        beneficiary: { type: string }
+        willingToHelp: { type: boolean }
+        submitterMode: { type: string, enum: [ANONYMOUS, AUTHENTICATED] }
+        submitterRef: { type: string }
+        status: { type: string }
+        mergedIntoId: { type: string, format: uuid }
+        moderationState: { type: string, enum: [PENDING, APPROVED, REJECTED] }
+        supportCount: { type: integer }
+        roadmapRef: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        createdBy: { type: string }
+
+    ContributionEvent:
+      type: object
+      description: One append-only lifecycle/moderation event.
+      properties:
+        id: { type: string, format: uuid }
+        contributionId: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        eventType: { type: string }
+        fromStatus: { type: string }
+        toStatus: { type: string }
+        note: { type: string }
+        actorRef: { type: string }
+        occurredAt: { type: string, format: date-time }
+
+    TestingCohort:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        name: { type: string }
+        segment: { type: string }
+        description: { type: string }
+        active: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    TestingEnrollment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        cohortId: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        contributorRef: { type: string }
+        contact: { type: string }
+        segment: { type: string }
+        createdAt: { type: string, format: date-time }
