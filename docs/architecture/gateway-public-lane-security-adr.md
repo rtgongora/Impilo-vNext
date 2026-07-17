@@ -82,6 +82,7 @@ Every permitAll route family must have a row here (the guard checks this file).
 | `/internal/v1/public/gateway/sos/{reference}` (GET) | daidzai `PublicEmergencyStatusController` via `PublicSosIntakeService` | W2 | disclosure-limited status read by the 202 receipt reference (reference/status/coarse-stage/createdAt/callback-pending only — no callback number, description, location, or subject); miss = 404 |
 | `/internal/v1/public/gateway/feedback` (POST + claim-code GET) | rito `PublicCaseIntakeController` via `PublicFeedbackIntakeService` | W4 | **anonymous WRITE** (`gateway-feedback-claim`); abuse note below |
 | `/internal/v1/public/gateway/advisory/**` | guidance `AdvisoryResolveController` via `PublicGatewayAdvisoryBffController` | W4 | Nompilo service-advisory resolve (GET, PUBLISHED/in-window/audience=public only) + impression/dismiss (POST) — advisories are DATA; impression payload allow-listed to advisoryId + event + opaque anon dismissal key (no PII) |
+| `/internal/v1/public/gateway/get-involved/**` | participation `PublicContributionController` via `PublicGatewayGetInvolvedBffController` | W4 | Citizen "Get Involved" co-design: anonymous idea/experience submit (**anonymous WRITE**, `gateway-get-involved-claim`) with claim-code status GET; moderated public idea board GET; anonymous board support (**anonymous WRITE**, opaque supporter key); open testing-cohort GET + anonymous enrol (**anonymous WRITE**). Abuse note below; disclosure-limited (no claim-code hashes, submitter refs, or metadata) |
 | `/internal/v1/wallet/bill-contributions/{shareToken}` (GET only) | mushe bill-contribution view via `CitizenCardController` | W4 | fundraiser share-link read (claim-token pattern, unguessable token); read-only, donations require sign-in |
 
 **Anonymous-write abuse note — `POST /internal/v1/public/gateway/sos`:** rate-limited
@@ -106,6 +107,22 @@ disclosure-limited (reference/type/status/timestamps) and share a per-IP window 
 throttle brute-force probing. Reporter identity is never captured on this lane
 (`anonymous=true` forced); volunteered contact goes into case metadata only.
 
+**Anonymous-write abuse note — `POST /internal/v1/public/gateway/get-involved/**`:**
+the co-design lane is the "something could be better" surface (distinct from feedback's
+"something went wrong"). Its three anonymous writes — contribution submit, board
+support, cohort enrol — are rate-limited per-IP (5 / 600s) and globally (60 / 60s) in
+Redis, and, like feedback, fail **CLOSED** when the limiter store is down (co-design is
+not life-safety). Submittable types are allow-listed (`IDEA`, `EXPERIENCE`); title,
+free-text, beneficiary/need-area, and contact are length-capped (512/8000/255). A
+submission returns a one-time claim code generated in participation and stored only as a
+SHA-256 hash (`contribution.claim_code_hash`, V001); the reference alone never unlocks
+status. Submitter identity is never captured (`ANONYMOUS` forced); volunteered contact
+goes into contribution metadata only. The public idea board (GET) shows **only**
+moderation-`APPROVED` contributions; support uses an opaque supporter key (no PII) and is
+idempotent per supporter. Status reads
+(`GET /internal/v1/public/gateway/get-involved/contributions/{claimCode}`) are
+disclosure-limited and share a per-IP window to throttle probing.
+
 Legacy Envoy-only prefixes `/v1/public/verify` and `/v1/public/share` are **deprecated
 as public entries** (not anonymous-capable through Envoy today; live traffic reaches
 these capabilities via the shell/BFF). They remain routed for compatibility; do not add
@@ -124,6 +141,7 @@ Extends the existing golden-journey harness conventions (`reports/journeys/`):
 | `gateway-emergency-anon` | W2 | anonymous SOS → incident `unverified` → callback-before-dispatch honoured → 429 at rate threshold |
 | `gateway-book-with-escalation` | W3 | anonymous → R1 → R2 upgrade → booking confirmed with intent continuity |
 | `gateway-feedback-claim` | W4 | anonymous complaint → claim code → status check without sign-in |
+| `gateway-get-involved-claim` | W4 | anonymous idea → claim code → status check; board shows only APPROVED; anonymous support increments once |
 | `gateway-cover-pay` | W5 | enrol → eligibility → bill → step-up → receipt; public plan-browse has zero member data |
 | `gateway-marketplace-guest` | W6 | anonymous browse → guest cart → sign-in claim → order → track |
 | `gateway-delegated` | W7 | delegated booking + anti-self-grant negative test |

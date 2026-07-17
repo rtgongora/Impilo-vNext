@@ -425,6 +425,17 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST,
                             "/internal/v1/public/gateway/advisory/impression",
                             "/internal/v1/public/gateway/advisory/dismiss").permitAll()
+                    // Anonymous WRITE exception (ADR W4, gateway-get-involved-claim): citizen
+                    // "Get Involved" co-design — idea/experience submit with claim-code tracking,
+                    // moderated idea-board support, and testing-cohort enrol. Fail-CLOSED abuse
+                    // controls (per-IP + global rate windows, allow-listed types, body caps)
+                    // enforced in PublicGetInvolvedIntakeService; board/cohort/status GETs are
+                    // covered by the GET wildcard above. This is "something could be better",
+                    // distinct from the feedback lane's "something went wrong".
+                    .requestMatchers(HttpMethod.POST,
+                            "/internal/v1/public/gateway/get-involved/contributions",
+                            "/internal/v1/public/gateway/get-involved/board/*/support",
+                            "/internal/v1/public/gateway/get-involved/cohorts/*/enroll").permitAll()
                     .requestMatchers("/internal/v1/citizen/clients/*/patient-shares/**")
                             .hasAnyRole(CITIZEN_ROLES)
 

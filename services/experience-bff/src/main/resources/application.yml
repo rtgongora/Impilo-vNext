@@ -121,6 +121,7 @@ impilo:
     nhume-base-url: ${NHUME_BASE_URL:${NHUME_SERVICE_BASE_URL:http://localhost:8210}}
     madi-base-url: ${MADI_BASE_URL:${MADI_SERVICE_BASE_URL:http://localhost:8300}}
     rito-base-url: ${RITO_BASE_URL:${RITO_SERVICE_BASE_URL:http://localhost:8391}}
+    participation-base-url: ${PARTICIPATION_BASE_URL:${PARTICIPATION_SERVICE_BASE_URL:http://localhost:8393}}
     daidzai-base-url: ${DAIDZAI_BASE_URL:${DAIDZAI_SERVICE_BASE_URL:http://localhost:8392}}
     live-base-url: ${LIVE_BASE_URL:http://localhost:8380}
     iot-ingestion-base-url: ${IOT_INGESTION_BASE_URL:http://localhost:8330}

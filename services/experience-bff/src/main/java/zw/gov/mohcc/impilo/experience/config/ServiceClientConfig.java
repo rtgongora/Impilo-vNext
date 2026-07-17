@@ -143,7 +143,9 @@ public class ServiceClientConfig {
             /** patient-safety-service — pharmacovigilance (ADR/AEFI) SoR + MCAZ workbench (port 8202). */
             String patientSafetyBaseUrl,
             /** identity-assurance-service — identity assurance level + upgrade workflow (port 8201). */
-            String identityAssuranceBaseUrl
+            String identityAssuranceBaseUrl,
+            /** Participation — citizen Get-Involved & co-design (port 8393). */
+            String participationBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -223,6 +225,7 @@ public class ServiceClientConfig {
             if (daidzaiBaseUrl == null) daidzaiBaseUrl = "http://localhost:8392";
             if (patientSafetyBaseUrl == null) patientSafetyBaseUrl = "http://localhost:8202";
             if (identityAssuranceBaseUrl == null) identityAssuranceBaseUrl = "http://localhost:8201";
+            if (participationBaseUrl == null) participationBaseUrl = "http://localhost:8393";
         }
     }
 
@@ -239,7 +242,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null
+                null, null, null, null, null, null, null
         );
     }
 
@@ -260,7 +263,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null
+                null, null, null, null, null
         );
     }
 

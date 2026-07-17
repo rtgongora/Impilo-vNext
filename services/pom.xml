@@ -107,6 +107,8 @@
         <module>rito-quality-safety-service</module>
         <!-- Daidzai — Emergency, Disaster & Public-Health Response Command -->
         <module>daidzai-service</module>
+        <!-- Participation — Citizen Get-Involved & Co-Design -->
+        <module>participation-service</module>
         <!-- Forms Service — Clinical Content Platform -->
         <module>forms-service</module>
         <!-- Data Pipeline — v1.1-Native Ingestion & Watermarking -->
