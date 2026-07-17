@@ -35,6 +35,33 @@
 }
 
 @layer components {
+  /**
+   * Skip-to-content link (C8 a11y). Visually hidden until it receives keyboard
+   * focus, then pinned top-left above all chrome. WCAG AA: emerald-600 on white
+   * text clears the 4.5:1 contrast bar, and a visible focus ring is provided.
+   */
+  .impilo-skip-link {
+    position: absolute;
+    left: 0.75rem;
+    top: -3rem;
+    z-index: 100;
+    border-radius: 0.5rem;
+    background-color: #047857; /* emerald-700 — AA contrast on white text */
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: top 0.15s ease;
+  }
+
+  .impilo-skip-link:focus,
+  .impilo-skip-link:focus-visible {
+    top: 0.75rem;
+    outline: 2px solid #a7f3d0; /* emerald-200 focus ring */
+    outline-offset: 2px;
+  }
+
   .impilo-surface-card {
     @apply rounded-3xl border bg-card shadow-impilo-card;
     border-color: var(--border-strong);
@@ -329,6 +356,12 @@
     .auth-hero-afro-bg .auth-hero-node-pulse,
     .auth-hero-afro-bg .auth-hero-orb {
       animation: none !important;
+    }
+
+    /* C8 a11y: the skip link should appear instantly (no slide) for users who
+       ask to reduce motion. */
+    .impilo-skip-link {
+      transition: none !important;
     }
   }
 

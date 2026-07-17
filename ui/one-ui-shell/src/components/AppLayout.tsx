@@ -14,6 +14,7 @@ import { NavRail } from "./navigation/NavRail";
 import { ModuleBreadcrumb } from "./navigation/ModuleBreadcrumb";
 import { ActingForBanner } from "./citizen/ActingForBanner";
 import { ShellTopAccountActions } from "./shell/ShellTopAccountActions";
+import { SkipToContent } from "./public/SkipToContent";
 import { useLayoutPrefsStore } from "@/hooks/useLayoutPrefsStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
@@ -28,6 +29,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen bg-background-deep">
+      {/* a11y (C8): jump past the nav rail + chrome to the workspace main landmark. */}
+      <SkipToContent targetId="main-content" />
       <ExperienceSidebar />
       <NavRail />
       <div className="flex min-w-0 flex-1 flex-col">
@@ -110,7 +113,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
         <ActingForBanner />
-        <main data-shell-scroll="main" className="impilo-canvas flex-1 overflow-auto px-3 pb-[var(--shell-taskbar-height,0px)] pt-0 md:px-4">{children}</main>
+        <main id="main-content" data-shell-scroll="main" className="impilo-canvas flex-1 overflow-auto px-3 pb-[var(--shell-taskbar-height,0px)] pt-0 md:px-4">{children}</main>
       </div>
     </div>
   );
