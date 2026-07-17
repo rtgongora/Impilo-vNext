@@ -119,7 +119,10 @@ export default function BookServiceWizardPage() {
 
   // Preserve the citizen's booking intent (not payment/consent state) so a sign-in or
   // session-expiry interruption returns them to what they had chosen.
-  const { hydrated, draft, save, clear } = useFormDraft<BookingDraft>("booking-new");
+  const { hydrated, draft, save, clear } = useFormDraft<BookingDraft>("booking-new", {
+    label: "Continue your booking",
+    href: "/home/bookings/new",
+  });
 
   useEffect(() => {
     if (!hydrated || !draft) return;

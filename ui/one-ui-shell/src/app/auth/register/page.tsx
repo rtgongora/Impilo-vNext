@@ -62,7 +62,10 @@ export default function RegisterPage() {
 
   // Preserve non-secret entries so an interrupted sign-up (or a bounce to sign-in) returns
   // the citizen to what they typed. Passwords are never persisted (stripped by the store).
-  const { hydrated, draft, save, clear } = useFormDraft<RegisterDraft>("auth-register");
+  const { hydrated, draft, save, clear } = useFormDraft<RegisterDraft>("auth-register", {
+    label: "Finish creating your account",
+    href: "/auth/register",
+  });
 
   useEffect(() => {
     if (!hydrated || !draft) return;
