@@ -3,6 +3,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
+import { recordNompiloFailure } from "@/lib/nompilo-failure";
 
 interface Props {
   children: ReactNode;
@@ -23,6 +24,14 @@ export class ShellErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("[ShellErrorBoundary]", error, info.componentStack);
+    // Feed the failure into Nompilo so it can offer context-aware recovery. Privacy-safe: only a
+    // fixed render-error code + the page route — never the error message (which could carry data).
+    if (typeof window !== "undefined") {
+      recordNompiloFailure({
+        route: window.location.pathname,
+        code: "UI_RENDER_ERROR",
+      });
+    }
   }
 
   render() {
@@ -49,6 +58,9 @@ export class ShellErrorBoundary extends Component<Props, State> {
               </button>
               <Link href="/home" className="impilo-btn-primary text-xs">
                 Go home
+              </Link>
+              <Link href="/welcome/report" className="impilo-btn-secondary text-xs">
+                Report a problem
               </Link>
               <Link href="/platform/all-features" className="impilo-btn-secondary text-xs">
                 All features
