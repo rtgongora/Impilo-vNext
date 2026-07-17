@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
 import { PublicFeedbackStatusLookup } from "@/components/public/PublicFeedbackStatusLookup";
+import { DidThisWork } from "@/components/feedback/DidThisWork";
 
 export const metadata = {
   title: "Check a report — Impilo",
@@ -25,6 +26,10 @@ export default function ReportStatusPage() {
         <div className="mt-6 max-w-xl">
           <PublicFeedbackStatusLookup />
         </div>
+      </section>
+
+      <section className="mt-6 max-w-xl">
+        <DidThisWork surfaceLabel="Checking a report" />
       </section>
     </PublicShell>
   );
