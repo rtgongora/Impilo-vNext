@@ -110,7 +110,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
         <ActingForBanner />
-        <main className="impilo-canvas flex-1 overflow-auto px-3 pb-[var(--shell-taskbar-height,0px)] pt-0 md:px-4">{children}</main>
+        <main data-shell-scroll="main" className="impilo-canvas flex-1 overflow-auto px-3 pb-[var(--shell-taskbar-height,0px)] pt-0 md:px-4">{children}</main>
       </div>
     </div>
   );

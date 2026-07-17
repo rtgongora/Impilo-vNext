@@ -9,6 +9,7 @@ import { shouldShowExperienceShell } from "@/lib/shell/shell-visibility";
 import { EmergencyHelpButton } from "@/components/public/EmergencyHelpButton";
 import { ShellEhrTaskEnricher } from "./ShellEhrTaskEnricher";
 import { ShellRouteSync } from "./ShellRouteSync";
+import { ShellScrollRestoration } from "./ShellScrollRestoration";
 import { ShellSearchPalette } from "./ShellSearchPalette";
 import { ShellStartMenu } from "./ShellStartMenu";
 import { ShellTaskbar } from "./ShellTaskbar";
@@ -86,6 +87,7 @@ export function ShellChrome() {
   return (
     <>
       <ShellRouteSync />
+      <ShellScrollRestoration />
       {showEmergencyHelp ? <EmergencyHelpButton raised={show} /> : null}
       {show ? (
         <>

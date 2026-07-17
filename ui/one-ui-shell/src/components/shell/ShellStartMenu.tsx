@@ -11,6 +11,7 @@ import { listVisibleShellApps, listQuickActions } from "@/lib/shell/app-registry
 import type { AppDefinition, ShellAppCategory } from "@/lib/shell/types";
 import { ShellAppIcon } from "@/components/branding/ShellAppIcon";
 import { useHealthOsLauncher, type LauncherApp } from "@/hooks/queries/useHealthOsLauncher";
+import { ResumeWorkSection } from "@/components/shell/ResumeWorkSection";
 
 const CATEGORY_LABEL: Record<ShellAppCategory, string> = {
   clinical: "Clinical & care",
@@ -183,6 +184,9 @@ export function ShellStartMenu() {
               </ul>
             </section>
           ) : null}
+
+          {/* In-progress form drafts the user can resume (distinct from Recent history). */}
+          <ResumeWorkSection />
 
           {recentItems.length > 0 ? (
             <section className="mb-4">
