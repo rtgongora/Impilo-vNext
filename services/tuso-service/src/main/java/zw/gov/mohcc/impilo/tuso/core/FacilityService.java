@@ -377,6 +377,52 @@ public class FacilityService {
     }
 
     /**
+     * Service-aware facility search: like {@link #searchFacilities} but constrained to
+     * facilities that carry an ACTIVE capability matching {@code serviceToken} (by capability
+     * code or display name). This is the registry-truth backing for citizen "find care" —
+     * a facility is only returned if TUSO (the system of record) holds a live matching
+     * capability for it; the platform never guesses that a facility offers a service.
+     *
+     * <p>If {@code serviceToken} is blank this delegates to {@link #searchFacilities}. If no
+     * facility carries the capability an empty page is returned (never a broad fallback).</p>
+     *
+     * @param tenantId     tenant isolation scope
+     * @param query        optional facility-name filter
+     * @param serviceToken capability token (e.g. {@code radiology}, {@code maternity})
+     * @param filters      optional geo/type/status filters
+     * @param pageable     pagination parameters
+     * @return page of facilities offering the service and matching the filters
+     */
+    @Transactional(readOnly = true)
+    public Page<FacilityEntity> searchFacilitiesByService(UUID tenantId, String query,
+                                                          String serviceToken,
+                                                          FacilitySearchFilters filters,
+                                                          Pageable pageable) {
+        if (serviceToken == null || serviceToken.isBlank()) {
+            return searchFacilities(tenantId, query, filters, pageable);
+        }
+
+        String token = serviceToken.trim().toLowerCase();
+        List<Long> facilityIds = capabilityRepository.findFacilityIdsByActiveServiceToken(tenantId, token);
+        if (facilityIds.isEmpty()) {
+            log.debug("No facilities carry an active capability matching service token '{}' for tenant {}",
+                    token, tenantId);
+            return Page.empty(pageable);
+        }
+
+        String type = filters != null ? filters.facilityType() : null;
+        String status = filters != null ? filters.status() : null;
+        String district = filters != null ? filters.district() : null;
+        String province = filters != null ? filters.province() : null;
+        String nameQuery = (query != null && !query.isBlank()) ? query.trim() : null;
+
+        log.debug("Service-aware search for tenant {}: token='{}' matched {} facilities, filters type={}, status={}, district={}, province={}",
+                tenantId, token, facilityIds.size(), type, status, district, province);
+        return facilityRepository.findByIdInAndFilters(
+                tenantId, facilityIds, nameQuery, type, status, district, province, pageable);
+    }
+
+    /**
      * Close a facility. Sets status to CLOSED, records the closure date and reason.
      *
      * @param id     the facility ID

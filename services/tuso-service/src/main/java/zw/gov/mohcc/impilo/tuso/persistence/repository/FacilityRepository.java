@@ -78,6 +78,31 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
             @Param("province") String province,
             Pageable pageable);
 
+    /**
+     * Facilities restricted to a supplied ID set, intersected with the standard
+     * geo/type/status/name filters. Backs service-aware "find care" search: the ID set is
+     * the facilities that carry an ACTIVE matching capability (see
+     * {@link FacilityCapabilityRepository#findFacilityIdsByActiveServiceToken}), so the
+     * result is exactly "facilities that offer this service AND match these filters".
+     * Callers must pass a non-empty {@code ids} (an empty {@code IN ()} is invalid SQL).
+     */
+    @Query("SELECT f FROM FacilityEntity f WHERE (:tenantId IS NULL OR f.tenantId = :tenantId) " +
+           "AND f.id IN :ids " +
+           "AND (:query IS NULL OR LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+           "AND (:type IS NULL OR f.facilityType = :type) " +
+           "AND (:status IS NULL OR f.status = :status) " +
+           "AND (:district IS NULL OR f.district = :district) " +
+           "AND (:province IS NULL OR f.province = :province)")
+    Page<FacilityEntity> findByIdInAndFilters(
+            @Param("tenantId") UUID tenantId,
+            @Param("ids") List<Long> ids,
+            @Param("query") String query,
+            @Param("type") String type,
+            @Param("status") String status,
+            @Param("district") String district,
+            @Param("province") String province,
+            Pageable pageable);
+
     Page<FacilityEntity> findByTenantId(UUID tenantId, Pageable pageable);
 
     List<FacilityEntity> findByTenantId(UUID tenantId);

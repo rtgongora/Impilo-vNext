@@ -61,16 +61,22 @@ public class PublicFacilityController {
             @RequestParam(required = false) String province,
             @RequestParam(required = false) String district,
             @RequestParam(required = false) String level,
+            @RequestParam(required = false) String service,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
 
         TrustContext ctx = TrustContextHolder.require();
-        log.info("Public facility search [query={}, type={}, province={}, district={}] correlationId={}",
-                query, facilityType, province, district, ctx.correlationId());
+        log.info("Public facility search [query={}, type={}, province={}, district={}, service={}] correlationId={}",
+                query, facilityType, province, district, service, ctx.correlationId());
 
         var filters = new FacilityService.FacilitySearchFilters(facilityType, status, district, province);
-        Page<FacilityEntity> entityPage = facilityService.searchFacilities(
-                ctx.tenantId(), query, filters, PageRequest.of(page, size));
+        // Service-aware facet: when a capability token is supplied, only facilities that carry an
+        // ACTIVE matching capability are returned (registry truth). Otherwise, plain directory search.
+        Page<FacilityEntity> entityPage = (service != null && !service.isBlank())
+                ? facilityService.searchFacilitiesByService(
+                        ctx.tenantId(), query, service, filters, PageRequest.of(page, size))
+                : facilityService.searchFacilities(
+                        ctx.tenantId(), query, filters, PageRequest.of(page, size));
         Page<FacilityListResponse.FacilitySummary> resultPage = entityPage.map(this::toFacilitySummary);
 
         PagedResponse<FacilityListResponse.FacilitySummary> response = PagedResponse.of(
