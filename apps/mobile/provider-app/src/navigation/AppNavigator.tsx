@@ -14,12 +14,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomSheet, NompiloLauncher } from "@impilo/mobile-design-system";
 import { AuthGuard } from "./AuthGuard";
 import { ModeRouter } from "./ModeRouter";
+import { useDeepLinkRouting } from "./deepLinks";
 import { GlobalErrorBanner } from "../screens/GlobalErrorBanner";
 import { NetworkStatusBar } from "../screens/NetworkStatusBar";
 import { NompiloAssistantScreen } from "../screens/NompiloAssistantScreen";
 
 export function AppNavigator() {
   const [nompiloOpen, setNompiloOpen] = useState(false);
+
+  // Route inbound universal links / custom-scheme deep links into the app store.
+  useDeepLinkRouting();
 
   return (
     <SafeAreaView style={styles.container}>
