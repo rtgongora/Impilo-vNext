@@ -1,40 +1,35 @@
 import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
-import { PublicFacilitySearch } from "@/components/public/PublicFacilitySearch";
+import { FindCareExperience } from "@/components/public/find-care/FindCareExperience";
 
 export const metadata = {
-  title: "Find care — Impilo",
+  title: "Find health services — Impilo",
   description:
-    "Search the national facility directory, see major public referral hospitals, and learn how to visit a facility. No sign-in needed.",
+    "Say what care you need — maternity, X-ray, HIV medicines, dialysis and more — and find facilities that actually offer it, near you. No sign-in needed.",
 };
 
 /**
- * Public find-care page (gateway pillar: Get care / Find or verify a service).
- * The national facility directory is searchable WITHOUT sign-in via the anonymous
- * gateway lane; booking and saved facilities remain behind sign-in. The referral
- * hospital list stays as an always-available reference. No PII on this page.
+ * Public "Find Health Services" page (gateway pillar: Get care / Find a service).
+ *
+ * A need-first, service-aware access-to-care search over the anonymous gateway
+ * lane: a person asks in plain language, optionally shares a location, and gets
+ * unified result cards ranked by service-match then nearness. No facility or
+ * provider truth is hard-coded on this page — every result is registry-derived
+ * via the BFF. Booking and saved facilities remain behind sign-in. No PII here.
  */
-const REFERRAL_HOSPITALS = [
-  { name: "Parirenyatwa Group of Hospitals", city: "Harare" },
-  { name: "Harare Central Hospital", city: "Harare" },
-  { name: "Chitungwiza Central Hospital", city: "Chitungwiza" },
-  { name: "Mpilo Central Hospital", city: "Bulawayo" },
-  { name: "United Bulawayo Hospitals", city: "Bulawayo" },
-  { name: "Mutare Provincial Hospital", city: "Mutare" },
-  { name: "Gweru Provincial Hospital", city: "Gweru" },
-  { name: "Masvingo Provincial Hospital", city: "Masvingo" },
-];
-
 export default function FindCarePage() {
   return (
     <PublicShell>
       <nav className="text-sm text-slate-500">
-        <Link href="/welcome" className="hover:text-slate-900">Welcome</Link> / Find care
+        <Link href="/welcome" className="hover:text-slate-900">
+          Welcome
+        </Link>{" "}
+        / Find health services
       </nav>
-      <h1 className="mt-2 text-3xl font-bold text-slate-900">Find care near you</h1>
+      <h1 className="mt-2 text-3xl font-bold text-slate-900">Find health services near you</h1>
       <p className="mt-3 max-w-2xl text-slate-600">
-        Search the national facility directory — no sign-in needed. To book an appointment or save
-        a facility, create an account or sign in.
+        Tell us what care you need and we&apos;ll find facilities that actually offer it — no sign-in
+        needed. To book an appointment or save a facility, create an account or sign in.
       </p>
 
       <div className="mt-6 flex flex-wrap gap-3">
@@ -59,24 +54,8 @@ export default function FindCarePage() {
       </div>
 
       <div className="mt-8">
-        <PublicFacilitySearch />
+        <FindCareExperience />
       </div>
-
-      <section className="mt-8">
-        <h2 className="font-semibold text-slate-900">Major public referral hospitals</h2>
-        <ul className="mt-3 grid gap-3 sm:grid-cols-2">
-          {REFERRAL_HOSPITALS.map((h) => (
-            <li key={h.name} className="rounded-xl border border-slate-200 bg-white p-4">
-              <p className="font-medium text-slate-900">{h.name}</p>
-              <p className="text-sm text-slate-500">{h.city}</p>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-xs text-slate-500">
-          This is a reference list of major referral hospitals. Use the search above for the
-          complete national directory.
-        </p>
-      </section>
 
       <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="font-semibold text-slate-900">Visiting a facility</h2>
