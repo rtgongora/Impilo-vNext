@@ -166,6 +166,23 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /**
+     * List governed virtual services (TUSO "virtual hospital" registry) filtered to a lifecycle
+     * status. The find-care lane calls this with {@code ACTIVE} so it never surfaces a virtual-care
+     * option that is not live. Anonymous-safe: supplies service-originated trust headers so the
+     * authed registry endpoint resolves a trust context when the public lane stripped them. Returns
+     * the {@code ApiResponse} data list (each entry a disclosure-limited virtual-service summary).
+     */
+    public JsonNode listVirtualServices(String lifecycleStatus) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/virtual-services");
+        if (lifecycleStatus != null && !lifecycleStatus.isBlank()) {
+            builder.queryParam("lifecycleStatus", lifecycleStatus.trim());
+        }
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                builder.build().toUri(), HttpMethod.GET, anonymousSafeEntity(), JsonNode.class);
+        return extractData(response);
+    }
+
     /** Public facility profile (disclosure-limited view; anonymous-safe). */
     public JsonNode publicFacilityProfile(long id) {
         ResponseEntity<JsonNode> response = restTemplate.exchange(

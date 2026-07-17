@@ -51,6 +51,7 @@ public class FindCareOrchestrationService {
     public static final int MAX_QUERY_CHARS = 200;
     public static final int MAX_PAGE_SIZE = 50;
     public static final int MAX_DISTANCE_CANDIDATES = 50;
+    public static final int MAX_VIRTUAL_CARE_OPTIONS = 10;
 
     private static final String IP_RATE_PREFIX = "gateway:findcare:rl:ip:";
     private static final String GLOBAL_RATE_KEY = "gateway:findcare:rl:global";
@@ -93,6 +94,18 @@ public class FindCareOrchestrationService {
             Double latitude,
             Double longitude) {}
 
+    /**
+     * A real, ACTIVE virtual-care option (TUSO virtual-service registry truth). Surfaced only when
+     * a live virtual service exists; the shell renders "Start virtual care" against these and never
+     * fabricates one. PII-free, disclosure-limited to what a citizen needs to choose.
+     */
+    public record VirtualCareOption(
+            String reference,
+            String name,
+            String level,
+            String province,
+            List<String> serviceLines) {}
+
     /** The orchestrated response: interpretation, ranked results, and honest notes. */
     public record CareSearchResponse(
             String interpretedService,
@@ -101,6 +114,8 @@ public class FindCareOrchestrationService {
             boolean emergencyIntent,
             boolean accessibilityRequested,
             boolean distanceAvailable,
+            boolean virtualCareAvailable,
+            List<VirtualCareOption> virtualCare,
             List<String> notes,
             List<CareResult> results,
             int page,
@@ -220,13 +235,74 @@ public class FindCareOrchestrationService {
                 .thenComparing(r -> r.distanceMeters() == null ? Double.MAX_VALUE : r.distanceMeters())
                 .thenComparing(r -> r.name() == null ? "" : r.name()));
 
-        if (telemed) {
-            notes.add("Telemedicine availability per facility is not yet held in the register; "
-                    + "we could not confirm which of these offer remote consultations.");
+        // (e) Virtual-care truth: ACTIVE virtual services (TUSO "virtual hospital" registry). This is
+        // NOT a per-facility channel — the register does not hold per-facility telemedicine — so it is
+        // surfaced as its own option set, never attached to a specific facility card. Best-effort: a
+        // failure omits it rather than fabricating availability.
+        List<VirtualCareOption> virtualCare = resolveVirtualCare(province, notes);
+        boolean virtualCareAvailable = !virtualCare.isEmpty();
+        if (telemed && !virtualCareAvailable) {
+            notes.add("Per-facility telemedicine is not held in the register, and no live virtual "
+                    + "service matched your area, so we could not confirm remote care here.");
         }
 
         return new CareSearchResponse(token, tokens, telemed, emergency, accessibility,
-                distanceAvailable, notes, candidates, respPage, respSize, total);
+                distanceAvailable, virtualCareAvailable, virtualCare, notes, candidates, respPage, respSize, total);
+    }
+
+    /**
+     * Best-effort ACTIVE virtual-care lookup. Asks TUSO for virtual services in the ACTIVE lifecycle
+     * only (never CONFIGURED/SUSPENDED), optionally narrows to the caller's province, and shapes a
+     * PII-free option list. On any failure it returns empty — the lane omits virtual care rather than
+     * inventing it. Capped so an anonymous caller cannot pull an unbounded set.
+     */
+    private List<VirtualCareOption> resolveVirtualCare(String province, List<String> notes) {
+        try {
+            JsonNode data = tuso.listVirtualServices("ACTIVE");
+            if (data == null || !data.isArray()) {
+                return List.of();
+            }
+            String wantProvince = trimToNull(province);
+            List<VirtualCareOption> options = new ArrayList<>();
+            for (JsonNode vs : data) {
+                if (!"ACTIVE".equalsIgnoreCase(vs.path("lifecycleStatus").asText(""))) {
+                    continue; // defence-in-depth: never trust a non-ACTIVE row through the filter
+                }
+                String vsProvince = vs.hasNonNull("provinceCode") ? vs.get("provinceCode").asText() : null;
+                // A national virtual service (no province) is available everywhere; a provincial one
+                // only matches when the caller shared that province (or shared none).
+                if (wantProvince != null && vsProvince != null && !wantProvince.equalsIgnoreCase(vsProvince)) {
+                    continue;
+                }
+                List<String> lines = new ArrayList<>();
+                JsonNode serviceLines = vs.path("serviceLines");
+                if (serviceLines.isArray()) {
+                    for (JsonNode line : serviceLines) {
+                        String name = line.isObject() ? line.path("name").asText(null) : line.asText(null);
+                        if (name != null && !name.isBlank()) {
+                            lines.add(name);
+                        }
+                    }
+                }
+                options.add(new VirtualCareOption(
+                        vs.hasNonNull("vsUid") ? vs.get("vsUid").asText() : null,
+                        vs.hasNonNull("name") ? vs.get("name").asText() : null,
+                        vs.hasNonNull("level") ? vs.get("level").asText() : null,
+                        vsProvince,
+                        List.copyOf(lines)));
+                if (options.size() >= MAX_VIRTUAL_CARE_OPTIONS) {
+                    break;
+                }
+            }
+            if (!options.isEmpty()) {
+                notes.add("Virtual care is available: you can start a remote consultation with a live "
+                        + "virtual service after signing in.");
+            }
+            return List.copyOf(options);
+        } catch (Exception e) {
+            log.warn("Virtual-care lookup unavailable, omitting virtual care from find-care result: {}", e.getMessage());
+            return List.of();
+        }
     }
 
     /** Public facility profile passthrough (disclosure-limited; capabilities + operating hours). */
