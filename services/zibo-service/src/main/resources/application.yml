@@ -24,6 +24,10 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    # Dollar-quoted JSON bodies (e.g. $cs${ ... }) put a '$' adjacent to '{',
+    # which Flyway's placeholder engine reads as '${' → "No value provided for
+    # placeholder". No zibo migration uses real Flyway placeholders, so disable.
+    placeholder-replacement: false
   data:
     redis:
       host: ${REDIS_HOST:localhost}
