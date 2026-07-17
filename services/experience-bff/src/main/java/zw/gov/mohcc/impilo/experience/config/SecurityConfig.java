@@ -436,6 +436,13 @@ public class SecurityConfig {
                             "/internal/v1/public/gateway/get-involved/contributions",
                             "/internal/v1/public/gateway/get-involved/board/*/support",
                             "/internal/v1/public/gateway/get-involved/cohorts/*/enroll").permitAll()
+                    // Anonymous WRITE exception (ADR, gateway-client-telemetry): client-side
+                    // request-outcome telemetry batch. Fail-CLOSED abuse controls (per-IP 60/min +
+                    // global 6000/min Redis windows, ≤20 events/request, per-field length caps,
+                    // server-side PII-free allow-list) enforced in ClientTelemetryIntakeService;
+                    // forwarded to observability best-effort, always answered 202.
+                    .requestMatchers(HttpMethod.POST,
+                            "/internal/v1/public/gateway/client-telemetry").permitAll()
                     .requestMatchers("/internal/v1/citizen/clients/*/patient-shares/**")
                             .hasAnyRole(CITIZEN_ROLES)
 

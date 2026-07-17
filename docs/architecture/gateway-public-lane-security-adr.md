@@ -84,6 +84,8 @@ Every permitAll route family must have a row here (the guard checks this file).
 | `/internal/v1/public/gateway/feedback` (POST + claim-code GET) | rito `PublicCaseIntakeController` via `PublicFeedbackIntakeService` | W4 | **anonymous WRITE** (`gateway-feedback-claim`); abuse note below |
 | `/internal/v1/public/gateway/advisory/**` | guidance `AdvisoryResolveController` via `PublicGatewayAdvisoryBffController` | W4 | Nompilo service-advisory resolve (GET, PUBLISHED/in-window/audience=public only) + impression/dismiss (POST) — advisories are DATA; impression payload allow-listed to advisoryId + event + opaque anon dismissal key (no PII) |
 | `/internal/v1/public/gateway/get-involved/**` | participation `PublicContributionController` via `PublicGatewayGetInvolvedBffController` | W4 | Citizen "Get Involved" co-design: anonymous idea/experience submit (**anonymous WRITE**, `gateway-get-involved-claim`) with claim-code status GET; moderated public idea board GET; anonymous board support (**anonymous WRITE**, opaque supporter key); open testing-cohort GET + anonymous enrol (**anonymous WRITE**). Abuse note below; disclosure-limited (no claim-code hashes, submitter refs, or metadata) |
+| `/internal/v1/public/gateway/service-status` (GET) | observability heartbeat feed via `ObservabilityServiceClient` → `PublicServiceStatusProjectionService` in `PublicGatewayServiceStatusBffController` | W5 | citizen service-status board; PII-free coarse group projection over the platform heartbeat feed; **honest states** — a group is `OPERATIONAL` only when every mapped member service is present in the feed AND `UP`; an absent member yields `PARTIAL`/`UNKNOWN` (never `OPERATIONAL`); when the heartbeat source is unreachable the board returns `live:false` with all groups `UNKNOWN` (200, not 500 — no fabricated green, no existence oracle); the internal service→group taxonomy lives server-side in the projection service and never appears in the response; covered by the `/internal/v1/public/` prefix + the `GET /internal/v1/public/gateway/**` permitAll (no new Envoy route, no new SecurityConfig line) |
+| `/internal/v1/public/gateway/client-telemetry` (POST) | observability client-events ingest via `ClientTelemetryIntakeService` → `ObservabilityServiceClient.postClientEvents` | W5 | **anonymous WRITE** (`gateway-client-telemetry`); client-side request-outcome batch; abuse note below |
 | `/internal/v1/wallet/bill-contributions/{shareToken}` (GET only) | mushe bill-contribution view via `CitizenCardController` | W4 | fundraiser share-link read (claim-token pattern, unguessable token); read-only, donations require sign-in |
 
 **Anonymous-write abuse note — `POST /internal/v1/public/gateway/sos`:** rate-limited
@@ -123,6 +125,21 @@ moderation-`APPROVED` contributions; support uses an opaque supporter key (no PI
 idempotent per supporter. Status reads
 (`GET /internal/v1/public/gateway/get-involved/contributions/{claimCode}`) are
 disclosure-limited and share a per-IP window to throttle probing.
+
+**Anonymous-write abuse note — `POST /internal/v1/public/gateway/client-telemetry`:**
+the shell posts a small batch of client-side request outcomes so the platform can see
+failures citizens hit before sign-in. The BFF is the disclosure/abuse boundary. The batch is
+capped at **20 events/request**; the lane is rate-limited per-IP (**60 / 60s** fixed window)
+and globally (**6000 / 60s**) in Redis, and — like feedback, unlike SOS — fails **CLOSED**
+when the limiter store is down (telemetry is not life-safety, so an anonymous write lane
+without working abuse controls stays shut). Every event is allow-listed SERVER-SIDE to exactly
+six PII-free fields — `route` (≤256), `code` (≤64), `correlationId` (≤64), `requestId` (≤64),
+`status` (coerced to int or dropped), `at` (dropped unless it parses as ISO-8601); anything else
+the client sends is stripped, and any event missing `route`+`code` is dropped. The sanitized
+batch is forwarded to observability best-effort; the caller always receives **202
+`{accepted:n}`** even when the downstream POST fails, so a telemetry hiccup can never provoke a
+client retry storm. Covered by the `/internal/v1/public/` Envoy prefix (ext_authz-disabled +
+trust-header-stripped) — no new Envoy route; only the one BFF `permitAll` line is added.
 
 Legacy Envoy-only prefixes `/v1/public/verify` and `/v1/public/share` are **deprecated
 as public entries** (not anonymous-capable through Envoy today; live traffic reaches
