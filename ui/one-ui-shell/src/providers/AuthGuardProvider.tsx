@@ -24,6 +24,7 @@ import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContra
 import { buildContextGuardRedirect } from "@/lib/resolve-post-login-destination";
 import { matchRouteDefinition } from "@/lib/routes";
 import { isSchedulingClusterPath } from "@/lib/scheduling-paths";
+import { evaluateRouteTrust } from "@/lib/auth/action-trust-matrix";
 
 /** Re-export for existing imports from this module. */
 export { ROLE_GROUPS, matchesRequiredRole };
@@ -66,19 +67,17 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Assurance tier gate: restrict UNVERIFIED users from health pages
-    const HEALTH_RESTRICTED_PREFIXES = [
-      "/ehr", "/clinical", "/pharmacy", "/lab", "/queue",
-      "/scheduling", "/shift", "/telemedicine",
-    ];
-
-    if (
-      isAuthenticated &&
-      user?.assuranceLevel === "UNVERIFIED" &&
-      HEALTH_RESTRICTED_PREFIXES.some((p) => pathname.startsWith(p))
-    ) {
-      router.replace("/auth/register/assurance");
-      return;
+    // Assurance tier gate (data-driven — lib/auth/action-trust-matrix.ts). The matrix is a
+    // strict superset of the former hard-coded HEALTH_RESTRICTED_PREFIXES bounce: UNVERIFIED
+    // users are still blocked from health surfaces (which now require at least TEMPORARY), and
+    // the rule set is extensible per-surface. The BFF Session Experience Contract stays
+    // authoritative for route visibility; this governs the assurance dimension only.
+    if (isAuthenticated) {
+      const trust = evaluateRouteTrust(pathname, user?.assuranceLevel);
+      if (trust && !trust.allowed && trust.upgradePath) {
+        router.replace(trust.upgradePath);
+        return;
+      }
     }
 
     // Work / My-Professional / My-Life isolation (L3 W4). The boundary between
