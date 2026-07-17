@@ -75,6 +75,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/get-involved/test", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Help Test Impilo", navLabel: "Help Test" },
   // Public service-status board (indicative; live status backend is a later wave).
   { path: "/status", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Service Status", navLabel: "Service Status" },
+  // Get-app / download surface (public, honest coming-soon store state; web app always available).
+  { path: "/download", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Get the Impilo Apps", navLabel: "Get the App" },
 
   // â”€â”€ Zone: Legal / Consent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/privacy", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Privacy Policy", navLabel: "Privacy Policy" },
@@ -484,6 +486,8 @@ export const ROUTES: RouteDefinition[] = [
   // â”€â”€ Zone: Provider Activation (Health OS Â§6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/provider/activate", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activate Provider Role", navLabel: "Provider Activation" },
   { path: "/provider/status", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Provider Status", navLabel: "Provider Status" },
+  // Public provider-onboarding explainer — honest journey map into the real activation/claim flow.
+  { path: "/provider/get-access", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Get Provider Access", navLabel: "Provider Access" },
   // E2-TRUST: provider self-service claim / recovery journey (page already exists — nav discoverability).
   { path: "/citizen/provider-claim", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Claim Provider Profile", navLabel: "Provider Claim", navZone: "professional" },
   { path: "/citizen/provider-claim/status", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Provider Access Requests", navLabel: "Provider Access Requests", navZone: "professional" },
@@ -915,7 +919,10 @@ export const ROUTES: RouteDefinition[] = [
 // Nompilo Advisory + Get Involved + Feedback (Jul 2026): +6 — public co-design lane
 // /get-involved (+ /idea, /board, /track, /test) and the indicative /status board. All
 // public (guard:none), no login. New total is 747.
-export const EXPECTED_ROUTE_COUNT = 747;
+// App discovery (Jul 2026): +2 — public /download get-app surface (honest coming-soon
+// store state + web app + device-aware QR-to-web) and /provider/get-access provider
+// onboarding explainer (honest journey map into the real activation/claim flow). Total 749.
+export const EXPECTED_ROUTE_COUNT = 749;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
