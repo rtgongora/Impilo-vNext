@@ -8,8 +8,9 @@
  * facility actually offers (with operating hours when held), coordinates for
  * directions, and any "report to" service-point hint carried in capability
  * metadata. Operating status is shown honestly as unverified; the verified-
- * provider layer (Varapi) is a later wave and is surfaced only as a real
- * "verify a professional" next step, never a fabricated roster.
+ * provider roster (Varapi) is fetched in parallel and lists only professionals
+ * fully confirmed on the national register — no availability or slots, ever —
+ * alongside a standing "verify a professional" next step.
  */
 
 import { useEffect, useState } from "react";
@@ -22,12 +23,19 @@ import {
   Clock,
   Stethoscope,
   ShieldCheck,
+  BadgeCheck,
   AlertTriangle,
   Building2,
+  UserRound,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
-import type { FacilityCapability, FacilityProfile } from "@/lib/find-care/types";
-import { directionsUrl, humanizeEnum } from "@/lib/find-care/format";
+import type {
+  FacilityCapability,
+  FacilityPractitionersResponse,
+  FacilityProfile,
+  VerifiedProvider,
+} from "@/lib/find-care/types";
+import { directionsUrl, formatRegisterDate, humanizeEnum, isRegistered } from "@/lib/find-care/format";
 import { serviceTokenLabel } from "@/lib/find-care/service-chips";
 import { useFindCareJourneyStore } from "@/hooks/useFindCareJourneyStore";
 import { FindCareAccessActions } from "./FindCareAccessActions";
@@ -62,6 +70,14 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState(false);
 
+  // Verified-provider roster (Varapi register truth) — fetched in parallel with its own state so a
+  // slow or failing roster never blocks the facility profile. Honest: only fully confirmed register
+  // entries appear, there is no availability/slot data, and the "verify a professional" link stays
+  // regardless of what the roster returns.
+  const [providers, setProviders] = useState<VerifiedProvider[] | null>(null);
+  const [providersLoading, setProvidersLoading] = useState(true);
+  const [providersError, setProvidersError] = useState(false);
+
   // The last search response (persisted) carries the honest virtual-care signal + interpreted
   // service, so a direct visit to this page still knows whether to offer virtual care.
   const hydrate = useFindCareJourneyStore((s) => s.hydrate);
@@ -87,6 +103,29 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [facilityId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setProvidersLoading(true);
+    setProvidersError(false);
+    setProviders(null);
+    apiClient
+      .get<FacilityPractitionersResponse>(
+        `/internal/v1/public/gateway/find-care/facilities/${facilityId}/practitioners`,
+      )
+      .then((res) => {
+        if (!cancelled) setProviders(res?.providers ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setProvidersError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setProvidersLoading(false);
       });
     return () => {
       cancelled = true;
@@ -254,16 +293,86 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
         variant="full"
       />
 
-      {/* Verified-provider layer — deferred (Varapi wiring is a later wave). Real next step only. */}
+      {/* Verified-provider layer — Varapi register truth. Only fully confirmed professionals; no
+          availability/slots are ever shown, and the verify link stays regardless of the roster. */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="flex items-center gap-2 font-semibold text-slate-900">
           <ShieldCheck className="h-4 w-4 text-slate-400" aria-hidden />
           Health professionals
         </h2>
-        <p className="mt-2 text-sm text-slate-600">
-          Individual verified providers for this facility aren&apos;t listed here yet. You can independently
-          confirm whether a specific practitioner is registered.
-        </p>
+
+        {providersLoading ? (
+          <p className="mt-3 flex items-center gap-2 text-sm text-slate-500" role="status">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            Loading verified professionals…
+          </p>
+        ) : providersError ? (
+          <p className="mt-2 text-sm text-slate-600">
+            We couldn&apos;t load the verified-provider list right now. You can still confirm a
+            specific practitioner independently.
+          </p>
+        ) : providers && providers.length > 0 ? (
+          <>
+            <p className="mt-2 text-sm text-slate-600">
+              These professionals are confirmed on the national register as practising here. This is
+              the register roster — it does not show availability or appointment times.
+            </p>
+            <ul className="mt-3 divide-y divide-slate-100">
+              {providers.map((p, i) => {
+                const role = [humanizeEnum(p.profession) ?? p.profession, p.cadre]
+                  .filter(Boolean)
+                  .join(" · ");
+                const licenceFrom = formatRegisterDate(p.licenceValidFrom);
+                const licenceTo = formatRegisterDate(p.licenceValidTo);
+                const licenceWindow = licenceFrom || licenceTo
+                  ? `${licenceFrom ?? "—"} – ${licenceTo ?? "present"}`
+                  : null;
+                return (
+                  <li
+                    key={p.registrationNumber ?? `${p.displayName ?? "provider"}-${i}`}
+                    className="flex gap-3 py-3"
+                  >
+                    <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-500">
+                      <UserRound className="h-4 w-4" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-slate-900">
+                          {p.displayName ?? "Registered professional"}
+                        </span>
+                        {isRegistered(p.registerStatus) && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
+                            <BadgeCheck className="h-3 w-3" aria-hidden />
+                            Verified on the national register
+                          </span>
+                        )}
+                      </div>
+                      {role && <p className="mt-0.5 text-sm text-slate-600">{role}</p>}
+                      {p.roleTitle && (
+                        <p className="text-sm text-slate-500">{p.roleTitle}</p>
+                      )}
+                      {(p.registeringAuthority || licenceWindow) && (
+                        <p className="mt-1 text-xs text-slate-500">
+                          {p.registeringAuthority && (
+                            <span>{p.registeringAuthority}</span>
+                          )}
+                          {p.registeringAuthority && licenceWindow && <span> · </span>}
+                          {licenceWindow && <span>Licence valid {licenceWindow}</span>}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        ) : (
+          <p className="mt-2 text-sm text-slate-600">
+            No individual practitioners are published for this facility yet. You can independently
+            confirm whether a specific practitioner is registered.
+          </p>
+        )}
+
         <Link
           href="/verify/practitioner"
           className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"

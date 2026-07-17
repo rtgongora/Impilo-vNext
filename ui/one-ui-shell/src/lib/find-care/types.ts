@@ -114,6 +114,38 @@ export interface FacilityProfile {
   capabilities: FacilityCapability[] | null;
 }
 
+/**
+ * A verified health professional who genuinely practises at a facility (Varapi register truth).
+ *
+ * Consumes GET /internal/v1/public/gateway/find-care/facilities/{id}/practitioners. Every field is
+ * nullable on purpose — the roster only carries what Varapi has fully confirmed, and the UI must
+ * render "unknown" honestly rather than fabricate a value the register does not hold. There is NO
+ * availability / slot / "open now" information in this shape, and none must ever be inferred from it.
+ */
+export interface VerifiedProvider {
+  displayName: string | null;
+  profession: string | null;
+  cadre: string | null;
+  roleTitle: string | null;
+  registrationNumber: string | null;
+  registerStatus: string | null;
+  /** ISO date string or null. */
+  registeredSince: string | null;
+  /** ISO date string or null. */
+  registrationExpiryDate: string | null;
+  licenceStatus: string | null;
+  /** ISO date string or null. */
+  licenceValidFrom: string | null;
+  /** ISO date string or null. */
+  licenceValidTo: string | null;
+  registeringAuthority: string | null;
+}
+
+/** The verified-provider roster response for a facility (only fully confirmed register entries). */
+export interface FacilityPractitionersResponse {
+  providers: VerifiedProvider[];
+}
+
 /** Standard error envelope the lane returns for VALIDATION / RATE_LIMITED / FIND_CARE_UNAVAILABLE. */
 export interface FindCareErrorEnvelope {
   error?: { code?: string; message?: string };

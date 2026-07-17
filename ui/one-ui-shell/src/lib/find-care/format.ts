@@ -48,6 +48,28 @@ export function formatDistanceLine(result: Pick<CareResult, "distanceMeters" | "
   return dist;
 }
 
+/**
+ * A short human date for register facts (registration / licence dates), or null when absent or
+ * unparseable. Never invents a value — a null ISO string stays "unknown" for the caller to omit.
+ */
+export function formatRegisterDate(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
+/**
+ * True when a Varapi register-status string plainly indicates the professional is currently
+ * registered (register truth, case-insensitive). Anything else — pending, suspended, unknown, or
+ * null — must NOT show a "verified on the national register" badge.
+ */
+export function isRegistered(registerStatus: string | null | undefined): boolean {
+  if (!registerStatus) return false;
+  const s = registerStatus.trim().toUpperCase();
+  return s === "REGISTERED" || s === "ACTIVE" || s === "CURRENT" || s === "VALID";
+}
+
 /** A Google Maps directions link built purely from coordinates the register holds. */
 export function directionsUrl(
   lat: number | null | undefined,
