@@ -37,12 +37,31 @@ if [[ "${ALLOW_STALE_JAR:-0}" != "1" && -d "services/${SERVICE_ID}/src" ]]; then
   fi
 fi
 
+SOURCE_COMMIT="$(git rev-parse HEAD 2>/dev/null || echo unknown)"
+SOURCE_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# Git-commit stale-JAR guard (complements the mtime check above): the jar stamps its
+# source commit via git-commit-id-maven-plugin (BOOT-INF/classes/git.properties). If
+# that commit != HEAD, the jar is from a different checkout — refuse under strict mode.
+if [[ "$SOURCE_COMMIT" != "unknown" ]] && command -v unzip >/dev/null 2>&1; then
+  JAR_COMMIT="$(unzip -p "$JAR" BOOT-INF/classes/git.properties 2>/dev/null | sed -n 's/^git.commit.id.abbrev=//p' | tr -d '\r')"
+  if [[ -n "$JAR_COMMIT" && "$SOURCE_COMMIT" != "$JAR_COMMIT"* ]]; then
+    echo "[estate] WARN stale JAR for ${SERVICE_ID}: jar built from ${JAR_COMMIT} but HEAD is ${SOURCE_COMMIT:0:7}."
+    [[ "${IMPILO_STRICT_JAR_FRESHNESS:-0}" == "1" ]] && { echo "[estate] ABORT (IMPILO_STRICT_JAR_FRESHNESS=1)"; exit 1; }
+  fi
+fi
+
 TMP="$(mktemp -d)"
 cp "$JAR" "$TMP/app.jar"
 TAG_SHA="$(full_boot_image_tag)"
 IMG="impilo/${SERVICE_ID}"
 docker build -t "${IMG}:preview" -t "${IMG}:${TAG_SHA}" \
   --build-arg "APP_PORT=${PORT}" \
+  --label "org.opencontainers.image.revision=${SOURCE_COMMIT}" \
+  --label "org.opencontainers.image.version=${TAG_SHA}" \
+  --label "org.opencontainers.image.created=${BUILD_DATE}" \
+  --label "org.impilo.source.branch=${SOURCE_BRANCH}" \
   -f scripts/build/templates/impilo-jre-runtime.Dockerfile \
   "$TMP"
 rm -rf "$TMP"

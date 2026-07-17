@@ -395,6 +395,12 @@ def build_dockerfile(service_id: str, dockerfile_path: str | None, log_path: pat
         "--build-arg", f"SOURCE_BRANCH={source_branch}",
         "--build-arg", f"BUILD_DATE={build_date}",
         "--build-arg", f"CACHE_BUST={cache_bust}",
+        # OCI provenance labels — freshness is a `docker inspect`/`crane config` read,
+        # not jar archaeology. revision is the source commit the image was built from.
+        "--label", f"org.opencontainers.image.revision={source_commit}",
+        "--label", f"org.opencontainers.image.version={tag}",
+        "--label", f"org.opencontainers.image.created={build_date}",
+        "--label", f"org.impilo.source.branch={source_branch}",
         "-f", str(dockerfile),
         str(context),
     ]
@@ -407,6 +413,32 @@ def build_dockerfile(service_id: str, dockerfile_path: str | None, log_path: pat
         ]
     if os.environ.get("IMPILO_IMAGE_NO_CACHE") == "1":
         build_cmd.insert(2, "--no-cache")
+    # Stale-jar guard: the image COPYies target/*.jar verbatim; if that jar was not
+    # recompiled from the current source (the classic trap where an --only image build
+    # re-Dockerizes an old jar), it silently ships stale code. Read the jar's stamped
+    # git.commit.id.abbrev (from git-commit-id-maven-plugin) and compare to the source
+    # commit this build targets. Warn by default; fail hard under IMPILO_STRICT_JAR_FRESHNESS=1.
+    try:
+        import zipfile
+        jars = [p for p in (context / "target").glob(f"{service_id}*.jar")
+                if "sources" not in p.name and "javadoc" not in p.name and "original" not in p.name]
+        if jars and source_commit not in ("", "unknown"):
+            with zipfile.ZipFile(jars[0]) as zf:
+                gp = zf.read("BOOT-INF/classes/git.properties").decode("utf-8", "replace")
+            jar_commit = ""
+            for ln in gp.splitlines():
+                if ln.startswith("git.commit.id.abbrev="):
+                    jar_commit = ln.split("=", 1)[1].strip()
+            if jar_commit and not source_commit.startswith(jar_commit) and not jar_commit.startswith(source_commit[:len(jar_commit)]):
+                msg = (f"STALE JAR: {service_id} jar built from {jar_commit} but this image "
+                       f"targets {source_commit[:12]}. Recompile (mvn package) before imaging.\n")
+                append_log(log_path, "WARN " + msg)
+                print(f"[estate] WARN {msg}", end="")
+                if os.environ.get("IMPILO_STRICT_JAR_FRESHNESS") == "1":
+                    print(f"[estate] ABORT stale jar for {service_id} (IMPILO_STRICT_JAR_FRESHNESS=1)")
+                    return False, None
+    except (KeyError, OSError, zipfile.BadZipFile):
+        pass  # no git.properties (non-Java svc / plugin absent) — nothing to check
     append_log(
         log_path,
         f"STRATEGY dockerfile\nCOMMAND {' '.join(shlex.quote(c) for c in build_cmd)}\nLOG {log_path}\n",
