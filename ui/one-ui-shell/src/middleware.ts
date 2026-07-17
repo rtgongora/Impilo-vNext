@@ -19,6 +19,9 @@ export const PUBLIC_PREFIXES = [
   "/terms",
   "/consent",
   "/account-deletion",
+  "/get-involved", // public co-design / participation (anonymous — no account needed)
+  "/status",       // public service-status board
+  "/download",     // public get-app / app-discovery surface
   "/_next",
   "/api",
   "/internal",
@@ -26,9 +29,15 @@ export const PUBLIC_PREFIXES = [
 
 const PUBLIC_FILES = ["/favicon.ico", "/robots.txt", "/manifest.json"];
 
+// Exact public paths under an otherwise-gated prefix (e.g. the provider-onboarding
+// explainer lives under /provider but must be viewable before sign-in; the rest of
+// /provider/* stays provider-gated).
+const PUBLIC_EXACT_PATHS = ["/provider/get-access"];
+
 export function isPublicPath(pathname: string): boolean {
   if (pathname === "/") return true; // root decides welcome-vs-home by session itself
   if (PUBLIC_FILES.includes(pathname)) return true;
+  if (PUBLIC_EXACT_PATHS.includes(pathname)) return true;
   return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 

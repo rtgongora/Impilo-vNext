@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: public-website
-          image: 127.0.0.1:5000/impilo/public-website@sha256:5ab80ba78252e4e74996b967c6a85d7bbc7114d7d9479498b5071dd9f2fe1f28
+          image: 127.0.0.1:5000/impilo/public-website@sha256:9f56aea96debd50a3730288c10f393a74eb2138b5263a1991720ddd2c2a628f2
           ports: [{ containerPort: 8080 }]
           readinessProbe:
             httpGet: { path: /, port: 8080 }
@@ -51,14 +51,16 @@ spec:
     - websecure
   routes:
     - kind: Rule
-      # Public gateway paths. NOTE: /learning deliberately NOT claimed — vNext
-      # Fundo owns it; the website serves that content at /training.
+      # Public marketing/informational paths served by the website. NOT claimed
+      # (→ vNext): /learning (Fundo), /get-involved + /community (the REAL vNext
+      # participation feature), /download (vNext get-app page). /apps + /.well-known
+      # ARE the website's (app-discovery surface + universal-link association files).
       match: >-
         Host(`impilo.mohcc.gov.zw`) && (Path(`/`) || PathPrefix(`/about`) ||
         PathPrefix(`/services`) || PathPrefix(`/solutions`) ||
         PathPrefix(`/features`) || PathPrefix(`/resources`) ||
         PathPrefix(`/docs`) || PathPrefix(`/training`) ||
-        PathPrefix(`/get-involved`) || PathPrefix(`/community`) ||
+        PathPrefix(`/apps`) || PathPrefix(`/.well-known`) ||
         PathPrefix(`/technical`) || PathPrefix(`/contact`) ||
         PathPrefix(`/assets`) || Path(`/logo.png`))
       priority: 50000
