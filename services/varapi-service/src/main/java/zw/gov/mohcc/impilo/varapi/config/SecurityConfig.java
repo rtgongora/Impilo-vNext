@@ -37,6 +37,11 @@ public class SecurityConfig {
                 // TrustContextFilter still requires those headers, and PublicPractitionerVerificationController
                 // returns only the allow-listed register-status DTO — everything else stays fail-closed.
                 .requestMatchers("/v1/public/practitioners/**").permitAll()
+                // Anonymous facility-scoped verified-practitioner listing (gateway public find-care lane).
+                // Same posture as the practitioner-verification lane: called tokenless with synthesized
+                // trust headers; PublicFacilityPractitionersController returns only the allow-listed
+                // projection (no PII, no availability), so everything else stays fail-closed.
+                .requestMatchers("/v1/public/facilities/**").permitAll()
                 .requestMatchers(disableOauthForTests ? "/v1/**" : "/__disabled_test_auth_bypass__").permitAll()
                 .anyRequest().authenticated()
             );

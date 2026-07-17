@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.varapi.api.dto.PublicPractitionerVerificationResponse;
+import zw.gov.mohcc.impilo.varapi.core.PublicPractitionerProjectionSupport;
 import zw.gov.mohcc.impilo.varapi.core.PublicPractitionerVerificationService;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.CouncilEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.LicenseEntity;
@@ -62,7 +63,8 @@ class PublicPractitionerVerificationControllerTest {
     void setUp() {
         controller = new PublicPractitionerVerificationController(
                 new PublicPractitionerVerificationService(
-                        registrationRepository, councilLicenceRepository, licenseRepository));
+                        registrationRepository,
+                        new PublicPractitionerProjectionSupport(councilLicenceRepository, licenseRepository)));
         TrustContextHolder.set(new TrustContext(
                 tenantId, "public-gateway", "SYSTEM", "PUBLIC_ACCESS", "device",
                 UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
