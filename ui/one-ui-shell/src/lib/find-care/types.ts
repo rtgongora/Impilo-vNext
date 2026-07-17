@@ -40,6 +40,19 @@ export interface CareResult {
   longitude: number | null;
 }
 
+/**
+ * A real, ACTIVE virtual-care option (TUSO virtual-service registry truth). Present only when a live
+ * virtual service exists — the shell renders "Start virtual care" against these and never fabricates
+ * one. Not attached to a specific facility card (per-facility telemedicine is not held in the register).
+ */
+export interface VirtualCareOption {
+  reference: string | null;
+  name: string | null;
+  level: string | null;
+  province: string | null;
+  serviceLines: string[];
+}
+
 /** The orchestrated search response: interpretation, ranked results, and honest notes. */
 export interface CareSearchResponse {
   interpretedService: string | null;
@@ -48,6 +61,10 @@ export interface CareSearchResponse {
   emergencyIntent: boolean;
   accessibilityRequested: boolean;
   distanceAvailable: boolean;
+  /** True only when at least one ACTIVE virtual service was found (never fabricated). */
+  virtualCareAvailable: boolean;
+  /** Live virtual-care options (empty when none are ACTIVE / matched). */
+  virtualCare: VirtualCareOption[];
   /** Honest, human-readable caveats (no location, stale hours, straight-line distance…). */
   notes: string[];
   results: CareResult[];

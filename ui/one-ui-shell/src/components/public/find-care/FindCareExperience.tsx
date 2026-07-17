@@ -26,6 +26,7 @@ import {
   Pencil,
   AlertTriangle,
   Info,
+  Video,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import type { CareResult, CareSearchResponse } from "@/lib/find-care/types";
@@ -425,6 +426,23 @@ export function FindCareExperience() {
             </ul>
           )}
 
+          {/* Virtual care — shown only when a live ACTIVE virtual service was actually found. */}
+          {results.virtualCareAvailable && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              <Video className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+              <span>
+                <span className="font-medium">Virtual care is available.</span> You can start a remote
+                consultation with a live virtual service after signing in.
+              </span>
+              <Link
+                href="/auth/login?returnTo=%2Fcitizen%2Fvirtual-care"
+                className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
+              >
+                Start virtual care
+              </Link>
+            </div>
+          )}
+
           {results.emergencyIntent && (
             <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
@@ -490,6 +508,7 @@ export function FindCareExperience() {
                 key={r.facilityId ?? `${r.name}-${i}`}
                 result={r}
                 locationShared={Boolean(location)}
+                virtualCareAvailable={results.virtualCareAvailable}
                 onOpen={setSelectedFacility}
                 active={selectedFacilityId != null && r.facilityId === selectedFacilityId}
               />

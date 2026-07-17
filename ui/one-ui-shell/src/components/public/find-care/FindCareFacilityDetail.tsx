@@ -29,6 +29,8 @@ import { apiClient } from "@/lib/api-client";
 import type { FacilityCapability, FacilityProfile } from "@/lib/find-care/types";
 import { directionsUrl, humanizeEnum } from "@/lib/find-care/format";
 import { serviceTokenLabel } from "@/lib/find-care/service-chips";
+import { useFindCareJourneyStore } from "@/hooks/useFindCareJourneyStore";
+import { FindCareAccessActions } from "./FindCareAccessActions";
 
 const SERVICE_POINT_KEYS = ["servicePoint", "service_point", "reportTo", "report_to", "entryPoint", "location", "department"];
 
@@ -59,6 +61,14 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState(false);
+
+  // The last search response (persisted) carries the honest virtual-care signal + interpreted
+  // service, so a direct visit to this page still knows whether to offer virtual care.
+  const hydrate = useFindCareJourneyStore((s) => s.hydrate);
+  const lastResults = useFindCareJourneyStore((s) => s.results);
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -235,6 +245,15 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
         </p>
       </section>
 
+      {/* Access-to-care actions — real next steps (sign-in continuity or an honest request receipt). */}
+      <FindCareAccessActions
+        facilityId={profile.id ?? Number(facilityId)}
+        facilityName={profile.name}
+        serviceToken={lastResults?.interpretedService ?? null}
+        virtualCareAvailable={lastResults?.virtualCareAvailable ?? false}
+        variant="full"
+      />
+
       {/* Verified-provider layer — deferred (Varapi wiring is a later wave). Real next step only. */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <h2 className="flex items-center gap-2 font-semibold text-slate-900">
@@ -255,18 +274,12 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
 
       {/* Sign-in continuity */}
       <p className="text-xs text-slate-500">
-        To book an appointment or save this facility,{" "}
-        <Link
-          href={`/auth/login?returnTo=${encodeURIComponent(`/welcome/find-care/${facilityId}`)}`}
-          className="font-medium text-emerald-700 hover:text-emerald-800"
-        >
-          sign in
-        </Link>{" "}
-        or{" "}
+        New to Impilo?{" "}
         <Link href="/auth/register/contact" className="font-medium text-emerald-700 hover:text-emerald-800">
-          create an account
-        </Link>
-        .
+          Create an account
+        </Link>{" "}
+        to book, request transport, and follow your care. Your selection is kept so you can pick up
+        where you left off.
       </p>
     </div>
   );

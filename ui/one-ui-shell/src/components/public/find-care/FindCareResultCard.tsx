@@ -20,11 +20,14 @@ import { MapPin, Navigation, CheckCircle2, HelpCircle, Video, Building2 } from "
 import type { CareResult } from "@/lib/find-care/types";
 import { serviceTokenLabel } from "@/lib/find-care/service-chips";
 import { directionsUrl, formatDistanceLine, humanizeEnum } from "@/lib/find-care/format";
+import { FindCareAccessActions } from "./FindCareAccessActions";
 
 interface FindCareResultCardProps {
   result: CareResult;
   /** Whether the person shared a location this search (drives the distance prompt). */
   locationShared: boolean;
+  /** True when the last search confirmed a live ACTIVE virtual service (drives "Start virtual care"). */
+  virtualCareAvailable?: boolean;
   /** Called when the card is opened, so the journey store can remember the selection. */
   onOpen?: (facilityId: number) => void;
   /** Highlight state (e.g. selected on the map). */
@@ -34,6 +37,7 @@ interface FindCareResultCardProps {
 export function FindCareResultCard({
   result,
   locationShared,
+  virtualCareAvailable = false,
   onOpen,
   active = false,
 }: FindCareResultCardProps) {
@@ -140,14 +144,16 @@ export function FindCareResultCard({
             Get directions
           </a>
         )}
-        {/* Booking is a real next step, clearly labelled — it routes to sign-in, not a fake success. */}
-        {detailHref && (
-          <Link
-            href={`/auth/login?returnTo=${encodeURIComponent(detailHref)}`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            Sign in to book
-          </Link>
+        {/* Access-to-care actions — each routes to a real next step (sign-in continuity or the
+            facility's request panel), never a fabricated confirmation. */}
+        {id != null && (
+          <FindCareAccessActions
+            facilityId={id}
+            facilityName={result.name}
+            serviceToken={result.matchedService}
+            virtualCareAvailable={virtualCareAvailable}
+            variant="compact"
+          />
         )}
       </div>
     </article>
