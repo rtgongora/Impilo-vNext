@@ -15,6 +15,7 @@ import { ShellTaskbar } from "./ShellTaskbar";
 import { ShellTaskManagerModal } from "./ShellTaskManagerModal";
 import { NompiloGlobalCommandBar } from "@/components/intelligent/NompiloGlobalCommandBar";
 import { ProactiveAssistant } from "@/components/intelligent/ProactiveAssistant";
+import { HealthIdStatusChip } from "./HealthIdStatusChip";
 
 /**
  * Global OS-like shell: route sync + bottom taskbar + Start + search + task manager overlay.
@@ -89,6 +90,7 @@ export function ShellChrome() {
       {show ? (
         <>
           <ShellEhrTaskEnricher />
+          <HealthIdStatusChip />
           <ShellTaskbar />
         </>
       ) : null}
