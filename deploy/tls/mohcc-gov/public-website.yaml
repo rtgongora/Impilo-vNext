@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: public-website
-          image: 127.0.0.1:5000/impilo/public-website@sha256:c914b5ff0fc1c8187d15072889c175e43e7558dd0ece781fab03c1af4005ab6c
+          image: 127.0.0.1:5000/impilo/public-website@sha256:ac4c5afbd9b266200fd6ba185b6c9c9416c2cbcb70c76ae728a057807dc2da8f
           ports: [{ containerPort: 8080 }]
           readinessProbe:
             httpGet: { path: /, port: 8080 }
