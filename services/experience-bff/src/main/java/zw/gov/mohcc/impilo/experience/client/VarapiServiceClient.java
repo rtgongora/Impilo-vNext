@@ -666,6 +666,18 @@ public class VarapiServiceClient {
     }
 
     /**
+     * Verified providers at a facility (public register facts; anonymous-safe). Varapi owns the
+     * gate and returns an empty {@code ApiResponse.data} list for an unknown/empty facility (no
+     * 404, no existence oracle); {@link #extractData} unwraps it to a JSON array node.
+     */
+    public JsonNode publicFacilityPractitioners(long facilityId) {
+        String url = baseUrl + "/v1/public/facilities/" + facilityId + "/practitioners";
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                java.net.URI.create(url), HttpMethod.GET, anonymousSafeEntity(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Downstream registries reject requests missing the mandatory trust headers (400).
      * Anonymous public-lane requests arrive with actor/trust headers stripped at the
      * edge, so the BFF supplies service-originated defaults here; when the caller DID

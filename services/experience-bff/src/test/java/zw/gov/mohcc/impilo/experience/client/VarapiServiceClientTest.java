@@ -41,4 +41,43 @@ class VarapiServiceClientTest {
         assertEquals("Tariro", result.get("givenName").asText());
         server.verify();
     }
+
+    @Test
+    void publicFacilityPractitionersUnwrapsApiResponseArray() {
+        RestTemplate restTemplate = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
+        ServiceClientConfig.ServiceEndpoints endpoints = ServiceClientConfig.testEndpointsStandardWireMocks();
+        VarapiServiceClient client = new VarapiServiceClient(restTemplate, endpoints);
+
+        server.expect(requestTo("http://varapi/v1/public/facilities/42/practitioners"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(
+                        "{\"data\":[{\"displayName\":\"Dr Tariro Moyo\",\"profession\":\"GENERAL_PRACTITIONER\","
+                                + "\"registerStatus\":\"REGISTERED\"}]}",
+                        MediaType.APPLICATION_JSON
+                ));
+
+        JsonNode result = client.publicFacilityPractitioners(42L);
+
+        assertEquals(1, result.size());
+        assertEquals("Dr Tariro Moyo", result.get(0).get("displayName").asText());
+        server.verify();
+    }
+
+    @Test
+    void publicFacilityPractitionersUnwrapsEmptyListOnMiss() {
+        RestTemplate restTemplate = new RestTemplate();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
+        ServiceClientConfig.ServiceEndpoints endpoints = ServiceClientConfig.testEndpointsStandardWireMocks();
+        VarapiServiceClient client = new VarapiServiceClient(restTemplate, endpoints);
+
+        server.expect(requestTo("http://varapi/v1/public/facilities/999/practitioners"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"data\":[]}", MediaType.APPLICATION_JSON));
+
+        JsonNode result = client.publicFacilityPractitioners(999L);
+
+        assertEquals(0, result.size());
+        server.verify();
+    }
 }

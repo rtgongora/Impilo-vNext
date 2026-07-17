@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.experience.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -8,6 +10,7 @@ import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.KeycloakAdminClient;
 import zw.gov.mohcc.impilo.experience.client.NdilaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -59,17 +62,20 @@ public class FindCareOrchestrationService {
     private final StringRedisTemplate redis;
     private final TusoServiceClient tuso;
     private final NdilaServiceClient ndila;
+    private final VarapiServiceClient varapi;
     private final FindCareServiceTaxonomy taxonomy;
     private final KeycloakAdminClient keycloakAdminClient;
 
     public FindCareOrchestrationService(StringRedisTemplate redis,
                                         TusoServiceClient tuso,
                                         NdilaServiceClient ndila,
+                                        VarapiServiceClient varapi,
                                         FindCareServiceTaxonomy taxonomy,
                                         KeycloakAdminClient keycloakAdminClient) {
         this.redis = redis;
         this.tuso = tuso;
         this.ndila = ndila;
+        this.varapi = varapi;
         this.taxonomy = taxonomy;
         this.keycloakAdminClient = keycloakAdminClient;
     }
@@ -308,6 +314,24 @@ public class FindCareOrchestrationService {
     /** Public facility profile passthrough (disclosure-limited; capabilities + operating hours). */
     public JsonNode facilityProfile(long id) {
         return tuso.publicFacilityProfile(id);
+    }
+
+    /**
+     * Verified providers at a facility — a pure composition passthrough of Varapi's public register
+     * (Varapi owns the gate and the allow-listed practitioner fields; the BFF adds no truth and no
+     * other service's PII). Wraps the array as {@code {"providers":[...]}}; an unknown/empty facility
+     * yields {@code {"providers":[]}} (Varapi returns an empty list — no 404, no existence oracle).
+     * Never throws on empty. Rate-limit parity with {@link #facilityProfile} (an unmetered read).
+     */
+    public JsonNode verifiedProvidersAtFacility(long facilityId) {
+        JsonNode providers = varapi.publicFacilityPractitioners(facilityId);
+        ObjectNode out = JsonNodeFactory.instance.objectNode();
+        if (providers != null && providers.isArray()) {
+            out.set("providers", providers);
+        } else {
+            out.set("providers", JsonNodeFactory.instance.arrayNode());
+        }
+        return out;
     }
 
     // ── internals ─────────────────────────────────────────────────────────

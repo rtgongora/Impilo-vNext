@@ -88,6 +88,23 @@ public class PublicGatewayFindCareBffController {
         }
     }
 
+    /**
+     * Verified providers at a facility. Composition passthrough of Varapi's public register (Varapi
+     * owns the gate + allow-listed fields). Always {@code {"providers":[...]}}; an unknown/empty
+     * facility is a 200 with an empty list (no existence oracle).
+     */
+    @GetMapping("/facilities/{id}/practitioners")
+    public ResponseEntity<JsonNode> facilityPractitioners(@PathVariable long id) {
+        try {
+            return ResponseEntity.ok(findCareService.verifiedProvidersAtFacility(id));
+        } catch (org.springframework.web.client.HttpClientErrorException.NotFound nf) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            log.warn("Public find-care facility practitioners failed for id {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
+    }
+
     private static String clientIp(HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
