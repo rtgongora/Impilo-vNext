@@ -38,9 +38,23 @@ public class PublicFeedbackIntakeService {
     public static final int MAX_TITLE_CHARS = 200;
     public static final int MAX_DESCRIPTION_CHARS = 4000;
     public static final int MAX_CONTACT_CHARS = 255;
+    public static final int MAX_INCIDENT_REF_CHARS = 128;
 
-    /** Allow-listed public case types (mirrors rito's PublicCaseIntakeService). */
-    public static final Set<String> PUBLIC_CASE_TYPES = Set.of("COMPLAINT", "SAFETY_CONCERN");
+    /** Allow-listed public case types (mirrors rito's PublicCaseIntakeService widened lane). */
+    public static final Set<String> PUBLIC_CASE_TYPES =
+            Set.of("COMPLAINT", "SAFETY_CONCERN", "COMPLIMENT", "SUGGESTION");
+
+    /**
+     * Citizen-facing feedback categories the public lane accepts (mirrors rito's
+     * {@code PublicFeedbackRoutingPolicy.CATEGORIES}). When present, the category drives
+     * operational-owner routing + triage downstream and the caseType may be omitted.
+     */
+    public static final Set<String> FEEDBACK_CATEGORIES = Set.of(
+            "SOMETHING_NOT_WORKING", "PERFORMANCE", "SIGN_IN_PROBLEM", "BOOKING_PROBLEM",
+            "TELEMEDICINE_PROBLEM", "FACILITY_INFO_INCORRECT", "PROVIDER_INFO_INCORRECT",
+            "MAPPING_DIRECTIONS", "TRANSPORT_PROBLEM", "PAYMENT_PROBLEM", "HEALTH_ID_IDENTITY",
+            "ACCESSIBILITY_LANGUAGE", "PRIVACY_SECURITY", "PATIENT_SAFETY", "COMPLAINT_ABOUT_CARE",
+            "SUGGESTION", "COMPLIMENT");
 
     private static final String IP_RATE_PREFIX = "gateway:feedback:rl:ip:";
     private static final String GLOBAL_RATE_KEY = "gateway:feedback:rl:global";
@@ -76,7 +90,14 @@ public class PublicFeedbackIntakeService {
 
     public FeedbackReceipt submit(Map<String, Object> body, String clientIp) {
         String caseType = str(body, "caseType");
-        if (!PUBLIC_CASE_TYPES.contains(caseType)) {
+        String feedbackCategory = str(body, "feedbackCategory");
+        // A feedbackCategory drives operational-owner routing and wins over caseType; without one
+        // the caller must name an allow-listed public case type.
+        if (!feedbackCategory.isBlank()) {
+            if (!FEEDBACK_CATEGORIES.contains(feedbackCategory)) {
+                throw new FeedbackValidationException("Unknown feedback category.");
+            }
+        } else if (!PUBLIC_CASE_TYPES.contains(caseType)) {
             throw new FeedbackValidationException("caseType must be one of " + PUBLIC_CASE_TYPES);
         }
         String title = str(body, "title");
@@ -85,7 +106,8 @@ public class PublicFeedbackIntakeService {
             throw new FeedbackValidationException("A short title and a description are required.");
         }
         if (title.length() > MAX_TITLE_CHARS || description.length() > MAX_DESCRIPTION_CHARS
-                || str(body, "contact").length() > MAX_CONTACT_CHARS) {
+                || str(body, "contact").length() > MAX_CONTACT_CHARS
+                || str(body, "incidentRef").length() > MAX_INCIDENT_REF_CHARS) {
             throw new FeedbackValidationException("One of the fields is too long.");
         }
 
@@ -97,11 +119,13 @@ public class PublicFeedbackIntakeService {
                 "The service is busy right now. Please try again in a few minutes.");
 
         Map<String, Object> ritoBody = new LinkedHashMap<>();
-        ritoBody.put("caseType", caseType);
+        putIfPresent(ritoBody, "caseType", caseType);
+        putIfPresent(ritoBody, "feedbackCategory", feedbackCategory);
         ritoBody.put("title", title);
         ritoBody.put("description", description);
         putIfPresent(ritoBody, "facilityId", str(body, "facilityId"));
         putIfPresent(ritoBody, "contact", str(body, "contact"));
+        putIfPresent(ritoBody, "incidentRef", str(body, "incidentRef"));
 
         JsonNode created = rito.createPublicCase(ritoBody, resolveBearer());
         if (created == null || !created.hasNonNull("claimCode")) {
