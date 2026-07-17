@@ -477,6 +477,15 @@ kubectl rollout status deployment -n "$NAMESPACE" --timeout="${FULL_BOOT_ROLLOUT
 REPO_PATH="$REPO_PATH" NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/tls/restore-public-edge.sh" || \
   echo "WARN: public-edge restore reported an issue — check TLS/ingress manually."
 
+# Reconcile Keycloak confidential client secrets. The realm import's
+# "${env.KC_CLIENT_SECRET_*}" placeholders are first-import-only and not
+# substituted on the running estate, so a fresh Keycloak DB imports the literal
+# placeholder as each client secret → 401 unauthorized_client (citizen signup
+# shows "identity service not ready", ops-console login fails). This sets each
+# client's secret to its env value, as the import intended.
+NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/keycloak/reconcile-client-secrets.sh" || \
+  echo "WARN: keycloak client-secret reconcile failed — signup/ops-login may be broken until run manually."
+
 echo "--- Sovereign preview seeds (VARAPI, WGV, domain truth) ---"
 bash "$REPO_PATH/scripts/deploy/seed-full-preview-sovereign-data.sh" || {
   echo "WARN: sovereign seed script failed — continuing with smoke tests"
