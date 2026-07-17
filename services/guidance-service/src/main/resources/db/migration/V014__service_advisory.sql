@@ -73,9 +73,8 @@ VALUES
      'MODAL',
      'PUBLISHED',
      '{"audience": "public"}'::jsonb,
-     '[{"label": "Explore", "href": "/welcome"},'
-     || ' {"label": "Get involved", "href": "/get-involved"},'
-     || ' {"label": "Report a problem", "href": "/welcome/report"},'
-     || ' {"label": "View service status", "href": "/status"}]'::jsonb,
+     -- Single JSON literal: the ::jsonb cast binds tighter than ||, so a
+     -- concatenated form would cast only the last fragment and fail.
+     '[{"label": "Explore", "href": "/welcome"}, {"label": "Get involved", "href": "/get-involved"}, {"label": "Report a problem", "href": "/welcome/report"}, {"label": "View service status", "href": "/status"}]'::jsonb,
      'system',
      'system');
