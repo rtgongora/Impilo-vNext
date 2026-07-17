@@ -134,5 +134,68 @@
     "minutes": "minutes",
     "hours": "hours",
     "days": "days"
+  },
+  "public": {
+    "chrome": {
+      "skipToContent": "Skip to main content",
+      "healthOs": "Health Operating System",
+      "signIn": "Sign in",
+      "createAccount": "Create account",
+      "home": "Home",
+      "back": "Back",
+      "getApp": "Get the app",
+      "getInvolved": "Get involved",
+      "findCare": "Find care",
+      "emergency": "Emergency",
+      "serviceStatus": "Service status"
+    },
+    "footer": {
+      "copyright": "© Ministry of Health & Child Care · Impilo",
+      "findCare": "Find care",
+      "emergency": "Emergency",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "accessibilityLanguage": "Accessibility & language"
+    },
+    "language": {
+      "label": "Language",
+      "choose": "Choose language"
+    },
+    "welcome": {
+      "eyebrow": "Ministry of Health & Child Care",
+      "title": "Your health, connected and protected.",
+      "intro": "Impilo is Zimbabwe's national Health Operating System. Create an account to request a Health ID, receive care, view your records, and manage who can see them — with strong privacy and your consent at every step.",
+      "createAccount": "Create an account",
+      "signIn": "Sign in",
+      "requestHealthId": "Request a Health ID",
+      "noHealthIdNeeded": "You do not need a Health ID to get started — create an account first, then request one."
+    },
+    "emergency": {
+      "breadcrumb": "Emergency",
+      "title": "If life is at risk, get help now",
+      "intro": "For a medical emergency, call emergency services or go to the nearest hospital emergency department immediately. Do not wait to create an account.",
+      "findFacility": "Find a facility"
+    },
+    "findCare": {
+      "title": "What care or service are you looking for?",
+      "intro": "Search in your own words, or tap a service below. No sign-in needed.",
+      "search": "Search",
+      "commonServices": "Common services"
+    },
+    "status": {
+      "title": "Service status",
+      "intro": "A general overview of Impilo's main service groups and how available they are."
+    },
+    "download": {
+      "breadcrumb": "Get the app",
+      "title": "Take Impilo with you",
+      "intro": "Two apps, one National Health Operating System. The Impilo mobile apps are on the way — and you can use Impilo on the web today, no install needed."
+    },
+    "getInvolved": {
+      "breadcrumb": "Get involved",
+      "eyebrow": "Impilo is growing — with you",
+      "title": "Your experience can improve health care",
+      "intro": "Impilo is Zimbabwe's National Health Operating System, and it is still being built. The best ideas come from the people who use it. Tell us what matters to you — no account needed, and you can follow what happens next."
+    }
   }
 }

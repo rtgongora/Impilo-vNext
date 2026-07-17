@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
+import { GetInvolvedHero } from "@/components/public/GetInvolvedHero";
 
 export const metadata = {
   title: "Get involved — help build Impilo",
@@ -55,19 +56,7 @@ export default function GetInvolvedPage() {
         / Get involved
       </nav>
 
-      <section className="mt-3 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="text-sm font-medium uppercase tracking-wide text-emerald-700">
-          Impilo is growing — with you
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">
-          Your experience can improve health care
-        </h1>
-        <p className="mt-4 max-w-2xl text-lg text-slate-600">
-          Impilo is Zimbabwe&apos;s National Health Operating System, and it is still being built.
-          The best ideas come from the people who use it. Tell us what matters to you — no account
-          needed, and you can follow what happens next.
-        </p>
-      </section>
+      <GetInvolvedHero />
 
       {/* The two clear paths — honest routing. */}
       <section className="mt-6 grid gap-4 sm:grid-cols-2">

@@ -134,5 +134,33 @@
     "minutes": "maminitsi",
     "hours": "maawa",
     "days": "mazuva"
+  },
+  "public": {
+    "chrome": {
+      "skipToContent": "Svetukira kune zvemukati",
+      "signIn": "Pinda",
+      "createAccount": "Nyoresa",
+      "home": "Kumba",
+      "back": "Dzokera",
+      "findCare": "Tsvaga rubatsiro",
+      "emergency": "Rubatsiro rwekukurumidza"
+    },
+    "language": {
+      "label": "Mutauro",
+      "choose": "Sarudza mutauro"
+    },
+    "welcome": {
+      "signIn": "Pinda",
+      "createAccount": "Nyoresa"
+    },
+    "emergency": {
+      "breadcrumb": "Rubatsiro rwekukurumidza",
+      "title": "Kana upenyu huri panjodzi, tsvaga rubatsiro izvozvi",
+      "intro": "Kana paine chiitiko chekurwara chinokurumidza, fonera vabatsiri vekukurumidza kana kumhanya kuchipatara chiri pedyo newe ipapo. Usamirira kuti utange kunyoresa akaundi.",
+      "findFacility": "Tsvaga nzvimbo yekurapirwa"
+    },
+    "findCare": {
+      "search": "Tsvaga"
+    }
   }
 }

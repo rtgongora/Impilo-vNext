@@ -29,6 +29,7 @@ import {
   Video,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
+import { useI18n } from "@/lib/i18n/useI18n";
 import type { CareResult, CareSearchResponse } from "@/lib/find-care/types";
 import { SERVICE_CHIPS, PROVINCES, serviceTokenLabel } from "@/lib/find-care/service-chips";
 import { useFindCareJourneyStore } from "@/hooks/useFindCareJourneyStore";
@@ -45,6 +46,7 @@ interface SearchError {
 }
 
 export function FindCareExperience() {
+  const { t } = useI18n();
   const {
     need,
     serviceToken,
@@ -227,15 +229,15 @@ export function FindCareExperience() {
       {/* ── Need-first search ─────────────────────────────────────────── */}
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="find-care-heading">
         <h2 id="find-care-heading" className="text-lg font-semibold text-slate-900">
-          What care or service are you looking for?
+          {t("public.findCare.title")}
         </h2>
         <p className="mt-1 text-sm text-slate-600">
-          Search in your own words, or tap a service below. No sign-in needed.
+          {t("public.findCare.intro")}
         </p>
 
         <form className="mt-4 flex flex-wrap gap-2" onSubmit={submitFreeText} role="search">
           <label htmlFor="find-care-need" className="sr-only">
-            What care or service are you looking for?
+            {t("public.findCare.title")}
           </label>
           <div className="relative min-w-56 flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
@@ -254,13 +256,13 @@ export function FindCareExperience() {
             className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Search className="h-4 w-4" aria-hidden />}
-            Search
+            {t("public.findCare.search")}
           </button>
         </form>
 
         {/* Quick service chips */}
         <div className="mt-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Common services</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{t("public.findCare.commonServices")}</p>
           <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Quick service filters">
             {SERVICE_CHIPS.map((chip) => {
               const selected = serviceToken === chip.token;

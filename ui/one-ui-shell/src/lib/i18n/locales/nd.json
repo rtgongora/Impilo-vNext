@@ -134,5 +134,33 @@
     "minutes": "imizuzu",
     "hours": "amahola",
     "days": "insuku"
+  },
+  "public": {
+    "chrome": {
+      "skipToContent": "Yeqela kokuqukethwe",
+      "signIn": "Ngena",
+      "createAccount": "Bhalisa",
+      "home": "Ekhaya",
+      "back": "Buyela emuva",
+      "findCare": "Dinga usizo",
+      "emergency": "Usizo oluphuthumayo"
+    },
+    "language": {
+      "label": "Ulimi",
+      "choose": "Khetha ulimi"
+    },
+    "welcome": {
+      "signIn": "Ngena",
+      "createAccount": "Bhalisa"
+    },
+    "emergency": {
+      "breadcrumb": "Usizo oluphuthumayo",
+      "title": "Nxa impilo isengozini, dinga usizo khathesi",
+      "intro": "Nxa kulesimo esiphuthumayo sezempilakahle, tshaya inombolo yosizo oluphuthumayo kumbe uye esibhedlela esiseduze lawe khonokho. Ungalindi ukuthi wenze i-akhawunti.",
+      "findFacility": "Dinga indawo yokwelatshwa"
+    },
+    "findCare": {
+      "search": "Dinga"
+    }
   }
 }

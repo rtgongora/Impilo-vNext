@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
+import { WelcomeHero } from "@/components/public/WelcomeHero";
 import { IntentLink } from "@/components/public/IntentLink";
 import { GatewayEscalationExplainer } from "@/components/intelligent/GatewayEscalationExplainer";
 import type { GatewayPillar } from "@/lib/gateway-intent";
@@ -106,43 +107,7 @@ const INTENT_PILLARS: Array<{
 export default function WelcomePage() {
   return (
     <PublicShell>
-      <section className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="text-sm font-medium uppercase tracking-wide text-emerald-700">
-          Ministry of Health &amp; Child Care
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">
-          Your health, connected and protected.
-        </h1>
-        <p className="mt-4 max-w-2xl text-lg text-slate-600">
-          Impilo is Zimbabwe&apos;s national Health Operating System. Create an account to request a
-          Health ID, receive care, view your records, and manage who can see them — with strong
-          privacy and your consent at every step.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/auth/register/contact"
-            className="rounded-lg bg-emerald-600 px-5 py-2.5 font-semibold text-white hover:bg-emerald-700"
-          >
-            Create an account
-          </Link>
-          <Link
-            href="/auth/login"
-            className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 font-semibold text-slate-800 hover:bg-slate-50"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/auth/register?intent=health-id"
-            className="rounded-lg border border-emerald-300 bg-emerald-50 px-5 py-2.5 font-semibold text-emerald-800 hover:bg-emerald-100"
-          >
-            Request a Health ID
-          </Link>
-        </div>
-        <p className="mt-3 text-sm text-slate-500">
-          You do <strong>not</strong> need a Health ID to get started — create an account first, then
-          request one.
-        </p>
-      </section>
+      <WelcomeHero />
 
       <section className="mt-8 grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-5">

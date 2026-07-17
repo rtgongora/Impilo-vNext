@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
+import { DownloadHero } from "@/components/public/DownloadHero";
 import { GetAppSurface } from "@/components/download/GetAppSurface";
 
 export const metadata = {
@@ -26,13 +27,7 @@ export default function DownloadPage() {
         / Get the app
       </nav>
 
-      <section className="mt-3 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-slate-900">Take Impilo with you</h1>
-        <p className="mt-2 max-w-2xl text-slate-600">
-          Two apps, one National Health Operating System. The Impilo mobile apps are on the way —
-          and you can use Impilo on the web today, no install needed.
-        </p>
-      </section>
+      <DownloadHero />
 
       <section className="mt-6">
         <GetAppSurface />

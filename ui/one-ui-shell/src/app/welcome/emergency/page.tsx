@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
+import { EmergencyHero } from "@/components/public/EmergencyHero";
 import { EmergencyAssistanceForm } from "@/components/public/EmergencyAssistanceForm";
 
 export const metadata = {
@@ -19,11 +20,7 @@ export default function EmergencyPage() {
       </nav>
 
       <div className="mt-3 rounded-2xl border border-red-300 bg-red-50 p-6">
-        <h1 className="text-2xl font-bold text-red-800">If life is at risk, get help now</h1>
-        <p className="mt-2 text-red-900">
-          For a medical emergency, call emergency services or go to the nearest hospital emergency
-          department immediately. Do not wait to create an account.
-        </p>
+        <EmergencyHero />
         <dl className="mt-4 grid gap-3 sm:grid-cols-3">
           <div className="rounded-lg bg-white p-4">
             <dt className="text-xs uppercase tracking-wide text-slate-500">Ambulance / Police / Fire</dt>

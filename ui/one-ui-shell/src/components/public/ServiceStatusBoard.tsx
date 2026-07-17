@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
+import { useI18n } from "@/lib/i18n/useI18n";
 import {
   SERVICE_STATUS_BOARD,
   STATE_META,
@@ -93,6 +94,7 @@ function buildRows(feed: LiveStatus | null): DisplayRow[] {
 }
 
 export function ServiceStatusBoard() {
+  const { t } = useI18n();
   const [feed, setFeed] = useState<LiveStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -123,9 +125,9 @@ export function ServiceStatusBoard() {
   return (
     <>
       <section className="mt-3 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-slate-900">Service status</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t("public.status.title")}</h1>
         <p className="mt-2 max-w-2xl text-slate-600">
-          A general overview of Impilo&apos;s main service groups and how available they are.
+          {t("public.status.intro")}
         </p>
 
         {anyLive ? (
