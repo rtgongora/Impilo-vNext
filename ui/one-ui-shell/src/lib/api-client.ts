@@ -25,6 +25,7 @@
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { randomUUID } from "@/lib/uuid";
 import { isStepUpRequired } from "@/lib/stepUp";
+import { recordNompiloFailure } from "@/lib/nompilo-failure";
 
 // Use NEXT_PUBLIC_BFF_URL when explicitly set (Docker, tests, SSR).
 // In the browser without an explicit URL, use relative paths so requests proxy
@@ -362,6 +363,36 @@ function handleAuthFailure(): void {
   }
 }
 
+/**
+ * Feed a failed API call into the Nompilo failure signal so the assistant can offer
+ * context-aware recovery. Privacy-safe by construction: only the page route, the machine
+ * error code, and the correlation/request ids (already on the wire) are captured — never
+ * the request body, response body, or any PII/clinical/credential content.
+ *
+ * 401s that are session-expiry/step-up are excluded (they have their own refresh/challenge
+ * flow and are not user-actionable failures).
+ */
+function recordApiFailure(
+  status: number,
+  errorBody: unknown,
+  response?: Response,
+): void {
+  if (typeof window === "undefined") return;
+  const envelope = (errorBody as Partial<ApiError> | null)?.error;
+  const code = envelope?.code || `HTTP_${status}`;
+  const correlationId =
+    envelope?.correlation_id || response?.headers?.get("X-Correlation-ID") || undefined;
+  const requestId =
+    envelope?.request_id || response?.headers?.get("X-Request-ID") || undefined;
+  recordNompiloFailure({
+    route: window.location.pathname,
+    code,
+    correlationId,
+    requestId,
+    status,
+  });
+}
+
 export type ApiRequestOptions = {
   extraHeaders?: Record<string, string>;
 };
@@ -423,6 +454,7 @@ async function request<T>(
         handleAuthFailure();
       }
 
+      recordApiFailure(retryResponse.status, retryBody, retryResponse);
       throw { status: retryResponse.status, ...(retryBody || {}) };
     }
 
@@ -433,6 +465,7 @@ async function request<T>(
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null);
+    recordApiFailure(response.status, errorBody, response);
     throw {
       status: response.status,
       ...(errorBody || {}),
