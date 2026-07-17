@@ -19,6 +19,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "zw.gov.impilo.citizen",
       "buildNumber": "1",
+      "associatedDomains": ["applinks:impilo.mohcc.gov.zw"],
       "infoPlist": {
         "NSCameraUsageDescription": "Used for telehealth video consultations and to scan QR codes for health records.",
         "NSPhotoLibraryUsageDescription": "Used to upload profile photos and documents.",
@@ -42,6 +43,20 @@
         "ACCESS_NETWORK_STATE",
         "RECORD_AUDIO",
         "MODIFY_AUDIO_SETTINGS"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "category": ["BROWSABLE", "DEFAULT"],
+          "data": [
+            { "scheme": "https", "host": "impilo.mohcc.gov.zw", "pathPrefix": "/welcome/find-care" },
+            { "scheme": "https", "host": "impilo.mohcc.gov.zw", "pathPrefix": "/appointments" },
+            { "scheme": "https", "host": "impilo.mohcc.gov.zw", "pathPrefix": "/bills" },
+            { "scheme": "https", "host": "impilo.mohcc.gov.zw", "pathPrefix": "/welcome/report" },
+            { "scheme": "https", "host": "impilo.mohcc.gov.zw", "pathPrefix": "/get-involved" }
+          ]
+        }
       ]
     },
     "plugins": [

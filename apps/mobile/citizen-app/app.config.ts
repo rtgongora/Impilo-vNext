@@ -50,6 +50,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
     bundleIdentifier: BUNDLE,
     buildNumber: "1",
+    // Universal Links: iOS verifies this against
+    // https://impilo.mohcc.gov.zw/.well-known/apple-app-site-association.
+    // Verification only completes once the real Apple Team ID replaces
+    // TEAMID_PENDING in that file (see apps/mobile/DEEP_LINKING.md).
+    associatedDomains: ["applinks:impilo.mohcc.gov.zw"],
     infoPlist: {
       NSCameraUsageDescription:
         "Used to scan QR codes for health records.",
@@ -75,6 +80,26 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "INTERNET",
       "ACCESS_NETWORK_STATE",
       "RECORD_AUDIO",
+    ],
+    // Android App Links: autoVerify makes the OS check
+    // https://impilo.mohcc.gov.zw/.well-known/assetlinks.json against the
+    // release-signing certificate. Verified links open the app directly;
+    // verification only completes once the real signing SHA256 replaces the
+    // placeholder in that file (see apps/mobile/DEEP_LINKING.md). The custom
+    // scheme (impilo-citizen://) keeps working regardless.
+    intentFilters: [
+      {
+        action: "VIEW",
+        autoVerify: true,
+        category: ["BROWSABLE", "DEFAULT"],
+        data: [
+          { scheme: "https", host: "impilo.mohcc.gov.zw", pathPrefix: "/welcome/find-care" },
+          { scheme: "https", host: "impilo.mohcc.gov.zw", pathPrefix: "/appointments" },
+          { scheme: "https", host: "impilo.mohcc.gov.zw", pathPrefix: "/bills" },
+          { scheme: "https", host: "impilo.mohcc.gov.zw", pathPrefix: "/welcome/report" },
+          { scheme: "https", host: "impilo.mohcc.gov.zw", pathPrefix: "/get-involved" },
+        ],
+      },
     ],
   },
   plugins: [

@@ -19,6 +19,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "zw.gov.impilo.provider",
       "buildNumber": "1",
+      "associatedDomains": ["applinks:impilo.mohcc.gov.zw"],
       "infoPlist": {
         "NSCameraUsageDescription": "Used for telemedicine video consultations, scanning patient IDs, and capturing clinical images.",
         "NSMicrophoneUsageDescription": "Used for telemedicine audio and video consultations.",
@@ -43,6 +44,17 @@
         "ACCESS_NETWORK_STATE",
         "RECORD_AUDIO",
         "MODIFY_AUDIO_SETTINGS"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "category": ["BROWSABLE", "DEFAULT"],
+          "data": [
+            { "scheme": "https", "host": "impilo.mohcc.gov.zw", "pathPrefix": "/provider" },
+            { "scheme": "https", "host": "impilo.mohcc.gov.zw", "pathPrefix": "/work" }
+          ]
+        }
       ]
     },
     "plugins": [
