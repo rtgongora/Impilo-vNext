@@ -201,7 +201,21 @@ fb_run_deploy_if_authorized() {
   export FULL_BOOT_IMAGE_TAG="$TAG"
   export FULL_BOOT_SKIP_BUILD="${FULL_BOOT_SKIP_BUILD:-1}"
   unset FULL_BOOT_SKIP_IMPORT || true
-  fb_cleanup_full_boot_namespace
+  # Deploy mode. DEFAULT = in-place: 'helm upgrade --install' rolls only the changed
+  # Deployments and leaves everything else (incl. the namespace-scoped TLS secret,
+  # IngressRoutes and running pods) untouched — no full teardown, no estate-wide
+  # downtime. Opt into a destructive clean-room rebuild (wipe + redeploy from zero)
+  # only when you genuinely need a clean slate, via FULL_BOOT_CLEAN_REBUILD=1.
+  if [[ "${FULL_BOOT_CLEAN_REBUILD:-0}" == "1" ]]; then
+    echo "--- CLEAN REBUILD (FULL_BOOT_CLEAN_REBUILD=1): wiping namespace $IMPILO_FULLBOOT_NS ---"
+    echo "    NOTE: this destroys namespace-scoped non-chart objects (TLS secret, IngressRoutes,"
+    echo "          acme svc). The deploy tail restores the edge; the root-only TLS secret needs"
+    echo "          'sudo /usr/local/bin/sync-mohcc-gov-tls.sh' afterwards."
+    fb_cleanup_full_boot_namespace
+  else
+    echo "--- IN-PLACE upgrade (default): namespace preserved; helm upgrade rolls only changed services ---"
+    echo "    (set FULL_BOOT_CLEAN_REBUILD=1 for a destructive clean-room rebuild)"
+  fi
   printf '%s\n' "$DEPLOY_PHRASE" | bash scripts/deploy/full-boot-preview-deploy.sh
   fb_workflow_update "deploy_completed"
 }
