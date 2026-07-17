@@ -4,12 +4,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.obs.persistence.entity.ClientEventEntity;
 import zw.gov.mohcc.impilo.obs.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.obs.persistence.entity.ServiceHeartbeatEntity;
+import zw.gov.mohcc.impilo.obs.persistence.repository.ClientEventRepository;
 import zw.gov.mohcc.impilo.obs.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.obs.persistence.repository.ServiceHeartbeatRepository;
 
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -17,15 +20,21 @@ import java.util.stream.Collectors;
 public class OpsService {
 
     private static final Logger log = LoggerFactory.getLogger(OpsService.class);
-    private static final int STALE_THRESHOLD_MINUTES = 5;
+    static final int STALE_THRESHOLD_MINUTES = 5;
+
+    /** Server-side cap on a single client-event ingest batch; extras are ignored. */
+    static final int MAX_CLIENT_EVENTS_BATCH = 50;
 
     private final ServiceHeartbeatRepository heartbeatRepository;
     private final EventOutboxRepository outboxRepository;
+    private final ClientEventRepository clientEventRepository;
 
     public OpsService(ServiceHeartbeatRepository heartbeatRepository,
-                      EventOutboxRepository outboxRepository) {
+                      EventOutboxRepository outboxRepository,
+                      ClientEventRepository clientEventRepository) {
         this.heartbeatRepository = heartbeatRepository;
         this.outboxRepository = outboxRepository;
+        this.clientEventRepository = clientEventRepository;
     }
 
     @Transactional
@@ -115,5 +124,59 @@ public class OpsService {
         lag.put("oldest_unpublished_at", oldestUnpublished != null ? oldestUnpublished.toString() : null);
         lag.put("measured_at", OffsetDateTime.now().toString());
         return lag;
+    }
+
+    /**
+     * Persist a batch of PII-free client events. The batch is capped server-side
+     * at {@link #MAX_CLIENT_EVENTS_BATCH}; over-long allow-listed fields are
+     * truncated defensively. Returns the number of events accepted (persisted).
+     */
+    @Transactional
+    public int recordClientEvents(UUID tenantId, List<ClientEventCommand> events) {
+        if (events == null || events.isEmpty()) {
+            return 0;
+        }
+        List<ClientEventCommand> capped = events.size() > MAX_CLIENT_EVENTS_BATCH
+                ? events.subList(0, MAX_CLIENT_EVENTS_BATCH)
+                : events;
+
+        int accepted = 0;
+        for (ClientEventCommand ev : capped) {
+            if (ev == null) {
+                continue;
+            }
+            ClientEventEntity entity = new ClientEventEntity();
+            entity.setTenantId(tenantId);
+            entity.setRoute(truncate(ev.route(), 256));
+            entity.setCode(truncate(ev.code(), 64));
+            entity.setCorrelationId(truncate(ev.correlationId(), 64));
+            entity.setRequestId(truncate(ev.requestId(), 64));
+            entity.setHttpStatus(ev.status());
+            entity.setOccurredAt(parseOccurredAt(ev.at()));
+            entity.setSource("CLIENT");
+            clientEventRepository.save(entity);
+            accepted++;
+        }
+        log.info("Client events ingested [tenant={}, accepted={}, submitted={}]",
+                tenantId, accepted, events.size());
+        return accepted;
+    }
+
+    private static String truncate(String value, int maxLength) {
+        if (value == null) {
+            return null;
+        }
+        return value.length() > maxLength ? value.substring(0, maxLength) : value;
+    }
+
+    private static OffsetDateTime parseOccurredAt(String at) {
+        if (at == null || at.isBlank()) {
+            return null;
+        }
+        try {
+            return OffsetDateTime.parse(at.trim());
+        } catch (DateTimeParseException ex) {
+            return null;
+        }
     }
 }
