@@ -127,6 +127,37 @@ public class OpsService {
     }
 
     /**
+     * Disclosure-limited public projection of the service-status board.
+     *
+     * <p>Reuses the same UP/STALE derivation as {@link #getHealthSummary()} but
+     * exposes ONLY service name, derived liveness, and last heartbeat — never
+     * instance ids, tenant, version, metadata, instance counts, or raw stored
+     * status strings.</p>
+     */
+    @Transactional(readOnly = true)
+    public PublicServiceStatusSummary getPublicServiceStatus() {
+        OffsetDateTime threshold = OffsetDateTime.now().minusMinutes(STALE_THRESHOLD_MINUTES);
+        List<ServiceHeartbeatEntity> all = heartbeatRepository.findAll();
+
+        List<PublicServiceStatusItem> services = all.stream()
+                .collect(Collectors.groupingBy(ServiceHeartbeatEntity::getServiceName))
+                .entrySet().stream()
+                .map(entry -> {
+                    boolean isHealthy = entry.getValue().stream()
+                            .anyMatch(h -> h.getLastHeartbeat().isAfter(threshold));
+                    OffsetDateTime last = entry.getValue().stream()
+                            .map(ServiceHeartbeatEntity::getLastHeartbeat)
+                            .max(Comparator.naturalOrder())
+                            .orElse(null);
+                    return new PublicServiceStatusItem(entry.getKey(), isHealthy ? "UP" : "STALE", last);
+                })
+                .sorted(Comparator.comparing(PublicServiceStatusItem::serviceName))
+                .toList();
+
+        return new PublicServiceStatusSummary(OffsetDateTime.now(), STALE_THRESHOLD_MINUTES, services);
+    }
+
+    /**
      * Persist a batch of PII-free client events. The batch is capped server-side
      * at {@link #MAX_CLIENT_EVENTS_BATCH}; over-long allow-listed fields are
      * truncated defensively. Returns the number of events accepted (persisted).

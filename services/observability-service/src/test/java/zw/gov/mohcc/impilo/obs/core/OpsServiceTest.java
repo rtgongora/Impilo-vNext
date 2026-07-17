@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +19,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.obs.persistence.entity.ClientEventEntity;
+import zw.gov.mohcc.impilo.obs.persistence.entity.ServiceHeartbeatEntity;
 import zw.gov.mohcc.impilo.obs.persistence.repository.ClientEventRepository;
 import zw.gov.mohcc.impilo.obs.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.obs.persistence.repository.ServiceHeartbeatRepository;
@@ -33,6 +36,73 @@ class OpsServiceTest {
     @BeforeEach
     void setUp() {
         opsService = new OpsService(heartbeatRepository, outboxRepository, clientEventRepository);
+    }
+
+    private static ServiceHeartbeatEntity heartbeat(String service, String instance,
+                                                    OffsetDateTime last, String rawStatus) {
+        ServiceHeartbeatEntity hb = new ServiceHeartbeatEntity();
+        hb.setServiceName(service);
+        hb.setInstanceId(instance);
+        hb.setTenantId(UUID.randomUUID());
+        hb.setStatus(rawStatus);
+        hb.setVersionTag("9.9.9");
+        hb.setMetadata("{\"secret\":\"leak\"}");
+        hb.setLastHeartbeat(last);
+        return hb;
+    }
+
+    @Nested
+    @DisplayName("Public service-status projection")
+    class PublicStatusProjection {
+
+        @Test
+        @DisplayName("derives UP/STALE and exposes only serviceName + status + lastHeartbeat")
+        void projectionIsDisclosureLimited() {
+            OffsetDateTime now = OffsetDateTime.now();
+            when(heartbeatRepository.findAll()).thenReturn(List.of(
+                    heartbeat("fresh-svc", "inst-a", now.minusMinutes(1), "DEGRADED"),
+                    heartbeat("stale-svc", "inst-b", now.minusMinutes(30), "UP")));
+
+            PublicServiceStatusSummary summary = opsService.getPublicServiceStatus();
+
+            assertThat(summary.staleThresholdMinutes()).isEqualTo(5);
+            assertThat(summary.generatedAt()).isNotNull();
+            assertThat(summary.services()).hasSize(2);
+
+            PublicServiceStatusItem fresh = summary.services().stream()
+                    .filter(s -> s.serviceName().equals("fresh-svc")).findFirst().orElseThrow();
+            PublicServiceStatusItem stale = summary.services().stream()
+                    .filter(s -> s.serviceName().equals("stale-svc")).findFirst().orElseThrow();
+
+            // Liveness is DERIVED (never the raw stored status string, never invented states).
+            assertThat(fresh.status()).isEqualTo("UP");
+            assertThat(stale.status()).isEqualTo("STALE");
+            assertThat(fresh.lastHeartbeat()).isNotNull();
+
+            // The typed projection has exactly three accessor components — no instance
+            // ids, tenant, version, metadata, or instance counts can be reached.
+            assertThat(PublicServiceStatusItem.class.getRecordComponents())
+                    .extracting(java.lang.reflect.RecordComponent::getName)
+                    .containsExactlyInAnyOrder("serviceName", "status", "lastHeartbeat");
+            assertThat(PublicServiceStatusSummary.class.getRecordComponents())
+                    .extracting(java.lang.reflect.RecordComponent::getName)
+                    .containsExactlyInAnyOrder("generatedAt", "staleThresholdMinutes", "services");
+        }
+
+        @Test
+        @DisplayName("collapses multiple instances of one service into a single item (no instance count)")
+        void collapsesInstances() {
+            OffsetDateTime now = OffsetDateTime.now();
+            when(heartbeatRepository.findAll()).thenReturn(List.of(
+                    heartbeat("svc", "inst-1", now.minusMinutes(30), "UP"),
+                    heartbeat("svc", "inst-2", now.minusMinutes(1), "UP")));
+
+            PublicServiceStatusSummary summary = opsService.getPublicServiceStatus();
+
+            assertThat(summary.services()).hasSize(1);
+            // Any instance fresh => service UP.
+            assertThat(summary.services().get(0).status()).isEqualTo("UP");
+        }
     }
 
     @Nested
