@@ -21,7 +21,7 @@ VALUES (
     'Impilo Surgical Procedure Codes',
     'Curated national surgical-procedure code set (ICD-9-CM-procedure aligned) for perioperative coding.',
     'PUBLISHED',
-    $json${
+    $cs${
       "resourceType": "CodeSystem",
       "url": "https://impilo.gov.zw/fhir/CodeSystem/surgical-procedures",
       "version": "1.0.0",
@@ -45,13 +45,13 @@ VALUES (
         {"code": "85.41", "display": "Unilateral simple mastectomy"},
         {"code": "68.49", "display": "Total abdominal hysterectomy"}
       ]
-    }$json$,
-    md5($json${
+    }$cs$,
+    md5($cs${
       "resourceType": "CodeSystem",
       "url": "https://impilo.gov.zw/fhir/CodeSystem/surgical-procedures",
       "version": "1.0.0",
       "concept": ["47.0","47.01","74.1","53.00","53.10","79.36","54.11","51.23","85.41","68.49"]
-    }$json$),
+    }$cs$),
     'Ministry of Health and Child Care, Zimbabwe',
     'ZW',
     'system-seeder',
@@ -71,7 +71,7 @@ VALUES (
     'Impilo Surgical Procedures Value Set',
     'Value set of billable/schedulable surgical procedures composing the Impilo surgical-procedure CodeSystem.',
     'PUBLISHED',
-    $json${
+    $cs${
       "resourceType": "ValueSet",
       "url": "https://impilo.gov.zw/fhir/ValueSet/surgical-procedures",
       "version": "1.0.0",
@@ -97,8 +97,8 @@ VALUES (
           }
         ]
       }
-    }$json$,
-    md5($json$valueset:surgical-procedures:1.0.0$json$),
+    }$cs$,
+    md5($cs$valueset:surgical-procedures:1.0.0$cs$),
     'Ministry of Health and Child Care, Zimbabwe',
     'ZW',
     'system-seeder',
