@@ -36,6 +36,17 @@ import { useFacilities, type FacilityResource } from "@/hooks/queries/useFacilit
 import type { BookingChannel, BookingTargetType } from "@/lib/booking-bff";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { RecognisedProviderChip } from "@/components/common/RecognisedProviderChip";
+import { useFormDraft } from "@/hooks/useFormDraftStore";
+
+/** Non-secret booking intent preserved across interruptions (no payment/consent state). */
+interface BookingDraft extends Record<string, unknown> {
+  targetType: BookingTargetType | "";
+  bookingType: string;
+  preferredDate: string;
+  preferredTime: string;
+  channel: BookingChannel;
+  reason: string;
+}
 
 const TARGET_TYPES: {
   id: BookingTargetType;
@@ -105,6 +116,25 @@ export default function BookServiceWizardPage() {
 
   const createBooking = useCreateBooking();
   const requestMvumo = useRequestBookingMvumo();
+
+  // Preserve the citizen's booking intent (not payment/consent state) so a sign-in or
+  // session-expiry interruption returns them to what they had chosen.
+  const { hydrated, draft, save, clear } = useFormDraft<BookingDraft>("booking-new");
+
+  useEffect(() => {
+    if (!hydrated || !draft) return;
+    if (typeof draft.targetType === "string") setTargetType(draft.targetType);
+    if (typeof draft.bookingType === "string") setBookingType(draft.bookingType);
+    if (typeof draft.preferredDate === "string") setPreferredDate(draft.preferredDate);
+    if (typeof draft.preferredTime === "string") setPreferredTime(draft.preferredTime);
+    if (typeof draft.channel === "string") setChannel(draft.channel as BookingChannel);
+    if (typeof draft.reason === "string") setReason(draft.reason);
+  }, [hydrated, draft]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    save({ targetType, bookingType, preferredDate, preferredTime, channel, reason });
+  }, [hydrated, targetType, bookingType, preferredDate, preferredTime, channel, reason, save]);
 
   const { data: facilitiesData, isLoading: facilitiesLoading } = useFacilities(
     debouncedFacilitySearch.length >= 2 ? { search: debouncedFacilitySearch, size: 12 } : { size: 8 },
@@ -189,6 +219,7 @@ export default function BookServiceWizardPage() {
       serviceName: targetLabel || undefined,
     });
     if (result?.id) {
+      clear();
       setSubmittedId(result.id);
       router.push(`/home/bookings/${result.id}`);
     }

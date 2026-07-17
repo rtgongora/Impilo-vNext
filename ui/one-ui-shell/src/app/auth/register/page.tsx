@@ -9,7 +9,7 @@
  * On success: auto-login and redirect to /home.
  */
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -30,6 +30,15 @@ import { useAcceptPolicyConsent } from "@/hooks/queries/usePolicyConsent";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
 import { useRegistrationReadiness } from "@/hooks/queries/useIdentityAssurance";
+import { useFormDraft } from "@/hooks/useFormDraftStore";
+
+/** Non-secret fields preserved across a sign-in interruption (passwords are never persisted). */
+interface RegisterDraft extends Record<string, unknown> {
+  fullName: string;
+  identifier: string;
+  hasHealthId: boolean | null;
+  healthId: string;
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -50,6 +59,24 @@ export default function RegisterPage() {
   const [submitting, setSubmitting] = useState(false);
   const readiness = useRegistrationReadiness();
   const registrationReady = readiness.data?.data?.attributes?.ready !== false;
+
+  // Preserve non-secret entries so an interrupted sign-up (or a bounce to sign-in) returns
+  // the citizen to what they typed. Passwords are never persisted (stripped by the store).
+  const { hydrated, draft, save, clear } = useFormDraft<RegisterDraft>("auth-register");
+
+  useEffect(() => {
+    if (!hydrated || !draft) return;
+    if (typeof draft.fullName === "string") setFullName(draft.fullName);
+    if (typeof draft.identifier === "string") setIdentifier(draft.identifier);
+    if (typeof draft.hasHealthId === "boolean") setHasHealthId(draft.hasHealthId);
+    if (typeof draft.healthId === "string") setHealthId(draft.healthId);
+  }, [hydrated, draft]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!fullName && !identifier && !healthId && hasHealthId === null) return;
+    save({ fullName, identifier, hasHealthId, healthId });
+  }, [hydrated, fullName, identifier, hasHealthId, healthId, save]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -129,8 +156,10 @@ export default function RegisterPage() {
           termsOfUseAccepted: true,
           channel: "WEB",
         });
+        clear();
         router.push("/auth/register/assurance");
       } else if (attrs.status === "REGISTERED") {
+        clear();
         router.push(`/auth/login?registered=true&message=${encodeURIComponent(attrs.message ?? "Account created. Please sign in.")}`);
       } else {
         setError("Registration completed but sign-in could not start automatically. Please sign in manually.");
