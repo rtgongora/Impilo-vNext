@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { recordClientObservation } from "@/lib/client-observability";
 
 /**
  * Nompilo failure signal — the lightweight bridge that lets a citizen action failure
@@ -73,6 +74,22 @@ export function recordNompiloFailure(signal: Omit<NompiloFailureSignal, "at">): 
     useNompiloFailureStore.getState().record(signal);
   } catch {
     // Never let failure-signal recording break the primary error path.
+  }
+  // Fan out to the batched, PII-free network sink from this single record site, so every failure
+  // choke point (api-client, ShellErrorBoundary, dead-end capture) is shipped without duplicating
+  // the feed. Drops `action` (the only free-text-ish field) — allow-list is enforced again in the
+  // sink. This module imports the sink one-way (sink imports nothing from the app), so no cycle.
+  try {
+    recordClientObservation({
+      route: signal.route,
+      code: signal.code,
+      correlationId: signal.correlationId,
+      requestId: signal.requestId,
+      status: signal.status,
+      at: Date.now(),
+    });
+  } catch {
+    // Sink is best-effort; never let it break the primary error path.
   }
 }
 
