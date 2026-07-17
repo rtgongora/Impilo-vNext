@@ -34,8 +34,11 @@ public class PublicCaseIntakeController {
         this.intakeService = intakeService;
     }
 
-    public record PublicCaseRequest(String caseType, String title, String description,
-                                    UUID facilityId, String contact) {}
+    private static final int MAX_INCIDENT_REF = 128;
+
+    public record PublicCaseRequest(String caseType, String feedbackCategory, String title,
+                                    String description, UUID facilityId, String contact,
+                                    String incidentRef) {}
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> openCase(
@@ -46,13 +49,14 @@ public class PublicCaseIntakeController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "title and description are required");
         }
         if (body.title().length() > MAX_TITLE || body.description().length() > MAX_DESCRIPTION
-                || (body.contact() != null && body.contact().length() > MAX_CONTACT)) {
+                || (body.contact() != null && body.contact().length() > MAX_CONTACT)
+                || (body.incidentRef() != null && body.incidentRef().length() > MAX_INCIDENT_REF)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "field length exceeded");
         }
         try {
             PublicCaseIntakeService.PublicIntakeResult result = intakeService.openPublicCase(
-                    tenantId, body.caseType(), body.title().trim(), body.description().trim(),
-                    body.facilityId(), body.contact());
+                    tenantId, body.caseType(), body.feedbackCategory(), body.title().trim(),
+                    body.description().trim(), body.facilityId(), body.contact(), body.incidentRef());
             log.info("Public case opened [reference={}] tenant={}", result.caseReference(), tenantId);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "caseReference", result.caseReference(),

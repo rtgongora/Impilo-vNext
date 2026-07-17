@@ -59,6 +59,22 @@ public class CaseEntity {
     @Column(name = "sensitive", nullable = false)
     private Boolean sensitive;
 
+    /**
+     * Citizen-facing feedback category from the public feedback loop (distinct from the clinical
+     * case type). Null for cases opened outside the routed public lane. See
+     * {@code PublicFeedbackRoutingPolicy}.
+     */
+    @Column(name = "feedback_category", length = 64)
+    private String feedbackCategory;
+
+    /** Operational owner routed from the feedback category — the team whose queue must act. */
+    @Column(name = "operational_owner", length = 64)
+    private String operationalOwner;
+
+    /** Triage priority routed from the feedback category: CRITICAL / HIGH / ROUTINE. */
+    @Column(name = "triage_priority", length = 16)
+    private String triagePriority;
+
     @Column(name = "facility_id")
     private UUID facilityId;
 
@@ -190,6 +206,12 @@ public class CaseEntity {
     public void setAnonymous(Boolean anonymous) { this.anonymous = anonymous; }
     public Boolean getSensitive() { return sensitive; }
     public void setSensitive(Boolean sensitive) { this.sensitive = sensitive; }
+    public String getFeedbackCategory() { return feedbackCategory; }
+    public void setFeedbackCategory(String feedbackCategory) { this.feedbackCategory = feedbackCategory; }
+    public String getOperationalOwner() { return operationalOwner; }
+    public void setOperationalOwner(String operationalOwner) { this.operationalOwner = operationalOwner; }
+    public String getTriagePriority() { return triagePriority; }
+    public void setTriagePriority(String triagePriority) { this.triagePriority = triagePriority; }
     public UUID getFacilityId() { return facilityId; }
     public void setFacilityId(UUID facilityId) { this.facilityId = facilityId; }
     public UUID getDistrictId() { return districtId; }
