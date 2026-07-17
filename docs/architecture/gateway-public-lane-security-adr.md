@@ -157,10 +157,26 @@ It is a **read-only composition** governed by the same discipline as the rest of
   (`FacilityCapabilityRepository.findFacilityIdsByActiveServiceToken` → `FacilityService.searchFacilitiesByService`,
   exposed via the existing `PublicFacilityController` `search` with an optional `service` facet).
   The BFF (`FindCareOrchestrationService`) composes; it does not decide what a facility offers.
-- **Deterministic interpretation.** Free text is mapped to a capability token by a seeded, in-code
-  synonym table (`FindCareServiceTaxonomy.interpret`) — no PII, no model, fully auditable. The
-  single `interpret(...)` seam is where a later LLM/semantic path plugs in without touching the
-  orchestrator. An unrecognized phrase degrades to a plain name search (surfaced in `notes`).
+- **Deterministic interpretation (with an off-by-default NL upgrade seam).** Free text is mapped to a
+  capability token by a seeded, in-code synonym table (`FindCareServiceTaxonomy.interpret`) — no PII,
+  no model, fully auditable. The single `interpret(...)` seam is where a semantic path plugs in
+  without touching the orchestrator. That seam is now wired to the governed structured-output
+  endpoint of **llm-orchestration-service** (`POST /internal/v1/llm/structured`, the system of record
+  for model routing — not guidance-service) via `LlmStructuredServiceClient`, behind the feature flag
+  `impilo.findcare.llm-interpret.enabled` (**default false**, so the deterministic path always ships).
+  When enabled, the model runs only after the synonym table finds nothing, and its output is fenced to
+  the existing token vocabulary (`KNOWN_TOKENS`) — it can never invent a capability the registry
+  search does not understand. Any failure or all-unknown result falls back to the deterministic map
+  (honesty gate). An unrecognized phrase still degrades to a plain name search (surfaced in `notes`).
+- **Virtual-care truth (read enrichment, ACTIVE-gated).** The search response carries a
+  `virtualCare` option set + `virtualCareAvailable` flag, sourced from the TUSO virtual-service
+  registry ("virtual hospitals") filtered to the **ACTIVE** lifecycle only (never
+  CONFIGURED/SUSPENDED) and, when a province was shared, to that province. It is surfaced as its own
+  option set — **never attached to a specific facility card**, because the register does not hold
+  per-facility telemedicine — and is capped (10) and PII-free (name/level/province/service-lines). The
+  lookup is best-effort: any failure omits virtual care rather than fabricating it. This stays on the
+  same GET `/find-care/search` read (no new public path). Actually *starting* virtual care is a
+  resource-moving, signed-in step (see the access-to-care actions section below), not an anonymous one.
 - **Service-aware distance.** Only facilities that offer the service are ranked. When the caller
   shares a location, travel distance + ETA come from Ndila's distance-matrix (geography/routing
   SoR); if Ndila is unavailable the lane falls back to a straight-line (haversine) estimate for
@@ -176,6 +192,31 @@ It is a **read-only composition** governed by the same discipline as the rest of
   chars and page size at 50; the distance fan-out is capped at 50 candidates per call. Responses
   are PII-free (facility name/type/level/district/province/coordinates only — no contacts, no
   internal identifiers, no internal service names).
+
+## Access-to-care actions (find-care journey → signed-in, resource-moving steps)
+
+The find-care **search** is anonymous; the **actions** that follow it — booking an appointment,
+starting virtual care, requesting patient transport, and reading referral movement — move real
+resources and therefore require a person anchor. They are **not** on the public gateway lane. This is
+the graduated-friction doctrine in practice ("care before coverage; trust rises with the action;
+help before identity"): a guest can search freely, and the public find-care UI routes a
+"Book" / "Start virtual care" / "Request transport" tap to sign-in with a `returnTo` that lands back
+on the same facility/service selection (the find-care journey store preserves it), then completes the
+action authenticated.
+
+| Route family | Auth | Backing | Notes |
+|---|---|---|---|
+| `POST /internal/v1/citizen/access-to-care/appointments/request` | CITIZEN | booking-service `AppointmentController` (`createCitizen`) | booking-service is the **system of record for citizen appointments**. No real citizen slot-availability is published anywhere in the estate, so this is a governed **REQUEST**: it persists `REQUESTED` and returns a reference — a slot/confirmation is never fabricated. Reschedule/cancel use the existing citizen appointment endpoints. |
+| `POST /internal/v1/citizen/access-to-care/transport/request` | CITIZEN | nhume-service (`delivery_type=PATIENT`) via `NhumeServiceClient` | planned (non-emergency) patient transport tied to a facility and, optionally, a referral (`clinical_context_ref`). Submitted as a pending request; nhume owns dispatch and the receipt never claims a courier moved. **Emergency stays on the Daidzai SOS lane — not duplicated here.** |
+| `GET /internal/v1/citizen/access-to-care/transport/{transportRef}` | CITIZEN | nhume-service via `NhumeServiceClient` | citizen-safe coarse status (REQUESTED/ASSIGNED/PICKUP/EN_ROUTE/ARRIVED/CANCELLED) only. |
+| `GET /internal/v1/citizen/access-to-care/referrals/{id}/movement` | CITIZEN | referral-service (+ nhume transport leg) via `ReferralServiceClient` | read-only citizen-safe movement (referral status mapped to citizen language + safe receiving-facility name + optional transport leg). Internal clinical/ops payload is never echoed. |
+
+Starting virtual care reuses the existing authed citizen telehealth request
+(`POST /internal/v1/mobile/citizen/telehealth/sessions` → PCT teleconsult intake) — no new
+appointment/telemedicine truth is created. Abuse controls, ownership binding (transport reads are
+IDOR-guarded because the sovereign reads are only tenant-scoped), body caps, and PII-safe shaping live
+in `CitizenAccessToCareService`, mirroring `PublicSosIntakeService`. The rate-limiter fails **closed**
+here (a resource-moving write is not life-safety — emergencies use the SOS lane, which fails open).
 
 ## Gate handshake notes (W0)
 

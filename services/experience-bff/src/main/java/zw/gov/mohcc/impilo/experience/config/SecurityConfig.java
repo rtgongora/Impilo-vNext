@@ -439,6 +439,16 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/citizen/clients/*/patient-shares/**")
                             .hasAnyRole(CITIZEN_ROLES)
 
+                    // ── Citizen access-to-care actions (find-care journey → resource-moving steps) ──
+                    // Appointment request, planned patient transport, and referral movement status for
+                    // the find-care journey. NOT on the anonymous public gateway lane: these move real
+                    // resources, so they require a signed-in person (doctrine: trust rises with the
+                    // action). The public find-care UI routes "Book"/"Request transport" to sign-in with
+                    // a returnTo that lands here. Abuse controls + ownership binding live in
+                    // CitizenAccessToCareService; governed by gateway-public-lane-security-adr.
+                    .requestMatchers("/internal/v1/citizen/access-to-care/**")
+                            .hasAnyRole(CITIZEN_ROLES)
+
                     // ── Registry ZW geography bulk import + locality approval (ops) ──
                     .requestMatchers(HttpMethod.POST, "/internal/v1/registry/geo/zw/bulk")
                             .hasAnyRole(REGISTRY_OPS_ROLES)
