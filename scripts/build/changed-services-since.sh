@@ -37,14 +37,17 @@ CHANGED="$(git diff --name-only "$BASE" -- 2>/dev/null)"
 [ -z "$CHANGED" ] && exit 0   # nothing changed
 
 # Shared inputs that affect every image → full rebuild.
-if printf '%s\n' "$CHANGED" | grep -qE '^(services/shared-core/|services/pom\.xml$|libs/shared-kernel(-java)?/|scripts/build/templates/|scripts/build/build-runtime-image-from-jar\.sh$|scripts/build/build-full-vnext-images\.sh$)'; then
+# NB: use here-strings, NOT `printf | grep -q` — under `set -o pipefail`, grep -q closes
+# the pipe on first match, printf gets SIGPIPE (141), and the pipeline reports non-zero
+# even on a MATCH, silently defeating the force-full check (ships stale dependents).
+if grep -qE '^(services/shared-core/|services/pom\.xml$|libs/shared-kernel(-java)?/|scripts/build/templates/|scripts/build/build-runtime-image-from-jar\.sh$|scripts/build/build-full-vnext-images\.sh$)' <<<"$CHANGED"; then
   echo ALL; exit 0
 fi
 
 # Map changed paths to service ids (dir name under services/, plus UI/BFF surfaces).
 {
-  printf '%s\n' "$CHANGED" | sed -nE 's#^services/([^/]+)/.*#\1#p'
-  printf '%s\n' "$CHANGED" | grep -qE '^ui/one-ui-shell/' && echo one-ui-shell
-  printf '%s\n' "$CHANGED" | grep -qE '^services/experience-bff/' && echo experience-bff
+  sed -nE 's#^services/([^/]+)/.*#\1#p' <<<"$CHANGED"
+  grep -qE '^ui/one-ui-shell/' <<<"$CHANGED" && echo one-ui-shell
+  grep -qE '^services/experience-bff/' <<<"$CHANGED" && echo experience-bff
 } | grep -v '^shared-core$' | sort -u | tr '\n' ' ' | sed 's/ $//'
 echo

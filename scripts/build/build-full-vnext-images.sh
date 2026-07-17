@@ -37,9 +37,27 @@ while [[ $# -gt 0 ]]; do
       SUMMARY_ONLY=1
       shift
       ;;
+    --changed-since)
+      # Incremental (#4): build only services changed since a baseline (default: the last
+      # certified/deployed commit). Delegates to changed-services-since.sh:
+      #   ALL   -> full estate (leave ONLY_SERVICES empty)
+      #   empty -> nothing changed, exit 0 (no build)
+      #   list  -> add each to --only
+      if [[ "${2:-}" =~ ^--?[A-Za-z] || -z "${2:-}" ]]; then _base=""; shift 1; else _base="$2"; shift 2; fi
+      _changed="$(bash "$(dirname "$0")/changed-services-since.sh" $_base)"
+      if [[ "$_changed" == "ALL" ]]; then
+        echo "[estate] --changed-since: shared input changed -> full estate build."
+      elif [[ -z "$_changed" ]]; then
+        echo "[estate] --changed-since: no service source changed since baseline -> nothing to build."
+        exit 0
+      else
+        echo "[estate] --changed-since: building only changed: $_changed"
+        for sid in $_changed; do ONLY_SERVICES+=("$sid"); done
+      fi
+      ;;
     *)
       echo "Unknown argument: $1"
-      echo "Usage: bash scripts/build/build-full-vnext-images.sh [--full-estate] [--debug-required-spine-only] [--summary-only] [--wave N] [--only <service>]..."
+      echo "Usage: bash scripts/build/build-full-vnext-images.sh [--full-estate] [--changed-since [baseline]] [--debug-required-spine-only] [--summary-only] [--wave N] [--only <service>]..."
       exit 2
       ;;
   esac
