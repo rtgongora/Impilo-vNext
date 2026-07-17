@@ -15,7 +15,7 @@
         "EXPO_PUBLIC_KEYCLOAK_REALM": "impilo",
         "EXPO_PUBLIC_KEYCLOAK_CLIENT_ID": "citizen-app",
         "EXPO_PUBLIC_APP_VARIANT": "dev",
-        "EXPO_PUBLIC_APP_NAME": "Impilo Citizen Dev"
+        "EXPO_PUBLIC_APP_NAME": "Impilo (Dev)"
       },
       "android": {
         "buildType": "apk",
@@ -42,7 +42,7 @@
         "EXPO_PUBLIC_KEYCLOAK_REALM": "impilo",
         "EXPO_PUBLIC_KEYCLOAK_CLIENT_ID": "impilo-mobile-citizen",
         "EXPO_PUBLIC_APP_VARIANT": "preview",
-        "EXPO_PUBLIC_APP_NAME": "Impilo Citizen Preview"
+        "EXPO_PUBLIC_APP_NAME": "Impilo (Preview)"
       },
       "android": {
         "buildType": "apk"
@@ -61,7 +61,7 @@
         "EXPO_PUBLIC_KEYCLOAK_REALM": "impilo",
         "EXPO_PUBLIC_KEYCLOAK_CLIENT_ID": "citizen-app",
         "EXPO_PUBLIC_APP_VARIANT": "staging",
-        "EXPO_PUBLIC_APP_NAME": "Impilo Citizen Staging"
+        "EXPO_PUBLIC_APP_NAME": "Impilo (Staging)"
       },
       "android": {
         "buildType": "apk"
@@ -80,7 +80,7 @@
         "EXPO_PUBLIC_KEYCLOAK_REALM": "impilo",
         "EXPO_PUBLIC_KEYCLOAK_CLIENT_ID": "citizen-app",
         "EXPO_PUBLIC_APP_VARIANT": "production",
-        "EXPO_PUBLIC_APP_NAME": "Impilo Citizen"
+        "EXPO_PUBLIC_APP_NAME": "Impilo"
       },
       "android": {
         "buildType": "app-bundle"

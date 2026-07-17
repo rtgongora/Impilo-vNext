@@ -120,7 +120,7 @@ export function LoginScreen({ onSignUp, onContactSignUp, onGuestDestination }: L
         <View style={styles.logoCircle}>
           <Ionicons name="heart" size={44} color="#FFFFFF" />
         </View>
-        <Text style={styles.appName}>Impilo Health</Text>
+        <Text style={styles.appName}>Impilo</Text>
         <Text style={styles.tagline}>Your health, in your hands</Text>
 
         <View style={styles.pillRow}>
@@ -162,7 +162,7 @@ export function LoginScreen({ onSignUp, onContactSignUp, onGuestDestination }: L
             fullWidth
             disabled={isSigningIn}
             testID="login-button"
-            accessibilityLabel="Sign in to Impilo Citizen App"
+            accessibilityLabel="Sign in to Impilo"
             icon={<Ionicons name="log-in-outline" size={20} color="#FFFFFF" />}
           />
         )}

@@ -1,10 +1,10 @@
 import { ExpoConfig, ConfigContext } from "expo/config";
 
 const VARIANT_NAME_SUFFIX = {
-  dev: " Dev",
-  development: " Dev",
-  preview: " Preview",
-  staging: " Staging",
+  dev: " (Dev)",
+  development: " (Dev)",
+  preview: " (Preview)",
+  staging: " (Staging)",
   production: "",
 } as const;
 const VARIANT_BUNDLE_SUFFIX = {
@@ -28,7 +28,7 @@ function resolveVariant(raw: string | undefined): AppVariant {
 const VARIANT = resolveVariant(process.env.EXPO_PUBLIC_APP_VARIANT);
 
 const APP_NAME =
-  process.env.EXPO_PUBLIC_APP_NAME ?? `Impilo Health${VARIANT_NAME_SUFFIX[VARIANT] ?? ""}`;
+  process.env.EXPO_PUBLIC_APP_NAME ?? `Impilo${VARIANT_NAME_SUFFIX[VARIANT] ?? ""}`;
 const BUNDLE_BASE = "zw.gov.impilo.citizen";
 const BUNDLE = `${BUNDLE_BASE}${VARIANT_BUNDLE_SUFFIX[VARIANT] ?? ""}`;
 

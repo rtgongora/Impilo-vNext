@@ -2,7 +2,7 @@
   "name": "@impilo/citizen-app",
   "version": "0.1.0",
   "private": true,
-  "description": "Impilo Citizen App — Personal health, social feed, marketplace, messaging, and telehealth for citizens/patients. Targets Android and iOS via Expo.",
+  "description": "Impilo (Citizen app) — Personal health, social feed, marketplace, messaging, and telehealth for citizens/patients. Product name is \"Impilo\"; the citizen-app package id is retained for the monorepo. Targets Android and iOS via Expo.",
   "main": "src/main.tsx",
   "scripts": {
     "start": "expo start",

@@ -30,7 +30,7 @@ const ENV = {
   KEYCLOAK_REALM: extra.keycloakRealm ?? process.env.EXPO_PUBLIC_KEYCLOAK_REALM ?? "impilo",
   KEYCLOAK_CLIENT_ID: extra.keycloakClientId ?? process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID ?? "citizen-app",
   API_BASE_URL: extra.apiBaseUrl ?? process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://192.168.100.211:8160",
-  APP_NAME: extra.appName ?? process.env.EXPO_PUBLIC_APP_NAME ?? "Impilo Citizen Dev",
+  APP_NAME: extra.appName ?? process.env.EXPO_PUBLIC_APP_NAME ?? "Impilo (Dev)",
   // Always derive the redirect URI from Linking so it matches the URL that
   // WebBrowser.openAuthSessionAsync intercepts — Expo Go uses exp://…/--/auth/callback
   // and standalone builds use impilo-citizen://auth/callback.  A hardcoded value from
