@@ -46,8 +46,10 @@ echo "$CLIENTS" | while IFS=: read -r CID KEY; do
   [ -z "$CID" ] && continue
   WANT=$(sec "$KEY")
   [ -z "$WANT" ] && { echo "  SKIP $CID (secret key $KEY empty)"; continue; }
+  # First "id" in the ?clientId= response is the client's own UUID. Must grab the
+  # FIRST match — a greedy sed grabs a nested protocol-mapper id and 404s the PUT.
   UUID=$(curl -s -H "Authorization: Bearer $TK" "$KURL/admin/realms/$REALM/clients?clientId=$CID" \
-    | sed -n 's/.*"id":"\([^"]*\)".*/\1/p' | head -1)
+    | grep -oE '"id":"[^"]*"' | head -1 | sed 's/"id":"\([^"]*\)"/\1/')
   [ -z "$UUID" ] && { echo "  MISS $CID (client not found)"; continue; }
   curl -s -H "Authorization: Bearer $TK" "$KURL/admin/realms/$REALM/clients/$UUID" > /tmp/kc-c.json
   # replace whatever the secret currently is (incl. literal ${env...}) with WANT
