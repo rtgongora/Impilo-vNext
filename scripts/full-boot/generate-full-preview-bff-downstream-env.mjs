@@ -117,6 +117,7 @@ const SERVICE_ENV = [
   ["KHULUMA_BASE_URL", "khuluma-service"],
   ["PATIENT_SAFETY_BASE_URL", "patient-safety-service"],
   ["RITO_BASE_URL", "rito-quality-safety-service"],
+  ["PARTICIPATION_BASE_URL", "participation-service"],
   // Organization registry SoR — feeds BFF impilo.services.organization-registry-base-url
   // (OrganizationRegistryServiceClient + OrgRegistryFacilityAdminClient).
   ["ORGANIZATION_REGISTRY_BASE_URL", "organization-registry-service"],

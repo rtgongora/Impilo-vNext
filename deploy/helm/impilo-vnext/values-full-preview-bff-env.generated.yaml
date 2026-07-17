@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-bff-downstream-env.mjs
-# Downstream env vars: 106
+# Downstream env vars: 107
 experienceBff:
   env:
     FHIR_BASE_URL: http://hapi-fhir:8090/fhir
@@ -108,4 +108,5 @@ experienceBff:
     KHULUMA_BASE_URL: http://khuluma-service:8390
     PATIENT_SAFETY_BASE_URL: http://patient-safety-service:8202
     RITO_BASE_URL: http://rito-quality-safety-service:8391
+    PARTICIPATION_BASE_URL: http://participation-service:8393
     ORGANIZATION_REGISTRY_BASE_URL: http://organization-registry-service:8153
