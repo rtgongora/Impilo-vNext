@@ -140,6 +140,25 @@ def docker_ref_runtime_id(ref):
     return normalize_digest(docker_image_id(ref))
 
 
+def image_source_commit(sid):
+    """Source commit an image was built from, via the OCI revision label
+    (set by both build strategies). Turns freshness verification into a label
+    read instead of jar archaeology. Empty when unavailable."""
+    if not docker:
+        return ""
+    for ref in (f"impilo/{sid}:preview", f"{registry}/impilo/{sid}:preview"):
+        rc, out, _ = run(["docker", "image", "inspect", ref, "--format",
+                          '{{index .Config.Labels "org.opencontainers.image.revision"}}'])
+        out = (out or "").strip()
+        if rc == 0 and out and out != "<no value>":
+            return out
+    return ""
+
+
+_rc, _head, _ = run(["git", "rev-parse", "HEAD"])
+head_commit = _head.strip() if _rc == 0 else ""
+
+
 def digest_matches_pod(candidate, pod_digest):
     if not candidate or not pod_digest:
         return False
@@ -337,9 +356,15 @@ for sid in runtime_services:
         aligned = "UNKNOWN"
         reason = "no_inspection_tools"
 
+    src_commit = image_source_commit(sid) or rec.get("source_commit", "")
+    src_matches_head = None
+    if src_commit and head_commit:
+        n = min(len(src_commit), len(head_commit), 12)
+        src_matches_head = src_commit[:n] == head_commit[:n]
     rows.append({
         "service": sid,
-        "source_commit": rec.get("source_commit", ""),
+        "source_commit": src_commit,
+        "source_commit_matches_head": src_matches_head,
         "expected_image_ref": dep_image or expected_image_ref,
         "expected_registry_digest": short_digest(expected_digest),
         "local_docker_image_id": short_digest(local_id),
