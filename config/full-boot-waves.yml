@@ -109,6 +109,7 @@ waves:
       - khuluma-service
       - live-service
       - rito-quality-safety-service
+      - participation-service
       - butano-web
       - community-service
       - costa-console

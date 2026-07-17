@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
-# Microservices: 96 | enabled: 95 (all waves)
+# Microservices: 96 | enabled: 96 (all waves)
 fullBootServices:
   ai-model-registry-service:
     enabled: true
@@ -297,7 +297,7 @@ fullBootServices:
     env:
       ORTHANC_BASE_URL: http://orthanc:8042
   participation-service:
-    enabled: false
+    enabled: true
     port: 8393
     database: participation
   patient-safety-service:
