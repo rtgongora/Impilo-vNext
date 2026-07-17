@@ -419,6 +419,12 @@ public class SecurityConfig {
                     // (per-IP + global rate windows, allow-listed case types, body caps) enforced
                     // in PublicFeedbackIntakeService; status reads are claim-code-gated.
                     .requestMatchers(HttpMethod.POST, "/internal/v1/public/gateway/feedback").permitAll()
+                    // Anonymous WRITE exception: Nompilo service-advisory impression/dismissal
+                    // analytics. Payload is allow-listed to advisoryId + event + an opaque anon
+                    // dismissal key (no PII); the shell resolves advisories as DATA, never hard-coded.
+                    .requestMatchers(HttpMethod.POST,
+                            "/internal/v1/public/gateway/advisory/impression",
+                            "/internal/v1/public/gateway/advisory/dismiss").permitAll()
                     .requestMatchers("/internal/v1/citizen/clients/*/patient-shares/**")
                             .hasAnyRole(CITIZEN_ROLES)
 

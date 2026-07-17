@@ -80,6 +80,7 @@ Every permitAll route family must have a row here (the guard checks this file).
 | `/internal/v1/public/gateway/sos` (POST) | daidzai SOS intake via `PublicSosIntakeService` → `EmergencyController.createRequest` | W2 | **anonymous WRITE** (ADR §5, PD-3); abuse note below |
 | `/internal/v1/public/gateway/sos/{reference}` (GET) | daidzai `PublicEmergencyStatusController` via `PublicSosIntakeService` | W2 | disclosure-limited status read by the 202 receipt reference (reference/status/coarse-stage/createdAt/callback-pending only — no callback number, description, location, or subject); miss = 404 |
 | `/internal/v1/public/gateway/feedback` (POST + claim-code GET) | rito `PublicCaseIntakeController` via `PublicFeedbackIntakeService` | W4 | **anonymous WRITE** (`gateway-feedback-claim`); abuse note below |
+| `/internal/v1/public/gateway/advisory/**` | guidance `AdvisoryResolveController` via `PublicGatewayAdvisoryBffController` | W4 | Nompilo service-advisory resolve (GET, PUBLISHED/in-window/audience=public only) + impression/dismiss (POST) — advisories are DATA; impression payload allow-listed to advisoryId + event + opaque anon dismissal key (no PII) |
 | `/internal/v1/wallet/bill-contributions/{shareToken}` (GET only) | mushe bill-contribution view via `CitizenCardController` | W4 | fundraiser share-link read (claim-token pattern, unguessable token); read-only, donations require sign-in |
 
 **Anonymous-write abuse note — `POST /internal/v1/public/gateway/sos`:** rate-limited

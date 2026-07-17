@@ -167,6 +167,48 @@ public class GuidanceServiceClient {
         return response.getBody();
     }
 
+    // ── Service Advisory public lane (R0, anonymous — V014) ───────────────────────────
+    // Calls the service-side AdvisoryResolveController; the public lane always constrains
+    // audience=public. Raw body is forwarded so the BFF adds no interpretation.
+
+    /** Resolve the active, in-window, public-audience advisory set for the caller context. */
+    public JsonNode resolvePublicAdvisories(String deviceType, String language, String province,
+                                            String district, String serviceKey, String appKey,
+                                            String journeyStage) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/guidance/advisory")
+                .queryParam("audience", "public");
+        addIfPresent(builder, "deviceType", deviceType);
+        addIfPresent(builder, "language", language);
+        addIfPresent(builder, "province", province);
+        addIfPresent(builder, "district", district);
+        addIfPresent(builder, "serviceKey", serviceKey);
+        addIfPresent(builder, "appKey", appKey);
+        addIfPresent(builder, "journeyStage", journeyStage);
+        java.net.URI url = builder.encode().build().toUri();
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Record an advisory impression (VIEW | DISMISS | FEEDBACK) — opaque anon key, no PII. */
+    public JsonNode recordAdvisoryImpression(Map<String, Object> request) {
+        String url = baseUrl + "/internal/v1/guidance/advisory/impression";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Record an advisory dismissal — opaque anon key, no PII. */
+    public JsonNode dismissAdvisory(Map<String, Object> request) {
+        String url = baseUrl + "/internal/v1/guidance/advisory/dismiss";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return response.getBody();
+    }
+
+    private static void addIfPresent(UriComponentsBuilder builder, String name, String value) {
+        if (value != null && !value.isBlank()) {
+            builder.queryParam(name, value);
+        }
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
