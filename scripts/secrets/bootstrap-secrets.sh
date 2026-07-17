@@ -72,9 +72,16 @@ set_if_absent smtp-password "${SMTP_PASSWORD:-placeholder-not-configured}"
 set_if_absent sms-gateway-url "${SMS_GATEWAY_URL:-placeholder-not-configured}"
 set_if_absent sms-gateway-api-key "${SMS_GATEWAY_API_KEY:-placeholder-not-configured}"
 
-# livekit-api-secret: match the server key, don't randomise.
+# livekit-api-secret: source of truth for the RTC stack. Post-P2 the signing
+# secret is NOT inlined in the livekit-config CM (only the api_key *name* is), so
+# the CM read below is a legacy fallback and is normally empty — when empty,
+# self-generate. The livekit server reads this value back via LIVEKIT_KEYS, so a
+# generated secret stays internally consistent across all consumers. Operators
+# can pin a specific value via LIVEKIT_API_SECRET. set_if_absent keeps it stable
+# across runs once set (never re-randomised).
 lk_val="${LIVEKIT_API_SECRET:-$(kubectl get cm -n "$NS" livekit-config \
   -o jsonpath='{.data.livekit\.yaml}' 2>/dev/null | awk '/impilo-preview-key:/{print $2; exit}')}"
+lk_val="${lk_val:-$(openssl rand -hex 32)}"
 set_if_absent livekit-api-secret "$lk_val"
 
 # livekit-keys = "<apiKey>: <secret>" — consumed by the livekit server LIVEKIT_KEYS
