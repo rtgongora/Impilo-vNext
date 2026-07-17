@@ -862,6 +862,13 @@ const SURFACE_ALLOWLIST_PREFIXES = [
   // sessionStorage.setItem(JSON.stringify(...)) serialization in the shared
   // useAccessibilityPreferences hook, not a debug render.)
   '/welcome',
+  // Public app-discovery / orientation surface (same class as /welcome, /privacy, /terms):
+  // honest coming-soon store affordances (no fabricated store deep-links), an email-client
+  // "notify me" (no fabricated success state), a static QR encoding the web-app URL, and a
+  // static PLATFORMS list. No personal data, no persistence, no sovereign backing by design —
+  // a backend "store listing" would be FAKE because the apps are not published yet. If the
+  // apps ship and this gains live store metadata it must gain BFF backing and leave this list.
+  '/download',
   '/account-deletion',
   '/bootstrap',
   '/platform/all-features',

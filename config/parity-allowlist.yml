@@ -30,6 +30,21 @@ exceptions:
     remediation: Wire to BFF summary endpoints per BUTANO row
     issue: mobile-butano-partial
 
+  - path: ui/one-ui-shell/src/app/welcome/page.tsx
+    capability: Public L0 intent landing (welcome)
+    reason: >-
+      False positive on the placeholder-copy regex. The page renders an honest
+      per-pillar access badge whose not-yet-available state reads "Coming soon"
+      (truthful UI state, not placeholder debt), and a doctrine comment lists the
+      same three pillar states. No mock data, no BFF calls, no personal/health
+      data — same static public-orientation class as the product-truth surface
+      allowlist entry for /welcome. Not part of this session's participation gaps.
+    review_date: 2026-08-01
+    owner: experience-shell
+    class: honest_false_positive
+    remediation: Retire this entry if the pillar badge copy stops using "Coming soon".
+    issue: parity-welcome-coming-soon
+
 legacy_advisory_gaps:
   - capability: ZIBO terminology admin
     note: Separate zibo-web app; web shell link only — mobile n/a

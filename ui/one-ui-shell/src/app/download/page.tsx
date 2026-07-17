@@ -12,10 +12,10 @@ export const metadata = {
 /**
  * Get-app / download surface (public — guard: none).
  *
- * Honest states only: the mobile apps exist but are NOT yet on the stores, so
- * every store affordance is a "coming soon" with a notify-me interest capture,
- * the web app is always offered as the available-now path, and the QR points to
- * the web app — never a fabricated store deep-link.
+ * Honest states only: the mobile apps exist but are NOT yet on the app stores,
+ * so every store affordance is a not-yet-published state with a notify-me interest
+ * capture, the web app is always offered as the available-now path, and the QR
+ * points to the web app — never a fabricated store deep-link.
  */
 export default function DownloadPage() {
   return (
