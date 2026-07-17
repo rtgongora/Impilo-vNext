@@ -28,9 +28,20 @@ import java.util.UUID;
  * ({@code /internal/v1/public/gateway/**}) this filter synthesizes service-originated
  * defaults — the public default tenant, the national pod, and fresh request/correlation
  * ids — for whichever of the four headers are missing. Caller-supplied values are never
- * overridden, non-GET methods are untouched (the lane is GET-only in W1), and every
- * other route keeps the strict v1.1 contract. Must run BEFORE the V11HeaderFilter
+ * overridden, most non-GET methods are untouched (the write lanes — SOS, feedback,
+ * get-involved — carry client-supplied headers so their abuse traceability is preserved),
+ * and every other route keeps the strict v1.1 contract. Must run BEFORE the V11HeaderFilter
  * (registered at {@code HIGHEST_PRECEDENCE + 9} in {@link FilterConfig}).</p>
+ *
+ * <p><strong>Exception — client-telemetry beacon.</strong> The client-observability sink
+ * flushes via {@code navigator.sendBeacon}, which cannot set request headers at all, so a
+ * genuine beacon arrives with none of the four v1.1 headers <em>and</em> no
+ * {@code Idempotency-Key} (which the companion IdempotencyFilter otherwise requires on
+ * POST). For the single fire-and-forget telemetry path this filter therefore also
+ * synthesizes the four headers and a fresh idempotency key, so the beacon lane works
+ * headerless. This lane is best-effort, PII-free, rate-limited and fail-closed in
+ * {@code ClientTelemetryIntakeService}; a per-request random idempotency key is correct
+ * because each beacon batch is append-only (no dedup semantics to protect).</p>
  */
 public class PublicGatewayAnonymousDefaultsFilter extends OncePerRequestFilter {
 
@@ -38,11 +49,17 @@ public class PublicGatewayAnonymousDefaultsFilter extends OncePerRequestFilter {
     static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
     static final String PUBLIC_POD = "national-spine";
 
+    /** The one anonymous WRITE lane that must tolerate a headerless {@code sendBeacon} POST. */
+    static final String CLIENT_TELEMETRY_PATH = "/internal/v1/public/gateway/client-telemetry";
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        if (!"GET".equalsIgnoreCase(request.getMethod())) {
+        boolean isGet = "GET".equalsIgnoreCase(request.getMethod());
+        boolean isTelemetryBeacon = "POST".equalsIgnoreCase(request.getMethod())
+                && CLIENT_TELEMETRY_PATH.equals(request.getRequestURI());
+        if (!isGet && !isTelemetryBeacon) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -51,6 +68,10 @@ public class PublicGatewayAnonymousDefaultsFilter extends OncePerRequestFilter {
         putIfMissing(request, defaults, CompanionHeaders.POD_ID, PUBLIC_POD);
         putIfMissing(request, defaults, CompanionHeaders.REQUEST_ID, UUID.randomUUID().toString());
         putIfMissing(request, defaults, CompanionHeaders.CORRELATION_ID, UUID.randomUUID().toString());
+        if (isTelemetryBeacon) {
+            // sendBeacon cannot carry an Idempotency-Key; each telemetry batch is append-only.
+            putIfMissing(request, defaults, CompanionHeaders.IDEMPOTENCY_KEY, UUID.randomUUID().toString());
+        }
         if (defaults.isEmpty()) {
             filterChain.doFilter(request, response);
             return;
