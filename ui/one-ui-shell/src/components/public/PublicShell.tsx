@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { EmergencyHelpButton } from "./EmergencyHelpButton";
 import { PublicAccessibilityMenu } from "./PublicAccessibilityMenu";
+import { ServiceAdvisoryBanner } from "@/components/advisory/ServiceAdvisoryBanner";
 
 /**
  * Public L0 shell — the chrome for unauthenticated, pre-account pages (welcome,
@@ -38,6 +39,13 @@ export function PublicShell({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
+
+      {/*
+        Nompilo Service Advisory — resolved as DATA and mounted once here so it appears across
+        public pages. It self-enforces the never-block-care rule: on emergency/find-care/report
+        routes it downgrades to a small, dismissible inline notice and never a blocking modal.
+      */}
+      <ServiceAdvisoryBanner />
 
       <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
 
