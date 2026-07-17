@@ -3,27 +3,31 @@
 /**
  * Proactive Health Assistant — Health OS Experience Doctrine
  *
- * An intelligent overlay that surfaces timely, contextual information
- * based on who the user is, what they're doing, and what the system
- * knows about their patients, schedule, and obligations.
+ * The docked, context-aware Nompilo surface. It is genuinely context-aware because its proactive
+ * notices come from the REAL Nompilo context engine (useNompiloContext → BFF
+ * /internal/v1/nompilo/context) — the same source NompiloContextualGuidance uses — which resolves
+ * route + userType + trust + locked-state from real service signals. The legacy
+ * /assistant/notifications feed is kept only as a SUPPLEMENTARY stream (clearly labelled), never
+ * as the primary voice.
  *
- * Capabilities:
- * - Clinical alerts (drug interactions, critical results, overdue screenings)
- * - Operational nudges (queue bottlenecks, shift handoff reminders, stock alerts)
- * - Wellness prompts (medication adherence, appointment reminders, goal progress)
- * - Guided workflows (step-by-step for complex processes)
- * - Contextual education (relevant clinical guidelines, formulary info)
+ * Conversation runs through the shared useNompiloChat hook (POST /internal/v1/assistant/chat) and
+ * renders the backend's reply + genuine next-step actions. When the backend is degraded or
+ * unreachable, Nompilo says so and offers safe actions — it NEVER fabricates an answer or a
+ * success. When a citizen action fails, the failure signal (privacy-safe: route + error code +
+ * correlation id) is surfaced as a "that didn't work — here's what you can do" recovery notice.
  *
- * The assistant listens, understands, searches, responds, guides,
- * reminds, alerts, and acts within governed boundaries.
+ * Presentation: a docked compact panel on desktop; a bottom-sheet focused conversation on mobile.
+ * It minimises during active data entry / focused work but stays easily retrievable, and the
+ * conversation is retained across minimise + navigation (workflow-state hard gate).
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import {
   AlertTriangle, CheckCircle2, Info, Heart, Calendar,
   Stethoscope, X, ChevronRight, Sparkles,
-  MessageCircle, Lightbulb, Activity,
+  MessageCircle, Lightbulb, Activity, Lock, ListChecks, GraduationCap,
 } from "lucide-react";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -35,13 +39,18 @@ import {
 } from "@/hooks/useAssistantUiStore";
 import { isFocusedWorkspaceRoute } from "@/lib/shell/workspace-context";
 import { apiClient } from "@/lib/api-client";
+import { useNompiloContext, type NompiloGuidanceItem, type NompiloSeverity } from "@/hooks/queries/useNompilo";
+import { useNompiloChat } from "@/hooks/useNompiloChat";
+import { useNompiloFailureStore, isFailureFresh } from "@/lib/nompilo-failure";
 
 // ── Types ────────────────────────────────────────────────────────────
+
+type NoticeSeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO";
 
 interface AssistantNotification {
   id: string;
   type: "CLINICAL_ALERT" | "OPERATIONAL" | "WELLNESS" | "GUIDANCE" | "REMINDER" | "INSIGHT";
-  severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO";
+  severity: NoticeSeverity;
   title: string;
   body: string;
   action?: { label: string; href: string };
@@ -51,9 +60,21 @@ interface AssistantNotification {
   context?: Record<string, unknown>;
 }
 
-interface AssistantState {
-  notifications: AssistantNotification[];
-  unreadCount: number;
+/** Unified proactive notice — the shape the panel renders, from any source. */
+interface Notice {
+  id: string;
+  severity: NoticeSeverity;
+  iconKey: string;
+  title: string;
+  body: string;
+  action?: { label: string; href: string };
+  /** When set, an "Ask Nompilo" button opens the conversation pre-seeded with this query. */
+  askQuery?: string;
+  source: string;
+  supplementary?: boolean;
+  dismissible: boolean;
+  /** Dismissing this notice also clears the underlying failure signal. */
+  clearsFailure?: boolean;
 }
 
 // ── Severity styling ─────────────────────────────────────────────────
@@ -66,22 +87,47 @@ const SEVERITY_STYLES: Record<string, { bg: string; border: string; icon: typeof
   INFO: { bg: "bg-success-soft", border: "border-success/25", icon: Lightbulb, iconColor: "text-primary" },
 };
 
-const TYPE_ICONS: Record<string, typeof Stethoscope> = {
+const ICONS: Record<string, typeof Stethoscope> = {
   CLINICAL_ALERT: Stethoscope,
   OPERATIONAL: Activity,
   WELLNESS: Heart,
   GUIDANCE: Lightbulb,
   REMINDER: Calendar,
   INSIGHT: Sparkles,
+  LOCKED_STATE: Lock,
+  CHECKLIST_ITEM: ListChecks,
+  PROTOCOL: GraduationCap,
+  ORIENTATION: Info,
+  FAILURE: AlertTriangle,
 };
+
+// ── Context → notice mapping ─────────────────────────────────────────
+
+const GUIDANCE_SEVERITY: Record<NompiloSeverity, NoticeSeverity> = {
+  CRITICAL: "CRITICAL",
+  WARN: "HIGH",
+  RECOMMEND: "MEDIUM",
+  INFO: "INFO",
+};
+
+function guidanceToNotice(item: NompiloGuidanceItem): Notice {
+  return {
+    id: `guidance:${item.key}`,
+    severity: GUIDANCE_SEVERITY[item.severity] ?? "INFO",
+    iconKey: item.type,
+    title: item.title,
+    body: item.body,
+    action: item.ctaRoute ? { label: item.ctaLabel ?? "Open", href: item.ctaRoute } : undefined,
+    source: item.ownerService ?? "Nompilo",
+    dismissible: true,
+  };
+}
 
 // ── Component ────────────────────────────────────────────────────────
 
 export function ProactiveAssistant() {
-  const [state, setState] = useState<AssistantState>({
-    notifications: [],
-    unreadCount: 0,
-  });
+  const [supplemental, setSupplemental] = useState<AssistantNotification[]>([]);
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [chatInput, setChatInput] = useState("");
 
   // Panel/chat/conversation live in a store so minimising the assistant or
@@ -92,7 +138,6 @@ export function ProactiveAssistant() {
   const chatOpen = useAssistantUiStore((s) => s.chatOpen);
   const setChatOpen = useAssistantUiStore((s) => s.setChatOpen);
   const chatMessages = useAssistantUiStore((s) => s.chatMessages);
-  const appendChatMessage = useAssistantUiStore((s) => s.appendChatMessage);
   const lastTypingAt = useAssistantUiStore((s) => s.lastTypingAt);
   const markTyping = useAssistantUiStore((s) => s.markTyping);
 
@@ -121,7 +166,18 @@ export function ProactiveAssistant() {
   const facility = useFacilityStore();
   const shift = useShiftStore();
 
-  // Fetch contextual notifications based on current user context
+  // PRIMARY: the real Nompilo context engine — resolves route + userType + trust + locked-state.
+  const { data: contextData } = useNompiloContext(pathname ?? "");
+  const guidance = useMemo(() => contextData?.data?.guidance ?? [], [contextData]);
+  const contextDegraded = contextData?.data?.degraded ?? false;
+
+  // Failure recovery signal (privacy-safe: route + code + correlation id only).
+  const lastFailure = useNompiloFailureStore((s) => s.lastFailure);
+  const clearFailure = useNompiloFailureStore((s) => s.clear);
+
+  const { send, pending } = useNompiloChat();
+
+  // SUPPLEMENTARY: legacy notifications feed — kept, but clearly secondary to the context engine.
   const fetchNotifications = useCallback(async () => {
     try {
       const params = new URLSearchParams();
@@ -132,69 +188,104 @@ export function ProactiveAssistant() {
       const response = await apiClient.get<{ data: AssistantNotification[] }>(
         `/internal/v1/assistant/notifications?${params.toString()}`
       );
-      const notifications = response?.data ?? [];
-      setState(prev => ({
-        ...prev,
-        notifications,
-        unreadCount: notifications.filter(n => n.severity === "CRITICAL" || n.severity === "HIGH").length,
-      }));
+      setSupplemental(response?.data ?? []);
     } catch {
-      // Silent fail — assistant is non-blocking
+      // Silent fail — assistant is non-blocking; the context engine is the primary voice.
     }
   }, [workMode.mode, facility.facility?.id, shift.shift?.id]);
 
-  // Poll for notifications every 30 seconds
   useEffect(() => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
-  const dismiss = useCallback((id: string) => {
-    setState(prev => ({
-      ...prev,
-      notifications: prev.notifications.filter(n => n.id !== id),
-      unreadCount: Math.max(0, prev.unreadCount - 1),
-    }));
-  }, []);
+  // Assemble the unified notice list: context guidance (primary) + failure recovery +
+  // supplementary notifications, minus locally dismissed items.
+  const notices = useMemo<Notice[]>(() => {
+    const out: Notice[] = [];
 
-  const handleChat = useCallback(async () => {
-    if (!chatInput.trim()) return;
-    const userMessage = chatInput.trim();
-    setChatInput("");
-    appendChatMessage({ role: "user", text: userMessage });
-
-    try {
-      const response = await apiClient.post<{ data: { reply: string } }>(
-        "/internal/v1/assistant/chat",
-        { message: userMessage, context: { work_mode: workMode.mode, facility_id: facility.facility?.id } }
-      );
-      appendChatMessage({ role: "assistant", text: response?.data?.reply ?? "I'm here to help. Could you rephrase that?" });
-    } catch {
-      appendChatMessage({ role: "assistant", text: "I'm having trouble connecting. Please try again." });
+    if (isFailureFresh(lastFailure) && lastFailure) {
+      out.push({
+        id: `failure:${lastFailure.at}`,
+        severity: "HIGH",
+        iconKey: "FAILURE",
+        title: "That didn't work",
+        body:
+          `Your last action couldn't be completed (${lastFailure.code}). ` +
+          "You can try again, ask me what to do next, or report the problem — a person will follow up." +
+          (lastFailure.correlationId ? ` Reference: ${lastFailure.correlationId}.` : ""),
+        action: { label: "Report a problem", href: "/welcome/report" },
+        askQuery: "I hit an error on this page. What can I do to recover?",
+        source: "Nompilo recovery",
+        dismissible: true,
+        clearsFailure: true,
+      });
     }
-  }, [appendChatMessage, chatInput, workMode.mode, facility.facility?.id]);
 
-  const criticalNotifications = useMemo(
-    () => state.notifications.filter(n => n.severity === "CRITICAL"),
-    [state.notifications]
+    for (const item of guidance) out.push(guidanceToNotice(item));
+
+    for (const n of supplemental) {
+      out.push({
+        id: `supp:${n.id}`,
+        severity: n.severity,
+        iconKey: n.type,
+        title: n.title,
+        body: n.body,
+        action: n.action,
+        source: n.source,
+        supplementary: true,
+        dismissible: n.dismissible,
+      });
+    }
+
+    return out.filter((n) => !dismissed.has(n.id));
+  }, [guidance, supplemental, lastFailure, dismissed]);
+
+  const dismiss = useCallback(
+    (notice: Notice) => {
+      setDismissed((prev) => new Set(prev).add(notice.id));
+      if (notice.clearsFailure) clearFailure();
+    },
+    [clearFailure],
+  );
+
+  const unreadCount = useMemo(
+    () => notices.filter((n) => n.severity === "CRITICAL" || n.severity === "HIGH").length,
+    [notices],
+  );
+
+  const criticalNotices = useMemo(() => notices.filter((n) => n.severity === "CRITICAL"), [notices]);
+
+  const submitChat = useCallback(() => {
+    const q = chatInput;
+    setChatInput("");
+    void send(q);
+  }, [chatInput, send]);
+
+  const askInChat = useCallback(
+    (query: string) => {
+      setChatOpen(true);
+      void send(query);
+    },
+    [send, setChatOpen],
   );
 
   return (
     <>
       {/* Critical alert banner — always visible at top */}
-      {criticalNotifications.length > 0 && (
+      {criticalNotices.length > 0 && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white px-4 py-2 flex items-center gap-3">
           <AlertTriangle className="h-5 w-5 flex-shrink-0 animate-pulse" />
           <span className="text-sm font-medium flex-1">
-            {criticalNotifications[0].title}: {criticalNotifications[0].body}
+            {criticalNotices[0].title}: {criticalNotices[0].body}
           </span>
-          {criticalNotifications[0].action && (
-            <a href={criticalNotifications[0].action.href} className="text-sm underline font-bold">
-              {criticalNotifications[0].action.label}
-            </a>
+          {criticalNotices[0].action && (
+            <Link href={criticalNotices[0].action.href} className="text-sm underline font-bold">
+              {criticalNotices[0].action.label}
+            </Link>
           )}
-          <button onClick={() => dismiss(criticalNotifications[0].id)} className="p-1">
+          <button onClick={() => dismiss(criticalNotices[0])} className="p-1" aria-label="Dismiss alert">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -218,28 +309,33 @@ export function ProactiveAssistant() {
         }}
       >
         <Sparkles className={focusedWork && !isOpen ? "h-4 w-4" : "h-6 w-6"} />
-        {state.unreadCount > 0 && (
+        {unreadCount > 0 && (
           <span
             className={`absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-[10px] font-bold flex items-center justify-center ${
               suppressNonUrgent ? "" : "animate-pulse"
             }`}
           >
-            {state.unreadCount}
+            {unreadCount}
           </span>
         )}
       </button>
 
-      {/* Notification panel — opens only on deliberate user action */}
+      {/* Panel — docked compact card on desktop; bottom-sheet on mobile. Opens only on
+          deliberate user action. */}
       {isOpen && (
         <div
-          className="fixed right-6 z-40 w-96 max-h-[70vh] bg-card rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col"
-          style={{ bottom: "calc(var(--shell-taskbar-height, 0px) + 6.5rem)" }}
+          className="fixed z-40 flex flex-col overflow-hidden border border-border bg-card shadow-2xl
+                     inset-x-0 bottom-0 max-h-[80vh] rounded-t-2xl
+                     sm:inset-x-auto sm:right-6 sm:bottom-[calc(var(--shell-taskbar-height,0px)+6.5rem)] sm:w-96 sm:max-h-[70vh] sm:rounded-2xl"
         >
           {/* Header */}
           <div className="px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-700 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
               <span className="font-semibold">Health Assistant</span>
+              {contextDegraded && (
+                <span className="text-[10px] rounded-full bg-white/20 px-1.5 py-0.5">limited mode</span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -265,67 +361,118 @@ export function ProactiveAssistant() {
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {chatMessages.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center mt-8">
-                    Ask me anything about your patients, schedule, guidelines, or the platform.
+                    Ask me anything about your care, payments, records, or the platform.
                   </p>
                 )}
                 {chatMessages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
-                      msg.role === "user" ? "bg-violet-600 text-white" : "bg-neutral-100 text-foreground"
-                    }`}>
-                      {msg.text}
+                    <div
+                      className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
+                        msg.role === "user"
+                          ? "bg-violet-600 text-white"
+                          : msg.degraded
+                          ? "bg-warning-soft text-foreground border border-warning/35"
+                          : "bg-neutral-100 text-foreground"
+                      }`}
+                    >
+                      {msg.role === "assistant" && msg.degraded && (
+                        <span className="mb-1 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-amber-700">
+                          <AlertTriangle className="h-3 w-3" /> Limited mode — not a complete answer
+                        </span>
+                      )}
+                      <p className="whitespace-pre-wrap">{msg.text}</p>
+                      {msg.disclaimer && (
+                        <p className="mt-1 text-[11px] italic text-muted-foreground">{msg.disclaimer}</p>
+                      )}
+                      {msg.actions && msg.actions.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {msg.actions.map((a, ai) => (
+                            <Link
+                              key={`${a.href}:${ai}`}
+                              href={a.href}
+                              className="inline-flex items-center gap-0.5 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-violet-700 hover:bg-neutral-50"
+                            >
+                              {a.label}
+                              <ChevronRight className="h-3 w-3" />
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                      {msg.sources && msg.sources.length > 0 && (
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          Sources: {msg.sources.map((s) => s.title ?? s.label ?? s.href).filter(Boolean).join(", ")}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
+                {pending && (
+                  <div className="flex justify-start">
+                    <div className="rounded-xl bg-neutral-100 px-3 py-2 text-sm text-muted-foreground">Nompilo is thinking…</div>
+                  </div>
+                )}
               </div>
               <div className="p-3 border-t flex gap-2">
                 <input
                   value={chatInput}
                   onChange={e => setChatInput(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handleChat()}
+                  onKeyDown={e => e.key === "Enter" && submitChat()}
                   placeholder="Ask the assistant..."
                   className="flex-1 rounded-lg border border-border px-3 py-2 text-sm focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none"
                 />
                 <button
-                  onClick={handleChat}
-                  className="px-3 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700"
+                  onClick={submitChat}
+                  disabled={pending || !chatInput.trim()}
+                  className="px-3 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-50"
                 >
                   Send
                 </button>
               </div>
             </div>
           ) : (
-            /* Notification list */
+            /* Notice list — primary voice is the context engine */
             <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
-              {state.notifications.length === 0 ? (
+              {notices.length === 0 ? (
                 <div className="p-8 text-center">
                   <CheckCircle2 className="h-10 w-10 text-emerald-400 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">All clear — no alerts right now</p>
+                  <p className="text-sm text-muted-foreground">All clear — nothing needs your attention right now</p>
                 </div>
               ) : (
-                state.notifications.map(notification => {
-                  const style = SEVERITY_STYLES[notification.severity] ?? SEVERITY_STYLES.INFO;
-                  const TypeIcon = TYPE_ICONS[notification.type] ?? Info;
+                notices.map(notice => {
+                  const style = SEVERITY_STYLES[notice.severity] ?? SEVERITY_STYLES.INFO;
+                  const TypeIcon = ICONS[notice.iconKey] ?? Info;
 
                   return (
-                    <div key={notification.id} className={`p-3 ${style.bg} border-l-4 ${style.border} flex gap-3`}>
+                    <div key={notice.id} className={`p-3 ${style.bg} border-l-4 ${style.border} flex gap-3`}>
                       <div className="flex-shrink-0 mt-0.5">
                         <TypeIcon className={`h-5 w-5 ${style.iconColor}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">{notification.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{notification.body}</p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-[10px] text-muted-foreground">{notification.source}</span>
-                          {notification.action && (
-                            <a href={notification.action.href} className="text-xs text-violet-600 font-medium flex items-center gap-0.5">
-                              {notification.action.label} <ChevronRight className="h-3 w-3" />
-                            </a>
+                        <p className="text-sm font-medium text-foreground">{notice.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{notice.body}</p>
+                        <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                          <span className="text-[10px] text-muted-foreground">
+                            {notice.source}
+                            {notice.supplementary ? " · supplementary" : ""}
+                          </span>
+                          {notice.action && (
+                            <Link href={notice.action.href} className="text-xs text-violet-600 font-medium flex items-center gap-0.5">
+                              {notice.action.label} <ChevronRight className="h-3 w-3" />
+                            </Link>
+                          )}
+                          {notice.askQuery && (
+                            <button
+                              type="button"
+                              onClick={() => askInChat(notice.askQuery as string)}
+                              className="text-xs text-violet-600 font-medium flex items-center gap-0.5"
+                            >
+                              Ask Nompilo <MessageCircle className="h-3 w-3" />
+                            </button>
                           )}
                         </div>
                       </div>
-                      {notification.dismissible && (
-                        <button onClick={() => dismiss(notification.id)} className="flex-shrink-0 p-1">
+                      {notice.dismissible && (
+                        <button onClick={() => dismiss(notice)} className="flex-shrink-0 p-1" aria-label={`Dismiss ${notice.title}`}>
                           <X className="h-3.5 w-3.5 text-muted-foreground" />
                         </button>
                       )}

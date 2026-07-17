@@ -33,6 +33,12 @@ vi.mock("@/lib/api-client", () => ({
   },
 }));
 
+// The context engine is the assistant's primary voice; mock it so the component can render
+// without a QueryClientProvider (react-query) in this unit test.
+vi.mock("@/hooks/queries/useNompilo", () => ({
+  useNompiloContext: () => ({ data: { data: { guidance: [], degraded: false } } }),
+}));
+
 function resetStores() {
   useAssistantUiStore.setState({ panelOpen: false, chatOpen: false, chatMessages: [], lastTypingAt: 0 });
   useLayoutPrefsStore.setState({ hydrated: true, navRailPref: "auto", taskbarMinimized: false, focusMode: false });
