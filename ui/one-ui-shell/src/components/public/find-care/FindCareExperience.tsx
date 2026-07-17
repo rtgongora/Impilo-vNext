@@ -73,6 +73,7 @@ export function FindCareExperience() {
   const [error, setError] = useState<SearchError | null>(null);
   const [geoStatus, setGeoStatus] = useState<GeoStatus>("idle");
   const autoRan = useRef(false);
+  const handoffApplied = useRef(false);
 
   // Hydrate the persisted journey once on mount.
   useEffect(() => {
@@ -142,6 +143,27 @@ export function FindCareExperience() {
     },
     [setResults],
   );
+
+  // One-shot handoff from the public website: a ?service=<TOKEN> or ?q=<free text>
+  // param seeds the journey and auto-searches, taking precedence over any persisted
+  // journey (a fresh link is a fresh intent). Read from the URL directly so no
+  // Suspense boundary / CSR bailout is needed for this client-only side effect.
+  useEffect(() => {
+    if (handoffApplied.current || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const serviceParam = params.get("service");
+    const qParam = params.get("q");
+    if (!serviceParam && !qParam) return;
+    handoffApplied.current = true;
+    autoRan.current = true; // we run the search here; suppress the hydrate auto-run
+    if (serviceParam) {
+      const token = serviceParam.trim().toUpperCase();
+      setService(token, serviceTokenLabel(token));
+    } else if (qParam) {
+      setNeed(qParam.trim());
+    }
+    setTimeout(() => void runSearch(0), 0);
+  }, [setService, setNeed, runSearch]);
 
   // After hydration, if there's an active query but no cached results, run once so a
   // fresh reload resumes the journey instead of showing an empty page.
