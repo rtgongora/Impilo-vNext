@@ -418,6 +418,11 @@ fi
 
 kubectl create namespace "$NAMESPACE" 2>/dev/null || true
 
+# Out-of-band app secrets must exist before Helm --wait schedules secretKeyRef pods.
+# fullboot.sh deploy wipes this namespace first, so bootstrap here (after create), not before deploy.
+echo "--- Bootstrap out-of-band secrets ($NAMESPACE/impilo-app-secrets) ---"
+NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/secrets/bootstrap-secrets.sh"
+
 preview_resolve_full_boot_provenance "$PREVIEW_DEPLOY_COMMIT"
 RUNTIME_IDS="$(bash scripts/full-boot/list-runtime-service-ids.sh)"
 DIGESTS_JSON="$(preview_digest_json_for_images "experience-bff,one-ui-shell,$RUNTIME_IDS" "$DIGESTS_VALUES")"
@@ -437,6 +442,12 @@ if [[ -f "$DIGESTS_VALUES" ]] && [[ "${IMPILO_DEPLOY_NO_DIGEST_PIN:-}" != "1" ]]
   HELM_DIGEST_PIN_SETS+=(--set global.imagePullPolicy=Always)
 fi
 
+HELM_WAIT_ARGS=(--wait --timeout "${FULL_BOOT_HELM_WAIT_TIMEOUT:-60m}" --atomic=false)
+if [[ "${FULL_BOOT_HELM_NO_WAIT:-}" == "1" ]]; then
+  echo "NOTE: FULL_BOOT_HELM_NO_WAIT=1 — Helm apply without --wait (crashlooping non-spine must not block release)"
+  HELM_WAIT_ARGS=(--timeout "${FULL_BOOT_HELM_WAIT_TIMEOUT:-60m}" --atomic=false)
+fi
+
 helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   -n "$NAMESPACE" \
   "${HELM_VALUE_FILES[@]}" \
@@ -453,7 +464,7 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   --set global.imageTag="$IMAGE_TAG" \
   --set images.experienceBff.tag="$IMAGE_TAG" \
   --set images.oneUiShell.tag="$IMAGE_TAG" \
-  --wait --timeout "${FULL_BOOT_HELM_WAIT_TIMEOUT:-60m}" --atomic=false
+  "${HELM_WAIT_ARGS[@]}"
 
 # Digest-pinned estates: helm upgrade with Recreate strategy rolls each changed
 # Deployment natively (old pod terminates before new pod starts). No mass

@@ -193,6 +193,21 @@ def _extract_ui_bundle_hash(image_ref: str) -> str:
     return match.group(1) if match else ""
 
 
+def _extract_ui_page_chunks_fingerprint(image_ref: str) -> str:
+    """Fingerprint of app page-*.js chunk filenames (layout can stay stable while routes change)."""
+    import hashlib
+
+    cmd = [
+        "docker", "run", "--rm", "--entrypoint", "sh", image_ref, "-c",
+        "find /app/one-ui-shell/.next-build/static/chunks/app -name 'page-*.js' "
+        "-printf '%P\\n' 2>/dev/null | sort",
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    if result.returncode != 0 or not result.stdout.strip():
+        return ""
+    return hashlib.sha256(result.stdout.encode()).hexdigest()[:16]
+
+
 def _ui_bundle_hash_mode() -> str:
     mode = os.environ.get("IMPILO_UI_BUNDLE_HASH_MODE", "").strip().lower()
     if mode in ("strict", "relaxed"):
@@ -286,21 +301,43 @@ def _verify_ui_bundle_after_build(image_ref: str, log_path: pathlib.Path):
     prev_hash = prev_path.read_text().strip() if prev_path.exists() else ""
     baseline_commit = prev_meta.get("source_commit", "")
     tree_fp = _ui_git_tree_fingerprint()
+    page_fp = _extract_ui_page_chunks_fingerprint(image_ref)
 
     if prev_hash and bundle_hash == prev_hash:
         committed_changed = _ui_committed_sources_changed(baseline_commit)
         if committed_changed:
-            msg = (
-                f"UI bundle verification: hash unchanged ({bundle_hash}) after committed UI "
-                f"source changes ({baseline_commit[:8]}..HEAD)\n"
-            )
-            if mode == "strict":
-                append_log(log_path, f"FAIL {msg}")
-                return False, bundle_hash
-            append_log(
-                log_path,
-                f"WARN {msg}policy={mode} — continuing (targeted deploy path)\n",
-            )
+            prev_page_fp = str(prev_meta.get("page_chunks_fingerprint") or "")
+            if not prev_page_fp and baseline_commit:
+                # Best-effort: compare page chunks against prior SHA-tagged image when meta lacks fingerprint.
+                for old_ref in (
+                    f"impilo/one-ui-shell:preview-{baseline_commit[:9]}",
+                    f"impilo/one-ui-shell:preview-{baseline_commit}",
+                ):
+                    prev_page_fp = _extract_ui_page_chunks_fingerprint(old_ref)
+                    if prev_page_fp:
+                        break
+            if page_fp and prev_page_fp and page_fp != prev_page_fp:
+                append_log(
+                    log_path,
+                    f"OK UI layout hash unchanged ({bundle_hash}) but page chunks advanced "
+                    f"({prev_page_fp} -> {page_fp}) after UI source changes "
+                    f"({baseline_commit[:8]}..HEAD); policy={mode}\n",
+                )
+            else:
+                msg = (
+                    f"UI bundle verification: hash unchanged ({bundle_hash}) after committed UI "
+                    f"source changes ({baseline_commit[:8]}..HEAD)"
+                )
+                if page_fp or prev_page_fp:
+                    msg += f" (page_chunks={page_fp or '?'} prev={prev_page_fp or '?'})"
+                msg += "\n"
+                if mode == "strict":
+                    append_log(log_path, f"FAIL {msg}")
+                    return False, bundle_hash
+                append_log(
+                    log_path,
+                    f"WARN {msg}policy={mode} — continuing (targeted deploy path)\n",
+                )
         else:
             append_log(
                 log_path,
@@ -313,11 +350,16 @@ def _verify_ui_bundle_after_build(image_ref: str, log_path: pathlib.Path):
         "bundle_hash": bundle_hash,
         "source_commit": _git_commit(),
         "source_tree_fingerprint": tree_fp,
+        "page_chunks_fingerprint": page_fp,
         "policy_mode": mode,
         "built_at": datetime.now(timezone.utc).isoformat(),
     }
     meta_path.write_text(json.dumps(meta, indent=2))
-    append_log(log_path, f"UI bundle hash verified: layout-{bundle_hash}.js (policy={mode})\n")
+    append_log(
+        log_path,
+        f"UI bundle hash verified: layout-{bundle_hash}.js page_chunks={page_fp or 'n/a'} "
+        f"(policy={mode})\n",
+    )
     return True, bundle_hash
 
 
