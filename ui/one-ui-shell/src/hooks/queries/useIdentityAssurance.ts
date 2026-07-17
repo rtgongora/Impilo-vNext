@@ -13,13 +13,10 @@ const TIER_TO_LOA: Record<AssuranceUpgradeTier, { targetLevel: string; method: s
   FULL: { targetLevel: "LOA3", method: "IN_PERSON_VERIFICATION" },
 };
 
-export function useAssuranceStatus(enabled = true) {
-  return useQuery({
-    queryKey: ["identity", "assurance", "status"],
-    queryFn: () => apiClient.get<ApiResponse<Record<string, unknown>>>("/internal/v1/identity/assurance/status"),
-    enabled,
-  });
-}
+// NOTE: `useAssuranceStatus` was consolidated into `@/hooks/queries/useIdentity` — that
+// typed `AssuranceStatus` (permissions / upgrade pathways / nextBestStep) is the single
+// implementation used across the shell (banner, status chip, explainers). Import it from
+// there; do not reintroduce a duplicate here.
 
 export function useRequestAssuranceUpgrade() {
   return useMutation({
