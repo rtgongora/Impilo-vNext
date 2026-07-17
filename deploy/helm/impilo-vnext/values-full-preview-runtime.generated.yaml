@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
-# Microservices: 95 | enabled: 95 (all waves)
+# Microservices: 96 | enabled: 95 (all waves)
 fullBootServices:
   ai-model-registry-service:
     enabled: true
@@ -296,6 +296,10 @@ fullBootServices:
     database: pacs_adapter
     env:
       ORTHANC_BASE_URL: http://orthanc:8042
+  participation-service:
+    enabled: false
+    port: 8393
+    database: participation
   patient-safety-service:
     enabled: true
     port: 8202
@@ -526,6 +530,7 @@ postgres:
     - organization_registry
     - oros
     - pacs_adapter
+    - participation
     - patient_safety
     - pct
     - pharmacy

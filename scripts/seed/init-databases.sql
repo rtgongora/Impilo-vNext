@@ -24,3 +24,6 @@ CREATE DATABASE live;
 -- back to JSONB geometry storage + pure-Java spatial math (see GeoMath /
 -- GeoJsonReader). Either mode produces a working dev environment.
 CREATE DATABASE impilo_ndila;
+
+-- Participation — Citizen Get-Involved & Co-Design (port 8393).
+CREATE DATABASE participation;
