@@ -1,11 +1,18 @@
 package zw.gov.mohcc.impilo.experience.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import zw.gov.mohcc.impilo.experience.client.LlmStructuredServiceClient;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Deterministic free-text → service-capability interpreter for the citizen "find care" lane.
@@ -22,6 +29,32 @@ import java.util.Map;
  */
 @Component
 public class FindCareServiceTaxonomy {
+
+    private static final Logger log = LoggerFactory.getLogger(FindCareServiceTaxonomy.class);
+
+    /**
+     * The canonical vocabulary — the union of every token the deterministic map can emit. The
+     * optional LLM path is fenced to this set: a model may only ever return a token that already
+     * exists here, so the NL upgrade can never invent a capability the registry search does not
+     * understand (honesty gate). Built lazily from {@link #SYNONYMS} in the static initializer.
+     */
+    private static final Set<String> KNOWN_TOKENS = new LinkedHashSet<>();
+
+    /**
+     * Optional LLM structured-interpret seam. Off by default ({@code impilo.findcare.llm-interpret.enabled=false})
+     * so the deterministic path always ships; when enabled AND a governed provider is configured,
+     * free text is routed through {@link LlmStructuredServiceClient} and the result is validated
+     * against {@link #KNOWN_TOKENS} before it is trusted. Any failure falls back to the synonym map.
+     */
+    private final LlmStructuredServiceClient llmClient;
+    private final boolean llmInterpretEnabled;
+
+    public FindCareServiceTaxonomy(
+            LlmStructuredServiceClient llmClient,
+            @Value("${impilo.findcare.llm-interpret.enabled:false}") boolean llmInterpretEnabled) {
+        this.llmClient = llmClient;
+        this.llmInterpretEnabled = llmInterpretEnabled;
+    }
 
     /** Result of interpreting a free-text care need. */
     public record Interpretation(
@@ -98,6 +131,10 @@ public class FindCareServiceTaxonomy {
         SYNONYMS.put("doctor", List.of("GENERAL", "OPD"));
         SYNONYMS.put("family plan", List.of("FAMILY_PLANNING"));
         SYNONYMS.put("contracept", List.of("FAMILY_PLANNING"));
+
+        for (List<String> tokens : SYNONYMS.values()) {
+            KNOWN_TOKENS.addAll(tokens);
+        }
     }
 
     /** Intent-flag phrases (do not, on their own, produce a capability token). */
@@ -133,9 +170,76 @@ public class FindCareServiceTaxonomy {
         boolean emergency = containsAny(norm, EMERGENCY_TERMS);
         boolean accessibility = containsAny(norm, ACCESSIBILITY_TERMS);
 
+        // Optional NL upgrade: only when the deterministic map found nothing, the flag is on, and a
+        // provider is configured. The model's tokens are fenced to KNOWN_TOKENS so nothing new is
+        // invented; any failure or an all-unknown result leaves the deterministic (empty) tokens.
+        if (tokens.isEmpty() && llmInterpretEnabled) {
+            List<String> llmTokens = interpretViaLlm(norm);
+            if (!llmTokens.isEmpty()) {
+                tokens = llmTokens;
+            }
+        }
+
         String primary = tokens.isEmpty() ? null : tokens.get(0);
         boolean recognized = !tokens.isEmpty();
         return new Interpretation(raw, List.copyOf(tokens), primary, telemed, emergency, accessibility, recognized);
+    }
+
+    /**
+     * Route free text through the governed LLM structured-output endpoint and keep only tokens that
+     * already exist in {@link #KNOWN_TOKENS}. Deterministic, honest fallback on every failure: an
+     * empty list means "the model added nothing we can trust", and the caller uses the synonym map.
+     */
+    private List<String> interpretViaLlm(String norm) {
+        try {
+            Map<String, Object> schema = Map.of(
+                    "type", "object",
+                    "properties", Map.of(
+                            "serviceTokens", Map.of(
+                                    "type", "array",
+                                    "items", Map.of("type", "string", "enum", new ArrayList<>(KNOWN_TOKENS)))),
+                    "required", List.of("serviceTokens"));
+            String system = "You map a person's free-text health need to canonical service capability "
+                    + "tokens. Only use tokens from the provided enum. If nothing fits, return an empty "
+                    + "array. Do not invent tokens.";
+            JsonNode response = llmClient.structured("FIND_CARE_SERVICE_INTERPRET", system, norm, schema);
+            if (response == null) {
+                return List.of();
+            }
+            JsonNode tokensNode = findServiceTokens(response);
+            if (tokensNode == null || !tokensNode.isArray()) {
+                return List.of();
+            }
+            List<String> accepted = new ArrayList<>();
+            for (JsonNode t : tokensNode) {
+                String token = t.asText(null);
+                if (token != null && KNOWN_TOKENS.contains(token) && !accepted.contains(token)) {
+                    accepted.add(token);
+                }
+            }
+            return accepted;
+        } catch (Exception e) {
+            log.warn("Find-care LLM interpret failed, using deterministic map: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    /** Locate the {@code serviceTokens} array wherever the orchestrator envelope nests it. */
+    private static JsonNode findServiceTokens(JsonNode root) {
+        if (root.has("serviceTokens")) {
+            return root.get("serviceTokens");
+        }
+        // Orchestrator responses vary by provider; probe the common structured-output carriers.
+        for (String path : List.of("structuredOutput", "output", "data", "result", "content", "message")) {
+            JsonNode child = root.get(path);
+            if (child != null) {
+                JsonNode found = findServiceTokens(child);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 
     private static boolean containsAny(String norm, List<String> terms) {
