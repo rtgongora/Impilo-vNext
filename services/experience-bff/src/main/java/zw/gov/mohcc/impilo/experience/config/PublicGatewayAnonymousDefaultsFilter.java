@@ -63,20 +63,26 @@ public class PublicGatewayAnonymousDefaultsFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+        // Tenant + pod are OVERRIDDEN (not merely defaulted) on this namespace. These are
+        // anonymous public lanes serving the public national-spine tenant's public data; the
+        // caller's tenant is never authoritative here. Live edge traffic (Traefik → BFF) does
+        // NOT strip inbound trust headers, so a signed-in browser's own X-Tenant-ID (the moh-zw
+        // dev/app tenant) would otherwise leak through and drive downstream lookups against the
+        // wrong tenant — 502s on the public facility profile, empty advisory/find-care results.
+        // Forcing the public tenant makes every public-gateway read resolve the public data.
+        Map<String, String> overrides = new LinkedHashMap<>();
+        overrides.put(CompanionHeaders.TENANT_ID, PUBLIC_DEFAULT_TENANT);
+        overrides.put(CompanionHeaders.POD_ID, PUBLIC_POD);
+        // Request/correlation ids are filled only when missing — a caller-supplied trace id is
+        // legitimate and preserved for correlation.
         Map<String, String> defaults = new LinkedHashMap<>();
-        putIfMissing(request, defaults, CompanionHeaders.TENANT_ID, PUBLIC_DEFAULT_TENANT);
-        putIfMissing(request, defaults, CompanionHeaders.POD_ID, PUBLIC_POD);
         putIfMissing(request, defaults, CompanionHeaders.REQUEST_ID, UUID.randomUUID().toString());
         putIfMissing(request, defaults, CompanionHeaders.CORRELATION_ID, UUID.randomUUID().toString());
         if (isTelemetryBeacon) {
             // sendBeacon cannot carry an Idempotency-Key; each telemetry batch is append-only.
             putIfMissing(request, defaults, CompanionHeaders.IDEMPOTENCY_KEY, UUID.randomUUID().toString());
         }
-        if (defaults.isEmpty()) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        filterChain.doFilter(new DefaultedHeaderRequest(request, defaults), response);
+        filterChain.doFilter(new DefaultedHeaderRequest(request, overrides, defaults), response);
     }
 
     private static void putIfMissing(HttpServletRequest request, Map<String, String> defaults,
@@ -87,26 +93,40 @@ public class PublicGatewayAnonymousDefaultsFilter extends OncePerRequestFilter {
         }
     }
 
-    /** Read-only view of the request with the missing platform headers defaulted. */
+    /**
+     * Read-only view of the request with public-lane headers applied. {@code overrides}
+     * (tenant, pod) always win over any caller-supplied value; {@code defaults}
+     * (request/correlation/idempotency ids) apply only when the caller sent none.
+     */
     private static final class DefaultedHeaderRequest extends HttpServletRequestWrapper {
 
+        private final Map<String, String> overrides;
         private final Map<String, String> defaults;
 
-        private DefaultedHeaderRequest(HttpServletRequest request, Map<String, String> defaults) {
+        private DefaultedHeaderRequest(HttpServletRequest request,
+                                       Map<String, String> overrides,
+                                       Map<String, String> defaults) {
             super(request);
-            Map<String, String> caseInsensitive = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            caseInsensitive.putAll(defaults);
-            this.defaults = caseInsensitive;
+            this.overrides = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            this.overrides.putAll(overrides);
+            this.defaults = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            this.defaults.putAll(defaults);
         }
 
         @Override
         public String getHeader(String name) {
+            String override = overrides.get(name);
+            if (override != null) return override;
             String value = super.getHeader(name);
             return value != null ? value : defaults.get(name);
         }
 
         @Override
         public Enumeration<String> getHeaders(String name) {
+            String override = overrides.get(name);
+            if (override != null) {
+                return Collections.enumeration(Collections.singletonList(override));
+            }
             Enumeration<String> values = super.getHeaders(name);
             if (values != null && values.hasMoreElements()) {
                 return values;
@@ -124,6 +144,7 @@ public class PublicGatewayAnonymousDefaultsFilter extends OncePerRequestFilter {
             while (original != null && original.hasMoreElements()) {
                 names.put(original.nextElement(), Boolean.TRUE);
             }
+            overrides.keySet().forEach(name -> names.putIfAbsent(name, Boolean.TRUE));
             defaults.keySet().forEach(name -> names.putIfAbsent(name, Boolean.TRUE));
             return Collections.enumeration(names.keySet());
         }
