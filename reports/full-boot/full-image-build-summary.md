@@ -2,12 +2,12 @@
 
 > Doctrine: runtime image strategy required (not Dockerfile-only).
 
-- Tag: `preview-efedd0f49`
-- Mode: **all_non_not_required**
-- Selected targets: **124**
+- Tag: `preview-32f2c4fa6`
+- Mode: **only**
+- Selected targets: **2**
 - Runtime image required (catalog): **22**
-- Pass: **105** | Fail: **0** | Skip: **19**
-- Official validated: **8**
+- Pass: **2** | Fail: **0** | Skip: **0**
+- Official validated: **0**
 - Missing required strategy: **0**
 - Required failures: **0**
 - Blocking failures: **0**

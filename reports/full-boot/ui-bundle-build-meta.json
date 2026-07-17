@@ -1,7 +1,8 @@
 {
-  "bundle_hash": "cbcc87326661cfb3",
-  "source_commit": "efedd0f49a31a1dd9570057edb2f93584d06524e",
-  "source_tree_fingerprint": "4c4cbc83261ac333",
+  "bundle_hash": "28ffafc82a62465d",
+  "source_commit": "32f2c4fa6304024503c1131247256f3a2f8cad2a",
+  "source_tree_fingerprint": "6d37a4fe4b1e93c6",
+  "page_chunks_fingerprint": "b91d05b39cacde80",
   "policy_mode": "strict",
-  "built_at": "2026-07-09T06:23:00.668556+00:00"
+  "built_at": "2026-07-16T13:32:04.242538+00:00"
 }

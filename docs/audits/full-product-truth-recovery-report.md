@@ -1,6 +1,6 @@
 # Full Product Truth Recovery Report
 
-> Generated: 2026-07-15T23:33:15.009Z
+> Generated: 2026-07-16T10:10:10.405Z
 > Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 
 ## Executive summary

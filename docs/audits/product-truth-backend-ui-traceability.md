@@ -1,6 +1,6 @@
 # Product Truth — Backend-to-UI Traceability
 
-> Generated: 2026-07-15T23:33:15.009Z
+> Generated: 2026-07-16T10:10:10.405Z
 
 For each service: backend capabilities → API → BFF → UI → mobile → persistence.
 
@@ -1289,7 +1289,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (14 controllers, 83 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: ndila.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (6 clients) |
-| 4 | Visible in UI? | Yes (84 refs) |
+| 4 | Visible in UI? | Yes (87 refs) |
 | 5 | Visible on mobile? | Yes (18 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |
@@ -2255,7 +2255,7 @@ For each service: backend capabilities → API → BFF → UI → mobile → per
 | 1 | Real backend capabilities? | Yes (25 controllers, 140 routes) |
 | 2 | Exposed via API/contracts? | Yes (contract: vito.openapi.yaml) |
 | 3 | Wired via BFF? | Yes (32 clients) |
-| 4 | Visible in UI? | Yes (87 refs) |
+| 4 | Visible in UI? | Yes (88 refs) |
 | 5 | Visible on mobile? | Yes (11 refs) |
 | 6 | Fake/partial/disconnected? | No |
 | 7 | Backend without UI? | No |

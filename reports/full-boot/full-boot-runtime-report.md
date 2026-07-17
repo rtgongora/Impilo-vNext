@@ -2,8 +2,8 @@
 
 > All of vNext is accountable. One estate means all deployable vNext services. Waves are sequencing, not optionality.
 
-**Estate status:** `FULL_ESTATE_PASS`
-**Estate reason:** full estate deployed, ready, and healthy
+**Estate status:** `FAIL`
+**Estate reason:** runtime image truth: 1 stale non-exempt service(s)
 **Runtime estate ready:** 97/97 (missing/not-ready: 0)
 **Legacy full-boot status (alias):** `FULL_BOOT_PASS` — images, helm, and runtime healthy
 
@@ -18,8 +18,8 @@
 |--------|-------|
 | Total discovered | 148 |
 | Required full boot | 22 |
-| Image pass / fail | 105 / 0 |
+| Image pass / fail | 2 / 0 |
 | Helm ready / missing / partial | 22 / 0 / 0 |
-| Deployed in full boot | 109 |
-| Pods ready / total | 109 / 110 |
+| Deployed in full boot | 108 |
+| Pods ready / total | 108 / 109 |
 

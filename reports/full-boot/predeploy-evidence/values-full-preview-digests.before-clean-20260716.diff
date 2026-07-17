@@ -1,0 +1,401 @@
+diff --git a/deploy/helm/impilo-vnext/values-full-preview-digests.generated.yaml b/deploy/helm/impilo-vnext/values-full-preview-digests.generated.yaml
+index cd2a06f9b..9ab005385 100644
+--- a/deploy/helm/impilo-vnext/values-full-preview-digests.generated.yaml
++++ b/deploy/helm/impilo-vnext/values-full-preview-digests.generated.yaml
+@@ -1,298 +1,298 @@
+ # AUTO-GENERATED — do not edit by hand.
+ # Regenerate: bash scripts/full-boot/resolve-image-digests.sh
+ # Chart-native digest pinning: Helm renders registry/repo@sha256 for each runtime service.
+-generated_at: '2026-07-09T07:30:07.623849+00:00'
++generated_at: '2026-07-16T04:00:51.364780+00:00'
+ source_tag: preview
+ registry: 127.0.0.1:5000
+ digest_pin_count: 97
+ fullBootServices:
+   ai-model-registry-service:
+     image:
+-      digest: sha256:9204793c43d768783f0807af8f50c91e2dcb71d5a49512720a67e8f08d3fdcae
++      digest: sha256:fa2c28417dafcf3e2f5ef33e3a9a4ecc4ccbf300b9108441ba67c58ad0d073cc
+   analytics-pipeline-service:
+     image:
+-      digest: sha256:608350f3cf92051b4cbd061262c1b037fcc399d2c85311f22d763eb6446d99f5
++      digest: sha256:496ab2f45a42537fb1aff6e86417d9dd83cf0bec7060edfd4b3be6188f0a4c9a
+   asset-registry-service:
+     image:
+-      digest: sha256:ad99d4f3f7a95a7889af37d6640a74eedb84ff65c284bdc67ae4704a2f498570
++      digest: sha256:e3f8ce11e9954d5ed2feff6eaed20e6838cd273a2556f358c5f785bcf8cff0f5
+   audit-ledger-service:
+     image:
+-      digest: sha256:87f339a60056a135d0e7433529d4dd9400101abf33443baa77ee7cbebc51fcae
++      digest: sha256:4e02eb2456bbac279b743b3e62acd4bf45bbb2c62d34e06d43c80bb863b56804
+   booking-service:
+     image:
+-      digest: sha256:f6beb06a1aa09b43748071e7dc707b8e48921399146ef7fdf8134bd162267701
++      digest: sha256:57db44e0c3ee7a53caacd73f04cdb68f92c920b0186db7d73cf0ab8c67edcc14
+   butano-fhir:
+     image:
+-      digest: sha256:bf2bb8dc04ee7269fbd467f43dfdc36dcca3a3d232262d0b156df613b6b423db
++      digest: sha256:89039ec1c067bbced0985d833248ba5daef79880837dd29851b7c49dd81555cc
+   butano-service:
+     image:
+-      digest: sha256:3c71c6579a48f3596a924cb217b75572b2abd07e55154b693fbc285e01576406
++      digest: sha256:fdd328f097c7f5577600da511753e376741fc7f765dd601fed4cca78aed10035
+   campaigns-service:
+     image:
+-      digest: sha256:52cbaa5f041749b074d9fafc144192552b5c9a2896078f6ee8af48dd46e5d111
++      digest: sha256:8507a6b4e74ca9a0561974ee1f16d2803ed92c29d527ba31b854c1ced11a6013
+   card-print-agent:
+     image:
+-      digest: sha256:da5a79d1805e4ec7a7ad06bc962cc326bcad13d2bee2d7737b2654df7a624163
++      digest: sha256:829b751757b2d7dac0aade8f09584043e93049b81bf77bca878d0961ca36fe65
+   channels-service:
+     image:
+-      digest: sha256:6bf6a808993f8144d87a337b6288a5371e971fe7f647fc88122f2b8d5db2eeef
++      digest: sha256:7281186ba6e7b79bda5b149de21232f5aaebadbe620a5811ff6afb979162ff9e
+   clinical-knowledge-platform-service:
+     image:
+-      digest: sha256:44a94ab50d4c8a6e9248bec6a73321c5234af0b3126da6ed7f7106552c7d6cc1
++      digest: sha256:35a424dd87d2ca4e35a0bf6b846abaea401b4fb3b9c0480a53e7dfc7aabe04b8
+   community-service:
+     image:
+-      digest: sha256:e537136d2b3490514d490082a0cc6703c7cd02262e3e7638e167347e69d0c8ab
++      digest: sha256:8a978e6fb0755d6982f92b8a4da384f8f3a9c7f7648f759d2c60affcc3a94156
+   connector-fhir-adapter:
+     image:
+-      digest: sha256:af966e9db6e4e1d2a017263c556da2b4215d0119a86ff3a0e9456266a5022fbc
++      digest: sha256:54e6e0a799d7039fc836f7aac6b330d689c3c59c814326564a705658cf0f3464
+   costing-engine-service:
+     image:
+-      digest: sha256:b6a987f0064840e0e19fa5a3ab88847ef0899558609e40d39d0453b122f077b7
++      digest: sha256:bd331ce4f485505a5508f41c9a85b166527037c1cb93964a546b4e6ea8d0b988
+   coverage-service:
+     image:
+-      digest: sha256:0dd35aed153180c86166c1957c07f6fde2d0e6ccfff5170e3e0acec9e38e37c4
++      digest: sha256:7cf5427f140adf8091c3a7d5e4541cf5b66f8a43c3d836ea65f97276781e090e
+   credential-verification-service:
+     image:
+-      digest: sha256:9658703587f341318e10c64108df0b6a055b18b60c044ab70a57a2c5a1207386
++      digest: sha256:5dbfa5261e4d86cefe42467ff8c4b876e2b6555bc84df91488a81076e003cb26
+   daidzai-service:
+     image:
+-      digest: sha256:a9c40379c85857410f187247721a4919c2fe7350dfe8e1b53bf7e18f659784f5
++      digest: sha256:7e6fa8db50296e53b3ba1b262200c0816adb2db26b852e1a624c8d37789e4ebc
+   data-access-governance-service:
+     image:
+-      digest: sha256:ad71f83eccd0be9100904a8ec32b48db8eaf6bdd952fbc4ebe042fca93d62802
++      digest: sha256:fea6689fb576d1d075590fda9700a74d7577f0591d18dd22251b76b5f5b6a1a9
+   data-governance-service:
+     image:
+-      digest: sha256:95ec49c77e79ae2c800123346ff2091b094c967314bca95d7fb5fc0c263b0b0d
++      digest: sha256:540e99fe4957734075233c1bed42cde38f5a001f68ab1f0436e65f85649aa29e
+   data-ingestion-service:
+     image:
+-      digest: sha256:4cbe153c1c9f5dd442437d324b2b45c84a9ef27af123a2e1c7d60907334d6fb9
++      digest: sha256:65554928e5d333804109a61b71f5641518eb9ca83f41604eafbdb97c11b4043b
+   data-pipeline-service:
+     image:
+-      digest: sha256:967ed00e2f1aa4cce9438523626148ae9e5275821fc28d37aa07da251b85fe11
++      digest: sha256:b586564ca53c6dd4fd5d108aa856014641592aa808d8d205dd21034348b0cc20
+   data-warehouse-service:
+     image:
+-      digest: sha256:9071b1ebdafb55fae7c72af74ca1dccd41730661eebc24253a7252145458d28b
++      digest: sha256:b7f2c1db8a12926b38dc7415c1802c4ec82c3178ba8a4a770c1b6a779fdc6895
+   developer-portal-service:
+     image:
+-      digest: sha256:46841c7c0df56c093f57f4d088e6113ce98d831ac3e4304872145f2cd315a0ca
++      digest: sha256:645710b35a5112b97b20a1edd4f215c289644d6aea959ffbef68acf33da16145
+   dispatch-service:
+     image:
+-      digest: sha256:dc1ef15ce6f7f30404524a9404a763f5d7bdaf2a4614350e779216068f2dcb5c
++      digest: sha256:d1a422c8091fa499c25376d798832e488f399f846a685958d818d30e640b780c
+   document-service:
+     image:
+-      digest: sha256:659cc9b52143667222047fdf51b0eab95aac0142c6758c7491f5917d6170c7b5
++      digest: sha256:2dd0f5ccb4db10afbf77d6bf0b6f539d8cef866e2b1603789bc6363e329f64c9
+   fhir-gateway-service:
+     image:
+-      digest: sha256:e9a85af11a9047fb1b96c0ad1994beca9e1f2872f1ac729ece8fa267274f8d42
++      digest: sha256:625343aeeddf5c0a5ca1a0de9efc12e75f654b24dd79b12204967d15f55bed5c
+   forms-service:
+     image:
+-      digest: sha256:09f3afd9a96ec54dd9764f328ac54d31154d60dcbfa82ead05e90a52cd000b44
++      digest: sha256:ed971c1c5ba9bc800083b843742650bc4a9358bf2a28bdeac7c00de3dc682b3d
+   general-ledger-service:
+     image:
+-      digest: sha256:f691b52fc278c1f187ad64cc008a3ed0753e8f0f7199a57b16a43a4d076f5536
++      digest: sha256:464201ae702a8fc0cadf4ed42019c6526c0b30861097af03ab0ab5c913c792ff
+   guidance-service:
+     image:
+-      digest: sha256:17c429f0a0e5029b2673403ced238f6f100eba9ad690fb7d4e9720d31d901a9d
++      digest: sha256:b378f29047c02106232ca9bdf8b284783a8542ce504d178aec7bcc269dfb592e
+   hr-payroll-service:
+     image:
+-      digest: sha256:b1056021319ef2b368a42bee0a2c471842cbff09312e05b3141ccadeaff8ada9
++      digest: sha256:741d9170ca3c70c8f5c197f6241749b45dd891650101a4c35d888f48667d4e8a
+   identity-assurance-service:
+     image:
+-      digest: sha256:b43496dfc0d7d852991d5da2e1cf30d91e14137a6e9867df1dd8f09f5b365b66
++      digest: sha256:f71c59bf5863de6ae1251f0127713921800ac017af47c365bb005fce4a2590f9
+   indawo-service:
+     image:
+-      digest: sha256:e93041384ee40d22ccf4dd6bf0e9f92cf3da05b529ec2dcfd41ff71cddbdd530
++      digest: sha256:59e2f618268e8a7100fdd24c39b13adef986bc0f01c2bcc4b20c63c8b368a85a
+   inpatient-service:
+     image:
+-      digest: sha256:313632b20ad6308a9fdfc96c330b10e579088948dba99a44df1cf6ff62b20d28
++      digest: sha256:f18551732e4ce775ec9f0f59e35ec0d1f449fabcc2ecad217f2e13b1af4d7c2a
+   integration-hub:
+     image:
+-      digest: sha256:afc8f8099d000503f0fe85ff90ddd1e41b92a1f41f06faffe383a9c9df4bd879
++      digest: sha256:0e339767ea60312d61a99cfa3118aca1e13dd5d2ce3bc2859ff0afd19dcd049f
+   inventory-elmis-adapter:
+     image:
+-      digest: sha256:60969111b8b9c6644d51b8d5df939570c4449ba2a8886d2cfdc39bc2bc260a7d
++      digest: sha256:781989d58a1ba988e771a12b91622e1ffbf2826bbc625adc191347f2432b1ede
+   inventory-service:
+     image:
+-      digest: sha256:779e30f89c0e6271acf775b1ca2db26db0681fc56ffc0f2087485b40e5be7bbd
++      digest: sha256:c619bd9db5b0efc0a7e5e8badd0e2337c90f5bf92e24f53dbd02dd3483c57f57
+   iot-ingestion-service:
+     image:
+-      digest: sha256:0e15193758f93f57d4b28c1faa591cbbae7c4064d1868c2411fd2d4811bc2434
++      digest: sha256:97ce4fd2153d7afc091abbe7e634766913dbf39a9fda845345ffb0653caa1ea7
+   jobs-service:
+     image:
+-      digest: sha256:2072bb4f45b6dd1a8c3997da8c5c66e255fb549633c5bc753a6665cb2ddad1ce
++      digest: sha256:d4141f074ddbd52eeed5065613ca87da6bf22ac57b8abc9402844406940ad395
+   khuluma-service:
+     image:
+-      digest: sha256:a68aca8f48ab9d088649e24354ace2018635f8dbd43ceafafeeb604b08abc9d0
++      digest: sha256:15d22c8e666ff67952a479d26638fc0b53d55f79d63a0a670b23d8833be127fa
+   landela-adapter-service:
+     image:
+-      digest: sha256:c45b98b389dcf2ad66061917fdc547595372ff998a92a753fa77b1cf07ecdc93
++      digest: sha256:c5685e3d154bb078549baed18716545b1f0db26cac2d8da85feef0c623d13949
+   learning-service:
+     image:
+-      digest: sha256:0001d0c4927df7b27937174408455e612733063bcc42997f0bea4a72dd597374
++      digest: sha256:66e763a57ed318f18ae3b164561b060d78a49a3299552bdf34f8c2f7bbfb432a
+   live-service:
+     image:
+-      digest: sha256:84c244211d12ba25942c9fc93a9688d9236839a89a70d47bb6e67f14d3723534
++      digest: sha256:8d48d14e7ff68686f05db9538a8b5846c6f265cd3aedd1427feae6459c5f2df4
+   llm-orchestration-service:
+     image:
+-      digest: sha256:90590178aaf38a6653863cef440a7836c6b4bc7675dfb28610f0f9f836778bd7
++      digest: sha256:84d668a7589018466f4047cecc59fcc62595c4bcf67427c5d86a96efbb24e5c1
+   madi-service:
+     image:
+-      digest: sha256:9b1748475592d15b6186c93048bec3b1d20761c5dc04f1f7fe2fe8da3d60e31a
++      digest: sha256:eafa067f41b3bc300c5ce6802e272e7b819705e20fd6088380cf2909fbeaee84
+   msika-apps-service:
+     image:
+-      digest: sha256:c6c19952114d4fea966acf2009040dbbc23e9b77f2497b381399f5130bebd0bf
++      digest: sha256:f7550a36ec3ee1a8d942ce0e16d521f25e3363c98587038f400004c354f767ff
+   msika-flow-service:
+     image:
+-      digest: sha256:738ca18489c69d58ed30abefdb036f98e0d11543ac4ec157bfea2f57a8b0b048
++      digest: sha256:88524742fa3c50b269ee7f0209fcf1dfd887aa47d43a0d49d5a29e458c6b85e9
+   msika-service:
+     image:
+-      digest: sha256:b435f1097750ba7eb9a3c04143a3c44610c5ea0caad25b9de6491756dda99fa1
++      digest: sha256:8839aa35336a37ca56e089bf102666c255768c4e46ec1646621385cc5a2046cc
+   mushe-wallet-service:
+     image:
+-      digest: sha256:20b483419ba9c7c712628cdda66929d4393ba305ae6b048d0bd23115e30ed3bc
++      digest: sha256:42096c89b58901b9cbc7baacb28ed1154b6938e9a7e9313e542fcb43ab0bc288
+   mushex-service:
+     image:
+-      digest: sha256:5dbea335f6b93b0f6709de0cbe1730d2bb7f43773fb1eeed4a0b7894e461b346
++      digest: sha256:49176a3b229eb0be3a853b44893648a1ea5a0e2da55057788395f27799fbc48a
+   mvumo-service:
+     image:
+-      digest: sha256:b097e725b60b934f88799ffd152dd4c86e76b7dfc6fa6c7c625f0e1e7a5148f3
++      digest: sha256:aa7a9dd17d43e15643ac8a955c56cdc331ded94921c92591aec293180703c9ba
+   national-data-repository-service:
+     image:
+-      digest: sha256:523d952852c0d895befa57706d6ca58770dbf9bf4d846a64aca5b4810b56ab5c
++      digest: sha256:ddf0d18fd6b4d398b2c688b742d6ec39cae6a684b5b8286ec4c95b27bf8fd5db
+   ndila-service:
+     image:
+-      digest: sha256:85ce0ec58ab8ec38d6e39adeb0a5339138fbe7967594e8fdb8195695d7cf0a83
++      digest: sha256:121554ea0168ea86d2b9ecd7f45c067c1ec3c5bfe118c483765ce984ad2d8157
+   ndr-service:
+     image:
+-      digest: sha256:0cbb808909b8d897d90a1551bd0499f652e4cd3519e3dc6c0c9077c07f321ff6
++      digest: sha256:e27ff119165a869b5a91112f2f9a9c62587132938aae653a306f05f662358635
+   nhume-service:
+     image:
+-      digest: sha256:f9fb2ff3f99d68e1468d9e835a599a1e04525348f5031d6deb6fcb2a206c87e4
++      digest: sha256:2161dda7c886c07ccba50dd73595ee1bb38746927d73b12e98bc37b00c0a31ea
+   notification-service:
+     image:
+-      digest: sha256:57ddfbcab08d5a9308fcf56c55025ec6e329a9fe0dfa3e119e2562a27e38fc9d
++      digest: sha256:c3814b71024ac6934772d12ff62c74765a59a90dafeccdcd2053cbef977c32d6
+   observability-service:
+     image:
+-      digest: sha256:fae4a94aba59b3601ef291e87c83fbd67a24c0e5d2f73977f8889a13dcb4bc05
++      digest: sha256:d03321ef20d56e13ba525031b89e2f1d017bc7205726a7a7e5e6a2325d02b60b
+   offline-edge-service:
+     image:
+-      digest: sha256:4b0ecfd767efaf1ba4731c0d1c3302be058ff71f3b593ef70552aa510abc6263
++      digest: sha256:5a4b378b2ef9c6ed223511df30bebbc2e22bb92eaf12bd86b38b2649f560de65
+   offline-sync-service:
+     image:
+-      digest: sha256:9d0779f4aa1df2a8d01c2763e26efb69b6f61fa565e0305d692a20465447b437
++      digest: sha256:561906a2c30c0657af28dbc847ebd54b3c4d5aac6b1a4e06a9e093cea1150f49
+   organization-registry-service:
+     image:
+-      digest: sha256:18049f63296b3c13e7104d4969b3852d207eadcb9ba22a825689d536cf7bc162
++      digest: sha256:5e12862305f988e02747d2b970073b2aba5f99cafe6767a033bc9dfe20be982c
+   oros-service:
+     image:
+-      digest: sha256:2607f2602515a79b0bb2bee8a968d9aba50bb668bca6a4f60f369512e6823a73
++      digest: sha256:4a2396128ce899e605c08fff5e8489b5fda48e16f59e63131ae7f89c227d1ea9
+   pacs-adapter-service:
+     image:
+-      digest: sha256:d37ac73afbc86f480dc736526f2db52f736dbc22b321d1fa305332be33275766
++      digest: sha256:ab3183b5ac420d7fa178ccf103acd899c0396856836eee5fc5f46ebd3ef9658f
+   patient-safety-service:
+     image:
+-      digest: sha256:4f72b8db431d755bc4b12803beafa43659976004cd7dda053ea113b5e6b750dc
++      digest: sha256:f930385617a2c1afa7542e1b8ff71e1baa6b3939fcc434e2a8870b265cec1e24
+   pct-service:
+     image:
+-      digest: sha256:07bba86acea3c28b1b3bd8184e731cb854f59e685854db1ac32bd2b1040a7a3a
++      digest: sha256:7c9e8da83dd86dde2506dede138f78f9d9db49d10b4c604ece0b12611499b01f
+   pharmacy-elmis-adapter:
+     image:
+-      digest: sha256:f0103979fa26291c5abce9a478dfeb2c0de853e7cad88d0107ff6104c8ebf68e
++      digest: sha256:bf812b072ba624ff81b316f2a624d18648d34dd0eef0fd288ed0c56729711a37
+   pharmacy-service:
+     image:
+-      digest: sha256:952f9d6bd30f1d6c29c1accbd45dc7b2d5f638aa30b0dd9f0cad063696dc6e85
++      digest: sha256:4d73e59fa2e71281911237262326f6956e31fb2d7a516d0d1b6eb516005f90f7
+   procurement-service:
+     image:
+-      digest: sha256:11fbad916cb30ece3673208cee9341841ba3032eec2dcdd30a6981f5f11c0f68
++      digest: sha256:18c092ef999a250b1daec130c3576a20b9f1eccc90812ef7575ddc8788bf2503
+   product-registry-service:
+     image:
+-      digest: sha256:96b716a0ba4495129a21947e45268fd8e428a1ee14b0543b9aecec8ab48c7345
++      digest: sha256:60263cba35749dccc12baa36218a25afce7abd41bd2297d8052db83b4a6f4f9e
+   referral-service:
+     image:
+-      digest: sha256:f46f2ff1eae4415100c69ed146a2501d0ef8052e2522c26ff7b838b664ab4813
++      digest: sha256:1253b61f1c21842fc31ecab6b43dbfab248265925525727d4598698a0a374f59
+   reporting-service:
+     image:
+-      digest: sha256:9d1f68ccd8b6097cc1db6e6faf45ae40628826b1d3667c8a180774d2af4b8435
++      digest: sha256:e1f5fcfdd2df4cbc2ded7b528d5f15faabbe7dfc7f76c9f2d8b91ad67f546598
+   rito-quality-safety-service:
+     image:
+-      digest: sha256:ffeafb2320ee50e3b4072b2d6d62416dd0d8a4ff08247b25673c3d594a4b628b
++      digest: sha256:e6317c0da9be62c2db390f1dc82d0cee26b83896b4d4d6559da7e196e97bda46
+   rtc-gateway-service:
+     image:
+-      digest: sha256:d9af7cf8e48cfa3ee51f1f3b91e219c11a26cbf83a42ef8bc5dafc60837f3999
++      digest: sha256:abd800fe2dd9fb196e87378003f56964e10e7d6c4fd4f85db436809eef862135
+   rules-service:
+     image:
+-      digest: sha256:7f6a89831b793fb81c0fb98131d04344b027b84f26afacb643edafd6e77521a1
++      digest: sha256:dbfbd2c15f6fa5bcd82d685cbe34b5fb124ed649e8afc103cf1c41eb57e35a7f
+   scheduling-service:
+     image:
+-      digest: sha256:bd370ad8bc50957fe96aadd9ef62e27039b8cfdfcb561d59573a8d7a4a839d92
++      digest: sha256:7f7f7eeacaa24e9b439c5ac5c40b9b4a94a433dcbfda0861fde4e5181fbca7f1
+   schema-registry-service:
+     image:
+-      digest: sha256:298c6ba32639e3d5f89a695bde57ebad0a14ebbdd0cad994c36f3214d40f74f4
++      digest: sha256:f1a3c42471b071b1777abe6b6129d085fc92322e1728e9e446a835ac8e6e5aff
+   search-service:
+     image:
+-      digest: sha256:bd1be3acdf33da06f4eca1af4b2734b510f25f9c1cfc061756a20a1b8b4730df
++      digest: sha256:36b1ecc70802784b6d3c54d47bc87707fae6fc8149f8768738a9be7323ecc33f
+   security-hardening-service:
+     image:
+-      digest: sha256:e0304684bd61ef66988c8d947ea02c53c686207bb842ca77b99e370ae404ac32
++      digest: sha256:31f71eb5a52e7aeffd3b2869d61f0e7808f50491bd9b8f6c6301f37559cb46d3
+   share-slip-service:
+     image:
+-      digest: sha256:1a3eb0fa5af71e6b64f09e7dce3e3546385a42a2c660b4fb824b1efac4778d4b
++      digest: sha256:245185e957593ad7767de747f23983362be1df0cc7a1f979beb1b0fa3d5580b3
+   simba-service:
+     image:
+-      digest: sha256:0fc7b585348ef33495380a3733841a89ad6969357a76541457bc82f61909fc26
++      digest: sha256:ec2e08c5357618cdd140628398effd18f5ec7783f62bc9b98a89e8bdc744d705
+   support-service:
+     image:
+-      digest: sha256:91af832770883c7e3abf3b3898a2989fd5c2ac805cb11025a8a1258efdce2473
++      digest: sha256:9788f9f046ecc3d519f568b872d8b0653d975bae630efd9d5d91c3e96cdf7d2d
+   surveillance-service:
+     image:
+-      digest: sha256:d2fac12a56378e28773f3cea41c1b3ed4c83f20e4fdaf31c6756f0db94c5d260
++      digest: sha256:5b26369e6490db9633aed4dcd6689a43c373b550d207bb4590a485552837bf0e
+   tshepo-audit-service:
+     image:
+-      digest: sha256:93a4e022314f259c9f571e27942cc59f724f755e68d8e946fed2ee924f690728
++      digest: sha256:f7e39ed209f8bdca0443d84d22570b3f6eadd425ed2429bfa6ff1448ae4d9c34
+   tshepo-authz-service:
+     image:
+-      digest: sha256:884d5b5ea9a94bb787c1c9cb636d7d4229a8f9fcfe2a1901de0392817bea273b
++      digest: sha256:667b9162d2eb97e73ca0a3646d2efd774521ef7186ce592f3f09b41ec0138723
+   tshepo-consent-service:
+     image:
+-      digest: sha256:bcd6e6450a341c06c0f03e43b0ec58f8c861ac0c4ce958846433ec3557da8623
++      digest: sha256:add7eaa51a06babea9592c7de7d05b08cbc8b519a266c4b070a2f62fecfce069
+   tshepo-identity-service:
+     image:
+-      digest: sha256:32b689edc0acac71f80efcceb9c8acb3cfe7b71331196d6992ab606bf11e5cfb
++      digest: sha256:b1aba73bccc843704682272a526dfea8f3bbb89cd6895242d7bf5e63891f9286
+   tshepo-keys-service:
+     image:
+-      digest: sha256:500a4aa991947a131f7409ca51b349d9b35f8e6d4774fabee4438e1d4bac885c
++      digest: sha256:c21d796725b6ccf3745ebf90ba443cbbe9e2b8373a9ed672784eec3bed7d2817
+   tshepo-offline-service:
+     image:
+-      digest: sha256:bc3995d7d604797c8c3d42d76f324baf3514f75424df1b2b2bbbe4a520499224
++      digest: sha256:14eee9862d2a3aec5deb3280314caef2462ce256ada2e00197b2c78013bb4ba2
+   tuso-service:
+     image:
+-      digest: sha256:e727f0d9946b4d167b367405e5097c6007221f40fe5baec302195064c7f55c6f
++      digest: sha256:648e538bd1c87a988350683d2924971c676f6fa135581ee7455bbb27a0b7159b
+   ubomi-service:
+     image:
+-      digest: sha256:9f9d712ef0b1c7ede92a284c644aaefdca6ad81239e89f580d084002178e49a2
++      digest: sha256:3583bbdeb9a1aa417fe85655e0a63d3bce3e2fb47d6ff36f7f2af8d09f7518ab
+   varapi-service:
+     image:
+-      digest: sha256:a887626d673873d831083b6762831e24d92fb863bb59d876db7251915c792439
++      digest: sha256:041d1f0f0627ae6ac29d2a36af8b6f5f5db1bad61894cb96aaabd59251f3d9d0
+   vashandi-workforce-service:
+     image:
+-      digest: sha256:b8a5255a27723a872b066a6c040e22b60b66cf80423903f87a0ec864ccc4c672
++      digest: sha256:30becc2c541b49498dbde462eb0c5bc6564f2027b5ec08923df2a32988b9e7c9
+   vito-service:
+     image:
+-      digest: sha256:2c2b0b3e986901dd36c39607e8ca5501c72ae25620637918943274a2e1a15114
++      digest: sha256:ca27cb62e3d8dc76c869b5f91b6b5a0492b8f7d69d43a4f61a00564cf0115622
+   wellness-service:
+     image:
+-      digest: sha256:7a0f128b7d8dbcaf17a9a8b03384070c900545fc5d44145159eb78c1d4b6778d
++      digest: sha256:52f687eccf87748a1998f8b54d2ad9fec0058797164ed95bfcd1d47ffa77f38d
+   workflow-service:
+     image:
+-      digest: sha256:7656bea1958214df9ddca8c5311d8bd18cff84aa291bb694d2d14cb54725d6d7
++      digest: sha256:7da3cb369c13cfbda5b56a3ae86d695abd4e292b6d7e26b00f9f6da71ed949b3
+   workforce-governance-service:
+     image:
+-      digest: sha256:7296b36f9c98272b4ac705a2982596777e700ede6ae48f65ebfd4a904bb49998
++      digest: sha256:fa12868845963d5908ed67b34b7b2e1492a066cc35e955bbaf7aa450801133ef
+   zibo-service:
+     image:
+-      digest: sha256:b16a9204d5c7832debb7bdb95630fc44b6745388083d3ab5a793ef8a8e3595e6
++      digest: sha256:1ffbb4b823e25bd86915fe1275aaf99e4c8ceb7472f82f4ed512ea82abfdb4da
+ images:
+   experienceBff:
+-    digest: sha256:97c184cf794f6052c01166f2fdbf436458b2b187ba4c609054e1c289de91a7bc
++    digest: sha256:8be84ff8ced2a349ccf9885bb76f446847531c967e1805f2ae3e7c989e9475a0
+   oneUiShell:
+-    digest: sha256:1a792ec588124739a55cb9e639037d177e587f05002f09725df4f023ba75d759
++    digest: sha256:9ad7cbfa5492fb683a6861d0c82b2a2902f12d350ed8eaa11f5a3f9a3640a605

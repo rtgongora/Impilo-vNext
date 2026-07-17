@@ -1,8 +1,9 @@
 {
   "workflow": "fullboot-deploy",
-  "updated_at": "2026-06-30T20:59:14.427209+00:00",
-  "status": "awaiting_sudo_checkpoint",
-  "checkpoint_id": "cp-20260630225914-63c2d792b",
+  "updated_at": "2026-07-17T01:06:39.602551+00:00",
+  "status": "completed",
+  "checkpoint_id": "cp-20260716114608-32f2c4fa6",
   "image_tag": "preview",
-  "next_step_after_continue": "verify_images_and_prepare"
+  "completion_note": "Estate deployed and verified via direct-helm recovery (helm-recovery-watched-32f2c4fa6). 108/108 pods healthy; SMOKE_PASS/FULL_BOOT_PASS; zibo+WGV+livekit crashloops fixed and redeployed.",
+  "live_estate_commit": "32f2c4fa6 (+ backend hotfixes 2a83bb13f/ed22b4256/ba8d5cf5a)"
 }

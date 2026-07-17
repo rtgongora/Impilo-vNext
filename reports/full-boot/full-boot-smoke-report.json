@@ -356,6 +356,12 @@
       "available": 1,
       "healthy": true
     },
+    "ndila-martin": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "ndila-service": {
       "replicas": 1,
       "ready": 1,
@@ -647,7 +653,7 @@
   },
   "missing_deployments": [],
   "unhealthy_deployments": [],
-  "runtime_pods_count": 108,
+  "runtime_pods_count": 109,
   "verify_pods_ignored": 0,
   "crashloop": [],
   "pending": [],
