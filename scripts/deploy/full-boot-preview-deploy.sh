@@ -472,6 +472,11 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
 echo "--- Waiting for estate rollouts (timeout ${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}) ---"
 kubectl rollout status deployment -n "$NAMESPACE" --timeout="${FULL_BOOT_ROLLOUT_TIMEOUT:-45m}" || true
 
+# Restore the public TLS/ingress edge wiped by the namespace teardown (IngressRoutes,
+# acme-host-nginx svc/endpoints). The root-only TLS secret step is printed as a reminder.
+REPO_PATH="$REPO_PATH" NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/tls/restore-public-edge.sh" || \
+  echo "WARN: public-edge restore reported an issue — check TLS/ingress manually."
+
 echo "--- Sovereign preview seeds (VARAPI, WGV, domain truth) ---"
 bash "$REPO_PATH/scripts/deploy/seed-full-preview-sovereign-data.sh" || {
   echo "WARN: sovereign seed script failed — continuing with smoke tests"
