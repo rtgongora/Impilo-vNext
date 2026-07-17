@@ -14,7 +14,14 @@ export type ServiceState =
   | "PARTIAL"
   | "UNAVAILABLE"
   | "MAINTENANCE"
-  | "RESTORED";
+  | "RESTORED"
+  /**
+   * UNKNOWN — a live probe exists for a group but could not resolve a state (the live
+   * status backend returned UNKNOWN). Rendered as a neutral, honest "not monitored" label;
+   * NEVER shown as green. This is distinct from the authored INDICATIVE states above, which
+   * are local fallbacks used when a group is not live-monitored at all.
+   */
+  | "UNKNOWN";
 
 export interface ServiceStatusEntry {
   group: string;
@@ -65,4 +72,5 @@ export const STATE_META: Record<ServiceState, { label: string; badge: string; do
   DEGRADED: { label: "Degraded", badge: "bg-amber-50 text-amber-700", dot: "bg-amber-500" },
   PARTIAL: { label: "Partial", badge: "bg-amber-50 text-amber-700", dot: "bg-amber-500" },
   UNAVAILABLE: { label: "Unavailable", badge: "bg-red-50 text-red-700", dot: "bg-red-500" },
+  UNKNOWN: { label: "Status not monitored", badge: "bg-slate-100 text-slate-600", dot: "bg-slate-400" },
 };
