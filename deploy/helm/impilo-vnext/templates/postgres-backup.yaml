@@ -1,0 +1,84 @@
+{{- if and .Values.postgres.enabled ((.Values.postgresBackup | default dict).enabled | default true) }}
+# Nightly logical backup of EVERY database (2026-07-18): before this, no backup of any
+# kind ever ran — the emptyDir wipes had no restore source. pg_dumpall covers all
+# per-service DBs + roles. Dumps land on a dedicated PVC AND are mirrored to a host
+# path (single-node k3s) so a namespace delete cannot take the backups with it.
+# Off-VM copies are the Track B follow-up (VM3 backup repository / S3 via scripts/dr).
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backups
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    # Survives 'helm uninstall' — data volumes are only destroyed by the explicit
+    # FULL_BOOT_WIPE_DATA=1 namespace wipe (see scripts/operator/fullboot.sh).
+    "helm.sh/resource-policy": keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ (.Values.postgresBackup | default dict).storageSize | default "30Gi" }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: {{ ((.Values.postgresBackup | default dict).schedule | default "30 1 * * *") | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 3600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: pg-dumpall
+              image: {{ .Values.postgres.image }}
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: POSTGRES_PASSWORD
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: POSTGRES_USER
+                - name: RETENTION_DAYS
+                  value: {{ ((.Values.postgresBackup | default dict).retentionDays | default 7) | quote }}
+              command:
+                - sh
+                - -c
+                - |
+                  set -eu
+                  ts="$(date +%F-%H%M)"
+                  out="/backups/pgdumpall-${ts}.sql.gz"
+                  echo "pg_dumpall -> ${out}"
+                  pg_dumpall -h postgres -U "$PGUSER" | gzip > "${out}"
+                  size="$(wc -c < "${out}")"
+                  echo "dump complete: ${size} bytes"
+                  [ "${size}" -gt 10240 ] || { echo "FAIL: dump suspiciously small (${size} bytes)"; exit 1; }
+                  cp "${out}" /host-backups/ 2>/dev/null || echo "WARN: host mirror copy failed (continuing)"
+                  find /backups /host-backups -name 'pgdumpall-*.sql.gz' -mtime +"${RETENTION_DAYS}" -delete 2>/dev/null || true
+                  echo "retention pruned (> ${RETENTION_DAYS} days); backup OK"
+              volumeMounts:
+                - name: backups
+                  mountPath: /backups
+                - name: host-backups
+                  mountPath: /host-backups
+          volumes:
+            - name: backups
+              persistentVolumeClaim:
+                claimName: postgres-backups
+            - name: host-backups
+              hostPath:
+                path: {{ ((.Values.postgresBackup | default dict).hostMirrorPath | default "/opt/impilo/backups") | quote }}
+                type: DirectoryOrCreate
+{{- end }}
