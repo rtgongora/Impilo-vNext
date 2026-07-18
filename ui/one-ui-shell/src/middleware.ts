@@ -22,6 +22,9 @@ export const PUBLIC_PREFIXES = [
   "/get-involved", // public co-design / participation (anonymous — no account needed)
   "/status",       // public service-status board
   "/download",     // public get-app / app-discovery surface
+  "/geo",          // public map base data (Zimbabwe admin/places GeoJSON) — the find-care
+                   // map fetches these on the anonymous lane; without this the middleware
+                   // 307-redirects them to /auth/login and the public map renders blank.
   "/_next",
   "/api",
   "/internal",
