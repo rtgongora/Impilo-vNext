@@ -152,12 +152,42 @@ fb_import_images_flow() {
   fb_request_import_checkpoint
 }
 
+# Data volumes that hold authoritative state (2026-07-18 wipe incident). A clean rebuild
+# preserves these by DEFAULT; destroying them requires the explicit FULL_BOOT_WIPE_DATA
+# path below. The PVC templates also carry helm.sh/resource-policy=keep so 'helm
+# uninstall' alone can never delete them.
+FB_DATA_PVCS="postgres-data keycloak-data minio-data kafka-data orthanc-data postgres-backups ndila-martin-data"
+FB_WIPE_PHRASE="WIPE ALL IMPILO PREVIEW DATA"
+
 fb_cleanup_full_boot_namespace() {
   echo "--- cleanup impilo-full-preview (non-sudo kubectl) ---"
   echo "impilo-preview is NOT modified."
+  if [[ "${FULL_BOOT_WIPE_DATA:-0}" == "1" ]]; then
+    echo ""
+    echo "!!! FULL_BOOT_WIPE_DATA=1 — this DESTROYS ALL DATA VOLUMES:"
+    echo "!!!   $FB_DATA_PVCS"
+    echo "!!!   (every database, citizen account, uploaded object, DICOM study, backup)"
+    echo "!!! Type the phrase to proceed: $FB_WIPE_PHRASE"
+    local confirm=""
+    read -r confirm || true
+    if [[ "$confirm" != "$FB_WIPE_PHRASE" ]]; then
+      echo "FAIL: wipe phrase mismatch — data volumes NOT destroyed; aborting cleanup." >&2
+      return 1
+    fi
+    echo "--- DATA WIPE authorized: deleting namespace incl. data PVCs ---"
+    helm uninstall impilo-full-preview -n "$IMPILO_FULLBOOT_NS" 2>/dev/null || true
+    kubectl delete namespace "$IMPILO_FULLBOOT_NS" --ignore-not-found --wait=false 2>/dev/null || true
+    echo "OK: full wipe requested (namespace may terminate in background)"
+    return 0
+  fi
+  # DEFAULT: clean-room rebuild of WORKLOADS ONLY — data PVCs (and the namespace that
+  # holds them, plus the TLS secret) are preserved. 'helm uninstall' skips the PVCs via
+  # their keep-annotation; we then clear remaining workload objects but never the PVCs.
+  echo "--- data-preserving clean rebuild: PVCs kept ($FB_DATA_PVCS) ---"
   helm uninstall impilo-full-preview -n "$IMPILO_FULLBOOT_NS" 2>/dev/null || true
-  kubectl delete namespace "$IMPILO_FULLBOOT_NS" --ignore-not-found --wait=false 2>/dev/null || true
-  echo "OK: cleanup requested (namespace may terminate in background)"
+  kubectl -n "$IMPILO_FULLBOOT_NS" delete deployments,statefulsets,daemonsets,jobs,cronjobs,pods --all --wait=false 2>/dev/null || true
+  echo "OK: workloads cleared; namespace + data volumes preserved."
+  echo "    (To destroy data too: FULL_BOOT_WIPE_DATA=1 + typed phrase '$FB_WIPE_PHRASE')"
 }
 
 fb_run_prepare() {
@@ -207,11 +237,13 @@ fb_run_deploy_if_authorized() {
   # downtime. Opt into a destructive clean-room rebuild (wipe + redeploy from zero)
   # only when you genuinely need a clean slate, via FULL_BOOT_CLEAN_REBUILD=1.
   if [[ "${FULL_BOOT_CLEAN_REBUILD:-0}" == "1" ]]; then
-    echo "--- CLEAN REBUILD (FULL_BOOT_CLEAN_REBUILD=1): wiping namespace $IMPILO_FULLBOOT_NS ---"
-    echo "    NOTE: this destroys namespace-scoped non-chart objects (TLS secret, IngressRoutes,"
-    echo "          acme svc). The deploy tail restores the edge; the root-only TLS secret needs"
-    echo "          'sudo /usr/local/bin/sync-mohcc-gov-tls.sh' afterwards."
-    fb_cleanup_full_boot_namespace
+    echo "--- CLEAN REBUILD (FULL_BOOT_CLEAN_REBUILD=1): rebuilding workloads in $IMPILO_FULLBOOT_NS ---"
+    echo "    DATA IS PRESERVED by default (postgres/keycloak/minio/kafka/orthanc/backup PVCs kept)."
+    echo "    Destroying data additionally requires FULL_BOOT_WIPE_DATA=1 + a typed confirmation"
+    echo "    phrase. A full wipe also destroys non-chart objects (TLS secret, IngressRoutes);"
+    echo "    the deploy tail restores the edge; the root-only TLS secret then needs"
+    echo "    'sudo /usr/local/bin/sync-mohcc-gov-tls.sh'."
+    fb_cleanup_full_boot_namespace || { echo "FAIL: cleanup aborted"; return 1; }
   else
     echo "--- IN-PLACE upgrade (default): namespace preserved; helm upgrade rolls only changed services ---"
     echo "    (set FULL_BOOT_CLEAN_REBUILD=1 for a destructive clean-room rebuild)"
