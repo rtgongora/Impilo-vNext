@@ -70,7 +70,7 @@ jget(){ python3 -c "import json,sys;d=json.load(open('$1'));d=d.get('data',d) if
 # trauma/VITO lane's concern; THIS wave's contract is only that theatre intake ACCEPTS whatever
 # patient_cpid it is given (incl. a PROVISIONAL one). The synthetic id is a faithful stand-in for that.
 provcpid(){ local f=$1 sex=$2 desc=$3 out
-  curl -sS -o "$f" $(hdr) -X POST $VITO/internal/v1/identities/provisional \
+  curl -sS -o "$f" $(hdr) -H "X-Service-Id: tshepo-identity" -X POST $VITO/internal/v1/identities/provisional \
     -d "{\"estimated_sex\":\"$sex\",\"descriptor\":\"$desc\"}" 2>/dev/null
   out=$(jget "$f" health_id)
   [ -n "$out" ] && { echo "$out"; return; }

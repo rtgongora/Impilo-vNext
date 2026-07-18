@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
+import zw.gov.mohcc.impilo.experience.client.TshepoIdentityServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 
 import java.util.List;
@@ -16,28 +17,35 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * WU5 — the trauma unknown-patient identity proxies forward to VITO (provisional mint +
- * MergeService merge) and wrap the response as {@code {data:...}}. The web reconcile must
- * hit the merge endpoint (which emits vito.merge.executed), not per-service repoint hooks.
+ * WU5 — trauma unknown-patient identity. The provisional mint forwards to
+ * tshepo-identity (Identity Contract §7.2 — the browser surface receives only
+ * {cpid, status}, never a Health ID); the merge still forwards to VITO's
+ * MergeService, whose event the SubjectTranslationRelay converts for clinical
+ * repointing. Responses are wrapped as {@code {data:...}}.
  */
 class TraumaIdentityControllerTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Test
-    void mintProvisional_delegatesAndReturns201() {
+    void mintProvisional_delegatesToTrustCoreAndReturnsCpidOnly() {
         VitoServiceClient vito = mock(VitoServiceClient.class);
+        TshepoIdentityServiceClient tshepoIdentity = mock(TshepoIdentityServiceClient.class);
         ObjectNode minted = mapper.createObjectNode();
-        minted.put("health_id", "TEMP-1");
-        minted.put("crid", "CRID-1");
+        minted.put("cpid", "cccccccc-cccc-4ccc-8ccc-cccccccccccc");
         minted.put("status", "PROVISIONAL");
-        when(vito.mintProvisionalIdentity(any())).thenReturn(minted);
+        when(tshepoIdentity.provisionSubject(any())).thenReturn(minted);
 
-        var resp = new TraumaIdentityController(vito).mintProvisional(Map.of("estimated_sex", "M", "descriptor", "unknown RTC"));
+        var resp = new TraumaIdentityController(vito, tshepoIdentity)
+                .mintProvisional(Map.of("estimated_sex", "M", "descriptor", "unknown RTC"));
 
         assertEquals(201, resp.getStatusCode().value());
-        assertEquals("PROVISIONAL", ((JsonNode) resp.getBody().get("data")).get("status").asText());
-        verify(vito).mintProvisionalIdentity(any());
+        JsonNode data = (JsonNode) resp.getBody().get("data");
+        assertEquals("PROVISIONAL", data.get("status").asText());
+        assertEquals("cccccccc-cccc-4ccc-8ccc-cccccccccccc", data.get("cpid").asText());
+        // The Health ID never reaches the trauma surface
+        assertEquals(false, data.has("health_id"));
+        verify(tshepoIdentity).provisionSubject(any());
     }
 
     @Test
@@ -49,7 +57,7 @@ class TraumaIdentityControllerTest {
         when(vito.mergePatients(any())).thenReturn(merged);
 
         var body = Map.<String, Object>of("survivor_crid", "CRID-SURV", "merged_crids", List.of("CRID-1"), "reason", "IDENTIFIED");
-        var resp = new TraumaIdentityController(vito).merge(body);
+        var resp = new TraumaIdentityController(vito, mock(TshepoIdentityServiceClient.class)).merge(body);
 
         assertEquals(200, resp.getStatusCode().value());
         assertEquals(true, ((JsonNode) resp.getBody().get("data")).get("merged").asBoolean());

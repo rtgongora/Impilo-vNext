@@ -28,8 +28,11 @@ public class PatientController {
 
     private static final Logger log = LoggerFactory.getLogger(PatientController.class);
     private final VitoServiceClient vitoClient;
+    private final zw.gov.mohcc.impilo.experience.service.SubjectResolutionService subjectResolution;
 
-    public PatientController(VitoServiceClient vitoClient) {
+    public PatientController(VitoServiceClient vitoClient,
+                             zw.gov.mohcc.impilo.experience.service.SubjectResolutionService subjectResolution) {
+        this.subjectResolution = subjectResolution;
         this.vitoClient = vitoClient;
     }
 
@@ -361,7 +364,7 @@ public class PatientController {
         return null;
     }
 
-    private static Map<String, Object> mapIssuanceToPatient(
+    private Map<String, Object> mapIssuanceToPatient(
             JsonNode result, String given, String family, String dob, String sex,
             String nationalId, String phone) {
         String healthId = textOrNull(result, "healthId");
@@ -370,7 +373,9 @@ public class PatientController {
         }
         Map<String, Object> attrs = new LinkedHashMap<>();
         attrs.put("impiloHealthId", healthId);
-        attrs.put("cpid", healthId);
+        // Identity Contract §7.2: the clinical subject key is the mapped CPID,
+        // never the Health ID itself.
+        attrs.put("cpid", subjectResolution.cpidForHealthId(healthId));
         attrs.put("givenName", given);
         attrs.put("familyName", family);
         attrs.put("displayName", (given + " " + family).trim());
@@ -385,7 +390,7 @@ public class PatientController {
         return Map.of("id", healthId, "type", "patient", "attributes", attrs);
     }
 
-    private static Map<String, Object> mapRegistrySummaryToPatient(JsonNode item) {
+    private Map<String, Object> mapRegistrySummaryToPatient(JsonNode item) {
         String healthId = textOrNull(item, "healthId");
         if (healthId == null) {
             healthId = UUID.randomUUID().toString();
@@ -394,7 +399,7 @@ public class PatientController {
         Map<String, Object> attrs = new LinkedHashMap<>();
         attrs.put("impiloHealthId", healthId);
         attrs.put("impiloId", impiloId);
-        attrs.put("cpid", impiloId != null ? impiloId : healthId);
+        attrs.put("cpid", subjectResolution.cpidForHealthId(healthId));
         attrs.put("displayName", textOrNull(item, "displayName"));
         attrs.put("givenName", "");
         attrs.put("familyName", "");
@@ -406,7 +411,7 @@ public class PatientController {
         return Map.of("id", healthId, "type", "patient", "attributes", attrs);
     }
 
-    private static Map<String, Object> mapClientProfileToPatient(JsonNode profile) {
+    private Map<String, Object> mapClientProfileToPatient(JsonNode profile) {
         JsonNode master = profile.get("master");
         if (master == null || master.isNull()) {
             return Map.of("id", "unknown", "type", "patient", "attributes", Map.of());
@@ -421,7 +426,7 @@ public class PatientController {
         Map<String, Object> attrs = new LinkedHashMap<>();
         attrs.put("impiloHealthId", healthId);
         attrs.put("impiloId", impiloId);
-        attrs.put("cpid", impiloId != null ? impiloId : healthId);
+        attrs.put("cpid", subjectResolution.cpidForHealthId(healthId));
         attrs.put("givenName", first != null ? first : "");
         attrs.put("middleName", middle);
         attrs.put("familyName", last != null ? last : "");
@@ -501,14 +506,14 @@ public class PatientController {
         }
     }
 
-    private static Map<String, Object> mapClientEntityToPatient(JsonNode entity) {
+    private Map<String, Object> mapClientEntityToPatient(JsonNode entity) {
         String healthId = textOrNull(entity, "healthId");
         if (healthId == null) {
             healthId = textOrNull(entity, "id");
         }
         Map<String, Object> attrs = new LinkedHashMap<>();
         attrs.put("impiloHealthId", healthId);
-        attrs.put("cpid", healthId);
+        attrs.put("cpid", subjectResolution.cpidForHealthId(healthId));
         attrs.put("displayName", textOrNull(entity, "displayName"));
         attrs.put("givenName", textOrNull(entity, "givenName"));
         attrs.put("familyName", textOrNull(entity, "familyName"));

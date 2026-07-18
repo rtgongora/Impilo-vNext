@@ -23,7 +23,7 @@ class PatientControllerTest {
     void listPatients_failsCleanWhenVitoUnavailable_neverSeeds() {
         // VITO is the registry of record. With it down, the BFF must NOT serve a
         // fabricated seeded directory — it fails clean with 503 VITO_UNAVAILABLE.
-        PatientController controller = new PatientController(new UnavailableVitoClient());
+        PatientController controller = new PatientController(new UnavailableVitoClient(), stubResolution());
 
         ResponseEntity<Map<String, Object>> response =
                 controller.listPatients("req-1", "corr-1", 0, 20, null, null);
@@ -43,7 +43,7 @@ class PatientControllerTest {
         item.put("healthId", "33333333-3333-3333-3333-333333333333");
         item.put("displayName", "Tatenda Moyo");
         item.put("lifecycleStatus", "ACTIVE");
-        PatientController controller = new PatientController(new ListReturningVitoClient(paged));
+        PatientController controller = new PatientController(new ListReturningVitoClient(paged), stubResolution());
 
         ResponseEntity<Map<String, Object>> response =
                 controller.listPatients("req-2", "corr-2", 0, 20, null, null);
@@ -59,7 +59,7 @@ class PatientControllerTest {
 
     @Test
     void getPatient_failsCleanWhenVitoUnavailable_neverSeeds() {
-        PatientController controller = new PatientController(new UnavailableVitoClient());
+        PatientController controller = new PatientController(new UnavailableVitoClient(), stubResolution());
 
         ResponseEntity<Map<String, Object>> response =
                 controller.getPatient("pat-001", "req-3", "corr-3");
@@ -169,7 +169,7 @@ class PatientControllerTest {
                 .put("preferredLanguage", "en-ZW")
                 .put("maritalStatus", "MARRIED");
 
-        PatientController controller = new PatientController(new RegistryCapturingVitoClient(profile));
+        PatientController controller = new PatientController(new RegistryCapturingVitoClient(profile), stubResolution());
 
         ResponseEntity<Map<String, Object>> response = controller.createPatient(
                 "tenant-1",
@@ -213,7 +213,7 @@ class PatientControllerTest {
         passport.put("identifierType", "PASSPORT_REFERENCE");
         passport.put("identifierValue", "P12345678");
 
-        PatientController controller = new PatientController(new ProfileReturningVitoClient(profile));
+        PatientController controller = new PatientController(new ProfileReturningVitoClient(profile), stubResolution());
 
         ResponseEntity<Map<String, Object>> response = controller.getPatient(
                 "11111111-1111-1111-1111-111111111111",
@@ -241,7 +241,7 @@ class PatientControllerTest {
         ma.put("identifierType", "MEDICAL_AID_NUMBER");
         ma.put("identifierValue", "MA-99881");
 
-        PatientController controller = new PatientController(new ProfileReturningVitoClient(profile));
+        PatientController controller = new PatientController(new ProfileReturningVitoClient(profile), stubResolution());
 
         ResponseEntity<Map<String, Object>> response = controller.getPatient(
                 "11111111-1111-1111-1111-111111111111", "req-ma-get", "corr-ma-get");
@@ -263,7 +263,7 @@ class PatientControllerTest {
         master.put("sex", "male");
         master.put("lifecycleStatus", "PROVISIONAL");
 
-        PatientController controller = new PatientController(new ProfileReturningVitoClient(profile));
+        PatientController controller = new PatientController(new ProfileReturningVitoClient(profile), stubResolution());
 
         ResponseEntity<Map<String, Object>> response = controller.getPatient(
                 "22222222-2222-2222-2222-222222222222",
@@ -345,5 +345,15 @@ class PatientControllerTest {
         public JsonNode getPatient(String id) {
             throw new RuntimeException("vito unavailable");
         }
+    }
+
+    /** Deterministic Health-ID→CPID stub: the mapping seam is exercised, not fabricated. */
+    private static zw.gov.mohcc.impilo.experience.service.SubjectResolutionService stubResolution() {
+        return new zw.gov.mohcc.impilo.experience.service.SubjectResolutionService(null) {
+            @Override
+            public String cpidForHealthId(String healthId) {
+                return healthId == null || healthId.isBlank() ? null : "cpid-for-" + healthId;
+            }
+        };
     }
 }

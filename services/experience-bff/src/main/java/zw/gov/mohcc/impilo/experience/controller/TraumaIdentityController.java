@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.experience.client.TshepoIdentityServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 
 import java.util.Map;
@@ -18,7 +19,9 @@ import java.util.Map;
  * <ul>
  *   <li>{@code POST /internal/v1/trauma/identity/provisional} — mint a PROVISIONAL CPID
  *       for an unidentified trauma patient (stamped as {@code patient_cpid} across the
- *       episode). Forwards to VITO {@code POST /internal/v1/identities/provisional}.</li>
+ *       episode). Forwards to tshepo-identity
+ *       {@code POST /v1/identity/subjects/provisional}, which orchestrates the VITO
+ *       mint and returns {@code {cpid, status}} only (Identity Contract §7.2).</li>
  *   <li>{@code POST /internal/v1/trauma/identity/merge} — reconcile the provisional
  *       identity into a confirmed survivor. Forwards to VITO
  *       {@code POST /internal/v1/patients/merge}, which runs {@code MergeService}
@@ -38,9 +41,12 @@ public class TraumaIdentityController {
     private static final Logger log = LoggerFactory.getLogger(TraumaIdentityController.class);
 
     private final VitoServiceClient vito;
+    private final TshepoIdentityServiceClient tshepoIdentity;
 
-    public TraumaIdentityController(VitoServiceClient vito) {
+    public TraumaIdentityController(VitoServiceClient vito,
+                                    TshepoIdentityServiceClient tshepoIdentity) {
         this.vito = vito;
+        this.tshepoIdentity = tshepoIdentity;
     }
 
     private static JsonNode requirePayload(JsonNode node, String op) {
@@ -58,12 +64,17 @@ public class TraumaIdentityController {
     @PostMapping("/provisional")
     public ResponseEntity<Map<String, Object>> mintProvisional(@RequestBody(required = false) Map<String, Object> body) {
         try {
-            JsonNode minted = requirePayload(vito.mintProvisionalIdentity(body != null ? body : Map.of()), "VITO mintProvisional");
+            // Identity Contract §7.2: unknown-patient minting goes through the trust
+            // core, which orchestrates the VITO mint internally and returns only
+            // {cpid, status}. The Health ID never reaches the trauma surface.
+            JsonNode minted = requirePayload(
+                    tshepoIdentity.provisionSubject(body != null ? body : Map.of()),
+                    "tshepo-identity provisionSubject");
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", minted));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("VITO mintProvisional", e);
+            throw upstreamFailure("tshepo-identity provisionSubject", e);
         }
     }
 

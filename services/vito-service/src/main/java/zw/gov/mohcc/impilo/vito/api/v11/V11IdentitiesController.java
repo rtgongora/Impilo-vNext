@@ -14,13 +14,15 @@ import java.util.UUID;
  * V1.1 provisional-identity endpoint for the emergency/trauma pipeline.
  *
  * <p>{@code POST /internal/v1/identities/provisional} mints a VITO identity "from birth" for an
- * unknown patient (mass-casualty, unconscious trauma arrival). The returned {@code health_id} is
- * a real CPID that services stamp as {@code patient_cpid} immediately — no placeholder string
- * refs. When the patient is later identified, reconciliation is a reversible VITO
- * {@code MergeService.merge} (see {@code POST /internal/v1/patients/merge}), whose
- * {@code vito.merge.executed} event repoints every downstream trauma link
- * (see {@code IdentityRepointHandler} in shared-kernel-java). This closes the discovery gap where
- * unknown-patient reconcile bypassed the merge path and orphaned rows.</p>
+ * unknown patient (mass-casualty, unconscious trauma arrival). The returned {@code health_id}
+ * is the IDENTITY-PLANE anchor — it is <b>not</b> a CPID and must never be stamped as
+ * {@code patient_cpid} (Identity Contract §7.2). The only permitted caller is
+ * <b>tshepo-identity</b>'s {@code SubjectProvisioningService}, which maps the new Health ID
+ * to an independent CPID and hands clinical callers {@code {cpid, status}} only. When the
+ * patient is later identified, reconciliation is a reversible VITO {@code MergeService.merge}
+ * (see {@code POST /internal/v1/patients/merge}); the SubjectTranslationRelay converts the
+ * merge into {@code impilo.identity.subject.merged.v1}, which repoints every downstream
+ * clinical link (see {@code IdentityRepointHandler} in shared-kernel-java).</p>
  *
  * <p>The minted identity is {@code PROVISIONAL} / {@code UNVERIFIED} / IAL 0 — exactly the state
  * {@link IdentityService#register} produces — so it flows through the existing verify/merge
@@ -31,6 +33,8 @@ import java.util.UUID;
  *   <li>{@code V1_1HeaderFilter} — mandatory v1.1 headers.</li>
  *   <li>{@code IdempotencyFilter} — Idempotency-Key required for POST on {@code /internal/v1/**},
  *       so a retried mint does not create a second identity.</li>
+ *   <li>Caller allowlist — {@code X-Service-Id} must match
+ *       {@code vito.identity.provisional-mint-caller} (default {@code tshepo-identity}).</li>
  * </ul>
  */
 @RestController
@@ -38,9 +42,14 @@ import java.util.UUID;
 public class V11IdentitiesController {
 
     private final IdentityService identityService;
+    private final String allowedCaller;
 
-    public V11IdentitiesController(IdentityService identityService) {
+    public V11IdentitiesController(
+            IdentityService identityService,
+            @org.springframework.beans.factory.annotation.Value(
+                    "${vito.identity.provisional-mint-caller:tshepo-identity}") String allowedCaller) {
         this.identityService = identityService;
+        this.allowedCaller = allowedCaller;
     }
 
     /**
@@ -64,7 +73,18 @@ public class V11IdentitiesController {
     public ResponseEntity<Map<String, Object>> mintProvisional(
             @RequestBody(required = false) ProvisionalRequest request,
             @RequestHeader("X-Tenant-ID") String tenantId,
-            @RequestHeader(value = "X-Actor-Id", required = false) String actorId) {
+            @RequestHeader(value = "X-Actor-Id", required = false) String actorId,
+            @RequestHeader(value = "X-Service-Id", required = false) String callerServiceId) {
+
+        // Only the trust core's translator may receive a raw health_id (Identity
+        // Contract §7.2). Clinical services use tshepo-identity's
+        // POST /v1/identity/subjects/provisional, which returns a CPID.
+        if (callerServiceId == null || !callerServiceId.startsWith(allowedCaller)) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "error", "PROVISIONAL_MINT_RESTRICTED",
+                    "message", "This identity-plane endpoint is restricted to " + allowedCaller
+                            + "; clinical callers must use tshepo-identity /v1/identity/subjects/provisional"));
+        }
 
         ProvisionalRequest req = request != null ? request : new ProvisionalRequest();
         UUID tenantUuid = UUID.fromString(tenantId);

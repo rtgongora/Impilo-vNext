@@ -11,7 +11,7 @@ import java.util.UUID;
 
 /**
  * Repoints PCT's ED patient anchors when VITO merges an unknown trauma patient's provisional identity
- * into a confirmed one: {@code ed_visit.patient_cpid} and {@code emergency_cases.known_health_id}.
+ * into a confirmed one: {@code ed_visit.patient_cpid} and {@code emergency_cases.known_subject_cpid}.
  * Idempotent. Auto-collected into PCT's {@code List<IdentityRepointHook>} fan-out.
  */
 @Component
@@ -31,7 +31,7 @@ public class PctTraumaRepointHook implements IdentityRepointHook {
     public int repoint(IdentityRepointCommand command) {
         UUID tenantId = UUID.fromString(command.tenantId());
         int n = edVisitRepository.repointPatientCpid(tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
-        n += emergencyCaseRepository.repointKnownHealthId(tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
+        n += emergencyCaseRepository.repointKnownSubjectCpid(tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
         return n;
     }
 

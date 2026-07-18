@@ -503,8 +503,8 @@ python3 -c "import json;r=json.load(open('$EV/readiness-ready.json')).get('data'
 # ═════ J-TR-6: unknown patient → VITO merge repoints ALL trauma links (zero orphans) ══
 say "J-TR-6: VITO reconcile — every trauma link repoints, zero orphans, per correct column"
 # Two VITO provisional identities: the unknown trauma patient (merged) + the confirmed survivor.
-curl -sS -o "$EV/prov-merged.json" $(hdr) -X POST $VITO/internal/v1/identities/provisional -d '{"estimated_sex":"M","descriptor":"unknown RTC"}'
-curl -sS -o "$EV/prov-surv.json" $(hdr) -X POST $VITO/internal/v1/identities/provisional -d '{"estimated_sex":"M","descriptor":"identified"}'
+curl -sS -o "$EV/prov-merged.json" $(hdr) -H "X-Service-Id: tshepo-identity" -X POST $VITO/internal/v1/identities/provisional -d '{"estimated_sex":"M","descriptor":"unknown RTC"}'
+curl -sS -o "$EV/prov-surv.json" $(hdr) -H "X-Service-Id: tshepo-identity" -X POST $VITO/internal/v1/identities/provisional -d '{"estimated_sex":"M","descriptor":"identified"}'
 MHID=$(jget "$EV/prov-merged.json" health_id); MCRID=$(jget "$EV/prov-merged.json" crid)
 SHID=$(jget "$EV/prov-surv.json" health_id); SCRID=$(jget "$EV/prov-surv.json" crid)
 [ -n "$MHID" ] && [ -n "$SHID" ] && ok "VITO minted provisional (merged $MHID) + survivor ($SHID)" || bad "VITO provisional mint failed"
@@ -540,12 +540,12 @@ for pair in "daidzai:$DAI" "pct:$PCT" "inpatient:$INP" "madi:$MADI"; do
 done
 
 # Zero orphans: nothing left on the tombstoned id; every link repointed to the survivor, per column.
-ORPHANS=$(( $(DAISQL "SELECT count(*) FROM daidzai.dai_trauma_episode WHERE subject_health_id='$MHID'") + $(DAISQL "SELECT count(*) FROM daidzai.dai_emergency_incident WHERE subject_health_id='$MHID'") + $(PCTSQL "SELECT count(*) FROM pct.ed_visit WHERE patient_cpid='$MHID'") + $(PCTSQL "SELECT count(*) FROM pct.emergency_cases WHERE known_health_id='$MHID'") + $(INPSQL "SELECT count(*) FROM inpatient.emergency_activation WHERE subject_cpid='$MHID'") + $(INPSQL "SELECT count(*) FROM inpatient.procedure_episode WHERE subject_cpid='$MHID'") + $(MADISQL "SELECT count(*) FROM madi.blood_orders WHERE patient_cpid='$MHID'") ))
+ORPHANS=$(( $(DAISQL "SELECT count(*) FROM daidzai.dai_trauma_episode WHERE subject_health_id='$MHID'") + $(DAISQL "SELECT count(*) FROM daidzai.dai_emergency_incident WHERE subject_health_id='$MHID'") + $(PCTSQL "SELECT count(*) FROM pct.ed_visit WHERE patient_cpid='$MHID'") + $(PCTSQL "SELECT count(*) FROM pct.emergency_cases WHERE known_subject_cpid='$MHID'") + $(INPSQL "SELECT count(*) FROM inpatient.emergency_activation WHERE subject_cpid='$MHID'") + $(INPSQL "SELECT count(*) FROM inpatient.procedure_episode WHERE subject_cpid='$MHID'") + $(MADISQL "SELECT count(*) FROM madi.blood_orders WHERE patient_cpid='$MHID'") ))
 [ "$ORPHANS" = 0 ] && ok "ZERO orphans — no trauma row left on the tombstoned provisional Health ID" || bad "$ORPHANS orphan row(s) still on $MHID"
 # Per-column repoint to the survivor (each table on its OWN patient column).
 [ "$(DAISQL "SELECT count(*) FROM daidzai.dai_trauma_episode WHERE subject_health_id='$SHID'")" -ge 1 ] && ok "daidzai.dai_trauma_episode.subject_health_id → survivor" || bad "episode not repointed"
 [ "$(PCTSQL "SELECT count(*) FROM pct.ed_visit WHERE patient_cpid='$SHID'")" -ge 1 ] && ok "pct.ed_visit.patient_cpid → survivor" || bad "ed_visit not repointed"
-[ "$(PCTSQL "SELECT count(*) FROM pct.emergency_cases WHERE known_health_id='$SHID'")" -ge 1 ] && ok "pct.emergency_cases.known_health_id → survivor" || bad "emergency_cases not repointed"
+[ "$(PCTSQL "SELECT count(*) FROM pct.emergency_cases WHERE known_subject_cpid='$SHID'")" -ge 1 ] && ok "pct.emergency_cases.known_subject_cpid → survivor" || bad "emergency_cases not repointed"
 [ "$(INPSQL "SELECT count(*) FROM inpatient.emergency_activation WHERE subject_cpid='$SHID'")" -ge 1 ] && ok "inpatient.emergency_activation.subject_cpid → survivor (resus anchor)" || bad "emergency_activation not repointed"
 [ "$(INPSQL "SELECT count(*) FROM inpatient.procedure_episode WHERE subject_cpid='$SHID'")" -ge 1 ] && ok "inpatient.procedure_episode.subject_cpid → survivor (theatre hook auto-collected)" || bad "procedure_episode not repointed — theatre hook not collected"
 [ "$(MADISQL "SELECT count(*) FROM madi.blood_orders WHERE patient_cpid='$SHID'")" -ge 1 ] && ok "madi.blood_orders.patient_cpid → survivor" || bad "blood_orders not repointed"

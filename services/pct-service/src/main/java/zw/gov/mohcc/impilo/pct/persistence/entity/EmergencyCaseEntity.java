@@ -21,8 +21,8 @@ public class EmergencyCaseEntity {
     @Column(name = "temp_person_ref")
     private String tempPersonRef;
 
-    @Column(name = "known_health_id")
-    private String knownHealthId;
+    @Column(name = "known_subject_cpid")
+    private String knownSubjectCpid;
 
     @Column(name = "triage_category", nullable = false)
     private String triageCategory = "RED";
@@ -45,8 +45,8 @@ public class EmergencyCaseEntity {
     @Column(name = "status", nullable = false)
     private String status = "ACTIVE";
 
-    @Column(name = "reconciled_health_id")
-    private String reconciledHealthId;
+    @Column(name = "reconciled_cpid")
+    private String reconciledCpid;
 
     @Column(name = "reconciled_at")
     private OffsetDateTime reconciledAt;
@@ -88,8 +88,8 @@ public class EmergencyCaseEntity {
     public UUID getEmergencyCaseId() { return emergencyCaseId; }
     public String getTempPersonRef() { return tempPersonRef; }
     public void setTempPersonRef(String tempPersonRef) { this.tempPersonRef = tempPersonRef; }
-    public String getKnownHealthId() { return knownHealthId; }
-    public void setKnownHealthId(String knownHealthId) { this.knownHealthId = knownHealthId; }
+    public String getKnownSubjectCpid() { return knownSubjectCpid; }
+    public void setKnownSubjectCpid(String knownSubjectCpid) { this.knownSubjectCpid = knownSubjectCpid; }
     public String getTriageCategory() { return triageCategory; }
     public void setTriageCategory(String triageCategory) { this.triageCategory = triageCategory; }
     public String getPresentingComplaint() { return presentingComplaint; }
@@ -104,8 +104,8 @@ public class EmergencyCaseEntity {
     public void setLocationDescription(String locationDescription) { this.locationDescription = locationDescription; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-    public String getReconciledHealthId() { return reconciledHealthId; }
-    public void setReconciledHealthId(String reconciledHealthId) { this.reconciledHealthId = reconciledHealthId; }
+    public String getReconciledCpid() { return reconciledCpid; }
+    public void setReconciledCpid(String reconciledCpid) { this.reconciledCpid = reconciledCpid; }
     public OffsetDateTime getReconciledAt() { return reconciledAt; }
     public void setReconciledAt(OffsetDateTime reconciledAt) { this.reconciledAt = reconciledAt; }
     public String getReconciledBy() { return reconciledBy; }

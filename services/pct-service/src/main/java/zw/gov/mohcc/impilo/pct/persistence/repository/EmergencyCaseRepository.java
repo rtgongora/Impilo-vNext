@@ -16,9 +16,9 @@ public interface EmergencyCaseRepository extends JpaRepository<EmergencyCaseEnti
 
     /** VITO merge repoint: move the emergency case's known Health ID to the surviving one. */
     @Modifying
-    @Query("update EmergencyCaseEntity c set c.knownHealthId = :survivor "
-            + "where c.tenantId = :tenantId and c.knownHealthId = :merged")
-    int repointKnownHealthId(@Param("tenantId") UUID tenantId,
+    @Query("update EmergencyCaseEntity c set c.knownSubjectCpid = :survivor "
+            + "where c.tenantId = :tenantId and c.knownSubjectCpid = :merged")
+    int repointKnownSubjectCpid(@Param("tenantId") UUID tenantId,
                              @Param("merged") String mergedHealthId,
                              @Param("survivor") String survivorHealthId);
 }

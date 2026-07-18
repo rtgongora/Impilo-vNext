@@ -49,6 +49,7 @@ public class EhrPatientSummaryController {
 
     private final PctServiceClient pctClient;
     private final VitoServiceClient vitoClient;
+    private final zw.gov.mohcc.impilo.experience.service.SubjectResolutionService subjectResolution;
     private final RestTemplate restTemplate;
     private final String mvumoBaseUrl;
     private final ObjectMapper objectMapper;
@@ -58,9 +59,11 @@ public class EhrPatientSummaryController {
             VitoServiceClient vitoClient,
             RestTemplate serviceRestTemplate,
             ServiceClientConfig.ServiceEndpoints endpoints,
+            zw.gov.mohcc.impilo.experience.service.SubjectResolutionService subjectResolution,
             ObjectMapper objectMapper) {
         this.pctClient = pctClient;
         this.vitoClient = vitoClient;
+        this.subjectResolution = subjectResolution;
         this.restTemplate = serviceRestTemplate;
         this.mvumoBaseUrl = endpoints.mvumoBaseUrl();
         this.objectMapper = objectMapper;
@@ -93,6 +96,12 @@ public class EhrPatientSummaryController {
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
+    /**
+     * Resolve an EHR route id (Health ID, registry id, or already a CPID) to the
+     * clinical subject CPID via tshepo-identity (Identity Contract §7.2). The
+     * pre-contract shortcut of returning the Impilo ID or Health ID as "the cpid"
+     * is gone — clinical services only understand mapped CPIDs.
+     */
     private String resolveCpid(String patientId) {
         if (patientId == null || patientId.isBlank()) {
             return "";
@@ -100,34 +109,33 @@ public class EhrPatientSummaryController {
         if (patientId.contains("CPID-")) {
             return patientId;
         }
+        String healthId = null;
         try {
             JsonNode profile = vitoClient.getClientRegistryProfile(patientId);
             if (profile != null) {
                 JsonNode master = profile.get("master");
                 if (master != null && !master.isNull()) {
-                    String impilo = text(master, "impiloId");
-                    if (impilo != null && !impilo.isBlank()) {
-                        return impilo;
-                    }
-                    String hid = text(master, "healthId");
-                    if (hid != null && !hid.isBlank()) {
-                        return hid;
-                    }
+                    healthId = text(master, "healthId");
                 }
             }
         } catch (Exception e) {
             log.debug("VITO profile miss for id={}: {}", patientId, e.getMessage());
         }
-        try {
-            JsonNode entity = vitoClient.getPatient(patientId);
-            if (entity != null) {
-                String hid = text(entity, "healthId");
-                if (hid != null && !hid.isBlank()) {
-                    return hid;
+        if (healthId == null || healthId.isBlank()) {
+            try {
+                JsonNode entity = vitoClient.getPatient(patientId);
+                if (entity != null) {
+                    healthId = text(entity, "healthId");
                 }
+            } catch (Exception e) {
+                log.debug("VITO entity miss for id={}: {}", patientId, e.getMessage());
             }
-        } catch (Exception e) {
-            log.debug("VITO entity miss for id={}: {}", patientId, e.getMessage());
+        }
+        if (healthId != null && !healthId.isBlank()) {
+            String cpid = subjectResolution.cpidForHealthId(healthId);
+            if (cpid != null && !cpid.isBlank()) {
+                return cpid;
+            }
         }
         return Optional.ofNullable(SEEDED_CPIDS.get(patientId)).orElse(patientId);
     }

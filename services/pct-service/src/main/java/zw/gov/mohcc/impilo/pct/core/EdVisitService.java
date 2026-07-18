@@ -225,7 +225,11 @@ public class EdVisitService {
         EmergencyCaseEntity ec = new EmergencyCaseEntity();
         ec.setTenantId(ctx.tenantId());
         ec.setTempPersonRef(EdPayloadMapper.str(body, "tempPersonRef", "temp_person_ref"));
-        ec.setKnownHealthId(EdPayloadMapper.str(body, "knownHealthId", "known_health_id"));
+        // Clinical intake carries the subject CPID (Identity Contract §7.2); the
+        // legacy knownHealthId key is accepted for wire compat but the value must
+        // already be a mapped CPID — PCT never resolves or stores Health IDs.
+        ec.setKnownSubjectCpid(EdPayloadMapper.str(body,
+                "knownSubjectCpid", "known_subject_cpid", "knownHealthId", "known_health_id"));
         ec.setTriageCategory(Objects.requireNonNullElse(
                 EdPayloadMapper.str(body, "triageCategory", "triage_category"), "RED").toUpperCase());
         ec.setPresentingComplaint(complaint);
@@ -238,7 +242,7 @@ public class EdVisitService {
         ec.setNotes(EdPayloadMapper.str(body, "notes"));
         ec = emergencyCaseRepository.save(ec);
 
-        String cpid = Objects.requireNonNullElse(ec.getKnownHealthId(),
+        String cpid = Objects.requireNonNullElse(ec.getKnownSubjectCpid(),
                 "TEMP-ED-" + ec.getEmergencyCaseId().toString().substring(0, 8).toUpperCase());
         Map<String, Object> visitBody = new LinkedHashMap<>(body);
         visitBody.put("patientCpid", cpid);
@@ -259,22 +263,26 @@ public class EdVisitService {
         TrustContext ctx = TrustContextHolder.require();
         EmergencyCaseEntity ec = emergencyCaseRepository.findByEmergencyCaseId(caseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Emergency case not found"));
-        String healthId = EdPayloadMapper.str(body, "reconciledHealthId", "reconciled_health_id", "healthId");
-        if (healthId == null || healthId.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reconciledHealthId is required");
+        // Identity Contract §7.2: reconciliation targets a CPID minted/resolved by
+        // tshepo-identity. Legacy key spellings accepted for wire compat; the value
+        // is a CPID either way — PCT never touches Health IDs.
+        String reconciledCpid = EdPayloadMapper.str(body,
+                "reconciledCpid", "reconciled_cpid", "reconciledHealthId", "reconciled_health_id");
+        if (reconciledCpid == null || reconciledCpid.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reconciledCpid is required");
         }
-        ec.setReconciledHealthId(healthId);
+        ec.setReconciledCpid(reconciledCpid);
         ec.setReconciledAt(OffsetDateTime.now());
         ec.setReconciledBy(ctx.actorId());
         ec.setStatus("RECONCILED");
         emergencyCaseRepository.save(ec);
         if (ec.getVisitId() != null) {
             visitRepository.findById(ec.getVisitId()).ifPresent(v -> {
-                v.setPatientCpid(healthId);
+                v.setPatientCpid(reconciledCpid);
                 visitRepository.save(v);
             });
         }
-        return Map.of("emergency_case_id", caseId.toString(), "reconciled_health_id", healthId, "status", "RECONCILED");
+        return Map.of("emergency_case_id", caseId.toString(), "reconciled_cpid", reconciledCpid, "status", "RECONCILED");
     }
 
     public List<Map<String, Object>> listVisits(UUID facilityId, String statusFilter) {

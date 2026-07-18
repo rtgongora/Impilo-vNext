@@ -39,6 +39,40 @@ public class TshepoIdentityServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Resolve the CPID mapped to a Health ID (Identity Contract §7.2). Returns the
+     * mapping node {@code {healthId, cpid, ...}} or null when unmapped.
+     */
+    public JsonNode getMappingByHealthId(String healthId) {
+        String url = baseUrl + "/v1/identity/mapping/" + healthId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Mint a provisional clinical subject for an unknown patient (trauma). Returns
+     * {@code {cpid, status}} — never a Health ID.
+     */
+    public JsonNode provisionSubject(Map<String, Object> request) {
+        String url = baseUrl + "/v1/identity/subjects/provisional";
+        log.info("TSHEPO-IDENTITY: provisionSubject operation");
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Issue a patient-context scoped token binding {@code sub_ref} to a CPID for
+     * downstream clinical calls (Identity Contract §7.2, enforced by the
+     * SubjectContextFilter).
+     */
+    public JsonNode issuePatientContextToken(Map<String, Object> request) {
+        String url = baseUrl + "/v1/identity/tokens";
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode generateProvisionalCpid(Map<String, Object> request) {
         String url = baseUrl + "/v1/identity/cpid/provisional";
         log.info("TSHEPO-IDENTITY: generateProvisionalCpid operation");
