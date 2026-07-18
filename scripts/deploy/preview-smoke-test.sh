@@ -35,4 +35,20 @@ if command -v kubectl >/dev/null 2>&1; then
   fi
 fi
 
+# Identity Contract conformance (the AMBER->GREEN bar, Identity Contract §16).
+# Opt-in — set RUN_IDENTITY_PACK=1 after the CPID cutover. A RED result
+# (exit 1) fails the smoke test; AMBER (exit 2, journeys skipped because a
+# service was unreachable) is surfaced but does not fail liveness.
+if [[ "${RUN_IDENTITY_PACK:-0}" == "1" ]]; then
+  echo "=== Identity Contract 12-journey pack ==="
+  REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+  if bash "$REPO_ROOT/tests/identity-contract/identity-contract-journeys.sh"; then
+    echo "PASS identity-contract pack GREEN"
+  else
+    rc=$?
+    if [[ "$rc" == "1" ]]; then echo "FAIL identity-contract pack RED"; FAIL=1
+    else echo "WARN identity-contract pack AMBER (some journeys skipped)"; fi
+  fi
+fi
+
 exit "$FAIL"
