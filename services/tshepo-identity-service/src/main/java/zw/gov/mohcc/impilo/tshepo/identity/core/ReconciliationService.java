@@ -38,17 +38,20 @@ public class ReconciliationService {
     private final EventOutboxRepository outboxRepo;
     private final CpidGenerator cpidGenerator;
     private final IdResolutionService idResolutionService;
+    private final zw.gov.mohcc.impilo.tshepo.identity.events.SubjectEventPublisher subjectEvents;
     private final ObjectMapper objectMapper;
 
     public ReconciliationService(ProvisionalCpidRepository provisionalRepo,
                                   EventOutboxRepository outboxRepo,
                                   CpidGenerator cpidGenerator,
                                   IdResolutionService idResolutionService,
+                                  zw.gov.mohcc.impilo.tshepo.identity.events.SubjectEventPublisher subjectEvents,
                                   ObjectMapper objectMapper) {
         this.provisionalRepo = provisionalRepo;
         this.outboxRepo = outboxRepo;
         this.cpidGenerator = cpidGenerator;
         this.idResolutionService = idResolutionService;
+        this.subjectEvents = subjectEvents;
         this.objectMapper = objectMapper;
     }
 
@@ -125,6 +128,10 @@ public class ReconciliationService {
                        "oCpid", request.oCpid(),
                        "canonicalCpid", canonicalCpid,
                        "healthId", request.healthId()));
+
+        // Clinical-plane repoint signal: O-CPID -> canonical CPID, no health_id
+        // (Identity Contract §8 — same repoint machinery as merges downstream).
+        subjectEvents.subjectReconciled(request.tenantId(), request.oCpid(), canonicalCpid, null);
 
         log.info("Reconciled O-CPID {} → canonical CPID {} for tenant={}",
                 request.oCpid(), canonicalCpid, request.tenantId());

@@ -49,13 +49,17 @@ class ReconciliationServiceTest {
     @Mock
     private IdResolutionService idResolutionService;
 
+    @Mock
+    private zw.gov.mohcc.impilo.tshepo.identity.events.SubjectEventPublisher subjectEvents;
+
     private ReconciliationService service;
 
     @BeforeEach
     void setUp() {
         ObjectMapper objectMapper = new ObjectMapper();
         service = new ReconciliationService(
-                provisionalRepo, outboxRepo, cpidGenerator, idResolutionService, objectMapper);
+                provisionalRepo, outboxRepo, cpidGenerator, idResolutionService,
+                subjectEvents, objectMapper);
     }
 
     // ── Fixture helpers ────────────────────────────────────────────────────

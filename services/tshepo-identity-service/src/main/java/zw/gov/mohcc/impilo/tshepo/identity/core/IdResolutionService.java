@@ -151,8 +151,10 @@ public class IdResolutionService {
      * the winner's row. The global unique constraint on {@code cpid} remains the
      * collision guard for the (cryptographically negligible) UUIDv4 clash case.</p>
      */
-    IdMappingEntity findOrCreateMapping(UUID tenantId, UUID healthId, UUID crid) {
+    @Transactional
+    public IdMappingEntity findOrCreateMapping(UUID tenantId, UUID healthId, UUID crid) {
         return mappingRepo.findByTenantIdAndHealthId(tenantId, healthId)
+                .map(mapping -> followMergeRedirect(tenantId, mapping))
                 .orElseGet(() -> {
                     UUID cpid = cpidGenerator.generateCpid();
                     int inserted = mappingRepo.insertIfAbsent(tenantId, healthId, cpid, crid);
@@ -170,6 +172,82 @@ public class IdResolutionService {
                     }
                     return mapping;
                 });
+    }
+
+    /**
+     * Looks up an existing mapping without creating one (used by the merge relay
+     * for the merged identity — if it was never mapped, no clinical data exists
+     * under it and there is nothing to repoint).
+     */
+    @Transactional(readOnly = true)
+    public java.util.Optional<IdMappingEntity> findExistingMapping(UUID tenantId, UUID healthId) {
+        return mappingRepo.findByTenantIdAndHealthId(tenantId, healthId);
+    }
+
+    /**
+     * Follows the merge redirect chain: a RETIRED mapping with a merged_into_cpid
+     * resolves to the survivor's mapping, so a merged Health ID transparently
+     * yields the surviving CPID (Identity Contract §7.3 — redirect, never delete).
+     */
+    private IdMappingEntity followMergeRedirect(UUID tenantId, IdMappingEntity mapping) {
+        int hops = 0;
+        while ("RETIRED".equals(mapping.getMappingStatus())
+                && mapping.getMergedIntoCpid() != null
+                && hops++ < 5) {
+            IdMappingEntity next = mappingRepo
+                    .findByTenantIdAndCpid(tenantId, mapping.getMergedIntoCpid())
+                    .orElse(null);
+            if (next == null || next.getId().equals(mapping.getId())) {
+                break;
+            }
+            mapping = next;
+        }
+        return mapping;
+    }
+
+    /**
+     * Marks the merged identity's mapping RETIRED with a redirect to the survivor
+     * CPID. Idempotent; a missing merged mapping is a no-op (no clinical data was
+     * ever keyed under it).
+     *
+     * @return the survivor's CPID recorded on the redirect
+     */
+    @Transactional
+    public void retireMappingForMerge(UUID tenantId, UUID mergedHealthId, UUID survivorCpid) {
+        mappingRepo.findByTenantIdAndHealthId(tenantId, mergedHealthId).ifPresent(mapping -> {
+            if (mapping.getCpid().equals(survivorCpid)) {
+                return; // self-redirect guard: merged and survivor resolve to the same mapping
+            }
+            mapping.setMappingStatus("RETIRED");
+            mapping.setMergedIntoCpid(survivorCpid);
+            mappingRepo.save(mapping);
+            publishOutboxEvent("IdMapping", mapping.getCpid().toString(), "MAPPING_RETIRED",
+                    Map.of("tenantId", tenantId,
+                           "retiredCpid", mapping.getCpid(),
+                           "mergedIntoCpid", survivorCpid));
+            log.info("Retired id_mapping cpid={} -> survivor cpid={} (tenant={})",
+                    mapping.getCpid(), survivorCpid, tenantId);
+        });
+    }
+
+    /**
+     * Reverses a merge retirement: restores the mapping to ACTIVE and clears the
+     * redirect. Idempotent.
+     */
+    @Transactional
+    public void reactivateMappingAfterUnmerge(UUID tenantId, UUID mergedHealthId) {
+        mappingRepo.findByTenantIdAndHealthId(tenantId, mergedHealthId).ifPresent(mapping -> {
+            if (!"RETIRED".equals(mapping.getMappingStatus())) {
+                return;
+            }
+            mapping.setMappingStatus("ACTIVE");
+            mapping.setMergedIntoCpid(null);
+            mappingRepo.save(mapping);
+            publishOutboxEvent("IdMapping", mapping.getCpid().toString(), "MAPPING_REACTIVATED",
+                    Map.of("tenantId", tenantId, "cpid", mapping.getCpid()));
+            log.info("Reactivated id_mapping cpid={} after unmerge (tenant={})",
+                    mapping.getCpid(), tenantId);
+        });
     }
 
     private MappingResponse toMappingResponse(IdMappingEntity entity) {

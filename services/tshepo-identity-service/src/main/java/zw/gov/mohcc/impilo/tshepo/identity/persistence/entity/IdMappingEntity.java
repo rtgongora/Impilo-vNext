@@ -39,6 +39,10 @@ public class IdMappingEntity {
     @Column(name = "mapping_status", nullable = false, length = 16)
     private String mappingStatus = "ACTIVE";
 
+    /** Survivor CPID when this mapping was RETIRED by an identity merge (redirect, never delete). */
+    @Column(name = "merged_into_cpid")
+    private UUID mergedIntoCpid;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -74,6 +78,9 @@ public class IdMappingEntity {
 
     public String getMappingStatus() { return mappingStatus; }
     public void setMappingStatus(String mappingStatus) { this.mappingStatus = mappingStatus; }
+
+    public UUID getMergedIntoCpid() { return mergedIntoCpid; }
+    public void setMergedIntoCpid(UUID mergedIntoCpid) { this.mergedIntoCpid = mergedIntoCpid; }
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }

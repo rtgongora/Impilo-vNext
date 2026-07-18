@@ -97,6 +97,33 @@ channels:
       keysRotated:
         $ref: "#/components/messages/KeysRotated"
 
+  # ── Clinical-Plane Subject Channel (Identity Contract §7.3) ─────────────
+  # The ONLY identity-lifecycle stream clinical services may consume. Produced
+  # exclusively by tshepo-identity's SubjectTranslationRelay. Payloads carry
+  # CPIDs only — schemas forbid health_id structurally. Partitioned by CPID.
+  # impilo.vito.* topics are identity-plane and OFF-LIMITS to clinical services.
+
+  identitySubjectLifecycle:
+    address: impilo.identity.subject
+    description: >-
+      Clinical-plane subject lifecycle: created / verified / deceased / merged /
+      merge_reversed / reconciled. Producer: tshepo-identity (relay). Consumers:
+      BUTANO SHR, PCT, inpatient, pharmacy, daidzai, and every other clinical
+      service that keys data by CPID. No health_id, CRID, or PII ever appears.
+    messages:
+      subjectCreated:
+        $ref: "#/components/messages/SubjectCreated"
+      subjectVerified:
+        $ref: "#/components/messages/SubjectVerified"
+      subjectDeceased:
+        $ref: "#/components/messages/SubjectDeceased"
+      subjectMerged:
+        $ref: "#/components/messages/SubjectMerged"
+      subjectMergeReversed:
+        $ref: "#/components/messages/SubjectMergeReversed"
+      subjectReconciled:
+        $ref: "#/components/messages/SubjectReconciled"
+
   # ── Kernel Channel ──────────────────────────────────────────────────────
 
   kernelClientRegistered:
@@ -395,6 +422,56 @@ components:
       contentType: application/json
       payload:
         $ref: "#/components/schemas/EventEnvelopeBase"
+
+    # ── Clinical-Plane Subject Events (Identity Contract §7.3) ────────────
+
+    SubjectCreated:
+      name: SubjectCreated
+      title: Clinical Subject Created
+      summary: A new clinical subject (CPID) exists — SHR creates its Patient spine entry
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithSubjectCreatedPayload"
+
+    SubjectVerified:
+      name: SubjectVerified
+      title: Clinical Subject Verified
+      summary: The subject's identity was verified (proofing complete) — no PII attached
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithSubjectVerifiedPayload"
+
+    SubjectDeceased:
+      name: SubjectDeceased
+      title: Clinical Subject Deceased
+      summary: The subject is deceased — clinical services mark records inactive
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithSubjectDeceasedPayload"
+
+    SubjectMerged:
+      name: SubjectMerged
+      title: Clinical Subject Merged
+      summary: Two subjects merged — repoint merged_cpid data to survivor_cpid
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithSubjectMergedPayload"
+
+    SubjectMergeReversed:
+      name: SubjectMergeReversed
+      title: Clinical Subject Merge Reversed
+      summary: A previous merge was reversed — merged_cpid is active again
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithSubjectMergedPayload"
+
+    SubjectReconciled:
+      name: SubjectReconciled
+      title: Offline Subject Reconciled
+      summary: An offline O-CPID was reconciled — repoint provisional_cpid data to canonical_cpid
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeWithSubjectReconciledPayload"
 
     # ── Kernel Events ─────────────────────────────────────────────────────
 
@@ -723,10 +800,15 @@ components:
       allOf:
         - $ref: "#/components/schemas/EventEnvelopeBase"
         - type: object
+          x-plane: identity
+          description: >-
+            IDENTITY-PLANE ONLY (impilo.vito.* / kernel.vito.*). Carries the
+            health_id and is therefore off-limits to clinical services — they
+            consume impilo.identity.subject instead (Identity Contract §7.3).
           properties:
             payload:
               type: object
-              description: "Full initial state for CREATE; no PII in SHR-facing events"
+              description: "Full initial state for CREATE; identity-plane consumers only"
               properties:
                 crid:
                   type: string
@@ -735,6 +817,112 @@ components:
                 health_id:
                   type: string
                 registration_facility_id:
+                  type: string
+                  format: uuid
+
+    # ── Clinical-plane subject payloads (Identity Contract §7.3) ──────────
+    # additionalProperties: false is the structural guard — a health_id (or any
+    # PII field) in these payloads is a schema violation, testable in CI.
+
+    EventEnvelopeWithSubjectCreatedPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          x-plane: clinical
+          properties:
+            payload:
+              type: object
+              additionalProperties: false
+              required: [tenant_id, cpid]
+              properties:
+                tenant_id:
+                  type: string
+                  format: uuid
+                cpid:
+                  type: string
+                  format: uuid
+                  description: Independent random clinical subject identifier
+                status:
+                  type: string
+                  description: Identity lifecycle status (e.g. PROVISIONAL)
+
+    EventEnvelopeWithSubjectVerifiedPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          x-plane: clinical
+          properties:
+            payload:
+              type: object
+              additionalProperties: false
+              required: [tenant_id, cpid]
+              properties:
+                tenant_id:
+                  type: string
+                  format: uuid
+                cpid:
+                  type: string
+                  format: uuid
+                verified:
+                  type: boolean
+
+    EventEnvelopeWithSubjectDeceasedPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          x-plane: clinical
+          properties:
+            payload:
+              type: object
+              additionalProperties: false
+              required: [tenant_id, cpid]
+              properties:
+                tenant_id:
+                  type: string
+                  format: uuid
+                cpid:
+                  type: string
+                  format: uuid
+
+    EventEnvelopeWithSubjectMergedPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          x-plane: clinical
+          properties:
+            payload:
+              type: object
+              additionalProperties: false
+              required: [tenant_id, survivor_cpid, merged_cpid]
+              properties:
+                tenant_id:
+                  type: string
+                  format: uuid
+                survivor_cpid:
+                  type: string
+                  format: uuid
+                merged_cpid:
+                  type: string
+                  format: uuid
+
+    EventEnvelopeWithSubjectReconciledPayload:
+      allOf:
+        - $ref: "#/components/schemas/EventEnvelopeBase"
+        - type: object
+          x-plane: clinical
+          properties:
+            payload:
+              type: object
+              additionalProperties: false
+              required: [tenant_id, provisional_cpid, canonical_cpid]
+              properties:
+                tenant_id:
+                  type: string
+                  format: uuid
+                provisional_cpid:
+                  type: string
+                  format: uuid
+                canonical_cpid:
                   type: string
                   format: uuid
 

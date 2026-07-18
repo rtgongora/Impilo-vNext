@@ -34,7 +34,15 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      # Values are pre-serialized JSON strings (envelope/outbox payloads) — a
+      # JsonSerializer would double-encode them into quoted string literals.
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      # Subject translation relay (impilo.vito.* -> impilo.identity.subject)
+      group-id: tshepo-identity-subject-relay
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   security:
     oauth2:
       resourceserver:
