@@ -44,6 +44,42 @@ public class NdilaServiceClient {
         return response.getBody() == null ? new byte[0] : response.getBody();
     }
 
+    /**
+     * Anonymous street tile from ndila's public lane ({@code PublicStreetTileController},
+     * gateway-public-lane-security ADR §3) — self-hosted Martin MVT street geometry, no
+     * PII, no bearer token. Headers are service-originated defaults (same pattern as
+     * {@code VarapiServiceClient.publicPractitionerVerify}); when the caller did send
+     * platform headers the shared forwarding interceptor overwrites these defaults.
+     *
+     * @return raw tile bytes (typically gzipped MVT), or {@code null} for an empty tile
+     *         (ndila 204 — preserved so the BFF controller can answer 204 too)
+     */
+    public byte[] publicStreetTile(int z, int x, int y) {
+        String url = baseUrl + "/v1/public/ndila/tiles/" + z + "/" + x + "/" + y + ".mvt";
+        ResponseEntity<byte[]> response = restTemplate.exchange(
+                java.net.URI.create(url), org.springframework.http.HttpMethod.GET,
+                anonymousSafeEntity(), byte[].class);
+        byte[] body = response.getBody();
+        return (body == null || body.length == 0) ? null : body;
+    }
+
+    /**
+     * Anonymous public-lane request entity: downstream services enforce the mandatory
+     * v1.1 trust headers, and anonymous public-gateway traffic arrives with trust
+     * headers stripped at the edge — so the BFF supplies service-originated defaults.
+     */
+    private org.springframework.http.HttpEntity<Void> anonymousSafeEntity() {
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set("X-Tenant-ID", "00000000-0000-0000-0000-000000000001");
+        headers.set("X-Pod-ID", "national-spine");
+        headers.set("X-Actor-ID", "public-gateway");
+        headers.set("X-Actor-Type", "SYSTEM");
+        headers.set("X-Purpose-Of-Use", "PUBLIC_ACCESS");
+        headers.set("X-Correlation-ID", java.util.UUID.randomUUID().toString());
+        headers.set("X-Request-ID", java.util.UUID.randomUUID().toString());
+        return new org.springframework.http.HttpEntity<>(headers);
+    }
+
     public JsonNode nearbyAssets(Map<String, Object> body) {
         String url = baseUrl + "/api/v1/ndila/tracking/assets/nearby";
         return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
