@@ -55,9 +55,35 @@ describe("buildNdilaMapStyle", () => {
     expect(source).toBeDefined();
     expect((source as { type?: string }).type).toBe("vector");
     expect(style.sources?.["ndila-raster"]).toBeUndefined();
-    // Label-free until a glyphs endpoint exists — a symbol layer without glyphs hard-fails MapLibre.
-    expect(style.layers?.some((l) => l.type === "symbol")).toBe(false);
     expect(style.layers?.some((l) => l.id === "ndila-street-road-major")).toBe(true);
+  });
+
+  it("labels the vector street style via self-hosted glyphs", () => {
+    const style = buildNdilaMapStyle({
+      vectorTileUrlTemplate: "/internal/v1/public/gateway/map/tiles/{z}/{x}/{y}.mvt",
+      provider: "OSM_OSRM",
+    });
+    // Symbol layers hard-require a style glyphs endpoint — the committed Noto Sans PBFs.
+    expect(style.glyphs).toBe("/map/glyphs/{fontstack}/{range}.pbf");
+    const symbolLayers = style.layers?.filter((l) => l.type === "symbol") ?? [];
+    expect(symbolLayers.length).toBeGreaterThan(0);
+    expect(symbolLayers.some((l) => l.id === "ndila-street-place-city")).toBe(true);
+    expect(symbolLayers.some((l) => l.id === "ndila-street-road-name")).toBe(true);
+    expect(symbolLayers.some((l) => l.id === "ndila-street-water-name")).toBe(true);
+  });
+
+  it("keeps the fallback styles glyph-free (no tileConfig, raster)", () => {
+    // The admin-boundary fallback must never depend on the glyph assets.
+    const blank = buildNdilaMapStyle(null);
+    expect(blank.glyphs).toBeUndefined();
+    expect(blank.layers?.some((l) => l.type === "symbol")).toBe(false);
+
+    const raster = buildNdilaMapStyle({
+      tileUrlTemplate: "/internal/v1/ndila/tiles/{z}/{x}/{y}.png",
+      provider: "PREVIEW_SOVEREIGN",
+    });
+    expect(raster.glyphs).toBeUndefined();
+    expect(raster.layers?.some((l) => l.type === "symbol")).toBe(false);
   });
 
   it("falls back to raster when the vector template is mock or absent", () => {

@@ -9,7 +9,11 @@ import maplibregl, {
   type RequestParameters,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { buildNdilaMapStyle, streetsTilesAvailable } from "@/lib/ndila/build-ndila-map-style";
+import {
+  buildNdilaMapStyle,
+  streetsTilesAvailable,
+  type NdilaTileConfigInput,
+} from "@/lib/ndila/build-ndila-map-style";
 import {
   ZIMBABWE_ADMIN_GEOJSON_URL,
   ZIMBABWE_BOUNDS,
@@ -37,12 +41,7 @@ export interface NdilaMapLibreProps {
   markers?: NdilaGeoMarker[];
   routeCoordinates?: NdilaMapCoordinate[];
   height?: number;
-  tileConfig?: {
-    provider?: string;
-    tileUrlTemplate?: string;
-    maxZoom?: number;
-    attribution?: string;
-  } | null;
+  tileConfig?: NdilaTileConfigInput | null;
   fitToMarkers?: boolean;
   showNavigation?: boolean;
   showZimbabweAdmin?: boolean;

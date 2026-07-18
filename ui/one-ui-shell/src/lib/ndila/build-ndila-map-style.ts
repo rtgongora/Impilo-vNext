@@ -1,4 +1,4 @@
-import type { LayerSpecification, StyleSpecification } from "maplibre-gl";
+import type { ExpressionSpecification, LayerSpecification, StyleSpecification } from "maplibre-gl";
 
 export interface NdilaTileConfigInput {
   provider?: string;
@@ -27,10 +27,19 @@ export function isVectorTileTemplate(template?: string): boolean {
   return isRasterTileTemplate(template);
 }
 
-// OpenMapTiles-schema street layers (tilemaker output). Deliberately label-free:
-// text layers need a glyphs endpoint the street stack does not serve yet, and
-// MapLibre hard-fails styles that use text-field without glyphs.
+// OpenMapTiles-schema street layers (tilemaker/planetiler output). Labels are
+// rendered from self-hosted Noto Sans glyph PBFs committed under
+// ui/one-ui-shell/public/map/glyphs (fetched by scripts/ndila/fetch-map-glyphs.sh
+// — Latin ranges only; no CDN at runtime). The glyphs endpoint is declared ONLY
+// on the vector street style: the admin-boundary fallback style must keep
+// working without it.
 const STREETS_SOURCE = "ndila-streets";
+
+/** Self-hosted glyph endpoint (shell public assets — sovereign, no CDN). */
+export const NDILA_GLYPHS_URL = "/map/glyphs/{fontstack}/{range}.pbf";
+
+/** OpenMapTiles carries transliterated names; prefer Latin, fall back to local. */
+const NAME_FIELD: ExpressionSpecification = ["coalesce", ["get", "name:latin"], ["get", "name"]];
 
 function openMapTilesStreetLayers(): LayerSpecification[] {
   return [
@@ -176,6 +185,69 @@ function openMapTilesStreetLayers(): LayerSpecification[] {
 }
 
 /**
+ * Label layers over the street layers. These require the style-level `glyphs`
+ * endpoint (self-hosted Noto Sans PBFs) — only the vector street style declares
+ * it, so these layers are only ever added there.
+ */
+function openMapTilesLabelLayers(): LayerSpecification[] {
+  return [
+    {
+      id: "ndila-street-water-name",
+      type: "symbol",
+      source: STREETS_SOURCE,
+      "source-layer": "water_name",
+      layout: {
+        "text-field": NAME_FIELD,
+        "text-font": ["Noto Sans Regular"],
+        "text-size": 11,
+      },
+      paint: { "text-color": "#3b6d99", "text-halo-color": "#eaf2f9", "text-halo-width": 1.2 },
+    },
+    {
+      id: "ndila-street-road-name",
+      type: "symbol",
+      source: STREETS_SOURCE,
+      "source-layer": "transportation_name",
+      minzoom: 11,
+      layout: {
+        "symbol-placement": "line",
+        "text-field": NAME_FIELD,
+        "text-font": ["Noto Sans Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 11, 9, 16, 12],
+      },
+      paint: { "text-color": "#5d5347", "text-halo-color": "#ffffff", "text-halo-width": 1.3 },
+    },
+    {
+      id: "ndila-street-place-minor",
+      type: "symbol",
+      source: STREETS_SOURCE,
+      "source-layer": "place",
+      filter: ["match", ["get", "class"], ["town", "village"], true, false],
+      minzoom: 8,
+      layout: {
+        "text-field": NAME_FIELD,
+        "text-font": ["Noto Sans Regular"],
+        "text-size": ["match", ["get", "class"], "town", 12, 10.5],
+      },
+      paint: { "text-color": "#1e293b", "text-halo-color": "#f8fafc", "text-halo-width": 1.4 },
+    },
+    {
+      id: "ndila-street-place-city",
+      type: "symbol",
+      source: STREETS_SOURCE,
+      "source-layer": "place",
+      filter: ["==", ["get", "class"], "city"],
+      layout: {
+        "text-field": NAME_FIELD,
+        "text-font": ["Noto Sans Bold"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 4, 11, 10, 16],
+      },
+      paint: { "text-color": "#0f172a", "text-halo-color": "#ffffff", "text-halo-width": 1.6 },
+    },
+  ];
+}
+
+/**
  * Build a MapLibre style from Ndila tile policy. Preference order:
  * 1. Self-hosted MVT street tiles (Martin) rendered natively as vectors.
  * 2. Governed raster pyramids (sovereign preview PNGs or https rasters).
@@ -190,6 +262,9 @@ export function buildNdilaMapStyle(
   if (includeRaster && isVectorTileTemplate(vectorTemplate)) {
     return {
       version: 8,
+      // Self-hosted glyphs enable text labels; declared only on this branch so
+      // the raster and blank fallback styles never depend on the glyph assets.
+      glyphs: NDILA_GLYPHS_URL,
       sources: {
         [STREETS_SOURCE]: {
           type: "vector",
@@ -199,7 +274,7 @@ export function buildNdilaMapStyle(
           attribution: tileConfig?.attribution,
         },
       },
-      layers: openMapTilesStreetLayers(),
+      layers: [...openMapTilesStreetLayers(), ...openMapTilesLabelLayers()],
     };
   }
 

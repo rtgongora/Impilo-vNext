@@ -3,12 +3,16 @@
 /**
  * Map overview for find-care results.
  *
- * Reuses the shared Ndila MapLibre component. The public lane does not currently
- * expose street tiles, so we pass no tileConfig — the map degrades gracefully to
- * the bundled Zimbabwe admin-boundary base layer with facility pins. It is a
- * spatial overview only: full parity of actions is guaranteed by rendering the
- * same result cards beneath the map (see FindCareExperience), so nothing on the
- * map is a dead end and the list remains the low-bandwidth path.
+ * Reuses the shared Ndila MapLibre component. The public lane serves self-hosted
+ * street tiles (Martin MVT via the BFF public gateway passthrough,
+ * /internal/v1/public/gateway/map/tiles) with labels from committed Noto Sans
+ * glyphs — no CDN, no auth, no PII. When the street stack is absent or a tile
+ * fetch fails, MapLibre simply skips those tiles and the bundled Zimbabwe
+ * admin-boundary layers (drawn on top of the base style) keep the map readable —
+ * graceful degrade, never blank. It is a spatial overview only: full parity of
+ * actions is guaranteed by rendering the same result cards beneath the map (see
+ * FindCareExperience), so nothing on the map is a dead end and the list remains
+ * the low-bandwidth path.
  */
 
 import { useMemo } from "react";
@@ -88,7 +92,12 @@ export function FindCareMap({ results, origin, selectedFacilityId }: FindCareMap
         center={center}
         zoom={mappable > 0 ? 9 : ZIMBABWE_DEFAULT_ZOOM}
         markers={markers}
-        tileConfig={null}
+        tileConfig={{
+          provider: "OSM_OSRM",
+          vectorTileUrlTemplate: "/internal/v1/public/gateway/map/tiles/{z}/{x}/{y}.mvt",
+          maxZoom: 14,
+          attribution: "© OpenStreetMap contributors",
+        }}
         fitToMarkers={mappable > 0}
         clusterMarkers
         showNavigation
