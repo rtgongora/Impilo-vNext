@@ -27,6 +27,22 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
 
     Page<ClientEntity> findByTenantId(UUID tenantId, Pageable pageable);
 
+    /**
+     * Blocking query for probabilistic matching (Identity Contract §13 / E3):
+     * return only candidates that share a coarse blocking key with the source —
+     * same birth year OR same family-name initial — so the O(N) Jaro-Winkler
+     * scan runs over a small candidate set instead of the whole tenant (and
+     * without the previous silent 1000-row cap).
+     */
+    @Query("SELECT c FROM ClientEntity c WHERE c.tenantId = :tenantId "
+         + "AND c.healthId <> :sourceHealthId "
+         + "AND ((:birthYear IS NOT NULL AND YEAR(c.dateOfBirth) = :birthYear) "
+         + "  OR (:familyInitial IS NOT NULL AND LOWER(SUBSTRING(c.familyName, 1, 1)) = :familyInitial))")
+    List<ClientEntity> findBlockingCandidates(@Param("tenantId") UUID tenantId,
+                                              @Param("sourceHealthId") UUID sourceHealthId,
+                                              @Param("birthYear") Integer birthYear,
+                                              @Param("familyInitial") String familyInitial);
+
     List<ClientEntity> findTop100ByTenantIdOrderByUpdatedAtDesc(UUID tenantId);
 
     boolean existsByTenantIdAndHealthId(UUID tenantId, UUID healthId);

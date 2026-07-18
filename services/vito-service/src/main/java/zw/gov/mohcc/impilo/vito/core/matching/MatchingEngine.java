@@ -37,6 +37,9 @@ import java.util.*;
 @Service
 public class MatchingEngine {
 
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(MatchingEngine.class);
+
     private final ClientRepository clientRepository;
     private final MatchResultRepository matchResultRepository;
     private final VitoProperties properties;
@@ -61,8 +64,28 @@ public class MatchingEngine {
         ClientEntity source = clientRepository.findByTenantIdAndHealthId(tenantId, sourceHealthId)
                 .orElseThrow(() -> new IllegalArgumentException("Source client not found"));
 
-        Page<ClientEntity> candidates = clientRepository.findByTenantId(tenantId,
-                Pageable.ofSize(1000));
+        // Blocking (Identity Contract §13 / E3): restrict scoring to candidates
+        // sharing a coarse blocking key (birth year OR family-name initial),
+        // instead of scanning the whole tenant with a silent 1000-row cap.
+        Integer birthYear = source.getDateOfBirth() != null
+                ? source.getDateOfBirth().getYear() : null;
+        String familyInitial = (source.getFamilyName() != null && !source.getFamilyName().isBlank())
+                ? source.getFamilyName().substring(0, 1).toLowerCase() : null;
+
+        List<ClientEntity> candidates;
+        if (birthYear == null && familyInitial == null) {
+            // No blocking key on the source — fall back to a bounded scan and log
+            // the cap so coverage loss is never silent.
+            Page<ClientEntity> page = clientRepository.findByTenantId(tenantId, Pageable.ofSize(1000));
+            candidates = page.getContent();
+            if (page.getTotalElements() > 1000) {
+                log.warn("Matching source {} has no blocking key; scanned first 1000 of {} candidates "
+                        + "(coverage capped)", sourceHealthId, page.getTotalElements());
+            }
+        } else {
+            candidates = clientRepository.findBlockingCandidates(
+                    tenantId, sourceHealthId, birthYear, familyInitial);
+        }
 
         List<MatchResultEntity> results = new ArrayList<>();
 

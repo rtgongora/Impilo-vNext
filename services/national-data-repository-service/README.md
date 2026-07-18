@@ -1,6 +1,16 @@
 # NDR — National Data Repository Service
 
-Analytics-ready data store for national datasets. **Not a shared health record** — stores aggregate and de-identified data for reporting, dashboards, and policy analysis.
+Analytics-ready data store for national datasets. **Not a shared health record** — stores aggregate data for reporting, dashboards, and policy analysis.
+
+> **Boundary correction (Identity Contract §15).** This service does **not** yet
+> de-identify. The CPID is a *pseudonym*, not an anonymised token — it is
+> reversible through the authorised trust-core workflow — so data keyed by CPID
+> is pseudonymised, not de-identified. True de-identification (dataset-specific
+> tokens, direct-identifier removal, quasi-identifier reduction, small-cell
+> suppression) is designed in
+> [`docs/data-platform/de-identification-pipeline.md`](../../docs/data-platform/de-identification-pipeline.md)
+> and is **not built**. Until it lands, do not describe NDR datasets as
+> de-identified.
 
 ## Port
 
