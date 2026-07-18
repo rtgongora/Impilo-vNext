@@ -43,8 +43,10 @@ public class ExternalRegistrationService {
     private final PhidPoolService phidPoolService;
     private final ClientAddressDelegationPublisher addressDelegationPublisher;
     private final zw.gov.mohcc.impilo.vito.core.matching.MatchingEngine matchingEngine;
+    private final zw.gov.mohcc.impilo.vito.core.ContactHasher contactHasher;
 
     public ExternalRegistrationService(zw.gov.mohcc.impilo.vito.core.matching.MatchingEngine matchingEngine,
+                                       zw.gov.mohcc.impilo.vito.core.ContactHasher contactHasher,
                                        ClientRepository clientRepository,
                                        ClientIdentifierRepository clientIdentifierRepository,
                                        EventOutboxRepository outboxRepository,
@@ -54,6 +56,7 @@ public class ExternalRegistrationService {
                                        PhidPoolService phidPoolService,
                                        ClientAddressDelegationPublisher addressDelegationPublisher) {
         this.matchingEngine = matchingEngine;
+        this.contactHasher = contactHasher;
         this.clientRepository = clientRepository;
         this.clientIdentifierRepository = clientIdentifierRepository;
         this.outboxRepository = outboxRepository;
@@ -173,7 +176,7 @@ public class ExternalRegistrationService {
         client.setSourceSystemPatientId(request.sourceSystemPatientId());
 
         if (request.phone() != null && !request.phone().isBlank()) {
-            client.setPhoneHash(hmacPhone(request.phone().trim()));
+            client.setPhoneHash(contactHasher.hashPhone(request.phone()));
         }
 
         Map<String, Object> address = new LinkedHashMap<>();

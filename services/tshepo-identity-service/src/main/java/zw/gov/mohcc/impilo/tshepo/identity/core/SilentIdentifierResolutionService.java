@@ -79,7 +79,7 @@ public class SilentIdentifierResolutionService {
 
         return switch (kind) {
             case "HEALTH_ID" -> resolveHealthId(tenantId, value);
-            case "IMPILO_ID" -> resolveImpiloIdHash(tenantId, value);
+            case "IMPILO_ID" -> resolveImpiloId(tenantId, value);
             case "PHONE" -> resolvePersonContact(tenantId, "phone", value);
             case "EMAIL" -> resolvePersonContact(tenantId, "email", value);
             // PROVIDER_ID / COUNCIL_NUMBER resolve a profile but never authenticate.
@@ -105,9 +105,25 @@ public class SilentIdentifierResolutionService {
                 .orElseGet(IdentifierResolveResponse::notResolved);
     }
 
-    /** IMPILO_ID: a lookup hash resolved by VITO to a Health ID, then to a CPID. */
-    private IdentifierResolveResponse resolveImpiloIdHash(UUID tenantId, String lookupHash) {
-        UUID healthId = vitoResolveLookupHash(tenantId, lookupHash);
+    /** IMPILO_ID: the raw Impilo ID resolved by VITO (alias vault) to a Health ID, then to a CPID. */
+    private IdentifierResolveResponse resolveImpiloId(UUID tenantId, String impiloId) {
+        UUID healthId = vitoResolve(tenantId, "IMPILO_ID", impiloId, "/v1/registry/resolve");
+        return healthIdToRef(tenantId, healthId);
+    }
+
+    /**
+     * PHONE / EMAIL: a person contact resolved PRIVATELY by VITO (the pepper +
+     * alias-vault holder) to a Health ID via POST /v1/registry/resolve-contact.
+     * Only healthId (or a uniform miss) is returned — never a candidate list
+     * (Identity Journey Doctrine §2).
+     */
+    private IdentifierResolveResponse resolvePersonContact(UUID tenantId, String contactKind, String value) {
+        UUID healthId = vitoResolve(tenantId, contactKind, value, "/v1/registry/resolve-contact");
+        return healthIdToRef(tenantId, healthId);
+    }
+
+    /** Map a resolved Health ID (or null) to a person ref (or the uniform miss). */
+    private IdentifierResolveResponse healthIdToRef(UUID tenantId, UUID healthId) {
         if (healthId == null) {
             return IdentifierResolveResponse.notResolved();
         }
@@ -118,16 +134,32 @@ public class SilentIdentifierResolutionService {
     }
 
     /**
-     * PHONE / EMAIL: a person contact resolved by VITO (the person SoR) to a
-     * Health ID. VITO stores contacts hashed; the deterministic contact resolver
-     * is not yet exposed as an internal endpoint.
-     * TODO(L3): add VITO internal contact-resolve endpoint
-     *   (POST /v1/internal/clients/resolve-contact {kind,value} → healthId) and
-     *   call it here. Until then deny uniformly (anti-enum preserved).
+     * POST a private resolution to VITO ({@code /resolve} or {@code /resolve-contact}).
+     * Sends INTERNAL access mode (VITO gates these to the trust core). Returns the
+     * resolved Health ID or null; any miss/error yields null (anti-enum preserved
+     * by the caller's uniform response + timing floor).
      */
-    private IdentifierResolveResponse resolvePersonContact(UUID tenantId, String contactKind, String value) {
-        log.debug("contact resolution ({}) not yet wired to VITO — uniform deny", contactKind);
-        return IdentifierResolveResponse.notResolved();
+    private UUID vitoResolve(UUID tenantId, String kind, String value, String path) {
+        try {
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            headers.set("X-Access-Mode", "INTERNAL");
+            headers.set("X-Service-Id", "tshepo-identity");
+            Map<String, Object> body = Map.of("tenantId", tenantId.toString(), "kind", kind, "value", value);
+            ResponseEntity<String> response = vitoRestTemplate.postForEntity(
+                    path, new org.springframework.http.HttpEntity<>(body, headers), String.class);
+            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                return null;
+            }
+            JsonNode node = objectMapper.readTree(response.getBody()).path("data").path("healthId");
+            if (node.isMissingNode() || node.isNull()) {
+                return null;
+            }
+            return parseUuidOrNull(node.asText());
+        } catch (Exception e) {
+            log.debug("VITO resolution ({}) failed (suppressed): {}", path, e.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -176,28 +208,6 @@ public class SilentIdentifierResolutionService {
         }
         String s = v.asText();
         return s == null || s.isBlank() ? null : s;
-    }
-
-    /** Calls VITO to resolve an Impilo-ID lookup hash to a Health ID; null on any miss/error. */
-    private UUID vitoResolveLookupHash(UUID tenantId, String lookupHash) {
-        try {
-            Map<String, Object> body = Map.of(
-                    "tenantId", tenantId.toString(),
-                    "lookupHash", lookupHash);
-            ResponseEntity<String> response = vitoRestTemplate.postForEntity(
-                    "/v1/registry/resolve", body, String.class);
-            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
-                return null;
-            }
-            JsonNode node = objectMapper.readTree(response.getBody()).path("data").path("healthId");
-            if (node.isMissingNode() || node.isNull()) {
-                return null;
-            }
-            return parseUuidOrNull(node.asText());
-        } catch (Exception e) {
-            log.debug("VITO lookup-hash resolution failed (suppressed): {}", e.getMessage());
-            return null;
-        }
     }
 
     private IdentifierResolveResponse resolvedRef(String healthId, String cpid,

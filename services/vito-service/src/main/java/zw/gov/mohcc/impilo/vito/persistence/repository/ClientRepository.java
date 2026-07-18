@@ -55,6 +55,13 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
 
     Optional<ClientEntity> findByTenantIdAndCrid(UUID tenantId, UUID crid);
 
+    // Identity Journey Doctrine §2: private server-side contact matching. These
+    // return at most one client; the resolve endpoint exposes only healthId or a
+    // uniform miss (no candidate list, no demographics).
+    Optional<ClientEntity> findByTenantIdAndPhoneHash(UUID tenantId, String phoneHash);
+
+    Optional<ClientEntity> findByTenantIdAndEmailHash(UUID tenantId, String emailHash);
+
     // Identity Contract §6: impiloId is encrypted at rest and cannot be matched
     // by value in SQL. Name search stays here; exact Impilo-ID match is resolved
     // separately via the alias vault (see ClientIdentityOperationsService).

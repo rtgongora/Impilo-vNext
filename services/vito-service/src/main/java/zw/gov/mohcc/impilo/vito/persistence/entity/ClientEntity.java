@@ -51,6 +51,12 @@ public class ClientEntity {
     @Column(name = "phone_hash")
     private String phoneHash;
 
+    // Identity Journey Doctrine §2: deterministic HMAC lookup key for PRIVATE
+    // server-side contact matching (never exposed; resolve-contact returns only
+    // healthId or a uniform miss). Set via the shared HmacService (hex).
+    @Column(name = "email_hash")
+    private String emailHash;
+
     @Column(name = "crid", nullable = false, unique = true)
     private UUID crid;
 
@@ -152,6 +158,9 @@ public class ClientEntity {
     public void setSex(String sex) { this.sex = sex; }
     public String getPhoneHash() { return phoneHash; }
     public void setPhoneHash(String phoneHash) { this.phoneHash = phoneHash; }
+
+    public String getEmailHash() { return emailHash; }
+    public void setEmailHash(String emailHash) { this.emailHash = emailHash; }
     public UUID getCrid() { return crid; }
     public void setCrid(UUID crid) { this.crid = crid; }
     public String getImpiloId() { return impiloId; }

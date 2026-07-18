@@ -21,6 +21,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(MockitoExtension.class)
 class SilentIdentifierResolutionServiceTest {
@@ -116,8 +118,25 @@ class SilentIdentifierResolutionServiceTest {
     }
 
     @Test
-    void phoneAndEmail_uniformDenyUntilWired() {
+    void phone_resolvesPrivatelyViaVito() {
         UUID tenant = UUID.randomUUID();
+        UUID healthId = UUID.randomUUID();
+        when(vitoRestTemplate.postForEntity(org.mockito.ArgumentMatchers.eq("/v1/registry/resolve-contact"),
+                any(), org.mockito.ArgumentMatchers.eq(String.class)))
+                .thenReturn(ResponseEntity.ok("{\"data\":{\"healthId\":\"" + healthId + "\"}}"));
+        org.mockito.Mockito.lenient().when(mappingRepo.findByTenantIdAndHealthId(tenant, healthId))
+                .thenReturn(Optional.empty());
+
+        IdentifierResolveResponse r =
+                service.resolve(new IdentifierResolveRequest(tenant, "PHONE", "+263771234567"));
+        assertThat(r.resolved()).isTrue();
+    }
+
+    @Test
+    void phoneAndEmail_uniformMissWhenVitoDoesNotResolve() {
+        UUID tenant = UUID.randomUUID();
+        when(vitoRestTemplate.postForEntity(any(String.class), any(), org.mockito.ArgumentMatchers.eq(String.class)))
+                .thenReturn(ResponseEntity.ok("{\"data\":{\"healthId\":null}}"));
         assertThat(service.resolve(new IdentifierResolveRequest(tenant, "PHONE", "+263771234567")).resolved())
                 .isFalse();
         assertThat(service.resolve(new IdentifierResolveRequest(tenant, "EMAIL", "a@b.com")).resolved())

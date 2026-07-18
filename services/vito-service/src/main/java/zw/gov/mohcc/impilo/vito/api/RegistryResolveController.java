@@ -1,0 +1,123 @@
+package zw.gov.mohcc.impilo.vito.api;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.shared.auth.AccessMode;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.vito.core.ContactHasher;
+import zw.gov.mohcc.impilo.vito.core.ImpiloIdAliasService;
+import zw.gov.mohcc.impilo.vito.persistence.entity.ClientEntity;
+import zw.gov.mohcc.impilo.vito.persistence.repository.ClientRepository;
+
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Private, server-side identity resolution for the Trust Core (Identity Journey
+ * Doctrine §2). INTERNAL-only. Resolves a presented identifier to a Health ID —
+ * or a uniform miss — and returns <b>nothing but the healthId</b>: no candidate
+ * list, no demographics, no existence signal. VITO is the pepper + alias-vault
+ * holder, so raw values are hashed here and never leave.
+ *
+ * <p>Callers: tshepo-identity {@code SilentIdentifierResolutionService} (login
+ * hardening) and {@code IdResolutionService} (full resolve chain). The
+ * anti-enumeration timing floor is applied by the calling service around the
+ * whole resolution; this endpoint's contribution is a uniform 200 response shape
+ * on hit and miss alike ({@code {resolved, data:{healthId}}}).</p>
+ */
+@RestController
+@RequestMapping("/v1/registry")
+public class RegistryResolveController {
+
+    private final ClientRepository clientRepository;
+    private final ImpiloIdAliasService aliasService;
+    private final ContactHasher contactHasher;
+
+    public RegistryResolveController(ClientRepository clientRepository,
+                                     ImpiloIdAliasService aliasService,
+                                     ContactHasher contactHasher) {
+        this.clientRepository = clientRepository;
+        this.aliasService = aliasService;
+        this.contactHasher = contactHasher;
+    }
+
+    public record ResolveRequest(UUID tenantId, String kind, String value) {}
+
+    /**
+     * Resolve an Impilo ID or Health ID to a Health ID. Kinds: IMPILO_ID (alias
+     * vault), HEALTH_ID (existence check). Uniform 200 with {@code data.healthId}
+     * null on miss.
+     */
+    @PostMapping("/resolve")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> resolve(@RequestBody ResolveRequest req) {
+        internalOnly();
+        UUID tenantId = req.tenantId();
+        String kind = req.kind() == null ? "" : req.kind().trim().toUpperCase(Locale.ROOT);
+        String value = req.value() == null ? "" : req.value().trim();
+        UUID healthId = null;
+        if (tenantId != null && !value.isBlank()) {
+            healthId = switch (kind) {
+                case "IMPILO_ID" -> aliasService.resolve(tenantId, "IMPILO_ID", value).orElse(null);
+                case "LEGACY_PHID" -> aliasService.resolve(tenantId, "LEGACY_PHID", value).orElse(null);
+                case "HEALTH_ID" -> parseHealthIdIfPresent(tenantId, value);
+                default -> null;
+            };
+        }
+        return uniform(healthId);
+    }
+
+    /**
+     * Private contact matching: phone/email → Health ID (Identity Journey Doctrine
+     * §2). The raw contact is hashed here; only healthId (or a uniform miss) is
+     * returned. Never a candidate list.
+     */
+    @PostMapping("/resolve-contact")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> resolveContact(@RequestBody ResolveRequest req) {
+        internalOnly();
+        UUID tenantId = req.tenantId();
+        String kind = req.kind() == null ? "" : req.kind().trim().toLowerCase(Locale.ROOT);
+        String value = req.value() == null ? "" : req.value().trim();
+        UUID healthId = null;
+        if (tenantId != null && !value.isBlank()) {
+            String hash = contactHasher.hash(kind, value);
+            if (hash != null) {
+                Optional<ClientEntity> match = switch (kind) {
+                    case "phone" -> clientRepository.findByTenantIdAndPhoneHash(tenantId, hash);
+                    case "email" -> clientRepository.findByTenantIdAndEmailHash(tenantId, hash);
+                    default -> Optional.empty();
+                };
+                healthId = match.map(ClientEntity::getHealthId).orElse(null);
+            }
+        }
+        return uniform(healthId);
+    }
+
+    private UUID parseHealthIdIfPresent(UUID tenantId, String value) {
+        try {
+            UUID hid = UUID.fromString(value);
+            return clientRepository.findByTenantIdAndHealthId(tenantId, hid).isPresent() ? hid : null;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private ResponseEntity<ApiResponse<Map<String, Object>>> uniform(UUID healthId) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("healthId", healthId != null ? healthId.toString() : null);
+        data.put("resolved", healthId != null);
+        return ResponseEntity.ok(ApiResponse.ok(data, null));
+    }
+
+    private void internalOnly() {
+        TrustContext ctx = TrustContextHolder.require();
+        if (ctx.mode() != AccessMode.INTERNAL) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN, "INTERNAL_ONLY");
+        }
+    }
+}

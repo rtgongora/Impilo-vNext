@@ -58,7 +58,8 @@ class ClientUpdateServiceTest {
     void setUp() {
         service = new ClientUpdateService(clientRepository, outboxRepository, identifierRepository,
                 vitoProperties, objectMapper,
-                new zw.gov.mohcc.impilo.vito.events.ClientAddressDelegationPublisher(outboxRepository, objectMapper));
+                new zw.gov.mohcc.impilo.vito.events.ClientAddressDelegationPublisher(outboxRepository, objectMapper),
+                new zw.gov.mohcc.impilo.vito.core.ContactHasher(new zw.gov.mohcc.impilo.shared.crypto.HmacService("test-pepper")));
         tenantId = UUID.randomUUID();
         healthId = UUID.randomUUID();
         when(clientRepository.save(any(ClientEntity.class))).thenAnswer(inv -> inv.getArgument(0));

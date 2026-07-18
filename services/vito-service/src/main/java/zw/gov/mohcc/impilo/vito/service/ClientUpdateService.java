@@ -33,19 +33,22 @@ public class ClientUpdateService {
     private final VitoProperties vitoProperties;
     private final ObjectMapper objectMapper;
     private final ClientAddressDelegationPublisher addressDelegationPublisher;
+    private final zw.gov.mohcc.impilo.vito.core.ContactHasher contactHasher;
 
     public ClientUpdateService(ClientRepository clientRepository,
                                EventOutboxRepository outboxRepository,
                                ClientIdentifierRepository identifierRepository,
                                VitoProperties vitoProperties,
                                ObjectMapper objectMapper,
-                               ClientAddressDelegationPublisher addressDelegationPublisher) {
+                               ClientAddressDelegationPublisher addressDelegationPublisher,
+                               zw.gov.mohcc.impilo.vito.core.ContactHasher contactHasher) {
         this.clientRepository = clientRepository;
         this.outboxRepository = outboxRepository;
         this.identifierRepository = identifierRepository;
         this.vitoProperties = vitoProperties;
         this.objectMapper = objectMapper;
         this.addressDelegationPublisher = addressDelegationPublisher;
+        this.contactHasher = contactHasher;
     }
 
     @Transactional
@@ -64,7 +67,7 @@ public class ClientUpdateService {
         if (req.dateOfBirth() != null) client.setDateOfBirth(req.dateOfBirth());
         if (req.sex() != null) client.setSex(req.sex());
         if (req.phone() != null && !req.phone().isBlank()) {
-            client.setPhoneHash(hmacPhone(req.phone().trim()));
+            client.setPhoneHash(contactHasher.hashPhone(req.phone()));
         }
 
         // Address: merge into existing JSON instead of replacing it, so an update
