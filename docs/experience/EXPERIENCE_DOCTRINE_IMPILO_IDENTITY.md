@@ -1,10 +1,12 @@
-# Experience Doctrine — Impilo ID (Health ID) as primary human identity
+# Experience Doctrine — Health ID (HID) as primary human identity
 
 This rule applies across the **Experience Layer** and the sovereign registry/services it orchestrates.
 
+> **Corrected 2026-07-18** — governed by the [Impilo Identity Contract](../architecture/identity-trust-contract.md). This document previously used "Impilo ID (Health ID)" as one term. They are **distinct identifiers** (Identity Contract §1): the **Health ID (HID)** is the internal UUID anchor described throughout this document; the **Impilo ID** is the separate, human-friendly, client-facing identifier issued at proofing approval. Columns named `impilo_health_id` carry the **HID** — the column naming is historical and retained; prose must use "Health ID". Neither HID nor CPID may be emitted to the browser (Identity Contract §12).
+
 ## Canonical anchor
 
-1. **Impilo ID (Health ID)** — a stable UUID issued by the national identity plane — is the **primary longitudinal human identity**. All person-scoped continuity (clinical, biometric, workforce, registry self-service) resolves to this anchor first.
+1. **Health ID (HID)** — a stable UUID issued by the national identity plane — is the **primary longitudinal human identity**. All person-scoped continuity (clinical, biometric, workforce, registry self-service) resolves to this anchor first, **server-side**. Clinical subject continuity uses the CPID obtained from tshepo-identity, never the HID.
 
 2. **Provider public ID** (`VARAPI` provider token), **council registration numbers**, **licence numbers**, **employee numbers**, **national IDs**, **Moodle/Fundo user references**, **MusheX party references**, and similar values are **linked identifiers**. They must be stored and surfaced as **secondary** facts tied to the person/provider graph, never as parallel “roots” that bypass the Health ID.
 
@@ -23,7 +25,7 @@ This rule applies across the **Experience Layer** and the sovereign registry/ser
 
 ## Vito (client / biometric plane)
 
-Vito continues to key biometric profiles and templates by **`healthId` (UUID)** — the same Impilo / Health ID. See `docs/vito/VITO_AND_IMPILO_IDENTITY.md`.
+Vito continues to key biometric profiles and templates by **`healthId` (UUID)** — the Health ID (HID). See `docs/vito/VITO_AND_IMPILO_IDENTITY.md`. (Template custody is moving behind the dedicated ABIS boundary per Identity Contract §11.)
 
 ## APIs and UI
 
