@@ -493,6 +493,16 @@ bash "$REPO_PATH/scripts/deploy/seed-full-preview-sovereign-data.sh" || {
 
 bash scripts/test/run-full-boot-smoke-tests.sh
 
+# --- MANDATORY: facility / geo reference estate present (durable seed migrations applied). ---
+# The MFL facilities + coords + capabilities + referral pathways are Flyway seeds (tuso
+# V027/V028/V029, ndila V003). If they are absent after deploy the seed did not apply and
+# find-care is starved — that is a failed boot, not a warning.
+echo "--- Facility/geo estate (mandatory reference data) ---"
+NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/full-boot/verify-facility-estate.sh" || {
+  echo "DEPLOY INCOMPLETE: facility/geo estate missing — see scripts/full-boot/verify-facility-estate.sh" >&2
+  exit 1
+}
+
 # --- RUNTIME IMAGE TRUTH: prove the running estate, not the deployment story. ---
 echo "--- Runtime image truth (digest alignment across the chain) ---"
 RUNTIME_TRUTH_OK=1
