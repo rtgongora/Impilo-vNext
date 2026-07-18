@@ -25,6 +25,8 @@ export const PUBLIC_PREFIXES = [
   "/geo",          // public map base data (Zimbabwe admin/places GeoJSON) — the find-care
                    // map fetches these on the anonymous lane; without this the middleware
                    // 307-redirects them to /auth/login and the public map renders blank.
+  "/map",          // public map assets (self-hosted glyph PBFs for street labels) — same
+                   // anonymous-lane rule as /geo; a 307 here means label-less maps.
   "/_next",
   "/api",
   "/internal",
