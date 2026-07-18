@@ -5,41 +5,43 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.tshepo.identity.api.dto.*;
-import zw.gov.mohcc.impilo.tshepo.identity.core.CpidGenerator;
+import zw.gov.mohcc.impilo.tshepo.identity.core.IdResolutionService;
 import zw.gov.mohcc.impilo.tshepo.identity.core.ReconciliationService;
 
 import java.util.UUID;
 
 /**
- * CPID generation endpoints.
+ * CPID issuance endpoints.
  *
- * <p>Supports both deterministic canonical CPID generation and offline
- * provisional O-CPID issuance.</p>
+ * <p>Canonical CPIDs are independent random UUIDs held only in the id_mapping
+ * table (Identity Contract §7) — there is no client-computable derivation, so
+ * every issuance goes through the mapping.</p>
  */
 @RestController
 @RequestMapping("/v1/identity/cpid")
 public class CpidController {
 
-    private final CpidGenerator cpidGenerator;
+    private final IdResolutionService idResolutionService;
     private final ReconciliationService reconciliationService;
 
-    public CpidController(CpidGenerator cpidGenerator,
+    public CpidController(IdResolutionService idResolutionService,
                            ReconciliationService reconciliationService) {
-        this.cpidGenerator = cpidGenerator;
+        this.idResolutionService = idResolutionService;
         this.reconciliationService = reconciliationService;
     }
 
     /**
-     * Generate a deterministic CPID (UUID v5) from tenantId + healthId.
+     * Issue (find-or-create) the CPID for a tenantId + healthId pair.
      *
-     * <p>This is a pure computation — it does NOT persist a mapping. Use
-     * POST /v1/identity/mapping to persist. This endpoint is useful for
-     * pre-flight checks or client-side CPID computation verification.</p>
+     * <p>Idempotent: repeated calls return the same mapped CPID. The former
+     * "pure computation" contract is retired — CPIDs are random and only exist
+     * once mapped, so nothing outside this service can compute one.</p>
      */
     @PostMapping("/generate")
     public ResponseEntity<ApiResponse<CpidResponse>> generateCpid(
             @Valid @RequestBody GenerateCpidRequest request) {
-        UUID cpid = cpidGenerator.generateCpid(request.tenantId(), request.healthId());
+        UUID cpid = idResolutionService.createMapping(new CreateMappingRequest(
+                request.tenantId(), request.healthId(), null)).cpid();
         return ResponseEntity.ok(ApiResponse.ok(new CpidResponse(cpid, false), null));
     }
 

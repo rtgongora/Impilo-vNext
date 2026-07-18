@@ -64,7 +64,6 @@ class MosipLinkServiceTest {
     @BeforeEach
     void setUp() {
         IdentityProperties properties = new IdentityProperties(
-                "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
                 300,
                 TEST_KEK_BASE64,
                 null,

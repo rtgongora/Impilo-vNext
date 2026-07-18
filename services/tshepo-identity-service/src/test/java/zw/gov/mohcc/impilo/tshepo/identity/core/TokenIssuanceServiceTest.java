@@ -59,7 +59,6 @@ class TokenIssuanceServiceTest {
     @BeforeEach
     void setUp() {
         IdentityProperties properties = new IdentityProperties(
-                "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
                 DEFAULT_TTL_SECONDS,
                 null,
                 "http://localhost:8086",

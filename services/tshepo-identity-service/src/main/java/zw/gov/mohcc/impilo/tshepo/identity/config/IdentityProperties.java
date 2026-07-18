@@ -10,9 +10,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "tshepo.identity")
 public record IdentityProperties(
-        /** UUID v5 namespace for deterministic CPID generation. */
-        String cpidNamespace,
-
         /** Default scoped-token TTL in seconds. */
         int tokenTtlSeconds,
 
@@ -29,9 +26,6 @@ public record IdentityProperties(
         String varapiServiceUrl
 ) {
     public IdentityProperties {
-        if (cpidNamespace == null || cpidNamespace.isBlank()) {
-            cpidNamespace = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
-        }
         if (tokenTtlSeconds <= 0) {
             tokenTtlSeconds = 300;
         }

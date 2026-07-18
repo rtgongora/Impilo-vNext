@@ -16,7 +16,6 @@ import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.IdMappingEntity;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.ProvisionalCpidEntity;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.repository.EventOutboxRepository;
-import zw.gov.mohcc.impilo.tshepo.identity.persistence.repository.IdMappingRepository;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.repository.ProvisionalCpidRepository;
 
 import java.time.Instant;
@@ -42,13 +41,13 @@ class ReconciliationServiceTest {
     private ProvisionalCpidRepository provisionalRepo;
 
     @Mock
-    private IdMappingRepository mappingRepo;
-
-    @Mock
     private EventOutboxRepository outboxRepo;
 
     @Mock
     private CpidGenerator cpidGenerator;
+
+    @Mock
+    private IdResolutionService idResolutionService;
 
     private ReconciliationService service;
 
@@ -56,7 +55,7 @@ class ReconciliationServiceTest {
     void setUp() {
         ObjectMapper objectMapper = new ObjectMapper();
         service = new ReconciliationService(
-                provisionalRepo, mappingRepo, outboxRepo, cpidGenerator, objectMapper);
+                provisionalRepo, outboxRepo, cpidGenerator, idResolutionService, objectMapper);
     }
 
     // ── Fixture helpers ────────────────────────────────────────────────────
@@ -185,21 +184,34 @@ class ReconciliationServiceTest {
 
     // ── reconcile tests ────────────────────────────────────────────────────
 
+    /** Builds the id_mapping row the resolution service would find-or-create. */
+    private IdMappingEntity buildMapping(UUID cpid) {
+        IdMappingEntity mapping = new IdMappingEntity();
+        mapping.setId(1L);
+        mapping.setTenantId(tenantId());
+        mapping.setHealthId(healthId());
+        mapping.setCpid(cpid);
+        mapping.setMappingStatus("ACTIVE");
+        mapping.setCreatedAt(Instant.now());
+        return mapping;
+    }
+
     @Nested
     @DisplayName("reconcile")
     class Reconcile {
 
+        private void stubMappingResolution() {
+            when(idResolutionService.findOrCreateMapping(tenantId(), healthId(), null))
+                    .thenReturn(buildMapping(canonicalCpid()));
+        }
+
         @Test
-        @DisplayName("maps O-CPID to canonical CPID and creates id_mapping")
+        @DisplayName("maps O-CPID to the canonical CPID held by id_mapping")
         void reconcile_newReconciliation_mapsToCanonical() {
             ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
             when(provisionalRepo.findByTenantIdAndOriginCpid(tenantId(), oCpid()))
                     .thenReturn(Optional.of(provisional));
-            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
-            when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
-                    .thenReturn(Optional.empty());
-            when(mappingRepo.save(any(IdMappingEntity.class)))
-                    .thenAnswer(invocation -> invocation.getArgument(0));
+            stubMappingResolution();
             when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -218,11 +230,7 @@ class ReconciliationServiceTest {
             ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
             when(provisionalRepo.findByTenantIdAndOriginCpid(tenantId(), oCpid()))
                     .thenReturn(Optional.of(provisional));
-            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
-            when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
-                    .thenReturn(Optional.empty());
-            when(mappingRepo.save(any(IdMappingEntity.class)))
-                    .thenAnswer(invocation -> invocation.getArgument(0));
+            stubMappingResolution();
             when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -239,49 +247,40 @@ class ReconciliationServiceTest {
         }
 
         @Test
-        @DisplayName("creates id_mapping entry when none exists for the Health ID")
-        void reconcile_createsIdMapping() {
+        @DisplayName("delegates mapping creation to IdResolutionService (single mint path)")
+        void reconcile_delegatesToResolutionService() {
             ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
             when(provisionalRepo.findByTenantIdAndOriginCpid(tenantId(), oCpid()))
                     .thenReturn(Optional.of(provisional));
-            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
-            when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
-                    .thenReturn(Optional.empty());
-            when(mappingRepo.save(any(IdMappingEntity.class)))
-                    .thenAnswer(invocation -> invocation.getArgument(0));
+            stubMappingResolution();
             when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             service.reconcile(new ReconcileRequest(tenantId(), oCpid(), healthId()));
 
-            ArgumentCaptor<IdMappingEntity> captor = ArgumentCaptor.forClass(IdMappingEntity.class);
-            verify(mappingRepo).save(captor.capture());
-            IdMappingEntity mapping = captor.getValue();
-
-            assertEquals(tenantId(), mapping.getTenantId());
-            assertEquals(healthId(), mapping.getHealthId());
-            assertEquals(canonicalCpid(), mapping.getCpid());
-            assertEquals("ACTIVE", mapping.getMappingStatus());
+            verify(idResolutionService).findOrCreateMapping(tenantId(), healthId(), null);
         }
 
         @Test
-        @DisplayName("does not create duplicate id_mapping when one already exists")
-        void reconcile_existingMapping_doesNotDuplicate() {
+        @DisplayName("adopts the existing mapping's CPID — never forks a fresh value")
+        void reconcile_existingMapping_adoptsMappedCpid() {
+            // Regression for the pre-decoupling bug: the service used to stamp a
+            // freshly generated CPID even when a mapping already existed. Under
+            // random CPIDs that would fork the patient's clinical key.
+            UUID mappedCpid = UUID.fromString("99999999-9999-4999-8999-999999999999");
             ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
             when(provisionalRepo.findByTenantIdAndOriginCpid(tenantId(), oCpid()))
                     .thenReturn(Optional.of(provisional));
-            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
-
-            IdMappingEntity existingMapping = new IdMappingEntity();
-            existingMapping.setId(99L);
-            when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
-                    .thenReturn(Optional.of(existingMapping));
+            when(idResolutionService.findOrCreateMapping(tenantId(), healthId(), null))
+                    .thenReturn(buildMapping(mappedCpid));
             when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            service.reconcile(new ReconcileRequest(tenantId(), oCpid(), healthId()));
+            ReconcileResponse response = service.reconcile(
+                    new ReconcileRequest(tenantId(), oCpid(), healthId()));
 
-            verify(mappingRepo, never()).save(any());
+            assertEquals(mappedCpid, response.canonicalCpid(),
+                    "Canonical CPID must be the mapping's value, not a new mint");
         }
 
         @Test
@@ -299,10 +298,9 @@ class ReconciliationServiceTest {
             assertEquals("RECONCILED", response.status());
             assertNotNull(response.reconciledAt());
 
-            // Should NOT generate a new CPID or save anything
-            verify(cpidGenerator, never()).generateCpid(any(), any());
+            // Should NOT resolve a mapping or save anything
+            verify(idResolutionService, never()).findOrCreateMapping(any(), any(), any());
             verify(provisionalRepo, never()).save(any());
-            verify(mappingRepo, never()).save(any());
         }
 
         @Test
@@ -324,11 +322,7 @@ class ReconciliationServiceTest {
             ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
             when(provisionalRepo.findByTenantIdAndOriginCpid(tenantId(), oCpid()))
                     .thenReturn(Optional.of(provisional));
-            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
-            when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
-                    .thenReturn(Optional.empty());
-            when(mappingRepo.save(any(IdMappingEntity.class)))
-                    .thenAnswer(invocation -> invocation.getArgument(0));
+            stubMappingResolution();
             when(provisionalRepo.save(any(ProvisionalCpidEntity.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 

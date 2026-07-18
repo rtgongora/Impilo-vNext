@@ -7,7 +7,8 @@ import java.util.UUID;
 /**
  * Request to create a new Health ID → CPID mapping.
  *
- * <p>If no CPID is supplied, one will be deterministically generated (UUID v5).</p>
+ * <p>The CPID is minted server-side as an independent random UUID; callers never
+ * supply or compute it (Identity Contract §7).</p>
  */
 public record CreateMappingRequest(
         @NotNull UUID tenantId,

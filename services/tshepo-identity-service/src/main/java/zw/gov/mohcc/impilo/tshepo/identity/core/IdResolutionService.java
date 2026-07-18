@@ -95,8 +95,8 @@ public class IdResolutionService {
     }
 
     /**
-     * Create a new Health ID → CPID mapping. The CPID is deterministically
-     * generated if one does not already exist.
+     * Create a new Health ID → CPID mapping. A fresh independent random CPID
+     * is minted if one does not already exist for the (tenant, healthId) pair.
      */
     @Transactional
     public MappingResponse createMapping(CreateMappingRequest request) {
@@ -143,29 +143,32 @@ public class IdResolutionService {
     }
 
     /**
-     * Finds an existing mapping or creates a new one with a deterministic CPID.
+     * Finds an existing mapping or creates one with a fresh independent random
+     * CPID (Identity Contract §7 — CPID is never derived).
+     *
+     * <p>Race-safe: concurrent creators for the same (tenant, healthId) converge
+     * on one row via {@code INSERT … ON CONFLICT DO NOTHING}; the loser re-reads
+     * the winner's row. The global unique constraint on {@code cpid} remains the
+     * collision guard for the (cryptographically negligible) UUIDv4 clash case.</p>
      */
-    private IdMappingEntity findOrCreateMapping(UUID tenantId, UUID healthId, UUID crid) {
+    IdMappingEntity findOrCreateMapping(UUID tenantId, UUID healthId, UUID crid) {
         return mappingRepo.findByTenantIdAndHealthId(tenantId, healthId)
                 .orElseGet(() -> {
-                    UUID cpid = cpidGenerator.generateCpid(tenantId, healthId);
+                    UUID cpid = cpidGenerator.generateCpid();
+                    int inserted = mappingRepo.insertIfAbsent(tenantId, healthId, cpid, crid);
 
-                    IdMappingEntity entity = new IdMappingEntity();
-                    entity.setTenantId(tenantId);
-                    entity.setHealthId(healthId);
-                    entity.setCpid(cpid);
-                    entity.setCrid(crid);
-                    entity.setMappingStatus("ACTIVE");
+                    IdMappingEntity mapping = mappingRepo
+                            .findByTenantIdAndHealthId(tenantId, healthId)
+                            .orElseThrow(() -> new IllegalStateException(
+                                    "id_mapping row missing immediately after upsert"));
 
-                    IdMappingEntity saved = mappingRepo.save(entity);
-
-                    // Publish event to outbox
-                    publishOutboxEvent("IdMapping", cpid.toString(), "MAPPING_CREATED",
-                            Map.of("tenantId", tenantId, "healthId", healthId, "cpid", cpid));
-
-                    log.info("Created id_mapping: tenant={}, healthId={}, cpid={}",
-                            tenantId, healthId, cpid);
-                    return saved;
+                    if (inserted == 1) {
+                        publishOutboxEvent("IdMapping", cpid.toString(), "MAPPING_CREATED",
+                                Map.of("tenantId", tenantId, "healthId", healthId, "cpid", cpid));
+                        log.info("Created id_mapping: tenant={}, healthId={}, cpid={}",
+                                tenantId, healthId, cpid);
+                    }
+                    return mapping;
                 });
     }
 

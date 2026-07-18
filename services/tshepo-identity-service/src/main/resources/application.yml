@@ -44,8 +44,6 @@ spring:
 # --- TSHEPO Identity-specific ---
 tshepo:
   identity:
-    # UUID v5 namespace for deterministic CPID generation (DNS namespace from RFC 4122)
-    cpid-namespace: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
     # Default scoped-token TTL in seconds
     token-ttl-seconds: 300
     # AES-256-GCM key for MOSIP link_ref encryption (Base64-encoded, 32 bytes)

@@ -123,15 +123,11 @@ class IdResolutionServiceTest {
         void resolve_newMapping_createsCpidMapping() {
             stubVitoResolveSuccess();
             when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
-                    .thenReturn(Optional.empty());
-            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(cpid());
-            when(mappingRepo.save(any(IdMappingEntity.class)))
-                    .thenAnswer(invocation -> {
-                        IdMappingEntity e = invocation.getArgument(0);
-                        e.setId(1L);
-                        e.setCreatedAt(Instant.now());
-                        return e;
-                    });
+                    .thenReturn(Optional.empty())               // pre-check
+                    .thenReturn(Optional.of(buildMappingEntity())); // re-read after upsert
+            when(cpidGenerator.generateCpid()).thenReturn(cpid());
+            when(mappingRepo.insertIfAbsent(tenantId(), healthId(), cpid(), null))
+                    .thenReturn(1);
 
             ResolveRequest request = new ResolveRequest(tenantId(), impiloIdHash());
             ResolveResponse response = service.resolve(request);
@@ -155,8 +151,9 @@ class IdResolutionServiceTest {
             assertEquals(healthId(), response.healthId());
             assertEquals(cpid(), response.cpid());
             assertEquals(crid(), response.crid());
-            // Should NOT generate a new CPID or save a new entity
-            verify(cpidGenerator, never()).generateCpid(any(), any());
+            // Should NOT generate a new CPID or insert a new row
+            verify(cpidGenerator, never()).generateCpid();
+            verify(mappingRepo, never()).insertIfAbsent(any(), any(), any(), any());
         }
 
         @Test
@@ -203,15 +200,11 @@ class IdResolutionServiceTest {
         void resolve_newMapping_publishesOutboxEvent() {
             stubVitoResolveSuccess();
             when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
-                    .thenReturn(Optional.empty());
-            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(cpid());
-            when(mappingRepo.save(any(IdMappingEntity.class)))
-                    .thenAnswer(invocation -> {
-                        IdMappingEntity e = invocation.getArgument(0);
-                        e.setId(1L);
-                        e.setCreatedAt(Instant.now());
-                        return e;
-                    });
+                    .thenReturn(Optional.empty())
+                    .thenReturn(Optional.of(buildMappingEntity()));
+            when(cpidGenerator.generateCpid()).thenReturn(cpid());
+            when(mappingRepo.insertIfAbsent(tenantId(), healthId(), cpid(), null))
+                    .thenReturn(1);
 
             service.resolve(new ResolveRequest(tenantId(), impiloIdHash()));
 
@@ -297,18 +290,14 @@ class IdResolutionServiceTest {
     class CreateMapping {
 
         @Test
-        @DisplayName("creates new mapping with deterministic CPID when none exists")
+        @DisplayName("creates new mapping with a freshly minted random CPID when none exists")
         void createMapping_new_generatesAndStoresCpid() {
             when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
-                    .thenReturn(Optional.empty());
-            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(cpid());
-            when(mappingRepo.save(any(IdMappingEntity.class)))
-                    .thenAnswer(invocation -> {
-                        IdMappingEntity e = invocation.getArgument(0);
-                        e.setId(1L);
-                        e.setCreatedAt(Instant.now());
-                        return e;
-                    });
+                    .thenReturn(Optional.empty())
+                    .thenReturn(Optional.of(buildMappingEntity()));
+            when(cpidGenerator.generateCpid()).thenReturn(cpid());
+            when(mappingRepo.insertIfAbsent(tenantId(), healthId(), cpid(), crid()))
+                    .thenReturn(1);
 
             CreateMappingRequest request = new CreateMappingRequest(tenantId(), healthId(), crid());
             MappingResponse response = service.createMapping(request);
@@ -317,6 +306,7 @@ class IdResolutionServiceTest {
             assertEquals(cpid(), response.cpid());
             assertEquals(crid(), response.crid());
             assertEquals("ACTIVE", response.mappingStatus());
+            verify(mappingRepo).insertIfAbsent(tenantId(), healthId(), cpid(), crid());
         }
 
         @Test
@@ -330,51 +320,46 @@ class IdResolutionServiceTest {
             MappingResponse response = service.createMapping(request);
 
             assertEquals(cpid(), response.cpid());
-            verify(cpidGenerator, never()).generateCpid(any(), any());
-            // Should not save a new entity
-            verify(mappingRepo, never()).save(any());
+            verify(cpidGenerator, never()).generateCpid();
+            // Should not insert a new row
+            verify(mappingRepo, never()).insertIfAbsent(any(), any(), any(), any());
         }
 
         @Test
-        @DisplayName("saved entity has correct tenant, health, cpid, and crid fields")
-        void createMapping_new_entityFieldsCorrect() {
+        @DisplayName("lost creation race: returns the winner's row and publishes no event")
+        void createMapping_lostRace_returnsWinnersRow() {
+            // Pre-check sees nothing; a concurrent creator wins the upsert (0 rows
+            // inserted); the re-read returns the winner's row with the winner's CPID.
+            UUID winnersCpid = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
+            IdMappingEntity winners = buildMappingEntity();
+            winners.setCpid(winnersCpid);
+
             when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
-                    .thenReturn(Optional.empty());
-            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(cpid());
-            when(mappingRepo.save(any(IdMappingEntity.class)))
-                    .thenAnswer(invocation -> {
-                        IdMappingEntity e = invocation.getArgument(0);
-                        e.setId(1L);
-                        e.setCreatedAt(Instant.now());
-                        return e;
-                    });
+                    .thenReturn(Optional.empty())
+                    .thenReturn(Optional.of(winners));
+            when(cpidGenerator.generateCpid()).thenReturn(cpid());
+            when(mappingRepo.insertIfAbsent(tenantId(), healthId(), cpid(), null))
+                    .thenReturn(0);
 
-            service.createMapping(new CreateMappingRequest(tenantId(), healthId(), crid()));
+            MappingResponse response = service.createMapping(
+                    new CreateMappingRequest(tenantId(), healthId(), null));
 
-            ArgumentCaptor<IdMappingEntity> captor = ArgumentCaptor.forClass(IdMappingEntity.class);
-            verify(mappingRepo).save(captor.capture());
-            IdMappingEntity saved = captor.getValue();
-
-            assertEquals(tenantId(), saved.getTenantId());
-            assertEquals(healthId(), saved.getHealthId());
-            assertEquals(cpid(), saved.getCpid());
-            assertEquals(crid(), saved.getCrid());
-            assertEquals("ACTIVE", saved.getMappingStatus());
+            assertEquals(winnersCpid, response.cpid(),
+                    "Loser of the race must adopt the winner's CPID, never its own draft");
+            verify(outboxRepo, never()).save(any());
         }
 
         @Test
         @DisplayName("handles null CRID gracefully")
         void createMapping_nullCrid_succeeds() {
+            IdMappingEntity noCrid = buildMappingEntity();
+            noCrid.setCrid(null);
             when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
-                    .thenReturn(Optional.empty());
-            when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(cpid());
-            when(mappingRepo.save(any(IdMappingEntity.class)))
-                    .thenAnswer(invocation -> {
-                        IdMappingEntity e = invocation.getArgument(0);
-                        e.setId(1L);
-                        e.setCreatedAt(Instant.now());
-                        return e;
-                    });
+                    .thenReturn(Optional.empty())
+                    .thenReturn(Optional.of(noCrid));
+            when(cpidGenerator.generateCpid()).thenReturn(cpid());
+            when(mappingRepo.insertIfAbsent(tenantId(), healthId(), cpid(), null))
+                    .thenReturn(1);
 
             CreateMappingRequest request = new CreateMappingRequest(tenantId(), healthId(), null);
             MappingResponse response = service.createMapping(request);

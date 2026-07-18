@@ -8,8 +8,9 @@ import java.util.UUID;
  * Maps a Health ID to a canonical CPID (Clinical Patient Identifier).
  *
  * <p>This table is the authoritative source for the Health ID ↔ CPID relationship
- * within a tenant. The CPID is deterministically derived (UUID v5) from the
- * tenant ID and Health ID, ensuring idempotent generation.</p>
+ * within a tenant — and the ONLY place the two identifiers co-reside (Identity
+ * Contract §7). The CPID is an independent random UUID v4; idempotency comes from
+ * the unique (tenant_id, health_id) constraint, not from derivation.</p>
  *
  * <p>No PII is stored — Health ID is an opaque UUID issued by VITO.</p>
  */

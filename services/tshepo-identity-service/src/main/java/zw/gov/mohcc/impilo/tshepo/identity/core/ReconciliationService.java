@@ -9,10 +9,8 @@ import zw.gov.mohcc.impilo.tshepo.identity.api.dto.ProvisionalCpidResponse;
 import zw.gov.mohcc.impilo.tshepo.identity.api.dto.ReconcileRequest;
 import zw.gov.mohcc.impilo.tshepo.identity.api.dto.ReconcileResponse;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.EventOutboxEntity;
-import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.IdMappingEntity;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.ProvisionalCpidEntity;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.repository.EventOutboxRepository;
-import zw.gov.mohcc.impilo.tshepo.identity.persistence.repository.IdMappingRepository;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.repository.ProvisionalCpidRepository;
 
 import java.time.Instant;
@@ -26,8 +24,7 @@ import java.util.UUID;
  * <h3>Reconciliation workflow:</h3>
  * <ol>
  *   <li>Facility comes back online and submits (tenantId, oCpid, healthId)</li>
- *   <li>Service generates the canonical CPID from (tenantId, healthId)</li>
- *   <li>Creates/finds the id_mapping entry</li>
+ *   <li>Service finds-or-creates the id_mapping entry (independent random CPID)</li>
  *   <li>Updates the provisional_cpid record: status=RECONCILED, canonical_cpid set</li>
  *   <li>Downstream systems can then merge any data tagged with the O-CPID</li>
  * </ol>
@@ -38,20 +35,20 @@ public class ReconciliationService {
     private static final Logger log = LoggerFactory.getLogger(ReconciliationService.class);
 
     private final ProvisionalCpidRepository provisionalRepo;
-    private final IdMappingRepository mappingRepo;
     private final EventOutboxRepository outboxRepo;
     private final CpidGenerator cpidGenerator;
+    private final IdResolutionService idResolutionService;
     private final ObjectMapper objectMapper;
 
     public ReconciliationService(ProvisionalCpidRepository provisionalRepo,
-                                  IdMappingRepository mappingRepo,
                                   EventOutboxRepository outboxRepo,
                                   CpidGenerator cpidGenerator,
+                                  IdResolutionService idResolutionService,
                                   ObjectMapper objectMapper) {
         this.provisionalRepo = provisionalRepo;
-        this.mappingRepo = mappingRepo;
         this.outboxRepo = outboxRepo;
         this.cpidGenerator = cpidGenerator;
+        this.idResolutionService = idResolutionService;
         this.objectMapper = objectMapper;
     }
 
@@ -87,9 +84,8 @@ public class ReconciliationService {
      * <p>Steps:</p>
      * <ol>
      *   <li>Find the provisional_cpid record</li>
-     *   <li>Generate/find the canonical CPID for (tenantId, healthId)</li>
+     *   <li>Find-or-create the canonical CPID mapping for (tenantId, healthId)</li>
      *   <li>Update the provisional record with canonical_cpid and status=RECONCILED</li>
-     *   <li>Ensure the id_mapping exists</li>
      * </ol>
      */
     @Transactional
@@ -109,19 +105,12 @@ public class ReconciliationService {
             );
         }
 
-        // Generate the canonical CPID
-        UUID canonicalCpid = cpidGenerator.generateCpid(request.tenantId(), request.healthId());
-
-        // Ensure the id_mapping exists
-        mappingRepo.findByTenantIdAndHealthId(request.tenantId(), request.healthId())
-                .orElseGet(() -> {
-                    IdMappingEntity mapping = new IdMappingEntity();
-                    mapping.setTenantId(request.tenantId());
-                    mapping.setHealthId(request.healthId());
-                    mapping.setCpid(canonicalCpid);
-                    mapping.setMappingStatus("ACTIVE");
-                    return mappingRepo.save(mapping);
-                });
+        // The canonical CPID is whatever the id_mapping holds (find-or-create with a
+        // fresh random CPID). Never a freshly generated value when a mapping already
+        // exists — that would silently fork the patient's clinical key.
+        UUID canonicalCpid = idResolutionService
+                .findOrCreateMapping(request.tenantId(), request.healthId(), null)
+                .getCpid();
 
         // Update the provisional record
         Instant now = Instant.now();
