@@ -47,7 +47,10 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
             Pageable pageable);
 
     @Query("SELECT f FROM FacilityEntity f WHERE (:tenantId IS NULL OR f.tenantId = :tenantId) " +
-           "AND (:query IS NULL OR LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+           // CAST(:query AS string) gives the parameter a definite text type even when null — without
+           // it a null :query inside LOWER(CONCAT(...)) is sent untyped and Postgres resolves it to
+           // `lower(bytea)` (function does not exist) → 500.
+           "AND (:query IS NULL OR LOWER(f.name) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
            "AND (:type IS NULL OR f.facilityType = :type) " +
            "AND (:status IS NULL OR f.status = :status) " +
            "AND (:regulatoryStatus IS NULL OR f.regulatoryStatus = :regulatoryStatus) " +
@@ -88,7 +91,10 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
      */
     @Query("SELECT f FROM FacilityEntity f WHERE (:tenantId IS NULL OR f.tenantId = :tenantId) " +
            "AND f.id IN :ids " +
-           "AND (:query IS NULL OR LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+           // CAST(:query AS string) gives the parameter a definite text type even when null — without
+           // it a null :query inside LOWER(CONCAT(...)) is sent untyped and Postgres resolves it to
+           // `lower(bytea)` (function does not exist) → 500.
+           "AND (:query IS NULL OR LOWER(f.name) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
            "AND (:type IS NULL OR f.facilityType = :type) " +
            "AND (:status IS NULL OR f.status = :status) " +
            "AND (:district IS NULL OR f.district = :district) " +
