@@ -100,6 +100,11 @@ public class SecurityConfig {
                             .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                             .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
+                            // Public street-tile lane (gateway-public-lane-security ADR §3):
+                            // anonymous MVT street geometry for the citizen find-care map —
+                            // no PII, served via PublicStreetTileController.
+                            .requestMatchers(HttpMethod.GET, "/v1/public/ndila/tiles/**").permitAll()
+
                             // Read access (geocode, search, nearby, route preview, public layers)
                             .requestMatchers(HttpMethod.POST, "/api/v1/ndila/geocode",
                                     "/api/v1/ndila/reverse-geocode",

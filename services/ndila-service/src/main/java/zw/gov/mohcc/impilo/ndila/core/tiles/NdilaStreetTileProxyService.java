@@ -49,6 +49,52 @@ public class NdilaStreetTileProxyService {
         return fetchTile(z, x, y).filter(body -> !isPng(body));
     }
 
+    /** Outcome of an honest vector-tile fetch: distinguishes "no data here" from "stack down". */
+    public enum VectorTileStatus { OK, EMPTY, UNAVAILABLE }
+
+    public record VectorTileResult(VectorTileStatus status, byte[] body) {
+        static final VectorTileResult EMPTY_TILE = new VectorTileResult(VectorTileStatus.EMPTY, null);
+        static final VectorTileResult UNAVAILABLE_TILE = new VectorTileResult(VectorTileStatus.UNAVAILABLE, null);
+    }
+
+    /**
+     * Vector fetch that keeps the failure modes honest instead of collapsing them into
+     * {@link Optional#empty()}: EMPTY means the upstream answered and there is genuinely
+     * nothing at this coordinate (Martin 204 / 404 / blank body); UNAVAILABLE means the
+     * street stack is disabled, unreachable, or answered with something that is not a
+     * vector tile. Callers on the public lane surface UNAVAILABLE as 503 — never a
+     * fabricated tile.
+     */
+    public VectorTileResult fetchVectorResult(int z, int x, int y) {
+        if (!isActive()) {
+            return VectorTileResult.UNAVAILABLE_TILE;
+        }
+        String url = buildTileUrl(z, x, y);
+        try {
+            byte[] body = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(byte[].class);
+            if (body == null || body.length < 8) {
+                return VectorTileResult.EMPTY_TILE;
+            }
+            if (isPng(body)) {
+                // Raster upstream misconfigured behind the vector path — not a vector tile.
+                return VectorTileResult.UNAVAILABLE_TILE;
+            }
+            return new VectorTileResult(VectorTileStatus.OK, body);
+        } catch (RestClientResponseException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return VectorTileResult.EMPTY_TILE;
+            }
+            log.debug("Ndila street tile proxy {} -> HTTP {}", url, ex.getStatusCode().value());
+            return VectorTileResult.UNAVAILABLE_TILE;
+        } catch (Exception ex) {
+            log.debug("Ndila street tile proxy failed for {}: {}", url, ex.toString());
+            return VectorTileResult.UNAVAILABLE_TILE;
+        }
+    }
+
     public static boolean isPng(byte[] body) {
         return body.length >= 8
                 && (body[0] & 0xFF) == 0x89 && body[1] == 'P' && body[2] == 'N' && body[3] == 'G';
