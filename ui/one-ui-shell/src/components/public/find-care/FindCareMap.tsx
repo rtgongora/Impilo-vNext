@@ -96,7 +96,7 @@ export function FindCareMap({ results, origin, selectedFacilityId }: FindCareMap
           provider: "OSM_OSRM",
           vectorTileUrlTemplate: "/internal/v1/public/gateway/map/tiles/{z}/{x}/{y}.mvt",
           maxZoom: 14,
-          attribution: "© OpenStreetMap contributors",
+          attribution: "© OpenMapTiles © OpenStreetMap contributors",
         }}
         fitToMarkers={mappable > 0}
         clusterMarkers
