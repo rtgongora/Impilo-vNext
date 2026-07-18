@@ -486,6 +486,13 @@ REPO_PATH="$REPO_PATH" NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/tls/resto
 NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/keycloak/reconcile-client-secrets.sh" || \
   echo "WARN: keycloak client-secret reconcile failed — signup/ops-login may be broken until run manually."
 
+# Reconcile Keycloak persona/seeded USERS (idempotent upsert from tools/auth/impilo-realm.json:
+# creates-if-missing, roles, identity anchors). Previously manual-only, so a Keycloak store
+# reset silently lost every persona until someone remembered to reseed (2026-07-18 incident).
+echo "--- Keycloak persona users reconcile ---"
+NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/operator/reconcile-keycloak-realm-users.sh" || \
+  echo "WARN: keycloak realm-user reconcile failed — persona logins may need manual reseed."
+
 echo "--- Sovereign preview seeds (VARAPI, WGV, domain truth) ---"
 bash "$REPO_PATH/scripts/deploy/seed-full-preview-sovereign-data.sh" || {
   echo "WARN: sovereign seed script failed — continuing with smoke tests"
@@ -500,6 +507,17 @@ bash scripts/test/run-full-boot-smoke-tests.sh
 echo "--- Facility/geo estate (mandatory reference data) ---"
 NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/full-boot/verify-facility-estate.sh" || {
   echo "DEPLOY INCOMPLETE: facility/geo estate missing — see scripts/full-boot/verify-facility-estate.sh" >&2
+  exit 1
+}
+
+# --- MANDATORY: estate data on durable volumes (2026-07-18 emptyDir wipe incident). ---
+# First ensure the PVs behind the data PVCs are reclaimPolicy=Retain (local-path defaults
+# to Delete), then hard-fail if any stateful workload regressed to ephemeral storage.
+echo "--- Estate persistence (durable volumes + backup) ---"
+NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/full-boot/retain-data-volumes.sh" || \
+  echo "WARN: could not patch all PV reclaim policies to Retain."
+NAMESPACE="$NAMESPACE" bash "$REPO_PATH/scripts/full-boot/verify-persistence.sh" || {
+  echo "DEPLOY INCOMPLETE: stateful workload on ephemeral storage — see scripts/full-boot/verify-persistence.sh" >&2
   exit 1
 }
 
