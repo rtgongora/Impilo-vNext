@@ -167,8 +167,17 @@ public class TshepoIdentityServiceClient {
     public JsonNode resolveIdentifier(Map<String, Object> request) {
         String url = baseUrl + "/v1/identity/resolve-identifier";
         log.info("TSHEPO-IDENTITY: resolveIdentifier operation [kind={}]", request.get("kind"));
+        // resolve-identifier is INTERNAL-only (Identity Journey Doctrine §2) — a hit
+        // returns the person's Health ID, so only the trust core may call it.
+        org.springframework.http.HttpHeaders h = new org.springframework.http.HttpHeaders();
+        h.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        h.set("X-Access-Mode", "INTERNAL");
+        h.set("X-Service-Id", "experience-bff");
+        if (request.get("tenantId") != null) {
+            h.set("X-Tenant-ID", request.get("tenantId").toString());
+        }
         ResponseEntity<JsonNode> response =
-                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
+                restTemplate.postForEntity(url, new HttpEntity<>(request, h), JsonNode.class);
         return extractData(response);
     }
 

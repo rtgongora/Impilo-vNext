@@ -45,11 +45,21 @@ class ResolutionControllerTenantGuardTest {
         IdentifierResolveRequest request =
                 new IdentifierResolveRequest(spoofedTenant, "HEALTH_ID", UUID.randomUUID().toString());
 
-        assertThatThrownBy(() -> controller().resolveIdentifier(request, trustedTenant))
+        assertThatThrownBy(() -> controller().resolveIdentifier(request, trustedTenant, "INTERNAL"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("tenantId does not match");
 
         // The resolver is never reached for a tenant-spoofed request.
+        verifyNoInteractions(silentResolutionService);
+    }
+
+    @Test
+    void rejectsNonInternalAccessMode() {
+        UUID tenant = UUID.randomUUID();
+        IdentifierResolveRequest request =
+                new IdentifierResolveRequest(tenant, "HEALTH_ID", UUID.randomUUID().toString());
+        assertThatThrownBy(() -> controller().resolveIdentifier(request, tenant, null))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
         verifyNoInteractions(silentResolutionService);
     }
 
@@ -62,7 +72,7 @@ class ResolutionControllerTenantGuardTest {
         when(silentResolutionService.resolve(any())).thenReturn(resolved);
 
         ResponseEntity<ApiResponse<IdentifierResolveResponse>> response =
-                controller().resolveIdentifier(request, tenant);
+                controller().resolveIdentifier(request, tenant, "INTERNAL");
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
         verify(silentResolutionService).resolve(request);

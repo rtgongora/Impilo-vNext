@@ -47,7 +47,17 @@ public class ResolutionController {
     @PostMapping("/resolve-identifier")
     public ResponseEntity<ApiResponse<IdentifierResolveResponse>> resolveIdentifier(
             @Valid @RequestBody IdentifierResolveRequest request,
-            @RequestHeader("x-tenant-id") UUID trustedTenantId) {
+            @RequestHeader("x-tenant-id") UUID trustedTenantId,
+            @RequestHeader(value = "x-access-mode", required = false) String accessMode) {
+        // INTERNAL-only (Identity Journey Doctrine §2): a successful private match
+        // returns the person's Health ID, so this must never be reachable by a
+        // client — only the trust core (BFF) may resolve, and only to immediately
+        // issue a second-factor challenge without surfacing the result.
+        if (!"INTERNAL".equalsIgnoreCase(accessMode)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "resolve-identifier is INTERNAL-only");
+        }
         if (!trustedTenantId.equals(request.tenantId())) {
             throw new IllegalArgumentException("tenantId does not match the request trust context");
         }

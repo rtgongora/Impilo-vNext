@@ -64,6 +64,44 @@ public class VitoServiceClient {
         return extractData(response);
     }
 
+    // ── Record claim (Identity Journey Doctrine §2, CJ3) — INTERNAL trust-core ──
+
+    private static org.springframework.http.HttpEntity<Map<String, Object>> internal(Map<String, Object> body) {
+        org.springframework.http.HttpHeaders h = new org.springframework.http.HttpHeaders();
+        h.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        h.set("X-Access-Mode", "INTERNAL");
+        h.set("X-Service-Id", "experience-bff");
+        return new org.springframework.http.HttpEntity<>(body, h);
+    }
+
+    /** Private server-side resolution (Impilo ID / legacy PHID / Health ID) → healthId or uniform miss. */
+    public JsonNode registryResolve(Map<String, Object> body) {
+        ResponseEntity<JsonNode> r = restTemplate.postForEntity(
+                baseUrl + "/v1/registry/resolve", internal(body), JsonNode.class);
+        return extractData(r);
+    }
+
+    /** Private contact matching (phone/email) → healthId or uniform miss. */
+    public JsonNode registryResolveContact(Map<String, Object> body) {
+        ResponseEntity<JsonNode> r = restTemplate.postForEntity(
+                baseUrl + "/v1/registry/resolve-contact", internal(body), JsonNode.class);
+        return extractData(r);
+    }
+
+    /** Start a record-claim challenge; returns {challengeId, otp, contact, maskedContact, deliverable}. */
+    public JsonNode claimStart(Map<String, Object> body) {
+        ResponseEntity<JsonNode> r = restTemplate.postForEntity(
+                baseUrl + "/v1/registry/claim/start", internal(body), JsonNode.class);
+        return extractData(r);
+    }
+
+    /** Verify a record-claim OTP; binds the account on success. Returns {verified, healthId}. */
+    public JsonNode claimVerify(Map<String, Object> body) {
+        ResponseEntity<JsonNode> r = restTemplate.postForEntity(
+                baseUrl + "/v1/registry/claim/verify", internal(body), JsonNode.class);
+        return extractData(r);
+    }
+
     /** Start ID recovery process. */
     public JsonNode startRecovery(Map<String, Object> recoveryData) {
         String url = baseUrl + "/v1/portal/id/recovery/start";
