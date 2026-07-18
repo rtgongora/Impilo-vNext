@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
  * Per-service hook that repoints a participant's own rows when a VITO merge collapses two
  * identities. Each service that stamps {@code patient_cpid} / a Health ID onto trauma rows
  * provides one implementation that, inside its own transaction and idempotently, rewrites
- * {@code mergedHealthId → survivorHealthId} across its tables and writes an audit row.
+ * {@code oldSubjectCpid → newSubjectCpid} across its tables and writes an audit row.
  *
  * <p>The {@link #noop(String)} implementation is the W0 skeleton wiring: it records that the
  * merge reached the participant without changing any rows, so services can subscribe to
@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 public interface IdentityRepointHook {
 
     /**
-     * Repoint all rows this participant owns from {@code command.mergedHealthId()} to
-     * {@code command.survivorHealthId()}. Implementations MUST be idempotent (re-applying the
+     * Repoint all rows this participant owns from {@code command.oldSubjectCpid()} to
+     * {@code command.newSubjectCpid()}. Implementations MUST be idempotent (re-applying the
      * same command changes nothing) and MUST audit the operation.
      *
      * @return the number of rows repointed (0 is valid — the participant held none).
@@ -40,8 +40,8 @@ public interface IdentityRepointHook {
             @Override
             public int repoint(IdentityRepointCommand command) {
                 log.info("no-op identity repoint for {} — merge {} ({}→{}); no real repoint wired yet",
-                        participant, command.mergeId(), command.mergedHealthId(),
-                        command.survivorHealthId());
+                        participant, command.mergeId(), command.oldSubjectCpid(),
+                        command.newSubjectCpid());
                 return 0;
             }
 

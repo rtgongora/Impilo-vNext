@@ -16,7 +16,7 @@ class VitoMergeRepointDispatcherTest {
     private static final String TEN = "00000000-0000-0000-0000-0000000000aa";
 
     private String payload() {
-        return "{\"tenantId\":\"" + TEN + "\",\"survivorHealthId\":\"" + SURV + "\",\"mergedHealthId\":\"" + MERG + "\"}";
+        return "{\"tenant_id\":\"" + TEN + "\",\"survivor_cpid\":\"" + SURV + "\",\"merged_cpid\":\"" + MERG + "\"}";
     }
 
     static final class CountingHook implements IdentityRepointHook {
@@ -37,8 +37,8 @@ class VitoMergeRepointDispatcherTest {
         assertEquals(2, dispatcher.hookCount());
         assertEquals(2, result.get("svc-a"));
         assertEquals(3, result.get("svc-b"));
-        assertEquals(MERG, a.calls.get(0).mergedHealthId());
-        assertEquals(SURV, b.calls.get(0).survivorHealthId());
+        assertEquals(MERG, a.calls.get(0).oldSubjectCpid());
+        assertEquals(SURV, b.calls.get(0).newSubjectCpid());
     }
 
     @Test

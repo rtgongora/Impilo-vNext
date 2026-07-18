@@ -47,15 +47,18 @@ public class PipelineEventConsumer {
         }
     }
 
+    // Analytics is clinical-plane: subject lifecycle events (CPID only) replace the
+    // former identity-plane kernel.vito.client.registered / impilo.vito.identity
+    // subscription (Identity Contract §7.3 — no health_id reaches the pipeline).
     @KafkaListener(
-            topics = "#{'${pipeline.kafka.topics.client-registered:kernel.vito.client.registered,impilo.vito.identity}'.split(',')}",
+            topics = "#{'${pipeline.kafka.topics.client-registered:impilo.identity.subject}'.split(',')}",
             groupId = "data-pipeline-service")
     public void consumeClientRegistered(String message,
                                         @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
         meterRegistry.counter("impilo.eventing.consumer.messages.total",
                 "service", "data-pipeline-service", "topic", topic).increment();
         IngestResponse r = busEventIngestService.ingestFromKafka(
-                topic, "vito-service", message);
+                topic, "tshepo-identity", message);
         log.info("{} -> pipeline status={}", topic, r.status());
     }
 

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Inpatient's VITO identity-merge fan-out consumer. On {@code vito.merge.executed} it repoints every
+ * Inpatient's subject repoint consumer (Identity Contract §7.3). On merge/reconcile subject events it repoints every
  * inpatient trauma anchor via the Spring-collected {@link IdentityRepointHook}s — which include BOTH
  * the trauma lane's resuscitation hook (emergency_activation.subject_cpid) AND the theatre session's
  * InpatientProcedureEpisodeRepointHook (procedure_episode.subject_cpid), auto-wired into one fan-out.
@@ -43,7 +43,7 @@ public class VitoMergeConsumer {
     }
 
     @Profile("!test")
-    @KafkaListener(topics = {"vito.dedup", "impilo.vito.dedup"}, groupId = "inpatient-vito-merge")
+    @KafkaListener(topics = "impilo.identity.subject", groupId = "inpatient-vito-merge")
     public void onKafka(String payload) {
         apply(payload);
     }

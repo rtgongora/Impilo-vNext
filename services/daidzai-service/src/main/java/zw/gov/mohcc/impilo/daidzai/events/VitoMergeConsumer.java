@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * DAIDZAI's VITO identity-merge fan-out consumer. On {@code vito.merge.executed} it repoints every
+ * DAIDZAI's subject repoint consumer (Identity Contract §7.3). On merge/reconcile subject events it repoints every
  * trauma subject anchor DAIDZAI owns via its {@link IdentityRepointHook}s (auto-collected from the
  * Spring context). Two delivery paths share one repoint core:
  * <ul>
@@ -47,7 +47,7 @@ public class VitoMergeConsumer {
     }
 
     @Profile("!test")
-    @KafkaListener(topics = {"vito.dedup", "impilo.vito.dedup"}, groupId = "daidzai-vito-merge")
+    @KafkaListener(topics = "impilo.identity.subject", groupId = "daidzai-vito-merge")
     public void onKafka(String payload) {
         apply(payload);
     }

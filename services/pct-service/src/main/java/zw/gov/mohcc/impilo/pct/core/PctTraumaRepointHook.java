@@ -30,8 +30,8 @@ public class PctTraumaRepointHook implements IdentityRepointHook {
     @Transactional
     public int repoint(IdentityRepointCommand command) {
         UUID tenantId = UUID.fromString(command.tenantId());
-        int n = edVisitRepository.repointPatientCpid(tenantId, command.mergedHealthId(), command.survivorHealthId());
-        n += emergencyCaseRepository.repointKnownHealthId(tenantId, command.mergedHealthId(), command.survivorHealthId());
+        int n = edVisitRepository.repointPatientCpid(tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
+        n += emergencyCaseRepository.repointKnownHealthId(tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
         return n;
     }
 

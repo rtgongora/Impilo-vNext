@@ -50,7 +50,7 @@ public class InpatientProcedureEpisodeRepointHook implements IdentityRepointHook
     /**
      * Repoint every theatre case still on the merged Health ID onto the survivor, in this hook's own
      * transaction. Idempotent by construction: after the first apply no {@code subject_cpid} still equals
-     * {@code mergedHealthId}, so a redelivered command repoints 0 rows. Each invocation writes an audit
+     * {@code oldSubjectCpid}, so a redelivered command repoints 0 rows. Each invocation writes an audit
      * outbox row keyed by {@code command.idempotencyKey()}.
      */
     @Override
@@ -65,11 +65,11 @@ public class InpatientProcedureEpisodeRepointHook implements IdentityRepointHook
             return 0;
         }
         int repointed = episodeRepository.repointSubjectCpid(
-                tenantId, command.mergedHealthId(), command.survivorHealthId());
+                tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
         writeAudit(command, tenantId, repointed);
         if (repointed > 0) {
             log.info("INPATIENT-THEATRE: repointed {} theatre case(s) {} → {} (merge {})",
-                    repointed, command.mergedHealthId(), command.survivorHealthId(), command.mergeId());
+                    repointed, command.oldSubjectCpid(), command.newSubjectCpid(), command.mergeId());
         }
         return repointed;
     }
@@ -88,8 +88,8 @@ public class InpatientProcedureEpisodeRepointHook implements IdentityRepointHook
         audit.setPayloadJson("{"
                 + "\"event_type\":\"inpatient.procedure_episode.identity-repointed\","
                 + "\"tenant_id\":\"" + tenantId + "\","
-                + "\"merged_health_id\":\"" + command.mergedHealthId() + "\","
-                + "\"survivor_health_id\":\"" + command.survivorHealthId() + "\","
+                + "\"merged_health_id\":\"" + command.oldSubjectCpid() + "\","
+                + "\"survivor_health_id\":\"" + command.newSubjectCpid() + "\","
                 + "\"merge_id\":\"" + (command.mergeId() != null ? command.mergeId() : "") + "\","
                 + "\"rows_repointed\":" + repointed + ","
                 + "\"idempotency_key\":\"" + command.idempotencyKey() + "\""

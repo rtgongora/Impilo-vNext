@@ -28,7 +28,7 @@ public class InpatientResuscitationRepointHook implements IdentityRepointHook {
     @Transactional
     public int repoint(IdentityRepointCommand command) {
         return emergencyActivationRepository.repointSubjectCpid(
-                UUID.fromString(command.tenantId()), command.mergedHealthId(), command.survivorHealthId());
+                UUID.fromString(command.tenantId()), command.oldSubjectCpid(), command.newSubjectCpid());
     }
 
     @Override

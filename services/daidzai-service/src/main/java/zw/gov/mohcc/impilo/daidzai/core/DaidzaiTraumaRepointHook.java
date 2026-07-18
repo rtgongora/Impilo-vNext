@@ -31,8 +31,8 @@ public class DaidzaiTraumaRepointHook implements IdentityRepointHook {
     @Transactional
     public int repoint(IdentityRepointCommand command) {
         UUID tenantId = UUID.fromString(command.tenantId());
-        int n = episodeRepository.repointSubjectHealthId(tenantId, command.mergedHealthId(), command.survivorHealthId());
-        n += incidentRepository.repointSubjectHealthId(tenantId, command.mergedHealthId(), command.survivorHealthId());
+        int n = episodeRepository.repointSubjectHealthId(tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
+        n += incidentRepository.repointSubjectHealthId(tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
         return n;
     }
 

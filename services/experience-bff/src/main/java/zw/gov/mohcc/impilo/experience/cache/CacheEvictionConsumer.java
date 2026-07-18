@@ -28,7 +28,9 @@ public class CacheEvictionConsumer {
         this.objectMapper = objectMapper;
     }
 
-    @KafkaListener(topics = {"impilo.vito.identity", "vito.identity"}, groupId = "bff-cache")
+    // Clinical-plane subject stream (Identity Contract §7.3) — the BFF's patient
+    // caches are CPID-keyed, so eviction listens to CPID events, not vito.* topics.
+    @KafkaListener(topics = "impilo.identity.subject", groupId = "bff-cache")
     public void onPatientEvent(String event) {
         String cpid = extractField(event, "cpid", "subject_id");
         if (cpid != null) {

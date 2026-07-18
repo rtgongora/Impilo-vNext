@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * Fans a single {@code vito.merge.executed} event out to every {@link IdentityRepointHook} a service
- * exposes, so all of that service's trauma tables repoint {@code mergedHealthId → survivorHealthId}
+ * exposes, so all of that service's trauma tables repoint {@code oldSubjectCpid → newSubjectCpid}
  * in one delivery. Each service wires this with its Spring {@code List<IdentityRepointHook>} — which
  * auto-collects both the trauma lane's own hooks and peers' hooks registered in the same context
  * (e.g. inpatient collects the resuscitation hook AND theatre's procedure-episode hook).
@@ -42,10 +42,10 @@ public final class VitoMergeRepointDispatcher {
                 int rows = hook.repoint(command);
                 repointed.put(hook.participant(), rows);
                 log.info("vito.merge.executed → {} repointed {} row(s) ({}→{})",
-                        hook.participant(), rows, command.mergedHealthId(), command.survivorHealthId());
+                        hook.participant(), rows, command.oldSubjectCpid(), command.newSubjectCpid());
             } catch (RuntimeException e) {
                 log.error("identity repoint hook {} failed for merge {}→{}: {}",
-                        hook.participant(), command.mergedHealthId(), command.survivorHealthId(), e.getMessage(), e);
+                        hook.participant(), command.oldSubjectCpid(), command.newSubjectCpid(), e.getMessage(), e);
                 repointed.put(hook.participant(), -1);
             }
         }

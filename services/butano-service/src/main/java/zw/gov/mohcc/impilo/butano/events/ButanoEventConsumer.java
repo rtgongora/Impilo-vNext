@@ -35,16 +35,13 @@ import java.util.UUID;
 /**
  * Kafka consumers for BUTANO (Shared Health Record) reacting to kernel events.
  *
- * <p>Listens to VITO identity and dedup topics (legacy + v1.1 namespaces),
- * PACS imaging study metadata (legacy + v1.1), and consent revocation notifications.
- * Processing is idempotent where possible:
- * duplicate patient creations and duplicate reconciliation mappings are skipped.</p>
- *
- * <p>Wire format:</p>
- * <ul>
- *   <li>Legacy VITO emits the inner JSON payload only (no envelope).</li>
- *   <li>V1.1 emits a canonical envelope JSON with nested {@code payload} (object or JSON string).</li>
- * </ul>
+ * <p>Listens to the clinical-plane subject lifecycle topic
+ * ({@code impilo.identity.subject} — Identity Contract §7.3), PACS imaging study
+ * metadata (legacy + v1.1), and consent revocation notifications. The SHR never
+ * subscribes to identity-plane {@code vito.*} / {@code impilo.vito.*} topics:
+ * those carry Health IDs, which must not reach clinical services. Processing is
+ * idempotent where possible: duplicate patient creations and duplicate
+ * reconciliation mappings are skipped.</p>
  */
 @Component
 public class ButanoEventConsumer {
@@ -76,138 +73,120 @@ public class ButanoEventConsumer {
     }
 
     /**
-     * VITO identity stream — client registration and lifecycle signals that affect the SHR Patient spine.
+     * Clinical-plane subject lifecycle stream (Identity Contract §7.3).
+     *
+     * <p>The ONLY identity stream the SHR consumes. Produced exclusively by
+     * tshepo-identity's SubjectTranslationRelay; payloads carry CPIDs only.
+     * The former direct subscriptions to {@code vito.identity}/{@code vito.dedup}
+     * are gone — those are identity-plane topics carrying Health IDs, which the
+     * SHR must never see. There is deliberately no healthId fallback here: an
+     * event without a {@code cpid} is a contract violation and is dropped.</p>
      */
     @KafkaListener(
-            topics = {"vito.identity", "impilo.vito.identity"},
+            topics = "impilo.identity.subject",
             groupId = "butano-shr"
     )
-    public void consumeVitoIdentity(String message) {
+    public void consumeSubjectLifecycle(String message) {
         try {
             JsonNode root = objectMapper.readTree(message);
-            String correlationId = extractCorrelationId(root);
-            String envelopeEventType = extractEventType(root);
-            JsonNode payload = extractPayload(root);
-
-            log.info("BUTANO SHR: VITO identity event received envelopeType={} correlationId={}",
-                    envelopeEventType, correlationId);
-
-            if (payload == null || payload.isNull()) {
-                log.warn("BUTANO SHR: identity event missing payload, skipping correlationId={}", correlationId);
-                return;
+            if (root != null && root.isTextual()) {
+                root = objectMapper.readTree(root.asText());
             }
-
-            IdentitySignal signal = resolveIdentitySignal(envelopeEventType, payload);
-            log.debug("BUTANO SHR: resolved identity signal={} correlationId={}", signal, correlationId);
-
-            String cpid = resolveSubjectIdentifier(payload);
-            if (cpid == null || cpid.isBlank()) {
-                log.warn("BUTANO SHR: identity event missing subject identifier (cpid/healthId), correlationId={}",
-                        correlationId);
-                return;
-            }
-
-            UUID tenantId = resolveTenantId(root, payload, cpid);
-            if (tenantId == null && signal == IdentitySignal.CREATED) {
-                if (findFirstPatientByCpid(cpid).isPresent()) {
-                    log.debug("BUTANO SHR: duplicate create event, Patient already present for subject key={} "
-                            + "correlationId={} (idempotent)", cpid, correlationId);
-                    return;
-                }
-                log.warn("BUTANO SHR: cannot create Patient without tenant_id; subject key={} correlationId={}",
-                        cpid, correlationId);
-                return;
-            }
-            if (tenantId == null) {
-                tenantId = inferTenantFromExistingPatient(cpid);
-            }
-            if (tenantId == null) {
-                log.warn("BUTANO SHR: identity event missing tenant_id after inference, subject key={} "
-                        + "correlationId={}", cpid, correlationId);
-                return;
-            }
-
-            switch (signal) {
-                case CREATED -> ensurePatientForCpid(tenantId, cpid, correlationId);
-                case UPDATED_OR_VERIFIED -> updatePatientFromIdentityEvent(tenantId, cpid, payload, correlationId);
-                case DECEASED -> markPatientInactiveIfPresent(tenantId, cpid, correlationId);
-                case IGNORE -> log.debug("BUTANO SHR: ignoring identity event correlationId={}", correlationId);
-            }
-        } catch (JsonProcessingException e) {
-            log.error("BUTANO SHR: failed to parse VITO identity event: {}", e.getMessage(), e);
-        } catch (RuntimeException e) {
-            log.error("BUTANO SHR: error handling VITO identity event: {}", e.getMessage(), e);
-        }
-    }
-
-    /**
-     * VITO merge / dedup stream — triggers CPID rekeying across FHIR resources.
-     */
-    @KafkaListener(
-            topics = {"vito.dedup", "impilo.vito.dedup"},
-            groupId = "butano-shr"
-    )
-    public void consumeVitoDedup(String message) {
-        try {
-            JsonNode root = objectMapper.readTree(message);
             String correlationId = extractCorrelationId(root);
             String eventType = extractEventType(root);
             JsonNode payload = extractPayload(root);
 
             if (payload == null || payload.isNull()) {
-                log.warn("BUTANO SHR: dedup event missing payload, skipping correlationId={}", correlationId);
+                log.warn("BUTANO SHR: subject event missing payload, skipping correlationId={}", correlationId);
                 return;
             }
-
-            if (eventType != null && eventType.toLowerCase().contains("reversed")) {
-                log.info("BUTANO SHR: merge reversal observed (no SHR reconcile) type={} correlationId={}",
-                        eventType, correlationId);
-                return;
-            }
-
-            if (!isMergeEvent(eventType, payload)) {
-                log.debug("BUTANO SHR: dedup event not a merge, skipping type={} correlationId={}",
+            String action = subjectAction(eventType);
+            if (action == null) {
+                log.debug("BUTANO SHR: ignoring non-subject event type={} correlationId={}",
                         eventType, correlationId);
                 return;
             }
 
             UUID tenantId = parseUuid(firstNonBlank(
-                    text(payload, "tenant_id"),
-                    text(payload, "tenantId"),
-                    text(root, "tenant_id")));
+                    text(payload, "tenant_id"), text(root, "tenant_id")));
             if (tenantId == null) {
-                log.warn("BUTANO SHR: merge event missing tenant_id, skipping correlationId={}", correlationId);
+                log.warn("BUTANO SHR: subject event missing tenant_id, skipping type={} correlationId={}",
+                        eventType, correlationId);
                 return;
             }
 
-            String survivorCpid = firstNonBlank(
-                    text(payload, "survivor_cpid"),
-                    text(payload, "survivorCpid"),
-                    text(payload, "survivorHealthId"),
-                    text(payload, "survivor_health_id"),
-                    text(payload, "survivor"));
-            String mergedCpid = firstNonBlank(
-                    text(payload, "merged_cpid"),
-                    text(payload, "mergedCpid"),
-                    text(payload, "mergedHealthId"),
-                    text(payload, "merged_health_id"),
-                    text(payload, "merged"));
-
-            if (survivorCpid == null || mergedCpid == null) {
-                log.warn("BUTANO SHR: merge event missing survivor/merged identifiers correlationId={}",
-                        correlationId);
-                return;
+            switch (action) {
+                case "created" -> {
+                    String cpid = requireCpid(payload, "cpid", eventType, correlationId);
+                    if (cpid != null) {
+                        ensurePatientForCpid(tenantId, cpid, correlationId);
+                    }
+                }
+                case "verified" -> {
+                    String cpid = requireCpid(payload, "cpid", eventType, correlationId);
+                    if (cpid != null) {
+                        updatePatientFromIdentityEvent(tenantId, cpid, payload, correlationId);
+                    }
+                }
+                case "deceased" -> {
+                    String cpid = requireCpid(payload, "cpid", eventType, correlationId);
+                    if (cpid != null) {
+                        markPatientInactiveIfPresent(tenantId, cpid, correlationId);
+                    }
+                }
+                case "merged" -> {
+                    String survivorCpid = requireCpid(payload, "survivor_cpid", eventType, correlationId);
+                    String mergedCpid = requireCpid(payload, "merged_cpid", eventType, correlationId);
+                    if (survivorCpid != null && mergedCpid != null) {
+                        log.info("BUTANO SHR: subject merge survivor={} merged={} tenant={} correlationId={}",
+                                survivorCpid, mergedCpid, tenantId, correlationId);
+                        triggerReconciliationIfNeeded(tenantId, mergedCpid, survivorCpid, correlationId);
+                    }
+                }
+                case "merge_reversed" -> log.info(
+                        "BUTANO SHR: merge reversal observed (no SHR reconcile) correlationId={}", correlationId);
+                case "reconciled" -> {
+                    String provisionalCpid = requireCpid(payload, "provisional_cpid", eventType, correlationId);
+                    String canonicalCpid = requireCpid(payload, "canonical_cpid", eventType, correlationId);
+                    if (provisionalCpid != null && canonicalCpid != null) {
+                        log.info("BUTANO SHR: O-CPID reconcile provisional={} canonical={} tenant={} "
+                                + "correlationId={}", provisionalCpid, canonicalCpid, tenantId, correlationId);
+                        triggerReconciliationIfNeeded(tenantId, provisionalCpid, canonicalCpid, correlationId);
+                    }
+                }
+                default -> log.debug("BUTANO SHR: unhandled subject action={} correlationId={}",
+                        action, correlationId);
             }
-
-            log.info("BUTANO SHR: VITO merge event survivor={} merged={} tenant={} correlationId={}",
-                    survivorCpid, mergedCpid, tenantId, correlationId);
-
-            triggerReconciliationIfNeeded(tenantId, mergedCpid, survivorCpid, correlationId);
         } catch (JsonProcessingException e) {
-            log.error("BUTANO SHR: failed to parse VITO dedup event: {}", e.getMessage(), e);
+            log.error("BUTANO SHR: failed to parse subject event: {}", e.getMessage(), e);
         } catch (RuntimeException e) {
-            log.error("BUTANO SHR: error handling VITO dedup event: {}", e.getMessage(), e);
+            log.error("BUTANO SHR: error handling subject event: {}", e.getMessage(), e);
         }
+    }
+
+    /** Extracts the action from {@code impilo.identity.subject.<action>.v1}, or null. */
+    private static String subjectAction(String eventType) {
+        if (eventType == null) {
+            return null;
+        }
+        String t = eventType.toLowerCase();
+        int idx = t.indexOf(".subject.");
+        if (idx < 0) {
+            return null;
+        }
+        String rest = t.substring(idx + ".subject.".length());
+        int versionDot = rest.lastIndexOf(".v");
+        return versionDot > 0 ? rest.substring(0, versionDot) : rest;
+    }
+
+    private static String requireCpid(JsonNode payload, String field, String eventType, String correlationId) {
+        String value = text(payload, field);
+        if (value == null || value.isBlank()) {
+            log.warn("BUTANO SHR: subject event missing {} (contract violation), type={} correlationId={}",
+                    field, eventType, correlationId);
+            return null;
+        }
+        return value;
     }
 
     /**
@@ -609,11 +588,12 @@ public class ButanoEventConsumer {
             patient.setMeta(new Meta());
         }
         patient.setActive(true);
-        if (payload.has("verifiedBy") && !payload.get("verifiedBy").isNull()) {
+        if (payload.path("verified").asBoolean(false)
+                || (payload.has("verifiedBy") && !payload.get("verifiedBy").isNull())) {
             patient.getMeta().addTag(new Coding(
                     "https://impilo.gov.zw/identity",
                     "verified",
-                    "Identity verified in VITO"));
+                    "Identity verified in the client registry"));
         }
         patientDao.update(patient, (RequestDetails) null);
         log.info("BUTANO SHR: updated FHIR Patient for subject key={} tenant={} correlationId={}",
@@ -716,15 +696,6 @@ public class ButanoEventConsumer {
         return null;
     }
 
-    private static String resolveSubjectIdentifier(JsonNode payload) {
-        return firstNonBlank(
-                text(payload, "patient_cpid"),
-                text(payload, "patientCpid"),
-                text(payload, "cpid"),
-                text(payload, "healthId"),
-                text(payload, "health_id"));
-    }
-
     private UUID resolveTenantId(JsonNode root, JsonNode payload, String cpid) {
         UUID fromWire = parseUuid(firstNonBlank(
                 text(root, "tenant_id"),
@@ -772,59 +743,6 @@ public class ButanoEventConsumer {
             return Optional.empty();
         }
         return Optional.of((Patient) resources.get(0));
-    }
-
-    private Optional<Patient> findFirstPatientByCpid(String cpid) {
-        return findPatientsByCpid(cpid, 1);
-    }
-
-    private enum IdentitySignal {
-        CREATED,
-        UPDATED_OR_VERIFIED,
-        DECEASED,
-        IGNORE
-    }
-
-    private static IdentitySignal resolveIdentitySignal(String envelopeEventType, JsonNode payload) {
-        if (envelopeEventType != null) {
-            String t = envelopeEventType.toLowerCase();
-            if (t.contains("deceased")) {
-                return IdentitySignal.DECEASED;
-            }
-            if (t.contains("verified")) {
-                return IdentitySignal.UPDATED_OR_VERIFIED;
-            }
-            if (t.contains("updated")) {
-                return IdentitySignal.UPDATED_OR_VERIFIED;
-            }
-            if (t.contains("created")) {
-                return IdentitySignal.CREATED;
-            }
-            if (t.contains("identity_created") || t.contains("client_created")) {
-                return IdentitySignal.CREATED;
-            }
-        }
-        if (payload.has("deathNotificationRef") && !payload.get("deathNotificationRef").isNull()) {
-            return IdentitySignal.DECEASED;
-        }
-        if (payload.has("verifiedBy") && !payload.get("verifiedBy").isNull()) {
-            return IdentitySignal.UPDATED_OR_VERIFIED;
-        }
-        if ("PROVISIONAL".equalsIgnoreCase(text(payload, "status"))
-                && payload.has("did") && !payload.get("did").isNull()) {
-            return IdentitySignal.CREATED;
-        }
-        return IdentitySignal.IGNORE;
-    }
-
-    private static boolean isMergeEvent(String eventType, JsonNode payload) {
-        if (eventType != null) {
-            String t = eventType.toLowerCase();
-            if (t.contains("merge") && !t.contains("reversed")) {
-                return true;
-            }
-        }
-        return payload.has("survivor") && payload.has("merged");
     }
 
     private static String text(JsonNode node, String field) {

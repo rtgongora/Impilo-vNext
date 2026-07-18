@@ -8,32 +8,33 @@ import org.slf4j.LoggerFactory;
 import java.util.function.Predicate;
 
 /**
- * Framework-agnostic handler for the {@code vito.merge.executed} event — the propagation
- * channel that keeps trauma links consistent when two identities are reconciled.
+ * Framework-agnostic handler for clinical-plane subject repoint events — the propagation
+ * channel that keeps clinical links consistent when two identities are reconciled.
  *
- * <p>Today {@code vito.merge.executed} has no consumers: when VITO merges an unknown trauma
- * patient's provisional identity into a confirmed one, nothing repoints the downstream links,
- * leaving orphaned rows keyed on the tombstoned Health ID. This handler is the missing channel.
- * It is deliberately Spring-free (shared-kernel-java carries no web/Kafka deps); each service
- * wires it into its own consumer — a Kafka {@code @KafkaListener}, or the no-Kafka outbox
- * drainer used by the runtime-proof rigs — and passes the raw event payload to {@link #handle}.</p>
+ * <p>Per the Identity Contract §7.3, clinical services consume
+ * {@code impilo.identity.subject.merged.v1} (identity merge) and
+ * {@code impilo.identity.subject.reconciled.v1} (offline O-CPID reconcile) — both are
+ * "repoint old CPID → new CPID" commands. This handler is deliberately Spring-free
+ * (shared-kernel-java carries no web/Kafka deps); each service wires it into its own
+ * consumer — a Kafka {@code @KafkaListener}, or the no-Kafka outbox drainer used by the
+ * runtime-proof rigs — and passes the raw event payload to {@link #handle}.</p>
  *
  * <p>Responsibilities:</p>
  * <ul>
- *   <li>Parse the merge payload into an {@link IdentityRepointCommand}
- *       (fields {@code tenantId}, {@code survivorHealthId}, {@code mergedHealthId}).</li>
+ *   <li>Parse the subject payload into an {@link IdentityRepointCommand}
+ *       (fields {@code tenantId}, {@code oldSubjectCpid}, {@code newSubjectCpid}).</li>
  *   <li>Idempotency: skip when {@code alreadyProcessed} reports the merge key was seen, so a
  *       redelivered/replayed event never double-repoints.</li>
  *   <li>Delegate to the participant's {@link IdentityRepointHook} and return the row count.</li>
  * </ul>
- *
- * <p>W0 wires a {@link IdentityRepointHook#noop(String) no-op hook}; W6 replaces it per service
- * with real, audited repointing across that service's trauma tables.</p>
  */
 public final class IdentityRepointHandler {
 
-    /** Event type this handler responds to. */
-    public static final String EVENT_TYPE = "vito.merge.executed";
+    /** Merge event type this handler responds to. */
+    public static final String EVENT_TYPE = "impilo.identity.subject.merged.v1";
+
+    /** Offline-reconcile event type this handler responds to (same repoint semantics). */
+    public static final String RECONCILED_EVENT_TYPE = "impilo.identity.subject.reconciled.v1";
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -78,36 +79,60 @@ public final class IdentityRepointHandler {
         }
         int rows = hook.repoint(command);
         log.info("identity repoint applied by {} for merge {} ({}→{}): {} row(s)",
-                hook.participant(), command.mergeId(), command.mergedHealthId(),
-                command.survivorHealthId(), rows);
+                hook.participant(), command.mergeId(), command.oldSubjectCpid(),
+                command.newSubjectCpid(), rows);
         return new RepointOutcome(hook.participant(), command, rows, false);
     }
 
     /**
-     * Parse the VITO merge payload. Accepts either the flat payload emitted by
-     * {@code MergeService.publishEvent} or a v1.1 EventEnvelope whose {@code payload} object
-     * carries the same fields.
+     * Parse a clinical-plane subject repoint event (Identity Contract §7.3):
+     * {@code impilo.identity.subject.merged.v1} carrying
+     * {@code survivor_cpid}/{@code merged_cpid}, or
+     * {@code impilo.identity.subject.reconciled.v1} carrying
+     * {@code canonical_cpid}/{@code provisional_cpid}. Both repoint
+     * old&nbsp;→&nbsp;new the same way. Accepts a bare payload or a v1.1
+     * EventEnvelope whose {@code payload} object carries the fields. Health-ID
+     * shaped fields are deliberately NOT accepted — clinical services never see
+     * Health IDs.
      */
     static IdentityRepointCommand parse(String eventPayloadJson) {
         try {
             JsonNode root = MAPPER.readTree(eventPayloadJson);
-            JsonNode body = root.has("survivorHealthId") ? root
-                    : root.path("payload"); // unwrap an EventEnvelope if present
-            String tenantId = text(body, "tenantId");
-            String survivorHealthId = text(body, "survivorHealthId");
-            String mergedHealthId = text(body, "mergedHealthId");
-            String mergeId = body.has("mergeId") ? text(body, "mergeId")
-                    : text(root, "aggregateId");
-            String correlationId = root.has("correlationId") ? text(root, "correlationId") : null;
-            if (survivorHealthId == null || mergedHealthId == null || tenantId == null) {
-                throw new IllegalArgumentException(
-                        "vito.merge.executed payload missing tenantId/survivorHealthId/mergedHealthId");
+            if (root != null && root.isTextual()) {
+                root = MAPPER.readTree(root.asText()); // unwrap double-encoded wire values
             }
-            return new IdentityRepointCommand(tenantId, mergedHealthId, survivorHealthId,
+            JsonNode body = (root.has("survivor_cpid") || root.has("canonical_cpid"))
+                    ? root
+                    : root.path("payload"); // unwrap an EventEnvelope if present
+            String tenantId = firstText(body, "tenant_id", "tenantId");
+            if (tenantId == null) {
+                tenantId = firstText(root, "tenant_id", "tenantId");
+            }
+            // merged: survivor/merged; reconciled: canonical/provisional — old → new either way
+            String newSubjectCpid = firstText(body, "survivor_cpid", "canonical_cpid");
+            String oldSubjectCpid = firstText(body, "merged_cpid", "provisional_cpid");
+            String mergeId = body.has("mergeId") ? text(body, "mergeId")
+                    : firstText(root, "event_id", "aggregateId");
+            String correlationId = firstText(root, "correlation_id", "correlationId");
+            if (newSubjectCpid == null || oldSubjectCpid == null || tenantId == null) {
+                throw new IllegalArgumentException(
+                        "subject repoint payload missing tenant_id/survivor_cpid/merged_cpid");
+            }
+            return new IdentityRepointCommand(tenantId, oldSubjectCpid, newSubjectCpid,
                     mergeId, correlationId);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-            throw new IllegalArgumentException("unparseable vito.merge.executed payload", e);
+            throw new IllegalArgumentException("unparseable subject repoint payload", e);
         }
+    }
+
+    private static String firstText(JsonNode node, String... fields) {
+        for (String field : fields) {
+            String v = text(node, field);
+            if (v != null && !v.isBlank()) {
+                return v;
+            }
+        }
+        return null;
     }
 
     private static String text(JsonNode node, String field) {

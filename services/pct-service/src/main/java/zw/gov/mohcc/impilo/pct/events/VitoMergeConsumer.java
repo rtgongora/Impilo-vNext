@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * PCT's VITO identity-merge fan-out consumer. On {@code vito.merge.executed} it repoints PCT's ED
+ * PCT's subject repoint consumer (Identity Contract §7.3). On merge/reconcile subject events it repoints PCT's ED
  * patient anchors via its {@link IdentityRepointHook}s. Kafka listener (prod) + the
  * {@code POST /internal/v1/identity/vito-merge} endpoint (broker-less rig) share one idempotent core.
  */
@@ -40,7 +40,7 @@ public class VitoMergeConsumer {
     }
 
     @Profile("!test")
-    @KafkaListener(topics = {"vito.dedup", "impilo.vito.dedup"}, groupId = "pct-vito-merge")
+    @KafkaListener(topics = "impilo.identity.subject", groupId = "pct-vito-merge")
     public void onKafka(String payload) {
         apply(payload);
     }

@@ -11,8 +11,9 @@ import java.util.function.Predicate;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit coverage for the {@code vito.merge.executed} propagation channel skeleton:
- * payload parsing, hook dispatch, and idempotency.
+ * Unit coverage for the clinical-plane subject repoint channel
+ * ({@code impilo.identity.subject.merged/reconciled}): payload parsing, hook
+ * dispatch, and idempotency.
  */
 class IdentityRepointHandlerTest {
 
@@ -30,8 +31,13 @@ class IdentityRepointHandlerTest {
     }
 
     private String mergePayload() {
-        return "{\"tenantId\":\"" + TENANT + "\",\"survivor\":\"crid-s\",\"merged\":\"crid-m\","
-                + "\"survivorHealthId\":\"" + SURVIVOR + "\",\"mergedHealthId\":\"" + MERGED + "\"}";
+        return "{\"tenant_id\":\"" + TENANT + "\","
+                + "\"survivor_cpid\":\"" + SURVIVOR + "\",\"merged_cpid\":\"" + MERGED + "\"}";
+    }
+
+    private String reconciledPayload() {
+        return "{\"tenant_id\":\"" + TENANT + "\","
+                + "\"canonical_cpid\":\"" + SURVIVOR + "\",\"provisional_cpid\":\"" + MERGED + "\"}";
     }
 
     @Test
@@ -44,8 +50,8 @@ class IdentityRepointHandlerTest {
         assertEquals(1, hook.calls.size());
         IdentityRepointCommand cmd = hook.calls.get(0);
         assertEquals(TENANT, cmd.tenantId());
-        assertEquals(MERGED, cmd.mergedHealthId());
-        assertEquals(SURVIVOR, cmd.survivorHealthId());
+        assertEquals(MERGED, cmd.oldSubjectCpid());
+        assertEquals(SURVIVOR, cmd.newSubjectCpid());
         assertEquals(3, outcome.rowsRepointed());
         assertTrue(outcome.applied());
         assertFalse(outcome.skippedDuplicate());
@@ -56,14 +62,14 @@ class IdentityRepointHandlerTest {
     void unwrapsEnvelopePayloadObject() {
         RecordingHook hook = new RecordingHook(1);
         IdentityRepointHandler handler = new IdentityRepointHandler(hook, cmd -> false);
-        String envelope = "{\"eventType\":\"vito.merge.executed\",\"aggregateId\":\"77\","
-                + "\"correlationId\":\"corr-1\",\"payload\":{\"tenantId\":\"" + TENANT + "\","
-                + "\"survivorHealthId\":\"" + SURVIVOR + "\",\"mergedHealthId\":\"" + MERGED + "\"}}";
+        String envelope = "{\"event_type\":\"impilo.identity.subject.merged.v1\",\"aggregateId\":\"77\","
+                + "\"correlation_id\":\"corr-1\",\"payload\":{\"tenant_id\":\"" + TENANT + "\","
+                + "\"survivor_cpid\":\"" + SURVIVOR + "\",\"merged_cpid\":\"" + MERGED + "\"}}";
 
         handler.handle(envelope);
 
         IdentityRepointCommand cmd = hook.calls.get(0);
-        assertEquals(SURVIVOR, cmd.survivorHealthId());
+        assertEquals(SURVIVOR, cmd.newSubjectCpid());
         assertEquals("77", cmd.mergeId());
         assertEquals("corr-1", cmd.correlationId());
     }
@@ -94,6 +100,29 @@ class IdentityRepointHandlerTest {
         assertEquals("pct-service", outcome.participant());
         assertEquals(0, outcome.rowsRepointed());
         assertTrue(outcome.applied());
+    }
+
+    @Test
+    void parsesReconciledPayloadAsRepoint() {
+        RecordingHook hook = new RecordingHook(2);
+        IdentityRepointHandler handler = new IdentityRepointHandler(hook, cmd -> false);
+
+        handler.handle(reconciledPayload());
+
+        IdentityRepointCommand cmd = hook.calls.get(0);
+        assertEquals(MERGED, cmd.oldSubjectCpid(), "provisional O-CPID is the old key");
+        assertEquals(SURVIVOR, cmd.newSubjectCpid(), "canonical CPID is the new key");
+    }
+
+    @Test
+    void rejectsHealthIdShapedPayload() {
+        // Identity Contract: clinical services never see Health IDs — the parser
+        // must NOT accept survivorHealthId/mergedHealthId fields.
+        IdentityRepointHandler handler =
+                new IdentityRepointHandler(new RecordingHook(0), cmd -> false);
+        String healthIdPayload = "{\"tenantId\":\"" + TENANT + "\","
+                + "\"survivorHealthId\":\"" + SURVIVOR + "\",\"mergedHealthId\":\"" + MERGED + "\"}";
+        assertThrows(IllegalArgumentException.class, () -> handler.handle(healthIdPayload));
     }
 
     @Test
