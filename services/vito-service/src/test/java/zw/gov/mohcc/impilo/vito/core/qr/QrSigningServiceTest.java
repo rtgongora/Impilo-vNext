@@ -9,12 +9,42 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class QrSigningServiceTest {
 
+    private static final String SEED = "a-stable-qr-signing-seed-of-32-bytes++";
+
     private QrSigningService service;
+
+    private QrSigningService instance(String seed) throws Exception {
+        QrSigningService s = new QrSigningService(seed);
+        s.init();
+        return s;
+    }
 
     @BeforeEach
     void setUp() throws Exception {
-        service = new QrSigningService();
-        service.init();
+        service = instance(SEED);
+    }
+
+    @Test
+    void tokenVerifiesAcrossInstances_survivesRestart() throws Exception {
+        // C3 regression: a token signed before a restart / by another pod must
+        // still verify. Seed-derived keys are identical across instances.
+        QrSigningService afterRestart = instance(SEED);
+        String token = service.sign("tenant1", "PICKUP", "ptr", 3600);
+        assertTrue(afterRestart.verify(token).isPresent());
+    }
+
+    @Test
+    void differentSeedCannotVerify() throws Exception {
+        QrSigningService other = instance("a-DIFFERENT-qr-seed-of-32-bytes-long++");
+        String token = service.sign("tenant1", "WALLET", "ptr", 3600);
+        assertTrue(other.verify(token).isEmpty());
+    }
+
+    @Test
+    void publicJwkIsStableAndPublicOnly() throws Exception {
+        assertEquals(instance(SEED).getPublicKeyJwk(), instance(SEED).getPublicKeyJwk());
+        assertFalse(service.getPublicKeyJwk().contains("\"d\""),
+                "public JWK must not leak the private scalar");
     }
 
     @Test
