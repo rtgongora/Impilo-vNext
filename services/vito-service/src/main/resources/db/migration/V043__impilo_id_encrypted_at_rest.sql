@@ -9,10 +9,10 @@ DROP INDEX IF EXISTS vito.idx_client_impilo_id;
 ALTER TABLE vito.client
     ALTER COLUMN impilo_id TYPE text;
 
-ALTER TABLE vito.issuance_requests
+ALTER TABLE vito.issuance_request
     ALTER COLUMN impilo_id_issued TYPE text;
 
 COMMENT ON COLUMN vito.client.impilo_id IS
     'Impilo ID, AES-256-GCM encrypted at rest (Identity Contract §6). Look up via the alias vault, never by value.';
-COMMENT ON COLUMN vito.issuance_requests.impilo_id_issued IS
+COMMENT ON COLUMN vito.issuance_request.impilo_id_issued IS
     'Issued Impilo ID, AES-256-GCM encrypted at rest (Identity Contract §6).';
