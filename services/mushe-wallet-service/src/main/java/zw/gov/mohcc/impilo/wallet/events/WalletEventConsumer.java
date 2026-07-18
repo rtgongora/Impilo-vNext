@@ -277,6 +277,12 @@ public class WalletEventConsumer {
     public void onVitoIdentityEvent(String message) {
         try {
             JsonNode node = objectMapper.readTree(message);
+            // Defensive: a mis-configured producer (JsonSerializer over a pre-serialized
+            // JSON string) puts a quoted string literal on the wire — unwrap it so the
+            // auto-create-wallet event isn't silently dropped as a blank type.
+            if (node != null && node.isTextual()) {
+                node = objectMapper.readTree(node.asText());
+            }
 
             String eventType = node.path("event_type").asText(
                     node.path("eventType").asText(""));

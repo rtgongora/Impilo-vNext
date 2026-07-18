@@ -40,6 +40,12 @@ public class PrintJobListener {
         long cardId = -1;
         try {
             JsonNode node = objectMapper.readTree(message);
+            // Defensive: a mis-configured producer (JsonSerializer over a pre-serialized
+            // JSON string) puts a quoted string literal on the wire — unwrap it so cardId
+            // and the other fields don't silently read as missing/zero.
+            if (node != null && node.isTextual()) {
+                node = objectMapper.readTree(node.asText());
+            }
             cardId = node.path("cardId").asLong();
             String template = node.path("template").asText("STANDARD");
             String did = node.path("did").asText();
