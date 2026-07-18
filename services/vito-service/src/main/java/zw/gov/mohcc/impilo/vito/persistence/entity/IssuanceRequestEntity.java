@@ -45,7 +45,10 @@ public class IssuanceRequestEntity {
     @Column(name = "rejection_reason", columnDefinition = "TEXT")
     private String rejectionReason;
 
-    @Column(name = "impilo_id_issued")
+    // Identity Contract §6: encrypted at rest (AES-256-GCM).
+    @Column(name = "impilo_id_issued", columnDefinition = "text")
+    @jakarta.persistence.Convert(
+            converter = zw.gov.mohcc.impilo.vito.core.crypto.ImpiloIdEncryptionConverter.class)
     private String impiloIdIssued;
 
     @Column(name = "card_id")

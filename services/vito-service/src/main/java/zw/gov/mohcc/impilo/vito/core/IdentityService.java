@@ -151,9 +151,18 @@ public class IdentityService {
         return clientRepository.findByTenantIdAndHealthId(tenantId, healthId);
     }
 
+    /**
+     * Resolve a client by their Impilo ID via the alias vault (Identity Contract §6).
+     * The impilo_id column is now encrypted at rest, so a WHERE impilo_id = ? query
+     * cannot match; the vault's HMAC lookup hash + Argon2id verifier is the index.
+     */
     @Transactional(readOnly = true)
     public Optional<ClientEntity> findByImpiloId(UUID tenantId, String impiloId) {
-        return clientRepository.findByTenantIdAndImpiloId(tenantId, impiloId);
+        if (impiloId == null || impiloId.isBlank()) {
+            return Optional.empty();
+        }
+        return aliasService.resolve(tenantId, "IMPILO_ID", impiloId)
+                .flatMap(healthId -> clientRepository.findByTenantIdAndHealthId(tenantId, healthId));
     }
 
     @Transactional(readOnly = true)

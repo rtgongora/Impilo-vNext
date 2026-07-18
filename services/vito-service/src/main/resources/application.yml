@@ -44,6 +44,11 @@ spring:
 # ---- VITO-specific configuration ----
 
 vito:
+  identity:
+    # Impilo ID at-rest encryption key (Identity Contract §6). Production MUST
+    # supply a >=32-char secret via tshepo-keys custody; unset falls back to a
+    # dev key with a loud warning so the preview estate boots.
+    impilo-id-encryption-key: ${VITO_IMPILO_ID_ENCRYPTION_KEY:}
   # Argon2id parameters (Architect directive: m=64MB, t=3, p=4)
   argon2:
     memory-cost-kb: 65536     # 64 MiB

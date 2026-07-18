@@ -28,9 +28,12 @@ import java.util.UUID;
 public class InternalSearchController {
 
     private final ClientRepository clientRepository;
+    private final zw.gov.mohcc.impilo.vito.core.IdentityService identityService;
 
-    public InternalSearchController(ClientRepository clientRepository) {
+    public InternalSearchController(ClientRepository clientRepository,
+                                    zw.gov.mohcc.impilo.vito.core.IdentityService identityService) {
         this.clientRepository = clientRepository;
+        this.identityService = identityService;
     }
 
     /**
@@ -57,15 +60,23 @@ public class InternalSearchController {
         int page = request.page() != null ? request.page() : 0;
         int size = request.size() != null ? Math.min(request.size(), 100) : 20;
 
-        Page<ClientEntity> results = clientRepository.searchByNameOrImpiloId(
-                tenantId, q, PageRequest.of(page, size));
-
-        List<Map<String, Object>> masked = results.getContent().stream()
-                .map(this::maskClient)
-                .toList();
+        // Identity Contract §6: exact Impilo-ID match resolves via the alias vault
+        // (the column is encrypted, not value-queryable); name search stays in SQL.
+        java.util.Optional<ClientEntity> byImpiloId = identityService.findByImpiloId(tenantId, q);
+        List<Map<String, Object>> masked;
+        long total;
+        if (byImpiloId.isPresent()) {
+            masked = List.of(maskClient(byImpiloId.get()));
+            total = 1;
+        } else {
+            Page<ClientEntity> results = clientRepository.searchByNameOrImpiloId(
+                    tenantId, q, PageRequest.of(page, size));
+            masked = results.getContent().stream().map(this::maskClient).toList();
+            total = results.getTotalElements();
+        }
 
         return ResponseEntity.ok(ApiResponse.ok(
-                PagedResponse.of(masked, page, size, results.getTotalElements()),
+                PagedResponse.of(masked, page, size, total),
                 ctx.correlationId().toString()));
     }
 

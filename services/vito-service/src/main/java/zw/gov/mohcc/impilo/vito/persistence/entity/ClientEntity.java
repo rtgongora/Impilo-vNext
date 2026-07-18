@@ -54,7 +54,12 @@ public class ClientEntity {
     @Column(name = "crid", nullable = false, unique = true)
     private UUID crid;
 
-    @Column(name = "impilo_id")
+    // Identity Contract §6: encrypted at rest (AES-256-GCM). In-memory plaintext,
+    // ciphertext in the column. Value lookups go through the alias vault, never
+    // WHERE impilo_id = ? (randomised ciphertext is not value-queryable).
+    @Column(name = "impilo_id", columnDefinition = "text")
+    @jakarta.persistence.Convert(
+            converter = zw.gov.mohcc.impilo.vito.core.crypto.ImpiloIdEncryptionConverter.class)
     private String impiloId;
 
     @JdbcTypeCode(SqlTypes.JSON)

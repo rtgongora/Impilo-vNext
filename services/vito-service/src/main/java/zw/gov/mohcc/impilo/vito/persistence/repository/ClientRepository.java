@@ -37,15 +37,15 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
 
     long countByTenantIdAndVerificationStatus(UUID tenantId, ClientVerificationState verificationState);
 
-    Optional<ClientEntity> findByTenantIdAndImpiloId(UUID tenantId, String impiloId);
-
     Optional<ClientEntity> findByTenantIdAndCrid(UUID tenantId, UUID crid);
 
+    // Identity Contract §6: impiloId is encrypted at rest and cannot be matched
+    // by value in SQL. Name search stays here; exact Impilo-ID match is resolved
+    // separately via the alias vault (see ClientIdentityOperationsService).
     @Query("SELECT c FROM ClientEntity c WHERE c.tenantId = :tenantId " +
            "AND (LOWER(c.givenName) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(COALESCE(c.middleName, '')) LIKE LOWER(CONCAT('%', :q, '%')) " +
-           "OR LOWER(c.familyName) LIKE LOWER(CONCAT('%', :q, '%')) " +
-           "OR c.impiloId = :q)")
+           "OR LOWER(c.familyName) LIKE LOWER(CONCAT('%', :q, '%')))")
     Page<ClientEntity> searchByNameOrImpiloId(@Param("tenantId") UUID tenantId,
                                               @Param("q") String query,
                                               Pageable pageable);
@@ -56,8 +56,7 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
            "AND (:query IS NULL OR :query = '' OR " +
            "LOWER(c.givenName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "LOWER(COALESCE(c.middleName, '')) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(c.familyName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "c.impiloId = :query)")
+           "LOWER(c.familyName) LIKE LOWER(CONCAT('%', :query, '%')))")
     Page<ClientEntity> searchClients(@Param("tenantId") UUID tenantId,
                                      @Param("query") String query,
                                      @Param("status") IdentityStatus status,

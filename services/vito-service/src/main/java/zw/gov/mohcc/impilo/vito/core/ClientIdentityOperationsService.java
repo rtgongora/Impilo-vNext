@@ -142,9 +142,25 @@ public class ClientIdentityOperationsService {
                                                                                 int page,
                                                                                 int size) {
         TrustContext ctx = TrustContextHolder.require();
+        String q = normalizeQuery(query);
+
+        // Identity Contract §6: impiloId is encrypted at rest, so an exact
+        // Impilo-ID query must resolve through the alias vault, not SQL. If the
+        // query resolves to a client, return exactly that client.
+        if (q != null && !q.isBlank()) {
+            java.util.Optional<ClientEntity> byImpiloId = aliasService
+                    .resolve(ctx.tenantId(), "IMPILO_ID", q)
+                    .flatMap(hid -> clientRepository.findByTenantIdAndHealthId(ctx.tenantId(), hid));
+            if (byImpiloId.isPresent()) {
+                return new org.springframework.data.domain.PageImpl<>(
+                        java.util.List.of(toSummary(byImpiloId.get())),
+                        PageRequest.of(0, size), 1);
+            }
+        }
+
         Page<ClientEntity> clients = clientRepository.searchClients(
                 ctx.tenantId(),
-                normalizeQuery(query),
+                q,
                 status,
                 verificationState,
                 PageRequest.of(page, size)
