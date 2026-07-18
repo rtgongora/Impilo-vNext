@@ -78,9 +78,15 @@ public class PrivilegeRevocationConsumer {
             String newStatus = textOrNull(payloadNode, "newStatus");
             String status = textOrNull(payloadNode, "status");
             String previousStatus = textOrNull(payloadNode, "previousStatus");
+            // PJ15 fix: licence FSM events (varapi.provider.lapsed / .suspended) carry
+            // newLifecycle/previousLifecycle, NOT newStatus/status — so a lapsed licence
+            // was silently NOT revoking privileges. Include the lifecycle fields.
+            String newLifecycle = textOrNull(payloadNode, "newLifecycle");
+            String previousLifecycle = textOrNull(payloadNode, "previousLifecycle");
 
-            boolean revocation = isRevocation(eventLower, newStatus, status);
-            boolean reactivation = isReactivation(newStatus, status, previousStatus);
+            boolean revocation = isRevocation(eventLower, newStatus, status, newLifecycle);
+            boolean reactivation = isReactivation(newStatus, status, previousStatus,
+                    newLifecycle, previousLifecycle);
 
             if (revocation) {
                 revocationStore.markRevoked(providerId);
@@ -104,8 +110,16 @@ public class PrivilegeRevocationConsumer {
         }
     }
 
-    private static boolean isRevocation(String eventLower, String newStatus, String status) {
-        if (eventLower.contains("revoked") || eventLower.contains("suspended") || eventLower.contains("deactivated")) {
+    private static boolean isRevocation(String eventLower, String newStatus, String status, String newLifecycle) {
+        // Licence FSM terminal transitions (PJ15): a lapsed/suspended/retired/expired
+        // licence revokes practice privileges.
+        if (eventLower.contains("revoked") || eventLower.contains("suspended")
+                || eventLower.contains("deactivated") || eventLower.contains("lapsed")
+                || eventLower.contains("retired") || eventLower.contains("expired")) {
+            return true;
+        }
+        // A non-active target lifecycle revokes regardless of event-type wording.
+        if (newLifecycle != null && !isActiveLifecycle(newLifecycle)) {
             return true;
         }
         if (eventLower.contains("status_changed")) {
@@ -123,7 +137,12 @@ public class PrivilegeRevocationConsumer {
         return status != null && !isActive(status);
     }
 
-    private static boolean isReactivation(String newStatus, String status, String previousStatus) {
+    private static boolean isReactivation(String newStatus, String status, String previousStatus,
+                                          String newLifecycle, String previousLifecycle) {
+        // Licence FSM reactivation: returning to an active lifecycle from a non-active one.
+        if (newLifecycle != null && isActiveLifecycle(newLifecycle)) {
+            return previousLifecycle == null || !isActiveLifecycle(previousLifecycle);
+        }
         if (newStatus != null && isActive(newStatus)) {
             return previousStatus == null || !isActive(previousStatus);
         }
@@ -131,6 +150,20 @@ public class PrivilegeRevocationConsumer {
             return true;
         }
         return false;
+    }
+
+    /**
+     * A provider lifecycle state that permits practice. LICENCED_ACTIVE and the
+     * still-practising warning state LICENCE_DUE_FOR_RENEWAL are active; LAPSED,
+     * SUSPENDED, RETIRED, RESTRICTED (and any non-licenced state) are not.
+     */
+    private static boolean isActiveLifecycle(String lifecycle) {
+        if (lifecycle == null) {
+            return false;
+        }
+        String l = lifecycle.trim().toUpperCase();
+        return l.equals("LICENCED_ACTIVE") || l.equals("LICENSED_ACTIVE")
+                || l.equals("LICENCE_DUE_FOR_RENEWAL") || l.equals("LICENSE_DUE_FOR_RENEWAL");
     }
 
     private static boolean isActive(String s) {
