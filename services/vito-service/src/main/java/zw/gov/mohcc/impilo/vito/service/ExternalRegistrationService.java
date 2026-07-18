@@ -42,8 +42,10 @@ public class ExternalRegistrationService {
     private final PhidPoolRepository phidPoolRepository;
     private final PhidPoolService phidPoolService;
     private final ClientAddressDelegationPublisher addressDelegationPublisher;
+    private final zw.gov.mohcc.impilo.vito.core.matching.MatchingEngine matchingEngine;
 
-    public ExternalRegistrationService(ClientRepository clientRepository,
+    public ExternalRegistrationService(zw.gov.mohcc.impilo.vito.core.matching.MatchingEngine matchingEngine,
+                                       ClientRepository clientRepository,
                                        ClientIdentifierRepository clientIdentifierRepository,
                                        EventOutboxRepository outboxRepository,
                                        VitoProperties vitoProperties,
@@ -51,6 +53,7 @@ public class ExternalRegistrationService {
                                        PhidPoolRepository phidPoolRepository,
                                        PhidPoolService phidPoolService,
                                        ClientAddressDelegationPublisher addressDelegationPublisher) {
+        this.matchingEngine = matchingEngine;
         this.clientRepository = clientRepository;
         this.clientIdentifierRepository = clientIdentifierRepository;
         this.outboxRepository = outboxRepository;
@@ -95,7 +98,9 @@ public class ExternalRegistrationService {
         ClientEntity bestMatch = null;
 
         for (ClientEntity candidate : candidates) {
-            double score = demographicScore(request, candidate);
+            double score = matchingEngine.scoreDemographics(request.givenName(), request.familyName(),
+                    request.dateOfBirth() != null ? request.dateOfBirth().toString() : null,
+                    request.sex(), candidate);
             if (score > bestScore) {
                 bestScore = score;
                 bestMatch = candidate;
@@ -148,65 +153,6 @@ public class ExternalRegistrationService {
                 "CREATED",
                 correlationId
         );
-    }
-
-    private double demographicScore(ExternalClientRegistrationRequest request, ClientEntity candidate) {
-        double givenNameScore = jaroWinkler(request.givenName(), candidate.getGivenName()) * 0.15;
-        double familyNameScore = jaroWinkler(request.familyName(), candidate.getFamilyName()) * 0.20;
-        double dobScore = (request.dateOfBirth() != null && candidate.getDateOfBirth() != null
-                && request.dateOfBirth().equals(candidate.getDateOfBirth())) ? 0.30 : 0.0;
-        double sexScore = (request.sex() != null && candidate.getSex() != null
-                && request.sex().equalsIgnoreCase(candidate.getSex())) ? 0.10 : 0.0;
-        return givenNameScore + familyNameScore + dobScore + sexScore;
-    }
-
-    private double jaroWinkler(String s1, String s2) {
-        if (s1 == null || s2 == null) return 0.0;
-        s1 = s1.toLowerCase().strip();
-        s2 = s2.toLowerCase().strip();
-        if (s1.equals(s2)) return 1.0;
-        if (s1.isEmpty() || s2.isEmpty()) return 0.0;
-
-        int maxDist = Math.max(s1.length(), s2.length()) / 2 - 1;
-        if (maxDist < 0) maxDist = 0;
-
-        boolean[] s1Matches = new boolean[s1.length()];
-        boolean[] s2Matches = new boolean[s2.length()];
-        int matches = 0;
-        int transpositions = 0;
-
-        for (int i = 0; i < s1.length(); i++) {
-            int start = Math.max(0, i - maxDist);
-            int end = Math.min(s2.length(), i + maxDist + 1);
-            for (int j = start; j < end; j++) {
-                if (s2Matches[j] || s1.charAt(i) != s2.charAt(j)) continue;
-                s1Matches[i] = true;
-                s2Matches[j] = true;
-                matches++;
-                break;
-            }
-        }
-
-        if (matches == 0) return 0.0;
-
-        int k = 0;
-        for (int i = 0; i < s1.length(); i++) {
-            if (!s1Matches[i]) continue;
-            while (!s2Matches[k]) k++;
-            if (s1.charAt(i) != s2.charAt(k)) transpositions++;
-            k++;
-        }
-
-        double jaro = (((double) matches / s1.length()) +
-                ((double) matches / s2.length()) +
-                (((double) matches - transpositions / 2.0) / matches)) / 3.0;
-
-        int prefix = 0;
-        for (int i = 0; i < Math.min(4, Math.min(s1.length(), s2.length())); i++) {
-            if (s1.charAt(i) == s2.charAt(i)) prefix++;
-            else break;
-        }
-        return jaro + (prefix * 0.1 * (1.0 - jaro));
     }
 
     private ClientEntity buildNewClient(UUID tenantId, ExternalClientRegistrationRequest request, String actorId) {

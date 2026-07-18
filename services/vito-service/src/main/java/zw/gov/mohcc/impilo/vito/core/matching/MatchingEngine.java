@@ -128,6 +128,24 @@ public class MatchingEngine {
 
     // --- Field-level scoring ---
 
+    /**
+     * Single estate scorer (Identity Contract §13 / C6): score externally
+     * supplied demographics against a candidate with the SAME field functions
+     * and weights as entity-vs-entity matching. Replaces the drift-prone copy
+     * that lived in ExternalRegistrationService.
+     */
+    public double scoreDemographics(String givenName, String familyName,
+                                    String dateOfBirth, String sex,
+                                    ClientEntity candidate) {
+        Map<String, Double> scores = new LinkedHashMap<>();
+        scores.put("givenName", jaroWinkler(givenName, candidate.getGivenName()));
+        scores.put("familyName", jaroWinkler(familyName, candidate.getFamilyName()));
+        scores.put("dateOfBirth", exactMatch(dateOfBirth,
+                candidate.getDateOfBirth() != null ? candidate.getDateOfBirth().toString() : null));
+        scores.put("sex", exactMatch(sex, candidate.getSex()));
+        return computeWeightedScore(scores);
+    }
+
     private Map<String, Double> computeFieldScores(ClientEntity source, ClientEntity candidate) {
         Map<String, Double> scores = new LinkedHashMap<>();
 

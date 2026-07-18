@@ -12,7 +12,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.vito.api.dto.ClientRegistryDtos;
 import zw.gov.mohcc.impilo.vito.api.dto.ClientIdentitySummary;
-import zw.gov.mohcc.impilo.vito.core.id.ImpiloIdFormat;
+import zw.gov.mohcc.impilo.vito.core.id.ImpiloIdFormatV2;
 import zw.gov.mohcc.impilo.vito.core.matching.MatchingEngine;
 import zw.gov.mohcc.impilo.vito.core.merge.MergeService;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientAliasEntity;
@@ -86,7 +86,8 @@ public class ClientIdentityOperationsService {
     private final MatchingEngine matchingEngine;
     private final MergeService mergeService;
     private final ImpiloIdAliasService aliasService;
-    private final ImpiloIdFormat impiloIdFormat;
+    // Format v2 (ISO 7064) is the only issuance format — Identity Contract §4.1 / D8.
+    private final ImpiloIdFormatV2 impiloIdFormat;
     private final ObjectMapper objectMapper;
     private final ClientAddressDelegationPublisher addressDelegationPublisher;
 
@@ -108,7 +109,7 @@ public class ClientIdentityOperationsService {
                                            MatchingEngine matchingEngine,
                                            MergeService mergeService,
                                            ImpiloIdAliasService aliasService,
-                                           ImpiloIdFormat impiloIdFormat,
+                                           ImpiloIdFormatV2 impiloIdFormat,
                                            ObjectMapper objectMapper,
                                            ClientAddressDelegationPublisher addressDelegationPublisher) {
         this.clientRepository = clientRepository;

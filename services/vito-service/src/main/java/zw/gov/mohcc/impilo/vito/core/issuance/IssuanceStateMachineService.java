@@ -5,7 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.vito.core.*;
-import zw.gov.mohcc.impilo.vito.core.id.ImpiloIdFormat;
+import zw.gov.mohcc.impilo.vito.core.id.ImpiloIdFormatV2;
 import zw.gov.mohcc.impilo.vito.core.card.CardLifecycleService;
 import zw.gov.mohcc.impilo.vito.persistence.entity.*;
 import zw.gov.mohcc.impilo.vito.persistence.repository.*;
@@ -18,14 +18,15 @@ public class IssuanceStateMachineService {
 
     private final IssuanceRequestRepository issuanceRepo;
     private final ClientRepository clientRepo;
-    private final ImpiloIdFormat impiloIdFormat;
+    // Format v2 (ISO 7064) is the only issuance format — Identity Contract §4.1 / D8.
+    private final ImpiloIdFormatV2 impiloIdFormat;
     private final ImpiloIdAliasService aliasService;
     private final CardLifecycleService cardService;
     private final EventOutboxRepository outboxRepo;
 
     public IssuanceStateMachineService(IssuanceRequestRepository issuanceRepo,
                                         ClientRepository clientRepo,
-                                        ImpiloIdFormat impiloIdFormat,
+                                        ImpiloIdFormatV2 impiloIdFormat,
                                         ImpiloIdAliasService aliasService,
                                         CardLifecycleService cardService,
                                         EventOutboxRepository outboxRepo) {
