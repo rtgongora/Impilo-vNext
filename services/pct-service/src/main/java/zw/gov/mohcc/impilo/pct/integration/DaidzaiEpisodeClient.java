@@ -50,7 +50,7 @@ public class DaidzaiEpisodeClient {
      * @return the minted (or pre-existing) trauma episode id, or {@code null} if DAIDZAI is
      *         unreachable / returned no id.
      */
-    public UUID mintEdWalkIn(UUID tenantId, UUID edVisitId, String subjectHealthId,
+    public UUID mintEdWalkIn(UUID tenantId, UUID edVisitId, String subjectCpid,
                              String subjectIdentityMode) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("originService", "pct-service");
@@ -59,7 +59,7 @@ public class DaidzaiEpisodeClient {
         body.put("ownerRef", edVisitId.toString());
         body.put("firstPhase", "ED");
         body.put("subjectIdentityMode", subjectIdentityMode != null ? subjectIdentityMode : "UNKNOWN");
-        if (subjectHealthId != null) body.put("subjectHealthId", subjectHealthId);
+        if (subjectCpid != null) { body.put("subjectCpid", subjectCpid); body.put("subjectHealthId", subjectCpid); } // actor-plane HID (legacy daidzai wire key; value is a CPID)
         try {
             ResponseEntity<Map> resp = restTemplate.exchange(baseUrl + "/internal/v1/daidzai/trauma-episodes",
                     HttpMethod.POST, new HttpEntity<>(body, headers(tenantId)), Map.class);

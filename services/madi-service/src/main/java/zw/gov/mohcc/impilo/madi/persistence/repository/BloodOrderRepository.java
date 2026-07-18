@@ -22,6 +22,6 @@ public interface BloodOrderRepository extends JpaRepository<BloodOrderEntity, Lo
     @Query("update BloodOrderEntity o set o.patientCpid = :survivor "
             + "where o.tenantId = :tenantId and o.patientCpid = :merged")
     int repointPatientCpid(@Param("tenantId") UUID tenantId,
-                           @Param("merged") String mergedHealthId,
-                           @Param("survivor") String survivorHealthId);
+                           @Param("merged") String mergedCpid,
+                           @Param("survivor") String survivorCpid);
 }

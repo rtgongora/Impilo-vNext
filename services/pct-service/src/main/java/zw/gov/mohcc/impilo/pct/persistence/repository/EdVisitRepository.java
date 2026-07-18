@@ -17,8 +17,8 @@ public interface EdVisitRepository extends JpaRepository<EdVisitEntity, UUID> {
     @Query("update EdVisitEntity v set v.patientCpid = :survivor "
             + "where v.tenantId = :tenantId and v.patientCpid = :merged")
     int repointPatientCpid(@Param("tenantId") UUID tenantId,
-                           @Param("merged") String mergedHealthId,
-                           @Param("survivor") String survivorHealthId);
+                           @Param("merged") String mergedCpid,
+                           @Param("survivor") String survivorCpid);
 
     Optional<EdVisitEntity> findByJourneyId(String journeyId);
     List<EdVisitEntity> findByTenantIdAndFacilityIdAndStatusInOrderByCreatedAtDesc(

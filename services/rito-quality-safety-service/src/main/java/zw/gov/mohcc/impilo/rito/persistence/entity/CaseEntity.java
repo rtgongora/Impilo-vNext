@@ -93,8 +93,8 @@ public class CaseEntity {
     @Column(name = "reporter_actor_type", length = 48)
     private String reporterActorType;
 
-    @Column(name = "subject_health_id", length = 128)
-    private String subjectHealthId;
+    @Column(name = "subject_cpid", length = 128)
+    private String subjectCpid;
 
     @Column(name = "assigned_to_actor_id", length = 128)
     private String assignedToActorId;
@@ -224,8 +224,8 @@ public class CaseEntity {
     public void setReporterActorId(String reporterActorId) { this.reporterActorId = reporterActorId; }
     public String getReporterActorType() { return reporterActorType; }
     public void setReporterActorType(String reporterActorType) { this.reporterActorType = reporterActorType; }
-    public String getSubjectHealthId() { return subjectHealthId; }
-    public void setSubjectHealthId(String subjectHealthId) { this.subjectHealthId = subjectHealthId; }
+    public String getSubjectCpid() { return subjectCpid; }
+    public void setSubjectCpid(String subjectCpid) { this.subjectCpid = subjectCpid; }
     public String getAssignedToActorId() { return assignedToActorId; }
     public void setAssignedToActorId(String assignedToActorId) { this.assignedToActorId = assignedToActorId; }
     public String getAssignedToActorType() { return assignedToActorType; }

@@ -175,6 +175,27 @@ public class IdResolutionService {
     }
 
     /**
+     * Audited reverse resolution (Identity Contract §7.4): CPID → mapping, with a
+     * mandatory purpose of use and a REVERSE_RESOLVED outbox event per call. The
+     * plain {@link #getMappingByCpid} stays for internal composition; this is the
+     * only HTTP-exposed reverse path.
+     */
+    @Transactional
+    public MappingResponse reverseResolveAudited(UUID tenantId, UUID cpid,
+                                                 String purposeOfUse, String actorId) {
+        if (purposeOfUse == null || purposeOfUse.isBlank()) {
+            throw new IllegalArgumentException("x-purpose-of-use is required for reverse resolution");
+        }
+        MappingResponse result = getMappingByCpid(tenantId, cpid);
+        publishOutboxEvent("IdMapping", cpid.toString(), "REVERSE_RESOLVED",
+                Map.of("tenantId", tenantId,
+                       "cpid", cpid,
+                       "purposeOfUse", purposeOfUse,
+                       "actorId", actorId != null ? actorId : "unknown"));
+        return result;
+    }
+
+    /**
      * Looks up an existing mapping without creating one (used by the merge relay
      * for the merged identity — if it was never mapped, no clinical data exists
      * under it and there is nothing to repoint).

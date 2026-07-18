@@ -57,9 +57,10 @@ public class ClinicalNoteService {
         ClinicalNoteEntity row = new ClinicalNoteEntity();
         row.setTenantId(tenantId);
         row.setPatientId(requiredString(body, "patient_id"));
-        Object ph = body.get("patient_health_id");
+        Object ph = body.get("subject_cpid");
+        if (ph == null) ph = body.get("patient_health_id"); // actor-plane HID (legacy wire key; value is a CPID)
         if (ph != null && !String.valueOf(ph).isBlank()) {
-            row.setPatientHealthId(UUID.fromString(String.valueOf(ph).trim()));
+            row.setSubjectCpid(UUID.fromString(String.valueOf(ph).trim()));
         }
         Object enc = body.get("encounter_id");
         if (enc != null && !String.valueOf(enc).isBlank()) {

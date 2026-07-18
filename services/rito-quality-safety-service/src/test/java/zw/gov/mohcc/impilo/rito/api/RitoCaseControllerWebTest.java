@@ -36,10 +36,10 @@ class RitoCaseControllerWebTest {
     }
 
     /** Creates a case at a facility and returns its id. */
-    private String createCaseAtFacility(UUID tenant, String facilityId, String subjectHealthId) throws Exception {
+    private String createCaseAtFacility(UUID tenant, String facilityId, String subjectCpid) throws Exception {
         String body = "{\"caseType\":\"COMPLAINT\",\"title\":\"t\",\"description\":\"d\",\"severity\":\"MODERATE\","
                 + "\"source\":\"WEB_PORTAL\",\"facilityId\":\"" + facilityId + "\","
-                + "\"subjectHealthId\":\"" + subjectHealthId + "\"}";
+                + "\"subjectCpid\":\"" + subjectCpid + "\"}";
         String json = mockMvc.perform(staff(post("/internal/v1/rito/cases"), tenant)
                         .header("Idempotency-Key", UUID.randomUUID().toString())
                         .contentType(MediaType.APPLICATION_JSON).content(body))
@@ -80,19 +80,19 @@ class RitoCaseControllerWebTest {
     @Test
     void suppress_fields_obligation_redacts_case_identity_on_read() throws Exception {
         UUID tenant = UUID.randomUUID();
-        String id = createCaseAtFacility(tenant, UUID.randomUUID().toString(), "HID-SECRET");
+        String id = createCaseAtFacility(tenant, UUID.randomUUID().toString(), "CPID-SECRET");
 
         // No obligation -> subject identity visible.
         mockMvc.perform(staff(get("/internal/v1/rito/cases/" + id), tenant))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.subjectHealthId").value("HID-SECRET"));
+                .andExpect(jsonPath("$.subjectCpid").value("CPID-SECRET"));
 
         // suppressFields obligation -> subject identity removed from the representation.
         mockMvc.perform(staff(get("/internal/v1/rito/cases/" + id), tenant)
-                        .header("x-suppress-fields", "subjectHealthId,reporterActorId"))
+                        .header("x-suppress-fields", "subjectCpid,reporterActorId"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.subjectHealthId").doesNotExist())
+                .andExpect(jsonPath("$.subjectCpid").doesNotExist())
                 .andExpect(jsonPath("$.reporterActorId").doesNotExist());
     }
 

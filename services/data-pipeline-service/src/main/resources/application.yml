@@ -70,5 +70,5 @@ pipeline:
   kafka:
     topics:
       journey-completed: ${PIPELINE_KAFKA_TOPICS_JOURNEY_COMPLETED:clinical.pct.journey.completed}
-      client-registered: ${PIPELINE_KAFKA_TOPICS_CLIENT_REGISTERED:kernel.vito.client.registered}
+      client-registered: ${PIPELINE_KAFKA_TOPICS_CLIENT_REGISTERED:impilo.identity.subject}
       result-available: ${PIPELINE_KAFKA_TOPICS_RESULT_AVAILABLE:clinical.oros.result.available}

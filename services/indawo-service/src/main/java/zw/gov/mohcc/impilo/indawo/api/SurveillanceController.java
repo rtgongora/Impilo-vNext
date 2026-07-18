@@ -154,7 +154,7 @@ public class SurveillanceController {
         FieldTeamEntity e = new FieldTeamEntity();
         e.setName(req.name());
         if (req.teamType() != null) e.setTeamType(req.teamType());
-        e.setLeadHealthId(req.leadHealthId());
+        e.setLeadHealthId(req.leadHealthId()); // actor-plane HID
         e.setMemberCount(req.memberCount() != null ? req.memberCount() : 0);
         e.setBaseSiteId(req.baseSiteId());
         FieldTeamEntity saved = service.createTeam(tenantId, actor(ctx), e);
@@ -218,7 +218,7 @@ public class SurveillanceController {
 
     private static SurveillanceDtos.TeamResponse toTeam(FieldTeamEntity e) {
         return new SurveillanceDtos.TeamResponse(e.getTeamId().toString(), e.getName(), e.getTeamType(),
-                e.getStatus(), e.getLeadHealthId(), e.getMemberCount());
+                e.getStatus(), e.getLeadHealthId(), e.getMemberCount()); // actor-plane HID
     }
 
     private static SurveillanceDtos.DeploymentResponse toDeployment(FieldTeamDeploymentEntity e) {

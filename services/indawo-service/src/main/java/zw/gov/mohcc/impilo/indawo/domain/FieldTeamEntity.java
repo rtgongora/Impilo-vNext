@@ -30,8 +30,8 @@ public class FieldTeamEntity {
     @Column(name = "status", nullable = false, length = 32)
     private String status = "AVAILABLE";
 
-    @Column(name = "lead_health_id", length = 128)
-    private String leadHealthId;
+    @Column(name = "lead_health_id", length = 128) // actor-plane HID
+    private String leadHealthId; // actor-plane HID
 
     @Column(name = "member_count", nullable = false)
     private int memberCount;
@@ -70,8 +70,8 @@ public class FieldTeamEntity {
     public void setTeamType(String teamType) { this.teamType = teamType; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-    public String getLeadHealthId() { return leadHealthId; }
-    public void setLeadHealthId(String leadHealthId) { this.leadHealthId = leadHealthId; }
+    public String getLeadHealthId() { return leadHealthId; } // actor-plane HID
+    public void setLeadHealthId(String leadHealthId) { this.leadHealthId = leadHealthId; } // actor-plane HID
     public int getMemberCount() { return memberCount; }
     public void setMemberCount(int memberCount) { this.memberCount = memberCount; }
     public UUID getBaseSiteId() { return baseSiteId; }

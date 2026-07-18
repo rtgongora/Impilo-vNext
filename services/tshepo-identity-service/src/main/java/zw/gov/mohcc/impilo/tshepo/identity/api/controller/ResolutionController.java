@@ -80,8 +80,27 @@ public class ResolutionController {
     }
 
     /**
-     * Create a new Health ID → CPID mapping. The CPID is deterministically
-     * generated (UUID v5). Idempotent: if the mapping already exists, the
+     * Reverse resolution: CPID → mapping (Identity Contract §7.4).
+     *
+     * <p>The only sanctioned path from a clinical subject key back to the identity
+     * plane, for authorised composition flows (e.g. deep-link entry with only a
+     * CPID). A purpose of use is mandatory and every call is audited via the
+     * outbox ({@code REVERSE_RESOLVED}) — there is no unaudited reverse path.</p>
+     */
+    @GetMapping("/mappings/by-cpid/{cpid}")
+    public ResponseEntity<ApiResponse<MappingResponse>> getMappingByCpid(
+            @PathVariable UUID cpid,
+            @RequestHeader("x-tenant-id") UUID tenantId,
+            @RequestHeader("x-purpose-of-use") String purposeOfUse,
+            @RequestHeader(value = "x-actor-id", required = false) String actorId) {
+        MappingResponse result = resolutionService.reverseResolveAudited(
+                tenantId, cpid, purposeOfUse, actorId);
+        return ResponseEntity.ok(ApiResponse.ok(result, null));
+    }
+
+    /**
+     * Create a new Health ID → CPID mapping with an independent random CPID
+     * (Identity Contract §7). Idempotent: if the mapping already exists, the
      * existing record is returned.
      */
     @PostMapping("/mapping")

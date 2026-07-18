@@ -100,8 +100,6 @@ vito:
     # DualEmitPolicy: LEGACY_ONLY | V1_1_ONLY | DUAL
     emit-mode: ${VITO_EMIT_MODE:DUAL}
   outbox:
-    dual-emit-kernel-client-registered-enabled: ${VITO_OUTBOX_DUAL_EMIT_KERNEL_CLIENT_REGISTERED_ENABLED:false}
-    kernel-client-registered-topic: ${VITO_OUTBOX_KERNEL_CLIENT_REGISTERED_TOPIC:kernel.vito.client.registered}
 
 impilo:
   ops:

@@ -140,6 +140,28 @@ public class TechCompanionAutoConfiguration {
         return reg;
     }
 
+    /**
+     * Patient-context guard (Identity Contract §7.2): writes carrying
+     * {@code X-Subject-ID} must present a matching patient-context token.
+     * Mode via {@code impilo.subject-context.mode} = off | log | enforce
+     * (default off; flip to log at the CPID cutover, enforce once the estate
+     * carries tokens end-to-end).
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "companionSubjectContextFilter")
+    public FilterRegistrationBean<zw.gov.mohcc.impilo.companion.filter.SubjectContextFilter>
+            companionSubjectContextFilter(
+                    @org.springframework.beans.factory.annotation.Value(
+                            "${impilo.subject-context.mode:off}") String mode) {
+        FilterRegistrationBean<zw.gov.mohcc.impilo.companion.filter.SubjectContextFilter> reg =
+                new FilterRegistrationBean<>();
+        reg.setFilter(new zw.gov.mohcc.impilo.companion.filter.SubjectContextFilter(mode));
+        reg.addUrlPatterns(V11_URL_PATTERNS);
+        reg.setOrder(13);
+        reg.setName("companionSubjectContextFilter");
+        return reg;
+    }
+
     // ── Correlation MDC Filter (structured logging) ────────────
 
     @Bean

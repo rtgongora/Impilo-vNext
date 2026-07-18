@@ -40,7 +40,7 @@ public class RitoSafetyClient {
     /** Open a RITO case for a theatre safety concern. Returns the RITO case id, or null if RITO was down. */
     @SuppressWarnings("unchecked")
     public String createCase(String caseType, String title, String description, String severity,
-                             String category, String subjectHealthId, Map<String, Object> metadata,
+                             String category, String subjectCpid, Map<String, Object> metadata,
                              String idempotencyKey) {
         try {
             Map<String, Object> payload = new LinkedHashMap<>();
@@ -52,7 +52,7 @@ public class RitoSafetyClient {
             // service-to-service case is INTEGRATION_API. "THEATRE" was rejected 400 so no case opened.
             payload.put("source", "INTEGRATION_API");
             payload.put("category", category);
-            if (subjectHealthId != null) payload.put("subjectHealthId", subjectHealthId);
+            if (subjectCpid != null) payload.put("subjectCpid", subjectCpid);
             payload.put("metadata", metadata != null ? metadata : Map.of());
             ResponseEntity<Map> resp = restTemplate.postForEntity(baseUrl + "/internal/v1/rito/cases",
                     new HttpEntity<>(payload, trustHeaders(idempotencyKey)), Map.class);

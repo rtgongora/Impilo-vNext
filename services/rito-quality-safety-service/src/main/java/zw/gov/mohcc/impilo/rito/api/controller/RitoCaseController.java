@@ -96,7 +96,8 @@ public class RitoCaseController {
                 uuid(body, "programmeId"),
                 reporterActorId != null ? reporterActorId : actorId,
                 reporterActorType != null ? reporterActorType : actorType,
-                str(body, "subjectHealthId"),
+                str(body, "subjectCpid") != null ? str(body, "subjectCpid")
+                        : str(body, "subjectHealthId"), // actor-plane HID (legacy wire key; value is a CPID)
                 boolVal(body, "asDraft"),
                 metadata);
         return ResponseEntity.status(HttpStatus.CREATED).body(caseService.createCase(tenantId, newCase));

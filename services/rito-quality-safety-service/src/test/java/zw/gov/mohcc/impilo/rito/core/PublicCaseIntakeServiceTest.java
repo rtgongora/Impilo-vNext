@@ -68,8 +68,11 @@ class PublicCaseIntakeServiceTest {
 
     @Test
     void public_lane_rejects_non_allowlisted_case_types() {
+        // COMPLIMENT and SUGGESTION joined the public-lane allowlist with the
+        // public-feedback routing feature (V003); clinical/safety case types and
+        // missing types remain rejected.
         UUID tenant = UUID.randomUUID();
-        for (String rejected : new String[]{"COMPLIMENT", "SUGGESTION", "ADVERSE_EVENT", null}) {
+        for (String rejected : new String[]{"ADVERSE_EVENT", "NEAR_MISS", null}) {
             assertThatThrownBy(() -> intakeService.openPublicCase(tenant, rejected,
                     "t", "d", null, null))
                     .isInstanceOf(IllegalArgumentException.class);

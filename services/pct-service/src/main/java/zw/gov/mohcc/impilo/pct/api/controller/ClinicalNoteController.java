@@ -81,7 +81,7 @@ public class ClinicalNoteController {
 
     private Map<String, Object> toDetail(ClinicalNoteEntity e) {
         Map<String, Object> m = new LinkedHashMap<>(toSummary(e));
-        m.put("patient_health_id", e.getPatientHealthId() != null ? e.getPatientHealthId().toString() : null);
+        m.put("subject_cpid", e.getSubjectCpid() != null ? e.getSubjectCpid().toString() : null);
         m.put("encounter_id", e.getEncounterId() != null ? e.getEncounterId().toString() : null);
         m.put("body", e.getBody());
         m.put("subjective", e.getSubjective());

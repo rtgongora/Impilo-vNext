@@ -19,6 +19,6 @@ public interface EmergencyCaseRepository extends JpaRepository<EmergencyCaseEnti
     @Query("update EmergencyCaseEntity c set c.knownSubjectCpid = :survivor "
             + "where c.tenantId = :tenantId and c.knownSubjectCpid = :merged")
     int repointKnownSubjectCpid(@Param("tenantId") UUID tenantId,
-                             @Param("merged") String mergedHealthId,
-                             @Param("survivor") String survivorHealthId);
+                             @Param("merged") String mergedCpid,
+                             @Param("survivor") String survivorCpid);
 }

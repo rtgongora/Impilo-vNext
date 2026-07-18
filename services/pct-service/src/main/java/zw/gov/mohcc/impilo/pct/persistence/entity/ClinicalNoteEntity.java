@@ -21,8 +21,8 @@ public class ClinicalNoteEntity {
     @Column(name = "patient_id", nullable = false, length = 128)
     private String patientId;
 
-    @Column(name = "patient_health_id")
-    private UUID patientHealthId;
+    @Column(name = "subject_cpid")
+    private UUID subjectCpid;
 
     @Column(name = "encounter_id")
     private UUID encounterId;
@@ -98,12 +98,12 @@ public class ClinicalNoteEntity {
         this.patientId = patientId;
     }
 
-    public UUID getPatientHealthId() {
-        return patientHealthId;
+    public UUID getSubjectCpid() {
+        return subjectCpid;
     }
 
-    public void setPatientHealthId(UUID patientHealthId) {
-        this.patientHealthId = patientHealthId;
+    public void setSubjectCpid(UUID subjectCpid) {
+        this.subjectCpid = subjectCpid;
     }
 
     public UUID getEncounterId() {

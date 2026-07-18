@@ -226,10 +226,10 @@ public class EdVisitService {
         ec.setTenantId(ctx.tenantId());
         ec.setTempPersonRef(EdPayloadMapper.str(body, "tempPersonRef", "temp_person_ref"));
         // Clinical intake carries the subject CPID (Identity Contract §7.2); the
-        // legacy knownHealthId key is accepted for wire compat but the value must
+        // legacy wire key accepted for compat but the value must
         // already be a mapped CPID — PCT never resolves or stores Health IDs.
         ec.setKnownSubjectCpid(EdPayloadMapper.str(body,
-                "knownSubjectCpid", "known_subject_cpid", "knownHealthId", "known_health_id"));
+                "knownSubjectCpid", "known_subject_cpid", "knownHealthId", "known_health_id")); // actor-plane HID (legacy wire key; value is a CPID)
         ec.setTriageCategory(Objects.requireNonNullElse(
                 EdPayloadMapper.str(body, "triageCategory", "triage_category"), "RED").toUpperCase());
         ec.setPresentingComplaint(complaint);
@@ -267,7 +267,7 @@ public class EdVisitService {
         // tshepo-identity. Legacy key spellings accepted for wire compat; the value
         // is a CPID either way — PCT never touches Health IDs.
         String reconciledCpid = EdPayloadMapper.str(body,
-                "reconciledCpid", "reconciled_cpid", "reconciledHealthId", "reconciled_health_id");
+                "reconciledCpid", "reconciled_cpid", "reconciledHealthId", "reconciled_health_id"); // actor-plane HID (legacy wire key; value is a CPID)
         if (reconciledCpid == null || reconciledCpid.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reconciledCpid is required");
         }

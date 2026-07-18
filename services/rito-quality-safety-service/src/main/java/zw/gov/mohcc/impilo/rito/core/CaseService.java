@@ -68,7 +68,7 @@ public class CaseService {
     public record NewCase(
             String caseType, String title, String description, String severity, String source,
             String category, boolean anonymous, UUID facilityId, UUID districtId, UUID provinceId,
-            UUID programmeId, String reporterActorId, String reporterActorType, String subjectHealthId,
+            UUID programmeId, String reporterActorId, String reporterActorType, String subjectCpid,
             boolean asDraft, Map<String, Object> metadata) {
     }
 
@@ -105,7 +105,7 @@ public class CaseService {
             c.setReporterActorId(cmd.reporterActorId());
             c.setReporterActorType(cmd.reporterActorType());
         }
-        c.setSubjectHealthId(cmd.subjectHealthId());
+        c.setSubjectCpid(cmd.subjectCpid());
         c.setStatus(cmd.asDraft() ? CaseLifecycle.DRAFT : CaseLifecycle.SUBMITTED);
         c.setCreatedBy(cmd.reporterActorId());
         applySla(c, tenantId, caseType, severity);
@@ -187,7 +187,7 @@ public class CaseService {
 
     private static boolean isOwnCase(CaseEntity c, String actorId) {
         return actorId != null && !actorId.isBlank()
-                && (actorId.equals(c.getReporterActorId()) || actorId.equals(c.getSubjectHealthId()));
+                && (actorId.equals(c.getReporterActorId()) || actorId.equals(c.getSubjectCpid()));
     }
 
     @Transactional(readOnly = true)

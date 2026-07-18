@@ -51,13 +51,13 @@ public final class SurveillanceDtos {
 
     // ── Field teams ──
     public record CreateTeamRequest(
-            @NotBlank String name, String teamType, String leadHealthId,
+            @NotBlank String name, String teamType, String leadHealthId, // actor-plane HID
             Integer memberCount, UUID baseSiteId
     ) {}
 
     public record TeamResponse(
             String teamId, String name, String teamType, String status,
-            String leadHealthId, int memberCount
+            String leadHealthId, int memberCount // actor-plane HID
     ) {}
 
     public record DeployRequest(UUID outbreakId, UUID siteId, String objective) {}
