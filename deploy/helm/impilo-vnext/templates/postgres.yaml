@@ -10,6 +10,24 @@ stringData:
   POSTGRES_USER: {{ .Values.postgres.username | quote }}
   POSTGRES_DB: {{ .Values.postgres.database | quote }}
 ---
+# Durable data volume (2026-07-18): postgres previously ran on emptyDir, so ANY pod
+# restart erased every database in the estate (it happened — twice). local-path PVC
+# (cluster default StorageClass), same pattern as ndila-martin-data.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    # Survives 'helm uninstall' — data volumes are only destroyed by the explicit
+    # FULL_BOOT_WIPE_DATA=1 namespace wipe (see scripts/operator/fullboot.sh).
+    "helm.sh/resource-policy": keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.postgres.storageSize | default "50Gi" }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -61,7 +79,8 @@ spec:
             {{- end }}
       volumes:
         - name: data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: postgres-data
         {{- if .Values.postgres.initDatabases }}
         - name: init-scripts
           configMap:

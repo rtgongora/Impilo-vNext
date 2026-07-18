@@ -63,6 +63,8 @@ postgres:
   # values-full-preview-runtime.generated.yaml (regenerated on each deploy).
   maxConnections: 600
   sharedBuffers: 256MB
+  # Durable data volume (PVC, local-path). 2026-07-18: emptyDir wiped the estate twice.
+  storageSize: 50Gi
 
 redis:
   enabled: true
@@ -70,6 +72,7 @@ redis:
 
 kafka:
   enabled: true
+  storageSize: 10Gi
   image:
     repository: apache/kafka
     tag: "3.7.1"
@@ -84,9 +87,10 @@ kafka:
 
 keycloak:
   enabled: true
-  # Seed the impilo realm (client experience-ui + users/roles) on every Keycloak start
-  # so browser login works durably. start-dev uses ephemeral H2, so --import-realm
-  # re-seeds from the mounted ConfigMap (files/realm-impilo-preview.json) on each boot.
+  storageSize: 2Gi
+  # Seed the impilo realm (client experience-ui + users/roles) at FIRST boot.
+  # H2 now lives on the keycloak-data PVC (2026-07-18), so --import-realm only runs
+  # into an empty database; later restarts keep users (incl. citizen signups).
   realmImport:
     enabled: true
   image:
@@ -117,6 +121,7 @@ envoy:
 
 minio:
   enabled: true
+  storageSize: 20Gi
   image:
     repository: minio/minio
     tag: latest
@@ -179,6 +184,7 @@ livekitEgress:
 
 orthanc:
   enabled: true
+  storageSize: 10Gi
   image:
     # docker.io is unreachable from the preview VM; the gcr mirror carries the
     # jodogne images (orthanc-plugins ships the DICOMweb plugin).

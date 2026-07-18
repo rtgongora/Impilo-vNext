@@ -1,5 +1,22 @@
 {{- if .Values.kafka.enabled }}
 ---
+# Durable KRaft log volume (2026-07-18): Kafka previously wrote to /tmp inside the container
+# (no volume), so any pod restart erased all topics, partitions and consumer offsets.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-data
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    # Survives 'helm uninstall' — data volumes are only destroyed by the explicit
+    # FULL_BOOT_WIPE_DATA=1 namespace wipe (see scripts/operator/fullboot.sh).
+    "helm.sh/resource-policy": keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.kafka.storageSize | default "10Gi" }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -49,7 +66,7 @@ spec:
             - name: CLUSTER_ID
               value: "impilo-preview-kafka-01"
             - name: KAFKA_LOG_DIRS
-              value: "/tmp/kraft-combined-logs"
+              value: "/var/lib/kafka/data/kraft-combined-logs"
             - name: KAFKA_INTER_BROKER_LISTENER_NAME
               value: "PLAINTEXT"
           startupProbe:
@@ -70,6 +87,13 @@ spec:
             failureThreshold: 6
           resources:
             {{- toYaml .Values.kafka.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/kafka/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: kafka-data
 ---
 apiVersion: v1
 kind: Service

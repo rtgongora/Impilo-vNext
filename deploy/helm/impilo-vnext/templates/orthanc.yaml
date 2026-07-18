@@ -1,8 +1,23 @@
 {{- if .Values.orthanc.enabled }}
 # Orthanc DICOM server — preview imaging backend for pacs-adapter-service.
 # Preview-scoped: authentication disabled (ClusterIP-only, never exposed via
-# ingress) and ephemeral storage (studies do not survive pod restarts). Real
-# deployments must front Orthanc with auth and persistent volumes.
+# ingress). Storage is a durable PVC (2026-07-18) — studies survive pod restarts.
+# Real deployments must additionally front Orthanc with auth.
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: orthanc-data
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    # Survives 'helm uninstall' — data volumes are only destroyed by the explicit
+    # FULL_BOOT_WIPE_DATA=1 namespace wipe (see scripts/operator/fullboot.sh).
+    "helm.sh/resource-policy": keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.orthanc.storageSize | default "10Gi" }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -77,7 +92,8 @@ spec:
           configMap:
             name: orthanc-config
         - name: orthanc-storage
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: orthanc-data
 ---
 apiVersion: v1
 kind: Service

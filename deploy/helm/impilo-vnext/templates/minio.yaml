@@ -1,5 +1,22 @@
 {{- if .Values.minio.enabled }}
 ---
+# Durable object volume (2026-07-18): MinIO previously had NO volume — /data lived on the
+# container's writable layer, so any pod restart erased every uploaded document/reel/recording.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-data
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    # Survives 'helm uninstall' — data volumes are only destroyed by the explicit
+    # FULL_BOOT_WIPE_DATA=1 namespace wipe (see scripts/operator/fullboot.sh).
+    "helm.sh/resource-policy": keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.minio.storageSize | default "20Gi" }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -50,6 +67,13 @@ spec:
             periodSeconds: 20
           resources:
             {{- toYaml .Values.minio.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: minio-data
 ---
 apiVersion: v1
 kind: Service

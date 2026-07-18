@@ -1,5 +1,20 @@
 {{- if .Values.keycloak.enabled }}
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: keycloak-data
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    # Survives 'helm uninstall' — data volumes are only destroyed by the explicit
+    # FULL_BOOT_WIPE_DATA=1 namespace wipe (see scripts/operator/fullboot.sh).
+    "helm.sh/resource-policy": keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.keycloak.storageSize | default "2Gi" }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -89,18 +104,28 @@ spec:
             failureThreshold: 6
           resources:
             {{- toYaml .Values.keycloak.resources | nindent 12 }}
-          {{- if (.Values.keycloak.realmImport | default dict).enabled }}
           volumeMounts:
+            # Durable H2 volume (2026-07-18): start-dev keeps its embedded H2 under
+            # /opt/keycloak/data on the container's writable layer, so any pod restart
+            # erased every user (incl. real citizen signups) and session. The realm-import
+            # ConfigMap stays nested below the PVC mount; import only runs into an empty
+            # H2, so the first boot imports and later restarts keep users.
+            - name: data
+              mountPath: /opt/keycloak/data
+            {{- if (.Values.keycloak.realmImport | default dict).enabled }}
             - name: realm-import
               mountPath: /opt/keycloak/data/import
               readOnly: true
-          {{- end }}
-      {{- if (.Values.keycloak.realmImport | default dict).enabled }}
+            {{- end }}
       volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: keycloak-data
+        {{- if (.Values.keycloak.realmImport | default dict).enabled }}
         - name: realm-import
           configMap:
             name: keycloak-realm-import
-      {{- end }}
+        {{- end }}
 ---
 apiVersion: v1
 kind: Service
