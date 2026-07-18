@@ -31,9 +31,14 @@ public record AuthorizationRequest(
     String programmeId,
     String shiftId,
     // ── Governance (Health OS §11) ──
-    String assuranceLevel,      // LOA1–LOA4
+    String assuranceLevel,      // LOA1–LOA4 (coarse; effective IAL = max(this, ial))
     String subjectId,           // Patient/subject of action
     String workflowState,       // Health OS §11 dim 10: workflow state (e.g. DRAFT, ACTIVE, DISCHARGED)
+    // ── Assurance vector (Identity Contract §9) ──
+    String ial,                     // identity proofing level (LOA1–4)
+    String aal,                     // authentication level this session (LOA1–4)
+    String recordLinkConfidence,    // LOW | MEDIUM | HIGH | DISPUTED
+    String sessionAssurance,        // device/session assurance (LOA1–4)
     // ── Derived from request ──
     String action,
     String resourceType,
@@ -80,6 +85,11 @@ public record AuthorizationRequest(
             headerGetter.apply(TrustHeaders.ASSURANCE_LEVEL),
             headerGetter.apply(TrustHeaders.SUBJECT_ID),
             headerGetter.apply(TrustHeaders.WORKFLOW_STATE),
+            // Assurance vector (Identity Contract §9)
+            headerGetter.apply(TrustHeaders.IAL),
+            headerGetter.apply(TrustHeaders.AAL),
+            headerGetter.apply(TrustHeaders.RECORD_LINK_CONFIDENCE),
+            headerGetter.apply(TrustHeaders.SESSION_ASSURANCE),
             // Derived from request
             deriveAction(method, path),
             deriveResourceType(path),

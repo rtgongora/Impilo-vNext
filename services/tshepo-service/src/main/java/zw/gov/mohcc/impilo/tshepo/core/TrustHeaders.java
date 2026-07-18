@@ -37,6 +37,15 @@ public final class TrustHeaders {
     public static final String ACCESS_MODE     = "x-access-mode";
     public static final String WORKFLOW_STATE  = "x-workflow-state";
 
+    // ── Assurance vector (Identity Contract §9) ──────────────────────
+    // Four independent dimensions; effective identity assurance is the max of
+    // the coarse ASSURANCE_LEVEL and the IAL, so a self-service upgrade delivered
+    // via IAL reaches policy even when a stale ACR-derived level lags (G-CZO-01).
+    public static final String IAL = "x-ial";  // identity proofing level (LOA1–4)
+    public static final String AAL = "x-aal";  // authentication level this session (LOA1–4)
+    public static final String RECORD_LINK_CONFIDENCE = "x-record-link-confidence"; // LOW|MEDIUM|HIGH|DISPUTED
+    public static final String SESSION_ASSURANCE = "x-session-assurance"; // LOA1–4 (device/session)
+
     // ── Response / obligation headers ────────────────────────────────
     public static final String DECISION      = "x-decision";
     public static final String OBLIGATIONS   = "x-obligations";

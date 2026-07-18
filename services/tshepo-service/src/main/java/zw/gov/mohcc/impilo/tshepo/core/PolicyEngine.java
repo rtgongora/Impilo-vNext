@@ -169,16 +169,20 @@ public class PolicyEngine {
             return decision;
         }
 
-        // --- Step 8: Assurance level gate (Health OS §11) ---
-        // High-sensitivity resources require elevated identity assurance (LOA3+).
-        if (requiresElevatedAssurance(request.action(), request.resourceType())
-                && !meetsAssuranceThreshold(request.assuranceLevel(), "LOA3")) {
-            Decision decision = Decision.stepUpRequired(
-                List.of("IDENTITY_PROOFING", "BIOMETRIC"), riskScore
-            );
-            persistDecision(request, decision, startTime);
-            appendAuditEntry(request, "STEP_UP_ASSURANCE");
-            return decision;
+        // --- Step 8: Assurance vector gate (Identity Contract §9) ---
+        // High-sensitivity actions require minimum values across four independent
+        // dimensions. Step-up names the DEFICIENT dimension — they have different
+        // remedies (re-proof vs re-authenticate vs resolve a disputed link).
+        if (requiresElevatedAssurance(request.action(), request.resourceType())) {
+            String deficient = deficientAssuranceDimension(request);
+            if (deficient != null) {
+                Decision decision = Decision.stepUpRequired(
+                    stepUpMethodsFor(deficient), riskScore
+                );
+                persistDecision(request, decision, startTime);
+                appendAuditEntry(request, "STEP_UP_" + deficient);
+                return decision;
+            }
         }
 
         // --- Step 9: ALLOW with appropriate obligations ---
@@ -480,6 +484,65 @@ public class PolicyEngine {
         int actualLevel = parseLoaLevel(actual);
         int requiredLevel = parseLoaLevel(required);
         return actualLevel >= requiredLevel;
+    }
+
+    /**
+     * Evaluates the four-dimension assurance vector (Identity Contract §9) for an
+     * elevated-assurance action and returns the FIRST deficient dimension, or
+     * {@code null} when all minimums are met.
+     *
+     * <dl>
+     *   <dt>IDENTITY_PROOFING (IAL)</dt><dd>effective IAL = max(assuranceLevel, ial) &ge; LOA3</dd>
+     *   <dt>AUTHENTICATION (AAL)</dt><dd>session authentication &ge; LOA2 (when supplied)</dd>
+     *   <dt>RECORD_LINK</dt><dd>account↔HID link not DISPUTED (DISPUTED always blocks)</dd>
+     *   <dt>SESSION</dt><dd>device/session assurance &ge; LOA2 (when supplied)</dd>
+     * </dl>
+     *
+     * <p>Effective IAL taking the MAX of the coarse header and the IAL dimension is
+     * what closes G-CZO-01: a self-service assurance upgrade delivered as an IAL
+     * signal now raises effective proofing even when the coarse ACR-derived level
+     * is stale. Unsupplied AAL/session dimensions do not block (care-first — the
+     * coarse IAL gate still applies); a DISPUTED record link always blocks.</p>
+     */
+    // package-private for focused unit testing of the pure vector logic
+    String deficientAssuranceDimension(AuthorizationRequest request) {
+        // Record-link confidence: a disputed link blocks regardless of proofing.
+        String rlc = request.recordLinkConfidence();
+        if (rlc != null && "DISPUTED".equalsIgnoreCase(rlc.trim())) {
+            return "RECORD_LINK";
+        }
+
+        // Identity proofing: effective IAL is the max of the coarse level and IAL.
+        int effectiveIal = Math.max(parseLoaLevel(request.assuranceLevel()),
+                                    parseLoaLevel(request.ial()));
+        if (effectiveIal < 3) {
+            return "IDENTITY_PROOFING";
+        }
+
+        // Authentication strength this session (only when supplied — care-first).
+        if (request.aal() != null && !request.aal().isBlank()
+                && parseLoaLevel(request.aal()) < 2) {
+            return "AUTHENTICATION";
+        }
+
+        // Device/session assurance (only when supplied).
+        if (request.sessionAssurance() != null && !request.sessionAssurance().isBlank()
+                && parseLoaLevel(request.sessionAssurance()) < 2) {
+            return "SESSION";
+        }
+
+        return null;
+    }
+
+    /** Step-up methods appropriate to the deficient dimension. */
+    private List<String> stepUpMethodsFor(String dimension) {
+        return switch (dimension) {
+            case "IDENTITY_PROOFING" -> List.of("IDENTITY_PROOFING", "BIOMETRIC");
+            case "AUTHENTICATION" -> List.of("MFA", "PASSKEY", "OTP");
+            case "SESSION" -> List.of("DEVICE_BINDING", "MFA");
+            case "RECORD_LINK" -> List.of("STEWARD_REVIEW");
+            default -> List.of("IDENTITY_PROOFING");
+        };
     }
 
     private int parseLoaLevel(String loa) {
