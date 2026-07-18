@@ -39,6 +39,12 @@ public class VitoClientAddressConsumer {
     public void onVitoIdentityEvent(String message) {
         try {
             JsonNode node = objectMapper.readTree(message);
+            // Defensive: a mis-configured producer (JsonSerializer over a pre-serialized
+            // JSON string) puts a quoted string literal on the wire — unwrap it so the
+            // event isn't silently dropped as a non-matching type.
+            if (node != null && node.isTextual()) {
+                node = objectMapper.readTree(node.asText());
+            }
             // Tolerate a flat payload or an outer {payload:{...}} envelope.
             JsonNode body = node.has("payload") && node.get("payload").isObject() ? node.get("payload") : node;
 

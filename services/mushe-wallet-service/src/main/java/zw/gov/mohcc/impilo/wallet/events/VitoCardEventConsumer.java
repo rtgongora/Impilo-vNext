@@ -34,6 +34,12 @@ public class VitoCardEventConsumer {
     public void onVitoCardEvent(String message) {
         try {
             JsonNode node = objectMapper.readTree(message);
+            // Defensive: a mis-configured producer (JsonSerializer over a pre-serialized
+            // JSON string) puts a quoted string literal on the wire — unwrap it so field
+            // access below doesn't silently read blanks and drop the event.
+            if (node != null && node.isTextual()) {
+                node = objectMapper.readTree(node.asText());
+            }
             JsonNode payload = node.has("payload") && !node.get("payload").isNull() ? node.get("payload") : node;
 
             String eventType = firstNonBlank(
