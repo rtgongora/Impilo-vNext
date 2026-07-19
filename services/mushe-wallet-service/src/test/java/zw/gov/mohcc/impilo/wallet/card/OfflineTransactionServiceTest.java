@@ -38,6 +38,7 @@ class OfflineTransactionServiceTest {
     private String publicKeyPem;
     private CardRepository cardRepository;
     private WalletService walletService;
+    private zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
     private OfflineTransactionService service;
     private final UUID walletId = UUID.randomUUID();
 
@@ -52,7 +53,9 @@ class OfflineTransactionServiceTest {
 
         cardRepository = mock(CardRepository.class);
         walletService = mock(WalletService.class);
-        service = new OfflineTransactionService(cardRepository, walletService, new ObjectMapper());
+        biometricVerification = mock(zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient.class);
+        service = new OfflineTransactionService(cardRepository, walletService, new ObjectMapper(),
+                biometricVerification);
         when(walletService.debit(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(new TransactionEntity());
     }
@@ -157,5 +160,52 @@ class OfflineTransactionServiceTest {
         assertThrows(OfflineTransactionService.OfflineTransactionRejected.class,
                 () -> service.redeem("VITO-1", payload, sign(payload), OfflineTransactionService.UV_BIOMETRIC));
         verify(walletService, never()).debit(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void live_biometric_no_match_rejects_even_when_the_signed_claim_is_biometric() throws Exception {
+        CardEntity card = linkedCard(0);
+        when(cardRepository.findByVitoCardNumber("VITO-1")).thenReturn(Optional.of(card));
+        when(biometricVerification.verify(eq("subj-1"), eq("FINGERPRINT"), any()))
+                .thenReturn(new zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient.Decision("NO_MATCH", 0.1));
+        String payload = "{\"amount\":\"10.00\",\"counter\":1,\"nonce\":\"bio1\",\"authMethod\":\"BIOMETRIC\"}";
+
+        assertThrows(OfflineTransactionService.OfflineTransactionRejected.class,
+                () -> service.redeem("VITO-1", payload, sign(payload),
+                        OfflineTransactionService.UV_BIOMETRIC, "subj-1", "cHJvYmU="));
+        verify(walletService, never()).debit(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void live_biometric_match_proceeds() throws Exception {
+        CardEntity card = linkedCard(0);
+        when(cardRepository.findByVitoCardNumber("VITO-1")).thenReturn(Optional.of(card));
+        when(cardRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(biometricVerification.verify(eq("subj-1"), eq("FINGERPRINT"), any()))
+                .thenReturn(new zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient.Decision("MATCH", 0.98));
+        String payload = "{\"amount\":\"10.00\",\"counter\":1,\"nonce\":\"bio2\",\"authMethod\":\"BIOMETRIC\"}";
+
+        service.redeem("VITO-1", payload, sign(payload),
+                OfflineTransactionService.UV_BIOMETRIC, "subj-1", "cHJvYmU=");
+
+        verify(walletService).debit(eq(walletId), eq(new BigDecimal("10.00")), eq("OFFLINE_PURSE"),
+                eq("CARD_OFFLINE"), eq("bio2"), any(), any(), any(), any(), eq("bio2"));
+    }
+
+    @Test
+    void live_biometric_unavailable_falls_back_to_the_signed_webauthn_claim() throws Exception {
+        CardEntity card = linkedCard(0);
+        when(cardRepository.findByVitoCardNumber("VITO-1")).thenReturn(Optional.of(card));
+        when(cardRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(biometricVerification.verify(any(), any(), any()))
+                .thenReturn(zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient.Decision.unavailable());
+        String payload = "{\"amount\":\"10.00\",\"counter\":1,\"nonce\":\"bio3\",\"authMethod\":\"BIOMETRIC\"}";
+
+        service.redeem("VITO-1", payload, sign(payload),
+                OfflineTransactionService.UV_BIOMETRIC, "subj-1", "cHJvYmU=");
+
+        // Outage doesn't block a legitimately card-signed biometric payment.
+        verify(walletService).debit(eq(walletId), eq(new BigDecimal("10.00")), eq("OFFLINE_PURSE"),
+                eq("CARD_OFFLINE"), eq("bio3"), any(), any(), any(), any(), eq("bio3"));
     }
 }

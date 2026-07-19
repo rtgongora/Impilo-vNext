@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient;
 import zw.gov.mohcc.impilo.wallet.core.WalletService;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.CardEntity;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.TransactionEntity;
@@ -36,12 +37,15 @@ public class OfflineTransactionService {
     private final CardRepository cardRepository;
     private final WalletService walletService;
     private final ObjectMapper objectMapper;
+    private final BiometricVerificationClient biometricVerification;
 
     public OfflineTransactionService(CardRepository cardRepository, WalletService walletService,
-                                     ObjectMapper objectMapper) {
+                                     ObjectMapper objectMapper,
+                                     BiometricVerificationClient biometricVerification) {
         this.cardRepository = cardRepository;
         this.walletService = walletService;
         this.objectMapper = objectMapper;
+        this.biometricVerification = biometricVerification;
     }
 
     /** Thrown when an offline transaction fails verification/policy — surfaced as 4xx by the controller. */
@@ -82,6 +86,29 @@ public class OfflineTransactionService {
     @Transactional
     public TransactionEntity redeem(String vitoCardNumber, String payloadJson, String signatureB64,
                                     String requiredUserVerification) {
+        return redeem(vitoCardNumber, payloadJson, signatureB64, requiredUserVerification, null, null);
+    }
+
+    /**
+     * Reconcile a card-signed offline transaction with an optional <b>real server-side biometric
+     * 1:1 match</b> behind the WebAuthn claim (attended POS / online reconcile). When a biometric
+     * {@code subjectRef} + {@code probeBase64} are supplied, mushe additionally verifies the probe
+     * against the cardholder's ABIS enrolment through the shared seam
+     * (ABIS SoR → core-infra matcher-engine) — defence-in-depth over the signed device claim.
+     *
+     * <p>Care-first / fail-closed:</p>
+     * <ul>
+     *   <li>NO_MATCH → reject (a live biometric that doesn't match is authoritative);</li>
+     *   <li>MATCH → proceed;</li>
+     *   <li>UNAVAILABLE (biometrics off / ABIS unreachable) → fall back to the signed WebAuthn claim,
+     *       already enforced below, so an outage never blocks a legitimately card-signed payment.</li>
+     * </ul>
+     * When no probe is supplied this behaves exactly as the WebAuthn-claim path.
+     */
+    @Transactional
+    public TransactionEntity redeem(String vitoCardNumber, String payloadJson, String signatureB64,
+                                    String requiredUserVerification, String biometricSubjectRef,
+                                    String biometricProbeBase64) {
         CardEntity card = cardRepository.findByVitoCardNumber(vitoCardNumber)
                 .orElseThrow(() -> new OfflineTransactionRejected("No money card linked to VITO card " + vitoCardNumber));
         if ("BLOCKED".equals(card.getStatus())) {
@@ -122,6 +149,20 @@ public class OfflineTransactionService {
             // Fail-closed: e.g. a biometric-pay request whose signed payload does not assert BIOMETRIC.
             throw new OfflineTransactionRejected("Requires " + requiredUserVerification
                     + " user verification; payload asserted " + authMethod);
+        }
+
+        // Defence-in-depth: when an attended terminal supplies a live biometric probe for a
+        // BIOMETRIC-required txn, verify it 1:1 through the shared ABIS seam behind the device claim.
+        if (UV_BIOMETRIC.equalsIgnoreCase(requiredUserVerification)
+                && biometricSubjectRef != null && !biometricSubjectRef.isBlank()
+                && biometricProbeBase64 != null && !biometricProbeBase64.isBlank()) {
+            BiometricVerificationClient.Decision decision =
+                    biometricVerification.verify(biometricSubjectRef, "FINGERPRINT", biometricProbeBase64);
+            if ("NO_MATCH".equals(decision.result())) {
+                throw new OfflineTransactionRejected("Live biometric did not match the cardholder");
+            }
+            // MATCH proceeds; UNAVAILABLE falls back to the signed WebAuthn claim already enforced.
+            log.info("Offline biometric-pay live match for card {}: {}", vitoCardNumber, decision.result());
         }
 
         // Idempotent ledger debit — the nonce is the idempotency key, so a re-submitted offline txn

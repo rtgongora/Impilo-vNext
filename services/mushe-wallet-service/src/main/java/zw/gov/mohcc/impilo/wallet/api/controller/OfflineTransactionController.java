@@ -48,15 +48,27 @@ public class OfflineTransactionController {
     public ResponseEntity<ApiResponse<TransactionEntity>> redeemBiometric(
             @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
             @RequestBody Map<String, Object> body) {
+        // Optional live probe for a real server-side 1:1 match behind the WebAuthn claim
+        // (attended POS). Absent → WebAuthn-claim-only path, unchanged.
         return apply(str(body, "vitoCardNumber"), str(body, "payload"), str(body, "signature"),
-                OfflineTransactionService.UV_BIOMETRIC, correlationId);
+                OfflineTransactionService.UV_BIOMETRIC,
+                str(body, "biometricSubjectRef"), str(body, "biometricProbe"), correlationId);
     }
 
     private ResponseEntity<ApiResponse<TransactionEntity>> apply(String vitoCardNumber, String payload,
                                                                  String signature, String requiredUv,
                                                                  String correlationId) {
+        return apply(vitoCardNumber, payload, signature, requiredUv, null, null, correlationId);
+    }
+
+    private ResponseEntity<ApiResponse<TransactionEntity>> apply(String vitoCardNumber, String payload,
+                                                                 String signature, String requiredUv,
+                                                                 String biometricSubjectRef,
+                                                                 String biometricProbe,
+                                                                 String correlationId) {
         try {
-            TransactionEntity txn = offlineTransactionService.redeem(vitoCardNumber, payload, signature, requiredUv);
+            TransactionEntity txn = offlineTransactionService.redeem(vitoCardNumber, payload, signature,
+                    requiredUv, biometricSubjectRef, biometricProbe);
             return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(txn, correlationId));
         } catch (OfflineTransactionService.OfflineTransactionRejected e) {
             // Honest 422 — the offline transaction failed verification/policy (bad signature, replay,
