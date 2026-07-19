@@ -14,5 +14,9 @@ public record SubmitProviderAccessRequest(
         String councilNumber,
         String ecNumber,
         String organizationRef,
-        String evidenceSummary
+        String evidenceSummary,
+        java.util.UUID facilityId,
+        String engagementType,
+        java.time.LocalDate accessValidFrom,
+        java.time.LocalDate accessValidTo
 ) {}

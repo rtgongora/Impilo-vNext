@@ -67,6 +67,20 @@ public class ProviderAccessRequestEntity {
     @Column(name = "provider_public_id", length = 40)
     private String providerPublicId;
 
+    /** FACILITY_ACCESS (W5): the canonical tuso facility_uuid requested. */
+    @Column(name = "facility_id")
+    private java.util.UUID facilityId;
+
+    /** FACILITY_ACCESS: PERMANENT | ROTATION | LOCUM | OUTREACH | TELEMED | SPECIALIST_POOL | SUPERVISORY | TRAINING. */
+    @Column(name = "engagement_type", length = 32)
+    private String engagementType;
+
+    @Column(name = "access_valid_from")
+    private java.time.LocalDate accessValidFrom;
+
+    @Column(name = "access_valid_to")
+    private java.time.LocalDate accessValidTo;
+
     /** Reviewer (actor id) who recorded the decision — Trust Console review lane. */
     @Column(name = "decided_by", length = 255)
     private String decidedBy;
@@ -162,4 +176,13 @@ public class ProviderAccessRequestEntity {
     public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
 
     public Instant getUpdatedAt() { return updatedAt; }
+
+    public java.util.UUID getFacilityId() { return facilityId; }
+    public void setFacilityId(java.util.UUID facilityId) { this.facilityId = facilityId; }
+    public String getEngagementType() { return engagementType; }
+    public void setEngagementType(String engagementType) { this.engagementType = engagementType; }
+    public java.time.LocalDate getAccessValidFrom() { return accessValidFrom; }
+    public void setAccessValidFrom(java.time.LocalDate accessValidFrom) { this.accessValidFrom = accessValidFrom; }
+    public java.time.LocalDate getAccessValidTo() { return accessValidTo; }
+    public void setAccessValidTo(java.time.LocalDate accessValidTo) { this.accessValidTo = accessValidTo; }
 }

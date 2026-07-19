@@ -65,6 +65,28 @@ public class ProviderAccessRequestService {
         entity.setEcNumberMasked(mask(req.ecNumber()));
         entity.setOrganizationRef(trimToNull(req.organizationRef()));
         entity.setEvidenceSummary(trimToNull(req.evidenceSummary()));
+        entity.setFacilityId(req.facilityId());
+        entity.setEngagementType(trimToNull(req.engagementType()) != null
+                ? req.engagementType().trim().toUpperCase(Locale.ROOT) : null);
+        entity.setAccessValidFrom(req.accessValidFrom());
+        entity.setAccessValidTo(req.accessValidTo());
+
+        if (type == ProviderAccessRequestType.FACILITY_ACCESS) {
+            // Facility access rides on an EXISTING professional identity (PJ4):
+            // the request needs a facility, an engagement type, an expiry for
+            // temporary engagements, and a linked provider profile.
+            if (entity.getFacilityId() == null) {
+                throw new IllegalArgumentException("A facility is required for a facility-access request");
+            }
+            String engagement = entity.getEngagementType();
+            if (engagement == null || !java.util.Set.of("PERMANENT", "ROTATION", "LOCUM", "OUTREACH",
+                    "TELEMED", "SPECIALIST_POOL", "SUPERVISORY", "TRAINING").contains(engagement)) {
+                throw new IllegalArgumentException("Unknown engagement type for a facility-access request");
+            }
+            if (!"PERMANENT".equals(engagement) && entity.getAccessValidTo() == null) {
+                throw new IllegalArgumentException("A temporary engagement requires an access end date");
+            }
+        }
 
         // recover-not-reissue guard at the request layer: never create a "new" request
         // when the applicant already appears to hold a provider profile.
@@ -113,6 +135,7 @@ public class ProviderAccessRequestService {
             ProviderAccessRequestStatus.PENDING_EMPLOYER_REVIEW.name(),
             ProviderAccessRequestStatus.PENDING_ORGANIZATION_REVIEW.name(),
             ProviderAccessRequestStatus.PENDING_NATIONAL_REVIEW.name(),
+            ProviderAccessRequestStatus.PENDING_FACILITY_REVIEW.name(),
             ProviderAccessRequestStatus.NEEDS_MORE_INFORMATION.name(),
             ProviderAccessRequestStatus.NEEDS_ADJUDICATION.name());
 
@@ -176,9 +199,16 @@ public class ProviderAccessRequestService {
 
         publishEvent("PROVIDER_ACCESS_REQUEST", entity.getPublicId(),
                 "varapi.provider.access_request.decided",
-                String.format("{\"publicId\":\"%s\",\"requestType\":\"%s\",\"status\":\"%s\",\"decidedBy\":\"%s\"}",
+                String.format("{\"publicId\":\"%s\",\"requestType\":\"%s\",\"status\":\"%s\",\"decidedBy\":\"%s\","
+                                + "\"applicantHealthId\":\"%s\",\"facilityId\":\"%s\",\"engagementType\":\"%s\","
+                                + "\"accessValidFrom\":\"%s\",\"accessValidTo\":\"%s\"}",
                         entity.getPublicId(), entity.getRequestType(), entity.getStatus(),
-                        entity.getDecidedBy() == null ? "" : entity.getDecidedBy()),
+                        entity.getDecidedBy() == null ? "" : entity.getDecidedBy(),
+                        entity.getApplicantHealthId() == null ? "" : entity.getApplicantHealthId(),
+                        entity.getFacilityId() == null ? "" : entity.getFacilityId(),
+                        entity.getEngagementType() == null ? "" : entity.getEngagementType(),
+                        entity.getAccessValidFrom() == null ? "" : entity.getAccessValidFrom(),
+                        entity.getAccessValidTo() == null ? "" : entity.getAccessValidTo()),
                 ctx.tenantId(), ctx.correlationId());
         log.info("Provider access request {} decided (status={}, decidedBy={})",
                 entity.getPublicId(), entity.getStatus(), entity.getDecidedBy());
@@ -188,6 +218,11 @@ public class ProviderAccessRequestService {
     /** Route a fresh request to its pending stage + next actor by the evidence supplied. */
     private void applyRouting(ProviderAccessRequestEntity entity, ProviderAccessRequestType type) {
         switch (type) {
+            case FACILITY_ACCESS -> {
+                entity.setStatus(ProviderAccessRequestStatus.PENDING_FACILITY_REVIEW.name());
+                entity.setNextActor("FACILITY_ADMINISTRATOR");
+                entity.setReason("Awaiting approval by the receiving facility. Work access begins only after the facility approves and the posting is recorded.");
+            }
             case ORG_INVITATION -> {
                 entity.setStatus(ProviderAccessRequestStatus.PENDING_ORGANIZATION_REVIEW.name());
                 entity.setNextActor("ORGANIZATION_REPRESENTATIVE");

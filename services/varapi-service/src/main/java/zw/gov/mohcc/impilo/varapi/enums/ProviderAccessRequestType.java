@@ -15,5 +15,7 @@ public enum ProviderAccessRequestType {
     COUNCIL_NUMBER,
     EC_NUMBER,
     HAVE_PROVIDER_ID,
-    RECOVER
+    RECOVER,
+    /** PJ4/PJ16 (W5): a linked provider requests to work at a facility. */
+    FACILITY_ACCESS
 }
