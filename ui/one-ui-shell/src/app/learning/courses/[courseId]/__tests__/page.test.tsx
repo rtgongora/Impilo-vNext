@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import LearningCourseDetailPage from "../page";
 
@@ -82,12 +82,21 @@ vi.mock("@/hooks/queries/useFundoCatalog", () => ({
   useFundoCourseStructure: () => structureState,
 }));
 
+const { enrolState, subjectState } = vi.hoisted(() => ({
+  enrolState: {
+    mutate: vi.fn(),
+    mutateAsync: vi.fn<(body: unknown) => Promise<unknown>>(),
+    isPending: false,
+  },
+  subjectState: { subjectType: "PROVIDER", subjectId: "SUBJECT-1" },
+}));
+
 vi.mock("@/hooks/queries/useFundoLms", () => ({
-  useCreateFundoEnrolment: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
+  useCreateFundoEnrolment: () => enrolState,
 }));
 
 vi.mock("@/components/learning/LearningSubjectPicker", () => ({
-  useLearningSubject: () => ({ subjectType: "PROVIDER", subjectId: "SUBJECT-1" }),
+  useLearningSubject: () => subjectState,
 }));
 
 vi.mock("@/components/live/FundoLiveWebinarEmbed", () => ({
@@ -105,6 +114,7 @@ function setState(state: Partial<typeof structureState>) {
 describe("Phase 6B — LearningCourseDetailPage", () => {
   afterEach(() => {
     setState({ data: undefined, isLoading: false, isError: false });
+    enrolState.mutateAsync.mockReset();
     cleanup();
   });
 
@@ -179,4 +189,46 @@ describe("Phase 6B — LearningCourseDetailPage", () => {
     render(<LearningCourseDetailPage />);
     expect(screen.getByText(/Loading course/i)).toBeInTheDocument();
   });
+
+  it("surfaces a visible error when enrolment is rejected", async () => {
+    setState({ data: MINIMAL_STRUCTURE });
+    enrolState.mutateAsync.mockRejectedValue({ status: 400, error: { message: "Subject is not eligible" } });
+    render(<LearningCourseDetailPage />);
+    fireEvent.click(screen.getByTestId("fundo-enrol-button"));
+    expect(await screen.findByTestId("fundo-enrol-error")).toHaveTextContent("Subject is not eligible");
+  });
+
+  it("treats an id-less enrolment response as an error, not a silent no-op", async () => {
+    setState({ data: MINIMAL_STRUCTURE });
+    enrolState.mutateAsync.mockResolvedValue({ data: {} });
+    render(<LearningCourseDetailPage />);
+    fireEvent.click(screen.getByTestId("fundo-enrol-button"));
+    expect(await screen.findByTestId("fundo-enrol-error")).toHaveTextContent(/no enrolment id/i);
+  });
+
+  it("disables enrol while the learner subject has not resolved", () => {
+    setState({ data: MINIMAL_STRUCTURE });
+    subjectState.subjectId = "";
+    render(<LearningCourseDetailPage />);
+    expect(screen.getByTestId("fundo-enrol-button")).toBeDisabled();
+    subjectState.subjectId = "SUBJECT-1";
+  });
 });
+
+const MINIMAL_STRUCTURE = {
+  data: {
+    structure: {
+      id: "course-1",
+      code: "FUNDO-CTX-A",
+      title: "Foundation A",
+      description: null,
+      category: null,
+      level: null,
+      status: "PUBLISHED",
+      cpdEligible: false,
+      mandatory: false,
+      estimatedDurationMinutes: null,
+      modules: [],
+    },
+  },
+};

@@ -12,22 +12,38 @@ export default function FundoStudioNewCoursePage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState("en");
+  const [error, setError] = useState<string | null>(null);
   const { data: languageData } = useFundoLanguageOptions();
   const languages = languageData?.data?.items?.length
     ? languageData.data.items
     : [{ code: "en", label: "English", nativeLabel: "English" }];
 
   async function onCreate() {
-    const res = (await createCourse.mutateAsync({
-      title,
-      description,
-      status: "DRAFT",
-      category: "GENERAL",
-      level: "FOUNDATION",
-      language,
-    })) as { data?: { course?: { id?: string } } };
-    const id = res?.data?.course?.id;
-    if (id) router.push(`/learning/studio/courses/${id}/builder`);
+    setError(null);
+    try {
+      const res = (await createCourse.mutateAsync({
+        title,
+        description,
+        status: "DRAFT",
+        category: "GENERAL",
+        level: "FOUNDATION",
+        language,
+      })) as { data?: { course?: { id?: string } } };
+      const id = res?.data?.course?.id;
+      if (!id) {
+        setError("The course was not created — the service returned no course id. Please retry.");
+        return;
+      }
+      router.push(`/learning/studio/courses/${id}/builder`);
+    } catch (e) {
+      const err = e as { status?: number; error?: { message?: string } };
+      setError(
+        err?.error?.message ??
+          (err?.status === 403
+            ? "You do not have authoring permission for this learning space."
+            : "Failed to create the draft course. Please retry."),
+      );
+    }
   }
 
   return (
@@ -51,6 +67,11 @@ export default function FundoStudioNewCoursePage() {
             ))}
           </select>
         </label>
+        {error ? (
+          <div className="rounded-lg border border-warning/35 bg-warning-soft p-3 text-sm text-warning-foreground" data-testid="fundo-create-course-error">
+            {error}
+          </div>
+        ) : null}
         <button
           type="button"
           disabled={!title.trim() || createCourse.isPending}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BadgeCheck, BookOpenCheck, CheckCircle2, Clock, GraduationCap } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
@@ -22,6 +23,8 @@ export default function LearningCourseDetailPage() {
   const { data, isLoading, isError } = useFundoCourseStructure(courseId);
   const createEnrolment = useCreateFundoEnrolment();
   const subject = useLearningSubject();
+  const [enrolError, setEnrolError] = useState<string | null>(null);
+  const subjectReady = subject.subjectId.trim().length > 0;
 
   const structure = data?.data?.structure;
   const titleText = structure?.title ?? "Impilo Fundo Course";
@@ -89,26 +92,41 @@ export default function LearningCourseDetailPage() {
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={async () => {
-                    const res = (await createEnrolment.mutateAsync({
-                      courseId: structure.id,
-                      subjectType: subject.subjectType,
-                      subjectId: subject.subjectId,
-                      enrolmentType: "SELF",
-                    })) as { data?: { enrolment?: { id?: string } } };
-                    const enrolmentId = String(res?.data?.enrolment?.id ?? "");
-                    if (enrolmentId) {
+                    setEnrolError(null);
+                    try {
+                      const res = (await createEnrolment.mutateAsync({
+                        courseId: structure.id,
+                        subjectType: subject.subjectType,
+                        subjectId: subject.subjectId,
+                        enrolmentType: "SELF",
+                      })) as { data?: { enrolment?: { id?: string } } };
+                      const enrolmentId = String(res?.data?.enrolment?.id ?? "");
+                      if (!enrolmentId) {
+                        setEnrolError("Enrolment was not created — the service returned no enrolment id. Please retry.");
+                        return;
+                      }
                       router.push(`/learning/enrolments/${enrolmentId}`);
+                    } catch (e) {
+                      const err = e as { status?: number; error?: { message?: string } };
+                      setEnrolError(err?.error?.message ?? "Enrolment failed. Please retry.");
                     }
                   }}
-                  className="rounded bg-primary px-3 py-1.5 text-sm text-white"
+                  disabled={!subjectReady || createEnrolment.isPending}
+                  title={subjectReady ? undefined : "Your learner identity is still loading — retry in a moment."}
+                  className="rounded bg-primary px-3 py-1.5 text-sm text-white disabled:opacity-60"
                   data-testid="fundo-enrol-button"
                 >
-                  Enrol / Continue
+                  {createEnrolment.isPending ? "Enrolling…" : "Enrol / Continue"}
                 </button>
                 <Link href="/learning/my-learning" className="rounded border border-border px-3 py-1.5 text-sm text-foreground">
                   View my learning
                 </Link>
               </div>
+              {enrolError ? (
+                <div className="mt-3 rounded-lg border border-warning/35 bg-warning-soft p-3 text-sm text-warning-foreground" data-testid="fundo-enrol-error">
+                  {enrolError}
+                </div>
+              ) : null}
             </div>
 
             <div className="mb-6">
