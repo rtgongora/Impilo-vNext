@@ -53,6 +53,19 @@ public class ScopedTokenEntity {
     @Column(name = "status", nullable = false, length = 16)
     private String status = "ACTIVE";
 
+    /** SERVICE (S2S scoped token) | WORK_CONTEXT (duty-scoped work token, D-P3). */
+    @Column(name = "token_kind", nullable = false, length = 32)
+    private String tokenKind = "SERVICE";
+
+    /**
+     * WORK_CONTEXT only: the stable-for-the-session context claims
+     * (facility/department/workspace/role template/provider public id/purpose/
+     * session assurance) as JSON. Live licence/scope truth stays PDP-resolved.
+     */
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "context_claims", columnDefinition = "jsonb")
+    private String contextClaims;
+
     @PrePersist
     protected void onCreate() {
         if (this.id == null) {
@@ -95,4 +108,10 @@ public class ScopedTokenEntity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getTokenKind() { return tokenKind; }
+    public void setTokenKind(String tokenKind) { this.tokenKind = tokenKind; }
+
+    public String getContextClaims() { return contextClaims; }
+    public void setContextClaims(String contextClaims) { this.contextClaims = contextClaims; }
 }
