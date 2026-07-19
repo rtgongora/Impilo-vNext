@@ -42,8 +42,8 @@ non-UUID input answers 400 → DB rows verified (`lrn_course`, `lrn_enrolment`).
 `fundo-author-learner.journey.spec.ts` against `https://impilo.mohcc.gov.zw` (real login,
 10-point acceptance standard, `expectSaved` requires observed 2xx mutations):
 
-- **Run 1** (`artifacts-proof1-142707`): author ✓ 13.6s, learner ✓ 29.9s — **2 passed**
-- **Run 2** (`artifacts-proof2-142857`): author ✓ 13.5s, learner ✓ 29.7s — **2 passed**
+- **Run 1** (`artifacts-proof1-142124`): author ✓ 13.6s, learner ✓ 29.9s — **2 passed**
+- **Run 2** (`artifacts-proof2-142223`): author ✓ 13.5s, learner ✓ 29.7s — **2 passed**
 
 DB truth after the runs: each run's course row is PUBLISHED with exactly 1 enrolment
 (`lrn_course` / `lrn_enrolment`); live published catalogue = 19 courses.
