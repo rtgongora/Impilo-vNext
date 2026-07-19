@@ -12,12 +12,15 @@ export default function FundoStudioAnalyticsPage() {
   const adminReport = useFundoReportFiltered("course-completions", { limit: 40 });
   const leadershipReport = useFundoReportFiltered("cohort-completions", { limit: 40 });
 
+  // The /reports/overview envelope returns publishedCourses/totalEnrolments/
+  // completed; certificate counts come from the cohort-completions totals block.
   const payload = (data?.data ?? {}) as Record<string, number>;
+  const cohortTotals = ((leadershipReport.data?.data ?? {}) as { totals?: Record<string, number> }).totals ?? {};
   const kpis = [
-    ["Courses", payload.courses ?? 0],
-    ["Enrolments", payload.enrolments ?? 0],
+    ["Courses", payload.publishedCourses ?? 0],
+    ["Enrolments", payload.totalEnrolments ?? 0],
     ["Completed", payload.completed ?? 0],
-    ["Certificates", payload.certificates ?? 0],
+    ["Certificates", cohortTotals.certificatesIssued ?? 0],
   ];
 
   const roleCards = useMemo(() => {
