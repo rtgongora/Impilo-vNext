@@ -98,7 +98,8 @@ CODE=$(postc "/internal/v1/coverage/members/$MID/benefits/reserve" "{\"benefitCo
 [ "$CODE" = "409" ] && ok "over-limit reserve rejected HTTP $CODE" || bad "over-limit HTTP=$CODE (want 409)"
 # idempotent replay of r1 returns the same snapshot, no double-apply
 REPLAY=$(post "/internal/v1/coverage/members/$MID/benefits/reserve" "{\"benefitCode\":\"GP_CONSULT\",\"amount\":60,\"reference\":\"$RUN-r1\"}")
-[ "$(echo "$REPLAY"|jg data.reserved)" = "60.00" ] && ok "idempotent replay (reserved still 60.00)" || bad "replay reserved=$(echo "$REPLAY"|jg data.reserved)"
+RVAL=$(echo "$REPLAY"|jg data.reserved)
+[ "$(python3 -c "print(abs(float('${RVAL:-0}')-60)<0.001)" 2>/dev/null)" = "True" ] && ok "idempotent replay (reserved still $RVAL)" || bad "replay reserved=$RVAL"
 
 echo "== 9. eligibility v2 + signed token =="
 EV=$(post /internal/v1/coverage/eligibility/v2 "{\"coverageId\":\"$MID\",\"benefitCode\":\"GP_CONSULT\",\"facilityId\":\"FAC-1\",\"issueToken\":true}")

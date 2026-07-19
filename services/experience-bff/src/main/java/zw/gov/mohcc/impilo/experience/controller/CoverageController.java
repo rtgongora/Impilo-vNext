@@ -384,14 +384,10 @@ public class CoverageController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
-        try {
-            JsonNode data = coverageClient.enrollMember(body);
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", data != null ? data : Map.of(),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-        } catch (Exception e) {
-            log.error("Member enrollment failed: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "ENROLL_FAILED", "message", e.getMessage())));
-        }
+        // Propagate the engine's honest status verbatim — a duplicate active enrolment or a
+        // suspended-payer block is a real 409, not a blanket 400, so the UI shows the true reason.
+        return upstreamWrite("ENROLL_FAILED", () -> coverageClient.enrollMember(body), HttpStatus.CREATED,
+                requestId, correlationId);
     }
 
     @GetMapping("/members")
