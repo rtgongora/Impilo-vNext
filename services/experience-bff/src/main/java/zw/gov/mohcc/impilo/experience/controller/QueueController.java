@@ -154,6 +154,22 @@ public class QueueController {
                             "data", item != null ? item : Map.of(),
                             "meta", meta));
                 }
+                // A journey was started but there is NO active queue for this facility/type, so
+                // the patient cannot be placed on a queue — they are left in limbo. Report the
+                // real cause (queue materialisation gap) instead of the misleading "pct did not
+                // return a queue item", which pointed diagnosis at the wrong service.
+                log.warn("Walk-in enqueue: NO active queue for facility={} type={} — journey {} started but NOT queued (queue materialisation gap)",
+                        facilityUuid, queueType, journeyId);
+                Map<String, Object> nqMeta = new LinkedHashMap<>();
+                nqMeta.put("request_id", requestId);
+                nqMeta.put("correlation_id", correlationId);
+                nqMeta.put("journey_id", journeyId);
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                        "error", Map.of("code", "NO_QUEUE_CONFIGURED",
+                                "message", "No active queue is configured for this facility, so the walk-in "
+                                        + "could not be placed on a queue. Queue materialisation may not have "
+                                        + "completed for this facility."),
+                        "meta", nqMeta));
             }
         } catch (Exception e) {
             log.info("PCT unavailable — queue entry not created: {}", e.getMessage());

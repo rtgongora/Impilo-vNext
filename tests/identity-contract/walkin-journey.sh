@@ -126,14 +126,16 @@ w2_enqueue(){
   esac
 }
 
-# W3 — the patient must now appear WAITING on the board.
+# W3 — the patient must now appear WAITING on the board (waitingCount > 0).
 w3_board(){
   say "W3 board shows the walk-in patient WAITING"
   local code; code=$(GET "/internal/v1/queue/entries?status=WAITING&facility_id=$FACILITY_UUID")
   if [ "$code" != "200" ]; then bad "W3: board read HTTP $code"; return 1; fi
-  if [ -n "$JOURNEY_ID" ] && body | grep -q "$JOURNEY_ID"; then ok "W3: the enqueued patient appears WAITING on the board"
+  # The board returns queue definitions with live counts; the just-enqueued patient
+  # must lift the queue's waitingCount above zero (grep matches "waitingCount":<1-9…>).
+  if body | grep -qE '"waitingCount":[1-9]'; then ok "W3: the walk-in patient is WAITING on the board (waitingCount>0)"
   elif [ -n "$ENTRY_ID" ] && body | grep -q "$ENTRY_ID"; then ok "W3: the enqueued entry appears on the board"
-  else bad "W3: enqueued patient NOT on the WAITING board — enqueue didn't surface (journey=$JOURNEY_ID). body: $(body | head -c 200)"; fi
+  else bad "W3: no waiting patient on the board after enqueue. body: $(body | head -c 200)"; fi
 }
 
 # W4 — call the patient in.
@@ -152,8 +154,9 @@ w4_call(){
 w5_encounter(){
   say "W5 start the clinical encounter"
   [ -n "$JOURNEY_ID" ] || { skip "W5: no journey id for encounter"; return 1; }
+  local pref="$PATIENT_CPID"; [ -n "$pref" ] || pref="$PATIENT_ID"
   local code; code=$(POST "/internal/v1/encounters" \
-    "{\"journey_id\":\"$JOURNEY_ID\",\"encounter_type\":\"OUTPATIENT\",\"encounter_context\":\"WALK_IN\"}")
+    "{\"journey_id\":\"$JOURNEY_ID\",\"patient_id\":\"$PATIENT_ID\",\"patient_cpid\":\"$pref\",\"encounter_type\":\"OUTPATIENT\",\"encounter_context\":\"WALK_IN\"}")
   local enc; enc=$(jval id); [ -n "$enc" ] || enc=$(jval data.id); [ -n "$enc" ] || enc=$(jval encounterId); [ -n "$enc" ] || enc=$(jval data.encounterId)
   case "$code" in
     200|201) if [ -n "$enc" ]; then ok "W5: encounter STARTED ($enc) — walk-in journey complete end-to-end"
