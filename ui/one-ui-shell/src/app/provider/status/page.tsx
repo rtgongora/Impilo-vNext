@@ -12,6 +12,7 @@ import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useIdentityContext } from "@/hooks/useIdentityContext";
 import { providerStatusResolutionMessage } from "@/lib/identity-context";
+import { WorkEligibilityPanel } from "@/components/provider/WorkEligibilityPanel";
 
 export default function ProviderStatusPage() {
   const user = useAuthStore((s) => s.user);
@@ -28,6 +29,12 @@ export default function ProviderStatusPage() {
     <AppLayout>
       <PageShell title={copy.title} subtitle="Provider ID status affects work access">
         <div className="max-w-xl mx-auto space-y-4">
+          {/* Authoritative, owner-only live work-eligibility (D-P6) — the server
+              summary of whether Work is available right now + remediation. The
+              client-side copy below stays as the offline/identity-context
+              fallback. */}
+          <WorkEligibilityPanel />
+
           <div className="rounded-lg border border-warning/35 bg-warning-soft p-4">
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
