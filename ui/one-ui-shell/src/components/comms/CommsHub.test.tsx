@@ -129,6 +129,35 @@ describe("CommsHub", () => {
     });
   });
 
+  it("starts a new conversation from the composer and selects it", async () => {
+    post.mockImplementation((url: string) => {
+      if (url === "/internal/v1/khuluma/conversations") {
+        return Promise.resolve({ conversationId: "c-new", type: "DIRECT", title: "Sister Moyo", participants: [] });
+      }
+      return Promise.resolve({});
+    });
+    renderHub();
+    // no send box until a conversation exists
+    fireEvent.click(await screen.findByTestId("comms-new-conversation"));
+    fireEvent.change(screen.getByTestId("comms-recipient-id"), { target: { value: "PRV-ZW-00042" } });
+    fireEvent.click(screen.getByTestId("comms-create-conversation"));
+    await waitFor(() => {
+      const createCall = post.mock.calls.find((c) => c[0] === "/internal/v1/khuluma/conversations");
+      expect(createCall).toBeTruthy();
+      expect(createCall?.[1]).toMatchObject({ type: "DIRECT", participants: [{ actorId: "PRV-ZW-00042" }] });
+    });
+    // the new conversation becomes the selected one (dialog closed)
+    await waitFor(() => expect(screen.queryByTestId("comms-new-dialog")).not.toBeInTheDocument());
+  });
+
+  it("surfaces an error when the recipient is missing", async () => {
+    renderHub();
+    fireEvent.click(await screen.findByTestId("comms-new-conversation"));
+    fireEvent.click(screen.getByTestId("comms-create-conversation"));
+    expect(await screen.findByTestId("comms-new-error")).toHaveTextContent(/at least one recipient/i);
+    expect(post.mock.calls.some((c) => c[0] === "/internal/v1/khuluma/conversations")).toBe(false);
+  });
+
   it("updates presence when the status control changes", async () => {
     put.mockResolvedValue({ actorId: "me", status: "BUSY", statusMessage: null, lastSeenAt: null });
     renderHub();
