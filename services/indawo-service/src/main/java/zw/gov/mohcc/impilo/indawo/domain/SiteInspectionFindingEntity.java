@@ -47,6 +47,14 @@ public class SiteInspectionFindingEntity {
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
+    /**
+     * Set true when the owning inspection is signed/finalised. A signed finding
+     * is append-only (SJ4): the DB trigger (V012) rejects UPDATE/DELETE, so
+     * corrections must be new compliance actions, never edits.
+     */
+    @Column(name = "signed_flag", nullable = false)
+    private boolean signedFlag = false;
+
     protected SiteInspectionFindingEntity() {}
 
     public SiteInspectionFindingEntity(UUID findingId, UUID tenantId, UUID inspectionId, String status) {
@@ -74,5 +82,7 @@ public class SiteInspectionFindingEntity {
     public String getRectificationStatus() { return rectificationStatus; }
     public void setRectificationStatus(String rectificationStatus) { this.rectificationStatus = rectificationStatus; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
+    public boolean isSignedFlag() { return signedFlag; }
+    public void setSignedFlag(boolean signedFlag) { this.signedFlag = signedFlag; }
 }
 

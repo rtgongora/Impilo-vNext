@@ -336,6 +336,11 @@ public class SiteRegulatoryService {
                     finding.setEvidenceRefsJson(toJsonSafe(f.evidenceRefs()));
                 }
                 finding.setRectificationDeadline(f.rectificationDeadline());
+                // The outcome record finalises the inspection (reportStatus FINAL),
+                // so the finding is sealed on creation (SJ4): the DB trigger (V012)
+                // then rejects any later UPDATE/DELETE — corrections are new
+                // compliance actions, never edits of the original finding.
+                finding.setSignedFlag(true);
                 findingRepository.save(finding);
 
                 BigDecimal weight = weightForSeverity(f.severity());
