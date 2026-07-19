@@ -944,7 +944,14 @@ public class TeleconsultController {
             }
             emitTelemedicineNotification("TELECONSULT_COMPLETED", completed, actorId, "Teleconsult session completed.");
             emitTelemedicineAnalyticsEvent("TELECONSULT_COMPLETED", id, completed, actorId, facilityId, body);
-            writeTeleconsultSummaryToFhir(id, completed, actorId);
+            boolean clinicalSummaryWritten = writeTeleconsultSummaryToFhir(id, completed, actorId);
+            // The PCT referral completion is the durable clinical record; the FHIR
+            // DiagnosticReport is a secondary projection. Surface whether it was
+            // written so completion never silently claims a clinical summary exists
+            // when fhir-gateway dropped it — the UI can prompt a retry.
+            if (completed instanceof ObjectNode completedObj) {
+                completedObj.put("clinicalSummaryWritten", clinicalSummaryWritten);
+            }
             triggerTeleconsultBilling(id, completed, body);
             telemedicineGovernanceService.audit(
                     tenantId, correlationId, purposeOfUse, facilityId,
@@ -1653,11 +1660,19 @@ public class TeleconsultController {
         }
     }
 
-    private void writeTeleconsultSummaryToFhir(String referralId, JsonNode completed, String actorId) {
+    /**
+     * Projects the completed teleconsult as a FHIR DiagnosticReport. Returns
+     * whether the write succeeded so the caller can report an honest
+     * clinical-summary status instead of silently dropping it on a
+     * fhir-gateway outage. (A durable retry belongs in a sovereign service —
+     * the BFF is stateless; failures are logged at ERROR for reconciliation.)
+     */
+    private boolean writeTeleconsultSummaryToFhir(String referralId, JsonNode completed, String actorId) {
         try {
             String patientRef = extractPatient(completed);
             if (patientRef == null || patientRef.isBlank()) {
-                return;
+                log.warn("Teleconsult {} completed without a patient reference — no FHIR summary written", referralId);
+                return false;
             }
             ObjectNode diagnosticReport = objectMapper.createObjectNode();
             diagnosticReport.put("resourceType", "DiagnosticReport");
@@ -1668,8 +1683,11 @@ public class TeleconsultController {
             diagnosticReport.put("conclusion", "Teleconsult referral " + referralId + " completed.");
             diagnosticReport.put("performer", defaultString(actorId, "unknown"));
             fhirGatewayClient.createResource("DiagnosticReport", diagnosticReport);
+            return true;
         } catch (Exception ex) {
-            log.warn("Teleconsult FHIR writeback failed: {}", ex.getMessage());
+            log.error("Teleconsult FHIR writeback FAILED for {} — clinical summary NOT recorded: {}",
+                    referralId, ex.getMessage());
+            return false;
         }
     }
 

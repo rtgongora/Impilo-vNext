@@ -16,7 +16,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, CheckCircle2, FileText, Loader2, Lock,
-  Mic, PanelRightClose, PanelRightOpen, Phone, PhoneOff, Send, Shield, User,
+  PanelRightClose, PanelRightOpen, Phone, PhoneOff, Send, Shield, User,
   Video, VideoOff, Activity,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
@@ -85,6 +85,7 @@ export default function TeleconsultSessionPage() {
   const [followUpExecution, setFollowUpExecution] = useState("");
   const [closureNarrative, setClosureNarrative] = useState("");
   const [submittingCompletion, setSubmittingCompletion] = useState(false);
+  const [completionNote, setCompletionNote] = useState<string | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -203,12 +204,20 @@ export default function TeleconsultSessionPage() {
 
   async function handleSubmitCompletion() {
     setSubmittingCompletion(true);
+    setCompletionNote(null);
     try {
-      await apiClient.post(`/internal/v1/teleconsult/sessions/${sessionId}/complete`, {
+      const res = (await apiClient.post(`/internal/v1/teleconsult/sessions/${sessionId}/complete`, {
         actionsTaken, patientOutcome, followUpExecution, closureNarrative,
-      });
+      })) as { data?: { clinicalSummaryWritten?: boolean }; clinicalSummaryWritten?: boolean };
       setSession((s) => s ? { ...s, status: "CLOSED", stage: 7 } : s);
-    } catch { /* fallback */ }
+      const summaryWritten = res?.data?.clinicalSummaryWritten ?? res?.clinicalSummaryWritten;
+      if (summaryWritten === false) {
+        setCompletionNote("Session closed, but the clinical summary could not be recorded to the record. It will need to be re-sent — notify support if it persists.");
+      }
+    } catch (e) {
+      const err = e as { error?: { message?: string } };
+      setCompletionNote(err?.error?.message ?? "The session could not be completed. Please retry.");
+    }
     setSubmittingCompletion(false);
   }
 
@@ -339,6 +348,11 @@ export default function TeleconsultSessionPage() {
               {submittingCompletion ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
               {submittingCompletion ? "Closing..." : "Close Case & Archive"}
             </button>
+            {completionNote && (
+              <p className="rounded-lg border border-warning/35 bg-warning-soft p-2 text-xs text-warning-foreground" data-testid="teleconsult-completion-note">
+                {completionNote}
+              </p>
+            )}
           </div>
         </div>
       </AppLayout>
@@ -584,9 +598,6 @@ export default function TeleconsultSessionPage() {
               className={`p-2.5 rounded-full transition-colors ${videoActive ? "bg-red-500 text-white" : "bg-blue-100 text-primary-hover hover:bg-blue-200"}`}
               title={hasGovernedMedia ? (videoActive ? "Stop video" : "Video call") : "Waiting for governed RTC media"}>
               {videoActive ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
-            </button>
-            <button className="p-2.5 rounded-full bg-neutral-100 text-muted-foreground hover:bg-neutral-100" title="Voice note">
-              <Mic className="w-5 h-5" />
             </button>
             <LowBandwidthToggle audioOnly={audioOnly} onAudioOnlyChange={setAudioOnly} />
           </div>
