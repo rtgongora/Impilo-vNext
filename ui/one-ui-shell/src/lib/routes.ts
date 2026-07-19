@@ -620,6 +620,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/operations/vito/patient-shares", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Patient Shares", navLabel: "Patient Shares", navZone: "professional" },
   { path: "/operations/vito/internal-search", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Internal Search", navLabel: "Internal Search", navZone: "professional" },
   { path: "/operations/vito/biometrics", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Biometrics", navLabel: "Biometrics", navZone: "professional" },
+  { path: "/operations/vito/biometric-enrol", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Biometric enrol & verify", navLabel: "Biometric enrol/verify", navZone: "professional" },
   { path: "/operations/vito/recovery", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Recovery & SHS", navLabel: "Recovery & SHS", navZone: "professional" },
   { path: "/operations/vito/registry-admin", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Registry Admin", navLabel: "Registry Admin", navZone: "professional" },
   { path: "/operations/butano", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "SHR Operations", navLabel: "SHR Ops", navZone: "professional" },
@@ -943,7 +944,7 @@ export const ROUTES: RouteDefinition[] = [
 // /site/register, /site/operator-access (UI-5/UI-6). Total 754.
 // Place governance steward console (Jul 2026): +1 — /registry/place-governance, the steward
 // review surface for place self-service case types the Trust Console does not own. Total 755.
-export const EXPECTED_ROUTE_COUNT = 755;
+export const EXPECTED_ROUTE_COUNT = 756;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
