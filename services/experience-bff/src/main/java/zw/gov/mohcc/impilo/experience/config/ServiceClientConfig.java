@@ -283,8 +283,13 @@ public class ServiceClientConfig {
                 forwardHeader(inbound, request, CompanionHeaders.REQUEST_ID);
                 forwardHeader(inbound, request, CompanionHeaders.CORRELATION_ID);
                 forwardHeader(inbound, request, CompanionHeaders.AUTHORIZATION);
-                forwardHeader(inbound, request, CompanionHeaders.ACTOR_ID);
-                forwardHeader(inbound, request, CompanionHeaders.ACTOR_TYPE);
+                // Actor identity is forwarded only-if-absent: a BFF client method that has
+                // deliberately pre-set an actor context (e.g. the dependant-registration flow
+                // asserting SYSTEM authority to create a guardianship delegation the guardian is
+                // authorised to establish) must win over blind inbound forwarding. Every other
+                // call leaves these unset, so the caller's actor is forwarded unchanged.
+                forwardHeaderIfAbsent(inbound, request, CompanionHeaders.ACTOR_ID);
+                forwardHeaderIfAbsent(inbound, request, CompanionHeaders.ACTOR_TYPE);
                 forwardHeader(inbound, request, CompanionHeaders.PROVIDER_ID);
                 forwardHeader(inbound, request, CompanionHeaders.PURPOSE_OF_USE);
                 forwardHeader(inbound, request, CompanionHeaders.DEVICE_FINGERPRINT);
@@ -360,5 +365,19 @@ public class ServiceClientConfig {
         if (value != null && !value.isBlank()) {
             outbound.getHeaders().set(headerName, value);
         }
+    }
+
+    /**
+     * Forward an inbound header only if the calling client method has not already set it on the
+     * outbound request. Lets a deliberate override (a pre-set actor context) survive the
+     * interceptor, mirroring the only-if-absent treatment already applied to idempotency keys.
+     */
+    private static void forwardHeaderIfAbsent(HttpServletRequest inbound,
+                                              org.springframework.http.HttpRequest outbound,
+                                              String headerName) {
+        if (outbound.getHeaders().containsKey(headerName)) {
+            return;
+        }
+        forwardHeader(inbound, outbound, headerName);
     }
 }

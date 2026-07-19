@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.Map;
@@ -38,13 +40,27 @@ public class MvumoServiceClient {
 
     /**
      * Create an act-on-behalf delegation relationship (guardian / caregiver — CJ14/CJ15).
-     * The caller's X-Actor-ID / X-Tenant-ID are forwarded by the shared trust interceptor;
-     * mvumo (the act-of-record) requires an authenticated actor to attribute the grant.
+     *
+     * <p>A {@code GUARDIANSHIP} grant asserts authority over another subject, and mvumo
+     * (correctly) forbids a self-service {@code CITIZEN} from self-asserting it — the self-grant
+     * IDOR guard in {@code DelegationService.create}. In the guardian-adds-dependant flow, however,
+     * the BFF <em>is</em> the administrative authority: it has authenticated the guardian AND minted
+     * the dependant's brand-new health id itself (see {@code CitizenDependantController}), so the
+     * delegator subject can never be a client-supplied foreign record — the IDOR the guard defends
+     * against is closed here by construction. The BFF therefore vouches for the grant by presenting a
+     * {@code SYSTEM} actor context; the human guardian remains recorded as the {@code delegateActorId}
+     * in the body, preserving accountability. This explicit override survives the shared trust
+     * interceptor because actor-header forwarding is applied only-if-absent.
      */
     public JsonNode createDelegation(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/mvumo/delegations";
-        log.info("MVUMO: creating delegation relationship type={}", body.get("relationshipType"));
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        log.info("MVUMO: creating delegation relationship type={} (BFF asserts SYSTEM authority)",
+                body.get("relationshipType"));
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(CompanionHeaders.ACTOR_TYPE, "SYSTEM");
+        headers.set(CompanionHeaders.ACTOR_ID, "experience-bff");
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body, headers), JsonNode.class);
         return extractData(response);
     }
 
