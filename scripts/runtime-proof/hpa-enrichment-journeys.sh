@@ -26,6 +26,9 @@ FEED="${FEED:-/home/robert/impilo-imports/tuso-hpa/2026-07-17/bundle/data/hpa_tu
 TEN="${TEN:-00000000-0000-0000-0000-000000000001}"
 V036="$(cd "$(dirname "$0")/../.." && pwd)/services/tuso-service/src/main/resources/db/migration/V036__hpa_facility_enrichment.sql"
 PSQL(){ docker exec "$RIG" psql -U impilo -d tuso -tAc "$1"; }
+FAILS=0
+ok(){   echo "  PASS: $1"; }
+bad(){  echo "  FAIL: $1"; FAILS=$((FAILS+1)); }
 
 echo "== 1. rig: real schema + estate + V036 =="
 docker rm -f "$RIG" >/dev/null 2>&1 || true
@@ -87,14 +90,27 @@ WHERE d.outcome LIKE 'NEW_%' AND NOT EXISTS(SELECT 1 FROM tuso.facility_identifi
 SQL
 docker cp /tmp/apply.sql "$RIG:/tmp/apply.sql"; docker exec "$RIG" psql -U impilo -d tuso -q -f /tmp/apply.sql
 A1=$(PSQL 'select count(*) from tuso.facility;'); echo "after apply: $A1 (was $BEFORE; +$((A1-BEFORE)))"
+# assertions
+TOTAL=$(PSQL 'select count(*) from tuso.feed_dec;')
+[ "$TOTAL" = "6327" ] && ok "all 6,327 candidates classified" || bad "candidate total $TOTAL != 6327"
+CREATED=$((A1-BEFORE))
+[ "$CREATED" -gt 0 ] && ok "create-if-unmatched produced $CREATED facilities" || bad "no facilities created"
 
 echo "== 5. IDEMPOTENCY (second apply must create 0) =="
 docker exec "$RIG" psql -U impilo -d tuso -q -f /tmp/apply.sql
 A2=$(PSQL 'select count(*) from tuso.facility;')
-[ "$A2" = "$A1" ] && echo "IDEMPOTENT: yes ($A1 stable, 0 new)" || echo "NOT IDEMPOTENT ($A1 -> $A2)"
+[ "$A2" = "$A1" ] && ok "idempotent: 2nd apply created 0 ($A1 stable)" || bad "not idempotent ($A1 -> $A2)"
 
 echo "== 6. ROLLBACK BY BATCH (canonical never hard-deleted) =="
 docker exec "$RIG" psql -U impilo -d tuso -q -c "SET search_path=tuso,public; DELETE FROM tuso.facility_identifier WHERE system='HPA_INSTITUTION_ID' AND value LIKE 'HPA-%'; DELETE FROM tuso.facility WHERE tenant_id='$TEN' AND facility_code LIKE 'HPA-%';"
 R=$(PSQL 'select count(*) from tuso.facility;')
-[ "$R" = "$BEFORE" ] && echo "ROLLBACK: restored to $BEFORE canonical" || echo "ROLLBACK mismatch ($R)"
-echo "done. (docker rm -f $RIG to clean up)"
+[ "$R" = "$BEFORE" ] && ok "rollback restored to $BEFORE canonical (0 hard-deleted)" || bad "rollback mismatch ($R != $BEFORE)"
+
+echo
+if [ "$FAILS" -eq 0 ]; then
+  echo "VERDICT: GREEN — HPA match-or-create invariants hold. (docker rm -f $RIG to clean up)"
+  exit 0
+else
+  echo "VERDICT: RED — $FAILS invariant(s) failed. (docker rm -f $RIG to clean up)"
+  exit 1
+fi
