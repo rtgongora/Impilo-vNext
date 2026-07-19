@@ -230,7 +230,7 @@ export function ShellTaskbar() {
       {preview ? <ShellTaskPreview task={preview.task} x={preview.x} y={preview.y} /> : null}
 
       <div
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-[10000] flex justify-center px-2 sm:px-4"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-[10000] hidden justify-center px-2 sm:px-4 lg:flex"
         style={{ paddingBottom: `max(${SHELL_DOCK_BOTTOM_INSET_PX}px, env(safe-area-inset-bottom, 0px))` }}
       >
         <nav

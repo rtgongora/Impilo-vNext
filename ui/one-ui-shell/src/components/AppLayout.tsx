@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Home, Maximize2, Menu, Minimize2 } from "lucide-react";
 import { ExperienceSidebar } from "./navigation/ExperienceSidebar";
 import { NavRail } from "./navigation/NavRail";
+import { MobileTabBar } from "./navigation/MobileTabBar";
 import { ModuleBreadcrumb } from "./navigation/ModuleBreadcrumb";
 import { ActingForBanner } from "./citizen/ActingForBanner";
 import { ShellTopAccountActions } from "./shell/ShellTopAccountActions";
@@ -113,8 +114,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
         <ActingForBanner />
-        <main id="main-content" data-shell-scroll="main" className="impilo-canvas flex-1 overflow-auto px-3 pb-[var(--shell-taskbar-height,0px)] pt-0 md:px-4">{children}</main>
+        {/* Bottom inset differs by device: the mobile tab bar (~4.5rem + safe area) under `lg`,
+            the desktop floating dock (var) at `lg`+. */}
+        <main id="main-content" data-shell-scroll="main" className="impilo-canvas flex-1 overflow-auto px-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] pt-0 md:px-4 lg:pb-[var(--shell-taskbar-height,0px)]">{children}</main>
       </div>
+      {/* Phone-sized primary navigation; replaces the desktop dock under the `lg` breakpoint. */}
+      <MobileTabBar />
     </div>
   );
 }
