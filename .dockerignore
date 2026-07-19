@@ -20,6 +20,8 @@ vendor
 **/coverage
 !ui/one-ui-shell/src/app/coverage
 !ui/one-ui-shell/src/app/coverage/**
+!ui/one-ui-shell/src/components/coverage
+!ui/one-ui-shell/src/components/coverage/**
 **/test-results
 services
 apps
