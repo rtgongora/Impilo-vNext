@@ -39,8 +39,44 @@ public class ClaimEntity {
     @Column(name = "encounter_id", length = 255)
     private String encounterId;
 
-    @Column(name = "status", nullable = false, length = 16)
+    @Column(name = "status", nullable = false, length = 32)
     private String status = "DRAFT";
+
+    // Ruvimbo claims v2 (V017).
+    @Column(name = "claim_number", length = 64)
+    private String claimNumber;
+    @Column(name = "member_cpid", length = 255)
+    private String memberCpid;
+    @Column(name = "plan_version_id")
+    private UUID planVersionId;
+    @Column(name = "authorisation_id")
+    private UUID authorisationId;
+    @Column(name = "referral_id")
+    private UUID referralId;
+    @Column(name = "allowed_amount", precision = 14, scale = 2)
+    private BigDecimal allowedAmount;
+    @Column(name = "denied_amount", precision = 14, scale = 2)
+    private BigDecimal deniedAmount;
+    @Column(name = "patient_responsibility", precision = 14, scale = 2)
+    private BigDecimal patientResponsibility;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "reason_codes", columnDefinition = "jsonb")
+    private String reasonCodes;
+    @Column(name = "ruleset_version", length = 32)
+    private String rulesetVersion;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "scrub_result", columnDefinition = "jsonb")
+    private String scrubResult;
+    @Column(name = "replaces_claim_id")
+    private UUID replacesClaimId;
+    @Column(name = "replaced_by_claim_id")
+    private UUID replacedByClaimId;
+    @Column(name = "reversed", nullable = false)
+    private boolean reversed = false;
+    @Column(name = "settlement_ref", length = 128)
+    private String settlementRef;
+    @Column(name = "currency", nullable = false, length = 8)
+    private String currency = "USD";
 
     @Column(name = "claim_type", nullable = false, length = 32)
     private String claimType;
@@ -96,6 +132,68 @@ public class ClaimEntity {
         this.createdAt = now;
         this.updatedAt = now;
     }
+
+    /** Ruvimbo v2 draft factory — starts DRAFT (not SUBMITTED) for the scrub→submit→adjudicate flow. */
+    public static ClaimEntity draft(UUID tenantId, String podId, UUID coverageId, String memberCpid,
+                                    String facilityId, String providerId, String encounterId,
+                                    String claimType, String lineItems, BigDecimal totalAmount) {
+        ClaimEntity c = new ClaimEntity();
+        c.id = UUID.randomUUID();
+        c.tenantId = tenantId;
+        c.podId = podId;
+        c.coverageId = coverageId;
+        c.memberCpid = memberCpid;
+        c.facilityId = facilityId;
+        c.providerId = providerId;
+        c.encounterId = encounterId;
+        c.claimType = claimType;
+        c.lineItems = lineItems;
+        c.totalAmount = totalAmount;
+        c.status = "DRAFT";
+        c.claimNumber = "CLM-" + c.id.toString().substring(0, 8).toUpperCase();
+        OffsetDateTime now = OffsetDateTime.now();
+        c.createdAt = now;
+        c.updatedAt = now;
+        return c;
+    }
+
+    public void touch() { this.updatedAt = OffsetDateTime.now(); }
+    public void setTotalAmount(BigDecimal v) { this.totalAmount = v; }
+    public void setSubmittedAt(OffsetDateTime v) { this.submittedAt = v; }
+    public void setAdjudicatedAt(OffsetDateTime v) { this.adjudicatedAt = v; }
+    public void setApprovedAmount(BigDecimal v) { this.approvedAmount = v; }
+    public void setAdjudication(String v) { this.adjudication = v; }
+    public String getClaimNumber() { return claimNumber; }
+    public String getMemberCpid() { return memberCpid; }
+    public void setMemberCpid(String v) { this.memberCpid = v; }
+    public UUID getPlanVersionId() { return planVersionId; }
+    public void setPlanVersionId(UUID v) { this.planVersionId = v; }
+    public UUID getAuthorisationId() { return authorisationId; }
+    public void setAuthorisationId(UUID v) { this.authorisationId = v; }
+    public UUID getReferralId() { return referralId; }
+    public void setReferralId(UUID v) { this.referralId = v; }
+    public BigDecimal getAllowedAmount() { return allowedAmount; }
+    public void setAllowedAmount(BigDecimal v) { this.allowedAmount = v; }
+    public BigDecimal getDeniedAmount() { return deniedAmount; }
+    public void setDeniedAmount(BigDecimal v) { this.deniedAmount = v; }
+    public BigDecimal getPatientResponsibility() { return patientResponsibility; }
+    public void setPatientResponsibility(BigDecimal v) { this.patientResponsibility = v; }
+    public String getReasonCodes() { return reasonCodes; }
+    public void setReasonCodes(String v) { this.reasonCodes = v; }
+    public String getRulesetVersion() { return rulesetVersion; }
+    public void setRulesetVersion(String v) { this.rulesetVersion = v; }
+    public String getScrubResult() { return scrubResult; }
+    public void setScrubResult(String v) { this.scrubResult = v; }
+    public UUID getReplacesClaimId() { return replacesClaimId; }
+    public void setReplacesClaimId(UUID v) { this.replacesClaimId = v; }
+    public UUID getReplacedByClaimId() { return replacedByClaimId; }
+    public void setReplacedByClaimId(UUID v) { this.replacedByClaimId = v; }
+    public boolean isReversed() { return reversed; }
+    public void setReversed(boolean v) { this.reversed = v; }
+    public String getSettlementRef() { return settlementRef; }
+    public void setSettlementRef(String v) { this.settlementRef = v; }
+    public String getCurrency() { return currency; }
+    public void setCurrency(String v) { this.currency = v; }
 
     public UUID getId() { return id; }
     public UUID getTenantId() { return tenantId; }

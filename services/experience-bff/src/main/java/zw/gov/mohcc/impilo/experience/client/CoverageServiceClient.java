@@ -521,6 +521,26 @@ public class CoverageServiceClient {
                 baseUrl + "/internal/v1/coverage/liability-estimates", body, JsonNode.class));
     }
 
+    // ── Ruvimbo Wave 3: claims v2 (line-level adjudication, EOB, lineage) ───
+
+    public JsonNode createClaimV2(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/internal/v1/coverage/v2/claims", body, JsonNode.class));
+    }
+
+    public JsonNode getClaimV2(String id) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/internal/v1/coverage/v2/claims/" + id, JsonNode.class));
+    }
+
+    public JsonNode claimV2Action(String id, String action, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/v2/claims/" + id + "/" + action, body, JsonNode.class));
+    }
+
+    public JsonNode claimV2Sub(String id, String sub) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/internal/v1/coverage/v2/claims/" + id + "/" + sub, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) return response.getBody().get("data");
         return response.getBody();

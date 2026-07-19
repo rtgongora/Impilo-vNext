@@ -13,5 +13,7 @@ public interface RemittanceRepository extends JpaRepository<RemittanceEntity, UU
 
     List<RemittanceEntity> findByTenantIdAndPayerId(UUID tenantId, String payerId);
 
+    List<RemittanceEntity> findByTenantIdAndClaimId(UUID tenantId, UUID claimId);
+
     Optional<RemittanceEntity> findByIdAndTenantId(UUID id, UUID tenantId);
 }

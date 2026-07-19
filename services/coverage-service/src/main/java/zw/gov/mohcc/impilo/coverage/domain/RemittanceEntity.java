@@ -49,6 +49,13 @@ public class RemittanceEntity {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
+    // Ruvimbo W3: link a remittance to the claim it settles + settlement status (V017).
+    @Column(name = "claim_id")
+    private UUID claimId;
+
+    @Column(name = "settlement_status", nullable = false, length = 24)
+    private String settlementStatus = "PENDING";
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -93,4 +100,9 @@ public class RemittanceEntity {
         this.status = status;
         this.updatedAt = OffsetDateTime.now();
     }
+
+    public UUID getClaimId() { return claimId; }
+    public void setClaimId(UUID v) { this.claimId = v; }
+    public String getSettlementStatus() { return settlementStatus; }
+    public void setSettlementStatus(String v) { this.settlementStatus = v; this.updatedAt = OffsetDateTime.now(); }
 }

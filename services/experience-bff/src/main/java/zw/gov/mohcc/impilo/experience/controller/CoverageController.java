@@ -687,6 +687,41 @@ public class CoverageController {
         return upstreamWrite("ESTIMATE_FAILED", () -> coverageClient.createLiabilityEstimate(body), HttpStatus.CREATED, rid, cid);
     }
 
+    // ════════════════════════════════════════════════════════════════════
+    // Ruvimbo Wave 3 passthroughs (claims v2: adjudication, EOB, lineage)
+    // ════════════════════════════════════════════════════════════════════
+
+    @PostMapping("/v2/claims")
+    public ResponseEntity<Map<String, Object>> createClaimV2(@RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("CLAIM_CREATE_FAILED", () -> coverageClient.createClaimV2(body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @GetMapping("/v2/claims/{id}")
+    public ResponseEntity<Map<String, Object>> getClaimV2(@PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.getClaimV2(id), rid, cid);
+    }
+
+    @GetMapping("/v2/claims/{id}/{sub}")
+    public ResponseEntity<Map<String, Object>> claimV2Sub(@PathVariable String id, @PathVariable String sub,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.claimV2Sub(id, sub), rid, cid);
+    }
+
+    @PostMapping("/v2/claims/{id}/{action}")
+    public ResponseEntity<Map<String, Object>> claimV2Action(@PathVariable String id, @PathVariable String action,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        Map<String, Object> b = body != null ? body : Map.of();
+        HttpStatus ok = "replace".equals(action) ? HttpStatus.CREATED : HttpStatus.OK;
+        return upstreamWrite("CLAIM_ACTION_FAILED", () -> coverageClient.claimV2Action(id, action, b), ok, rid, cid);
+    }
+
     /** Read passthrough: 502 on transport failure, empty object/array preserved. */
     private ResponseEntity<Map<String, Object>> read(
             java.util.concurrent.Callable<JsonNode> call, String requestId, String correlationId) {
