@@ -26,8 +26,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class IdentifierLeakInventoryTest {
 
-    /** Pinned 2026-07-19 (Identity Journey Program, D7 staff-surface slice). */
-    private static final int BASELINE = 53;
+    /**
+     * Pinned 2026-07-19 (Identity Journey Program, D7 staff-surface slice).
+     *
+     * <p>Re-pinned 53 → 55 (CJ8/CJ14): the +2 sites are <b>internal VITO-contract field names</b>,
+     * not browser emissions — {@code VitoServiceClient} builds {@code /v1/cards/request} and
+     * {@code /identity/register} bodies whose field VITO <i>requires</i> to be {@code "healthId"},
+     * and {@code CitizenDependantController} reads {@code "healthId"} back off VITO's register
+     * response (it is used internally as the mvumo delegation subject; the browser response names
+     * it {@code dependantSubjectRef}, disclosed only to the just-authorised guardian). The literal
+     * is dictated by VITO's API and cannot be renamed; consistent with the baseline, which already
+     * counts internal service-to-service field names (e.g. {@code WorkforceIntakeService}).</p>
+     */
+    private static final int BASELINE = 55;
 
     private static final Pattern LEAK = Pattern.compile("\"(healthId|impiloHealthId|health_id)\"");
 
