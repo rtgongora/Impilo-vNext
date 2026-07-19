@@ -606,6 +606,87 @@ public class CoverageController {
         return upstreamWrite("TOKEN_VERIFY_FAILED", () -> coverageClient.verifyEligibilityToken(body), HttpStatus.OK, rid, cid);
     }
 
+    // ════════════════════════════════════════════════════════════════════
+    // Ruvimbo Wave 2 passthroughs (authorisations, referrals, liability estimates)
+    // ════════════════════════════════════════════════════════════════════
+
+    @GetMapping("/authorisations")
+    public ResponseEntity<Map<String, Object>> listAuthorisations(
+            @RequestParam(name = "member_cpid", required = false) String memberCpid,
+            @RequestParam(required = false) String status,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.listAuthorisations(memberCpid, status), rid, cid);
+    }
+
+    @GetMapping("/authorisations/{id}")
+    public ResponseEntity<Map<String, Object>> getAuthorisation(@PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.getAuthorisation(id), rid, cid);
+    }
+
+    @PostMapping("/authorisations")
+    public ResponseEntity<Map<String, Object>> createAuthorisation(@RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("AUTH_CREATE_FAILED", () -> coverageClient.createAuthorisation(body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @PostMapping("/authorisations/{id}/{action}")
+    public ResponseEntity<Map<String, Object>> authorisationAction(@PathVariable String id, @PathVariable String action,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        Map<String, Object> b = body != null ? body : Map.of();
+        return upstreamWrite("AUTH_ACTION_FAILED", () -> coverageClient.authorisationAction(id, action, b), HttpStatus.OK, rid, cid);
+    }
+
+    @GetMapping("/referrals")
+    public ResponseEntity<Map<String, Object>> listReferrals(
+            @RequestParam(name = "member_cpid") String memberCpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.listReferrals(memberCpid), rid, cid);
+    }
+
+    @PostMapping("/referrals")
+    public ResponseEntity<Map<String, Object>> createReferral(@RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("REFERRAL_CREATE_FAILED", () -> coverageClient.createReferral(body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @GetMapping("/referrals/{id}/validity")
+    public ResponseEntity<Map<String, Object>> referralValidity(@PathVariable String id,
+            @RequestParam(name = "emergency", defaultValue = "false") boolean emergency,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.referralValidity(id, emergency), rid, cid);
+    }
+
+    @PostMapping("/referrals/{id}/consume")
+    public ResponseEntity<Map<String, Object>> consumeReferral(@PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("REFERRAL_CONSUME_FAILED", () -> coverageClient.consumeReferral(id), HttpStatus.OK, rid, cid);
+    }
+
+    @GetMapping("/liability-estimates")
+    public ResponseEntity<Map<String, Object>> listLiabilityEstimates(
+            @RequestParam(name = "member_cpid") String memberCpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.listLiabilityEstimates(memberCpid), rid, cid);
+    }
+
+    @PostMapping("/liability-estimates")
+    public ResponseEntity<Map<String, Object>> createLiabilityEstimate(@RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("ESTIMATE_FAILED", () -> coverageClient.createLiabilityEstimate(body), HttpStatus.CREATED, rid, cid);
+    }
+
     /** Read passthrough: 502 on transport failure, empty object/array preserved. */
     private ResponseEntity<Map<String, Object>> read(
             java.util.concurrent.Callable<JsonNode> call, String requestId, String correlationId) {

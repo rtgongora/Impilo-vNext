@@ -467,6 +467,60 @@ public class CoverageServiceClient {
                 baseUrl + "/internal/v1/coverage/eligibility/tokens/verify", body, JsonNode.class));
     }
 
+    // ── Ruvimbo Wave 2: authorisations, referrals, liability estimates ──────
+
+    public JsonNode listAuthorisations(String memberCpid, String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/authorisations");
+        if (memberCpid != null && !memberCpid.isBlank()) b.queryParam("member_cpid", memberCpid);
+        if (status != null && !status.isBlank()) b.queryParam("status", status);
+        return extractData(restTemplate.getForEntity(b.toUriString(), JsonNode.class));
+    }
+
+    public JsonNode getAuthorisation(String id) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/internal/v1/coverage/authorisations/" + id, JsonNode.class));
+    }
+
+    public JsonNode createAuthorisation(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/internal/v1/coverage/authorisations", body, JsonNode.class));
+    }
+
+    public JsonNode authorisationAction(String id, String action, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/authorisations/" + id + "/" + action, body, JsonNode.class));
+    }
+
+    public JsonNode listReferrals(String memberCpid) {
+        return extractData(restTemplate.getForEntity(UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/internal/v1/coverage/referrals")
+                .queryParam("member_cpid", memberCpid).toUriString(), JsonNode.class));
+    }
+
+    public JsonNode createReferral(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/internal/v1/coverage/referrals", body, JsonNode.class));
+    }
+
+    public JsonNode referralValidity(String id, boolean emergency) {
+        return extractData(restTemplate.getForEntity(UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/internal/v1/coverage/referrals/" + id + "/validity")
+                .queryParam("emergency", emergency).toUriString(), JsonNode.class));
+    }
+
+    public JsonNode consumeReferral(String id) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/referrals/" + id + "/consume", Map.of(), JsonNode.class));
+    }
+
+    public JsonNode listLiabilityEstimates(String memberCpid) {
+        return extractData(restTemplate.getForEntity(UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/internal/v1/coverage/liability-estimates")
+                .queryParam("member_cpid", memberCpid).toUriString(), JsonNode.class));
+    }
+
+    public JsonNode createLiabilityEstimate(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/liability-estimates", body, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) return response.getBody().get("data");
         return response.getBody();
