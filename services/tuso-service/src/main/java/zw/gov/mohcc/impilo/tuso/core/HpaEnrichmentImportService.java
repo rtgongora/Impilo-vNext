@@ -11,6 +11,8 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityRegulatoryStatus;
+import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityContactEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityContactRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityIdentifierRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRepository;
 
@@ -69,17 +71,20 @@ public class HpaEnrichmentImportService {
     private final FacilityMatchService matchService;
     private final FacilityRepository facilityRepository;
     private final FacilityIdentifierRepository identifierRepository;
+    private final FacilityContactRepository contactRepository;
 
     public HpaEnrichmentImportService(JdbcTemplate jdbc,
                                       ObjectMapper objectMapper,
                                       FacilityMatchService matchService,
                                       FacilityRepository facilityRepository,
-                                      FacilityIdentifierRepository identifierRepository) {
+                                      FacilityIdentifierRepository identifierRepository,
+                                      FacilityContactRepository contactRepository) {
         this.jdbc = jdbc;
         this.objectMapper = objectMapper;
         this.matchService = matchService;
         this.facilityRepository = facilityRepository;
         this.identifierRepository = identifierRepository;
+        this.contactRepository = contactRepository;
     }
 
     /** Import request: the server-side feed path + dry-run flag (+ optional explicit tenant for rigs). */
@@ -187,7 +192,7 @@ public class HpaEnrichmentImportService {
             if (match.candidates().size() == 1 && nameCorroborated) {
                 Long fid = top.facility().getId();
                 if (!dryRun) {
-                    enrichExisting(tenantId, actorId, batchId, fid, top.facility().getFacilityUuid(), hpa, srk, institutionId, hpaIdValue, regNum);
+                    enrichExisting(tenantId, actorId, batchId, fid, hpa, srk, institutionId, hpaIdValue, regNum, corroboratedLegacy(record));
                 }
                 recordDecision(tenantId, batchId, srk, CONFIRMED_EXISTING_ENRICH, "HIGH", fid, false,
                         "MATCH:" + top.matchType());
@@ -206,7 +211,7 @@ public class HpaEnrichmentImportService {
         String decision = unresolvedSite ? NEW_ESTABLISHMENT_SITE_UNRESOLVED : NEW_REGULATED_ESTABLISHMENT;
         Long fid = null;
         if (!dryRun) {
-            fid = createRegulatorListed(tenantId, actorId, batchId, hpa, srk, institutionId, hpaIdValue, regNum, unresolvedSite);
+            fid = createRegulatorListed(tenantId, actorId, batchId, hpa, srk, institutionId, hpaIdValue, regNum, unresolvedSite, corroboratedLegacy(record));
         }
         recordDecision(tenantId, batchId, srk, decision, "MEDIUM", fid, false, "NO_LIVE_MATCH_CREATE");
         return new Outcome(decision, unresolvedSite ? Category.CREATE_UNRESOLVED : Category.CREATE_ESTABLISHMENT, fid);
@@ -214,8 +219,9 @@ public class HpaEnrichmentImportService {
 
     // ── Canonical writes (enrich / create) ──────────────────────────────────
 
-    private void enrichExisting(UUID tenantId, String actorId, long batchId, Long facilityId, UUID facilityUuid,
-                                JsonNode hpa, String srk, long institutionId, String hpaIdValue, String regNum) {
+    private void enrichExisting(UUID tenantId, String actorId, long batchId, Long facilityId,
+                                JsonNode hpa, String srk, long institutionId, String hpaIdValue, String regNum,
+                                JsonNode legacyEnrichment) {
         FacilityEntity facility = facilityRepository.findById(facilityId).orElse(null);
         if (facility == null) {
             return;
@@ -231,11 +237,14 @@ public class HpaEnrichmentImportService {
         assertField(tenantId, batchId, facilityId, "regulatory.designation", text(hpa, "designation"), "HPA", srk, "REGULATOR_ASSERTED", "PUBLIC");
         setProgressiveState(tenantId, facilityId, "REGULATOR_LISTED", "HPA", srk);
         setProgressiveState(tenantId, facilityId, "PUBLICLY_VISIBLE", "HPA", srk);
+        applyLegacyEnrichment(tenantId, batchId, facility, facilityId, srk, legacyEnrichment);
+        practitionerInChargeHandoff(tenantId, batchId, facilityId, hpa);
         computeCompletenessAndGaps(tenantId, batchId, facilityId, hpa);
     }
 
     private Long createRegulatorListed(UUID tenantId, String actorId, long batchId, JsonNode hpa, String srk,
-                                       long institutionId, String hpaIdValue, String regNum, boolean unresolvedSite) {
+                                       long institutionId, String hpaIdValue, String regNum, boolean unresolvedSite,
+                                       JsonNode legacyEnrichment) {
         FacilityEntity facility = new FacilityEntity();
         facility.setTenantId(tenantId);
         // Deterministic, stable, unique facility_code so re-runs are idempotent and no code is invented ad hoc.
@@ -281,8 +290,52 @@ public class HpaEnrichmentImportService {
             dataGapTask(tenantId, batchId, facilityId, "VERIFICATION", "location",
                     "Resolve or link the physical site for this establishment", "STEWARD", "HIGH");
         }
+        applyLegacyEnrichment(tenantId, batchId, facility, facilityId, srk, legacyEnrichment);
+        practitionerInChargeHandoff(tenantId, batchId, facilityId, hpa);
         computeCompletenessAndGaps(tenantId, batchId, facilityId, hpa);
         return facilityId;
+    }
+
+    /**
+     * Legacy operational enrichment — ONLY from the corroborated legacy candidate
+     * (AUTO_EXACT_REG_CORROBORATED). Facility-scope contacts become UNVERIFIED
+     * candidate endpoints (never public until verified); address/locality become
+     * dated legacy field-assertions bound for Ndila reconciliation. Personal
+     * practitioner/owner contacts are NOT touched here — restricted by policy.
+     */
+    private void applyLegacyEnrichment(UUID tenantId, long batchId, FacilityEntity facility, Long facilityId,
+                                       String srk, JsonNode legacy) {
+        if (legacy == null || legacy.isNull() || legacy.isMissingNode()) {
+            return;
+        }
+        upsertFacilityContactCandidate(facility, text(legacy, "facility_telephone"), text(legacy, "facility_email"));
+        upsertFacilityContactCandidate(facility, text(legacy, "facility_mobile"), null);
+        // Ndila-bound location assertions (dated, unverified legacy — never a public map pin).
+        assertField(tenantId, batchId, facilityId, "location.physical_address", text(legacy, "physical_address"),
+                "LEGACY_SQL", srk, "UNVERIFIED", "RESTRICTED");
+        assertField(tenantId, batchId, facilityId, "location.locality_legacy", text(legacy, "locality"),
+                "LEGACY_SQL", srk, "UNVERIFIED", "INTERNAL");
+        if (!isBlank(text(legacy, "physical_address"))) {
+            upsertCompleteness(tenantId, facilityId, "location", "PARTIAL");
+            dataGapTask(tenantId, batchId, facilityId, "VERIFICATION", "location",
+                    "Confirm the legacy address and set the map location", "FACILITY", "MEDIUM");
+        }
+    }
+
+    /**
+     * Practitioner-in-charge handoff (Varapi-bound): the current PIC is a
+     * REGULATOR-listed candidate relationship that grants NO authority. We record
+     * the workforce gap + a verification task; a Varapi consumer resolves each
+     * practitioner (by registration number) into a candidate PENDING relationship.
+     */
+    private void practitionerInChargeHandoff(UUID tenantId, long batchId, Long facilityId, JsonNode hpa) {
+        String pic = text(hpa, "practitioners_in_charge_raw");
+        if (isBlank(pic)) {
+            return;
+        }
+        upsertCompleteness(tenantId, facilityId, "workforce", "PARTIAL");
+        dataGapTask(tenantId, batchId, facilityId, "VERIFICATION", "workforce",
+                "Confirm the practitioner-in-charge (resolve via Varapi; grants no authority)", "REGULATOR", "MEDIUM");
     }
 
     /** Honest incomplete profile: separate completeness per dimension + actionable data-gap tasks. */
@@ -405,6 +458,36 @@ public class HpaEnrichmentImportService {
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────
+
+    /** The legacy candidate is auto-usable ONLY when the crosswalk corroborated it (feed sets legacy_enrichment). */
+    private static JsonNode corroboratedLegacy(JsonNode record) {
+        JsonNode legacy = record.path("legacy_enrichment");
+        return (legacy.isMissingNode() || legacy.isNull()) ? null : legacy;
+    }
+
+    /** Idempotent facility-scope contact candidate (UNVERIFIED); never a personal contact. */
+    private void upsertFacilityContactCandidate(FacilityEntity facility, String phone, String email) {
+        if (isBlank(phone) && isBlank(email)) {
+            return;
+        }
+        List<FacilityContactEntity> existing = contactRepository.findByFacilityId(facility.getId());
+        boolean dup = existing.stream().anyMatch(c ->
+                (phone != null && phone.equals(c.getPhone())) || (email != null && email.equals(c.getEmail())));
+        if (dup) {
+            return;
+        }
+        FacilityContactEntity contact = new FacilityContactEntity();
+        contact.setFacility(facility);
+        contact.setContactType("HPA_LEGACY_CANDIDATE_UNVERIFIED");
+        contact.setRole("FACILITY");
+        if (!isBlank(phone)) {
+            contact.setPhone(phone.trim());
+        }
+        if (!isBlank(email)) {
+            contact.setEmail(email.trim());
+        }
+        contactRepository.save(contact);
+    }
 
     private void upsertIdentifier(FacilityEntity facility, String system, String value) {
         if (isBlank(value)) {
