@@ -199,7 +199,7 @@ export type TraumaEpisode = Record<string, unknown> & {
   status?: string;
   currentPhase?: string;
   subjectIdentityMode?: string;
-  subjectHealthId?: string;
+  subjectCpid?: string;
   timeline?: Array<Record<string, unknown>>;
 };
 

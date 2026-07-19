@@ -68,7 +68,7 @@ export function TraumaEpisodeTimeline({
         </span>
         {episode.currentPhase ? <span className="text-xs text-muted-foreground">Current: {str(episode.currentPhase)}</span> : null}
         <span className="text-xs text-muted-foreground">
-          Subject: {str(episode.subjectIdentityMode) || "—"}{episode.subjectHealthId ? ` · ${str(episode.subjectHealthId)}` : ""}
+          Subject: {str(episode.subjectIdentityMode) || "—"}{episode.subjectCpid ? ` · ${str(episode.subjectCpid)}` : ""}
         </span>
       </div>
 

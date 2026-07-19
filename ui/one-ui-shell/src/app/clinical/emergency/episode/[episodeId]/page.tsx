@@ -18,7 +18,7 @@ import { useTraumaEpisode } from "@/hooks/queries/useDaidzai";
 export default function TraumaEpisodePage({ params }: { params: { episodeId: string } }) {
   const episode = useTraumaEpisode(params.episodeId);
   const mode = episode.data?.subjectIdentityMode ? String(episode.data.subjectIdentityMode) : undefined;
-  const unidentified = mode === "ANONYMOUS" || mode === "PROVISIONAL" || !episode.data?.subjectHealthId;
+  const unidentified = mode === "ANONYMOUS" || mode === "PROVISIONAL" || !episode.data?.subjectCpid;
 
   return (
     <AppLayout>
