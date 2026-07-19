@@ -62,6 +62,56 @@ public class IndawoServiceClient {
         return response.getBody();
     }
 
+    // ── Site self-service (SJ1 operator grants, SJ2 registration) ───────────
+
+    /** SJ2: submit a new-site registration application → RegistrationReceipt (202). */
+    public JsonNode submitSiteRegistration(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/site-registrations";
+        log.info("INDAWO: submitSiteRegistration");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return dataOf(restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class));
+    }
+
+    /** SJ2: steward registration review queue by outcome. */
+    public JsonNode listSiteRegistrations(String outcome) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/site-registrations")
+                .queryParam("outcome", outcome)
+                .toUriString();
+        log.info("INDAWO: listSiteRegistrations outcome={}", outcome);
+        return dataOf(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** SJ1: submit an operator-role grant claim on a site (siteId in path). */
+    public JsonNode submitOperatorGrant(String siteId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/sites/" + siteId + "/operator-grants";
+        log.info("INDAWO: submitOperatorGrant siteId={}", siteId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return dataOf(restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class));
+    }
+
+    /** SJ1: steward operator-grant queue by state. */
+    public JsonNode listOperatorGrants(String state) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/site-operator-grants")
+                .queryParam("state", state)
+                .toUriString();
+        log.info("INDAWO: listOperatorGrants state={}", state);
+        return dataOf(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** SJ1: approve a PENDING operator grant → ACTIVE (steward-gated upstream). */
+    public JsonNode approveOperatorGrant(String grantId) {
+        String url = baseUrl + "/internal/v1/site-operator-grants/" + grantId + "/approve";
+        log.info("INDAWO: approveOperatorGrant grantId={}", grantId);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return dataOf(restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(Map.of(), headers), JsonNode.class));
+    }
+
     // ── Public-health surveillance / place mode ─────────────────────────────
 
     private JsonNode dataOf(ResponseEntity<JsonNode> response) {

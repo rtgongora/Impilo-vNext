@@ -211,6 +211,13 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/facility/[id]", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Facility Details", navLabel: "Facility" },
   { path: "/facility/[id]/configuration", zone: "facility", layout: "app", sidebar: "facility", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Configuration", navLabel: "Configuration" },
   { path: "/facility/claim", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Claim facility administration", navLabel: "Claim administration" },
+  // FJ2/D-L4: register a facility not yet on the platform (person-assurance gated).
+  { path: "/facility/register", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Register a facility", navLabel: "Register facility" },
+  // D-L6/D-L8: facility trust dimensions + verification + governance requests.
+  { path: "/facility/[id]/trust", zone: "facility", layout: "app", sidebar: "facility", guard: "auth", pageTitle: "Facility trust & governance", navLabel: "Trust & governance" },
+  // SJ2/SJ1 D-L4: Indawo site self-service — citizen-accessible (NOT the PUBLIC_HEALTH-gated site registry).
+  { path: "/site/register", zone: "facility", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Register a site", navLabel: "Register site" },
+  { path: "/site/operator-access", zone: "facility", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Request site operator access", navLabel: "Site operator access" },
 
   // â”€â”€ Zone: Workspace Selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/workspace", zone: "workspace", layout: "app", sidebar: "workspace", guard: "facility", pageTitle: "Select Workspace", navLabel: "Workspaces" },
@@ -924,7 +931,10 @@ export const ROUTES: RouteDefinition[] = [
 // App discovery (Jul 2026): +2 — public /download get-app surface (honest coming-soon
 // store state + web app + device-aware QR-to-web) and /provider/get-access provider
 // onboarding explainer (honest journey map into the real activation/claim flow). Total 749.
-export const EXPECTED_ROUTE_COUNT = 749;
+// Provider/place self-service UI (Jul 2026): +5 — /provider/workplace (UI-3 work-session
+// hub) and the place self-service surfaces /facility/register, /facility/[id]/trust,
+// /site/register, /site/operator-access (UI-5/UI-6). Total 754.
+export const EXPECTED_ROUTE_COUNT = 754;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
