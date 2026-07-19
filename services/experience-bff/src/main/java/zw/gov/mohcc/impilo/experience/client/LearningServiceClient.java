@@ -1,16 +1,20 @@
 package zw.gov.mohcc.impilo.experience.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 import zw.gov.mohcc.impilo.experience.config.LearningServiceRuntimeProperties;
 
@@ -255,7 +259,7 @@ public class LearningServiceClient {
 
     public JsonNode postV11(String relativePath, Map<String, Object> body) {
         if (!props.isConfigured()) {
-            return null;
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Learning service is not configured");
         }
         String url = trim(props.getBaseUrl()) + "/internal/v1/learning/v11/" + relativePath;
         try {
@@ -265,14 +269,14 @@ public class LearningServiceClient {
             ResponseEntity<JsonNode> res = restTemplate.postForEntity(url, entity, JsonNode.class);
             return unwrapData(res.getBody());
         } catch (Exception e) {
-            log.debug("Learning v11 POST {} failed: {}", relativePath, e.getMessage());
-            return null;
+            log.warn("Learning v11 POST {} failed: {}", relativePath, e.getMessage());
+            throw asWriteFailure("POST", relativePath, e);
         }
     }
 
     public JsonNode putV11(String relativePath, Map<String, Object> body) {
         if (!props.isConfigured()) {
-            return null;
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Learning service is not configured");
         }
         String url = trim(props.getBaseUrl()) + "/internal/v1/learning/v11/" + relativePath;
         try {
@@ -282,8 +286,8 @@ public class LearningServiceClient {
             ResponseEntity<JsonNode> res = restTemplate.exchange(url, HttpMethod.PUT, entity, JsonNode.class);
             return unwrapData(res.getBody());
         } catch (Exception e) {
-            log.debug("Learning v11 PUT {} failed: {}", relativePath, e.getMessage());
-            return null;
+            log.warn("Learning v11 PUT {} failed: {}", relativePath, e.getMessage());
+            throw asWriteFailure("PUT", relativePath, e);
         }
     }
 
@@ -305,9 +309,49 @@ public class LearningServiceClient {
                     b.toUriString(), HttpMethod.DELETE, HttpEntity.EMPTY, JsonNode.class);
             return unwrapData(res.getBody());
         } catch (Exception e) {
-            log.debug("Learning v11 DELETE {} failed: {}", relativePath, e.getMessage());
-            return null;
+            log.warn("Learning v11 DELETE {} failed: {}", relativePath, e.getMessage());
+            throw asWriteFailure("DELETE", relativePath, e);
         }
+    }
+
+    /**
+     * Writes must never degrade to a fake-empty success: a swallowed upstream
+     * failure surfaced to the shell as 200 {"data":{}} and the button silently
+     * did nothing. Propagate the upstream status (and its error message when
+     * parseable) as a ResponseStatusException for the global handler.
+     */
+    private static ResponseStatusException asWriteFailure(String verb, String relativePath, Exception e) {
+        if (e instanceof ResponseStatusException rse) {
+            return rse;
+        }
+        if (e instanceof HttpStatusCodeException statusEx) {
+            HttpStatus status = HttpStatus.resolve(statusEx.getStatusCode().value());
+            if (status == null) {
+                status = HttpStatus.BAD_GATEWAY;
+            }
+            return new ResponseStatusException(status, upstreamMessage(statusEx, verb, relativePath));
+        }
+        return new ResponseStatusException(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Learning service is unreachable — the " + verb + " was not applied");
+    }
+
+    private static String upstreamMessage(HttpStatusCodeException statusEx, String verb, String relativePath) {
+        try {
+            JsonNode body = new ObjectMapper().readTree(statusEx.getResponseBodyAsString());
+            for (String path : new String[] {"error/message", "message"}) {
+                JsonNode cur = body;
+                for (String part : path.split("/")) {
+                    cur = cur == null ? null : cur.get(part);
+                }
+                if (cur != null && cur.isTextual() && !cur.asText().isBlank()) {
+                    return cur.asText();
+                }
+            }
+        } catch (Exception ignored) {
+            // fall through to the generic message
+        }
+        return "Learning service rejected the " + verb + " " + relativePath;
     }
 
     private static JsonNode unwrapData(JsonNode root) {
