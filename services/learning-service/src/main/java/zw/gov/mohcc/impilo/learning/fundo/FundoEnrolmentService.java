@@ -25,6 +25,15 @@ public class FundoEnrolmentService {
 
     private static final List<String> ACTIVE_STATUSES = List.of("ENROLLED", "IN_PROGRESS");
 
+    /**
+     * Must stay in lockstep with chk_lrn_enrolment_subject_type (V030): the
+     * legacy cohort classes plus the experience-layer identity classes
+     * (USER_HEALTH_ID citizen anchor, PROVIDER_PUBLIC_ID Varapi public id).
+     */
+    public static final List<String> ALLOWED_SUBJECT_TYPES = List.of(
+            "PROVIDER", "STUDENT", "STAFF", "FACILITY_TEAM", "OTHER",
+            "USER_HEALTH_ID", "PROVIDER_PUBLIC_ID");
+
     private final EnrolmentRepository enrolmentRepository;
     private final CourseRepository courseRepository;
     private final FundoOutboxAppender outbox;

@@ -57,6 +57,10 @@ public class FundoEnrolmentController {
             return FundoV11Support.badRequest("INVALID_INPUT",
                     "courseId, subjectType and subjectId are required");
         }
+        if (!FundoEnrolmentService.ALLOWED_SUBJECT_TYPES.contains(subjectType)) {
+            return FundoV11Support.badRequest("INVALID_SUBJECT_TYPE",
+                    "subjectType must be one of " + FundoEnrolmentService.ALLOWED_SUBJECT_TYPES);
+        }
         UUID pathwayId = FundoV11Support.tryParseUuid(asString(body.get("pathwayId")));
         String enrolmentType = asString(body.get("enrolmentType"));
         String assignedBy = asString(body.get("assignedBy"));
