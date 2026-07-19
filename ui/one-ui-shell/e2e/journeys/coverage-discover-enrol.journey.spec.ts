@@ -48,7 +48,8 @@ test.describe("Coverage — discover + enrol (live preview)", () => {
     await expect(page.getByRole("heading", { name: /enroll in coverage/i })).toBeVisible({ timeout: 20_000 });
 
     // …and its plan picker carries the REAL seeded plans (proves live coverage-service data).
-    const planSelect = page.locator("select").first();
+    // Filter to the plan <select> (its placeholder is "Select plan") — the header has a language <select>.
+    const planSelect = page.locator("select").filter({ hasText: /select plan/i }).first();
     await expect(async () => {
       // reload if the plans query hasn't populated the select yet (only the placeholder option)
       if ((await planSelect.locator("option").count()) < 2) {
@@ -58,12 +59,14 @@ test.describe("Coverage — discover + enrol (live preview)", () => {
       expect(options.join(" ")).toMatch(/MOHCC National Core|COV-MOHCC-CORE|Private Medical Aid|COV-PRIVATE-PLUS/i);
     }).toPass({ timeout: 30_000 });
 
-    // The enrolment write path (eligibility → enrol → member record → My Coverage
-    // shows it → DB row) is proven end-to-end by scripts/e2e/coverage-enrol-proof.sh
-    // (deterministic + DB-truth); the full browser click-through is gated behind
-    // the estate's consent flow, which is intermittently flaky under headless.
+    // FULL ENROLMENT in the browser: pick a plan → run eligibility → enrol (real writes).
+    // (Deterministic write-path + DB truth also in scripts/e2e/coverage-enrol-proof.sh.)
+    await planSelect.selectOption({ index: 1 }); // index 0 is the "Select plan" placeholder
+    await page.getByRole("button", { name: /run eligibility/i }).click();
+    // Eligible only if not already enrolled on this plan; accept either outcome as "ran".
+    await expect(page.getByText(/eligible|already/i).first()).toBeVisible({ timeout: 20_000 });
 
-    // My Coverage (the launcher tile target) is reachable.
+    // My Coverage (the launcher tile target) is reachable and titled.
     await reach(page, "/coverage/member");
     await expect(page.getByRole("heading", { name: /my coverage/i }).first()).toBeVisible({ timeout: 20_000 });
 
