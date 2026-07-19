@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.abis.api.dto.EnrollTemplateRequest;
 import zw.gov.mohcc.impilo.abis.api.dto.EnrollTemplateResponse;
+import zw.gov.mohcc.impilo.abis.api.dto.ExtractTemplateRequest;
 import zw.gov.mohcc.impilo.abis.api.dto.IdentifyRequest;
 import zw.gov.mohcc.impilo.abis.api.dto.IdentifyResponse;
 import zw.gov.mohcc.impilo.abis.api.dto.VerifyRequest;
@@ -69,6 +70,25 @@ public class AbisController {
                 saved.getModality().name(),
                 saved.getPosition(),
                 saved.getStatus()));
+    }
+
+    @PostMapping("/templates:extract")
+    public ResponseEntity<Map<String, Object>> extract(
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @Valid @RequestBody ExtractTemplateRequest request) {
+        var r = templateService.extractTemplate(
+                request.modality(),
+                Base64.getDecoder().decode(request.sampleBase64()),
+                request.width() == null ? 0 : request.width(),
+                request.height() == null ? 0 : request.height(),
+                request.dpi() == null ? 0 : request.dpi());
+        if (!r.ok()) {
+            return ResponseEntity.ok(Map.of("ok", false, "detail", r.detail()));
+        }
+        return ResponseEntity.ok(Map.of(
+                "ok", true,
+                "templateBase64", Base64.getEncoder().encodeToString(r.template()),
+                "quality", r.quality()));
     }
 
     @PostMapping("/verify")

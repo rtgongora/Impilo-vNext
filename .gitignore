@@ -115,3 +115,4 @@ reports/full-boot/local-registry-data/
 
 # Claude Code local worktrees (never commit)
 .claude/worktrees/
+vendor/models/

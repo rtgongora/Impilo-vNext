@@ -50,6 +50,32 @@ public class BmeClientMatchingEngine implements BiometricMatchingEngine {
     }
 
     @Override
+    public ExtractionResult extractTemplate(zw.gov.mohcc.impilo.abis.core.BiometricModality modality,
+                                            byte[] sampleImage, int width, int height, int dpi) {
+        if (sampleImage == null || sampleImage.length == 0) {
+            return ExtractionResult.unavailable("no_sample");
+        }
+        try {
+            Map<String, Object> req = Map.of(
+                    "modality", modality.name(),
+                    "sampleBase64", b64(sampleImage),
+                    "width", width, "height", height, "dpi", dpi);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> resp = engine.post().uri("/v1/engine/extract")
+                    .body(req).retrieve().body(Map.class);
+            if (resp == null || !Boolean.TRUE.equals(resp.get("ok"))) {
+                return ExtractionResult.unavailable(resp == null ? "no_body"
+                        : String.valueOf(resp.getOrDefault("detail", "extract_failed")));
+            }
+            byte[] template = Base64.getDecoder().decode(String.valueOf(resp.get("templateBase64")));
+            return new ExtractionResult(true, template, num(resp.get("quality")), "matcher-engine");
+        } catch (RuntimeException e) {
+            log.warn("matcher-engine extract failed (fail-closed): {}", e.getMessage());
+            return ExtractionResult.unavailable("engine_unreachable");
+        }
+    }
+
+    @Override
     public VerificationDecision verify(byte[] probeTemplate, TemplateEntity enrolled, BiometricProbeContext ctx) {
         if (probeTemplate == null || probeTemplate.length == 0 || enrolled == null) {
             return new VerificationDecision("NO_REFERENCE", 0.0, "Missing probe or enrolled template");

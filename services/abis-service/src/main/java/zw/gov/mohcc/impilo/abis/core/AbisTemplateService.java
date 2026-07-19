@@ -90,6 +90,15 @@ public class AbisTemplateService {
         return saved;
     }
 
+    /**
+     * Extract a template from a raw capture image via the matching engine
+     * (enrolment-from-image). Fail-closed when no engine/model is available.
+     */
+    public BiometricMatchingEngine.ExtractionResult extractTemplate(
+            BiometricModality modality, byte[] sampleImage, int width, int height, int dpi) {
+        return matchingEngine.extractTemplate(modality, sampleImage, width, height, dpi);
+    }
+
     @Transactional
     public VerificationDecision verify(UUID tenantId, String subjectRef, BiometricModality modality,
                                        String position, byte[] probeTemplate,

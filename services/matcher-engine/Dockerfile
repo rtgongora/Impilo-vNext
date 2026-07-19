@@ -1,6 +1,8 @@
-FROM eclipse-temurin:21-jre-alpine AS runtime
+# glibc base (NOT alpine/musl) — ONNX Runtime bundles glibc-linked native libs
+# for the face/iris extract path; alpine would fail to load them.
+FROM eclipse-temurin:21-jre AS runtime
 
-RUN addgroup -S impilo && adduser -S impilo -G impilo
+RUN groupadd -r impilo && useradd -r -g impilo impilo
 
 WORKDIR /app
 COPY target/matcher-engine-*.jar app.jar

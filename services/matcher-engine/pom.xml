@@ -47,6 +47,12 @@
             <artifactId>sourceafis</artifactId>
         </dependency>
 
+        <!-- ONNX Runtime for face-embedding inference (extract path; needs glibc natives) -->
+        <dependency>
+            <groupId>com.microsoft.onnxruntime</groupId>
+            <artifactId>onnxruntime</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

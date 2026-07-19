@@ -44,6 +44,23 @@ public interface BiometricMatchingEngine {
             List<TemplateEntity> candidates,
             BiometricProbeContext probeContext);
 
+    /**
+     * Extract a comparable template from a raw capture IMAGE (image → template).
+     * Fail-closed by default; the engine-backed adapter implements it via the
+     * matcher-engine. Enrolment-from-image = extract then {@code AbisTemplateService.enroll}.
+     */
+    default ExtractionResult extractTemplate(
+            zw.gov.mohcc.impilo.abis.core.BiometricModality modality,
+            byte[] sampleImage, int width, int height, int dpi) {
+        return ExtractionResult.unavailable("extraction_unavailable");
+    }
+
+    record ExtractionResult(boolean ok, byte[] template, double quality, String detail) {
+        public static ExtractionResult unavailable(String detail) {
+            return new ExtractionResult(false, new byte[0], 0.0, detail);
+        }
+    }
+
     record VerificationDecision(String result, double confidence, String summary) {}
 
     /**
