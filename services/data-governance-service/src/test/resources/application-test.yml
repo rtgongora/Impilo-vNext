@@ -18,3 +18,8 @@ impilo:
     disable-oauth-for-tests: true
   companion:
     enabled: true
+  # Test-only de-identification secrets (production custody = tshepo-keys)
+  deid:
+    secrets:
+      test-secret-a: unit-test-dataset-secret-a
+      test-secret-b: unit-test-dataset-secret-b
