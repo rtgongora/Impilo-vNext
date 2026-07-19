@@ -29,6 +29,7 @@ class PickupTokenServiceTest {
     @Mock private OrderStateMachine stateMachine;
     @Mock private EventOutboxRepository outboxRepository;
     @Mock private MsikaPickupBiometricPolicyClient pickupBiometricPolicyClient;
+    @Mock private zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
 
     private PickupTokenService service;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -36,7 +37,8 @@ class PickupTokenServiceTest {
     @BeforeEach
     void setUp() {
         service = new PickupTokenService(
-                tokenRepository, stateMachine, outboxRepository, objectMapper, pickupBiometricPolicyClient);
+                tokenRepository, stateMachine, outboxRepository, objectMapper, pickupBiometricPolicyClient,
+                biometricVerification);
         lenient().doNothing().when(pickupBiometricPolicyClient).assertPickupClaimAllowed(any());
     }
 

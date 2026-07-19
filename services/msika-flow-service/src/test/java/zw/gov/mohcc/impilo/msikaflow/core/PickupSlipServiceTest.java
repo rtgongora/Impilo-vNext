@@ -36,6 +36,7 @@ class PickupSlipServiceTest {
     @Mock private OrderStateMachine stateMachine;
     @Mock private EventOutboxRepository outboxRepository;
     @Mock private MsikaPickupBiometricPolicyClient pickupBiometricPolicyClient;
+    @Mock private zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
 
     private PickupTokenService tokenService;
     private final PickupSlipPdfService pdfService = new PickupSlipPdfService();
@@ -46,7 +47,8 @@ class PickupSlipServiceTest {
     @BeforeEach
     void setUp() {
         tokenService = new PickupTokenService(
-                tokenRepository, stateMachine, outboxRepository, objectMapper, pickupBiometricPolicyClient);
+                tokenRepository, stateMachine, outboxRepository, objectMapper, pickupBiometricPolicyClient,
+                biometricVerification);
     }
 
     // ----- PDF renderer -----

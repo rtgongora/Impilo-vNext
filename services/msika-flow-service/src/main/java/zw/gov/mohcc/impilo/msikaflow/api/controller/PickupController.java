@@ -66,7 +66,9 @@ public class PickupController {
 
         PickupClaimTrust trust =
                 new PickupClaimTrust(tenantId, correlationId, actorId, actorType, assurance, deviceFingerprint);
-        PickupTokenService.ClaimResult result = pickupTokenService.claimPickup(req.tokenOrOtp(), trust);
+        PickupTokenService.ClaimResult result = pickupTokenService.claimPickup(
+                req.tokenOrOtp(), trust,
+                req.biometricSubjectRef(), req.biometricModality(), req.biometricProbeBase64());
 
         return ResponseEntity.ok(ApiResponse.ok(result, correlationId));
     }

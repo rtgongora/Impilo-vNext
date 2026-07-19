@@ -35,17 +35,20 @@ public class PickupTokenService {
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
     private final MsikaPickupBiometricPolicyClient pickupBiometricPolicyClient;
+    private final zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
 
     public PickupTokenService(PickupTokenRepository tokenRepository,
                               OrderStateMachine stateMachine,
                               EventOutboxRepository outboxRepository,
                               ObjectMapper objectMapper,
-                              MsikaPickupBiometricPolicyClient pickupBiometricPolicyClient) {
+                              MsikaPickupBiometricPolicyClient pickupBiometricPolicyClient,
+                              zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification) {
         this.tokenRepository = tokenRepository;
         this.stateMachine = stateMachine;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
         this.pickupBiometricPolicyClient = pickupBiometricPolicyClient;
+        this.biometricVerification = biometricVerification;
     }
 
     @Transactional
@@ -96,8 +99,25 @@ public class PickupTokenService {
         return new PickupIssueResult(token.getId(), rawToken, rawOtp, expiresAt);
     }
 
+    /** Token/OTP-only redemption (no biometric collector verify). */
     @Transactional
     public ClaimResult claimPickup(String tokenOrOtp, PickupClaimTrust trust) {
+        return claimPickup(tokenOrOtp, trust, null, null, null);
+    }
+
+    /**
+     * Redeem a pickup token, optionally layering a biometric collector-verify over the
+     * token/OTP proof. When {@code biometricSubjectRef}/{@code biometricProbeBase64} are
+     * supplied, the collector's live probe is matched through the shared verification seam:
+     * MATCH → the redemption is marked biometric-verified; NO_MATCH → the redemption is
+     * rejected (nothing is claimed); engine UNAVAILABLE / NO_REFERENCE → fall back to the
+     * existing token/OTP proof (a biometric outage must never block a valid collection).
+     * Absent biometric fields ⇒ unchanged token/OTP behaviour.
+     */
+    @Transactional
+    public ClaimResult claimPickup(String tokenOrOtp, PickupClaimTrust trust,
+                                   String biometricSubjectRef, String biometricModality,
+                                   String biometricProbeBase64) {
         // Rate limiting
         if (isRateLimited(trust.actorId())) {
             throw new IllegalStateException("Too many claim attempts. Please wait before trying again.");
@@ -105,6 +125,12 @@ public class PickupTokenService {
         recordAttempt(trust.actorId());
 
         pickupBiometricPolicyClient.assertPickupClaimAllowed(trust);
+
+        // Optional biometric collector verify (care-first): MATCH marks the redemption
+        // biometric-verified; NO_MATCH rejects before anything is claimed; an outage falls
+        // back to the token/OTP proof below.
+        boolean biometricVerified = resolveBiometricVerified(
+                biometricSubjectRef, biometricModality, biometricProbeBase64);
 
         // Try to find by token hash first, then OTP hash
         String hash = sha256(tokenOrOtp);
@@ -145,7 +171,8 @@ public class PickupTokenService {
             token.setClaimMeta(objectMapper.writeValueAsString(Map.of(
                     "deviceFingerprint",
                     trust.deviceFingerprint() != null ? trust.deviceFingerprint() : "unknown",
-                    "claimedAt", OffsetDateTime.now().toString()
+                    "claimedAt", OffsetDateTime.now().toString(),
+                    "biometricVerified", biometricVerified
             )));
         } catch (Exception e) {
             log.warn("Failed to serialize claim meta: {}", e.getMessage());
@@ -160,10 +187,33 @@ public class PickupTokenService {
         // Publish event
         publishOutbox("PickupToken", token.getId(), "PICKUP_CLAIMED", trust.tenantId(),
                 Map.of("orderId", token.getOrderId(), "tokenId", token.getId(),
-                        "claimedBy", trust.actorId()));
+                        "claimedBy", trust.actorId(),
+                        "biometricVerified", biometricVerified));
 
-        log.info("Pickup claimed: orderId={} claimedBy={}", token.getOrderId(), trust.actorId());
-        return new ClaimResult(token.getOrderId(), token.getId(), trust.actorId());
+        log.info("Pickup claimed: orderId={} claimedBy={} biometricVerified={}",
+                token.getOrderId(), trust.actorId(), biometricVerified);
+        return new ClaimResult(token.getOrderId(), token.getId(), trust.actorId(), biometricVerified);
+    }
+
+    /**
+     * Resolve whether the optional collector biometric verified for this claim.
+     * Absent fields ⇒ {@code false} (unchanged token/OTP proof). MATCH ⇒ {@code true}.
+     * Engine UNAVAILABLE / NO_REFERENCE ⇒ {@code false} (fall back to token/OTP; never block
+     * a valid collection on an outage). NO_MATCH ⇒ reject the redemption.
+     */
+    private boolean resolveBiometricVerified(String subjectRef, String modality, String probeBase64) {
+        if (probeBase64 == null || probeBase64.isBlank() || subjectRef == null || subjectRef.isBlank()) {
+            return false; // no biometric supplied — unchanged behaviour
+        }
+        String mod = (modality != null && !modality.isBlank()) ? modality : "FINGERPRINT";
+        var decision = biometricVerification.verify(subjectRef, mod, probeBase64);
+        if (decision.isMatch()) {
+            return true;
+        }
+        if ("UNAVAILABLE".equals(decision.result()) || "NO_REFERENCE".equals(decision.result())) {
+            return false; // care-first: fall back to the token/OTP proof
+        }
+        throw new IllegalStateException("Biometric verification failed for pickup redemption");
     }
 
     private boolean isRateLimited(String actorId) {
@@ -227,7 +277,7 @@ public class PickupTokenService {
     }
 
     public record PickupIssueResult(String tokenId, String rawToken, String rawOtp, OffsetDateTime expiresAt) {}
-    public record ClaimResult(String orderId, String tokenId, String claimedBy) {}
+    public record ClaimResult(String orderId, String tokenId, String claimedBy, boolean biometricVerified) {}
 
     /** Non-secret slip context for {@code /orders/{id}/pickup/slip.pdf} (G034). */
     public record PickupSlipContext(String orderId, String tokenId, OffsetDateTime expiresAt,
