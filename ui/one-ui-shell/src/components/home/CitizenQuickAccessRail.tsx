@@ -7,18 +7,13 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   ArrowRight,
-  Award,
   Calendar,
-  Droplet,
   FileText,
-  Globe,
-  Heart,
   PanelLeftClose,
   PanelLeftOpen,
   Pill,
   QrCode,
   Shield,
-  ShoppingCart,
   Stethoscope,
   User,
   Users,
@@ -31,13 +26,16 @@ interface QuickAccessItem {
   badge?: string | null;
 }
 
+// Distinct from the global NavRail: these are the person's own health-record deep links
+// (/home/*), not app-wide destinations. Items that duplicate the NavRail — Wellness,
+// Blood donation, Marketplace, Caregiving, My Wallet, Find services — were removed so the
+// home rail and the global nav no longer overlap (the "two side menus" redundancy).
 const MY_HEALTH_LINKS: QuickAccessItem[] = [
   { href: "/home/profile", label: "Profile", icon: User },
   { href: "/home/medications", label: "Medications", icon: Pill },
   { href: "/home/documents", label: "Documents", icon: FileText },
   { href: "/home/bookings", label: "My Bookings", icon: Calendar },
   { href: "/home/appointments", label: "My Appointments", icon: Calendar },
-  { href: "/madi/donor", label: "Blood donation", icon: Droplet },
   { href: "/monitoring", label: "Monitoring", icon: Activity },
 ];
 
@@ -45,14 +43,6 @@ const MY_CARE_LINKS: QuickAccessItem[] = [
   { href: "/home/care-team", label: "Care Team", icon: Users },
   { href: "/coverage", label: "Coverage", icon: Shield },
   { href: "/home/referrals", label: "Referrals", icon: ArrowRight },
-];
-
-const EXPLORE_LINKS: QuickAccessItem[] = [
-  { href: "/wellness", label: "Wellness", icon: Heart },
-  { href: "/discover", label: "Find services", icon: Globe },
-  { href: "/marketplace", label: "Marketplace", icon: ShoppingCart },
-  { href: "/caregiving", label: "Caregiving", icon: Users },
-  { href: "/wallet", label: "My Wallet", icon: Award },
 ];
 
 // RJ-2: self-service provider access for a Health-ID person (Provider ID is secondary).
@@ -182,8 +172,6 @@ export function CitizenQuickAccessRail({ className = "", collapsible = false }: 
       <QuickAccessSection title="My Health" items={MY_HEALTH_LINKS} collapsed={collapsed} />
       <hr className="border-border" />
       <QuickAccessSection title="My Care" items={MY_CARE_LINKS} collapsed={collapsed} />
-      <hr className="border-border" />
-      <QuickAccessSection title="Explore" items={EXPLORE_LINKS} collapsed={collapsed} />
       <hr className="border-border" />
       <QuickAccessSection title="Provider access" items={PROVIDER_ACCESS_LINKS} collapsed={collapsed} />
     </aside>

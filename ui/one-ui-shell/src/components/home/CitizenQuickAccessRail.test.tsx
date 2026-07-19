@@ -20,7 +20,12 @@ describe("CitizenQuickAccessRail", () => {
     expect(screen.getByRole("link", { name: /My Health ID/i })).toHaveAttribute("href", "/citizen/health-id/qr");
     expect(screen.getByRole("link", { name: /Medications/i })).toHaveAttribute("href", "/home/medications");
     expect(screen.getByRole("link", { name: /Care Team/i })).toHaveAttribute("href", "/home/care-team");
-    expect(screen.getByRole("link", { name: /Marketplace/i })).toHaveAttribute("href", "/marketplace");
+    expect(screen.getByRole("link", { name: /Coverage/i })).toHaveAttribute("href", "/coverage");
+    // De-duplication: destinations that already live in the global NavRail (Marketplace,
+    // Wellness, Blood donation) must NOT be repeated in the home rail — that overlap was the
+    // "two side menus" redundancy.
+    expect(screen.queryByRole("link", { name: /Marketplace/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Blood donation/i })).toBeNull();
     // RJ-2: self-service provider access is reachable from the citizen home rail.
     expect(screen.getByRole("link", { name: /Request Provider Access/i })).toHaveAttribute(
       "href",
