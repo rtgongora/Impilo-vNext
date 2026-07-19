@@ -1,0 +1,6 @@
+ varapi_resolution_status | count 
+--------------------------+-------
+ UNRESOLVED               |  6576
+ RESOLVED                 |     4
+(2 rows)
+
