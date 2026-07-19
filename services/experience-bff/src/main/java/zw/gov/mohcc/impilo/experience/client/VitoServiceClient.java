@@ -41,7 +41,10 @@ public class VitoServiceClient {
     public JsonNode registerIdentity(Map<String, Object> patientData) {
         String url = baseUrl + "/v1/identity/register";
         log.info("VITO: Registering new patient identity");
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, patientData, JsonNode.class);
+        // VITO's register endpoint refuses AccessMode.EXTERNAL — the BFF must
+        // identify as the internal trust-core caller or every citizen
+        // self-registration 403s.
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, internal(patientData), JsonNode.class);
         return extractData(response);
     }
 
