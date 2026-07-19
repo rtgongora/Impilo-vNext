@@ -79,7 +79,10 @@ class PatientJourneyIntegrationTest {
         telemetryService = new TelemetryService(telemetryRepository, objectMapper);
 
         journeyStateMachine = new JourneyStateMachine(
-                journeyRepository, outboxRepository, telemetryService, objectMapper);
+                journeyRepository, outboxRepository, telemetryService, objectMapper,
+                // A disabled ABIS client resolves to UNAVAILABLE; this suite never supplies a
+                // biometric probe, so check-ins proceed exactly as before.
+                new zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient(false, null));
 
         workspaceSessionService = new WorkspaceSessionService(
                 sessionRepository, outboxRepository, telemetryService, objectMapper);

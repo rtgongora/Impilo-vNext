@@ -17,11 +17,24 @@ import java.util.UUID;
  * @param appointmentId the booking appointment that produced this journey,
  *                      if the visit was scheduled (distinguishes scheduled
  *                      check-ins from walk-ins)
+ * @param biometricSubjectRef the subject reference (e.g. CPID) whose enrolled
+ *                      biometric template the arrival probe is verified against;
+ *                      when supplied alongside {@code biometricProbeBase64} the
+ *                      check-in is verified through the shared ABIS seam
+ * @param biometricModality the biometric modality of the probe
+ *                      ({@code FINGERPRINT}|{@code FACE}|{@code IRIS});
+ *                      defaults to {@code FINGERPRINT} when a probe is present
+ * @param biometricProbeBase64 the base64-encoded biometric probe template
+ *                      captured at the desk; when {@code null}/blank the check-in
+ *                      proceeds exactly as before (no biometric binding)
  */
 public record StartJourneyRequest(
         @NotBlank String patientCpid,
         UUID facilityId,
         String referralSource,
         String referralId,
-        UUID appointmentId
+        UUID appointmentId,
+        String biometricSubjectRef,
+        String biometricModality,
+        String biometricProbeBase64
 ) {}

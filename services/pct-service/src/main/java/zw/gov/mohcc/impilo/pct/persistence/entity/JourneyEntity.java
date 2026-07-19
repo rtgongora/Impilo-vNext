@@ -40,6 +40,15 @@ public class JourneyEntity {
     @Column(name = "appointment_id")
     private UUID appointmentId;
 
+    /**
+     * True when this arrival/check-in was confirmed by a biometric MATCH through
+     * the shared ABIS seam. False for non-biometric check-ins and when a
+     * biometric outage (UNAVAILABLE/NO_REFERENCE) forced a care-first fallback —
+     * a biometric outage never blocks arrival, but it is never recorded as a match.
+     */
+    @Column(name = "biometric_verified", nullable = false)
+    private boolean biometricVerified = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -79,6 +88,9 @@ public class JourneyEntity {
 
     public UUID getAppointmentId() { return appointmentId; }
     public void setAppointmentId(UUID appointmentId) { this.appointmentId = appointmentId; }
+
+    public boolean isBiometricVerified() { return biometricVerified; }
+    public void setBiometricVerified(boolean biometricVerified) { this.biometricVerified = biometricVerified; }
 
     public String getReferralId() { return referralId; }
     public void setReferralId(String referralId) { this.referralId = referralId; }

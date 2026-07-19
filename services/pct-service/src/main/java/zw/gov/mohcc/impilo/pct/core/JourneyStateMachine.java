@@ -116,15 +116,18 @@ public class JourneyStateMachine {
     private final EventOutboxRepository outboxRepository;
     private final TelemetryService telemetryService;
     private final ObjectMapper objectMapper;
+    private final zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
 
     public JourneyStateMachine(JourneyRepository journeyRepository,
                                EventOutboxRepository outboxRepository,
                                TelemetryService telemetryService,
-                               ObjectMapper objectMapper) {
+                               ObjectMapper objectMapper,
+                               zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification) {
         this.journeyRepository = journeyRepository;
         this.outboxRepository = outboxRepository;
         this.telemetryService = telemetryService;
         this.objectMapper = objectMapper;
+        this.biometricVerification = biometricVerification;
     }
 
     /**
@@ -206,7 +209,37 @@ public class JourneyStateMachine {
     public JourneyEntity createJourney(UUID facilityId, String patientCpid,
                                        String referralSource, String referralId,
                                        UUID appointmentId) {
+        return createJourney(facilityId, patientCpid, referralSource, referralId, appointmentId,
+                null, null, null);
+    }
+
+    /**
+     * Create a journey, optionally verifying the arrival through the shared ABIS
+     * seam (care-first biometric check-in).
+     *
+     * <p>When {@code biometricProbeBase64} and {@code biometricSubjectRef} are both
+     * supplied the probe is verified against the subject's enrolled template:</p>
+     * <ul>
+     *   <li><b>MATCH</b> → the journey is created and marked {@code biometricVerified}.</li>
+     *   <li><b>NO_MATCH</b> → a {@link PctDomainException} is thrown; nothing is persisted.</li>
+     *   <li><b>UNAVAILABLE / NO_REFERENCE</b> → the check-in proceeds as a non-biometric
+     *       arrival (fail-open on the biometric factor only — a biometric outage must never
+     *       block a patient arriving for care). Never recorded as a match.</li>
+     * </ul>
+     *
+     * <p>When no probe is supplied the behaviour is identical to the pre-biometric
+     * check-in path (non-verified arrival).</p>
+     */
+    @Transactional
+    public JourneyEntity createJourney(UUID facilityId, String patientCpid,
+                                       String referralSource, String referralId,
+                                       UUID appointmentId,
+                                       String biometricSubjectRef, String biometricModality,
+                                       String biometricProbeBase64) {
         TrustContext ctx = TrustContextHolder.require();
+
+        boolean biometricVerified = resolveBiometricVerified(
+                biometricSubjectRef, biometricModality, biometricProbeBase64);
 
         JourneyEntity journey = new JourneyEntity();
         journey.setJourneyId(generateUlid());
@@ -217,6 +250,7 @@ public class JourneyStateMachine {
         journey.setReferralSource(referralSource);
         journey.setReferralId(referralId);
         journey.setAppointmentId(appointmentId);
+        journey.setBiometricVerified(biometricVerified);
         journey.setCreatedAt(OffsetDateTime.now());
         journey.setUpdatedAt(OffsetDateTime.now());
 
@@ -231,13 +265,37 @@ public class JourneyStateMachine {
         payload.put("referralSource", referralSource);
         payload.put("referralId", referralId);
         payload.put("appointmentId", appointmentId != null ? appointmentId.toString() : null);
+        payload.put("biometricVerified", biometricVerified);
         payload.put("createdAt", journey.getCreatedAt().toString());
         writeOutbox("JOURNEY", journey.getJourneyId(), "JOURNEY_CREATED", toJson(payload));
 
-        log.info("Journey created: id={}, patient={}, facility={}",
-                journey.getJourneyId(), patientCpid, facilityId);
+        log.info("Journey created: id={}, patient={}, facility={}, biometricVerified={}",
+                journey.getJourneyId(), patientCpid, facilityId, biometricVerified);
 
         return journey;
+    }
+
+    /**
+     * Resolve the biometric-verified flag for a check-in through the shared seam.
+     * Returns {@code false} (non-biometric arrival) when no probe is supplied or on
+     * a biometric outage; {@code true} on MATCH; throws on NO_MATCH so nothing is
+     * persisted.
+     */
+    private boolean resolveBiometricVerified(String subjectRef, String modality, String probeBase64) {
+        if (probeBase64 == null || probeBase64.isBlank() || subjectRef == null || subjectRef.isBlank()) {
+            return false; // no probe → today's non-biometric check-in
+        }
+        String resolvedModality = (modality != null && !modality.isBlank()) ? modality : "FINGERPRINT";
+        var decision = biometricVerification.verify(subjectRef, resolvedModality, probeBase64);
+        if (decision.isMatch()) {
+            return true;
+        }
+        if ("UNAVAILABLE".equals(decision.result()) || "NO_REFERENCE".equals(decision.result())) {
+            return false; // care-first: a biometric outage must not block arrival
+        }
+        // NO_MATCH → deny the check-in; nothing is persisted.
+        throw new PctDomainException("BIOMETRIC_NO_MATCH", 403,
+                "biometric verification failed for the supplied probe");
     }
 
     // ------------------------------------------------------------------

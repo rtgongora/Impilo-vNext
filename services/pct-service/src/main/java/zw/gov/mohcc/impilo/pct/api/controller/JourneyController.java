@@ -9,6 +9,7 @@ import zw.gov.mohcc.impilo.pct.api.dto.RouteRequest;
 import zw.gov.mohcc.impilo.pct.api.dto.StartJourneyRequest;
 import zw.gov.mohcc.impilo.pct.api.dto.TriageRequest;
 import zw.gov.mohcc.impilo.pct.core.JourneyStateMachine;
+import zw.gov.mohcc.impilo.pct.core.PctDomainException;
 import zw.gov.mohcc.impilo.pct.core.RoutingEngine;
 import zw.gov.mohcc.impilo.pct.core.TriageService;
 import zw.gov.mohcc.impilo.pct.persistence.entity.JourneyEntity;
@@ -61,14 +62,23 @@ public class JourneyController {
         TrustContext ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        JourneyEntity journey = journeyStateMachine.createJourney(
-                request.facilityId() != null ? request.facilityId() : ctx.facilityId(),
-                request.patientCpid(),
-                request.referralSource(),
-                request.referralId(),
-                request.appointmentId());
+        try {
+            JourneyEntity journey = journeyStateMachine.createJourney(
+                    request.facilityId() != null ? request.facilityId() : ctx.facilityId(),
+                    request.patientCpid(),
+                    request.referralSource(),
+                    request.referralId(),
+                    request.appointmentId(),
+                    request.biometricSubjectRef(),
+                    request.biometricModality(),
+                    request.biometricProbeBase64());
 
-        return ResponseEntity.ok(ApiResponse.ok(journey, correlationId));
+            return ResponseEntity.ok(ApiResponse.ok(journey, correlationId));
+        } catch (PctDomainException ex) {
+            // NO_MATCH on a supplied biometric probe → reject the check-in; nothing persisted.
+            return ResponseEntity.status(ex.getStatus())
+                    .body(ApiResponse.error(ex.getCode(), ex.getMessage(), ex.getStatus(), correlationId));
+        }
     }
 
     /**

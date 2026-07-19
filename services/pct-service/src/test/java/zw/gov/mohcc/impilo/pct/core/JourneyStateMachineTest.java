@@ -46,6 +46,9 @@ class JourneyStateMachineTest {
     @Mock
     private TelemetryService telemetryService;
 
+    @Mock
+    private zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
+
     private JourneyStateMachine stateMachine;
 
     private static final UUID TENANT_ID = UUID.randomUUID();
@@ -57,7 +60,7 @@ class JourneyStateMachineTest {
     void setUp() {
         ObjectMapper objectMapper = new ObjectMapper();
         stateMachine = new JourneyStateMachine(
-                journeyRepository, outboxRepository, telemetryService, objectMapper);
+                journeyRepository, outboxRepository, telemetryService, objectMapper, biometricVerification);
     }
 
     private JourneyEntity createJourneyInState(JourneyState state) {
