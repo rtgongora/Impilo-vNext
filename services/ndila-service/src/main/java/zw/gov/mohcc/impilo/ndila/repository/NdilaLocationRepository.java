@@ -20,6 +20,8 @@ public interface NdilaLocationRepository extends JpaRepository<NdilaLocationEnti
 
     List<NdilaLocationEntity> findByTenantIdAndLocationType(UUID tenantId, String locationType);
 
+    List<NdilaLocationEntity> findByTenantIdAndAnchorId(UUID tenantId, UUID anchorId);
+
     Optional<NdilaLocationEntity> findByTenantIdAndOwnerServiceAndOwnerEntityTypeAndOwnerEntityId(
             UUID tenantId, String ownerService, String ownerEntityType, String ownerEntityId);
 }

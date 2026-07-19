@@ -114,6 +114,13 @@ public class NdilaLocationEntity {
     @Column(name = "boundary_id")
     private UUID boundaryId;
 
+    /**
+     * Shared place anchor (D-L1): multiple owner-keyed locations on one campus
+     * point at one {@link NdilaPlaceAnchorEntity}. Stewarded assignment.
+     */
+    @Column(name = "anchor_id")
+    private UUID anchorId;
+
     @Column(name = "catchment_area_id")
     private UUID catchmentAreaId;
 
@@ -204,6 +211,8 @@ public class NdilaLocationEntity {
     public void setVerifiedAt(OffsetDateTime verifiedAt) { this.verifiedAt = verifiedAt; }
     public UUID getBoundaryId() { return boundaryId; }
     public void setBoundaryId(UUID boundaryId) { this.boundaryId = boundaryId; }
+    public UUID getAnchorId() { return anchorId; }
+    public void setAnchorId(UUID anchorId) { this.anchorId = anchorId; }
     public UUID getCatchmentAreaId() { return catchmentAreaId; }
     public void setCatchmentAreaId(UUID catchmentAreaId) { this.catchmentAreaId = catchmentAreaId; }
     public String getSensitivityLevel() { return sensitivityLevel; }
