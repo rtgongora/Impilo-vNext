@@ -140,6 +140,12 @@ Legend — **Built**: works today · **Reuse**: substrate exists, journey needs 
 ### Provider journeys (PJ1–PJ18)
 
 A provider is **first a person, then a regulated professional, then a worker in a facility context.**
+The provider journeys are hardened and completed by the **Provider + Place identity program** (2026-07-19,
+decision record in [`docs/design/provider-clinical-place/`](../design/provider-clinical-place/)): standalone
+HID↔ProviderID authorization-link, varapi private resolve (no enumeration), `WORK_CONTEXT` scoped tokens with
+revocation teardown, badge-as-selector, and the acceptance pack `tests/identity-contract/provider-journeys.sh`.
+Place identity (facilities/sites) has its own sibling doctrine:
+[`place-journey-doctrine.md`](place-journey-doctrine.md).
 
 | # | Journey | State | Anchor / gap |
 |---|---|---|---|
@@ -147,8 +153,8 @@ A provider is **first a person, then a regulated professional, then a worker in 
 | PJ2 | Request Provider Access | Built | `ProviderClaimController` eligibility/preview/claim |
 | PJ3 | No provider record found | Built | council resolver + provider-verification case |
 | PJ4 | Request facility access | Reuse | vashandi + varapi affiliations; facility approval `[I]` |
-| PJ5 | Provider daily sign-in + workspace select | Reuse | session assurance; **duty-scoped workforce token** gap `[I]` |
-| PJ6 | Provider card / staff badge | Reuse | card-print-agent `PROVIDER_CARD`; **sign-in resolve path** gap `[I]` |
+| PJ5 | Provider daily sign-in + workspace select | Reuse | session assurance; **duty-scoped workforce token** → Provider/Place program W3 (ScopedToken `WORK_CONTEXT`) |
+| PJ6 | Provider card / staff badge | Reuse | card-print-agent `PROVIDER_CARD`; **sign-in resolve path** → Provider/Place program W7 (badge = account selector, never authorisation) |
 | PJ7 | Identify a returning client at point of care | Built | masked search + QR resolve + patient context |
 | PJ8 | Register a new client (search→create→visit) | Reuse | one continuous journey to PCT visit `[I,H]` |
 | PJ9 | Use biometric identification | Reuse | 1:1 verify / controlled 1:N `[G,X1]` |
@@ -157,7 +163,7 @@ A provider is **first a person, then a regulated professional, then a worker in 
 | PJ12 | Telemedicine encounter | Built | PCT telehealth + rtc-gateway; join by session |
 | PJ13 | Offline care | Built | offline capability tokens + reconcile `[K]` |
 | PJ14 | Provider self-service profile management | Built | varapi profile; regulator-gated authoritative fields |
-| PJ15 | Licence expiry / suspension / restriction | **Broken** | `LicenceRenewalSweep` lapses but `PrivilegeRevocationConsumer` misses LAPSED → **no revocation** `[I]` |
+| PJ15 | Licence expiry / suspension / restriction | Built | **Fixed @`61849a28c`** — lapsed/retired/expired + non-active `newLifecycle` now revoke (cache evict + revocation marker). Follow-up: active `ScopedToken` teardown → Provider/Place program W1 |
 | PJ16 | Transfer to another facility | Reuse | vashandi posting end/start; context swap `[I]` |
 | PJ17 | Provider account recovery | Reuse | stronger assurance than citizen; relationships intact `[I,F]` |
 | PJ18 | Provider identity/professional-record dispute | Built | governed case; no self-edit of authoritative fields |

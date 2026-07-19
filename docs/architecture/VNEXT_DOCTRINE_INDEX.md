@@ -47,6 +47,7 @@
 | `docs/architecture/org-registry-cutover-phase2-runbook.md` | partial-auto | all planes | yes |
 | `docs/architecture/organization-registry-adoption.md` | partial-auto | all planes | yes |
 | `docs/architecture/pct-care-tracker-journey.md` | human-review | all planes | advisory |
+| `docs/architecture/place-journey-doctrine.md` | human-review | all planes | advisory |
 | `docs/architecture/planes/00-production-plane-doctrine.md` | human-review | all planes | advisory |
 | `docs/architecture/planes/01-trust-identity-assurance-governance.md` | human-review | all planes | advisory |
 | `docs/architecture/planes/02-registry-sovereign-identity-spine.md` | partial-auto | all planes | yes |
