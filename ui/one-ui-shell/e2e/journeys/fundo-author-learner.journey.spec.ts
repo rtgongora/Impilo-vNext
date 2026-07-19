@@ -38,7 +38,9 @@ test.describe.serial("Fundo author → learner journey (live preview)", () => {
     });
 
     await checklist.point("A3_formOpens", "creation form carries title/description/language", async () => {
-      await expect(page.getByLabel(/language/i)).toBeVisible();
+      // Anchored to the form's own label — the shell top bar also exposes a
+      // language control, which makes a bare getByLabel(/language/i) ambiguous.
+      await expect(page.locator("label", { hasText: /^Language/ }).locator("select")).toBeVisible();
     });
 
     await checklist.point("A4_saves", "draft persists via real POST and opens the builder", async () => {

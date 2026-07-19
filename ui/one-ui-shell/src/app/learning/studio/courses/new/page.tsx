@@ -10,9 +10,24 @@ export default function FundoStudioNewCoursePage() {
   const router = useRouter();
   const createCourse = useCreateFundoCourse();
   const [title, setTitle] = useState("");
+  const [code, setCode] = useState("");
+  const [codeEdited, setCodeEdited] = useState(false);
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState("en");
   const [error, setError] = useState<string | null>(null);
+
+  // The backend requires a unique course code; suggest one from the title so a
+  // quick draft never dies on "code and title are required", while an author
+  // who types their own code keeps it.
+  function suggestCode(fromTitle: string) {
+    const slug = fromTitle
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 24)
+      .replace(/-+$/g, "");
+    return slug ? `${slug}-${Date.now().toString(36).toUpperCase().slice(-4)}` : "";
+  }
   const { data: languageData } = useFundoLanguageOptions();
   const languages = languageData?.data?.items?.length
     ? languageData.data.items
@@ -22,6 +37,7 @@ export default function FundoStudioNewCoursePage() {
     setError(null);
     try {
       const res = (await createCourse.mutateAsync({
+        code: code.trim() || suggestCode(title),
         title,
         description,
         status: "DRAFT",
@@ -51,7 +67,26 @@ export default function FundoStudioNewCoursePage() {
       <div className="space-y-3 rounded-lg border border-border bg-card p-4">
         <label className="block text-sm text-foreground">
           Course title
-          <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full rounded border border-border px-3 py-2 text-sm" />
+          <input
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (!codeEdited) setCode(suggestCode(e.target.value));
+            }}
+            className="mt-1 w-full rounded border border-border px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="block text-sm text-foreground">
+          Course code
+          <input
+            value={code}
+            onChange={(e) => {
+              setCode(e.target.value);
+              setCodeEdited(true);
+            }}
+            placeholder="Suggested from the title — edit if you need a specific code"
+            className="mt-1 w-full rounded border border-border px-3 py-2 font-mono text-sm"
+          />
         </label>
         <label className="block text-sm text-foreground">
           Description

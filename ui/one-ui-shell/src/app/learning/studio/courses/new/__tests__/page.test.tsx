@@ -58,6 +58,15 @@ describe("Fundo Studio new-course page", () => {
     expect(screen.queryByTestId("fundo-create-course-error")).not.toBeInTheDocument();
   });
 
+  it("always sends a course code — auto-suggested from the title (backend requires code+title)", async () => {
+    createState.mutateAsync.mockResolvedValue({ data: { course: { id: "course-9" } } });
+    render(<FundoStudioNewCoursePage />);
+    await fillAndCreate();
+    await waitFor(() => expect(createState.mutateAsync).toHaveBeenCalled());
+    const body = createState.mutateAsync.mock.calls[0][0] as { code?: string };
+    expect(body.code).toMatch(/^IPC-BASICS-/);
+  });
+
   it("shows the backend error message when the create is rejected", async () => {
     createState.mutateAsync.mockRejectedValue({ status: 400, error: { message: "Course code already exists" } });
     render(<FundoStudioNewCoursePage />);
