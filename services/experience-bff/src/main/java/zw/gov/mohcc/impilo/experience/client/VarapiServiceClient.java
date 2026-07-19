@@ -41,6 +41,18 @@ public class VarapiServiceClient {
     /**
      * Get licenses for a provider.
      */
+    /** HPA practitioner-in-charge candidate resolution summary (RESOLVED / UNRESOLVED counts). */
+    public JsonNode hpaPractitionerSummary() {
+        String url = baseUrl + "/v1/internal/providers/hpa-practitioner-import/summary";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** Unresolved HPA practitioner-in-charge onboarding candidates (grants no authority). */
+    public JsonNode hpaPractitionerOnboardingQueue(int limit) {
+        String url = baseUrl + "/v1/internal/providers/hpa-practitioner-import/onboarding-queue?limit=" + limit;
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     public JsonNode getProviderLicenses(String providerId) {
         String url = baseUrl + "/v1/internal/providers/" + providerId + "/licenses";
         log.info("VARAPI: Getting licenses for provider={}", providerId);

@@ -26,6 +26,12 @@ public class NdilaServiceClient {
         this.objectMapper = objectMapper;
     }
 
+    /** HPA facilities awaiting map-location confirmation (geocode review queue). */
+    public JsonNode hpaGeocodeReviewQueue(int limit) {
+        String url = baseUrl + "/internal/v1/locations/hpa-import/geocode-review-queue?limit=" + limit;
+        return restTemplate.getForEntity(url, JsonNode.class).getBody();
+    }
+
     public JsonNode tileConfig() {
         String url = baseUrl + "/api/v1/ndila/tiles/config";
         JsonNode body = restTemplate.getForEntity(url, JsonNode.class).getBody();

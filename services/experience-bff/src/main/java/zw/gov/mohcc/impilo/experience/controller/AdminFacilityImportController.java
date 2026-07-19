@@ -8,7 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.NdilaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -31,9 +33,15 @@ public class AdminFacilityImportController {
     private static final Logger log = LoggerFactory.getLogger(AdminFacilityImportController.class);
 
     private final TusoServiceClient tusoClient;
+    private final VarapiServiceClient varapiClient;
+    private final NdilaServiceClient ndilaClient;
 
-    public AdminFacilityImportController(TusoServiceClient tusoClient) {
+    public AdminFacilityImportController(TusoServiceClient tusoClient,
+                                         VarapiServiceClient varapiClient,
+                                         NdilaServiceClient ndilaClient) {
         this.tusoClient = tusoClient;
+        this.varapiClient = varapiClient;
+        this.ndilaClient = ndilaClient;
     }
 
     @GetMapping("/facility-import-runs")
@@ -61,6 +69,75 @@ public class AdminFacilityImportController {
         } catch (Exception e) {
             return badGateway(requestId, correlationId, "HPA_IMPORT_RUNS_UNAVAILABLE",
                     "Unable to load HPA import runs from TUSO");
+        }
+    }
+
+    @PostMapping("/hpa-import/dry-run")
+    public ResponseEntity<Map<String, Object>> hpaDryRun(
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        try {
+            JsonNode data = tusoClient.hpaImportDryRun(body != null ? body : Map.of());
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "HPA_IMPORT_DRYRUN_FAILED",
+                    "Unable to start the HPA dry-run in TUSO");
+        }
+    }
+
+    @PostMapping("/hpa-import/apply")
+    public ResponseEntity<Map<String, Object>> hpaApply(
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        try {
+            JsonNode data = tusoClient.hpaImportApply(body != null ? body : Map.of());
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "HPA_IMPORT_APPLY_FAILED",
+                    "Unable to apply the HPA import in TUSO");
+        }
+    }
+
+    @GetMapping("/hpa-practitioner-summary")
+    public ResponseEntity<Map<String, Object>> hpaPractitionerSummary(
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        try {
+            JsonNode data = varapiClient.hpaPractitionerSummary();
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "HPA_PRACTITIONER_SUMMARY_UNAVAILABLE",
+                    "Unable to load HPA practitioner resolution summary from VARAPI");
+        }
+    }
+
+    @GetMapping("/hpa-practitioner-onboarding")
+    public ResponseEntity<Map<String, Object>> hpaPractitionerOnboarding(
+            @RequestParam(value = "limit", defaultValue = "200") int limit,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        try {
+            JsonNode data = varapiClient.hpaPractitionerOnboardingQueue(limit);
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "HPA_PRACTITIONER_ONBOARDING_UNAVAILABLE",
+                    "Unable to load the HPA practitioner onboarding queue from VARAPI");
+        }
+    }
+
+    @GetMapping("/hpa-geocode-review")
+    public ResponseEntity<Map<String, Object>> hpaGeocodeReview(
+            @RequestParam(value = "limit", defaultValue = "200") int limit,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        try {
+            JsonNode data = ndilaClient.hpaGeocodeReviewQueue(limit);
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "HPA_GEOCODE_REVIEW_UNAVAILABLE",
+                    "Unable to load the HPA geocode review queue from NDILA");
         }
     }
 

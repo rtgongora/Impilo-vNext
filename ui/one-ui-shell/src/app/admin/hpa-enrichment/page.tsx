@@ -9,15 +9,146 @@
  */
 
 import { useState } from "react";
-import { Building2, ClipboardCheck, ListChecks } from "lucide-react";
+import { Building2, ClipboardCheck, ListChecks, MapPinOff, Play, Stethoscope } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import {
+  useHpaApply,
+  useHpaDryRun,
+  useHpaGeocodeReview,
   useHpaImportRuns,
   useHpaOutcomes,
+  useHpaPractitionerOnboarding,
+  useHpaPractitionerSummary,
   useHpaReviewQueue,
   type HpaImportRun,
 } from "@/hooks/queries/useHpaImport";
+
+const inputClass =
+  "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground";
+
+function RunImportCard() {
+  const dryRun = useHpaDryRun();
+  const apply = useHpaApply();
+  const [feedPath, setFeedPath] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+  const busy = dryRun.isPending || apply.isPending;
+
+  function run(kind: "dry" | "apply") {
+    setMsg(null);
+    if (!feedPath.trim()) {
+      setMsg("Enter the server-side path to the HPA candidate feed (…/hpa_tuso_candidate_feed.jsonl).");
+      return;
+    }
+    const m = kind === "dry" ? dryRun : apply;
+    m.mutate(
+      { feedPath: feedPath.trim() },
+      {
+        onSuccess: (s) =>
+          setMsg(
+            `${kind === "dry" ? "Dry-run" : "Apply"} batch #${s.batchId}: ${s.candidatesTotal} candidates · ` +
+              `${s.enrichedExisting} enriched · ${s.createdEstablishment} new · ${s.routedToReview} review · ` +
+              `${s.quarantined} quarantined.`,
+          ),
+        onError: () => setMsg(`The ${kind === "dry" ? "dry-run" : "apply"} could not be started.`),
+      },
+    );
+  }
+
+  return (
+    <section className="space-y-3 rounded-2xl border border-border bg-card p-5" data-testid="hpa-run-import">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <Play className="h-4 w-4 text-primary" /> Run an import
+      </h2>
+      <input
+        type="text"
+        value={feedPath}
+        onChange={(e) => setFeedPath(e.target.value)}
+        placeholder="Server path to hpa_tuso_candidate_feed.jsonl"
+        className={inputClass}
+      />
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => run("dry")}
+          disabled={busy}
+          className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
+        >
+          {dryRun.isPending ? "Running…" : "Dry-run"}
+        </button>
+        <button
+          type="button"
+          onClick={() => run("apply")}
+          disabled={busy}
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+        >
+          {apply.isPending ? "Applying…" : "Apply safe outcomes"}
+        </button>
+      </div>
+      {msg && <p className="text-sm text-muted-foreground">{msg}</p>}
+    </section>
+  );
+}
+
+function CrossServiceQueues() {
+  const picSummary = useHpaPractitionerSummary();
+  const onboarding = useHpaPractitionerOnboarding();
+  const geocode = useHpaGeocodeReview();
+  return (
+    <>
+      <section className="space-y-2">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Stethoscope className="h-4 w-4 text-primary" /> Practitioner onboarding (Varapi)
+        </h2>
+        <div className="flex flex-wrap gap-2 text-xs">
+          {(picSummary.data ?? []).map((s) => (
+            <span key={s.varapi_resolution_status} className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
+              {s.varapi_resolution_status}: <b className="text-foreground">{s.n}</b>
+            </span>
+          ))}
+        </div>
+        {!onboarding.isLoading && (onboarding.data ?? []).length === 0 && (
+          <p className="text-sm text-muted-foreground">No unresolved practitioner candidates awaiting onboarding.</p>
+        )}
+        <ul className="space-y-1.5">
+          {(onboarding.data ?? []).slice(0, 25).map((r) => (
+            <li
+              key={r.id}
+              className="flex items-center justify-between rounded-lg border border-border bg-card p-2.5 text-sm"
+              data-testid="hpa-onboarding-row"
+            >
+              <span className="text-foreground">{r.practitioner_name}</span>
+              <span className="text-xs text-muted-foreground">
+                {r.practitioner_registration_number} · grants no authority
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <MapPinOff className="h-4 w-4 text-primary" /> Map locations awaiting confirmation (Ndila)
+        </h2>
+        {!geocode.isLoading && (geocode.data ?? []).length === 0 && (
+          <p className="text-sm text-muted-foreground">No facilities awaiting map-location confirmation.</p>
+        )}
+        <ul className="space-y-1.5">
+          {(geocode.data ?? []).slice(0, 25).map((r) => (
+            <li
+              key={r.id}
+              className="flex items-center justify-between rounded-lg border border-border bg-card p-2.5 text-sm"
+              data-testid="hpa-geocode-row"
+            >
+              <span className="text-foreground">{r.facility_name}</span>
+              <span className="text-xs text-muted-foreground">{r.province ?? "—"} · {r.reason}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </>
+  );
+}
 
 function RunRow({ run, active, onSelect }: { run: HpaImportRun; active: boolean; onSelect: () => void }) {
   return (
@@ -61,6 +192,8 @@ export default function HpaEnrichmentAdminPage() {
         subtitle="Import batches, reconciliation outcomes and review queues"
       >
         <div className="mx-auto max-w-4xl space-y-6">
+          <RunImportCard />
+
           <section className="space-y-2">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <Building2 className="h-4 w-4 text-primary" /> Import batches
@@ -134,6 +267,8 @@ export default function HpaEnrichmentAdminPage() {
               </section>
             </>
           )}
+
+          <CrossServiceQueues />
         </div>
       </PageShell>
     </AppLayout>

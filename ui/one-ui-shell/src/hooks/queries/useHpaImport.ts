@@ -7,7 +7,7 @@
  * runs server-side. Degrades honestly (empty on failure).
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 const BASE = "/internal/v1/admin";
@@ -72,6 +72,118 @@ export function useHpaOutcomes(runId: number | null) {
       }
     },
     enabled: runId != null,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+// ── Trigger (dry-run / apply) ────────────────────────────────────────────────
+
+export interface HpaImportSummary {
+  batchId: number;
+  dryRun: boolean;
+  candidatesTotal: number;
+  liveTusoScanned: number;
+  enrichedExisting: number;
+  createdEstablishment: number;
+  createdUnresolvedSite: number;
+  routedToReview: number;
+  quarantined: number;
+  unchangedIdempotent: number;
+}
+
+export interface HpaImportInput {
+  feedPath: string;
+  tenantId?: string;
+}
+
+/** Start an HPA dry-run (writes a dry-run batch; no facility mutation). */
+export function useHpaDryRun() {
+  const qc = useQueryClient();
+  return useMutation<HpaImportSummary, Error, HpaImportInput>({
+    mutationFn: async (input) =>
+      (await apiClient.post<ApiResponse<HpaImportSummary>>(`${BASE}/hpa-import/dry-run`, input)).data,
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["hpa-import", "runs"] }),
+  });
+}
+
+/** Apply the HPA import (materialises safe outcomes). */
+export function useHpaApply() {
+  const qc = useQueryClient();
+  return useMutation<HpaImportSummary, Error, HpaImportInput>({
+    mutationFn: async (input) =>
+      (await apiClient.post<ApiResponse<HpaImportSummary>>(`${BASE}/hpa-import/apply`, input)).data,
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["hpa-import", "runs"] }),
+  });
+}
+
+// ── Cross-service candidate queues ───────────────────────────────────────────
+
+export interface HpaPractitionerResolution {
+  varapi_resolution_status: string;
+  n: number;
+}
+
+export interface HpaOnboardingRow {
+  id: number;
+  hpa_institution_id: number;
+  practitioner_name: string;
+  practitioner_registration_number: string;
+  relationship_role: string;
+  onboarding_status: string;
+}
+
+export function useHpaPractitionerSummary() {
+  return useQuery<HpaPractitionerResolution[]>({
+    queryKey: ["hpa-import", "practitioner-summary"],
+    queryFn: async () => {
+      try {
+        return (await apiClient.get<ApiResponse<HpaPractitionerResolution[]>>(`${BASE}/hpa-practitioner-summary`))
+          .data ?? [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useHpaPractitionerOnboarding() {
+  return useQuery<HpaOnboardingRow[]>({
+    queryKey: ["hpa-import", "practitioner-onboarding"],
+    queryFn: async () => {
+      try {
+        return (await apiClient.get<ApiResponse<HpaOnboardingRow[]>>(`${BASE}/hpa-practitioner-onboarding`))
+          .data ?? [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export interface HpaGeocodeRow {
+  id: string;
+  owner_entity_id: string;
+  facility_name: string;
+  province: string | null;
+  reason: string;
+  status: string;
+}
+
+export function useHpaGeocodeReview() {
+  return useQuery<HpaGeocodeRow[]>({
+    queryKey: ["hpa-import", "geocode-review"],
+    queryFn: async () => {
+      try {
+        return (await apiClient.get<ApiResponse<HpaGeocodeRow[]>>(`${BASE}/hpa-geocode-review`)).data ?? [];
+      } catch {
+        return [];
+      }
+    },
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });

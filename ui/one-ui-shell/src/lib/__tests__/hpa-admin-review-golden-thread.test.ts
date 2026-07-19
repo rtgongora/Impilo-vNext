@@ -19,6 +19,32 @@ describe("HPA admin review golden thread", () => {
     expect(page).toContain("hpa-review-row");
   });
 
+  it("the console can TRIGGER an import and shows cross-service queues", () => {
+    const page = read("ui/one-ui-shell/src/app/admin/hpa-enrichment/page.tsx");
+    // Operable: run dry-run / apply, not just read.
+    expect(page).toContain("useHpaDryRun");
+    expect(page).toContain("useHpaApply");
+    expect(page).toContain("hpa-run-import");
+    // Cross-service candidate visibility (Varapi practitioners + Ndila geocode).
+    expect(page).toContain("useHpaPractitionerOnboarding");
+    expect(page).toContain("useHpaGeocodeReview");
+    expect(page).toContain("hpa-onboarding-row");
+    expect(page).toContain("hpa-geocode-row");
+  });
+
+  it("the BFF exposes trigger + cross-service lanes", () => {
+    const bff = read(
+      "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminFacilityImportController.java",
+    );
+    expect(bff).toContain("/hpa-import/dry-run");
+    expect(bff).toContain("/hpa-import/apply");
+    expect(bff).toContain("/hpa-practitioner-onboarding");
+    expect(bff).toContain("/hpa-geocode-review");
+    expect(bff).toContain("hpaImportApply");
+    expect(bff).toContain("hpaPractitionerOnboardingQueue");
+    expect(bff).toContain("hpaGeocodeReviewQueue");
+  });
+
   it("the route is registered (REGISTRY_ADMIN-gated)", () => {
     const routes = read("ui/one-ui-shell/src/lib/routes.ts");
     expect(routes).toMatch(/\/admin\/hpa-enrichment[\s\S]*?REGISTRY_ADMIN/);

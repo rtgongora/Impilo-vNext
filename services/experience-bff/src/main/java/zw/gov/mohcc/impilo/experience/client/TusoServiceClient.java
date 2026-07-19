@@ -348,6 +348,18 @@ public class TusoServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    /** Trigger an HPA enrichment dry-run (writes a dry-run batch; no facility mutation). */
+    public JsonNode hpaImportDryRun(java.util.Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/hpa-import/dry-run";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    /** Trigger an HPA enrichment apply (materialises safe outcomes). */
+    public JsonNode hpaImportApply(java.util.Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/hpa-import/apply";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
     /** Review queue (identity-conflict / possible-existing / unresolved-site) for an HPA import batch. */
     public JsonNode hpaImportReviewQueue(long runId, String outcome) {
         String url = baseUrl + "/v1/internal/facilities/hpa-import/runs/" + runId + "/review-queue"
