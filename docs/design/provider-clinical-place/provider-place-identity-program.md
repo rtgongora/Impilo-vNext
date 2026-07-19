@@ -138,7 +138,25 @@ vito untouched (patient-program territory).
 | W7 | provider | badge (V026) + shared workstation + reauth-before-sign · badge-QR public verify |
 | W8 | place | FJ5–FJ7, FJ9, SJ3–SJ6 (tuso V034+, indawo V015+) · V040 |
 | W9 | place | QR credentials + public projections (tuso V036, indawo V017–V018) |
-| W10 | provider | passkey (joint Keycloak window) · break-glass capture · offline credential (tshepo-offline V002) |
+| W10 | provider | passkey (joint Keycloak window — **DEFERRED**, see note) · break-glass (**CZO-queued**) · offline credential (tshepo-offline V002 ✅) |
+
+### W10 status (2026-07-19)
+
+- **Offline provider device credential — DONE** (tshepo-offline V002
+  `provider_device_credential` + `ProviderDeviceCredentialService`): issued only from an
+  authenticated online session (no cold issuance), caches a provider/facility/role status
+  snapshot, restricts a high-risk denylist (prescribe/sign/close-sensitive/dispense-controlled/
+  break-glass/consent-change) offline, supersedes prior device credential; **never mints identity
+  offline**. Default TTL 72h (PO open question). 70 tests green.
+- **Passkey/WebAuthn — DEFERRED to a joint Keycloak realm window.** The realm import is a hot
+  shared file with the patient-ID sessions; WebAuthn needs realm-config + FE ceremony + a recovery
+  path, and daily login v1 (password + TOTP step-up + badge-tap-as-selector) already ships. To be
+  scheduled with the patient sessions as a coordinated realm change; the login preference order in
+  D-P4 becomes passkey-first at that point.
+- **Break-glass — CZO-queued.** The `BREAK-GLASS` rule is CZO-LEAD (consent/emergency cross-cutting,
+  not authorable in `impilo.authz`); the BFF capture/audit surface reuses the existing
+  `TrustBreakGlassResourceMapper`. Queued for the CZO session rather than built here to avoid
+  touching the single-writer PDP surface.
 | W11 | both | acceptance packs: `tests/identity-contract/provider-journeys.sh` + `tests/place-contract/` |
 
 Verdict gate: pack green = SOFTWARE_CONTRACT_GREEN; real council/HPA/CRVS links = EXTERNAL_INTEGRATION_GREEN
