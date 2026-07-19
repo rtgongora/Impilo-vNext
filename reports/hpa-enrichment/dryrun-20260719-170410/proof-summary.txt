@@ -1,0 +1,8 @@
+HPA match-or-create rig proof — Sun Jul 19 07:27:43 PM UTC 2026
+estate before: 1776
+dry-run: NEW 5488 / REVIEW 687 / ENRICH 152 / total 6327
+apply: +5488 created -> 7264; 5488 HPA_INSTITUTION_ID keys
+idempotency: 2nd apply 0 new (7264 stable)
+rollback by batch: -> 1776
+
+CLEAN idempotency: apply#1 -> 1776 ; apply#2 -> 1776 (0 new) ; keys=5488 ; canonical non-HPA=1776 untouched

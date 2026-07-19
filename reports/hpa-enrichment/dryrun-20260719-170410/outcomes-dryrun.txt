@@ -1,0 +1,7 @@
+           outcome           | count 
+-----------------------------+-------
+ NEW_REGULATED_ESTABLISHMENT |  5488
+ POSSIBLE_EXISTING_REVIEW    |   687
+ CONFIRMED_EXISTING_ENRICH   |   152
+(3 rows)
+
