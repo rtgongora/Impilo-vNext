@@ -1,0 +1,28 @@
+COPY 6327
+SELECT 6327
+UPDATE 6327
+--- reconciliation vs LIVE preview estate ---
+           outcome           | count 
+-----------------------------+-------
+ NEW_REGULATED_ESTABLISHMENT |  5488
+ POSSIBLE_EXISTING_REVIEW    |   687
+ CONFIRMED_EXISTING_ENRICH   |   152
+(3 rows)
+
+--- APPLY safe outcomes (create NEW) ---
+    stage    | facilities 
+-------------+------------
+ after_apply |       7264
+(1 row)
+
+--- IDEMPOTENCY: 2nd apply must add 0 ---
+      stage      | facilities 
+-----------------+------------
+ after_2nd_apply |       7264
+(1 row)
+
+     stage      | facilities 
+----------------+------------
+ after_rollback |       1776
+(1 row)
+
