@@ -29,6 +29,10 @@ import java.util.UUID;
 @RequestMapping("/internal/v1/coverage/members")
 public class MemberCoverageController {
 
+    /** Membership statuses that count as an active enrolment for the duplicate guard (spec §10.2). */
+    private static final java.util.Set<String> ACTIVE_ENROLMENT_STATES = java.util.Set.of(
+            "DRAFT", "DECLARED", "PENDING_VERIFICATION", "VERIFIED", "ACTIVE", "GRACE_PERIOD");
+
     private final MemberCoverageRepository memberCoverageRepository;
     private final CoveragePlanRepository planRepository;
     private final CoverageEventService eventService;
@@ -65,6 +69,16 @@ public class MemberCoverageController {
                 .orElse(null);
         if (plan == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        // Duplicate-active-enrolment guard (spec §10; fixes the completion-lens nit where a
+        // member could enrol twice on the same plan). A DB partial-unique index backs this.
+        boolean alreadyActive = memberCoverageRepository
+                .findByTenantIdAndClientId(tid, request.clientId()).stream()
+                .anyMatch(m -> m.getPlanId().equals(request.planId())
+                        && ACTIVE_ENROLMENT_STATES.contains(m.getStatus()));
+        if (alreadyActive) {
+            throw new IllegalStateException("Member already has an active enrolment on this plan");
         }
 
         String relationship = request.relationship() != null && !request.relationship().isBlank()

@@ -37,6 +37,13 @@ public class CoveragePlanEntity {
     @Column(name = "status", nullable = false, length = 16)
     private String status = "ACTIVE";
 
+    // Ruvimbo hierarchy links (V015). Nullable: legacy flat plans backfilled to their version.
+    @Column(name = "payer_ref")
+    private UUID payerRef;
+
+    @Column(name = "plan_version_id")
+    private UUID planVersionId;
+
     @Column(name = "effective_from", nullable = false)
     private LocalDate effectiveFrom;
 
@@ -76,6 +83,10 @@ public class CoveragePlanEntity {
     public String getPlanType() { return planType; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public UUID getPayerRef() { return payerRef; }
+    public void setPayerRef(UUID v) { this.payerRef = v; }
+    public UUID getPlanVersionId() { return planVersionId; }
+    public void setPlanVersionId(UUID v) { this.planVersionId = v; }
     public LocalDate getEffectiveFrom() { return effectiveFrom; }
     public LocalDate getEffectiveTo() { return effectiveTo; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

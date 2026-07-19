@@ -42,6 +42,23 @@ public class EligibilityCheckEntity {
     @Column(name = "decision_evidence_json", columnDefinition = "jsonb")
     private String decisionEvidenceJson;
 
+    // Ruvimbo eligibility v2 explainability (spec §12.2).
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "reason_codes", columnDefinition = "jsonb")
+    private String reasonCodes;
+
+    @Column(name = "ruleset_version", length = 32)
+    private String rulesetVersion;
+
+    @Column(name = "valid_until")
+    private OffsetDateTime validUntil;
+
+    @Column(name = "network_status", length = 24)
+    private String networkStatus;
+
+    @Column(name = "plan_version_id")
+    private UUID planVersionId;
+
     @Column(name = "checked_at", nullable = false)
     private OffsetDateTime checkedAt;
 
@@ -77,6 +94,16 @@ public class EligibilityCheckEntity {
     public String getResultCode() { return resultCode; }
     public String getResultMessage() { return resultMessage; }
     public String getDecisionEvidenceJson() { return decisionEvidenceJson; }
+    public String getReasonCodes() { return reasonCodes; }
+    public void setReasonCodes(String v) { this.reasonCodes = v; }
+    public String getRulesetVersion() { return rulesetVersion; }
+    public void setRulesetVersion(String v) { this.rulesetVersion = v; }
+    public OffsetDateTime getValidUntil() { return validUntil; }
+    public void setValidUntil(OffsetDateTime v) { this.validUntil = v; }
+    public String getNetworkStatus() { return networkStatus; }
+    public void setNetworkStatus(String v) { this.networkStatus = v; }
+    public UUID getPlanVersionId() { return planVersionId; }
+    public void setPlanVersionId(UUID v) { this.planVersionId = v; }
     public OffsetDateTime getCheckedAt() { return checkedAt; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
 }

@@ -200,6 +200,59 @@ public class CoverageEventService {
         }
     }
 
+    // ------------------------------------------------------------------
+    // Ruvimbo Wave 1 event families (spec §31).
+    // ------------------------------------------------------------------
+
+    /** Generic Ruvimbo emitter for the new foundation aggregates. */
+    @Transactional
+    public void emitDomain(String aggregateType, String aggregateId, String eventType,
+                           UUID correlationId, UUID tenantId, String podId,
+                           String subjectId, String subjectType, Map<String, Object> payload) {
+        LinkedHashMap<String, Object> body = new LinkedHashMap<>(payload != null ? payload : Map.of());
+        body.putIfAbsent("meta", meta(correlationId));
+        emit(aggregateType, aggregateId, eventType, correlationId, tenantId, podId,
+                subjectId != null ? subjectId : aggregateId, subjectType, body);
+    }
+
+    @Transactional
+    public void emitPayer(String action, UUID payerId, UUID correlationId, UUID tenantId, String podId,
+                          Map<String, Object> payload) {
+        emitDomain("PAYER", payerId.toString(), TOPICS.eventType("payer", action),
+                correlationId, tenantId, podId, payerId.toString(), "PAYER", payload);
+    }
+
+    @Transactional
+    public void emitPlanVersionPublished(UUID planVersionId, UUID correlationId, UUID tenantId, String podId,
+                                         Map<String, Object> payload) {
+        emitDomain("PLAN_VERSION", planVersionId.toString(), "coverage.plan-version.published",
+                correlationId, tenantId, podId, planVersionId.toString(), "PLAN_VERSION", payload);
+    }
+
+    /** Membership lifecycle: declared/verified/activated/suspended/terminated (§31). */
+    @Transactional
+    public void emitCoverageLifecycle(String action, UUID membershipId, UUID correlationId, UUID tenantId,
+                                      String podId, Map<String, Object> payload) {
+        emitDomain("MEMBER_COVERAGE", membershipId.toString(), TOPICS.eventType("coverage", action),
+                correlationId, tenantId, podId, membershipId.toString(), "MEMBER_COVERAGE", payload);
+    }
+
+    /** Benefit accumulator movement: reserved/consumed/released (§31). */
+    @Transactional
+    public void emitBenefit(String action, UUID accumulatorId, UUID correlationId, UUID tenantId, String podId,
+                            Map<String, Object> payload) {
+        emitDomain("BENEFIT_ACCUMULATOR", accumulatorId.toString(), TOPICS.eventType("benefit", action),
+                correlationId, tenantId, podId, accumulatorId.toString(), "BENEFIT_ACCUMULATOR", payload);
+    }
+
+    /** Signed eligibility token issued (§12.3, §31). */
+    @Transactional
+    public void emitEligibilityTokenIssued(UUID eligibilityCheckId, UUID correlationId, UUID tenantId, String podId,
+                                           Map<String, Object> payload) {
+        emitDomain("ELIGIBILITY", eligibilityCheckId.toString(), "coverage.eligibility.token.issued",
+                correlationId, tenantId, podId, eligibilityCheckId.toString(), "ELIGIBILITY", payload);
+    }
+
     private void emit(String aggregateType, String aggregateId, String eventType,
                       UUID correlationId, UUID tenantId, String podId,
                       String subjectId, String subjectType, Map<String, Object> payload) {

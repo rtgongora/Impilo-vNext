@@ -18,4 +18,8 @@ public interface MemberCoverageRepository extends JpaRepository<MemberCoverageEn
     Optional<MemberCoverageEntity> findByIdAndTenantId(UUID id, UUID tenantId);
 
     List<MemberCoverageEntity> findByTenantIdAndPlanId(UUID tenantId, UUID planId);
+
+    List<MemberCoverageEntity> findByTenantIdAndPrincipalMemberId(UUID tenantId, UUID principalMemberId);
+
+    List<MemberCoverageEntity> findByTenantIdAndVerificationStatus(UUID tenantId, String verificationStatus);
 }

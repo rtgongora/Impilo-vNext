@@ -34,8 +34,34 @@ public class MemberCoverageEntity {
     @Column(name = "relationship", nullable = false, length = 32)
     private String relationship = "SELF";
 
-    @Column(name = "status", nullable = false, length = 16)
+    @Column(name = "status", nullable = false, length = 32)
     private String status = "ACTIVE";
+
+    // Ruvimbo (spec §10.2): verification status is kept SEPARATE from membership status.
+    @Column(name = "verification_status", nullable = false, length = 24)
+    private String verificationStatus = "DECLARED";
+
+    @Column(name = "verification_date")
+    private OffsetDateTime verificationDate;
+
+    @Column(name = "verification_source", length = 64)
+    private String verificationSource;
+
+    @Column(name = "coverage_priority", nullable = false)
+    private int coveragePriority = 1;
+
+    @Column(name = "member_category", length = 48)
+    private String memberCategory;
+
+    /** Non-null on a dependant membership → points at the principal membership (spec §10.3). */
+    @Column(name = "principal_member_id")
+    private UUID principalMemberId;
+
+    @Column(name = "termination_reason", length = 255)
+    private String terminationReason;
+
+    @Column(name = "card_reference", length = 64)
+    private String cardReference;
 
     @Column(name = "effective_from", nullable = false)
     private LocalDate effectiveFrom;
@@ -76,6 +102,23 @@ public class MemberCoverageEntity {
     public String getRelationship() { return relationship; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; this.updatedAt = OffsetDateTime.now(); }
+    public String getVerificationStatus() { return verificationStatus; }
+    public void setVerificationStatus(String v) { this.verificationStatus = v; this.updatedAt = OffsetDateTime.now(); }
+    public OffsetDateTime getVerificationDate() { return verificationDate; }
+    public void setVerificationDate(OffsetDateTime v) { this.verificationDate = v; }
+    public String getVerificationSource() { return verificationSource; }
+    public void setVerificationSource(String v) { this.verificationSource = v; }
+    public int getCoveragePriority() { return coveragePriority; }
+    public void setCoveragePriority(int v) { this.coveragePriority = v; }
+    public String getMemberCategory() { return memberCategory; }
+    public void setMemberCategory(String v) { this.memberCategory = v; }
+    public UUID getPrincipalMemberId() { return principalMemberId; }
+    public void setPrincipalMemberId(UUID v) { this.principalMemberId = v; }
+    public String getTerminationReason() { return terminationReason; }
+    public void setTerminationReason(String v) { this.terminationReason = v; }
+    public String getCardReference() { return cardReference; }
+    public void setCardReference(String v) { this.cardReference = v; }
+    public void setEffectiveTo(LocalDate v) { this.effectiveTo = v; this.updatedAt = OffsetDateTime.now(); }
     public LocalDate getEffectiveFrom() { return effectiveFrom; }
     public LocalDate getEffectiveTo() { return effectiveTo; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
