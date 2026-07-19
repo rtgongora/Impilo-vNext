@@ -1,8 +1,15 @@
 "use client";
 
 /**
- * Sign In with Provider ID — Provider ID + PIN login form.
- * Route: /auth/login/provider-id | pageTitle: "Sign In with Provider ID"
+ * Health Provider Login — identify-then-authenticate (D-P4, PJ5).
+ *
+ * The Provider ID only IDENTIFIES the account (it is often publicly known and
+ * is never a secret); the person then authenticates with their own account
+ * password. A Provider ID + short PIN as the sole credential is retired —
+ * LOGIN-PROVIDERID-DENY (impilo.authz): a professional identifier never
+ * authenticates by itself.
+ *
+ * Route: /auth/login/provider-id | pageTitle: "Health Provider Login"
  */
 
 import { useState, type FormEvent } from "react";
@@ -25,8 +32,8 @@ export default function ProviderIdLoginPage() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const setFocusedWorkMode = useOperationalContextStore((s) => s.setFocusedWorkMode);
 
-  const [providerId, setProviderId] = useState("");
-  const [pin, setPin] = useState("");
+  const [providerId, setProviderId] = useState(searchParams.get("providerId") ?? "");
+  const [password, setPassword] = useState("");
   const [signInFocusedWorkMode, setSignInFocusedWorkMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,15 +46,15 @@ export default function ProviderIdLoginPage() {
       return;
     }
 
-    if (!pin.trim() || pin.length < 4) {
-      setError("Please enter a valid PIN (at least 4 digits).");
+    if (!password.trim() || password.length < 8) {
+      setError("Please enter your account password (at least 8 characters).");
       return;
     }
 
     login.mutate(
       {
         email: providerId,
-        password: pin,
+        password,
         method: "provider_id",
       } as { email: string; password: string },
       {
@@ -78,7 +85,8 @@ export default function ProviderIdLoginPage() {
           router.push(buildPostLoginResolvingPath(returnTo));
         },
         onError: () => {
-          setError("Invalid Provider ID or PIN. Please try again.");
+          // Generic on purpose — never confirm whether the Provider ID exists.
+          setError("We could not sign you in with those details. Please try again.");
         },
       },
     );
@@ -97,10 +105,11 @@ export default function ProviderIdLoginPage() {
       </div>
 
       <h2 className="text-xl font-semibold text-foreground mb-1">
-        Sign In with Provider ID
+        Health Provider Login
       </h2>
       <p className="text-sm text-muted-foreground mb-6">
-        Enter your registered provider number and PIN
+        Your Provider ID identifies your account. You still sign in as yourself
+        — with your own password.
       </p>
 
       {error && (
@@ -130,33 +139,28 @@ export default function ProviderIdLoginPage() {
             />
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Your provider number was assigned during registration
+            Identifies your account only — a Provider ID alone never signs you in
           </p>
         </div>
 
         <div>
           <label
-            htmlFor="pin"
+            htmlFor="account-password"
             className="block text-sm font-medium text-foreground mb-1"
           >
-            PIN
+            Account password
           </label>
           <div className="relative">
             <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
-              id="pin"
+              id="account-password"
               type="password"
               required
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={8}
-              value={pin}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, "");
-                setPin(val);
-              }}
-              placeholder="Enter your PIN"
-              className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400 tracking-widest"
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Your Impilo account password"
+              className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
             />
           </div>
         </div>
@@ -178,7 +182,7 @@ export default function ProviderIdLoginPage() {
 
         <button
           type="submit"
-          disabled={login.isPending || !providerId.trim() || !pin.trim()}
+          disabled={login.isPending || !providerId.trim() || !password.trim()}
           className="w-full py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
         >
           {login.isPending ? (

@@ -62,10 +62,10 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     expect(screen.getByText("Other sign-in methods")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^Health ID$/i })).toHaveAttribute(
-      "href",
-      "/auth/login/provider-id",
-    );
+    // The workforce entrance is a permanent, prominent action (PJ5, D-P4).
+    expect(
+      screen.getByRole("link", { name: /Health Provider Login — Work now/i }),
+    ).toHaveAttribute("href", "/auth/login/provider-id");
     expect(screen.getByRole("link", { name: /Biometric/i })).toHaveAttribute(
       "href",
       "/auth/login/biometric",

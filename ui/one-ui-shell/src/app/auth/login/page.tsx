@@ -280,19 +280,25 @@ export default function LoginPage() {
         </button>
       </form>
 
+      {/* Health Provider Login — the permanent workforce entrance (PJ5, D-P4).
+          Same accounts, same trust platform — a different front door, never a
+          different identity silo. */}
+      <div className="mt-6 pt-6 border-t border-border">
+        <Link
+          href="/auth/login/provider-id"
+          className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-impilo-500 text-primary text-sm font-medium rounded-lg hover:bg-primary-soft transition-colors"
+        >
+          <BadgeCheck className="w-4 h-4" />
+          Health Provider Login — Work now
+        </Link>
+      </div>
+
       {/* Alternative sign-in methods */}
       <div className="mt-6 pt-6 border-t border-border">
         <p className="text-xs text-muted-foreground text-center mb-3">
           Other sign-in methods
         </p>
         <div className="flex gap-3">
-          <Link
-            href="/auth/login/provider-id"
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-border rounded-lg text-sm text-foreground hover:border-primary/25 hover:bg-primary-soft transition-colors"
-          >
-            <BadgeCheck className="w-4 h-4 text-primary" />
-            Health ID
-          </Link>
           <Link
             href="/auth/login/biometric"
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-border rounded-lg text-sm text-foreground hover:border-primary/25 hover:bg-primary-soft transition-colors"
