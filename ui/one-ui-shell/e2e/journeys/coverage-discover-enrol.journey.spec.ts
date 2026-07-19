@@ -30,13 +30,17 @@ test.describe("Coverage — discover + enrol (live preview)", () => {
   test("citizen sees Coverage in the launcher and reaches enrol with real plans", async ({ page }) => {
     await loginAs(page, PERSONAS.learner);
 
-    // Enrol surface shows the REAL seeded plans (proves live coverage-service data).
+    // Enrol surface RENDERS (no longer a 404 — the .dockerignore fix built the feature).
     await reach(page, "/coverage/enroll");
-    await expect(
-      page.getByText(/MOHCC National Core|COV-MOHCC-CORE|Private Medical Aid|COV-PRIVATE-PLUS/i).first(),
-    ).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("heading", { name: /enroll in coverage/i })).toBeVisible({ timeout: 20_000 });
 
-    // My Coverage (the tile target) is reachable and titled.
+    // …and its plan picker carries the REAL seeded plans (proves live coverage-service data).
+    await expect(async () => {
+      const options = await page.locator("select option").allTextContents();
+      expect(options.join(" ")).toMatch(/MOHCC National Core|COV-MOHCC-CORE|Private Medical Aid|COV-PRIVATE-PLUS/i);
+    }).toPass({ timeout: 20_000 });
+
+    // My Coverage (the launcher tile target) is reachable.
     await reach(page, "/coverage/member");
     await expect(page.getByRole("heading", { name: /my coverage/i }).first()).toBeVisible({ timeout: 20_000 });
 
