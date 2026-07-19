@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
@@ -37,6 +39,10 @@ public class EncounterController {
         this.costaClient = costaClient;
     }
 
+    // Tolerate unknown fields: the provider walk-in flow (and other callers) reuse the enqueue-style
+    // payload, which carries fields this endpoint does not consume. Rejecting them with a 500 broke the
+    // walk-in encounter start; ignore extras and accept "patient_cpid" as an alias of the cpid field.
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record CreateEncounterRequest(
             @JsonProperty("patient_id") String patientId,
             @JsonProperty("facility_id") String facilityId,
@@ -52,7 +58,7 @@ public class EncounterController {
             @JsonProperty("protocol_ref") String protocolRef,
             @JsonProperty("chief_complaint") String chiefComplaint,
             @JsonProperty("journey_id") String journeyId,
-            @JsonProperty("cpid") String cpid) {}
+            @JsonProperty("cpid") @JsonAlias("patient_cpid") String cpid) {}
 
     public record UpdateEncounterPathwayProtocolRequest(
             @JsonProperty("pathway_ref") String pathwayRef,
