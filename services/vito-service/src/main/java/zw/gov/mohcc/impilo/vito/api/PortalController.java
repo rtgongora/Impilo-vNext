@@ -32,19 +32,22 @@ public class PortalController {
     private final DelegatedPickupService pickupService;
     private final QrSigningService qrSigningService;
     private final HmacService hmacService;
+    private final zw.gov.mohcc.impilo.vito.persistence.repository.ClientVerificationReviewRepository reviewRepository;
 
     public PortalController(IssuanceStateMachineService issuanceService,
                              IdentityService identityService,
                              ImpiloIdAliasService aliasService,
                              DelegatedPickupService pickupService,
                              QrSigningService qrSigningService,
-                             HmacService hmacService) {
+                             HmacService hmacService,
+                             zw.gov.mohcc.impilo.vito.persistence.repository.ClientVerificationReviewRepository reviewRepository) {
         this.issuanceService = issuanceService;
         this.identityService = identityService;
         this.aliasService = aliasService;
         this.pickupService = pickupService;
         this.qrSigningService = qrSigningService;
         this.hmacService = hmacService;
+        this.reviewRepository = reviewRepository;
     }
 
     /**
@@ -125,15 +128,46 @@ public class PortalController {
     }
 
     /**
-     * POST /v1/portal/id/recovery/verify — verify recovery with proof.
+     * POST /v1/portal/id/recovery/verify — submit recovery proof for adjudication.
+     *
+     * <p>This endpoint does <b>not</b> self-certify recovery. The prior stub returned a
+     * hard-coded {@code VERIFIED} regardless of any proof — a false-assurance bug, since
+     * knowing an Impilo ID is exactly what a recovering (or impersonating) user supplies.
+     * Recovery of a lost credential must never auto-verify from the request alone; it is
+     * an assurance escalation that requires an authorised officer to inspect the proofing
+     * artifacts and release the credential. So a submission opens an {@code ID_RECOVERY}
+     * steward review and returns {@code UNDER_REVIEW}, consistent with the operator-review
+     * path. Anti-enumeration: the response is identical whether or not the Impilo ID
+     * resolves — an unresolved submission opens no review but returns the same body.</p>
      */
     @StepUpRequired(reason = "Recovery verification requires step-up")
     @PostMapping("/id/recovery/verify")
     public ResponseEntity<Map<String, String>> recoveryVerify(@RequestBody Map<String, String> body) {
-        // In production: verify proofing artifacts, biometric binding, etc.
+        TrustContext ctx = TrustContextHolder.require();
+        UUID tenantId = ctx.tenantId();
+        String aliasValue = body.get("impiloId");
+        String proofKind = body.getOrDefault("proofKind", "UNSPECIFIED");
+        String proofRef = body.get("proofRef");
+
+        if (aliasValue != null) {
+            aliasService.resolve(tenantId, "IMPILO_ID", aliasValue).ifPresent(healthId -> {
+                ClientVerificationReviewEntity review = new ClientVerificationReviewEntity();
+                review.setReviewId(UUID.randomUUID());
+                review.setTenantId(tenantId);
+                review.setClientHealthId(healthId);
+                review.setReviewType("ID_RECOVERY");
+                review.setStatus("OPEN");
+                review.setNotes("Self-service ID recovery submitted (step-up authenticated). proofKind="
+                        + proofKind + (proofRef != null ? ", proofRef=" + proofRef : "")
+                        + ". Officer must inspect proof and release credential — not auto-verified.");
+                reviewRepository.save(review);
+            });
+        }
+
+        // Identical response on hit and miss (anti-enumeration); never claims VERIFIED here.
         return ResponseEntity.ok(Map.of(
-                "status", "VERIFIED",
-                "message", "Recovery verification submitted. An operator will review your case."
+                "status", "UNDER_REVIEW",
+                "message", "Recovery verification submitted. An operator will review your case and contact you."
         ));
     }
 
