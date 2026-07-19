@@ -66,7 +66,9 @@ test.describe.serial("Fundo author → learner journey (live preview)", () => {
 
     await checklist.point("A10_logicalEnd", "course reaches PUBLISHED", async () => {
       await gotoAs(page, PERSONAS.trainer, "/learning/studio/publish");
-      const row = page.locator("li, tr, div").filter({ hasText: COURSE_MARKER }).first();
+      // The list renders one <li> per course; a loose "li, tr, div" filter
+      // resolves to an ancestor div holding EVERY row's Publish button.
+      const row = page.locator("li").filter({ hasText: COURSE_MARKER }).first();
       await expect(row).toBeVisible({ timeout: 20_000 });
       await expectSaved(
         page,

@@ -32,7 +32,7 @@ vi.mock("@/hooks/queries/useFundoCatalog", () => ({
 
 vi.mock("@/hooks/queries/useFundoStudio", () => ({
   useFundoStudioReadiness: () => readinessState,
-  useUpdateFundoCourse: () => updateMutation,
+  useUpdateFundoCourseById: () => updateMutation,
   useScheduleLearningNotification: () => scheduleMutation,
 }));
 
@@ -49,7 +49,14 @@ describe("FundoStudioPublishPage", () => {
   it("publishes selected course and schedules notification", async () => {
     render(<FundoStudioPublishPage />);
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "c-1" } });
-    fireEvent.click(screen.getByRole("button", { name: "Publish" }));
-    expect(updateMutation.mutateAsync).toHaveBeenCalled();
+    fireEvent.click(screen.getAllByRole("button", { name: "Publish" })[0]);
+    expect(updateMutation.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ courseId: "c-1", status: "PUBLISHED" }));
+  });
+
+  it("publishes straight from a course row without pre-selecting", async () => {
+    render(<FundoStudioPublishPage />);
+    const rowPublish = screen.getAllByRole("button", { name: "Publish" }).at(-1)!;
+    fireEvent.click(rowPublish);
+    expect(updateMutation.mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ status: "PUBLISHED" }));
   });
 });

@@ -77,6 +77,14 @@ export function useUpdateFundoCourse(courseId: string) {
   });
 }
 
+/** Course update with the id in the payload — for list surfaces acting on many courses. */
+export function useUpdateFundoCourseById() {
+  return useMutation({
+    mutationFn: ({ courseId, ...body }: { courseId: string } & Record<string, unknown>) =>
+      apiClient.put(`/internal/v1/learning/v11/catalog/${encodeURIComponent(courseId)}`, body),
+  });
+}
+
 export function useCreateFundoModule(courseId: string) {
   return useMutation({
     mutationFn: (body: Record<string, unknown>) =>

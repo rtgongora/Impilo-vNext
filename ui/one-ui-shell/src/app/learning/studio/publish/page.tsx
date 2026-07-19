@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { FundoStudioWorkspace } from "@/components/learning/FundoStudioWorkspace";
 import { useFundoCatalog } from "@/hooks/queries/useFundoCatalog";
-import { useFundoStudioReadiness, useScheduleLearningNotification, useUpdateFundoCourse } from "@/hooks/queries/useFundoStudio";
+import { useFundoStudioReadiness, useScheduleLearningNotification, useUpdateFundoCourseById } from "@/hooks/queries/useFundoStudio";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 
 export default function FundoStudioPublishPage() {
@@ -15,23 +15,28 @@ export default function FundoStudioPublishPage() {
   const readiness = useFundoStudioReadiness(selectedCourseId || undefined);
   const schedule = useScheduleLearningNotification();
   const selectedCourse = useMemo(() => items.find((c) => c.id === selectedCourseId), [items, selectedCourseId]);
-  const publishMutation = useUpdateFundoCourse(selectedCourseId || "");
+  const publishMutation = useUpdateFundoCourseById();
 
-  async function updateStatus(status: "DRAFT" | "PUBLISHED" | "ARCHIVED") {
-    if (!selectedCourseId) return;
-    await publishMutation.mutateAsync({ status });
+  async function updateStatusFor(courseId: string, status: "DRAFT" | "PUBLISHED" | "ARCHIVED") {
+    if (!courseId) return;
+    await publishMutation.mutateAsync({ courseId, status });
     if (status === "PUBLISHED" && subject?.subjectType && subject?.subjectId) {
+      const course = items.find((c) => c.id === courseId);
       await schedule.mutateAsync({
         subjectType: subject.subjectType,
         subjectId: subject.subjectId,
         eventCode: "course.published",
         title: "New Fundo course published",
-        message: `${selectedCourse?.title ?? "A course"} is now published.`,
+        message: `${course?.title ?? "A course"} is now published.`,
         channelPreference: "IN_APP",
         status: "PENDING",
       });
     }
     void refetch();
+  }
+
+  async function updateStatus(status: "DRAFT" | "PUBLISHED" | "ARCHIVED") {
+    await updateStatusFor(selectedCourseId, status);
   }
 
   return (
@@ -78,6 +83,29 @@ export default function FundoStudioPublishPage() {
             <div className="mt-2 flex gap-2 text-xs">
               <Link href={`/learning/studio/courses/${c.id}`} className="rounded border border-border px-2 py-1 text-foreground">Readiness</Link>
               <Link href={`/learning/studio/courses/${c.id}/builder`} className="rounded border border-border px-2 py-1 text-foreground">Revise builder</Link>
+              {c.status !== "PUBLISHED" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCourseId(c.id);
+                    void updateStatusFor(c.id, "PUBLISHED");
+                  }}
+                  className="rounded border border-teal-400 px-2 py-1 text-teal-700"
+                >
+                  Publish
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCourseId(c.id);
+                    void updateStatusFor(c.id, "ARCHIVED");
+                  }}
+                  className="rounded border border-red-300 px-2 py-1 text-danger"
+                >
+                  Archive
+                </button>
+              )}
             </div>
           </li>
         ))}
