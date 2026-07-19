@@ -8,7 +8,7 @@ import { useFundoStudioReadiness, useScheduleLearningNotification, useUpdateFund
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 
 export default function FundoStudioPublishPage() {
-  const { data, refetch } = useFundoCatalog({ limit: 100 });
+  const { data, refetch } = useFundoCatalog({ status: "ALL", limit: 100 });
   const [selectedCourseId, setSelectedCourseId] = useState<string>("");
   const subject = useLearningSubject();
   const items = data?.data?.items ?? [];

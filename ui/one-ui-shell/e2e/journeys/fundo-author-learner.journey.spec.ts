@@ -60,7 +60,11 @@ test.describe.serial("Fundo author → learner journey (live preview)", () => {
       await page.getByRole("button", { name: /^add module$/i }).click();
       await page.locator("section, div").filter({ hasText: /^Add lesson/ }).locator("input").first().fill("Lesson 1");
       await page.getByRole("button", { name: /^add lesson$/i }).click();
-      await expect(page.getByText("Module 1").first()).toBeVisible({ timeout: 15_000 });
+      // Assert in the Current-structure list — a bare getByText resolves to the
+      // module <option> inside the (closed, hence "hidden") select first.
+      await expect(
+        page.locator("li").filter({ hasText: "Module 1" }).first(),
+      ).toBeVisible({ timeout: 15_000 });
       void moduleTitle;
     });
 

@@ -7,7 +7,7 @@ import { FundoStudioWorkspace } from "@/components/learning/FundoStudioWorkspace
 import { useFundoCatalog } from "@/hooks/queries/useFundoCatalog";
 
 export default function FundoStudioCoursesPage() {
-  const { data, isLoading } = useFundoCatalog({ limit: 100 });
+  const { data, isLoading } = useFundoCatalog({ status: "ALL", limit: 100 });
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "DRAFT" | "PUBLISHED" | "ARCHIVED">("ALL");
   const items = data?.data?.items ?? [];
