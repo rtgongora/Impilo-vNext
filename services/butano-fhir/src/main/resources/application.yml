@@ -21,7 +21,11 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      # Values would be pre-serialized JSON strings (outbox house style) — a
+      # JsonSerializer double-encodes. No producer exists in this service today;
+      # StringSerializer keeps a future KafkaTemplate<String,String> from silently
+      # double-encoding (the 064b83204 failure class).
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
   security:
     oauth2:
       resourceserver:
