@@ -62,7 +62,8 @@ class Ed25519SigningServiceTest {
     @BeforeEach
     void setUp() {
         keysProperties = buildKeysProperties();
-        signingService = new Ed25519SigningService(signingKeyRepository, eventOutboxRepository, keysProperties);
+        signingService = new Ed25519SigningService(signingKeyRepository, eventOutboxRepository, keysProperties,
+                new zw.gov.mohcc.impilo.tshepo.keys.core.custody.SoftwareKeyCustodyProvider(keysProperties));
     }
 
     // ------------------------------------------------------------------

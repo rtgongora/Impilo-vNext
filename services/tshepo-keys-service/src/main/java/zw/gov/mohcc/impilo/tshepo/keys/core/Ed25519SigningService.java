@@ -10,9 +10,6 @@ import com.nimbusds.jose.crypto.Ed25519Verifier;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.OctetKeyPair;
 import com.nimbusds.jose.util.Base64URL;
-import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
-import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator;
-import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters;
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters;
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
 import org.slf4j.Logger;
@@ -24,11 +21,6 @@ import zw.gov.mohcc.impilo.tshepo.keys.persistence.entity.SigningKeyEntity;
 import zw.gov.mohcc.impilo.tshepo.keys.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.tshepo.keys.persistence.repository.SigningKeyRepository;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.ByteBuffer;
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
@@ -38,9 +30,10 @@ import java.util.UUID;
 /**
  * Core service for Ed25519 key generation, storage, signing, and verification.
  *
- * <p>Private keys are encrypted at rest using AES-256-GCM with a KEK sourced from
- * configuration (Vault-ready). The encrypted format is:
- * {@code [12-byte IV | encrypted-private-key | 16-byte GCM-tag]}</p>
+ * <p>Private-key custody is delegated to the configured
+ * {@link zw.gov.mohcc.impilo.tshepo.keys.core.custody.KeyCustodyProvider}
+ * (software AES-256-GCM by default; KMS/HSM via a vendor provider). This class
+ * orchestrates key rows, purposes, kid allocation and JWS assembly.</p>
  *
  * <p>JWS compact serialization is done via Nimbus JOSE+JWT using Ed25519 (EdDSA).</p>
  */
@@ -49,28 +42,20 @@ public class Ed25519SigningService {
 
     private static final Logger log = LoggerFactory.getLogger(Ed25519SigningService.class);
 
-    private static final String AES_GCM = "AES/GCM/NoPadding";
-    private static final int GCM_IV_LENGTH = 12;
-    private static final int GCM_TAG_LENGTH = 128; // bits
 
     private final SigningKeyRepository signingKeyRepository;
     private final EventOutboxRepository eventOutboxRepository;
     private final KeysProperties keysProperties;
-    private final SecureRandom secureRandom;
-    private final byte[] kekBytes;
+    private final zw.gov.mohcc.impilo.tshepo.keys.core.custody.KeyCustodyProvider custodyProvider;
 
     public Ed25519SigningService(SigningKeyRepository signingKeyRepository,
                                  EventOutboxRepository eventOutboxRepository,
-                                 KeysProperties keysProperties) {
+                                 KeysProperties keysProperties,
+                                 zw.gov.mohcc.impilo.tshepo.keys.core.custody.KeyCustodyProvider custodyProvider) {
         this.signingKeyRepository = signingKeyRepository;
         this.eventOutboxRepository = eventOutboxRepository;
         this.keysProperties = keysProperties;
-        this.secureRandom = new SecureRandom();
-        this.kekBytes = hexToBytes(keysProperties.getKek());
-
-        if (this.kekBytes.length != 32) {
-            throw new IllegalStateException("KEK must be exactly 32 bytes (256 bits) for AES-256-GCM, got " + this.kekBytes.length);
-        }
+        this.custodyProvider = custodyProvider;
     }
 
     /**
@@ -80,22 +65,17 @@ public class Ed25519SigningService {
      * @return the persisted SigningKeyEntity (with encrypted private key)
      */
     public SigningKeyEntity generateKeyPair(UUID tenantId) {
-        // Generate Ed25519 key pair using Bouncy Castle
-        Ed25519KeyPairGenerator keyGen = new Ed25519KeyPairGenerator();
-        keyGen.init(new Ed25519KeyGenerationParameters(secureRandom));
-        AsymmetricCipherKeyPair keyPair = keyGen.generateKeyPair();
-
-        Ed25519PrivateKeyParameters privateKey = (Ed25519PrivateKeyParameters) keyPair.getPrivate();
-        Ed25519PublicKeyParameters publicKey = (Ed25519PublicKeyParameters) keyPair.getPublic();
+        // Key material is minted under the custody provider (software AES-GCM
+        // today; KMS/HSM handle under a vendor provider).
+        var material = custodyProvider.generate();
 
         // Generate a unique key ID
         String keyId = "kid-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
 
         // Encode public key as PEM (SubjectPublicKeyInfo format via Base64)
-        String publicKeyPem = encodePublicKeyPem(publicKey.getEncoded());
+        String publicKeyPem = encodePublicKeyPem(material.publicKey());
 
-        // Encrypt private key with AES-256-GCM
-        byte[] encryptedPrivateKey = encryptPrivateKey(privateKey.getEncoded());
+        byte[] encryptedPrivateKey = material.custodyBlob();
 
         // Compute expiry based on rotation interval
         Instant expiresAt = Instant.now().plus(keysProperties.getRotationIntervalDays(), ChronoUnit.DAYS);
@@ -173,14 +153,7 @@ public class Ed25519SigningService {
      * @return Base64url-encoded Ed25519 signature
      */
     public String signPayloadWithKey(SigningKeyEntity keyEntity, byte[] payload) {
-        byte[] privateKeyBytes = decryptPrivateKey(keyEntity.getPrivateKeyEncrypted());
-
-        Ed25519PrivateKeyParameters privateKey = new Ed25519PrivateKeyParameters(privateKeyBytes, 0);
-        org.bouncycastle.crypto.signers.Ed25519Signer signer = new org.bouncycastle.crypto.signers.Ed25519Signer();
-        signer.init(true, privateKey);
-        signer.update(payload, 0, payload.length);
-        byte[] signature = signer.generateSignature();
-
+        byte[] signature = custodyProvider.sign(keyEntity.getPrivateKeyEncrypted(), payload);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(signature);
     }
 
@@ -211,7 +184,10 @@ public class Ed25519SigningService {
      * {@code kid} header is the key's id, so verifiers can resolve it from the JWKS.
      */
     public String signJwsWithKey(SigningKeyEntity keyEntity, String payload) {
-        byte[] privateKeyBytes = decryptPrivateKey(keyEntity.getPrivateKeyEncrypted());
+        // JWS assembly needs the raw key locally (Nimbus signer) — software
+        // custody only; a KMS/HSM provider throws here, which is the residual
+        // migration surface documented on KeyCustodyProvider.
+        byte[] privateKeyBytes = custodyProvider.exportPrivate(keyEntity.getPrivateKeyEncrypted());
         byte[] publicKeyBytes = decodePublicKeyPem(keyEntity.getPublicKeyPem());
 
         try {
@@ -285,50 +261,7 @@ public class Ed25519SigningService {
      * @return raw 32-byte Ed25519 private key
      */
     public byte[] decryptPrivateKey(byte[] encrypted) {
-        try {
-            ByteBuffer buffer = ByteBuffer.wrap(encrypted);
-            byte[] iv = new byte[GCM_IV_LENGTH];
-            buffer.get(iv);
-            byte[] ciphertext = new byte[buffer.remaining()];
-            buffer.get(ciphertext);
-
-            Cipher cipher = Cipher.getInstance(AES_GCM);
-            SecretKeySpec keySpec = new SecretKeySpec(kekBytes, "AES");
-            GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-            cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmSpec);
-
-            return cipher.doFinal(ciphertext);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to decrypt private key", e);
-        }
-    }
-
-    /**
-     * Encrypt an Ed25519 private key for at-rest storage.
-     *
-     * @param privateKeyBytes raw 32-byte Ed25519 private key
-     * @return encrypted format: [12-byte IV | ciphertext | GCM tag]
-     */
-    private byte[] encryptPrivateKey(byte[] privateKeyBytes) {
-        try {
-            byte[] iv = new byte[GCM_IV_LENGTH];
-            secureRandom.nextBytes(iv);
-
-            Cipher cipher = Cipher.getInstance(AES_GCM);
-            SecretKeySpec keySpec = new SecretKeySpec(kekBytes, "AES");
-            GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-            cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmSpec);
-
-            byte[] ciphertext = cipher.doFinal(privateKeyBytes);
-
-            // Prepend IV to ciphertext
-            ByteBuffer result = ByteBuffer.allocate(GCM_IV_LENGTH + ciphertext.length);
-            result.put(iv);
-            result.put(ciphertext);
-            return result.array();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to encrypt private key", e);
-        }
+        return custodyProvider.exportPrivate(encrypted);
     }
 
     /**
@@ -359,16 +292,4 @@ public class Ed25519SigningService {
         eventOutboxRepository.save(event);
     }
 
-    private static byte[] hexToBytes(String hex) {
-        if (hex == null || hex.isEmpty()) {
-            throw new IllegalArgumentException("KEK hex string must not be null or empty");
-        }
-        int len = hex.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
-                    + Character.digit(hex.charAt(i + 1), 16));
-        }
-        return data;
-    }
 }
