@@ -85,3 +85,14 @@ kubectl exec -n "$NS" deploy/postgres -- psql -U impilo -d varapi -tAc \
   "SELECT 'superadmin_provider='||count(*) FROM varapi.provider WHERE impilo_health_id='b0000000-0000-4000-8000-000000000010';"
 
 echo "PASS: sovereign preview seeds applied"
+
+# 21 — Fundo starter catalogue. API-driven (not SQL) on purpose: it authors
+# through the live ingress as the trainer persona, so a broken authoring lane
+# fails the seed instead of being papered over. Needs ingress + experience-bff +
+# learning-service up, so it is a soft tail step — warn, don't fail the run,
+# when the estate is not serving yet (operator re-runs it post-boot).
+if RESOLVE_IP="${RESOLVE_IP:-127.0.0.1}" bash "$SEED_DIR/21-seed-fundo-learning.sh"; then
+  echo "PASS: fundo starter catalogue seeded"
+else
+  echo "WARN: fundo catalogue seed did not complete (estate not serving yet?) — re-run scripts/seed/21-seed-fundo-learning.sh once the ingress is up"
+fi
