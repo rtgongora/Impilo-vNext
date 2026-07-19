@@ -86,45 +86,34 @@ class FacilityClaimServiceTest {
         return e;
     }
 
-    // ── Eligibility gated on FacilitySourceLegitimacy.allowedOnPlatform ──────────
+    // ── Eligibility is GENERIC — the D-L4 anti-enumeration boundary ──────────────
 
     @Test
-    void eligibility_deniedWhenNotAllowedOnPlatform() {
+    void eligibility_isGenericAndNeverDisclosesLegitimacyOrRoster() {
+        // Probing a facility UUID must reveal nothing: no legitimacy verdicts, no
+        // administrator counts — the SAME response for every facility.
         stubFacility();
-        when(legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid))
-                .thenReturn(List.of(legitimacy(false)));
 
         FacilityClaimDtos.EligibilityView view = service.checkEligibility(facilityUuid);
 
-        assertThat(view.allowedOnPlatform()).isFalse();
-        assertThat(view.claimable()).isFalse();
-        assertThat(view.reasons()).anySatisfy(r -> assertThat(r).contains("denies platform operation"));
-    }
-
-    @Test
-    void eligibility_deniedWhenNoLegitimacyRecorded() {
-        stubFacility();
-        when(legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid)).thenReturn(List.of());
-
-        FacilityClaimDtos.EligibilityView view = service.checkEligibility(facilityUuid);
-
-        // Silence never grants.
-        assertThat(view.claimable()).isFalse();
-        assertThat(view.reasons()).anySatisfy(r -> assertThat(r).contains("No source legitimacy recorded"));
-    }
-
-    @Test
-    void eligibility_allowedWhenEverySourceAllows() {
-        stubFacility();
-        when(legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid))
-                .thenReturn(List.of(legitimacy(true)));
-        when(appointmentRepository.findByFacilityUuidOrderByCreatedAtDesc(facilityUuid)).thenReturn(List.of());
-
-        FacilityClaimDtos.EligibilityView view = service.checkEligibility(facilityUuid);
-
+        assertThat(view.allowedOnPlatform()).isTrue();
         assertThat(view.claimable()).isTrue();
-        assertThat(view.alreadyAdministered()).isFalse();
         assertThat(view.activeAdministratorCount()).isZero();
+        assertThat(view.reasons()).hasSize(1);
+        assertThat(view.reasons().get(0)).doesNotContain("platform operation", "legitimacy");
+        // The legitimacy verdict is never even consulted on the eligibility path.
+        verify(legitimacyRepository, never()).findByFacilityIdOrderBySourceAsc(any());
+    }
+
+    @Test
+    void eligibility_reportsOnlyTheCallersOwnState() {
+        stubFacility();
+        when(appointmentRepository.existsByFacilityUuidAndPersonHealthIdAndApprovalState(
+                facilityUuid, actor, FacilityAdminAppointmentEntity.STATE_ACTIVE)).thenReturn(true);
+
+        FacilityClaimDtos.EligibilityView view = service.checkEligibility(facilityUuid);
+
+        assertThat(view.alreadyAdministered()).isTrue();
     }
 
     // ── Submit claim → PENDING appointment ──────────────────────────────────────
@@ -134,8 +123,9 @@ class FacilityClaimServiceTest {
         stubFacility();
         when(legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid))
                 .thenReturn(List.of(legitimacy(true)));
-        when(appointmentRepository.existsByFacilityUuidAndPersonHealthIdAndApprovalState(
-                facilityUuid, "HID-100", FacilityAdminAppointmentEntity.STATE_ACTIVE)).thenReturn(false);
+        when(appointmentRepository.existsByFacilityUuidAndPersonHealthIdAndRoleAndApprovalState(
+                facilityUuid, "HID-100", FacilityAdminAppointmentEntity.ROLE_FACILITY_ADMINISTRATOR,
+                FacilityAdminAppointmentEntity.STATE_ACTIVE)).thenReturn(false);
         when(appointmentRepository.save(any(FacilityAdminAppointmentEntity.class)))
                 .thenAnswer(inv -> {
                     FacilityAdminAppointmentEntity a = inv.getArgument(0);
@@ -144,7 +134,7 @@ class FacilityClaimServiceTest {
                 });
 
         FacilityClaimDtos.AppointmentView view = service.submitClaim(facilityUuid,
-                new FacilityClaimDtos.SubmitClaimRequest("HID-100", null, "doc://evidence/1", null, null, null));
+                new FacilityClaimDtos.SubmitClaimRequest("HID-100", null, "doc://evidence/1", null, null, null, null));
 
         ArgumentCaptor<FacilityAdminAppointmentEntity> captor =
                 ArgumentCaptor.forClass(FacilityAdminAppointmentEntity.class);
@@ -163,18 +153,67 @@ class FacilityClaimServiceTest {
     }
 
     @Test
-    void submitClaim_rejectedWhenFacilityNotAllowedOnPlatform() {
+    void submitClaim_notAllowedFacilityStillLandsPendingForStewardReview() {
+        // ANTI-ENUM (D-L4): the legitimacy verdict is a STEWARD input, not a
+        // submission gate — a probing claimant learns nothing by submitting.
         stubFacility();
         when(legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid))
                 .thenReturn(List.of(legitimacy(false)));
+        when(appointmentRepository.save(any(FacilityAdminAppointmentEntity.class)))
+                .thenAnswer(inv -> {
+                    FacilityAdminAppointmentEntity a = inv.getArgument(0);
+                    a.setId(8L);
+                    return a;
+                });
+
+        FacilityClaimDtos.AppointmentView view = service.submitClaim(facilityUuid,
+                new FacilityClaimDtos.SubmitClaimRequest("HID-100", null, "doc://evidence/1", null, null, null, null));
+
+        assertThat(view.approvalState()).isEqualTo("PENDING");
+        verify(outboxRepository).save(any());
+    }
+
+    @Test
+    void submitClaim_requiresProofOfAuthority() {
+        stubFacility();
 
         assertThatThrownBy(() -> service.submitClaim(facilityUuid,
-                new FacilityClaimDtos.SubmitClaimRequest("HID-100", null, null, null, null, null)))
+                new FacilityClaimDtos.SubmitClaimRequest("HID-100", null, null, null, null, null, null)))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(t -> assertThat(((ResponseStatusException) t).getStatusCode())
-                        .isEqualTo(HttpStatus.CONFLICT));
+                        .isEqualTo(HttpStatus.BAD_REQUEST));
         verify(appointmentRepository, never()).save(any());
-        verify(outboxRepository, never()).save(any());
+    }
+
+    @Test
+    void submitClaim_rejectsUnknownRoleScope() {
+        stubFacility();
+
+        assertThatThrownBy(() -> service.submitClaim(facilityUuid,
+                new FacilityClaimDtos.SubmitClaimRequest("HID-100", "SUPREME_LEADER", "doc://e/1", null, null, null, null)))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(t -> assertThat(((ResponseStatusException) t).getStatusCode())
+                        .isEqualTo(HttpStatus.BAD_REQUEST));
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void submitClaim_recoveryClaimTypeIsRecorded() {
+        stubFacility();
+        when(legitimacyRepository.findByFacilityIdOrderBySourceAsc(facilityUuid))
+                .thenReturn(List.of(legitimacy(true)));
+        when(appointmentRepository.save(any(FacilityAdminAppointmentEntity.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        service.submitClaim(facilityUuid, new FacilityClaimDtos.SubmitClaimRequest(
+                "HID-100", "DATA_STEWARD", "doc://evidence/2", "RECOVERY", null, null, null));
+
+        ArgumentCaptor<FacilityAdminAppointmentEntity> captor =
+                ArgumentCaptor.forClass(FacilityAdminAppointmentEntity.class);
+        verify(appointmentRepository).save(captor.capture());
+        assertThat(captor.getValue().getClaimType())
+                .isEqualTo(FacilityAdminAppointmentEntity.CLAIM_TYPE_RECOVERY);
+        assertThat(captor.getValue().getRole()).isEqualTo("DATA_STEWARD");
     }
 
     // ── Approve → ACTIVE ─────────────────────────────────────────────────────────

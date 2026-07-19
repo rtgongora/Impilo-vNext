@@ -68,36 +68,40 @@ public class FacilityClaimService {
     // ── Eligibility ─────────────────────────────────────────────────────────────
 
     /**
-     * Is this facility claimable/administrable? Consults the per-source legitimacy verdicts:
-     * a facility not allowed on the platform is not claimable. Silence never grants.
+     * Claim eligibility — GENERIC by doctrine (Place Journey Doctrine §2, D-L4):
+     * an unproven claimant learns only that a claim may be submitted for review.
+     * The legitimacy verdicts and administrator roster used to be disclosed here
+     * — an enumeration leak (probing a facility UUID revealed its per-source
+     * status and how many administrators it has); they now live only in the
+     * steward review (Trust Console). The one non-generic element is the
+     * caller's OWN state: whether THEY already hold an active appointment.
      */
     @Transactional(readOnly = true)
     public FacilityClaimDtos.EligibilityView checkEligibility(UUID facilityUuid) {
         TrustContext ctx = TrustContextHolder.require();
         FacilityEntity facility = requireFacility(facilityUuid, ctx.tenantId());
 
-        List<String> reasons = new ArrayList<>();
-        boolean allowed = platformAccessAllowed(facility.getFacilityUuid(), reasons);
-
-        long activeCount = appointmentRepository
-                .findByFacilityUuidOrderByCreatedAtDesc(facility.getFacilityUuid()).stream()
-                .filter(a -> FacilityAdminAppointmentEntity.STATE_ACTIVE.equals(a.getApprovalState()))
-                .count();
-        boolean alreadyAdministered = activeCount > 0;
+        boolean selfAdministers = ctx.actorId() != null
+                && appointmentRepository.existsByFacilityUuidAndPersonHealthIdAndApprovalState(
+                        facility.getFacilityUuid(), ctx.actorId(),
+                        FacilityAdminAppointmentEntity.STATE_ACTIVE);
 
         return new FacilityClaimDtos.EligibilityView(
-                facility.getFacilityUuid(), allowed, allowed, alreadyAdministered,
-                (int) activeCount, reasons);
+                facility.getFacilityUuid(), true, true, selfAdministers, 0,
+                List.of("Submit your claim with proof of authority; it will be reviewed."));
     }
 
     // ── Preview ─────────────────────────────────────────────────────────────────
 
-    /** Non-sensitive facility summary + the claimability verdict (confirm-before-commit). */
+    /**
+     * Non-sensitive facility summary (confirm-before-commit). Only public-directory
+     * facts; the claimability verdict is no longer disclosed pre-proof (D-L4) —
+     * the flags are constant so the response shape is uniform for every facility.
+     */
     @Transactional(readOnly = true)
     public FacilityClaimDtos.PreviewView preview(UUID facilityUuid) {
         TrustContext ctx = TrustContextHolder.require();
         FacilityEntity facility = requireFacility(facilityUuid, ctx.tenantId());
-        boolean allowed = platformAccessAllowed(facility.getFacilityUuid(), new ArrayList<>());
         return new FacilityClaimDtos.PreviewView(
                 facility.getFacilityUuid(),
                 facility.getFacilityCode(),
@@ -105,8 +109,8 @@ public class FacilityClaimService {
                 facility.getFacilityType(),
                 facility.getProvince(),
                 facility.getDistrict(),
-                allowed,
-                allowed);
+                true,
+                true);
     }
 
     // ── Submit claim → PENDING appointment ──────────────────────────────────────
@@ -127,26 +131,50 @@ public class FacilityClaimService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "personHealthId is required");
         }
 
-        List<String> reasons = new ArrayList<>();
-        if (!platformAccessAllowed(facility.getFacilityUuid(), reasons)) {
-            // Not allowed on the platform → not claimable. Honest 409, never a fake success.
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Facility is not allowed on the platform and cannot be claimed: "
-                            + String.join("; ", reasons));
+        // Proof of authority is mandatory (D-L4): knowing a facility's name, code
+        // or UUID grants nothing. The evidence ref points at an appointment letter,
+        // invitation token, document upload, or verification event — never free air.
+        if (request.evidenceRef() == null || request.evidenceRef().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Proof of authority is required to submit a facility claim.");
         }
 
-        if (appointmentRepository.existsByFacilityUuidAndPersonHealthIdAndApprovalState(
-                facility.getFacilityUuid(), request.personHealthId(),
+        String role = request.role() == null || request.role().isBlank()
+                ? FacilityAdminAppointmentEntity.ROLE_FACILITY_ADMINISTRATOR
+                : request.role().trim().toUpperCase();
+        if (!FacilityAdminAppointmentEntity.ROLE_SCOPES.contains(role)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Unknown facility-management role: " + role);
+        }
+
+        // ANTI-ENUM (D-L4): the platform-legitimacy verdict is no longer a
+        // submission gate — every well-formed claim lands PENDING and the
+        // STEWARD sees the verdict in the review queue. A probing claimant
+        // learns nothing about the facility's status from submitting.
+        List<String> legitimacyContext = new ArrayList<>();
+        boolean allowedOnPlatform = platformAccessAllowed(facility.getFacilityUuid(), legitimacyContext);
+        if (!allowedOnPlatform) {
+            log.info("Facility {} claim submitted while platform access is not allowed — routed to steward review",
+                    facility.getFacilityUuid());
+        }
+
+        // Self-state conflict (the claimant's OWN role at this facility) — not
+        // enumeration. Role-aware since V030: distinct roles may coexist.
+        if (appointmentRepository.existsByFacilityUuidAndPersonHealthIdAndRoleAndApprovalState(
+                facility.getFacilityUuid(), request.personHealthId(), role,
                 FacilityAdminAppointmentEntity.STATE_ACTIVE)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "This person is already an active administrator of the facility.");
+                    "You already hold this role at this facility.");
         }
 
         FacilityAdminAppointmentEntity appointment = new FacilityAdminAppointmentEntity();
         appointment.setFacilityUuid(facility.getFacilityUuid());
         appointment.setPersonHealthId(request.personHealthId());
-        appointment.setRole(request.role() == null || request.role().isBlank()
-                ? FacilityAdminAppointmentEntity.ROLE_FACILITY_ADMINISTRATOR : request.role().trim());
+        appointment.setRole(role);
+        appointment.setClaimType(FacilityAdminAppointmentEntity.CLAIM_TYPE_RECOVERY
+                .equalsIgnoreCase(request.claimType())
+                ? FacilityAdminAppointmentEntity.CLAIM_TYPE_RECOVERY
+                : FacilityAdminAppointmentEntity.CLAIM_TYPE_NEW);
         appointment.setAppointedBy(ctx.actorId());
         appointment.setApprovalState(FacilityAdminAppointmentEntity.STATE_PENDING);
         appointment.setEvidenceRef(request.evidenceRef());
@@ -220,9 +248,11 @@ public class FacilityClaimService {
         if (!List.of(FacilityAdminAppointmentEntity.STATE_PENDING,
                 FacilityAdminAppointmentEntity.STATE_ACTIVE,
                 FacilityAdminAppointmentEntity.STATE_REJECTED,
-                FacilityAdminAppointmentEntity.STATE_REVOKED).contains(normalized)) {
+                FacilityAdminAppointmentEntity.STATE_REVOKED,
+                FacilityAdminAppointmentEntity.STATE_EXPIRED).contains(normalized)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Unknown approval state '" + state + "' — expected PENDING, ACTIVE, REJECTED or REVOKED");
+                    "Unknown approval state '" + state
+                            + "' — expected PENDING, ACTIVE, REJECTED, REVOKED or EXPIRED");
         }
         Map<UUID, Boolean> tenantOwned = new LinkedHashMap<>();
         return appointmentRepository.findByApprovalStateOrderByCreatedAtDesc(normalized).stream()

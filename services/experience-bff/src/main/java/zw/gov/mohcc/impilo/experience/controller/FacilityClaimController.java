@@ -128,9 +128,31 @@ public class FacilityClaimController {
                     "A facility UUID is required to list facility-admin appointments.", requestId, correlationId);
         }
         try {
+            // ANTI-ENUM (Place Journey Doctrine §2, W4): the administrator roster
+            // is disclosed ONLY to someone who already holds an ACTIVE appointment
+            // at this facility; everyone else sees just their OWN rows. A facility
+            // UUID must never enumerate who runs the place.
+            JsonNode all = tusoClient.appointments(facilityUuid);
+            List<JsonNode> visible = new java.util.ArrayList<>();
+            boolean actorIsActiveAdmin = false;
+            if (all != null && all.isArray()) {
+                for (JsonNode a : all) {
+                    if (actorId != null && actorId.equalsIgnoreCase(text(a, "personHealthId"))
+                            && "ACTIVE".equalsIgnoreCase(text(a, "approvalState"))) {
+                        actorIsActiveAdmin = true;
+                        break;
+                    }
+                }
+                for (JsonNode a : all) {
+                    if (actorIsActiveAdmin
+                            || (actorId != null && actorId.equalsIgnoreCase(text(a, "personHealthId")))) {
+                        visible.add(a);
+                    }
+                }
+            }
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("facilityUuid", facilityUuid);
-            data.put("appointments", tusoClient.appointments(facilityUuid));
+            data.put("appointments", visible);
             return ok(data, requestId, correlationId);
         } catch (HttpStatusCodeException ex) {
             return propagate(ex, requestId, correlationId);

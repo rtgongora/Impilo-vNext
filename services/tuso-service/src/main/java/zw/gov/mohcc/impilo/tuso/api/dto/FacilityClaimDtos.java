@@ -45,11 +45,16 @@ public final class FacilityClaimDtos {
             boolean claimable) {
     }
 
-    /** Submit-claim body. The claimant ({@code personHealthId}) is supplied by the trusted caller (BFF), bound to the session actor. */
+    /**
+     * Submit-claim body. The claimant ({@code personHealthId}) is supplied by the trusted
+     * caller (BFF), bound to the session actor. {@code evidenceRef} (proof of authority)
+     * is mandatory since W4 (D-L4). {@code claimType}: NEW | RECOVERY (FJ8).
+     */
     public record SubmitClaimRequest(
             @NotBlank String personHealthId,
             String role,
             String evidenceRef,
+            String claimType,
             LocalDate validFrom,
             LocalDate validTo,
             String notes) {

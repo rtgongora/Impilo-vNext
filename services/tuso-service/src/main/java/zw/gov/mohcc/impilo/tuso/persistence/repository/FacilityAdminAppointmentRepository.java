@@ -20,4 +20,12 @@ public interface FacilityAdminAppointmentRepository
 
     boolean existsByFacilityUuidAndPersonHealthIdAndApprovalState(
             UUID facilityUuid, String personHealthId, String approvalState);
+
+    /** Role-aware self-conflict check (V030: distinct roles may coexist). */
+    boolean existsByFacilityUuidAndPersonHealthIdAndRoleAndApprovalState(
+            UUID facilityUuid, String personHealthId, String role, String approvalState);
+
+    /** Expiry sweep feed (V030): ACTIVE appointments whose validity window has passed. */
+    List<FacilityAdminAppointmentEntity> findByApprovalStateAndValidToBefore(
+            String approvalState, java.time.LocalDate validTo);
 }

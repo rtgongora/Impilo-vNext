@@ -23,8 +23,19 @@ public class FacilityAdminAppointmentEntity {
     public static final String STATE_ACTIVE = "ACTIVE";
     public static final String STATE_REJECTED = "REJECTED";
     public static final String STATE_REVOKED = "REVOKED";
+    /** ACTIVE appointment whose valid_to has passed (expiry sweep, V030). */
+    public static final String STATE_EXPIRED = "EXPIRED";
 
     public static final String ROLE_FACILITY_ADMINISTRATOR = "FACILITY_ADMINISTRATOR";
+
+    /** Closed role-scope vocabulary (Place Journey Doctrine FJ1, D-L4; V030 CHECK). */
+    public static final java.util.Set<String> ROLE_SCOPES = java.util.Set.of(
+            "FACILITY_VIEWER", "DATA_STEWARD", "SERVICE_CONFIG_MANAGER",
+            "FACILITY_ADMINISTRATOR", "REGULATORY_LIAISON");
+
+    public static final String CLAIM_TYPE_NEW = "NEW";
+    /** FJ8: recovery re-establishes access on the SAME facility — never a new record. */
+    public static final String CLAIM_TYPE_RECOVERY = "RECOVERY";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -59,6 +70,10 @@ public class FacilityAdminAppointmentEntity {
 
     @Column(name = "notes", columnDefinition = "text")
     private String notes;
+
+    /** NEW | RECOVERY (FJ8). */
+    @Column(name = "claim_type", nullable = false, length = 16)
+    private String claimType = CLAIM_TYPE_NEW;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -103,6 +118,8 @@ public class FacilityAdminAppointmentEntity {
     public void setValidTo(LocalDate validTo) { this.validTo = validTo; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public String getClaimType() { return claimType; }
+    public void setClaimType(String claimType) { this.claimType = claimType; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public String getCreatedBy() { return createdBy; }
