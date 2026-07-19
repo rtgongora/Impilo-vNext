@@ -81,11 +81,11 @@ export default function CoverageEnrollPage() {
         icon={<Shield className="h-6 w-6 text-primary" />}
       >
         <Link
-          href="/coverage"
+          href="/coverage/member"
           className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-primary-hover hover:text-impilo-900"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to coverage operations
+          Back to My Coverage
         </Link>
 
         <div className="grid gap-6 lg:grid-cols-2">

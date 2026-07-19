@@ -50,6 +50,23 @@ export const SHELL_APPS: AppDefinition[] = [
     serviceSlug: "fundo",
   },
   {
+    // Coverage was fully routed and backed by a real, seeded service but had no
+    // launcher/nav presence — reachable only by typing the URL ("can't see it
+    // anywhere"). Citizen-facing landing is /coverage/member (auth-only); the
+    // ADMIN /coverage operations console stays gated by its route guard.
+    id: "app-coverage",
+    appCode: "coverage",
+    name: "Coverage",
+    description: "Health coverage schemes, enrolment, subsidies and claims",
+    icon: "ShieldCheck",
+    category: "citizen",
+    href: "/coverage/member",
+    activeFlag: true,
+    systemAppFlag: false,
+    weight: 4,
+    maturity: "live",
+  },
+  {
     id: "app-clinical",
     appCode: "clinical",
     name: "Clinical Hub",
