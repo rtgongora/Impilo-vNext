@@ -128,9 +128,9 @@ test.describe.serial("Fundo author → learner journey (live preview)", () => {
       await logout(page);
       await loginAs(page, PERSONAS.learner);
       await gotoAs(page, PERSONAS.learner, "/learning/my-learning");
-      await expect(
-        page.getByText(COURSE_MARKER).first().or(page.getByText(/in progress/i).first()),
-      ).toBeVisible({ timeout: 20_000 });
+      // Assert the course itself — .or() over two .first() locators trips
+      // strict mode when BOTH resolve (which is the healthy state here).
+      await expect(page.getByText(COURSE_MARKER).first()).toBeVisible({ timeout: 20_000 });
       await gotoAs(page, PERSONAS.learner, enrolmentUrl);
       await expect(page.getByRole("button", { name: /start \/ continue/i }).first()).toBeVisible({ timeout: 20_000 });
     });
