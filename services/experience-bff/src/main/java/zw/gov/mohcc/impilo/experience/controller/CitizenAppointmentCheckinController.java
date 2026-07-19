@@ -59,7 +59,9 @@ public class CitizenAppointmentCheckinController {
     public ResponseEntity<Map<String, Object>> mintToken(
             @PathVariable String appointmentId,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
-            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
 
         if (actorId == null || actorId.isBlank()) {
             return error(HttpStatus.BAD_REQUEST, "X-Actor-ID is required");
@@ -87,7 +89,7 @@ public class CitizenAppointmentCheckinController {
         out.put("appointmentId", appointmentId);
         out.put("token", text(token, "token"));
         out.put("expiresAt", text(token, "expiresAt"));
-        return ResponseEntity.ok(out);
+        return ResponseEntity.ok(envelope(out, requestId, correlationId));
     }
 
     public record CheckinByTokenRequest(String token) {}
@@ -156,5 +158,16 @@ public class CitizenAppointmentCheckinController {
     private ResponseEntity<Map<String, Object>> error(HttpStatus status, String message) {
         return ResponseEntity.status(status).body(Map.of(
                 "error", Map.of("code", status.name(), "message", message)));
+    }
+
+    /** Wrap a success payload in the house {@code {data, meta}} envelope the shell expects. */
+    private static Map<String, Object> envelope(Object data, String requestId, String correlationId) {
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("request_id", requestId);
+        meta.put("correlation_id", correlationId);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("data", data);
+        body.put("meta", meta);
+        return body;
     }
 }

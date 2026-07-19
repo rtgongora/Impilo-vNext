@@ -23,6 +23,8 @@ class CitizenAppointmentCheckinControllerTest {
     private static final String TENANT = "t-1";
     private static final String ACTOR = "11111111-1111-1111-1111-111111111111";
     private static final String APPT = "22222222-2222-2222-2222-222222222222";
+    private static final String REQ = "req-1";
+    private static final String CORR = "corr-1";
 
     private final ObjectMapper mapper = new ObjectMapper();
     private BookingServiceClient booking;
@@ -41,8 +43,8 @@ class CitizenAppointmentCheckinControllerTest {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> body(ResponseEntity<Map<String, Object>> r) {
-        return r.getBody();
+    private Map<String, Object> data(ResponseEntity<Map<String, Object>> r) {
+        return (Map<String, Object>) r.getBody().get("data");
     }
 
     @Test
@@ -52,10 +54,11 @@ class CitizenAppointmentCheckinControllerTest {
         when(identity.issueScopedToken(anyMap()))
                 .thenReturn(mapper.readTree("{\"token\":\"tok-xyz\",\"expiresAt\":\"2026-07-19T12:00:00Z\"}"));
 
-        ResponseEntity<Map<String, Object>> r = controller.mintToken(APPT, TENANT, ACTOR);
+        ResponseEntity<Map<String, Object>> r = controller.mintToken(APPT, TENANT, ACTOR, REQ, CORR);
         assertThat(r.getStatusCode().value()).isEqualTo(200);
-        assertThat(body(r).get("token")).isEqualTo("tok-xyz");
-        assertThat(body(r).get("appointmentId")).isEqualTo(APPT);
+        assertThat(r.getBody()).containsKeys("data", "meta"); // house envelope the shell requires
+        assertThat(data(r).get("token")).isEqualTo("tok-xyz");
+        assertThat(data(r).get("appointmentId")).isEqualTo(APPT);
         // The token scope must bind THIS appointment id, targeted at booking-service.
         verify(identity).issueScopedToken(argThat(m ->
                 ("APPOINTMENT_CHECKIN:" + APPT).equals(m.get("scope"))
@@ -68,7 +71,7 @@ class CitizenAppointmentCheckinControllerTest {
     void nonOwnerForbidden() throws Exception {
         when(booking.getAppointment(APPT)).thenReturn(mapper.readTree("{\"patient_id\":\"someone-else\"}"));
         when(subjects.cpidForHealthId(ACTOR)).thenReturn("cpid-x"); // still no match on patient_cpid
-        ResponseEntity<Map<String, Object>> r = controller.mintToken(APPT, TENANT, ACTOR);
+        ResponseEntity<Map<String, Object>> r = controller.mintToken(APPT, TENANT, ACTOR, REQ, CORR);
         assertThat(r.getStatusCode().value()).isEqualTo(403);
         verify(identity, never()).issueScopedToken(anyMap());
     }
@@ -79,7 +82,7 @@ class CitizenAppointmentCheckinControllerTest {
         when(booking.getAppointment(APPT)).thenReturn(mapper.readTree("{\"patient_cpid\":\"cpid-9\"}"));
         when(subjects.cpidForHealthId(ACTOR)).thenReturn("cpid-9");
         when(identity.issueScopedToken(anyMap())).thenReturn(mapper.readTree("{\"token\":\"t\"}"));
-        ResponseEntity<Map<String, Object>> r = controller.mintToken(APPT, TENANT, ACTOR);
+        ResponseEntity<Map<String, Object>> r = controller.mintToken(APPT, TENANT, ACTOR, REQ, CORR);
         assertThat(r.getStatusCode().value()).isEqualTo(200);
     }
 
