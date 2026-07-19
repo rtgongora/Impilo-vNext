@@ -126,7 +126,7 @@ Legend — **Built**: works today · **Reuse**: substrate exists, journey needs 
 | CJ5 | Recover account after lost phone / SIM | Reuse | device/session revocation (tshepo-authz) + recovery; claim-start throttle `d545a0c1d` applies `[F]` |
 | CJ6 | Digital Impilo card issuance | Built | `PortalController /health-id/qr`, wallet UI |
 | CJ7 | Request a physical card | Built | `IssuanceController`/`PrintJobController`/card-print-agent |
-| CJ8 | Lost/stolen/damaged card → replace | ✅ Done | BFF `POST /wallet/cards/report-lost` — resolves the caller's active card server-side, revokes LOST/STOLEN, optional replacement (`b646e0efc`) `[H]` (UI follow-up) |
+| CJ8 | Lost/stolen/damaged card → replace | ✅ Done | full stack: `ReportLostCard` on `/citizen/wallet/identity` (reason + replacement + step-up) → BFF `POST /wallet/cards/report-lost` (resolves caller's active card server-side, revokes LOST/STOLEN) (`b646e0efc`, UI `ae7fc2d97`); BFF already enveloped (reused `ok()`) — no contract gap `[H]` (not yet live-driven) |
 | CJ9 | Biometric self/assisted enrolment | Reuse | consent+capture; matcher via ABIS `[G,X1]` |
 | CJ10 | Returning client identified by biometric | Reuse | search-first→1:1 verify; 1:N candidates `[G,X1]` |
 | CJ11 | Book appointment + self-check-in | ✅ Done | BFF `CitizenAppointmentCheckinController` — signed appointment token (tshepo-identity scoped-token, scope-bound + replay-proof) → `/checkin-by-token` → `AppointmentCheckInService` (`4cbea9823`) `[H]` |
