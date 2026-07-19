@@ -45,7 +45,8 @@ public class SecurityConfig {
      */
     @Bean
     @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests", havingValue = "true")
-    public SecurityFilterChain testFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
+    public SecurityFilterChain testFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter,
+            @org.springframework.beans.factory.annotation.Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session ->
@@ -61,6 +62,14 @@ public class SecurityConfig {
                 // strict chain (authenticated + upstream ext_authz).
                 .requestMatchers("/internal/v1/**").permitAll()
                 .anyRequest().authenticated());
+
+        // Without this, anyRequest().authenticated() is unsatisfiable on the test
+        // chain — no JWT processing means every bearer-carrying business call
+        // (e.g. BFF-relayed citizen registration) dies 403 as anonymous.
+        if (issuerUri != null && !issuerUri.isBlank()) {
+            http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
+        }
+
         return http.build();
     }
 
