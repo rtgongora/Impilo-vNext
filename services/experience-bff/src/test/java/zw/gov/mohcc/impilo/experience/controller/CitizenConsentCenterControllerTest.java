@@ -21,6 +21,8 @@ class CitizenConsentCenterControllerTest {
 
     private static final String ACTOR = "11111111-1111-1111-1111-111111111111"; // citizen actorId == healthId
     private static final String CPID = "cpid-abc";
+    private static final String REQ = "req-1";
+    private static final String CORR = "corr-1";
 
     private final ObjectMapper mapper = new ObjectMapper();
     private TshepoConsentServiceClient consent;
@@ -43,9 +45,9 @@ class CitizenConsentCenterControllerTest {
         when(subjects.cpidForHealthId(ACTOR)).thenReturn(CPID);
         when(audit.getAccessHistory(CPID, 0, 20)).thenReturn(mapper.readTree("[{\"actor\":\"dr-x\"}]"));
 
-        ResponseEntity<Map<String, Object>> r = controller.consentCenter(ACTOR, 0, 20);
-        assertThat(r.getBody().get("consents").toString()).contains("c1");
-        assertThat(r.getBody().get("accessLog").toString()).contains("dr-x");
+        Map<String, Object> data = data(controller.consentCenter(ACTOR, REQ, CORR, 0, 20));
+        assertThat(data.get("consents").toString()).contains("c1");
+        assertThat(data.get("accessLog").toString()).contains("dr-x");
         // The access-log was fetched by the SERVER-resolved CPID, not any client-supplied id.
         verify(audit).getAccessHistory(CPID, 0, 20);
     }
@@ -56,9 +58,9 @@ class CitizenConsentCenterControllerTest {
         when(consent.myConsents(0, 20)).thenReturn(mapper.readTree("[{\"id\":\"c1\"}]"));
         when(subjects.cpidForHealthId(ACTOR)).thenReturn(null);
 
-        ResponseEntity<Map<String, Object>> r = controller.consentCenter(ACTOR, 0, 20);
-        assertThat(r.getBody().get("consents").toString()).contains("c1");
-        assertThat(r.getBody().get("accessLog")).isNull();
+        Map<String, Object> data = data(controller.consentCenter(ACTOR, REQ, CORR, 0, 20));
+        assertThat(data.get("consents").toString()).contains("c1");
+        assertThat(data.get("accessLog")).isNull();
         verify(audit, never()).getAccessHistory(any(), anyInt(), anyInt());
     }
 
@@ -69,9 +71,19 @@ class CitizenConsentCenterControllerTest {
         when(subjects.cpidForHealthId(ACTOR)).thenReturn(CPID);
         when(audit.getAccessHistory(CPID, 0, 20)).thenThrow(new RuntimeException("audit down"));
 
-        ResponseEntity<Map<String, Object>> r = controller.consentCenter(ACTOR, 0, 20);
-        assertThat(r.getBody().get("consents").toString()).contains("c1");
-        assertThat(r.getBody().get("accessLog")).isNull();
+        Map<String, Object> data = data(controller.consentCenter(ACTOR, REQ, CORR, 0, 20));
+        assertThat(data.get("consents").toString()).contains("c1");
+        assertThat(data.get("accessLog")).isNull();
+    }
+
+    @Test
+    @DisplayName("response uses the house {data, meta} envelope the shell expects")
+    void usesEnvelope() throws Exception {
+        when(consent.myConsents(0, 20)).thenReturn(mapper.readTree("[]"));
+        when(subjects.cpidForHealthId(ACTOR)).thenReturn(null);
+        ResponseEntity<Map<String, Object>> r = controller.consentCenter(ACTOR, REQ, CORR, 0, 20);
+        assertThat(r.getBody()).containsKeys("data", "meta");
+        assertThat(((Map<?, ?>) r.getBody().get("meta")).get("correlation_id")).isEqualTo(CORR);
     }
 
     @Test
@@ -79,8 +91,13 @@ class CitizenConsentCenterControllerTest {
     void revokePassesThrough() throws Exception {
         UUID id = UUID.randomUUID();
         when(consent.revokeMyConsent(id)).thenReturn(mapper.readTree("{\"status\":\"REVOKED\"}"));
-        ResponseEntity<Map<String, Object>> r = controller.revoke(id);
-        assertThat(r.getBody().get("status")).isEqualTo("REVOKED");
+        Map<String, Object> data = data(controller.revoke(id, REQ, CORR));
+        assertThat(data.get("status")).isEqualTo("REVOKED");
         verify(consent).revokeMyConsent(id);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> data(ResponseEntity<Map<String, Object>> r) {
+        return (Map<String, Object>) r.getBody().get("data");
     }
 }

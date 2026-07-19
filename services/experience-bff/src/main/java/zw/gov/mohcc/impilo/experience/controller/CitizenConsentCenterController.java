@@ -48,13 +48,15 @@ public class CitizenConsentCenterController {
     @GetMapping
     public ResponseEntity<Map<String, Object>> consentCenter(
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        Map<String, Object> out = new LinkedHashMap<>();
+        Map<String, Object> data = new LinkedHashMap<>();
 
         // "Who did I allow?" — the consent service self-resolves the trust-context patient.
-        out.put("consents", safe(() -> consentClient.myConsents(page, size), "consents"));
+        data.put("consents", safe(() -> consentClient.myConsents(page, size), "consents"));
 
         // "Who actually looked?" — the access-log is CPID-keyed; resolve the CPID from the
         // authenticated actor (citizen actorId == healthId). Degrades gracefully to empty.
@@ -65,9 +67,9 @@ public class CitizenConsentCenterController {
         } else if (actorId != null) {
             log.debug("consent-center: no CPID resolved for the actor; access-log omitted");
         }
-        out.put("accessLog", accessLog);
+        data.put("accessLog", accessLog);
 
-        return ResponseEntity.ok(out);
+        return ResponseEntity.ok(envelope(data, requestId, correlationId));
     }
 
     /**
@@ -75,19 +77,33 @@ public class CitizenConsentCenterController {
      * service against the trust-context patient — a citizen cannot revoke another's consent.
      */
     @PostMapping("/revoke/{consentId}")
-    public ResponseEntity<Map<String, Object>> revoke(@PathVariable UUID consentId) {
-        Map<String, Object> out = new LinkedHashMap<>();
+    public ResponseEntity<Map<String, Object>> revoke(
+            @PathVariable UUID consentId,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        Map<String, Object> data = new LinkedHashMap<>();
         try {
             JsonNode result = consentClient.revokeMyConsent(consentId);
-            out.put("status", "REVOKED");
-            out.put("consent", result);
-            return ResponseEntity.ok(out);
+            data.put("status", "REVOKED");
+            data.put("consent", result);
+            return ResponseEntity.ok(envelope(data, requestId, correlationId));
         } catch (Exception e) {
             log.warn("consent-center revoke failed for {}: {}", consentId, e.getMessage());
-            out.put("status", "ERROR");
-            out.put("message", "The consent could not be revoked. Please try again.");
-            return ResponseEntity.status(502).body(out);
+            data.put("status", "ERROR");
+            data.put("message", "The consent could not be revoked. Please try again.");
+            return ResponseEntity.status(502).body(envelope(data, requestId, correlationId));
         }
+    }
+
+    /** Wrap in the house {@code {data, meta}} envelope the experience shell's api-client expects. */
+    private static Map<String, Object> envelope(Object data, String requestId, String correlationId) {
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("request_id", requestId);
+        meta.put("correlation_id", correlationId);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("data", data);
+        body.put("meta", meta);
+        return body;
     }
 
     /** Fetch that degrades to null (never fails the whole surface if one source is down). */
