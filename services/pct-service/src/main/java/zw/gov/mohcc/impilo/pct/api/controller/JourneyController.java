@@ -39,15 +39,58 @@ public class JourneyController {
     private final TriageService triageService;
     private final RoutingEngine routingEngine;
     private final JourneyRepository journeyRepository;
+    private final zw.gov.mohcc.impilo.shared.card.CardVerificationClient cardVerification;
 
     public JourneyController(JourneyStateMachine journeyStateMachine,
                              TriageService triageService,
                              RoutingEngine routingEngine,
-                             JourneyRepository journeyRepository) {
+                             JourneyRepository journeyRepository,
+                             zw.gov.mohcc.impilo.shared.card.CardVerificationClient cardVerification) {
         this.journeyStateMachine = journeyStateMachine;
         this.triageService = triageService;
         this.routingEngine = routingEngine;
         this.journeyRepository = journeyRepository;
+        this.cardVerification = cardVerification;
+    }
+
+    /**
+     * B5: check in a patient by presenting their SMART card. The card presentation is
+     * resolved through the shared card-resolve seam (→ VITO); the resolved Health ID
+     * (== CPID) becomes the patient, so the desk never keys a CPID and one card can't
+     * start another person's journey. Fail-closed: an unresolved or non-ACTIVE card is
+     * rejected (422) — never a fabricated identity.
+     */
+    @PostMapping("/check-in-by-card")
+    public ResponseEntity<ApiResponse<JourneyEntity>> checkInByCard(
+            @RequestBody zw.gov.mohcc.impilo.pct.api.dto.CheckInByCardRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+
+        var resolution = cardVerification.resolve(
+                request.cardNumber(), request.qrToken(), request.cardAssertion());
+        if (!resolution.resolved()) {
+            return ResponseEntity.status(422).body(ApiResponse.error("CARD_NOT_RESOLVED",
+                    "The presented card could not be resolved (unknown, unverifiable, or expired)",
+                    422, correlationId));
+        }
+        if (!resolution.isActive()) {
+            return ResponseEntity.status(422).body(ApiResponse.error("CARD_INACTIVE",
+                    "The presented card is not active (status " + resolution.cardStatus() + ")",
+                    422, correlationId));
+        }
+
+        try {
+            JourneyEntity journey = journeyStateMachine.createJourney(
+                    request.facilityId() != null ? request.facilityId() : ctx.facilityId(),
+                    resolution.cpid(),
+                    request.referralSource() != null ? request.referralSource() : "CARD_CHECK_IN",
+                    request.referralId(),
+                    request.appointmentId());
+            return ResponseEntity.ok(ApiResponse.ok(journey, correlationId));
+        } catch (PctDomainException ex) {
+            return ResponseEntity.status(ex.getStatus())
+                    .body(ApiResponse.error(ex.getCode(), ex.getMessage(), ex.getStatus(), correlationId));
+        }
     }
 
     /**
