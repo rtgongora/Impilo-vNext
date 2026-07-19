@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Optional: {@code MVUMO_IT_BEARER_TOKEN} for authenticated deployments.
  * </p>
  */
-class TshepoConsentDevInstanceIT {
+class TshepoConsentDevInstanceTest {
 
     @Test
     @EnabledIfEnvironmentVariable(named = "MVUMO_IT_TSHEPO_BASE", matches = ".+")
