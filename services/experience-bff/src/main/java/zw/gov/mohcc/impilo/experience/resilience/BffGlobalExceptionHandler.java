@@ -5,8 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedHashMap;
@@ -35,6 +37,21 @@ public class BffGlobalExceptionHandler {
         error.put("correlation_id", request.getHeader("X-Correlation-ID"));
 
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of("error", error));
+    }
+
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<Map<String, Object>> handleMalformedRequest(
+            Exception e, HttpServletRequest request) {
+
+        Map<String, Object> error = new LinkedHashMap<>();
+        error.put("code", "BAD_REQUEST");
+        error.put("message", e instanceof MissingServletRequestParameterException missing
+                ? "Missing required parameter: " + missing.getParameterName()
+                : "A request parameter has the wrong type");
+        error.put("request_id", request.getHeader("X-Request-ID"));
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", error));
     }
 
