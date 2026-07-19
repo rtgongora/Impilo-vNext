@@ -113,6 +113,8 @@ cannot self-serve. **Care is never denied** for missing National ID, smartphone,
 Legend — **Built**: works today · **Reuse**: substrate exists, journey needs wiring · **Gap**: net-new · wave in `[ ]`.
 **✅ Done** marks a journey delivered this program at the **SOFTWARE_CONTRACT** tier (backend + BFF wired, unit/contract-tested) — not yet deployed or gateway-auth-proven (see §8's 3-tier verdict); the commit is cited. A trailing `(UI follow-up)` means the citizen-facing page still lives in the UI lane.
 
+> **Lesson (2026-07-19, CJ13):** "backend + BFF tested" is **not** the same as done for a person, and it hides real defects. Building the first actual screen (CJ13 consent-center) immediately exposed three faults the green JUnit suite had passed over — a missing `{data,meta}` response envelope the shell requires, a `PagedResponse` shape the stubs had simplified away, and a stale-closure bug in the revoke/step-up handler. A journey is only truly done when a person can complete it end-to-end through the UI; the citizen-facing page is part of the contract, not a follow-up. Prefer building the screen alongside the endpoint so the UI drives the contract, rather than deferring it.
+
 ### Client journeys (CJ1–CJ20)
 
 | # | Journey | State | Anchor / gap |
@@ -129,7 +131,7 @@ Legend — **Built**: works today · **Reuse**: substrate exists, journey needs 
 | CJ10 | Returning client identified by biometric | Reuse | search-first→1:1 verify; 1:N candidates `[G,X1]` |
 | CJ11 | Book appointment + self-check-in | ✅ Done | BFF `CitizenAppointmentCheckinController` — signed appointment token (tshepo-identity scoped-token, scope-bound + replay-proof) → `/checkin-by-token` → `AppointmentCheckInService` (`4cbea9823`) `[H]` |
 | CJ12 | View personal health information | Built | patient-context token; VITO banner + BUTANO record |
-| CJ13 | Manage consent & privacy + access log | ✅ Done | BFF `CitizenConsentCenterController` composes consent directives (trust-context self-resolved) + record access-log (CPID resolved server-side) (`fb78749c3`) `[H]` (UI follow-up) |
+| CJ13 | Manage consent & privacy + access log | ✅ Done | full stack: `/citizen/consent-center` page (revoke + step-up) → BFF `CitizenConsentCenterController` (consent directives trust-context-resolved + access-log CPID-resolved) (`fb78749c3`, UI+contract-fix `6782c9ed7`). **Building the UI exposed 3 hidden gaps** (missing `{data,meta}` envelope, PagedResponse `items` shape, a stale-closure step-up bug) — now fixed+tested `[H]` (not yet live-driven vs a running BFF) |
 | CJ14 | Add a child / dependant | ✅ Done | BFF `CitizenDependantController` — registers the child (own HID/CRID/CPID via VITO golden path) + time-bound `GUARDIAN` delegation on mvumo (expires at 18 → young adult claims own account via CJ3); server-derived expiry, adult rejected (`e959d9104`) `[J]` (child Impilo ID minted later at card issuance) |
 | CJ15 | Authorise a caregiver / representative | Built | mvumo `DelegationController` (create/revoke/resolve) + PolicyEngine Step 4.5 `evaluateDelegation` (act-on-behalf, assurance-floor + scope + fail-closed) — verified live this program `[J]` |
 | CJ16 | Update demographic details (low/high-risk) | Reuse | VITO update + steward for high-risk; SHR unchanged `[H]` |
