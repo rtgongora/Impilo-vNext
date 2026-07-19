@@ -94,6 +94,9 @@ public class ProofingController {
         body.put("decision", result.decision());
         body.put("grantedOutcome", result.grantedOutcome() == null ? null : result.grantedOutcome().name());
         body.put("assuranceLevel", result.assuranceLevel());
+        // The bound account (actorId) whose assurance the BFF should raise for a witnessed
+        // approval (INTERNAL response — consumed by the trust core, not surfaced to a client).
+        body.put("boundAccountRef", result.boundAccountRef());
         return ResponseEntity.ok(ApiResponse.ok(body, null));
     }
 

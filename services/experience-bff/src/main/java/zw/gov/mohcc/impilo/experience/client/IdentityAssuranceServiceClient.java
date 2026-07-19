@@ -96,12 +96,27 @@ public class IdentityAssuranceServiceClient {
      * applies the raise to the acting citizen (never another actor).
      */
     public JsonNode recordProofingOutcome(String targetLevel, String provenance) {
+        return recordProofingOutcome(targetLevel, provenance, null);
+    }
+
+    /**
+     * Officer-witnessed variant: raise an <b>explicit</b> actor's assurance (the reviewed
+     * citizen, not the acting officer). IA accepts the explicit actorId only because the
+     * endpoint is INTERNAL-only and the raise is audited with its provenance.
+     */
+    public JsonNode recordProofingOutcome(String targetLevel, String provenance, String actorId) {
         String url = baseUrl + "/internal/v1/assurance/proofing-outcome";
-        log.info("IDENTITY-ASSURANCE: recording proofing outcome level={} provenance={}", targetLevel, provenance);
+        log.info("IDENTITY-ASSURANCE: recording proofing outcome level={} provenance={} explicitActor={}",
+                targetLevel, provenance, actorId != null);
         org.springframework.http.HttpHeaders h = new org.springframework.http.HttpHeaders();
         h.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
         h.set("X-Access-Mode", "INTERNAL");
-        Map<String, Object> body = Map.of("targetLevel", targetLevel, "provenance", provenance);
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("targetLevel", targetLevel);
+        body.put("provenance", provenance);
+        if (actorId != null && !actorId.isBlank()) {
+            body.put("actorId", actorId);
+        }
         ResponseEntity<JsonNode> response =
                 restTemplate.postForEntity(url, new HttpEntity<>(body, h), JsonNode.class);
         return extractData(response);

@@ -112,6 +112,13 @@ public class VitoServiceClient {
         return extractData(r);
     }
 
+    /** Officer decision on a proofing/recovery review (Wave G). Returns {status, grantedOutcome, assuranceLevel, boundAccountRef}. */
+    public JsonNode proofingReviewDecision(String reviewId, Map<String, Object> body) {
+        ResponseEntity<JsonNode> r = restTemplate.postForEntity(
+                baseUrl + "/v1/proofing/reviews/" + reviewId + "/decision", internal(body), JsonNode.class);
+        return extractData(r);
+    }
+
     /** Start ID recovery process. */
     public JsonNode startRecovery(Map<String, Object> recoveryData) {
         String url = baseUrl + "/v1/portal/id/recovery/start";

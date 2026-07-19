@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.vito.core.proofing;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientVerificationReviewEntity;
+import zw.gov.mohcc.impilo.vito.persistence.repository.ClientAuthorizationLinkRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.ClientVerificationReviewRepository;
 
 import java.time.OffsetDateTime;
@@ -33,15 +34,25 @@ public class ProofingReviewDecisionService {
 
     private final ClientVerificationReviewRepository reviewRepository;
     private final ProofingService proofingService;
+    private final ClientAuthorizationLinkRepository authorizationLinkRepository;
 
     public ProofingReviewDecisionService(ClientVerificationReviewRepository reviewRepository,
-                                         ProofingService proofingService) {
+                                         ProofingService proofingService,
+                                         ClientAuthorizationLinkRepository authorizationLinkRepository) {
         this.reviewRepository = reviewRepository;
         this.proofingService = proofingService;
+        this.authorizationLinkRepository = authorizationLinkRepository;
     }
 
+    /**
+     * @param boundAccountRef the account bound to the reviewed record (the actorId whose
+     *                        assurance the caller should raise), or null when no account is
+     *                        yet linked — the assurance applies later, when the person claims
+     *                        or links an account.
+     */
     public record DecisionResult(UUID reviewId, String status, String decision,
-                                 ProofingOutcome grantedOutcome, int assuranceLevel) {}
+                                 ProofingOutcome grantedOutcome, int assuranceLevel,
+                                 String boundAccountRef) {}
 
     /**
      * @param decision APPROVE or REJECT
@@ -84,7 +95,20 @@ public class ProofingReviewDecisionService {
         }
         reviewRepository.save(review);
 
+        String boundAccountRef = approve ? resolveBoundAccount(tenantId, review.getClientHealthId()) : null;
         return new DecisionResult(reviewId, review.getStatus(), review.getDecision(),
-                approve ? outcome : null, approve ? outcome.assuranceLevel() : 0);
+                approve ? outcome : null, approve ? outcome.assuranceLevel() : 0, boundAccountRef);
+    }
+
+    /** The account (actorId) bound to this record, if any — the most recent ACTIVE ACCOUNT link. */
+    private String resolveBoundAccount(UUID tenantId, UUID healthId) {
+        return authorizationLinkRepository
+                .findByTenantIdAndClientHealthIdOrderByCreatedAtDesc(tenantId, healthId).stream()
+                .filter(l -> "ACCOUNT".equals(l.getAuthorisationType()))
+                .filter(l -> l.getStatus() == null || !"REVOKED".equalsIgnoreCase(l.getStatus()))
+                .map(l -> l.getReferenceId())
+                .filter(ref -> ref != null && !ref.isBlank())
+                .findFirst()
+                .orElse(null);
     }
 }

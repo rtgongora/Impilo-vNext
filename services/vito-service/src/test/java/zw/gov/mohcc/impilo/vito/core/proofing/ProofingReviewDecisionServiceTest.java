@@ -4,9 +4,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import zw.gov.mohcc.impilo.vito.core.ProofingMethod;
+import zw.gov.mohcc.impilo.vito.persistence.entity.ClientAuthorizationLinkEntity;
 import zw.gov.mohcc.impilo.vito.persistence.entity.ClientVerificationReviewEntity;
+import zw.gov.mohcc.impilo.vito.persistence.repository.ClientAuthorizationLinkRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.ClientVerificationReviewRepository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,14 +26,26 @@ class ProofingReviewDecisionServiceTest {
 
     private ClientVerificationReviewRepository reviewRepo;
     private ProofingService proofingService;
+    private ClientAuthorizationLinkRepository linkRepo;
     private ProofingReviewDecisionService service;
 
     @BeforeEach
     void setUp() {
         reviewRepo = mock(ClientVerificationReviewRepository.class);
         proofingService = mock(ProofingService.class);
-        service = new ProofingReviewDecisionService(reviewRepo, proofingService);
+        linkRepo = mock(ClientAuthorizationLinkRepository.class);
+        service = new ProofingReviewDecisionService(reviewRepo, proofingService, linkRepo);
         when(reviewRepo.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(linkRepo.findByTenantIdAndClientHealthIdOrderByCreatedAtDesc(any(), any())).thenReturn(List.of());
+    }
+
+    private void boundAccount(String accountRef) {
+        ClientAuthorizationLinkEntity link = new ClientAuthorizationLinkEntity();
+        link.setAuthorisationType("ACCOUNT");
+        link.setReferenceId(accountRef);
+        link.setStatus("RECORD_LINKED");
+        when(linkRepo.findByTenantIdAndClientHealthIdOrderByCreatedAtDesc(TENANT, HID))
+                .thenReturn(List.of(link));
     }
 
     private void openReview() {
@@ -45,13 +60,15 @@ class ProofingReviewDecisionServiceTest {
     }
 
     @Test
-    @DisplayName("APPROVE with IN_PERSON_WITNESSED records LOA3 assurance under the officer")
+    @DisplayName("APPROVE with IN_PERSON_WITNESSED records LOA3 assurance + returns the bound account")
     void approveRecordsWitnessedOutcome() {
         openReview();
+        boundAccount("kc-subject-42");
         var res = service.decide(TENANT, REVIEW, "officer-3", "APPROVE",
                 ProofingOutcome.IN_PERSON_WITNESSED, "inspected passport");
         assertThat(res.status()).isEqualTo("APPROVED");
         assertThat(res.assuranceLevel()).isEqualTo(3);
+        assertThat(res.boundAccountRef()).isEqualTo("kc-subject-42");
         verify(proofingService).recordEvent(eq(TENANT), eq(HID), eq(ProofingMethod.ASSISTED),
                 eq(3), anyString(), eq("officer-3"), anyString());
     }

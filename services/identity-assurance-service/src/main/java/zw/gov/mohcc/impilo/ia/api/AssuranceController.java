@@ -78,8 +78,13 @@ public class AssuranceController {
                     org.springframework.http.HttpStatus.FORBIDDEN,
                     "proofing-outcome is INTERNAL-only");
         }
+        // Self-service proofing raises the CURRENT actor. The officer-witnessed path (a steward
+        // approving another person's review) passes an explicit actorId — allowed only because
+        // this endpoint is INTERNAL-only and every raise is audited with its provenance.
+        String targetActor = (body.actorId() != null && !body.actorId().isBlank())
+                ? body.actorId().trim() : ctx.actorId();
         AssuranceService.StatusView view = assuranceService.recordProofingOutcome(
-                ctx.tenantId(), ctx.actorId(), body.targetLevel(), body.provenance());
+                ctx.tenantId(), targetActor, body.targetLevel(), body.provenance());
         return ResponseEntity.ok(ApiResponse.ok(view, ctx.correlationId().toString()));
     }
 
@@ -87,5 +92,5 @@ public class AssuranceController {
 
     public record DecideRequest(boolean approve, String reason) {}
 
-    public record ProofingOutcomeRequest(AssuranceLevel targetLevel, String provenance) {}
+    public record ProofingOutcomeRequest(AssuranceLevel targetLevel, String provenance, String actorId) {}
 }
