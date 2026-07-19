@@ -109,9 +109,15 @@ public class LicenceRenewalSweep {
         event.setAggregateType("PROVIDER");
         event.setAggregateId(provider.getProviderPublicId());
         event.setEventType(eventType);
+        // impiloHealthId = the claimed person anchor, so trust-plane consumers can
+        // tear down the person's active sessions/tokens on revocation (W1 D-P3).
+        // Unclaimed profiles carry a synthetic anchor — emit empty, never the
+        // synthetic UUID, so consumers cannot revoke an unrelated actor.
+        java.util.UUID personAnchor = provider.getClaimedHealthId();
         event.setPayload(String.format(
-                "{\"providerPublicId\":\"%s\",\"previousLifecycle\":\"%s\",\"newLifecycle\":\"%s\",\"licenceValidTo\":\"%s\"}",
-                provider.getProviderPublicId(), previous, target.name(), validTo != null ? validTo : ""));
+                "{\"providerPublicId\":\"%s\",\"impiloHealthId\":\"%s\",\"previousLifecycle\":\"%s\",\"newLifecycle\":\"%s\",\"licenceValidTo\":\"%s\"}",
+                provider.getProviderPublicId(), personAnchor != null ? personAnchor : "",
+                previous, target.name(), validTo != null ? validTo : ""));
         outboxRepository.save(event);
     }
 

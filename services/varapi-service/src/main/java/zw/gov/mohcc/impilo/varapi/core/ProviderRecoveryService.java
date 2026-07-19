@@ -68,14 +68,17 @@ public class ProviderRecoveryService {
     private final ProviderRepository providerRepository;
     private final ProviderClaimTokenRepository claimTokenRepository;
     private final EventOutboxRepository outboxRepository;
+    private final ProviderAuthorizationLinkService authorizationLinkService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public ProviderRecoveryService(ProviderRepository providerRepository,
                                    ProviderClaimTokenRepository claimTokenRepository,
-                                   EventOutboxRepository outboxRepository) {
+                                   EventOutboxRepository outboxRepository,
+                                   ProviderAuthorizationLinkService authorizationLinkService) {
         this.providerRepository = providerRepository;
         this.claimTokenRepository = claimTokenRepository;
         this.outboxRepository = outboxRepository;
+        this.authorizationLinkService = authorizationLinkService;
     }
 
     /**
@@ -186,6 +189,16 @@ public class ProviderRecoveryService {
             // silently returning a different identity.
             throw new IllegalStateException("Recovery integrity violation: provider identifier changed");
         }
+
+        // Authoritative binding record (D-P1): the recovery rebind supersedes the
+        // previous ACTIVE link in the same transaction — history preserved.
+        authorizationLinkService.recordBinding(
+                ctx.tenantId(), provider, actorHealthId,
+                zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderAuthorizationLinkEntity.TYPE_RECOVERY,
+                "recovery-token:" + token.getId(),
+                "RECORD_LINKED",
+                "RECOVERY",
+                ctx.actorId());
 
         publishEvent(provider.getProviderPublicId(), "varapi.provider.recovered",
                 String.format("{\"providerPublicId\":\"%s\",\"impiloHealthId\":\"%s\"}",

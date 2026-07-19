@@ -72,6 +72,7 @@ public class ProviderBootstrapService {
     private final CouncilRepository councilRepository;
     private final EventOutboxRepository outboxRepository;
     private final ProviderClaimAdjudicationService providerClaimAdjudicationService;
+    private final ProviderAuthorizationLinkService authorizationLinkService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public ProviderBootstrapService(ProviderRepository providerRepository,
@@ -79,13 +80,15 @@ public class ProviderBootstrapService {
                                     ProviderCouncilRegistrationRecordRepository registrationRepository,
                                     CouncilRepository councilRepository,
                                     EventOutboxRepository outboxRepository,
-                                    ProviderClaimAdjudicationService providerClaimAdjudicationService) {
+                                    ProviderClaimAdjudicationService providerClaimAdjudicationService,
+                                    ProviderAuthorizationLinkService authorizationLinkService) {
         this.providerRepository = providerRepository;
         this.claimTokenRepository = claimTokenRepository;
         this.registrationRepository = registrationRepository;
         this.councilRepository = councilRepository;
         this.outboxRepository = outboxRepository;
         this.providerClaimAdjudicationService = providerClaimAdjudicationService;
+        this.authorizationLinkService = authorizationLinkService;
     }
 
     // ── Bulk preload ────────────────────────────────────────────────────────
@@ -326,6 +329,16 @@ public class ProviderBootstrapService {
         }
         provider.setUpdatedBy(ctx.actorId());
         provider = providerRepository.save(provider);
+
+        // Authoritative binding record (D-P1) — same transaction as the claim,
+        // so the claimed_health_id pointer and the link row commit together.
+        authorizationLinkService.recordBinding(
+                ctx.tenantId(), provider, claimantHealthId,
+                zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderAuthorizationLinkEntity.TYPE_CLAIM,
+                "claim-token:" + token.getId(),
+                "RECORD_LINKED",
+                provider.getOnboardingChannel() != null ? provider.getOnboardingChannel() : "BOOTSTRAP_CLAIM",
+                ctx.actorId());
 
         // The token was already burned atomically above (claimTokenRepository.redeem);
         // no second, non-atomic save here — that would re-open the race window.

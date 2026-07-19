@@ -50,6 +50,7 @@ class ProviderRecoveryServiceTest {
     @Mock private ProviderRepository providerRepository;
     @Mock private ProviderClaimTokenRepository claimTokenRepository;
     @Mock private EventOutboxRepository outboxRepository;
+    @Mock private ProviderAuthorizationLinkService authorizationLinkService;
 
     private ProviderRecoveryService service;
 
@@ -60,7 +61,7 @@ class ProviderRecoveryServiceTest {
     @BeforeEach
     void setUp() {
         service = new ProviderRecoveryService(
-                providerRepository, claimTokenRepository, outboxRepository);
+                providerRepository, claimTokenRepository, outboxRepository, authorizationLinkService);
         seedActor(personHealthId.toString(), "CITIZEN");
         lenient().when(outboxRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
