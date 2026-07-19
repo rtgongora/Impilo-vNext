@@ -145,6 +145,26 @@ public class VitoServiceClient {
         return extractData(r);
     }
 
+    /**
+     * Submit a fresh SMART-card issuance request through the governed PORTAL channel (INTERNAL, B3).
+     * PORTAL auto-routes to PROOFING — a fresh physical card must be identity-proofed, unlike the
+     * lost/stolen REPLACEMENT fast path. {@code type} is NEW or REPLACEMENT.
+     */
+    public JsonNode submitPortalIssuance(String healthId, String type) {
+        ResponseEntity<JsonNode> r = restTemplate.postForEntity(
+                baseUrl + "/v1/internal/issuance/submit",
+                internal(Map.of("healthId", healthId, "type", type, "channel", "PORTAL")), JsonNode.class);
+        return extractData(r);
+    }
+
+    /** Get an issuance request's current state by id (INTERNAL, B3 status poll). */
+    public JsonNode getIssuanceRequest(long requestId) {
+        ResponseEntity<JsonNode> r = restTemplate.exchange(
+                baseUrl + "/v1/internal/issuance/" + requestId,
+                org.springframework.http.HttpMethod.GET, internal(Map.of()), JsonNode.class);
+        return extractData(r);
+    }
+
     /** Start ID recovery process. */
     public JsonNode startRecovery(Map<String, Object> recoveryData) {
         String url = baseUrl + "/v1/portal/id/recovery/start";

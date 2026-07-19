@@ -134,6 +134,55 @@ public class CitizenCardController {
         }
     }
 
+    // ── Fresh physical card request (through PROOFING, B3) ──────────────
+
+    /**
+     * Citizen self-service request for a FRESH physical SMART card. Unlike the lost/stolen
+     * replacement fast path ({@code report-lost}), a fresh card is submitted on the governed
+     * PORTAL issuance channel, which auto-routes to PROOFING — the citizen must be identity-proofed
+     * (in-person appointment) before the card is produced. Health ID is taken from {@code X-Actor-ID}
+     * (never the body). Returns the created issuance request (its id + PROOFING state) so the citizen
+     * can track it.
+     */
+    @PostMapping("/cards/request-physical")
+    public ResponseEntity<Map<String, Object>> requestPhysicalCard(
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+        UUID healthId = uuidOrNull(actorId);
+        if (healthId == null) {
+            return validation("X-Actor-ID must be the citizen Health ID UUID", requestId, correlationId);
+        }
+        // REPLACEMENT only if the citizen explicitly says so; a first card is NEW.
+        String type = "REPLACEMENT".equalsIgnoreCase(str(body == null ? null : body.get("type")))
+                ? "REPLACEMENT" : "NEW";
+        try {
+            JsonNode req = vitoClient.submitPortalIssuance(healthId.toString(), type);
+            if (req == null) {
+                return upstreamUnavailable("requestPhysicalCard", "vito returned null", requestId, correlationId);
+            }
+            return ok(req, requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            log.info("requestPhysicalCard upstream rejected: {}", e.getStatusCode());
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of(
+                    "error", Map.of("code", "UPSTREAM_REJECTED", "message", e.getStatusText()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return upstreamUnavailable("requestPhysicalCard", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    /** Track a fresh-card issuance request's state (PROOFING → APPROVED → ISSUED → DELIVERED). */
+    @GetMapping("/cards/issuance/{requestId}")
+    public ResponseEntity<Map<String, Object>> issuanceStatus(
+            @PathVariable("requestId") long issuanceRequestId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> vitoClient.getIssuanceRequest(issuanceRequestId), "issuanceStatus",
+                requestId, correlationId);
+    }
+
     // ── Device enrollment (VIRTUAL card key → VITO → mushe link) ────────
 
     /**
