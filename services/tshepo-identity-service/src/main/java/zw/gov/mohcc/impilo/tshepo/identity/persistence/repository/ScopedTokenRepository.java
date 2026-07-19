@@ -28,4 +28,19 @@ public interface ScopedTokenRepository extends JpaRepository<ScopedTokenEntity, 
             + " SET t.status = 'REVOKED', t.revokedAt = :now"
             + " WHERE t.actorId = :actorId AND t.status = 'ACTIVE'")
     int revokeAllForActor(@Param("actorId") String actorId, @Param("now") Instant now);
+
+    /**
+     * Facility-scoped teardown (W5, D-P7): revoke the actor's ACTIVE
+     * WORK_CONTEXT tokens bound to ONE facility — an assignment ending at
+     * facility A must not kill a live session at facility B.
+     */
+    @Modifying
+    @Query(value = "UPDATE tshepo_identity.scoped_token"
+            + " SET status = 'REVOKED', revoked_at = :now"
+            + " WHERE actor_id = :actorId AND status = 'ACTIVE'"
+            + "   AND token_kind = 'WORK_CONTEXT'"
+            + "   AND context_claims->>'facility_id' = :facilityId", nativeQuery = true)
+    int revokeWorkContextForActorAtFacility(@Param("actorId") String actorId,
+                                            @Param("facilityId") String facilityId,
+                                            @Param("now") Instant now);
 }

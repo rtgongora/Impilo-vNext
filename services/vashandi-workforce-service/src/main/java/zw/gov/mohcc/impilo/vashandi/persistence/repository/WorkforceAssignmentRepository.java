@@ -23,4 +23,8 @@ public interface WorkforceAssignmentRepository extends JpaRepository<WorkforceAs
 
     List<WorkforceAssignmentEntity> findByTenantIdAndWorkforceProfileIdAndStatusIn(
             UUID tenantId, UUID workforceProfileId, List<String> statuses);
+
+    /** Expiry sweep feed (V008): active assignments whose end date has passed. */
+    List<WorkforceAssignmentEntity> findByStatusAndEndDateBefore(
+            String status, java.time.LocalDate endDate);
 }

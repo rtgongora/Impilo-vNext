@@ -46,6 +46,14 @@ public class WorkforceAssignmentEntity {
     private LocalDate endDate;
     private String sourceAuthority;
 
+    /**
+     * How the provider is engaged (D-P7): PERMANENT | ROTATION | LOCUM |
+     * OUTREACH | TELEMED | SPECIALIST_POOL | SUPERVISORY | TRAINING.
+     * Non-permanent engagements require an endDate (V008 CHECK).
+     */
+    @Column(name = "engagement_type", length = 32)
+    private String engagementType;
+
     @Column(nullable = false, length = 32)
     private String eligibilityStatus = "pending";
 
