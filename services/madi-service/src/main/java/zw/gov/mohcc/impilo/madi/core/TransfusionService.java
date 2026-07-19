@@ -30,6 +30,7 @@ public class TransfusionService {
     private final MadiEventEmitter eventEmitter;
     private final zw.gov.mohcc.impilo.madi.persistence.repository.BloodOrderRepository orderRepository;
     private final zw.gov.mohcc.impilo.madi.integration.OrosIntegration orosIntegration;
+    private final zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
 
     public TransfusionService(TransfusionEpisodeRepository episodeRepository,
                               TransfusionObservationRepository observationRepository,
@@ -37,7 +38,8 @@ public class TransfusionService {
                               ButanoIntegration butanoIntegration,
                               MadiEventEmitter eventEmitter,
                               zw.gov.mohcc.impilo.madi.persistence.repository.BloodOrderRepository orderRepository,
-                              zw.gov.mohcc.impilo.madi.integration.OrosIntegration orosIntegration) {
+                              zw.gov.mohcc.impilo.madi.integration.OrosIntegration orosIntegration,
+                              zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification) {
         this.episodeRepository = episodeRepository;
         this.observationRepository = observationRepository;
         this.outcomeRepository = outcomeRepository;
@@ -45,6 +47,7 @@ public class TransfusionService {
         this.eventEmitter = eventEmitter;
         this.orderRepository = orderRepository;
         this.orosIntegration = orosIntegration;
+        this.biometricVerification = biometricVerification;
     }
 
     @Transactional
@@ -150,6 +153,33 @@ public class TransfusionService {
                                                            UUID bloodUnitId, String patientMethod,
                                                            String patientBiometricRef, String unitMethod,
                                                            String unitScanRef, String verifiedBy) {
+        return verifyPreTransfusion(tenantId, episodeId, patientCpid, bloodUnitId, patientMethod,
+                patientBiometricRef, unitMethod, unitScanRef, verifiedBy, null, null, null);
+    }
+
+    /**
+     * Bedside pre-transfusion patient + unit verification — the wrong-patient safety stop
+     * that must pass before observations can be recorded and the unit administered.
+     *
+     * <p>When a live biometric probe is supplied ({@code biometricSubjectRef} +
+     * {@code biometricProbeBase64}) the patient's identity is verified through the shared
+     * biometric seam immediately before the unit is hung:
+     * <ul>
+     *   <li>MATCH → the patient-identity check is recorded as {@link VerificationMethod#BIOMETRIC}
+     *       and the confirmed subject reference is stored (patient-identity-confirmed-by-biometric).</li>
+     *   <li>NO_MATCH → the bedside step is rejected (wrong-patient safety stop); nothing is persisted.</li>
+     *   <li>UNAVAILABLE / NO_REFERENCE → fall back to the declared two-person/manual
+     *       {@code patientMethod}; a biometric outage must never block a needed transfusion.</li>
+     * </ul>
+     * Absent biometric fields ⇒ behaviour is exactly as before (declared method recorded verbatim).
+     */
+    @Transactional
+    public TransfusionEpisodeEntity verifyPreTransfusion(UUID tenantId, UUID episodeId, String patientCpid,
+                                                           UUID bloodUnitId, String patientMethod,
+                                                           String patientBiometricRef, String unitMethod,
+                                                           String unitScanRef, String verifiedBy,
+                                                           String biometricSubjectRef, String biometricModality,
+                                                           String biometricProbeBase64) {
         TransfusionEpisodeEntity episode = requireEpisode(tenantId, episodeId);
         if (!TransfusionStatus.IN_PROGRESS.name().equals(episode.getStatus())) {
             throw new IllegalStateException("Pre-transfusion verification only allowed for IN_PROGRESS episodes");
@@ -159,12 +189,33 @@ public class TransfusionService {
         }
         VerificationMethod patientVerification = parseVerificationMethod(patientMethod);
         VerificationMethod unitVerification = parseVerificationMethod(unitMethod);
+
+        // Optional biometric patient-identity interlock immediately before administration.
+        boolean patientBiometricConfirmed = false;
+        String effectivePatientBiometricRef = patientBiometricRef;
+        if (biometricProbeBase64 != null && !biometricProbeBase64.isBlank()
+                && biometricSubjectRef != null && !biometricSubjectRef.isBlank()) {
+            String modality = biometricModality != null && !biometricModality.isBlank()
+                    ? biometricModality : "FINGERPRINT";
+            var decision = biometricVerification.verify(biometricSubjectRef, modality, biometricProbeBase64);
+            if (decision.isMatch()) {
+                patientVerification = VerificationMethod.BIOMETRIC;
+                effectivePatientBiometricRef = biometricSubjectRef;
+                patientBiometricConfirmed = true;
+            } else if (!"UNAVAILABLE".equals(decision.result()) && !"NO_REFERENCE".equals(decision.result())) {
+                // NO_MATCH → wrong-patient safety stop; nothing is persisted.
+                throw new IllegalStateException(
+                        "Biometric patient verification failed — wrong-patient safety stop");
+            }
+            // UNAVAILABLE / NO_REFERENCE → proceed on the declared two-person/manual method (care-first).
+        }
+
         OffsetDateTime now = OffsetDateTime.now();
 
         episode.setBloodUnitId(bloodUnitId);
         episode.setPatientVerified(true);
         episode.setPatientVerificationMethod(patientVerification.name());
-        episode.setPatientBiometricRef(patientBiometricRef);
+        episode.setPatientBiometricRef(effectivePatientBiometricRef);
         episode.setPatientVerifiedAt(now);
         episode.setPatientVerifiedBy(verifiedBy);
         episode.setUnitVerified(true);
@@ -177,6 +228,7 @@ public class TransfusionService {
                 "bloodUnitId", bloodUnitId.toString(),
                 "patientMethod", patientVerification.name(),
                 "unitMethod", unitVerification.name(),
+                "patientBiometricConfirmed", patientBiometricConfirmed,
                 "verifiedAt", now.toString()));
         episode.setUpdatedAt(now);
         TransfusionEpisodeEntity saved = episodeRepository.save(episode);

@@ -89,7 +89,10 @@ public class MadiTransfusionController {
                 str(body, "patient_biometric_ref"),
                 required(body, "unit_method"),
                 str(body, "unit_scan_ref"),
-                str(body, "verified_by"));
+                str(body, "verified_by"),
+                str(body, "biometric_subject_ref"),
+                str(body, "biometric_modality"),
+                str(body, "biometric_probe_base64"));
     }
 
     @GetMapping("/{episodeId}")

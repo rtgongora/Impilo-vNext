@@ -38,7 +38,8 @@ class TransfusionPreVerifyTest {
     @BeforeEach
     void setUp() {
         transfusionService = new TransfusionService(episodeRepository, observationRepository,
-                outcomeRepository, butanoIntegration, eventEmitter, orderRepository, orosIntegration);
+                outcomeRepository, butanoIntegration, eventEmitter, orderRepository, orosIntegration,
+                new zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient(false, null));
     }
 
     @Test
