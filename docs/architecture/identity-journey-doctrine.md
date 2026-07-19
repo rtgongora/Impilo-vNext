@@ -111,31 +111,34 @@ cannot self-serve. **Care is never denied** for missing National ID, smartphone,
 ## 5. The 40-journey catalog
 
 Legend — **Built**: works today · **Reuse**: substrate exists, journey needs wiring · **Gap**: net-new · wave in `[ ]`.
+**✅ Done** marks a journey delivered this program at the **SOFTWARE_CONTRACT** tier (backend + BFF wired, unit/contract-tested) — not yet deployed or gateway-auth-proven (see §8's 3-tier verdict); the commit is cited. A trailing `(UI follow-up)` means the citizen-facing page still lives in the UI lane.
 
 ### Client journeys (CJ1–CJ20)
 
 | # | Journey | State | Anchor / gap |
 |---|---|---|---|
 | CJ1 | Browse & obtain services without logging in | Built | public gateway; Nompilo explains when login is needed `[H]` |
-| CJ2 | First-time self-registration (private dedup) | Reuse | `ProvisionalHealthIdController` + **private matching** `[F,G,H]` |
-| CJ3 | Existing client claims their record | Gap | account-shell→private match→2nd factor→`client_authorization_link` `[F]` |
-| CJ4 | Recover a forgotten Impilo ID | Reuse | `PortalController` recovery; **verify is a stub** `[F]` |
-| CJ5 | Recover account after lost phone / SIM | Reuse | device/session revocation (tshepo-authz) + recovery `[F]` |
+| CJ2 | First-time self-registration (private dedup) | Reuse | `ProvisionalHealthIdController` + **private matching ✅ landed** (`b6434b615`: VITO `RegistryResolveController` /resolve+/resolve-contact, no candidate list) `[F,G,H]` |
+| CJ3 | Existing client claims their record | ✅ Done | claim flow: BFF `PatientRecordClaimController` → private match → OTP-to-recorded-contact → `client_authorization_link` (RECORD_LINKED) + owner-alert on lockout (`edb56de35`, `9272f1a36`) `[F]` |
+| CJ4 | Recover a forgotten Impilo ID | ✅ Done | `PortalController` recovery; **verify stub fixed** — no longer self-certifies, opens `ID_RECOVERY` steward review (`a52497d68`) `[F]` |
+| CJ5 | Recover account after lost phone / SIM | Reuse | device/session revocation (tshepo-authz) + recovery; claim-start throttle `d545a0c1d` applies `[F]` |
 | CJ6 | Digital Impilo card issuance | Built | `PortalController /health-id/qr`, wallet UI |
 | CJ7 | Request a physical card | Built | `IssuanceController`/`PrintJobController`/card-print-agent |
-| CJ8 | Lost/stolen/damaged card → replace | Reuse | `/cards/{id}/revoke` exists; **citizen "report lost card" UI** gap `[H]` |
+| CJ8 | Lost/stolen/damaged card → replace | ✅ Done | BFF `POST /wallet/cards/report-lost` — resolves the caller's active card server-side, revokes LOST/STOLEN, optional replacement (`b646e0efc`) `[H]` (UI follow-up) |
 | CJ9 | Biometric self/assisted enrolment | Reuse | consent+capture; matcher via ABIS `[G,X1]` |
 | CJ10 | Returning client identified by biometric | Reuse | search-first→1:1 verify; 1:N candidates `[G,X1]` |
-| CJ11 | Book appointment + self-check-in | Reuse | booking-service + kiosk; **signed appointment token** gap `[H]` |
+| CJ11 | Book appointment + self-check-in | ✅ Done | BFF `CitizenAppointmentCheckinController` — signed appointment token (tshepo-identity scoped-token, scope-bound + replay-proof) → `/checkin-by-token` → `AppointmentCheckInService` (`4cbea9823`) `[H]` |
 | CJ12 | View personal health information | Built | patient-context token; VITO banner + BUTANO record |
-| CJ13 | Manage consent & privacy + access log | Reuse | `PortalConsentController` + `AccessHistoryController`; unify surface `[H]` |
-| CJ14 | Add a child / dependant | Gap | own HID/CRID/CPID/Impilo ID + guardian relationship `[J]` |
-| CJ15 | Authorise a caregiver / representative | Gap | act-on-behalf on mvumo `[J]` |
+| CJ13 | Manage consent & privacy + access log | ✅ Done | BFF `CitizenConsentCenterController` composes consent directives (trust-context self-resolved) + record access-log (CPID resolved server-side) (`fb78749c3`) `[H]` (UI follow-up) |
+| CJ14 | Add a child / dependant | Gap | delegation engine ready (mvumo + PolicyEngine §4.5); **remaining: mint child HID/CRID/CPID/Impilo ID + time-bound guardian relationship as a journey** `[J]` |
+| CJ15 | Authorise a caregiver / representative | Built | mvumo `DelegationController` (create/revoke/resolve) + PolicyEngine Step 4.5 `evaluateDelegation` (act-on-behalf, assurance-floor + scope + fail-closed) — verified live this program `[J]` |
 | CJ16 | Update demographic details (low/high-risk) | Reuse | VITO update + steward for high-risk; SHR unchanged `[H]` |
 | CJ17 | Report duplicate / incorrect identity | Reuse | dedup/merge steward workflow (audited) `[H]` |
 | CJ18 | Foreign national / person without National ID | Reuse | passport/programme-id; Impilo ID regardless of citizenship `[H]` |
 | CJ19 | Emergency unidentified client | Built | `V11IdentitiesController` provisional → merge-reconcile `[K]` |
 | CJ20 | Offline registration & reconciliation | Built | tshepo-offline O-CPID → relay `subject.reconciled` `[K]` |
+
+**Client-journey roll-up (2026-07-19 sweep):** 12/20 satisfied at software-contract tier — **7 Built** (CJ1, CJ6, CJ7, CJ12, CJ15, CJ19, CJ20) + **5 ✅ Done this program** (CJ3, CJ4, CJ8, CJ11, CJ13). **7 Reuse** need wiring: CJ2 (private-match landed; registration UX), CJ5 (lost-phone), CJ9/CJ10 (biometric — gated on `X1` ABIS), CJ16 (demographic risk-tiers), CJ17 (dedup/merge steward), CJ18 (foreign national). **1 Gap:** CJ14 (child/dependant identity-mint journey — delegation engine ready). The ✅ Done + several Reuse still need their citizen-facing UI page (UI lane) and gateway-auth acceptance-pack proof before SOFTWARE_CONTRACT_GREEN (§8).
 
 ### Provider journeys (PJ1–PJ18)
 
