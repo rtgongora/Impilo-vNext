@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.tshepo.identity.api.dto.IntrospectRequest;
 import zw.gov.mohcc.impilo.tshepo.identity.api.dto.IntrospectResponse;
 import zw.gov.mohcc.impilo.tshepo.identity.api.dto.IssueScopedTokenRequest;
+import zw.gov.mohcc.impilo.tshepo.identity.api.dto.IssueWorkContextTokenRequest;
 import zw.gov.mohcc.impilo.tshepo.identity.api.dto.ScopedTokenResponse;
 import zw.gov.mohcc.impilo.tshepo.identity.config.IdentityProperties;
 import zw.gov.mohcc.impilo.tshepo.identity.persistence.entity.EventOutboxEntity;
@@ -450,6 +451,83 @@ class TokenIssuanceServiceTest {
             assertEquals("ScopedToken", event.getAggregateType());
             assertEquals("TOKEN_REVOKED", event.getEventType());
             assertEquals(jti, event.getAggregateId());
+        }
+    }
+
+    // ── Work-context tokens (D-P3) ─────────────────────────────────────────
+
+    @Nested
+    @DisplayName("work-context issuance")
+    class WorkContext {
+
+        private IssueWorkContextTokenRequest workRequest(String previousJti) {
+            return new IssueWorkContextTokenRequest(
+                    tenantId(),
+                    "person-hid-1",
+                    "PROVPUBLICID0000000000001",
+                    UUID.fromString("11111111-1111-4111-8111-111111111111"),
+                    null,
+                    UUID.fromString("22222222-2222-4222-8222-222222222222"),
+                    "NURSE_GENERAL",
+                    "TREATMENT",
+                    "LOA2",
+                    previousJti,
+                    null);
+        }
+
+        @Test
+        @DisplayName("persists WORK_CONTEXT kind + context claims, 15-min default TTL")
+        void issuesWorkContextToken() {
+            stubKeysServiceSuccess();
+
+            ScopedTokenResponse response = service.issueWorkContextToken(workRequest(null));
+
+            ArgumentCaptor<ScopedTokenEntity> captor = ArgumentCaptor.forClass(ScopedTokenEntity.class);
+            verify(tokenRepo).save(captor.capture());
+            ScopedTokenEntity saved = captor.getValue();
+            assertEquals("WORK_CONTEXT", saved.getTokenKind());
+            assertEquals("work:context", saved.getScope());
+            assertEquals("PROVPUBLICID0000000000001", saved.getSubjectRef());
+            assertTrue(saved.getContextClaims().contains("11111111-1111-4111-8111-111111111111"));
+            assertTrue(saved.getContextClaims().contains("workspace_id"));
+            assertTrue(saved.getContextClaims().contains("NURSE_GENERAL"));
+            // Live-truth fields must NOT be baked into the context.
+            assertFalse(saved.getContextClaims().contains("licence"));
+            long ttl = saved.getExpiresAt().getEpochSecond() - Instant.now().getEpochSecond();
+            assertTrue(ttl > 800 && ttl <= 900, "expected ~900s TTL, got " + ttl);
+            assertNotNull(response.token());
+        }
+
+        @Test
+        @DisplayName("context switch revokes the previous jti before reissue")
+        void contextSwitchRevokesPreviousToken() {
+            stubKeysServiceSuccess();
+            ScopedTokenEntity previous = new ScopedTokenEntity();
+            previous.setId(UUID.randomUUID());
+            previous.setJti("prev-jti");
+            previous.setStatus("ACTIVE");
+            when(tokenRepo.findByTenantIdAndJti(tenantId(), "prev-jti")).thenReturn(Optional.of(previous));
+
+            service.issueWorkContextToken(workRequest("prev-jti"));
+
+            assertEquals("REVOKED", previous.getStatus());
+            assertNotNull(previous.getRevokedAt());
+            // previous saved as revoked + new token saved
+            verify(tokenRepo, times(2)).save(any(ScopedTokenEntity.class));
+        }
+
+        @Test
+        @DisplayName("an already-revoked previous jti is left untouched")
+        void alreadyRevokedPreviousJtiIsIgnored() {
+            stubKeysServiceSuccess();
+            ScopedTokenEntity previous = new ScopedTokenEntity();
+            previous.setJti("prev-jti");
+            previous.setStatus("REVOKED");
+            when(tokenRepo.findByTenantIdAndJti(tenantId(), "prev-jti")).thenReturn(Optional.of(previous));
+
+            service.issueWorkContextToken(workRequest("prev-jti"));
+
+            verify(tokenRepo, times(1)).save(any(ScopedTokenEntity.class));
         }
     }
 }

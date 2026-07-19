@@ -34,6 +34,18 @@ public class TokenController {
     }
 
     /**
+     * Issue a duty-scoped WORK_CONTEXT token for a provider work session (D-P3).
+     * The BFF proves the Vashandi assignment before calling; a context switch
+     * passes {@code previousJti} so the old token is revoked before reissue.
+     */
+    @PostMapping("/work-context")
+    public ResponseEntity<ApiResponse<ScopedTokenResponse>> issueWorkContextToken(
+            @Valid @RequestBody IssueWorkContextTokenRequest request) {
+        ScopedTokenResponse result = tokenService.issueWorkContextToken(request);
+        return ResponseEntity.ok(ApiResponse.ok(result, null));
+    }
+
+    /**
      * Introspect a scoped token: verify it is active, not expired, and not revoked.
      */
     @PostMapping("/introspect")

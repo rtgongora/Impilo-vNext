@@ -122,6 +122,102 @@ public class TokenIssuanceService {
                 request.targetService(), expiresAt);
     }
 
+    /** Default work-session token TTL (D-P3: 15-min silent reissue while context unchanged). */
+    static final int WORK_CONTEXT_DEFAULT_TTL_SECONDS = 900;
+
+    /**
+     * Issue a duty-scoped WORK_CONTEXT token (D-P3). The caller (BFF) has
+     * already proven the assignment against Vashandi; this method binds the
+     * proven facility/workspace context into a short-lived revocable token and
+     * — on a context switch — revokes the session's previous work token first,
+     * so two contexts are never live for one session.
+     */
+    @Transactional
+    public ScopedTokenResponse issueWorkContextToken(IssueWorkContextTokenRequest request) {
+        if (request.previousJti() != null && !request.previousJti().isBlank()) {
+            tokenRepo.findByTenantIdAndJti(request.tenantId(), request.previousJti())
+                    .filter(t -> "ACTIVE".equals(t.getStatus()))
+                    .ifPresent(t -> {
+                        t.setStatus("REVOKED");
+                        t.setRevokedAt(Instant.now());
+                        tokenRepo.save(t);
+                        log.info("Work-context switch: revoked previous token jti={}", t.getJti());
+                    });
+        }
+
+        int ttl = (request.ttlSeconds() != null && request.ttlSeconds() > 0)
+                ? request.ttlSeconds()
+                : WORK_CONTEXT_DEFAULT_TTL_SECONDS;
+
+        String jti = UUID.randomUUID().toString();
+        Instant now = Instant.now();
+        Instant expiresAt = now.plusSeconds(ttl);
+
+        // Stable-for-the-session context only; live licence/scope truth stays PDP-resolved.
+        Map<String, Object> context = new java.util.LinkedHashMap<>();
+        context.put("provider_id", request.providerPublicId());
+        context.put("facility_id", request.facilityId().toString());
+        if (request.departmentId() != null) {
+            context.put("department_id", request.departmentId().toString());
+        }
+        if (request.workspaceId() != null) {
+            context.put("workspace_id", request.workspaceId().toString());
+        }
+        if (request.roleTemplateId() != null && !request.roleTemplateId().isBlank()) {
+            context.put("role", request.roleTemplateId());
+        }
+        context.put("purpose_of_use", request.purposeOfUse() != null ? request.purposeOfUse() : "TREATMENT");
+        if (request.sessionAssurance() != null && !request.sessionAssurance().isBlank()) {
+            context.put("session_assurance", request.sessionAssurance());
+        }
+
+        JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
+                .jwtID(jti)
+                .issuer("tshepo-identity-service")
+                .claim("tenant_id", request.tenantId().toString())
+                .claim("actor_id", request.actorId())
+                .claim("token_kind", "WORK_CONTEXT")
+                .claim("scope", "work:context")
+                .claim("target_service", "tshepo-authz")
+                .issueTime(Date.from(now))
+                .expirationTime(Date.from(expiresAt));
+        context.forEach(claims::claim);
+
+        String signedToken = signViaKeysService(claims.build());
+
+        String contextJson;
+        try {
+            contextJson = objectMapper.writeValueAsString(context);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to serialise work-context claims", e);
+        }
+
+        ScopedTokenEntity entity = new ScopedTokenEntity();
+        entity.setTenantId(request.tenantId());
+        entity.setActorId(request.actorId());
+        entity.setTargetService("tshepo-authz");
+        entity.setScope("work:context");
+        entity.setSubjectRef(request.providerPublicId());
+        entity.setJti(jti);
+        entity.setExpiresAt(expiresAt);
+        entity.setStatus("ACTIVE");
+        entity.setTokenKind("WORK_CONTEXT");
+        entity.setContextClaims(contextJson);
+        tokenRepo.save(entity);
+
+        publishOutboxEvent("ScopedToken", jti, "WORK_CONTEXT_TOKEN_ISSUED",
+                Map.of("tenantId", request.tenantId(),
+                       "actorId", request.actorId(),
+                       "providerPublicId", request.providerPublicId(),
+                       "facilityId", request.facilityId().toString(),
+                       "jti", jti));
+
+        log.info("Issued work-context token: jti={}, actor={}, facility={}, workspace={}, ttl={}s",
+                jti, request.actorId(), request.facilityId(), request.workspaceId(), ttl);
+
+        return new ScopedTokenResponse(signedToken, jti, "work:context", "tshepo-authz", expiresAt);
+    }
+
     /**
      * Introspect a token: check validity by JTI, expiry, and revocation status.
      *
