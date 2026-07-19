@@ -25,14 +25,42 @@ public class AttendanceService {
     private final WorkforceAssignmentRepository assignmentRepository;
     private final VashandiOutboxWriter outboxWriter;
 
+    private final zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
+
     public AttendanceService(AttendanceEventRepository attendanceRepository,
                              ShiftRepository shiftRepository,
                              WorkforceAssignmentRepository assignmentRepository,
-                             VashandiOutboxWriter outboxWriter) {
+                             VashandiOutboxWriter outboxWriter,
+                             zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification) {
         this.attendanceRepository = attendanceRepository;
         this.shiftRepository = shiftRepository;
         this.assignmentRepository = assignmentRepository;
         this.outboxWriter = outboxWriter;
+        this.biometricVerification = biometricVerification;
+    }
+
+    /**
+     * Resolve the check-in mode, verifying a biometric through the shared seam when
+     * one is supplied. MATCH → "biometric"; NO_MATCH → null (caller denies); engine
+     * UNAVAILABLE → fall back to the requested mode (a biometric outage must not
+     * block a worker clocking in).
+     */
+    private String resolveCheckInMode(VashandiDtos.CheckInRequest request, String defaultMode) {
+        String requested = request.checkInMode() != null ? request.checkInMode() : defaultMode;
+        if (request.biometricProbeBase64() == null || request.biometricProbeBase64().isBlank()
+                || request.biometricSubjectRef() == null || request.biometricSubjectRef().isBlank()) {
+            return requested;
+        }
+        String modality = request.biometricModality() != null ? request.biometricModality() : "FINGERPRINT";
+        var decision = biometricVerification.verify(
+                request.biometricSubjectRef(), modality, request.biometricProbeBase64());
+        if (decision.isMatch()) {
+            return "biometric";
+        }
+        if ("UNAVAILABLE".equals(decision.result()) || "NO_REFERENCE".equals(decision.result())) {
+            return requested; // care-first: don't block clock-in on a biometric outage
+        }
+        return null; // NO_MATCH → deny
     }
 
     public List<AttendanceEventEntity> list(UUID tenantId, UUID workforceProfileId) {
@@ -56,13 +84,18 @@ public class AttendanceService {
             }
         }
 
+        String mode = resolveCheckInMode(request, "self_check_in");
+        if (mode == null) {
+            return new VashandiDtos.AttendanceActionResponse(null, "denied", "biometric verification failed");
+        }
+
         AttendanceEventEntity event = new AttendanceEventEntity();
         event.setTenantId(tenantId);
         event.setShiftId(request.shiftId());
         event.setWorkforceProfileId(request.workforceProfileId());
         event.setEventType("check_in");
         event.setEventTime(request.eventTime() != null ? request.eventTime() : OffsetDateTime.now());
-        event.setCheckInMode(request.checkInMode() != null ? request.checkInMode() : "self_check_in");
+        event.setCheckInMode(mode);
         event.setDeviceId(request.deviceId());
         event.setOffline(request.offline() != null && request.offline());
         AttendanceEventEntity saved = attendanceRepository.save(event);

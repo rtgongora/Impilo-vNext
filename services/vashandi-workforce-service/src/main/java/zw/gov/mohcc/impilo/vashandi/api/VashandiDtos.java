@@ -140,7 +140,14 @@ public final class VashandiDtos {
             OffsetDateTime eventTime,
             String checkInMode,
             String deviceId,
-            Boolean offline
+            Boolean offline,
+            // Optional biometric check-in: the worker's opaque biometric subject_ref
+            // + a probe template. When supplied and it MATCHes, the event is recorded
+            // as checkInMode="biometric"; a NO_MATCH is denied; an engine outage falls
+            // back to the supplied mode (workers aren't blocked by a biometric outage).
+            String biometricSubjectRef,
+            String biometricModality,
+            String biometricProbeBase64
     ) {
     }
 

@@ -30,12 +30,15 @@ class AttendanceServiceAdhocTest {
     WorkforceAssignmentRepository assignmentRepository;
     @Mock
     VashandiOutboxWriter outboxWriter;
+    @Mock
+    zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
 
     AttendanceService service;
 
     @BeforeEach
     void setUp() {
-        service = new AttendanceService(attendanceRepository, shiftRepository, assignmentRepository, outboxWriter);
+        service = new AttendanceService(attendanceRepository, shiftRepository, assignmentRepository, outboxWriter,
+                biometricVerification);
     }
 
     @Test
