@@ -94,16 +94,23 @@ public class LiabilityEstimateService {
 
         BigDecimal allowed = standardCharge; // Wave 2: contractual-allowed == charge; tariff carve-out is W3.
         BigDecimal coveredBase = allowed.subtract(copay).max(BigDecimal.ZERO);
-        BigDecimal payerEstimate = coveredBase.multiply(coveragePct)
-                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-        BigDecimal coinsurance = coveredBase.subtract(payerEstimate).max(BigDecimal.ZERO);
-        BigDecimal nonCovered = coveragePct.signum() == 0 ? allowed.subtract(copay).max(BigDecimal.ZERO) : BigDecimal.ZERO;
-        BigDecimal patient = copay.add(coinsurance).add(coveragePct.signum() == 0 ? nonCovered : BigDecimal.ZERO)
-                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal payerEstimate;
+        BigDecimal coinsurance;
+        BigDecimal nonCovered;
+        BigDecimal patient;
         if (coveragePct.signum() == 0) {
+            // Non-covered benefit: no payer contribution — the covered base is patient-borne.
             payerEstimate = BigDecimal.ZERO;
             coinsurance = BigDecimal.ZERO;
+            nonCovered = coveredBase;
+            patient = copay.add(nonCovered);
+        } else {
+            payerEstimate = coveredBase.multiply(coveragePct).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+            coinsurance = coveredBase.subtract(payerEstimate).max(BigDecimal.ZERO);
+            nonCovered = BigDecimal.ZERO;
+            patient = copay.add(coinsurance);
         }
+        patient = patient.setScale(2, RoundingMode.HALF_UP);
 
         LiabilityEstimateEntity e = new LiabilityEstimateEntity();
         e.setId(UUID.randomUUID());

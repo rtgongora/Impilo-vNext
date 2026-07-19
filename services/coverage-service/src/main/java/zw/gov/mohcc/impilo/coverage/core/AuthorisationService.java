@@ -133,7 +133,7 @@ public class AuthorisationService {
         }
         a.setEstimatedAmount(total);
         authRepository.save(a);
-        emit("submitted", a, correlationId); // draft-created uses the submitted family's aggregate; status stays DRAFT
+        emit("created", a, correlationId); // status stays DRAFT; distinct event type avoids outbox key collisions
         return a;
     }
 
