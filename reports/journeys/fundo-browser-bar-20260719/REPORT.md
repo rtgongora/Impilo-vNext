@@ -55,7 +55,7 @@ before the passes; the mocked rig could never have seen them):
 |---|---|---|
 | Studio create form | Sent no `code`; backend requires code+title → every browser create 400'd ("code and title are required" — visible only thanks to fix #5) | `5d7c2e0c4` auto-suggested Course code field |
 | Course builder | Add-lesson button dead behind an unselected module dropdown right after adding the first module | `7efecdf10` auto-select newest module |
-| Studio Publish page | Backend catalogue list defaults `status=PUBLISHED` → the publish surface could never show the drafts it exists to publish; no per-row action either | `5159edf7c` studio lists request ALL + one-click row Publish/Archive |
+| Studio Publish page | Backend catalogue list defaults `status=PUBLISHED` → the publish surface could never show the drafts it exists to publish; no per-row action either | `5159edf7c` one-click row Publish/Archive + `f0e1a1e68` studio lists request ALL |
 
 Journey-spec robustness fixes in the same commits: language assertion anchored to the form
 label (shell top bar also has a language control), structure assertion anchored to the
