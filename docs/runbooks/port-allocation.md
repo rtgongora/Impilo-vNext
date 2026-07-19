@@ -17,6 +17,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | 8080 | Keycloak |
 | 9000 / 9001 | MinIO |
 | 9092 | Kafka (client) |
+| 9200 | `matcher-engine` (biometric matching engine — core infra, behind the abis-service adapter) |
 | 9090 | Prometheus (host map in observability stack) — **not** TSHEPO gRPC |
 | 10000 / 9901 | Envoy |
 | 3000–3006 | UI apps (see `CLAUDE.md`; **3000** = One UI Shell / merged Experience) |

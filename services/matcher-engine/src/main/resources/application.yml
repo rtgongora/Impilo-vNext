@@ -1,0 +1,33 @@
+server:
+  port: 9200
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: matcher-engine
+
+# ---- Matching engine tuning ----
+matcher:
+  fingerprint:
+    # SourceAFIS score threshold; ~40 is the documented FMR<0.01% operating point.
+    match-threshold: ${MATCHER_FP_THRESHOLD:40}
+    default-dpi: ${MATCHER_FP_DPI:500}
+  face:
+    # ONNX face-embedding model path (wave A2). Absent → face fails closed.
+    model-path: ${MATCHER_FACE_MODEL_PATH:}
+    match-threshold: ${MATCHER_FACE_THRESHOLD:0.5}
+  iris:
+    model-path: ${MATCHER_IRIS_MODEL_PATH:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    tags:
+      application: matcher-engine

@@ -203,6 +203,22 @@ services:
       retries: 12
       start_period: 30s
 
+  # ── Biometric matching engine (core infra; SourceAFIS fingerprint real, ONNX face/iris) ──
+  matcher-engine:
+    build:
+      context: ../../services/matcher-engine
+      dockerfile: Dockerfile
+    environment:
+      MATCHER_FP_THRESHOLD: "40"
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9200/actuator/health > /dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
   # ── PACS adapter (governed imaging metadata) ─────────────────────
   pacs-adapter-service:
     build:

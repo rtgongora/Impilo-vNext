@@ -42,6 +42,9 @@
         <grpc.version>1.80.0</grpc.version>
         <grpc-spring-boot.version>3.1.0.RELEASE</grpc-spring-boot.version>
         <protobuf.version>3.25.5</protobuf.version>
+        <!-- Biometric matching engine (matcher-engine core-infra component) -->
+        <sourceafis.version>3.18.1</sourceafis.version>
+        <onnxruntime.version>1.17.0</onnxruntime.version>
     </properties>
 
     <modules>
@@ -209,6 +212,7 @@
         <module>vashandi-workforce-service</module>
         <!-- Clinical Knowledge & EDLIZ-aligned guidance platform -->
         <module>clinical-knowledge-platform-service</module>
+        <module>matcher-engine</module>
         <module>guidance-service</module>
         <module>ai-model-registry-service</module>
         <module>llm-orchestration-service</module>
@@ -221,6 +225,18 @@
     <dependencyManagement>
         <dependencies>
             <!-- Spring Boot BOM (imported from parent, listed here for clarity) -->
+
+            <!-- Biometric matching engine deps (matcher-engine) -->
+            <dependency>
+                <groupId>com.machinezoo.sourceafis</groupId>
+                <artifactId>sourceafis</artifactId>
+                <version>${sourceafis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.microsoft.onnxruntime</groupId>
+                <artifactId>onnxruntime</artifactId>
+                <version>${onnxruntime.version}</version>
+            </dependency>
 
             <!-- Kafka -->
             <dependency>

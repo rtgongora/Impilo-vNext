@@ -86,6 +86,11 @@ function specialEnv(serviceId) {
     // Chart-deployed Orthanc (templates/orthanc.yaml) is the preview DICOM backend.
     return { ORTHANC_BASE_URL: "http://orthanc:8042" };
   }
+  if (serviceId === "abis-service") {
+    // Chart-deployed matcher-engine (templates/matcher-engine.yaml) is the core-infra
+    // biometric matching appliance; abis-service is its governance adapter.
+    return { MATCHER_ENGINE_URL: "http://matcher-engine:9200" };
+  }
   if (serviceId === "rtc-gateway-service") {
     // Chart-deployed LiveKit (templates/livekit.yaml). Browser signaling is
     // wss via Traefik (deploy/tls/mohcc-gov/livekit-ingressroute.yaml routes

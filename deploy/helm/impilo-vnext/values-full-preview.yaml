@@ -182,6 +182,26 @@ livekitEgress:
       cpu: "4"
       memory: 2Gi
 
+matcherEngine:
+  # Biometric matching engine — core-infra component (SourceAFIS fingerprint real;
+  # ONNX face/iris fail-closed until a model is mounted). Stateless (no PVC).
+  # Built image from the estate registry, deployed in the infra lane like Orthanc.
+  enabled: true
+  replicaCount: 1
+  image:
+    # global.imageRegistry/impilo/matcher-engine:preview (our built engine image)
+    tag: "preview"
+    pullPolicy: IfNotPresent
+  env:
+    MATCHER_FP_THRESHOLD: "40"
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
 orthanc:
   enabled: true
   storageSize: 10Gi
