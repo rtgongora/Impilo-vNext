@@ -29,11 +29,17 @@ public class InternalSearchController {
 
     private final ClientRepository clientRepository;
     private final zw.gov.mohcc.impilo.vito.core.IdentityService identityService;
+    private final zw.gov.mohcc.impilo.vito.persistence.repository.EventOutboxRepository outboxRepository;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     public InternalSearchController(ClientRepository clientRepository,
-                                    zw.gov.mohcc.impilo.vito.core.IdentityService identityService) {
+                                    zw.gov.mohcc.impilo.vito.core.IdentityService identityService,
+                                    zw.gov.mohcc.impilo.vito.persistence.repository.EventOutboxRepository outboxRepository,
+                                    com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
         this.clientRepository = clientRepository;
         this.identityService = identityService;
+        this.outboxRepository = outboxRepository;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -81,24 +87,64 @@ public class InternalSearchController {
     }
 
     /**
-     * GET /v1/internal/clients/{healthId}/full — full record for authorized operators.
-     * Unmasked — audit-logged via trust headers.
+     * GET /v1/internal/clients/{healthId}/full — full <b>unmasked</b> record for authorized
+     * operators. This is a break-glass surface: it requires a purpose of use <b>and</b> an
+     * explicit access reason, and every successful open writes a dedicated
+     * {@code CLIENT_RECORD_BREAK_GLASS_ACCESS} audit event (actor + purpose + reason). The
+     * prior implementation claimed "audit-logged via trust headers" but captured no reason
+     * and wrote no explicit audit event.
      */
     @GetMapping("/{healthId}/full")
-    public ResponseEntity<?> getFull(@PathVariable UUID healthId) {
+    public ResponseEntity<?> getFull(@PathVariable UUID healthId,
+                                     @RequestParam(value = "reason", required = false) String reason) {
         TrustContext ctx = TrustContextHolder.require();
         if (ctx.mode() != AccessMode.INTERNAL) {
             return ResponseEntity.status(403).body(
                     ApiResponse.error("FORBIDDEN", "INTERNAL_ONLY", 403,
                             ctx.correlationId().toString()));
         }
+        if (reason == null || reason.trim().length() < 5) {
+            return ResponseEntity.badRequest().body(
+                    ApiResponse.error("MISSING_REASON", "An access reason (>=5 chars) is required to open an unmasked record",
+                            400, ctx.correlationId().toString()));
+        }
 
         return clientRepository.findByTenantIdAndHealthId(ctx.tenantId(), healthId)
-                .map(client -> ResponseEntity.ok(
-                        ApiResponse.ok(client, ctx.correlationId().toString())))
+                .map(client -> {
+                    writeBreakGlassAudit(ctx, healthId, reason.trim());
+                    return ResponseEntity.ok(ApiResponse.ok(client, ctx.correlationId().toString()));
+                })
                 .orElse(ResponseEntity.status(404).body(
                         ApiResponse.error("NOT_FOUND", "Client not found", 404,
                                 ctx.correlationId().toString())));
+    }
+
+    private void writeBreakGlassAudit(TrustContext ctx, UUID healthId, String reason) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("healthId", healthId.toString());
+            payload.put("actorId", ctx.actorId());
+            payload.put("purposeOfUse", ctx.purposeOfUse());
+            payload.put("reason", reason);
+            payload.put("correlationId", ctx.correlationId() == null ? null : ctx.correlationId().toString());
+
+            zw.gov.mohcc.impilo.vito.persistence.entity.EventOutboxEntity event =
+                    new zw.gov.mohcc.impilo.vito.persistence.entity.EventOutboxEntity();
+            event.setAggregateType("CLIENT_RECORD");
+            event.setAggregateId(healthId.toString());
+            event.setEventType("CLIENT_RECORD_BREAK_GLASS_ACCESS");
+            event.setPayload(objectMapper.writeValueAsString(payload));
+            event.setTenantId(ctx.tenantId() == null ? null : ctx.tenantId().toString());
+            event.setCorrelationId(ctx.correlationId() == null ? null : ctx.correlationId().toString());
+            outboxRepository.save(event);
+        } catch (Exception e) {
+            // An audit-write failure must not silently expose the record without a trail.
+            throw new IllegalStateException("Break-glass access could not be audited", e);
+        }
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
     }
 
     private Map<String, Object> maskClient(ClientEntity c) {

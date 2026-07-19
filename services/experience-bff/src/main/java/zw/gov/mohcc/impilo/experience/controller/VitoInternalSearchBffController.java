@@ -33,12 +33,16 @@ public class VitoInternalSearchBffController {
     @GetMapping("/{healthId}/full")
     public ResponseEntity<String> fullClient(
             @PathVariable String healthId,
+            @RequestParam(value = "reason", required = false) String reason,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return forward(
-                () -> vitoServiceClient.rawGet("/v1/internal/clients/" + healthId + "/full"),
-                requestId,
-                correlationId);
+        // Break-glass: opening an unmasked record requires an explicit access reason, forwarded
+        // to VITO which enforces it and writes a CLIENT_RECORD_BREAK_GLASS_ACCESS audit event.
+        String url = "/v1/internal/clients/" + healthId + "/full"
+                + (reason != null && !reason.isBlank()
+                        ? "?reason=" + org.springframework.web.util.UriUtils.encodeQueryParam(reason, java.nio.charset.StandardCharsets.UTF_8)
+                        : "");
+        return forward(() -> vitoServiceClient.rawGet(url), requestId, correlationId);
     }
 
     @FunctionalInterface
