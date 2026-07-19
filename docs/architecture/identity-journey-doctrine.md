@@ -130,7 +130,7 @@ Legend — **Built**: works today · **Reuse**: substrate exists, journey needs 
 | CJ11 | Book appointment + self-check-in | ✅ Done | BFF `CitizenAppointmentCheckinController` — signed appointment token (tshepo-identity scoped-token, scope-bound + replay-proof) → `/checkin-by-token` → `AppointmentCheckInService` (`4cbea9823`) `[H]` |
 | CJ12 | View personal health information | Built | patient-context token; VITO banner + BUTANO record |
 | CJ13 | Manage consent & privacy + access log | ✅ Done | BFF `CitizenConsentCenterController` composes consent directives (trust-context self-resolved) + record access-log (CPID resolved server-side) (`fb78749c3`) `[H]` (UI follow-up) |
-| CJ14 | Add a child / dependant | Gap | delegation engine ready (mvumo + PolicyEngine §4.5); **remaining: mint child HID/CRID/CPID/Impilo ID + time-bound guardian relationship as a journey** `[J]` |
+| CJ14 | Add a child / dependant | ✅ Done | BFF `CitizenDependantController` — registers the child (own HID/CRID/CPID via VITO golden path) + time-bound `GUARDIAN` delegation on mvumo (expires at 18 → young adult claims own account via CJ3); server-derived expiry, adult rejected (`e959d9104`) `[J]` (child Impilo ID minted later at card issuance) |
 | CJ15 | Authorise a caregiver / representative | Built | mvumo `DelegationController` (create/revoke/resolve) + PolicyEngine Step 4.5 `evaluateDelegation` (act-on-behalf, assurance-floor + scope + fail-closed) — verified live this program `[J]` |
 | CJ16 | Update demographic details (low/high-risk) | Reuse | VITO update + steward for high-risk; SHR unchanged `[H]` |
 | CJ17 | Report duplicate / incorrect identity | Reuse | dedup/merge steward workflow (audited) `[H]` |
@@ -138,7 +138,7 @@ Legend — **Built**: works today · **Reuse**: substrate exists, journey needs 
 | CJ19 | Emergency unidentified client | Built | `V11IdentitiesController` provisional → merge-reconcile `[K]` |
 | CJ20 | Offline registration & reconciliation | Built | tshepo-offline O-CPID → relay `subject.reconciled` `[K]` |
 
-**Client-journey roll-up (2026-07-19 sweep):** 12/20 satisfied at software-contract tier — **7 Built** (CJ1, CJ6, CJ7, CJ12, CJ15, CJ19, CJ20) + **5 ✅ Done this program** (CJ3, CJ4, CJ8, CJ11, CJ13). **7 Reuse** need wiring: CJ2 (private-match landed; registration UX), CJ5 (lost-phone), CJ9/CJ10 (biometric — gated on `X1` ABIS), CJ16 (demographic risk-tiers), CJ17 (dedup/merge steward), CJ18 (foreign national). **1 Gap:** CJ14 (child/dependant identity-mint journey — delegation engine ready). The ✅ Done + several Reuse still need their citizen-facing UI page (UI lane) and gateway-auth acceptance-pack proof before SOFTWARE_CONTRACT_GREEN (§8).
+**Client-journey roll-up (2026-07-19 sweep):** 13/20 satisfied at software-contract tier — **7 Built** (CJ1, CJ6, CJ7, CJ12, CJ15, CJ19, CJ20) + **6 ✅ Done this program** (CJ3, CJ4, CJ8, CJ11, CJ13, CJ14). **No open Gaps.** **7 Reuse** need wiring: CJ2 (private-match landed; registration UX), CJ5 (lost-phone), CJ9/CJ10 (biometric — gated on `X1` ABIS), CJ16 (demographic risk-tiers), CJ17 (dedup/merge steward), CJ18 (foreign national). The ✅ Done + several Reuse still need their citizen-facing UI page (UI lane) and gateway-auth acceptance-pack proof before SOFTWARE_CONTRACT_GREEN (§8).
 
 ### Provider journeys (PJ1–PJ18)
 
