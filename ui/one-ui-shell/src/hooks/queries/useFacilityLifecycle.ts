@@ -154,6 +154,80 @@ export function useRecomputeFacilityTrust(facilityUuid: string) {
   });
 }
 
+// ── Completeness dimensions + data-gap tasks (V036 / HPA enrichment) ─────────
+
+export interface FacilityCompletenessDim {
+  dimension?: string;
+  status?: string;
+  completeness_pct?: number | null;
+}
+
+export interface FacilityDataGapTask {
+  id?: number;
+  task_type?: string;
+  dimension?: string | null;
+  required_information?: string;
+  why_required?: string | null;
+  responsible_actor?: string;
+  accepted_evidence?: string | null;
+  priority?: string;
+  status?: string;
+}
+
+export function useFacilityCompletenessDimensions(facilityUuid: string) {
+  return useQuery<FacilityCompletenessDim[]>({
+    queryKey: ["facility-lifecycle", "completeness", facilityUuid],
+    queryFn: async () =>
+      (
+        await apiClient.get<Envelope<{ dimensions: FacilityCompletenessDim[] }>>(
+          `${BASE}/${encodeURIComponent(facilityUuid)}/completeness`,
+        )
+      ).data.dimensions ?? [],
+    enabled: !!facilityUuid,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useFacilityDataGaps(facilityUuid: string) {
+  return useQuery<FacilityDataGapTask[]>({
+    queryKey: ["facility-lifecycle", "data-gaps", facilityUuid],
+    queryFn: async () =>
+      (
+        await apiClient.get<Envelope<{ tasks: FacilityDataGapTask[] }>>(
+          `${BASE}/${encodeURIComponent(facilityUuid)}/data-gaps`,
+        )
+      ).data.tasks ?? [],
+    enabled: !!facilityUuid,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export interface ResolveDataGapInput {
+  facilityUuid: string;
+  taskId: number;
+  status: string;
+  note?: string;
+}
+
+export function useResolveDataGap() {
+  const qc = useQueryClient();
+  return useMutation<{ id?: string; status?: string }, FacilityLifecycleApiError, ResolveDataGapInput>({
+    mutationFn: async ({ facilityUuid, taskId, status, note }) =>
+      (
+        await apiClient.post<Envelope<{ id?: string; status?: string }>>(
+          `${BASE}/${encodeURIComponent(facilityUuid)}/data-gaps/${taskId}/resolve`,
+          { status, note },
+        )
+      ).data,
+    onSuccess: async (_r, input) => {
+      await qc.invalidateQueries({ queryKey: ["facility-lifecycle", "data-gaps", input.facilityUuid] });
+      await qc.invalidateQueries({ queryKey: ["facility-lifecycle", "completeness", input.facilityUuid] });
+    },
+  });
+}
+
 // ── Governance ───────────────────────────────────────────────────────────────
 
 export type FacilityGovernanceAction = "high-risk-update" | "transfer" | "duplicate-report";

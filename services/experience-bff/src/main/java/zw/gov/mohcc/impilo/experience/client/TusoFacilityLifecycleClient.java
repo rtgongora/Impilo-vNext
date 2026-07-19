@@ -118,6 +118,27 @@ public class TusoFacilityLifecycleClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    // ── Completeness + data-gap tasks (V036 / HPA enrichment) ───────────────
+
+    /** Per-dimension completeness for a facility. */
+    public JsonNode completeness(String facilityUuid) {
+        String url = baseUrl + "/v1/internal/facilities/" + enc(facilityUuid) + "/facility-data-gaps/completeness";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** Open + resolved data-gap / verification tasks for a facility. */
+    public JsonNode dataGaps(String facilityUuid) {
+        String url = baseUrl + "/v1/internal/facilities/" + enc(facilityUuid) + "/facility-data-gaps";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** Move a data-gap task forward with an audit note. */
+    public JsonNode resolveDataGap(String facilityUuid, String taskId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/" + enc(facilityUuid)
+                + "/facility-data-gaps/" + enc(taskId) + "/resolve";
+        return extractData(restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class));
+    }
+
     private static String enc(String v) {
         return URLEncoder.encode(v == null ? "" : v, StandardCharsets.UTF_8);
     }

@@ -20,11 +20,14 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   facilityLifecycleErrorMessage,
+  useFacilityCompletenessDimensions,
+  useFacilityDataGaps,
   useFacilityTrustDimensions,
   useFacilityVerificationCases,
   useOpenFacilityGovernanceCase,
   useOpenFacilityVerification,
   useRecomputeFacilityTrust,
+  useResolveDataGap,
   type FacilityGovernanceAction,
 } from "@/hooks/queries/useFacilityLifecycle";
 
@@ -53,6 +56,9 @@ export default function FacilityTrustPage() {
   const facilityUuid = params.id as string;
 
   const trust = useFacilityTrustDimensions(facilityUuid);
+  const completeness = useFacilityCompletenessDimensions(facilityUuid);
+  const dataGaps = useFacilityDataGaps(facilityUuid);
+  const resolveGap = useResolveDataGap();
   const recompute = useRecomputeFacilityTrust(facilityUuid);
   const cases = useFacilityVerificationCases(facilityUuid);
   const openVerification = useOpenFacilityVerification();
@@ -160,6 +166,93 @@ export default function FacilityTrustPage() {
                 </div>
               ))}
             </div>
+          </section>
+
+          {/* Completeness & data gaps (V036 / HPA enrichment) */}
+          <section className="space-y-3" data-testid="facility-completeness">
+            <h2 className="text-sm font-semibold text-foreground">Completeness & data gaps</h2>
+            {completeness.data && completeness.data.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {completeness.data.map((d) => (
+                  <div
+                    key={d.dimension}
+                    className="flex items-center justify-between rounded-lg border border-border bg-card p-2.5"
+                    data-testid="completeness-dimension-row"
+                  >
+                    <span className="text-xs font-medium text-foreground">
+                      {(d.dimension ?? "").replace(/_/g, " ")}
+                    </span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        d.status === "COMPLETE"
+                          ? "bg-success-soft text-success"
+                          : d.status === "PARTIAL"
+                            ? "bg-muted text-muted-foreground"
+                            : "bg-danger-soft text-red-800"
+                      }`}
+                    >
+                      {d.status ?? "MISSING"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {dataGaps.isLoading && <p className="text-sm text-muted-foreground">Loading data gaps…</p>}
+            {!dataGaps.isLoading && (dataGaps.data ?? []).length === 0 && (
+              <p className="text-sm text-muted-foreground">No outstanding data gaps for this facility.</p>
+            )}
+            <ul className="space-y-2">
+              {(dataGaps.data ?? []).map((t) => {
+                const done = t.status === "RESOLVED" || t.status === "DISMISSED";
+                return (
+                  <li
+                    key={t.id}
+                    className="rounded-lg border border-border bg-card p-3 text-sm"
+                    data-testid="data-gap-row"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground">{t.required_information}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {[t.dimension, t.responsible_actor, t.priority].filter(Boolean).join(" · ")}
+                          {t.accepted_evidence ? ` · evidence: ${t.accepted_evidence}` : ""}
+                        </p>
+                      </div>
+                      {done ? (
+                        <span className="shrink-0 rounded-full bg-success-soft px-2 py-0.5 text-[10px] font-medium uppercase text-success">
+                          {t.status}
+                        </span>
+                      ) : (
+                        <div className="flex shrink-0 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              t.id != null &&
+                              resolveGap.mutate({ facilityUuid, taskId: t.id, status: "RESOLVED" })
+                            }
+                            disabled={resolveGap.isPending}
+                            className="rounded-lg bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50"
+                          >
+                            Mark resolved
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              t.id != null &&
+                              resolveGap.mutate({ facilityUuid, taskId: t.id, status: "IN_PROGRESS" })
+                            }
+                            disabled={resolveGap.isPending}
+                            className="rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
+                          >
+                            In progress
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </section>
 
           {/* Verification */}

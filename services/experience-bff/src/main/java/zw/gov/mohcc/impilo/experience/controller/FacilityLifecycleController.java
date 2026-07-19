@@ -236,6 +236,56 @@ public class FacilityLifecycleController {
         }
     }
 
+    // ── Completeness + data-gap tasks (V036 / HPA enrichment) ───────────────
+
+    /** Per-dimension completeness for a facility (identity / regulatory / location / …). */
+    @GetMapping("/{facilityUuid}/completeness")
+    public ResponseEntity<Map<String, Object>> completeness(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String facilityUuid) {
+        try {
+            JsonNode result = tusoClient.completeness(facilityUuid);
+            return ok(Map.of("dimensions", casesArray(result)), requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return propagate(e, requestId, correlationId);
+        }
+    }
+
+    /** Actionable data-gap / verification tasks for a facility. */
+    @GetMapping("/{facilityUuid}/data-gaps")
+    public ResponseEntity<Map<String, Object>> dataGaps(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String facilityUuid) {
+        try {
+            JsonNode result = tusoClient.dataGaps(facilityUuid);
+            return ok(Map.of("tasks", casesArray(result)), requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return propagate(e, requestId, correlationId);
+        }
+    }
+
+    /** Move a data-gap task forward (IN_PROGRESS / RESOLVED / DISMISSED) with an audit note. */
+    @PostMapping("/{facilityUuid}/data-gaps/{taskId}/resolve")
+    public ResponseEntity<Map<String, Object>> resolveDataGap(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @PathVariable String facilityUuid,
+            @PathVariable String taskId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            JsonNode result = tusoClient.resolveDataGap(facilityUuid, taskId,
+                    body != null ? body : new LinkedHashMap<>());
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("id", text(result, "id"));
+            data.put("status", text(result, "status"));
+            return ok(data, requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return propagate(e, requestId, correlationId);
+        }
+    }
+
     // ── Governance ─────────────────────────────────────────────────────────
 
     /**
