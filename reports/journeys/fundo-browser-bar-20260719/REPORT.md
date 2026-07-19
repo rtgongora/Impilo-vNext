@@ -77,3 +77,68 @@ browser; a citizen learner can find it, enrol, learn and resume — live, twice,
 data landing in the sovereign store. What remains honest-partial is unchanged from the
 Fundo programme register (notification provider wiring, offline, Tshepo rego authoring
 queued behind the CZO lock).
+
+---
+
+## Extended surface coverage (2026-07-19, second pass)
+
+Same bar as the core loop: a real Chromium driving the real TLS ingress, real Keycloak
+logins, `expectSaved` requiring observed 2xx mutations, then a DB row check in the
+sovereign store. New specs live in `ui/one-ui-shell/e2e/journeys/`. Deployed after this
+pass: `one-ui-shell@sha256:fb2339f0` (tag `fundo-w6-reports-daf0387dd`) — carries the two
+UI defect fixes below. learning-service / experience-bff digests unchanged from the core
+pass (no backend change was needed).
+
+| Surface | Verdict | Evidence |
+|---|---|---|
+| **1. Assessment-taking → scoring → certificate** | **PROVEN LIVE** | `fundo-assessment-certificate.journey.spec.ts` — 2 tests green. Learner enrols in the scored EHR course, takes its 2-question quiz → **auto-graded 100 / passed / AUTO_GRADED** (real POST `…/assessments/{id}/attempts`); completes all 3 required lessons → enrolment **COMPLETED** → certificate **ISSUED** and viewable. DB: `lrn_assessment_attempt` (score 100, passed t), `lrn_certificate` (ISSUED); outbox `assessment.attempt.submitted.v1` + `certificate.issued.v1` + `course.completed.v1`. |
+| **2. Media & library** | **PROVEN LIVE** (library resource); media-asset embed not separately proven | `fundo-library.journey.spec.ts` — 2 tests green. trainer registers a governed resource via Library Uploads (real POST `…/library/resources`), learner browses `/learning/library` and opens the detail — cross-user, resume-after-logout. DB: `lrn_library_resource` row. |
+| **3. Reports / cohorts** | **PROVEN LIVE** | `fundo-reports.journey.spec.ts` — 2 tests green. Manager (`LEARNING_AUTHOR`) sees real numbers on `/learning/reports` **and** Studio Analytics: EHR at **100%** completion, `certificatesIssued`/`completed` non-zero, `publishedCourses=13` — each observed via a live GET 2xx **and** cross-checked against the rendered DOM (a page of zeros fails these steps). |
+| **4. Live sessions / classroom** | **PARTIAL** — check-in PROVEN LIVE; live media classroom is a GAP | `fundo-session-checkin.journey.spec.ts` — green. Learner finds a facilitator's scheduled session, opens check-in, enters the code, records attendance via real POST `…/sessions/{id}/checkin`. DB: `lrn_session_attendance` (PRESENT/CODE). Classroom: see GAP notes. |
+
+### Defects found and fixed on the way
+
+| Layer | Defect | Fix |
+|---|---|---|
+| Studio Analytics (`/learning/studio/analytics`) | KPI tiles read `payload.courses`/`enrolments`/`certificates`, but `/reports/overview` returns `publishedCourses`/`totalEnrolments`/`completed` and no cert count → **3 of 4 headline KPIs rendered a dead `0` regardless of real activity** — the exact "looks like mocks" symptom. | `daf0387dd` — map to the real keys; source Certificates from the cohort-completions `totals.certificatesIssued` block already fetched on the page. Proven live post-deploy. |
+| Library resource detail (`/learning/library/[resourceId]`) | Read a non-existent `status` field → always rendered "Status: unknown". | `fa8c4221f` — read `reviewStatus`/`resourceType`. |
+
+### Honest gaps (documented, not smoothed)
+
+- **Seed assessments carry no questions.** Only the seeded EHR fixture quiz
+  (`dddddddd-0002-…`) has objective questions + correct answers. The 9 courses created by
+  `scripts/seed/21-seed-fundo-learning.sh` each got a PUBLISHED assessment shell with
+  **zero questions** — un-takeable (a zero-question submit scores `null`/pending, no pass,
+  no cert path). The assessment journey is proven against the EHR fixture; broadening the
+  seed to author real questions per course is follow-up work.
+- **Certificates are metadata-only.** `FundoCertificateService` issues metadata + a
+  SHA-256 verification digest; there is **no PDF / signed credential / download** (the
+  certificates page says so). "Viewable" is proven; "downloadable" is out of scope by
+  design.
+- **Library upload is metadata + reference-URL**, not binary streaming into
+  document-service MinIO (that remains the QUEUED partial from the Fundo programme
+  register). Minor: `uploaded_by` persisted as `system` (actor id not propagated from the
+  principal into `FundoStudioController.actorId()` for this path).
+- **Media-asset embed / watch path not separately browser-proven.** `FundoMediaController`
+  (watch-progress, chapters, bookmarks, attach) operates on pre-existing `lrn_media_asset`
+  rows; the estate has none and there is no author upload that creates one, so the
+  in-lesson video-consumption thread was not driven to a green.
+- **No in-shell create-session authoring surface.** Scheduled sessions and check-in tokens
+  are created via the backend API only (Studio Delivery authors facilitators/venues, not
+  sessions); the session + token for journey 4 were provisioned out-of-band through the
+  real ingress and injected via `FUNDO_SESSION_ID/TITLE/CHECKIN_CODE`.
+- **Live media classroom (`ClassroomShell` over Impilo Live) is reachable but not
+  browser-proven.** A `LIVE` session **does** schedule an Impilo Live event (event +
+  `/live/event/{id}` join path created and queryable — Impilo Live is wired), and the
+  classroom UI is reachable, but the real-time media room (join-room/token/chat/polls +
+  WebRTC, inherently non-functional in headless Playwright) was **not** driven end-to-end
+  this pass. Recorded as partial, not claimed green.
+
+### Net
+
+Of the four extended surfaces: **three clear the live bar outright** (assessment→scoring→
+certificate, library author→consumer, reports/cohorts incl. Studio Analytics), and the
+**fourth is proven for attendance check-in with the live-media classroom honestly flagged
+as a reachable-but-unproven GAP.** Two more "dead numbers / dead field" UI defects were
+caught and fixed live. The mocked chromium-project specs and pod-to-pod scripts still do
+not count at this bar; the four new `*.journey.spec.ts` files do.
