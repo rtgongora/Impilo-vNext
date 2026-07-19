@@ -37,13 +37,16 @@ public class CardService {
     private final ObjectMapper objectMapper;
     private final BCryptPasswordEncoder passwordEncoder;
     private final SecureRandom secureRandom;
+    private final zw.gov.mohcc.impilo.wallet.persistence.repository.VitoCardFreezeRepository vitoCardFreezeRepository;
 
     public CardService(CardRepository cardRepository,
                        EventOutboxRepository outboxRepository,
-                       ObjectMapper objectMapper) {
+                       ObjectMapper objectMapper,
+                       zw.gov.mohcc.impilo.wallet.persistence.repository.VitoCardFreezeRepository vitoCardFreezeRepository) {
         this.cardRepository = cardRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.vitoCardFreezeRepository = vitoCardFreezeRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
         this.secureRandom = new SecureRandom();
     }
@@ -183,7 +186,22 @@ public class CardService {
     public CardEntity linkVitoCard(UUID cardId, String vitoCardNumber, UUID tenantId) {
         CardEntity card = findCardOrThrow(cardId);
         card.setVitoCardNumber(vitoCardNumber);
-        return cardRepository.save(card);
+        final CardEntity linked = cardRepository.save(card);
+
+        // B4: backfill reconciliation — if the VITO card was revoked/suspended BEFORE
+        // this money card linked, freezeForVitoCard was a no-op at revoke time and left
+        // a tombstone. Consume it now so the money facet can never be spent on a card
+        // whose identity facet is already dead.
+        vitoCardFreezeRepository.findById(vitoCardNumber).ifPresent(tombstone -> {
+            if (!"BLOCKED".equals(linked.getStatus())) {
+                blockCard(linked.getCardId(), tombstone.getReason() != null
+                        ? tombstone.getReason() : "VITO SMART card revoked before link", linked.getTenantId());
+                log.info("Froze newly-linked money card {} from pre-existing VITO revoke tombstone {}",
+                        linked.getCardId(), vitoCardNumber);
+            }
+            vitoCardFreezeRepository.deleteById(vitoCardNumber);
+        });
+        return linked;
     }
 
     /** Cache the linked VITO card's device/SE public key (from card events) for offline-txn verification. */
@@ -210,13 +228,32 @@ public class CardService {
         if (vitoCardNumber == null || vitoCardNumber.isBlank()) {
             return;
         }
-        cardRepository.findByVitoCardNumber(vitoCardNumber).ifPresent(card -> {
-            if ("BLOCKED".equals(card.getStatus())) {
-                return; // idempotent — already frozen
-            }
-            blockCard(card.getCardId(), reason, card.getTenantId());
-            log.info("Froze money card {} for revoked/suspended VITO card {}", card.getCardId(), vitoCardNumber);
-        });
+        var linked = cardRepository.findByVitoCardNumber(vitoCardNumber);
+        if (linked.isEmpty()) {
+            // B4: no money card linked yet — record a freeze tombstone so a link that
+            // happens AFTER this revoke still freezes the money facet (link-after-event
+            // race). Previously the revoke was silently lost here.
+            recordFreezeTombstone(vitoCardNumber, "REVOKED_OR_SUSPENDED", reason);
+            return;
+        }
+        CardEntity card = linked.get();
+        if ("BLOCKED".equals(card.getStatus())) {
+            return; // idempotent — already frozen
+        }
+        blockCard(card.getCardId(), reason, card.getTenantId());
+        log.info("Froze money card {} for revoked/suspended VITO card {}", card.getCardId(), vitoCardNumber);
+    }
+
+    private void recordFreezeTombstone(String vitoCardNumber, String eventType, String reason) {
+        if (vitoCardFreezeRepository.existsById(vitoCardNumber)) {
+            return; // idempotent
+        }
+        var tombstone = new zw.gov.mohcc.impilo.wallet.persistence.entity.VitoCardFreezeEntity();
+        tombstone.setVitoCardNumber(vitoCardNumber);
+        tombstone.setEventType(eventType);
+        tombstone.setReason(reason);
+        vitoCardFreezeRepository.save(tombstone);
+        log.info("Recorded VITO card freeze tombstone for {} (no money card linked yet)", vitoCardNumber);
     }
 
     // ── Unified SMART card: PHR-carry function opt-in (Phase 4) ──────────
