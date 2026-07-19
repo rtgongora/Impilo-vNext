@@ -295,6 +295,34 @@ public class PaymentIntentController {
         return ResponseEntity.ok(ApiResponse.ok(intent, correlationId));
     }
 
+    /**
+     * Record a SMART-card-funded payment against this intent (B5 card-settlement recognition).
+     * The card's offline purse already moved the money in the mushe ledger, so — like an external
+     * rail (Paynow/webhook) — this only RECORDS the payment against the intent; it drives the intent
+     * to PAID and emits {@code mushex.payment.status.changed}, which Costa / Msika-flow / mushe-wallet
+     * already consume. No wallet debit happens here (avoids double-debiting the card holder).
+     * Idempotent: an already-PAID intent returns unchanged.
+     */
+    @PostMapping("/{id}/record-card-payment")
+    public ResponseEntity<ApiResponse<PaymentIntentEntity>> recordCardPayment(
+            @PathVariable String id,
+            @Valid @RequestBody RecordCardPaymentRequest request) {
+        var ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+
+        PaymentIntentEntity current = paymentIntentService.getIntent(id);
+        if (current.getStatus() == IntentStatus.PAID) {
+            return ResponseEntity.ok(ApiResponse.ok(current, correlationId)); // idempotent
+        }
+        PaymentIntentEntity intent = paymentIntentService.recordPayment(id, request.amount());
+        return ResponseEntity.ok(ApiResponse.ok(intent, correlationId));
+    }
+
+    /** Body for a card-funded payment record: the amount the card purse settled. */
+    public record RecordCardPaymentRequest(
+            @jakarta.validation.constraints.NotNull java.math.BigDecimal amount,
+            String cardReference) {}
+
     @PostMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<PaymentIntentEntity>> cancelIntent(@PathVariable String id) {
         var ctx = TrustContextHolder.require();
