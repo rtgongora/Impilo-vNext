@@ -45,7 +45,8 @@ class CardLifecycleKeyTest {
         VitoProperties props = new VitoProperties();
         props.getCard().setExpiryYears(5);
         service = new CardLifecycleService(
-                cardRepository, transitionRepository, didGenerator, props, outboxRepository);
+                cardRepository, transitionRepository, didGenerator, props, outboxRepository,
+                new zw.gov.mohcc.impilo.shared.crypto.HmacService("card-lifecycle-key-test-pepper-32b-min"));
         lenient().when(didGenerator.generate(any())).thenReturn("did:impilo:test");
         lenient().when(cardRepository.save(any())).thenAnswer(i -> {
             SmartCardEntity c = i.getArgument(0);

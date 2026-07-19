@@ -9,6 +9,7 @@ import zw.gov.mohcc.impilo.vito.core.CardStatus;
 import zw.gov.mohcc.impilo.vito.core.RevocationReason;
 import zw.gov.mohcc.impilo.vito.core.did.SovereignIdGenerator;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.shared.crypto.HmacService;
 import zw.gov.mohcc.impilo.vito.persistence.entity.CardStateTransitionEntity;
 import zw.gov.mohcc.impilo.vito.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.vito.persistence.entity.SmartCardEntity;
@@ -44,17 +45,20 @@ public class CardLifecycleService {
     private final SovereignIdGenerator didGenerator;
     private final VitoProperties properties;
     private final EventOutboxRepository outboxRepository;
+    private final HmacService hmacService;
 
     public CardLifecycleService(SmartCardRepository cardRepository,
                                  CardStateTransitionRepository transitionRepository,
                                  SovereignIdGenerator didGenerator,
                                  VitoProperties properties,
-                                 EventOutboxRepository outboxRepository) {
+                                 EventOutboxRepository outboxRepository,
+                                 HmacService hmacService) {
         this.cardRepository = cardRepository;
         this.transitionRepository = transitionRepository;
         this.didGenerator = didGenerator;
         this.properties = properties;
         this.outboxRepository = outboxRepository;
+        this.hmacService = hmacService;
     }
 
     /**
@@ -103,6 +107,10 @@ public class CardLifecycleService {
         card.setStatus(CardStatus.REQUESTED);
         card.setCardForm("VIRTUAL".equalsIgnoreCase(cardForm) ? "VIRTUAL" : "PHYSICAL");
         card.setRequestedBy(resolvedRequestedBy);
+        // B0: index the QR pointer (HMAC of health_id) so a scanned card/QR
+        // dereferences to this card in O(1). Same derivation as the portal my-QR
+        // and share-slip pointers, so those presentations resolve here too.
+        card.setCardPointer(hmacService.computeLookupHash(healthId.toString()));
         card.setExpiresAt(OffsetDateTime.now().plusYears(properties.getCard().getExpiryYears()));
 
         card = cardRepository.save(card);

@@ -26,5 +26,9 @@ public interface SmartCardRepository extends JpaRepository<SmartCardEntity, Long
     Optional<SmartCardEntity> findByTenantIdAndCardNumber(
             UUID tenantId, String cardNumber);
 
+    /** B0: dereference a scanned-QR pointer (HMAC of health_id) to its card. */
+    List<SmartCardEntity> findByTenantIdAndCardPointerOrderByCreatedAtDesc(
+            UUID tenantId, String cardPointer);
+
     Optional<SmartCardEntity> findByDidUri(String didUri);
 }

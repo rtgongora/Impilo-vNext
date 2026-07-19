@@ -43,6 +43,14 @@ public class SmartCardEntity {
     @Column(name = "previous_card_id")
     private Long previousCardId;
 
+    /**
+     * B0: HMAC(health_id) — the opaque pointer a scanned QR carries. Stored and
+     * indexed so a presented pointer dereferences to this card in O(1), without
+     * a full-table HMAC scan. Never the raw Health ID.
+     */
+    @Column(name = "card_pointer")
+    private String cardPointer;
+
     @Column(name = "requested_by", nullable = false)
     private String requestedBy;
 
@@ -109,6 +117,8 @@ public class SmartCardEntity {
     public void setStatus(CardStatus status) { this.status = status; }
     public Long getPreviousCardId() { return previousCardId; }
     public void setPreviousCardId(Long previousCardId) { this.previousCardId = previousCardId; }
+    public String getCardPointer() { return cardPointer; }
+    public void setCardPointer(String cardPointer) { this.cardPointer = cardPointer; }
     public String getRequestedBy() { return requestedBy; }
     public void setRequestedBy(String requestedBy) { this.requestedBy = requestedBy; }
     public OffsetDateTime getRequestedAt() { return requestedAt; }

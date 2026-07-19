@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.shared.response.PagedResponse;
 import zw.gov.mohcc.impilo.vito.core.CardStatus;
 import zw.gov.mohcc.impilo.vito.core.RevocationReason;
 import zw.gov.mohcc.impilo.vito.core.card.CardLifecycleService;
+import zw.gov.mohcc.impilo.vito.core.card.CardResolveService;
 import zw.gov.mohcc.impilo.vito.persistence.entity.SmartCardEntity;
 
 import java.util.List;
@@ -27,9 +28,33 @@ import java.util.Objects;
 public class CardController {
 
     private final CardLifecycleService cardService;
+    private final CardResolveService cardResolveService;
 
-    public CardController(CardLifecycleService cardService) {
+    public CardController(CardLifecycleService cardService,
+                          CardResolveService cardResolveService) {
         this.cardService = cardService;
+        this.cardResolveService = cardResolveService;
+    }
+
+    /**
+     * B0: the ONE card resolve seam. Given any card presentation — a card number,
+     * a scanned vito QR (JWT), or a printed-card assertion — return the resolved
+     * {@code {healthId, cpid, cardStatus}} so every consumer (identity / pay /
+     * check-in / PHR) routes a presentation through a single governed path.
+     * Never fabricates identity: an unverifiable or unknown presentation → 404.
+     */
+    @PostMapping("/resolve")
+    public ResponseEntity<ApiResponse<CardResolveService.CardResolution>> resolve(
+            @RequestBody CardResolveRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        requireInternal(ctx);
+        return cardResolveService.resolve(
+                        ctx.tenantId(), request.cardNumber(), request.qrToken(), request.cardAssertion())
+                .map(res -> ResponseEntity.ok(ApiResponse.ok(res, ctx.correlationId().toString())))
+                .orElseGet(() -> ResponseEntity.status(404).body(ApiResponse.error(
+                        "CARD_NOT_RESOLVED",
+                        "No card resolves for the presentation (unknown, unverifiable, or expired)",
+                        404, ctx.correlationId().toString())));
     }
 
     @PostMapping("/request")
@@ -155,4 +180,7 @@ public class CardController {
     /** Body for the print step; carries the secure-element public key provisioned at print (G032). */
     record CardPrintRequest(String publicKey) {}
     record RevokeRequest(RevocationReason reason) {}
+
+    /** Card presentation to resolve — exactly one of the three is expected. */
+    record CardResolveRequest(String cardNumber, String qrToken, String cardAssertion) {}
 }
