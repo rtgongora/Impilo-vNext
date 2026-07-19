@@ -33,15 +33,21 @@ public class IdentityService {
     private final SovereignIdGenerator didGenerator;
     private final ImpiloIdAliasService aliasService;
     private final EventOutboxRepository outboxRepository;
+    private final zw.gov.mohcc.impilo.vito.core.matching.MatchingEngine matchingEngine;
+    private final zw.gov.mohcc.impilo.vito.config.VitoProperties vitoProperties;
 
     public IdentityService(ClientRepository clientRepository,
                            SovereignIdGenerator didGenerator,
                            ImpiloIdAliasService aliasService,
-                           EventOutboxRepository outboxRepository) {
+                           EventOutboxRepository outboxRepository,
+                           zw.gov.mohcc.impilo.vito.core.matching.MatchingEngine matchingEngine,
+                           zw.gov.mohcc.impilo.vito.config.VitoProperties vitoProperties) {
         this.clientRepository = clientRepository;
         this.didGenerator = didGenerator;
         this.aliasService = aliasService;
         this.outboxRepository = outboxRepository;
+        this.matchingEngine = matchingEngine;
+        this.vitoProperties = vitoProperties;
     }
 
     /**
@@ -54,6 +60,21 @@ public class IdentityService {
     public ClientRegistrationResult register(UUID tenantId, String givenName,
                                               String familyName, String dateOfBirth,
                                               String sex, String actorId) {
+        // Person-scoped dedupe: a blind repeat of the same registration (double
+        // submit, stateless retry) must return the existing client, not mint a
+        // second PROVISIONAL person. Strong demographic match = the estate's
+        // auto-link threshold via the single MatchingEngine scorer.
+        ClientEntity duplicate = findStrongDuplicate(tenantId, givenName, familyName, dateOfBirth, sex);
+        if (duplicate != null) {
+            publishEvent("CLIENT", duplicate.getHealthId().toString(),
+                    "IDENTITY_DEDUPLICATED",
+                    String.format("{\"healthId\":\"%s\",\"status\":\"%s\",\"tenantId\":\"%s\",\"actorId\":\"%s\"}",
+                            duplicate.getHealthId(), duplicate.getStatus(), tenantId, actorId));
+            // DID is minted once at creation and not persisted — never fabricate
+            // a fresh one for an existing person.
+            return new ClientRegistrationResult(duplicate, null);
+        }
+
         ClientEntity client = new ClientEntity();
         client.setTenantId(tenantId);
         client.setGivenName(givenName);
@@ -84,6 +105,49 @@ public class IdentityService {
                         client.getHealthId(), did, client.getTenantId()));
 
         return new ClientRegistrationResult(client, did);
+    }
+
+    /**
+     * Best strong-match candidate for a registration, or null when nothing
+     * reaches the auto-link threshold. Uses the blocking query (birth year /
+     * family initial) so the scorer runs over a small candidate set; tombstoned
+     * and deceased records never dedupe.
+     */
+    private ClientEntity findStrongDuplicate(UUID tenantId, String givenName,
+                                             String familyName, String dateOfBirth, String sex) {
+        boolean hasFamily = familyName != null && !familyName.isBlank();
+        if (!hasFamily && dateOfBirth == null) {
+            return null;
+        }
+        Integer birthYear = null;
+        if (dateOfBirth != null) {
+            try {
+                birthYear = java.time.LocalDate.parse(dateOfBirth).getYear();
+            } catch (java.time.format.DateTimeParseException ignored) {
+                // register() itself will reject the malformed date; no blocking key here.
+            }
+        }
+        String familyInitial = hasFamily ? familyName.substring(0, 1).toLowerCase() : null;
+        if (birthYear == null && familyInitial == null) {
+            return null;
+        }
+
+        double threshold = vitoProperties.getMatching().getThresholdAutoLink();
+        ClientEntity best = null;
+        double bestScore = 0.0;
+        for (ClientEntity candidate : clientRepository.findBlockingCandidates(
+                tenantId, UUID.randomUUID(), birthYear, familyInitial)) {
+            if (candidate.getStatus() == IdentityStatus.MERGED
+                    || candidate.getStatus() == IdentityStatus.DECEASED) {
+                continue;
+            }
+            double score = matchingEngine.scoreDemographics(givenName, familyName, dateOfBirth, sex, candidate);
+            if (score > bestScore) {
+                bestScore = score;
+                best = candidate;
+            }
+        }
+        return bestScore >= threshold ? best : null;
     }
 
     /**

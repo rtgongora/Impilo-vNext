@@ -56,12 +56,18 @@ public class IdIssuanceController {
                 request.sex(),
                 ctx.actorId());
 
-        return ResponseEntity.status(201).body(ApiResponse.ok(
-                Map.of(
-                        "healthId", result.client().getHealthId(),
-                        "did", result.did(),
-                        "status", result.client().getStatus()
-                ),
+        // Dedupe hits return the existing client with no DID (a DID is minted
+        // once at creation and never re-fabricated) — Map.of would NPE on it.
+        boolean deduplicated = result.did() == null;
+        Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("healthId", result.client().getHealthId());
+        if (result.did() != null) {
+            payload.put("did", result.did());
+        }
+        payload.put("status", result.client().getStatus());
+        payload.put("deduplicated", deduplicated);
+        return ResponseEntity.status(deduplicated ? 200 : 201).body(ApiResponse.ok(
+                payload,
                 ctx.correlationId().toString()));
     }
 
