@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -16,6 +15,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+// Registered via BiometricAutoConfiguration — shared-core beans are not
+// component-scanned by consumer apps, so this ships as an auto-configured bean
+// available in every service that depends on shared-core.
 
 /**
  * The ONE shared biometric-verification seam. Any service that authorizes a
@@ -30,7 +32,6 @@ import java.util.Map;
  * blocking care. Trust headers (tenant/actor/correlation) on the current request
  * are forwarded to ABIS.</p>
  */
-@Component
 public class BiometricVerificationClient {
 
     private static final Logger log = LoggerFactory.getLogger(BiometricVerificationClient.class);
