@@ -77,4 +77,25 @@ class CitizenCardRequestPhysicalTest {
 
         assertThat(data(r).get("state").asText()).isEqualTo("APPROVED");
     }
+
+    @Test
+    @DisplayName("resolve-presentation proxies the B0 seam and returns identity")
+    void resolvePresentation() throws Exception {
+        when(vito.resolveCard("CARD-1", null, null))
+                .thenReturn(mapper.readTree("{\"healthId\":\"hid-1\",\"cpid\":\"hid-1\",\"cardStatus\":\"ACTIVE\"}"));
+
+        ResponseEntity<Map<String, Object>> r = controller.resolvePresentation(
+                Map.of("cardNumber", "CARD-1"), REQ, CORR);
+
+        assertThat(data(r).get("cardStatus").asText()).isEqualTo("ACTIVE");
+        assertThat(data(r).get("healthId").asText()).isEqualTo("hid-1");
+    }
+
+    @Test
+    @DisplayName("resolve-presentation with no presentation → 400")
+    void resolvePresentationValidation() {
+        ResponseEntity<Map<String, Object>> r = controller.resolvePresentation(Map.of(), REQ, CORR);
+        assertThat(r.getStatusCode().value()).isEqualTo(400);
+        verifyNoInteractions(vito);
+    }
 }

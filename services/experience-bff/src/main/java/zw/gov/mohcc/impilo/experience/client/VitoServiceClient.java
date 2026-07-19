@@ -165,6 +165,21 @@ public class VitoServiceClient {
         return extractData(r);
     }
 
+    /**
+     * Resolve a presented SMART card (the B0 seam) to {healthId, cpid, cardStatus} — the
+     * present-to-verify primitive for card sign-in / POS verify (INTERNAL, B5). Exactly one
+     * of cardNumber / qrToken / cardAssertion identifies the card.
+     */
+    public JsonNode resolveCard(String cardNumber, String qrToken, String cardAssertion) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        if (cardNumber != null) body.put("cardNumber", cardNumber);
+        if (qrToken != null) body.put("qrToken", qrToken);
+        if (cardAssertion != null) body.put("cardAssertion", cardAssertion);
+        ResponseEntity<JsonNode> r = restTemplate.postForEntity(
+                baseUrl + "/v1/cards/resolve", internal(body), JsonNode.class);
+        return extractData(r);
+    }
+
     /** Start ID recovery process. */
     public JsonNode startRecovery(Map<String, Object> recoveryData) {
         String url = baseUrl + "/v1/portal/id/recovery/start";

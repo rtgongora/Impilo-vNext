@@ -183,6 +183,29 @@ public class CitizenCardController {
                 requestId, correlationId);
     }
 
+    // ── Present-to-verify (card sign-in / POS resolve, B5) ──────────────
+
+    /**
+     * Resolve a PRESENTED card (scanned QR, printed assertion, or entered number) to its
+     * identity + status through the B0 resolve seam — the primitive behind card sign-in and
+     * a POS "who is this card" check. Body: exactly one of {@code cardNumber|qrToken|cardAssertion}.
+     * Fail-closed: an unresolved/unverifiable presentation → 404, never a fabricated identity.
+     */
+    @PostMapping("/cards/resolve-presentation")
+    public ResponseEntity<Map<String, Object>> resolvePresentation(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        if (body == null || (str(body.get("cardNumber")) == null
+                && str(body.get("qrToken")) == null && str(body.get("cardAssertion")) == null)) {
+            return validation("one of cardNumber, qrToken, cardAssertion is required",
+                    requestId, correlationId);
+        }
+        return proxy(() -> vitoClient.resolveCard(
+                        str(body.get("cardNumber")), str(body.get("qrToken")), str(body.get("cardAssertion"))),
+                "resolvePresentation", requestId, correlationId);
+    }
+
     // ── Device enrollment (VIRTUAL card key → VITO → mushe link) ────────
 
     /**
