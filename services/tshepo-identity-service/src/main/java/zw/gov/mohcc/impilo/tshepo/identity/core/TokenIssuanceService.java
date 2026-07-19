@@ -291,11 +291,13 @@ public class TokenIssuanceService {
     /**
      * Signs the JWT claims by calling tshepo-keys-service POST /v1/sign.
      *
-     * <p>Request body: { "algorithm": "EdDSA", "payload": "<base64url-encoded claims>" }
-     * Expected response: { "data": { "signature": "<base64url-encoded signature>" } }</p>
+     * <p>Request body: { "tenantId": "<uuid>", "payload": "<header.payload signing input>",
+     * "jwsCompact": false } — tenantId is @NotNull-validated and selects the
+     * tenant's active signing key.</p>
+     * <p>Response (flat): { "keyId": "...", "algorithm": "Ed25519", "signature": "<base64url>" }</p>
      *
-     * <p>We construct the full JWS compact serialization:
-     * header.payload.signature</p>
+     * <p>We construct the full JWS compact serialization: header.payload.signature,
+     * where the payload is canonical JSON (see {@code claims.toPayload()}).</p>
      */
     private String signViaKeysService(JWTClaimsSet claims) {
         try {
