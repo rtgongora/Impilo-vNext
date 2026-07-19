@@ -189,7 +189,10 @@ public class PortalController {
         return identityService.findByHealthId(tenantId, healthId.get())
                 .map(client -> ResponseEntity.ok(Map.<String, Object>of(
                         "registered", true,
-                        "healthId", client.getHealthId().toString(),
+                        // Do NOT surface the raw Health ID (internal UUID) to the citizen browser
+                        // (Identity Contract: keep internal identifiers out of the browser). The
+                        // citizen's patient-facing identifier is the Impilo ID; the QR is a signed,
+                        // pointer-only token (GET /health-id/qr), never the raw Health ID.
                         "status", client.getStatus().name(),
                         "impiloId", client.getImpiloId() != null ? client.getImpiloId() : ""
                 )))

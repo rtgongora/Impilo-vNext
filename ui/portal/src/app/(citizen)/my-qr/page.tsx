@@ -7,7 +7,6 @@ type Status = "loading" | "not-registered" | "registered" | "error";
 
 interface ProfileData {
   impiloId?: string;
-  healthId?: string;
   status?: string;
 }
 
@@ -130,14 +129,6 @@ export default function MyQrPage() {
                 <span className="text-neutral-500">Impilo ID</span>
                 <span className="font-mono text-neutral-900">
                   {profile.impiloId}
-                </span>
-              </div>
-            )}
-            {profile.healthId && (
-              <div className="flex justify-between text-sm">
-                <span className="text-neutral-500">Health ID</span>
-                <span className="font-mono text-neutral-900">
-                  {profile.healthId}
                 </span>
               </div>
             )}

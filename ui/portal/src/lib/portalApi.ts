@@ -106,7 +106,8 @@ export const portalApi = {
   getMe: () =>
     portalFetch<{
       registered: boolean;
-      healthId?: string;
+      // No raw healthId: the internal Health ID (UUID) is never surfaced to the browser.
+      // The citizen's patient-facing identifier is impiloId; presentation uses the signed QR.
       status?: string;
       impiloId?: string;
     }>(`${PORTAL_BASE}/me`),
