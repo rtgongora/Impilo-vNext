@@ -27,13 +27,16 @@ public class AssuranceService {
     private final AssuranceRecordRepository recordRepository;
     private final AssuranceUpgradeRequestRepository upgradeRepository;
     private final EventOutboxRepository outboxRepository;
+    private final zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
 
     public AssuranceService(AssuranceRecordRepository recordRepository,
                             AssuranceUpgradeRequestRepository upgradeRepository,
-                            EventOutboxRepository outboxRepository) {
+                            EventOutboxRepository outboxRepository,
+                            zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification) {
         this.recordRepository = recordRepository;
         this.upgradeRepository = upgradeRepository;
         this.outboxRepository = outboxRepository;
+        this.biometricVerification = biometricVerification;
     }
 
     /** The assurance status surfaced to the experience shell. */
@@ -142,6 +145,60 @@ public class AssuranceService {
                             "provenance", provenance == null ? "PROOFING" : provenance));
         }
         return getStatus(tenantId, actorId);
+    }
+
+    /**
+     * Consume a biometric verification outcome as an <b>LOA4 biometric-binding</b> signal.
+     * A live probe is verified against the subject's enrolled template through the shared ABIS
+     * seam ({@code zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient}), and the
+     * outcome maps onto the assurance vector the PDP reads:
+     *
+     * <ul>
+     *   <li><b>MATCH</b> → the actor is bound by a biometric factor; assurance is asserted at
+     *       {@link AssuranceLevel#LOA4} (only ever raising) and the provenance is audited.</li>
+     *   <li><b>NO_MATCH</b> → explicit denial: a {@link SecurityException} is thrown and the
+     *       existing level is left untouched (a failed biometric never elevates).</li>
+     *   <li><b>UNAVAILABLE / NO_REFERENCE</b> → the ABIS is disabled/unreachable or the subject
+     *       has no enrolled template; there is no elevation and the current level is unchanged.
+     *       Fail-closed on elevation, never a fabricated bind.</li>
+     * </ul>
+     *
+     * @return the actor's assurance status after the (possible) binding
+     */
+    @Transactional
+    public StatusView recordBiometricBinding(UUID tenantId, String actorId, String subjectRef,
+                                             String modality, String probeBase64) {
+        if (actorId == null || actorId.isBlank()) {
+            throw new IllegalArgumentException("actorId is required");
+        }
+        if (subjectRef == null || subjectRef.isBlank() || probeBase64 == null || probeBase64.isBlank()) {
+            throw new IllegalArgumentException("subjectRef and probe are required for a biometric binding");
+        }
+        String resolvedModality = (modality != null && !modality.isBlank()) ? modality : "FINGERPRINT";
+        var decision = biometricVerification.verify(subjectRef, resolvedModality, probeBase64);
+
+        if (decision.isMatch()) {
+            AssuranceLevel current = recordRepository.findByTenantIdAndActorId(tenantId, actorId)
+                    .map(AssuranceRecordEntity::getCurrentLevel).orElse(AssuranceLevel.LOA1);
+            if (current == null || AssuranceLevel.LOA4.isHigherThan(current)) {
+                AssuranceRecordEntity record = raiseLevel(tenantId, actorId, AssuranceLevel.LOA4);
+                publish("ASSURANCE_RECORD", record.getId(), "ASSURANCE_RAISED_BY_BIOMETRIC", tenantId,
+                        Map.of("actorId", actorId, "level", AssuranceLevel.LOA4.name(),
+                                "from", current == null ? "NONE" : current.name(),
+                                "modality", resolvedModality,
+                                "provenance", "BIOMETRIC_MATCH",
+                                "confidence", String.valueOf(decision.confidence())));
+            }
+            return getStatus(tenantId, actorId);
+        }
+
+        if ("UNAVAILABLE".equals(decision.result()) || "NO_REFERENCE".equals(decision.result())) {
+            // Fail-closed on elevation: no bind on a biometric outage / missing reference.
+            return getStatus(tenantId, actorId);
+        }
+
+        // NO_MATCH → explicit denial; nothing is raised.
+        throw new SecurityException("Biometric NO_MATCH: assurance not elevated for actor " + actorId);
     }
 
     private AssuranceRecordEntity raiseLevel(UUID tenantId, String actorId, AssuranceLevel level) {

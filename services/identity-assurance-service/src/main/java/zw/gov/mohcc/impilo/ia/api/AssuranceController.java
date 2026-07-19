@@ -88,9 +88,41 @@ public class AssuranceController {
         return ResponseEntity.ok(ApiResponse.ok(view, ctx.correlationId().toString()));
     }
 
+    /**
+     * Bind the actor to an LOA4 biometric factor from a live probe (Access-Control dimension
+     * "assurance level"). INTERNAL-only — the Trust Core presents a subjectRef + captured probe;
+     * the probe is verified through the shared ABIS seam. MATCH raises the actor to LOA4;
+     * NO_MATCH is a 403 denial with no elevation; an ABIS outage leaves the level unchanged.
+     * The raise is applied to the CURRENT actor unless an explicit actorId is supplied
+     * (officer-witnessed capture), and every bind is audited with its provenance.
+     */
+    @PostMapping("/biometric-binding")
+    public ResponseEntity<ApiResponse<AssuranceService.StatusView>> biometricBinding(
+            @RequestBody BiometricBindingRequest body) {
+        TrustContext ctx = TrustContextHolder.require();
+        if (ctx.mode() != zw.gov.mohcc.impilo.shared.auth.AccessMode.INTERNAL) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "biometric-binding is INTERNAL-only");
+        }
+        String targetActor = (body.actorId() != null && !body.actorId().isBlank())
+                ? body.actorId().trim() : ctx.actorId();
+        try {
+            AssuranceService.StatusView view = assuranceService.recordBiometricBinding(
+                    ctx.tenantId(), targetActor, body.subjectRef(), body.modality(), body.probeBase64());
+            return ResponseEntity.ok(ApiResponse.ok(view, ctx.correlationId().toString()));
+        } catch (SecurityException ex) {
+            // NO_MATCH → explicit denial; no elevation.
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN, ex.getMessage());
+        }
+    }
+
     public record UpgradeRequest(AssuranceLevel targetLevel, String method) {}
 
     public record DecideRequest(boolean approve, String reason) {}
 
     public record ProofingOutcomeRequest(AssuranceLevel targetLevel, String provenance, String actorId) {}
+
+    public record BiometricBindingRequest(String subjectRef, String modality, String probeBase64, String actorId) {}
 }

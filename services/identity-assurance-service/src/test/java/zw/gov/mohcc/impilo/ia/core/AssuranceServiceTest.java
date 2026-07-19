@@ -29,13 +29,14 @@ class AssuranceServiceTest {
     @Mock private AssuranceRecordRepository recordRepository;
     @Mock private AssuranceUpgradeRequestRepository upgradeRepository;
     @Mock private EventOutboxRepository outboxRepository;
+    @Mock private zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
 
     private AssuranceService service;
     private final UUID tenant = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        service = new AssuranceService(recordRepository, upgradeRepository, outboxRepository);
+        service = new AssuranceService(recordRepository, upgradeRepository, outboxRepository, biometricVerification);
         when(upgradeRepository.save(any())).thenAnswer(inv -> {
             AssuranceUpgradeRequestEntity e = inv.getArgument(0);
             if (e.getId() == null) e.setId(1L);
