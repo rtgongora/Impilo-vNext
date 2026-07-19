@@ -242,6 +242,48 @@ zero_to_one(){
   if [ "$code" = "201" ] && body | grep -q '"status"'; then ok "CJ14(z2o): new person added a dependant (real child + guardianship)"
   else skip "CJ14(z2o): dependant create HTTP $code — $(body | head -c 160)"; fi
 
+  # CJ3 — claim/start. Exercises the SAME internal-orchestration boundary CJ14 died
+  # on (tshepoIdentity.resolveIdentifier + vito.claimStart, both INTERNAL). A 502/403
+  # here means the break is systemic, not one endpoint. Also asserts anti-enum.
+  code=$(POST "/internal/v1/identity/patient/claim/start" '{"claimKind":"IMPILO_ID","claimValue":"000000000X-nope"}')
+  local first_shape; first_shape=$(jval status)
+  case "$code" in
+    502|403) bad "CJ3(z2o): claim/start BROKEN (HTTP $code) — internal resolve/claim denied at boundary (same class as CJ14)";;
+    200) local c2; c2=$(POST "/internal/v1/identity/patient/claim/start" '{"claimKind":"IMPILO_ID","claimValue":"111111111X-alsonope"}')
+         if [ "$(jval status)" = "$first_shape" ] && [ -n "$first_shape" ]; then ok "CJ3(z2o): claim/start live + uniform anti-enum (no existence signal)"
+         else bad "CJ3(z2o): claim/start response shape not uniform across misses (anti-enum leak)"; fi;;
+    404|501) skip "CJ3(z2o): claim/start not deployed (HTTP $code)";;
+    *) skip "CJ3(z2o): claim/start HTTP $code — $(body | head -c 140)";;
+  esac
+
+  # CJ4 — recovery/start (vito portal recovery via the BFF). Same boundary question.
+  code=$(POST "/internal/v1/identity/patient/recovery/start" '{"impiloId":"000000000X-nope"}')
+  case "$code" in
+    502|403) bad "CJ4(z2o): recovery/start BROKEN (HTTP $code) — internal recovery denied at boundary";;
+    200) ok "CJ4(z2o): recovery/start live (generic response, no existence signal)";;
+    404|501) skip "CJ4(z2o): recovery/start not deployed (HTTP $code)";;
+    *) skip "CJ4(z2o): recovery/start HTTP $code — $(body | head -c 140)";;
+  esac
+
+  # CJ11 — give the fresh person an appointment, then mint a check-in token
+  # (issueScopedToken is INTERNAL — the same boundary again).
+  local future; future=$(python3 -c 'import datetime;print((datetime.datetime.utcnow()+datetime.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ"))')
+  code=$(POST "/internal/v1/appointments" \
+    "{\"patient_id\":\"$NEW_HID\",\"facility_id\":${CJ11_FACILITY:-1},\"scheduled_at\":\"$future\",\"appointment_type\":\"CONSULTATION\"}")
+  if [ "$code" = "200" ] || [ "$code" = "201" ]; then
+    local aid; aid=$(jval id); [ -n "$aid" ] || aid=$(jval data.id)
+    if [ -n "$aid" ]; then
+      code=$(GET "/internal/v1/appointments/$aid/checkin-token")
+      case "$code" in
+        200) has data.token && ok "CJ11(z2o): appointment created + signed check-in token issued (live)" || bad "CJ11(z2o): token 200 but no data.token";;
+        502|403) bad "CJ11(z2o): check-in token BROKEN (HTTP $code) — internal token issuance denied at boundary";;
+        *) bad "CJ11(z2o): check-in token HTTP $code — $(body | head -c 140)";;
+      esac
+    else skip "CJ11(z2o): appointment create returned no id"; fi
+  else
+    skip "CJ11(z2o): couldn't create appointment (HTTP $code, booking setup) — set CJ11_FACILITY"
+  fi
+
   # Teardown the seeded consent (leave the provisional person; unproofed, harmless).
   db tshepo_consent "DELETE FROM tshepo_consent.consent_directive WHERE grantee_ref='$SEED_MARK';" >/dev/null 2>&1
   ACTOR="$(derive_actor)"
