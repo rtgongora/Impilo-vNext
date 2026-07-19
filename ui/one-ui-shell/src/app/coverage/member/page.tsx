@@ -29,6 +29,7 @@ import {
   useMyAppeals,
   useMyClaimHistory,
   useMyContributions,
+  useMemberAccumulators,
   useMyCoveragePlans,
   useMyEligibility,
   useMyPreauths,
@@ -161,6 +162,8 @@ export default function MemberCoveragePage() {
 
   const plans = useMemo(() => (plansQ.data ?? []).map(asRecord), [plansQ.data]);
   const firstCoverageId = readStr(plans[0] ?? {}, "id");
+  const benefitsQ = useMemberAccumulators(firstCoverageId || null);
+  const benefits = useMemo(() => (benefitsQ.data ?? []).map(asRecord), [benefitsQ.data]);
 
   const [eligCoverageId, setEligCoverageId] = useState("");
   const [eligService, setEligService] = useState("");
@@ -274,6 +277,69 @@ export default function MemberCoveragePage() {
                           </td>
                           <td className="py-2 text-muted-foreground whitespace-nowrap">
                             {from || "—"} {to ? `→ ${to}` : ""}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Section>
+
+          <Section
+            title="Your benefits"
+            icon={<BarChart3 className="h-4 w-4 text-teal-600" />}
+            isLoading={benefitsQ.isLoading}
+            isError={benefitsQ.isError}
+          >
+            {benefits.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No benefit balances yet. Benefits appear here once you are enrolled on a Ruvimbo plan.
+              </p>
+            ) : (
+              <div className="overflow-x-auto" data-testid="coverage-member-benefits-table">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="pb-2 pr-2">Benefit</th>
+                      <th className="pb-2 pr-2">Covered</th>
+                      <th className="pb-2 pr-2">Co-pay</th>
+                      <th className="pb-2 pr-2">Limit</th>
+                      <th className="pb-2 pr-2">Used</th>
+                      <th className="pb-2 pr-2">Reserved</th>
+                      <th className="pb-2">Remaining</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {benefits.map((row, i) => {
+                      const code = readStr(row, "benefitCode", "benefit_code");
+                      const category = readStr(row, "category");
+                      const pct = readNum(row, "coveragePercent", "coverage_percent");
+                      const copay = readNum(row, "copay");
+                      const limit = readNum(row, "limit");
+                      const used = readNum(row, "used");
+                      const reserved = readNum(row, "reserved");
+                      const remaining = readNum(row, "remaining");
+                      const needsAuth = row.requiresAuthorisation === true || row.requires_authorisation === true;
+                      return (
+                        <tr key={code || i}>
+                          <td className="py-2 pr-2 font-medium text-foreground">
+                            {code || "—"}
+                            {category ? <span className="ml-1 text-xs text-muted-foreground">({category})</span> : null}
+                            {needsAuth ? (
+                              <span className="ml-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800">
+                                auth required
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className="py-2 pr-2 text-foreground">{pct ? `${pct}%` : "—"}</td>
+                          <td className="py-2 pr-2 text-foreground">{copay ? copay.toFixed(2) : "0.00"}</td>
+                          <td className="py-2 pr-2 text-foreground">{limit ? limit.toFixed(2) : "—"}</td>
+                          <td className="py-2 pr-2 text-muted-foreground">{used.toFixed(2)}</td>
+                          <td className="py-2 pr-2 text-muted-foreground">{reserved.toFixed(2)}</td>
+                          <td className="py-2 font-medium text-teal-700">
+                            {limit ? remaining.toFixed(2) : "unlimited"}
                           </td>
                         </tr>
                       );

@@ -38,6 +38,24 @@ export function useMyCoveragePlans(cpid?: string | null) {
   });
 }
 
+/**
+ * Ruvimbo benefit accumulators for a membership — reservation-aware position
+ * (limit / used / reserved / remaining) per benefit. Keyed by the membership id
+ * (the coverage row's `id`), not the CPID.
+ */
+export function useMemberAccumulators(membershipId?: string | null) {
+  return useQuery({
+    queryKey: ["member-benefit-accumulators", membershipId ?? null],
+    queryFn: async () => {
+      const res = await apiClient.get<ApiResponse<unknown> | unknown[]>(
+        `/internal/v1/coverage/members/${membershipId}/benefit-accumulators`,
+      );
+      return unwrapArray(res);
+    },
+    enabled: Boolean(membershipId),
+  });
+}
+
 export function useMyEligibility(cpid?: string | null) {
   return useQuery({
     queryKey: ["member-coverage-eligibility", cpid ?? null],

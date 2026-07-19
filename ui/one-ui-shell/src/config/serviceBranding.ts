@@ -21,6 +21,7 @@ export type ServiceBrandingSlug =
   | "nompilo"
   | "patient-safety"
   | "rito"
+  | "ruvimbo"
   | "simba"
   | "tshepo"
   | "tuso"
@@ -99,6 +100,15 @@ export const SERVICE_BRANDING: Record<ServiceBrandingSlug, ServiceBrandingEntry>
     domain: "Learning & Workforce",
     fallbackIcon: "GraduationCap",
     aliases: ["fundo", "learning", "impilo-fundo", "impilo fundo", "lms", "training"],
+  },
+  ruvimbo: {
+    slug: "ruvimbo",
+    name: "Ruvimbo",
+    logo: "/brand/services/ruvimbo-logo.png",
+    description: "Health coverage, benefits & claims",
+    domain: "Health Financing",
+    fallbackIcon: "ShieldCheck",
+    aliases: ["ruvimbo", "coverage", "impilo-ruvimbo", "impilo ruvimbo", "health financing", "benefits", "claims"],
   },
   indawo: {
     slug: "indawo",
@@ -351,6 +361,7 @@ export const COMMAND_CENTRE_TILE_SLUGS: Record<string, ServiceBrandingSlug> = {
   ndila: "ndila",
   nhume: "nhume",
   "wellness-hub": "simba",
+  coverage: "ruvimbo",
 };
 
 /** Longest-prefix route → sovereign service slug (PageShell auto-branding). */
@@ -376,6 +387,7 @@ export const ROUTE_SERVICE_SLUG_PREFIXES: ReadonlyArray<{
   { prefix: "/ndila", slug: "ndila" },
   { prefix: "/madi", slug: "madi" },
   { prefix: "/rito", slug: "rito" },
+  { prefix: "/coverage", slug: "ruvimbo" },
   { prefix: "/my-life/feedback", slug: "rito" },
   { prefix: "/work/facility/rito", slug: "rito" },
   { prefix: "/work/above-site/rito", slug: "rito" },
@@ -431,6 +443,11 @@ export const SERVICE_SURFACE_COVERAGE: Record<ServiceBrandingSlug, ServiceSurfac
     notes: "Communications hub — worker + citizen conversations and comms operations console.",
   },
   madi: { status: "surfaced", primaryRoutes: ["/madi", "/madi/donor"] },
+  ruvimbo: {
+    status: "surfaced",
+    primaryRoutes: ["/coverage/member", "/coverage/enroll", "/coverage"],
+    notes: "Health financing — citizen coverage wallet + benefits, enrolment, and the coverage operations console.",
+  },
   msika: { status: "surfaced", primaryRoutes: ["/marketplace", "/registry/products"] },
   mushex: { status: "surfaced", primaryRoutes: ["/finance/mushex-platform", "/finance"] },
   mvumo: { status: "surfaced", primaryRoutes: ["/registry/mvumo", "/consent"] },

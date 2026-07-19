@@ -56,8 +56,9 @@ export const SHELL_APPS: AppDefinition[] = [
     // ADMIN /coverage operations console stays gated by its route guard.
     id: "app-coverage",
     appCode: "coverage",
-    name: "Coverage",
-    description: "Health coverage schemes, enrolment, subsidies and claims",
+    // Ruvimbo is the sovereign brand for the Coverage / health-financing capability.
+    name: "Ruvimbo",
+    description: "Health coverage, benefits, enrolment, subsidies and claims",
     icon: "ShieldCheck",
     category: "citizen",
     href: "/coverage/member",
