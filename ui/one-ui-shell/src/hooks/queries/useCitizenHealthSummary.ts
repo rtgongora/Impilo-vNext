@@ -33,6 +33,10 @@ export function useCitizenHealthSummary() {
     () => asList(summary.results ?? summary.labs ?? summary.observations),
     [summary.results, summary.labs, summary.observations],
   );
+  const medications = useMemo(
+    () => asList(summary.medications ?? summary.medicationStatements ?? summary.meds),
+    [summary.medications, summary.medicationStatements, summary.meds],
+  );
 
-  return { ...query, summary, conditions, allergies, results };
+  return { ...query, summary, conditions, allergies, results, medications };
 }

@@ -11,8 +11,9 @@ import {
   useCreateBillContribution,
   useEnrollDeviceCard,
   useMySmartCards,
-  useSetPhrCarry,
 } from "@/hooks/queries/useMusheWallet";
+import { DigitalCard } from "@/components/wallet/DigitalCard";
+import { generateAndStoreKey } from "@/lib/digitalCardKey";
 
 function asRecord(v: unknown): Record<string, unknown> {
   return v && typeof v === "object" ? (v as Record<string, unknown>) : {};
@@ -38,28 +39,12 @@ function unwrapCards(v: unknown): Record<string, unknown>[] {
   return list.map(asRecord);
 }
 
-/** Generate a non-exportable P-256 key and return SPKI PEM public key for VITO enrollment. */
-async function generateBrowserDevicePublicKeyPem(): Promise<string> {
-  const pair = await crypto.subtle.generateKey(
-    { name: "ECDSA", namedCurve: "P-256" },
-    false,
-    ["sign", "verify"],
-  );
-  const spki = await crypto.subtle.exportKey("spki", pair.publicKey);
-  const b64 = btoa(String.fromCharCode(...new Uint8Array(spki)));
-  const lines = b64.match(/.{1,64}/g) ?? [b64];
-  return `-----BEGIN PUBLIC KEY-----\n${lines.join("\n")}\n-----END PUBLIC KEY-----`;
-}
-
 export function CitizenSmartCardPanel({ enabled }: { enabled: boolean }) {
   const cardsQ = useMySmartCards(enabled);
   const cards = useMemo(() => unwrapCards(cardsQ.data), [cardsQ.data]);
   const card = cards[0];
   const cardId = card ? readStr(card, "cardId", "id") : "";
-  const phrEnabled = card?.phrEnabled === true;
-  const vitoCardNumber = card ? readStr(card, "vitoCardNumber") : "";
 
-  const setPhr = useSetPhrCarry();
   const createBill = useCreateBillContribution();
   const enroll = useEnrollDeviceCard();
 
@@ -99,37 +84,11 @@ export function CitizenSmartCardPanel({ enabled }: { enabled: boolean }) {
         </p>
       )}
 
+      {/* The three card functions (identity / pay / health) as one digital-card surface. */}
+      {enabled && <DigitalCard enabled={enabled} />}
+
       {cardId && (
         <div className="space-y-4">
-          <div className="text-sm">
-            <span className="text-muted-foreground">Card </span>
-            <span className="font-medium">{readStr(card, "maskedCardNumber") || cardId}</span>
-            {vitoCardNumber ? (
-              <span className="ml-2 text-xs text-emerald-700">VITO linked · {vitoCardNumber}</span>
-            ) : (
-              <span className="ml-2 text-xs text-amber-700">Device not enrolled yet</span>
-            )}
-          </div>
-
-          <label className="flex items-center gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={phrEnabled}
-              disabled={setPhr.isPending}
-              onChange={(e) => setPhr.mutate({ cardId, enabled: e.target.checked })}
-              aria-label="PHR-carry on this card"
-            />
-            <span>
-              Carry my health record on this card (PHR)
-              {setPhr.isPending && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}
-            </span>
-          </label>
-          {setPhr.isError && (
-            <p className="text-xs text-danger" role="alert">
-              Could not update PHR-carry.
-            </p>
-          )}
-
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">Help pay my bill</p>
             <div className="flex flex-wrap gap-2">
@@ -195,8 +154,9 @@ export function CitizenSmartCardPanel({ enabled }: { enabled: boolean }) {
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">Enroll this browser as a device key</p>
             <p className="text-xs text-muted-foreground">
-              Generates a P-256 key in this browser and enrolls the public key with VITO (VIRTUAL card).
-              Biometric pay on mobile still needs the phone enrollment flow.
+              Generates a non-extractable P-256 key in this browser, keeps it in this device&apos;s
+              secure storage, and enrolls the public key with VITO (VIRTUAL card). The key stays on
+              this device so it can sign your card payments.
             </p>
             <button
               type="button"
@@ -206,7 +166,9 @@ export function CitizenSmartCardPanel({ enabled }: { enabled: boolean }) {
                 setEnrollMsg(null);
                 void (async () => {
                   try {
-                    const publicKey = await generateBrowserDevicePublicKeyPem();
+                    // Persist the key pair (non-extractable) so it survives for later pay signing,
+                    // instead of discarding the private key after enrollment.
+                    const publicKey = await generateAndStoreKey();
                     await enroll.mutateAsync({ cardId, publicKey });
                     setEnrollMsg("Device key enrolled and linked to your card.");
                   } catch (e) {

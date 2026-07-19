@@ -193,6 +193,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/citizen/wallet/timeline", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Care Timeline", navLabel: "Care Timeline", navZone: "life" },
   { path: "/citizen/wallet/dependants", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Dependants & Proxy", navLabel: "Dependants", navZone: "life" },
   { path: "/citizen/wallet/payments", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Payments & Bills", navLabel: "Payments", navZone: "life" },
+  // Digital SMART card (Jul 2026): the citizen's card at parity with the physical card — identity,
+  // pay, and health functions in the browser (device-signed offline pay).
+  { path: "/citizen/wallet/smart-card", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Digital SMART Card", navLabel: "Digital Card", navZone: "life" },
   { path: "/citizen/wallet/comms", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Communication Preferences", navLabel: "Comms Preferences", navZone: "life" },
   // E2-TRUST: four-block doctrine trust profile (identity/professional/employment/operational).
   { path: "/citizen/wallet/trust", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Trust Profile", navLabel: "Trust Profile", navZone: "life" },
@@ -944,7 +947,9 @@ export const ROUTES: RouteDefinition[] = [
 // /site/register, /site/operator-access (UI-5/UI-6). Total 754.
 // Place governance steward console (Jul 2026): +1 — /registry/place-governance, the steward
 // review surface for place self-service case types the Trust Console does not own. Total 755.
-export const EXPECTED_ROUTE_COUNT = 756;
+// Digital SMART card (Jul 2026): +1 — /citizen/wallet/smart-card, the citizen's browser card at
+// parity with the physical card (identity / pay / health functions). Total 757.
+export const EXPECTED_ROUTE_COUNT = 757;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

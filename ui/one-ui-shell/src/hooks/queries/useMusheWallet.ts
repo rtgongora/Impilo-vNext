@@ -128,6 +128,48 @@ export function useEnrollDeviceCard() {
   });
 }
 
+/**
+ * Body for a card-signed offline payment. `payload` is the exact canonical JSON string the
+ * device signed ({amount,counter,nonce,currency,authMethod}); `signature` is its base64 DER
+ * ECDSA-SHA256 signature. mushe verifies the signature against the enrolled device public key,
+ * enforces the monotonic counter, and applies an idempotent ledger debit (nonce = idempotency key).
+ */
+export interface CardPayBody {
+  vitoCardNumber: string;
+  payload: string;
+  signature: string;
+}
+
+/** Function 3 — pay from the card's offline purse (tap / scan). Honest 422 on rejection. */
+export function useCardPay() {
+  const queryClient = useQueryClient();
+  return useMutation<CardResponse, unknown, CardPayBody>({
+    mutationFn: (body) => apiClient.post<CardResponse>(`/internal/v1/wallet/cards/pay`, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["citizen-smart-cards"] });
+      void queryClient.invalidateQueries({ queryKey: ["mushe-wallet-balance"] });
+      void queryClient.invalidateQueries({ queryKey: ["mushe-wallet-transactions"] });
+    },
+  });
+}
+
+/**
+ * Function 3 (biometric variant) — the signed payload must assert authMethod=BIOMETRIC; mushe
+ * enforces it fail-closed and rejects (422) a payload that does not claim biometric verification.
+ */
+export function useCardPayBiometric() {
+  const queryClient = useQueryClient();
+  return useMutation<CardResponse, unknown, CardPayBody>({
+    mutationFn: (body) =>
+      apiClient.post<CardResponse>(`/internal/v1/wallet/cards/pay/biometric`, body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["citizen-smart-cards"] });
+      void queryClient.invalidateQueries({ queryKey: ["mushe-wallet-balance"] });
+      void queryClient.invalidateQueries({ queryKey: ["mushe-wallet-transactions"] });
+    },
+  });
+}
+
 /** Universal payment — calls BFF wallet/pay with method selection */
 export function useWalletPay() {
   const queryClient = useQueryClient();
