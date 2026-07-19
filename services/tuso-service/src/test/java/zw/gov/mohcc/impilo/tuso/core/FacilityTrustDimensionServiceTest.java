@@ -45,6 +45,7 @@ class FacilityTrustDimensionServiceTest {
     @Mock private FacilityAdminAppointmentRepository appointmentRepository;
     @Mock private FacilityCapabilityRepository capabilityRepository;
     @Mock private FacilityTrustDimensionRepository dimensionRepository;
+    @Mock private zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityVerificationCaseRepository verificationCaseRepository;
 
     private FacilityTrustDimensionService service;
 
@@ -56,7 +57,11 @@ class FacilityTrustDimensionServiceTest {
     void setUp() {
         service = new FacilityTrustDimensionService(
                 facilityRepository, legitimacyRepository, appointmentRepository,
-                capabilityRepository, dimensionRepository);
+                capabilityRepository, dimensionRepository, verificationCaseRepository);
+        lenient().when(verificationCaseRepository.findByTenantIdAndFacilityUuidAndStatus(any(), any(), any()))
+                .thenReturn(List.of());
+        lenient().when(verificationCaseRepository.existsByTenantIdAndFacilityUuidAndStatus(any(), any(), any()))
+                .thenReturn(false);
         facility = new FacilityEntity();
         facility.setId(42L);
         facility.setFacilityUuid(facilityUuid);

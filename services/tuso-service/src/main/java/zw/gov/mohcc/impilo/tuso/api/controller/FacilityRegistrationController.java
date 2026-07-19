@@ -38,9 +38,23 @@ public class FacilityRegistrationController {
                 .body(registrationService.register(request));
     }
 
-    /** Steward review queue by outcome (Trust Console lane). */
+    /**
+     * Steward review queue by outcome (Trust Console lane). Steward-gated
+     * in-service: the queue carries steward-only match context that must never
+     * reach the registrant who just submitted on the same path family.
+     */
     @GetMapping
-    public ResponseEntity<Map<String, Object>> listByOutcome(@RequestParam("outcome") String outcome) {
+    public ResponseEntity<Map<String, Object>> listByOutcome(
+            @RequestParam("outcome") String outcome,
+            jakarta.servlet.http.HttpServletRequest http) {
+        String actorType = http.getHeader("X-Actor-Type");
+        String normalised = actorType == null ? ""
+                : actorType.trim().toUpperCase(java.util.Locale.ROOT);
+        if (!java.util.Set.of("SYSTEM", "REGISTRY_ADMIN", "NATIONAL_ADMIN", "DATA_STEWARD")
+                .contains(normalised)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Registration cases are steward-reviewed");
+        }
         List<Map<String, Object>> cases = registrationService.listByOutcome(outcome).stream()
                 .map(FacilityRegistrationController::toStewardView)
                 .toList();

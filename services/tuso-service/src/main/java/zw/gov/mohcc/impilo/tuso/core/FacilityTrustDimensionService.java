@@ -53,17 +53,20 @@ public class FacilityTrustDimensionService {
     private final FacilityAdminAppointmentRepository appointmentRepository;
     private final FacilityCapabilityRepository capabilityRepository;
     private final FacilityTrustDimensionRepository dimensionRepository;
+    private final zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityVerificationCaseRepository verificationCaseRepository;
 
     public FacilityTrustDimensionService(FacilityRepository facilityRepository,
                                          FacilitySourceLegitimacyRepository legitimacyRepository,
                                          FacilityAdminAppointmentRepository appointmentRepository,
                                          FacilityCapabilityRepository capabilityRepository,
-                                         FacilityTrustDimensionRepository dimensionRepository) {
+                                         FacilityTrustDimensionRepository dimensionRepository,
+                                         zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityVerificationCaseRepository verificationCaseRepository) {
         this.facilityRepository = facilityRepository;
         this.legitimacyRepository = legitimacyRepository;
         this.appointmentRepository = appointmentRepository;
         this.capabilityRepository = capabilityRepository;
         this.dimensionRepository = dimensionRepository;
+        this.verificationCaseRepository = verificationCaseRepository;
     }
 
     /** Recompute and upsert all 9 dimensions for a facility. Returns the fresh rows. */
@@ -73,11 +76,13 @@ public class FacilityTrustDimensionService {
                 .filter(f -> tenantId.equals(f.getTenantId()))
                 .orElseThrow(() -> new IllegalArgumentException("Unknown facility: " + facilityUuid));
 
+        List<zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityVerificationCaseEntity> verifiedCases =
+                verificationCaseRepository.findByTenantIdAndFacilityUuidAndStatus(tenantId, facilityUuid,
+                        zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityVerificationCaseEntity.STATUS_VERIFIED);
+
         Map<String, Verdict> verdicts = new LinkedHashMap<>();
-        // Not yet wired signals stay honestly UNKNOWN (W6 verification cases, inspection feed).
-        verdicts.put("EXISTENCE", new Verdict(FacilityTrustDimensionEntity.STATUS_UNKNOWN,
-                null, "verification-cases"));
-        verdicts.put("GEOSPATIAL", geospatial(facility));
+        verdicts.put("EXISTENCE", existence(tenantId, facilityUuid, verifiedCases));
+        verdicts.put("GEOSPATIAL", geospatial(facility, verifiedCases));
         verdicts.put("AUTHORITY", authority(facility));
         verdicts.put("LEGAL_IDENTITY", legalIdentity(facility));
         verdicts.put("REGULATORY", regulatory(facility));
@@ -110,12 +115,38 @@ public class FacilityTrustDimensionService {
         return dimensionRepository.findByTenantIdAndFacilityUuidOrderByDimensionAsc(tenantId, facilityUuid);
     }
 
-    private Verdict geospatial(FacilityEntity facility) {
+    private Verdict existence(UUID tenantId, UUID facilityUuid,
+                              List<zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityVerificationCaseEntity> verifiedCases) {
+        if (!verifiedCases.isEmpty()) {
+            return new Verdict(FacilityTrustDimensionEntity.STATUS_CONFIRMED,
+                    "verification-case:" + verifiedCases.get(0).getCaseRef(), "verification-cases");
+        }
+        boolean anyFailed = verificationCaseRepository.existsByTenantIdAndFacilityUuidAndStatus(
+                tenantId, facilityUuid,
+                zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityVerificationCaseEntity.STATUS_FAILED);
+        if (anyFailed) {
+            return new Verdict(FacilityTrustDimensionEntity.STATUS_FAILED,
+                    "verification-case:FAILED", "verification-cases");
+        }
+        return new Verdict(FacilityTrustDimensionEntity.STATUS_UNKNOWN, null, "verification-cases");
+    }
+
+    private Verdict geospatial(FacilityEntity facility,
+                               List<zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityVerificationCaseEntity> verifiedCases) {
         boolean hasCoordinates = facility.getLatitude() != null && facility.getLongitude() != null;
-        // Coordinates present = PARTIAL only; CONFIRMED needs anchor/GPS verification (W6/Ndila).
-        return hasCoordinates
-                ? new Verdict(FacilityTrustDimensionEntity.STATUS_PARTIAL, "facility:coordinates", "tuso")
-                : new Verdict(FacilityTrustDimensionEntity.STATUS_UNKNOWN, null, "tuso");
+        if (!hasCoordinates) {
+            return new Verdict(FacilityTrustDimensionEntity.STATUS_UNKNOWN, null, "tuso");
+        }
+        // CONFIRMED only when a verifier decided VERIFIED with a plausible live
+        // GPS position; registry coordinates alone remain PARTIAL.
+        return verifiedCases.stream()
+                .filter(c -> c.getGpsDistanceMeters() != null
+                        && c.getGpsDistanceMeters().doubleValue() <= FacilityVerificationService.GPS_PLAUSIBLE_METERS)
+                .findFirst()
+                .map(c -> new Verdict(FacilityTrustDimensionEntity.STATUS_CONFIRMED,
+                        "verification-case:" + c.getCaseRef() + ":gps", "verification-cases"))
+                .orElse(new Verdict(FacilityTrustDimensionEntity.STATUS_PARTIAL,
+                        "facility:coordinates", "tuso"));
     }
 
     private Verdict authority(FacilityEntity facility) {
