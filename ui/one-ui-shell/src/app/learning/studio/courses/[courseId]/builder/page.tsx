@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FundoStudioWorkspace } from "@/components/learning/FundoStudioWorkspace";
 import { useFundoCourseStructure } from "@/hooks/queries/useFundoCatalog";
 import { useCreateFundoLesson, useCreateFundoModule } from "@/hooks/queries/useFundoStudio";
@@ -30,6 +30,15 @@ export default function FundoStudioCourseBuilderPage({ params }: { params: { cou
   const createLesson = useCreateFundoLesson(selectedModuleId || "");
 
   const moduleOptions = useMemo(() => modules.map((m) => ({ id: m.id, title: m.title })), [modules]);
+
+  // Target the newest module automatically when none is selected — after
+  // "Add module" an author's next step is adding its lessons, and leaving the
+  // Add-lesson button dead behind an unselected dropdown reads as broken.
+  useEffect(() => {
+    if (!selectedModuleId && moduleOptions.length > 0) {
+      setSelectedModuleId(moduleOptions[moduleOptions.length - 1].id);
+    }
+  }, [moduleOptions, selectedModuleId]);
 
   async function onAddModule() {
     await createModule.mutateAsync({ title: moduleTitle, status: "DRAFT" });
