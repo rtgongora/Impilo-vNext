@@ -312,6 +312,10 @@ fullBootServices:
   tshepo-identity-service:
     env:
       IMPILO_SUBJECT_CONTEXT_MODE: "log"
+      # Unset previously, so scoped-token signing called localhost:8184 and
+      # ALL estate token issuance (patient-context, WORK_CONTEXT, check-in)
+      # 500'd with Connection refused. Live-harness-flagged 2026-07-19.
+      TSHEPO_KEYS_SERVICE_URL: http://tshepo-keys-service:8184
   pct-service:
     env:
       IMPILO_SUBJECT_CONTEXT_MODE: "log"

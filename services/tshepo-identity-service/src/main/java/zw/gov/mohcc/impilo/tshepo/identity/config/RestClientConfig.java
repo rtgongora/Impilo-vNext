@@ -46,11 +46,17 @@ public class RestClientConfig {
 
     @Bean(name = "keysRestTemplate")
     public RestTemplate keysRestTemplate(RestTemplateBuilder builder,
-                                          IdentityProperties properties) {
+                                          IdentityProperties properties,
+                                          ClientHttpRequestInterceptor trustHeaderForwardingInterceptor) {
+        // keys-service /v1/sign is .authenticated() — forward the inbound
+        // caller's bearer (like the vito/varapi templates) or every scoped-token
+        // signing call 401s and ALL estate token issuance (patient-context,
+        // WORK_CONTEXT, appointment check-in) 500s. Live-harness-flagged.
         return builder
                 .rootUri(properties.keysServiceUrl())
                 .setConnectTimeout(Duration.ofSeconds(3))
                 .setReadTimeout(Duration.ofSeconds(5))
+                .additionalInterceptors(trustHeaderForwardingInterceptor)
                 .build();
     }
 
