@@ -541,6 +541,66 @@ public class CoverageServiceClient {
                 baseUrl + "/internal/v1/coverage/v2/claims/" + id + "/" + sub, JsonNode.class));
     }
 
+    // ── Ruvimbo Wave 4: COB, employer/group, fraud, capitation, gateway ─────
+
+    public JsonNode cobList(String memberCpid) {
+        return extractData(restTemplate.getForEntity(UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/internal/v1/coverage/cob").queryParam("member_cpid", memberCpid).toUriString(), JsonNode.class));
+    }
+    public JsonNode cobCoordinate(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/internal/v1/coverage/cob/coordinate", body, JsonNode.class));
+    }
+
+    public JsonNode listEmployers() {
+        return extractData(restTemplate.getForEntity(baseUrl + "/internal/v1/coverage/employers", JsonNode.class));
+    }
+    public JsonNode registerEmployer(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/internal/v1/coverage/employers", body, JsonNode.class));
+    }
+    public JsonNode stageRoster(String employerId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/employers/" + employerId + "/roster-batches", body, JsonNode.class));
+    }
+    public JsonNode rosterBatch(String batchId, String sub) {
+        String url = baseUrl + "/internal/v1/coverage/employers/roster-batches/" + batchId + (sub != null ? "/" + sub : "");
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+    public JsonNode rosterAction(String batchId, String action) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/employers/roster-batches/" + batchId + "/" + action, Map.of(), JsonNode.class));
+    }
+
+    public JsonNode listFraudFlags(String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/fraud-flags");
+        if (status != null && !status.isBlank()) b.queryParam("status", status);
+        return extractData(restTemplate.getForEntity(b.toUriString(), JsonNode.class));
+    }
+    public JsonNode screenClaim(String claimId) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/fraud-flags/screen-claim/" + claimId, Map.of(), JsonNode.class));
+    }
+    public JsonNode reviewFraudFlag(String id, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/fraud-flags/" + id + "/review", body, JsonNode.class));
+    }
+
+    public JsonNode listCapitation(String providerId) {
+        return extractData(restTemplate.getForEntity(UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/internal/v1/coverage/capitation-reports").queryParam("provider_id", providerId).toUriString(), JsonNode.class));
+    }
+    public JsonNode createCapitation(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/internal/v1/coverage/capitation-reports", body, JsonNode.class));
+    }
+
+    public JsonNode listGateway(String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/gateway/transactions");
+        if (status != null && !status.isBlank()) b.queryParam("status", status);
+        return extractData(restTemplate.getForEntity(b.toUriString(), JsonNode.class));
+    }
+    public JsonNode routeGateway(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/internal/v1/coverage/gateway/transactions", body, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) return response.getBody().get("data");
         return response.getBody();

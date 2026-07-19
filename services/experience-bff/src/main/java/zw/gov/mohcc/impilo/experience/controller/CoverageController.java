@@ -722,6 +722,100 @@ public class CoverageController {
         return upstreamWrite("CLAIM_ACTION_FAILED", () -> coverageClient.claimV2Action(id, action, b), ok, rid, cid);
     }
 
+    // ════════════════════════════════════════════════════════════════════
+    // Ruvimbo Wave 4 passthroughs (COB, employer/group, fraud, capitation, gateway)
+    // ════════════════════════════════════════════════════════════════════
+
+    @GetMapping("/cob")
+    public ResponseEntity<Map<String, Object>> cobList(@RequestParam(name = "member_cpid") String memberCpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.cobList(memberCpid), rid, cid);
+    }
+
+    @PostMapping("/cob/coordinate")
+    public ResponseEntity<Map<String, Object>> cobCoordinate(@RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("COB_FAILED", () -> coverageClient.cobCoordinate(body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @GetMapping("/employers")
+    public ResponseEntity<Map<String, Object>> listEmployers(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(coverageClient::listEmployers, rid, cid);
+    }
+
+    @PostMapping("/employers")
+    public ResponseEntity<Map<String, Object>> registerEmployer(@RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("EMPLOYER_CREATE_FAILED", () -> coverageClient.registerEmployer(body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @PostMapping("/employers/{id}/roster-batches")
+    public ResponseEntity<Map<String, Object>> stageRoster(@PathVariable String id, @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("ROSTER_STAGE_FAILED", () -> coverageClient.stageRoster(id, body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @GetMapping("/employers/roster-batches/{batchId}")
+    public ResponseEntity<Map<String, Object>> rosterBatch(@PathVariable String batchId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.rosterBatch(batchId, null), rid, cid);
+    }
+
+    @GetMapping("/employers/roster-batches/{batchId}/rows")
+    public ResponseEntity<Map<String, Object>> rosterRows(@PathVariable String batchId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.rosterBatch(batchId, "rows"), rid, cid);
+    }
+
+    @PostMapping("/employers/roster-batches/{batchId}/{action}")
+    public ResponseEntity<Map<String, Object>> rosterAction(@PathVariable String batchId, @PathVariable String action,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("ROSTER_ACTION_FAILED", () -> coverageClient.rosterAction(batchId, action), HttpStatus.OK, rid, cid);
+    }
+
+    @GetMapping("/fraud-flags")
+    public ResponseEntity<Map<String, Object>> listFraud(@RequestParam(required = false) String status,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.listFraudFlags(status), rid, cid);
+    }
+
+    @PostMapping("/fraud-flags/screen-claim/{claimId}")
+    public ResponseEntity<Map<String, Object>> screenClaim(@PathVariable String claimId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("FRAUD_SCREEN_FAILED", () -> coverageClient.screenClaim(claimId), HttpStatus.CREATED, rid, cid);
+    }
+
+    @PostMapping("/fraud-flags/{id}/review")
+    public ResponseEntity<Map<String, Object>> reviewFraud(@PathVariable String id, @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("FRAUD_REVIEW_FAILED", () -> coverageClient.reviewFraudFlag(id, body), HttpStatus.OK, rid, cid);
+    }
+
+    @GetMapping("/capitation-reports")
+    public ResponseEntity<Map<String, Object>> listCapitation(@RequestParam(name = "provider_id") String providerId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.listCapitation(providerId), rid, cid);
+    }
+
+    @PostMapping("/capitation-reports")
+    public ResponseEntity<Map<String, Object>> createCapitation(@RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("CAPITATION_FAILED", () -> coverageClient.createCapitation(body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @GetMapping("/gateway/transactions")
+    public ResponseEntity<Map<String, Object>> listGateway(@RequestParam(defaultValue = "RECEIVED") String status,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.listGateway(status), rid, cid);
+    }
+
+    @PostMapping("/gateway/transactions")
+    public ResponseEntity<Map<String, Object>> routeGateway(@RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid, @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("GATEWAY_ROUTE_FAILED", () -> coverageClient.routeGateway(body), HttpStatus.CREATED, rid, cid);
+    }
+
     /** Read passthrough: 502 on transport failure, empty object/array preserved. */
     private ResponseEntity<Map<String, Object>> read(
             java.util.concurrent.Callable<JsonNode> call, String requestId, String correlationId) {
