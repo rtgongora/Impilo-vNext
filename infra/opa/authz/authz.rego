@@ -117,6 +117,33 @@ deny_reasons contains "LOGIN_PERSON_FIRST" if {
 	not kind in person_login_kinds
 }
 
+# WORK-TOKEN-CONTEXT-MATCH (W3, D-P3): a WORK-zone request must carry a work-context whose
+# facility (and workspace, when the request scopes one) matches the request scope — forcing a
+# revoke-and-reissue on every facility/workspace switch instead of a silently drifting session.
+# Deny-safe: fires only when tshepo-authz supplies BOTH the token context and the request scope.
+#   input.work_context   object  claims from the presented WORK_CONTEXT token
+#                                ({facility_id, workspace_id, ...})
+#   input.scope.facility / input.scope.workspace  the request's evaluated scope
+deny_reasons contains "WORK_TOKEN_CONTEXT_MISMATCH" if {
+	input.access_mode == "WORK"
+	is_object(input.work_context)
+	token_facility := object.get(input.work_context, "facility_id", "")
+	token_facility != ""
+	request_facility := object.get(object.get(input, "scope", {}), "facility", "")
+	request_facility != ""
+	lower(token_facility) != lower(request_facility)
+}
+
+deny_reasons contains "WORK_TOKEN_CONTEXT_MISMATCH" if {
+	input.access_mode == "WORK"
+	is_object(input.work_context)
+	token_workspace := object.get(input.work_context, "workspace_id", "")
+	token_workspace != ""
+	request_workspace := object.get(object.get(input, "scope", {}), "workspace", "")
+	request_workspace != ""
+	lower(token_workspace) != lower(request_workspace)
+}
+
 # ── Derived values ──────────────────────────────────────────────────────────
 
 acr_loa := x if {

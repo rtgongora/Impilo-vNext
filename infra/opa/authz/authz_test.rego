@@ -195,3 +195,48 @@ test_login_rules_inert_without_identifier_kind if {
 	not "LOGIN_PROVIDERID_DENY" in d.deny_reasons
 	not "LOGIN_PERSON_FIRST" in d.deny_reasons
 }
+
+# ── Provider+Place W3: WORK-TOKEN-CONTEXT-MATCH ──────────────────────────────
+
+test_deny_work_request_outside_token_facility if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "access_mode": "WORK", "assignment_active": true,
+		"work_context": {"facility_id": "fac-a", "workspace_id": "ws-1"},
+		"scope": {"facility": "fac-b"},
+		"purpose": "TREATMENT", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == false
+	"WORK_TOKEN_CONTEXT_MISMATCH" in d.deny_reasons
+}
+
+test_deny_work_request_outside_token_workspace if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "access_mode": "WORK", "assignment_active": true,
+		"work_context": {"facility_id": "fac-a", "workspace_id": "ws-1"},
+		"scope": {"facility": "fac-a", "workspace": "ws-2"},
+		"purpose": "TREATMENT", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == false
+	"WORK_TOKEN_CONTEXT_MISMATCH" in d.deny_reasons
+}
+
+test_allow_work_request_matching_token_context if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "access_mode": "WORK", "assignment_active": true,
+		"work_context": {"facility_id": "FAC-A", "workspace_id": "ws-1"},
+		"scope": {"facility": "fac-a", "workspace": "WS-1"},
+		"purpose": "TREATMENT", "loa": 3, "assurance_loa": 3,
+	}
+	d.allow == true
+	not "WORK_TOKEN_CONTEXT_MISMATCH" in d.deny_reasons
+}
+
+test_context_match_inert_without_work_context if {
+	# Deny-safe: no token context supplied => the rule never fires.
+	d := authz.decision with input as {
+		"actor_id": "person-1", "access_mode": "WORK", "assignment_active": true,
+		"scope": {"facility": "fac-a"},
+		"purpose": "TREATMENT", "loa": 3, "assurance_loa": 3,
+	}
+	not "WORK_TOKEN_CONTEXT_MISMATCH" in d.deny_reasons
+}
