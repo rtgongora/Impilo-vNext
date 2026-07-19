@@ -240,3 +240,12 @@ test_context_match_inert_without_work_context if {
 	}
 	not "WORK_TOKEN_CONTEXT_MISMATCH" in d.deny_reasons
 }
+
+test_deny_authenticate_with_badge_serial if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "action": "AUTHENTICATE", "identifier_kind": "BADGE_SERIAL",
+		"purpose": "OPERATIONS", "loa": 1, "assurance_loa": 1,
+	}
+	d.allow == false
+	"BADGE_NEVER_AUTHORISES" in d.deny_reasons
+}

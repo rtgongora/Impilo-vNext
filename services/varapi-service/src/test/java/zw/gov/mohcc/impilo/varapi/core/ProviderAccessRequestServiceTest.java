@@ -60,7 +60,7 @@ class ProviderAccessRequestServiceTest {
         when(providerRepository.findByTenantIdAndImpiloHealthId(TENANT, APPLICANT)).thenReturn(Optional.empty());
 
         ProviderAccessRequestEntity e = service().submit(new SubmitProviderAccessRequest(
-                "NEW_PROVIDER", "Medical Officer", null, null, null, null, null));
+                "NEW_PROVIDER", "Medical Officer", null, null, null, null, null, null, null, null, null));
 
         assertEquals("NEW_PROVIDER", e.getRequestType());
         assertEquals("PENDING_NATIONAL_REVIEW", e.getStatus());
@@ -77,7 +77,7 @@ class ProviderAccessRequestServiceTest {
         when(providerRepository.findByTenantIdAndImpiloHealthId(TENANT, APPLICANT)).thenReturn(Optional.empty());
 
         ProviderAccessRequestEntity e = service().submit(new SubmitProviderAccessRequest(
-                "NEW_PROVIDER", "Doctor", "MDPCZ", "MDPCZ-123456", null, null, null));
+                "NEW_PROVIDER", "Doctor", "MDPCZ", "MDPCZ-123456", null, null, null, null, null, null, null));
 
         assertEquals("PENDING_COUNCIL_REVIEW", e.getStatus());
         assertEquals("COUNCIL_REVIEWER", e.getNextActor());
@@ -91,7 +91,7 @@ class ProviderAccessRequestServiceTest {
         when(providerRepository.findByTenantIdAndImpiloHealthId(TENANT, APPLICANT)).thenReturn(Optional.empty());
 
         ProviderAccessRequestEntity e = service().submit(new SubmitProviderAccessRequest(
-                "ORG_INVITATION", null, null, null, null, "Chitungwiza Mission", null));
+                "ORG_INVITATION", null, null, null, null, "Chitungwiza Mission", null, null, null, null, null));
 
         assertEquals("PENDING_ORGANIZATION_REVIEW", e.getStatus());
         assertEquals("ORGANIZATION_REPRESENTATIVE", e.getNextActor());
@@ -105,7 +105,7 @@ class ProviderAccessRequestServiceTest {
                 .thenReturn(Optional.of(new ProviderEntity()));
 
         ProviderAccessRequestEntity e = service().submit(new SubmitProviderAccessRequest(
-                "NEW_PROVIDER", "Doctor", null, null, null, null, null));
+                "NEW_PROVIDER", "Doctor", null, null, null, null, null, null, null, null, null));
 
         assertEquals("DUPLICATE_SUSPECTED", e.getStatus());
         assertEquals("NATIONAL_ADMINISTRATOR", e.getNextActor());
@@ -221,6 +221,6 @@ class ProviderAccessRequestServiceTest {
                 null, UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
 
         assertThrows(IllegalArgumentException.class, () -> service().submit(
-                new SubmitProviderAccessRequest("NEW_PROVIDER", null, null, null, null, null, null)));
+                new SubmitProviderAccessRequest("NEW_PROVIDER", null, null, null, null, null, null, null, null, null, null)));
     }
 }

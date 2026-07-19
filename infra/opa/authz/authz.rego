@@ -110,6 +110,13 @@ deny_reasons contains "LOGIN_PROVIDERID_DENY" if {
 # place identifier. Fires only when both the action and the kind are supplied (deny-safe).
 person_login_kinds := {"EMAIL", "PHONE", "USERNAME", "PASSKEY", "DEVICE_BIOMETRIC", "HEALTH_ID"}
 
+# BADGE-NEVER-AUTHORISES (W7, D-P5): a badge serial identifies/selects an account; it is never a
+# factor. Explicit reason on top of LOGIN_PERSON_FIRST so audit shows the badge-specific denial.
+deny_reasons contains "BADGE_NEVER_AUTHORISES" if {
+	input.action == "AUTHENTICATE"
+	upper(object.get(input, "identifier_kind", "")) == "BADGE_SERIAL"
+}
+
 deny_reasons contains "LOGIN_PERSON_FIRST" if {
 	input.action == "AUTHENTICATE"
 	kind := upper(object.get(input, "identifier_kind", ""))
