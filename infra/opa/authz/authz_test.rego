@@ -145,3 +145,53 @@ test_life_zone_needs_no_assignment if {
 	d.allow == true
 	not "WORK_REQUIRES_ASSIGNMENT" in d.deny_reasons
 }
+
+# ── Provider+Place W1: LOGIN-PROVIDERID-DENY / LOGIN-PERSON-FIRST ────────────
+
+test_deny_authenticate_with_provider_id if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "action": "AUTHENTICATE", "identifier_kind": "PROVIDER_ID",
+		"purpose": "OPERATIONS", "loa": 1, "assurance_loa": 1,
+	}
+	d.allow == false
+	"LOGIN_PROVIDERID_DENY" in d.deny_reasons
+	"LOGIN_PERSON_FIRST" in d.deny_reasons
+}
+
+test_deny_authenticate_with_council_reg if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "action": "AUTHENTICATE", "identifier_kind": "council_reg",
+		"purpose": "OPERATIONS", "loa": 1, "assurance_loa": 1,
+	}
+	d.allow == false
+	"LOGIN_PROVIDERID_DENY" in d.deny_reasons
+}
+
+test_allow_authenticate_with_person_credential if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "action": "AUTHENTICATE", "identifier_kind": "EMAIL",
+		"purpose": "OPERATIONS", "loa": 1, "assurance_loa": 1,
+	}
+	d.allow == true
+	not "LOGIN_PROVIDERID_DENY" in d.deny_reasons
+	not "LOGIN_PERSON_FIRST" in d.deny_reasons
+}
+
+test_deny_authenticate_with_place_identifier if {
+	d := authz.decision with input as {
+		"actor_id": "person-1", "action": "AUTHENTICATE", "identifier_kind": "FACILITY_CODE",
+		"purpose": "OPERATIONS", "loa": 1, "assurance_loa": 1,
+	}
+	d.allow == false
+	"LOGIN_PERSON_FIRST" in d.deny_reasons
+}
+
+test_login_rules_inert_without_identifier_kind if {
+	# Deny-safe: an AUTHENTICATE decision without the new input field is untouched.
+	d := authz.decision with input as {
+		"actor_id": "person-1", "action": "AUTHENTICATE",
+		"purpose": "OPERATIONS", "loa": 1, "assurance_loa": 1,
+	}
+	not "LOGIN_PROVIDERID_DENY" in d.deny_reasons
+	not "LOGIN_PERSON_FIRST" in d.deny_reasons
+}

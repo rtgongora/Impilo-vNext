@@ -91,6 +91,32 @@ deny_reasons contains "WORK_REQUIRES_ASSIGNMENT" if {
 
 assignment_active if input.assignment_active == true
 
+# ── Provider+Place identity program W1 (deny-safe strangler; SHADOW first) ──────────────
+#
+# Input contract additions (optional; absent ⇒ rule inert):
+#   input.identifier_kind  string  the credential/identifier kind presented for the action
+#                                  (e.g. "EMAIL", "PHONE", "PASSKEY", "PROVIDER_ID", "COUNCIL_REG")
+
+# LOGIN-PROVIDERID-DENY: a Provider ID / council registration number may IDENTIFY an account
+# (prefill / badge-style selection) but must never AUTHENTICATE — professional identifiers are
+# often public knowledge and never a possession/knowledge factor (Journey Doctrine PJ1/PJ5).
+deny_reasons contains "LOGIN_PROVIDERID_DENY" if {
+	input.action == "AUTHENTICATE"
+	upper(object.get(input, "identifier_kind", "")) in {"PROVIDER_ID", "COUNCIL_REG", "COUNCIL_NUMBER", "EC_NUMBER"}
+}
+
+# LOGIN-PERSON-FIRST: authentication is person-anchored — an account authenticates with a
+# person credential (email/phone/username/passkey/device biometric), never a professional or
+# place identifier. Fires only when both the action and the kind are supplied (deny-safe).
+person_login_kinds := {"EMAIL", "PHONE", "USERNAME", "PASSKEY", "DEVICE_BIOMETRIC", "HEALTH_ID"}
+
+deny_reasons contains "LOGIN_PERSON_FIRST" if {
+	input.action == "AUTHENTICATE"
+	kind := upper(object.get(input, "identifier_kind", ""))
+	kind != ""
+	not kind in person_login_kinds
+}
+
 # ── Derived values ──────────────────────────────────────────────────────────
 
 acr_loa := x if {
