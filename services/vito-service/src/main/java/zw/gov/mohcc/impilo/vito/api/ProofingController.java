@@ -28,9 +28,12 @@ import java.util.UUID;
 public class ProofingController {
 
     private final ProofingSubmissionService submissionService;
+    private final zw.gov.mohcc.impilo.vito.core.proofing.ProofingReviewDecisionService reviewDecisionService;
 
-    public ProofingController(ProofingSubmissionService submissionService) {
+    public ProofingController(ProofingSubmissionService submissionService,
+                              zw.gov.mohcc.impilo.vito.core.proofing.ProofingReviewDecisionService reviewDecisionService) {
         this.submissionService = submissionService;
+        this.reviewDecisionService = reviewDecisionService;
     }
 
     public record DocumentSelfieRequest(
@@ -62,6 +65,35 @@ public class ProofingController {
         if (result.reviewId() != null) {
             body.put("reviewId", result.reviewId().toString());
         }
+        return ResponseEntity.ok(ApiResponse.ok(body, null));
+    }
+
+    public record ReviewDecisionRequest(UUID tenantId, String reviewer, String decision,
+                                        String outcome, String notes) {}
+
+    /**
+     * Officer resolves an open proofing / recovery review. On APPROVE, the chosen
+     * witnessed outcome is written to the proofing ledger — the only path from a
+     * review-required attempt to real assurance. INTERNAL-only.
+     */
+    @PostMapping("/reviews/{reviewId}/decision")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> decideReview(
+            @PathVariable UUID reviewId,
+            @RequestBody ReviewDecisionRequest req) {
+        internalOnly();
+        zw.gov.mohcc.impilo.vito.core.proofing.ProofingOutcome outcome = null;
+        if (req.outcome() != null && !req.outcome().isBlank()) {
+            outcome = zw.gov.mohcc.impilo.vito.core.proofing.ProofingOutcome.valueOf(
+                    req.outcome().trim().toUpperCase());
+        }
+        var result = reviewDecisionService.decide(
+                req.tenantId(), reviewId, req.reviewer(), req.decision(), outcome, req.notes());
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("reviewId", result.reviewId().toString());
+        body.put("status", result.status());
+        body.put("decision", result.decision());
+        body.put("grantedOutcome", result.grantedOutcome() == null ? null : result.grantedOutcome().name());
+        body.put("assuranceLevel", result.assuranceLevel());
         return ResponseEntity.ok(ApiResponse.ok(body, null));
     }
 
