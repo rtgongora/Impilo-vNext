@@ -166,7 +166,13 @@ public class MatchingEngine {
         scores.put("dateOfBirth", exactMatch(dateOfBirth,
                 candidate.getDateOfBirth() != null ? candidate.getDateOfBirth().toString() : null));
         scores.put("sex", exactMatch(sex, candidate.getSex()));
-        return computeWeightedScore(scores);
+        // Renormalize over the fields this path can actually supply. The raw
+        // weight table reserves 0.25 for phoneHash, which demographics-only
+        // callers never provide — without renormalization a PERFECT 4-field
+        // match capped at 0.75, below every threshold, so demographic dedupe
+        // could never fire anywhere (caught by the D1 live-proof).
+        double weightSum = 0.15 + 0.20 + 0.30 + 0.10;
+        return computeWeightedScore(scores) / weightSum;
     }
 
     private Map<String, Double> computeFieldScores(ClientEntity source, ClientEntity candidate) {

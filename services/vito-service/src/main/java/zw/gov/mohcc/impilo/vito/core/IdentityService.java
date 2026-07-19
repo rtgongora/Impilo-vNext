@@ -115,8 +115,12 @@ public class IdentityService {
      */
     private ClientEntity findStrongDuplicate(UUID tenantId, String givenName,
                                              String familyName, String dateOfBirth, String sex) {
+        // Evidence floor: the renormalized demographic score is only
+        // auto-link-grade when ALL four fields are present — a perfect match
+        // on partial evidence must mint, not absorb.
         boolean hasFamily = familyName != null && !familyName.isBlank();
-        if (!hasFamily && dateOfBirth == null) {
+        if (givenName == null || givenName.isBlank() || !hasFamily
+                || dateOfBirth == null || sex == null || sex.isBlank()) {
             return null;
         }
         Integer birthYear = null;
