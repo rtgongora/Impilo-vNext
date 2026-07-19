@@ -84,6 +84,7 @@ say(){  echo "" | tee -a "$SUMMARY"; echo "== $1" | tee -a "$SUMMARY"; }
 # unquoted, so the header value must not contain spaces inline) so
 # resource-server services authenticate.
 AUTH_HDR_FILE="$EVIDENCE_DIR/.auth-header"
+trap 'rm -f "$AUTH_HDR_FILE"' EXIT  # never leave the bearer in the evidence dir
 hdr(){ printf '%s' \
   "-H X-Tenant-ID:$TENANT -H X-Pod-ID:national -H X-Request-ID:$(uuid) "\
 "-H X-Correlation-ID:$(uuid) -H X-Actor-Id:$ACTOR -H X-Actor-Type:SYSTEM "\
