@@ -8,6 +8,7 @@
 
 import Link from "next/link";
 import { IdentityAssuranceBanner } from "@/components/citizen/IdentityAssuranceBanner";
+import { ReportLostCard } from "@/components/citizen/ReportLostCard";
 import { useWalletOverview } from "@/hooks/queries/useWallet";
 
 export default function WalletIdentityPage() {
@@ -57,6 +58,8 @@ export default function WalletIdentityPage() {
           Source: VITO · Identity assurance
         </p>
       </section>
+
+      <ReportLostCard />
 
       <div className="flex flex-wrap gap-3 text-sm">
         <Link href="/citizen/health-id/qr" className="text-primary-hover underline">

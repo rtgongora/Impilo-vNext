@@ -69,6 +69,33 @@ export function useRequestCard() {
   });
 }
 
+// ── Citizen self-service (CJ8) — actor-resolved, no card id supplied ──
+
+export interface ReportLostResult {
+  status: "REPORTED" | "NO_ACTIVE_CARD";
+  reason: "LOST" | "STOLEN";
+  revokedCardId?: number;
+  replacementRequested: boolean;
+  replacement?: unknown;
+  message?: string;
+}
+
+/**
+ * Citizen "report my card lost/stolen" (CJ8). The BFF resolves the caller's own
+ * active card server-side from X-Actor-ID — no card id is supplied here.
+ */
+export function useReportLostCard() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { reason: "LOST" | "STOLEN"; requestReplacement: boolean }) =>
+      apiClient.post<ApiResponse<ReportLostResult>>("/internal/v1/wallet/cards/report-lost", body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["vito", "cards"] });
+      void queryClient.invalidateQueries({ queryKey: ["wallet"] });
+    },
+  });
+}
+
 export function useMarkCardPrinted() {
   const queryClient = useQueryClient();
   return useMutation({
