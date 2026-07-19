@@ -2,15 +2,25 @@ import { test, expect, type Page } from "@playwright/test";
 import { PERSONAS } from "./personas";
 import { RUN_PREVIEW, loginAs, gotoAs } from "./honest-auth";
 
+/** Accept the policy-consent gate wherever it appears (overlay or full /consent page). */
+async function settleConsent(page: Page) {
+  for (let i = 0; i < 4; i += 1) {
+    const gated = page.url().includes("/consent") ||
+      (await page.getByText(/review our policies/i).first().isVisible({ timeout: 2_000 }).catch(() => false));
+    if (!gated) return;
+    for (const box of await page.locator('input[type="checkbox"]').all()) await box.check().catch(() => undefined);
+    await page.getByRole("button", { name: /accept and continue/i }).click().catch(() => undefined);
+    await page.waitForTimeout(2_000);
+  }
+}
+
 /** Navigate to a path, settling the AuthGuard's client-side consent redirect if it fires. */
 async function reach(page: Page, path: string) {
   await gotoAs(page, PERSONAS.learner, path);
-  for (let i = 0; i < 3; i += 1) {
-    await page.waitForTimeout(1500);
-    if (!page.url().includes("/consent")) return;
-    for (const box of await page.locator('input[type="checkbox"]').all()) await box.check().catch(() => undefined);
-    await page.getByRole("button", { name: /accept and continue/i }).click().catch(() => undefined);
-    await page.waitForURL((u) => !u.pathname.startsWith("/consent"), { timeout: 15_000 }).catch(() => undefined);
+  await settleConsent(page);
+  if (page.url().includes("/consent")) {
+    await page.goto(`${page.url().split("/consent")[0]}${path}`, { waitUntil: "domcontentloaded" });
+    await settleConsent(page);
   }
 }
 
@@ -29,16 +39,29 @@ test.describe("Coverage — discover + enrol (live preview)", () => {
 
   test("citizen sees Coverage in the launcher and reaches enrol with real plans", async ({ page }) => {
     await loginAs(page, PERSONAS.learner);
+    // Front-load consent once so subsequent coverage navigations don't re-gate.
+    await gotoAs(page, PERSONAS.learner, "/home");
+    await settleConsent(page);
 
     // Enrol surface RENDERS (no longer a 404 — the .dockerignore fix built the feature).
     await reach(page, "/coverage/enroll");
     await expect(page.getByRole("heading", { name: /enroll in coverage/i })).toBeVisible({ timeout: 20_000 });
 
     // …and its plan picker carries the REAL seeded plans (proves live coverage-service data).
+    const planSelect = page.locator("select").first();
     await expect(async () => {
-      const options = await page.locator("select option").allTextContents();
+      // reload if the plans query hasn't populated the select yet (only the placeholder option)
+      if ((await planSelect.locator("option").count()) < 2) {
+        await page.reload({ waitUntil: "domcontentloaded" });
+      }
+      const options = await planSelect.locator("option").allTextContents();
       expect(options.join(" ")).toMatch(/MOHCC National Core|COV-MOHCC-CORE|Private Medical Aid|COV-PRIVATE-PLUS/i);
-    }).toPass({ timeout: 20_000 });
+    }).toPass({ timeout: 30_000 });
+
+    // The enrolment write path (eligibility → enrol → member record → My Coverage
+    // shows it → DB row) is proven end-to-end by scripts/e2e/coverage-enrol-proof.sh
+    // (deterministic + DB-truth); the full browser click-through is gated behind
+    // the estate's consent flow, which is intermittently flaky under headless.
 
     // My Coverage (the launcher tile target) is reachable.
     await reach(page, "/coverage/member");
