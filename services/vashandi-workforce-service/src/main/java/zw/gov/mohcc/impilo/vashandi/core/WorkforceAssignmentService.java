@@ -54,6 +54,7 @@ public class WorkforceAssignmentService {
         assignment.setStartDate(request.startDate());
         assignment.setEndDate(request.endDate());
         assignment.setSourceAuthority(request.sourceAuthority());
+        assignment.setEngagementType(request.engagementType());
         assignment.setStatus("requested");
         assignment.setCreatedBy(actorId());
         WorkforceAssignmentEntity saved = assignmentRepository.save(assignment);

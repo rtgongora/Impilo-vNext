@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.vashandi.integration.IntegrationCheckResult;
 import zw.gov.mohcc.impilo.vashandi.persistence.entity.WorkforceAssignmentEntity;
 import zw.gov.mohcc.impilo.vashandi.persistence.repository.WorkforceAssignmentRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -80,5 +81,30 @@ class WorkforceAssignmentServiceTest {
 
         assertThat(response.actionStatus()).isEqualTo("completed");
         assertThat(response.assignmentStatus()).isEqualTo("active");
+    }
+
+    @Test
+    void create_persistsEngagementType() throws Exception {
+        // Identity-program (D-P7): an operator-created posting carries its engagement
+        // type through to the saved assignment (a non-PERMANENT engagement is end-dated).
+        UUID tenant = UUID.randomUUID();
+        when(assignmentRepository.save(any())).thenAnswer(inv -> {
+            WorkforceAssignmentEntity e = inv.getArgument(0);
+            if (e.getId() == null) {
+                e.setId(UUID.randomUUID()); // mirror DB-generated id so emit() can key on it
+            }
+            return e;
+        });
+
+        VashandiDtos.CreateAssignmentRequest request = new VashandiDtos.CreateAssignmentRequest(
+                UUID.randomUUID(), "facility_access", UUID.randomUUID(), UUID.randomUUID(),
+                null, null, null, null, "role.template", null,
+                LocalDate.now(), LocalDate.now().plusMonths(3), "operator", "LOCUM");
+
+        WorkforceAssignmentEntity saved = service.create(tenant, request);
+
+        assertThat(saved.getEngagementType()).isEqualTo("LOCUM");
+        assertThat(saved.getStatus()).isEqualTo("requested");
+        assertThat(saved.getEndDate()).isNotNull();
     }
 }

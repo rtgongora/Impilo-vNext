@@ -88,7 +88,8 @@ public class WorkforceImportBridgeService {
                                 null,
                                 LocalDate.now(),
                                 null,
-                                request.source()
+                                request.source(),
+                                null // engagementType — unknown at bulk import; set on later postings
                         ));
                 assignmentIds.add(assignment.getId());
             }

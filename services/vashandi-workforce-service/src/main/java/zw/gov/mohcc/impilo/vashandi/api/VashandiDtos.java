@@ -57,7 +57,12 @@ public final class VashandiDtos {
             UUID supervisorProfileId,
             LocalDate startDate,
             LocalDate endDate,
-            String sourceAuthority
+            String sourceAuthority,
+            // Identity-program (D-P7): how the person is engaged at this posting —
+            // PERMANENT | ROTATION | LOCUM | OUTREACH | TELEMED | SPECIALIST_POOL |
+            // SUPERVISORY | TRAINING. A non-PERMANENT engagement must be end-dated
+            // (enforced by the vsh_workforce_assignment CHECK constraint).
+            String engagementType
     ) {
     }
 
