@@ -309,11 +309,15 @@ public class TokenIssuanceService {
             Base64URL payloadB64 = Base64URL.encode(claims.toJSONObject().toString());
             String signingInput = headerB64 + "." + payloadB64;
 
-            // Call keys-service for signature
-            Map<String, Object> signRequest = Map.of(
-                    "algorithm", "EdDSA",
-                    "payload", signingInput
-            );
+            // Call keys-service for signature. The /v1/sign contract requires
+            // tenantId (validated @NotNull) + jwsCompact=false for a raw
+            // signature over the signing input; the response is FLAT
+            // {keyId, algorithm, signature}, not wrapped in {data}.
+            String tenant = claims.getStringClaim("tenant_id");
+            Map<String, Object> signRequest = new java.util.LinkedHashMap<>();
+            signRequest.put("tenantId", tenant);
+            signRequest.put("payload", signingInput);
+            signRequest.put("jwsCompact", false);
 
             ResponseEntity<String> response = keysRestTemplate.postForEntity(
                     "/v1/sign", signRequest, String.class);
@@ -323,7 +327,7 @@ public class TokenIssuanceService {
             }
 
             JsonNode root = objectMapper.readTree(response.getBody());
-            String signature = root.path("data").path("signature").asText();
+            String signature = root.path("signature").asText();
             if (signature == null || signature.isBlank()) {
                 throw new IllegalStateException("Keys service returned empty signature");
             }

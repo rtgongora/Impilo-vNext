@@ -105,8 +105,11 @@ class TokenIssuanceServiceTest {
      * Stubs the keys-service REST call to return a fake signature.
      */
     private void stubKeysServiceSuccess() {
+        // Real keys-service /v1/sign response is FLAT {keyId, algorithm,
+        // signature} — the previous {data:{signature}} stub encoded a shape the
+        // service never returns, so it hid the live 400/empty-signature break.
         String responseBody = """
-                {"data": {"signature": "fake-ed25519-signature-base64url"}}
+                {"keyId": "kid-test", "algorithm": "Ed25519", "signature": "fake-ed25519-signature-base64url"}
                 """;
         when(keysRestTemplate.postForEntity(eq("/v1/sign"), any(), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(responseBody, HttpStatus.OK));
