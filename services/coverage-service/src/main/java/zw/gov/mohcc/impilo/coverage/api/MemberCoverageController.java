@@ -35,13 +35,16 @@ public class MemberCoverageController {
 
     private final MemberCoverageRepository memberCoverageRepository;
     private final CoveragePlanRepository planRepository;
+    private final zw.gov.mohcc.impilo.coverage.repository.PayerRepository payerRepository;
     private final CoverageEventService eventService;
 
     public MemberCoverageController(MemberCoverageRepository memberCoverageRepository,
                                     CoveragePlanRepository planRepository,
+                                    zw.gov.mohcc.impilo.coverage.repository.PayerRepository payerRepository,
                                     CoverageEventService eventService) {
         this.memberCoverageRepository = memberCoverageRepository;
         this.planRepository = planRepository;
+        this.payerRepository = payerRepository;
         this.eventService = eventService;
     }
 
@@ -69,6 +72,17 @@ public class MemberCoverageController {
                 .orElse(null);
         if (plan == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        // Suspended-payer gate (spec §8): a suspended/terminated payer blocks NEW enrolments,
+        // but its historic memberships remain accessible.
+        if (plan.getPayerRef() != null) {
+            payerRepository.findByIdAndTenantId(plan.getPayerRef(), tid).ifPresent(payer -> {
+                if (!"ACTIVE".equals(payer.getStatus())) {
+                    throw new IllegalStateException("Payer is not accepting new enrolments (status: "
+                            + payer.getStatus() + ")");
+                }
+            });
         }
 
         // Duplicate-active-enrolment guard (spec §10; fixes the completion-lens nit where a

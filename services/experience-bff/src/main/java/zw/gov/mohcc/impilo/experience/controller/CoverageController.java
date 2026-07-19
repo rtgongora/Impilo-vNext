@@ -412,6 +412,13 @@ public class CoverageController {
     // Ruvimbo Wave 1 passthroughs (payers, hierarchy, membership, benefits, eligibility v2)
     // ════════════════════════════════════════════════════════════════════
 
+    @PostMapping("/plans")
+    public ResponseEntity<Map<String, Object>> createPlan(@RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("PLAN_CREATE_FAILED", () -> coverageClient.createPlan(body), HttpStatus.CREATED, rid, cid);
+    }
+
     @GetMapping("/payers")
     public ResponseEntity<Map<String, Object>> listPayers(
             @RequestParam(required = false) String status,

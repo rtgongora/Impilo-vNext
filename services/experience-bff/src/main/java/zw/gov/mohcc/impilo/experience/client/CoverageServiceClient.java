@@ -337,6 +337,12 @@ public class CoverageServiceClient {
         return null;
     }
 
+    // ── Ruvimbo Wave 1: create a flat live plan (optionally linked to a payer + version) ──
+
+    public JsonNode createPlan(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/internal/v1/coverage", body, JsonNode.class));
+    }
+
     // ── Ruvimbo Wave 1: payer registry ─────────────────────────────────────
 
     public JsonNode listPayers(String status) {

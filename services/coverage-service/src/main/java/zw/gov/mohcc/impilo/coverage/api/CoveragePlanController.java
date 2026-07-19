@@ -159,6 +159,9 @@ public class CoveragePlanController {
                 request.planCode(), request.planName(),
                 request.payerId(), request.planType(),
                 request.effectiveFrom());
+        // Ruvimbo: optionally link the flat live plan to the payer registry + published version.
+        if (request.payerRef() != null) plan.setPayerRef(request.payerRef());
+        if (request.planVersionId() != null) plan.setPlanVersionId(request.planVersionId());
         planRepository.save(plan);
 
         java.util.LinkedHashMap<String, Object> payload = new java.util.LinkedHashMap<>();
