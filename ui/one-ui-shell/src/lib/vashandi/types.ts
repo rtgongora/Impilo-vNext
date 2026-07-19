@@ -136,7 +136,28 @@ export interface WorkforceAssignment {
   sourceAuthority?: string;
   eligibilityStatus?: string;
   opaDecisionId?: string;
+  /**
+   * Identity-program (D-P7): how the person is engaged at this posting.
+   * PERMANENT | ROTATION | LOCUM | OUTREACH | TELEMED | SPECIALIST_POOL |
+   * SUPERVISORY | TRAINING. Non-PERMANENT engagements are end-dated and swept to
+   * `ended` on expiry (which tears down the matching WORK_CONTEXT token).
+   */
+  engagementType?: string;
 }
+
+/** Engagement types (D-P7). A non-PERMANENT engagement must be end-dated. */
+export const ENGAGEMENT_TYPES = [
+  "PERMANENT",
+  "ROTATION",
+  "LOCUM",
+  "OUTREACH",
+  "TELEMED",
+  "SPECIALIST_POOL",
+  "SUPERVISORY",
+  "TRAINING",
+] as const;
+
+export type EngagementType = (typeof ENGAGEMENT_TYPES)[number];
 
 export interface Roster {
   id: string;
@@ -287,6 +308,7 @@ export interface CreateAssignmentRequest {
   startDate?: string;
   endDate?: string;
   sourceAuthority?: string;
+  engagementType?: string;
 }
 
 export interface CheckInRequest {

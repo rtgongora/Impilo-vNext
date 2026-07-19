@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Users, CalendarDays, ClipboardList, Clock, GraduationCap, Palmtree, Upload, ShieldAlert, BarChart3, RadioTower } from "lucide-react";
+import { Users, CalendarDays, ClipboardList, Clock, GraduationCap, Palmtree, Upload, ShieldAlert, BarChart3, RadioTower, KeyRound, ArrowRight } from "lucide-react";
 import { VashandiShell } from "@/components/vashandi/VashandiShell";
 import { useSessionExperienceContract } from "@/hooks/useSessionExperienceContract";
 import { ADMINISTRATION_SURFACES } from "@/lib/administration-governance/surfaces";
@@ -29,6 +29,32 @@ export default function Page() {
       <div className="space-y-6">
         <div className="rounded-xl border border-indigo-100 bg-info-soft/60 px-4 py-3 text-sm text-primary-hover">
           Operational workforce — roster, shift, attendance, leave and access risk. OPA-enforced; not HSC employment authority.
+        </div>
+
+        {/* Identity-program integration (D-P7): how identity becomes an operative posting. */}
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-start gap-3">
+            <KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
+            <div className="min-w-0">
+              <h4 className="text-sm font-semibold text-foreground">
+                How work access is granted here
+              </h4>
+              <p className="mt-1 text-sm text-muted-foreground">
+                A registered professional (Varapi) does not, by itself, authorise work. A facility
+                access request, once approved, <span className="font-medium text-foreground">materialises an assignment</span> here with an
+                engagement type and validity window. Starting a <span className="font-medium text-foreground">work session</span> proves that
+                assignment and mints a short-lived work-context token; when the assignment expires,
+                the sweep ends it and the matching token is torn down. Identity → assignment →
+                session → expiry — one governed chain.
+              </p>
+              <Link
+                href="/provider/workplace"
+                className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                Start or switch a work session <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {SECTION_LINKS.map((section) => {
