@@ -302,6 +302,28 @@ fullBootServices:
     enabled: true
   vashandi-workforce-service:
     enabled: true
+  # Subject-context ratchet (Identity Contract B5): burn-in LOG mode on the
+  # subject-write services — mismatched/missing X-Subject-Context-Token on
+  # subject-scoped writes is logged (SUBJECT_CONTEXT_VIOLATION), never blocked.
+  # ENFORCE only after the gateway journey pack proves token plumbing end-to-end.
+  vito-service:
+    env:
+      IMPILO_SUBJECT_CONTEXT_MODE: "log"
+  tshepo-identity-service:
+    env:
+      IMPILO_SUBJECT_CONTEXT_MODE: "log"
+  pct-service:
+    env:
+      IMPILO_SUBJECT_CONTEXT_MODE: "log"
+  butano-service:
+    env:
+      IMPILO_SUBJECT_CONTEXT_MODE: "log"
+  butano-fhir:
+    env:
+      IMPILO_SUBJECT_CONTEXT_MODE: "log"
+  daidzai-service:
+    env:
+      IMPILO_SUBJECT_CONTEXT_MODE: "log"
   # Preview-scoped boot requirements discovered by the 2026-07-02 full-boot
   # runtime checkpoint. Fail-closed guards in these services are correct for
   # production; preview supplies the explicit opt-ins / preview key material.
