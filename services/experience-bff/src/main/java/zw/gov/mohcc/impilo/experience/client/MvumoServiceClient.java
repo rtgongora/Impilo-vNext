@@ -36,6 +36,18 @@ public class MvumoServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Create an act-on-behalf delegation relationship (guardian / caregiver — CJ14/CJ15).
+     * The caller's X-Actor-ID / X-Tenant-ID are forwarded by the shared trust interceptor;
+     * mvumo (the act-of-record) requires an authenticated actor to attribute the grant.
+     */
+    public JsonNode createDelegation(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mvumo/delegations";
+        log.info("MVUMO: creating delegation relationship type={}", body.get("relationshipType"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode listTemplates() {
         String url = baseUrl + "/internal/v1/mvumo/templates";
         log.info("MVUMO: listing consent templates");
