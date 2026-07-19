@@ -60,7 +60,10 @@ coverage-service booted (Hibernate `validate` passed against the migrated schema
 
 - `coverage-service` @ `sha256:54666b1d…` (V015 migrated live)
 - `experience-bff` @ `sha256:db0e3bb8…`
-- `one-ui-shell` @ `<pending — Ruvimbo branding + wallet benefits>`
+- `one-ui-shell` @ `sha256:fb7914e5…` (Ruvimbo branding + wallet benefits)
+
+Browser journey `coverage-wallet.journey.spec.ts` passed **green ×2** live; final API
+proof re-run **33/33** after the shell deploy (no digest drift).
 
 ## Boundary honored
 
