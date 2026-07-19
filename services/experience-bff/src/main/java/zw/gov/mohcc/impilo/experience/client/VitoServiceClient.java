@@ -102,6 +102,13 @@ public class VitoServiceClient {
         return extractData(r);
     }
 
+    /** Submit a document+selfie proofing attempt (Wave G). Returns {disposition, outcome, assuranceLevel, signals, reviewId}. */
+    public JsonNode proofingDocumentSelfie(Map<String, Object> body) {
+        ResponseEntity<JsonNode> r = restTemplate.postForEntity(
+                baseUrl + "/v1/proofing/document-selfie", internal(body), JsonNode.class);
+        return extractData(r);
+    }
+
     /** Start ID recovery process. */
     public JsonNode startRecovery(Map<String, Object> recoveryData) {
         String url = baseUrl + "/v1/portal/id/recovery/start";
