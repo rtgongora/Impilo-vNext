@@ -334,6 +334,27 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    // ── HPA national facility enrichment import ─────────────────────────────
+
+    /** List HPA enrichment import batches (per-outcome counts + metrics). */
+    public JsonNode hpaImportRuns() {
+        String url = baseUrl + "/v1/internal/facilities/hpa-import/runs";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** Per-outcome reconciliation counts for an HPA import batch. */
+    public JsonNode hpaImportOutcomes(long runId) {
+        String url = baseUrl + "/v1/internal/facilities/hpa-import/runs/" + runId + "/outcomes";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /** Review queue (identity-conflict / possible-existing / unresolved-site) for an HPA import batch. */
+    public JsonNode hpaImportReviewQueue(long runId, String outcome) {
+        String url = baseUrl + "/v1/internal/facilities/hpa-import/runs/" + runId + "/review-queue"
+                + (outcome != null && !outcome.isBlank() ? "?outcome=" + outcome : "");
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     /** Duplicate rows grouped for review. */
     public JsonNode getFacilityImportRunDuplicates(long runId, String type) {
         String url = baseUrl + "/v1/internal/facilities/import/runs/" + runId + "/duplicates"

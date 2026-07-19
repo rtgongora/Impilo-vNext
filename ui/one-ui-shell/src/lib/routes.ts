@@ -307,6 +307,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/admin/audit/[id]", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Audit Entry", navLabel: "Audit Detail", navZone: "professional" },
   { path: "/admin/workforce-intake", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Workforce Intake", navLabel: "Workforce Intake", navZone: "professional" },
   { path: "/admin/facility-imports", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Import Batches", navLabel: "Facility Imports", navZone: "professional" },
+  // HPA national facility enrichment — steward review of import batches, outcomes and review queues.
+  { path: "/admin/hpa-enrichment", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "HPA facility enrichment", navLabel: "HPA Enrichment", navZone: "professional" },
   { path: "/admin/facility-imports/[runId]", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Import Batch", navLabel: "Import Batch", navZone: "professional" },
   { path: "/admin/facility-imports/[runId]/review", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Import Review", navLabel: "Import Review", navZone: "professional" },
   { path: "/admin/consent", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Consent Management", navLabel: "Consent", navZone: "professional" },
@@ -949,7 +951,7 @@ export const ROUTES: RouteDefinition[] = [
 // review surface for place self-service case types the Trust Console does not own. Total 755.
 // Digital SMART card (Jul 2026): +1 — /citizen/wallet/smart-card, the citizen's browser card at
 // parity with the physical card (identity / pay / health functions). Total 757.
-export const EXPECTED_ROUTE_COUNT = 757;
+export const EXPECTED_ROUTE_COUNT = 758;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

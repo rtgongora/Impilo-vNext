@@ -49,6 +49,50 @@ public class AdminFacilityImportController {
         }
     }
 
+    // ── HPA national facility enrichment import ─────────────────────────────
+
+    @GetMapping("/hpa-import-runs")
+    public ResponseEntity<Map<String, Object>> listHpaRuns(
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        try {
+            JsonNode data = tusoClient.hpaImportRuns();
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "HPA_IMPORT_RUNS_UNAVAILABLE",
+                    "Unable to load HPA import runs from TUSO");
+        }
+    }
+
+    @GetMapping("/hpa-import-runs/{runId}/outcomes")
+    public ResponseEntity<Map<String, Object>> hpaOutcomes(
+            @PathVariable long runId,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        try {
+            JsonNode data = tusoClient.hpaImportOutcomes(runId);
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "HPA_IMPORT_OUTCOMES_UNAVAILABLE",
+                    "Unable to load HPA import outcomes from TUSO");
+        }
+    }
+
+    @GetMapping("/hpa-import-runs/{runId}/review-queue")
+    public ResponseEntity<Map<String, Object>> hpaReviewQueue(
+            @PathVariable long runId,
+            @RequestParam(value = "outcome", required = false) String outcome,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
+        try {
+            JsonNode data = tusoClient.hpaImportReviewQueue(runId, outcome);
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            return badGateway(requestId, correlationId, "HPA_IMPORT_REVIEW_UNAVAILABLE",
+                    "Unable to load HPA import review queue from TUSO");
+        }
+    }
+
     @GetMapping("/facility-import-runs/{runId}")
     public ResponseEntity<Map<String, Object>> getRun(
             @PathVariable long runId,
