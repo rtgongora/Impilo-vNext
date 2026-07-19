@@ -110,26 +110,41 @@ public class ClinicalNotesController {
         pctBody.put("author_name", request.author_name());
 
         JsonNode created = pctClient.createClinicalNote(pctBody);
+        if (created == null) {
+            // Never report a fake 201: a null payload means pct-service did not
+            // persist the note. Surface it so the clinician sees the failure
+            // instead of a form that clears as if the note saved.
+            log.warn("PCT clinical note NOT persisted for patient={} (upstream returned no note)", request.patient_id());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "PCT_UNAVAILABLE", "message", "Clinical note was not saved. Please retry."),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
         log.info("PCT clinical note created for patient={}", request.patient_id());
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "data", created != null ? created : Map.of(),
+                "data", created,
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/{id}/sign")
     public ResponseEntity<Map<String, Object>> signNote(
-            @PathVariable UUID id,
+            // The note id is the numeric pct id, not a UUID — a UUID path-var 400'd every sign.
+            @PathVariable String id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey) {
 
-        JsonNode result = pctClient.signClinicalNote(id.toString());
+        JsonNode result = pctClient.signClinicalNote(id);
+        if (result == null) {
+            log.warn("PCT clinical note sign returned no payload: {}", id);
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "PCT_UNAVAILABLE", "message", "Note could not be signed. Please retry."),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
         log.info("PCT clinical note signed: {}", id);
-
         return ResponseEntity.ok(Map.of(
-                "data", result != null ? result : Map.of(),
+                "data", result,
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

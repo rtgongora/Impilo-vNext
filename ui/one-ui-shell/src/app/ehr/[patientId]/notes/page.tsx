@@ -77,6 +77,7 @@ export default function ClinicalNotesPage() {
   );
 
   const [showForm, setShowForm] = useState(false);
+  const [noteError, setNoteError] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>(noteTypeFilter ?? "");
   const [scope, setScope] = useState<NoteScope>("current");
   const [form, setForm] = useState(buildEmptyForm());
@@ -155,10 +156,13 @@ export default function ClinicalNotesPage() {
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    setNoteError(null);
 
     createNote.mutate(
       {
         patientId,
+        // pct now resolves either the numeric encounter id or its UUID ref, so
+        // the note links correctly instead of being lost to a format mismatch.
         encounterId: activeEncounter?.id ?? "",
         noteType: form.noteType,
         subjective: form.subjective || null,
@@ -175,12 +179,26 @@ export default function ClinicalNotesPage() {
           setShowForm(false);
           setScope(activeEncounter ? "current" : "all");
         },
+        onError: (e) => {
+          const err = e as { error?: { message?: string } };
+          // Do NOT clear the form — the note was not saved; let the clinician retry.
+          setNoteError(err?.error?.message ?? "The note could not be saved. Please retry.");
+        },
       },
     );
   }
 
   function handleSign(noteId: string) {
-    signNote.mutate({ id: noteId });
+    setNoteError(null);
+    signNote.mutate(
+      { id: noteId },
+      {
+        onError: (e) => {
+          const err = e as { error?: { message?: string } };
+          setNoteError(err?.error?.message ?? "The note could not be signed. Please retry.");
+        },
+      },
+    );
   }
 
   return (
@@ -531,6 +549,11 @@ export default function ClinicalNotesPage() {
                   </div>
                 </div>
 
+                {noteError && (
+                  <div className="rounded-xl border border-warning/35 bg-warning-soft p-3 text-sm text-warning-foreground" data-testid="clinical-note-error">
+                    {noteError}
+                  </div>
+                )}
                 <div className="flex flex-wrap items-center gap-3 pt-2">
                   <button
                     type="submit"
