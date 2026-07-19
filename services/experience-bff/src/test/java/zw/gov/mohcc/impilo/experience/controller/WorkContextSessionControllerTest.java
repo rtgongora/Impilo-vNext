@@ -126,4 +126,39 @@ class WorkContextSessionControllerTest {
         ResponseEntity<Map<String, Object>> response = start(Map.of());
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
+
+    @Test
+    void eligibilitySummaryIsOwnerOnlyAndHonestWhenSuspended() throws Exception {
+        when(varapiClient.getProviderByHealthId(actorId)).thenReturn(MAPPER.readTree(
+                "{\"providerPublicId\":\"PROVPUB1\",\"lifecycleStatus\":\"SUSPENDED\","
+                        + "\"status\":\"SUSPENDED\",\"active\":false}"));
+
+        ResponseEntity<Map<String, Object>> response =
+                controller.workEligibility("req-1", "corr-1", actorId);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> attrs = (Map<String, Object>) data.get("attributes");
+        assertThat(attrs.get("workEligible")).isEqualTo(false);
+        assertThat((String) attrs.get("remediation")).contains("My Professional");
+        // Authn succeeded, Work denied, personal spaces untouched — the summary
+        // never exposes anything about anyone but the session actor.
+        assertThat(data.get("id")).isEqualTo(actorId);
+    }
+
+    @Test
+    void eligibilitySummaryForUnlinkedPersonPointsAtProviderAccess() {
+        when(varapiClient.getProviderByHealthId(actorId)).thenReturn(null);
+
+        ResponseEntity<Map<String, Object>> response =
+                controller.workEligibility("req-1", "corr-1", actorId);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> attrs = (Map<String, Object>) data.get("attributes");
+        assertThat(attrs.get("linked")).isEqualTo(false);
+        assertThat((String) attrs.get("remediation")).contains("Request Provider Access");
+    }
 }

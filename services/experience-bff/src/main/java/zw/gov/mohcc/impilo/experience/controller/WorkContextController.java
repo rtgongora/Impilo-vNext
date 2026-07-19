@@ -164,6 +164,48 @@ public class WorkContextController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Owner-only work-eligibility summary (D-P6, PJ15/PJ17): after sign-in a
+     * suspended/lapsed provider sees WHY Work is unavailable and what to do —
+     * but ONLY about themselves (session actor), so the generic pre-auth
+     * boundary holds. My Life / My Professional are never affected by this.
+     */
+    @GetMapping("/eligibility")
+    public ResponseEntity<Map<String, Object>> workEligibility(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId) {
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        JsonNode provider = varapiClient.getProviderByHealthId(actorId);
+        if (provider == null || provider.isNull()) {
+            attributes.put("linked", false);
+            attributes.put("workEligible", false);
+            attributes.put("remediation",
+                    "No professional profile is linked to your account. "
+                            + "Use Request Provider Access to claim or register one.");
+        } else {
+            String lifecycle = text(provider, "lifecycleStatus");
+            String licenceStatus = text(provider, "licenceStatus");
+            boolean active = provider.path("active").asBoolean(
+                    "ACTIVE".equalsIgnoreCase(text(provider, "status")));
+            attributes.put("linked", true);
+            attributes.put("lifecycleStatus", lifecycle);
+            attributes.put("licenceStatus", licenceStatus);
+            attributes.put("workEligible", active);
+            attributes.put("remediation", active
+                    ? null
+                    : "You have signed in successfully. Professional Work access is currently "
+                            + "unavailable. Open My Professional to view the status and the next "
+                            + "steps (for example, submitting licence renewal evidence).");
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", actorId, "type", "work-eligibility", "attributes", attributes));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
     /** The requested facility (and workspace, when given) must be an ACTIVE assignment. */
     private JsonNode matchAssignment(JsonNode workContext, String facilityId, String workspaceId) {
         if (workContext == null || workContext.isNull()) {
