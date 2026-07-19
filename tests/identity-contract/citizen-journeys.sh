@@ -240,6 +240,7 @@ zero_to_one(){
   local minor; minor=$(python3 -c 'import datetime;print((datetime.date.today().replace(year=datetime.date.today().year-4)).isoformat())')
   code=$(POST "/internal/v1/citizen/dependants" "{\"givenName\":\"Rig\",\"familyName\":\"Child\",\"dateOfBirth\":\"$minor\"}")
   if [ "$code" = "201" ] && body | grep -q '"status"'; then ok "CJ14(z2o): new person added a dependant (real child + guardianship)"
+  elif [ "$code" = "502" ] || [ "$code" = "403" ]; then bad "CJ14(z2o): add-dependant BROKEN (HTTP $code) — BFF child-register denied at VITO boundary"
   else skip "CJ14(z2o): dependant create HTTP $code — $(body | head -c 160)"; fi
 
   # CJ3 — claim/start. Exercises the SAME internal-orchestration boundary CJ14 died
