@@ -76,8 +76,8 @@ public class ProviderBootstrapController {
                     request.claimantHealthId());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        ClaimProfileResponse response =
-                bootstrapService.claimProfile(request.claimToken(), request.claimantHealthId());
+        ClaimProfileResponse response = bootstrapService.claimProfile(
+                request.claimToken(), request.claimantHealthId(), request.assuranceOutcome());
         return ResponseEntity.ok(response);
     }
 

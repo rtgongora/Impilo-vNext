@@ -69,14 +69,28 @@ public class ProviderClaimController {
     private final DocumentServiceClient documentServiceClient;
     private final boolean ecMatchingEnabled;
 
+    private final zw.gov.mohcc.impilo.experience.client.IdentityAssuranceServiceClient assuranceClient;
+
+    /**
+     * Minimum person-assurance to BIND a provider profile to a Health ID
+     * (Identity Journey Doctrine §2/§4): knowing a claim token is not enough —
+     * the person must have proven their identity to at least LOA2
+     * (RECORD_LINKED / DOCUMENT_VERIFIED). Person-proofing itself is the Wave-G
+     * spine (vito ProofingController → identity-assurance); we CONSUME its
+     * outcome here, never re-implement it.
+     */
+    private static final int MIN_CLAIM_ASSURANCE_RANK = 2; // LOA2
+
     public ProviderClaimController(
             VarapiServiceClient varapiClient,
             WorkforceEmploymentMatchClient employmentMatchClient,
             DocumentServiceClient documentServiceClient,
+            zw.gov.mohcc.impilo.experience.client.IdentityAssuranceServiceClient assuranceClient,
             @Value("${impilo.features.ec-matching:false}") boolean ecMatchingEnabled) {
         this.varapiClient = varapiClient;
         this.employmentMatchClient = employmentMatchClient;
         this.documentServiceClient = documentServiceClient;
+        this.assuranceClient = assuranceClient;
         this.ecMatchingEnabled = ecMatchingEnabled;
     }
 
@@ -162,11 +176,26 @@ public class ProviderClaimController {
                     "Explicit consent is required before linking a provider profile to your Health ID.",
                     requestId, correlationId);
         }
+
+        // Person-proofing gate (Wave-G consume, §2 second-factor): binding a
+        // Provider ID to this account requires the person to have proven their
+        // identity to ≥LOA2. Token possession alone never crosses to a bind.
+        String assuranceLevel = claimantAssuranceLevel();
+        if (assuranceRank(assuranceLevel) < MIN_CLAIM_ASSURANCE_RANK) {
+            return error(HttpStatus.FORBIDDEN, "IDENTITY_PROOFING_REQUIRED",
+                    "Confirm your personal identity before linking a provider profile. "
+                            + "Complete identity verification, then try again.",
+                    requestId, correlationId);
+        }
+
         try {
             // The claimant is ALWAYS the session Health ID — never taken from the body.
+            // The proven assurance outcome rides along so it is recorded on the
+            // authorization link (replacing the fixed placeholder).
             JsonNode result = varapiClient.claim(Map.of(
                     "claimToken", claimToken,
-                    "claimantHealthId", actorId));
+                    "claimantHealthId", actorId,
+                    "assuranceOutcome", assuranceOutcomeFor(assuranceLevel)));
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("linked", true);
             data.put("providerPublicId", maskId(text(result, "providerPublicId")));
@@ -515,6 +544,43 @@ public class ProviderClaimController {
                         "message", message != null && !message.isBlank()
                                 ? message : e.getStatusText()),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    /**
+     * The session actor's current identity-assurance level (Wave-G spine).
+     * Fail-closed: if identity-assurance is unreachable the level is treated as
+     * the floor (LOA1), so a proofing gate cannot be bypassed by an outage.
+     */
+    private String claimantAssuranceLevel() {
+        try {
+            JsonNode status = assuranceClient.getAssuranceStatus();
+            String level = text(status, "currentLevel");
+            return level == null ? "LOA1" : level;
+        } catch (Exception e) {
+            log.warn("assurance status unavailable — treating as LOA1 (fail-closed): {}", e.getMessage());
+            return "LOA1";
+        }
+    }
+
+    private static int assuranceRank(String level) {
+        if (level == null) {
+            return 1;
+        }
+        return switch (level.trim().toUpperCase(java.util.Locale.ROOT)) {
+            case "LOA4" -> 4;
+            case "LOA3" -> 3;
+            case "LOA2" -> 2;
+            default -> 1;
+        };
+    }
+
+    /** Map the achieved assurance level to the doctrine §4 proofing outcome recorded on the link. */
+    private static String assuranceOutcomeFor(String level) {
+        return switch (assuranceRank(level)) {
+            case 4, 3 -> "AUTHORITATIVELY_VERIFIED";
+            case 2 -> "DOCUMENT_VERIFIED";
+            default -> "SELF_ASSERTED";
+        };
     }
 
     /** Mask a provider public identifier: first 4 + *** + last 2. */

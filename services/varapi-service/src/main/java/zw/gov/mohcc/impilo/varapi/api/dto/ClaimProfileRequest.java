@@ -16,5 +16,12 @@ public record ClaimProfileRequest(
          * this against the trust context, so a token cannot be redeemed onto an
          * arbitrary anchor.
          */
-        @NotNull(message = "claimantHealthId is required") UUID claimantHealthId
+        @NotNull(message = "claimantHealthId is required") UUID claimantHealthId,
+        /**
+         * The Identity Journey Doctrine §4 assurance outcome the trusted BFF
+         * proved for the claimant (from the Wave-G person-proofing spine) before
+         * allowing the bind. Recorded on the authorization link; null defaults to
+         * RECORD_LINKED (the token-possession + person-first-login baseline).
+         */
+        String assuranceOutcome
 ) {}

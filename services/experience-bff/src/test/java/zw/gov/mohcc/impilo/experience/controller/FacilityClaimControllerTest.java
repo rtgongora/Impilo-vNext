@@ -47,9 +47,17 @@ class FacilityClaimControllerTest {
     @Mock private TusoFacilityClaimClient tusoClient;
     @Mock private OrgRegistryFacilityAdminClient orgRegistryClient;
     @Mock private DocumentServiceClient documentServiceClient;
+    @Mock private zw.gov.mohcc.impilo.experience.client.IdentityAssuranceServiceClient assuranceClient;
 
     private FacilityClaimController controller() {
-        return new FacilityClaimController(tusoClient, orgRegistryClient, documentServiceClient);
+        return new FacilityClaimController(tusoClient, orgRegistryClient, documentServiceClient, assuranceClient);
+    }
+
+    private void assuranceLevel(String loa) {
+        try {
+            org.mockito.Mockito.lenient().when(assuranceClient.getAssuranceStatus())
+                    .thenReturn(MAPPER.readTree("{\"currentLevel\":\"" + loa + "\"}"));
+        } catch (Exception e) { throw new RuntimeException(e); }
     }
 
     @SuppressWarnings("unchecked")
@@ -146,6 +154,7 @@ class FacilityClaimControllerTest {
 
     @Test
     void appoint_bindsClaimantToSessionHealthId_masksEvidence_andRequiresConsent() throws Exception {
+        assuranceLevel("LOA2");
         when(tusoClient.submitClaim(eq(FACILITY), any())).thenReturn(MAPPER.readTree(
                 "{\"id\":7,\"personHealthId\":\"" + ACTOR + "\",\"role\":\"FACILITY_ADMINISTRATOR\","
                         + "\"approvalState\":\"PENDING\"}"));
@@ -184,7 +193,21 @@ class FacilityClaimControllerTest {
     }
 
     @Test
+    void appoint_belowLoa2_isForbidden_andNeverClaims() {
+        assuranceLevel("LOA1");
+
+        ResponseEntity<Map<String, Object>> resp = controller().appoint(
+                TENANT, REQ, CORR, ACTOR,
+                Map.of("facilityUuid", FACILITY, "consent", true, "evidenceRef", "APPT-1"));
+
+        assertEquals(HttpStatus.FORBIDDEN, resp.getStatusCode());
+        assertEquals("IDENTITY_PROOFING_REQUIRED", error(resp).get("code"));
+        verify(tusoClient, never()).submitClaim(anyString(), any());
+    }
+
+    @Test
     void appoint_facilityNotAllowed_propagates409Honestly() {
+        assuranceLevel("LOA2");
         when(tusoClient.submitClaim(eq(FACILITY), any())).thenThrow(HttpClientErrorException.create(
                 HttpStatus.CONFLICT, "Conflict", null,
                 "{\"error\":\"Facility is not allowed on the platform and cannot be claimed\"}"

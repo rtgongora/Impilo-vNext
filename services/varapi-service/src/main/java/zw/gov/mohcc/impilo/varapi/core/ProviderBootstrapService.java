@@ -253,6 +253,17 @@ public class ProviderBootstrapService {
      */
     @Transactional
     public ClaimProfileResponse claimProfile(String rawToken, UUID claimantHealthId) {
+        return claimProfile(rawToken, claimantHealthId, null);
+    }
+
+    /**
+     * Claim a preloaded profile, recording the assurance outcome the trusted
+     * BFF proved (from the Wave-G person-proofing spine) onto the authorization
+     * link. A null outcome defaults to RECORD_LINKED (the token-possession +
+     * person-first-login baseline).
+     */
+    @Transactional
+    public ClaimProfileResponse claimProfile(String rawToken, UUID claimantHealthId, String assuranceOutcome) {
         TrustContext ctx = TrustContextHolder.require();
         if (claimantHealthId == null) {
             throw new IllegalArgumentException("claimantHealthId is required");
@@ -336,7 +347,7 @@ public class ProviderBootstrapService {
                 ctx.tenantId(), provider, claimantHealthId,
                 zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderAuthorizationLinkEntity.TYPE_CLAIM,
                 "claim-token:" + token.getId(),
-                "RECORD_LINKED",
+                assuranceOutcome != null && !assuranceOutcome.isBlank() ? assuranceOutcome.trim() : "RECORD_LINKED",
                 provider.getOnboardingChannel() != null ? provider.getOnboardingChannel() : "BOOTSTRAP_CLAIM",
                 ctx.actorId());
 

@@ -63,13 +63,42 @@ public class FacilityClaimController {
     private final TusoFacilityClaimClient tusoClient;
     private final OrgRegistryFacilityAdminClient orgRegistryClient;
     private final DocumentServiceClient documentServiceClient;
+    private final zw.gov.mohcc.impilo.experience.client.IdentityAssuranceServiceClient assuranceClient;
+
+    /**
+     * Minimum person-assurance to submit a facility-administrator claim (Place
+     * Journey Doctrine §2/D-L4): proof-of-authority has a person half — the
+     * claimant must have proven their own identity to ≥LOA2 (consumed from the
+     * Wave-G person-proofing spine) — and a document/appointment-letter authority
+     * half (the evidenceRef). Knowing the facility's details is never enough.
+     */
+    private static final int MIN_CLAIM_ASSURANCE_RANK = 2; // LOA2
 
     public FacilityClaimController(TusoFacilityClaimClient tusoClient,
                                    OrgRegistryFacilityAdminClient orgRegistryClient,
-                                   DocumentServiceClient documentServiceClient) {
+                                   DocumentServiceClient documentServiceClient,
+                                   zw.gov.mohcc.impilo.experience.client.IdentityAssuranceServiceClient assuranceClient) {
         this.tusoClient = tusoClient;
         this.orgRegistryClient = orgRegistryClient;
         this.documentServiceClient = documentServiceClient;
+        this.assuranceClient = assuranceClient;
+    }
+
+    /** The session actor's current identity-assurance level; fail-closed to LOA1 on outage. */
+    private int claimantAssuranceRank() {
+        try {
+            JsonNode status = assuranceClient.getAssuranceStatus();
+            String level = text(status, "currentLevel");
+            return switch (level == null ? "LOA1" : level.trim().toUpperCase(java.util.Locale.ROOT)) {
+                case "LOA4" -> 4;
+                case "LOA3" -> 3;
+                case "LOA2" -> 2;
+                default -> 1;
+            };
+        } catch (Exception e) {
+            log.warn("assurance status unavailable — treating as LOA1 (fail-closed): {}", e.getMessage());
+            return 1;
+        }
     }
 
     // ── Eligibility ───────────────────────────────────────────────────────────
@@ -221,6 +250,14 @@ public class FacilityClaimController {
         if (!Boolean.TRUE.equals(body.get("consent"))) {
             return error(HttpStatus.BAD_REQUEST, "CONSENT_REQUIRED",
                     "Explicit consent is required before requesting facility administrator access.",
+                    requestId, correlationId);
+        }
+        // Person-proofing gate (Wave-G consume, D-L4 person half): a facility
+        // claim requires the claimant to have proven their own identity.
+        if (claimantAssuranceRank() < MIN_CLAIM_ASSURANCE_RANK) {
+            return error(HttpStatus.FORBIDDEN, "IDENTITY_PROOFING_REQUIRED",
+                    "Confirm your personal identity before requesting facility administrator access. "
+                            + "Complete identity verification, then try again.",
                     requestId, correlationId);
         }
         try {

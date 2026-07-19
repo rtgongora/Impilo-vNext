@@ -45,9 +45,19 @@ class ProviderClaimControllerTest {
     @Mock private VarapiServiceClient varapiClient;
     @Mock private WorkforceEmploymentMatchClient employmentMatchClient;
     @Mock private DocumentServiceClient documentServiceClient;
+    @Mock private zw.gov.mohcc.impilo.experience.client.IdentityAssuranceServiceClient assuranceClient;
 
     private ProviderClaimController controller(boolean ecMatchingEnabled) {
-        return new ProviderClaimController(varapiClient, employmentMatchClient, documentServiceClient, ecMatchingEnabled);
+        return new ProviderClaimController(
+                varapiClient, employmentMatchClient, documentServiceClient, assuranceClient, ecMatchingEnabled);
+    }
+
+    /** Stub the claimant's assurance level (Wave-G person-proofing gate). */
+    private void assuranceLevel(String loa) {
+        try {
+            org.mockito.Mockito.lenient().when(assuranceClient.getAssuranceStatus())
+                    .thenReturn(MAPPER.readTree("{\"currentLevel\":\"" + loa + "\"}"));
+        } catch (Exception e) { throw new RuntimeException(e); }
     }
 
     @SuppressWarnings("unchecked")
@@ -127,6 +137,7 @@ class ProviderClaimControllerTest {
 
     @Test
     void claim_bindsClaimantToSessionHealthId_andRequiresConsent() throws Exception {
+        assuranceLevel("LOA2");
         when(varapiClient.claim(any())).thenReturn(MAPPER.readTree(
                 "{\"providerPublicId\":\"ABCDEF1234567890\",\"lifecycleStatus\":\"CLAIMED\"}"));
 
@@ -144,6 +155,33 @@ class ProviderClaimControllerTest {
         verify(varapiClient).claim(captor.capture());
         assertEquals(ACTOR, captor.getValue().get("claimantHealthId"),
                 "claimant must come from X-Actor-ID, never the body");
+        assertEquals("DOCUMENT_VERIFIED", captor.getValue().get("assuranceOutcome"),
+                "the proven LOA2 outcome must be recorded on the link");
+    }
+
+    @Test
+    void claim_belowLoa2_isForbidden_andNeverBinds() {
+        assuranceLevel("LOA1");
+
+        ResponseEntity<Map<String, Object>> resp = controller(false).claim(
+                TENANT, REQ, CORR, ACTOR,
+                Map.of("claimToken", "tok-1", "consent", true));
+
+        assertEquals(HttpStatus.FORBIDDEN, resp.getStatusCode());
+        assertEquals("IDENTITY_PROOFING_REQUIRED", error(resp).get("code"));
+        verify(varapiClient, never()).claim(any());
+    }
+
+    @Test
+    void claim_assuranceOutage_failsClosed() {
+        when(assuranceClient.getAssuranceStatus()).thenThrow(new RuntimeException("assurance down"));
+
+        ResponseEntity<Map<String, Object>> resp = controller(false).claim(
+                TENANT, REQ, CORR, ACTOR,
+                Map.of("claimToken", "tok-1", "consent", true));
+
+        assertEquals(HttpStatus.FORBIDDEN, resp.getStatusCode());
+        verify(varapiClient, never()).claim(any());
     }
 
     @Test
@@ -158,6 +196,7 @@ class ProviderClaimControllerTest {
 
     @Test
     void claim_downstream409_propagatesHonestly() {
+        assuranceLevel("LOA2");
         when(varapiClient.claim(any())).thenThrow(HttpClientErrorException.create(
                 HttpStatus.CONFLICT, "Conflict", null,
                 "{\"error\":\"Claim token is invalid, expired, or already used\"}"
