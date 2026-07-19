@@ -36,6 +36,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | **8183** | `tshepo-audit-service` | |
 | **8184** | `tshepo-keys-service` | |
 | **8185** | `tshepo-offline-service` | |
+| **8186** | `abis-service` | Biometric template custody & matching (D6); deploy queues for the next authorized full-boot |
 
 ---
 

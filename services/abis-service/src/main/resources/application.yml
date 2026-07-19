@@ -1,0 +1,65 @@
+server:
+  port: 8186
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: abis-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/abis
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 3
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: abis
+  flyway:
+    enabled: true
+    schemas: abis
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # Values are pre-serialized JSON strings (envelope/outbox payloads) — a
+      # JsonSerializer would double-encode them into quoted string literals.
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+
+# --- ABIS configuration ---
+abis:
+  # Key Encryption Key (KEK) for AES-256-GCM template encryption at rest.
+  # In production, this MUST come from tshepo-keys custody / a KMS — never hardcode.
+  template-kek: ${ABIS_TEMPLATE_KEK:101112131415161718191a1b1c1d1e1f000102030405060708090a0b0c0d0e0f}
+  matching:
+    # Per-modality thresholds are versioned with the vendor algorithm; the
+    # fail-closed default engine never fabricates a match regardless.
+    liveness-min-score: ${ABIS_LIVENESS_MIN_SCORE:0}
+  identify:
+    # Hard cap on candidate templates loaded per 1:N identification request.
+    max-candidates: ${ABIS_IDENTIFY_MAX_CANDIDATES:500}
+  events:
+    kafka-topic: platform.abis.events
+  outbox:
+    poll-interval-ms: 2000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: abis-service

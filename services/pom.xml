@@ -169,6 +169,8 @@
         <module>tshepo-audit-service</module>
         <module>tshepo-keys-service</module>
         <module>tshepo-offline-service</module>
+        <!-- ABIS — biometric template custody & matching (trust plane, D6) -->
+        <module>abis-service</module>
         <!-- TSHEPO shared libraries (under libs/) -->
         <module>../libs/tshepo-contracts</module>
         <module>../libs/tshepo-sdk</module>

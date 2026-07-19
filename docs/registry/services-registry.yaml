@@ -2716,6 +2716,37 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: abis-service
+    maven_module: abis-service
+    primary_plane: trust
+    plane: trust
+    domain: biometric-identity
+    secondary_planes: []
+    sovereign: true
+    sovereign_group: ABIS
+    primary_protocol: rest
+    default_http_port: 8186
+    product_names:
+      - ABIS
+    owner_team: TBD
+    system_of_record_for:
+      - Biometric templates (encrypted)
+      - Per-modality matching thresholds
+    consumes_from:
+      - tshepo-authz-service
+      - vito-service
+    exposes_to:
+      - vito-service
+    forbidden_responsibilities:
+      - must-not-own-identity-assurance-policy
+      - must-not-store-demographics-or-pii
+      - must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: tshepo-service
     maven_module: tshepo-service
     primary_plane: trust
