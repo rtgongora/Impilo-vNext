@@ -117,7 +117,34 @@ public class AssuranceService {
         return request;
     }
 
-    private void raiseLevel(UUID tenantId, String actorId, AssuranceLevel level) {
+    /**
+     * Raise the actor's assurance level from an authoritative <b>proofing outcome</b>
+     * (Identity Journey Doctrine §4). Unlike {@link #requestUpgrade}/{@link #decideUpgrade},
+     * this is not a separate dual-control workflow: the proofing itself IS the governed
+     * verification — an auto document-verify with matched liveness, or an officer-witnessed
+     * review decision — so its recorded outcome maps directly onto the assurance vector that
+     * the PDP reads. Only ever raises (never downgrades) and audits the provenance via the
+     * outbox. This is the bridge that makes proofing actually change access decisions.
+     */
+    @Transactional
+    public StatusView recordProofingOutcome(UUID tenantId, String actorId,
+                                            AssuranceLevel target, String provenance) {
+        if (actorId == null || actorId.isBlank()) {
+            throw new IllegalArgumentException("actorId is required");
+        }
+        AssuranceLevel current = recordRepository.findByTenantIdAndActorId(tenantId, actorId)
+                .map(AssuranceRecordEntity::getCurrentLevel).orElse(AssuranceLevel.LOA1);
+        if (target != null && (current == null || target.isHigherThan(current))) {
+            AssuranceRecordEntity record = raiseLevel(tenantId, actorId, target);
+            publish("ASSURANCE_RECORD", record.getId(), "ASSURANCE_RAISED_BY_PROOFING", tenantId,
+                    Map.of("actorId", actorId, "level", target.name(),
+                            "from", current == null ? "NONE" : current.name(),
+                            "provenance", provenance == null ? "PROOFING" : provenance));
+        }
+        return getStatus(tenantId, actorId);
+    }
+
+    private AssuranceRecordEntity raiseLevel(UUID tenantId, String actorId, AssuranceLevel level) {
         AssuranceRecordEntity record = recordRepository.findByTenantIdAndActorId(tenantId, actorId)
                 .orElseGet(() -> {
                     AssuranceRecordEntity e = new AssuranceRecordEntity();
@@ -130,7 +157,7 @@ public class AssuranceService {
             record.setCurrentLevel(level);
         }
         record.setAssessedAt(OffsetDateTime.now());
-        recordRepository.save(record);
+        return recordRepository.save(record);
     }
 
     private void publish(String aggregateType, Long aggregateId, String eventType,

@@ -89,6 +89,24 @@ public class IdentityAssuranceServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Raise the caller's assurance level from an authoritative proofing outcome (Identity
+     * Journey Doctrine §4). INTERNAL-only on the IA side — the mode is set explicitly here;
+     * the caller's actor/tenant are forwarded by the shared trust-header interceptor, so IA
+     * applies the raise to the acting citizen (never another actor).
+     */
+    public JsonNode recordProofingOutcome(String targetLevel, String provenance) {
+        String url = baseUrl + "/internal/v1/assurance/proofing-outcome";
+        log.info("IDENTITY-ASSURANCE: recording proofing outcome level={} provenance={}", targetLevel, provenance);
+        org.springframework.http.HttpHeaders h = new org.springframework.http.HttpHeaders();
+        h.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        h.set("X-Access-Mode", "INTERNAL");
+        Map<String, Object> body = Map.of("targetLevel", targetLevel, "provenance", provenance);
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body, h), JsonNode.class);
+        return extractData(response);
+    }
+
     /** Contact-verification status of an account (verified contact + channels). */
     public JsonNode getContactVerification(String accountId) {
         String url = baseUrl + "/internal/v1/attestations/contact-verified/" + accountId;

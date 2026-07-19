@@ -62,7 +62,30 @@ public class AssuranceController {
         return ResponseEntity.ok(ApiResponse.ok(decided, ctx.correlationId().toString()));
     }
 
+    /**
+     * Raise the CURRENT actor's assurance from an authoritative proofing outcome (Identity
+     * Journey Doctrine §4). INTERNAL-only — only the Trust Core, after a genuine proofing
+     * (auto document-verify or officer-witnessed review), may call this; a citizen can never
+     * self-grant. The level is applied to {@code ctx.actorId()} (the acting citizen), so no
+     * actor can raise another's assurance. Only ever raises.
+     */
+    @PostMapping("/proofing-outcome")
+    public ResponseEntity<ApiResponse<AssuranceService.StatusView>> proofingOutcome(
+            @RequestBody ProofingOutcomeRequest body) {
+        TrustContext ctx = TrustContextHolder.require();
+        if (ctx.mode() != zw.gov.mohcc.impilo.shared.auth.AccessMode.INTERNAL) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN,
+                    "proofing-outcome is INTERNAL-only");
+        }
+        AssuranceService.StatusView view = assuranceService.recordProofingOutcome(
+                ctx.tenantId(), ctx.actorId(), body.targetLevel(), body.provenance());
+        return ResponseEntity.ok(ApiResponse.ok(view, ctx.correlationId().toString()));
+    }
+
     public record UpgradeRequest(AssuranceLevel targetLevel, String method) {}
 
     public record DecideRequest(boolean approve, String reason) {}
+
+    public record ProofingOutcomeRequest(AssuranceLevel targetLevel, String provenance) {}
 }

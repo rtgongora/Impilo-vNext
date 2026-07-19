@@ -124,4 +124,45 @@ class AssuranceServiceTest {
         assertThatThrownBy(() -> service.decideUpgrade(tenant, "reviewer-bob", 7L, true, null))
                 .isInstanceOf(IllegalStateException.class);
     }
+
+    @Test
+    void recordProofingOutcome_raisesLevelAndAudits() {
+        // Stateful mock so the final getStatus re-read reflects the save (as real JPA would).
+        java.util.concurrent.atomic.AtomicReference<AssuranceRecordEntity> stored =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        when(recordRepository.findByTenantIdAndActorId(tenant, "alice"))
+                .thenAnswer(i -> Optional.ofNullable(stored.get()));
+        when(recordRepository.save(any())).thenAnswer(i -> {
+            AssuranceRecordEntity e = i.getArgument(0);
+            stored.set(e);
+            return e;
+        });
+
+        AssuranceService.StatusView view =
+                service.recordProofingOutcome(tenant, "alice", AssuranceLevel.LOA3, "PROOFING:DOCUMENT_VERIFIED");
+        assertThat(view.currentLevel()).isEqualTo(AssuranceLevel.LOA3);
+        assertThat(stored.get().getCurrentLevel()).isEqualTo(AssuranceLevel.LOA3);
+        verify(outboxRepository).save(any()); // provenance audited
+    }
+
+    @Test
+    void recordProofingOutcome_neverDowngrades() {
+        AssuranceRecordEntity high = new AssuranceRecordEntity();
+        high.setTenantId(tenant);
+        high.setActorId("alice");
+        high.setCurrentLevel(AssuranceLevel.LOA4);
+        when(recordRepository.findByTenantIdAndActorId(tenant, "alice")).thenReturn(Optional.of(high));
+
+        AssuranceService.StatusView view =
+                service.recordProofingOutcome(tenant, "alice", AssuranceLevel.LOA2, "PROOFING:DOCUMENT_VERIFIED");
+        assertThat(view.currentLevel()).isEqualTo(AssuranceLevel.LOA4);
+        verify(recordRepository, org.mockito.Mockito.never()).save(any());
+        verify(outboxRepository, org.mockito.Mockito.never()).save(any());
+    }
+
+    @Test
+    void recordProofingOutcome_blankActor_throws() {
+        assertThatThrownBy(() -> service.recordProofingOutcome(tenant, "  ", AssuranceLevel.LOA3, "x"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

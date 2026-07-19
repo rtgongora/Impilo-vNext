@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.IdentityAssuranceServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 
 import java.util.LinkedHashMap;
@@ -31,9 +32,11 @@ public class PatientProofingController {
     private static final Logger log = LoggerFactory.getLogger(PatientProofingController.class);
 
     private final VitoServiceClient vito;
+    private final IdentityAssuranceServiceClient assurance;
 
-    public PatientProofingController(VitoServiceClient vito) {
+    public PatientProofingController(VitoServiceClient vito, IdentityAssuranceServiceClient assurance) {
         this.vito = vito;
+        this.assurance = assurance;
     }
 
     public record DocumentProofingRequest(
@@ -65,8 +68,13 @@ public class PatientProofingController {
 
             switch (disposition) {
                 case "VERIFIED" -> {
+                    String outcome = r.path("outcome").asText("DOCUMENT_VERIFIED");
+                    int loa = r.path("assuranceLevel").asInt(2);
+                    // Bridge the proofing outcome onto the assurance vector the PDP reads
+                    // (Identity Journey Doctrine §4) — this is what makes proofing change access.
+                    raiseAssurance(loa, "PROOFING:" + outcome);
                     out.put("status", "VERIFIED");
-                    out.put("assurance", r.path("outcome").asText("DOCUMENT_VERIFIED"));
+                    out.put("assurance", outcome);
                     out.put("message", "Your identity document has been verified and your account assurance has been raised.");
                 }
                 case "REJECTED" -> {
@@ -81,9 +89,30 @@ public class PatientProofingController {
             return ResponseEntity.ok(out);
         } catch (Exception e) {
             log.warn("proofing/document failed: {}", e.getMessage());
+            // fall through to the generic under-review response below
             out.put("status", "UNDER_REVIEW");
             out.put("message", "Your submission was received and is being reviewed. You will be notified once verification is complete.");
             return ResponseEntity.ok(out);
+        }
+    }
+
+    /** Raise the acting citizen's assurance from a verified proofing (LOA int → IA level). */
+    private void raiseAssurance(int loa, String provenance) {
+        String level = switch (loa) {
+            case 4 -> "LOA4";
+            case 3 -> "LOA3";
+            case 2 -> "LOA2";
+            default -> null; // LOA1/0 is not a raise worth recording
+        };
+        if (level == null) {
+            return;
+        }
+        try {
+            assurance.recordProofingOutcome(level, provenance);
+        } catch (Exception e) {
+            // The proofing itself succeeded and is on the ledger; an assurance-raise hiccup must
+            // not fail the citizen's request. It will reconcile on the next assurance read/retry.
+            log.warn("proofing assurance-raise not applied ({}): {}", provenance, e.getMessage());
         }
     }
 }
