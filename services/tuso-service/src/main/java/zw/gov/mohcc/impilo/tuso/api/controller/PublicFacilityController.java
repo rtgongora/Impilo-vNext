@@ -152,8 +152,26 @@ public class PublicFacilityController {
                 null, // createdAt — redacted
                 null, // updatedAt — redacted
                 null, // createdBy — redacted
-                null  // updatedBy — redacted
+                null, // updatedBy — redacted
+                // HPA enrichment disclosure — honest source/verification/completeness (never implies open).
+                metaString(entity, "source_system"),
+                metaString(entity, "source_effective_date"),
+                metaString(entity, "verification_status"),
+                metaBool(entity, "geospatial_incomplete") || metaBool(entity, "missing_operating_status"),
+                metaBool(entity, "site_resolution_unresolved")
         );
+    }
+
+    private static String metaString(FacilityEntity entity, String key) {
+        java.util.Map<String, Object> m = entity.getMetadata();
+        Object v = m == null ? null : m.get(key);
+        return v == null ? null : String.valueOf(v);
+    }
+
+    private static Boolean metaBool(FacilityEntity entity, String key) {
+        java.util.Map<String, Object> m = entity.getMetadata();
+        Object v = m == null ? null : m.get(key);
+        return v instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(v));
     }
 
     private FacilityResponse.OperatingModelDetail toOperatingModel(FacilityEntity entity) {

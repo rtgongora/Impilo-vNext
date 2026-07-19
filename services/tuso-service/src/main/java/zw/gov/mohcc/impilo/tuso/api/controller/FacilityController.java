@@ -352,7 +352,8 @@ public class FacilityController {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
                 entity.getCreatedBy(),
-                entity.getUpdatedBy()
+                entity.getUpdatedBy(),
+                null, null, null, null, null // HPA disclosure — public-profile only
         );
     }
 
@@ -438,7 +439,8 @@ public class FacilityController {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
                 entity.getCreatedBy(),
-                entity.getUpdatedBy()
+                entity.getUpdatedBy(),
+                null, null, null, null, null // HPA disclosure — public-profile only
         );
     }
 

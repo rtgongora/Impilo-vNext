@@ -29,6 +29,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
+import { FacilityHpaDisclosure } from "@/components/public/find-care/FacilityHpaDisclosure";
 import type {
   FacilityCapability,
   FacilityPractitionersResponse,
@@ -224,6 +225,9 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
           <p className="mt-2 text-xs text-slate-500">This facility does not have mapped coordinates yet.</p>
         )}
       </header>
+
+      {/* Honest regulatory-source disclosure for regulator-listed (HPA) records. */}
+      <FacilityHpaDisclosure profile={profile} />
 
       {/* Services offered (registry truth) */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6">

@@ -112,6 +112,17 @@ export interface FacilityProfile {
   facilityCategory: string | null;
   operatingModel: FacilityOperatingModel | null;
   capabilities: FacilityCapability[] | null;
+  /**
+   * Honest provenance/verification disclosure for regulator-listed records (HPA
+   * enrichment). Optional — present when the facility carries a regulatory source
+   * (e.g. `sourceSystem="HPA"`). The citizen surface must NEVER imply that a
+   * regulatory listing proves the facility is currently open; always date the status.
+   */
+  sourceSystem?: string | null;
+  sourceEffectiveDate?: string | null;
+  verificationStatus?: string | null;
+  profileIncomplete?: boolean | null;
+  siteUnresolved?: boolean | null;
 }
 
 /**

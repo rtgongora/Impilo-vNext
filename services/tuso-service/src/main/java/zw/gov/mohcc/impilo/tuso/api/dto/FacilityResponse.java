@@ -38,7 +38,14 @@ public record FacilityResponse(
         Instant createdAt,
         Instant updatedAt,
         String createdBy,
-        String updatedBy
+        String updatedBy,
+        // HPA enrichment disclosure (public profile) — honest source/verification/completeness.
+        // Null for non-regulator-listed records; the citizen surface renders them defensively.
+        String sourceSystem,
+        String sourceEffectiveDate,
+        String verificationStatus,
+        Boolean profileIncomplete,
+        Boolean siteUnresolved
 ) {
     public record OperatingModelDetail(
             String facilityTier,

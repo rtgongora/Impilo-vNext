@@ -62,7 +62,9 @@ public final class FacilityRepresentation {
                 r.createdAt(),
                 r.updatedAt(),
                 r.createdBy(),
-                r.updatedBy()
+                r.updatedBy(),
+                r.sourceSystem(), r.sourceEffectiveDate(), r.verificationStatus(),
+                r.profileIncomplete(), r.siteUnresolved()
         );
     }
 }
