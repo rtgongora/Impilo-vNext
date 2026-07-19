@@ -486,6 +486,8 @@ export const ROUTES: RouteDefinition[] = [
   // â”€â”€ Zone: Provider Activation (Health OS Â§6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/provider/activate", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activate Provider Role", navLabel: "Provider Activation" },
   { path: "/provider/status", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Provider Status", navLabel: "Provider Status" },
+  // D-P3/PJ5: workplace selection hub — proves the assignment and mints the WORK_CONTEXT token.
+  { path: "/provider/workplace", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Start a Work Session", navLabel: "Start Work Session" },
   // Public provider-onboarding explainer — honest journey map into the real activation/claim flow.
   { path: "/provider/get-access", zone: "auth", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Get Provider Access", navLabel: "Provider Access" },
   // E2-TRUST: provider self-service claim / recovery journey (page already exists — nav discoverability).

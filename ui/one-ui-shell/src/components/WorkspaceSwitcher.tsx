@@ -126,7 +126,10 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
 
   function handleStartWorkSession() {
     guardedSwitch(() => {
-      router.push("/facility");
+      // D-P3/PJ5: the workplace hub proves the chosen assignment against
+      // Vashandi and mints the duty-scoped WORK_CONTEXT token (real work
+      // session), rather than only setting local facility/workspace state.
+      router.push("/provider/workplace");
       onClose();
     });
   }
