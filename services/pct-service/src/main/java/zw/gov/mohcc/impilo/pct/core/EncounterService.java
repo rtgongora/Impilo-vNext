@@ -209,6 +209,12 @@ public class EncounterService {
         String normalized = encounterContext == null || encounterContext.isBlank()
                 ? derivedDefault
                 : encounterContext.trim().toLowerCase(Locale.ROOT);
+        // "walk_in" is an arrival mode (a valid entry point — see ALLOWED_ENTRY_POINTS), not a clinical
+        // context. A walk-in patient is clinically an outpatient encounter, so accept the natural walk-in
+        // label the provider flow supplies and resolve it to the outpatient context rather than 500ing.
+        if ("walk_in".equals(normalized) || "walkin".equals(normalized)) {
+            normalized = "outpatient";
+        }
         if (!ALLOWED_CONTEXTS.contains(normalized)) {
             throw new IllegalArgumentException("Invalid encounter context: " + encounterContext);
         }
