@@ -408,6 +408,213 @@ public class CoverageController {
         }
     }
 
+    // ════════════════════════════════════════════════════════════════════
+    // Ruvimbo Wave 1 passthroughs (payers, hierarchy, membership, benefits, eligibility v2)
+    // ════════════════════════════════════════════════════════════════════
+
+    @GetMapping("/payers")
+    public ResponseEntity<Map<String, Object>> listPayers(
+            @RequestParam(required = false) String status,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.listPayers(status), rid, cid);
+    }
+
+    @GetMapping("/payers/{id}")
+    public ResponseEntity<Map<String, Object>> getPayer(@PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.getPayer(id), rid, cid);
+    }
+
+    @PostMapping("/payers")
+    public ResponseEntity<Map<String, Object>> createPayer(@RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("PAYER_CREATE_FAILED", () -> coverageClient.createPayer(body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @PostMapping("/payers/{id}/suspend")
+    public ResponseEntity<Map<String, Object>> suspendPayer(@PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("PAYER_SUSPEND_FAILED", () -> coverageClient.suspendPayer(id), HttpStatus.OK, rid, cid);
+    }
+
+    @PostMapping("/payers/{id}/reactivate")
+    public ResponseEntity<Map<String, Object>> reactivatePayer(@PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("PAYER_REACTIVATE_FAILED", () -> coverageClient.reactivatePayer(id), HttpStatus.OK, rid, cid);
+    }
+
+    @GetMapping("/payers/{payerId}/schemes")
+    public ResponseEntity<Map<String, Object>> listSchemes(@PathVariable String payerId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.listSchemes(payerId), rid, cid);
+    }
+
+    @PostMapping("/payers/{payerId}/schemes")
+    public ResponseEntity<Map<String, Object>> createScheme(@PathVariable String payerId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("SCHEME_CREATE_FAILED", () -> coverageClient.createScheme(payerId, body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @GetMapping("/schemes/{schemeId}/products")
+    public ResponseEntity<Map<String, Object>> listProducts(@PathVariable String schemeId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.listProducts(schemeId), rid, cid);
+    }
+
+    @PostMapping("/schemes/{schemeId}/products")
+    public ResponseEntity<Map<String, Object>> createProduct(@PathVariable String schemeId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("PRODUCT_CREATE_FAILED", () -> coverageClient.createProduct(schemeId, body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @GetMapping("/products/{productId}/versions")
+    public ResponseEntity<Map<String, Object>> listPlanVersions(@PathVariable String productId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.listPlanVersions(productId), rid, cid);
+    }
+
+    @PostMapping("/products/{productId}/versions")
+    public ResponseEntity<Map<String, Object>> createPlanVersion(@PathVariable String productId,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        Map<String, Object> b = body != null ? body : Map.of();
+        return upstreamWrite("VERSION_CREATE_FAILED", () -> coverageClient.createPlanVersion(productId, b), HttpStatus.CREATED, rid, cid);
+    }
+
+    @PostMapping("/plan-versions/{versionId}/publish")
+    public ResponseEntity<Map<String, Object>> publishPlanVersion(@PathVariable String versionId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("VERSION_PUBLISH_FAILED", () -> coverageClient.publishPlanVersion(versionId), HttpStatus.OK, rid, cid);
+    }
+
+    @GetMapping("/members/pending-verification")
+    public ResponseEntity<Map<String, Object>> pendingVerification(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(coverageClient::pendingVerification, rid, cid);
+    }
+
+    @GetMapping("/members/{id}/dependants")
+    public ResponseEntity<Map<String, Object>> listDependants(@PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.listDependants(id), rid, cid);
+    }
+
+    @PostMapping("/members/{id}/verify")
+    public ResponseEntity<Map<String, Object>> verifyMembership(@PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        Map<String, Object> b = body != null ? body : Map.of();
+        return upstreamWrite("MEMBER_VERIFY_FAILED", () -> coverageClient.verifyMembership(id, b), HttpStatus.OK, rid, cid);
+    }
+
+    @PostMapping("/members/{id}/suspend")
+    public ResponseEntity<Map<String, Object>> suspendMembership(@PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        Map<String, Object> b = body != null ? body : Map.of();
+        return upstreamWrite("MEMBER_SUSPEND_FAILED", () -> coverageClient.transitionMembership(id, "suspend", b), HttpStatus.OK, rid, cid);
+    }
+
+    @PostMapping("/members/{id}/reinstate")
+    public ResponseEntity<Map<String, Object>> reinstateMembership(@PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        Map<String, Object> b = body != null ? body : Map.of();
+        return upstreamWrite("MEMBER_REINSTATE_FAILED", () -> coverageClient.transitionMembership(id, "reinstate", b), HttpStatus.OK, rid, cid);
+    }
+
+    @PostMapping("/members/{id}/terminate")
+    public ResponseEntity<Map<String, Object>> terminateMembership(@PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        Map<String, Object> b = body != null ? body : Map.of();
+        return upstreamWrite("MEMBER_TERMINATE_FAILED", () -> coverageClient.transitionMembership(id, "terminate", b), HttpStatus.OK, rid, cid);
+    }
+
+    @PostMapping("/members/{id}/dependants")
+    public ResponseEntity<Map<String, Object>> addDependant(@PathVariable String id,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("DEPENDANT_ADD_FAILED", () -> coverageClient.addDependant(id, body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @GetMapping("/plan-versions/{planVersionId}/benefits")
+    public ResponseEntity<Map<String, Object>> listBenefits(@PathVariable String planVersionId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.listBenefits(planVersionId), rid, cid);
+    }
+
+    @PostMapping("/plan-versions/{planVersionId}/benefits")
+    public ResponseEntity<Map<String, Object>> createBenefit(@PathVariable String planVersionId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("BENEFIT_CREATE_FAILED", () -> coverageClient.createBenefit(planVersionId, body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @GetMapping("/members/{id}/benefit-accumulators")
+    public ResponseEntity<Map<String, Object>> memberAccumulators(@PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return read(() -> coverageClient.memberAccumulators(id), rid, cid);
+    }
+
+    @PostMapping("/members/{id}/benefits/{kind}")
+    public ResponseEntity<Map<String, Object>> benefitMovement(@PathVariable String id, @PathVariable String kind,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("BENEFIT_MOVEMENT_FAILED", () -> coverageClient.benefitMovement(id, kind, body), HttpStatus.OK, rid, cid);
+    }
+
+    @PostMapping("/eligibility/v2")
+    public ResponseEntity<Map<String, Object>> checkEligibilityV2(@RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("ELIGIBILITY_V2_FAILED", () -> coverageClient.checkEligibilityV2(body), HttpStatus.CREATED, rid, cid);
+    }
+
+    @PostMapping("/eligibility/tokens/verify")
+    public ResponseEntity<Map<String, Object>> verifyEligibilityToken(@RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String rid,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String cid) {
+        return upstreamWrite("TOKEN_VERIFY_FAILED", () -> coverageClient.verifyEligibilityToken(body), HttpStatus.OK, rid, cid);
+    }
+
+    /** Read passthrough: 502 on transport failure, empty object/array preserved. */
+    private ResponseEntity<Map<String, Object>> read(
+            java.util.concurrent.Callable<JsonNode> call, String requestId, String correlationId) {
+        try {
+            JsonNode data = call.call();
+            return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
     private ResponseEntity<Map<String, Object>> upstreamFailure(
             String code, String message, String requestId, String correlationId) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(

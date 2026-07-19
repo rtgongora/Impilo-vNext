@@ -337,6 +337,130 @@ public class CoverageServiceClient {
         return null;
     }
 
+    // ── Ruvimbo Wave 1: payer registry ─────────────────────────────────────
+
+    public JsonNode listPayers(String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/payers");
+        if (status != null && !status.isBlank()) b.queryParam("status", status);
+        return extractData(restTemplate.getForEntity(b.toUriString(), JsonNode.class));
+    }
+
+    public JsonNode getPayer(String id) {
+        return extractData(restTemplate.getForEntity(baseUrl + "/internal/v1/coverage/payers/" + id, JsonNode.class));
+    }
+
+    public JsonNode createPayer(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(baseUrl + "/internal/v1/coverage/payers", body, JsonNode.class));
+    }
+
+    public JsonNode suspendPayer(String id) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/payers/" + id + "/suspend", Map.of(), JsonNode.class));
+    }
+
+    public JsonNode reactivatePayer(String id) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/payers/" + id + "/reactivate", Map.of(), JsonNode.class));
+    }
+
+    // ── Scheme -> Product -> PlanVersion hierarchy ─────────────────────────
+
+    public JsonNode listSchemes(String payerId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/internal/v1/coverage/payers/" + payerId + "/schemes", JsonNode.class));
+    }
+
+    public JsonNode createScheme(String payerId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/payers/" + payerId + "/schemes", body, JsonNode.class));
+    }
+
+    public JsonNode listProducts(String schemeId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/internal/v1/coverage/schemes/" + schemeId + "/products", JsonNode.class));
+    }
+
+    public JsonNode createProduct(String schemeId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/schemes/" + schemeId + "/products", body, JsonNode.class));
+    }
+
+    public JsonNode listPlanVersions(String productId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/internal/v1/coverage/products/" + productId + "/versions", JsonNode.class));
+    }
+
+    public JsonNode createPlanVersion(String productId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/products/" + productId + "/versions", body, JsonNode.class));
+    }
+
+    public JsonNode publishPlanVersion(String versionId) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/plan-versions/" + versionId + "/publish", Map.of(), JsonNode.class));
+    }
+
+    // ── Membership lifecycle: verification, transitions, dependants ────────
+
+    public JsonNode pendingVerification() {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/internal/v1/coverage/members/pending-verification", JsonNode.class));
+    }
+
+    public JsonNode listDependants(String membershipId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/internal/v1/coverage/members/" + membershipId + "/dependants", JsonNode.class));
+    }
+
+    public JsonNode verifyMembership(String membershipId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/members/" + membershipId + "/verify", body, JsonNode.class));
+    }
+
+    public JsonNode transitionMembership(String membershipId, String action, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/members/" + membershipId + "/" + action, body, JsonNode.class));
+    }
+
+    public JsonNode addDependant(String membershipId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/members/" + membershipId + "/dependants", body, JsonNode.class));
+    }
+
+    // ── Benefits + reservation-aware accumulators ──────────────────────────
+
+    public JsonNode listBenefits(String planVersionId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/internal/v1/coverage/plan-versions/" + planVersionId + "/benefits", JsonNode.class));
+    }
+
+    public JsonNode createBenefit(String planVersionId, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/plan-versions/" + planVersionId + "/benefits", body, JsonNode.class));
+    }
+
+    public JsonNode memberAccumulators(String membershipId) {
+        return extractData(restTemplate.getForEntity(
+                baseUrl + "/internal/v1/coverage/members/" + membershipId + "/benefit-accumulators", JsonNode.class));
+    }
+
+    public JsonNode benefitMovement(String membershipId, String kind, Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/members/" + membershipId + "/benefits/" + kind, body, JsonNode.class));
+    }
+
+    // ── Eligibility v2 + signed tokens ─────────────────────────────────────
+
+    public JsonNode checkEligibilityV2(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/eligibility/v2", body, JsonNode.class));
+    }
+
+    public JsonNode verifyEligibilityToken(Map<String, Object> body) {
+        return extractData(restTemplate.postForEntity(
+                baseUrl + "/internal/v1/coverage/eligibility/tokens/verify", body, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) return response.getBody().get("data");
         return response.getBody();
