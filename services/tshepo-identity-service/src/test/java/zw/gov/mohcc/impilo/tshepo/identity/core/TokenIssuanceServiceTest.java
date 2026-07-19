@@ -252,6 +252,15 @@ class TokenIssuanceServiceTest {
             String[] parts = response.token().split("\\.");
             assertEquals(3, parts.length,
                     "JWS compact serialization must have exactly 3 parts (header.payload.signature)");
+            // The payload must be canonical JSON with the tenant claim — a
+            // Map.toString() payload ({k=v}) is a valid-looking 3-part token
+            // that every consumer fails to parse (regression guard).
+            String payloadJson = new String(java.util.Base64.getUrlDecoder().decode(parts[1]),
+                    java.nio.charset.StandardCharsets.UTF_8);
+            assertDoesNotThrow(() -> new com.fasterxml.jackson.databind.ObjectMapper().readTree(payloadJson),
+                    "token payload must be valid JSON, was: " + payloadJson);
+            assertTrue(payloadJson.contains("\"tenant_id\""),
+                    "token payload must carry the tenant_id claim as JSON, was: " + payloadJson);
         }
 
         @Test

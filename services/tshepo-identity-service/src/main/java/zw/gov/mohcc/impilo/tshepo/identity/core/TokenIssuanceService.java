@@ -304,9 +304,12 @@ public class TokenIssuanceService {
                     .type(JOSEObjectType.JWT)
                     .build();
 
-            // Create the signing input (header.payload)
+            // Create the signing input (header.payload). claims.toPayload()
+            // emits canonical JSON — claims.toJSONObject().toString() emits Java
+            // Map.toString ({k=v, ...}), producing a malformed non-JSON payload
+            // that every consumer fails to parse even though signing succeeds.
             Base64URL headerB64 = header.toBase64URL();
-            Base64URL payloadB64 = Base64URL.encode(claims.toJSONObject().toString());
+            Base64URL payloadB64 = Base64URL.encode(claims.toPayload().toBytes());
             String signingInput = headerB64 + "." + payloadB64;
 
             // Call keys-service for signature. The /v1/sign contract requires
