@@ -28,6 +28,9 @@ const BASE = "/api/v1/facility-lifecycle";
 const qk = {
   trust: (facilityUuid: string) => ["facility-lifecycle", "trust", facilityUuid] as const,
   verification: (facilityUuid: string) => ["facility-lifecycle", "verification", facilityUuid] as const,
+  registrationCases: (outcome: string) => ["facility-lifecycle", "reg-cases", outcome] as const,
+  governanceCases: (facilityUuid: string, caseType: string) =>
+    ["facility-lifecycle", "gov-cases", facilityUuid, caseType] as const,
 };
 
 // ── Registration ───────────────────────────────────────────────────────────
@@ -178,6 +181,99 @@ export function useOpenFacilityGovernanceCase() {
           payload ?? {},
         )
       ).data,
+  });
+}
+
+// ── Steward review (queue reads + decisions) ─────────────────────────────────
+
+export interface FacilityRegistrationCase {
+  caseRef?: string;
+  submittedName?: string;
+  applicantHealthId?: string;
+  outcome?: string;
+  matchedFacilityUuid?: string;
+  provisionalFacilityUuid?: string;
+  createdAt?: string;
+}
+
+/** Steward: facility-registration review queue by outcome (steward-gated upstream). */
+export function useFacilityRegistrationCases(outcome: string, enabled = true) {
+  return useQuery<FacilityRegistrationCase[]>({
+    queryKey: qk.registrationCases(outcome),
+    queryFn: async () =>
+      (
+        await apiClient.get<Envelope<{ cases: FacilityRegistrationCase[] }>>(
+          `${BASE}/registrations?outcome=${encodeURIComponent(outcome)}`,
+        )
+      ).data.cases ?? [],
+    enabled,
+    staleTime: 15_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export interface FacilityGovernanceCase {
+  caseRef?: string;
+  caseType?: string;
+  facilityUuid?: string;
+  status?: string;
+  createdAt?: string;
+}
+
+/** Steward: governance cases for a facility by type (steward-gated upstream). */
+export function useFacilityGovernanceCases(facilityUuid: string, caseType: string, enabled = true) {
+  return useQuery<FacilityGovernanceCase[]>({
+    queryKey: qk.governanceCases(facilityUuid, caseType),
+    queryFn: async () =>
+      (
+        await apiClient.get<Envelope<{ cases: FacilityGovernanceCase[] }>>(
+          `${BASE}/${encodeURIComponent(facilityUuid)}/governance/cases?caseType=${encodeURIComponent(caseType)}`,
+        )
+      ).data.cases ?? [],
+    enabled: !!facilityUuid && enabled,
+    staleTime: 15_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export interface DecisionInput {
+  facilityUuid: string;
+  caseId: string;
+  decision: string;
+  note?: string;
+}
+
+/** Steward: record a verification-case decision. */
+export function useDecideFacilityVerification() {
+  const qc = useQueryClient();
+  return useMutation<FacilityVerificationCase, FacilityLifecycleApiError, DecisionInput>({
+    mutationFn: async ({ facilityUuid, caseId, decision, note }) =>
+      (
+        await apiClient.post<Envelope<FacilityVerificationCase>>(
+          `${BASE}/${encodeURIComponent(facilityUuid)}/verification-cases/${encodeURIComponent(caseId)}/decision`,
+          { decision, note },
+        )
+      ).data,
+    onSuccess: async (_res, input) => {
+      await qc.invalidateQueries({ queryKey: qk.verification(input.facilityUuid) });
+    },
+  });
+}
+
+/** Steward: record a governance-case decision. */
+export function useDecideFacilityGovernance() {
+  const qc = useQueryClient();
+  return useMutation<FacilityGovernanceCase, FacilityLifecycleApiError, DecisionInput>({
+    mutationFn: async ({ facilityUuid, caseId, decision, note }) =>
+      (
+        await apiClient.post<Envelope<FacilityGovernanceCase>>(
+          `${BASE}/${encodeURIComponent(facilityUuid)}/governance/cases/${encodeURIComponent(caseId)}/decision`,
+          { decision, note },
+        )
+      ).data,
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["facility-lifecycle", "gov-cases"] });
+    },
   });
 }
 

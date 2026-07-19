@@ -9,7 +9,7 @@
  * envelope.
  */
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 interface Envelope<T> {
@@ -94,7 +94,7 @@ export function useRequestOperatorGrant() {
   });
 }
 
-// ── Steward queues (optional; steward-gated upstream) ────────────────────────
+// ── Steward queues + actions (steward-gated upstream) ────────────────────────
 
 export interface OperatorGrantRow {
   id?: string;
@@ -104,15 +104,56 @@ export interface OperatorGrantRow {
   claimType?: string;
 }
 
-export function useOperatorGrantQueue(state: string, enabled = false) {
+export function useOperatorGrantQueue(state: string, enabled = true) {
   return useQuery<OperatorGrantRow[]>({
     queryKey: ["site-self-service", "grants", state],
     queryFn: async () =>
       (await apiClient.get<Envelope<{ grants: OperatorGrantRow[] }>>(`${BASE}/operator-grants?state=${state}`))
         .data.grants ?? [],
     enabled,
-    staleTime: 30_000,
+    staleTime: 15_000,
     refetchOnWindowFocus: false,
+  });
+}
+
+export interface SiteRegistrationCaseRow {
+  caseRef?: string;
+  submittedName?: string;
+  outcome?: string;
+  createdAt?: string;
+}
+
+export function useSiteRegistrationCases(outcome: string, enabled = true) {
+  return useQuery<SiteRegistrationCaseRow[]>({
+    queryKey: ["site-self-service", "reg-cases", outcome],
+    queryFn: async () =>
+      (
+        await apiClient.get<Envelope<{ cases: SiteRegistrationCaseRow[] }>>(
+          `${BASE}/registrations?outcome=${encodeURIComponent(outcome)}`,
+        )
+      ).data.cases ?? [],
+    enabled,
+    staleTime: 15_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export interface ApproveGrantResult {
+  grantId?: string;
+  siteId?: string;
+  approvalState?: string;
+}
+
+/** Steward: approve a PENDING operator grant → ACTIVE. */
+export function useApproveOperatorGrant() {
+  const qc = useQueryClient();
+  return useMutation<ApproveGrantResult, SiteSelfServiceApiError, string>({
+    mutationFn: async (grantId: string) =>
+      (await apiClient.post<Envelope<ApproveGrantResult>>(`${BASE}/operator-grants/${encodeURIComponent(grantId)}/approve`))
+        .data,
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["site-self-service", "grants"] });
+    },
   });
 }
 

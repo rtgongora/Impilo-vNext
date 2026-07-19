@@ -355,6 +355,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/registry/facility-classification", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Facility classification reconciliation", navLabel: "Classification", navZone: "professional" },
   { path: "/registry/facilities", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Facility Registry", navLabel: "Facilities", navZone: "professional" },
   { path: "/registry/facilities/[id]", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Facility Profile", navLabel: "Facility", navZone: "professional" },
+  // Steward console for place self-service case types NOT owned by the Trust Console
+  // (facility/site registration, site operator grants, facility verification & governance).
+  { path: "/registry/place-governance", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Place governance", navLabel: "Place governance", navZone: "professional" },
   { path: "/registry/terminology", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Terminology Browser", navLabel: "Terminology", navZone: "professional" },
   { path: "/registry/terminology/[id]", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Concept Details", navLabel: "Concept", navZone: "professional" },
   { path: "/registry/products", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Product Registry", navLabel: "Products", navZone: "professional" },
@@ -934,7 +937,9 @@ export const ROUTES: RouteDefinition[] = [
 // Provider/place self-service UI (Jul 2026): +5 — /provider/workplace (UI-3 work-session
 // hub) and the place self-service surfaces /facility/register, /facility/[id]/trust,
 // /site/register, /site/operator-access (UI-5/UI-6). Total 754.
-export const EXPECTED_ROUTE_COUNT = 754;
+// Place governance steward console (Jul 2026): +1 — /registry/place-governance, the steward
+// review surface for place self-service case types the Trust Console does not own. Total 755.
+export const EXPECTED_ROUTE_COUNT = 755;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

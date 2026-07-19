@@ -103,6 +103,14 @@ public class TusoFacilityLifecycleClient {
         return extractData(restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class));
     }
 
+    /** Record a governance-case decision (steward-gated upstream). */
+    public JsonNode decideGovernanceCase(String facilityUuid, String caseId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/facilities/" + enc(facilityUuid)
+                + "/governance/cases/" + enc(caseId) + "/decision";
+        log.info("TUSO: deciding facility governance case facility={} case={}", facilityUuid, caseId);
+        return extractData(restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class));
+    }
+
     /** List governance cases for a facility by type (steward-gated upstream). */
     public JsonNode governanceCases(String facilityUuid, String caseType) {
         String url = baseUrl + "/v1/internal/facilities/" + enc(facilityUuid) + "/governance/cases?caseType=" + enc(caseType);

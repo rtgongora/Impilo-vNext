@@ -176,6 +176,36 @@ public class FacilityLifecycleController {
         }
     }
 
+    /**
+     * Record a verification-case decision (steward/verifier action). Upstream
+     * enforces the verifier gate on X-Actor-Type; the decision is bound to the
+     * session identity as the decider.
+     */
+    @PostMapping("/{facilityUuid}/verification-cases/{caseId}/decision")
+    public ResponseEntity<Map<String, Object>> decideVerificationCase(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader("X-Actor-ID") String actorId,
+            @PathVariable String facilityUuid,
+            @PathVariable String caseId,
+            @RequestBody Map<String, Object> body) {
+
+        String decision = str(body.get("decision"));
+        if (decision == null) {
+            return error(HttpStatus.BAD_REQUEST, "DECISION_REQUIRED",
+                    "A decision is required (for example APPROVED or REJECTED).", requestId, correlationId);
+        }
+        try {
+            Map<String, Object> req = new LinkedHashMap<>();
+            req.put("decision", decision);
+            if (str(body.get("note")) != null) req.put("note", str(body.get("note")));
+            JsonNode result = tusoClient.decideVerificationCase(facilityUuid, caseId, req);
+            return ok(verificationView(result), requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return propagate(e, requestId, correlationId);
+        }
+    }
+
     // ── Trust dimensions ───────────────────────────────────────────────────
 
     /** The facility's graded trust dimensions (transparency read). */
@@ -249,6 +279,35 @@ public class FacilityLifecycleController {
         try {
             JsonNode result = tusoClient.governanceCases(facilityUuid, caseType);
             return ok(Map.of("cases", casesArray(result)), requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return propagate(e, requestId, correlationId);
+        }
+    }
+
+    /**
+     * Record a governance-case decision (steward action). Upstream enforces the
+     * steward gate on X-Actor-Type; no change takes effect until it is approved.
+     */
+    @PostMapping("/{facilityUuid}/governance/cases/{caseId}/decision")
+    public ResponseEntity<Map<String, Object>> decideGovernanceCase(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader("X-Actor-ID") String actorId,
+            @PathVariable String facilityUuid,
+            @PathVariable String caseId,
+            @RequestBody Map<String, Object> body) {
+
+        String decision = str(body.get("decision"));
+        if (decision == null) {
+            return error(HttpStatus.BAD_REQUEST, "DECISION_REQUIRED",
+                    "A decision is required (for example APPROVED or REJECTED).", requestId, correlationId);
+        }
+        try {
+            Map<String, Object> req = new LinkedHashMap<>();
+            req.put("decision", decision);
+            if (str(body.get("note")) != null) req.put("note", str(body.get("note")));
+            JsonNode result = tusoClient.decideGovernanceCase(facilityUuid, caseId, req);
+            return ok(governanceView(result), requestId, correlationId);
         } catch (HttpStatusCodeException e) {
             return propagate(e, requestId, correlationId);
         }
