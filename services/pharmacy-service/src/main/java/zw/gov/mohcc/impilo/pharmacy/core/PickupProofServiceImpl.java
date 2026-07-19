@@ -45,17 +45,20 @@ public class PickupProofServiceImpl implements PickupProofService {
     private final HmacService hmacService;
     private final PharmacyProperties properties;
     private final ObjectMapper objectMapper;
+    private final zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
 
     public PickupProofServiceImpl(PickupProofRepository proofRepository,
                                   EventOutboxRepository outboxRepository,
                                   HmacService hmacService,
                                   PharmacyProperties properties,
-                                  ObjectMapper objectMapper) {
+                                  ObjectMapper objectMapper,
+                                  zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification) {
         this.proofRepository = proofRepository;
         this.outboxRepository = outboxRepository;
         this.hmacService = hmacService;
         this.properties = properties;
         this.objectMapper = objectMapper;
+        this.biometricVerification = biometricVerification;
     }
 
     @Override
@@ -96,6 +99,14 @@ public class PickupProofServiceImpl implements PickupProofService {
     @Override
     @Transactional
     public PickupProofEntity claimProof(String token, String deviceFingerprint) {
+        return claimProof(token, deviceFingerprint, null, null, null);
+    }
+
+    @Override
+    @Transactional
+    public PickupProofEntity claimProof(String token, String deviceFingerprint,
+                                        String biometricSubjectRef, String biometricModality,
+                                        String biometricProbeBase64) {
         TrustContext ctx = TrustContextHolder.require();
 
         if (token == null || token.isBlank()) {
@@ -113,6 +124,24 @@ public class PickupProofServiceImpl implements PickupProofService {
             proof.setStatus(PickupStatus.EXPIRED);
             proofRepository.save(proof);
             throw new IllegalStateException("Pickup proof has expired");
+        }
+
+        // Optional live biometric collector-verification at collection. MATCH → mark the
+        // collection biometric-verified; NO_MATCH → reject the collection (proof stays PENDING,
+        // transaction rolls back); UNAVAILABLE / NO_REFERENCE → fall back to the token check.
+        if (biometricProbeBase64 != null && !biometricProbeBase64.isBlank()
+                && biometricSubjectRef != null && !biometricSubjectRef.isBlank()) {
+            String modality = biometricModality != null && !biometricModality.isBlank()
+                    ? biometricModality : "FINGERPRINT";
+            var decision = biometricVerification.verify(biometricSubjectRef, modality, biometricProbeBase64);
+            if (decision.isMatch()) {
+                proof.setMethod(PickupMethod.BIOMETRIC);
+            } else if (!"UNAVAILABLE".equals(decision.result())
+                    && !"NO_REFERENCE".equals(decision.result())) {
+                throw new IllegalStateException(
+                        "Biometric collector verification failed — collection rejected");
+            }
+            // UNAVAILABLE / NO_REFERENCE → proceed on the token check (unchanged).
         }
 
         proof.setStatus(PickupStatus.CLAIMED);

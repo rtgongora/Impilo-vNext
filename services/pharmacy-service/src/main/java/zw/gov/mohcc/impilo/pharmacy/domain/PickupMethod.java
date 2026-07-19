@@ -12,5 +12,11 @@ public enum PickupMethod {
     OTP,
 
     /** QR code presented on the patient's device or printed receipt. */
-    QR
+    QR,
+
+    /**
+     * Live biometric identity match confirmed at collection through the shared
+     * biometric seam. Recorded on the proof when a probe MATCHes at claim time.
+     */
+    BIOMETRIC
 }

@@ -68,7 +68,9 @@ public class PickupController {
         String correlationId = TrustContextHolder.require().correlationId().toString();
 
         PickupProofEntity proof = pickupProofService.claimProof(
-                request.token(), request.deviceFingerprint());
+                request.token(), request.deviceFingerprint(),
+                request.biometricSubjectRef(), request.biometricModality(),
+                request.biometricProbeBase64());
 
         log.info("Pickup claimed: proofId={}, claimedBy={}",
                 proof.getProofId(), proof.getClaimedBy());
