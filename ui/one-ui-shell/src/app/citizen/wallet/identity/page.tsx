@@ -29,14 +29,18 @@ export default function WalletIdentityPage() {
       <IdentityAssuranceBanner />
 
       <section className="rounded-lg border border-border bg-card p-4">
-        <h2 className="mb-2 text-sm font-medium text-foreground">Health ID</h2>
+        <h2 className="mb-2 text-sm font-medium text-foreground">My identity</h2>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : (
           <dl className="space-y-1 text-sm">
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Health ID</dt>
-              <dd className="font-mono text-foreground">{String(identity.healthId ?? "—")}</dd>
+              <dt className="text-muted-foreground">Impilo ID</dt>
+              {/* D7: the raw Health ID (internal UUID) is never shown in the browser. The
+                  patient-facing Impilo ID is issued at card issuance; until then, none is shown. */}
+              <dd className="font-mono text-foreground">
+                {identity.impiloId ? String(identity.impiloId) : "Issued with your card"}
+              </dd>
             </div>
             {profile ? (
               <>

@@ -37,8 +37,12 @@ class IdentifierLeakInventoryTest {
      * it {@code dependantSubjectRef}, disclosed only to the just-authorised guardian). The literal
      * is dictated by VITO's API and cannot be renamed; consistent with the baseline, which already
      * counts internal service-to-service field names (e.g. {@code WorkforceIntakeService}).</p>
+     *
+     * <p>Re-pinned 55 → 54: the D7 fix removed the raw-Health-ID emission in
+     * {@code WalletOverviewService.identityAndTrust} (the wallet now surfaces the patient-facing
+     * Impilo ID, not {@code healthId}). The ratchet only moves down.</p>
      */
-    private static final int BASELINE = 55;
+    private static final int BASELINE = 54;
 
     private static final Pattern LEAK = Pattern.compile("\"(healthId|impiloHealthId|health_id)\"");
 

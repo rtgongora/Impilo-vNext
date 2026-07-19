@@ -102,7 +102,9 @@ public class WalletOverviewService {
     private Map<String, Object> identityAndTrust(String actorId) {
         Map<String, Object> card = new LinkedHashMap<>();
         card.put("_source", "vito-service + identity-assurance-service");
-        card.put("healthId", actorId);
+        // D7: never surface the raw Health ID (internal UUID) to the browser. The citizen's
+        // patient-facing identifier is the Impilo ID, taken from the profile below (it is issued
+        // at card issuance, so it may be absent for a freshly-registered person).
         try {
             card.put("assurance", assuranceClient.getAssuranceStatus());
         } catch (Exception e) {
@@ -110,12 +112,18 @@ public class WalletOverviewService {
             card.put("assurance", null);
             card.put("assuranceUnavailable", true);
         }
+        JsonNode profile = null;
         try {
-            card.put("profile", vitoClient.getCitizenProfile(actorId));
+            profile = vitoClient.getCitizenProfile(actorId);
+            card.put("profile", profile);
         } catch (Exception e) {
             log.debug("wallet: vito profile unavailable for actor: {}", e.getMessage());
             card.put("profile", null);
             card.put("profileUnavailable", true);
+        }
+        String impiloId = profile == null ? null : profile.path("impiloId").asText(null);
+        if (impiloId != null && !impiloId.isBlank()) {
+            card.put("impiloId", impiloId);
         }
         return card;
     }

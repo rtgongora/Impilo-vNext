@@ -60,7 +60,8 @@ class WalletOverviewServiceTest {
         ObjectNode profile = mapper.createObjectNode()
                 .put("givenName", "Tendai").put("familyName", "Moyo")
                 .put("dateOfBirth", "1990-01-01").put("sex", "F")
-                .put("phone", "+263770000000").put("address", "Harare");
+                .put("phone", "+263770000000").put("address", "Harare")
+                .put("impiloId", "IMP-123");
         lenient().when(assuranceClient.getAssuranceStatus()).thenReturn(assurance);
         lenient().when(vitoClient.getCitizenProfile(anyString())).thenReturn(profile);
         lenient().when(healthSummaryService.buildSummary(anyString())).thenReturn(Map.of("conditions", List.of()));
@@ -82,7 +83,10 @@ class WalletOverviewServiceTest {
         assertThat(data).containsKeys("identity", "profileCompletion", "consent", "dependants",
                 "records", "careTimeline", "payments", "commsPreferences", "guidance", "nextActions");
         Map<?, ?> identity = (Map<?, ?>) data.get("identity");
-        assertThat(identity.get("healthId")).isEqualTo("CPID-1");
+        // D7: the raw Health ID (internal UUID) is never surfaced to the browser; the
+        // patient-facing Impilo ID (from the profile) is exposed instead.
+        assertThat(identity.get("healthId")).isNull();
+        assertThat(identity.get("impiloId")).isEqualTo("IMP-123");
         assertThat(identity.get("_source")).asString().contains("vito").contains("identity-assurance");
     }
 
