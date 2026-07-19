@@ -55,8 +55,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -86,6 +88,7 @@ class NhumeDeliveryServiceTest {
     private NdilaClient ndila;
     private NhumeDeliveryService service;
     private zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeIntegrationWriteBackService writeBack;
+    private zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
     private final StubWriteBackGateway stubGateway = new StubWriteBackGateway();
 
     /** Records calls; returns OK — write-back HTTP truth is covered by gateway tests. */
@@ -140,6 +143,7 @@ class NhumeDeliveryServiceTest {
         assetRepo = mock(FleetAssetRepository.class);
         commsHub = mock(CommsHubClient.class);
         ndila = new SimulatedNdilaClient();
+        biometricVerification = mock(zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient.class);
 
         when(deliveryRepo.save(any(DeliveryRequestEntity.class)))
                 .thenAnswer(inv -> {
@@ -184,7 +188,7 @@ class NhumeDeliveryServiceTest {
         service = new NhumeDeliveryService(deliveryRepo, itemRepo, packageRepo, assignmentRepo,
                 statusEventRepo, trackingRepo, proofRepo, custodyRepo, exceptionRepo,
                 notificationRepo, auditRepo, outboxRepo, policyRepo, courierRepo, assetRepo,
-                commsHub, ndila, mapper, writeBack);
+                commsHub, ndila, mapper, writeBack, biometricVerification);
     }
 
     @Test
@@ -252,7 +256,7 @@ class NhumeDeliveryServiceTest {
 
         DeliveryProofEntity proof = service.captureProof(id,
                 new ProofRequest("DELIVERY", "OTP", "tester", "123456", null, null, null,
-                        true, null, null, Map.of(), true), actorCtx());
+                        true, null, null, Map.of(), true, null, null, null), actorCtx());
         assertThat(proof.getProofId()).isNotNull();
         assertThat(proof.isVerified()).isTrue();
         assertThat(store.get(id).getStatus()).isEqualTo(DeliveryStatus.DELIVERED.name());
@@ -279,7 +283,7 @@ class NhumeDeliveryServiceTest {
         service.startTransit(id, new StatusChangeRequest("en route", null), actorCtx());
         service.captureProof(id,
                 new ProofRequest("DELIVERY", "OTP", "tester", "123456", null, null, null,
-                        true, null, null, Map.of(), true), actorCtx());
+                        true, null, null, Map.of(), true, null, null, null), actorCtx());
 
         assertThat(store.get(id).getStatus()).isEqualTo(DeliveryStatus.DELIVERED.name());
         assertThat(stubGateway.calls).containsExactly("OROS:ORD-42", "PCT:REF-7");
@@ -308,7 +312,7 @@ class NhumeDeliveryServiceTest {
         service.startTransit(id, new StatusChangeRequest("en route", null), actorCtx());
         service.captureProof(id,
                 new ProofRequest("DELIVERY", "OTP", "tester", "123456", null, null, null,
-                        true, null, null, Map.of(), true), actorCtx());
+                        true, null, null, Map.of(), true, null, null, null), actorCtx());
 
         assertThat(store.get(id).getStatus()).isEqualTo(DeliveryStatus.DELIVERED.name());
         assertThat(stubGateway.calls).containsExactly(
@@ -353,13 +357,68 @@ class NhumeDeliveryServiceTest {
         // Collection sign-off: PICKUP stage, mark_delivered=false.
         DeliveryProofEntity proof = service.captureProof(id,
                 new ProofRequest("PICKUP", "RECIPIENT_SIGNATURE", "origin-clerk", null,
-                        "sig:collection", null, null, null, null, null, Map.of(), false),
+                        "sig:collection", null, null, null, null, null, Map.of(), false,
+                        null, null, null),
                 actorCtx());
 
         assertThat(proof.getProofStage()).isEqualTo("PICKUP");
         // The collection sign-off must NOT close the mission.
         assertThat(store.get(id).getStatus()).isEqualTo(DeliveryStatus.PICKED_UP.name());
         assertThat(store.get(id).getDeliveredAt()).isNull();
+    }
+
+    // ── Biometric recipient verification at handover ──────────────────────────
+
+    private ProofRequest bioProof() {
+        return new ProofRequest("DELIVERY", "OTP", "tester", null, null, null, null,
+                null, null, null, Map.of(), false,
+                "subj-recipient-1", "FINGERPRINT", "cHJvYmU=");
+    }
+
+    @Test
+    void captureProof_biometricMatch_marksHandoverBiometricVerified() {
+        DeliveryRequestEntity d = service.createDelivery(tenantId, "national-spine", null, null,
+                baseRequestBuilder(true), actorCtx());
+        UUID id = d.getDeliveryId();
+        when(biometricVerification.verify(eq("subj-recipient-1"), eq("FINGERPRINT"), any()))
+                .thenReturn(new zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient
+                        .Decision("MATCH", 0.97));
+
+        DeliveryProofEntity proof = service.captureProof(id, bioProof(), actorCtx());
+
+        assertThat(proof.getProofMethod()).isEqualTo("BIOMETRIC");
+        assertThat(proof.getBiometricRef()).isEqualTo("subj-recipient-1");
+        assertThat(proof.isVerified()).isTrue();
+    }
+
+    @Test
+    void captureProof_biometricNoMatch_rejectsHandover_nothingPersisted() {
+        DeliveryRequestEntity d = service.createDelivery(tenantId, "national-spine", null, null,
+                baseRequestBuilder(true), actorCtx());
+        UUID id = d.getDeliveryId();
+        when(biometricVerification.verify(any(), any(), any()))
+                .thenReturn(new zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient
+                        .Decision("NO_MATCH", 0.05));
+
+        assertThatThrownBy(() -> service.captureProof(id, bioProof(), actorCtx()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("handover rejected");
+        verify(proofRepo, never()).save(any());
+    }
+
+    @Test
+    void captureProof_biometricUnavailable_fallsBackToDeclaredMethod() {
+        DeliveryRequestEntity d = service.createDelivery(tenantId, "national-spine", null, null,
+                baseRequestBuilder(true), actorCtx());
+        UUID id = d.getDeliveryId();
+        when(biometricVerification.verify(any(), any(), any()))
+                .thenReturn(zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient
+                        .Decision.unavailable());
+
+        DeliveryProofEntity proof = service.captureProof(id, bioProof(), actorCtx());
+
+        assertThat(proof.getProofMethod()).as("not marked biometric on an outage").isEqualTo("OTP");
+        assertThat(proof.isVerified()).isTrue();
     }
 
     @Test

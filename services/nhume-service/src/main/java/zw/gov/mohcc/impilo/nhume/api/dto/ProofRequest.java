@@ -21,5 +21,12 @@ public record ProofRequest(
         @JsonProperty("locker_code") String lockerCode,
         @JsonProperty("webhook_ref") String webhookRef,
         @JsonProperty("metadata") Map<String, Object> metadata,
-        @JsonProperty("mark_delivered") Boolean markDelivered
+        @JsonProperty("mark_delivered") Boolean markDelivered,
+        // Optional live biometric recipient-verification at handover. When a probe is
+        // supplied, the recipient's identity is verified through the shared seam before the
+        // handover proof is accepted: MATCH → proof marked biometric-verified; NO_MATCH →
+        // handover rejected; UNAVAILABLE → fall back to the declared proof method (unchanged).
+        @JsonProperty("biometric_subject_ref") String biometricSubjectRef,
+        @JsonProperty("biometric_modality") String biometricModality,
+        @JsonProperty("biometric_probe_base64") String biometricProbeBase64
 ) {}

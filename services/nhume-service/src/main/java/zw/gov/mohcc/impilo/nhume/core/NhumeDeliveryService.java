@@ -100,6 +100,7 @@ public class NhumeDeliveryService {
     private final NdilaClient ndila;
     private final ObjectMapper objectMapper;
     private final zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeIntegrationWriteBackService writeBack;
+    private final zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
 
     public NhumeDeliveryService(DeliveryRequestRepository deliveryRepo,
                                 DeliveryItemRepository itemRepo,
@@ -119,7 +120,8 @@ public class NhumeDeliveryService {
                                 CommsHubClient commsHub,
                                 NdilaClient ndila,
                                 ObjectMapper objectMapper,
-                                zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeIntegrationWriteBackService writeBack) {
+                                zw.gov.mohcc.impilo.nhume.integration.writeback.NhumeIntegrationWriteBackService writeBack,
+                                zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification) {
         this.deliveryRepo = deliveryRepo;
         this.itemRepo = itemRepo;
         this.packageRepo = packageRepo;
@@ -139,6 +141,7 @@ public class NhumeDeliveryService {
         this.ndila = ndila;
         this.objectMapper = objectMapper;
         this.writeBack = writeBack;
+        this.biometricVerification = biometricVerification;
     }
 
     // ─── Reads ──────────────────────────────────────────────────────────────
@@ -596,16 +599,38 @@ public class NhumeDeliveryService {
                                              TrustLayerGuard.ActorContext actor) {
         DeliveryRequestEntity d = deliveryRepo.findById(deliveryId)
                 .orElseThrow(() -> new DeliveryNotFoundException(deliveryId));
+        // Optional live biometric recipient-verification at handover. MATCH → mark the proof
+        // biometric-verified; NO_MATCH → reject the handover (nothing persisted); UNAVAILABLE /
+        // NO_REFERENCE → fall back to the declared proof method so an outage never blocks delivery.
+        String proofMethod = req.proofMethod();
+        String biometricRef = req.biometricRef();
+        if (req.biometricProbeBase64() != null && !req.biometricProbeBase64().isBlank()
+                && req.biometricSubjectRef() != null && !req.biometricSubjectRef().isBlank()) {
+            String modality = req.biometricModality() != null && !req.biometricModality().isBlank()
+                    ? req.biometricModality() : "FINGERPRINT";
+            var decision = biometricVerification.verify(
+                    req.biometricSubjectRef(), modality, req.biometricProbeBase64());
+            if (decision.isMatch()) {
+                proofMethod = "BIOMETRIC";
+                biometricRef = req.biometricSubjectRef();
+            } else if (!"UNAVAILABLE".equals(decision.result())
+                    && !"NO_REFERENCE".equals(decision.result())) {
+                throw new IllegalStateException(
+                        "Biometric recipient verification failed — handover rejected");
+            }
+            // UNAVAILABLE / NO_REFERENCE → fall through on the declared proof method (unchanged).
+        }
+
         DeliveryProofEntity proof = new DeliveryProofEntity();
         proof.setProofId(UUID.randomUUID());
         proof.setDeliveryId(deliveryId);
         proof.setProofStage(orDefault(req.proofStage(), "DELIVERY"));
-        proof.setProofMethod(req.proofMethod());
+        proof.setProofMethod(proofMethod);
         proof.setCapturedBy(actor != null ? actor.actorId() : req.capturedBy());
         proof.setOtpCode(req.otpCode());
         proof.setSignatureUri(req.signatureUri());
         proof.setPhotoUri(req.photoUri());
-        proof.setBiometricRef(req.biometricRef());
+        proof.setBiometricRef(biometricRef);
         proof.setGeofenceMatch(req.geofenceMatch());
         proof.setLockerCode(req.lockerCode());
         proof.setWebhookRef(req.webhookRef());
