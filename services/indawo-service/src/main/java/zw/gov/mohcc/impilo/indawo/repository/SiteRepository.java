@@ -14,6 +14,26 @@ public interface SiteRepository extends JpaRepository<SiteEntity, UUID> {
 
     Page<SiteEntity> findByTenantId(UUID tenantId, Pageable pageable);
 
+    java.util.Optional<SiteEntity> findFirstByTenantIdAndSiteCodeIgnoreCase(UUID tenantId, String siteCode);
+
+    /**
+     * Normalised-name duplicate check (D-L5 MVP — exact normalised match; a
+     * trigram upgrade needs an index migration first). Category- and
+     * district-scoped: a "Central Market" in two districts is not a duplicate.
+     */
+    @Query("""
+            SELECT s FROM SiteEntity s
+            WHERE s.tenantId = :tenantId
+              AND lower(s.name) = :normalisedName
+              AND (:siteCategory IS NULL OR lower(s.siteCategory) = :siteCategory)
+              AND (:district IS NULL OR lower(s.district) = :district)
+            """)
+    java.util.List<SiteEntity> findByNormalisedName(
+            @Param("tenantId") UUID tenantId,
+            @Param("normalisedName") String normalisedName,
+            @Param("siteCategory") String siteCategory,
+            @Param("district") String district);
+
     @Query("""
             SELECT s
             FROM SiteEntity s
