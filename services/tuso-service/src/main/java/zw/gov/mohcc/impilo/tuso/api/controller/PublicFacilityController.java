@@ -48,6 +48,14 @@ public class PublicFacilityController {
         log.info("Fetching public facility profile [id={}] correlationId={}", id, ctx.correlationId());
 
         FacilityService.FacilityDetail detail = facilityService.getFacility(id);
+        // PROVISIONAL facilities (FJ2 registrations pending verification) are not
+        // publicly discoverable — profile behaves as if the record did not exist,
+        // so a registrant cannot use public search to learn their case's path.
+        if (zw.gov.mohcc.impilo.tuso.core.FacilityRegistrationService.STATUS_PROVISIONAL
+                .equalsIgnoreCase(detail.facility().getStatus())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.NOT_FOUND, "Facility not found: " + id);
+        }
         FacilityResponse response = toPublicFacilityResponse(detail);
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
@@ -77,10 +85,16 @@ public class PublicFacilityController {
                         ctx.tenantId(), query, service, filters, PageRequest.of(page, size))
                 : facilityService.searchFacilities(
                         ctx.tenantId(), query, filters, PageRequest.of(page, size));
-        Page<FacilityListResponse.FacilitySummary> resultPage = entityPage.map(this::toFacilitySummary);
+        // PROVISIONAL rows never reach the public directory (FJ2, D-L5) — even
+        // when the caller filters by status or omits it entirely.
+        List<FacilityListResponse.FacilitySummary> visible = entityPage.getContent().stream()
+                .filter(f -> !zw.gov.mohcc.impilo.tuso.core.FacilityRegistrationService.STATUS_PROVISIONAL
+                        .equalsIgnoreCase(f.getStatus()))
+                .map(this::toFacilitySummary)
+                .toList();
 
         PagedResponse<FacilityListResponse.FacilitySummary> response = PagedResponse.of(
-                resultPage.getContent(), resultPage.getNumber(), resultPage.getSize(), resultPage.getTotalElements());
+                visible, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements());
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }

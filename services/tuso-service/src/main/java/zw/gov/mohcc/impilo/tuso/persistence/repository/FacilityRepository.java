@@ -118,4 +118,21 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
     long countByTenantId(UUID tenantId);
 
     Optional<FacilityEntity> findByTenantIdAndGofrId(UUID tenantId, String gofrId);
+
+    /**
+     * Live trigram similarity for silent duplicate detection (D-L5; V002 gin_trgm
+     * index on name). Each row = [FacilityEntity, similarity score]. Steward
+     * material — candidates are never disclosed to registrants.
+     */
+    @org.springframework.data.jpa.repository.Query(value =
+            "SELECT f.*, similarity(lower(f.name), :normalisedName) AS score"
+                    + " FROM tuso.facility f"
+                    + " WHERE f.tenant_id = :tenantId"
+                    + "   AND similarity(lower(f.name), :normalisedName) >= :minScore"
+                    + " ORDER BY score DESC LIMIT 5",
+            nativeQuery = true)
+    List<Object[]> findSimilarByName(
+            @org.springframework.data.repository.query.Param("tenantId") UUID tenantId,
+            @org.springframework.data.repository.query.Param("normalisedName") String normalisedName,
+            @org.springframework.data.repository.query.Param("minScore") double minScore);
 }
