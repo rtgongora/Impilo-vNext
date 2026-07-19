@@ -55,7 +55,9 @@ public class CitizenDependantController {
     public ResponseEntity<Map<String, Object>> addDependant(
             @RequestBody AddDependantRequest req,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
-            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String guardianActorId) {
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String guardianActorId,
+            @RequestHeader(value = CompanionHeaders.REQUEST_ID, required = false) String requestId,
+            @RequestHeader(value = CompanionHeaders.CORRELATION_ID, required = false) String correlationId) {
 
         if (guardianActorId == null || guardianActorId.isBlank()) {
             return error(HttpStatus.BAD_REQUEST, "X-Actor-ID (the guardian) is required");
@@ -114,11 +116,22 @@ public class CitizenDependantController {
                     "type", "GUARDIAN",
                     "expiresAt", majority.toString(),
                     "relationship", relationship == null ? Map.of() : relationship));
-            return ResponseEntity.status(HttpStatus.CREATED).body(out);
+            return ResponseEntity.status(HttpStatus.CREATED).body(envelope(out, requestId, correlationId));
         } catch (Exception e) {
             log.warn("add-dependant failed: {}", e.getMessage());
             return error(HttpStatus.BAD_GATEWAY, "The dependant could not be added. Please try again.");
         }
+    }
+
+    /** Wrap a success payload in the house {@code {data, meta}} envelope the shell expects. */
+    private static Map<String, Object> envelope(Object data, String requestId, String correlationId) {
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("request_id", requestId);
+        meta.put("correlation_id", correlationId);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("data", data);
+        body.put("meta", meta);
+        return body;
     }
 
     private static boolean isBlank(String s) {

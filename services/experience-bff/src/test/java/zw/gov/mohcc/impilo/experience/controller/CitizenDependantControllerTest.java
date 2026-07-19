@@ -22,6 +22,8 @@ class CitizenDependantControllerTest {
     private static final String TENANT = "t-1";
     private static final String GUARDIAN = "guardian-1";
     private static final String CHILD_HID = "child-health-id";
+    private static final String REQ = "req-1";
+    private static final String CORR = "corr-1";
 
     private final ObjectMapper mapper = new ObjectMapper();
     private VitoServiceClient vito;
@@ -40,8 +42,8 @@ class CitizenDependantControllerTest {
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> body(ResponseEntity<Map<String, Object>> r) {
-        return r.getBody();
+    private Map<String, Object> data(ResponseEntity<Map<String, Object>> r) {
+        return (Map<String, Object>) r.getBody().get("data");
     }
 
     @Test
@@ -51,11 +53,12 @@ class CitizenDependantControllerTest {
         when(vito.registerIdentity(anyMap())).thenReturn(mapper.readTree("{\"healthId\":\"" + CHILD_HID + "\"}"));
         when(mvumo.createDelegation(anyMap())).thenReturn(mapper.readTree("{\"id\":\"rel-1\",\"status\":\"GRANTED\"}"));
 
-        ResponseEntity<Map<String, Object>> r = controller.addDependant(child(dob, null), TENANT, GUARDIAN);
+        ResponseEntity<Map<String, Object>> r = controller.addDependant(child(dob, null), TENANT, GUARDIAN, REQ, CORR);
 
         assertThat(r.getStatusCode().value()).isEqualTo(201);
-        assertThat(body(r).get("status")).isEqualTo("CREATED");
-        assertThat(body(r).get("dependantSubjectRef")).isEqualTo(CHILD_HID);
+        assertThat(r.getBody()).containsKeys("data", "meta"); // house envelope the shell requires
+        assertThat(data(r).get("status")).isEqualTo("CREATED");
+        assertThat(data(r).get("dependantSubjectRef")).isEqualTo(CHILD_HID);
 
         String expectedExpiryYear = String.valueOf(LocalDate.now().minusYears(5).plusYears(18).getYear());
         verify(mvumo).createDelegation(argThat(m ->
@@ -71,7 +74,7 @@ class CitizenDependantControllerTest {
     @DisplayName("a person at/over the age of majority is rejected (register/delegation never called)")
     void rejectsAdult() {
         String dob = LocalDate.now().minusYears(20).toString();
-        ResponseEntity<Map<String, Object>> r = controller.addDependant(child(dob, null), TENANT, GUARDIAN);
+        ResponseEntity<Map<String, Object>> r = controller.addDependant(child(dob, null), TENANT, GUARDIAN, REQ, CORR);
         assertThat(r.getStatusCode().value()).isEqualTo(422);
         verifyNoInteractions(vito);
         verifyNoInteractions(mvumo);
@@ -84,7 +87,7 @@ class CitizenDependantControllerTest {
         when(vito.registerIdentity(anyMap())).thenReturn(mapper.readTree("{\"healthId\":\"" + CHILD_HID + "\"}"));
         when(mvumo.createDelegation(anyMap())).thenReturn(mapper.readTree("{}"));
 
-        controller.addDependant(child(dob, List.of("immunization", "appointment")), TENANT, GUARDIAN);
+        controller.addDependant(child(dob, List.of("immunization", "appointment")), TENANT, GUARDIAN, REQ, CORR);
         verify(mvumo).createDelegation(argThat(m -> {
             List<?> scope = (List<?>) m.get("scope");
             return scope.contains("immunization") && !scope.contains("*");
@@ -95,7 +98,7 @@ class CitizenDependantControllerTest {
     @DisplayName("missing guardian actor is rejected before any upstream call")
     void missingGuardianRejected() {
         String dob = LocalDate.now().minusYears(4).toString();
-        ResponseEntity<Map<String, Object>> r = controller.addDependant(child(dob, null), TENANT, "  ");
+        ResponseEntity<Map<String, Object>> r = controller.addDependant(child(dob, null), TENANT, "  ", REQ, CORR);
         assertThat(r.getStatusCode().value()).isEqualTo(400);
         verifyNoInteractions(vito);
     }
@@ -105,7 +108,7 @@ class CitizenDependantControllerTest {
     void missingFieldsRejected() {
         ResponseEntity<Map<String, Object>> r = controller.addDependant(
                 new CitizenDependantController.AddDependantRequest("Tinashe", null, null, "M", null),
-                TENANT, GUARDIAN);
+                TENANT, GUARDIAN, REQ, CORR);
         assertThat(r.getStatusCode().value()).isEqualTo(400);
         verifyNoInteractions(vito);
     }

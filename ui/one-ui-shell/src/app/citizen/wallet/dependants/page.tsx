@@ -10,6 +10,7 @@
 
 import { useWalletOverview } from "@/hooks/queries/useWallet";
 import { useDelegationStore } from "@/hooks/useDelegationStore";
+import { AddDependant } from "@/components/citizen/AddDependant";
 
 type AnyRecord = Record<string, unknown>;
 
@@ -45,6 +46,8 @@ export default function WalletDependantsPage() {
           Source: {String(card._source ?? "Mvumo · VITO")}
         </p>
       </div>
+
+      <AddDependant />
 
       <section>
         <h2 className="mb-2 text-sm font-medium text-foreground">People I can act for</h2>
