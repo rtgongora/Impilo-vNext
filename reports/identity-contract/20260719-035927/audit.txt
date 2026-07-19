@@ -1,0 +1,20 @@
+== Identity audit: no vito.client.health_id value may appear in clinical subject columns ==
+vito.client health_id count: 5
+SKIP  pct pct.encounter.subject_cpid (absent)
+SKIP  pct pct.problem.subject_cpid (absent)
+SKIP  pct pct.care_plan.subject_cpid (absent)
+OK    pct pct.ed_visit.patient_cpid
+OK    pct pct.emergency_cases.known_subject_cpid
+OK    pct pct.emergency_cases.reconciled_cpid
+SKIP  inpatient inpatient.admission.patient_cpid (absent)
+OK    inpatient inpatient.emergency_activation.subject_cpid
+OK    inpatient inpatient.procedure_episode.subject_cpid
+SKIP  daidzai daidzai.dai_trauma_episode.subject_health_id (absent)
+SKIP  daidzai daidzai.dai_emergency_incident.subject_health_id (absent)
+SKIP  pharmacy pharmacy.prescription.patient_cpid (absent)
+SKIP  oros oros.orders.patient_cpid (absent)
+OK    madi madi.blood_orders.patient_cpid
+OK    booking booking.appointment.patient_cpid
+SKIP  indawo indawo.case_investigation.subject_cpid (absent)
+OK    hapi FHIR identifiers
+AUDIT PASS: zero Health-ID values found in clinical subject keys
