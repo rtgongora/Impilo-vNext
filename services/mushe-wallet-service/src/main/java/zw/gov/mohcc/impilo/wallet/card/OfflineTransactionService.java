@@ -38,14 +38,17 @@ public class OfflineTransactionService {
     private final WalletService walletService;
     private final ObjectMapper objectMapper;
     private final BiometricVerificationClient biometricVerification;
+    private final MushexSettlementClient mushexSettlementClient;
 
     public OfflineTransactionService(CardRepository cardRepository, WalletService walletService,
                                      ObjectMapper objectMapper,
-                                     BiometricVerificationClient biometricVerification) {
+                                     BiometricVerificationClient biometricVerification,
+                                     MushexSettlementClient mushexSettlementClient) {
         this.cardRepository = cardRepository;
         this.walletService = walletService;
         this.objectMapper = objectMapper;
         this.biometricVerification = biometricVerification;
+        this.mushexSettlementClient = mushexSettlementClient;
     }
 
     /** Thrown when an offline transaction fails verification/policy — surfaced as 4xx by the controller. */
@@ -175,6 +178,15 @@ public class OfflineTransactionService {
         cardRepository.save(card);
         log.info("Reconciled offline txn (card {}, counter {}, nonce {}, auth {}) into the ledger",
                 vitoCardNumber, counter, nonce, authMethod);
+
+        // B5 card-settlement recognition: if the signed payload names the MusheX intent this
+        // card payment settles, tell MusheX so it drives the intent to PAID and Costa / Msika-flow
+        // recognize the charge/order as paid — closing the "card money is mushe-ledger-only" gap.
+        // Fail-open: the payer is already debited, so a MusheX blip never reverses the payment.
+        String mushexIntentId = payload.path("mushexIntentId").asText(null);
+        if (mushexIntentId != null && !mushexIntentId.isBlank()) {
+            mushexSettlementClient.recordCardPayment(mushexIntentId, amount, card.getTenantId(), nonce);
+        }
         return txn;
     }
 

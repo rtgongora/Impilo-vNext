@@ -39,6 +39,7 @@ class OfflineTransactionServiceTest {
     private CardRepository cardRepository;
     private WalletService walletService;
     private zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
+    private MushexSettlementClient mushexSettlementClient;
     private OfflineTransactionService service;
     private final UUID walletId = UUID.randomUUID();
 
@@ -54,8 +55,9 @@ class OfflineTransactionServiceTest {
         cardRepository = mock(CardRepository.class);
         walletService = mock(WalletService.class);
         biometricVerification = mock(zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient.class);
+        mushexSettlementClient = mock(MushexSettlementClient.class);
         service = new OfflineTransactionService(cardRepository, walletService, new ObjectMapper(),
-                biometricVerification);
+                biometricVerification, mushexSettlementClient);
         when(walletService.debit(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(new TransactionEntity());
     }
@@ -190,6 +192,33 @@ class OfflineTransactionServiceTest {
 
         verify(walletService).debit(eq(walletId), eq(new BigDecimal("10.00")), eq("OFFLINE_PURSE"),
                 eq("CARD_OFFLINE"), eq("bio2"), any(), any(), any(), any(), eq("bio2"));
+    }
+
+    @Test
+    void card_payment_with_a_mushex_intent_records_the_settlement() throws Exception {
+        CardEntity card = linkedCard(0);
+        when(cardRepository.findByVitoCardNumber("VITO-1")).thenReturn(Optional.of(card));
+        when(cardRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        String payload = "{\"amount\":\"10.00\",\"counter\":1,\"nonce\":\"s1\",\"currency\":\"USD\","
+                + "\"mushexIntentId\":\"intent-1\"}";
+
+        service.redeem("VITO-1", payload, sign(payload));
+
+        // Costa/Msika recognition path: MusheX is told the card funded this intent.
+        verify(mushexSettlementClient).recordCardPayment(eq("intent-1"), eq(new BigDecimal("10.00")),
+                any(), eq("s1"));
+    }
+
+    @Test
+    void card_payment_without_a_mushex_intent_does_not_call_settlement() throws Exception {
+        CardEntity card = linkedCard(0);
+        when(cardRepository.findByVitoCardNumber("VITO-1")).thenReturn(Optional.of(card));
+        when(cardRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        String payload = "{\"amount\":\"10.00\",\"counter\":1,\"nonce\":\"s2\",\"currency\":\"USD\"}";
+
+        service.redeem("VITO-1", payload, sign(payload));
+
+        verify(mushexSettlementClient, never()).recordCardPayment(any(), any(), any(), any());
     }
 
     @Test
