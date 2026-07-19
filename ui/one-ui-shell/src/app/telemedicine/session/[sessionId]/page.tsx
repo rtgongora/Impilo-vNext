@@ -255,13 +255,19 @@ export default function TeleconsultSessionPage() {
         return true;
       }
       if (String(payload.status ?? "").toUpperCase() === "WAITING") {
-        setMediaError("The session gatekeeper placed this join in the waiting room. Retry shortly.");
+        setMediaError("You're in the waiting room — the provider must admit you before video or audio starts. This screen updates automatically once you're admitted.");
         return false;
       }
-      setMediaError("RTC gateway returned no governed room credentials.");
+      setMediaError("The RTC gateway returned no room credentials. You can continue the consult via notes and messages while this is resolved.");
       return false;
-    } catch {
-      setMediaError("Governed RTC media token could not be issued. Lifecycle BFF remains available.");
+    } catch (e) {
+      const err = e as { status?: number; error?: { code?: string; message?: string } };
+      if (err?.status === 403 && err?.error?.code === "CONSENT_REQUIRED") {
+        setMediaError("Record the patient's consent (the Consent step) before starting audio or video — governed media cannot begin without it.");
+      } else {
+        setMediaError((err?.error?.message ? err.error.message + " " : "Governed media could not start. ") +
+          "You can continue the consult via notes and messages while this is resolved.");
+      }
       return false;
     }
   }
@@ -614,8 +620,8 @@ export default function TeleconsultSessionPage() {
             </div>
           )}
           {mediaError ? (
-            <div className="mx-3 mt-2 rounded-md border border-amber-300 bg-warning-soft p-2 text-[11px] text-warning-foreground">
-              {mediaError} Continue governed teleconsult workflow via notes/messages while support stabilizes media.
+            <div className="mx-3 mt-2 rounded-md border border-amber-300 bg-warning-soft p-2 text-[11px] text-warning-foreground" data-testid="teleconsult-media-note">
+              {mediaError}
             </div>
           ) : null}
 
