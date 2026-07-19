@@ -684,7 +684,31 @@ public class VarapiServiceClient {
      * send platform headers (the web client always does), the shared forwarding
      * interceptor overwrites these defaults with the inbound values.
      */
+    /**
+     * Public provider badge scan (PJ6/D-P8): the signed QR content travels in
+     * the body, never the URL. Varapi verifies the signature + live standing and
+     * returns register facts, or a uniform NOT_RECOGNISED (forged/revoked/
+     * suspended all indistinguishable — no oracle). Anonymous-safe.
+     */
+    public JsonNode publicBadgeScan(String qr) {
+        String url = baseUrl + "/v1/public/practitioners/badge-scan";
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                java.net.URI.create(url), HttpMethod.POST,
+                anonymousSafeEntity(java.util.Map.of("qr", qr == null ? "" : qr)), JsonNode.class);
+        return extractData(response);
+    }
+
     private HttpEntity<Void> anonymousSafeEntity() {
+        return new HttpEntity<>(anonymousSafeHeaders());
+    }
+
+    private HttpEntity<Object> anonymousSafeEntity(Object body) {
+        HttpHeaders headers = anonymousSafeHeaders();
+        headers.set("Content-Type", "application/json");
+        return new HttpEntity<>(body, headers);
+    }
+
+    private HttpHeaders anonymousSafeHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-Tenant-ID", PUBLIC_DEFAULT_TENANT);
         headers.set("X-Actor-ID", "public-gateway");
@@ -693,7 +717,7 @@ public class VarapiServiceClient {
         headers.set("X-Device-Fingerprint", "public-gateway");
         headers.set("X-Correlation-ID", java.util.UUID.randomUUID().toString());
         headers.set("X-Request-ID", java.util.UUID.randomUUID().toString());
-        return new HttpEntity<>(headers);
+        return headers;
     }
 
     /**

@@ -157,6 +157,29 @@ public class TusoServiceClient {
         return response.getBody();
     }
 
+    /**
+     * Public facility QR credential scan (FJ QR/D-L7): the signed QR content (or
+     * a typed verification code) travels in the body. Tuso verifies + resolves
+     * the live facility and returns the policy-filtered projection, or a uniform
+     * NOT_RECOGNISED (no oracle). Anonymous-safe.
+     */
+    public JsonNode publicCredentialScan(String qr) {
+        String url = baseUrl + "/v1/public/facilities/credential-scan";
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set("Content-Type", "application/json");
+        headers.set("X-Tenant-ID", "00000000-0000-4000-8000-000000000001");
+        headers.set("X-Actor-ID", "public-gateway");
+        headers.set("X-Actor-Type", "SYSTEM");
+        headers.set("X-Purpose-Of-Use", "PUBLIC_ACCESS");
+        headers.set("X-Correlation-ID", java.util.UUID.randomUUID().toString());
+        headers.set("X-Request-ID", java.util.UUID.randomUUID().toString());
+        org.springframework.http.HttpEntity<Object> entity =
+                new org.springframework.http.HttpEntity<>(java.util.Map.of("qr", qr == null ? "" : qr), headers);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                java.net.URI.create(url), HttpMethod.POST, entity, JsonNode.class);
+        return response.getBody();
+    }
+
     /** Public facility-directory search (disclosure-limited summaries; anonymous-safe). */
     public JsonNode publicFacilitySearch(Map<String, String> params) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/public/facilities/search");

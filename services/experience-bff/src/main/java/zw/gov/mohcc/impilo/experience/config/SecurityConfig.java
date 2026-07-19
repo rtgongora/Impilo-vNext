@@ -404,12 +404,19 @@ public class SecurityConfig {
 
                     // ── Public facility-certificate verification (disclosure-limited) ──
                     .requestMatchers("/internal/v1/public/facility-certificates/verify/**").permitAll()
+                    // Anonymous facility QR credential scan (FJ QR/D-L7): signed QR in the body,
+                    // uniform NOT_RECOGNISED on any miss (no oracle). Distinct from the cert verify.
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/public/facility-certificates/credential-scan").permitAll()
 
                     // ── Gateway public lane (anonymous R0 reads; ADR: gateway-public-lane-security-adr) ──
                     // GET-only in W1; anonymous writes (feedback, SOS) arrive in later waves with
                     // their own abuse controls. Every sub-path must be registered in the ADR's
                     // public contract registry (enforced by scripts/guard/check-public-lane.sh).
                     .requestMatchers(HttpMethod.GET, "/internal/v1/public/gateway/**").permitAll()
+                    // Anonymous WRITE exception: provider badge QR scan (PJ6/D-P8). Signed QR in
+                    // the body (never the URL); forged/revoked/not-in-standing all return the same
+                    // NOT_RECOGNISED shape (no oracle). Read-only verification, no state change.
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/public/gateway/practitioners/badge-scan").permitAll()
                     // Anonymous WRITE exception (ADR §5, PD-3): emergency SOS intake. Captured
                     // immediately, never gated on sign-in; abuse controls (per-IP + global rate
                     // limits, callback normalization, body caps) enforced in PublicSosIntakeService.
