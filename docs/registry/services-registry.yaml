@@ -496,10 +496,13 @@ services:
     default_http_port: 8140
     product_names:
       - Coverage
+      - Ruvimbo
     owner_team: TBD
     system_of_record_for:
       - Coverage canonical records
       - Subsidy enrolments and annual-cap enforcement
+      - Payer registry, scheme/product/plan-version hierarchy, membership verification (Ruvimbo)
+      - Canonical claim (cv_claims) — COSTA claim packs file into this; MUSHEX settles it
     consumes_from:
       - tshepo-authz-service
     exposes_to:
