@@ -14,7 +14,12 @@ ui/node_modules
 .cursor
 vendor
 **/target
+# Exclude test-coverage report output — but NOT the Coverage product feature
+# (src/app/coverage), which `**/coverage` was silently eating from the build
+# context, 404-ing the whole feature.
 **/coverage
+!ui/one-ui-shell/src/app/coverage
+!ui/one-ui-shell/src/app/coverage/**
 **/test-results
 services
 apps
