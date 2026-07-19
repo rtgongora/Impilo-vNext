@@ -72,6 +72,68 @@ public class CitizenCardController {
         return proxy(() -> musheClient.getCard(cardId), "getCard", requestId, correlationId);
     }
 
+    // ── Report lost / stolen (CJ8) ──────────────────────────────────────
+
+    /**
+     * Citizen self-service "report my card lost/stolen" (Identity Journey Doctrine, CJ8). The
+     * citizen never supplies a card id — the BFF resolves their own active SMART card from the
+     * authenticated actor (X-Actor-ID == Health ID), revokes it with the stated reason so it can
+     * no longer authenticate, and optionally raises a replacement request. Only LOST/STOLEN are
+     * accepted here (operational reasons like DAMAGED/EXPIRED are an operator concern).
+     *
+     * <p>Body: {@code {"reason":"LOST|STOLEN","requestReplacement":true}} (both optional; reason
+     * defaults to LOST). Returns what happened, without ever exposing another person's card.</p>
+     */
+    @PostMapping("/cards/report-lost")
+    public ResponseEntity<Map<String, Object>> reportLost(
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+
+        if (actorId == null || actorId.isBlank()) {
+            return validation("X-Actor-ID is required to report a lost card", requestId, correlationId);
+        }
+        String reason = "STOLEN".equalsIgnoreCase(str(body == null ? null : body.get("reason")))
+                ? "STOLEN" : "LOST";
+        boolean requestReplacement = body != null && Boolean.TRUE.equals(body.get("requestReplacement"));
+
+        try {
+            JsonNode active = vitoClient.getActiveCard(actorId);
+            Long cardId = active == null ? null
+                    : (active.path("id").isMissingNode() || active.path("id").isNull()
+                        ? null : active.path("id").asLong());
+
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("reason", reason);
+            if (cardId == null) {
+                // Nothing active to revoke — still let the citizen request a card if they asked.
+                data.put("status", "NO_ACTIVE_CARD");
+                data.put("message", "No active card was found on your record to report. "
+                        + "You can request a new card.");
+            } else {
+                vitoClient.revokeCard(cardId, reason);
+                data.put("status", "REPORTED");
+                data.put("revokedCardId", cardId);
+                data.put("message", reason.equals("STOLEN")
+                        ? "Your card has been reported stolen and can no longer be used."
+                        : "Your card has been reported lost and can no longer be used.");
+            }
+
+            data.put("replacementRequested", requestReplacement);
+            if (requestReplacement) {
+                JsonNode replacement = vitoClient.requestCard(actorId, "PHYSICAL");
+                data.put("replacement", replacement);
+            }
+            return ok(data, requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            log.warn("report-lost upstream rejected: {}", e.getStatusCode());
+            return upstreamUnavailable("reportLost", "vito rejected", requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamUnavailable("reportLost", e.getMessage(), requestId, correlationId);
+        }
+    }
+
     // ── Device enrollment (VIRTUAL card key → VITO → mushe link) ────────
 
     /**

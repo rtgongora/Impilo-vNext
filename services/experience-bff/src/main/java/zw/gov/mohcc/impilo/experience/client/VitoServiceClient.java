@@ -119,6 +119,32 @@ public class VitoServiceClient {
         return extractData(r);
     }
 
+    /** The active SMART card for a Health ID (CJ8). Returns the card node or null when none. */
+    public JsonNode getActiveCard(String healthId) {
+        try {
+            ResponseEntity<JsonNode> r = restTemplate.getForEntity(
+                    baseUrl + "/v1/cards/active/" + healthId, JsonNode.class);
+            return extractData(r);
+        } catch (org.springframework.web.client.HttpClientErrorException.NotFound nf) {
+            return null;
+        }
+    }
+
+    /** Revoke a card by id with a reason (INTERNAL — LOST/STOLEN/…, CJ8). */
+    public JsonNode revokeCard(long cardId, String reason) {
+        ResponseEntity<JsonNode> r = restTemplate.postForEntity(
+                baseUrl + "/v1/cards/" + cardId + "/revoke", internal(Map.of("reason", reason)), JsonNode.class);
+        return extractData(r);
+    }
+
+    /** Request a (replacement) card for a Health ID (INTERNAL, CJ8). */
+    public JsonNode requestCard(String healthId, String cardForm) {
+        ResponseEntity<JsonNode> r = restTemplate.postForEntity(
+                baseUrl + "/v1/cards/request",
+                internal(Map.of("healthId", healthId, "cardForm", cardForm)), JsonNode.class);
+        return extractData(r);
+    }
+
     /** Start ID recovery process. */
     public JsonNode startRecovery(Map<String, Object> recoveryData) {
         String url = baseUrl + "/v1/portal/id/recovery/start";
