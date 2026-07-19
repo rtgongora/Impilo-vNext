@@ -38,13 +38,16 @@ public class PatientRecordClaimController {
     private final TshepoIdentityServiceClient tshepoIdentity;
     private final VitoServiceClient vito;
     private final NotificationServiceClient notification;
+    private final zw.gov.mohcc.impilo.experience.service.ClaimThrottleService claimThrottle;
 
     public PatientRecordClaimController(TshepoIdentityServiceClient tshepoIdentity,
                                         VitoServiceClient vito,
-                                        NotificationServiceClient notification) {
+                                        NotificationServiceClient notification,
+                                        zw.gov.mohcc.impilo.experience.service.ClaimThrottleService claimThrottle) {
         this.tshepoIdentity = tshepoIdentity;
         this.vito = vito;
         this.notification = notification;
+        this.claimThrottle = claimThrottle;
     }
 
     public record ClaimStartRequest(String claimKind, String claimValue) {}
@@ -53,12 +56,21 @@ public class PatientRecordClaimController {
     @PostMapping("/start")
     public ResponseEntity<Map<String, Object>> start(
             @RequestBody ClaimStartRequest req,
-            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId) {
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String accountRef,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
 
         Map<String, Object> generic = new LinkedHashMap<>();
         generic.put("status", "VERIFICATION_REQUIRED");
         generic.put("message", "If a matching record exists, a verification code has been sent to the "
                 + "contact registered on that record.");
+
+        // Per-account / per-IP anti-abuse throttle. On exceed, return the SAME uniform
+        // response without resolving or dispatching — the caller cannot tell throttle from miss.
+        if (!claimThrottle.allowStart(tenantId, accountRef, clientIp(httpRequest))) {
+            generic.put("challengeId", UUID.randomUUID().toString());
+            return ResponseEntity.ok(generic);
+        }
 
         try {
             // 1. Private, server-side resolution — never surfaced to the client.
@@ -163,6 +175,18 @@ public class PatientRecordClaimController {
         } catch (Exception e) {
             log.warn("record-claim owner alert not accepted: {}", e.getMessage());
         }
+    }
+
+    private static String clientIp(jakarta.servlet.http.HttpServletRequest req) {
+        if (req == null) {
+            return null;
+        }
+        String fwd = req.getHeader("X-Forwarded-For");
+        if (fwd != null && !fwd.isBlank()) {
+            int comma = fwd.indexOf(',');
+            return (comma > 0 ? fwd.substring(0, comma) : fwd).trim();
+        }
+        return req.getRemoteAddr();
     }
 
     private static String safeUpper(String s) { return s == null ? "" : s.trim().toUpperCase(); }
