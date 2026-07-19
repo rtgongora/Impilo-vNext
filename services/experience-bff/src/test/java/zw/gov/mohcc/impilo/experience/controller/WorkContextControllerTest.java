@@ -27,6 +27,12 @@ class WorkContextControllerTest {
     private VashandiServiceClient vashandiServiceClient;
 
     @MockBean
+    private zw.gov.mohcc.impilo.experience.client.VarapiServiceClient varapiServiceClient;
+
+    @MockBean
+    private zw.gov.mohcc.impilo.experience.client.TshepoIdentityServiceClient tshepoIdentityServiceClient;
+
+    @MockBean
     private StringRedisTemplate stringRedisTemplate;
 
     private static final ObjectMapper MAPPER = new ObjectMapper();

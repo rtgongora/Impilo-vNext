@@ -33,9 +33,15 @@ public class WorkContextController {
     private static final Logger log = LoggerFactory.getLogger(WorkContextController.class);
 
     private final VashandiServiceClient vashandiClient;
+    private final zw.gov.mohcc.impilo.experience.client.VarapiServiceClient varapiClient;
+    private final zw.gov.mohcc.impilo.experience.client.TshepoIdentityServiceClient tshepoIdentityClient;
 
-    public WorkContextController(VashandiServiceClient vashandiClient) {
+    public WorkContextController(VashandiServiceClient vashandiClient,
+                                 zw.gov.mohcc.impilo.experience.client.VarapiServiceClient varapiClient,
+                                 zw.gov.mohcc.impilo.experience.client.TshepoIdentityServiceClient tshepoIdentityClient) {
         this.vashandiClient = vashandiClient;
+        this.varapiClient = varapiClient;
+        this.tshepoIdentityClient = tshepoIdentityClient;
     }
 
     @GetMapping
@@ -64,6 +70,136 @@ public class WorkContextController {
                 "attributes", attributes));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Start or switch a provider work session (D-P3 / PJ5): prove the requested
+     * facility (and workspace, when given) against the actor's ACTIVE Vashandi
+     * assignments, then mint a duty-scoped WORK_CONTEXT token. A switch passes
+     * {@code previousJti}; the old token is revoked before reissue. The proof
+     * happens HERE — tshepo-identity only binds what this composition proved.
+     */
+    @org.springframework.web.bind.annotation.PostMapping("/session")
+    public ResponseEntity<Map<String, Object>> startWorkSession(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId,
+            @org.springframework.web.bind.annotation.RequestBody Map<String, Object> body) {
+
+        String facilityId = str(body.get("facilityId"));
+        String workspaceId = str(body.get("workspaceId"));
+        String previousJti = str(body.get("previousJti"));
+        if (facilityId == null) {
+            return errorBody(org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "FACILITY_REQUIRED", "A facility is required to start a work session.",
+                    requestId, correlationId);
+        }
+
+        // 1) The person must be a linked, operational provider.
+        JsonNode provider = varapiClient.getProviderByHealthId(actorId);
+        String providerPublicId = provider != null && !provider.isNull()
+                ? text(provider, "providerPublicId") : null;
+        if (providerPublicId == null) {
+            return errorBody(org.springframework.http.HttpStatus.FORBIDDEN,
+                    "WORK_SESSION_UNAVAILABLE",
+                    "Professional Work access is currently unavailable. Open My Professional to view the status.",
+                    requestId, correlationId);
+        }
+
+        // 2) The requested context must be one of the actor's ACTIVE assignments.
+        JsonNode workContext = vashandiClient.fetchWorkContext(actorId);
+        JsonNode matched = matchAssignment(workContext, facilityId, workspaceId);
+        if (matched == null) {
+            // Generic denial — never disclose which contexts DO exist beyond the
+            // picker the actor already sees via GET /work-context.
+            return errorBody(org.springframework.http.HttpStatus.FORBIDDEN,
+                    "WORK_SESSION_UNAVAILABLE",
+                    "Professional Work access is currently unavailable for the selected workplace.",
+                    requestId, correlationId);
+        }
+
+        // 3) Bind the PROVEN context into a short-lived work token.
+        Map<String, Object> issueRequest = new LinkedHashMap<>();
+        issueRequest.put("tenantId", tenantId);
+        issueRequest.put("actorId", actorId);
+        issueRequest.put("providerPublicId", providerPublicId);
+        issueRequest.put("facilityId", facilityId);
+        if (workspaceId != null) {
+            issueRequest.put("workspaceId", workspaceId);
+        }
+        String departmentId = text(matched, "departmentId");
+        if (departmentId != null) {
+            issueRequest.put("departmentId", departmentId);
+        }
+        String roleTemplateId = text(matched, "roleTemplateId");
+        if (roleTemplateId != null) {
+            issueRequest.put("roleTemplateId", roleTemplateId);
+        }
+        issueRequest.put("purposeOfUse", "TREATMENT");
+        if (previousJti != null) {
+            issueRequest.put("previousJti", previousJti);
+        }
+
+        JsonNode issued = tshepoIdentityClient.issueWorkContextToken(issueRequest);
+        JsonNode data = issued != null ? issued.path("data") : null;
+        if (data == null || data.isMissingNode() || data.isNull()) {
+            return errorBody(org.springframework.http.HttpStatus.BAD_GATEWAY,
+                    "WORK_TOKEN_UNAVAILABLE",
+                    "The work session could not be started. Try again.",
+                    requestId, correlationId);
+        }
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("token", text(data, "token"));
+        attributes.put("jti", text(data, "jti"));
+        attributes.put("expiresAt", text(data, "expiresAt"));
+        attributes.put("facilityId", facilityId);
+        attributes.put("workspaceId", workspaceId);
+        attributes.put("roleTemplateId", roleTemplateId);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", actorId, "type", "work-session", "attributes", attributes));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
+    /** The requested facility (and workspace, when given) must be an ACTIVE assignment. */
+    private JsonNode matchAssignment(JsonNode workContext, String facilityId, String workspaceId) {
+        if (workContext == null || workContext.isNull()) {
+            return null;
+        }
+        JsonNode assignments = workContext.path("activeAssignments");
+        if (!assignments.isArray()) {
+            return null;
+        }
+        for (JsonNode assignment : assignments) {
+            if (!facilityId.equalsIgnoreCase(text(assignment, "facilityId"))) {
+                continue;
+            }
+            String assignmentWorkspace = text(assignment, "workspaceId");
+            if (workspaceId == null || workspaceId.equalsIgnoreCase(assignmentWorkspace)) {
+                return assignment;
+            }
+        }
+        return null;
+    }
+
+    private ResponseEntity<Map<String, Object>> errorBody(org.springframework.http.HttpStatus status,
+                                                          String code, String message,
+                                                          String requestId, String correlationId) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("error", Map.of("code", code, "message", message));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.status(status).body(response);
+    }
+
+    private static String str(Object value) {
+        if (value == null) {
+            return null;
+        }
+        String s = String.valueOf(value).trim();
+        return s.isEmpty() ? null : s;
     }
 
     private Map<String, Object> toAttributes(JsonNode node) {

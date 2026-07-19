@@ -66,6 +66,14 @@ public class TshepoIdentityServiceClient {
      * downstream clinical calls (Identity Contract §7.2, enforced by the
      * SubjectContextFilter).
      */
+    /** Duty-scoped WORK_CONTEXT token for a proven provider work session (D-P3). */
+    public JsonNode issueWorkContextToken(Map<String, Object> request) {
+        String url = baseUrl + "/v1/identity/tokens/work-context";
+        org.springframework.http.ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
+        return response.getBody();
+    }
+
     public JsonNode issuePatientContextToken(Map<String, Object> request) {
         String url = baseUrl + "/v1/identity/tokens";
         ResponseEntity<JsonNode> response =
