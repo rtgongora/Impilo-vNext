@@ -37,6 +37,7 @@ import {
   Stethoscope,
   User,
   Users,
+  UsersRound,
   Wallet,
 } from "lucide-react";
 import type { SessionExperienceContract } from "@/lib/trust";
@@ -69,6 +70,8 @@ export const QUEUE_ROLES = expandRoleGroup(["CLINICIAN", "NURSE", "SUPPORT_AGENT
 export const DISPENSER_ROLES = expandRoleGroup(["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"]);
 export const PUBLIC_HEALTH_ROLES = expandRoleGroup(["PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"]);
 export const OPERATOR_SWITCH_ROLES = expandRoleGroup(["FACILITY_ADMIN", "SYSTEM_ADMIN", "FINANCE", "SUPER_ADMIN"]);
+// Vashandi workforce management — mirrors the WORKFORCE_ADMIN role group used by the app registry.
+export const WORKFORCE_ROLES = expandRoleGroup(["HR_OFFICER", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"]);
 
 export const ZONES: SidebarZone[] = [
   {
@@ -83,6 +86,7 @@ export const ZONES: SidebarZone[] = [
       { href: "/communication/secure-messaging", label: "Secure Messaging", icon: MessageSquare, requiredRoles: QUEUE_ROLES },
       { href: "/beds", label: "Bed Management", icon: Building2, requiredRoles: CLINICAL_ROLES },
       { href: "/scheduling", label: "Scheduling", icon: Calendar, requiredRoles: CLINICAL_ROLES },
+      { href: "/work/vashandi", label: "Vashandi Workforce", icon: UsersRound, requiredRoles: WORKFORCE_ROLES },
       { href: "/pharmacy", label: "Pharmacy", icon: Pill, requiredRoles: DISPENSER_ROLES },
       { href: "/inventory", label: "Inventory", icon: Package },
       { href: "/enterprise", label: "Enterprise resources", icon: Boxes },

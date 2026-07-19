@@ -1166,6 +1166,7 @@ export const QUICK_ACTION_IDS: string[] = [
   "cmd-claim-facility",
   "cmd-request-provider-access",
   "cmd-workforce-intake",
+  "cmd-vashandi",
   "cmd-book-service",
 ];
 

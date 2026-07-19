@@ -896,6 +896,10 @@ export const ROUTES: RouteDefinition[] = [
 // Impilo Live (Jun 2026): 14 routes under /live incl. /live/admin (services/live-service).
 // Trust & Access Administration (Jun 2026): 90 contract-governed routes under /work/** (administration-governance scaffold).
 // Vashandi (Jun 2026): 10 routes under /work/vashandi for operational workforce UI. New canonical total is 589.
+// NOTE (Jul 2026): these /work/vashandi routes are registered via ...ADMINISTRATION_GOVERNANCE_ROUTES
+// (the contract-governed /work/** scaffold), not as literal rows here — so they are guard/breadcrumb
+// governed already. The Jul 2026 surfacing work was nav discoverability (sidebar + start-menu), not
+// route registration.
 // Person Health Wallet (Jun 2026): 8 routes under /citizen/wallet for the unified person anchor
 // experience (overview, identity, profile, records, timeline, dependants, payments, comms).
 // Realigned the count constant to the actual extracted route total (it had drifted behind earlier waves).

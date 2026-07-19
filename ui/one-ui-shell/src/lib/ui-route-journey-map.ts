@@ -125,6 +125,7 @@ export const MANAGER_NAVIGATION: RoleNavigationItem[] = [
   { label: "Facilities", route: "/registry/facilities" },
   { label: "Services", route: "/registry/products" },
   { label: "Providers", route: "/registry/providers" },
+  { label: "Workforce", route: "/work/vashandi", aliases: ["/work/vashandi/assignments", "/work/vashandi/rosters"] },
   { label: "Queues", route: "/operations/facility-operations" },
   { label: "Payments", route: "/finance/payments" },
   { label: "Claims", route: "/finance/claims" },
