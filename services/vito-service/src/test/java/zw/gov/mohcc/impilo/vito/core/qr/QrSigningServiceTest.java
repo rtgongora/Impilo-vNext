@@ -14,7 +14,11 @@ class QrSigningServiceTest {
     private QrSigningService service;
 
     private QrSigningService instance(String seed) throws Exception {
-        QrSigningService s = new QrSigningService(seed);
+        return instance(seed, "");
+    }
+
+    private QrSigningService instance(String seed, String previousSeed) throws Exception {
+        QrSigningService s = new QrSigningService(seed, previousSeed);
         s.init();
         return s;
     }
@@ -101,6 +105,32 @@ class QrSigningServiceTest {
         var c2 = service.verify(t2).orElseThrow();
 
         assertNotEquals(c1.jti(), c2.jti());
+    }
+
+    @Test
+    void rotationOverlap_previousSeedTokensStillVerify() throws Exception {
+        // X4 K1<->K2 overlap: rotate the seed while retaining the old one
+        // verify-only — QRs issued before the rotation stay valid to expiry.
+        String newSeed = "a-ROTATED-qr-signing-seed-of-32-bytes+";
+        QrSigningService rotated = instance(newSeed, SEED);
+
+        String oldToken = service.sign("tenant1", "PICKUP", "ptr", 3600);
+        assertTrue(rotated.verify(oldToken).isPresent(), "pre-rotation QR must verify during overlap");
+
+        String newToken = rotated.sign("tenant1", "PICKUP", "ptr", 3600);
+        assertTrue(rotated.verify(newToken).isPresent());
+
+        // Without the overlap configured, the old token is rejected.
+        QrSigningService noOverlap = instance(newSeed);
+        assertTrue(noOverlap.verify(oldToken).isEmpty());
+    }
+
+    @Test
+    void kidIsVersionedBySeed() throws Exception {
+        String kidA = service.getPublicKeyJwk();
+        String kidB = instance("a-DIFFERENT-qr-seed-of-32-bytes-long++").getPublicKeyJwk();
+        assertTrue(kidA.contains("\"kid\":\"vito-qr-"), "kid must be versioned, was: " + kidA);
+        assertNotEquals(kidA, kidB, "a seed rotation must change the kid");
     }
 
     @Test

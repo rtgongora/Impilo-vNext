@@ -42,16 +42,19 @@ import java.util.*;
 public class QrSigningService {
 
     private static final Logger log = LoggerFactory.getLogger(QrSigningService.class);
-    private static final String KEY_ID = "vito-qr-1";
     private static final String DEV_SEED = "vito-qr-signing-dev-seed-change-me-32b";
 
     private final String seedMaterial;
+    private final String previousSeedMaterial;
 
     private OctetKeyPair jwk;
     private JWSSigner signer;
     private JWSVerifier verifier;
+    private String previousKeyId;
+    private JWSVerifier previousVerifier;
 
-    public QrSigningService(@Value("${vito.qr.signing-key-seed:}") String configuredSeed) {
+    public QrSigningService(@Value("${vito.qr.signing-key-seed:}") String configuredSeed,
+                            @Value("${vito.qr.signing-key-seed-previous:}") String previousSeed) {
         if (configuredSeed == null || configuredSeed.strip().length() < 32) {
             log.warn("vito.qr.signing-key-seed is unset/weak — using the DEV seed. Production MUST "
                     + "supply a >=32-char secret (tshepo-keys custody); QR signatures depend on it.");
@@ -59,6 +62,8 @@ public class QrSigningService {
         } else {
             this.seedMaterial = configuredSeed;
         }
+        this.previousSeedMaterial =
+                (previousSeed == null || previousSeed.strip().length() < 32) ? null : previousSeed;
     }
 
     @PostConstruct
@@ -66,19 +71,44 @@ public class QrSigningService {
         // Deterministic Ed25519 key from the seed: 32-byte private scalar =
         // SHA-256(seed); public key derived via BouncyCastle. Same seed -> same
         // key on every instance and every restart.
-        byte[] priv = MessageDigest.getInstance("SHA-256")
-                .digest(seedMaterial.getBytes(StandardCharsets.UTF_8));
-        Ed25519PrivateKeyParameters privParams = new Ed25519PrivateKeyParameters(priv, 0);
-        Ed25519PublicKeyParameters pubParams = privParams.generatePublicKey();
-
-        jwk = new OctetKeyPair.Builder(Curve.Ed25519, Base64URL.encode(pubParams.getEncoded()))
-                .d(Base64URL.encode(priv))
-                .keyID(KEY_ID)
-                .build();
+        jwk = keyFromSeed(seedMaterial);
         signer = new Ed25519Signer(jwk);
         verifier = new Ed25519Verifier(jwk.toPublicJWK());
+
+        // K1<->K2 rotation overlap (X4): the previous seed's key is retained
+        // VERIFY-ONLY, so rotating the seed keeps already-issued QRs valid to
+        // their expiry while new QRs carry the new kid.
+        if (previousSeedMaterial != null) {
+            OctetKeyPair previous = keyFromSeed(previousSeedMaterial);
+            previousKeyId = previous.getKeyID();
+            previousVerifier = new Ed25519Verifier(previous.toPublicJWK());
+            log.info("QR rotation overlap active — previous kid {} retained verify-only", previousKeyId);
+        }
         log.info("Ed25519 QR signing key initialized from seed (kid: {}, stable across restarts)",
                 jwk.getKeyID());
+    }
+
+    /**
+     * Versioned kid derived from the public key ({@code vito-qr-<8 hex of
+     * SHA-256(publicKey)>}) — a seed rotation changes the kid, which is what
+     * makes rotation-with-overlap observable to verifiers.
+     */
+    private static OctetKeyPair keyFromSeed(String seed) throws Exception {
+        byte[] priv = MessageDigest.getInstance("SHA-256")
+                .digest(seed.getBytes(StandardCharsets.UTF_8));
+        Ed25519PrivateKeyParameters privParams = new Ed25519PrivateKeyParameters(priv, 0);
+        Ed25519PublicKeyParameters pubParams = privParams.generatePublicKey();
+        byte[] pub = pubParams.getEncoded();
+
+        byte[] fingerprint = MessageDigest.getInstance("SHA-256").digest(pub);
+        StringBuilder kid = new StringBuilder("vito-qr-");
+        for (int i = 0; i < 4; i++) {
+            kid.append(String.format("%02x", fingerprint[i]));
+        }
+        return new OctetKeyPair.Builder(Curve.Ed25519, Base64URL.encode(pub))
+                .d(Base64URL.encode(priv))
+                .keyID(kid.toString())
+                .build();
     }
 
     /**
@@ -126,7 +156,7 @@ public class QrSigningService {
         try {
             SignedJWT jwt = SignedJWT.parse(compactJws);
 
-            if (!jwt.verify(verifier)) {
+            if (!jwt.verify(resolveVerifier(jwt))) {
                 return Optional.empty();
             }
 
@@ -150,6 +180,18 @@ public class QrSigningService {
             log.warn("QR token verification failed: {}", e.getMessage());
             return Optional.empty();
         }
+    }
+
+    /** Route verification by the token's kid: current key, or (during a
+     *  rotation window) the previous verify-only key. Tokens with the legacy
+     *  static kid or no kid at all verify against the current key — pre-kid
+     *  QRs were signed with the same seed-derived key. */
+    private JWSVerifier resolveVerifier(SignedJWT jwt) {
+        String kid = jwt.getHeader() != null ? jwt.getHeader().getKeyID() : null;
+        if (kid != null && previousVerifier != null && kid.equals(previousKeyId)) {
+            return previousVerifier;
+        }
+        return verifier;
     }
 
     /**
