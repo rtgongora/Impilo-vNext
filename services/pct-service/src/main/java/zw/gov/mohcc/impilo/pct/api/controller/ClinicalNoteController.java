@@ -55,17 +55,13 @@ public class ClinicalNoteController {
     }
 
     /**
-     * Signing is not yet implemented in the PCT strangler store; this endpoint exists so BFF and clients
-     * receive a stable response without 404 while a dedicated sign workflow is introduced.
+     * Records the requesting clinician's signature on the note (real, persisted).
      */
     @PostMapping("/{id}/sign")
     public ResponseEntity<ApiResponse<Map<String, Object>>> sign(@PathVariable long id) {
-        UUID tenantId = TrustContextHolder.require().tenantId();
-        ClinicalNoteEntity row = clinicalNoteService.get(tenantId, id);
-        Map<String, Object> detail = toDetail(row);
-        detail.put("signed", false);
-        detail.put("signed_at", null);
-        return ResponseEntity.ok(ApiResponse.ok(detail, TrustContextHolder.require().correlationId().toString()));
+        var ctx = TrustContextHolder.require();
+        ClinicalNoteEntity row = clinicalNoteService.sign(ctx.tenantId(), id, ctx.actorId());
+        return ResponseEntity.ok(ApiResponse.ok(toDetail(row), ctx.correlationId().toString()));
     }
 
     private Map<String, Object> toSummary(ClinicalNoteEntity e) {
@@ -94,6 +90,9 @@ public class ClinicalNoteController {
         m.put("trust_level_at_authoring", e.getTrustLevelAtAuthoring());
         m.put("share_correlation_id", e.getShareCorrelationId());
         m.put("provenance", e.getProvenance());
+        m.put("signed", e.isSigned());
+        m.put("signed_at", e.getSignedAt() != null ? e.getSignedAt().toString() : null);
+        m.put("signed_by", e.getSignedBy());
         return m;
     }
 }

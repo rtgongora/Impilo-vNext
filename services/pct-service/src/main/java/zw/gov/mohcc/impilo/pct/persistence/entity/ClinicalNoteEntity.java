@@ -73,9 +73,42 @@ public class ClinicalNoteEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
+    @Column(name = "signed", nullable = false)
+    private boolean signed = false;
+
+    @Column(name = "signed_at")
+    private OffsetDateTime signedAt;
+
+    @Column(name = "signed_by", length = 128)
+    private String signedBy;
+
     @PrePersist
     void onCreate() {
         createdAt = OffsetDateTime.now();
+    }
+
+    public boolean isSigned() {
+        return signed;
+    }
+
+    public void setSigned(boolean signed) {
+        this.signed = signed;
+    }
+
+    public OffsetDateTime getSignedAt() {
+        return signedAt;
+    }
+
+    public void setSignedAt(OffsetDateTime signedAt) {
+        this.signedAt = signedAt;
+    }
+
+    public String getSignedBy() {
+        return signedBy;
+    }
+
+    public void setSignedBy(String signedBy) {
+        this.signedBy = signedBy;
     }
 
     public Long getId() {

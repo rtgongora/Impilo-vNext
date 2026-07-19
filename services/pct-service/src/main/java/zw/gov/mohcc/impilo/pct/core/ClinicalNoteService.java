@@ -13,9 +13,13 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import zw.gov.mohcc.impilo.pct.api.PatientShareProvenanceHeaders;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ClinicalNoteEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.EncounterEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.ClinicalNoteRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.EncounterRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+
+import java.time.OffsetDateTime;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,10 +31,14 @@ public class ClinicalNoteService {
     private static final Logger log = LoggerFactory.getLogger(ClinicalNoteService.class);
 
     private final ClinicalNoteRepository repository;
+    private final EncounterRepository encounterRepository;
     private final ObjectMapper objectMapper;
 
-    public ClinicalNoteService(ClinicalNoteRepository repository, ObjectMapper objectMapper) {
+    public ClinicalNoteService(ClinicalNoteRepository repository,
+                               EncounterRepository encounterRepository,
+                               ObjectMapper objectMapper) {
         this.repository = repository;
+        this.encounterRepository = encounterRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -38,6 +46,49 @@ public class ClinicalNoteService {
     public Page<ClinicalNoteEntity> list(UUID tenantId, String patientId, int page, int size) {
         return repository.findByTenantIdAndPatientIdOrderByCreatedAtDesc(
                 tenantId, patientId, PageRequest.of(page, size));
+    }
+
+    /**
+     * Resolve the wire {@code encounter_id} to the encounter's UUID handle
+     * ({@code encounterRef}) — tolerant of what the caller sends so a consult
+     * note is NEVER lost to an id-format mismatch (the previous
+     * {@code UUID.fromString} threw whenever the UI sent the numeric encounter
+     * id instead of the UUID ref). Accepts a UUID ref as-is, resolves a numeric
+     * encounter id via the encounter table, and stores the note unlinked
+     * (null) rather than failing when the id is unresolvable.
+     */
+    private UUID resolveEncounterRef(UUID tenantId, String enc) {
+        try {
+            return UUID.fromString(enc);
+        } catch (IllegalArgumentException notAUuid) {
+            // fall through
+        }
+        try {
+            long encId = Long.parseLong(enc);
+            return encounterRepository.findById(encId)
+                    .filter(e -> tenantId.equals(e.getTenantId()))
+                    .map(EncounterEntity::getEncounterRef)
+                    .orElse(null);
+        } catch (NumberFormatException notNumeric) {
+            // fall through
+        }
+        log.warn("clinical note: unresolvable encounter_id '{}' — storing note without an encounter link", enc);
+        return null;
+    }
+
+    /**
+     * Records a real signature on a note (persisted signed state), replacing the
+     * former placebo that always returned signed=false.
+     */
+    @Transactional
+    public ClinicalNoteEntity sign(UUID tenantId, long id, String signerId) {
+        ClinicalNoteEntity row = get(tenantId, id);
+        row.setSigned(true);
+        row.setSignedAt(OffsetDateTime.now());
+        row.setSignedBy(signerId);
+        ClinicalNoteEntity saved = repository.save(row);
+        log.info("pct.clinical_note.signed id={} signedBy={}", saved.getId(), signerId);
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -64,7 +115,7 @@ public class ClinicalNoteService {
         }
         Object enc = body.get("encounter_id");
         if (enc != null && !String.valueOf(enc).isBlank()) {
-            row.setEncounterId(UUID.fromString(String.valueOf(enc).trim()));
+            row.setEncounterId(resolveEncounterRef(tenantId, String.valueOf(enc).trim()));
         }
         row.setNoteType(stringOr(body.get("note_type"), "GENERAL"));
         row.setBody(stringOr(body.get("body"), null));
