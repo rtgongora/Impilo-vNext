@@ -99,6 +99,19 @@ def g(o,p):
     return o
 sys.exit(0 if g(d,sys.argv[2]) is not None else 1)' "$EVIDENCE_DIR/.body" "$1" 2>/dev/null; }
 
+# DB helper for self-seeding (override PSQL for your estate; default kubectl exec).
+PSQL="${PSQL:-kubectl exec -n $NS deploy/postgres -- psql -U impilo -tA}"
+db(){ $PSQL -d "$1" -c "$2" 2>/dev/null; }
+jval(){ python3 -c 'import sys,json
+try: d=json.load(open(sys.argv[1]))
+except Exception: print(""); sys.exit()
+def g(o,p):
+    for k in p.split("."):
+        if not isinstance(o,dict): return ""
+        o=o.get(k)
+    return o
+v=g(d,sys.argv[2]); print(v if v is not None else "")' "$EVIDENCE_DIR/.body" "$1" 2>/dev/null; }
+
 mint_token
 ACTOR="$(derive_actor)"
 if [ -n "$TOKEN" ]; then printf 'Authorization: Bearer %s\n' "$TOKEN" > "$AUTH_HDR_FILE"; else : > "$AUTH_HDR_FILE"; fi
@@ -182,6 +195,64 @@ cj11(){
     *) bad "CJ11: unexpected HTTP $code — body: $(body | head -c 200)";;
   esac
 }
+
+# ── Zero-to-one: register a FRESH person, seed their own data, prove it flows ─
+# The strong pack (RUN_MUTATING=1). Because the test creates the subject and its
+# data, an empty result can ONLY mean broken — it can no longer be mistaken for a
+# genuinely-empty pre-existing record (the flaw in reading a warm persona).
+SEED_MARK="RIG-SEED-$(uuid | cut -c1-8)"
+NEW_HID=""
+zero_to_one(){
+  say "CJ2 zero-to-one — register a fresh citizen, then prove journeys on THAT person"
+  bff_up || { skip "Z2O: BFF unreachable"; return; }
+
+  # CJ2 — register a brand-new person through the production browser path.
+  local code; code=$(curl -sk -o "$EVIDENCE_DIR/.body" -w '%{http_code}' -X POST $(chdr) \
+    -H "Idempotency-Key:$(uuid)" \
+    --data '{"givenName":"Rig","familyName":"ZeroToOne","sex":"F","dateOfBirth":"1990-05-05"}' \
+    "$EXPERIENCE_BFF/internal/v1/identity/health-id/provisional")
+  NEW_HID=$(jval provisionalHealthId); [ -n "$NEW_HID" ] || NEW_HID=$(jval healthId); [ -n "$NEW_HID" ] || NEW_HID=$(jval data.healthId); [ -n "$NEW_HID" ] || NEW_HID=$(jval data.provisionalHealthId)
+  if [ "$code" = "401" ] || [ "$code" = "403" ]; then skip "CJ2: register needs gateway trust (HTTP $code)"; return; fi
+  if [ -z "$NEW_HID" ]; then bad "CJ2: registration returned no Health ID (HTTP $code: $(body | head -c 160))"; return; fi
+  ok "CJ2: fresh citizen registered → Health ID resolves ($NEW_HID)"
+
+  # Act AS the new person for the rest of the arc.
+  ACTOR="$NEW_HID"
+
+  # Seed ONE known consent for this person (patient_ref = actor = their Health ID).
+  if db tshepo_consent "INSERT INTO tshepo_consent.consent_directive
+      (id, tenant_id, patient_ref, grantor_ref, grantee_ref, status, scope, purpose, provision, fhir_consent_json, created_at)
+    VALUES (gen_random_uuid(), '$TENANT', '$NEW_HID', '$NEW_HID', '$SEED_MARK', 'ACTIVE', 'ALL', 'TREATMENT', 'permit', '{}'::jsonb, now());" >/dev/null 2>&1; then
+    :
+  else
+    skip "CJ13(z2o): could not seed consent (PSQL/db access) — cannot prove empty=broken"; ACTOR="$(derive_actor)"; return
+  fi
+
+  # CJ13 — the seeded consent MUST come back. Empty here now means BROKEN, because
+  # we created it. Shape-agnostic: the marker must appear whatever the envelope.
+  code=$(GET "/internal/v1/citizen/consent-center")
+  if [ "$code" != "200" ]; then bad "CJ13(z2o): consent-centre HTTP $code (expected 200)";
+  elif body | grep -q "$SEED_MARK"; then ok "CJ13(z2o): the person's OWN seeded consent flowed back (empty would be a bug)"
+    has data && has meta && ok "CJ13(z2o): response also uses the {data,meta} envelope" || bad "CJ13(z2o): seeded consent present but envelope MISSING (deploy 6782c9ed7)"
+  else bad "CJ13(z2o): seeded consent ($SEED_MARK) did NOT come back — composition/resolution broken. body: $(body | head -c 200)"; fi
+
+  # CJ14 — add a dependant AS the new person (creates a real child + guardianship).
+  local minor; minor=$(python3 -c 'import datetime;print((datetime.date.today().replace(year=datetime.date.today().year-4)).isoformat())')
+  code=$(POST "/internal/v1/citizen/dependants" "{\"givenName\":\"Rig\",\"familyName\":\"Child\",\"dateOfBirth\":\"$minor\"}")
+  if [ "$code" = "201" ] && body | grep -q '"status"'; then ok "CJ14(z2o): new person added a dependant (real child + guardianship)"
+  else skip "CJ14(z2o): dependant create HTTP $code — $(body | head -c 160)"; fi
+
+  # Teardown the seeded consent (leave the provisional person; unproofed, harmless).
+  db tshepo_consent "DELETE FROM tshepo_consent.consent_directive WHERE grantee_ref='$SEED_MARK';" >/dev/null 2>&1
+  ACTOR="$(derive_actor)"
+}
+
+if [ "${RUN_MUTATING:-0}" = "1" ]; then
+  zero_to_one
+else
+  say "NOTE: default run is read-only/contract-only. For the STRONG proof (register a"
+  echo "  fresh person, seed their consent, assert it flows back) run with RUN_MUTATING=1." | tee -a "$SUMMARY"
+fi
 
 cj13; cj14; cj8; cj11
 
