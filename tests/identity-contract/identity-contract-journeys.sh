@@ -12,11 +12,19 @@
 # and the browser/clinical plane never sees a Health ID.
 #
 # Run against a deployed estate (post full-boot). Service base URLs default to
-# the in-cluster/preview ports and are overridable:
+# the live ClusterIPs in IDENTITY_PACK_NAMESPACE (impilo-full-preview) resolved
+# via kubectl, and are individually overridable:
 #   TSHEPO_IDENTITY (8181)  VITO (8082)  PCT (8088)  BUTANO (8090)
-#   EXPERIENCE_BFF (8160)   KEYS (8086)
+#   EXPERIENCE_BFF (8160)   KEYS (8184)
 # Postgres access for DB assertions via PSQL (default: kubectl exec into the
-# preview postgres); override PSQL with a full 'psql -tA' prefix.
+# full-preview postgres); override PSQL with a full 'psql -tA' prefix.
+#
+# Authenticated journeys (J1/J9): a persona bearer token is minted from the
+# estate Keycloak (public direct-grant client `experience-ui`) as
+# PERSONA_USER/PERSONA_PASSWORD (default citizen.moyo). The mint targets the
+# in-cluster issuer (http://keycloak:8080) via --resolve so the token's `iss`
+# matches what the resource servers validate. If the mint fails those journeys
+# SKIP — never a false PASS.
 #
 # Usage:  bash tests/identity-contract/identity-contract-journeys.sh
 #         EVIDENCE_DIR=... to override output (default reports/identity-contract/<ts>)
@@ -28,20 +36,40 @@ TS="$(date +%Y%m%d-%H%M%S 2>/dev/null || echo run)"
 EVIDENCE_DIR="${EVIDENCE_DIR:-$REPO/reports/identity-contract/$TS}"
 mkdir -p "$EVIDENCE_DIR"
 
-TSHEPO_IDENTITY="${TSHEPO_IDENTITY:-http://localhost:8181}"
-VITO="${VITO:-http://localhost:8082}"
-PCT="${PCT:-http://localhost:8088}"
-BUTANO="${BUTANO:-http://localhost:8090}"
-EXPERIENCE_BFF="${EXPERIENCE_BFF:-http://localhost:8160}"
-KEYS="${KEYS:-http://localhost:8086}"
+NS="${IDENTITY_PACK_NAMESPACE:-impilo-full-preview}"
+svcip(){ kubectl get svc -n "$NS" "$1" -o jsonpath='{.spec.clusterIP}' 2>/dev/null; }
+
+TSHEPO_IDENTITY="${TSHEPO_IDENTITY:-http://$(svcip tshepo-identity-service):8181}"
+VITO="${VITO:-http://$(svcip vito-service):8082}"
+PCT="${PCT:-http://$(svcip pct-service):8088}"
+BUTANO="${BUTANO:-http://$(svcip butano-service):8090}"
+EXPERIENCE_BFF="${EXPERIENCE_BFF:-http://$(svcip experience-bff):8160}"
+KEYS="${KEYS:-http://$(svcip tshepo-keys-service):8184}"
 
 TENANT="${TENANT:-00000000-0000-0000-0000-000000000001}"
 FACILITY="${FACILITY:-00000000-0000-4000-8000-0000000000fa}"
 ACTOR="${ACTOR:-identity-rig}"
 
 # DB assertion helper — override PSQL for your estate; default kubectl exec.
-PSQL="${PSQL:-kubectl exec -n impilo-preview statefulset/postgres -- psql -U impilo -tA}"
+PSQL="${PSQL:-kubectl exec -n $NS deploy/postgres -- psql -U impilo -tA}"
 db(){ local dbname="$1" sql="$2"; $PSQL -d "$dbname" -c "$sql" 2>/dev/null; }
+
+# ── Persona bearer token (gateway-authenticated journeys) ────────────────────
+# Public direct-grant client; the persona set is seeded by the persona truth
+# pack. The issuer must be the in-cluster URL or resource servers reject `iss`.
+PERSONA_USER="${PERSONA_USER:-citizen.moyo}"
+PERSONA_PASSWORD="${PERSONA_PASSWORD:-ImpiloTest123!}"
+TOKEN_CLIENT="${TOKEN_CLIENT:-experience-ui}"
+TOKEN=""
+mint_token(){
+  local kc_ip; kc_ip=$(svcip keycloak)
+  [ -n "$kc_ip" ] || return 0
+  TOKEN=$(curl -sf -m 10 --resolve "keycloak:8080:$kc_ip" \
+      -X POST "http://keycloak:8080/realms/impilo/protocol/openid-connect/token" \
+      -d grant_type=password -d "client_id=$TOKEN_CLIENT" \
+      -d "username=$PERSONA_USER" --data-urlencode "password=$PERSONA_PASSWORD" \
+    | python3 -c 'import sys,json;print(json.load(sys.stdin).get("access_token",""))' 2>/dev/null) || TOKEN=""
+}
 
 PASS=0; FAIL=0; SKIP=0
 SUMMARY="$EVIDENCE_DIR/summary.txt"
@@ -51,11 +79,16 @@ bad(){  echo "  FAIL: $1" | tee -a "$SUMMARY"; FAIL=$((FAIL+1)); }
 skip(){ echo "  SKIP: $1" | tee -a "$SUMMARY"; SKIP=$((SKIP+1)); }
 say(){  echo "" | tee -a "$SUMMARY"; echo "== $1" | tee -a "$SUMMARY"; }
 
-# Trust headers a service-originated call must carry.
+# Trust headers a service-originated call must carry. When a persona token was
+# minted, the bearer rides along (via curl's -H @file form — hdr() expands
+# unquoted, so the header value must not contain spaces inline) so
+# resource-server services authenticate.
+AUTH_HDR_FILE="$EVIDENCE_DIR/.auth-header"
 hdr(){ printf '%s' \
   "-H X-Tenant-ID:$TENANT -H X-Pod-ID:national -H X-Request-ID:$(uuid) "\
 "-H X-Correlation-ID:$(uuid) -H X-Actor-Id:$ACTOR -H X-Actor-Type:SYSTEM "\
-"-H X-Purpose-Of-Use:TREATMENT -H Content-Type:application/json"; }
+"-H X-Purpose-Of-Use:TREATMENT -H Content-Type:application/json"
+  [ -s "$AUTH_HDR_FILE" ] && printf ' -H @%s' "$AUTH_HDR_FILE"; }
 uuid(){ cat /proc/sys/kernel/random/uuid 2>/dev/null || python3 -c 'import uuid;print(uuid.uuid4())'; }
 jget(){ python3 -c 'import sys,json;d=json.load(sys.stdin)
 def g(o,p):
@@ -65,27 +98,35 @@ def g(o,p):
 print(g(json.load(open("/dev/stdin")) if False else d, sys.argv[1]) or "")' "$1" 2>/dev/null; }
 reachable(){ curl -skf -m 5 -o /dev/null "$1/actuator/health" 2>/dev/null; }
 
+mint_token
+if [ -n "$TOKEN" ]; then printf 'Authorization: Bearer %s\n' "$TOKEN" > "$AUTH_HDR_FILE"; else : > "$AUTH_HDR_FILE"; fi
+
 {
   echo "Identity Contract 12-journey conformance pack — $TS"
   echo "repo: $(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo unknown)"
   echo "targets: tshepo-identity=$TSHEPO_IDENTITY vito=$VITO pct=$PCT butano=$BUTANO bff=$EXPERIENCE_BFF"
+  if [ -n "$TOKEN" ]; then echo "auth: persona bearer minted ($PERSONA_USER via $TOKEN_CLIENT)"; else echo "auth: NO TOKEN (gateway journeys will SKIP)"; fi
   echo ""
 } >> "$SUMMARY"
 
 # ── J1: New registration → issuance; Impilo ID appears only after issuance ──
 j1(){
   say "J1 registration → proofing → issuance (Impilo ID v2 only after approval)"
-  reachable "$VITO" || { skip "J1: VITO unreachable"; return; }
+  reachable "$EXPERIENCE_BFF" || { skip "J1: BFF unreachable"; return; }
   local code r hid
-  # Real endpoint is /v1/identity/register (INTERNAL). A direct hit returns 403
-  # when the estate requires gateway-injected trust context — that is the
-  # trust-first architecture working, not a contract failure, so SKIP.
-  code=$(curl -sk -o /tmp/j1.out -w '%{http_code}' $(hdr) -X POST "$VITO/v1/identity/register" \
-        -H "X-Access-Mode:INTERNAL" -H "Idempotency-Key:$(uuid)" \
+  # The citizen registration journey runs through the BFF's provisional
+  # Health-ID endpoint (the production browser path: BFF → VITO golden-path
+  # register), authenticated with the persona bearer. Tokenless estates SKIP —
+  # never a false PASS; with a token, a 401/403 is an honest FAIL.
+  code=$(curl -sk -o /tmp/j1.out -w '%{http_code}' $(hdr) -X POST "$EXPERIENCE_BFF/internal/v1/identity/health-id/provisional" \
+        -H "Idempotency-Key:$(uuid)" \
         -d '{"givenName":"Test","familyName":"Registrant","sex":"F","dateOfBirth":"1990-01-01"}')
-  if [ "$code" = "403" ] || [ "$code" = "401" ]; then skip "J1: register requires gateway trust context (direct ${code}) — needs authenticated gateway flow"; return; fi
+  if [ "$code" = "403" ] || [ "$code" = "401" ]; then
+    if [ -n "$TOKEN" ]; then bad "J1: authenticated register rejected (${code}) — gateway auth broken"; else skip "J1: register requires gateway trust context (direct ${code}) — needs authenticated gateway flow"; fi
+    return
+  fi
   r=$(cat /tmp/j1.out 2>/dev/null)
-  hid=$(echo "$r" | jget healthId); [ -n "$hid" ] || hid=$(echo "$r" | jget data.healthId)
+  hid=$(echo "$r" | jget provisionalHealthId); [ -n "$hid" ] || hid=$(echo "$r" | jget healthId); [ -n "$hid" ] || hid=$(echo "$r" | jget data.healthId)
   if [ -z "$hid" ]; then bad "J1: registration returned no healthId (HTTP $code: $r)"; return; fi
   ok "J1: registration minted a Health ID + PROVISIONAL status"
   # Impilo ID must NOT be present at registration
@@ -183,7 +224,10 @@ j9(){
   local code r ocpid
   code=$(curl -sk -o /tmp/j9.out -w '%{http_code}' $(hdr) -X POST "$TSHEPO_IDENTITY/v1/identity/cpid/provisional" \
         -d "{\"tenantId\":\"$TENANT\",\"facilityId\":\"$FACILITY\",\"deviceFingerprint\":\"rig-dev\"}")
-  if [ "$code" = "403" ] || [ "$code" = "401" ]; then skip "J9: O-CPID mint requires gateway trust context (direct ${code}) — needs authenticated gateway flow"; return; fi
+  if [ "$code" = "403" ] || [ "$code" = "401" ]; then
+    if [ -n "$TOKEN" ]; then bad "J9: authenticated O-CPID mint rejected (${code}) — gateway auth broken"; else skip "J9: O-CPID mint requires gateway trust context (direct ${code}) — needs authenticated gateway flow"; fi
+    return
+  fi
   r=$(cat /tmp/j9.out 2>/dev/null)
   ocpid=$(echo "$r" | jget data.oCpid); [ -n "$ocpid" ] || ocpid=$(echo "$r" | jget oCpid)
   if [ -n "$ocpid" ]; then ok "J9: O-CPID minted ($ocpid) — random UUIDv4"
