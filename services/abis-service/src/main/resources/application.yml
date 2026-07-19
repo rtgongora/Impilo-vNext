@@ -43,6 +43,13 @@ abis:
   # Key Encryption Key (KEK) for AES-256-GCM template encryption at rest.
   # In production, this MUST come from tshepo-keys custody / a KMS — never hardcode.
   template-kek: ${ABIS_TEMPLATE_KEK:101112131415161718191a1b1c1d1e1f000102030405060708090a0b0c0d0e0f}
+  # Core-infra matching engine (matcher-engine) this adapter delegates to. When
+  # abis.matcher.enabled=true (default), BmeClientMatchingEngine is @Primary and
+  # ABIS performs real matching via the engine; set false to revert to the local
+  # fail-closed default.
+  matcher:
+    enabled: ${ABIS_MATCHER_ENABLED:true}
+    base-url: ${MATCHER_ENGINE_URL:http://localhost:9200}
   matching:
     # Per-modality thresholds are versioned with the vendor algorithm; the
     # fail-closed default engine never fabricates a match regardless.
