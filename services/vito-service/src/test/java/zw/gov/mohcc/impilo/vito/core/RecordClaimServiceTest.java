@@ -124,6 +124,52 @@ class RecordClaimServiceTest {
     }
 
     @Test
+    @DisplayName("exhausting attempts locks the challenge and raises an owner security alert")
+    void verify_lockoutRaisesOwnerAlert() {
+        UUID cid = UUID.randomUUID();
+        RecordClaimChallengeEntity ch = new RecordClaimChallengeEntity();
+        ch.setChallengeId(cid);
+        ch.setTenantId(TENANT); ch.setClientHealthId(HID);
+        ch.setOtpHash(argon2.hash("654321"));
+        ch.setStatus("PENDING");
+        ch.setExpiresAt(OffsetDateTime.now().plusMinutes(10));
+        ch.setAttempts(4);         // one below the cap — the next wrong code exhausts it
+        ch.setMaxAttempts(5);
+        when(challengeRepository.findByChallengeId(cid)).thenReturn(Optional.of(ch));
+        when(clientRepository.findByTenantIdAndHealthId(TENANT, HID))
+                .thenReturn(Optional.of(clientWithPhone("+263779998888")));
+
+        RecordClaimService.ClaimVerification v = service.verifyClaim(cid, "000000", "acct");
+
+        assertFalse(v.verified());
+        assertTrue(v.securityAlert(), "the locking attempt must raise an owner alert");
+        assertEquals("+263779998888", v.ownerContact(), "owner contact for BFF dispatch only");
+        assertEquals("phone", v.ownerChannel());
+        assertEquals("LOCKED", ch.getStatus());
+        verify(linkRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("a normal wrong-code attempt (not the last) does NOT alert the owner")
+    void verify_wrongCodeNoAlert() {
+        UUID cid = UUID.randomUUID();
+        RecordClaimChallengeEntity ch = new RecordClaimChallengeEntity();
+        ch.setChallengeId(cid);
+        ch.setTenantId(TENANT); ch.setClientHealthId(HID);
+        ch.setOtpHash(argon2.hash("654321"));
+        ch.setStatus("PENDING");
+        ch.setExpiresAt(OffsetDateTime.now().plusMinutes(10));
+        ch.setAttempts(0);
+        ch.setMaxAttempts(5);
+        when(challengeRepository.findByChallengeId(cid)).thenReturn(Optional.of(ch));
+
+        RecordClaimService.ClaimVerification v = service.verifyClaim(cid, "000000", "acct");
+        assertFalse(v.verified());
+        assertFalse(v.securityAlert());
+        verify(clientRepository, never()).findByTenantIdAndHealthId(any(), any());
+    }
+
+    @Test
     @DisplayName("expired challenge never verifies")
     void verify_expired() {
         RecordClaimChallengeEntity expired = new RecordClaimChallengeEntity();

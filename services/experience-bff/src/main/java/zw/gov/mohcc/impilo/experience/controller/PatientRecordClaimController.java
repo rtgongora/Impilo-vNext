@@ -106,6 +106,12 @@ public class PatientRecordClaimController {
                     "code", nullSafe(req.code()),
                     "accountRef", accountRef != null ? accountRef : ""));
             boolean verified = v != null && v.path("verified").asBoolean(false);
+            // Anti-abuse: if this attempt locked the challenge, warn the record owner at their
+            // recorded contact. The owner's contact is consumed here (trust core) and never
+            // echoed back to the claimant — the client response stays generic.
+            if (v != null && v.path("securityAlert").asBoolean(false)) {
+                deliverOwnerAlert(text(v, "ownerChannel"), text(v, "ownerContact"));
+            }
             out.put("status", verified ? "LINKED" : "VERIFICATION_FAILED");
             if (verified) {
                 out.put("healthId", text(v, "healthId"));
@@ -138,6 +144,24 @@ public class PatientRecordClaimController {
             notification.sendNotification(body);
         } catch (Exception e) {
             log.warn("record-claim OTP delivery not accepted: {}", e.getMessage());
+        }
+    }
+
+    /** Warn the record owner that someone attempted (and failed) to claim their record. */
+    private void deliverOwnerAlert(String channel, String contact) {
+        if (contact == null || contact.isBlank()) {
+            return;
+        }
+        boolean sms = !"email".equalsIgnoreCase(channel);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("templateKey", sms ? "RECORD_CLAIM_SECURITY_ALERT" : "RECORD_CLAIM_SECURITY_ALERT_EMAIL");
+        body.put("channel", sms ? "SMS" : "EMAIL");
+        body.put("to", contact);
+        body.put("messageKind", "SENSITIVE");
+        try {
+            notification.sendNotification(body);
+        } catch (Exception e) {
+            log.warn("record-claim owner alert not accepted: {}", e.getMessage());
         }
     }
 

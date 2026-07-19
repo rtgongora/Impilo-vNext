@@ -132,6 +132,14 @@ public class RegistryResolveController {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("verified", v.verified());
         data.put("healthId", v.verified() && v.healthId() != null ? v.healthId().toString() : null);
+        // Anti-abuse owner alert on lockout. INTERNAL-only endpoint — the owner's contact is
+        // returned to the trusted BFF for dispatch and is NEVER surfaced to the client, so a
+        // malicious claimant cannot lock the challenge to harvest the owner's contact.
+        data.put("securityAlert", v.securityAlert());
+        if (v.securityAlert()) {
+            data.put("ownerContact", v.ownerContact());
+            data.put("ownerChannel", v.ownerChannel());
+        }
         return ResponseEntity.ok(ApiResponse.ok(data, null));
     }
 

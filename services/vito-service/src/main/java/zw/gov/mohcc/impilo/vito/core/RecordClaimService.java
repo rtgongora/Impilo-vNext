@@ -64,7 +64,29 @@ public class RecordClaimService {
     public record ClaimChallenge(UUID challengeId, String otp, String contact, String maskedContact,
                                  String channel, boolean deliverable) {}
 
-    public record ClaimVerification(boolean verified, UUID healthId) {}
+    /**
+     * @param verified      whether the OTP verified and the account was bound
+     * @param healthId      the linked Health ID on success, else null
+     * @param securityAlert set when THIS attempt exhausted the challenge (locked it) — the
+     *                      record owner should be warned that someone tried to claim their record
+     * @param ownerContact  the owner's recorded contact for the alert; returned only to the
+     *                      trusted internal caller (BFF), which dispatches the alert and NEVER
+     *                      echoes it to the client — so a malicious claimant can't lock the
+     *                      challenge to harvest the owner's contact
+     * @param ownerChannel  phone | email | none
+     */
+    public record ClaimVerification(boolean verified, UUID healthId,
+                                    boolean securityAlert, String ownerContact, String ownerChannel) {
+        static ClaimVerification failed() {
+            return new ClaimVerification(false, null, false, null, null);
+        }
+        static ClaimVerification verified(UUID healthId) {
+            return new ClaimVerification(true, healthId, false, null, null);
+        }
+        static ClaimVerification locked(String ownerContact, String ownerChannel) {
+            return new ClaimVerification(false, null, true, ownerContact, ownerChannel);
+        }
+    }
 
     /**
      * Start a claim: generate a challenge for the resolved Health ID, targeting a
@@ -105,32 +127,39 @@ public class RecordClaimService {
     public ClaimVerification verifyClaim(UUID challengeId, String code, String accountRef) {
         RecordClaimChallengeEntity ch = challengeRepository.findByChallengeId(challengeId).orElse(null);
         if (ch == null || !"PENDING".equals(ch.getStatus())) {
-            return new ClaimVerification(false, null);
+            return ClaimVerification.failed();
         }
         if (ch.getExpiresAt().isBefore(OffsetDateTime.now())) {
             ch.setStatus("EXPIRED");
             challengeRepository.save(ch);
-            return new ClaimVerification(false, null);
+            return ClaimVerification.failed();
         }
         if (ch.getAttempts() >= ch.getMaxAttempts()) {
             ch.setStatus("LOCKED");
             challengeRepository.save(ch);
-            return new ClaimVerification(false, null);
+            return ClaimVerification.failed();
         }
         ch.setAttempts(ch.getAttempts() + 1);
         boolean ok = code != null && argon2IdService.verify(code, ch.getOtpHash());
         if (!ok) {
             if (ch.getAttempts() >= ch.getMaxAttempts()) {
                 ch.setStatus("LOCKED");
+                challengeRepository.save(ch);
+                // This attempt exhausted the challenge — warn the record owner (anti-abuse,
+                // Identity Journey Doctrine §2). Contact goes only to the trusted BFF caller.
+                String[] owner = ownerContact(ch.getTenantId(), ch.getClientHealthId());
+                log.warn("record-claim challenge {} LOCKED after failed attempts for health_id={} — owner alert queued",
+                        ch.getChallengeId(), ch.getClientHealthId());
+                return ClaimVerification.locked(owner[0], owner[1]);
             }
             challengeRepository.save(ch);
-            return new ClaimVerification(false, null);
+            return ClaimVerification.failed();
         }
         ch.setStatus("VERIFIED");
         ch.setVerifiedAt(OffsetDateTime.now());
         challengeRepository.save(ch);
         bindAccount(ch.getTenantId(), ch.getClientHealthId(), accountRef);
-        return new ClaimVerification(true, ch.getClientHealthId());
+        return ClaimVerification.verified(ch.getClientHealthId());
     }
 
     /** Idempotently bind an account to the Health ID (RECORD_LINKED evidence). */
@@ -156,6 +185,20 @@ public class RecordClaimService {
         link.setStartDate(OffsetDateTime.now());
         linkRepository.save(link);
         log.info("account {} bound to health_id={} via verified record claim (RECORD_LINKED)", accountRef, healthId);
+    }
+
+    /** Resolve the record owner's preferred alert contact: {@code [contact, channel]} (phone preferred). */
+    private String[] ownerContact(UUID tenantId, UUID healthId) {
+        Optional<ClientEntity> client = clientRepository.findByTenantIdAndHealthId(tenantId, healthId);
+        String phone = client.map(c -> contactValue(c, "phone")).orElse(null);
+        String email = client.map(c -> contactValue(c, "email")).orElse(null);
+        if (phone != null) {
+            return new String[]{phone, "phone"};
+        }
+        if (email != null) {
+            return new String[]{email, "email"};
+        }
+        return new String[]{null, "none"};
     }
 
     private String contactValue(ClientEntity client, String key) {
