@@ -23,6 +23,7 @@ import {
 } from "@/hooks/queries/useAppointments";
 import { APPOINTMENT_STATUS_STYLES } from "@/lib/booking-bff";
 import { buildPostCheckInRoute } from "@/lib/appointment-check-in-routing";
+import { AppointmentCheckinQr } from "@/components/citizen/AppointmentCheckinQr";
 
 function formatWhen(iso?: string): string {
   if (!iso) return "To be confirmed";
@@ -145,6 +146,8 @@ export default function AppointmentDetailPage() {
                 </Link>
               )}
             </div>
+
+            <AppointmentCheckinQr appointmentId={appointmentId} />
 
             <div className="rounded-xl border border-border bg-card p-5 space-y-3">
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
