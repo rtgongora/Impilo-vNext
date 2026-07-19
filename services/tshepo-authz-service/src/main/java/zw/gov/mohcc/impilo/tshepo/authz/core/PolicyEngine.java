@@ -36,8 +36,10 @@ import java.time.Instant;
  *       Blocked devices (score >= 81) are denied immediately.</li>
  *   <li><strong>Purpose validation</strong> — reject requests with unknown or missing
  *       purpose-of-use.</li>
- *   <li><strong>Break-glass check</strong> — if purpose is BREAK_GLASS, require an active
- *       break_glass_request AND a completed step-up challenge.</li>
+ *   <li><strong>Break-glass check</strong> — if purpose is BREAK_GLASS, apply the break-glass
+ *       doctrine guard (verified provider capacity + facility context + named patient), then require
+ *       an active break_glass_request (mandatory reason + limited duration) AND a completed step-up
+ *       challenge. Break-glass never turns an unknown user into a health worker.</li>
  *   <li><strong>RBAC/ABAC</strong> — load matching policy_rules for the (actor_type,
  *       resource_type, action, purpose) tuple. Check facility_scope and workspace_scope
  *       constraints. Apply JSONB conditions (min_loa, allowed_facilities, etc.).
@@ -249,7 +251,16 @@ public class PolicyEngine {
         UUID tenantId = request.tenantId();
         String actorId = request.actorId();
 
-        // Require an active break-glass request
+        // Step 4.5 (break-glass branch) — BREAK-GLASS doctrine guard. Enforce that the requester is an
+        // already-authenticated, sufficiently-verified provider acting in a facility context on a named
+        // patient BEFORE the reason/step-up checks widen access. Never turns an unknown user into a
+        // health worker; a disputed (revoked) provider was already denied at the top of evaluate().
+        AuthzResponse guardDeny = evaluateBreakGlassAccess(request, riskScore, startTime);
+        if (guardDeny != null) {
+            return guardDeny;
+        }
+
+        // Require an active break-glass request (captures the mandatory reason + limited duration).
         if (!breakGlassService.hasActiveBreakGlass(tenantId, actorId)) {
             return denyAndLog(request, "NO_BREAK_GLASS_REQUEST",
                     "Break-glass purpose requires an active break-glass request. " +
@@ -262,15 +273,94 @@ public class PolicyEngine {
             return stepUpAndLog(request, riskScore, startTime);
         }
 
-        // Break-glass ALLOWED — with elevated obligations + full visibility envelope
+        // Break-glass ALLOWED — with elevated obligations + full visibility envelope. The ALLOW is
+        // audited at ELEVATED level and the active request sits in the PENDING_REVIEW queue for
+        // mandatory retrospective supervisor review (see BreakGlassService).
         Obligations obligations = VisibilityObligationComposer.compose(
                 request, PurposeOfUse.BREAK_GLASS, riskScore, null, Optional.empty(), objectMapper);
         Map<String, String> headers = buildHeaderMutations(obligations, request);
 
-        log.warn("BREAK-GLASS ALLOW: actor={}, resource={}/{}, correlation={}",
-                actorId, request.resourceType(), request.resourceId(), request.correlationId());
+        log.warn("BREAK-GLASS ALLOW: actor={}, provider={}, facility={}, patient={}, resource={}/{}, "
+                        + "correlation={} — queued for retrospective supervisor review",
+                actorId, request.providerId(), request.facilityId(), breakGlassPatientRef(request),
+                request.resourceType(), request.resourceId(), request.correlationId());
 
         return allowAndLog(request, obligations, headers, riskScore, startTime);
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // Step 4.5: BREAK-GLASS doctrine guard (CZO-LEAD; identity-journey break-glass doctrine)
+    // ════════════════════════════════════════════════════════════════════
+
+    /**
+     * Minimum effective LoA a provider must hold to raise break-glass — "sufficiently-verified".
+     * Break-glass widens the too-narrow permission of an ALREADY-verified provider; it never elevates
+     * a bare or anonymous session. LOA2 = at least a verified (remotely-proofed) identity.
+     */
+    private static final int BREAK_GLASS_MIN_LOA = 2;
+
+    /**
+     * BREAK-GLASS access guard (doctrine: identity-journey break-glass). Break-glass is ONLY for an
+     * already-authenticated, sufficiently-verified PROVIDER whose normal permission is momentarily too
+     * narrow for an immediate emergency. It may NEVER transform an unknown user into a health worker,
+     * and NEVER override a disputed identity. This guard enforces the preconditions the emergency
+     * widening depends on — a verified provider capacity, a facility context, and a named patient —
+     * before the active-request (reason) + step-up checks grant the widened access.
+     *
+     * <p>Composes with {@link #evaluateDelegation} / {@link #evaluateSelfTreatment}: same shape
+     * (returns a DENY {@link AuthzResponse}, or {@code null} to continue), same fail-closed discipline.
+     * A revoked/disputed provider privilege is already denied at the very top of {@link #evaluate}
+     * (before any scoring), so a disputed identity can never reach break-glass here.</p>
+     */
+    private AuthzResponse evaluateBreakGlassAccess(AuthzInternalRequest request, int riskScore, long startTime) {
+        // (1) Verified provider capacity — never turn an unknown user into a health worker. Break-glass
+        //     requires an activated professional identity (Provider ID + PROVIDER actor type), not a
+        //     citizen/anonymous session that merely declares the BREAK_GLASS purpose.
+        boolean providerCapacity = "PROVIDER".equalsIgnoreCase(request.actorType())
+                && request.providerId() != null && !request.providerId().isBlank();
+        if (!providerCapacity) {
+            return denyAndLog(request, "BREAK_GLASS_REQUIRES_VERIFIED_PROVIDER",
+                    "Break-glass is only available to an authenticated provider acting in a professional "
+                            + "capacity; it never grants clinical access to a non-provider.",
+                    riskScore, startTime);
+        }
+        // (1b) Sufficiently verified — break-glass widens a verified identity, never a bare session.
+        if (effectiveLoa(request) < BREAK_GLASS_MIN_LOA) {
+            return denyAndLog(request, "BREAK_GLASS_REQUIRES_VERIFIED_PROVIDER",
+                    "Break-glass requires a sufficiently-verified provider identity (LOA"
+                            + BREAK_GLASS_MIN_LOA + "+).",
+                    riskScore, startTime);
+        }
+        // (2) Facility context — the emergency happens somewhere; the widening is facility-scoped and
+        //     audited against that context.
+        if (request.facilityId() == null) {
+            return denyAndLog(request, "BREAK_GLASS_REQUIRES_FACILITY_CONTEXT",
+                    "Break-glass requires an operating facility context (X-Facility-ID).",
+                    riskScore, startTime);
+        }
+        // (3) Patient context — break-glass is per-patient, never a blanket override. The accessed
+        //     patient must be named so the enhanced audit + retrospective review bind to a subject.
+        if (breakGlassPatientRef(request) == null) {
+            return denyAndLog(request, "BREAK_GLASS_REQUIRES_PATIENT_CONTEXT",
+                    "Break-glass requires a specific patient context (X-Subject-ID or a resource id); "
+                            + "it is never a blanket access override.",
+                    riskScore, startTime);
+        }
+        return null;
+    }
+
+    /**
+     * The patient a break-glass access targets: the declared subject (X-Subject-ID) when present, else
+     * the path-derived resource id. Returns {@code null} when neither names a patient.
+     */
+    private static String breakGlassPatientRef(AuthzInternalRequest request) {
+        if (request.subjectId() != null && !request.subjectId().isBlank()) {
+            return request.subjectId();
+        }
+        if (request.resourceId() != null && !request.resourceId().isBlank()) {
+            return request.resourceId();
+        }
+        return null;
     }
 
     // ════════════════════════════════════════════════════════════════════

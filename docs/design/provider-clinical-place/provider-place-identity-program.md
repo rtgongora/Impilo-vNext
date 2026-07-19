@@ -153,10 +153,17 @@ vito untouched (patient-program territory).
   path, and daily login v1 (password + TOTP step-up + badge-tap-as-selector) already ships. To be
   scheduled with the patient sessions as a coordinated realm change; the login preference order in
   D-P4 becomes passkey-first at that point.
-- **Break-glass — CZO-queued.** The `BREAK-GLASS` rule is CZO-LEAD (consent/emergency cross-cutting,
-  not authorable in `impilo.authz`); the BFF capture/audit surface reuses the existing
-  `TrustBreakGlassResourceMapper`. Queued for the CZO session rather than built here to avoid
-  touching the single-writer PDP surface.
+- **Break-glass — LANDED (2026-07-19).** The `BREAK-GLASS` rule (CZO-LEAD) was authored on the
+  single-writer PDP surface via the identity/policy handoff (CZO cluster dormant since 2026-06-26).
+  A new PolicyEngine **Step-4.5 doctrine guard** (`evaluateBreakGlassAccess`, composing with
+  `evaluateDelegation`/`evaluateSelfTreatment`) now enforces, on the `purpose=BREAK_GLASS` branch:
+  verified-provider capacity (never mints a health worker) + facility context + named patient,
+  ahead of the existing reason-capture (active request) + step-up + ELEVATED-audit + PENDING_REVIEW
+  retrospective-review path. A disputed (revoked) provider is already denied at the top of
+  `evaluate()`. Governance perimeter for the request/review endpoints seeded in tshepo-authz
+  **V041** (verified-provider raise, supervisor review; citizen surface = fail-closed default-deny,
+  since the engine ignores a DENY rule's `path_contains`). BFF capture/audit reuses the existing
+  `TrustBreakGlassResourceMapper`. 54 PolicyEngine tests green (161 module-wide).
 | W11 | both | acceptance packs: `tests/identity-contract/provider-journeys.sh` + `tests/place-contract/` |
 
 Verdict gate: pack green = SOFTWARE_CONTRACT_GREEN; real council/HPA/CRVS links = EXTERNAL_INTEGRATION_GREEN
