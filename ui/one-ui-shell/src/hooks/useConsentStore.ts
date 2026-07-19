@@ -31,6 +31,12 @@ export interface ConsentRecord {
 interface ConsentState {
   /** True when the current user has accepted the current consent version. */
   hasConsented: boolean;
+  /**
+   * True once consent state has been read from localStorage. Guards against the
+   * consent gate firing on the initial `hasConsented=false` before hydration —
+   * which would flash an already-consented user to /consent on a hard navigation.
+   */
+  hydrated: boolean;
   /** The stored consent record, if any. */
   record: ConsentRecord | null;
   /** Accept the current policy version. */
@@ -43,6 +49,7 @@ interface ConsentState {
 
 export const useConsentStore = create<ConsentState>((set) => ({
   hasConsented: false,
+  hydrated: false,
   record: null,
 
   acceptConsent: (userId: string) => {
@@ -57,7 +64,7 @@ export const useConsentStore = create<ConsentState>((set) => ({
       localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_CONSENT_VERSION);
     }
 
-    set({ hasConsented: true, record });
+    set({ hasConsented: true, hydrated: true, record });
   },
 
   revokeConsent: () => {
@@ -65,7 +72,7 @@ export const useConsentStore = create<ConsentState>((set) => ({
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(STORAGE_VERSION_KEY);
     }
-    set({ hasConsented: false, record: null });
+    set({ hasConsented: false, hydrated: true, record: null });
   },
 
   hydrate: (userId: string) => {
@@ -74,7 +81,7 @@ export const useConsentStore = create<ConsentState>((set) => ({
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (!stored) {
-        set({ hasConsented: false, record: null });
+        set({ hasConsented: false, hydrated: true, record: null });
         return;
       }
 
@@ -85,15 +92,15 @@ export const useConsentStore = create<ConsentState>((set) => ({
         record.version === CURRENT_CONSENT_VERSION &&
         record.userId === userId
       ) {
-        set({ hasConsented: true, record });
+        set({ hasConsented: true, hydrated: true, record });
       } else {
         // Stale consent — clear and require re-acceptance
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(STORAGE_VERSION_KEY);
-        set({ hasConsented: false, record: null });
+        set({ hasConsented: false, hydrated: true, record: null });
       }
     } catch {
-      set({ hasConsented: false, record: null });
+      set({ hasConsented: false, hydrated: true, record: null });
     }
   },
 }));

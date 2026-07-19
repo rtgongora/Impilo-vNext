@@ -46,7 +46,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, hasRole, hasActiveProvider } = useAuthStore();
-  const { hasConsented } = useConsentStore();
+  const { hasConsented, hydrated: consentHydrated } = useConsentStore();
   const { hasFacility } = useFacilityStore();
   const { hasWorkspace } = useWorkspaceStore();
   const { hasShift } = useShiftStore();
@@ -57,9 +57,12 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Consent gate: redirect authenticated users who haven't consented,
-    // unless they're on a consent-exempt path.
+    // unless they're on a consent-exempt path. Wait for the consent store to
+    // hydrate from localStorage first — otherwise the initial hasConsented=false
+    // flashes an already-consented user to /consent on a hard navigation.
     if (
       isAuthenticated &&
+      consentHydrated &&
       !hasConsented &&
       !CONSENT_EXEMPT_PREFIXES.some((p) => pathname.startsWith(p))
     ) {
@@ -182,7 +185,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
         if (requiredRole && !matchesRequiredRole(hasRole, requiredRole)) { router.replace("/home"); return; }
         break;
     }
-  }, [pathname, isAuthenticated, hasConsented, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, user, identity, contract, contractLoading, router]);
+  }, [pathname, isAuthenticated, hasConsented, consentHydrated, hasFacility, hasWorkspace, hasShift, hasRole, hasActiveProvider, user, identity, contract, contractLoading, router]);
 
   return <>{children}</>;
 }
