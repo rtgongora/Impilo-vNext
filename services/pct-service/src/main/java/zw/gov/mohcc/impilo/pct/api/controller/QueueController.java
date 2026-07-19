@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.pct.api.dto.EnqueueRequest;
 import zw.gov.mohcc.impilo.pct.core.QueueEngine;
+import zw.gov.mohcc.impilo.pct.core.QueueMaterializationService;
 import zw.gov.mohcc.impilo.pct.domain.QueueItemStatus;
 import zw.gov.mohcc.impilo.pct.persistence.entity.QueueEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.QueueItemEntity;
@@ -34,13 +35,16 @@ public class QueueController {
     private final QueueEngine queueEngine;
     private final QueueRepository queueRepository;
     private final QueueItemRepository queueItemRepository;
+    private final QueueMaterializationService materializationService;
 
     public QueueController(QueueEngine queueEngine,
                            QueueRepository queueRepository,
-                           QueueItemRepository queueItemRepository) {
+                           QueueItemRepository queueItemRepository,
+                           QueueMaterializationService materializationService) {
         this.queueEngine = queueEngine;
         this.queueRepository = queueRepository;
         this.queueItemRepository = queueItemRepository;
+        this.materializationService = materializationService;
     }
 
     /**
@@ -62,6 +66,18 @@ public class QueueController {
             queues = queueRepository.findByTenantIdAndWorkspaceIdAndActiveTrue(ctx.tenantId(), workspaceId);
         } else {
             queues = queueRepository.findByTenantIdAndFacilityId(ctx.tenantId(), facilityId);
+            // Lazy materialisation: a facility that has never been reconciled has no queue at all and
+            // cannot accept a walk-in. Reconcile once from TUSO on first touch — TUSO's read-model
+            // supplies a default general/walk-in queue for an operational facility with no configured
+            // service points, so care is never denied for lack of a materialised queue. reconcileFacility
+            // is idempotent and fail-safe (a TUSO outage leaves existing queues untouched and returns
+            // FAILED fast), so it is safe to trigger from this read path.
+            if (queues.isEmpty()) {
+                var result = materializationService.reconcileFacility(ctx.tenantId(), facilityId);
+                if (result.created() > 0 || result.updated() > 0) {
+                    queues = queueRepository.findByTenantIdAndFacilityId(ctx.tenantId(), facilityId);
+                }
+            }
         }
 
         List<Map<String, Object>> result = new ArrayList<>();
