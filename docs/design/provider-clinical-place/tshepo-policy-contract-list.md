@@ -109,6 +109,30 @@ represented (verify, don't re-author).
 | **CZO-LEAD** | consent/delegation/break-glass/self-treatment/emergency cross-cutting | queue for lead; needs PolicyEngine Step 4.5 / consent verdict / delegation resolve |
 | **EXISTS** | step-up transport | verify `StepUpController` covers it; add the rego rule only |
 
+## H. Provider + Place identity program additions (2026-07-19)
+
+Added by [provider-place-identity-program.md](provider-place-identity-program.md); same routing discipline.
+`impilo.authz` now exists (`infra/opa/authz/authz.rego`) — several §A/§B rules are partially represented
+there (`PROVIDER_ID_REQUIRED`, `WORK_REQUIRES_ASSIGNMENT`, `PROVIDER_SELF_CLAIM`): **verify before
+re-authoring**.
+
+| ID | Trigger | Reads (input) | Decision | Obligations | Routing |
+|----|---------|---------------|----------|-------------|---------|
+| `WORK-TOKEN-CONTEXT-MATCH` | work-shell action | token context vs scope.facility/workspace | deny when request context ≠ WORK_CONTEXT token claims (forces revoke+reissue on switch) | audit | WS-OPA |
+| `BADGE-NEVER-AUTHORISES` | badge-serial presented as sole factor | authn factors | deny; badge selects the account only | audit attempt | WS-OPA |
+| `FACILITY-ADMIN-ROLE-SCOPE` | facility-admin action | appointment role (5 scopes), expiry | allow only actions within the granted role scope and validity window | audit | WS-OPA |
+| `SITE-OPERATOR-ROLE` | site management action | site assignment role, expiry | allow within operator role scope; never inspection-record writes | audit | WS-OPA |
+| `FACILITY-CLAIM-SUBMIT` | place claim submission | verified person identity, proof-of-authority factor | generic response until proof; binding only post-proof | anti-enum shape + timing | WS-OPA (+ BFF timing) |
+| `PLACE-LINK-STEWARD` | create/modify `ind_place_links` | steward role | steward-only writes | audit | WS-OPA |
+| `DUP-MERGE-STEWARD-ONLY` | facility/site merge, unmerge, redirect | steward role | steward-only; never self-service | append-only provenance | WS-OPA |
+| `SITE-REGISTER` | new Indawo site registration | role, category, jurisdiction | allow verified operator; silent-dup block path | review case | WS-OPA |
+| `PLACE-VERIFY-REVIEW` | verification-case decision | verifier role, jurisdiction | authorised verifiers only | decision record | WS-OPA |
+| `INSPECTOR-JURISDICTION` | inspection action | inspector credential, jurisdiction, assignment | allow only assigned inspector within jurisdiction | signed findings | WS-OPA |
+| `INSPECTION-RECORD-IMMUTABLE` | edit of an inspection finding | actor, record state | deny UPDATE/DELETE on original findings; append corrections only | audit | WS-OPA |
+| `FACILITY-UPDATE-HIGH-RISK` | high-risk facility field change | field classification, role | route to governed steward case; deny direct write | evidence required | WS-OPA |
+| `FACILITY-TRANSFER` | ownership/management transfer | both-party verification state | allow only dual-verified transfer cases | effective dates + audit | WS-OPA |
+| `COMPLAINT-IDENTITY-PROTECTED` | complaint case read | actor role vs complainant identity | complainant identity never disclosed to operator/public | redaction obligation | WS-OPA |
+
 **Hard rules for the implementer (round 2):**
 1. **Never edit** `PolicyEngine.java` / `ExtAuthzGrpcService.java` / `AuthorizeController.java`.
 2. New rego lands in `impilo.authz` (WS-OPA) with tests; **SHADOW** mode first; ENFORCE only after divergence≈0.

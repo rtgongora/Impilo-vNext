@@ -113,6 +113,14 @@ ext_authz path; the *rules* land via track P. OPA-down ⇒ Java DENY; Envoy fail
 
 ## 3. Migration-version assignment (collision-free)
 
+> **⚠ STALE — superseded 2026-07-19.** The ranges below predate the IATG waves and the estate work; actual
+> heads have moved far past them (tuso V029, indawo V009, varapi V023, vashandi V007, tshepo-identity V003).
+> Current authoritative reservations live in
+> [provider-place-identity-program.md](provider-place-identity-program.md) § Migration reservations.
+> Also note: tshepo-authz is no longer blanket "do not touch" — `policy_rule` **seed migrations**
+> (V031–V035 landed; V036–V040 reserved) are the sanctioned channel; the single-writer lock still covers
+> `PolicyEngine.java`/`ExtAuthzGrpcService.java`/`AuthorizeController.java`/rego authorship.
+
 | Service | Owner lane | Assigned range | ⚠ Reserved by live session |
 |---------|-----------|----------------|----------------------------|
 | pct-service | L1 | V015+ | — |
