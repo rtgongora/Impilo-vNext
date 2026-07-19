@@ -154,7 +154,12 @@ public class SiteController {
         log.info("External get site [siteId={}] correlationId={}", siteId, ctx.correlationId());
 
         Optional<SiteEntity> site = siteService.getSite(siteId);
-        if (site.isEmpty()) {
+        // DRAFT sites (SJ2 registrations pending verification) are not publicly
+        // resolvable — a not-found response so a registrant cannot use the
+        // external lookup to confirm a silent-block vs provisional outcome.
+        if (site.isEmpty()
+                || zw.gov.mohcc.impilo.indawo.domain.SiteLifecycleStatus.DRAFT.name()
+                        .equalsIgnoreCase(site.get().getLifecycleStatus())) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ErrorEnvelope.of("NOT_FOUND", "Site not found",
                             ctx.requestId(), ctx.correlationId()));
