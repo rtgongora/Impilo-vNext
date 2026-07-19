@@ -44,7 +44,7 @@ public class AssistanceController {
                     str(body, "requesterType") != null ? str(body, "requesterType")
                             : ("PROVIDER".equals(actorType) ? "PROVIDER" : "CITIZEN"),
                     actorId,
-                    str(body, "subjectIdentityMode"), str(body, "subjectHealthId"),
+                    str(body, "subjectIdentityMode"), str(body, "subjectCpid"),
                     str(body, "category"), str(body, "title"), str(body, "story"),
                     decimal(body, "targetAmount"), str(body, "currency"),
                     odt(body, "endsAt"), uuid(body, "beneficiaryWalletId"));

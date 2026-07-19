@@ -14,7 +14,7 @@ public class EmergencyRequestEntity {
     @Column(name = "requester_type", nullable = false, length = 32) private String requesterType;
     @Column(name = "requester_actor_id", length = 128) private String requesterActorId;
     @Column(name = "subject_identity_mode", nullable = false, length = 24) private String subjectIdentityMode;
-    @Column(name = "subject_health_id", length = 128) private String subjectHealthId;
+    @Column(name = "subject_cpid", length = 128) private String subjectCpid;
     @Column(name = "subject_temp_ref", length = 128) private String subjectTempRef;
     @Column(name = "subject_label", length = 255) private String subjectLabel;
     @Column(name = "emergency_category", nullable = false, length = 48) private String emergencyCategory;
@@ -57,8 +57,8 @@ public class EmergencyRequestEntity {
     public void setRequesterActorId(String v) { this.requesterActorId = v; }
     public String getSubjectIdentityMode() { return subjectIdentityMode; }
     public void setSubjectIdentityMode(String v) { this.subjectIdentityMode = v; }
-    public String getSubjectHealthId() { return subjectHealthId; }
-    public void setSubjectHealthId(String v) { this.subjectHealthId = v; }
+    public String getSubjectCpid() { return subjectCpid; }
+    public void setSubjectCpid(String v) { this.subjectCpid = v; }
     public String getSubjectTempRef() { return subjectTempRef; }
     public void setSubjectTempRef(String v) { this.subjectTempRef = v; }
     public String getSubjectLabel() { return subjectLabel; }

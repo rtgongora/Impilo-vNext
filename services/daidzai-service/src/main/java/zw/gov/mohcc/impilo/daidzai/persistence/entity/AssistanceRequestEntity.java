@@ -22,7 +22,7 @@ public class AssistanceRequestEntity {
     @Column(name = "requester_type", nullable = false, length = 32) private String requesterType;
     @Column(name = "requester_actor_id", length = 128) private String requesterActorId;
     @Column(name = "subject_identity_mode", nullable = false, length = 24) private String subjectIdentityMode = "ANONYMOUS";
-    @Column(name = "subject_health_id", length = 128) private String subjectHealthId;
+    @Column(name = "subject_cpid", length = 128) private String subjectCpid;
     @Column(name = "category", nullable = false, length = 48) private String category = "MEDICAL_COSTS";
     @Column(name = "title", nullable = false, length = 255) private String title;
     @Column(name = "story", columnDefinition = "TEXT") private String story;
@@ -62,8 +62,8 @@ public class AssistanceRequestEntity {
     public void setRequesterActorId(String requesterActorId) { this.requesterActorId = requesterActorId; }
     public String getSubjectIdentityMode() { return subjectIdentityMode; }
     public void setSubjectIdentityMode(String subjectIdentityMode) { this.subjectIdentityMode = subjectIdentityMode; }
-    public String getSubjectHealthId() { return subjectHealthId; }
-    public void setSubjectHealthId(String subjectHealthId) { this.subjectHealthId = subjectHealthId; }
+    public String getSubjectCpid() { return subjectCpid; }
+    public void setSubjectCpid(String subjectCpid) { this.subjectCpid = subjectCpid; }
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
     public String getTitle() { return title; }

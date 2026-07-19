@@ -74,7 +74,7 @@ public class AssistanceService {
 
     @Transactional
     public AssistanceRequestEntity create(UUID tenantId, String requesterType, String requesterActorId,
-                                          String subjectIdentityMode, String subjectHealthId,
+                                          String subjectIdentityMode, String subjectCpid,
                                           String category, String title, String story,
                                           BigDecimal targetAmount, String currency,
                                           OffsetDateTime endsAt, UUID beneficiaryWalletId) {
@@ -102,7 +102,7 @@ public class AssistanceService {
         a.setRequesterType(requesterType == null || requesterType.isBlank() ? "CITIZEN" : requesterType);
         a.setRequesterActorId(requesterActorId);
         a.setSubjectIdentityMode("KNOWN".equals(subjectIdentityMode) ? "KNOWN" : "ANONYMOUS");
-        a.setSubjectHealthId(subjectHealthId);
+        a.setSubjectCpid(subjectCpid);
         a.setCategory(cat);
         a.setTitle(title.trim());
         a.setStory(story);

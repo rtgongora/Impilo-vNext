@@ -35,7 +35,7 @@ public class EmergencyController {
             @RequestBody Map<String, Object> body) {
         EmergencyRequestEntity r = service.createRequest(tenantId,
                 str(body, "requesterType"), actorId,
-                str(body, "subjectIdentityMode"), str(body, "subjectHealthId"),
+                str(body, "subjectIdentityMode"), str(body, "subjectCpid"),
                 str(body, "subjectTempRef"), str(body, "subjectLabel"),
                 str(body, "emergencyCategory"), str(body, "severity"), str(body, "description"),
                 dbl(body, "lat"), dbl(body, "lng"), str(body, "locationDescription"),
@@ -85,7 +85,7 @@ public class EmergencyController {
             @RequestBody Map<String, Object> body) {
         EmergencyIncidentEntity inc = service.escalateToIncident(tenantId,
                 str(body, "emergencyCategory"), str(body, "severity"), str(body, "description"),
-                uuid(body, "facilityId"), str(body, "subjectIdentityMode"), str(body, "subjectHealthId"),
+                uuid(body, "facilityId"), str(body, "subjectIdentityMode"), str(body, "subjectCpid"),
                 dbl(body, "lat"), dbl(body, "lng"), str(body, "locationDescription"), actorId);
         return ResponseEntity.status(HttpStatus.CREATED).body(inc);
     }

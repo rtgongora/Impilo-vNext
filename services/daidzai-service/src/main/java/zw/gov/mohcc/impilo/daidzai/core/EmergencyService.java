@@ -63,7 +63,7 @@ public class EmergencyService {
     private void mintEpisodeForIncident(EmergencyIncidentEntity inc) {
         var ep = traumaEpisodes.mint(inc.getTenantId(), TraumaEpisodeService.OWNER_DAIDZAI, "INCIDENT",
                 inc.getId().toString(), inc.getId(), inc.getSubjectIdentityMode(),
-                inc.getSubjectHealthId(), inc.getSubjectTempRef(), "INCIDENT", inc.getId().toString());
+                inc.getSubjectCpid(), inc.getSubjectTempRef(), "INCIDENT", inc.getId().toString());
         inc.setTraumaEpisodeId(ep.getId());
         incidentRepo.save(inc);
     }
@@ -72,12 +72,12 @@ public class EmergencyService {
 
     @Transactional
     public EmergencyRequestEntity createRequest(UUID tenantId, String requesterType, String requesterActorId,
-                                                String subjectIdentityMode, String subjectHealthId,
+                                                String subjectIdentityMode, String subjectCpid,
                                                 String subjectTempRef, String subjectLabel,
                                                 String category, String reportedSeverity, String description,
                                                 Double lat, Double lng, String locationDescription,
                                                 String attachmentsRef, String channel) {
-        return createRequest(tenantId, requesterType, requesterActorId, subjectIdentityMode, subjectHealthId,
+        return createRequest(tenantId, requesterType, requesterActorId, subjectIdentityMode, subjectCpid,
                 subjectTempRef, subjectLabel, category, reportedSeverity, description, lat, lng,
                 locationDescription, attachmentsRef, channel, null);
     }
@@ -91,7 +91,7 @@ public class EmergencyService {
      */
     @Transactional
     public EmergencyRequestEntity createRequest(UUID tenantId, String requesterType, String requesterActorId,
-                                                String subjectIdentityMode, String subjectHealthId,
+                                                String subjectIdentityMode, String subjectCpid,
                                                 String subjectTempRef, String subjectLabel,
                                                 String category, String reportedSeverity, String description,
                                                 Double lat, Double lng, String locationDescription,
@@ -109,7 +109,7 @@ public class EmergencyService {
         r.setRequesterType(type);
         r.setRequesterActorId(requesterActorId);
         r.setSubjectIdentityMode(mode);
-        r.setSubjectHealthId("KNOWN".equals(mode) ? subjectHealthId : null);
+        r.setSubjectCpid("KNOWN".equals(mode) ? subjectCpid : null);
         r.setSubjectTempRef(subjectTempRef);
         r.setSubjectLabel(subjectLabel);
         r.setEmergencyCategory(category.toUpperCase());
@@ -225,7 +225,7 @@ public class EmergencyService {
         inc.setTitle(r.getEmergencyCategory() + " emergency");
         inc.setDescription(r.getDescription());
         inc.setSubjectIdentityMode(r.getSubjectIdentityMode());
-        inc.setSubjectHealthId(r.getSubjectHealthId());
+        inc.setSubjectCpid(r.getSubjectCpid());
         inc.setSubjectTempRef(r.getSubjectTempRef());
         inc.setLocationLat(r.getLocationLat());
         inc.setLocationLng(r.getLocationLng());
@@ -361,7 +361,7 @@ public class EmergencyService {
         java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
         payload.put("incidentId", incidentId.toString());
         payload.put("incidentReference", inc.getIncidentReference());
-        payload.put("subjectHealthId", inc.getSubjectHealthId());
+        payload.put("subjectCpid", inc.getSubjectCpid());
         payload.put("subjectTempRef", inc.getSubjectTempRef());
         payload.put("facilityId", inc.getFacilityId() != null ? inc.getFacilityId().toString() : null);
         payload.put("placeOfDeathContext", placeContext != null ? placeContext : "IN_TRANSIT");
@@ -406,7 +406,7 @@ public class EmergencyService {
     @Transactional
     public EmergencyIncidentEntity escalateToIncident(UUID tenantId, String category, String reportedSeverity,
                                                       String description, UUID facilityId,
-                                                      String subjectIdentityMode, String subjectHealthId,
+                                                      String subjectIdentityMode, String subjectCpid,
                                                       Double lat, Double lng, String locationDescription,
                                                       String actorId) {
         if (category == null || category.isBlank()) {
@@ -426,7 +426,7 @@ public class EmergencyService {
         inc.setDescription(description);
         inc.setFacilityId(facilityId);
         inc.setSubjectIdentityMode(subjectIdentityMode != null ? subjectIdentityMode.toUpperCase() : "UNKNOWN");
-        inc.setSubjectHealthId(subjectHealthId);
+        inc.setSubjectCpid(subjectCpid);
         inc.setLocationLat(lat);
         inc.setLocationLng(lng);
         inc.setLocationDescription(locationDescription);

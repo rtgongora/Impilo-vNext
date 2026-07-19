@@ -15,11 +15,11 @@ import java.util.UUID;
 public interface EmergencyIncidentRepository extends JpaRepository<EmergencyIncidentEntity, UUID> {
     Optional<EmergencyIncidentEntity> findByIdAndTenantId(UUID id, UUID tenantId);
 
-    /** VITO merge repoint: move the subject anchor from the tombstoned to the surviving Health ID. */
+    /** VITO merge repoint: move the subject anchor from the tombstoned to the surviving CPID. */
     @Modifying
-    @Query("update EmergencyIncidentEntity i set i.subjectHealthId = :survivor "
-            + "where i.tenantId = :tenantId and i.subjectHealthId = :merged")
-    int repointSubjectHealthId(@Param("tenantId") UUID tenantId,
+    @Query("update EmergencyIncidentEntity i set i.subjectCpid = :survivor "
+            + "where i.tenantId = :tenantId and i.subjectCpid = :merged")
+    int repointSubjectCpid(@Param("tenantId") UUID tenantId,
                                @Param("merged") String mergedHealthId,
                                @Param("survivor") String survivorHealthId);
     List<EmergencyIncidentEntity> findByTenantIdOrderByOpenedAtDesc(UUID tenantId);

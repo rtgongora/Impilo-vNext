@@ -58,7 +58,7 @@ public class TraumaEpisodeService {
      */
     @Transactional
     public TraumaEpisodeEntity mint(UUID tenantId, String originService, String originKind, String originKey,
-                                    UUID incidentId, String subjectIdentityMode, String subjectHealthId,
+                                    UUID incidentId, String subjectIdentityMode, String subjectCpid,
                                     String subjectTempRef, String firstPhase, String ownerRef) {
         if (tenantId == null) throw new IllegalArgumentException("tenantId is required");
         if (originKey == null || originKey.isBlank()) throw new IllegalArgumentException("originKey is required");
@@ -76,7 +76,7 @@ public class TraumaEpisodeService {
         ep.setOriginKey(originKey);
         ep.setIncidentId(incidentId);
         ep.setSubjectIdentityMode(subjectIdentityMode != null ? subjectIdentityMode.toUpperCase() : "UNKNOWN");
-        ep.setSubjectHealthId(subjectHealthId);
+        ep.setSubjectCpid(subjectCpid);
         ep.setSubjectTempRef(subjectTempRef);
         ep.setStatus("OPEN");
         String phase = firstPhase != null ? firstPhase.toUpperCase() : "INCIDENT";
@@ -203,7 +203,7 @@ public class TraumaEpisodeService {
         view.put("originService", ep.getOriginService());
         view.put("originKind", ep.getOriginKind());
         view.put("subjectIdentityMode", ep.getSubjectIdentityMode());
-        view.put("subjectHealthId", ep.getSubjectHealthId());
+        view.put("subjectCpid", ep.getSubjectCpid());
         view.put("incidentId", ep.getIncidentId() != null ? ep.getIncidentId().toString() : null);
         List<Map<String, Object>> timeline = phases.stream().map(p -> {
             Map<String, Object> m = new LinkedHashMap<>();

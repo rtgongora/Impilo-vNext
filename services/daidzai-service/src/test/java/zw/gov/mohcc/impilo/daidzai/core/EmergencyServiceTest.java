@@ -28,7 +28,7 @@ class EmergencyServiceTest {
                 "Man collapsed at market", -17.82, 31.05, "Mbare market", null, "MOBILE");
         assertThat(r.getId()).isNotNull();
         assertThat(r.getSubjectIdentityMode()).isEqualTo("ANONYMOUS");
-        assertThat(r.getSubjectHealthId()).isNull();
+        assertThat(r.getSubjectCpid()).isNull();
         assertThat(r.getStatus()).isEqualTo("RECEIVED");
         assertThat(outboxRepo.findAll()).anyMatch(e -> e.getEventType().equals("daidzai.request.received"));
     }

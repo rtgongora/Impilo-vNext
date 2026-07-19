@@ -20,7 +20,7 @@ public class EmergencyIncidentEntity {
     @Column(name = "title", length = 512) private String title;
     @Column(name = "description", columnDefinition = "TEXT") private String description;
     @Column(name = "subject_identity_mode", length = 24) private String subjectIdentityMode;
-    @Column(name = "subject_health_id", length = 128) private String subjectHealthId;
+    @Column(name = "subject_cpid", length = 128) private String subjectCpid;
     @Column(name = "subject_temp_ref", length = 128) private String subjectTempRef;
     @Column(name = "location_lat") private Double locationLat;
     @Column(name = "location_lng") private Double locationLng;
@@ -72,8 +72,8 @@ public class EmergencyIncidentEntity {
     public void setDescription(String v) { this.description = v; }
     public String getSubjectIdentityMode() { return subjectIdentityMode; }
     public void setSubjectIdentityMode(String v) { this.subjectIdentityMode = v; }
-    public String getSubjectHealthId() { return subjectHealthId; }
-    public void setSubjectHealthId(String v) { this.subjectHealthId = v; }
+    public String getSubjectCpid() { return subjectCpid; }
+    public void setSubjectCpid(String v) { this.subjectCpid = v; }
     public String getSubjectTempRef() { return subjectTempRef; }
     public void setSubjectTempRef(String v) { this.subjectTempRef = v; }
     public Double getLocationLat() { return locationLat; }

@@ -24,7 +24,7 @@ public class TraumaEpisodeEntity {
     @Column(name = "origin_key", nullable = false, length = 128) private String originKey;
     @Column(name = "incident_id") private UUID incidentId;
     @Column(name = "subject_identity_mode", nullable = false, length = 24) private String subjectIdentityMode = "UNKNOWN";
-    @Column(name = "subject_health_id", length = 128) private String subjectHealthId;
+    @Column(name = "subject_cpid", length = 128) private String subjectCpid;
     @Column(name = "subject_temp_ref", length = 128) private String subjectTempRef;
     @Column(name = "status", nullable = false, length = 24) private String status = "OPEN";
     @Column(name = "current_phase", nullable = false, length = 32) private String currentPhase = "INCIDENT";
@@ -59,8 +59,8 @@ public class TraumaEpisodeEntity {
     public void setIncidentId(UUID v) { this.incidentId = v; }
     public String getSubjectIdentityMode() { return subjectIdentityMode; }
     public void setSubjectIdentityMode(String v) { this.subjectIdentityMode = v; }
-    public String getSubjectHealthId() { return subjectHealthId; }
-    public void setSubjectHealthId(String v) { this.subjectHealthId = v; }
+    public String getSubjectCpid() { return subjectCpid; }
+    public void setSubjectCpid(String v) { this.subjectCpid = v; }
     public String getSubjectTempRef() { return subjectTempRef; }
     public void setSubjectTempRef(String v) { this.subjectTempRef = v; }
     public String getStatus() { return status; }

@@ -12,7 +12,7 @@ import java.util.UUID;
 /**
  * Repoints DAIDZAI's trauma subject anchor when VITO merges an unknown patient's provisional
  * identity into a confirmed one — the canonical trauma_episode + the incident both carry
- * {@code subject_health_id}. Idempotent (a redelivered merge finds no rows on the tombstoned id).
+ * {@code subject_cpid}. Idempotent (a redelivered merge finds no rows on the tombstoned id).
  * Auto-collected into DAIDZAI's {@code List<IdentityRepointHook>} fan-out.
  */
 @Component
@@ -31,8 +31,8 @@ public class DaidzaiTraumaRepointHook implements IdentityRepointHook {
     @Transactional
     public int repoint(IdentityRepointCommand command) {
         UUID tenantId = UUID.fromString(command.tenantId());
-        int n = episodeRepository.repointSubjectHealthId(tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
-        n += incidentRepository.repointSubjectHealthId(tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
+        int n = episodeRepository.repointSubjectCpid(tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
+        n += incidentRepository.repointSubjectCpid(tenantId, command.oldSubjectCpid(), command.newSubjectCpid());
         return n;
     }
 

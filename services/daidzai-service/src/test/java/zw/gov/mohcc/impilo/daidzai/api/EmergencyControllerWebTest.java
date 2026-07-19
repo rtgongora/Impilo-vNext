@@ -39,7 +39,7 @@ class EmergencyControllerWebTest {
     void citizenSosThenTrackThenDispatch() throws Exception {
         UUID tenant = UUID.randomUUID();
         String sos = "{\"requesterType\":\"CITIZEN\",\"subjectIdentityMode\":\"KNOWN\","
-                + "\"subjectHealthId\":\"HID-1\",\"emergencyCategory\":\"CARDIAC\",\"severity\":\"CRITICAL\","
+                + "\"subjectCpid\":\"HID-1\",\"emergencyCategory\":\"CARDIAC\",\"severity\":\"CRITICAL\","
                 + "\"description\":\"chest pain\",\"lat\":-17.8,\"lng\":31.0,\"channel\":\"WEB\"}";
         String reqJson = mockMvc.perform(citizen(post("/internal/v1/daidzai/requests"), tenant)
                         .contentType(MediaType.APPLICATION_JSON).content(sos))

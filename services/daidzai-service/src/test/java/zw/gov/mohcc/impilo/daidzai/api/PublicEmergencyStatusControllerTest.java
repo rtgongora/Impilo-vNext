@@ -40,7 +40,7 @@ class PublicEmergencyStatusControllerTest {
         r.setCallbackNumber("+263771234567");
         r.setDescription("Man collapsed at the market");
         r.setLocationDescription("Mbare market");
-        r.setSubjectHealthId("HID-SECRET-1");
+        r.setSubjectCpid("HID-SECRET-1");
         r.setSubjectLabel("John Doe");
         return r;
     }
@@ -70,7 +70,7 @@ class PublicEmergencyStatusControllerTest {
                 "requestReference", "status", "stage", "callbackPending", "createdAt");
         assertThat(components).doesNotContain(
                 "callbackNumber", "description", "locationDescription",
-                "subjectHealthId", "subjectLabel", "locationLat", "locationLng");
+                "subjectCpid", "subjectLabel", "locationLat", "locationLng");
     }
 
     @Test

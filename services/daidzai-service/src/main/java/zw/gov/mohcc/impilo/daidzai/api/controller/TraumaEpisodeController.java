@@ -30,7 +30,7 @@ public class TraumaEpisodeController {
     /**
      * Idempotent dual-entry mint. Body:
      * {@code {originService, originKind, originKey, incidentId?, subjectIdentityMode?,
-     *         subjectHealthId?, subjectTempRef?, firstPhase?, ownerRef?}}.
+     *         subjectCpid?, subjectTempRef?, firstPhase?, ownerRef?}}.
      * Returns 200 when the {@code (tenant, originKey)} episode already exists, 201 when newly minted.
      */
     @PostMapping
@@ -41,7 +41,7 @@ public class TraumaEpisodeController {
         boolean existed = service.episodeByOriginExists(tenantId, originKey);
         TraumaEpisodeEntity ep = service.mint(tenantId,
                 str(body, "originService"), str(body, "originKind"), originKey,
-                uuid(body, "incidentId"), str(body, "subjectIdentityMode"), str(body, "subjectHealthId"),
+                uuid(body, "incidentId"), str(body, "subjectIdentityMode"), str(body, "subjectCpid"),
                 str(body, "subjectTempRef"), str(body, "firstPhase"), str(body, "ownerRef"));
         HttpStatus code = existed ? HttpStatus.OK : HttpStatus.CREATED;
         return ResponseEntity.status(code).body(service.episodeView(tenantId, ep.getId()));
