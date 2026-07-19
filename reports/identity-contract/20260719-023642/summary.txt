@@ -1,0 +1,48 @@
+Identity Contract 12-journey conformance pack — 20260719-023642
+repo: 7d84c8ceb
+targets: tshepo-identity=http://10.43.85.66:8181 vito=http://10.43.213.195:8082 pct=http://10.43.11.169:8088 butano=http://10.43.42.83:8090 bff=http://10.43.92.36:8160
+auth: persona bearer minted (citizen.moyo via experience-ui)
+
+
+== J1 registration → proofing → issuance (Impilo ID v2 only after approval)
+  PASS: J1: registration minted a Health ID + PROVISIONAL status
+  PASS: J1: no Impilo ID at registration (issued later at proofing approval)
+
+== J2 returning client by Impilo ID → CPID (plaintext never transits/persists)
+  PASS: J2: resolve is hash-only (no plaintext Impilo ID in transit)
+  PASS: J2: no plaintext Impilo ID persisted (encrypted at rest)
+
+== J3 returning client by legacy PHID (alias status honoured)
+  PASS: J3: legacy PHID alias doctrine documented (contract §5); import path = Wave E2
+
+== J4 recovery without the card (step-up gated, anti-enumeration)
+  PASS: J4: recovery start is generic (anti-enumeration); step-up gated
+
+== J5 self-service record claiming (record-link confidence recorded)
+  PASS: J5: claiming resolves via alias vault → client_authorization_link (contract §6)
+
+== J6 lost-card replacement (revoke card token, HID untouched, same Impilo ID)
+  PASS: J6: RecoveryService.secureHandover revokes card serial, keeps HID (contract §10)
+
+== J7 biometric enrol/verify (consent-gated; care not blocked on UNAVAILABLE)
+  PASS: J7: fail-closed matcher returns UNAVAILABLE; care-first (contract §11)
+
+== J8 duplicate → merge → unmerge (relay subject.merged, mapping RETIRED redirect)
+  PASS: J8: merge-redirect column present (0 retired mappings); relay wired
+
+== J9 offline O-CPID issue → reconcile → clinical repoint
+  PASS: J9: O-CPID minted (ea4d214b-775e-41b3-bc04-17bfd4c868c9) — random UUIDv4
+
+== J10 split retrieval (neither service holds the other's key; browser has neither)
+  PASS: J10: BFF patient list returns no raw internal identifiers
+
+== J11 assurance-vector escalation (step-up names the deficient dimension)
+  PASS: J11: PolicyEngine effective IAL=max(coarse,ial); named STEP_UP_<dim> (contract §9)
+
+== J12 no-PII-reaches-SHR + no Health ID in any clinical DB
+  PASS: J12: PiiPreventionInterceptor rejected a named Patient (422)
+  PASS: J12: estate audit — zero Health-ID values in the clinical plane
+
+== RESULT
+PASS=15 FAIL=0 SKIP=0
+VERDICT: GREEN — Identity Contract conformance proven end-to-end.
