@@ -54,6 +54,33 @@ public class TshepoConsentServiceClient {
     }
 
     /**
+     * List the AUTHENTICATED patient's own active consent directives (CJ13 consent center).
+     * The consent service resolves the patient from the forwarded trust context (X-Actor-ID) —
+     * the subject is never client-supplied — so a citizen can only ever see their own consents.
+     */
+    public JsonNode myConsents(int page, int size) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/consent/portal/my-consents")
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .toUriString();
+        log.info("TSHEPO-CONSENT: Listing my consents (trust-context patient)");
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Revoke one of the authenticated patient's own consent directives (CJ13). The consent
+     * service verifies the directive belongs to the trust-context patient before revoking.
+     */
+    public JsonNode revokeMyConsent(UUID id) {
+        String url = baseUrl + "/v1/consent/portal/revoke/" + id;
+        log.info("TSHEPO-CONSENT: Revoking my consent id={}", id);
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(Map.of()), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Create a new consent directive.
      */
     public JsonNode createConsent(Map<String, Object> request) {
