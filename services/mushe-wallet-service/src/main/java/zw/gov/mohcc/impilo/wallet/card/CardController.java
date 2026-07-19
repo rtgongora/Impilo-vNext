@@ -43,17 +43,38 @@ public class CardController {
     private final WalletRepository walletRepository;
 
     private final MusheButanoClient butanoClient;
+    private final CardUpdateQueueConsumer cardUpdateQueueConsumer;
 
     public CardController(CardService cardService,
                           CardHealthDataService healthDataService,
                           CardRepository cardRepository,
                           WalletRepository walletRepository,
-                          MusheButanoClient butanoClient) {
+                          MusheButanoClient butanoClient,
+                          CardUpdateQueueConsumer cardUpdateQueueConsumer) {
         this.cardService = cardService;
         this.healthDataService = healthDataService;
         this.cardRepository = cardRepository;
         this.walletRepository = walletRepository;
         this.butanoClient = butanoClient;
+        this.cardUpdateQueueConsumer = cardUpdateQueueConsumer;
+    }
+
+    // ── Physical-write pipeline (B2) ────────────────────────────────────
+
+    /**
+     * Drain the pending card-update queue to the physical card via the NFC-writer
+     * seam (ops/on-demand trigger; a scheduled tick also drains when enabled).
+     * Returns per-pass counts.
+     */
+    @PostMapping("/sync/drain")
+    public ResponseEntity<Map<String, Object>> drainCardSyncQueue() {
+        CardUpdateQueueConsumer.DrainResult r = cardUpdateQueueConsumer.drainPending();
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("processed", r.processed());
+        body.put("synced", r.synced());
+        body.put("failed", r.failed());
+        body.put("retried", r.retried());
+        return ResponseEntity.ok(body);
     }
 
     // ── Issue Card ──────────────────────────────────────────────────────

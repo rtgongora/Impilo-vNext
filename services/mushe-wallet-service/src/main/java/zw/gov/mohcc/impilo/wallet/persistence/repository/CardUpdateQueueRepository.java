@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.wallet.persistence.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import zw.gov.mohcc.impilo.wallet.persistence.entity.CardUpdateQueueEntity;
 
@@ -14,4 +15,7 @@ public interface CardUpdateQueueRepository extends JpaRepository<CardUpdateQueue
     List<CardUpdateQueueEntity> findByCardIdAndStatus(UUID cardId, String status);
 
     Optional<CardUpdateQueueEntity> findByQueueId(UUID queueId);
+
+    /** B2: drain PENDING entries across all cards, highest priority + oldest first. */
+    List<CardUpdateQueueEntity> findByStatusOrderByPriorityAscCreatedAtAsc(String status, Pageable pageable);
 }
