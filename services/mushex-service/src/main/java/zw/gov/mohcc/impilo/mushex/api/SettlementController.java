@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import zw.gov.mohcc.impilo.mushex.api.dto.ReleasePayoutsRequest;
 import zw.gov.mohcc.impilo.mushex.api.dto.SettlementRunRequest;
 import zw.gov.mohcc.impilo.mushex.service.SettlementService;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -69,11 +70,16 @@ public class SettlementController {
     }
 
     @PostMapping("/{id}/release-payouts")
-    public ResponseEntity<ApiResponse<Object>> releasePayouts(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Object>> releasePayouts(
+            @PathVariable String id,
+            @RequestBody(required = false) ReleasePayoutsRequest request) {
         var ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
 
-        Object settlement = settlementService.releasePayouts(id);
+        Object settlement = request == null
+                ? settlementService.releasePayouts(id)
+                : settlementService.releasePayouts(id, request.biometricSubjectRef(),
+                        request.biometricModality(), request.biometricProbeBase64());
 
         return ResponseEntity.ok(ApiResponse.ok(settlement, correlationId));
     }

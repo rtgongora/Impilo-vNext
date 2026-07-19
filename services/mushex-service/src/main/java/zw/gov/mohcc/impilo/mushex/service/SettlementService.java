@@ -59,6 +59,8 @@ public class SettlementService {
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
     private final DisbursementRailRegistry disbursementRails;
+    private final zw.gov.mohcc.impilo.mushex.config.MushexProperties properties;
+    private final zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification;
 
     public SettlementService(SettlementRepository settlementRepository,
                              PayoutBatchRepository batchRepository,
@@ -68,7 +70,9 @@ public class SettlementService {
                              LedgerService ledgerService,
                              EventOutboxRepository outboxRepository,
                              ObjectMapper objectMapper,
-                             DisbursementRailRegistry disbursementRails) {
+                             DisbursementRailRegistry disbursementRails,
+                             zw.gov.mohcc.impilo.mushex.config.MushexProperties properties,
+                             zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient biometricVerification) {
         this.settlementRepository = settlementRepository;
         this.batchRepository = batchRepository;
         this.itemRepository = itemRepository;
@@ -78,6 +82,8 @@ public class SettlementService {
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
         this.disbursementRails = disbursementRails;
+        this.properties = properties;
+        this.biometricVerification = biometricVerification;
     }
 
     /**
@@ -332,6 +338,27 @@ public class SettlementService {
      */
     @Transactional
     public SettlementEntity releasePayouts(String settlementId) {
+        return releasePayouts(settlementId, null, null, null);
+    }
+
+    /**
+     * Release payouts with an OPTIONAL biometric step-up for high-value releases.
+     *
+     * <p>When the release total meets/exceeds {@code mushex.step-up.settlement-release-threshold}
+     * AND a biometric probe is supplied, the release is verified through the shared seam:
+     * MATCH → the release proceeds, marked {@code releaseStepUpMode="biometric"}; NO_MATCH →
+     * the release is blocked (nothing disbursed); engine UNAVAILABLE / NO_REFERENCE → fall back
+     * to the existing non-biometric step-up factor (the release is NOT auto-approved by the
+     * biometric layer — it proceeds only on whatever approval the caller already carries, exactly
+     * as today). Below threshold or absent probe ⇒ unchanged behaviour.
+     *
+     * @param biometricSubjectRef   subject reference for the approver's biometric (optional)
+     * @param biometricModality     "FINGERPRINT"|"FACE"|"IRIS" (defaults to FINGERPRINT)
+     * @param biometricProbeBase64  the live probe template (optional)
+     */
+    @Transactional
+    public SettlementEntity releasePayouts(String settlementId, String biometricSubjectRef,
+                                           String biometricModality, String biometricProbeBase64) {
         TrustContextHolder.require();
         SettlementEntity settlement = getSettlement(settlementId);
 
@@ -340,8 +367,16 @@ public class SettlementService {
                     "Cannot release settlement in status: " + settlement.getStatus());
         }
 
+        // High-value biometric step-up: verified BEFORE any state mutation so a NO_MATCH
+        // blocks the release with nothing disbursed. Below-threshold or no-probe releases
+        // are untouched; an engine outage falls back to the existing step-up factor.
+        String releaseStepUpMode = resolveReleaseStepUp(
+                settlement, biometricSubjectRef, biometricModality, biometricProbeBase64);
+        settlement.setReleaseStepUpMode(releaseStepUpMode);
+
         // Step-up authorization would be enforced at the controller/filter level
-        log.info("Releasing settlement payouts: id={} (step-up required)", settlementId);
+        log.info("Releasing settlement payouts: id={} (step-up required, mode={})",
+                settlementId, releaseStepUpMode);
 
         settlement.setStatus(SettlementStatus.RELEASED);
         settlement = settlementRepository.save(settlement);
@@ -437,6 +472,55 @@ public class SettlementService {
         log.info("Payout batch status updated: batchId={}, status={}", batchId, status);
 
         return batch;
+    }
+
+    /**
+     * Resolve the release step-up mode for a high-value settlement release.
+     *
+     * @return {@code "biometric"} when a MATCH stepped the release up; otherwise {@code null}
+     *         (below threshold, no probe, or engine outage → fall back to existing step-up).
+     * @throws IllegalStateException on NO_MATCH — the high-value release is blocked.
+     */
+    private String resolveReleaseStepUp(SettlementEntity settlement, String subjectRef,
+                                        String modality, String probeBase64) {
+        boolean probeSupplied = probeBase64 != null && !probeBase64.isBlank()
+                && subjectRef != null && !subjectRef.isBlank();
+        if (!probeSupplied) {
+            return null; // no biometric supplied — unchanged behaviour
+        }
+        BigDecimal releaseAmount = readReleaseAmount(settlement.getTotals());
+        BigDecimal threshold = properties.getStepUp().getSettlementReleaseThreshold();
+        if (threshold == null || releaseAmount.compareTo(threshold) < 0) {
+            return null; // below the high-value threshold — biometric step-up not required
+        }
+        String mod = (modality != null && !modality.isBlank()) ? modality : "FINGERPRINT";
+        var decision = biometricVerification.verify(subjectRef, mod, probeBase64);
+        if (decision.isMatch()) {
+            return "biometric";
+        }
+        if ("UNAVAILABLE".equals(decision.result()) || "NO_REFERENCE".equals(decision.result())) {
+            // Fail-closed against fabrication, care-first against outage: fall back to the
+            // existing non-biometric step-up factor. Never auto-approve on the biometric layer.
+            log.warn("Settlement {} biometric step-up unavailable ({}) — falling back to non-biometric step-up",
+                    settlement.getSettlementId(), decision.result());
+            return null;
+        }
+        throw new IllegalStateException(
+                "Biometric step-up failed for high-value settlement release " + settlement.getSettlementId());
+    }
+
+    /** Read the release amount (totalPaid) from the settlement totals JSON; ZERO when absent. */
+    private BigDecimal readReleaseAmount(String totalsJson) {
+        String paid = readMetadataField(totalsJson, "totalPaid");
+        if (paid == null) {
+            return BigDecimal.ZERO;
+        }
+        try {
+            return new BigDecimal(paid);
+        } catch (NumberFormatException e) {
+            log.warn("Unparseable settlement totalPaid '{}' — treating as ZERO for step-up threshold", paid);
+            return BigDecimal.ZERO;
+        }
     }
 
     /** Read a single string field from intent metadata JSON; null when absent/unparseable. */

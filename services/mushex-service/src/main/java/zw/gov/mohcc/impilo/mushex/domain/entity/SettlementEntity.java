@@ -43,6 +43,14 @@ public class SettlementEntity {
     @Column(name = "totals", columnDefinition = "jsonb")
     private String totals;
 
+    /**
+     * How the high-value release step-up was satisfied: {@code "biometric"} when a MATCH
+     * from the shared verification seam stepped the release up, otherwise null (release
+     * relied on the existing non-biometric step-up factor / below-threshold).
+     */
+    @Column(name = "release_stepup_mode")
+    private String releaseStepUpMode;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -107,6 +115,14 @@ public class SettlementEntity {
 
     public void setTotals(String totals) {
         this.totals = totals;
+    }
+
+    public String getReleaseStepUpMode() {
+        return releaseStepUpMode;
+    }
+
+    public void setReleaseStepUpMode(String releaseStepUpMode) {
+        this.releaseStepUpMode = releaseStepUpMode;
     }
 
     public OffsetDateTime getCreatedAt() {

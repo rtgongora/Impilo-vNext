@@ -65,6 +65,12 @@ public class MushexProperties {
         private boolean claimOverride = true;
         private boolean settlementRelease = true;
         private boolean crossFacilityDashboard = true;
+        /**
+         * High-value threshold (in settlement currency) above which a settlement release
+         * qualifies for biometric step-up. When a release total meets/exceeds this amount
+         * and a biometric probe is supplied, the release is verified through the shared seam.
+         */
+        private BigDecimal settlementReleaseThreshold = new BigDecimal("5000.00");
 
         public boolean isPayoutRelease() { return payoutRelease; }
         public void setPayoutRelease(boolean payoutRelease) { this.payoutRelease = payoutRelease; }
@@ -76,6 +82,8 @@ public class MushexProperties {
         public void setClaimOverride(boolean claimOverride) { this.claimOverride = claimOverride; }
         public boolean isSettlementRelease() { return settlementRelease; }
         public void setSettlementRelease(boolean settlementRelease) { this.settlementRelease = settlementRelease; }
+        public BigDecimal getSettlementReleaseThreshold() { return settlementReleaseThreshold; }
+        public void setSettlementReleaseThreshold(BigDecimal settlementReleaseThreshold) { this.settlementReleaseThreshold = settlementReleaseThreshold; }
         public boolean isCrossFacilityDashboard() { return crossFacilityDashboard; }
         public void setCrossFacilityDashboard(boolean crossFacilityDashboard) { this.crossFacilityDashboard = crossFacilityDashboard; }
     }

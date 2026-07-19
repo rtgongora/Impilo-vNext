@@ -88,7 +88,8 @@ class SettlementPayoutTest {
                 new DisbursementRailRegistry(List.of(new WalletDisbursementRail(walletAdapter)));
         service = new SettlementService(settlementRepository, batchRepository, itemRepository,
                 intentRepository, ledgerEntryRepository, ledgerService, outboxRepository,
-                new ObjectMapper(), registry);
+                new ObjectMapper(), registry, new zw.gov.mohcc.impilo.mushex.config.MushexProperties(),
+                mock(zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient.class));
         TrustContextHolder.set(new TrustContext(
                 tenantId, "ops-1", "SYSTEM_ADMIN", "FINANCE",
                 "device-1", UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
