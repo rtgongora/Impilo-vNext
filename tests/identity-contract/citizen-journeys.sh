@@ -276,7 +276,22 @@ zero_to_one(){
     if [ -n "$aid" ]; then
       code=$(GET "/internal/v1/appointments/$aid/checkin-token")
       case "$code" in
-        200) has data.token && ok "CJ11(z2o): appointment created + signed check-in token issued (live)" || bad "CJ11(z2o): token 200 but no data.token";;
+        200)
+          local tok; tok=$(jval data.token)
+          if [ -z "$tok" ]; then bad "CJ11(z2o): token 200 but no data.token"
+          else
+            ok "CJ11(z2o): check-in token issued (live)"
+            # CONSUME the token — issuance alone is not proof. A token whose payload is
+            # unparseable (e.g. Java Map.toString instead of JSON) still issues a clean
+            # 3-part 200, but introspection/verification fails. Only checking in with it
+            # proves the token actually WORKS end-to-end.
+            code=$(POST "/internal/v1/appointments/checkin-by-token" "{\"token\":\"$tok\"}")
+            case "$code" in
+              200) ok "CJ11(z2o): the check-in token VERIFIES + checks the patient in (payload parses, round-trips)";;
+              401) bad "CJ11(z2o): token issued but REJECTED on check-in (401) — unparseable/invalid payload, not consumable";;
+              *) bad "CJ11(z2o): checkin-by-token HTTP $code — $(body | head -c 160)";;
+            esac
+          fi;;
         502|403) bad "CJ11(z2o): check-in token BROKEN (HTTP $code) — internal token issuance denied at boundary";;
         *) bad "CJ11(z2o): check-in token HTTP $code — $(body | head -c 140)";;
       esac
