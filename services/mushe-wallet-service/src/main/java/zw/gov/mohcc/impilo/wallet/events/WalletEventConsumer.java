@@ -45,18 +45,22 @@ public class WalletEventConsumer {
     private final WalletService walletService;
     private final ObjectMapper objectMapper;
 
+    private final zw.gov.mohcc.impilo.wallet.card.MusheButanoClient butanoClient;
+
     public WalletEventConsumer(WalletRepository walletRepository,
                                 MerchantAccountRepository merchantRepository,
                                 CardRepository cardRepository,
                                 CardHealthDataService cardHealthDataService,
                                 WalletService walletService,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper,
+                                zw.gov.mohcc.impilo.wallet.card.MusheButanoClient butanoClient) {
         this.walletRepository = walletRepository;
         this.merchantRepository = merchantRepository;
         this.cardRepository = cardRepository;
         this.cardHealthDataService = cardHealthDataService;
         this.walletService = walletService;
         this.objectMapper = objectMapper;
+        this.butanoClient = butanoClient;
     }
 
     // ── Payment Status Changed ──────────────────────────────────────────
@@ -242,18 +246,24 @@ public class WalletEventConsumer {
                             card.getCardId());
                     continue;
                 }
+                // Fetch the REAL patient summary from BUTANO. On any failure keep the
+                // PENDING_SYNC marker (NOT "{}", which a reader could mistake for "no
+                // critical health data") — a BUTANO outage never corrupts the card.
+                UUID effectiveTenant = tenantId != null ? tenantId : wallet.getTenantId();
+                String realSummary = butanoClient.fetchIpsSummary(patientCpid, effectiveTenant);
+                String summaryJson = realSummary != null ? realSummary : "{\"status\":\"PENDING_SYNC\"}";
+                boolean isReal = realSummary != null;
+
                 cardHealthDataService.updateCriticalSummary(
                         card.getCardId(),
                         patientCpid,
-                        // Explicit PENDING_SYNC — the real critical summary is fetched from BUTANO
-                        // at card-sync time. NOT "{}", which a reader could mistake for "no critical
-                        // health data" (no allergies/conditions) on a health card.
-                        "{\"status\":\"PENDING_SYNC\"}",
+                        summaryJson,
                         encryptionKeyRef,
-                        tenantId != null ? tenantId : wallet.getTenantId()
+                        effectiveTenant
                 );
 
-                log.info("Queued CRITICAL_SUMMARY update for cardId={} patientCpid={}",
+                log.info("{} CRITICAL_SUMMARY update for cardId={} patientCpid={}",
+                        isReal ? "Synced real BUTANO summary to" : "Queued PENDING_SYNC (BUTANO unavailable) for",
                         card.getCardId(), patientCpid);
             }
 

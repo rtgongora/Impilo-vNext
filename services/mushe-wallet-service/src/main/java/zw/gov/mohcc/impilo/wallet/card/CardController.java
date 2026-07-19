@@ -42,14 +42,18 @@ public class CardController {
     private final CardRepository cardRepository;
     private final WalletRepository walletRepository;
 
+    private final MusheButanoClient butanoClient;
+
     public CardController(CardService cardService,
                           CardHealthDataService healthDataService,
                           CardRepository cardRepository,
-                          WalletRepository walletRepository) {
+                          WalletRepository walletRepository,
+                          MusheButanoClient butanoClient) {
         this.cardService = cardService;
         this.healthDataService = healthDataService;
         this.cardRepository = cardRepository;
         this.walletRepository = walletRepository;
+        this.butanoClient = butanoClient;
     }
 
     // ── Issue Card ──────────────────────────────────────────────────────
@@ -296,18 +300,21 @@ public class CardController {
         }
         String encryptionKeyRef = "tshepo-keys:" + card.getTenantId() + ":patient:" + patientCpid;
 
-        // Queue a CRITICAL_SUMMARY sync. The real summary is fetched from BUTANO at
-        // card-sync time; mark it PENDING_SYNC (not "{}", which a reader could mistake
-        // for "no critical health data" — no allergies/conditions — on a health card).
+        // Fetch the REAL summary from BUTANO; keep PENDING_SYNC only if it's
+        // unavailable (not "{}", which reads as "no critical health data").
+        String realSummary = butanoClient.fetchIpsSummary(patientCpid, UUID.fromString(tenantId));
+        String summaryJson = realSummary != null ? realSummary : "{\"status\":\"PENDING_SYNC\"}";
         healthDataService.updateCriticalSummary(
-                cardId, patientCpid, "{\"status\":\"PENDING_SYNC\"}", encryptionKeyRef,
+                cardId, patientCpid, summaryJson, encryptionKeyRef,
                 UUID.fromString(tenantId));
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("cardId", cardId.toString());
         response.put("patientCpid", patientCpid);
-        response.put("status", "QUEUED");
-        response.put("message", "Health data sync queued for processing");
+        response.put("status", realSummary != null ? "SYNCED" : "QUEUED");
+        response.put("message", realSummary != null
+                ? "Real patient summary synced to card"
+                : "Health data sync queued (BUTANO summary not yet available)");
         return ResponseEntity.accepted().body(response);
     }
 
