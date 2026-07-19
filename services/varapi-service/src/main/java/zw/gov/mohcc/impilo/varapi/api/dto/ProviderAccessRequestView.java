@@ -3,10 +3,14 @@ package zw.gov.mohcc.impilo.varapi.api.dto;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderAccessRequestEntity;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.UUID;
 
 /**
  * Applicant-facing projection of a provider-access request. Council/EC numbers
  * are already masked in the entity; the Provider ID (if any) is emitted masked.
+ * FACILITY_ACCESS requests (W5) also surface the facility/engagement/validity so
+ * the applicant's status view can show "LOCUM at &lt;facility&gt; until &lt;date&gt;".
  */
 public record ProviderAccessRequestView(
         String publicId,
@@ -21,6 +25,10 @@ public record ProviderAccessRequestView(
         String evidenceSummary,
         String reason,
         String providerPublicId,
+        UUID facilityId,
+        String engagementType,
+        LocalDate accessValidFrom,
+        LocalDate accessValidTo,
         String decidedBy,
         Instant decidedAt,
         String decisionNote,
@@ -41,6 +49,10 @@ public record ProviderAccessRequestView(
                 e.getEvidenceSummary(),
                 e.getReason(),
                 mask(e.getProviderPublicId()),
+                e.getFacilityId(),
+                e.getEngagementType(),
+                e.getAccessValidFrom(),
+                e.getAccessValidTo(),
                 e.getDecidedBy(),
                 e.getDecidedAt(),
                 e.getDecisionNote(),

@@ -26,7 +26,21 @@ export type ProviderAccessRequestType =
   | "COUNCIL_NUMBER"
   | "EC_NUMBER"
   | "HAVE_PROVIDER_ID"
-  | "RECOVER";
+  | "RECOVER"
+  | "FACILITY_ACCESS";
+
+/** Engagement types for a FACILITY_ACCESS request (D-P7). */
+export const ENGAGEMENT_TYPES = [
+  "PERMANENT",
+  "ROTATION",
+  "LOCUM",
+  "OUTREACH",
+  "TELEMED",
+  "SPECIALIST_POOL",
+  "SUPERVISORY",
+  "TRAINING",
+] as const;
+export type EngagementType = (typeof ENGAGEMENT_TYPES)[number];
 
 export interface ProviderAccessRequestView {
   publicId: string;
@@ -41,6 +55,11 @@ export interface ProviderAccessRequestView {
   evidenceSummary?: string | null;
   reason?: string | null;
   providerPublicId?: string | null;
+  // FACILITY_ACCESS (W5)
+  facilityId?: string | null;
+  engagementType?: string | null;
+  accessValidFrom?: string | null;
+  accessValidTo?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
 }
@@ -53,6 +72,12 @@ export interface SubmitProviderAccessRequestInput {
   ecNumber?: string;
   organizationRef?: string;
   evidenceSummary?: string;
+  // FACILITY_ACCESS (W5): facility + engagement + validity. A temporary
+  // engagement (anything but PERMANENT) requires accessValidTo.
+  facilityId?: string;
+  engagementType?: EngagementType;
+  accessValidFrom?: string;
+  accessValidTo?: string;
 }
 
 export interface ProviderAccessApiError {
