@@ -2,16 +2,17 @@ package zw.gov.mohcc.impilo.cardprint.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
+import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters;
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
+import org.bouncycastle.crypto.signers.Ed25519Signer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import zw.gov.mohcc.impilo.cardprint.config.CardPrintProperties;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import java.security.MessageDigest;
 import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.LinkedHashMap;
@@ -20,23 +21,57 @@ import java.util.Map;
 /**
  * Generates signed QR assertion payloads for smart cards.
  *
- * The assertion contains subject identification info plus an HMAC-SHA256 signature
- * that can be verified by any service holding the shared HMAC secret. This approach
- * does NOT embed secret tokens in the QR code; the signature is used purely for
- * integrity verification.
+ * <p>X4 (key ceremony readiness): assertions are signed with a deterministic
+ * seed-derived <b>Ed25519</b> key and carry a versioned {@code kid}
+ * ({@code card-qr-<fingerprint8>}), replacing the earlier symmetric
+ * HMAC-SHA256 scheme — a card credential must be verifiable without
+ * distributing a shared secret, and the kid is what makes rotation-with-overlap
+ * possible. Zero cards had been issued when the scheme switched, so no
+ * dual-verify window was needed. The seed is a deployment secret
+ * (tshepo-keys custody target); unset falls back to a dev seed with a loud
+ * warning so preview boots.</p>
  */
 @Service
 public class QrAssertionService {
 
     private static final Logger log = LoggerFactory.getLogger(QrAssertionService.class);
-    private static final String HMAC_ALGORITHM = "HmacSHA256";
+    private static final String DEV_SEED = "card-qr-signing-dev-seed-change-me-32b";
+    private static final String ALGORITHM = "Ed25519";
 
-    private final CardPrintProperties properties;
     private final ObjectMapper objectMapper;
+    private final String seedMaterial;
 
-    public QrAssertionService(CardPrintProperties properties, ObjectMapper objectMapper) {
-        this.properties = properties;
+    private Ed25519PrivateKeyParameters privateKey;
+    private String keyId;
+    private String publicKeyBase64;
+
+    public QrAssertionService(ObjectMapper objectMapper,
+                              @Value("${card-print.qr.signing-key-seed:}") String configuredSeed) {
         this.objectMapper = objectMapper;
+        if (configuredSeed == null || configuredSeed.strip().length() < 32) {
+            log.warn("card-print.qr.signing-key-seed is unset/weak — using the DEV seed. Production MUST "
+                    + "supply a >=32-char secret (tshepo-keys custody); card QR signatures depend on it.");
+            this.seedMaterial = DEV_SEED;
+        } else {
+            this.seedMaterial = configuredSeed;
+        }
+    }
+
+    @PostConstruct
+    public void init() throws Exception {
+        byte[] priv = MessageDigest.getInstance("SHA-256")
+                .digest(seedMaterial.getBytes(StandardCharsets.UTF_8));
+        privateKey = new Ed25519PrivateKeyParameters(priv, 0);
+        Ed25519PublicKeyParameters pub = privateKey.generatePublicKey();
+        publicKeyBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString(pub.getEncoded());
+
+        byte[] fingerprint = MessageDigest.getInstance("SHA-256").digest(pub.getEncoded());
+        StringBuilder kid = new StringBuilder("card-qr-");
+        for (int i = 0; i < 4; i++) {
+            kid.append(String.format("%02x", fingerprint[i]));
+        }
+        keyId = kid.toString();
+        log.info("Ed25519 card QR signing key initialized (kid: {}, stable across restarts)", keyId);
     }
 
     /**
@@ -45,7 +80,7 @@ public class QrAssertionService {
      * @param subjectType  the type of subject (PRACTITIONER, CLIENT, etc.)
      * @param subjectId    the unique identifier of the subject
      * @param credentialId the credential/card identifier (e.g., job ID or card number)
-     * @return JSON string containing the assertion payload and HMAC signature
+     * @return JSON string containing the assertion payload, kid and Ed25519 signature
      */
     public String generateSignedAssertion(String subjectType, String subjectId, String credentialId) {
         Map<String, Object> assertionPayload = new LinkedHashMap<>();
@@ -57,12 +92,13 @@ public class QrAssertionService {
 
         try {
             String payloadJson = objectMapper.writeValueAsString(assertionPayload);
-            String signature = computeHmac(payloadJson);
+            String signature = sign(payloadJson);
 
             Map<String, Object> signedAssertion = new LinkedHashMap<>();
             signedAssertion.put("payload", assertionPayload);
             signedAssertion.put("signature", signature);
-            signedAssertion.put("algorithm", HMAC_ALGORITHM);
+            signedAssertion.put("algorithm", ALGORITHM);
+            signedAssertion.put("kid", keyId);
 
             return objectMapper.writeValueAsString(signedAssertion);
 
@@ -72,22 +108,22 @@ public class QrAssertionService {
         }
     }
 
-    /**
-     * Computes HMAC-SHA256 over the given data using the configured secret.
-     */
-    private String computeHmac(String data) {
-        try {
-            Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-            SecretKeySpec keySpec = new SecretKeySpec(
-                    properties.getQr().getHmacSecret().getBytes(StandardCharsets.UTF_8),
-                    HMAC_ALGORITHM
-            );
-            mac.init(keySpec);
-            byte[] hmacBytes = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-            return Base64.getUrlEncoder().withoutPadding().encodeToString(hmacBytes);
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            log.error("Failed to compute HMAC for QR assertion", e);
-            throw new RuntimeException("HMAC computation failed", e);
-        }
+    /** Base64url raw Ed25519 signature over the canonical payload JSON. */
+    private String sign(String payloadJson) {
+        byte[] data = payloadJson.getBytes(StandardCharsets.UTF_8);
+        Ed25519Signer signer = new Ed25519Signer();
+        signer.init(true, privateKey);
+        signer.update(data, 0, data.length);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(signer.generateSignature());
+    }
+
+    /** Current signing kid (versioned by key material). */
+    public String getKeyId() {
+        return keyId;
+    }
+
+    /** Base64url raw Ed25519 public key for external verifiers. */
+    public String getPublicKeyBase64() {
+        return publicKeyBase64;
     }
 }
