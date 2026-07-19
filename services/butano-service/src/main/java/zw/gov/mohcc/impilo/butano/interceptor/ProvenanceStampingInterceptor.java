@@ -6,6 +6,7 @@ import ca.uhn.fhir.interceptor.api.Pointcut;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Meta;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,17 +76,23 @@ public class ProvenanceStampingInterceptor {
     /**
      * Stamps provenance metadata on newly created resources.
      */
+    // Hook params must use the pointcut's declared types (IBaseResource); HAPI
+    // binds by type and passes null otherwise.
     @Hook(Pointcut.STORAGE_PRESTORAGE_RESOURCE_CREATED)
-    public void onResourceCreated(RequestDetails requestDetails, Resource resource) {
-        stampProvenance(requestDetails, resource);
+    public void onResourceCreated(IBaseResource theResource, RequestDetails requestDetails) {
+        if (theResource instanceof Resource resource) {
+            stampProvenance(requestDetails, resource);
+        }
     }
 
     /**
      * Stamps provenance metadata on updated resources.
      */
     @Hook(Pointcut.STORAGE_PRESTORAGE_RESOURCE_UPDATED)
-    public void onResourceUpdated(RequestDetails requestDetails, Resource oldResource, Resource newResource) {
-        stampProvenance(requestDetails, newResource);
+    public void onResourceUpdated(IBaseResource theOldResource, IBaseResource theNewResource, RequestDetails requestDetails) {
+        if (theNewResource instanceof Resource newResource) {
+            stampProvenance(requestDetails, newResource);
+        }
     }
 
     // ── Core stamping logic ─────────────────────────────────────────────

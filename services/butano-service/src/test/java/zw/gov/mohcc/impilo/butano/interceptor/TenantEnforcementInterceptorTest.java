@@ -75,7 +75,7 @@ class TenantEnforcementInterceptorTest {
         Patient patient = new Patient();
         patient.setActive(true);
 
-        interceptor.onResourceCreated(requestDetails, patient);
+        interceptor.onResourceCreated(patient, requestDetails);
 
         // Verify the tenant tag was stamped on the resource's meta
         List<Coding> tags = patient.getMeta().getTag();
@@ -102,7 +102,7 @@ class TenantEnforcementInterceptorTest {
                 .setSystem(TAG_SYSTEM)
                 .setCode(TENANT_B);
 
-        interceptor.onResourceCreated(requestDetails, observation);
+        interceptor.onResourceCreated(observation, requestDetails);
 
         // Verify the injected tag was replaced with the real tenant
         long tenantTagCount = observation.getMeta().getTag().stream()
@@ -140,7 +140,7 @@ class TenantEnforcementInterceptorTest {
 
         ForbiddenOperationException ex = assertThrows(
                 ForbiddenOperationException.class,
-                () -> interceptor.onResourceUpdated(requestDetails, oldPatient, newPatient),
+                () -> interceptor.onResourceUpdated(oldPatient, newPatient, requestDetails),
                 "Cross-tenant update must be rejected with 403 Forbidden"
         );
 
@@ -163,7 +163,7 @@ class TenantEnforcementInterceptorTest {
         newPatient.setActive(true);
 
         assertDoesNotThrow(
-                () -> interceptor.onResourceUpdated(requestDetails, oldPatient, newPatient),
+                () -> interceptor.onResourceUpdated(oldPatient, newPatient, requestDetails),
                 "Same-tenant update should be allowed"
         );
 

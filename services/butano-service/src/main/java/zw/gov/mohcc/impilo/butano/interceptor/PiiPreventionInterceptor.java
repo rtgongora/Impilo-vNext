@@ -9,6 +9,7 @@ import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,9 +84,12 @@ public class PiiPreventionInterceptor {
     /**
      * Validates PII constraints on newly created resources.
      */
+    // Hook params must be declared as the pointcut's own types (IBaseResource) —
+    // HAPI binds parameters by declared type and silently passes null for anything
+    // else (e.g. the concrete R4 Resource), disabling the interceptor at runtime.
     @Hook(Pointcut.STORAGE_PRESTORAGE_RESOURCE_CREATED)
-    public void onResourceCreated(RequestDetails requestDetails, Resource resource) {
-        if (!properties.getPii().isEnforce()) {
+    public void onResourceCreated(IBaseResource theResource, RequestDetails requestDetails) {
+        if (!properties.getPii().isEnforce() || !(theResource instanceof Resource resource)) {
             return;
         }
         validateResource(resource);
@@ -95,8 +99,8 @@ public class PiiPreventionInterceptor {
      * Validates PII constraints on updated resources.
      */
     @Hook(Pointcut.STORAGE_PRESTORAGE_RESOURCE_UPDATED)
-    public void onResourceUpdated(RequestDetails requestDetails, Resource oldResource, Resource newResource) {
-        if (!properties.getPii().isEnforce()) {
+    public void onResourceUpdated(IBaseResource theOldResource, IBaseResource theNewResource, RequestDetails requestDetails) {
+        if (!properties.getPii().isEnforce() || !(theNewResource instanceof Resource newResource)) {
             return;
         }
         validateResource(newResource);

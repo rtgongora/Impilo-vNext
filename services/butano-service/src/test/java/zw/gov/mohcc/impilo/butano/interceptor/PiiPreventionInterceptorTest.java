@@ -55,7 +55,7 @@ class PiiPreventionInterceptorTest {
 
         UnprocessableEntityException ex = assertThrows(
                 UnprocessableEntityException.class,
-                () -> interceptor.onResourceCreated(requestDetails, patient),
+                () -> interceptor.onResourceCreated(patient, requestDetails),
                 "Patient with name field must be rejected with 422"
         );
 
@@ -78,7 +78,7 @@ class PiiPreventionInterceptorTest {
 
         UnprocessableEntityException ex = assertThrows(
                 UnprocessableEntityException.class,
-                () -> interceptor.onResourceCreated(requestDetails, patient),
+                () -> interceptor.onResourceCreated(patient, requestDetails),
                 "Patient with telecom field must be rejected with 422"
         );
 
@@ -99,7 +99,7 @@ class PiiPreventionInterceptorTest {
 
         UnprocessableEntityException ex = assertThrows(
                 UnprocessableEntityException.class,
-                () -> interceptor.onResourceCreated(requestDetails, patient),
+                () -> interceptor.onResourceCreated(patient, requestDetails),
                 "Patient with address field must be rejected with 422"
         );
 
@@ -122,7 +122,7 @@ class PiiPreventionInterceptorTest {
 
         // Should not throw — CPID-only Patient is valid
         assertDoesNotThrow(
-                () -> interceptor.onResourceCreated(requestDetails, patient),
+                () -> interceptor.onResourceCreated(patient, requestDetails),
                 "Patient with only CPID identifier should be accepted"
         );
     }
@@ -140,7 +140,7 @@ class PiiPreventionInterceptorTest {
 
         // Should not throw — gender and birthDate are permitted
         assertDoesNotThrow(
-                () -> interceptor.onResourceCreated(requestDetails, patient),
+                () -> interceptor.onResourceCreated(patient, requestDetails),
                 "Patient with gender and birthDate (but no PII) should be accepted"
         );
     }
@@ -161,7 +161,7 @@ class PiiPreventionInterceptorTest {
 
         // Should not throw — Encounter referencing Patient by ID is valid
         assertDoesNotThrow(
-                () -> interceptor.onResourceCreated(requestDetails, encounter),
+                () -> interceptor.onResourceCreated(encounter, requestDetails),
                 "Encounter with Patient reference by ID should be accepted"
         );
     }

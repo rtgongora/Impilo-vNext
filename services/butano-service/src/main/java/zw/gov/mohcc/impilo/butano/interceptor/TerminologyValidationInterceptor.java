@@ -14,6 +14,7 @@ import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.MedicationRequest;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Procedure;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.ServiceRequest;
 import org.hl7.fhir.r4.model.AllergyIntolerance;
@@ -90,17 +91,23 @@ public class TerminologyValidationInterceptor {
     /**
      * Validates terminology on newly created resources.
      */
+    // Hook params must use the pointcut's declared types (IBaseResource); HAPI
+    // binds by type and passes null otherwise.
     @Hook(Pointcut.STORAGE_PRESTORAGE_RESOURCE_CREATED)
-    public void onResourceCreated(RequestDetails requestDetails, Resource resource) {
-        validateTerminology(requestDetails, resource);
+    public void onResourceCreated(IBaseResource theResource, RequestDetails requestDetails) {
+        if (theResource instanceof Resource resource) {
+            validateTerminology(requestDetails, resource);
+        }
     }
 
     /**
      * Validates terminology on updated resources.
      */
     @Hook(Pointcut.STORAGE_PRESTORAGE_RESOURCE_UPDATED)
-    public void onResourceUpdated(RequestDetails requestDetails, Resource oldResource, Resource newResource) {
-        validateTerminology(requestDetails, newResource);
+    public void onResourceUpdated(IBaseResource theOldResource, IBaseResource theNewResource, RequestDetails requestDetails) {
+        if (theNewResource instanceof Resource newResource) {
+            validateTerminology(requestDetails, newResource);
+        }
     }
 
     // ── Core validation logic ───────────────────────────────────────────

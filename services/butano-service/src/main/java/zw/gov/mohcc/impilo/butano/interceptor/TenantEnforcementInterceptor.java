@@ -6,6 +6,7 @@ import ca.uhn.fhir.interceptor.api.Pointcut;
 import ca.uhn.fhir.rest.api.RestOperationTypeEnum;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.exceptions.ForbiddenOperationException;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Meta;
 import org.hl7.fhir.r4.model.Resource;
@@ -61,9 +62,11 @@ public class TenantEnforcementInterceptor {
      * <p>Removes any pre-existing tenant tags (to prevent injection) and adds the
      * canonical tenant tag derived from the trust header.</p>
      */
+    // Hook params must use the pointcut's declared types (IBaseResource); HAPI
+    // binds by type and passes null otherwise.
     @Hook(Pointcut.STORAGE_PRESTORAGE_RESOURCE_CREATED)
-    public void onResourceCreated(RequestDetails requestDetails, Resource resource) {
-        if (!properties.getTenant().isEnforce()) {
+    public void onResourceCreated(IBaseResource theResource, RequestDetails requestDetails) {
+        if (!properties.getTenant().isEnforce() || !(theResource instanceof Resource resource)) {
             return;
         }
 
@@ -86,10 +89,11 @@ public class TenantEnforcementInterceptor {
      * allowing the update. If it belongs to a different tenant, the update is rejected.</p>
      */
     @Hook(Pointcut.STORAGE_PRESTORAGE_RESOURCE_UPDATED)
-    public void onResourceUpdated(RequestDetails requestDetails, Resource oldResource, Resource newResource) {
-        if (!properties.getTenant().isEnforce()) {
+    public void onResourceUpdated(IBaseResource theOldResource, IBaseResource theNewResource, RequestDetails requestDetails) {
+        if (!properties.getTenant().isEnforce() || !(theNewResource instanceof Resource newResource)) {
             return;
         }
+        Resource oldResource = theOldResource instanceof Resource r ? r : null;
 
         String tenantId = getTenantId(requestDetails);
         if (tenantId == null) {
