@@ -4,8 +4,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -45,6 +47,22 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "NOT_FOUND",
                 "No BFF endpoint for " + request.getMethod() + " " + request.getRequestURI(), request);
+    }
+
+    /**
+     * Missing/mistyped request parameters are client errors. Both BFF advice
+     * classes declare an Exception.class catch-all and their relative order is
+     * unspecified, so this mapping must exist here as well as in
+     * BffGlobalExceptionHandler or the 500 catch-all can shadow it.
+     */
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<Map<String, Object>> handleMalformedParams(
+            Exception ex,
+            HttpServletRequest request) {
+        String message = ex instanceof MissingServletRequestParameterException missing
+                ? "Missing required parameter: " + missing.getParameterName()
+                : "A request parameter has the wrong type";
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "BAD_REQUEST", message, request);
     }
 
     @ExceptionHandler(ResponseStatusException.class)
