@@ -1,0 +1,9 @@
+       label        |  lat   |  lng  | validator_verdict 
+--------------------+--------+-------+-------------------
+ Harare (real)      | -17.83 | 31.05 | PLAUSIBLE_PIN
+ Bulawayo (real)    | -20.15 | 28.58 | PLAUSIBLE_PIN
+ null-island        |    0.0 |   0.0 | REJECT_ZERO
+ London (out of ZW) |   51.5 | -0.12 | REJECT_OUTSIDE_ZW
+ ocean              |  -30.0 |  40.0 | REJECT_OUTSIDE_ZW
+(5 rows)
+
