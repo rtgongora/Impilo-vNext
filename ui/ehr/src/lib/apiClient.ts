@@ -62,7 +62,9 @@ export function patientResourceToPatient(resource: {
   const firstName = given || parts[0] || "Unknown";
   const lastName = family || (parts.length > 1 ? parts.slice(1).join(" ") : "Unknown");
   return {
-    cpid: String(a.cpid ?? a.impiloHealthId ?? resource.id),
+    // D7: never treat a raw Health ID as the clinical key — cpid or the
+    // resource's own id only.
+    cpid: String(a.cpid ?? resource.id),
     firstName,
     lastName,
     dateOfBirth: String(a.dateOfBirth ?? ""),
@@ -99,7 +101,7 @@ export const apiClient = {
       .map((row) => {
         if (!row || typeof row !== "object") return null;
         const r = row as Record<string, unknown>;
-        const id = String(r.healthId ?? r.id ?? r.impiloId ?? crypto.randomUUID());
+        const id = String(r.cpid ?? r.id ?? crypto.randomUUID());
         return patientResourceToPatient({
           id,
           attributes: {
