@@ -25,6 +25,12 @@ Root causes fixed:
 
 Deployed: pct-service@8dc4efd4 (V044 migrated live), experience-bff@26e8b602.
 
+### Coverage — enrolment now COMPLETE + proven
+
+You flagged it "feels incomplete" — because I'd proven discoverability + render but not the actual enrolment. Now proven end-to-end (`scripts/e2e/coverage-enrol-proof.sh`, 6/6 live): citizen → **eligibility ELIGIBLE → enrol member (201) → My Coverage returns the plan → `cv_member_coverage` row ACTIVE**. (My Coverage was empty before because nobody had ever enrolled.) Note: eligibility correctly returns INELIGIBLE for an already-enrolled member; the enrol endpoint still allows a duplicate — a minor data-integrity nit.
+
+Also fixed a real consent-plane race surfaced while proving this: the AuthGuard redirected to `/consent` on the initial `hasConsented=false` **before** the consent store hydrated from localStorage, so a consented user could be flashed to the consent gate on a hard navigation. Added a `hydrated` guard.
+
 ### Coverage — two causes, both fixed
 1. **Invisible**: no `AppDefinition` in `app-registry.ts` → no launcher tile. Added a citizen Coverage tile → `/coverage/member`; retargeted citizen back-links off the ADMIN `/coverage`.
 2. **404 (deeper)**: root `.dockerignore` `**/coverage` — meant for the test-coverage report dir — also matched `src/app/coverage` (the feature), so the build context omitted it and `next build` never compiled it (deployed manifest: 841 app routes, **zero `/coverage`**). Fixed by re-including the feature dir. @ (.dockerignore) — **LAW: anchor broad `**/<name>` ignore patterns; they silently eat product dirs sharing the name.** Backend real + seeded (2 plans, subsidies).
