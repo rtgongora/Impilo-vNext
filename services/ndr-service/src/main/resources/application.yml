@@ -42,6 +42,18 @@ management:
 ndr:
   governance:
     base-url: ${NDR_GOVERNANCE_BASE_URL:http://localhost:8220}
+  # De-identification engine (data-governance-service) that powers the released zone.
+  deid:
+    base-url: ${NDR_DEID_BASE_URL:http://localhost:8220}
+  # Released-zone build. The scheduler is opt-in and OFF by default so tests / preview
+  # never auto-run a de-identification build; trigger builds via
+  # POST /internal/v1/ndr/release/{datasetRef} instead.
+  release:
+    scheduler:
+      enabled: ${NDR_RELEASE_SCHEDULER_ENABLED:false}
+      cron: ${NDR_RELEASE_SCHEDULER_CRON:0 0 3 * * *}
+      tenant-id: ${NDR_RELEASE_SCHEDULER_TENANT_ID:}
+      datasets: ${NDR_RELEASE_SCHEDULER_DATASETS:}
 
 impilo:
   companion:
