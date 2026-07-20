@@ -16,6 +16,9 @@ import zw.gov.mohcc.impilo.experience.client.RulesServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.time.Duration;
 import java.util.*;
@@ -66,6 +69,21 @@ public class AuthSessionController {
 
     @Value("${impilo.auth.refresh-cookie-secure:false}")
     private boolean refreshCookieSecure;
+
+    // ── L1 native passkey (WebAuthn passwordless) — flag-gated OFF by default ──
+    // When false: /auth/passkey/** return 501 PASSKEY_NOT_ENABLED so the UI keeps
+    // its honest "not enabled" state and password/ROPC login is entirely unaffected.
+    @Value("${impilo.auth.passkey.enabled:false}")
+    private boolean passkeyEnabled;
+
+    @Value("${impilo.auth.passkey.client-id:impilo-passkey}")
+    private String passkeyClientId;
+
+    @Value("${impilo.auth.passkey.redirect-uri:http://localhost:3000/auth/login/passkey/callback}")
+    private String passkeyRedirectUri;
+
+    @Value("${impilo.auth.passkey.scope:openid profile email}")
+    private String passkeyScope;
 
     private final RestTemplate restTemplate;
     private final VarapiServiceClient varapiClient;
@@ -211,6 +229,141 @@ public class AuthSessionController {
         // Professional capacity is discovered post-login via /linked-ids.
         return buildLoginResponse(fallbackToken, null, 28800, 0, fallbackUserId, fallbackUserId, email, email,
                 List.of("CITIZEN"), "CITIZEN", email, loginMethod, requestId, correlationId);
+    }
+
+    // ── L1 passkey — WebAuthn passwordless (auth-code, Keycloak-hosted ceremony) ──
+
+    /**
+     * Start the WebAuthn passwordless (passkey) ceremony.
+     *
+     * <p>Returns the Keycloak {@code authorize} URL for the auth-code flow bound
+     * to the passwordless {@code passkey-browser} flow (via the {@code impilo-passkey}
+     * client). The WebAuthn ceremony itself is Keycloak-hosted; the browser is
+     * redirected to the returned URL. PKCE (S256) is used — the generated
+     * {@code codeVerifier} is returned to the caller and MUST be replayed to
+     * {@code /auth/passkey/callback}. When {@code register} is requested the
+     * {@code kc_action=webauthn-register-passwordless} action is appended so an
+     * authenticated user can enrol this device as a passkey.</p>
+     *
+     * <p>Flag-gated: with {@code impilo.auth.passkey.enabled=false} this returns
+     * 501 so the UI keeps its honest "not enabled" state. NO session is minted here.</p>
+     */
+    @PostMapping("/auth/passkey/initiate")
+    public ResponseEntity<Map<String, Object>> passkeyInitiate(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+
+        if (!passkeyEnabled) {
+            return passkeyNotEnabled(requestId, correlationId);
+        }
+
+        boolean register = body != null
+                && Boolean.parseBoolean(String.valueOf(body.getOrDefault("register", "false")));
+        String loginHint = loginHintFrom(body);
+
+        String state = base64Url(randomBytes(32));
+        String nonce = base64Url(randomBytes(32));
+        String codeVerifier = base64Url(randomBytes(64));
+        String codeChallenge = base64Url(sha256(codeVerifier));
+
+        StringBuilder url = new StringBuilder(keycloakUrl)
+                .append("/realms/").append(enc(realm))
+                .append("/protocol/openid-connect/auth")
+                .append("?client_id=").append(enc(passkeyClientId))
+                .append("&redirect_uri=").append(enc(passkeyRedirectUri))
+                .append("&response_type=code")
+                .append("&scope=").append(enc(passkeyScope))
+                .append("&state=").append(enc(state))
+                .append("&nonce=").append(enc(nonce))
+                .append("&code_challenge=").append(enc(codeChallenge))
+                .append("&code_challenge_method=S256");
+        if (register) {
+            url.append("&kc_action=webauthn-register-passwordless");
+        }
+        if (loginHint != null) {
+            url.append("&login_hint=").append(enc(loginHint));
+        }
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("authorizeUrl", url.toString());
+        attributes.put("state", state);
+        attributes.put("nonce", nonce);
+        attributes.put("codeVerifier", codeVerifier);
+        attributes.put("register", register);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("type", "passkey-initiate", "attributes", attributes));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Complete the passkey ceremony: exchange the auth code for tokens.
+     *
+     * <p>Exchanges {@code code} (+ the PKCE {@code codeVerifier}) at Keycloak's
+     * token endpoint via {@code grant_type=authorization_code}, decodes the
+     * returned JWT and reuses the SAME session shape as ROPC login via
+     * {@link #buildLoginResponse}. A missing/blank code, or ANY failed/empty
+     * exchange, returns the uniform auth-failure — a session is NEVER fabricated.</p>
+     */
+    @PostMapping("/auth/passkey/callback")
+    public ResponseEntity<Map<String, Object>> passkeyCallback(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+
+        long startNanos = System.nanoTime();
+        if (!passkeyEnabled) {
+            return passkeyNotEnabled(requestId, correlationId);
+        }
+
+        String code = body == null ? "" : String.valueOf(body.getOrDefault("code", "")).trim();
+        String codeVerifier = body == null ? "" : String.valueOf(body.getOrDefault("codeVerifier", "")).trim();
+        String redirectUri = body != null && body.get("redirectUri") != null
+                && !String.valueOf(body.get("redirectUri")).isBlank()
+                ? String.valueOf(body.get("redirectUri")).trim()
+                : passkeyRedirectUri;
+
+        if (code.isEmpty() || "null".equals(code)) {
+            log.info("PASSKEY-CALLBACK: missing authorization code — auth failure (no session minted)");
+            return uniformAuthFailure(startNanos);
+        }
+
+        try {
+            String tokenUrl = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
+            MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+            formData.add("grant_type", "authorization_code");
+            formData.add("client_id", passkeyClientId);
+            formData.add("code", code);
+            formData.add("redirect_uri", redirectUri);
+            if (!codeVerifier.isEmpty() && !"null".equals(codeVerifier)) {
+                formData.add("code_verifier", codeVerifier);
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            ResponseEntity<JsonNode> kcResponse = restTemplate.exchange(
+                    tokenUrl, HttpMethod.POST,
+                    new HttpEntity<>(formData, headers),
+                    JsonNode.class);
+
+            if (kcResponse.getStatusCode().is2xxSuccessful()
+                    && kcResponse.getBody() != null
+                    && kcResponse.getBody().hasNonNull("access_token")) {
+                log.info("PASSKEY-CALLBACK: auth-code exchange succeeded");
+                return buildSessionFromKeycloakTokens(kcResponse.getBody(), null, "passkey", requestId, correlationId);
+            }
+            log.info("PASSKEY-CALLBACK: token endpoint returned no access_token — auth failure");
+            return uniformAuthFailure(startNanos);
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.info("PASSKEY-CALLBACK: auth-code exchange rejected ({})", e.getStatusCode());
+            return uniformAuthFailure(startNanos);
+        } catch (Exception e) {
+            log.warn("PASSKEY-CALLBACK: token exchange failed: {}", e.getMessage());
+            return uniformAuthFailure(startNanos);
+        }
     }
 
     @PostMapping("/auth/logout")
@@ -681,6 +834,89 @@ public class AuthSessionController {
             builder.header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString());
         }
         return builder.body(response);
+    }
+
+    /**
+     * Decode a Keycloak token response (access + refresh) into the canonical
+     * session shape via {@link #buildLoginResponse}. Used by the passkey
+     * auth-code callback; mirrors the claim extraction the ROPC login path uses.
+     */
+    private ResponseEntity<Map<String, Object>> buildSessionFromKeycloakTokens(
+            JsonNode tokenData, String loginPrincipal, String loginMethod,
+            String requestId, String correlationId) throws Exception {
+
+        String accessToken = tokenData.get("access_token").asText();
+        String refreshToken = tokenData.has("refresh_token") ? tokenData.get("refresh_token").asText() : null;
+        int expiresIn = tokenData.has("expires_in") ? tokenData.get("expires_in").asInt() : 28800;
+        int refreshExpiresIn = tokenData.has("refresh_expires_in") ? tokenData.get("refresh_expires_in").asInt() : expiresIn * 6;
+
+        String[] parts = accessToken.split("\\.");
+        String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
+        JsonNode claims = new com.fasterxml.jackson.databind.ObjectMapper().readTree(payloadJson);
+
+        String keycloakSub = claims.has("sub") ? claims.get("sub").asText() : UUID.randomUUID().toString();
+        String userId = resolvePersonAnchorId(claims, keycloakSub);
+        String userEmail = claims.has("email") ? claims.get("email").asText()
+                : (loginPrincipal != null ? loginPrincipal : "");
+        String displayName = claims.has("name") ? claims.get("name").asText()
+                : claims.has("preferred_username") ? claims.get("preferred_username").asText() : userEmail;
+
+        List<String> roles = new ArrayList<>();
+        if (claims.has("realm_access") && claims.get("realm_access").has("roles")) {
+            for (JsonNode role : claims.get("realm_access").get("roles")) {
+                String r = role.asText();
+                if (!r.startsWith("default-roles-") && !r.equals("offline_access") && !r.equals("uma_authorization")) {
+                    roles.add(r);
+                }
+            }
+        }
+
+        String actorType = determineActorType(roles);
+        log.info("Passkey session established: user={}, keycloakSub={}, roles={}", userId, keycloakSub, roles);
+        return buildLoginResponse(accessToken, refreshToken, expiresIn, refreshExpiresIn,
+                userId, keycloakSub, userEmail, displayName, roles, actorType,
+                loginPrincipal != null ? loginPrincipal : userEmail, loginMethod, requestId, correlationId);
+    }
+
+    private ResponseEntity<Map<String, Object>> passkeyNotEnabled(String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
+                "error", Map.of("code", "PASSKEY_NOT_ENABLED",
+                        "message", "Passkey sign-in is not enabled on this deployment."),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private static String loginHintFrom(Map<String, Object> body) {
+        if (body == null) return null;
+        Object v = body.get("loginHint");
+        if (v == null) v = body.get("email");
+        if (v == null) return null;
+        String s = String.valueOf(v).trim();
+        return s.isEmpty() ? null : s;
+    }
+
+    // PKCE / OIDC-state helpers for the passkey auth-code path.
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    private static byte[] randomBytes(int n) {
+        byte[] b = new byte[n];
+        SECURE_RANDOM.nextBytes(b);
+        return b;
+    }
+
+    private static byte[] sha256(String s) {
+        try {
+            return java.security.MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8));
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 unavailable", e);
+        }
+    }
+
+    private static String base64Url(byte[] b) {
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(b);
+    }
+
+    private static String enc(String s) {
+        return URLEncoder.encode(s, StandardCharsets.UTF_8);
     }
 
     private ResponseCookie buildRefreshCookie(String refreshToken, int expiresIn) {
