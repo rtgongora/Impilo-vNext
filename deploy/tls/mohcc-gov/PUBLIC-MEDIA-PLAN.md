@@ -4,6 +4,14 @@ Enables real off-network telemedicine media on `impilo.mohcc.gov.zw`. Signaling 
 already secured (`wss://…/rtc` via Traefik). This covers the **media** path, which
 does NOT flow through Traefik and needs ICE/TURN + firewall work.
 
+> **Status 2026-07-20 — platform side IMPLEMENTED (Steps 2–4).** LiveKit now
+> advertises the public IP + LAN candidates and runs embedded TURN-over-TLS on
+> **5349/TCP** (cert mounted from `impilo-mohcc-gov-zw-tls`; `use_external_ip` +
+> `advertise_internal_ip` + `skip_external_ip_validation`; TURN
+> `allow_restricted_peer_cidrs: [10.50.1.67/32]`). The renewal hook restarts
+> LiveKit only when the cert changes. **The one remaining external action is the
+> ZCHPC pfSense rule for `5349/TCP` (Step 3).**
+
 ## Current state (2026-07-09)
 
 - ✅ Signaling: `wss://impilo.mohcc.gov.zw/rtc` → Traefik → `livekit:7880` (TLS).
@@ -53,24 +61,34 @@ Add to `livekit.yaml` (`livekit-config` ConfigMap / templates/livekit-config.yam
 rtc:
   tcp_port: 7881
   udp_port: 7882
-  use_external_ip: true          # STUN-discover + advertise 41.57.127.235
-  # If STUN can't see the public IP behind 1:1 NAT, pin it explicitly:
-  # nat_1to1_ip: "41.57.127.235"
+  use_external_ip: true              # STUN-discover + advertise 41.57.127.235
+  advertise_internal_ip: true        # keep LAN candidates for on-site clients
+  skip_external_ip_validation: true  # 1:1 NAT has no hairpin self-ping; don't drop the public IP
+  # NOTE: nat_1to1_ip is NOT a valid key in livekit-server v1.13.3 (absent from
+  # the binary) — use use_external_ip + skip_external_ip_validation instead.
 turn:
   enabled: true
-  domain: impilo.mohcc.gov.zw    # must match the mounted cert's CN/SAN
-  tls_port: 5349                 # TURN/TLS (looks like https; firewall-friendly)
-  external_tls: false            # LiveKit terminates TURN-TLS with the mounted cert
+  domain: impilo.mohcc.gov.zw        # must match the mounted cert's CN/SAN
+  tls_port: 5349                     # TURN/TLS on TCP (looks like https; firewall-friendly)
+  external_tls: false                # LiveKit terminates TURN-TLS with the mounted cert
   cert_file: /etc/livekit/tls/tls.crt
   key_file:  /etc/livekit/tls/tls.key
+  ttl_seconds: 300
+  # LiveKit denies TURN relay to private peer IPs by default; the host-network
+  # SFU is at 10.50.1.67, so whitelist ONLY that /32 (nothing broader).
+  allow_restricted_peer_cidrs:
+    - 10.50.1.67/32
+  # DO NOT set turn.udp_port — this slice is TURN over TLS on TCP 5349 only.
 ```
 
 - **Mount the cert** into the LiveKit pod from the existing `impilo-mohcc-gov-zw-tls`
-  secret at `/etc/livekit/tls` (templates/livekit.yaml volume + volumeMount).
-- **Renewal reload**: LiveKit doesn't hot-reload TLS. Extend
-  `scripts/tls/sync-mohcc-gov-tls.sh` to also
-  `kubectl rollout restart deploy/livekit -n impilo-full-preview` after updating the
-  secret, so renewed TURN certs take effect.
+  secret at `/etc/livekit/tls` (templates/livekit.yaml volume + volumeMount, RO,
+  `defaultMode: 0400`). ✅ DONE.
+- **Renewal reload**: LiveKit doesn't hot-reload TLS.
+  `scripts/tls/sync-mohcc-gov-tls.sh` now fingerprints the leaf cert and, only
+  when it changed, runs `kubectl rollout restart deployment/livekit` +
+  `rollout status` so renewed TURN certs take effect without bouncing live calls
+  on unchanged runs. ✅ DONE.
 
 ## Step 3 — Firewall / NAT (OFF-BOX — network admin; cannot be done or verified from the VM)
 
@@ -78,14 +96,28 @@ Open inbound from the internet to the node public IP `41.57.127.235`:
 
 | Port | Proto | Purpose |
 |------|-------|---------|
-| 5349 | tcp + udp | TURN over TLS (primary relay for off-LAN clients) |
+| **5349** | **tcp only** | TURN over TLS (primary relay for off-LAN clients) |
 | 7881 | tcp | LiveKit ICE/TCP (direct + fallback) |
-| 7882 | udp | LiveKit ICE/UDP (direct media) |
+| 7882 | udp | LiveKit ICE/UDP (direct media mux) |
 
-- 443/tcp (signaling) is already open via Traefik.
+Authoritative port posture (do not deviate):
+
+- `5349/tcp` = TURN/TLS.
+- `7881/tcp` = ICE/TCP.
+- `7882/udp` = direct ICE/UDP mux.
+- **`5349/udp` = NOT configured** — the deployed LiveKit config sets only
+  `turn.tls_port` (TCP); there is no `turn.udp_port`. Opening 5349/udp would
+  forward to nothing. Do NOT open it.
+- **`3478/udp` = NOT configured** — no plain-UDP TURN listener in this slice.
+  Do NOT open it.
+
+Notes:
+
+- 443/tcp (signaling) is already open via Traefik — do not touch.
 - Confirm the `41.57.127.235` ↔ `10.50.1.67` 1:1 NAT is static.
-- If UDP is unreliable through the upstream firewall, TURN/TLS on 5349/tcp is the
-  fallback that almost always works.
+- TURN/TLS on `5349/tcp` is the relay that traverses UDP-hostile client networks;
+  it does not require any UDP port to be opened.
+- The exact rule to request: `41.57.127.235:5349/TCP → 10.50.1.67:5349/TCP`.
 
 ## Step 4 — DNS
 

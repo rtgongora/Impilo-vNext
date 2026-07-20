@@ -57,10 +57,20 @@ spec:
               protocol: TCP
             - containerPort: 7882
               protocol: UDP
+            # TURN-over-TLS. hostNetwork makes the host listener authoritative;
+            # this entry is documentation of the port the process opens.
+            - containerPort: 5349
+              protocol: TCP
           volumeMounts:
             - name: livekit-config
               mountPath: /etc/livekit/livekit.yaml
               subPath: livekit.yaml
+            # TURN-TLS cert/key for the embedded TURN server. Read-only; the
+            # Secret's own tls.crt/tls.key land at /etc/livekit/tls/{tls.crt,tls.key}
+            # (the paths referenced by turn.cert_file / turn.key_file).
+            - name: livekit-tls
+              mountPath: /etc/livekit/tls
+              readOnly: true
           readinessProbe:
             httpGet:
               path: /
@@ -79,6 +89,16 @@ spec:
         - name: livekit-config
           configMap:
             name: livekit-config
+        # Existing Let's Encrypt cert for impilo.mohcc.gov.zw (the same Secret
+        # Traefik serves for signaling). Mounted so the embedded TURN server can
+        # terminate TURN-TLS. defaultMode 0400 keeps tls.key non-world-readable;
+        # the LiveKit process runs as root (uid 0) so it reads the 0400 files
+        # without needing an fsGroup. Private-key material is never copied into
+        # the ConfigMap, image, or repo — it stays in the Secret.
+        - name: livekit-tls
+          secret:
+            secretName: impilo-mohcc-gov-zw-tls
+            defaultMode: 0400
 ---
 apiVersion: v1
 kind: Service
