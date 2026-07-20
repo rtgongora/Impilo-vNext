@@ -322,6 +322,16 @@ fullBootServices:
     enabled: true
   vashandi-workforce-service:
     enabled: true
+    env:
+      # Downstream service URLs — unset previously, so vashandi-workforce-service fell back to
+      # its localhost:8083/8165/8084/8235 application.yml defaults and the workforce-profile
+      # reconcile's varapi + workforce-governance dependency checks failed with Connection
+      # refused (persona provisioning could not verify provider/employment). Same class as the
+      # tshepo-identity TSHEPO_KEYS_SERVICE_URL fix below. Flagged 2026-07-20.
+      VARAPI_BASE_URL: http://varapi-service:8083
+      WORKFORCE_GOVERNANCE_BASE_URL: http://workforce-governance-service:8165
+      TUSO_BASE_URL: http://tuso-service:8084
+      FUNDO_BASE_URL: http://learning-service:8235
   # Subject-context ratchet (Identity Contract B5): burn-in LOG mode on the
   # subject-write services — mismatched/missing X-Subject-Context-Token on
   # subject-scoped writes is logged (SUBJECT_CONTEXT_VIOLATION), never blocked.
