@@ -173,8 +173,8 @@ function PayersTab() {
       <div className="lg:col-span-2">
         <Section title={`Payer registry (${rows.length})`}>
           <Table cols={["Code", "Name", "Type", "Status", ""]} rows={rows} render={(r) => [
-            <span className="font-medium">{rstr(r, "payerCode")}</span>, rstr(r, "legalName"), <Pill>{rstr(r, "organisationType")}</Pill>,
-            <Pill>{rstr(r, "status")}</Pill>,
+            <span key="code" className="font-medium">{rstr(r, "payerCode")}</span>, rstr(r, "legalName"), <Pill key="type">{rstr(r, "organisationType")}</Pill>,
+            <Pill key="status">{rstr(r, "status")}</Pill>,
             rstr(r, "status") === "ACTIVE"
               ? <Btn tone="danger" onClick={() => suspend.mutate(rstr(r, "id"))}>Suspend</Btn>
               : <Btn tone="ghost" onClick={() => reactivate.mutate(rstr(r, "id"))}>Reactivate</Btn>,
@@ -223,8 +223,8 @@ function PlansTab() {
           <div className="mt-3 space-y-2 border-t pt-3">
             <p className="text-xs font-medium text-muted-foreground">Schemes</p>
             <Table cols={["Code", "Type", ""]} rows={schemes.data ?? []} empty="No schemes." render={(r) => [
-              rstr(r, "schemeCode"), <Pill>{rstr(r, "coverageType")}</Pill>,
-              <Btn tone="ghost" onClick={() => { setSchemeId(rstr(r, "id")); setProductId(""); setVersionId(""); }}>Open</Btn>,
+              rstr(r, "schemeCode"), <Pill key="type">{rstr(r, "coverageType")}</Pill>,
+              <Btn key="open" tone="ghost" onClick={() => { setSchemeId(rstr(r, "id")); setProductId(""); setVersionId(""); }}>Open</Btn>,
             ]} />
             <div className="grid grid-cols-2 gap-2">
               <Field label="Scheme code" value={schemeCode} onChange={setSchemeCode} />
@@ -241,7 +241,7 @@ function PlansTab() {
             <p className="text-xs font-medium text-muted-foreground">Products</p>
             <Table cols={["Code", "Name", ""]} rows={products.data ?? []} empty="No products." render={(r) => [
               rstr(r, "productCode"), rstr(r, "name"),
-              <Btn tone="ghost" onClick={() => { setProductId(rstr(r, "id")); setVersionId(""); }}>Open</Btn>,
+              <Btn key="open" tone="ghost" onClick={() => { setProductId(rstr(r, "id")); setVersionId(""); }}>Open</Btn>,
             ]} />
             <div className="grid grid-cols-2 gap-2">
               <Field label="Product code" value={prodCode} onChange={setProdCode} />
@@ -258,8 +258,8 @@ function PlansTab() {
         {!productId ? <p className="text-sm text-muted-foreground">Select a product to manage versions.</p> : (
           <div className="space-y-3">
             <Table cols={["Version", "Status", "Currency", ""]} rows={versions.data ?? []} empty="No versions." render={(r) => [
-              `v${rstr(r, "versionNumber")}`, <Pill>{rstr(r, "status")}</Pill>, rstr(r, "currency"),
-              <div className="flex gap-1">
+              `v${rstr(r, "versionNumber")}`, <Pill key="status">{rstr(r, "status")}</Pill>, rstr(r, "currency"),
+              <div key="actions" className="flex gap-1">
                 <Btn tone="ghost" onClick={() => setVersionId(rstr(r, "id"))}>Benefits</Btn>
                 {rstr(r, "status") === "DRAFT" && <Btn testid="ruvimbo-publish" onClick={() => publish.mutate(rstr(r, "id"))}>Publish</Btn>}
               </div>,
@@ -304,8 +304,8 @@ function VerificationTab() {
         empty="No memberships awaiting verification." render={(r) => {
           const id = rstr(r, "id");
           return [
-            rstr(r, "clientId"), <Pill>{rstr(r, "status")}</Pill>, <Pill>{rstr(r, "verificationStatus")}</Pill>,
-            <div className="flex gap-1">
+            rstr(r, "clientId"), <Pill key="status">{rstr(r, "status")}</Pill>, <Pill key="verification">{rstr(r, "verificationStatus")}</Pill>,
+            <div key="actions" className="flex gap-1">
               <Btn testid="ruvimbo-verify" onClick={() => verify.mutate({ id, body: { verified: true, source: "REGISTRY_ATTESTED" } })}>Verify</Btn>
               <Btn tone="ghost" onClick={() => verify.mutate({ id, body: { verified: false } })}>Dispute</Btn>
               <Btn tone="danger" onClick={() => transition.mutate({ id, action: "terminate", body: { reason: "ops" } })}>Terminate</Btn>
@@ -336,8 +336,8 @@ function AuthorisationsTab() {
         </div>
         <div className="mt-3">
           <Table cols={["Type", "Status", "Urgency", ""]} rows={rows} empty="No authorisations." render={(r) => [
-            rstr(r, "authType"), <Pill>{rstr(r, "status")}</Pill>, rstr(r, "urgency"),
-            <Btn tone="ghost" onClick={() => setOpenId(rstr(r, "id"))}>Review</Btn>,
+            rstr(r, "authType"), <Pill key="status">{rstr(r, "status")}</Pill>, rstr(r, "urgency"),
+            <Btn key="review" tone="ghost" onClick={() => setOpenId(rstr(r, "id"))}>Review</Btn>,
           ]} />
         </div>
       </Section>
@@ -346,7 +346,7 @@ function AuthorisationsTab() {
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground">Status: <Pill>{rstr(detail.data ?? {}, "status")}</Pill></p>
             <Table cols={["Benefit", "Qty", "Est", "Line"]} rows={lines} render={(l) => [
-              rstr(l, "benefitCode"), rnum(l, "quantityRequested"), rnum(l, "estimatedAmount").toFixed(2), <Pill>{rstr(l, "lineStatus")}</Pill>,
+              rstr(l, "benefitCode"), rnum(l, "quantityRequested"), rnum(l, "estimatedAmount").toFixed(2), <Pill key="line">{rstr(l, "lineStatus")}</Pill>,
             ]} />
             <div className="flex flex-wrap gap-1">
               <Btn tone="ghost" onClick={() => action.mutate({ id: openId, action: "submit" })}>Submit</Btn>
@@ -400,7 +400,7 @@ function ClaimsTab() {
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground">{rstr(c, "claimNumber")} · <Pill>{rstr(c, "status")}</Pill> · approved {rnum(c, "approvedAmount").toFixed(2)} · patient {rnum(c, "patientResponsibility").toFixed(2)}</p>
             <Table cols={["Benefit", "Submitted", "Approved", "Line"]} rows={lines} render={(l) => [
-              rstr(l, "benefitCode"), rnum(l, "submittedAmount").toFixed(2), rnum(l, "approvedAmount").toFixed(2), <Pill>{rstr(l, "lineStatus")}</Pill>,
+              rstr(l, "benefitCode"), rnum(l, "submittedAmount").toFixed(2), rnum(l, "approvedAmount").toFixed(2), <Pill key="line">{rstr(l, "lineStatus")}</Pill>,
             ]} />
             <div className="flex flex-wrap gap-1">
               <Btn tone="ghost" onClick={() => action.mutate({ id: claimId, action: "scrub" })}>Scrub</Btn>
@@ -414,7 +414,7 @@ function ClaimsTab() {
                 <p className="mb-1 text-xs font-medium text-muted-foreground">Explanation of Benefits</p>
                 <Table cols={["Service", "Charged", "Paid", "You owe", "Why"]} rows={eobLines} render={(l) => [
                   rstr(l, "service"), rnum(l, "charged").toFixed(2), rnum(l, "paidByPayer").toFixed(2), rnum(l, "yourResponsibility").toFixed(2),
-                  <span className="text-xs text-muted-foreground">{rstr(l, "explanation")}</span>,
+                  <span key="why" className="text-xs text-muted-foreground">{rstr(l, "explanation")}</span>,
                 ]} />
               </div>
             )}
@@ -450,7 +450,7 @@ function CobTab() {
         <Table cols={["Benefit", "Charge", "Payers paid", "Patient"]} rows={list.data ?? []}
           empty="Enter a CPID to view decisions." render={(r) => [
             rstr(r, "benefitCode"), rnum(r, "standardCharge").toFixed(2),
-            <span className="font-medium text-teal-700">{rnum(r, "totalPayerPaid").toFixed(2)}</span>, rnum(r, "patientResponsibility").toFixed(2),
+            <span key="paid" className="font-medium text-teal-700">{rnum(r, "totalPayerPaid").toFixed(2)}</span>, rnum(r, "patientResponsibility").toFixed(2),
           ]} />
       </Section>
     </div>
@@ -483,7 +483,7 @@ function EmployersTab() {
         <div className="mt-3 border-t pt-3">
           <Table cols={["Code", "Name", ""]} rows={employers.data ?? []} empty="No employers." render={(r) => [
             rstr(r, "employerCode"), rstr(r, "name"),
-            <Btn tone="ghost" onClick={() => setEmployerId(rstr(r, "id"))}>Select</Btn>,
+            <Btn key="select" tone="ghost" onClick={() => setEmployerId(rstr(r, "id"))}>Select</Btn>,
           ]} />
         </div>
         {employerId && (
@@ -506,7 +506,7 @@ function EmployersTab() {
               <Pill>{rstr(batch.data ?? {}, "status")}</Pill> total {rnum(batch.data ?? {}, "totalRows")} · valid {rnum(batch.data ?? {}, "validRows")} · applied {rnum(batch.data ?? {}, "appliedRows")}
             </p>
             <Table cols={["Client", "Rel", "Validation", "Error"]} rows={rowsQ.data ?? []} render={(r) => [
-              rstr(r, "clientId"), rstr(r, "relationship"), <Pill>{rstr(r, "validationStatus")}</Pill>, rstr(r, "validationError") || "—",
+              rstr(r, "clientId"), rstr(r, "relationship"), <Pill key="validation">{rstr(r, "validationStatus")}</Pill>, rstr(r, "validationError") || "—",
             ]} />
             <div className="flex gap-1">
               <Btn onClick={() => rosterAction.mutate({ batchId, action: "validate" })}>Validate</Btn>
@@ -539,7 +539,7 @@ function FraudTab() {
           <Table cols={["Type", "Subject", "Severity", "Status", ""]} rows={rows} empty="No flags." render={(r) => {
             const id = rstr(r, "id");
             return [
-              <span className="font-medium">{rstr(r, "flagType")}</span>, rstr(r, "subjectRef").slice(0, 12), <Pill>{rstr(r, "severity")}</Pill>, <Pill>{rstr(r, "status")}</Pill>,
+              <span key="type" className="font-medium">{rstr(r, "flagType")}</span>, rstr(r, "subjectRef").slice(0, 12), <Pill key="severity">{rstr(r, "severity")}</Pill>, <Pill key="status">{rstr(r, "status")}</Pill>,
               rstr(r, "status") === "OPEN" ? (
                 <div className="flex gap-1">
                   <Btn onClick={() => review.mutate({ id, body: { status: "CONFIRMED", reviewerId: "inv", resolution: "recover" } })}>Confirm</Btn>
@@ -617,8 +617,8 @@ function SwitchTab() {
       <Section title="Switch monitor (routed)">
         <Table cols={["SCN", "Type", "Route", "Tech", "Business"]} rows={list.data ?? []}
           empty="No transactions." render={(r) => [
-            <span className="font-mono text-[11px]">{rstr(r, "switchControlNumber")}</span>, rstr(r, "transactionType"), <Pill>{rstr(r, "route")}</Pill>,
-            <Pill>{rstr(r, "technicalAck")}</Pill>, <Pill>{rstr(r, "businessAck")}</Pill>,
+            <span key="scn" className="font-mono text-[11px]">{rstr(r, "switchControlNumber")}</span>, rstr(r, "transactionType"), <Pill key="route">{rstr(r, "route")}</Pill>,
+            <Pill key="tech">{rstr(r, "technicalAck")}</Pill>, <Pill key="business">{rstr(r, "businessAck")}</Pill>,
           ]} />
       </Section>
     </div>

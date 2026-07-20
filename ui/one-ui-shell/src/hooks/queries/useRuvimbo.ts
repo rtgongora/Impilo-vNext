@@ -28,7 +28,7 @@ export function ruvimboObject(payload: unknown): Record<string, unknown> {
   return (payload && typeof payload === "object" ? payload : {}) as Record<string, unknown>;
 }
 
-function listQuery(key: unknown[], path: string, enabled = true) {
+function useListQuery(key: unknown[], path: string, enabled = true) {
   return useQuery({
     queryKey: key,
     queryFn: async () => ruvimboRows(await apiClient.get<unknown>(path)),
@@ -36,7 +36,7 @@ function listQuery(key: unknown[], path: string, enabled = true) {
   });
 }
 
-function objectQuery(key: unknown[], path: string, enabled = true) {
+function useObjectQuery(key: unknown[], path: string, enabled = true) {
   return useQuery({
     queryKey: key,
     queryFn: async () => ruvimboObject(await apiClient.get<unknown>(path)),
@@ -54,7 +54,7 @@ function useWrite(invalidate: unknown[][]) {
 // ── Payers ────────────────────────────────────────────────────────────────
 export function usePayers(status?: string) {
   const q = status ? `?status=${encodeURIComponent(status)}` : "";
-  return listQuery(["ruvimbo-payers", status ?? null], `${BASE}/payers${q}`);
+  return useListQuery(["ruvimbo-payers", status ?? null], `${BASE}/payers${q}`);
 }
 export function useCreatePayer() {
   const w = useWrite([["ruvimbo-payers"]]);
@@ -71,21 +71,21 @@ export function useReactivatePayer() {
 
 // ── Plan hierarchy ──────────────────────────────────────────────────────────
 export function useSchemes(payerId?: string) {
-  return listQuery(["ruvimbo-schemes", payerId ?? null], `${BASE}/payers/${payerId}/schemes`, Boolean(payerId));
+  return useListQuery(["ruvimbo-schemes", payerId ?? null], `${BASE}/payers/${payerId}/schemes`, Boolean(payerId));
 }
 export function useCreateScheme(payerId: string) {
   const w = useWrite([["ruvimbo-schemes", payerId]]);
   return useMutation({ mutationFn: (body: Record<string, unknown>) => apiClient.post(`${BASE}/payers/${payerId}/schemes`, body), ...w });
 }
 export function useProducts(schemeId?: string) {
-  return listQuery(["ruvimbo-products", schemeId ?? null], `${BASE}/schemes/${schemeId}/products`, Boolean(schemeId));
+  return useListQuery(["ruvimbo-products", schemeId ?? null], `${BASE}/schemes/${schemeId}/products`, Boolean(schemeId));
 }
 export function useCreateProduct(schemeId: string) {
   const w = useWrite([["ruvimbo-products", schemeId]]);
   return useMutation({ mutationFn: (body: Record<string, unknown>) => apiClient.post(`${BASE}/schemes/${schemeId}/products`, body), ...w });
 }
 export function usePlanVersions(productId?: string) {
-  return listQuery(["ruvimbo-versions", productId ?? null], `${BASE}/products/${productId}/versions`, Boolean(productId));
+  return useListQuery(["ruvimbo-versions", productId ?? null], `${BASE}/products/${productId}/versions`, Boolean(productId));
 }
 export function useCreatePlanVersion(productId: string) {
   const w = useWrite([["ruvimbo-versions", productId]]);
@@ -98,7 +98,7 @@ export function usePublishPlanVersion(productId: string) {
 
 // ── Benefits ────────────────────────────────────────────────────────────────
 export function usePlanBenefits(planVersionId?: string) {
-  return listQuery(["ruvimbo-benefits", planVersionId ?? null], `${BASE}/plan-versions/${planVersionId}/benefits`, Boolean(planVersionId));
+  return useListQuery(["ruvimbo-benefits", planVersionId ?? null], `${BASE}/plan-versions/${planVersionId}/benefits`, Boolean(planVersionId));
 }
 export function useCreateBenefit(planVersionId: string) {
   const w = useWrite([["ruvimbo-benefits", planVersionId]]);
@@ -107,10 +107,10 @@ export function useCreateBenefit(planVersionId: string) {
 
 // ── Membership verification ────────────────────────────────────────────────
 export function usePendingVerification() {
-  return listQuery(["ruvimbo-pending-verification"], `${BASE}/members/pending-verification`);
+  return useListQuery(["ruvimbo-pending-verification"], `${BASE}/members/pending-verification`);
 }
 export function useMemberDependants(membershipId?: string) {
-  return listQuery(["ruvimbo-dependants", membershipId ?? null], `${BASE}/members/${membershipId}/dependants`, Boolean(membershipId));
+  return useListQuery(["ruvimbo-dependants", membershipId ?? null], `${BASE}/members/${membershipId}/dependants`, Boolean(membershipId));
 }
 export function useVerifyMembership() {
   const w = useWrite([["ruvimbo-pending-verification"]]);
@@ -149,11 +149,11 @@ export function useAuthorisations(params: { memberCpid?: string; status?: string
   if (params.memberCpid) qs.set("member_cpid", params.memberCpid);
   if (params.status) qs.set("status", params.status);
   const s = qs.toString();
-  return listQuery(["ruvimbo-auths", params.memberCpid ?? null, params.status ?? null],
+  return useListQuery(["ruvimbo-auths", params.memberCpid ?? null, params.status ?? null],
     `${BASE}/authorisations${s ? `?${s}` : ""}`, Boolean(params.memberCpid || params.status));
 }
 export function useAuthorisation(id?: string) {
-  return objectQuery(["ruvimbo-auth", id ?? null], `${BASE}/authorisations/${id}`, Boolean(id));
+  return useObjectQuery(["ruvimbo-auth", id ?? null], `${BASE}/authorisations/${id}`, Boolean(id));
 }
 export function useCreateAuthorisation() {
   const w = useWrite([["ruvimbo-auths"]]);
@@ -170,7 +170,7 @@ export function useAuthorisationAction() {
 
 // ── Referrals ───────────────────────────────────────────────────────────────
 export function useReferrals(memberCpid?: string) {
-  return listQuery(["ruvimbo-referrals", memberCpid ?? null], `${BASE}/referrals?member_cpid=${encodeURIComponent(memberCpid ?? "")}`, Boolean(memberCpid));
+  return useListQuery(["ruvimbo-referrals", memberCpid ?? null], `${BASE}/referrals?member_cpid=${encodeURIComponent(memberCpid ?? "")}`, Boolean(memberCpid));
 }
 export function useCreateReferral() {
   const w = useWrite([["ruvimbo-referrals"]]);
@@ -183,7 +183,7 @@ export function useConsumeReferral() {
 
 // ── Liability estimation ────────────────────────────────────────────────────
 export function useLiabilityEstimates(memberCpid?: string) {
-  return listQuery(["ruvimbo-estimates", memberCpid ?? null], `${BASE}/liability-estimates?member_cpid=${encodeURIComponent(memberCpid ?? "")}`, Boolean(memberCpid));
+  return useListQuery(["ruvimbo-estimates", memberCpid ?? null], `${BASE}/liability-estimates?member_cpid=${encodeURIComponent(memberCpid ?? "")}`, Boolean(memberCpid));
 }
 export function useCreateLiabilityEstimate() {
   const w = useWrite([["ruvimbo-estimates"]]);
@@ -192,13 +192,13 @@ export function useCreateLiabilityEstimate() {
 
 // ── Claims v2 + adjudication ────────────────────────────────────────────────
 export function useClaimV2(id?: string) {
-  return objectQuery(["ruvimbo-claim", id ?? null], `${BASE}/v2/claims/${id}`, Boolean(id));
+  return useObjectQuery(["ruvimbo-claim", id ?? null], `${BASE}/v2/claims/${id}`, Boolean(id));
 }
 export function useClaimEob(id?: string) {
-  return objectQuery(["ruvimbo-claim-eob", id ?? null], `${BASE}/v2/claims/${id}/explanation-of-benefits`, Boolean(id));
+  return useObjectQuery(["ruvimbo-claim-eob", id ?? null], `${BASE}/v2/claims/${id}/explanation-of-benefits`, Boolean(id));
 }
 export function useClaimEvents(id?: string) {
-  return listQuery(["ruvimbo-claim-events", id ?? null], `${BASE}/v2/claims/${id}/events`, Boolean(id));
+  return useListQuery(["ruvimbo-claim-events", id ?? null], `${BASE}/v2/claims/${id}/events`, Boolean(id));
 }
 export function useCreateClaimV2() {
   return useMutation({ mutationFn: (body: Record<string, unknown>) => apiClient.post(`${BASE}/v2/claims`, body) });
@@ -214,7 +214,7 @@ export function useClaimAction() {
 
 // ── Coordination of benefits ────────────────────────────────────────────────
 export function useCobList(memberCpid?: string) {
-  return listQuery(["ruvimbo-cob", memberCpid ?? null], `${BASE}/cob?member_cpid=${encodeURIComponent(memberCpid ?? "")}`, Boolean(memberCpid));
+  return useListQuery(["ruvimbo-cob", memberCpid ?? null], `${BASE}/cob?member_cpid=${encodeURIComponent(memberCpid ?? "")}`, Boolean(memberCpid));
 }
 export function useCoordinateCob() {
   const w = useWrite([["ruvimbo-cob"]]);
@@ -223,17 +223,17 @@ export function useCoordinateCob() {
 
 // ── Employer / group rosters ────────────────────────────────────────────────
 export function useEmployers() {
-  return listQuery(["ruvimbo-employers"], `${BASE}/employers`);
+  return useListQuery(["ruvimbo-employers"], `${BASE}/employers`);
 }
 export function useRegisterEmployer() {
   const w = useWrite([["ruvimbo-employers"]]);
   return useMutation({ mutationFn: (body: Record<string, unknown>) => apiClient.post(`${BASE}/employers`, body), ...w });
 }
 export function useRosterBatch(batchId?: string) {
-  return objectQuery(["ruvimbo-roster-batch", batchId ?? null], `${BASE}/employers/roster-batches/${batchId}`, Boolean(batchId));
+  return useObjectQuery(["ruvimbo-roster-batch", batchId ?? null], `${BASE}/employers/roster-batches/${batchId}`, Boolean(batchId));
 }
 export function useRosterRows(batchId?: string) {
-  return listQuery(["ruvimbo-roster-rows", batchId ?? null], `${BASE}/employers/roster-batches/${batchId}/rows`, Boolean(batchId));
+  return useListQuery(["ruvimbo-roster-rows", batchId ?? null], `${BASE}/employers/roster-batches/${batchId}/rows`, Boolean(batchId));
 }
 export function useStageRoster() {
   return useMutation({
@@ -253,7 +253,7 @@ export function useRosterAction() {
 // ── Fraud, waste & abuse ────────────────────────────────────────────────────
 export function useFraudFlags(status?: string) {
   const q = status ? `?status=${encodeURIComponent(status)}` : "";
-  return listQuery(["ruvimbo-fraud", status ?? null], `${BASE}/fraud-flags${q}`);
+  return useListQuery(["ruvimbo-fraud", status ?? null], `${BASE}/fraud-flags${q}`);
 }
 export function useScreenClaim() {
   const w = useWrite([["ruvimbo-fraud"]]);
@@ -269,7 +269,7 @@ export function useReviewFraudFlag() {
 
 // ── Capitation ──────────────────────────────────────────────────────────────
 export function useCapitationReports(providerId?: string) {
-  return listQuery(["ruvimbo-capitation", providerId ?? null], `${BASE}/capitation-reports?provider_id=${encodeURIComponent(providerId ?? "")}`, Boolean(providerId));
+  return useListQuery(["ruvimbo-capitation", providerId ?? null], `${BASE}/capitation-reports?provider_id=${encodeURIComponent(providerId ?? "")}`, Boolean(providerId));
 }
 export function useCreateCapitation() {
   const w = useWrite([["ruvimbo-capitation"]]);
@@ -278,7 +278,7 @@ export function useCreateCapitation() {
 
 // ── Claims switch / payer gateway ───────────────────────────────────────────
 export function useGatewayTransactions(status = "ROUTED") {
-  return listQuery(["ruvimbo-gateway", status], `${BASE}/gateway/transactions?status=${encodeURIComponent(status)}`);
+  return useListQuery(["ruvimbo-gateway", status], `${BASE}/gateway/transactions?status=${encodeURIComponent(status)}`);
 }
 export function useRouteGateway() {
   const w = useWrite([["ruvimbo-gateway"]]);
