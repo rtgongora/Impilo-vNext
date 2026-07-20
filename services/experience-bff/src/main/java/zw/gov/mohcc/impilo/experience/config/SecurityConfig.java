@@ -487,6 +487,11 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                     .jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakJwtConverter()))
                 );
+            // PII Wave 0.3: once the bearer token is validated, force X-Actor-ID to the JWT's
+            // health_id claim so the actor is server-authoritative (un-spoofable) and the browser
+            // no longer needs to send its own Health ID.
+            http.addFilterAfter(new ActorContextFilter(),
+                    org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class);
         } else if (allowAnonymous) {
             log.warn("SECURITY: JWT validation DISABLED — impilo.security.allow-anonymous=true. "
                     + "All endpoints are open. This MUST NOT be used in production.");
