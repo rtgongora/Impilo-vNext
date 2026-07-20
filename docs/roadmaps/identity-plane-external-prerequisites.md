@@ -11,6 +11,21 @@ Verdict model: SOFTWARE_CONTRACT_GREEN → EXTERNAL_INTEGRATION_GREEN → NATION
 
 ---
 
+## 0. Biometric authentication (login / provider step-up / registration enrolment)
+
+**Software-contract state:** inline biometric **enrolment** at new-patient registration (seeds ABIS
+templates), **provider biometric step-up** gating Provider-ID activation, and native **Keycloak WebAuthn
+passkey login** (citizen + provider, biometric-bound, Keycloak-minted) are built and tested — the
+biometric-login stub is now the real flow. **ABIS 1:N scan-to-login** is built flag-gated OFF with a strict
+single-strong-candidate gate + full audit. Enrolment + provider step-up are live now (no external gate);
+login needs the rows below.
+
+| # | Prerequisite (EXTERNAL_INTEGRATION) | Owner | Gate it lifts |
+|---|---|---|---|
+| AUTH-1 (L1) | **Keycloak WebAuthn passwordless config applied** to the running IdP (the realm JSON is committed; needs a realm import at fullboot) + set `impilo.auth.passkey.enabled=true`. | Security + platform | passkey login |
+| AUTH-2 (L3) | **Keycloak token-exchange + impersonation** grant for the experience-bff service-account client (so a verified biometric identity mints a session without a password); `impilo.auth.biometric-login.enabled=true`. | Security | scan-to-login mint |
+| AUTH-3 (L3, NATIONAL) | Deployed ABIS + enrolled templates (L4 seeds them) + **real capture devices** + **1:N false-accept governance sign-off** for the LOGIN reason (threshold/margin calibration, attended/kiosk policy). | Identity architect + registry ops | scan-to-login go-live |
+
 ## 1. ABIS — biometric matching
 
 **Software-contract state:** real fingerprint (SourceAFIS) + iris (Gabor/Hamming) matching; real face
