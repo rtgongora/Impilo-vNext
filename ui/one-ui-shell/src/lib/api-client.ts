@@ -83,10 +83,13 @@ function getV12Headers(): Record<string, string> {
   }
 
   // ── Actor identity (Health OS §5–§6: who is acting) ──────────
+  // PII Wave 0.3: the browser must NOT send its raw Health ID as the actor. The BFF derives the
+  // authoritative X-Actor-ID from the validated JWT (health_id claim) and overrides whatever arrives,
+  // so we send only a non-HID session id as a best-effort hint (dropped/overridden server-side).
   const authUser = getStoredAuthUser();
-  const actorAnchor = authUser?.healthId?.trim() || authUser?.id;
-  if (actorAnchor) {
-    headers["X-Actor-ID"] = actorAnchor;           // Health ID — person anchor
+  const actorHint = authUser?.id;
+  if (actorHint) {
+    headers["X-Actor-ID"] = actorHint;
   }
   if (authUser?.email) {
     headers["X-Actor-Email"] = authUser.email;
