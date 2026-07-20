@@ -52,11 +52,9 @@ describe("Phase 6 service completion golden thread", () => {
   it("product-truth dataset marks phase6 complete for user-facing services", () => {
     const data = JSON.parse(read("reports/product/product-truth.json"));
     const phase6 = data.summary?.phase6;
-    // abis-service became user-facing with the W3e enrolment/adjudication console
-    // (90d0d626c) while the heuristic product-truth scanner still flags its
-    // BFF/contract wiring — tracked in the identity-plane program. Keep this set
-    // SHORT and documented: any OTHER user-facing service regressing fails here.
-    const KNOWN_IN_FLIGHT = new Set(["abis-service"]);
+    // Keep this set EMPTY unless a service is genuinely mid-flight, SHORT and
+    // documented when not: any user-facing service regressing fails here.
+    const KNOWN_IN_FLIGHT = new Set<string>([]);
     const services = (data.services ?? []) as Array<Record<string, unknown>>;
     const offenders = services
       .filter((s) => s.frontendExpected && s.productStatus !== "real")
