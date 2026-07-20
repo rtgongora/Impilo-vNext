@@ -53,6 +53,13 @@ public class TemplateEntity {
     @Column(name = "status", nullable = false, length = 16)
     private String status = "ACTIVE";
 
+    /**
+     * Monotonic version per (tenant, subject_ref, modality, position). Re-enrol supersedes
+     * the prior ACTIVE row (status→SUPERSEDED) and inserts a new row with version+1.
+     */
+    @Column(name = "version", nullable = false)
+    private int version = 1;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -101,6 +108,9 @@ public class TemplateEntity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public int getVersion() { return version; }
+    public void setVersion(int version) { this.version = version; }
 
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

@@ -55,9 +55,10 @@ class AbisControllerTest {
         saved.setSubjectRef("subj-opaque-1");
         saved.setModality(BiometricModality.FINGERPRINT);
         saved.setPosition("LEFT_INDEX");
+        saved.setVersion(1);
         when(templateService.enroll(eq(UUID.fromString(TENANT)), eq("subj-opaque-1"),
                 eq(BiometricModality.FINGERPRINT), eq("LEFT_INDEX"), eq(87), eq("vendor-x-3.1"), any()))
-                .thenReturn(saved);
+                .thenReturn(new AbisTemplateService.EnrollOutcome(saved, null));
 
         mockMvc.perform(post("/v1/abis/templates")
                         .header("X-Tenant-ID", TENANT)
@@ -70,7 +71,10 @@ class AbisControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(11))
                 .andExpect(jsonPath("$.subjectRef").value("subj-opaque-1"))
-                .andExpect(jsonPath("$.status").value("ACTIVE"));
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.version").value(1))
+                // No duplicate case opened → duplicateReview is null (not an auto-merge).
+                .andExpect(jsonPath("$.duplicateReview").doesNotExist());
     }
 
     @Test

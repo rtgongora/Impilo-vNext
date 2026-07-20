@@ -6,10 +6,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.abis.config.AbisThresholdProperties;
 import zw.gov.mohcc.impilo.abis.engine.BiometricMatchingEngine;
 import zw.gov.mohcc.impilo.abis.engine.BiometricMatchingEngine.IdentificationCandidate;
 import zw.gov.mohcc.impilo.abis.engine.BiometricMatchingEngine.VerificationDecision;
 import zw.gov.mohcc.impilo.abis.engine.BiometricProbeContext;
+import zw.gov.mohcc.impilo.abis.persistence.entity.AdjudicationCaseEntity;
 import zw.gov.mohcc.impilo.abis.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.abis.persistence.entity.TemplateEntity;
 import zw.gov.mohcc.impilo.abis.persistence.repository.EventOutboxRepository;
@@ -43,12 +45,15 @@ public class AbisTemplateService {
 
     public static final String DEFAULT_POSITION = "PRIMARY";
     public static final String STATUS_ACTIVE = "ACTIVE";
+    public static final String STATUS_SUPERSEDED = "SUPERSEDED";
 
     private final TemplateRepository templateRepository;
     private final EventOutboxRepository outboxRepository;
     private final BiometricMatchingEngine matchingEngine;
     private final TemplateCrypto templateCrypto;
     private final ObjectMapper objectMapper;
+    private final AdjudicationService adjudicationService;
+    private final AbisThresholdProperties thresholds;
     private final int identifyMaxCandidates;
 
     public AbisTemplateService(TemplateRepository templateRepository,
@@ -56,23 +61,61 @@ public class AbisTemplateService {
                                BiometricMatchingEngine matchingEngine,
                                TemplateCrypto templateCrypto,
                                ObjectMapper objectMapper,
+                               AdjudicationService adjudicationService,
+                               AbisThresholdProperties thresholds,
                                @Value("${abis.identify.max-candidates:500}") int identifyMaxCandidates) {
         this.templateRepository = templateRepository;
         this.outboxRepository = outboxRepository;
         this.matchingEngine = matchingEngine;
         this.templateCrypto = templateCrypto;
         this.objectMapper = objectMapper;
+        this.adjudicationService = adjudicationService;
+        this.thresholds = thresholds;
         this.identifyMaxCandidates = identifyMaxCandidates;
     }
 
+    /**
+     * Outcome of an enrol: the persisted template plus, when enrol-time dedup (W3b) trips,
+     * the duplicate-investigation case that was OPENED for human adjudication (never a merge).
+     */
+    public record EnrollOutcome(TemplateEntity template, AdjudicationCaseEntity duplicateCase) {
+        public boolean hasDuplicateReview() {
+            return duplicateCase != null;
+        }
+    }
+
     @Transactional
-    public TemplateEntity enroll(UUID tenantId, String subjectRef, BiometricModality modality,
-                                 String position, Integer qualityScore, String algorithmVersion,
-                                 byte[] templateBytes) {
+    public EnrollOutcome enroll(UUID tenantId, String subjectRef, BiometricModality modality,
+                                String position, Integer qualityScore, String algorithmVersion,
+                                byte[] templateBytes) {
         String pos = normalizePosition(position);
-        TemplateEntity entity = templateRepository
-                .findByTenantIdAndSubjectRefAndModalityAndPosition(tenantId, subjectRef, modality, pos)
-                .orElseGet(TemplateEntity::new);
+
+        // W3d — quality gating: reject a capture below the governed per-modality minimum
+        // (fail-closed; 0 = disabled). A degraded reference must never enter the gallery.
+        int minQuality = thresholds.minQuality(modality.name());
+        if (minQuality > 0 && qualityScore != null && qualityScore < minQuality) {
+            throw new QualityBelowThresholdException(qualityScore, minQuality);
+        }
+
+        // W3b — enrol-time dedup: bounded 1:N against the tenant gallery (excluding this
+        // subject's own prior templates). Candidates at/above the dedup threshold OPEN a
+        // duplicate-investigation case. Never auto-merge; enrolment still proceeds (care-first).
+        AdjudicationCaseEntity duplicateCase =
+                runEnrolDedup(tenantId, subjectRef, modality, templateBytes);
+
+        // W3d — versioning: supersede the prior ACTIVE row (keep history), insert version+1.
+        TemplateEntity prior = templateRepository
+                .findByTenantIdAndSubjectRefAndModalityAndPositionAndStatus(
+                        tenantId, subjectRef, modality, pos, STATUS_ACTIVE)
+                .orElse(null);
+        int nextVersion = 1;
+        if (prior != null) {
+            prior.setStatus(STATUS_SUPERSEDED);
+            templateRepository.save(prior);
+            nextVersion = prior.getVersion() + 1;
+        }
+
+        TemplateEntity entity = new TemplateEntity();
         entity.setTenantId(tenantId);
         entity.setSubjectRef(subjectRef);
         entity.setModality(modality);
@@ -81,13 +124,50 @@ public class AbisTemplateService {
         entity.setAlgorithmVersion(algorithmVersion);
         entity.setTemplateEncrypted(templateCrypto.encrypt(templateBytes));
         entity.setStatus(STATUS_ACTIVE);
+        entity.setVersion(nextVersion);
         TemplateEntity saved = templateRepository.save(entity);
 
         Map<String, Object> payload = basePayload(tenantId, subjectRef, modality, pos);
         payload.put("qualityScore", qualityScore);
         payload.put("algorithmVersion", algorithmVersion);
+        payload.put("version", nextVersion);
+        if (duplicateCase != null) {
+            payload.put("duplicateCaseId", duplicateCase.getId());
+        }
         recordEvent("abis.template", subjectRef, "abis.template.enrolled", payload);
-        return saved;
+        return new EnrollOutcome(saved, duplicateCase);
+    }
+
+    /**
+     * Enrol-time 1:N dedup. Returns the OPENED duplicate-investigation case, or null when
+     * dedup is disabled or no candidate reaches the threshold. NEVER merges.
+     */
+    private AdjudicationCaseEntity runEnrolDedup(UUID tenantId, String subjectRef,
+                                                 BiometricModality modality, byte[] templateBytes) {
+        if (!thresholds.getDedup().isEnabled()) {
+            return null;
+        }
+        List<TemplateEntity> gallery = templateRepository.findByTenantIdAndModalityAndStatus(
+                tenantId, modality, STATUS_ACTIVE,
+                PageRequest.of(0, thresholds.getDedup().getMaxGallery()));
+        // Exclude this subject's own templates — re-enrolling yourself is not a duplicate.
+        List<TemplateEntity> others = gallery.stream()
+                .filter(t -> !subjectRef.equals(t.getSubjectRef()))
+                .toList();
+        if (others.isEmpty()) {
+            return null;
+        }
+        List<IdentificationCandidate> candidates =
+                matchingEngine.identify(templateBytes, others, BiometricProbeContext.EMPTY);
+        double threshold = thresholds.getDedup().getThreshold();
+        List<IdentificationCandidate> hits = candidates.stream()
+                .filter(c -> c.confidence() >= threshold)
+                .toList();
+        if (hits.isEmpty()) {
+            return null;
+        }
+        // Reason ENROLMENT — a human adjudicates; the enrol still lands (care-first).
+        return adjudicationService.openCase(tenantId, subjectRef, modality, "ENROLMENT", hits);
     }
 
     /**
@@ -106,8 +186,8 @@ public class AbisTemplateService {
         TemplateEntity enrolled = (position == null || position.isBlank()
                 ? templateRepository.findFirstByTenantIdAndSubjectRefAndModalityAndStatusOrderByUpdatedAtDesc(
                         tenantId, subjectRef, modality, STATUS_ACTIVE)
-                : templateRepository.findByTenantIdAndSubjectRefAndModalityAndPosition(
-                        tenantId, subjectRef, modality, normalizePosition(position)))
+                : templateRepository.findByTenantIdAndSubjectRefAndModalityAndPositionAndStatus(
+                        tenantId, subjectRef, modality, normalizePosition(position), STATUS_ACTIVE))
                 .orElse(null);
 
         VerificationDecision decision = (enrolled == null)

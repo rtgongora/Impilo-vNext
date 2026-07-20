@@ -56,7 +56,7 @@ public class AbisController {
     public ResponseEntity<EnrollTemplateResponse> enroll(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @Valid @RequestBody EnrollTemplateRequest request) {
-        TemplateEntity saved = templateService.enroll(
+        AbisTemplateService.EnrollOutcome outcome = templateService.enroll(
                 tenantId,
                 request.subjectRef(),
                 request.modality(),
@@ -64,12 +64,22 @@ public class AbisController {
                 request.qualityScore(),
                 request.algorithmVersion(),
                 Base64.getDecoder().decode(request.templateBase64()));
+        TemplateEntity saved = outcome.template();
+        EnrollTemplateResponse.DuplicateReview review = outcome.hasDuplicateReview()
+                ? new EnrollTemplateResponse.DuplicateReview(
+                        outcome.duplicateCase().getId(),
+                        outcome.duplicateCase().getCandidateCount(),
+                        outcome.duplicateCase().getTopScore(),
+                        outcome.duplicateCase().getStatus())
+                : null;
         return ResponseEntity.status(HttpStatus.CREATED).body(new EnrollTemplateResponse(
                 saved.getId(),
                 saved.getSubjectRef(),
                 saved.getModality().name(),
                 saved.getPosition(),
-                saved.getStatus()));
+                saved.getStatus(),
+                saved.getVersion(),
+                review));
     }
 
     @PostMapping("/templates:extract")

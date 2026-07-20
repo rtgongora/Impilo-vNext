@@ -57,6 +57,20 @@ abis:
   identify:
     # Hard cap on candidate templates loaded per 1:N identification request.
     max-candidates: ${ABIS_IDENTIFY_MAX_CANDIDATES:500}
+  # Enrol-time dedup (W3b): bounded 1:N against the tenant gallery on enrol; candidates
+  # at/above the threshold OPEN a duplicate-investigation case (never auto-merge).
+  dedup:
+    enabled: ${ABIS_DEDUP_ENABLED:false}
+    threshold: ${ABIS_DEDUP_THRESHOLD:0.85}
+    max-gallery: ${ABIS_DEDUP_MAX_GALLERY:500}
+  # Quality gating (W3d): reject enrol below the per-modality minimum quality_score proxy.
+  # 0 (or unset) disables gating. NFIQ2/ISO quality is an external follow-on.
+  quality:
+    min-score:
+      FINGERPRINT: ${ABIS_QUALITY_MIN_FINGERPRINT:0}
+      FACE: ${ABIS_QUALITY_MIN_FACE:0}
+      IRIS: ${ABIS_QUALITY_MIN_IRIS:0}
+      default: ${ABIS_QUALITY_MIN_DEFAULT:0}
   events:
     kafka-topic: platform.abis.events
   outbox:
