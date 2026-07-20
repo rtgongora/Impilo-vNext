@@ -43,15 +43,27 @@ const STATUS_BADGE: Record<string, string> = {
 /*  Empty form state                                                   */
 /* ------------------------------------------------------------------ */
 
+// Values are the canonical vocabulary the PCT encounter service accepts (it lower-cases them):
+// context ∈ ALLOWED_CONTEXTS, entry_point ∈ ALLOWED_ENTRY_POINTS, care_setting ∈ ALLOWED_CARE_SETTINGS.
 const EMPTY_FORM = {
   encounter_type: "OUTPATIENT",
   chief_complaint: "",
   journey_id: "",
-  encounter_context: "CLINICAL_VISIT",
-  entry_point: "PROVIDER_WORKSPACE",
+  encounter_context: "OUTPATIENT",
+  entry_point: "WALK_IN",
   modality: "IN_PERSON",
-  care_setting: "OUTPATIENT",
+  care_setting: "FACILITY",
   priority: "ROUTINE" };
+
+// Clinical contexts a provider can choose for an encounter (canonical PCT contexts).
+const ENCOUNTER_CONTEXT_OPTIONS: { value: string; label: string }[] = [
+  { value: "OUTPATIENT", label: "Outpatient" },
+  { value: "EMERGENCY", label: "Emergency" },
+  { value: "INPATIENT", label: "Inpatient" },
+  { value: "COMMUNITY", label: "Community" },
+  { value: "VIRTUAL", label: "Virtual / Telehealth" },
+  { value: "PROCEDURE", label: "Procedure" },
+];
 
 /* ------------------------------------------------------------------ */
 /*  Page component                                                     */
@@ -101,7 +113,7 @@ export default function EncountersPage() {
   const [form, setForm] = useState({
     ...EMPTY_FORM,
     journey_id: journeyFromUrl,
-    entry_point: journeyFromUrl ? "QUEUE_WALK_IN" : EMPTY_FORM.entry_point,
+    entry_point: journeyFromUrl ? "WALK_IN" : EMPTY_FORM.entry_point,
   });
 
   function updateField(field: string, value: string) {
@@ -307,12 +319,17 @@ export default function EncountersPage() {
                       <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Context
                       </label>
-                      <input
-                        type="text"
+                      <select
                         value={form.encounter_context}
                         onChange={(e) => updateField("encounter_context", e.target.value)}
                         className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-impilo-400"
-                      />
+                      >
+                        {ENCOUNTER_CONTEXT_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-muted-foreground mb-1">
