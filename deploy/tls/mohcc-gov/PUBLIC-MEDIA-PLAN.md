@@ -4,34 +4,44 @@ Enables real off-network telemedicine media on `impilo.mohcc.gov.zw`. Signaling 
 already secured (`wss://…/rtc` via Traefik). This covers the **media** path, which
 does NOT flow through Traefik and needs ICE/TURN + firewall work.
 
-> **Status 2026-07-20 — DIRECT-MEDIA path LIVE; TURN-relay on 5349 does NOT work
-> as designed (see below).** LiveKit now advertises the public IP + LAN candidates
-> (`use_external_ip` + `advertise_internal_ip` + `skip_external_ip_validation`),
-> so off-network clients get `41.57.127.235:7882/udp` + `7881/tcp` (fixed
-> hostNetwork ports, already forwarded) and can connect **directly** where their
-> network permits. Embedded TURN-over-TLS is running and listening on `5349/TCP`
-> with the mounted `impilo-mohcc-gov-zw-tls` cert (verified: `openssl s_client`
-> TLSv1.3 handshake, `Verify=0`), but see the ⚠️ blocker.
+> **Status 2026-07-20 — DIRECT-MEDIA path LIVE; TURN-relay SNI solution IMPLEMENTED,
+> gated on 2 external items (DNS + cert SAN).**
 >
-> ⚠️ **LiveKit v1.13.3 hardcodes the client-advertised TURN URL to
-> `turns:<turn.domain>:443?transport=tcp` — NOT `:5349`** (empirically: a 3-browser
-> `rtc-media-diagnostic` run showed every client handed `turns:impilo.mohcc.gov.zw:443`;
-> confirmed by LiveKit docs "if not using a load balancer, `turn.tls_port` needs to
-> be 443, as that is the port advertised to clients" and livekit/livekit#3595). Port
-> `443` on the node is Traefik (HTTPS/signaling), so a relay attempt hits Traefik,
-> not the TURN server, and fails (the relay-only test peer got **zero** relay
-> candidates → `could not establish pc connection`).
+> Background (why the plain 5349 plan failed): LiveKit v1.13.3 HARDCODES the
+> client-advertised TURN URL to `turns:<turn.domain>:443?transport=tcp` — NOT
+> `:5349` (a 3-browser `rtc-media-diagnostic` showed every client handed
+> `turns:impilo.mohcc.gov.zw:443`; confirmed by LiveKit docs "if not using a load
+> balancer, `turn.tls_port` needs to be 443, as that is the port advertised" and
+> livekit/livekit#3595). Node `:443` is Traefik, so opening pfSense `5349` can NEVER
+> carry relay — **do NOT request a `5349` firewall rule.**
 >
-> **⇒ Do NOT request pfSense `5349/TCP` — it cannot enable relay** (no client is
-> told to use `5349`). Current posture (decided 2026-07-20): **direct-media only**;
-> the `5349` listener is retained as the basis for the SNI fix below.
+> **Solution (this change):** a DEDICATED SNI `turn.impilo.mohcc.gov.zw` that Traefik
+> TCP-routes on `HostSNI(...)` with **TLS passthrough** → `livekit:5349`. LiveKit
+> keeps terminating the TLS (external_tls:false). Relay then rides the already-open
+> public `:443` — **no new pfSense port**.
+>   `turns:turn.impilo.mohcc.gov.zw:443 → 41.57.127.235:443 → Traefik(websecure)
+>    → HostSNI passthrough → livekit:5349 → LiveKit TURN`
 >
-> **Correct relay fix (deferred — expands scope, needs network + cert teams):**
-> dedicated `turn.impilo.mohcc.gov.zw` subdomain → Traefik `IngressRouteTCP` with
-> TLS **passthrough** on `HostSNI(\`turn.impilo.mohcc.gov.zw\`)` → `livekit:5349`;
-> add `turn.impilo.mohcc.gov.zw` to the cert SAN; add the DNS A record
-> (`→ 41.57.127.235`); set `turn.domain: turn.impilo.mohcc.gov.zw`. Relay then
-> flows over the already-open `443` — **no new pfSense port**.
+> **Landed in repo + live (DNS-independent, inert until DNS/cert):**
+> - `turn.domain: turn.impilo.mohcc.gov.zw` (livekit-config).
+> - `livekit` Service exposes `5349/TCP` (`turn-tls`).
+> - `IngressRouteTCP impilo-mohcc-gov-livekit-turn` (HostSNI passthrough → livekit:5349).
+> - Verified live: SNI handshake to `:443` with `-servername turn.impilo.mohcc.gov.zw`
+>   reaches the LiveKit TURN listener (passthrough plumbing proven); existing HTTPS
+>   + `/rtc` unregressed; direct media still works.
+>
+> **⛔ Remaining external prerequisites (this VM cannot do these):**
+> 1. **DNS** — `turn.impilo.mohcc.gov.zw. A 41.57.127.235` (TTL 300). Authoritative
+>    zone is `ns1.gta.gov.zw` / `ns.gta.gov.zw` (GTA/ZCHPC), not this VM.
+> 2. **Cert SAN** — add `turn.impilo.mohcc.gov.zw` to the existing
+>    `impilo-mohcc-gov-zw-tls` cert (multi-SAN, HTTP-01, blocked on #1):
+>    `certbot certonly --webroot -w /var/www/letsencrypt --cert-name impilo.mohcc.gov.zw
+>    -d impilo.mohcc.gov.zw -d turn.impilo.mohcc.gov.zw`
+>    (the `renew_hook` re-syncs the secret and restarts LiveKit on cert change).
+>
+> Once both land: relay works with no further code change. Until then a UDP-hostile
+> off-network client still cannot relay; direct media (7881/7882 to 41.57.127.235)
+> is the working off-network path.
 
 ## Current state (2026-07-09)
 

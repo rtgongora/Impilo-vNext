@@ -25,7 +25,7 @@ ACME_PORT="${ACME_HOST_NGINX_PORT:-8089}"
 echo "--- Restore public edge (TLS/ingress) for $HOST in $NS ---"
 
 # 1) IngressRoutes + ACME ingress + livekit + public-website (all versioned manifests)
-for f in ingressroutes.yaml acme-ingress.yaml livekit-ingressroute.yaml public-website.yaml; do
+for f in ingressroutes.yaml acme-ingress.yaml livekit-ingressroute.yaml livekit-turn-ingressroutetcp.yaml public-website.yaml; do
   if [[ -f "$TLS_DIR/$f" ]]; then
     kubectl apply -f "$TLS_DIR/$f" >/dev/null 2>&1 && echo "  applied $f" \
       || echo "  WARN: apply $f failed (deps may be missing — non-fatal)"

@@ -112,4 +112,11 @@ spec:
     - name: http
       port: 7880
       targetPort: 7880
+    # TURN-over-TLS backend for the Traefik HostSNI(turn.impilo.mohcc.gov.zw)
+    # TLS-passthrough route (deploy/tls/mohcc-gov/livekit-turn-ingressroutetcp.yaml).
+    # hostNetwork means the endpoint is the node IP:5349 (LiveKit binds *:5349).
+    - name: turn-tls
+      port: 5349
+      targetPort: 5349
+      protocol: TCP
 {{- end }}

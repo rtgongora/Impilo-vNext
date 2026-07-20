@@ -25,3 +25,16 @@ spec:
                 name: acme-host-nginx
                 port:
                   number: 80
+    # SAN for LiveKit TURN-over-TLS (turn.impilo.mohcc.gov.zw). Lets host-side
+    # certbot --webroot HTTP-01-validate the extra SAN when expanding the cert.
+    # Inert until the turn.impilo.mohcc.gov.zw A record exists (GTA/ZCHPC zone).
+    - host: turn.impilo.mohcc.gov.zw
+      http:
+        paths:
+          - path: /.well-known/acme-challenge/
+            pathType: Prefix
+            backend:
+              service:
+                name: acme-host-nginx
+                port:
+                  number: 80
