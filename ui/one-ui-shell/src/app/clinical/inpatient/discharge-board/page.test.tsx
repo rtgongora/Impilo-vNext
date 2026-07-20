@@ -66,6 +66,13 @@ describe("InpatientDischargeBoardPage", () => {
           data: [{ id: "ADM-1", subject_cpid: "CPID-ZW-1", status: "ADMITTED", encounter_id: "ENC-1" }],
         });
       }
+      // clearance-gate lookup (8adc60956) — all sign-offs done, so finalise is only
+      // gated by the summary itself here.
+      if (path.startsWith("/internal/v1/discharge-clearances")) {
+        return Promise.resolve({
+          data: [{ id: "cl-1", clearance_type: "NURSING", status: "CLEARED" }],
+        });
+      }
       // discharge-summary lookup
       return Promise.resolve({
         data: { id: "ds-1", encounter_id: "ENC-1", status: "DRAFT", discharge_diagnosis: "Pneumonia" },
@@ -101,6 +108,11 @@ describe("InpatientDischargeBoardPage", () => {
       if (path.startsWith("/internal/v1/inpatient/admissions")) {
         return Promise.resolve({
           data: [{ id: "ADM-1", subject_cpid: "CPID-ZW-1", status: "ADMITTED", encounter_id: "ENC-1" }],
+        });
+      }
+      if (path.startsWith("/internal/v1/discharge-clearances")) {
+        return Promise.resolve({
+          data: [{ id: "cl-1", clearance_type: "NURSING", status: "CLEARED" }],
         });
       }
       return Promise.resolve({
@@ -184,6 +196,11 @@ describe("InpatientDischargeBoardPage", () => {
           data: [{ id: "ADM-1", subject_cpid: "CPID-ZW-1", status: "ADMITTED", encounter_id: "ENC-1" }],
         });
       }
+      if (path.startsWith("/internal/v1/discharge-clearances")) {
+        return Promise.resolve({
+          data: [{ id: "cl-1", clearance_type: "NURSING", status: "CLEARED" }],
+        });
+      }
       return Promise.resolve({
         data: { id: "ds-1", encounter_id: "ENC-1", status: "DRAFT", discharge_diagnosis: "Pneumonia" },
       });
@@ -206,6 +223,11 @@ describe("InpatientDischargeBoardPage", () => {
       if (path.startsWith("/internal/v1/inpatient/admissions")) {
         return Promise.resolve({
           data: [{ id: "ADM-1", subject_cpid: "CPID-ZW-1", status: "ADMITTED", encounter_id: "ENC-1" }],
+        });
+      }
+      if (path.startsWith("/internal/v1/discharge-clearances")) {
+        return Promise.resolve({
+          data: [{ id: "cl-1", clearance_type: "NURSING", status: "CLEARED" }],
         });
       }
       return Promise.resolve({

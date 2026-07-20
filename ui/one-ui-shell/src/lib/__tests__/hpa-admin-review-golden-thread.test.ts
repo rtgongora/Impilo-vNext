@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { EXPECTED_ROUTE_COUNT, ROUTES } from "@/lib/routes";
 
 /**
  * HPA-W4b golden thread: the admin HPA review console → useHpaImport → BFF admin
@@ -46,9 +47,12 @@ describe("HPA admin review golden thread", () => {
   });
 
   it("the route is registered (REGISTRY_ADMIN-gated)", () => {
-    const routes = read("ui/one-ui-shell/src/lib/routes.ts");
-    expect(routes).toMatch(/\/admin\/hpa-enrichment[\s\S]*?REGISTRY_ADMIN/);
-    expect(routes).toContain("EXPECTED_ROUTE_COUNT = 758");
+    const route = ROUTES.find((r) => r.path === "/admin/hpa-enrichment");
+    expect(route).toBeDefined();
+    expect(route?.guard).toBe("role");
+    expect(route?.requiredRole).toBe("REGISTRY_ADMIN");
+    // Registry stays internally consistent (exact count is owned by routes.test.ts).
+    expect(ROUTES).toHaveLength(EXPECTED_ROUTE_COUNT);
   });
 
   it("the hook targets the BFF admin HPA lanes", () => {

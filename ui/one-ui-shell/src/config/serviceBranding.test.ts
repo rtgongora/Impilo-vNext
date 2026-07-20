@@ -10,8 +10,8 @@ import {
 } from "@/config/serviceBranding";
 
 describe("serviceBranding registry", () => {
-  it("lists all 23 sovereign services", () => {
-    expect(listSovereignServices()).toHaveLength(23);
+  it("lists all 24 sovereign services", () => {
+    expect(listSovereignServices()).toHaveLength(24);
   });
 
   it("includes the newly-branded services", () => {

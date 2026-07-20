@@ -66,9 +66,15 @@ describe("LoginPage", () => {
     expect(
       screen.getByRole("link", { name: /Health Provider Login — Work now/i }),
     ).toHaveAttribute("href", "/auth/login/provider-id");
-    expect(screen.getByRole("link", { name: /Biometric/i })).toHaveAttribute(
+    // L1 passkey sign-in (real flow, replaces the biometric stub — cbf8869de).
+    expect(screen.getByRole("link", { name: /Sign in with a passkey/i })).toHaveAttribute(
       "href",
       "/auth/login/biometric",
+    );
+    // L3 ABIS scan-to-login — a distinct path from device passkeys (a91cff9ae).
+    expect(screen.getByRole("link", { name: /Sign in with your fingerprint/i })).toHaveAttribute(
+      "href",
+      "/auth/login/scan",
     );
     expect(screen.getByRole("link", { name: /Create an account/i })).toHaveAttribute(
       "href",
