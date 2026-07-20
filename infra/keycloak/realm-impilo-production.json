@@ -770,6 +770,50 @@
   ],
   "clients": [
     {
+      "clientId": "impilo-passkey",
+      "name": "Impilo Passkey (WebAuthn passwordless — L1)",
+      "description": "Auth-code client bound to the passkey-browser passwordless flow. The BFF exchanges the code server-side and Keycloak mints the session. Password / ROPC login is unaffected.",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/auth/login/passkey/callback",
+        "https://impilo.gov.zw/auth/login/passkey/callback",
+        "https://www.impilo.gov.zw/auth/login/passkey/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "https://impilo.gov.zw",
+        "https://www.impilo.gov.zw"
+      ],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "authenticationFlowBindingOverrides": {
+        "browser": "b7e4a1c2-9d3f-4a5b-8c6d-1e2f3a4b5c6d"
+      },
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt",
+        "impilo-trust-headers",
+        "impilo-clinical",
+        "impilo-admin"
+      ]
+    },
+    {
       "clientId": "impilo-ui",
       "name": "Impilo Experience UI",
       "enabled": true,
@@ -1186,6 +1230,85 @@
       "config": {
         "vendor": "other"
       }
+    }
+  ],
+  "webAuthnPasswordlessPolicyRpEntityName": "Impilo Health OS",
+  "webAuthnPasswordlessPolicyRpId": "",
+  "webAuthnPasswordlessPolicySignatureAlgorithms": [ "ES256", "RS256" ],
+  "webAuthnPasswordlessPolicyAttestationConveyancePreference": "not specified",
+  "webAuthnPasswordlessPolicyAuthenticatorAttachment": "not specified",
+  "webAuthnPasswordlessPolicyRequireResidentKey": "Yes",
+  "webAuthnPasswordlessPolicyUserVerificationRequirement": "required",
+  "webAuthnPasswordlessPolicyCreateTimeout": 0,
+  "webAuthnPasswordlessPolicyAvoidSameAuthenticatorRegister": false,
+  "webAuthnPasswordlessPolicyAcceptableAaguids": [],
+  "webAuthnPasswordlessPolicyExtraOrigins": [],
+  "requiredActions": [
+    {
+      "alias": "webauthn-register-passwordless",
+      "name": "Webauthn Register Passwordless",
+      "providerId": "webauthn-register-passwordless",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 80,
+      "config": {}
+    }
+  ],
+  "authenticationFlows": [
+    {
+      "id": "b7e4a1c2-9d3f-4a5b-8c6d-1e2f3a4b5c6d",
+      "alias": "passkey-browser",
+      "description": "L1 WebAuthn passwordless (passkey) browser flow. The built-in browser/direct-grant flows are left intact so password login is unaffected.",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-cookie",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "identity-provider-redirector",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "ALTERNATIVE",
+          "priority": 30,
+          "flowAlias": "passkey-browser-forms",
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "id": "c8f5b2d3-ae40-4b6c-9d7e-2f3a4b5c6d7e",
+      "alias": "passkey-browser-forms",
+      "description": "Username form, then the WebAuthn passwordless authenticator (passkey).",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-username-form",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "webauthn-authenticator-passwordless",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "userSetupAllowed": false
+        }
+      ]
     }
   ],
   "browserFlow": "browser",
