@@ -74,6 +74,11 @@ function specialEnv(serviceId) {
     return {
       TSHEPO_CONSENT_URL: "http://tshepo-consent-service:8182",
       TSHEPO_KEYS_URL: "http://tshepo-keys-service:8184",
+      // Required for WORK_CONTEXT duty-token introspection (the PDP calls identity
+      // /tokens/introspect). Without it the binding fails open and never fires.
+      TSHEPO_IDENTITY_URL: "http://tshepo-identity-service:8181",
+      // Duty-token binding mode: OFF | SHADOW | ENFORCE (default SHADOW — observe-only).
+      TSHEPO_WORK_CONTEXT_MODE: "SHADOW",
     };
   }
   if (serviceId === "vito-service") {

@@ -404,6 +404,8 @@ fullBootServices:
     env:
       TSHEPO_CONSENT_URL: http://tshepo-consent-service:8182
       TSHEPO_KEYS_URL: http://tshepo-keys-service:8184
+      TSHEPO_IDENTITY_URL: http://tshepo-identity-service:8181
+      TSHEPO_WORK_CONTEXT_MODE: SHADOW
   tshepo-consent-service:
     enabled: true
     port: 8182
