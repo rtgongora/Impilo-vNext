@@ -1,0 +1,273 @@
+{
+  "roomUrl": "wss://impilo.mohcc.gov.zw",
+  "when": "2026-07-20T10:24:22.392Z",
+  "peers": {
+    "A": {
+      "role": "provider HOST (publish)",
+      "connect": {
+        "state": "connected",
+        "events": [
+          "state:connecting",
+          "state:connected",
+          "published cam+mic"
+        ],
+        "connectError": null
+      },
+      "stats": {
+        "iceStates": [
+          "connected/connected/gathering:complete"
+        ],
+        "iceServers": [
+          "stun:global.stun.twilio.com:3478,stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302"
+        ],
+        "iceTransportPolicy": [
+          "all"
+        ],
+        "remoteCandidates": [
+          "host 10.42.0.1:7882/udp",
+          "host 10.42.0.0:7882/udp",
+          "host 172.17.0.1:7882/udp",
+          "host 10.50.1.67:7882/udp"
+        ],
+        "localCandidateTypes": [
+          "host",
+          "prflx"
+        ],
+        "selectedPairs": [
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "host 10.42.0.0:42391/udp",
+            "remote": "host 10.42.0.0:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "prflx 10.50.1.67:40411/udp",
+            "remote": "host 10.50.1.67:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "prflx 10.50.1.67:65400/udp",
+            "remote": "host 172.17.0.1:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "prflx 10.50.1.67:55304/udp",
+            "remote": "host 10.42.0.1:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "prflx 10.50.1.67:55304/udp",
+            "remote": "host 10.42.0.0:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "prflx 10.50.1.67:55304/udp",
+            "remote": "host 172.17.0.1:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "prflx 10.50.1.67:55304/udp",
+            "remote": "host 10.50.1.67:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": true,
+            "local": "prflx 10.50.1.67:55245/udp",
+            "remote": "host 172.17.0.1:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "host 10.50.1.67:40714/udp",
+            "remote": "host 10.50.1.67:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": true,
+            "local": "host 10.42.0.1:43043/udp",
+            "remote": "host 10.42.0.0:7882/udp",
+            "bytesRecv": 17622
+          },
+          {
+            "state": "succeeded",
+            "nominated": true,
+            "local": "prflx 10.50.1.67:19509/udp",
+            "remote": "host 10.50.1.67:7882/udp",
+            "bytesRecv": 1331
+          }
+        ],
+        "inbound": []
+      },
+      "errors": []
+    },
+    "B": {
+      "role": "patient on-LAN (baseline)",
+      "connect": {
+        "state": "connected",
+        "events": [
+          "state:connecting",
+          "state:connected",
+          "trackSubscribed",
+          "trackSubscribed"
+        ],
+        "connectError": null
+      },
+      "stats": {
+        "iceStates": [
+          "connected/connected/gathering:complete"
+        ],
+        "iceServers": [
+          "stun:global.stun.twilio.com:3478,stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302"
+        ],
+        "iceTransportPolicy": [
+          "all"
+        ],
+        "remoteCandidates": [
+          "host 10.42.0.0:7882/udp",
+          "host 10.42.0.1:7882/udp",
+          "host 10.50.1.67:7882/udp",
+          "host 172.17.0.1:7882/udp"
+        ],
+        "localCandidateTypes": [
+          "prflx",
+          "host"
+        ],
+        "selectedPairs": [
+          {
+            "state": "succeeded",
+            "nominated": true,
+            "local": "prflx 10.50.1.67:55036/udp",
+            "remote": "host 10.50.1.67:7882/udp",
+            "bytesRecv": 1590
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "host 10.42.0.0:41738/udp",
+            "remote": "host 10.42.0.0:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "prflx 10.50.1.67:47463/udp",
+            "remote": "host 172.17.0.1:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": true,
+            "local": "host 10.42.0.1:45139/udp",
+            "remote": "host 10.42.0.0:7882/udp",
+            "bytesRecv": 2280711
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "prflx 10.50.1.67:48129/udp",
+            "remote": "host 10.42.0.0:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "prflx 10.50.1.67:48129/udp",
+            "remote": "host 10.42.0.1:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "prflx 10.50.1.67:48129/udp",
+            "remote": "host 10.50.1.67:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "prflx 10.50.1.67:48129/udp",
+            "remote": "host 172.17.0.1:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": true,
+            "local": "prflx 10.50.1.67:33815/udp",
+            "remote": "host 172.17.0.1:7882/udp",
+            "bytesRecv": 65
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "prflx 10.50.1.67:28124/udp",
+            "remote": "host 10.50.1.67:7882/udp",
+            "bytesRecv": 0
+          },
+          {
+            "state": "succeeded",
+            "nominated": false,
+            "local": "host 10.50.1.67:58486/udp",
+            "remote": "host 10.50.1.67:7882/udp",
+            "bytesRecv": 0
+          }
+        ],
+        "inbound": [
+          {
+            "kind": "audio",
+            "bytes": 66102
+          },
+          {
+            "kind": "video",
+            "bytes": 2138210,
+            "frames": 467
+          }
+        ]
+      },
+      "errors": []
+    },
+    "C": {
+      "role": "patient REMOTE relay-only (simulates off-network)",
+      "connect": {
+        "state": "disconnected",
+        "events": [
+          "state:connecting",
+          "state:disconnected",
+          "disconnected:0"
+        ],
+        "connectError": "could not establish pc connection"
+      },
+      "stats": {
+        "iceStates": [
+          "closed/closed/gathering:complete"
+        ],
+        "iceServers": [
+          "stun:global.stun.twilio.com:3478,stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302"
+        ],
+        "iceTransportPolicy": [
+          "relay"
+        ],
+        "remoteCandidates": [],
+        "localCandidateTypes": [],
+        "selectedPairs": [],
+        "inbound": []
+      },
+      "errors": []
+    }
+  }
+}

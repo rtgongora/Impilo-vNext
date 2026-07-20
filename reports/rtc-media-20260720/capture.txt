@@ -1,0 +1,45 @@
+RTC / LiveKit media diagnostic — 2026-07-20T10:24:22.392Z
+room: wss://impilo.mohcc.gov.zw  (Traefik → livekit:7880, TLS)
+
+### A: provider HOST (publish)
+  livekit state:     connected
+  room events:       state:connecting, state:connected, published cam+mic
+  ICE states:        connected/connected/gathering:complete
+  ICE servers given:  stun:global.stun.twilio.com:3478,stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302
+  iceTransportPolicy: all
+  TURN configured:    NO   relay candidate present: NO
+  remote candidates the SFU advertised:
+     - host 10.42.0.1:7882/udp
+     - host 10.42.0.0:7882/udp
+     - host 172.17.0.1:7882/udp
+     - host 10.50.1.67:7882/udp
+  selected pair:     {"state":"succeeded","nominated":true,"local":"prflx 10.50.1.67:55245/udp","remote":"host 172.17.0.1:7882/udp","bytesRecv":0}
+  media received:    video=0  audio=0
+
+### B: patient on-LAN (baseline)
+  livekit state:     connected
+  room events:       state:connecting, state:connected, trackSubscribed, trackSubscribed
+  ICE states:        connected/connected/gathering:complete
+  ICE servers given:  stun:global.stun.twilio.com:3478,stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302
+  iceTransportPolicy: all
+  TURN configured:    NO   relay candidate present: NO
+  remote candidates the SFU advertised:
+     - host 10.42.0.0:7882/udp
+     - host 10.42.0.1:7882/udp
+     - host 10.50.1.67:7882/udp
+     - host 172.17.0.1:7882/udp
+  selected pair:     {"state":"succeeded","nominated":true,"local":"prflx 10.50.1.67:55036/udp","remote":"host 10.50.1.67:7882/udp","bytesRecv":1590}
+  media received:    video=2138210B/467frames  audio=66102B
+
+### C: patient REMOTE relay-only (simulates off-network)
+  livekit state:     disconnected
+  CONNECT ERROR:     could not establish pc connection
+  room events:       state:connecting, state:disconnected, disconnected:0
+  ICE states:        closed/closed/gathering:complete
+  ICE servers given:  stun:global.stun.twilio.com:3478,stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302
+  iceTransportPolicy: relay
+  TURN configured:    NO   relay candidate present: NO
+  remote candidates the SFU advertised:
+     (none)
+  selected pair:     (NONE — no working path)
+  media received:    video=0  audio=0
