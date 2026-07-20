@@ -56,11 +56,16 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 .requestMatchers("/v1/client-registry/**").permitAll()
-                // Preview/test only: the internal service-plane (v1.1) endpoints — provisional
-                // identity mint, patient merge, etc. — are reachable without a broker/Envoy so
-                // runtime-proof rigs can exercise the identity-reconcile path. Production keeps the
-                // strict chain (authenticated + upstream ext_authz).
+                // Preview/test only: the internal service-plane endpoints — provisional
+                // identity mint, patient merge, patient search, dedup, issuance, audit — are
+                // reachable without a broker/Envoy so runtime-proof rigs and first-party BFF S2S
+                // (with trust headers) can exercise the identity-reconcile path. Production keeps
+                // the strict chain (authenticated + upstream ext_authz).
+                // NOTE: VITO uses BOTH path conventions for its internal plane — /internal/v1/**
+                // (V11 patients, legacy-phid) AND /v1/internal/** (InternalSearchController client
+                // search, dedup, issuance, audit). Permit both, or BFF patient search 401s.
                 .requestMatchers("/internal/v1/**").permitAll()
+                .requestMatchers("/v1/internal/**").permitAll()
                 .anyRequest().authenticated());
 
         // Without this, anyRequest().authenticated() is unsatisfiable on the test
