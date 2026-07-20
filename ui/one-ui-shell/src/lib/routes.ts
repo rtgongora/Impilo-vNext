@@ -955,7 +955,7 @@ export const ROUTES: RouteDefinition[] = [
 // review surface for place self-service case types the Trust Console does not own. Total 755.
 // Digital SMART card (Jul 2026): +1 — /citizen/wallet/smart-card, the citizen's browser card at
 // parity with the physical card (identity / pay / health functions). Total 757.
-export const EXPECTED_ROUTE_COUNT = 761;
+export const EXPECTED_ROUTE_COUNT = 762;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

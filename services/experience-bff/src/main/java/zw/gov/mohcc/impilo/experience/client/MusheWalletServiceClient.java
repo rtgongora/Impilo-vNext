@@ -512,6 +512,17 @@ public class MusheWalletServiceClient {
     }
 
     /**
+     * Drain the physical-write card-update queue (B2). Returns per-pass counts
+     * {@code {processed, synced, failed, retried}} (a bare object, not an envelope).
+     */
+    public JsonNode drainCardSyncQueue() {
+        String url = baseUrl + "/internal/v1/cards/sync/drain";
+        log.info("MusheWallet: Draining card-sync queue");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, HttpEntity.EMPTY, JsonNode.class);
+        return response.getBody();
+    }
+
+    /**
      * Link a Mushe money card to a VITO CardCredential and optionally cache the device public key.
      */
     public JsonNode linkVitoCard(UUID cardId, Map<String, Object> body) {
