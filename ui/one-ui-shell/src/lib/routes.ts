@@ -147,6 +147,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/coverage/enroll", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Enroll in Coverage", navLabel: "Enroll", navZone: "life" },
   { path: "/coverage/member", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Coverage", navLabel: "My Coverage", navZone: "life" },
   { path: "/coverage/contracts", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Provider Contracts", navLabel: "Contracts", navZone: "professional" },
+  { path: "/coverage/operations", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Ruvimbo Operations", navLabel: "Ruvimbo Ops", navZone: "professional" },
 
   // â”€â”€ Zone: Identity Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/id-services", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Identity Services", navLabel: "ID Services", navZone: "professional" },
@@ -618,6 +619,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/operations/vito/issuance", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Issuance Queue", navLabel: "Issuance Queue", navZone: "professional" },
   { path: "/operations/vito/issuance/[requestId]", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Issuance Request", navLabel: "Issuance Request", navZone: "professional" },
   { path: "/operations/vito/cards", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Smart Cards", navLabel: "Smart Cards", navZone: "professional" },
+  { path: "/operations/vito/card-verify", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Verify a presented card", navLabel: "Card verify (POS)", navZone: "professional" },
+  { path: "/operations/vito/card-sync", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Card-sync pipeline", navLabel: "Card-sync ops", navZone: "professional" },
   { path: "/operations/vito/cards/pickup", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Card Pickup", navLabel: "Card Pickup", navZone: "professional" },
   { path: "/operations/vito/match", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Match Review", navLabel: "Match Review", navZone: "professional" },
   { path: "/operations/vito/dedup", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Deduplication", navLabel: "Deduplication", navZone: "professional" },
@@ -843,6 +846,7 @@ export const ROUTES: RouteDefinition[] = [
   // Citizen emergency surfaces (low-friction, life-safety) + provider command surfaces.
   { path: "/emergency", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Emergency", navLabel: "Emergency", navZone: "life" },
   { path: "/emergency/sos", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Send SOS", navLabel: "Send SOS", navZone: "life" },
+  { path: "/emergency/card-phr", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Break-glass card PHR", navLabel: "Break-glass card read", navZone: "professional" },
   { path: "/emergency/services", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Nearest Services", navLabel: "Nearest Services", navZone: "life" },
   { path: "/emergency/track", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Emergency", navLabel: "Track", navZone: "life" },
   { path: "/emergency/track/[id]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Emergency", navLabel: "Track", navZone: "life" },
@@ -951,7 +955,7 @@ export const ROUTES: RouteDefinition[] = [
 // review surface for place self-service case types the Trust Console does not own. Total 755.
 // Digital SMART card (Jul 2026): +1 — /citizen/wallet/smart-card, the citizen's browser card at
 // parity with the physical card (identity / pay / health functions). Total 757.
-export const EXPECTED_ROUTE_COUNT = 758;
+export const EXPECTED_ROUTE_COUNT = 761;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -267,6 +267,30 @@ export default function CoveragePage() {
   return (
     <AppLayout>
       <PageShell title="Coverage Operations" subtitle="Schemes, membership, eligibility, claims & settlement">
+        <div className="mb-4">
+          <Link
+            href="/coverage/operations"
+            className="block rounded-xl border-2 border-teal-300 bg-gradient-to-r from-teal-50 to-emerald-50 p-5 shadow-sm hover:border-teal-500 hover:shadow-md transition-all group"
+            data-testid="ruvimbo-operations-link"
+          >
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="rounded-lg bg-teal-600 p-3 text-white shadow">
+                <Network className="h-7 w-7" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-semibold text-foreground group-hover:text-teal-700 transition-colors">
+                  Ruvimbo Operations
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Full payer/provider workbench: payer registry, plan hierarchy &amp; publish, membership
+                  verification, authorisations, claims &amp; line-level adjudication, coordination of benefits,
+                  employer rosters, fraud review, capitation, and the claims switch.
+                </p>
+              </div>
+              <span className="text-sm font-medium text-teal-700 whitespace-nowrap">Open →</span>
+            </div>
+          </Link>
+        </div>
         <div className="mb-6 grid gap-4 md:grid-cols-2">
           <Link
             href="/coverage/member"

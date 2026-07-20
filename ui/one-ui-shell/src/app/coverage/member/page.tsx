@@ -36,6 +36,7 @@ import {
   useMyUtilization,
   useSubmitAppeal,
 } from "@/hooks/queries/useMemberCoverage";
+import { useAuthorisations, useReferrals, useLiabilityEstimates } from "@/hooks/queries/useRuvimbo";
 
 function asRecord(v: unknown): Record<string, unknown> {
   return v && typeof v === "object" ? (v as Record<string, unknown>) : {};
@@ -164,6 +165,13 @@ export default function MemberCoveragePage() {
   const firstCoverageId = readStr(plans[0] ?? {}, "id");
   const benefitsQ = useMemberAccumulators(firstCoverageId || null);
   const benefits = useMemo(() => (benefitsQ.data ?? []).map(asRecord), [benefitsQ.data]);
+  // Ruvimbo depth: authorisations, referrals and liability estimates for this member.
+  const authsQ = useAuthorisations({ memberCpid: cpid || undefined });
+  const auths = useMemo(() => (authsQ.data ?? []).map(asRecord), [authsQ.data]);
+  const referralsQ = useReferrals(cpid || undefined);
+  const referrals = useMemo(() => (referralsQ.data ?? []).map(asRecord), [referralsQ.data]);
+  const estimatesQ = useLiabilityEstimates(cpid || undefined);
+  const estimates = useMemo(() => (estimatesQ.data ?? []).map(asRecord), [estimatesQ.data]);
 
   const [eligCoverageId, setEligCoverageId] = useState("");
   const [eligService, setEligService] = useState("");
@@ -344,6 +352,87 @@ export default function MemberCoveragePage() {
                         </tr>
                       );
                     })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Section>
+
+          <Section
+            title="Authorisations"
+            icon={<ClipboardList className="h-4 w-4 text-indigo-600" />}
+            isLoading={authsQ.isLoading}
+            isError={authsQ.isError}
+          >
+            {auths.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No authorisations on file.</p>
+            ) : (
+              <div className="overflow-x-auto" data-testid="coverage-member-auths">
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b text-left text-muted-foreground"><th className="pb-2 pr-2">Type</th><th className="pb-2 pr-2">Status</th><th className="pb-2 pr-2">Urgency</th><th className="pb-2">Estimated</th></tr></thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {auths.map((row, i) => (
+                      <tr key={readStr(row, "id") || i}>
+                        <td className="py-2 pr-2 font-medium text-foreground">{readStr(row, "authType", "auth_type") || "—"}</td>
+                        <td className="py-2 pr-2"><span className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-xs">{readStr(row, "status")}</span></td>
+                        <td className="py-2 pr-2 text-muted-foreground">{readStr(row, "urgency")}</td>
+                        <td className="py-2 text-foreground">{readNum(row, "estimatedAmount", "estimated_amount").toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Section>
+
+          <Section
+            title="Referrals"
+            icon={<Stethoscope className="h-4 w-4 text-emerald-600" />}
+            isLoading={referralsQ.isLoading}
+            isError={referralsQ.isError}
+          >
+            {referrals.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No referrals on file.</p>
+            ) : (
+              <div className="overflow-x-auto" data-testid="coverage-member-referrals">
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b text-left text-muted-foreground"><th className="pb-2 pr-2">Scope</th><th className="pb-2 pr-2">Status</th><th className="pb-2 pr-2">Visits</th><th className="pb-2">Valid to</th></tr></thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {referrals.map((row, i) => (
+                      <tr key={readStr(row, "id") || i}>
+                        <td className="py-2 pr-2 font-medium text-foreground">{readStr(row, "scope") || "—"}</td>
+                        <td className="py-2 pr-2"><span className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-xs">{readStr(row, "status")}</span></td>
+                        <td className="py-2 pr-2 text-muted-foreground">{readNum(row, "visitsUsed", "visits_used")}/{readNum(row, "permittedVisits", "permitted_visits")}</td>
+                        <td className="py-2 text-muted-foreground">{readStr(row, "validTo", "valid_to") || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Section>
+
+          <Section
+            title="Cost estimates"
+            icon={<BarChart3 className="h-4 w-4 text-amber-600" />}
+            isLoading={estimatesQ.isLoading}
+            isError={estimatesQ.isError}
+          >
+            {estimates.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No cost estimates yet. A provider can generate one before planned care.</p>
+            ) : (
+              <div className="overflow-x-auto" data-testid="coverage-member-estimates">
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b text-left text-muted-foreground"><th className="pb-2 pr-2">Benefit</th><th className="pb-2 pr-2">Charge</th><th className="pb-2 pr-2">Plan pays</th><th className="pb-2">You pay</th></tr></thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {estimates.map((row, i) => (
+                      <tr key={readStr(row, "id") || i}>
+                        <td className="py-2 pr-2 font-medium text-foreground">{readStr(row, "benefitCode", "benefit_code") || "—"}</td>
+                        <td className="py-2 pr-2 text-muted-foreground">{readNum(row, "standardCharge", "standard_charge").toFixed(2)}</td>
+                        <td className="py-2 pr-2 text-teal-700">{readNum(row, "payerEstimate", "payer_estimate").toFixed(2)}</td>
+                        <td className="py-2 font-medium text-foreground">{readNum(row, "patientResponsibility", "patient_responsibility").toFixed(2)}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
