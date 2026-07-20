@@ -349,7 +349,7 @@ describe("Route Registry", () => {
       const route = ROUTES.find((r) => r.path === path);
       expect(route, `missing route ${path}`).toBeTruthy();
       expect(route?.guard).toBe("role");
-      expect(route?.requiredRole).toBe("ADMIN_OR_HIE");
+      expect(route?.requiredRole).toBe("LEARNING_AUTHOR");
     }
 
     const learnerAccessibleRoutes = [
@@ -367,6 +367,14 @@ describe("Route Registry", () => {
       expect(route, `missing route ${path}`).toBeTruthy();
       expect(route?.guard).toBe("auth");
     }
+  });
+
+  it("registers the L1 passkey callback route as a public auth route", () => {
+    const route = ROUTES.find((r) => r.path === "/auth/login/passkey/callback");
+    expect(route, "passkey callback route is missing from ROUTES").toBeTruthy();
+    expect(route?.zone).toBe("auth");
+    expect(route?.layout).toBe("auth");
+    expect(route?.guard).toBe("none");
   });
 
   it("registers Wave 2 identity and coverage child routes", () => {
