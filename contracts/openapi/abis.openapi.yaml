@@ -1,0 +1,600 @@
+# =============================================================================
+# ABIS — Biometric Template Custody & Matching API (OpenAPI 3.0)
+#
+# Identity Contract §11 boundary: encrypted biometric template custody,
+# 1:1 verification, restricted 1:N identification (candidates for human
+# adjudication — NEVER an automatic merge), enrol-time deduplication,
+# the adjudication / duplicate-investigation console, and operational stats.
+#
+# subject_ref values are opaque ABIS references — never Health IDs. Trust
+# headers are enforced by Envoy + TSHEPO; the service-side TrustContextFilter
+# populates tenant/actor context per CompanionHeaders.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: ABIS — Biometric Template Custody & Matching API
+  version: "1.0.0"
+  description: |
+    Automated Biometric Identification System boundary. Fail-closed matching:
+    with no vendor engine configured, verification returns UNAVAILABLE at zero
+    confidence — never a fabricated match. 1:N identification is restricted by
+    the X-Identify-Reason header (ENROLMENT, RECOVERY, DEDUPLICATION, LOGIN)
+    and only ever returns scored candidates for human adjudication; session
+    minting and merge governance live in the callers (experience-bff / console).
+  contact:
+    name: Impilo Platform Team
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8186
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Templates
+    description: Template extraction, enrolment, verification, identification
+  - name: Adjudication
+    description: Duplicate-investigation queue and dual-control merge console
+  - name: Operations
+    description: Operational stats and governed threshold configuration
+
+paths:
+  /v1/abis/templates:
+    post:
+      tags: [Templates]
+      operationId: enrollTemplate
+      summary: Enrol (or re-enrol) an encrypted biometric template under an opaque subject_ref
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnrollTemplateRequest"
+      responses:
+        "201":
+          description: Template stored (re-enrol supersedes the prior version). duplicateReview is present only when enrol-time dedup opened a duplicate-investigation case.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnrollTemplateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          description: Template quality below the governed threshold
+
+  "/v1/abis/templates:extract":
+    post:
+      tags: [Templates]
+      operationId: extractTemplate
+      summary: Extract a template from a raw capture image (pure feature computation, no subject_ref)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExtractTemplateRequest"
+      responses:
+        "200":
+          description: Extraction outcome (ok=false carries a detail message instead of a template)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtractTemplateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /v1/abis/verify:
+    post:
+      tags: [Templates]
+      operationId: verifyTemplate
+      summary: 1:1 verification of a probe against a subject's enrolled template (fail-closed)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyRequest"
+      responses:
+        "200":
+          description: Verification decision — UNAVAILABLE at zero confidence when no engine is configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /v1/abis/identify:
+    post:
+      tags: [Templates]
+      operationId: identifySubject
+      summary: Restricted 1:N identification — scored candidates for adjudication, never a merge or an authentication
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: X-Identify-Reason
+          in: header
+          required: true
+          description: Governed 1:N reason. LOGIN backs biometric scan-to-login and still only returns candidates.
+          schema:
+            type: string
+            enum: [ENROLMENT, RECOVERY, DEDUPLICATION, LOGIN]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdentifyRequest"
+      responses:
+        "200":
+          description: Scored candidates for human adjudication (decision is always CANDIDATES_FOR_ADJUDICATION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentifyResponse"
+        "400":
+          description: Missing or disallowed X-Identify-Reason, or invalid request body
+
+  /v1/abis/adjudication/cases:
+    get:
+      tags: [Adjudication]
+      operationId: listAdjudicationCases
+      summary: List the duplicate-investigation queue (optionally filtered by status)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            maximum: 200
+      responses:
+        "200":
+          description: Paged case list (candidates omitted in list view)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdjudicationCasePage"
+
+  /v1/abis/adjudication/cases/{id}:
+    get:
+      tags: [Adjudication]
+      operationId: getAdjudicationCase
+      summary: Fetch one adjudication case with its scored candidate list
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CaseId"
+      responses:
+        "200":
+          description: Case with candidates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdjudicationCase"
+        "404":
+          description: Case not found in tenant
+
+  /v1/abis/adjudication/cases/{id}/assign:
+    post:
+      tags: [Adjudication]
+      operationId: assignAdjudicationReviewer
+      summary: Assign a reviewer to a case (OPEN → IN_REVIEW)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignRequest"
+      responses:
+        "200":
+          description: Updated case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdjudicationCase"
+        "409":
+          description: Illegal state transition
+
+  /v1/abis/adjudication/cases/{id}/decision:
+    post:
+      tags: [Adjudication]
+      operationId: recordAdjudicationDecision
+      summary: Record a DISTINCT / CONFIRMED_DUPLICATE decision (→ RESOLVED). Never merges.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DecisionRequest"
+      responses:
+        "200":
+          description: Updated case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdjudicationCase"
+        "409":
+          description: Illegal state transition
+
+  /v1/abis/adjudication/cases/{id}/merge:
+    post:
+      tags: [Adjudication]
+      operationId: mergeAdjudicationCase
+      summary: Governed dual-control merge — the second reviewer (X-Actor-ID) must differ from the decision recorder
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MergeRequest"
+      responses:
+        "200":
+          description: Merged case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdjudicationCase"
+        "409":
+          description: Dual-control violation or illegal state transition
+
+  /v1/abis/stats:
+    get:
+      tags: [Operations]
+      operationId: getAbisStats
+      summary: Operational stats — template volumes, quality distribution, adjudication queue
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Stats snapshot for the tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/abis/config/thresholds:
+    get:
+      tags: [Operations]
+      operationId: getThresholdConfig
+      summary: The governed dedup / quality thresholds currently in force
+      responses:
+        "200":
+          description: Threshold configuration view
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ActorId:
+      name: X-Actor-ID
+      in: header
+      required: false
+      description: Acting reviewer — required by dual-control paths (decision recorder / merge sign-off).
+      schema:
+        type: string
+    CaseId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  responses:
+    BadRequest:
+      description: Validation failure
+
+  schemas:
+    BiometricModality:
+      type: string
+      enum: [FINGERPRINT, IRIS, FACE]
+
+    EnrollTemplateRequest:
+      type: object
+      required: [subjectRef, modality, templateBase64]
+      properties:
+        subjectRef:
+          type: string
+          maxLength: 128
+          description: Opaque ABIS subject reference — never a Health ID.
+        modality:
+          $ref: "#/components/schemas/BiometricModality"
+        position:
+          type: string
+          maxLength: 32
+        qualityScore:
+          type: integer
+        algorithmVersion:
+          type: string
+          maxLength: 64
+        templateBase64:
+          type: string
+
+    EnrollTemplateResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        subjectRef:
+          type: string
+        modality:
+          type: string
+        position:
+          type: string
+        status:
+          type: string
+        version:
+          type: integer
+        duplicateReview:
+          type: object
+          nullable: true
+          description: Present only when enrol-time dedup opened a duplicate-investigation case.
+          properties:
+            caseId:
+              type: integer
+              format: int64
+            candidateCount:
+              type: integer
+            topScore:
+              type: number
+              format: double
+            status:
+              type: string
+
+    ExtractTemplateRequest:
+      type: object
+      required: [modality, sampleBase64]
+      properties:
+        modality:
+          $ref: "#/components/schemas/BiometricModality"
+        sampleBase64:
+          type: string
+          description: Encoded image (PNG/JPEG/WSQ) or raw 8-bit grayscale pixels when width×height are given.
+        width:
+          type: integer
+        height:
+          type: integer
+        dpi:
+          type: integer
+
+    ExtractTemplateResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+        detail:
+          type: string
+          description: Failure detail when ok=false.
+        templateBase64:
+          type: string
+        quality:
+          type: number
+
+    VerifyRequest:
+      type: object
+      required: [subjectRef, modality, probeBase64]
+      properties:
+        subjectRef:
+          type: string
+          maxLength: 128
+        modality:
+          $ref: "#/components/schemas/BiometricModality"
+        position:
+          type: string
+          maxLength: 32
+        probeBase64:
+          type: string
+        livenessScore:
+          type: number
+          format: double
+        deviceAttestationRef:
+          type: string
+
+    VerifyResponse:
+      type: object
+      properties:
+        decision:
+          type: string
+          description: MATCH / NO_MATCH / UNAVAILABLE (fail-closed default engine).
+        confidence:
+          type: number
+          format: double
+        summary:
+          type: string
+
+    IdentifyRequest:
+      type: object
+      required: [modality, probeBase64]
+      properties:
+        modality:
+          $ref: "#/components/schemas/BiometricModality"
+        probeBase64:
+          type: string
+        livenessScore:
+          type: number
+          format: double
+        deviceAttestationRef:
+          type: string
+
+    IdentifyResponse:
+      type: object
+      properties:
+        reason:
+          type: string
+        decision:
+          type: string
+          description: Always CANDIDATES_FOR_ADJUDICATION — never a merge, never an authentication.
+        candidates:
+          type: array
+          items:
+            type: object
+            properties:
+              subjectRef:
+                type: string
+              confidence:
+                type: number
+                format: double
+              summary:
+                type: string
+
+    AssignRequest:
+      type: object
+      required: [reviewer]
+      properties:
+        reviewer:
+          type: string
+          maxLength: 128
+
+    DecisionRequest:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          description: DISTINCT or CONFIRMED_DUPLICATE.
+        reason:
+          type: string
+          maxLength: 2000
+
+    MergeRequest:
+      type: object
+      required: [mergeTargetSubjectRef]
+      properties:
+        mergeTargetSubjectRef:
+          type: string
+          maxLength: 128
+
+    AdjudicationCase:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        subjectRef:
+          type: string
+        modality:
+          type: string
+        reason:
+          type: string
+        status:
+          type: string
+        decision:
+          type: string
+          nullable: true
+        candidateCount:
+          type: integer
+        topScore:
+          type: number
+          format: double
+          nullable: true
+        assignedReviewer:
+          type: string
+          nullable: true
+        decidedBy:
+          type: string
+          nullable: true
+        decidedAt:
+          type: string
+          format: date-time
+          nullable: true
+        decisionReason:
+          type: string
+          nullable: true
+        mergeTargetSubjectRef:
+          type: string
+          nullable: true
+        dualSignOffBy:
+          type: string
+          nullable: true
+        mergedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        candidates:
+          type: array
+          items:
+            type: object
+            properties:
+              candidateSubjectRef:
+                type: string
+              score:
+                type: number
+                format: double
+              summary:
+                type: string
+              rank:
+                type: integer
+
+    AdjudicationCasePage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdjudicationCase"
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
