@@ -4,13 +4,34 @@ Enables real off-network telemedicine media on `impilo.mohcc.gov.zw`. Signaling 
 already secured (`wss://…/rtc` via Traefik). This covers the **media** path, which
 does NOT flow through Traefik and needs ICE/TURN + firewall work.
 
-> **Status 2026-07-20 — platform side IMPLEMENTED (Steps 2–4).** LiveKit now
-> advertises the public IP + LAN candidates and runs embedded TURN-over-TLS on
-> **5349/TCP** (cert mounted from `impilo-mohcc-gov-zw-tls`; `use_external_ip` +
-> `advertise_internal_ip` + `skip_external_ip_validation`; TURN
-> `allow_restricted_peer_cidrs: [10.50.1.67/32]`). The renewal hook restarts
-> LiveKit only when the cert changes. **The one remaining external action is the
-> ZCHPC pfSense rule for `5349/TCP` (Step 3).**
+> **Status 2026-07-20 — DIRECT-MEDIA path LIVE; TURN-relay on 5349 does NOT work
+> as designed (see below).** LiveKit now advertises the public IP + LAN candidates
+> (`use_external_ip` + `advertise_internal_ip` + `skip_external_ip_validation`),
+> so off-network clients get `41.57.127.235:7882/udp` + `7881/tcp` (fixed
+> hostNetwork ports, already forwarded) and can connect **directly** where their
+> network permits. Embedded TURN-over-TLS is running and listening on `5349/TCP`
+> with the mounted `impilo-mohcc-gov-zw-tls` cert (verified: `openssl s_client`
+> TLSv1.3 handshake, `Verify=0`), but see the ⚠️ blocker.
+>
+> ⚠️ **LiveKit v1.13.3 hardcodes the client-advertised TURN URL to
+> `turns:<turn.domain>:443?transport=tcp` — NOT `:5349`** (empirically: a 3-browser
+> `rtc-media-diagnostic` run showed every client handed `turns:impilo.mohcc.gov.zw:443`;
+> confirmed by LiveKit docs "if not using a load balancer, `turn.tls_port` needs to
+> be 443, as that is the port advertised to clients" and livekit/livekit#3595). Port
+> `443` on the node is Traefik (HTTPS/signaling), so a relay attempt hits Traefik,
+> not the TURN server, and fails (the relay-only test peer got **zero** relay
+> candidates → `could not establish pc connection`).
+>
+> **⇒ Do NOT request pfSense `5349/TCP` — it cannot enable relay** (no client is
+> told to use `5349`). Current posture (decided 2026-07-20): **direct-media only**;
+> the `5349` listener is retained as the basis for the SNI fix below.
+>
+> **Correct relay fix (deferred — expands scope, needs network + cert teams):**
+> dedicated `turn.impilo.mohcc.gov.zw` subdomain → Traefik `IngressRouteTCP` with
+> TLS **passthrough** on `HostSNI(\`turn.impilo.mohcc.gov.zw\`)` → `livekit:5349`;
+> add `turn.impilo.mohcc.gov.zw` to the cert SAN; add the DNS A record
+> (`→ 41.57.127.235`); set `turn.domain: turn.impilo.mohcc.gov.zw`. Relay then
+> flows over the already-open `443` — **no new pfSense port**.
 
 ## Current state (2026-07-09)
 
@@ -92,32 +113,32 @@ turn:
 
 ## Step 3 — Firewall / NAT (OFF-BOX — network admin; cannot be done or verified from the VM)
 
-Open inbound from the internet to the node public IP `41.57.127.235`:
+Inbound forwarding needed to the node public IP `41.57.127.235` for the current
+**direct-media** posture:
 
-| Port | Proto | Purpose |
-|------|-------|---------|
-| **5349** | **tcp only** | TURN over TLS (primary relay for off-LAN clients) |
-| 7881 | tcp | LiveKit ICE/TCP (direct + fallback) |
-| 7882 | udp | LiveKit ICE/UDP (direct media mux) |
+| Port | Proto | Purpose | State |
+|------|-------|---------|-------|
+| 443  | tcp | HTTPS/WSS signaling (Traefik) | already open — do not touch |
+| 7881 | tcp | LiveKit ICE/TCP (direct media) | already open — keep |
+| 7882 | udp | LiveKit ICE/UDP (direct media mux) | already open — keep |
 
 Authoritative port posture (do not deviate):
 
-- `5349/tcp` = TURN/TLS.
-- `7881/tcp` = ICE/TCP.
+- `7881/tcp` = ICE/TCP (direct).
 - `7882/udp` = direct ICE/UDP mux.
-- **`5349/udp` = NOT configured** — the deployed LiveKit config sets only
-  `turn.tls_port` (TCP); there is no `turn.udp_port`. Opening 5349/udp would
-  forward to nothing. Do NOT open it.
-- **`3478/udp` = NOT configured** — no plain-UDP TURN listener in this slice.
-  Do NOT open it.
+- **`5349/tcp` = do NOT request.** The TURN server listens here internally, but
+  LiveKit advertises TURN to clients on `:443` (hardcoded — see the ⚠️ status
+  note above), so an external `5349` rule cannot carry any relay traffic.
+- **`5349/udp` = NOT configured** — no `turn.udp_port` in the config.
+- **`3478/udp` = NOT configured** — no plain-UDP TURN listener.
 
 Notes:
 
-- 443/tcp (signaling) is already open via Traefik — do not touch.
+- No new pfSense/firewall rule is required for the direct-media posture — the
+  existing `7881/tcp` + `7882/udp` forwards already carry it.
 - Confirm the `41.57.127.235` ↔ `10.50.1.67` 1:1 NAT is static.
-- TURN/TLS on `5349/tcp` is the relay that traverses UDP-hostile client networks;
-  it does not require any UDP port to be opened.
-- The exact rule to request: `41.57.127.235:5349/TCP → 10.50.1.67:5349/TCP`.
+- Relay (for UDP-hostile client networks) is deferred to the SNI fix in the status
+  note; that fix carries relay over the already-open `443`, still no new port.
 
 ## Step 4 — DNS
 
@@ -125,14 +146,23 @@ Notes:
 no new record needed. Only add a `turn.` subdomain if TURN is later split to its own
 host (would need a cert SAN too).
 
-## Verification (needs a real OFF-network client — not possible from the VM)
+## Verification
 
-1. Pods healthy after config change; `livekit` logs show TURN listener on 5349.
-2. From an off-network browser, start a telemedicine session on
-   `https://impilo.mohcc.gov.zw`; confirm two-way audio/video.
-3. In `chrome://webrtc-internals`, confirm a `relay` (TURN) candidate pair is
-   selected when direct fails.
-4. Re-test an on-LAN client to confirm the hairpin fix didn't regress them.
+Direct-media posture (what to test now, needs a real OFF-network client — not
+possible from the VM):
+
+1. Pod healthy; `livekit` log shows `nodeIP 41.57.127.235` + `using external IPs …
+   advertiseInternalIP:true`. ✅ done 2026-07-20.
+2. From an off-network browser on a network that permits outbound UDP/TCP, start a
+   telemedicine session on `https://impilo.mohcc.gov.zw`; confirm two-way A/V over a
+   **direct** candidate to `41.57.127.235:7882/udp` (or `7881/tcp`).
+3. Re-test an on-LAN client — no regression. ✅ done 2026-07-20 (video 2.1 MB /
+   467 frames decoded).
+
+Relay (only after the SNI fix in the status note lands): in
+`chrome://webrtc-internals` confirm the client is offered
+`turns:turn.impilo.mohcc.gov.zw:443` and a `relay` pair is selected when direct
+fails. Until then, a UDP-hostile client will NOT connect (no working relay).
 
 ## Rollback
 
