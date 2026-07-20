@@ -107,7 +107,7 @@ services:
     command:
       - |
         until psql -h experience-db -U impilo -d postgres -c '\q' 2>/dev/null; do sleep 1; done
-        for db in inpatient pct impilo_integration_hub impilo_learning impilo_coverage impilo_simba impilo_pacs; do
+        for db in inpatient pct impilo_integration_hub impilo_learning impilo_coverage impilo_simba impilo_pacs impilo_abis; do
           psql -h experience-db -U impilo -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '$$db'" | grep -q 1 \
             || psql -h experience-db -U impilo -d postgres -c "CREATE DATABASE \"$$db\" OWNER impilo;"
         done
@@ -210,6 +210,10 @@ services:
       dockerfile: Dockerfile
     environment:
       MATCHER_FP_THRESHOLD: "40"
+      # Face extraction model path — external artifact (not committed), fetched by
+      # scripts/dev/vendor-biometric-deps.sh. Empty → face extraction fails closed
+      # (OnnxFaceEmbedder). Fingerprint (SourceAFIS) + iris (Gabor) are real without it.
+      MATCHER_FACE_MODEL_PATH: ""
     ports:
       - "9200:9200"
     healthcheck:
@@ -218,6 +222,44 @@ services:
       timeout: 5s
       retries: 12
       start_period: 30s
+
+  # ── ABIS (biometric template SoR + adjudication platform) ────────
+  # Governance adapter over matcher-engine; holds encrypted templates, runs enrol-time
+  # dedup (1:N), and owns the adjudication/duplicate-investigation queue. Never merges
+  # automatically (dual-control). Real matching delegated to matcher-engine.
+  abis-service:
+    build:
+      context: ../../services/abis-service
+      dockerfile: Dockerfile
+    environment:
+      SERVER_PORT: "8186"
+      POSTGRES_HOST: experience-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: impilo
+      SPRING_DATASOURCE_URL: jdbc:postgresql://experience-db:5432/impilo_abis
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      IMPILO_SECURITY_OAUTH2_ENABLED: "false"
+      ABIS_MATCHER_ENABLED: "true"
+      MATCHER_ENGINE_URL: http://matcher-engine:9200
+      ABIS_DEDUP_ENABLED: "true"
+      ABIS_DEDUP_THRESHOLD: "0.85"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8186:8186"
+    depends_on:
+      sovereign-db-init:
+        condition: service_completed_successfully
+      matcher-engine:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8186/actuator/health > /dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
 
   # ── PACS adapter (governed imaging metadata) ─────────────────────
   pacs-adapter-service:

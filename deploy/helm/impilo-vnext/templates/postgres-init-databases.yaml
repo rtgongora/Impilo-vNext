@@ -1,4 +1,8 @@
-{{- if and .Values.postgres.enabled .Values.postgres.initDatabases }}
+{{- /* Merge the generated per-service DB list with hand-registered extraInitDatabases
+       (services not in the classification generator, e.g. abis-service). uniq guards
+       against overlap. */}}
+{{- $allInitDatabases := concat (.Values.postgres.initDatabases | default list) (.Values.postgres.extraInitDatabases | default list) | uniq }}
+{{- if and .Values.postgres.enabled $allInitDatabases }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -9,7 +13,7 @@ data:
   01-create-preview-databases.sql: |
     -- Preview-only: idempotent database creation (first empty postgres data dir).
     {{- $owner := .Values.postgres.username | default "impilo" }}
-    {{- range .Values.postgres.initDatabases }}
+    {{- range $allInitDatabases }}
     SELECT 'CREATE DATABASE {{ . }} OWNER {{ $owner }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ . }}')\gexec
     {{- end }}
 ---
@@ -50,7 +54,7 @@ spec:
                 sleep 3
               done
               PGOWNER="${POSTGRES_USER:-impilo}"
-              {{- range .Values.postgres.initDatabases }}
+              {{- range $allInitDatabases }}
               exists=$(psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='{{ . }}'" 2>/dev/null || echo "")
               if [ "$exists" = "1" ]; then
                 echo "Database {{ . }} already exists."

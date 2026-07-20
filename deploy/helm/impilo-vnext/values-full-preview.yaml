@@ -63,6 +63,13 @@ postgres:
   # values-full-preview-runtime.generated.yaml (regenerated on each deploy).
   maxConnections: 600
   sharedBuffers: 256MB
+  # Hand-registered service databases that the generator does NOT emit (abis-service
+  # is not in config/full-boot-service-classification.yml, so it never appears in the
+  # regenerated postgres.initDatabases list). extraInitDatabases is created ALONGSIDE
+  # initDatabases by templates/postgres-init-databases.yaml and survives regeneration
+  # because the generated overlay never sets this key.
+  extraInitDatabases:
+    - abis
   # Durable data volume (PVC, local-path). 2026-07-18: emptyDir wiped the estate twice.
   storageSize: 50Gi
 
@@ -194,6 +201,14 @@ matcherEngine:
     pullPolicy: IfNotPresent
   env:
     MATCHER_FP_THRESHOLD: "40"
+    # Face EXTRACTION model path (ArcFace/MobileFaceNet ONNX). The model blob is an
+    # external artifact — NOT committed — fetched into the engine image / a mounted
+    # volume by scripts/dev/vendor-biometric-deps.sh (MATCHER_FACE_MODEL_URL). The
+    # WIRING + fail-closed default are ours: empty here → OnnxFaceEmbedder logs
+    # "face extraction fails closed" and never fabricates an embedding. Fingerprint
+    # (SourceAFIS) + iris (Gabor) are real with jars alone and need no model. Set to
+    # the mounted path (e.g. /models/face-embedding.onnx) to enable face extraction.
+    MATCHER_FACE_MODEL_PATH: ""
   resources:
     requests:
       cpu: 250m
@@ -295,6 +310,11 @@ experienceBff:
     GUIDANCE_BASE_URL: http://guidance-service:8260
     IDENTITY_ASSURANCE_BASE_URL: http://identity-assurance-service:8201
     NOTIFICATION_BASE_URL: http://notification-service:8200
+    # Biometric SoR (ABIS). Unset previously, so AbisBiometricClient +
+    # AbisAdjudicationClient fell back to their localhost:8186 defaults and every
+    # biometric enrol/verify/onboard + adjudication-console call failed in-cluster
+    # (same class as the booking/scheduling/guidance fixes above).
+    ABIS_BASE_URL: http://abis-service:8186
     SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
     MANAGEMENT_HEALTH_KAFKA_ENABLED: "false"
@@ -500,3 +520,32 @@ fullBootServices:
       # rtc lobby — localhost defaults would silently degrade meetings to no-media.
       LIVE_BASE_URL: http://live-service:8380
       RTC_GATEWAY_BASE_URL: http://rtc-gateway-service:8196
+  # ABIS — biometric template SoR + adjudication platform (port 8186, DB `abis`).
+  # Hand-registered here because abis-service is NOT in
+  # config/full-boot-service-classification.yml, so the generator never emits it into
+  # values-full-preview-runtime.generated.yaml. Deep-merges cleanly with the generated
+  # overlay (no abis-service key there to collide). Governance adapter over the
+  # chart-deployed core-infra matcher-engine (templates/matcher-engine.yaml) — the same
+  # pattern as pacs-adapter-service → Orthanc. Its `abis` database is created via
+  # postgres.extraInitDatabases above.
+  abis-service:
+    enabled: true
+    port: 8186
+    database: abis
+    env:
+      # Real matching delegated to the core-infra engine (BmeClientMatchingEngine is
+      # @Primary when true). Any transport/protocol error fails closed — never a
+      # fabricated match, never a merge.
+      ABIS_MATCHER_ENABLED: "true"
+      MATCHER_ENGINE_URL: http://matcher-engine:9200
+      # Enrol-time dedup (W3b): bounded 1:N against the tenant gallery on enrol;
+      # candidates >= threshold OPEN a duplicate-investigation case (never auto-merge).
+      ABIS_DEDUP_ENABLED: "true"
+      ABIS_DEDUP_THRESHOLD: "0.85"
+    resources:
+      requests:
+        cpu: 150m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
