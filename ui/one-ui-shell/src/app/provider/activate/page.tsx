@@ -4,6 +4,14 @@
  * Provider Activation Page — Health OS §6
  *
  * "Sign in as a person; practice as a provider only under activated Provider ID."
+ *
+ * L2 — optional provider biometric step-up. On activation the provider may add a
+ * biometric factor. VARAPI keys provider biometrics by the provider public id, so
+ * the subjectRef is the providerId. Care-first outcome handling:
+ *   MATCH        → activation proceeds and is marked biometric-verified.
+ *   NO_MATCH     → activation is BLOCKED with an honest message (the only blocking outcome).
+ *   UNAVAILABLE  → falls back to the existing activation factor; never blocks on a biometric outage.
+ *   no probe     → activation behaves exactly as it did before (backward compatible).
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -12,6 +20,8 @@ import { ShieldCheck, Loader2, AlertTriangle } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { ProviderRoleActivationRail } from "@/components/auth/ProviderRoleActivationRail";
 import { PageShell } from "@/components/PageShell";
+import { BiometricVerifyField } from "@/components/biometric/BiometricVerifyField";
+import type { Modality } from "@/hooks/queries/useAbisBiometric";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { apiClient } from "@/lib/api-client";
 import {
@@ -19,6 +29,8 @@ import {
   recordFromLinkedProviderId,
   type ProviderActivationRecord,
 } from "@/lib/provider-activation";
+
+type BiometricProbe = { modality: Modality; probeBase64: string };
 
 export default function ProviderActivatePage() {
   const router = useRouter();
@@ -30,21 +42,69 @@ export default function ProviderActivatePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activating, setActivating] = useState(false);
+  const [probe, setProbe] = useState<BiometricProbe | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [stepUpError, setStepUpError] = useState("");
 
-  const handleActivate = useCallback(
-    (provider: ProviderActivationRecord) => {
-      if (!user || !provider.providerId) return;
+  const finaliseActivation = useCallback(
+    (provider: ProviderActivationRecord, biometricVerified: boolean) => {
       setActivating(true);
       activateProvider(provider.providerId);
 
       if (typeof window !== "undefined") {
         sessionStorage.setItem("exp:provider_display", provider.displayName);
         sessionStorage.setItem("exp:provider_cadre", provider.cadre);
+        if (biometricVerified) {
+          sessionStorage.setItem("exp:provider_biometric_verified", "true");
+        } else {
+          sessionStorage.removeItem("exp:provider_biometric_verified");
+        }
       }
 
       router.replace(returnTo);
     },
-    [user, activateProvider, returnTo, router],
+    [activateProvider, returnTo, router],
+  );
+
+  const runActivation = useCallback(
+    async (provider: ProviderActivationRecord) => {
+      if (!user || !provider.providerId || activating || verifying) return;
+      setStepUpError("");
+
+      // No biometric captured → activation behaves exactly as it did before.
+      if (!probe) {
+        finaliseActivation(provider, false);
+        return;
+      }
+
+      // Optional step-up: verify the captured probe against this provider registration.
+      setVerifying(true);
+      let outcome = "UNAVAILABLE";
+      try {
+        const res = await apiClient.post<{ result?: string }>(
+          `/internal/v1/identity/providers/${encodeURIComponent(provider.providerId)}/biometric-verify`,
+          { modality: probe.modality, probeBase64: probe.probeBase64 },
+        );
+        outcome = (res?.result ?? "UNAVAILABLE").toUpperCase();
+      } catch {
+        // Care-first: a biometric outage must never block activation.
+        outcome = "UNAVAILABLE";
+      } finally {
+        setVerifying(false);
+      }
+
+      if (outcome === "NO_MATCH") {
+        // The only blocking outcome. Honest message; activation is not completed.
+        setStepUpError(
+          "Biometric did not match this provider registration. Activation was not completed — retry the capture, or contact your facility administrator.",
+        );
+        return;
+      }
+
+      // MATCH → proceed biometric-verified; UNAVAILABLE → fall back to the existing factor.
+      finaliseActivation(provider, outcome === "MATCH");
+    },
+    [user, probe, activating, verifying, finaliseActivation],
   );
 
   useEffect(() => {
@@ -90,16 +150,14 @@ export default function ProviderActivatePage() {
     };
   }, [user]);
 
-  useEffect(() => {
-    if (loading || activating || providers.length !== 1) return;
-    handleActivate(providers[0]!);
-  }, [loading, activating, providers, handleActivate]);
-
   function handleSkip() {
     router.replace("/home");
   }
 
   if (!user) return null;
+
+  const showActivationUi = !loading && !error && providers.length >= 1 && !activating;
+  const busy = verifying;
 
   return (
     <AppLayout>
@@ -145,35 +203,96 @@ export default function ProviderActivatePage() {
             </div>
           )}
 
-          {!loading && providers.length > 1 && !activating && (
+          {showActivationUi && (
             <div className="space-y-3">
-              {providers.map((p) => (
-                <button
-                  key={p.providerId}
-                  type="button"
-                  onClick={() => handleActivate(p)}
-                  className="w-full text-left rounded-lg border border-border bg-card p-4 hover:border-impilo-400 hover:ring-1 hover:ring-impilo-200 transition-all"
+              {/* L2 — optional provider biometric step-up. */}
+              <BiometricVerifyField
+                label="Add biometric verification (optional)"
+                disabled={busy}
+                onProbe={(p) => {
+                  setProbe(p);
+                  setStepUpError("");
+                }}
+              />
+
+              {stepUpError && (
+                <div
+                  className="rounded-lg border border-danger/28 bg-danger-soft p-3 text-sm text-red-800"
+                  data-testid="provider-stepup-error"
                 >
+                  <AlertTriangle className="h-4 w-4 inline mr-1" /> {stepUpError}
+                </div>
+              )}
+
+              {providers.length === 1 ? (
+                <div className="rounded-lg border border-border bg-card p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-foreground">{p.displayName}</p>
+                      <p className="font-medium text-foreground">{providers[0]!.displayName}</p>
                       <p className="text-sm text-muted-foreground">
-                        {p.cadre} — {p.registrationNumber}
+                        {providers[0]!.cadre} — {providers[0]!.registrationNumber}
                       </p>
-                      {p.licensureExpiry && (
+                      {providers[0]!.licensureExpiry && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Licence valid until {p.licensureExpiry}
+                          Licence valid until {providers[0]!.licensureExpiry}
                         </p>
                       )}
                     </div>
                     <ShieldCheck className="h-5 w-5 text-green-500" />
                   </div>
-                </button>
-              ))}
+                  <button
+                    type="button"
+                    data-testid="provider-activate-btn"
+                    onClick={() => runActivation(providers[0]!)}
+                    disabled={busy}
+                    className="mt-4 w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-60"
+                  >
+                    {busy ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Verifying biometric…
+                      </span>
+                    ) : probe ? (
+                      "Verify & activate provider role"
+                    ) : (
+                      "Activate provider role"
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {providers.map((p) => (
+                    <button
+                      key={p.providerId}
+                      type="button"
+                      data-testid={`provider-activate-${p.providerId}`}
+                      onClick={() => runActivation(p)}
+                      disabled={busy}
+                      className="w-full text-left rounded-lg border border-border bg-card p-4 hover:border-impilo-400 hover:ring-1 hover:ring-impilo-200 transition-all disabled:opacity-60"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-foreground">{p.displayName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {p.cadre} — {p.registrationNumber}
+                          </p>
+                          {p.licensureExpiry && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Licence valid until {p.licensureExpiry}
+                            </p>
+                          )}
+                        </div>
+                        <ShieldCheck className="h-5 w-5 text-green-500" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <button
                 type="button"
                 onClick={handleSkip}
-                className="block mx-auto mt-4 text-xs text-muted-foreground underline"
+                disabled={busy}
+                className="block mx-auto mt-4 text-xs text-muted-foreground underline disabled:opacity-60"
               >
                 Skip — continue without provider role
               </button>

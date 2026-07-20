@@ -363,6 +363,26 @@ public class VarapiServiceClient {
     }
 
     /**
+     * Provider biometric step-up verify (L2). VARAPI keys provider biometrics by the
+     * provider public id (the {@code {providerPublicId}} path segment on
+     * {@code /v1/provider-biometric}), so the subjectRef here is the providerId.
+     *
+     * <p>Body contract mirrors VARAPI's {@code VerifyBody}:
+     * {@code {modality, templateDataBase64, workflowType, contextType, biometricIntent}}.
+     * Returns the unwrapped verify result ({@code {result, confidence, verificationEventId, ...}}).
+     * Throws {@link org.springframework.web.client.HttpStatusCodeException} on any 4xx/5xx so the
+     * caller can classify honestly — a genuine identity NO_MATCH arrives as a 200 body from VARAPI.</p>
+     */
+    public JsonNode verifyProviderBiometric(String providerPublicId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/provider-biometric/"
+                + URLEncoder.encode(providerPublicId, StandardCharsets.UTF_8) + "/verify";
+        log.info("VARAPI: provider biometric step-up verify for provider={}", providerPublicId);
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Look up a provider registration by the person's Health ID (actor ID).
      *
      * <p>Used by the post-login identity resolution flow to discover whether
