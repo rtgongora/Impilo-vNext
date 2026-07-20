@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.varapi.persistence.entity;
 
 import jakarta.persistence.*;
 import zw.gov.mohcc.impilo.varapi.core.biometric.ProviderBiometricModality;
+import zw.gov.mohcc.impilo.varapi.core.biometric.ProviderBiometricTemplateConverter;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -33,6 +34,9 @@ public class ProviderBiometricTemplateEntity {
     @Column(name = "template_hash", nullable = false, length = 64)
     private String templateHash;
 
+    // Encrypted at rest (AES-256-GCM) — biometric templates are irreversible, non-resettable secrets
+    // and must never sit in plaintext (PII Enforcement Wave 0.1).
+    @Convert(converter = ProviderBiometricTemplateConverter.class)
     @Column(name = "template_data", nullable = false)
     private byte[] templateData;
 
