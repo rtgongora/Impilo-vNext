@@ -439,6 +439,7 @@ export const ROUTES: RouteDefinition[] = [
   // â”€â”€ Zone: Pharmacy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/pharmacy", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Pharmacy Dashboard", navLabel: "Pharmacy", navZone: "work" },
   { path: "/pharmacy/dispense", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Dispensing", navLabel: "Dispense", navZone: "work" },
+  { path: "/pharmacy/collect", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Collect a prescription", navLabel: "Collect / pickup", navZone: "work" },
   { path: "/pharmacy/stock", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Stock Management", navLabel: "Stock", navZone: "work" },
   { path: "/pharmacy/prescriptions", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Prescriptions", navLabel: "Prescriptions", navZone: "work" },
   { path: "/pharmacy/transaction-journey", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Rx Transaction Journey", navLabel: "Rx Journey", navZone: "work" },
@@ -955,7 +956,7 @@ export const ROUTES: RouteDefinition[] = [
 // review surface for place self-service case types the Trust Console does not own. Total 755.
 // Digital SMART card (Jul 2026): +1 — /citizen/wallet/smart-card, the citizen's browser card at
 // parity with the physical card (identity / pay / health functions). Total 757.
-export const EXPECTED_ROUTE_COUNT = 762;
+export const EXPECTED_ROUTE_COUNT = 763;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

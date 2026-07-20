@@ -253,4 +253,39 @@ public class PharmacyController {
                 "error", Map.of("code", code, "message", message != null ? message : "Pharmacy upstream unavailable"),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
+
+    /**
+     * Claim a medication pickup with a token, optionally verifying the collector's biometric
+     * (A4 seam). Body: {@code {token, deviceFingerprint?, biometricSubjectRef?, biometricModality?,
+     * biometricProbeBase64?}}. A NO_MATCH biometric is a real service 4xx and is surfaced honestly
+     * (COLLECTION_REJECTED), not masked as a 502.
+     */
+    @PostMapping("/pickup/claim")
+    public ResponseEntity<Map<String, Object>> claimPickup(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        if (body == null || body.get("token") == null || body.get("token").toString().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "error", Map.of("code", "TOKEN_REQUIRED", "message", "A pickup token is required"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+        try {
+            JsonNode data = pharmacyClient.claimPickup(body);
+            if (data == null) {
+                return upstreamFailure("PHARMACY_UNAVAILABLE", "No claim payload returned", requestId, correlationId);
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", data,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            // Honest passthrough: invalid/expired token or a biometric NO_MATCH is a real rejection.
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of(
+                    "error", Map.of("code", "COLLECTION_REJECTED",
+                            "message", "Collection was rejected — invalid/expired token or biometric mismatch."),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return upstreamFailure("PHARMACY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
 }

@@ -56,6 +56,18 @@ public class PharmacyServiceClient {
     }
 
     /**
+     * Claim a medication pickup with a token (+ optional biometric collector verify).
+     * Body: {@code {token, deviceFingerprint?, biometricSubjectRef?, biometricModality?,
+     * biometricProbeBase64?}}. Forwards the whole map so the biometric seam reaches the service.
+     */
+    public JsonNode claimPickup(java.util.Map<String, Object> body) {
+        String url = baseUrl + "/v1/pickup/claim";
+        log.info("Pharmacy: Claiming medication pickup");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Get the pharmacy worklist for a facility.
      */
     public JsonNode getWorklist(String facilityId, String status) {
