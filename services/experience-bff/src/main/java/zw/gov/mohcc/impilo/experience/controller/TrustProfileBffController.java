@@ -48,8 +48,16 @@ public class TrustProfileBffController {
     @GetMapping("/profile/{healthId}")
     public ResponseEntity<Map<String, Object>> profile(
             @PathVariable String healthId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorHealthId,
             @RequestParam(name = "providerId", required = false) String providerId) {
-        return ResponseEntity.ok(trustProfileComposer.compose(healthId, providerId));
+        // PII Wave 0.3: the trust profile is the signed-in person's own four-block
+        // view. The subject Health ID is server-authoritative — the JWT-proven
+        // actor (X-Actor-ID), never the client-supplied path — so a caller can
+        // only compose their own profile and the browser need not send its Health
+        // ID. The path variable is retained for route compatibility but ignored
+        // when an authoritative actor is present.
+        String subject = (actorHealthId != null && !actorHealthId.isBlank()) ? actorHealthId : healthId;
+        return ResponseEntity.ok(trustProfileComposer.compose(subject, providerId));
     }
 
     @PostMapping("/employment-match")

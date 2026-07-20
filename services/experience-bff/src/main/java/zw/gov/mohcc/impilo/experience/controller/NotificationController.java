@@ -50,7 +50,12 @@ public class NotificationController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            String resolvedRecipient = firstNonBlank(recipientId, actorId);
+            // PII Wave 0.3: the recipient is server-authoritative — the JWT-proven
+            // actor (X-Actor-ID) always wins over a client-supplied recipientId, so
+            // an authenticated caller can only read their own inbox (closes the
+            // recipientId spoofing hole). recipientId survives only as a fallback
+            // for service-to-service calls that carry no authenticated actor.
+            String resolvedRecipient = firstNonBlank(actorId, recipientId);
             JsonNode data = client.listNotifications(resolvedRecipient);
             JsonNode content = (data != null && data.has("content")) ? data.get("content") : data;
             return ResponseEntity.ok(Map.of(

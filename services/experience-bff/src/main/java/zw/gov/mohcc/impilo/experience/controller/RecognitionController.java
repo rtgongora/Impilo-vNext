@@ -46,9 +46,17 @@ public class RecognitionController {
     @GetMapping("/{healthId}")
     public ResponseEntity<Map<String, Object>> recognition(
             @PathVariable String healthId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        RecognitionCompositionService.RecognitionView view = recognitionService.resolve(healthId);
+        // PII Wave 0.3: recognition is a self-only badge lookup. The subject is
+        // server-authoritative — the JWT-proven actor (X-Actor-ID), never the
+        // client-supplied path — so a caller can only read their own recognition
+        // and the browser need not carry a subject identifier. The path variable
+        // is retained for route compatibility but ignored when an authoritative
+        // actor is present.
+        String subject = (actorId != null && !actorId.isBlank()) ? actorId : healthId;
+        RecognitionCompositionService.RecognitionView view = recognitionService.resolve(subject);
         return ResponseEntity.ok(Map.of(
                 "data", view,
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
