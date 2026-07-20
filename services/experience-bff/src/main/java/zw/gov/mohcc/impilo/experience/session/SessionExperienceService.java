@@ -81,8 +81,10 @@ public class SessionExperienceService {
         Map<String, Object> contract = new LinkedHashMap<>();
         contract.put("authenticated", true);
         contract.put("loginMethod", loginMethod != null ? loginMethod : "unknown");
+        // PII Wave 0.3: the session contract drives visibility/tabs by identityType
+        // and providerWorkerId; it must NOT echo the raw Health ID to the browser
+        // (the UI reads identityType/providerWorkerId, never identity.healthId).
         contract.put("identity", Map.of(
-                "healthId", actorId,
                 "providerWorkerId", resolvedProviderId != null ? resolvedProviderId : "",
                 "identityType", identityType
         ));

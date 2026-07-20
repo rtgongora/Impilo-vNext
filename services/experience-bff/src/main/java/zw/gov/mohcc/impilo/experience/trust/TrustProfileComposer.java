@@ -72,7 +72,10 @@ public class TrustProfileComposer {
 
     public Map<String, Object> compose(String healthId, String providerIdOverride) {
         Map<String, Object> profile = new LinkedHashMap<>();
-        profile.put("healthId", healthId);
+        // PII Wave 0.3: do NOT echo the raw Health ID to the browser. The healthId
+        // is used only server-side below (professional/employment/operational
+        // lookups); the trust-profile UI never reads it back (TrustProfilePanel
+        // renders the four blocks + generatedAt only), so the browser holds no HID.
         profile.put("generatedAt", Instant.now().toString());
         profile.put("identity", identityBlock());
         profile.put("professional", professionalBlock(healthId, providerIdOverride));
