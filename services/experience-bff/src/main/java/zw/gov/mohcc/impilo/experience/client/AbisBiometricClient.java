@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
 
@@ -42,8 +43,51 @@ public class AbisBiometricClient {
         return post("/v1/abis/verify", body);
     }
 
+    // --- Adjudication + duplicate-investigation console (W3c/W3e) ---
+
+    /** List the adjudication queue (optionally filtered by status). */
+    public JsonNode listCases(String status, int page, int size) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/abis/adjudication/cases")
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        return get(b.toUriString());
+    }
+
+    /** Fetch one adjudication case with its candidate list + scores. */
+    public JsonNode getCase(long id) {
+        return get(baseUrl + "/v1/abis/adjudication/cases/" + id);
+    }
+
+    /** Assign a reviewer to a case (→ IN_REVIEW). */
+    public JsonNode assign(long id, Map<String, Object> body) {
+        return post("/v1/abis/adjudication/cases/" + id + "/assign", body);
+    }
+
+    /** Record a DISTINCT / CONFIRMED_DUPLICATE decision (→ RESOLVED). Never merges. */
+    public JsonNode decide(long id, Map<String, Object> body) {
+        return post("/v1/abis/adjudication/cases/" + id + "/decision", body);
+    }
+
+    /** Governed, dual-control merge (the inbound X-Actor-ID is forwarded as the second reviewer). */
+    public JsonNode merge(long id, Map<String, Object> body) {
+        return post("/v1/abis/adjudication/cases/" + id + "/merge", body);
+    }
+
+    /** Operational stats (template volumes, quality distribution, adjudication queue). */
+    public JsonNode stats() {
+        return get(baseUrl + "/v1/abis/stats");
+    }
+
     private JsonNode post(String path, Map<String, Object> body) {
         ResponseEntity<JsonNode> resp = restTemplate.postForEntity(baseUrl + path, body, JsonNode.class);
+        return resp.getBody();
+    }
+
+    private JsonNode get(String url) {
+        ResponseEntity<JsonNode> resp = restTemplate.getForEntity(url, JsonNode.class);
         return resp.getBody();
     }
 }

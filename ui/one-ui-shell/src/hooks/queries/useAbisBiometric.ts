@@ -31,11 +31,29 @@ export function useExtractTemplate() {
   });
 }
 
-/** Enrol an extracted template under an opaque subject reference. */
+/**
+ * Result of an enrol. When enrol-time dedup opens a duplicate-investigation case,
+ * {@link EnrollResult.duplicateReview} is populated — the enrol still succeeded
+ * (care-first); a human adjudicates and any merge is a separate dual-control action.
+ */
+export interface EnrollResult {
+  id?: string;
+  subjectRef?: string;
+  status?: string;
+  version?: number;
+  duplicateReview?: {
+    caseId: number;
+    candidateCount: number;
+    topScore?: number;
+    status: string;
+  } | null;
+}
+
+/** Enrol an extracted template under an opaque subject reference (dedup runs server-side). */
 export function useEnrollTemplate() {
   return useMutation({
     mutationFn: (input: { subjectRef: string; modality: Modality; templateBase64: string; position?: string }) =>
-      apiClient.post<{ id?: string; subjectRef?: string; status?: string }>(`${BASE}/enroll`, input),
+      apiClient.post<EnrollResult>(`${BASE}/enroll`, input),
   });
 }
 

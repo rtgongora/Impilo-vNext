@@ -630,6 +630,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/operations/vito/internal-search", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Internal Search", navLabel: "Internal Search", navZone: "professional" },
   { path: "/operations/vito/biometrics", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Biometrics", navLabel: "Biometrics", navZone: "professional" },
   { path: "/operations/vito/biometric-enrol", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Biometric enrol & verify", navLabel: "Biometric enrol/verify", navZone: "professional" },
+  { path: "/operations/vito/biometric-onboard", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Biometric onboarding", navLabel: "Biometric onboarding", navZone: "professional" },
+  { path: "/operations/vito/adjudication", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Biometric adjudication", navLabel: "Adjudication console", navZone: "professional" },
+  { path: "/operations/vito/adjudication/[caseId]", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Adjudication case", navLabel: "Adjudication case", navZone: "professional" },
   { path: "/operations/vito/recovery", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Recovery & SHS", navLabel: "Recovery & SHS", navZone: "professional" },
   { path: "/operations/vito/registry-admin", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Registry Admin", navLabel: "Registry Admin", navZone: "professional" },
   { path: "/operations/butano", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "SHR Operations", navLabel: "SHR Ops", navZone: "professional" },
@@ -956,7 +959,11 @@ export const ROUTES: RouteDefinition[] = [
 // review surface for place self-service case types the Trust Console does not own. Total 755.
 // Digital SMART card (Jul 2026): +1 — /citizen/wallet/smart-card, the citizen's browser card at
 // parity with the physical card (identity / pay / health functions). Total 757.
-export const EXPECTED_ROUTE_COUNT = 763;
+// ABIS ops platform W3e (Jul 2026): +3 — /operations/vito/biometric-onboard (enrol onboarding:
+// capture→extract→dedup→enrol) and the adjudication console /operations/vito/adjudication
+// (queue) + /operations/vito/adjudication/[caseId] (case detail: assign/decide/dual-control
+// merge). Total 766.
+export const EXPECTED_ROUTE_COUNT = 766;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
