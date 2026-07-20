@@ -23,6 +23,14 @@
     </description>
 
     <dependencies>
+        <!-- Shared trust context + security baseline (TrustContextFilter, RateLimitFilter,
+             AdminAuditOutboxSink) — the estate-standard sovereign-service posture. -->
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
