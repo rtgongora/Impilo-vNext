@@ -8,6 +8,9 @@ const { searchParamsGet } = vi.hoisted(() => ({ searchParamsGet: vi.fn() }));
 vi.mock("@/lib/api-client", () => ({ apiClient: { get } }));
 vi.mock("next/navigation", () => ({
   useSearchParams: () => ({ get: searchParamsGet }),
+  // PublicShell now mounts the PublicBackBar continuity strip on sub-pages.
+  usePathname: () => "/welcome/emergency/track",
+  useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
 }));
 
 const STATUS = {

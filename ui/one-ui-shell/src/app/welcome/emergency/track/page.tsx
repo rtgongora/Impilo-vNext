@@ -13,6 +13,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, RefreshCw } from "lucide-react";
 import { PublicShell } from "@/components/public/PublicShell";
+import { SosStatusTimeline } from "@/components/public/emergency/SosStatusTimeline";
 import { apiClient } from "@/lib/api-client";
 
 interface SosStatus {
@@ -131,10 +132,11 @@ function EmergencyTrackInner() {
             )}
           </div>
           {status.stage && <p className="mt-3 text-lg font-semibold text-slate-900">{status.stage}</p>}
+          <SosStatusTimeline status={status.status} callbackPending={status.callbackPending} />
           {status.callbackPending && (
-            <p className="mt-2 text-sm text-slate-600">
-              A responder will call you back on the number you provided to confirm before help is
-              dispatched.
+            <p className="mt-3 text-sm text-slate-600">
+              Keep your phone nearby — the responder calls the number you provided to confirm
+              before anything is arranged.
             </p>
           )}
         </section>

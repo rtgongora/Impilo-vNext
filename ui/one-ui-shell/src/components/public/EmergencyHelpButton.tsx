@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Siren } from "lucide-react";
 
 /**
@@ -22,6 +25,11 @@ export function EmergencyHelpButton({
   raised?: boolean;
   className?: string;
 }) {
+  // On the emergency journey itself the page IS the emergency surface (with its
+  // own permanent call actions) — a floating link back to it is pure noise.
+  const pathname = usePathname();
+  if (pathname?.startsWith("/welcome/emergency")) return null;
+
   return (
     <Link
       href="/welcome/emergency"

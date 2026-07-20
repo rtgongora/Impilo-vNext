@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
+import { EMERGENCY_CONTACTS } from "@/config/emergency";
 
 const CATEGORY_LABELS: Record<string, string> = {
   "when-to-seek-care": "When to seek care",
@@ -165,8 +166,11 @@ export function PublicHealthInfo() {
         </div>
         <p className="mt-6 border-t border-slate-100 pt-4 text-xs text-slate-500">
           This is general health information, not personal medical advice. For advice about your
-          own health, speak to a health worker. In an emergency, call 999 or 112 or go to the
-          nearest health facility.
+          own health, speak to a health worker. In an emergency, call{" "}
+          {EMERGENCY_CONTACTS.slice(0, 2)
+            .map((c) => c.number)
+            .join(" or ")}{" "}
+          or go to the nearest health facility.
         </p>
       </article>
     );

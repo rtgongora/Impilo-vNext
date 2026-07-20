@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { EmergencyHelpButton } from "./EmergencyHelpButton";
 import { PublicHeader } from "./PublicHeader";
+import { PublicBackBar } from "./PublicBackBar";
 import { PublicFooter } from "./PublicFooter";
 import { SkipToContent } from "./SkipToContent";
 import { ServiceAdvisoryBanner } from "@/components/advisory/ServiceAdvisoryBanner";
@@ -20,6 +21,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
       <SkipToContent targetId="main-content" />
 
       <PublicHeader />
+
+      {/* Continuity: every public sub-page gets Back + Home (renders nothing on /welcome). */}
+      <PublicBackBar />
 
       {/*
         Nompilo Service Advisory — resolved as DATA and mounted once here so it appears across

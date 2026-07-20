@@ -1,71 +1,28 @@
-import Link from "next/link";
 import { PublicShell } from "@/components/public/PublicShell";
-import { EmergencyHero } from "@/components/public/EmergencyHero";
-import { EmergencyAssistanceForm } from "@/components/public/EmergencyAssistanceForm";
+import { EmergencyExperience } from "@/components/public/emergency/EmergencyExperience";
+import { EmergencyGuidanceCards } from "@/components/public/emergency/EmergencyGuidanceCards";
 
 export const metadata = {
-  title: "Emergency & public health — Impilo",
-  description: "Emergency numbers and current public-health guidance. Reachable without an account.",
+  title: "Emergency help — Impilo",
+  description:
+    "Verified emergency numbers, Nompilo guided emergency triage, nearest emergency care and assistance callback — no account needed.",
 };
 
 /**
- * Public emergency & public-health information (part of G-CZO-02). Static public-safety
- * content, reachable without login. No personal/health data.
+ * Public Emergency journey (G-CZO-02 / gateway doctrine §7). Reachable without
+ * login, never gated. The interactive responder (EmergencyExperience) leads;
+ * danger-sign cards and public-health guidance follow as scannable cards, not
+ * text walls. Emergency numbers come from src/config/emergency.ts ONLY.
+ *
+ * Back/home continuity comes from the PublicShell back bar; the OS shell chrome
+ * (taskbar, Nompilo command layer) is suppressed on this route even for
+ * authenticated users (shell-visibility.ts) — the triage panel IS Nompilo here.
  */
 export default function EmergencyPage() {
   return (
     <PublicShell>
-      <nav className="text-sm text-slate-500">
-        <Link href="/welcome" className="hover:text-slate-900">Welcome</Link> / Emergency
-      </nav>
-
-      <div className="mt-3 rounded-2xl border border-red-300 bg-red-50 p-6">
-        <EmergencyHero />
-        <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg bg-white p-4">
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Ambulance / Police / Fire</dt>
-            <dd className="mt-1 text-2xl font-bold text-slate-900">999</dd>
-          </div>
-          <div className="rounded-lg bg-white p-4">
-            <dt className="text-xs uppercase tracking-wide text-slate-500">Alternative emergency</dt>
-            <dd className="mt-1 text-2xl font-bold text-slate-900">112</dd>
-          </div>
-          <div className="rounded-lg bg-white p-4">
-            <dt className="text-xs uppercase tracking-wide text-slate-500">National hotline</dt>
-            <dd className="mt-1 text-lg font-semibold text-slate-900">2019 (toll-free)</dd>
-          </div>
-        </dl>
-      </div>
-
-      {/* Digital request for urgent assistance (doctrine §7.3). The call numbers above stay
-          prominent and are never behind this form — calling directly is always fastest. */}
-      <EmergencyAssistanceForm />
-
-      <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="font-semibold text-slate-900">When to seek urgent care</h2>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
-          <li>Difficulty breathing, chest pain, or severe bleeding</li>
-          <li>Sudden weakness, confusion, or difficulty speaking</li>
-          <li>Severe dehydration, high fever in an infant, or a serious injury</li>
-          <li>Pregnancy emergencies or reduced baby movement</li>
-        </ul>
-      </section>
-
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="font-semibold text-slate-900">Public-health guidance</h2>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
-          <li>Wash hands with soap and use safe drinking water to prevent cholera and diarrhoea.</li>
-          <li>Keep children up to date with routine immunisations at your nearest clinic.</li>
-          <li>Seek early testing and treatment for malaria, TB and other common illnesses.</li>
-          <li>Follow current Ministry of Health advisories during outbreaks.</li>
-        </ul>
-        <Link
-          href="/welcome/find-care"
-          className="mt-4 inline-block text-sm font-medium text-emerald-700 hover:text-emerald-800"
-        >
-          Find a facility →
-        </Link>
-      </section>
+      <EmergencyExperience />
+      <EmergencyGuidanceCards />
     </PublicShell>
   );
 }

@@ -1,37 +1,43 @@
 "use client";
 
 import Link from "next/link";
+import { Phone } from "lucide-react";
+import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { PublicAccessibilityMenu } from "./PublicAccessibilityMenu";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { useI18n } from "@/lib/i18n/useI18n";
 
 /**
- * Client chrome island for the public L0 header (C8 i18n). Extracted from the
- * server-rendered {@link PublicShell} so the interactive controls — accessibility
- * menu, language switcher, and the sign-in / create-account actions — can consume
- * the client-side i18n catalog without forcing the whole shell (or the server page
- * children) into the client bundle. Renders English on SSR + first paint, then the
- * stored locale after mount (hydration-safe).
+ * Client chrome island for the public L0 header (C8 i18n). Renders the OFFICIAL
+ * Impilo wordmark (never a CSS-drawn approximation) and keeps the three anchors
+ * a stranded visitor always needs — Find care, Emergency, and home — reachable
+ * from every public page, alongside accessibility, language and account actions.
+ * Hydration-safe: English on SSR + first paint, stored locale after mount.
  */
 export function PublicHeader() {
   const { t } = useI18n();
 
   return (
     <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
         <Link
           href="/welcome"
-          className="flex items-center gap-2 font-semibold text-slate-900"
+          aria-label="Impilo — home"
+          className="flex items-center focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
         >
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-600 text-white">
-            i
-          </span>
-          <span className="text-lg">Impilo</span>
-          <span className="hidden text-sm font-normal text-slate-500 sm:inline">
+          <ImpiloBrandLogo variant="full" tone="brand" size={30} />
+          <span className="ml-2 hidden text-sm font-normal text-slate-500 md:inline">
             {t("public.chrome.healthOs")}
           </span>
         </Link>
-        <nav className="flex items-center gap-2 text-sm">
+
+        <nav className="flex flex-wrap items-center gap-1.5 text-sm" aria-label="Public">
+          <Link
+            href="/welcome/find-care"
+            className="hidden rounded-md px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-100 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:inline-block"
+          >
+            {t("public.chrome.findCare")}
+          </Link>
           <PublicAccessibilityMenu />
           <LanguageSwitcher />
           <Link
@@ -45,6 +51,13 @@ export function PublicHeader() {
             className="rounded-md bg-emerald-600 px-3 py-1.5 font-medium text-white hover:bg-emerald-700 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
           >
             {t("public.chrome.createAccount")}
+          </Link>
+          <Link
+            href="/welcome/emergency"
+            className="inline-flex items-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-3 py-1.5 font-semibold text-red-700 hover:bg-red-100 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+          >
+            <Phone className="h-3.5 w-3.5" aria-hidden />
+            {t("public.chrome.emergency")}
           </Link>
         </nav>
       </div>
