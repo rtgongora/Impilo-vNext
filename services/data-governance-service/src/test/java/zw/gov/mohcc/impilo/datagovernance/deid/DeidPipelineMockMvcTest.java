@@ -384,6 +384,141 @@ public class DeidPipelineMockMvcTest {
         }
     }
 
+    // ── G) NDR gold→release leak regression (W2d) ──
+
+    @Nested
+    @DisplayName("G) NDR gold→release build — the released analytics zone leaks no PII")
+    class NdrGoldReleaseRegression {
+
+        // A raw subject reference that also joins the NDR bronze zone.
+        private static final String JOIN_PATIENT_REF_1 = "PATIENT-REF-0001";
+
+        @Test
+        @DisplayName("gold rows (direct IDs, FHIR-extension IDs, free-text, bronze join key, small cell) release clean")
+        void releaseBuildProducesCleanDeidentifiedZone() throws Exception {
+            String policyCode = "pol-ndr-rel-" + System.nanoTime();
+            String datasetCode = "ds-ndr-rel-" + System.nanoTime();
+            // Deliberately allowlist identifier-named columns to prove name-based
+            // stripping beats a mis-configured allowlist. The raw bronze join
+            // columns (patient_ref, source_event_id) are NOT allowlisted → dropped.
+            upsertPolicy(policyCode, "RESEARCH", "ACTIVE", 2,
+                    List.of("dob", "district", "visit_date", "diagnosis", "gender",
+                            "name", "cpid", "extensionCpid", "patientHealthId"),
+                    Map.of("columns", Map.of(
+                                    "dob", "AGE_BAND_5",
+                                    "district", "DISTRICT",
+                                    "visit_date", "MONTH",
+                                    "diagnosis", "RARE_TO_OTHER"),
+                            "quasiColumns", List.of("age_band", "district"),
+                            "rareThreshold", 2));
+            createDataset(datasetCode, policyCode, "test-secret-a", "RELEASED");
+
+            String body = requestRunRaw(datasetCode, ndrGoldRows());
+            assertNoPii(body);
+            // No raw subject/join key survives anywhere in the released payload.
+            assertThat(body).doesNotContain("PATIENT-REF");
+            assertThat(body).doesNotContain("evt-ndr-");
+
+            JsonNode run = MAPPER.readTree(body);
+            assertThat(run.path("status").asText()).isEqualTo("RELEASED");
+            assertThat(run.path("rows_in").asInt()).isEqualTo(5);
+            assertThat(run.path("rows_out").asInt()).isEqualTo(4);
+            assertThat(run.path("rows_suppressed").asInt()).isEqualTo(1);   // singleton class suppressed
+            assertThat(run.path("qa_report").path("min_retained_class_size").asInt())
+                    .isGreaterThanOrEqualTo(2);                              // k-anonymity holds
+
+            JsonNode rows = run.path("released_rows");
+            assertThat(rows.size()).isEqualTo(4);
+            for (JsonNode row : rows) {
+                // tokenised subject, never the raw patient reference
+                assertThat(row.path("subject_token").asText()).matches("[0-9a-f]{64}");
+                // direct identifiers gone (even the allowlisted / FHIR-extension ones)
+                assertThat(row.has("patient_ref")).isFalse();
+                assertThat(row.has("source_event_id")).isFalse();
+                assertThat(row.has("name")).isFalse();
+                assertThat(row.has("cpid")).isFalse();
+                assertThat(row.has("nid")).isFalse();
+                assertThat(row.has("phone")).isFalse();
+                assertThat(row.has("healthId")).isFalse();
+                assertThat(row.has("extensionCpid")).isFalse();
+                assertThat(row.has("patientHealthId")).isFalse();
+                // quasi-identifiers generalised, raw dob gone
+                assertThat(row.has("dob")).isFalse();
+                assertThat(row.path("age_band").asText()).isEqualTo("40-44");
+                assertThat(row.path("district").asText()).isEqualTo("Harare");
+                assertThat(row.path("visit_date").asText()).matches("\\d{4}-\\d{2}");
+            }
+        }
+
+        @Test
+        @DisplayName("a bronze join key smuggled into an allowlisted non-identifier column is caught (REJECTED)")
+        void bronzeJoinKeySmuggledIntoAllowlistedColumnRejects() throws Exception {
+            String policyCode = "pol-ndr-join-" + System.nanoTime();
+            String datasetCode = "ds-ndr-join-" + System.nanoTime();
+            // region_code is not an identifier by NAME, and it is allowlisted — but it
+            // carries the raw subject value, which is a re-identification join key.
+            upsertPolicy(policyCode, "RESEARCH", "ACTIVE", 2,
+                    List.of("gender", "region_code"), Map.of("quasiColumns", List.of()));
+            createDataset(datasetCode, policyCode, "test-secret-a", "TOKENISED");
+
+            Map<String, Object> row1 = new LinkedHashMap<>();
+            row1.put("cpid", JOIN_PATIENT_REF_1);
+            row1.put("gender", "F");
+            row1.put("region_code", JOIN_PATIENT_REF_1);   // raw subject value smuggled through
+            Map<String, Object> row2 = new LinkedHashMap<>();
+            row2.put("cpid", "PATIENT-REF-0002");
+            row2.put("gender", "M");
+            row2.put("region_code", "PATIENT-REF-0002");
+
+            JsonNode run = requestRun(datasetCode, List.of(row1, row2));
+
+            assertThat(run.path("status").asText()).isEqualTo("REJECTED");
+            assertThat(run.path("rejection_reason").asText()).contains("PII_LEAK_DETECTED");
+            assertThat(run.path("released_rows").isEmpty()).isTrue();
+        }
+
+        /** 4 rows in one equivalence class (40-44 / Harare) + 1 singleton (suppressed). */
+        private List<Map<String, Object>> ndrGoldRows() {
+            List<Map<String, Object>> rows = new ArrayList<>();
+            java.time.LocalDate now = java.time.LocalDate.now();
+            int[] ages = {40, 41, 42, 43};   // all in the 40-44 band
+            for (int i = 0; i < ages.length; i++) {
+                rows.add(ndrGoldRow("PATIENT-REF-100" + i,
+                        now.minusYears(ages[i]).minusMonths(1).toString(),
+                        "Harare Province/Harare/Mbare Clinic", "TB"));
+            }
+            rows.add(ndrGoldRow("PATIENT-REF-1009",
+                    now.minusYears(80).minusMonths(1).toString(),
+                    "Manicaland/Mutare/Sakubva Clinic", "RARE-SYNDROME"));   // singleton class
+            return rows;
+        }
+
+        /**
+         * A gold-encounter row flattened for a de-id run: the subject reference doubles
+         * as the {@code cpid} key, and it also appears as the raw {@code patient_ref} /
+         * {@code source_event_id} bronze join columns and as hidden FHIR-extension IDs.
+         */
+        private Map<String, Object> ndrGoldRow(String patientRef, String dob,
+                                               String district, String diagnosis) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("cpid", patientRef);                 // subject key → tokenised, never survives
+            row.put("patient_ref", patientRef);          // raw bronze join key (not allowlisted → dropped)
+            row.put("source_event_id", "evt-ndr-" + patientRef);  // bronze join key (dropped)
+            row.put("name", PII_NAME);                   // free-text name
+            row.put("healthId", PII_HEALTH_ID);
+            row.put("nid", PII_NID);
+            row.put("phone", PII_PHONE);
+            row.put("extensionCpid", patientRef);        // hidden ID in a FHIR extension
+            row.put("patientHealthId", PII_HEALTH_ID);   // hidden ID in a FHIR extension
+            row.put("dob", dob);
+            row.put("gender", "F");
+            row.put("district", district);
+            row.put("diagnosis", diagnosis);
+            row.put("visit_date", "2026-07-03");
+            return row;
+        }
+    }
+
     // ── Helpers ──
 
     private MockHttpServletRequestBuilder withHeaders(MockHttpServletRequestBuilder builder) {

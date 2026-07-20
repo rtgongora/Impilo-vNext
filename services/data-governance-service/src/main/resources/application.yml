@@ -46,9 +46,16 @@ impilo:
     enabled: true
     outbox-table: dgv_event_outbox
   # De-identification pipeline (docs/data-platform/de-identification-pipeline.md).
-  # Per-dataset HMAC secrets are resolved by reference (deid_dataset.secret_ref)
-  # under impilo.deid.secrets.<secret-ref>. Production custody is tshepo-keys:
-  # values are projected from managed secrets (IMPILO_DEID_SECRETS_* env vars);
-  # key material is NEVER committed here and NEVER stored in the database.
+  # Per-dataset HMAC secrets are resolved by reference (deid_dataset.secret_ref).
+  #
+  # secret-source selects the SecretResolver:
+  #   config       (default) — ConfigSecretResolver, values under impilo.deid.secrets.<ref>
+  #                            (projected from managed secrets via IMPILO_DEID_SECRETS_* env vars).
+  #   tshepo-keys            — TshepoKeysSecretResolver, resolves each ref live from the
+  #                            tshepo-keys managed-secret store (GET /v1/secrets/{ref}).
+  # Key material is NEVER committed here and NEVER stored in this service's database.
   deid:
+    secret-source: ${IMPILO_DEID_SECRET_SOURCE:config}
+    tshepo-keys:
+      base-url: ${TSHEPO_KEYS_BASE_URL:http://localhost:8184}
     secrets: {}
