@@ -33,7 +33,8 @@ class LlmProviderRouterTest {
                 properties,
                 registry,
                 Mockito.mock(LlmToolExecutionGateway.class),
-                auditRepository);
+                auditRepository,
+                new PromptPiiScrubber());
 
         LlmResponse response = router.route(new LlmRequest(
                 "TEST", Map.of(), List.of(new LlmMessage("user", "ping")), List.of(), null,
@@ -53,7 +54,8 @@ class LlmProviderRouterTest {
                 properties,
                 registry,
                 Mockito.mock(LlmToolExecutionGateway.class),
-                auditRepository);
+                auditRepository,
+                new PromptPiiScrubber());
 
         LlmResponse response = router.route(new LlmRequest(
                 "TEST", Map.of(), List.of(new LlmMessage("user", "ping")), List.of(), null,
