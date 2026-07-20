@@ -22,13 +22,23 @@ does NOT flow through Traefik and needs ICE/TURN + firewall work.
 >   `turns:turn.impilo.mohcc.gov.zw:443 → 41.57.127.235:443 → Traefik(websecure)
 >    → HostSNI passthrough → livekit:5349 → LiveKit TURN`
 >
-> **Landed in repo + live (DNS-independent, inert until DNS/cert):**
+> **Landed in repo + LIVE, relay PROVEN end-to-end on-estate (2026-07-20):**
 > - `turn.domain: turn.impilo.mohcc.gov.zw` (livekit-config).
 > - `livekit` Service exposes `5349/TCP` (`turn-tls`).
 > - `IngressRouteTCP impilo-mohcc-gov-livekit-turn` (HostSNI passthrough → livekit:5349).
-> - Verified live: SNI handshake to `:443` with `-servername turn.impilo.mohcc.gov.zw`
->   reaches the LiveKit TURN listener (passthrough plumbing proven); existing HTTPS
->   + `/rtc` unregressed; direct media still works.
+> - ⚠️ Gotcha (root-caused live): the ACME Ingress MUST be pinned to the `web`
+>   entrypoint (`traefik.ingress.kubernetes.io/router.entrypoints: web`). An
+>   Ingress rule for the turn host on websecure creates a TLS-TERMINATING route
+>   for that SNI which silently beats the passthrough route. (This — NOT any
+>   Traefik bug — was why passthrough initially failed; Traefik 3.6.13 handles
+>   this scenario correctly.)
+> - Live proof: SNI handshake to `:443` with `-servername turn.impilo.mohcc.gov.zw`
+>   presents the LE cert via LiveKit (TLSv1.3, Verify=0); HTTP-through-TLS gets no
+>   HTTP response (= TURN, not Traefik). 3-peer browser diagnostic with the DNS
+>   record simulated in-browser: relay-only peer gathered a relay candidate,
+>   connected, and decoded real A/V (video 754 KB/162 frames) through
+>   `turns:turn.impilo.mohcc.gov.zw:443` → passthrough → TURN → SFU. On-LAN
+>   baseline + HTTPS + `/rtc` unregressed.
 >
 > **⛔ Remaining external prerequisites (this VM cannot do these):**
 > 1. **DNS** — `turn.impilo.mohcc.gov.zw. A 41.57.127.235` (TTL 300). Authoritative

@@ -34,7 +34,9 @@ const log = (...a) => console.log(...a);
 
 const browser = await chromium.launch({
   args: [
-    "--host-resolver-rules=MAP impilo.mohcc.gov.zw 127.0.0.1",
+    // turn.* mapping simulates the pending public DNS A record (GTA/ZCHPC zone)
+    // so the TURN/TLS relay path is testable on-estate before DNS lands.
+    "--host-resolver-rules=MAP impilo.mohcc.gov.zw 127.0.0.1, MAP turn.impilo.mohcc.gov.zw 10.50.1.67",
     "--ignore-certificate-errors",
     "--use-fake-device-for-media-stream",
     "--use-fake-ui-for-media-stream",

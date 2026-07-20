@@ -12,6 +12,17 @@ kind: Ingress
 metadata:
   name: acme-host-nginx-gov
   namespace: impilo-full-preview
+  annotations:
+    # HTTP-01 challenges are plain HTTP on :80 — bind ONLY the web entrypoint.
+    # Without this, k3s binds Ingresses to ALL entrypoints, and the
+    # turn.impilo.mohcc.gov.zw rule below would create a TLS-TERMINATING route
+    # for that SNI on websecure — which beats (and silently breaks) the
+    # IngressRouteTCP TLS-passthrough route that must own that SNI for TURN
+    # relay (livekit-turn-ingressroutetcp.yaml). Empirically root-caused
+    # 2026-07-20: Traefik DEBUG showed both "Adding Passthrough route" and
+    # "Adding route ... with TLS options default" for the same SNI, with
+    # termination winning.
+    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   ingressClassName: traefik
   rules:
