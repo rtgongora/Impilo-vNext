@@ -3,7 +3,6 @@ package zw.gov.mohcc.impilo.wallet.card;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -16,9 +15,13 @@ import java.util.UUID;
  * payload into the exact ISO 7816-4 APDU frame sequence a contactless reader would
  * transmit to the card's secure element — proving the physical-write hand-off end to
  * end — but stops at the wire: no hardware is driven. A real PC/SC reader driver
- * (live APDU transmit + on-SE keygen) is the hardware follow-on and would replace this
- * bean (declare a {@code @Primary} real {@code NfcCardWriter}); this one is
- * {@code @ConditionalOnMissingBean}.
+ * (live APDU transmit + on-SE keygen) is the hardware follow-on and overrides this
+ * default by declaring a {@code @Primary} real {@code NfcCardWriter}. This one is a
+ * plain {@code @Component} so it always registers as the fallback; {@code @Primary}
+ * on the real writer wins when both are present. (A prior {@code @ConditionalOnMissingBean}
+ * here was unreliable — that condition is only honoured on auto-configuration classes,
+ * not component-scanned beans, so the bean silently failed to register and the service
+ * could not start.)
  *
  * <p>Frames built:</p>
  * <ul>
@@ -28,7 +31,6 @@ import java.util.UUID;
  * </ul>
  */
 @Component
-@ConditionalOnMissingBean(NfcCardWriter.class)
 public class SimulatedNfcCardWriter implements NfcCardWriter {
 
     private static final Logger log = LoggerFactory.getLogger(SimulatedNfcCardWriter.class);
