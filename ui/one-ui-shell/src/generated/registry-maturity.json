@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-16T09:53:47.058Z",
+  "generatedAt": "2026-07-20T16:20:04.521Z",
   "services": {
     "ai-model-registry-service": "unknown-or-partial",
     "analytics-pipeline-service": "unknown-or-partial",
@@ -70,6 +70,7 @@
     "referral-service": "unknown-or-partial",
     "reporting-service": "unknown-or-partial",
     "rito-quality-safety-service": "wired",
+    "participation-service": "unknown-or-partial",
     "rtc-gateway-service": "unknown-or-partial",
     "rules-service": "unknown-or-partial",
     "scheduling-service": "unknown-or-partial",
@@ -86,6 +87,7 @@
     "tshepo-identity-service": "unknown-or-partial",
     "tshepo-keys-service": "unknown-or-partial",
     "tshepo-offline-service": "unknown-or-partial",
+    "abis-service": "unknown-or-partial",
     "tshepo-service": "unknown-or-partial",
     "tuso-service": "unknown-or-partial",
     "ubomi-service": "unknown-or-partial",
