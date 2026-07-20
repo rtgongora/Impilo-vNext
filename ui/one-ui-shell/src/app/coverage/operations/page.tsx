@@ -117,10 +117,14 @@ export default function RuvimboOperationsPage() {
   const [tab, setTab] = useState<Tab>("payers");
   return (
     <AppLayout>
-      <PageShell title="Ruvimbo Operations" subtitle="Health financing — payers, plans, authorisations, claims & settlement">
-        <div className="mb-4 rounded-lg border border-teal-200 bg-teal-50 px-4 py-2 text-xs text-teal-800">
-          Ruvimbo is the Coverage capability. Coverage decides who pays &amp; what is covered — COSTA prices, MUSHEX moves money.
-          <Link href="/coverage" className="ml-2 underline">Legacy coverage console →</Link>
+      <PageShell title="Ruvimbo Operations" subtitle="Health financing — payers, plans, authorisations, claims & settlement" serviceSlug="ruvimbo">
+        <div className="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-teal-200 bg-white px-4 py-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/services/ruvimbo-logo.png" alt="Ruvimbo" className="h-9 w-auto" />
+          <span className="text-xs text-teal-800">
+            The Coverage capability — Coverage decides who pays &amp; what is covered; COSTA prices, MUSHEX moves money.
+          </span>
+          <Link href="/coverage" className="ml-auto text-xs text-teal-700 underline">Legacy coverage console →</Link>
         </div>
         <div className="mb-4 flex flex-wrap gap-1 border-b">
           {TABS.map((t) => (

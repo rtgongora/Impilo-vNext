@@ -79,6 +79,7 @@ export default function CoverageEnrollPage() {
         title="Enroll in coverage"
         subtitle="Citizen enrollment — eligibility check, plan selection, and member confirmation"
         icon={<Shield className="h-6 w-6 text-primary" />}
+        serviceSlug="ruvimbo"
       >
         <Link
           href="/coverage/member"

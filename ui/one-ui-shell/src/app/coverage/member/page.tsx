@@ -227,14 +227,17 @@ export default function MemberCoveragePage() {
         title="My Coverage"
         subtitle="Plans, eligibility, claims, contributions, pre-authorizations, benefit utilization, and appeals"
         icon={<Shield className="h-6 w-6" />}
+        serviceSlug="ruvimbo"
       >
-        <div className="mb-4">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <Link
             href="/home"
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Back to Home
           </Link>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/services/ruvimbo-logo.png" alt="Ruvimbo" className="h-7 w-auto opacity-90" />
         </div>
 
         {!cpid && (
