@@ -1,17 +1,160 @@
 {
-  "generatedAt": "2026-07-16T10:15:01.121Z",
+  "generatedAt": "2026-07-20T18:15:10.507Z",
   "counts": {
-    "totalOpenApiOperations": 4800,
+    "totalOpenApiOperations": 4829,
     "totalAsyncChannels": 84,
-    "implemented": 4850,
+    "implemented": 4879,
     "partial": 0,
     "missing": 11,
     "unownedContract": 23,
-    "orphanHandlers": 37,
-    "violations": 48,
+    "orphanHandlers": 55,
+    "violations": 66,
     "contractParseErrors": 0
   },
   "openApiOperations": [
+    {
+      "contract": "abis.openapi.yaml",
+      "operationId": "enrollTemplate",
+      "method": "POST",
+      "path": "/v1/abis/templates",
+      "summary": "Enrol (or re-enrol) an encrypted biometric template under an opaque subject_ref",
+      "modules": [
+        "abis-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/abis-service/src/main/java/zw/gov/mohcc/impilo/abis/api/AbisController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "abis.openapi.yaml",
+      "operationId": "extractTemplate",
+      "method": "POST",
+      "path": "/v1/abis/templates:extract",
+      "summary": "Extract a template from a raw capture image (pure feature computation, no subject_ref)",
+      "modules": [
+        "abis-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/abis-service/src/main/java/zw/gov/mohcc/impilo/abis/api/AbisController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "abis.openapi.yaml",
+      "operationId": "verifyTemplate",
+      "method": "POST",
+      "path": "/v1/abis/verify",
+      "summary": "1:1 verification of a probe against a subject's enrolled template (fail-closed)",
+      "modules": [
+        "abis-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/abis-service/src/main/java/zw/gov/mohcc/impilo/abis/api/AbisController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "abis.openapi.yaml",
+      "operationId": "identifySubject",
+      "method": "POST",
+      "path": "/v1/abis/identify",
+      "summary": "Restricted 1:N identification — scored candidates for adjudication, never a merge or an authentication",
+      "modules": [
+        "abis-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/abis-service/src/main/java/zw/gov/mohcc/impilo/abis/api/AbisController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "abis.openapi.yaml",
+      "operationId": "listAdjudicationCases",
+      "method": "GET",
+      "path": "/v1/abis/adjudication/cases",
+      "summary": "List the duplicate-investigation queue (optionally filtered by status)",
+      "modules": [
+        "abis-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/abis-service/src/main/java/zw/gov/mohcc/impilo/abis/api/AdjudicationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "abis.openapi.yaml",
+      "operationId": "getAdjudicationCase",
+      "method": "GET",
+      "path": "/v1/abis/adjudication/cases/{id}",
+      "summary": "Fetch one adjudication case with its scored candidate list",
+      "modules": [
+        "abis-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/abis-service/src/main/java/zw/gov/mohcc/impilo/abis/api/AdjudicationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "abis.openapi.yaml",
+      "operationId": "assignAdjudicationReviewer",
+      "method": "POST",
+      "path": "/v1/abis/adjudication/cases/{id}/assign",
+      "summary": "Assign a reviewer to a case (OPEN → IN_REVIEW)",
+      "modules": [
+        "abis-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/abis-service/src/main/java/zw/gov/mohcc/impilo/abis/api/AdjudicationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "abis.openapi.yaml",
+      "operationId": "recordAdjudicationDecision",
+      "method": "POST",
+      "path": "/v1/abis/adjudication/cases/{id}/decision",
+      "summary": "Record a DISTINCT / CONFIRMED_DUPLICATE decision (→ RESOLVED). Never merges.",
+      "modules": [
+        "abis-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/abis-service/src/main/java/zw/gov/mohcc/impilo/abis/api/AdjudicationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "abis.openapi.yaml",
+      "operationId": "mergeAdjudicationCase",
+      "method": "POST",
+      "path": "/v1/abis/adjudication/cases/{id}/merge",
+      "summary": "Governed dual-control merge — the second reviewer (X-Actor-ID) must differ from the decision recorder",
+      "modules": [
+        "abis-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/abis-service/src/main/java/zw/gov/mohcc/impilo/abis/api/AdjudicationController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "abis.openapi.yaml",
+      "operationId": "getAbisStats",
+      "method": "GET",
+      "path": "/v1/abis/stats",
+      "summary": "Operational stats — template volumes, quality distribution, adjudication queue",
+      "modules": [
+        "abis-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/abis-service/src/main/java/zw/gov/mohcc/impilo/abis/api/AbisStatsController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "abis.openapi.yaml",
+      "operationId": "getThresholdConfig",
+      "method": "GET",
+      "path": "/v1/abis/config/thresholds",
+      "summary": "The governed dedup / quality thresholds currently in force",
+      "modules": [
+        "abis-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/abis-service/src/main/java/zw/gov/mohcc/impilo/abis/api/AbisStatsController.java",
+      "stubPattern": null
+    },
     {
       "contract": "admin-governance.openapi.yaml",
       "operationId": "POST /precheck",
@@ -4266,7 +4409,7 @@
         "coverage-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/coverage-service/src/main/java/zw/gov/mohcc/impilo/coverage/api/CoveragePlanController.java",
+      "serviceHandler": "services/coverage-service/src/main/java/zw/gov/mohcc/impilo/coverage/api/BenefitController.java",
       "stubPattern": null
     },
     {
@@ -4279,7 +4422,7 @@
         "coverage-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/coverage-service/src/main/java/zw/gov/mohcc/impilo/coverage/api/CoveragePlanController.java",
+      "serviceHandler": "services/coverage-service/src/main/java/zw/gov/mohcc/impilo/coverage/api/BenefitController.java",
       "stubPattern": null
     },
     {
@@ -4591,7 +4734,7 @@
         "coverage-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/coverage-service/src/main/java/zw/gov/mohcc/impilo/coverage/api/ProviderContractController.java",
+      "serviceHandler": "services/coverage-service/src/main/java/zw/gov/mohcc/impilo/coverage/api/MembershipController.java",
       "stubPattern": null
     },
     {
@@ -4604,7 +4747,7 @@
         "coverage-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/coverage-service/src/main/java/zw/gov/mohcc/impilo/coverage/api/ProviderContractController.java",
+      "serviceHandler": "services/coverage-service/src/main/java/zw/gov/mohcc/impilo/coverage/api/MembershipController.java",
       "stubPattern": null
     },
     {
@@ -4838,7 +4981,7 @@
         "coverage-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/coverage-service/src/main/java/zw/gov/mohcc/impilo/coverage/api/ProviderContractController.java",
+      "serviceHandler": "services/coverage-service/src/main/java/zw/gov/mohcc/impilo/coverage/api/MembershipController.java",
       "stubPattern": null
     },
     {
@@ -4851,7 +4994,7 @@
         "coverage-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/coverage-service/src/main/java/zw/gov/mohcc/impilo/coverage/api/ProviderContractController.java",
+      "serviceHandler": "services/coverage-service/src/main/java/zw/gov/mohcc/impilo/coverage/api/MembershipController.java",
       "stubPattern": null
     },
     {
@@ -9024,7 +9167,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ReferralsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoverageController.java",
       "stubPattern": null
     },
     {
@@ -9037,7 +9180,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ReferralsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoverageController.java",
       "stubPattern": null
     },
     {
@@ -9310,7 +9453,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileReferralController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoverageController.java",
       "stubPattern": null
     },
     {
@@ -9323,7 +9466,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileReferralController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoverageController.java",
       "stubPattern": null
     },
     {
@@ -9622,7 +9765,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AccessChannelsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -10311,7 +10454,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/BedController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -12144,7 +12287,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AccessChannelsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -12521,7 +12664,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AccessChannelsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -14146,7 +14289,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AccessChannelsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -15212,7 +15355,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -17279,7 +17422,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LiveController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AssistantNotificationsController.java",
       "stubPattern": null
     },
     {
@@ -17682,7 +17825,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LlmGatewayController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AssistantNotificationsController.java",
       "stubPattern": null
     },
     {
@@ -18293,7 +18436,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -18696,7 +18839,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -18774,7 +18917,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MobileProviderExtendedController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -19918,7 +20061,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AccessChannelsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -20113,7 +20256,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AccessChannelsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -20282,7 +20425,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PayerOpsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoverageController.java",
       "stubPattern": null
     },
     {
@@ -20724,7 +20867,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DeathPathwayController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -21062,7 +21205,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -22271,7 +22414,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AccessChannelsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -23298,7 +23441,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -23337,7 +23480,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -23428,7 +23571,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -23467,7 +23610,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AdminGovernanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -23662,7 +23805,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TraumaIdentityController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -23805,7 +23948,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AccessChannelsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -24468,7 +24611,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ZiboRegistryProxyController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicGatewayAdvisoryBffController.java",
       "stubPattern": null
     },
     {
@@ -24494,7 +24637,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AccessChannelsController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -25105,7 +25248,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -25495,7 +25638,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ShiftController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PatientRecordClaimController.java",
       "stubPattern": null
     },
     {
@@ -25638,7 +25781,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ShiftController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PatientRecordClaimController.java",
       "stubPattern": null
     },
     {
@@ -34998,7 +35141,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AuthContactOtpController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -35141,7 +35284,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MobileProviderExtendedController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AbisBiometricBffController.java",
       "stubPattern": null
     },
     {
@@ -44177,6 +44320,240 @@
       ],
       "implStatus": "implemented",
       "serviceHandler": "services/pacs-adapter-service/src/main/java/zw/gov/mohcc/impilo/pacs/api/controller/PacsV11ProbeController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "publicSubmitContribution",
+      "method": "POST",
+      "path": "/v1/public/participation/contributions",
+      "summary": "Submit an anonymous idea or experience contribution",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "publicContributionStatus",
+      "method": "GET",
+      "path": "/v1/public/participation/contributions/{claimCode}",
+      "summary": "Read a contribution's status with its one-time claim code",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "publicBoard",
+      "method": "GET",
+      "path": "/v1/public/participation/board",
+      "summary": "List moderator-approved contributions on the public idea board",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "publicSupport",
+      "method": "POST",
+      "path": "/v1/public/participation/board/{id}/support",
+      "summary": "Add an anonymous \"support this idea\" vote",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/PublicContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "publicCohorts",
+      "method": "GET",
+      "path": "/v1/public/participation/cohorts",
+      "summary": "List open testing cohorts a citizen can sign up to",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "publicEnroll",
+      "method": "POST",
+      "path": "/v1/public/participation/cohorts/{id}/enroll",
+      "summary": "Sign up to help test a product experience",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "listContributions",
+      "method": "GET",
+      "path": "/internal/v1/participation/contributions",
+      "summary": "List contributions (optionally filtered by status or type)",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "createContribution",
+      "method": "POST",
+      "path": "/internal/v1/participation/contributions",
+      "summary": "Open an authenticated contribution",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "getContribution",
+      "method": "GET",
+      "path": "/internal/v1/participation/contributions/{id}",
+      "summary": "Get a single contribution",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "contributionTimeline",
+      "method": "GET",
+      "path": "/internal/v1/participation/contributions/{id}/timeline",
+      "summary": "Append-only event history for a contribution",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "transitionContribution",
+      "method": "POST",
+      "path": "/internal/v1/participation/contributions/{id}/transition",
+      "summary": "Guarded lifecycle transition (illegal jumps are rejected)",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "moderateContribution",
+      "method": "POST",
+      "path": "/internal/v1/participation/contributions/{id}/moderate",
+      "summary": "Set public-board visibility (PENDING / APPROVED / REJECTED)",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "mergeContribution",
+      "method": "POST",
+      "path": "/internal/v1/participation/contributions/{id}/merge",
+      "summary": "Merge this contribution into a canonical target (marks it MERGED)",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "linkRoadmap",
+      "method": "POST",
+      "path": "/internal/v1/participation/contributions/{id}/roadmap-link",
+      "summary": "Link a contribution to a delivery roadmap item (id reference only)",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "authenticatedSupport",
+      "method": "POST",
+      "path": "/internal/v1/participation/contributions/{id}/support",
+      "summary": "Add a support vote as the authenticated actor",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "moderationBoard",
+      "method": "GET",
+      "path": "/internal/v1/participation/board",
+      "summary": "Full moderation board view (all contributions, unmasked)",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "listCohorts",
+      "method": "GET",
+      "path": "/internal/v1/participation/cohorts",
+      "summary": "List all testing cohorts (active and inactive)",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "participation.openapi.yaml",
+      "operationId": "enrollCohort",
+      "method": "POST",
+      "path": "/internal/v1/participation/cohorts/{id}/enroll",
+      "summary": "Enrol the authenticated actor (or a volunteered contact) into a cohort",
+      "modules": [
+        "participation-service"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/participation-service/src/main/java/zw/gov/mohcc/impilo/participation/api/controller/ContributionController.java",
       "stubPattern": null
     },
     {
@@ -58160,7 +58537,7 @@
         "vito-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/api/IdIssuanceController.java",
+      "serviceHandler": "services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/api/CardController.java",
       "stubPattern": null
     },
     {
@@ -58589,7 +58966,7 @@
         "vito-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/api/IdIssuanceController.java",
+      "serviceHandler": "services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/api/CardController.java",
       "stubPattern": null
     },
     {
@@ -58706,7 +59083,7 @@
         "vito-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/api/IdIssuanceController.java",
+      "serviceHandler": "services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/api/CardController.java",
       "stubPattern": null
     },
     {
@@ -59395,7 +59772,7 @@
         "vito-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/api/IdIssuanceController.java",
+      "serviceHandler": "services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/api/CardController.java",
       "stubPattern": null
     },
     {
@@ -59564,7 +59941,7 @@
         "vito-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/api/IdIssuanceController.java",
+      "serviceHandler": "services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/api/CardController.java",
       "stubPattern": null
     },
     {
@@ -59954,7 +60331,7 @@
         "vito-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/api/IdIssuanceController.java",
+      "serviceHandler": "services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/api/CardController.java",
       "stubPattern": null
     },
     {
@@ -63553,6 +63930,110 @@
       "remediation": "add OpenAPI operation — complete contract; do not delete handler"
     },
     {
+      "module": "data-governance-service",
+      "method": "POST",
+      "path": "/internal/v1/deid/datasets",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/deid/api/DeidController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "data-governance-service",
+      "method": "GET",
+      "path": "/internal/v1/deid/datasets",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/deid/api/DeidController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "data-governance-service",
+      "method": "PUT",
+      "path": "/internal/v1/deid/policies",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/deid/api/DeidController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "data-governance-service",
+      "method": "POST",
+      "path": "/internal/v1/deid/runs",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/deid/api/DeidController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "data-governance-service",
+      "method": "GET",
+      "path": "/internal/v1/deid/runs/{runId}",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/deid/api/DeidController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "indawo-service",
+      "method": "POST",
+      "path": "/internal/v1/place-links",
+      "handler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/PlaceLinkController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "indawo-service",
+      "method": "POST",
+      "path": "/internal/v1/place-links/{id}/end",
+      "handler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/PlaceLinkController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "indawo-service",
+      "method": "GET",
+      "path": "/internal/v1/place-links",
+      "handler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/PlaceLinkController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "indawo-service",
+      "method": "POST",
+      "path": "/internal/v1/sites/{siteId}/operator-grants",
+      "handler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/SiteSelfServiceController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "indawo-service",
+      "method": "POST",
+      "path": "/internal/v1/site-operator-grants/{grantId}/approve",
+      "handler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/SiteSelfServiceController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "indawo-service",
+      "method": "GET",
+      "path": "/internal/v1/site-operator-grants",
+      "handler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/SiteSelfServiceController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "indawo-service",
+      "method": "POST",
+      "path": "/internal/v1/site-registrations",
+      "handler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/SiteSelfServiceController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "indawo-service",
+      "method": "GET",
+      "path": "/internal/v1/site-registrations",
+      "handler": "services/indawo-service/src/main/java/zw/gov/mohcc/impilo/indawo/api/SiteSelfServiceController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
       "module": "ndila-service",
       "method": "GET",
       "path": "/api/v1/ndila/tiles/{z}/{x}/{y}.png",
@@ -63581,6 +64062,14 @@
       "method": "GET",
       "path": "/api/v1/maps/tiles/{z}/{x}/{y}.mvt",
       "handler": "services/ndila-service/src/main/java/zw/gov/mohcc/impilo/ndila/api/NdilaTileRasterController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "ndr-service",
+      "method": "POST",
+      "path": "/internal/v1/ndr/release/{datasetRef}",
+      "handler": "services/ndr-service/src/main/java/zw/gov/mohcc/impilo/ndr/api/NdrReleaseController.java",
       "implStatus": "contract-gap",
       "remediation": "add OpenAPI operation — complete contract; do not delete handler"
     },
@@ -63669,6 +64158,38 @@
       "method": "POST",
       "path": "/v1/internal/facility-admin-appointments/{appointmentId}/approve",
       "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityClaimController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "POST",
+      "path": "/v1/internal/facilities/{facilityUuid}/credentials",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityCredentialController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "POST",
+      "path": "/v1/internal/facility-credentials/{verificationCode}/revoke",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityCredentialController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "tuso-service",
+      "method": "POST",
+      "path": "/v1/public/facilities/credential-scan",
+      "handler": "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/api/controller/FacilityCredentialController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "varapi-service",
+      "method": "POST",
+      "path": "/v1/internal/providers/{providerPublicId}/badges",
+      "handler": "services/varapi-service/src/main/java/zw/gov/mohcc/impilo/varapi/api/controller/ProviderBadgeController.java",
       "implStatus": "contract-gap",
       "remediation": "add OpenAPI operation — complete contract; do not delete handler"
     },

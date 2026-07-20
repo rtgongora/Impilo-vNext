@@ -1,15 +1,20 @@
 # Product Truth — Service Inventory
 
-> Generated: 2026-07-16T10:10:10.405Z
+> Generated: 2026-07-20T18:15:49.575Z
 > Scanner: `scripts/completeness/generate-product-truth.mjs`
-> Total services: **97** | Libraries: **12** | UI workspaces: **20**
+> Total services: **99** | Libraries: **12** | UI workspaces: **20**
+
+## Registry drift
+
+**Unregistered modules on disk:**
+- `matcher-engine`
 
 ## Summary by product status
 
 | Status | Count |
 |--------|------:|
 | internal-only | 25 |
-| real | 72 |
+| real | 74 |
 
 ## Service inventory
 
@@ -84,6 +89,7 @@
 | referral-service | integration | real | real | real | real | real | n/a | real | real |
 | reporting-service | data | real | real | real | real | real | n/a | real | real |
 | rito-quality-safety-service | experience | real | real | real | real | real | n/a | real | real |
+| participation-service | experience | real | real | real | real | real | n/a | real | real |
 | rtc-gateway-service | integration | real | real | real | real | real | n/a | real | real |
 | rules-service | clinical | real | real | real | real | real | n/a | real | real |
 | scheduling-service | clinical | real | real | real | real | real | n/a | real | real |
@@ -100,6 +106,7 @@
 | tshepo-identity-service | trust | real | real | real | real | real | n/a | real | real |
 | tshepo-keys-service | trust | real | real | real | real | real | n/a | real | real |
 | tshepo-offline-service | trust | real | real | real | real | real | n/a | real | real |
+| abis-service | trust | real | real | real | real | real | n/a | real | real |
 | tshepo-service | trust | real | real | real | real | real | n/a | real | real |
 | tuso-service | registry | real | real | real | real | real | n/a | real | real |
 | ubomi-service | registry | real | real | real | real | real | n/a | real | real |

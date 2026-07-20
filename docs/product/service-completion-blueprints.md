@@ -1,6 +1,6 @@
 # Service Completion Blueprints
 
-> Generated: 2026-07-16T10:10:10.405Z
+> Generated: 2026-07-20T18:15:49.575Z
 > End-to-end product expectation per service for mature vNext.
 
 Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and tests required.
@@ -328,7 +328,7 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 ## coverage-service
 
-**Product names:** Coverage
+**Product names:** Coverage, Ruvimbo
 **Plane/domain:** enterprise / finance
 **Current status:** real
 
@@ -1632,6 +1632,35 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 - BFF: proxy/controller test for each exposed route family
 - UI: vitest hook/page test + Playwright e2e for critical path
 
+## participation-service
+
+**Product names:** Participation, Get Involved
+**Plane/domain:** experience / workflow-orchestration
+**Current status:** real
+
+### Primary personas
+- Operators and domain users for workflow-orchestration plane capabilities
+- Standard governed service consumer
+
+### Main workflows
+- List/search Participation records
+- Create and update governed transactions with TSHEPO authz
+- Detail view with audit trail and status transitions where applicable
+
+### Minimum viable complete UI
+- List + detail routes backed by real BFF hooks
+- Empty/loading/error states with honest maturity labels
+
+### Production-grade complete UI
+- Full CRUD where domain permits; search/filter; role-based visibility
+- Mobile parity where user-facing
+- Cross-service handoffs documented in core-transaction journey maps
+
+### Tests required
+- Backend: `*IT.java` or controller tests for primary workflows
+- BFF: proxy/controller test for each exposed route family
+- UI: vitest hook/page test + Playwright e2e for critical path
+
 ## rtc-gateway-service
 
 **Product names:** Rtc Gateway
@@ -2045,6 +2074,35 @@ Each blueprint defines personas, workflows, CRUD, UI minimum, production UI, and
 
 ### Main workflows
 - List/search TSHEPO Offline records
+- Create and update governed transactions with TSHEPO authz
+- Detail view with audit trail and status transitions where applicable
+
+### Minimum viable complete UI
+- List + detail routes backed by real BFF hooks
+- Empty/loading/error states with honest maturity labels
+
+### Production-grade complete UI
+- Full CRUD where domain permits; search/filter; role-based visibility
+- Mobile parity where user-facing
+- Cross-service handoffs documented in core-transaction journey maps
+
+### Tests required
+- Backend: `*IT.java` or controller tests for primary workflows
+- BFF: proxy/controller test for each exposed route family
+- UI: vitest hook/page test + Playwright e2e for critical path
+
+## abis-service
+
+**Product names:** ABIS
+**Plane/domain:** trust / biometric-identity
+**Current status:** real
+
+### Primary personas
+- Operators and domain users for biometric-identity plane capabilities
+- Sovereign boundary: **ABIS**
+
+### Main workflows
+- List/search ABIS records
 - Create and update governed transactions with TSHEPO authz
 - Detail view with audit trail and status transitions where applicable
 

@@ -1,7 +1,7 @@
 # Product Truth — Frontend-to-Backend Traceability
 
-> Generated: 2026-07-16T10:10:10.405Z
-> Web surfaces: **823** | Mobile screens: **212**
+> Generated: 2026-07-20T18:15:49.575Z
+> Web surfaces: **855** | Mobile screens: **212**
 
 ## Web routes (one-ui-shell)
 
@@ -11,7 +11,9 @@
 | /auth/login | Sign In | auth | yes | no | yes | yes | yes | — |
 | /auth/login/email | Sign In with Email | auth | no | no | yes | no | no | — |
 | /auth/login/provider-id | Sign In with Provider ID | auth | yes | no | yes | yes | yes | — |
-| /auth/login/biometric | Biometric Verification | auth | no | no | yes | no | no | — |
+| /auth/login/biometric | Biometric Verification | auth | yes | no | yes | yes | yes | — |
+| /auth/login/scan | Scan to sign in | auth | yes | no | yes | yes | yes | — |
+| /auth/login/passkey/callback | Completing passkey sign-in | auth | yes | no | yes | yes | yes | — |
 | /auth/forgot-password | Forgot Password | auth | yes | no | yes | no | yes | — |
 | /auth/reset-password | Reset Password | auth | yes | no | yes | no | yes | — |
 | /auth/mfa | Multi-Factor Authentication | auth | yes | no | yes | yes | yes | — |
@@ -20,15 +22,22 @@
 | /auth/register | Create Account | auth | yes | no | yes | yes | yes | — |
 | /auth/register/contact | Create account with phone or email | auth | yes | no | yes | yes | yes | — |
 | /auth/register/assurance | Identity Assurance | auth | yes | no | yes | yes | yes | — |
-| /auth/register/status | Registration Status | auth | no | no | yes | no | yes | — |
+| /auth/register/status | Registration Status | auth | yes | no | yes | yes | yes | — |
 | /auth/resolving | Resolving Session | auth | yes | no | yes | no | yes | — |
 | /auth/context-chooser | Choose Work Context | auth | yes | no | yes | no | yes | — |
-| /welcome | Welcome to Impilo | auth | no | no | yes | no | yes | — |
-| /welcome/find-care | Find Care | auth | no | no | yes | no | yes | — |
+| /welcome | Welcome to Impilo | auth | yes | no | yes | no | yes | — |
+| /welcome/find-care | Find Care | auth | yes | no | yes | no | yes | — |
 | /welcome/emergency | Emergency & Public Health | auth | yes | no | yes | no | yes | — |
-| /welcome/emergency/track | Track an Emergency Request | auth | no | no | yes | no | yes | — |
+| /welcome/emergency/track | Track an Emergency Request | auth | yes | no | yes | no | yes | — |
 | /welcome/health-info | Health Information | auth | yes | no | yes | no | yes | — |
-| /welcome/accessibility | Accessibility & Language | auth | no | no | yes | no | yes | — |
+| /welcome/accessibility | Accessibility & Language | auth | yes | no | yes | no | yes | — |
+| /get-involved | Get Involved | auth | yes | no | yes | no | yes | — |
+| /get-involved/idea | Share an Idea | auth | yes | no | yes | no | yes | — |
+| /get-involved/board | Ideas Board | auth | yes | no | yes | no | yes | — |
+| /get-involved/track | Track Your Idea | auth | yes | no | yes | no | yes | — |
+| /get-involved/test | Help Test Impilo | auth | yes | no | yes | no | yes | — |
+| /status | Service Status | auth | yes | no | yes | no | yes | — |
+| /download | Get the Impilo Apps | auth | yes | no | yes | no | yes | — |
 | /privacy | Privacy Policy | auth | no | no | yes | no | no | — |
 | /terms | Terms of Use | auth | no | no | yes | no | no | — |
 | /consent | Review Policies | auth | yes | no | yes | yes | yes | — |
@@ -78,6 +87,7 @@
 | /coverage/enroll | Enroll in Coverage | home | yes | no | yes | yes | yes | — |
 | /coverage/member | My Coverage | home | yes | no | yes | yes | yes | — |
 | /coverage/contracts | Provider Contracts | admin | yes | no | yes | yes | yes | — |
+| /coverage/operations | Ruvimbo Operations | admin | yes | no | yes | yes | yes | — |
 | /id-services | Identity Services | admin | yes | no | yes | yes | yes | — |
 | /ai-governance | AI Governance | admin | yes | no | yes | yes | yes | — |
 | /ai-governance/models/[id] | AI Model | admin | yes | no | yes | yes | yes | — |
@@ -108,8 +118,8 @@
 | /citizen/id-recovery | ID Recovery | home | yes | no | yes | no | yes | — |
 | /citizen/delegated-pickup | Delegated Pickup | home | yes | no | yes | yes | yes | — |
 | /citizen/record-sharing | Share My Record | home | yes | no | yes | yes | yes | — |
-| /citizen/visit/[transactionId] | My Visit | home | no | no | yes | no | yes | — |
-| /citizen/inpatient/[admissionRef] | My Inpatient Stay | home | no | no | yes | no | yes | — |
+| /citizen/visit/[transactionId] | My Visit | home | yes | no | yes | no | yes | — |
+| /citizen/inpatient/[admissionRef] | My Inpatient Stay | home | yes | no | yes | no | yes | — |
 | /citizen/wallet | Mushe Personal Health Wallet | home | yes | no | yes | yes | yes | — |
 | /citizen/wallet/identity | Identity & Trust | home | yes | no | yes | yes | yes | — |
 | /citizen/wallet/profile | Profile & Corrections | home | yes | no | yes | yes | yes | — |
@@ -117,11 +127,12 @@
 | /citizen/wallet/timeline | Care Timeline | home | yes | no | yes | yes | yes | — |
 | /citizen/wallet/dependants | Dependants & Proxy | home | yes | no | yes | yes | yes | — |
 | /citizen/wallet/payments | Payments & Bills | home | yes | no | yes | yes | yes | — |
+| /citizen/wallet/smart-card | My Digital SMART Card | home | yes | no | yes | yes | yes | — |
 | /citizen/wallet/comms | Communication Preferences | home | yes | no | yes | yes | yes | — |
 | /citizen/wallet/trust | Trust Profile | home | yes | no | yes | no | yes | — |
 | /verify/credential | Verify Credential | home | no | no | yes | yes | no | — |
 | /verify/facility-certificate | Verify Facility Certificate | home | yes | no | yes | yes | yes | — |
-| /verify/practitioner | Verify a Health Professional | home | no | no | yes | yes | yes | — |
+| /verify/practitioner | Verify a Health Professional | home | yes | no | yes | yes | yes | — |
 | /professional/pic-nominations | PIC Nominations | professional | yes | no | yes | yes | yes | — |
 | /share/claim | Claim Shared Documents | home | yes | no | yes | yes | no | — |
 | /collaboration/access | Provider collaboration access | home | yes | no | yes | yes | yes | — |
@@ -129,6 +140,10 @@
 | /facility/[id] | Facility Details | facility | yes | no | yes | yes | yes | — |
 | /facility/[id]/configuration | Facility Configuration | facility | yes | no | yes | yes | yes | — |
 | /facility/claim | Claim facility administration | facility | yes | no | yes | yes | yes | — |
+| /facility/register | Register a facility | facility | yes | no | yes | yes | yes | — |
+| /facility/[id]/trust | Facility trust & governance | facility | yes | no | yes | yes | yes | — |
+| /site/register | Register a site | facility | yes | no | yes | yes | yes | — |
+| /site/operator-access | Request site operator access | facility | yes | no | yes | yes | yes | — |
 | /workspace | Select Workspace | workspace | yes | no | yes | yes | yes | — |
 | /workspace/[id] | Workspace Details | workspace | yes | no | yes | no | yes | — |
 | /shift | Start Shift | shift | yes | no | yes | yes | yes | — |
@@ -183,7 +198,7 @@
 | /ehr/[patientId]/functional-status | Functional Status | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/advance-directives | Advance Directives | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/care-team | Care Team | ehr | yes | no | yes | yes | yes | — |
-| /ehr/[patientId]/preferences/communications | Communication Preferences | ehr | no | no | yes | no | yes | — |
+| /ehr/[patientId]/preferences/communications | Communication Preferences | ehr | yes | no | yes | no | yes | — |
 | /ehr/[patientId]/goals | Goals | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/assessments | Assessments | ehr | yes | no | yes | yes | yes | — |
 | /ehr/[patientId]/charts | Ward Charts | ehr | yes | no | yes | yes | yes | — |
@@ -200,6 +215,7 @@
 | /admin/audit/[id] | Audit Entry | admin | yes | no | yes | no | yes | — |
 | /admin/workforce-intake | Workforce Intake | admin | yes | no | yes | yes | yes | — |
 | /admin/facility-imports | Facility Import Batches | admin | yes | no | yes | yes | yes | — |
+| /admin/hpa-enrichment | HPA facility enrichment | admin | yes | no | yes | yes | yes | — |
 | /admin/facility-imports/[runId] | Facility Import Batch | admin | yes | no | yes | yes | yes | — |
 | /admin/facility-imports/[runId]/review | Facility Import Review | admin | yes | no | yes | yes | yes | — |
 | /admin/consent | Consent Management | admin | yes | no | yes | no | yes | — |
@@ -247,6 +263,7 @@
 | /registry/facility-classification | Facility classification reconciliation | registry | yes | no | yes | yes | yes | — |
 | /registry/facilities | Facility Registry | registry | yes | no | yes | yes | yes | — |
 | /registry/facilities/[id] | Facility Profile | registry | yes | no | yes | yes | yes | — |
+| /registry/place-governance | Place governance | registry | yes | no | yes | yes | yes | — |
 | /registry/terminology | Terminology Browser | registry | yes | no | yes | no | yes | — |
 | /registry/terminology/[id] | Concept Details | registry | yes | no | yes | no | yes | — |
 | /registry/products | Product Registry | registry | yes | no | yes | no | yes | — |
@@ -312,6 +329,7 @@
 | /beds | Bed Management | queue | yes | no | yes | yes | yes | — |
 | /pharmacy | Pharmacy Dashboard | pharmacy | yes | no | yes | no | yes | — |
 | /pharmacy/dispense | Dispensing | pharmacy | yes | no | yes | no | yes | — |
+| /pharmacy/collect | Collect a prescription | pharmacy | yes | no | yes | yes | yes | — |
 | /pharmacy/stock | Stock Management | pharmacy | yes | no | yes | no | yes | — |
 | /pharmacy/prescriptions | Prescriptions | pharmacy | yes | no | yes | yes | yes | — |
 | /pharmacy/transaction-journey | Rx Transaction Journey | pharmacy | yes | no | yes | yes | yes | — |
@@ -352,8 +370,10 @@
 | /work/telemedicine/groups | Clinical Groups | queue | yes | no | yes | yes | yes | — |
 | /work/telemedicine/virtual-hospitals | Virtual Hospitals | queue | yes | no | yes | yes | yes | — |
 | /work/telemedicine/virtual-hospitals/[id] | Virtual Hospital | queue | yes | no | yes | yes | yes | — |
-| /provider/activate | Activate Provider Role | auth | yes | no | yes | no | yes | — |
+| /provider/activate | Activate Provider Role | auth | yes | no | yes | yes | yes | — |
 | /provider/status | Provider Status | auth | yes | no | yes | no | yes | — |
+| /provider/workplace | Start a Work Session | auth | yes | no | yes | yes | yes | — |
+| /provider/get-access | Get Provider Access | auth | yes | no | yes | no | yes | — |
 | /citizen/provider-claim | Claim Provider Profile | home | yes | no | yes | yes | yes | — |
 | /citizen/provider-claim/status | Provider Access Requests | home | yes | no | yes | yes | yes | — |
 | /facility/[id]/mode | Facility Mode | facility | yes | no | yes | yes | yes | — |
@@ -454,6 +474,8 @@
 | /operations/vito/issuance | Issuance Queue | operations | yes | no | yes | yes | yes | — |
 | /operations/vito/issuance/[requestId] | Issuance Request | operations | yes | no | yes | yes | yes | — |
 | /operations/vito/cards | Smart Cards | operations | yes | no | yes | yes | yes | — |
+| /operations/vito/card-verify | Verify a presented card | operations | yes | no | yes | yes | yes | — |
+| /operations/vito/card-sync | Card-sync pipeline | operations | yes | no | yes | no | yes | — |
 | /operations/vito/cards/pickup | Card Pickup | operations | yes | no | yes | yes | yes | — |
 | /operations/vito/match | Match Review | operations | yes | no | yes | yes | yes | — |
 | /operations/vito/dedup | Deduplication | operations | yes | no | yes | yes | yes | — |
@@ -461,6 +483,10 @@
 | /operations/vito/patient-shares | Patient Shares | operations | yes | no | yes | yes | yes | — |
 | /operations/vito/internal-search | Internal Search | operations | yes | no | yes | yes | yes | — |
 | /operations/vito/biometrics | Biometrics | operations | yes | no | yes | yes | yes | — |
+| /operations/vito/biometric-enrol | Biometric enrol & verify | operations | yes | no | yes | yes | yes | — |
+| /operations/vito/biometric-onboard | Biometric onboarding | operations | yes | no | yes | yes | yes | — |
+| /operations/vito/adjudication | Biometric adjudication | operations | yes | no | yes | yes | yes | — |
+| /operations/vito/adjudication/[caseId] | Adjudication case | operations | yes | no | yes | yes | yes | — |
 | /operations/vito/recovery | Recovery & SHS | operations | yes | no | yes | yes | yes | — |
 | /operations/vito/registry-admin | Registry Admin | operations | yes | no | yes | yes | yes | — |
 | /operations/butano | SHR Operations | operations | yes | no | yes | no | yes | — |
@@ -481,32 +507,6 @@
 | /developer/clients | Client Registration | developer | yes | no | yes | no | yes | — |
 | /developer/sandbox | Sandbox | developer | yes | yes | yes | no | yes | — |
 | /home/documents | My Documents | home | yes | no | yes | yes | yes | — |
-| /marketplace/cart | Shopping Cart | marketplace | yes | no | yes | yes | yes | — |
-| /marketplace/substitutions | Substitutions | marketplace | yes | no | yes | yes | yes | — |
-| /shell/file-manager | File manager | shell | yes | no | yes | yes | yes | — |
-| /shell/task-manager | Task manager | shell | yes | no | yes | no | yes | — |
-| /ask | Ask | intelligent | yes | no | yes | yes | yes | — |
-| /intelligence | Health Intelligence | intelligent | yes | no | yes | no | yes | — |
-| /search | Search | intelligent | yes | no | yes | yes | yes | — |
-| /nompilo | Nompilo | intelligent | yes | no | yes | yes | yes | — |
-| /guidance | Guidance | intelligent | yes | no | yes | yes | yes | — |
-| /guidance/reminders | Reminders & Prompts | intelligent | yes | no | yes | no | yes | — |
-| /guidance/education | Health Education | intelligent | yes | no | yes | no | yes | — |
-| /learning | Impilo Fundo | professional | yes | no | yes | no | yes | — |
-| /learning/catalog | Impilo Fundo Catalogue | professional | yes | no | yes | no | yes | — |
-| /learning/courses/[courseId] | Impilo Fundo Course | professional | yes | no | yes | yes | yes | — |
-| /learning/my-learning | My Learning | professional | yes | no | yes | no | yes | — |
-| /learning/enrolments/[enrolmentId] | Enrolment Player | professional | yes | no | yes | yes | yes | — |
-| /learning/enrolments/[enrolmentId]/lessons/[lessonId] | Lesson Player | professional | yes | no | yes | yes | yes | — |
-| /learning/pathways | Learning Pathways | professional | yes | no | yes | no | yes | — |
-| /learning/pathways/[pathwayId] | Pathway Detail | professional | yes | no | yes | no | yes | — |
-| /learning/record | Learning Record | professional | yes | no | yes | no | yes | — |
-| /learning/assessments/[assessmentId] | Assessment | professional | yes | no | yes | no | yes | — |
-| /learning/assessments/[assessmentId]/attempt | Assessment Attempt | professional | yes | no | yes | yes | yes | — |
-| /learning/attempts/[attemptId] | Attempt Result | professional | yes | no | yes | no | yes | — |
-| /learning/certificates | Certificates | professional | yes | no | yes | no | yes | — |
-| /learning/certificates/[certificateId] | Certificate Detail | professional | yes | no | yes | no | yes | — |
-| /learning/cpd | CPD Evidence | professional | yes | no | yes | yes | yes | — |
 
 ## Mobile screens
 

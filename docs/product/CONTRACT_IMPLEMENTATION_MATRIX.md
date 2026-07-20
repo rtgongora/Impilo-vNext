@@ -1,19 +1,19 @@
 # Contract Implementation Matrix
 
-> Generated: 2026-07-16T10:15:01.121Z
-> OpenAPI operations: **4800** | AsyncAPI channels: **84**
+> Generated: 2026-07-20T18:15:10.507Z
+> OpenAPI operations: **4829** | AsyncAPI channels: **84**
 
 ## Summary
 
 | Status | Count |
 |--------|------:|
-| implemented | 4850 |
+| implemented | 4879 |
 | partial | 0 |
 | missing | 11 |
 | unowned-contract | 23 |
-| contract-gap (handler exists — extend OpenAPI) | 37 |
+| contract-gap (handler exists — extend OpenAPI) | 55 |
 | contract-parse-errors | 0 |
-| **violations (partial + missing + orphan + invalid contract)** | **48** |
+| **violations (partial + missing + orphan + invalid contract)** | **66** |
 
 ## Remediation doctrine: complete — never delete
 
@@ -50,7 +50,7 @@ Forbidden: deleting controllers, removing routes, or trimming contracts to make 
 - `contract-gap` PUT /internal/v1/governance/privacy-preferences (data-governance-service)
 - `contract-gap` GET /internal/v1/governance/display-settings (data-governance-service)
 - `contract-gap` PUT /internal/v1/governance/display-settings (data-governance-service)
-- `contract-gap` GET /api/v1/ndila/tiles/{z}/{x}/{y}.png (ndila-service)
-- `contract-gap` GET /api/v1/maps/tiles/{z}/{x}/{y}.png (ndila-service)
+- `contract-gap` POST /internal/v1/deid/datasets (data-governance-service)
+- `contract-gap` GET /internal/v1/deid/datasets (data-governance-service)
 
 _Regenerate: `npm run contract-matrix --prefix scripts/completeness`_
