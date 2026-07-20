@@ -108,6 +108,7 @@ impilo:
       # live = TUSO then seed fallback; stub = seed only (CI / Maestro without TUSO)
       mode: ${IMPILO_BFF_FACILITIES_MODE:live}
   services:
+    abis-base-url: ${ABIS_BASE_URL:http://localhost:8186}
     pct-base-url: ${PCT_BASE_URL:http://localhost:8088}
     oros-base-url: ${OROS_BASE_URL:http://localhost:8089}
     pharmacy-base-url: ${PHARMACY_BASE_URL:http://localhost:8096}

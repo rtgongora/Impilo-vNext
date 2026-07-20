@@ -17,8 +17,9 @@ import java.util.Map;
 /**
  * Thin BFF client for the ABIS biometric SoR (extract / enrol / verify). Uses the
  * trust-header-forwarding {@code serviceRestTemplate}, so the inbound X-Tenant-ID
- * and actor context flow through to ABIS. Reads {@code ABIS_BASE_URL} directly
- * (independent of the large ServiceEndpoints record).
+ * and actor context flow through to ABIS. Base URL follows the estate convention
+ * ({@code impilo.services.abis-base-url}, env override {@code ABIS_BASE_URL}) like
+ * every other downstream of {@code abis-service}.
  */
 @Component
 public class AbisBiometricClient {
@@ -27,7 +28,7 @@ public class AbisBiometricClient {
     private final String baseUrl;
 
     public AbisBiometricClient(@Qualifier("serviceRestTemplate") RestTemplate serviceRestTemplate,
-                               @Value("${ABIS_BASE_URL:http://localhost:8186}") String baseUrl) {
+                               @Value("${impilo.services.abis-base-url:http://localhost:8186}") String baseUrl) {
         this.restTemplate = serviceRestTemplate;
         this.baseUrl = baseUrl;
     }
