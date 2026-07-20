@@ -45,7 +45,16 @@ import java.util.UUID;
  */
 public class PublicGatewayAnonymousDefaultsFilter extends OncePerRequestFilter {
 
-    /** Same public default tenant the BFF's anonymous-safe downstream calls use. */
+    /**
+     * Public default tenant for anonymous GET lanes. NOTE the estate currently runs TWO
+     * "default tenant" UUIDs: this one (which the TUSO facility master's 1,775 rows live
+     * under, so public find-care depends on it) and the golden …-4000-8000-…001 tenant
+     * (which anonymous WRITES store under, because the browser api-client's tenant passes
+     * through untouched on POST). Cross-lane reads that must survive the split (e.g. the
+     * public SOS status lookup) fall back to reference-only resolution service-side —
+     * see daidzai EmergencyService.findRequestByReference. Unifying the two default
+     * tenants is a platform-level cleanup tracked in the remediation report.
+     */
     static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
     static final String PUBLIC_POD = "national-spine";
 

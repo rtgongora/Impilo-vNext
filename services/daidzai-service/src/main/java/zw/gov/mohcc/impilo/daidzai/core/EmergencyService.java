@@ -155,7 +155,15 @@ public class EmergencyService {
         if (requestReference == null || requestReference.isBlank()) {
             return Optional.empty();
         }
-        return requestRepo.findByTenantIdAndRequestReference(tenantId, requestReference.trim());
+        String trimmed = requestReference.trim();
+        // Tenant-scoped first; then reference-only. The anonymous public lane's tenant header is
+        // SYNTHESIZED by the BFF, and the estate currently runs two "default tenant" UUIDs
+        // (…-0000-0000-…001 vs golden …-4000-8000-…001), so the write and read lanes can disagree —
+        // live-caught 2026-07-20: every public status lookup 404'd for a reference the intake had
+        // just issued. The reference itself is the requester's capability (unguessable suffix,
+        // PII-free response, uniform 404 on miss), so the fallback does not widen disclosure.
+        return requestRepo.findByTenantIdAndRequestReference(tenantId, trimmed)
+                .or(() -> requestRepo.findFirstByRequestReferenceOrderByCreatedAtDesc(trimmed));
     }
 
     /** Call-taker queue: pending (or status-filtered) SOS requests for the tenant, newest first. */

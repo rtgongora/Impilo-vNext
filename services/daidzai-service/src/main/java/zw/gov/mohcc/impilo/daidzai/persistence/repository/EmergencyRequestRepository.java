@@ -12,6 +12,9 @@ import java.util.UUID;
 public interface EmergencyRequestRepository extends JpaRepository<EmergencyRequestEntity, UUID> {
     Optional<EmergencyRequestEntity> findByIdAndTenantId(UUID id, UUID tenantId);
     Optional<EmergencyRequestEntity> findByTenantIdAndRequestReference(UUID tenantId, String requestReference);
+
+    /** Reference-only fallback for the public status lane (see EmergencyService). */
+    Optional<EmergencyRequestEntity> findFirstByRequestReferenceOrderByCreatedAtDesc(String requestReference);
     List<EmergencyRequestEntity> findByTenantIdAndIncidentId(UUID tenantId, UUID incidentId);
     List<EmergencyRequestEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
     List<EmergencyRequestEntity> findByTenantIdAndStatusOrderByCreatedAtDesc(UUID tenantId, String status);

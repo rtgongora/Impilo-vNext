@@ -40,7 +40,11 @@ public class DaidzaiServiceClient {
         this.baseUrl = endpoints.daidzaiBaseUrl();
     }
 
-    private static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-0000-0000-000000000001";
+    // Canonical golden tenant (matches TusoServiceClient / PatientSafetyPublicController and
+    // what daidzai actually stores on anonymous intake). The previous value
+    // (00000000-0000-0000-0000-000000000001) never matched a stored row, so the public
+    // status lane 404'd on every reference — live-caught 2026-07-20.
+    private static final String PUBLIC_DEFAULT_TENANT = "00000000-0000-4000-8000-000000000001";
 
     // ── Emergency requests (SOS) ─────────────────────────────────────
     public JsonNode createRequest(Map<String, Object> body) {
