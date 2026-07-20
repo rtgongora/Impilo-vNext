@@ -93,6 +93,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- WireMock — RG software-contract stub (RgVerificationRigIT) -->
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <version>3.10.0</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Tech Companion — v1.1 auto-configuration -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>
@@ -114,6 +122,22 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Run *Test (default) plus the RG WireMock software-contract rig
+                 (*RigIT) under surefire. Deliberately does NOT include the
+                 broad *IT pattern, so the Spring-context UbomiGoldenContractIT
+                 stays excluded (no failsafe in this estate). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/Test*.java</include>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                        <include>**/*RigIT.java</include>
+                    </includes>
+                </configuration>
             </plugin>
         </plugins>
     </build>

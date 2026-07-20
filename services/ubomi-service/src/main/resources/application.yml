@@ -46,3 +46,24 @@ management:
   metrics:
     tags:
       application: ubomi-service
+
+# ---- UBOMI outbox publisher (W1a) ----
+ubomi:
+  outbox:
+    poll-interval-ms: 2000
+  # ---- Registrar-General / CRVS outbound adapter (X2, W1b/W1c) ----
+  # Flag-gated OFF by default everywhere. With enabled=false ubomi gains NO RG
+  # HTTP client bean. Enabling requires the non-code prerequisites in
+  # docs/design/rg-crvs-outbound-adapter.md (data-sharing authority, RG API
+  # spec, sandbox + mTLS material, field-mapping sign-off, go-live approval).
+  rg:
+    enabled: false
+    base-url: ""
+    allowed-hosts: []
+    mtls:
+      key-ref: ""
+      truststore-ref: ""
+    connect-timeout-ms: 2000
+    read-timeout-ms: 5000
+    pending-ttl-hours: 72
+    reconcile-interval-ms: 60000
