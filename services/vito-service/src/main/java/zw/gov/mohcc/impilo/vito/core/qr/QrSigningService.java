@@ -10,8 +10,10 @@ import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters;
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.vito.keys.TshepoKeysSigningClient;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -52,6 +54,18 @@ public class QrSigningService {
     private JWSVerifier verifier;
     private String previousKeyId;
     private JWSVerifier previousVerifier;
+
+    /**
+     * W4b signing source. {@code seed} (default) = local seed-derived Ed25519 key (unchanged
+     * legacy path, fallback for one release); {@code tshepo-keys} = delegate signing+verification
+     * to the sovereign tshepo-keys-service.
+     */
+    @Value("${vito.qr.signing-source:seed}")
+    private String signingSource;
+
+    /** Present only when {@code vito.qr.signing-source=tshepo-keys} (conditional bean). */
+    @Autowired(required = false)
+    private TshepoKeysSigningClient keysClient;
 
     public QrSigningService(@Value("${vito.qr.signing-key-seed:}") String configuredSeed,
                             @Value("${vito.qr.signing-key-seed-previous:}") String previousSeed) {
@@ -132,6 +146,12 @@ public class QrSigningService {
                     .expirationTime(Date.from(now.plusSeconds(ttlSeconds)))
                     .build();
 
+            // W4b: when repointed to tshepo-keys, the claims are signed as a compact JWS by the
+            // sovereign key service (purpose QR_SIGNING); the private key never enters VITO.
+            if (useTshepoKeys()) {
+                return keysClient.signJws(tenantId, claims.toString());
+            }
+
             SignedJWT jwt = new SignedJWT(
                     new JWSHeader.Builder(JWSAlgorithm.EdDSA)
                             .keyID(jwk.getKeyID())
@@ -156,7 +176,8 @@ public class QrSigningService {
         try {
             SignedJWT jwt = SignedJWT.parse(compactJws);
 
-            if (!jwt.verify(resolveVerifier(jwt))) {
+            JWSVerifier jwsVerifier = resolveJwsVerifier(jwt);
+            if (jwsVerifier == null || !jwt.verify(jwsVerifier)) {
                 return Optional.empty();
             }
 
@@ -180,6 +201,25 @@ public class QrSigningService {
             log.warn("QR token verification failed: {}", e.getMessage());
             return Optional.empty();
         }
+    }
+
+    /** True when signing/verification is delegated to tshepo-keys and its client is wired. */
+    private boolean useTshepoKeys() {
+        return "tshepo-keys".equalsIgnoreCase(signingSource) && keysClient != null;
+    }
+
+    /**
+     * Resolve the verifier for a token. In tshepo-keys mode the public key is fetched from the
+     * sovereign JWKS by the token's kid (which naturally spans a K1&rarr;K2 rotation-overlap
+     * window, since the JWKS publishes rotated-but-unexpired keys). In seed mode this routes by
+     * kid to the current or previous verify-only key.
+     */
+    private JWSVerifier resolveJwsVerifier(SignedJWT jwt) {
+        String kid = jwt.getHeader() != null ? jwt.getHeader().getKeyID() : null;
+        if (useTshepoKeys()) {
+            return kid == null ? null : keysClient.resolveVerifier(kid).orElse(null);
+        }
+        return resolveVerifier(jwt);
     }
 
     /** Route verification by the token's kid: current key, or (during a

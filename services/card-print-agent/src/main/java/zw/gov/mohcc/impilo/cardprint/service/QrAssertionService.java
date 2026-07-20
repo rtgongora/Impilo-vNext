@@ -8,6 +8,7 @@ import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
 import org.bouncycastle.crypto.signers.Ed25519Signer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +45,18 @@ public class QrAssertionService {
     private Ed25519PrivateKeyParameters privateKey;
     private String keyId;
     private String publicKeyBase64;
+
+    /**
+     * W4b signing source. {@code seed} (default) = local seed-derived Ed25519 key (unchanged
+     * legacy path, fallback for one release); {@code tshepo-keys} = delegate signing to the
+     * sovereign tshepo-keys-service.
+     */
+    @Value("${card-print.qr.signing-source:seed}")
+    private String signingSource;
+
+    /** Present only when {@code card-print.qr.signing-source=tshepo-keys} (conditional bean). */
+    @Autowired(required = false)
+    private TshepoKeysSigningClient keysClient;
 
     public QrAssertionService(ObjectMapper objectMapper,
                               @Value("${card-print.qr.signing-key-seed:}") String configuredSeed) {
@@ -92,13 +105,26 @@ public class QrAssertionService {
 
         try {
             String payloadJson = objectMapper.writeValueAsString(assertionPayload);
-            String signature = sign(payloadJson);
+
+            // W4b: when repointed to tshepo-keys, the private key never enters the agent — the
+            // canonical payload is signed by the sovereign key service (purpose CARD_ASSERTION)
+            // and the returned kid identifies the JWKS-published public key for verifiers.
+            String signature;
+            String kidToUse;
+            if (useTshepoKeys()) {
+                TshepoKeysSigningClient.SignResult result = keysClient.sign(null, payloadJson);
+                signature = result.signature();
+                kidToUse = result.keyId();
+            } else {
+                signature = sign(payloadJson);
+                kidToUse = keyId;
+            }
 
             Map<String, Object> signedAssertion = new LinkedHashMap<>();
             signedAssertion.put("payload", assertionPayload);
             signedAssertion.put("signature", signature);
             signedAssertion.put("algorithm", ALGORITHM);
-            signedAssertion.put("kid", keyId);
+            signedAssertion.put("kid", kidToUse);
 
             return objectMapper.writeValueAsString(signedAssertion);
 
@@ -106,6 +132,11 @@ public class QrAssertionService {
             log.error("Failed to serialize QR assertion for subject {}/{}", subjectType, subjectId, e);
             throw new RuntimeException("Failed to generate QR assertion", e);
         }
+    }
+
+    /** True when signing is delegated to tshepo-keys and its client is wired. */
+    private boolean useTshepoKeys() {
+        return "tshepo-keys".equalsIgnoreCase(signingSource) && keysClient != null;
     }
 
     /** Base64url raw Ed25519 signature over the canonical payload JSON. */
