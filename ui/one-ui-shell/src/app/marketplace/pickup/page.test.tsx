@@ -71,4 +71,36 @@ describe("MarketplacePickupPage", () => {
       });
     });
   });
+
+  it("threads the collector biometric probe (subject = claimant) into the claim body", async () => {
+    const user = userEvent.setup();
+    post.mockImplementation((url: string) => {
+      if (url === "/internal/v1/identity/biometric/abis/extract") {
+        return Promise.resolve({ ok: true, templateBase64: "TPL==" });
+      }
+      return Promise.resolve({ ok: true });
+    });
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText("Pickup claim JSON"), {
+      target: { value: '{"tokenOrOtp":"otp-9","claimantId":"collector-9"}' },
+    });
+
+    // Capture a collector fingerprint through the shared field.
+    const file = new File(["x"], "print.png", { type: "image/png" });
+    fireEvent.change(screen.getByTestId("biometric-probe-file"), { target: { files: [file] } });
+    await waitFor(() => expect(screen.getByTestId("biometric-captured")).toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: /Claim pickup/i }));
+
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith("/internal/v1/commerce/pickup/claim", {
+        tokenOrOtp: "otp-9",
+        claimantId: "collector-9",
+        biometricSubjectRef: "collector-9",
+        biometricModality: "FINGERPRINT",
+        biometricProbeBase64: "TPL==",
+      });
+    });
+  });
 });

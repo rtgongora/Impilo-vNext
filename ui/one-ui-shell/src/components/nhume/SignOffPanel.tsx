@@ -13,6 +13,8 @@
 import { useState } from "react";
 import { Loader2, PenLine, PackageCheck } from "lucide-react";
 import { useRecordProof } from "@/hooks/useNhume";
+import { BiometricVerifyField } from "@/components/biometric/BiometricVerifyField";
+import type { Modality } from "@/hooks/queries/useAbisBiometric";
 
 const METHODS = [
   { value: "RECIPIENT_SIGNATURE", label: "Signature" },
@@ -25,10 +27,13 @@ const METHODS = [
 export function SignOffPanel({
   deliveryId,
   stage,
+  recipientRef,
   onDone,
 }: {
   deliveryId: string;
   stage: "PICKUP" | "DELIVERY";
+  /** Opaque enrolled reference for the recipient — seeds the biometric subject at drop-off. */
+  recipientRef?: string;
   onDone?: () => void;
 }) {
   const proof = useRecordProof(deliveryId);
@@ -36,6 +41,9 @@ export function SignOffPanel({
   const [who, setWho] = useState("");
   const [reference, setReference] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Live recipient-verify at handover (drop-off only). Optional / care-first.
+  const [subjectRef, setSubjectRef] = useState(recipientRef ?? "");
+  const [probe, setProbe] = useState<{ modality: Modality; probeBase64: string } | null>(null);
 
   const isPickup = stage === "PICKUP";
   const whoLabel = isPickup ? "Released by (name / role at origin)" : "Received by (name / role at destination)";
@@ -46,6 +54,15 @@ export function SignOffPanel({
       setError(isPickup ? "Record who released the cargo." : "Record who received the cargo.");
       return;
     }
+    // Recipient biometric only threads when a probe is captured AND a subject is known.
+    const bio =
+      !isPickup && probe && subjectRef.trim()
+        ? {
+            biometric_subject_ref: subjectRef.trim(),
+            biometric_modality: probe.modality,
+            biometric_probe_base64: probe.probeBase64,
+          }
+        : {};
     try {
       await proof.mutateAsync({
         method,
@@ -54,10 +71,12 @@ export function SignOffPanel({
         captured_by: who.trim(),
         recipient_name: who.trim(),
         ...(method === "OTP" ? { otp_code: reference.trim() || undefined } : { signature_uri: reference.trim() || undefined }),
+        ...bio,
         notes: isPickup ? "Collection sign-off" : "Drop-off sign-off",
       });
       setWho("");
       setReference("");
+      setProbe(null);
       onDone?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Sign-off was rejected — check status and role.");
@@ -88,6 +107,20 @@ export function SignOffPanel({
           <input value={reference} onChange={(e) => setReference(e.target.value)} className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" placeholder={method === "OTP" ? "e.g. 1234" : "e.g. signature:abc.png"} />
         </label>
       </div>
+      {!isPickup ? (
+        <div className="mt-3 space-y-2">
+          <label className="block text-xs text-muted-foreground">
+            Recipient reference (for biometric verify)
+            <input
+              value={subjectRef}
+              onChange={(e) => setSubjectRef(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm font-mono"
+              placeholder="recipient Health ID / enrolled reference"
+            />
+          </label>
+          <BiometricVerifyField label="Verify recipient by biometric (optional)" onProbe={setProbe} />
+        </div>
+      ) : null}
       {error ? <p className="mt-2 rounded-lg bg-danger-soft px-3 py-2 text-xs text-danger">{error}</p> : null}
       <button
         type="button"

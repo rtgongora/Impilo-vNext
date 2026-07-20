@@ -8,6 +8,8 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useCommerceClaimPickup, useCommerceIssuePickup } from "@/hooks/queries/useCommercePickup";
 import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
+import { BiometricVerifyField } from "@/components/biometric/BiometricVerifyField";
+import type { Modality } from "@/hooks/queries/useAbisBiometric";
 
 const DEFAULT_CLAIM_JSON = "{\n  \"pickupToken\": \"\",\n  \"claimedBy\": \"\",\n  \"claimantId\": \"\"\n}\n";
 
@@ -15,6 +17,7 @@ export default function MarketplacePickupPage() {
   const [orderId, setOrderId] = useState("");
   const [claimJson, setClaimJson] = useState(DEFAULT_CLAIM_JSON);
   const [claimError, setClaimError] = useState<string | null>(null);
+  const [probe, setProbe] = useState<{ modality: Modality; probeBase64: string } | null>(null);
   const issueM = useCommerceIssuePickup();
   const claimM = useCommerceClaimPickup();
 
@@ -87,19 +90,37 @@ export default function MarketplacePickupPage() {
               className="mt-3 block w-full rounded-lg border border-border p-3 font-mono text-xs"
               aria-label="Pickup claim JSON"
             />
+            <div className="mt-3">
+              <BiometricVerifyField label="Verify collector by biometric (optional)" onProbe={setProbe} />
+            </div>
             {claimError ? <p className="mt-2 text-xs text-danger">{claimError}</p> : null}
             <button
               type="button"
               disabled={claimM.isPending}
               className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
               onClick={() => {
+                let parsed: Record<string, unknown>;
                 try {
-                  const body = JSON.parse(claimJson) as unknown;
-                  setClaimError(null);
-                  claimM.mutate(body);
+                  parsed = (JSON.parse(claimJson) ?? {}) as Record<string, unknown>;
                 } catch {
                   setClaimError("Invalid JSON.");
+                  return;
                 }
+                setClaimError(null);
+                // Thread the collector's live probe. Subject = the claimant identity
+                // already entered on this claim; on the service a MATCH confirms, a
+                // NO_MATCH blocks (4xx), UNAVAILABLE falls back to the token/OTP proof.
+                const subjectRef = parsed.claimantId ?? parsed.claimedBy;
+                const body =
+                  probe && subjectRef
+                    ? {
+                        ...parsed,
+                        biometricSubjectRef: subjectRef,
+                        biometricModality: probe.modality,
+                        biometricProbeBase64: probe.probeBase64,
+                      }
+                    : parsed;
+                claimM.mutate(body);
               }}
             >
               {claimM.isPending ? "Posting..." : "Claim pickup"}

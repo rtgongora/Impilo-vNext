@@ -55,11 +55,30 @@ public class MushexServiceClient {
     }
 
     public ResponseEntity<String> releasePayouts(String settlementId) {
-        log.info("MusheX: Releasing payouts settlement={}", settlementId);
+        return releasePayouts(settlementId, null);
+    }
+
+    /**
+     * Release payouts, optionally forwarding a JSON body carrying the high-value
+     * biometric step-up ({@code biometricSubjectRef}/{@code biometricModality}/
+     * {@code biometricProbeBase64}). A blank/absent body preserves the original
+     * no-body release semantics (threshold-gated step-up decided upstream).
+     */
+    public ResponseEntity<String> releasePayouts(String settlementId, String requestBody) {
+        boolean hasBody = requestBody != null && !requestBody.isBlank();
+        log.info("MusheX: Releasing payouts settlement={} biometricStepUp={}", settlementId, hasBody);
+        HttpEntity<?> entity;
+        if (hasBody) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            entity = new HttpEntity<>(requestBody, headers);
+        } else {
+            entity = HttpEntity.EMPTY;
+        }
         return restTemplate.exchange(
                 baseUrl + "/mushex/v1/settlements/" + settlementId + "/release-payouts",
                 HttpMethod.POST,
-                HttpEntity.EMPTY,
+                entity,
                 String.class
         );
     }

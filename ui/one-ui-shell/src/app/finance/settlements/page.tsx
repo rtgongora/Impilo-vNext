@@ -7,6 +7,8 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFinanceReleasePayouts, useFinanceRunSettlement, useFinanceSettlement } from "@/hooks/queries/useFinanceSettlements";
+import { BiometricVerifyField } from "@/components/biometric/BiometricVerifyField";
+import type { Modality } from "@/hooks/queries/useAbisBiometric";
 
 function pickSettlementId(body: unknown): string | null {
   if (!body || typeof body !== "object") return null;
@@ -27,6 +29,8 @@ export default function FinanceSettlementsPage() {
   const [settlementIdInput, setSettlementIdInput] = useState("");
   const [activeSettlementId, setActiveSettlementId] = useState<string | undefined>(undefined);
   const [lastRunResponse, setLastRunResponse] = useState<unknown>(null);
+  const [officerRef, setOfficerRef] = useState("");
+  const [probe, setProbe] = useState<{ modality: Modality; probeBase64: string } | null>(null);
 
   const settlementQ = useFinanceSettlement(activeSettlementId);
   const runM = useFinanceRunSettlement();
@@ -160,11 +164,32 @@ export default function FinanceSettlementsPage() {
             )}
 
             <div className="mt-4 border-t border-border pt-4">
+              <div className="mb-3 space-y-2">
+                <label className="block text-xs text-muted-foreground">
+                  Releasing officer reference (for high-value step-up)
+                  <input
+                    type="text"
+                    value={officerRef}
+                    onChange={(e) => setOfficerRef(e.target.value)}
+                    placeholder="officer Health ID / enrolled reference"
+                    className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm font-mono"
+                    aria-label="Releasing officer reference"
+                  />
+                </label>
+                <BiometricVerifyField label="Verify releasing officer by biometric (optional)" onProbe={setProbe} />
+              </div>
               <button
                 type="button"
                 disabled={releaseM.isPending || !activeSettlementId}
                 onClick={() => {
-                  if (activeSettlementId) releaseM.mutate(activeSettlementId);
+                  if (!activeSettlementId) return;
+                  // Step-up only threads when both a probe and an officer subject are present;
+                  // otherwise the release posts unchanged (existing step-up factor applies).
+                  const biometric =
+                    probe && officerRef.trim()
+                      ? { subjectRef: officerRef.trim(), modality: probe.modality, probeBase64: probe.probeBase64 }
+                      : undefined;
+                  releaseM.mutate({ settlementId: activeSettlementId, biometric });
                 }}
                 className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
               >
@@ -179,7 +204,8 @@ export default function FinanceSettlementsPage() {
               <p className="mt-2 text-xs text-muted-foreground">
                 POST{" "}
                 <code className="text-[11px]">/internal/v1/finance/settlements/&#123;settlementId&#125;/release-payouts</code>
-                . Uses the settlement id currently loaded above.
+                . Uses the settlement id currently loaded above. A biometric step-up is optional and only
+                enforced by MusheX above the high-value threshold.
               </p>
             </div>
           </div>

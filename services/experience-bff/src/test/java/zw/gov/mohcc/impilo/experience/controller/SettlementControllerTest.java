@@ -33,10 +33,23 @@ class SettlementControllerTest {
     void releasePayoutsForwardsUpstreamSettlementState() {
         SettlementController controller = new SettlementController(new StubMushexClient());
 
-        ResponseEntity<String> response = controller.releasePayouts("SET-001", "req-2", "corr-2");
+        ResponseEntity<String> response = controller.releasePayouts("SET-001", null, "req-2", "corr-2");
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals("{\"settlementId\":\"SET-001\",\"status\":\"RELEASED\"}", response.getBody());
+    }
+
+    @Test
+    void releasePayoutsForwardsOptionalBiometricStepUpBody() {
+        StubMushexClient stub = new StubMushexClient();
+        SettlementController controller = new SettlementController(stub);
+
+        String body = "{\"biometricSubjectRef\":\"officer-3\",\"biometricModality\":\"FINGERPRINT\",\"biometricProbeBase64\":\"TPL==\"}";
+        ResponseEntity<String> response = controller.releasePayouts("SET-001", body, "req-2b", "corr-2b");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(body, stub.lastReleaseBody);
+        assertEquals("req-2b", response.getHeaders().getFirst(CompanionHeaders.REQUEST_ID));
     }
 
     @Test
@@ -55,6 +68,8 @@ class SettlementControllerTest {
     }
 
     private static final class StubMushexClient extends MushexServiceClient {
+        private String lastReleaseBody = "UNSET";
+
         private StubMushexClient() {
             super(new RestTemplate(), endpoints());
         }
@@ -67,7 +82,8 @@ class SettlementControllerTest {
         }
 
         @Override
-        public ResponseEntity<String> releasePayouts(String settlementId) {
+        public ResponseEntity<String> releasePayouts(String settlementId, String requestBody) {
+            this.lastReleaseBody = requestBody;
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body("{\"settlementId\":\"" + settlementId + "\",\"status\":\"RELEASED\"}");

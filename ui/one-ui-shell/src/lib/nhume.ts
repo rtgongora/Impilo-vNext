@@ -249,6 +249,15 @@ export interface ProofPayload {
   captured_lat?: number;
   captured_lng?: number;
   metadata?: Record<string, unknown>;
+  /**
+   * Optional live biometric recipient-verification at handover. When a probe is
+   * supplied with a subject ref, nhume-service verifies the recipient through the
+   * shared seam before accepting the proof: MATCH → biometric-verified; NO_MATCH →
+   * handover rejected (4xx); UNAVAILABLE → falls back to the declared proof method.
+   */
+  biometric_subject_ref?: string;
+  biometric_modality?: string;
+  biometric_probe_base64?: string;
 }
 
 export interface ChainOfCustodyPayload {

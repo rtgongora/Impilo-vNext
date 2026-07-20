@@ -252,7 +252,13 @@ function OverviewTab({ id, delivery }: { id: string; delivery: Record<string, un
         </p>
         {canCollect ? <SignOffPanel deliveryId={id} stage="PICKUP" /> : null}
         {canCollect && canDropOff ? <div className="h-2" /> : null}
-        {canDropOff ? <SignOffPanel deliveryId={id} stage="DELIVERY" /> : null}
+        {canDropOff ? (
+          <SignOffPanel
+            deliveryId={id}
+            stage="DELIVERY"
+            recipientRef={String(delivery.recipient_ref ?? delivery.recipient_health_id ?? "")}
+          />
+        ) : null}
         {!canCollect && !canDropOff ? (
           <p className="rounded-lg border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
             Sign-off becomes available once the mission is assigned and moving.

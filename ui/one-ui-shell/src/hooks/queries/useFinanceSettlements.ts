@@ -55,14 +55,32 @@ export function useFinanceRunSettlement() {
   });
 }
 
+export type ReleasePayoutsInput = {
+  settlementId: string;
+  /**
+   * Optional high-value step-up. When supplied, MusheX verifies the releasing
+   * officer through the shared biometric seam before releasing (threshold-gated):
+   * MATCH → release proceeds, NO_MATCH → rejected (4xx), UNAVAILABLE → falls back
+   * to the existing step-up factor.
+   */
+  biometric?: { subjectRef: string; modality: string; probeBase64: string };
+};
+
 export function useFinanceReleasePayouts() {
   const qc = useQueryClient();
-  return useMutation<FinanceSettlementJson, unknown, string>({
-    mutationFn: (settlementId) =>
-      apiClient.post<FinanceSettlementJson>(
-        `/internal/v1/finance/settlements/${encodeURIComponent(settlementId)}/release-payouts`,
-      ),
-    onSuccess: (_, settlementId) => {
+  return useMutation<FinanceSettlementJson, unknown, ReleasePayoutsInput>({
+    mutationFn: ({ settlementId, biometric }) => {
+      const url = `/internal/v1/finance/settlements/${encodeURIComponent(settlementId)}/release-payouts`;
+      // No biometric → post with no body, preserving the existing release behaviour.
+      return biometric
+        ? apiClient.post<FinanceSettlementJson>(url, {
+            biometricSubjectRef: biometric.subjectRef,
+            biometricModality: biometric.modality,
+            biometricProbeBase64: biometric.probeBase64,
+          })
+        : apiClient.post<FinanceSettlementJson>(url);
+    },
+    onSuccess: (_, { settlementId }) => {
       void qc.invalidateQueries({ queryKey: ["finance", "settlements", settlementId] });
     },
   });

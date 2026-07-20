@@ -52,10 +52,13 @@ public class SettlementController {
     @PostMapping("/{settlementId}/release-payouts")
     public ResponseEntity<String> releasePayouts(
             @PathVariable String settlementId,
+            @RequestBody(required = false) String body,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId
     ) {
-        return forward("release payouts", requestId, correlationId, () -> mushexClient.releasePayouts(settlementId));
+        // Forwards the optional biometric step-up body verbatim; a null body keeps
+        // the original no-body release behaviour (MusheX gates the step-up by threshold).
+        return forward("release payouts", requestId, correlationId, () -> mushexClient.releasePayouts(settlementId, body));
     }
 
     private ResponseEntity<String> forward(
