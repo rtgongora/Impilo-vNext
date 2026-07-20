@@ -39,6 +39,7 @@ class DischargeSummaryServiceTest {
     @Mock DischargeSummaryRepository summaryRepository;
     @Mock DischargeClearanceRepository clearanceRepository;
     @Mock EventOutboxRepository outboxRepository;
+    @Mock AdmissionService admissionService;
 
     private DischargeSummaryService service;
     private final UUID tenant = UUID.randomUUID();
@@ -47,7 +48,7 @@ class DischargeSummaryServiceTest {
     @BeforeEach
     void setUp() {
         service = new DischargeSummaryService(summaryRepository, clearanceRepository,
-                outboxRepository, new ObjectMapper(), false);
+                outboxRepository, new ObjectMapper(), admissionService, false);
         setActor("actor-doc");
     }
 
@@ -264,7 +265,7 @@ class DischargeSummaryServiceTest {
     @Test
     void saveDraft_usesConfiguredCountersignDefault() {
         DischargeSummaryService defaultOn = new DischargeSummaryService(summaryRepository,
-                clearanceRepository, outboxRepository, new ObjectMapper(), true);
+                clearanceRepository, outboxRepository, new ObjectMapper(), admissionService, true);
         when(summaryRepository.findByTenantIdAndEncounterId(tenant, encounter))
                 .thenReturn(Optional.empty());
         when(summaryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));

@@ -47,18 +47,21 @@ public class DischargeSummaryService {
     private final DischargeClearanceRepository clearanceRepository;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final AdmissionService admissionService;
     private final boolean countersignRequiredDefault;
 
     public DischargeSummaryService(DischargeSummaryRepository summaryRepository,
                                    DischargeClearanceRepository clearanceRepository,
                                    EventOutboxRepository outboxRepository,
                                    ObjectMapper objectMapper,
+                                   AdmissionService admissionService,
                                    @Value("${impilo.inpatient.discharge-summary.countersign-required-default:false}")
                                    boolean countersignRequiredDefault) {
         this.summaryRepository = summaryRepository;
         this.clearanceRepository = clearanceRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.admissionService = admissionService;
         this.countersignRequiredDefault = countersignRequiredDefault;
     }
 
@@ -241,6 +244,12 @@ public class DischargeSummaryService {
         followup.put("follow_up", s.getFollowUpJson());
         emit("DISCHARGE_SUMMARY", s.getSummaryId().toString(),
                 "inpatient.discharge.followup_requested", followup);
+
+        // Finalising the documented discharge IS the discharge: flip the admission to DISCHARGED and
+        // free the bed (closes the split-brain where the summary flow never discharged the patient).
+        admissionService.dischargeByEncounter(tenant(), encounterId)
+                .ifPresent(a -> log.info("INPATIENT: admission {} discharged via summary finalise",
+                        a.getAdmissionRef()));
 
         log.info("INPATIENT: discharge summary finalised for encounter {} (subject {})",
                 encounterId, s.getSubjectCpid());

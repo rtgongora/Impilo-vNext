@@ -232,7 +232,8 @@ public class AdmissionService {
     }
 
     /**
-     * Discharges a patient, setting the status to DISCHARGED and recording the timestamp.
+     * Discharges a patient, setting the status to DISCHARGED, recording the timestamp,
+     * freeing the bed, and emitting {@code inpatient.discharge.completed}.
      */
     @Transactional
     public AdmissionEntity dischargePatient(UUID admissionRef) {
@@ -241,20 +242,45 @@ public class AdmissionService {
         if ("DISCHARGED".equals(admission.getStatus())) {
             throw new IllegalStateException("Patient already discharged: " + admissionRef);
         }
+        return completeDischarge(admission);
+    }
 
+    /**
+     * Discharge the admission carrying a given encounter (tenant-scoped). Used by the discharge-summary
+     * finalise flow so that finalising the documented discharge ALSO discharges the patient and frees the
+     * bed — closing the split-brain where the summary flow and the status flip were decoupled. No-op
+     * (empty) when there is no matching admission or it is already discharged (finalise stays idempotent).
+     */
+    @Transactional
+    public Optional<AdmissionEntity> dischargeByEncounter(UUID tenantId, UUID encounterId) {
+        return admissionRepository.findByTenantIdAndEncounterId(tenantId, encounterId)
+                .filter(a -> !"DISCHARGED".equals(a.getStatus()))
+                .map(this::completeDischarge);
+    }
+
+    /** Shared discharge: status → DISCHARGED, timestamp, free the bed, emit the event. */
+    private AdmissionEntity completeDischarge(AdmissionEntity admission) {
         admission.setStatus("DISCHARGED");
         admission.setDischargedAt(OffsetDateTime.now());
         admission = admissionRepository.save(admission);
 
+        // Free the bed back to the pool so the ward census is truthful after discharge.
+        if (admission.getBedId() != null) {
+            bedRepository.findById(admission.getBedId()).ifPresent(bed -> {
+                bed.setStatus("AVAILABLE");
+                bedRepository.save(bed);
+            });
+        }
+
         appendOutboxEvent(
                 "ADMISSION",
-                admissionRef.toString(),
+                admission.getAdmissionRef().toString(),
                 "inpatient.discharge.completed",
                 admission.getTenantId(),
                 buildStandardPayload(admission));
 
-        log.info("Patient discharged: admissionRef={}, facility={}",
-                admissionRef, admission.getFacilityId());
+        log.info("Patient discharged: admissionRef={}, facility={}, bed freed={}",
+                admission.getAdmissionRef(), admission.getFacilityId(), admission.getBedId());
 
         return admission;
     }

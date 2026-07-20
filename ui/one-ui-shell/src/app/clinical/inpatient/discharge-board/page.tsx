@@ -12,6 +12,10 @@ import {
   useDischargeSummary,
   useFinaliseDischargeSummary,
   useSaveDischargeSummary,
+  useDischargeClearances,
+  useInitDischargeClearances,
+  useClearDischargeClearance,
+  useWaiveDischargeClearance,
   type DischargeSummary,
 } from "@/hooks/queries/useInpatient";
 
@@ -154,6 +158,92 @@ function DischargeSummaryDraftEditor({
           Cancel
         </button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Discharge clearances — the multi-disciplinary sign-offs (nursing, pharmacy, accounts, …) that
+ * gate summary finalisation. Without these being CLEARED/WAIVED, finalise returns 409, so this is
+ * the first step of the discharge flow. Real writes to discharge_clearance.
+ */
+function DischargeClearancesPanel({
+  encounterId,
+  patientCpid,
+}: {
+  encounterId: string;
+  patientCpid: string | null;
+}) {
+  const { data, isLoading } = useDischargeClearances(encounterId);
+  const init = useInitDischargeClearances();
+  const clear = useClearDischargeClearance();
+  const waive = useWaiveDischargeClearance();
+  const rows = (data?.data ?? []) as Record<string, unknown>[];
+  const pending = rows.filter((r) => {
+    const s = String(r.status ?? "");
+    return s !== "CLEARED" && s !== "WAIVED";
+  }).length;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-slate-500">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading clearances…
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-3 rounded border border-slate-200 bg-slate-50 p-3" data-testid="discharge-clearances">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-sm font-medium">
+          Discharge clearances {rows.length > 0 ? `(${rows.length - pending}/${rows.length} cleared)` : ""}
+        </span>
+        {rows.length === 0 && (
+          <button
+            type="button"
+            data-testid="init-clearances"
+            disabled={init.isPending}
+            onClick={() => init.mutate({ encounterId, patientId: patientCpid })}
+            className="rounded bg-slate-900 px-3 py-1 text-xs text-white hover:bg-slate-700 disabled:opacity-50"
+          >
+            {init.isPending ? "Initialising…" : "Initialise clearances"}
+          </button>
+        )}
+      </div>
+      {rows.length === 0 ? (
+        <p className="text-xs text-slate-500">
+          No clearances yet — initialise the multi-disciplinary sign-off checklist to begin discharge.
+        </p>
+      ) : (
+        <ul className="space-y-1">
+          {rows.map((r) => {
+            const id = String(r.id ?? "");
+            const status = String(r.status ?? "");
+            const done = status === "CLEARED" || status === "WAIVED";
+            return (
+              <li key={id} className="flex items-center justify-between gap-2 text-sm">
+                <span>
+                  {String(r.clearance_type ?? r.clearanceType ?? "—")}{" "}
+                  <span className={done ? "text-green-700" : "text-amber-700"}>· {status}</span>
+                </span>
+                {!done && (
+                  <span className="flex gap-1">
+                    <button type="button" data-testid="clear-clearance" disabled={clear.isPending}
+                      onClick={() => clear.mutate({ id })}
+                      className="rounded border border-green-600 px-2 py-0.5 text-xs text-green-700 hover:bg-green-50 disabled:opacity-50">Clear</button>
+                    <button type="button" disabled={waive.isPending}
+                      onClick={() => waive.mutate({ id, reason: "not applicable" })}
+                      className="rounded border border-slate-300 px-2 py-0.5 text-xs hover:bg-slate-100 disabled:opacity-50">Waive</button>
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {(init.isError || clear.isError || waive.isError) && (
+        <p className="mt-1 text-xs text-red-600">Clearance action was rejected by the inpatient service.</p>
+      )}
     </div>
   );
 }
@@ -357,6 +447,7 @@ export default function InpatientDischargeBoardPage() {
                 </div>
                 {encounterId && openEncounter === encounterId && (
                   <div className="mt-3 border-t border-slate-100 pt-3">
+                    <DischargeClearancesPanel encounterId={encounterId} patientCpid={cpid} />
                     <DischargeSummaryPanel encounterId={encounterId} patientCpid={cpid} />
                   </div>
                 )}

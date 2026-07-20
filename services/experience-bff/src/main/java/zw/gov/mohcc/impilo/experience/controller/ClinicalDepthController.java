@@ -242,9 +242,9 @@ public class ClinicalDepthController {
             JsonNode pctData = pctClient.recordNEWS2Components(body);
             if (pctData != null) return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", pctData));
         } catch (Exception e) {
-            log.warn("PCT recordNEWS2Components failed, falling back to local: {}", e.getMessage());
+            log.warn("PCT recordNEWS2Components failed, persisting NEWS2 to inpatient EWS: {}", e.getMessage());
         }
-        // NEWS2 component scoring: each parameter 0-3 points
+        // NEWS2 component scoring: each parameter 0-3 points.
         int rrScore = toInt(body.getOrDefault("respiratoryRateScore", 0));
         int spo2Score = toInt(body.getOrDefault("spo2Score", 0));
         int spo2ScaleScore = toInt(body.getOrDefault("spo2ScaleScore", 0));
@@ -255,18 +255,19 @@ public class ClinicalDepthController {
         int tempScore = toInt(body.getOrDefault("temperatureScore", 0));
 
         int totalScore = rrScore + spo2Score + spo2ScaleScore + airO2Score + bpScore + hrScore + consScore + tempScore;
-        String riskLevel = totalScore >= 7 ? "HIGH" : totalScore >= 5 ? "MEDIUM" : consScore == 3 ? "MEDIUM" : totalScore >= 1 ? "LOW" : "NONE";
-        boolean escalation = totalScore >= 7 || consScore == 3;
-
         String components = String.format(
                 "{\"respiratoryRate\":%d,\"spo2\":%d,\"spo2Scale\":%d,\"airOrOxygen\":%d,\"systolicBP\":%d,\"heartRate\":%d,\"consciousness\":%d,\"temperature\":%d}",
                 rrScore, spo2Score, spo2ScaleScore, airO2Score, bpScore, hrScore, consScore, tempScore);
 
-        UUID id = UUID.randomUUID();
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of(
-                "id", id, "totalScore", totalScore, "riskLevel", riskLevel,
-                "escalationRequired", escalation, "components", components)));
+        // Persist the score to the inpatient EWS store (real write to early_warning_score) rather than
+        // returning a fabricated UUID with no persistence. The computed NEWS2 total + components are
+        // forwarded; inpatient-service applies risk banding + escalation and owns the record.
+        Map<String, Object> ews = new java.util.LinkedHashMap<>(body);
+        ews.put("totalScore", totalScore);
+        ews.put("scoreType", "NEWS2");
+        ews.put("components", components);
+        JsonNode saved = requirePayload(inpatientClient.recordEws(ews), "Inpatient recordEws (NEWS2)");
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", saved));
     }
 
     private int toInt(Object val) {

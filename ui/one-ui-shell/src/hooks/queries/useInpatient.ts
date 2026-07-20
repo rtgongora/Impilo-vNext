@@ -320,3 +320,47 @@ export function useCountersignDischargeSummary() {
     },
   });
 }
+
+// ── Discharge clearances (the multi-disciplinary sign-offs that gate finalise) ──
+export interface DischargeClearance {
+  id?: string;
+  clearance_type?: string;
+  status?: string;
+  cleared_by?: string | null;
+  [k: string]: unknown;
+}
+
+export function useDischargeClearances(encounterId?: string | null) {
+  return useQuery<{ data?: DischargeClearance[]; progress?: Record<string, number> }>({
+    queryKey: ["inpatient-discharge-clearances", encounterId ?? null],
+    queryFn: () => apiClient.get(`/internal/v1/discharge-clearances?encounterId=${encounterId}`),
+    enabled: Boolean(encounterId),
+  });
+}
+
+export function useInitDischargeClearances() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, { encounterId: string; patientId?: string | null }>({
+    mutationFn: ({ encounterId, patientId }) =>
+      apiClient.post("/internal/v1/discharge-clearances/init", { encounterId, subjectCpid: patientId ?? undefined }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["inpatient-discharge-clearances"] }),
+  });
+}
+
+export function useClearDischargeClearance() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, { id: string; note?: string }>({
+    mutationFn: ({ id, note }) =>
+      apiClient.post(`/internal/v1/discharge-clearances/${id}/clear`, note ? { note } : {}),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["inpatient-discharge-clearances"] }),
+  });
+}
+
+export function useWaiveDischargeClearance() {
+  const queryClient = useQueryClient();
+  return useMutation<unknown, unknown, { id: string; reason?: string }>({
+    mutationFn: ({ id, reason }) =>
+      apiClient.post(`/internal/v1/discharge-clearances/${id}/waive`, reason ? { reason } : {}),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["inpatient-discharge-clearances"] }),
+  });
+}
