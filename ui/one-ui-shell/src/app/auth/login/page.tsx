@@ -301,10 +301,11 @@ export default function LoginPage() {
         <div className="flex gap-3">
           <Link
             href="/auth/login/biometric"
+            data-testid="passkey-signin-link"
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-border rounded-lg text-sm text-foreground hover:border-primary/25 hover:bg-primary-soft transition-colors"
           >
             <Fingerprint className="w-4 h-4 text-primary" />
-            Biometric
+            Sign in with a passkey
           </Link>
         </div>
       </div>

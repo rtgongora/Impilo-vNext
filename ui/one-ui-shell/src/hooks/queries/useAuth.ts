@@ -42,6 +42,59 @@ export function useLogin() {
   });
 }
 
+// ── L1 native passkey (WebAuthn passwordless) ──────────────────────────────
+// The WebAuthn ceremony is Keycloak-hosted: initiate returns the authorize URL
+// (the browser is redirected there), and the callback exchanges the returned
+// auth code for the SAME session shape as password login. Flag-gated in the BFF —
+// when disabled, initiate rejects with status 501 / code PASSKEY_NOT_ENABLED so
+// the UI keeps an honest "not enabled" state.
+
+export interface PasskeyInitiateResource {
+  id?: string;
+  type: "passkey-initiate";
+  attributes: {
+    authorizeUrl: string;
+    state: string;
+    nonce: string;
+    codeVerifier: string;
+    register: boolean;
+  };
+}
+
+type PasskeyInitiateResponse = ApiResponse<PasskeyInitiateResource>;
+
+interface PasskeyInitiatePayload {
+  register?: boolean;
+  email?: string;
+}
+
+interface PasskeyCallbackPayload {
+  code: string;
+  codeVerifier?: string;
+  redirectUri?: string;
+}
+
+/** Start the passkey ceremony — returns the Keycloak authorize URL + PKCE material. */
+export function usePasskeyInitiate() {
+  return useMutation<PasskeyInitiateResponse, unknown, PasskeyInitiatePayload | void>({
+    mutationFn: (payload) =>
+      apiClient.post<PasskeyInitiateResponse>("/internal/v1/auth/passkey/initiate", payload ?? {}),
+  });
+}
+
+/** Complete the passkey ceremony — exchanges the auth code for a real session. */
+export function usePasskeyCallback() {
+  const queryClient = useQueryClient();
+
+  return useMutation<LoginResponse, unknown, PasskeyCallbackPayload>({
+    mutationFn: (payload: PasskeyCallbackPayload) =>
+      apiClient.post<LoginResponse>("/internal/v1/auth/passkey/callback", payload),
+    onSuccess: () => {
+      queryClient.clear();
+    },
+  });
+}
+
 export function useLogout() {
   const queryClient = useQueryClient();
 

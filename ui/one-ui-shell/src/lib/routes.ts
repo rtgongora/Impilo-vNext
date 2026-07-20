@@ -47,6 +47,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/auth/login/email", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Sign In with Email", navLabel: "Email Login" },
   { path: "/auth/login/provider-id", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Sign In with Provider ID", navLabel: "Provider ID Login" },
   { path: "/auth/login/biometric", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Biometric Verification", navLabel: "Biometric" },
+  { path: "/auth/login/passkey/callback", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Completing passkey sign-in", navLabel: "Passkey Callback" },
   { path: "/auth/forgot-password", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Forgot Password", navLabel: "Forgot Password" },
   { path: "/auth/reset-password", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Reset Password", navLabel: "Reset Password" },
   { path: "/auth/mfa", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Multi-Factor Authentication", navLabel: "MFA" },
@@ -963,7 +964,9 @@ export const ROUTES: RouteDefinition[] = [
 // capture→extract→dedup→enrol) and the adjudication console /operations/vito/adjudication
 // (queue) + /operations/vito/adjudication/[caseId] (case detail: assign/decide/dual-control
 // merge). Total 766.
-export const EXPECTED_ROUTE_COUNT = 766;
+// L1 native passkey (Jul 2026): +1 — /auth/login/passkey/callback, the WebAuthn passwordless
+// auth-code return trip that exchanges the code for a session. Total 767.
+export const EXPECTED_ROUTE_COUNT = 767;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
