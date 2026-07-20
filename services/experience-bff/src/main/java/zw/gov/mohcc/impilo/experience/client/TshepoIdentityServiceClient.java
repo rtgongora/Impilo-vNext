@@ -50,6 +50,29 @@ public class TshepoIdentityServiceClient {
     }
 
     /**
+     * Sanctioned reverse resolution: CPID → mapping (Identity Contract §7.4).
+     *
+     * <p>The only audited path from a clinical subject key (CPID) back to the identity
+     * plane. A {@code purposeOfUse} is mandatory and every call is audited server-side
+     * ({@code REVERSE_RESOLVED}). Used by the biometric scan-to-login path to map the
+     * winning ABIS candidate's subjectRef (a CPID) to the person's Health ID anchor.</p>
+     *
+     * @return the mapping node {@code {healthId, cpid, crid, mappingStatus, ...}} or null
+     */
+    public JsonNode getMappingByCpid(String cpid, String tenantId, String purposeOfUse) {
+        String url = baseUrl + "/v1/identity/mappings/by-cpid/" + cpid;
+        org.springframework.http.HttpHeaders h = new org.springframework.http.HttpHeaders();
+        if (tenantId != null && !tenantId.isBlank()) {
+            h.set("x-tenant-id", tenantId);
+        }
+        h.set("x-purpose-of-use", purposeOfUse);
+        log.info("TSHEPO-IDENTITY: reverse getMappingByCpid operation [purpose={}]", purposeOfUse);
+        ResponseEntity<JsonNode> response =
+                restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(h), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Mint a provisional clinical subject for an unknown patient (trauma). Returns
      * {@code {cpid, status}} — never a Health ID.
      */

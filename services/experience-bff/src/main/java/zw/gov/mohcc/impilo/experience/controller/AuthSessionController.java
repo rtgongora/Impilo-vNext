@@ -85,6 +85,33 @@ public class AuthSessionController {
     @Value("${impilo.auth.passkey.scope:openid profile email}")
     private String passkeyScope;
 
+    // ── L3 biometric scan-to-login (ABIS 1:N) — flag-gated OFF, HIGHEST-RISK path ──
+    // Session minting stays Keycloak-owned: a strong 1:N match resolves a person, then
+    // Keycloak token-exchange mints the token. A session is NEVER fabricated — a weak,
+    // ambiguous, or absent match, or ANY infra failure, denies fail-closed. When the flag
+    // is off the SessionMinter bean is absent and the endpoint returns 501.
+    @Value("${impilo.auth.biometric-login.min-score:0.9}")
+    private double biometricMinScore;
+
+    @Value("${impilo.auth.biometric-login.margin:0.15}")
+    private double biometricMargin;
+
+    @Value("${impilo.auth.biometric-login.purpose-of-use:BIOMETRIC_LOGIN}")
+    private String biometricLoginPurpose;
+
+    /** Present ONLY when impilo.auth.biometric-login.enabled=true; its absence → 501. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private zw.gov.mohcc.impilo.experience.auth.SessionMinter sessionMinter;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private zw.gov.mohcc.impilo.experience.client.AbisBiometricClient abisBiometricClient;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private zw.gov.mohcc.impilo.experience.client.TshepoIdentityServiceClient tshepoIdentityClient;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient biometricAuditClient;
+
     private final RestTemplate restTemplate;
     private final VarapiServiceClient varapiClient;
     private final VitoServiceClient vitoClient;
@@ -363,6 +390,137 @@ public class AuthSessionController {
         } catch (Exception e) {
             log.warn("PASSKEY-CALLBACK: token exchange failed: {}", e.getMessage());
             return uniformAuthFailure(startNanos);
+        }
+    }
+
+    // ── L3 biometric scan-to-login (ABIS 1:N) ──────────────────────────────
+
+    /**
+     * Biometric scan-to-login: identify a person 1:N from a fresh capture and, ONLY on a
+     * single strong unambiguous match, mint a real Keycloak session for them.
+     *
+     * <p><b>This is the highest-risk authentication path in the platform.</b> The gate is
+     * deliberately strict and everything fails closed:</p>
+     * <ol>
+     *   <li><b>Flag / bean gate</b> — when {@code impilo.auth.biometric-login.enabled=false}
+     *       the {@link zw.gov.mohcc.impilo.experience.auth.SessionMinter} bean is absent and
+     *       this returns 501; no ABIS call is made.</li>
+     *   <li><b>Probe</b> — accepts a pre-extracted {@code templateBase64} probe, or a raw
+     *       {@code {modality, sampleBase64}} capture which is extracted via ABIS first.</li>
+     *   <li><b>Identify</b> — 1:N against ABIS with reason {@code LOGIN} (scored candidates
+     *       only; ABIS never authenticates).</li>
+     *   <li><b>Strict single-strong-candidate gate</b> — require exactly ONE candidate whose
+     *       score ≥ {@code min-score} (default 0.9) AND that leads the 2nd candidate by ≥
+     *       {@code margin} (default 0.15). Zero / weak / ambiguous → <b>deny</b> (401), never
+     *       a session.</li>
+     *   <li><b>Resolve</b> — the winner's subjectRef (a CPID) → Health ID via the audited
+     *       reverse mapping; a miss/failure denies fail-closed.</li>
+     *   <li><b>Mint</b> — {@link zw.gov.mohcc.impilo.experience.auth.SessionMinter} obtains a
+     *       Keycloak token for the resolved person WITHOUT a password (token exchange), then
+     *       {@link #buildSessionFromKeycloakTokens} yields the SAME session shape as
+     *       password/passkey login.</li>
+     *   <li><b>Audit</b> — every attempt (success + every denial cause) is audited with the
+     *       outcome and top score only — NO biometric bytes, NO template.</li>
+     * </ol>
+     *
+     * <p><b>EXTERNAL prerequisites</b> (beyond the flag): a deployed ABIS with enrolled
+     * templates + capture devices; a Keycloak service-account client granted token-exchange /
+     * impersonation and configured so the Health ID anchor is resolvable as
+     * {@code requested_subject}; and 1:N false-accept-rate governance sign-off for LOGIN.</p>
+     */
+    @PostMapping("/auth/biometric/identify-login")
+    public ResponseEntity<Map<String, Object>> biometricIdentifyLogin(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+
+        long startNanos = System.nanoTime();
+
+        // (1) Flag / bean gate — no minter bean means the feature is disabled → 501.
+        if (sessionMinter == null || abisBiometricClient == null || tshepoIdentityClient == null) {
+            return biometricNotEnabled(requestId, correlationId);
+        }
+
+        String modality = body == null ? "FINGERPRINT"
+                : String.valueOf(body.getOrDefault("modality", "FINGERPRINT")).trim();
+        if (modality.isEmpty() || "null".equals(modality)) {
+            modality = "FINGERPRINT";
+        }
+
+        // (2) Resolve the probe template (pre-extracted, or extract a raw capture via ABIS).
+        String probeBase64;
+        try {
+            probeBase64 = resolveBiometricProbe(body, modality);
+        } catch (Exception e) {
+            log.warn("BIOMETRIC-LOGIN: probe extraction failed ({}) — fail closed", e.getMessage());
+            auditBiometricLogin("UNAVAILABLE", "EXTRACT_FAILED", null, null, requestId, correlationId, tenantId);
+            return biometricUnavailable(requestId, correlationId);
+        }
+        if (probeBase64 == null || probeBase64.isBlank()) {
+            auditBiometricLogin("DENY", "NO_PROBE", null, null, requestId, correlationId, tenantId);
+            return biometricDeny(startNanos, requestId, correlationId);
+        }
+
+        // (3) 1:N identify (reason LOGIN) — scored candidates only.
+        JsonNode identifyResult;
+        try {
+            identifyResult = abisBiometricClient.identify(modality, probeBase64, "LOGIN");
+        } catch (Exception e) {
+            log.warn("BIOMETRIC-LOGIN: ABIS identify unavailable ({}) — fail closed", e.getMessage());
+            auditBiometricLogin("UNAVAILABLE", "IDENTIFY_FAILED", null, null, requestId, correlationId, tenantId);
+            return biometricUnavailable(requestId, correlationId);
+        }
+
+        // (4) STRICT single-strong-candidate gate.
+        BiometricGate gate = evaluateBiometricGate(identifyResult);
+        if (!gate.pass()) {
+            log.info("BIOMETRIC-LOGIN: denied ({}), topScore={}", gate.denyReason(), gate.topScore());
+            auditBiometricLogin("DENY", gate.denyReason(), null, gate.topScore(), requestId, correlationId, tenantId);
+            return biometricDeny(startNanos, requestId, correlationId);
+        }
+
+        // (5) Resolve the winning candidate's CPID → Health ID (audited reverse mapping).
+        String healthId;
+        try {
+            JsonNode mapping = tshepoIdentityClient.getMappingByCpid(gate.subjectRef(), tenantId, biometricLoginPurpose);
+            healthId = mapping == null ? null : mapping.path("healthId").asText(null);
+        } catch (Exception e) {
+            log.warn("BIOMETRIC-LOGIN: reverse CPID resolution failed ({}) — fail closed", e.getMessage());
+            auditBiometricLogin("UNAVAILABLE", "REVERSE_MAP_FAILED", null, gate.topScore(), requestId, correlationId, tenantId);
+            return biometricUnavailable(requestId, correlationId);
+        }
+        if (healthId == null || healthId.isBlank() || "null".equals(healthId)) {
+            log.info("BIOMETRIC-LOGIN: strong match but no identity mapping — deny (no session)");
+            auditBiometricLogin("DENY", "NO_IDENTITY_MAPPING", null, gate.topScore(), requestId, correlationId, tenantId);
+            return biometricDeny(startNanos, requestId, correlationId);
+        }
+
+        // (6) Mint a real Keycloak session for the resolved person WITHOUT a password.
+        zw.gov.mohcc.impilo.experience.auth.SessionMinter.KeycloakTokens tokens;
+        try {
+            tokens = sessionMinter.mintForSubject(healthId);
+        } catch (Exception e) {
+            log.warn("BIOMETRIC-LOGIN: session mint threw ({}) — fail closed", e.getMessage());
+            auditBiometricLogin("UNAVAILABLE", "MINT_FAILED", healthId, gate.topScore(), requestId, correlationId, tenantId);
+            return biometricUnavailable(requestId, correlationId);
+        }
+        if (tokens == null || !tokens.hasAccessToken()) {
+            log.warn("BIOMETRIC-LOGIN: token exchange yielded no session — fail closed");
+            auditBiometricLogin("UNAVAILABLE", "MINT_EMPTY", healthId, gate.topScore(), requestId, correlationId, tenantId);
+            return biometricUnavailable(requestId, correlationId);
+        }
+
+        try {
+            ResponseEntity<Map<String, Object>> session = buildSessionFromKeycloakTokens(
+                    tokens.tokenResponse(), null, "biometric", requestId, correlationId);
+            log.info("BIOMETRIC-LOGIN: session established via strong 1:N match, topScore={}", gate.topScore());
+            auditBiometricLogin("SUCCESS", "STRONG_MATCH", healthId, gate.topScore(), requestId, correlationId, tenantId);
+            return session;
+        } catch (Exception e) {
+            log.warn("BIOMETRIC-LOGIN: session assembly failed ({}) — fail closed", e.getMessage());
+            auditBiometricLogin("UNAVAILABLE", "SESSION_BUILD_FAILED", healthId, gate.topScore(), requestId, correlationId, tenantId);
+            return biometricUnavailable(requestId, correlationId);
         }
     }
 
@@ -1102,6 +1260,152 @@ public class AuthSessionController {
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "error", Map.of("code", "INVALID_CREDENTIALS", "message", "Invalid credentials")));
+    }
+
+    // ── L3 biometric scan-to-login helpers ─────────────────────────────────
+
+    /**
+     * Outcome of the strict single-strong-candidate gate. When {@code pass} is true the
+     * {@code subjectRef} is the sole strong candidate's CPID; otherwise {@code denyReason}
+     * explains why no session may be minted. {@code topScore} is the leading candidate's
+     * confidence (null when there were no candidates) — safe to audit (not a biometric byte).
+     */
+    private record BiometricGate(boolean pass, String subjectRef, Double topScore, String denyReason) {
+        static BiometricGate deny(String reason, Double topScore) {
+            return new BiometricGate(false, null, topScore, reason);
+        }
+        static BiometricGate pass(String subjectRef, double topScore) {
+            return new BiometricGate(true, subjectRef, topScore, null);
+        }
+    }
+
+    /**
+     * Resolve the probe template. A pre-extracted {@code templateBase64} is used as-is;
+     * otherwise a raw {@code sampleBase64} capture is extracted via ABIS. Returns null when
+     * neither is present or extraction reports {@code ok=false}. Throws only on transport
+     * failure (treated as UNAVAILABLE by the caller).
+     */
+    private String resolveBiometricProbe(Map<String, Object> body, String modality) {
+        if (body == null) {
+            return null;
+        }
+        Object pre = body.get("templateBase64");
+        if (pre != null && !String.valueOf(pre).isBlank() && !"null".equals(String.valueOf(pre))) {
+            return String.valueOf(pre).trim();
+        }
+        Object sample = body.get("sampleBase64");
+        if (sample == null || String.valueOf(sample).isBlank() || "null".equals(String.valueOf(sample))) {
+            return null;
+        }
+        Map<String, Object> extractReq = new LinkedHashMap<>();
+        extractReq.put("modality", modality);
+        extractReq.put("sampleBase64", String.valueOf(sample));
+        if (body.get("width") != null) extractReq.put("width", body.get("width"));
+        if (body.get("height") != null) extractReq.put("height", body.get("height"));
+        if (body.get("dpi") != null) extractReq.put("dpi", body.get("dpi"));
+        JsonNode extracted = abisBiometricClient.extract(extractReq);
+        if (extracted == null || !extracted.path("ok").asBoolean(false)) {
+            return null; // low-quality / unextractable capture — caller denies
+        }
+        String template = extracted.path("templateBase64").asText(null);
+        return template == null || template.isBlank() ? null : template;
+    }
+
+    /**
+     * The strict single-strong-candidate gate. Ranks candidates by confidence and passes
+     * ONLY when the leader is above {@code biometricMinScore} AND (if a runner-up exists)
+     * leads it by at least {@code biometricMargin}. Zero / weak / ambiguous all deny.
+     */
+    private BiometricGate evaluateBiometricGate(JsonNode identifyResult) {
+        JsonNode candidates = identifyResult == null ? null : identifyResult.get("candidates");
+        if (candidates == null || !candidates.isArray() || candidates.isEmpty()) {
+            return BiometricGate.deny("NO_CANDIDATES", null);
+        }
+        // Rank by confidence descending (defensive — do not trust upstream ordering).
+        List<JsonNode> ranked = new ArrayList<>();
+        candidates.forEach(ranked::add);
+        ranked.sort((a, b) -> Double.compare(
+                b.path("confidence").asDouble(0.0), a.path("confidence").asDouble(0.0)));
+
+        JsonNode top = ranked.get(0);
+        double topScore = top.path("confidence").asDouble(0.0);
+        String subjectRef = top.path("subjectRef").asText(null);
+
+        if (subjectRef == null || subjectRef.isBlank()) {
+            return BiometricGate.deny("NO_SUBJECT_REF", topScore);
+        }
+        if (topScore < biometricMinScore) {
+            return BiometricGate.deny("WEAK_MATCH", topScore);
+        }
+        if (ranked.size() > 1) {
+            double second = ranked.get(1).path("confidence").asDouble(0.0);
+            if (topScore - second < biometricMargin) {
+                return BiometricGate.deny("AMBIGUOUS_MATCH", topScore);
+            }
+        }
+        return BiometricGate.pass(subjectRef, topScore);
+    }
+
+    /** 501 when the biometric-login feature (and thus its SessionMinter bean) is not enabled. */
+    private ResponseEntity<Map<String, Object>> biometricNotEnabled(String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
+                "error", Map.of("code", "BIOMETRIC_LOGIN_NOT_ENABLED",
+                        "message", "Biometric sign-in is not enabled on this deployment."),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    /** 401 deny for a weak/ambiguous/absent match — honest, non-enumerating, time-floored. */
+    private ResponseEntity<Map<String, Object>> biometricDeny(long startNanos, String requestId, String correlationId) {
+        long elapsedMillis = (System.nanoTime() - startNanos) / 1_000_000L;
+        long remaining = AUTH_FAIL_FLOOR_MILLIS - elapsedMillis;
+        if (remaining > 0) {
+            try {
+                Thread.sleep(remaining);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "error", Map.of("code", "BIOMETRIC_NO_MATCH",
+                        "message", "We couldn't identify you. Please use another sign-in method."),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    /** 503 fail-closed for any infrastructure failure — NEVER a session. */
+    private ResponseEntity<Map<String, Object>> biometricUnavailable(String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                "error", Map.of("code", "BIOMETRIC_UNAVAILABLE",
+                        "message", "Biometric sign-in is temporarily unavailable. Please try again or use another method."),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    /**
+     * Audit every biometric-login attempt — success and every denial cause — with the outcome
+     * and top score only. NO biometric bytes, NO template, NO probe are recorded. Best-effort:
+     * the audit client swallows its own failures so an audit-plane outage cannot itself mint or
+     * block a session (the decision has already been made fail-closed above).
+     */
+    private void auditBiometricLogin(String outcome, String reason, String healthId, Double topScore,
+                                     String requestId, String correlationId, String tenantId) {
+        log.info("AUDIT biometric.identify-login outcome={} reason={} topScore={} req={}",
+                outcome, reason, topScore, requestId);
+        if (biometricAuditClient == null) {
+            return;
+        }
+        try {
+            Map<String, Object> event = new LinkedHashMap<>();
+            event.put("eventType", "auth.biometric.identify-login");
+            event.put("outcome", outcome);
+            event.put("reason", reason);
+            if (topScore != null) event.put("topScore", topScore);
+            if (healthId != null) event.put("actorId", healthId);
+            if (tenantId != null) event.put("tenantId", tenantId);
+            event.put("requestId", requestId);
+            event.put("correlationId", correlationId);
+            biometricAuditClient.ingestAuditEvent(event);
+        } catch (Exception e) {
+            log.warn("BIOMETRIC-LOGIN: audit ingest failed: {}", e.getMessage());
+        }
     }
 
     private String determineActorType(List<String> roles) {

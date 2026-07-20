@@ -3,6 +3,10 @@ package zw.gov.mohcc.impilo.experience.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -41,6 +45,27 @@ public class AbisBiometricClient {
     /** 1:1 verify a probe template against a subject's enrolled template. */
     public JsonNode verify(Map<String, Object> body) {
         return post("/v1/abis/verify", body);
+    }
+
+    /**
+     * Restricted 1:N identify. Sends the mandatory {@code X-Identify-Reason} header
+     * (∈ {ENROLMENT, RECOVERY, DEDUPLICATION, LOGIN}) and returns scored candidates —
+     * NEVER an authentication or merge decision. The single-strong-candidate gate and
+     * every governance/audit decision live in the caller.
+     *
+     * @param reason the identify reason header value (e.g. {@code LOGIN} for scan-to-login)
+     */
+    public JsonNode identify(String modality, String probeBase64, String reason) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Identify-Reason", reason);
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("modality", modality);
+        body.put("probeBase64", probeBase64);
+        ResponseEntity<JsonNode> resp = restTemplate.exchange(
+                baseUrl + "/v1/abis/identify", HttpMethod.POST,
+                new HttpEntity<>(body, headers), JsonNode.class);
+        return resp.getBody();
     }
 
     // --- Adjudication + duplicate-investigation console (W3c/W3e) ---
