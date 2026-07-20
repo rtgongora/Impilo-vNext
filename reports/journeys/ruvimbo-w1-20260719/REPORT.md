@@ -72,6 +72,26 @@ never duplicated. `cv_claims` is the canonical claim (COSTA claim packs file int
 settles it). Switch ≠ adjudication. G3 subsidy dual-lane untouched. Policy plane (Tshepo/OPA)
 untouched.
 
+## Waves 2–4 — DELIVERED + PROVEN LIVE (2026-07-20)
+
+The PO opted to build all deferred waves continuously (internal rails honestly gated). Each
+wave was built → migrated → deployed digest-pinned → proven live ×2 through the real ingress.
+
+| Wave | Migration | Delivered | Proof |
+|---|---|---|---|
+| **W2 Authorisations & Estimates** | V016 | Referrals/gatekeeping (validate + emergency bypass + consume); full §17 14-status authorisation machine + line-level (approval reserves benefit, idempotent); patient-liability estimation (COSTA charge → coverage split, `ruvimbo-liability-v1`) | `ruvimbo-w2-proof.sh` **20/20 ×2** |
+| **W3 Claims & Remittance** | V017 | Claims v2 (21-status, line-level, lineage void/reverse/replace, scrubbing); **real line-level adjudication** (auth-match + accumulator-consume + copay/coinsurance, explainable `ruvimbo-adjudication-v1`); citizen EOB; settlement instruction → `coverage.settlement.initiated` (MUSHEX payout credential-gated) | `ruvimbo-w3-proof.sh` **23/23 ×2** |
+| **W4 Advanced Financing** | V018 | Coordination of benefits (priority waterfall, total payer ≤ allowed); employer/group admin (roster stage→validate→apply); fraud flags (screen → governed review, never auto-denies); capitation reports; Claims Switch/Payer Gateway (route + technical/business ack; external rails PENDING, not faked) | `ruvimbo-w4-proof.sh` **21/21 ×2** |
+
+**Live bugs caught + fixed by the proofs:** W2 outbox idempotency-key collision on authorisation
+create (`submitted`→`created`) + non-covered liability double-count; W3 fragile proof parse.
+A pre-existing **foreign** test break (`AdminFacilityImportControllerTest`, an unrelated concurrent
+`NdilaServiceClient` ctor change) was flagged as a separate chip, not fixed here; builds used
+`-Dmaven.test.skip=true`. Every migration (V016/V017/V018) was clone-validated against the live DB
+before deploy.
+
+**Deployed live (all four waves):** coverage-service (`flyway=018`), experience-bff, one-ui-shell.
+
 ## Deferred (registered in `ruvimbo-epics.md`)
 
 - **W2** Authorisations & Estimates: referrals/gatekeeping, full §17 authorisation machine,
