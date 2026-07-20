@@ -56,6 +56,23 @@ public class EncounterService {
     private static final Set<String> ALLOWED_CARE_SETTINGS = Set.of("facility", "community", "home", "mobile_outreach", "virtual");
     private static final Set<String> ALLOWED_PRIORITIES = Set.of("routine", "urgent", "emergency");
 
+    // The clinical UI and various callers speak a richer care vocabulary than PCT's canonical enums
+    // (e.g. the encounter-start form sends context "clinical_visit", entry point "provider_workspace"
+    // / "queue_walk_in", care setting "outpatient"). Rejecting those with a 500 broke the encounter-start
+    // screen. These maps translate the common non-canonical labels to the canonical value so any
+    // reasonable caller succeeds; genuinely unknown values still fail the ALLOWED_* check below.
+    private static final Map<String, String> CONTEXT_ALIASES = Map.of(
+            "walk_in", "outpatient", "walkin", "outpatient",
+            "clinical_visit", "outpatient", "clinical", "outpatient",
+            "telehealth", "virtual", "home_visit", "community");
+    private static final Map<String, String> ENTRY_POINT_ALIASES = Map.of(
+            "provider_workspace", "walk_in", "queue_walk_in", "walk_in", "walkin", "walk_in",
+            "appointment", "scheduled_appointment", "booking", "scheduled_appointment",
+            "emergency", "emergency_arrival");
+    private static final Map<String, String> CARE_SETTING_ALIASES = Map.of(
+            "outpatient", "facility", "inpatient", "facility", "clinic", "facility",
+            "home_visit", "home", "telehealth", "virtual", "hospital", "facility");
+
     public EncounterService(EncounterRepository encounterRepository,
                             JourneyRepository journeyRepository,
                             JourneyStateMachine journeyStateMachine,
@@ -209,12 +226,9 @@ public class EncounterService {
         String normalized = encounterContext == null || encounterContext.isBlank()
                 ? derivedDefault
                 : encounterContext.trim().toLowerCase(Locale.ROOT);
-        // "walk_in" is an arrival mode (a valid entry point — see ALLOWED_ENTRY_POINTS), not a clinical
-        // context. A walk-in patient is clinically an outpatient encounter, so accept the natural walk-in
-        // label the provider flow supplies and resolve it to the outpatient context rather than 500ing.
-        if ("walk_in".equals(normalized) || "walkin".equals(normalized)) {
-            normalized = "outpatient";
-        }
+        // "walk_in"/"clinical_visit" etc. are arrival/UI labels, not clinical contexts — resolve the
+        // common aliases (see CONTEXT_ALIASES) to the canonical context rather than 500ing.
+        normalized = CONTEXT_ALIASES.getOrDefault(normalized, normalized);
         if (!ALLOWED_CONTEXTS.contains(normalized)) {
             throw new IllegalArgumentException("Invalid encounter context: " + encounterContext);
         }
@@ -225,6 +239,7 @@ public class EncounterService {
         String normalized = entryPoint == null || entryPoint.isBlank()
                 ? deriveEntryPointFromJourney(journey)
                 : entryPoint.trim().toLowerCase(Locale.ROOT);
+        normalized = ENTRY_POINT_ALIASES.getOrDefault(normalized, normalized);
         if (!ALLOWED_ENTRY_POINTS.contains(normalized)) {
             throw new IllegalArgumentException("Invalid encounter entry point: " + entryPoint);
         }
@@ -236,6 +251,7 @@ public class EncounterService {
         String normalized = careSetting == null || careSetting.isBlank()
                 ? defaultSetting
                 : careSetting.trim().toLowerCase(Locale.ROOT);
+        normalized = CARE_SETTING_ALIASES.getOrDefault(normalized, normalized);
         if (!ALLOWED_CARE_SETTINGS.contains(normalized)) {
             throw new IllegalArgumentException("Invalid encounter care setting: " + careSetting);
         }
