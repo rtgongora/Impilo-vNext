@@ -928,11 +928,15 @@ public class AuthSessionController {
     /** VARAPI returns providerPublicId; legacy mocks used providerId. */
     private static String resolveProviderPublicId(JsonNode providerData) {
         if (providerData == null || providerData.isNull()) return null;
-        if (providerData.has("providerId") && !providerData.get("providerId").asText().isBlank()) {
-            return providerData.get("providerId").asText();
-        }
+        // Prefer the PUBLIC id (PROV-ZW-00001) over varapi's numeric internal "providerId" (e.g. "1").
+        // The public id is what the trust layer (X-Provider-ID), provider activation, and workforce
+        // assignments key on; checking "providerId" first returned the internal row id and broke
+        // provider attribution once the registry was populated.
         if (providerData.has("providerPublicId") && !providerData.get("providerPublicId").asText().isBlank()) {
             return providerData.get("providerPublicId").asText();
+        }
+        if (providerData.has("providerId") && !providerData.get("providerId").asText().isBlank()) {
+            return providerData.get("providerId").asText();
         }
         return null;
     }

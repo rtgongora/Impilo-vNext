@@ -454,11 +454,15 @@ public class SessionExperienceService {
 
     private static String resolveProviderPublicId(JsonNode node) {
         if (node == null || node.isNull()) return null;
-        if (node.has("providerId") && !node.get("providerId").asText().isBlank()) {
-            return node.get("providerId").asText();
-        }
+        // Prefer the PUBLIC id (PROV-ZW-00001) over varapi's numeric internal "providerId" (e.g. "1").
+        // The varapi DTO exposes both; the public id is what the trust layer (X-Provider-ID),
+        // provider activation, and workforce assignments key on. Checking "providerId" first returned
+        // the internal row id and broke provider attribution once the registry was populated.
         if (node.has("providerPublicId") && !node.get("providerPublicId").asText().isBlank()) {
             return node.get("providerPublicId").asText();
+        }
+        if (node.has("providerId") && !node.get("providerId").asText().isBlank()) {
+            return node.get("providerId").asText();
         }
         return null;
     }
