@@ -92,6 +92,28 @@ before deploy.
 
 **Deployed live (all four waves):** coverage-service (`flyway=018`), experience-bff, one-ui-shell.
 
+## Complete UI — every capability operable in-browser (2026-07-20)
+
+The W2–W4 rails (and W1 admin surfaces) were API+BFF only; the PO asked that everything I built
+have a complete UI. Delivered:
+
+- **`useRuvimbo.ts`** — React Query hooks for every Wave 1–4 BFF endpoint (envelope-tolerant,
+  idempotency via `apiClient`).
+- **`/coverage/operations`** (ADMIN) — a 10-tab Ruvimbo Operations workbench: **Payers**
+  (register/suspend/reactivate) · **Plans** (payer→scheme→product→version→publish + benefits) ·
+  **Verification** queue (verify/dispute/terminate) · **Authorisations** (review → approve/deny
+  all) · **Claims** (file → scrub → submit → adjudicate → EOB) · **Coordination** (waterfall) ·
+  **Employers** (register → stage → validate → apply) · **Fraud** (screen → confirm/dismiss) ·
+  **Capitation** · **Switch** monitor. Engine 4xx (409/400) surfaces verbatim — no fake success.
+- **Citizen wallet** (`/coverage/member`) — added **Authorisations**, **Referrals**, and
+  **Cost-estimate** sections alongside the existing plans/benefits/claims/appeals.
+- Route registered ADMIN-gated; discoverability card on the legacy `/coverage` console.
+
+**Browser-proven live ×2:** `coverage-operations.journey.spec.ts` — admin reaches the console,
+sees the seeded payer registry, **registers a payer in-browser**, and Plans/Switch tabs render;
+`coverage-wallet.journey.spec.ts` still green with the new sections. Deployed one-ui-shell
+`@e9512598`. tsc clean.
+
 ## Deferred (registered in `ruvimbo-epics.md`)
 
 - **W2** Authorisations & Estimates: referrals/gatekeeping, full §17 authorisation machine,
