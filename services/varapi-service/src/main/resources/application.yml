@@ -85,10 +85,6 @@ varapi:
     parallelism: 1
   hmac:
     pepper: ${VARAPI_HMAC_PEPPER:dev-pepper-change-in-production}
-  biometric:
-    # AES-256-GCM key seed for provider biometric templates at rest (PII Enforcement Wave 0.1).
-    # Production must supply this via tshepo-keys custody; blank falls back to a loud dev key.
-    template-key-seed: ${VARAPI_BIOMETRIC_TEMPLATE_KEY_SEED:}
   zibo:
     base-url: http://localhost:8085
     validation-mode: LENIENT  # STRICT or LENIENT
@@ -113,6 +109,9 @@ varapi:
   biometric:
     policy-enabled: ${VARAPI_BIOMETRIC_POLICY_ENABLED:true}
     tshepo-policy-base-url: ${TSHEPO_AUTHZ_BASE_URL:http://localhost:8081}
+    # AES-256-GCM key seed for provider biometric templates at rest (PII Enforcement Wave 0.1).
+    # Production must supply this via tshepo-keys custody; blank falls back to a loud dev key.
+    template-key-seed: ${VARAPI_BIOMETRIC_TEMPLATE_KEY_SEED:}
   mushex:
     enabled: ${VARAPI_MUSHEX_ENABLED:false}
     base-url: ${VARAPI_MUSHEX_BASE_URL:http://localhost:8102}
