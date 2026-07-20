@@ -81,6 +81,7 @@ public class PolicyEngine {
     private final VisibilityEscalationService visibilityEscalationService;
     private final DelegationClient delegationClient;
     private final OpaDecisionClient opaDecisionClient;
+    private final RoleTemplateCatalog roleTemplateCatalog;
 
     public PolicyEngine(DeviceRiskScoreEvaluator riskScoring,
                         PolicyCacheService policyCacheService,
@@ -94,7 +95,8 @@ public class PolicyEngine {
                         ObjectMapper objectMapper,
                         VisibilityEscalationService visibilityEscalationService,
                         DelegationClient delegationClient,
-                        OpaDecisionClient opaDecisionClient) {
+                        OpaDecisionClient opaDecisionClient,
+                        RoleTemplateCatalog roleTemplateCatalog) {
         this.riskScoring = riskScoring;
         this.policyCacheService = policyCacheService;
         this.privilegeRevocationStore = privilegeRevocationStore;
@@ -108,6 +110,7 @@ public class PolicyEngine {
         this.visibilityEscalationService = visibilityEscalationService;
         this.delegationClient = delegationClient;
         this.opaDecisionClient = opaDecisionClient;
+        this.roleTemplateCatalog = roleTemplateCatalog;
     }
 
     /**
@@ -546,6 +549,64 @@ public class PolicyEngine {
                 boolean verified = accountVerified(request);
                 if (!verified && Instant.now().toEpochMilli() > expiryEpochMs) {
                     log.debug("Condition failed: verification grace expired for actor {}", request.actorId());
+                    return false;
+                }
+            }
+
+            // ── First-class operational dimensions (Health OS §7 + §10 + workflow-state) ──
+            // department / ward / organisation are sourced from the WORK_CONTEXT duty token when
+            // it is usable (authoritative), falling back to the client header otherwise.
+
+            // workflow-state gates (X-Workflow-State): allow/blocked lists on the transaction state.
+            if (conditions.containsKey("allowed_workflow_states")) {
+                List<String> allowed = (List<String>) conditions.get("allowed_workflow_states");
+                String state = request.workflowContext();
+                if (state == null || allowed.stream().noneMatch(state::equalsIgnoreCase)) {
+                    log.debug("Condition failed: workflow-state '{}' not in allowed {}", state, allowed);
+                    return false;
+                }
+            }
+            if (conditions.containsKey("blocked_workflow_states")) {
+                List<String> blocked = (List<String>) conditions.get("blocked_workflow_states");
+                String state = request.workflowContext();
+                if (state != null && blocked.stream().anyMatch(state::equalsIgnoreCase)) {
+                    log.debug("Condition failed: workflow-state '{}' is blocked {}", state, blocked);
+                    return false;
+                }
+            }
+
+            // department / ward / organisation membership (duty-token-authoritative).
+            if (conditions.containsKey("allowed_departments")) {
+                List<String> allowed = (List<String>) conditions.get("allowed_departments");
+                String dept = effectiveDepartment(request);
+                if (dept == null || allowed.stream().noneMatch(dept::equalsIgnoreCase)) {
+                    log.debug("Condition failed: department '{}' not in allowed {}", dept, allowed);
+                    return false;
+                }
+            }
+            if (conditions.containsKey("allowed_wards")) {
+                List<String> allowed = (List<String>) conditions.get("allowed_wards");
+                String ward = effectiveWard(request);
+                if (ward == null || allowed.stream().noneMatch(ward::equalsIgnoreCase)) {
+                    log.debug("Condition failed: ward '{}' not in allowed {}", ward, allowed);
+                    return false;
+                }
+            }
+            if (conditions.containsKey("allowed_organisations")) {
+                List<String> allowed = (List<String>) conditions.get("allowed_organisations");
+                String org = effectiveOrganisation(request);
+                if (org == null || allowed.stream().noneMatch(org::equalsIgnoreCase)) {
+                    log.debug("Condition failed: organisation '{}' not in allowed {}", org, allowed);
+                    return false;
+                }
+            }
+
+            // attached role-id: a provider public id must be present (duty token or header) for
+            // provider-only actions, beyond the negative revocation/self-treatment checks.
+            if (Boolean.TRUE.equals(conditions.get("requires_provider_id"))) {
+                String provider = effectiveProviderId(request);
+                if (provider == null || provider.isBlank()) {
+                    log.debug("Condition failed: requires_provider_id but none present for actor {}", request.actorId());
                     return false;
                 }
             }
@@ -1065,13 +1126,24 @@ public class PolicyEngine {
             return new DutyBinding(request, null);
         }
 
-        // Matched. Fold the duty role into the effective role set (additive — never removes a
-        // Keycloak-claim role) so policy rules authored against the duty role also match.
+        // Matched. Fold the duty role — the raw roleTemplateId AND any canonical role(s) it maps
+        // to via the role-template catalog — into the effective role set (additive; never removes
+        // a Keycloak-claim role) so policy rules authored against either also match.
         AuthzInternalRequest effective = request;
         if (dc.role() != null && !dc.role().isBlank()) {
             List<String> roles = new ArrayList<>(request.roles() != null ? request.roles() : List.of());
-            if (roles.stream().noneMatch(r -> r != null && r.equalsIgnoreCase(dc.role()))) {
-                roles.add(dc.role());
+            List<String> toAdd = new ArrayList<>();
+            toAdd.add(dc.role());
+            toAdd.addAll(roleTemplateCatalog.resolve(request.tenantId(), dc.role()));
+            boolean changed = false;
+            for (String candidate : toAdd) {
+                if (candidate != null && !candidate.isBlank()
+                        && roles.stream().noneMatch(r -> r != null && r.equalsIgnoreCase(candidate))) {
+                    roles.add(candidate);
+                    changed = true;
+                }
+            }
+            if (changed) {
                 effective = request.withRoles(roles);
             }
         }
@@ -1103,5 +1175,33 @@ public class PolicyEngine {
         if (method == null) return false;
         String m = method.toUpperCase();
         return m.equals("POST") || m.equals("PUT") || m.equals("PATCH") || m.equals("DELETE");
+    }
+
+    /** Department for ABAC: the duty token's proven value when usable, else the client header. */
+    private static String effectiveDepartment(AuthzInternalRequest request) {
+        DutyContext dc = request.dutyContext();
+        if (dc != null && dc.usable() && dc.departmentId() != null) return dc.departmentId();
+        return request.departmentId();
+    }
+
+    /** Ward for ABAC: duty-token-authoritative, header fallback. */
+    private static String effectiveWard(AuthzInternalRequest request) {
+        DutyContext dc = request.dutyContext();
+        if (dc != null && dc.usable() && dc.wardId() != null) return dc.wardId();
+        return request.wardId();
+    }
+
+    /** Organisation for ABAC: duty-token-authoritative (no direct header equivalent). */
+    private static String effectiveOrganisation(AuthzInternalRequest request) {
+        DutyContext dc = request.dutyContext();
+        if (dc != null && dc.usable() && dc.orgId() != null) return dc.orgId();
+        return null;
+    }
+
+    /** Provider id for ABAC: duty-token-authoritative, X-Provider-ID header fallback. */
+    private static String effectiveProviderId(AuthzInternalRequest request) {
+        DutyContext dc = request.dutyContext();
+        if (dc != null && dc.usable() && dc.providerId() != null) return dc.providerId();
+        return request.providerId();
     }
 }

@@ -50,6 +50,7 @@ class PolicyEngineTest {
     @Mock private VisibilityEscalationService visibilityEscalationService;
     @Mock private DelegationClient delegationClient;
     @Mock private OpaDecisionClient opaDecisionClient;
+    @Mock private RoleTemplateCatalog roleTemplateCatalog;
 
     private AuthzProperties properties;
     private ObjectMapper objectMapper;
@@ -73,7 +74,7 @@ class PolicyEngineTest {
                 riskScoring, policyCacheService, privilegeRevocationStore, consentClient,
                 stepUpService, breakGlassService, decisionLogRepository,
                 auditPublisher, properties, objectMapper, visibilityEscalationService,
-                delegationClient, opaDecisionClient
+                delegationClient, opaDecisionClient, roleTemplateCatalog
         );
     }
 
@@ -500,6 +501,94 @@ class PolicyEngineTest {
 
         assertEquals(Verdict.DENY, response.verdict(), "The conditional DENY must still fire on its pinned path");
         assertEquals("POLICY_DENY", response.errorCode());
+    }
+
+    // ── First-class WORK_CONTEXT dimensions (Phase D) ──────────────────────
+    private static AuthzInternalRequest dimRequest(String path, String resourceType, String action,
+            List<String> roles, String departmentId, String providerId, String workflowState,
+            DutyContext duty) {
+        return new AuthzInternalRequest(
+                TENANT_ID, ACTOR_ID, "PROVIDER", roles, "TREATMENT",
+                DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
+                null, "POST", path, action, resourceType, null,
+                3, "session-abc", null,
+                providerId, departmentId, null, null, null, null,
+                null, workflowState, duty);
+    }
+
+    @Test
+    @DisplayName("workflow-state: blocked_workflow_states denies an amend on a DISCHARGED transaction")
+    void evaluate_workflowState_blocked_denies() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions("note", "CLINICIAN", "POST",
+                "{\"path_contains\": \"/x/note\", \"blocked_workflow_states\": [\"DISCHARGED\"]}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        AuthzResponse active = policyEngine.evaluate(dimRequest("/x/note", "note", "POST:/x/note",
+                List.of("CLINICIAN"), null, null, "ACTIVE", DutyContext.absent()));
+        assertEquals(Verdict.ALLOW, active.verdict(), "amend on an ACTIVE transaction is allowed");
+
+        AuthzResponse discharged = policyEngine.evaluate(dimRequest("/x/note", "note", "POST:/x/note",
+                List.of("CLINICIAN"), null, null, "DISCHARGED", DutyContext.absent()));
+        assertEquals(Verdict.DENY, discharged.verdict(), "amend on a DISCHARGED transaction is blocked");
+    }
+
+    @Test
+    @DisplayName("department: allowed_departments gates to the matching department")
+    void evaluate_department_gate() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions("dept", "CLINICIAN", "POST",
+                "{\"path_contains\": \"/x/dept\", \"allowed_departments\": [\"cardiology\"]}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        AuthzResponse ok = policyEngine.evaluate(dimRequest("/x/dept", "dept", "POST:/x/dept",
+                List.of("CLINICIAN"), "cardiology", null, null, DutyContext.absent()));
+        assertEquals(Verdict.ALLOW, ok.verdict(), "cardiology department is allowed");
+
+        AuthzResponse wrong = policyEngine.evaluate(dimRequest("/x/dept", "dept", "POST:/x/dept",
+                List.of("CLINICIAN"), "oncology", null, null, DutyContext.absent()));
+        assertEquals(Verdict.DENY, wrong.verdict(), "a different department is denied");
+    }
+
+    @Test
+    @DisplayName("provider-id: requires_provider_id denies when no provider id is attached")
+    void evaluate_requiresProviderId() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity rule = buildAllowRuleWithConditions("rx", "CLINICIAN", "POST",
+                "{\"path_contains\": \"/x/rx\", \"requires_provider_id\": true}");
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        AuthzResponse with = policyEngine.evaluate(dimRequest("/x/rx", "rx", "POST:/x/rx",
+                List.of("CLINICIAN"), null, "PROV-PUBLIC-1", null, DutyContext.absent()));
+        assertEquals(Verdict.ALLOW, with.verdict(), "provider id present → allowed");
+
+        AuthzResponse without = policyEngine.evaluate(dimRequest("/x/rx", "rx", "POST:/x/rx",
+                List.of("CLINICIAN"), null, null, null, DutyContext.absent()));
+        assertEquals(Verdict.DENY, without.verdict(), "no provider id → denied");
+    }
+
+    @Test
+    @DisplayName("role-template: a token carrying a template id matches a rule via its catalog canonical role")
+    void evaluate_roleTemplate_foldsCanonicalRole() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        when(roleTemplateCatalog.resolve(TENANT_ID, "NURSE_ONCOLOGY_SNR"))
+                .thenReturn(List.of("CLINICIAN"));
+        PolicyRuleEntity rule = buildAllowRule("note", null, "CLINICIAN", null, null);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(rule));
+
+        // The Keycloak claim carries NO CLINICIAN role; the duty token proves NURSE_ONCOLOGY_SNR,
+        // which the catalog maps to CLINICIAN. Facility/actor match so the token is trusted.
+        DutyContext duty = new DutyContext(true, true, "WORK_CONTEXT", ACTOR_ID,
+                FACILITY_ID.toString(), null, null, null, null, null, null, "NURSE_ONCOLOGY_SNR", null);
+        AuthzResponse resp = policyEngine.evaluate(dimRequest("/x/note", "note", "POST:/x/note",
+                List.of(), null, null, null, duty));
+
+        assertEquals(Verdict.ALLOW, resp.verdict(),
+                "duty role NURSE_ONCOLOGY_SNR → canonical CLINICIAN → matches the rule");
     }
 
     @Test
