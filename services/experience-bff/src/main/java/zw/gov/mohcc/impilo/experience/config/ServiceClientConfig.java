@@ -305,7 +305,14 @@ public class ServiceClientConfig {
                 forwardHeader(inbound, request, CompanionHeaders.FACILITY_ID);
                 forwardHeader(inbound, request, CompanionHeaders.TUSO_FACILITY_ID);
                 forwardHeader(inbound, request, CompanionHeaders.WORKSPACE_ID);
+                forwardHeader(inbound, request, CompanionHeaders.DEPARTMENT_ID);
+                forwardHeader(inbound, request, CompanionHeaders.WARD_ID);
+                forwardHeader(inbound, request, CompanionHeaders.PROGRAMME_ID);
                 forwardHeader(inbound, request, CompanionHeaders.SHIFT_ID);
+                forwardHeader(inbound, request, CompanionHeaders.WORKFLOW_STATE);
+                // Duty proof: the signed WORK_CONTEXT token the PDP introspects to make the
+                // operational context above authoritative (validated, not merely trusted).
+                forwardHeader(inbound, request, CompanionHeaders.WORK_CONTEXT_TOKEN);
                 // Idempotency keys are scoped to ONE mutation: when a BFF handler fans
                 // out to several downstream mutations it must set distinct keys, and
                 // blind forwarding would clobber them (downstream then 409s the second

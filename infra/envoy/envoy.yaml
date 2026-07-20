@@ -304,6 +304,7 @@ static_resources:
                             - "x-pii-access"
                             - "x-clinical-access"
                             - "x-obligations"
+                            - "x-work-context-token"
                           typed_per_filter_config:
                             envoy.filters.http.ext_authz:
                               "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute

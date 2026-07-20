@@ -21,7 +21,14 @@ public record IssueWorkContextTokenRequest(
         @NotBlank String actorId,
         @NotBlank String providerPublicId,
         @NotNull UUID facilityId,
-        UUID departmentId,
+        // Operational-context ids are opaque strings, not UUIDs: departmentId/wardId/
+        // programmeId are Vashandi VARCHAR keys (a UUID field would 400 on a non-UUID
+        // dept id and silently break the binding). Kept as String on the wire.
+        String departmentId,
+        String wardId,
+        String programmeId,
+        String organisationId,
+        String assignmentId,
         UUID workspaceId,
         String roleTemplateId,
         String purposeOfUse,

@@ -157,8 +157,20 @@ public class TokenIssuanceService {
         Map<String, Object> context = new java.util.LinkedHashMap<>();
         context.put("provider_id", request.providerPublicId());
         context.put("facility_id", request.facilityId().toString());
-        if (request.departmentId() != null) {
-            context.put("department_id", request.departmentId().toString());
+        if (request.departmentId() != null && !request.departmentId().isBlank()) {
+            context.put("department_id", request.departmentId());
+        }
+        if (request.wardId() != null && !request.wardId().isBlank()) {
+            context.put("ward_id", request.wardId());
+        }
+        if (request.programmeId() != null && !request.programmeId().isBlank()) {
+            context.put("programme_id", request.programmeId());
+        }
+        if (request.organisationId() != null && !request.organisationId().isBlank()) {
+            context.put("org_id", request.organisationId());
+        }
+        if (request.assignmentId() != null && !request.assignmentId().isBlank()) {
+            context.put("assignment_id", request.assignmentId());
         }
         if (request.workspaceId() != null) {
             context.put("workspace_id", request.workspaceId().toString());

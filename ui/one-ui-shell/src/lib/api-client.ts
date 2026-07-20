@@ -160,6 +160,17 @@ function getV12Headers(): Record<string, string> {
     headers["X-Shift-ID"] = shiftId;
   }
 
+  // ── Duty proof (Health OS §7+§10: on-duty, here, in this role, right now) ──
+  // The WORK_CONTEXT token proves the operational context above against a live
+  // Vashandi assignment. Sending it lets the PDP treat the signed token claims as
+  // authoritative and validate the loose picker headers against them, rather than
+  // trusting the browser's context alone. Read straight from the work-session
+  // store's persisted shape (sessionStorage exp:work-session → { token, ... }).
+  const workSession = getStoredJson<{ token?: string }>("exp:work-session");
+  if (workSession?.token) {
+    headers["X-Work-Context-Token"] = workSession.token;
+  }
+
   return headers;
 }
 

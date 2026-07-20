@@ -65,6 +65,17 @@ public final class CompanionHeaders {
     public static final String ACCESS_MODE      = "X-Access-Mode";      // INTERNAL, EXTERNAL
     public static final String WORKFLOW_STATE   = "X-Workflow-State";   // e.g. DRAFT, ACTIVE, DISCHARGED
 
+    /**
+     * Duty-scoped WORK_CONTEXT token (Ed25519, revocable jti, 15-min TTL) minted by the BFF
+     * WorkContextController after proving the chosen facility/department/workspace/role against
+     * an ACTIVE {@code vsh_workforce_assignment}. It carries the operational context
+     * (facility / department / ward / workspace / programme / org / provider / role) as signed
+     * claims. The PDP introspects it (tshepo-identity {@code /tokens/introspect}) and treats the
+     * token claims — not the loose picker headers above — as the authoritative operational
+     * context, validating the trust headers against it. Stripped on the public/anonymous lane.
+     */
+    public static final String WORK_CONTEXT_TOKEN = "X-Work-Context-Token";
+
     // ── Domain correlation (cross-service episode/journey spines) ────────
     /**
      * Canonical trauma-episode correlation id. Server-minted by DAIDZAI (or PCT on ED-first

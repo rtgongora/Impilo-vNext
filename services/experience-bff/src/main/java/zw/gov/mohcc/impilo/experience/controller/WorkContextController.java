@@ -132,6 +132,25 @@ public class WorkContextController {
         if (departmentId != null) {
             issueRequest.put("departmentId", departmentId);
         }
+        // Full operational context from the matched ACTIVE assignment, so the signed
+        // token — not the loose picker headers — becomes the PDP's authoritative source
+        // for the ward / programme / organisation / department dimensions.
+        String unitId = text(matched, "unitId");
+        if (unitId != null) {
+            issueRequest.put("wardId", unitId);
+        }
+        String programmeId = text(matched, "programmeId");
+        if (programmeId != null) {
+            issueRequest.put("programmeId", programmeId);
+        }
+        String organisationId = text(matched, "organisationId");
+        if (organisationId != null) {
+            issueRequest.put("organisationId", organisationId);
+        }
+        String assignmentId = text(matched, "assignmentId");
+        if (assignmentId != null) {
+            issueRequest.put("assignmentId", assignmentId);
+        }
         String roleTemplateId = text(matched, "roleTemplateId");
         if (roleTemplateId != null) {
             issueRequest.put("roleTemplateId", roleTemplateId);
