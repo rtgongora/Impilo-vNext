@@ -56,12 +56,32 @@ public class PctServiceClient {
      */
     public JsonNode startJourney(String patientCpid, UUID facilityId,
                                  String referralSource, String referralId) {
+        return startJourney(patientCpid, facilityId, referralSource, referralId, null, null, null);
+    }
+
+    /**
+     * Start a journey, optionally carrying a live biometric probe. When
+     * {@code biometricProbeBase64} and {@code biometricSubjectRef} are supplied,
+     * pct-service verifies the arrival probe through the shared ABIS seam:
+     * MATCH → journey starts; NO_MATCH → pct-service rejects with a 4xx (the
+     * caller surfaces it); UNAVAILABLE → the check-in proceeds without a binding.
+     */
+    public JsonNode startJourney(String patientCpid, UUID facilityId,
+                                 String referralSource, String referralId,
+                                 String biometricSubjectRef, String biometricModality,
+                                 String biometricProbeBase64) {
         String url = baseUrl + "/v1/journeys/start";
         Map<String, Object> body = new java.util.LinkedHashMap<>();
         body.put("patientCpid", patientCpid);
         if (facilityId != null) body.put("facilityId", facilityId.toString());
         if (referralSource != null) body.put("referralSource", referralSource);
         if (referralId != null) body.put("referralId", referralId);
+        if (biometricSubjectRef != null && !biometricSubjectRef.isBlank())
+            body.put("biometricSubjectRef", biometricSubjectRef);
+        if (biometricModality != null && !biometricModality.isBlank())
+            body.put("biometricModality", biometricModality);
+        if (biometricProbeBase64 != null && !biometricProbeBase64.isBlank())
+            body.put("biometricProbeBase64", biometricProbeBase64);
 
         log.info("PCT: Starting journey for patient={}... at facility={}",
                 patientCpid.substring(0, Math.min(8, patientCpid.length())), facilityId);

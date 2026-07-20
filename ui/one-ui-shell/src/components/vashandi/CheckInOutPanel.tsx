@@ -6,6 +6,8 @@ import { useShiftStore } from "@/hooks/useShiftStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import type { AttendanceEvent } from "@/lib/vashandi/types";
+import { BiometricVerifyField } from "@/components/biometric/BiometricVerifyField";
+import type { Modality } from "@/hooks/queries/useAbisBiometric";
 import { VashandiFriendlyBlockedState } from "./VashandiFriendlyBlockedState";
 
 interface CheckInOutPanelProps {
@@ -28,6 +30,7 @@ export function CheckInOutPanel({ shiftId, workforceProfileId }: CheckInOutPanel
   const facility = useFacilityStore((state) => state.facility);
   const workspace = useWorkspaceStore((state) => state.workspace);
   const [lastAction, setLastAction] = useState<string | null>(null);
+  const [liveProbe, setLiveProbe] = useState<{ modality: Modality; probeBase64: string } | null>(null);
   const blocked =
     checkIn.data && !checkIn.data.success ? checkIn.data
     : adhocCheckIn.data && !adhocCheckIn.data.success ? adhocCheckIn.data
@@ -48,13 +51,35 @@ export function CheckInOutPanel({ shiftId, workforceProfileId }: CheckInOutPanel
     <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
       <h3 className="font-medium text-foreground">Check in / out</h3>
       <p className="text-sm text-muted-foreground">Records attendance against shift {shiftId}.</p>
+      {hasRosteredShift ? (
+        <BiometricVerifyField
+          label="Verify by biometric (optional)"
+          onProbe={setLiveProbe}
+          disabled={checkIn.isPending}
+        />
+      ) : (
+        <p className="text-[11px] text-muted-foreground">
+          Biometric check-in is recorded against a rostered shift; this self-service check-in uses your
+          bound workforce profile and facility context.
+        </p>
+      )}
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
           disabled={checkIn.isPending || adhocCheckIn.isPending}
           onClick={async () => {
             const result = hasRosteredShift
-              ? await checkIn.mutateAsync({ shiftId, workforceProfileId, checkInMode: "self_check_in" })
+              ? await checkIn.mutateAsync({
+                  shiftId,
+                  workforceProfileId,
+                  checkInMode: "self_check_in",
+                  // Live ABIS probe: the server verifies against the worker's enrolled
+                  // template (MATCH → recorded as biometric; NO_MATCH → denied;
+                  // UNAVAILABLE → falls back on self_check_in).
+                  biometricSubjectRef: liveProbe ? workforceProfileId : undefined,
+                  biometricModality: liveProbe?.modality,
+                  biometricProbeBase64: liveProbe?.probeBase64,
+                })
               : await adhocCheckIn.mutateAsync({ workforceProfileId, facilityId: facility?.id || undefined });
             if (result.success) {
               const event = (result.data ?? {}) as AttendanceEvent & { eventId?: string };

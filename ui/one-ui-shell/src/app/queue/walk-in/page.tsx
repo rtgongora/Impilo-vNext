@@ -20,6 +20,8 @@ import { apiClient, type ApiResponse } from "@/lib/api-client";
 import type { QueueEntryResource } from "@/hooks/queries/useQueue";
 import { getPatientDisplayName, getPatientQueueSummary } from "@/lib/queue-workflows";
 import { VitoClientRegistrationWizard } from "@/components/registry/VitoClientRegistrationWizard";
+import { BiometricVerifyField } from "@/components/biometric/BiometricVerifyField";
+import type { Modality } from "@/hooks/queries/useAbisBiometric";
 
 export default function WalkInPage() {
   const router = useRouter();
@@ -32,6 +34,7 @@ export default function WalkInPage() {
   const [selectedPatient, setSelectedPatient] = useState<PatientResource | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [liveProbe, setLiveProbe] = useState<{ modality: Modality; probeBase64: string } | null>(null);
 
   const [showNewPatient, setShowNewPatient] = useState(false);
 
@@ -81,6 +84,12 @@ export default function WalkInPage() {
           priority: "NORMAL",
           queue_type: "WALK_IN",
           patient_cpid: patientCpid,
+          // Optional live biometric probe verified server-side at check-in (ABIS seam):
+          // MATCH → journey starts; NO_MATCH → PCT rejects (4xx, surfaced below);
+          // UNAVAILABLE → check-in proceeds on the existing factor.
+          biometric_subject_ref: liveProbe ? patientCpid : undefined,
+          biometric_modality: liveProbe?.modality,
+          biometric_probe_base64: liveProbe?.probeBase64,
         },
       );
 
@@ -95,8 +104,16 @@ export default function WalkInPage() {
           ? `/ehr/${patientId}/encounters?${query}`
           : `/ehr/${patientId}/encounters`,
       );
-    } catch {
-      setError("Failed to create queue entry. Please try again.");
+    } catch (e) {
+      const err = e as { status?: number; error?: { message?: string } };
+      if (err?.status && err.status >= 400 && err.status < 500) {
+        setError(
+          err.error?.message
+            ?? "Biometric did not match — check-in is blocked. Confirm the patient's identity another way, or check in without a biometric.",
+        );
+      } else {
+        setError("Failed to create queue entry. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -243,6 +260,14 @@ export default function WalkInPage() {
                   }}
                 />
               </div>
+            )}
+
+            {selectedPatient && (
+              <BiometricVerifyField
+                label="Verify patient by biometric (optional)"
+                onProbe={setLiveProbe}
+                disabled={isSubmitting}
+              />
             )}
 
             {error && (

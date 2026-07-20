@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Fingerprint, ScanBarcode, Loader2, CheckCircle2 } from "lucide-react";
 import { useBiometricProfile, useBiometricVerify } from "@/hooks/queries/useVitoBiometric";
 import { usePreVerifyTransfusion } from "@/hooks/queries/useMadi";
+import { BiometricVerifyField } from "@/components/biometric/BiometricVerifyField";
+import type { Modality } from "@/hooks/queries/useAbisBiometric";
 
 const PATIENT_METHODS = [
   { value: "BIOMETRIC", label: "Biometric (VITO)" },
@@ -42,6 +44,7 @@ export function MadiBedsideVerifyPanel({
   const [patientBiometricRef, setPatientBiometricRef] = useState("");
   const [unitScanRef, setUnitScanRef] = useState("");
   const [biometricOk, setBiometricOk] = useState(false);
+  const [liveProbe, setLiveProbe] = useState<{ modality: Modality; probeBase64: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const { data: bioProfile } = useBiometricProfile(patientCpid || undefined);
@@ -86,8 +89,8 @@ export function MadiBedsideVerifyPanel({
 
   function handlePreVerify() {
     if (!patientCpid.trim() || !bloodUnitId.trim()) return;
-    if (patientMethod === "BIOMETRIC" && !patientBiometricRef.trim()) {
-      setError("Complete biometric capture before recording verification.");
+    if (patientMethod === "BIOMETRIC" && !patientBiometricRef.trim() && !liveProbe) {
+      setError("Capture a biometric (VITO match or a live probe) before recording verification, or choose another method.");
       return;
     }
     preVerify.mutate(
@@ -99,13 +102,29 @@ export function MadiBedsideVerifyPanel({
         unit_method: unitMethod,
         unit_scan_ref: unitScanRef.trim() || undefined,
         verified_by: verifiedBy,
+        // Live ABIS probe: the server matches it against the patient's enrolled
+        // template. MATCH → verification proceeds; NO_MATCH → the service rejects
+        // with a 4xx (surfaced below); UNAVAILABLE → falls back on the chosen method.
+        biometric_subject_ref: liveProbe ? patientCpid.trim() : undefined,
+        biometric_modality: liveProbe?.modality,
+        biometric_probe_base64: liveProbe?.probeBase64,
       },
       {
         onSuccess: () => {
           setError(null);
           onVerified?.();
         },
-        onError: () => setError("Bedside verification failed. Check patient, unit, and method."),
+        onError: (err) => {
+          const e = err as { status?: number; error?: { message?: string } };
+          if (e?.status && e.status >= 400 && e.status < 500) {
+            setError(
+              e.error?.message
+                ?? "Biometric did not match — bedside verification is blocked. Confirm the patient's identity another way.",
+            );
+          } else {
+            setError("Bedside verification failed. Check patient, unit, and method.");
+          }
+        },
       },
     );
   }
@@ -163,6 +182,14 @@ export function MadiBedsideVerifyPanel({
           )}
           {biometricOk && <span className="text-xs text-green-700">Biometric match recorded</span>}
         </div>
+      )}
+
+      {patientMethod === "BIOMETRIC" && (
+        <BiometricVerifyField
+          label="Or capture a live probe (verified on submit)"
+          onProbe={setLiveProbe}
+          disabled={preVerify.isPending}
+        />
       )}
 
       {(patientMethod === "EMERGENCY_OVERRIDE" || patientMethod === "BARCODE_SCAN") && (

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -121,6 +122,9 @@ public class QueueController {
         String queueType = strVal(body, "queue_type", "queueType");
         String priority = strVal(body, "priority");
         String cpid = strVal(body, "patient_cpid", "patientCpid");
+        String biometricSubjectRef = strVal(body, "biometric_subject_ref", "biometricSubjectRef");
+        String biometricModality = strVal(body, "biometric_modality", "biometricModality");
+        String biometricProbeBase64 = strVal(body, "biometric_probe_base64", "biometricProbeBase64");
 
         if (patientId == null || patientId.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -132,7 +136,8 @@ public class QueueController {
             UUID facilityUuid = UUID.fromString(facilityId != null ? facilityId.trim() : "");
             JsonNode journeyData = pctClient.startJourney(
                     cpid != null ? cpid.trim() : patientId,
-                    facilityUuid, null, null);
+                    facilityUuid, null, null,
+                    biometricSubjectRef, biometricModality, biometricProbeBase64);
             if (journeyData != null && journeyData.has("journeyId")) {
                 String journeyId = journeyData.get("journeyId").asText();
                 UUID queueUuid;
@@ -171,6 +176,22 @@ public class QueueController {
                                         + "completed for this facility."),
                         "meta", nqMeta));
             }
+        } catch (HttpClientErrorException ce) {
+            // pct-service rejected the check-in (e.g. a biometric NO_MATCH). Surface the
+            // real 4xx honestly instead of masking it as PCT_UNAVAILABLE, so the desk
+            // knows the step is blocked rather than the service being down.
+            String upstreamMsg = ce.getResponseBodyAsString();
+            log.info("PCT rejected queue entry ({}): {}", ce.getStatusCode(), upstreamMsg);
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("request_id", requestId);
+            meta.put("correlation_id", correlationId);
+            return ResponseEntity.status(ce.getStatusCode()).body(Map.of(
+                    "error", Map.of(
+                            "code", "CHECK_IN_REJECTED",
+                            "message", (upstreamMsg != null && !upstreamMsg.isBlank())
+                                    ? upstreamMsg
+                                    : "Check-in was rejected by pct-service (biometric did not match)."),
+                    "meta", meta));
         } catch (Exception e) {
             log.info("PCT unavailable — queue entry not created: {}", e.getMessage());
             return upstreamUnavailable("PCT_UNAVAILABLE",

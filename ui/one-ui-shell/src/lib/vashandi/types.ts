@@ -318,6 +318,12 @@ export interface CheckInRequest {
   checkInMode?: string;
   deviceId?: string;
   offline?: boolean;
+  /** Optional live biometric probe verified server-side (shared ABIS seam):
+   *  MATCH → recorded as checkInMode="biometric"; NO_MATCH → denied;
+   *  UNAVAILABLE → falls back on the supplied mode (a worker is never blocked by an outage). */
+  biometricSubjectRef?: string;
+  biometricModality?: string;
+  biometricProbeBase64?: string;
 }
 
 export interface CheckOutRequest {

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.mockito.ArgumentCaptor;
+import org.springframework.web.client.HttpClientErrorException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -52,7 +53,7 @@ class QueueControllerTest {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode journey = mapper.createObjectNode();
         journey.put("journeyId", "42");
-        when(pctClient.startJourney(anyString(), any(UUID.class), any(), any())).thenReturn(journey);
+        when(pctClient.startJourney(anyString(), any(UUID.class), any(), any(), any(), any(), any())).thenReturn(journey);
 
         var queueArray = mapper.createArrayNode();
         var queueDef = queueArray.addObject();
@@ -89,9 +90,81 @@ class QueueControllerTest {
     }
 
     @Test
+    void createEntryForwardsBiometricProbeToPctStartJourney() throws Exception {
+        PctServiceClient pctClient = mock(PctServiceClient.class);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode journey = mapper.createObjectNode();
+        journey.put("journeyId", "42");
+        when(pctClient.startJourney(anyString(), any(UUID.class), any(), any(),
+                anyString(), anyString(), anyString())).thenReturn(journey);
+
+        var queueArray = mapper.createArrayNode();
+        var queueDef = queueArray.addObject();
+        queueDef.put("queueType", "WALK_IN");
+        queueDef.put("queueId", "11111111-1111-1111-1111-111111111111");
+        when(pctClient.listQueues(any(UUID.class), any())).thenReturn(queueArray);
+
+        ObjectNode item = mapper.createObjectNode();
+        item.put("id", "22222222-2222-2222-2222-222222222222");
+        when(pctClient.enqueue(any(UUID.class), anyString(), anyInt())).thenReturn(item);
+
+        QueueController controller = newController(pctClient);
+
+        var response = controller.createEntry(
+                "tenant-1", "pod-1", "req-1", "corr-1", "idem-1",
+                Map.of(
+                        "patient_id", "a1000000-0000-0000-0000-000000000001",
+                        "facility_id", "f1000000-0000-0000-0000-000000000001",
+                        "queue_type", "WALK_IN",
+                        "patient_cpid", "CPID-ZW-00001",
+                        "biometric_subject_ref", "CPID-ZW-00001",
+                        "biometric_modality", "FINGERPRINT",
+                        "biometric_probe_base64", "PROBE=="
+                )
+        );
+
+        assertEquals(201, response.getStatusCode().value());
+        verify(pctClient).startJourney(
+                eq("CPID-ZW-00001"), any(UUID.class), any(), any(),
+                eq("CPID-ZW-00001"), eq("FINGERPRINT"), eq("PROBE=="));
+    }
+
+    @Test
+    void createEntrySurfacesPctBiometricRejectionAsClientError() {
+        PctServiceClient pctClient = mock(PctServiceClient.class);
+        when(pctClient.startJourney(anyString(), any(UUID.class), any(), any(),
+                anyString(), anyString(), anyString()))
+                .thenThrow(HttpClientErrorException.create(
+                        org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY,
+                        "Unprocessable Entity",
+                        org.springframework.http.HttpHeaders.EMPTY,
+                        "biometric NO_MATCH".getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                        java.nio.charset.StandardCharsets.UTF_8));
+        QueueController controller = newController(pctClient);
+
+        var response = controller.createEntry(
+                "tenant-1", "pod-1", "req-1", "corr-1", "idem-1",
+                Map.of(
+                        "patient_id", "a1000000-0000-0000-0000-000000000001",
+                        "facility_id", "f1000000-0000-0000-0000-000000000001",
+                        "queue_type", "WALK_IN",
+                        "patient_cpid", "CPID-ZW-00001",
+                        "biometric_subject_ref", "CPID-ZW-00001",
+                        "biometric_modality", "FINGERPRINT",
+                        "biometric_probe_base64", "PROBE=="
+                )
+        );
+
+        // A NO_MATCH must surface honestly as a 4xx, never be masked as 502 PCT_UNAVAILABLE.
+        assertEquals(422, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("CHECK_IN_REJECTED", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+    }
+
+    @Test
     void createEntryFailsClosedWhenPctUnavailable() {
         PctServiceClient pctClient = mock(PctServiceClient.class);
-        when(pctClient.startJourney(anyString(), any(UUID.class), any(), any()))
+        when(pctClient.startJourney(anyString(), any(UUID.class), any(), any(), any(), any(), any()))
                 .thenThrow(new RuntimeException("pct down"));
         QueueController controller = newController(pctClient);
 
@@ -158,7 +231,7 @@ class QueueControllerTest {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode journey = mapper.createObjectNode();
         journey.put("journeyId", "42");
-        when(pctClient.startJourney(anyString(), any(UUID.class), any(), any())).thenReturn(journey);
+        when(pctClient.startJourney(anyString(), any(UUID.class), any(), any(), any(), any(), any())).thenReturn(journey);
 
         var queueArray = mapper.createArrayNode();
         var queueDef = queueArray.addObject();

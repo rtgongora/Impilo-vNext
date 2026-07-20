@@ -385,6 +385,11 @@ export interface PreVerifyTransfusionPayload {
   unit_method: string;
   unit_scan_ref?: string;
   verified_by?: string;
+  /** Optional live biometric probe verified server-side (ABIS seam):
+   *  MATCH → proceed + mark verified; NO_MATCH → reject (4xx); UNAVAILABLE → fall back. */
+  biometric_subject_ref?: string;
+  biometric_modality?: string;
+  biometric_probe_base64?: string;
 }
 
 export interface BloodFridge {
