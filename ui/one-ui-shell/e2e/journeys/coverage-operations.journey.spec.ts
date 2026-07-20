@@ -43,6 +43,13 @@ test.describe("Ruvimbo Operations — admin workbench (live preview)", () => {
     await expect(page.getByRole("heading", { name: /ruvimbo operations/i })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByTestId("ruvimbo-tab-payers")).toBeVisible({ timeout: 10_000 });
 
+    // The processed Ruvimbo wordmark logo renders (transparent PNG, actually loaded).
+    const logo = page.locator('img[src*="ruvimbo-logo"]').first();
+    await expect(logo).toBeVisible({ timeout: 10_000 });
+    const loaded = await logo.evaluate((el) => (el as HTMLImageElement).naturalWidth > 0);
+    expect(loaded).toBe(true);
+    await page.screenshot({ path: "/tmp/claude-1002/-opt-impilo-repos-Impilo-vNext/ef781a8f-3074-4cfb-91b8-eed5f6634077/scratchpad/ruvimbo-ops-logo.png" });
+
     // Payers tab shows the real seeded registry.
     await expect(page.getByText(/PAYER-MOHCC/).first()).toBeVisible({ timeout: 20_000 });
 
