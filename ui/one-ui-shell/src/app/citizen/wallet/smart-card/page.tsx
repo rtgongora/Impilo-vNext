@@ -13,6 +13,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { CitizenSmartCardPanel } from "@/components/wallet/CitizenSmartCardPanel";
+import { RequestPhysicalCard } from "@/components/wallet/RequestPhysicalCard";
 
 export default function DigitalSmartCardPage() {
   const actorId = useAuthStore((s) => s.user?.id) ?? "";
@@ -29,7 +30,10 @@ export default function DigitalSmartCardPage() {
             Sign in to open your digital card.
           </p>
         ) : (
-          <CitizenSmartCardPanel enabled={Boolean(actorId)} />
+          <div className="space-y-6">
+            <CitizenSmartCardPanel enabled={Boolean(actorId)} />
+            <RequestPhysicalCard />
+          </div>
         )}
       </PageShell>
     </AppLayout>

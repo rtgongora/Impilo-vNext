@@ -40,6 +40,13 @@ export interface CanonicalPayloadInput {
   nonce: string;
   currency: string;
   authMethod: string;
+  /**
+   * B5a: the MusheX payment intent this card payment settles (a bill or order).
+   * When present it is part of the SIGNED payload, so mushe can drive that intent
+   * to PAID and Costa/Msika recognize the charge — tamper-proof. Omit for a plain
+   * stored-value spend.
+   */
+  mushexIntentId?: string;
 }
 
 // ── IndexedDB (structured-clone stores CryptoKey; non-extractable keys persist) ──────
@@ -180,13 +187,19 @@ export function rawEcdsaToDer(raw: Uint8Array): Uint8Array {
  * string produced here must be the same string handed to {@link signCardPayload} and POSTed.
  */
 export function buildCanonicalPayload(input: CanonicalPayloadInput): string {
-  return JSON.stringify({
+  const payload: Record<string, unknown> = {
     amount: input.amount,
     counter: input.counter,
     nonce: input.nonce,
     currency: input.currency,
     authMethod: input.authMethod,
-  });
+  };
+  // Only include the intent key when settling a specific bill/order, so a plain
+  // spend's signed bytes are unchanged.
+  if (input.mushexIntentId) {
+    payload.mushexIntentId = input.mushexIntentId;
+  }
+  return JSON.stringify(payload);
 }
 
 // ── Key lifecycle ────────────────────────────────────────────────────────────────

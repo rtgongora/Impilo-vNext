@@ -30,6 +30,19 @@ describe("buildCanonicalPayload", () => {
       '{"amount":"12.50","counter":42,"nonce":"n-1","currency":"USD","authMethod":"PIN"}',
     );
   });
+
+  it("includes mushexIntentId in the SIGNED payload only when settling a bill (B5a)", () => {
+    const plain = buildCanonicalPayload({
+      amount: "5.00", counter: 1, nonce: "n", currency: "USD", authMethod: "PIN",
+    });
+    expect(plain).not.toContain("mushexIntentId");
+
+    const settling = buildCanonicalPayload({
+      amount: "5.00", counter: 1, nonce: "n", currency: "USD", authMethod: "PIN",
+      mushexIntentId: "intent-77",
+    });
+    expect(settling).toContain('"mushexIntentId":"intent-77"');
+  });
 });
 
 describe("rawEcdsaToDer", () => {

@@ -163,6 +163,7 @@ interface PayFunctionProps {
 function PayFunction({ vitoCardNumber, serverLastCounter }: PayFunctionProps) {
   const [amount, setAmount] = useState("1.00");
   const [currency] = useState("USD");
+  const [mushexIntentId, setMushexIntentId] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
 
@@ -189,13 +190,18 @@ function PayFunction({ vitoCardNumber, serverLastCounter }: PayFunctionProps) {
         nonce,
         currency,
         authMethod,
+        // B5a: when settling a specific bill/order, the intent id rides inside the
+        // signed payload so mushe drives it to PAID and Costa/Msika recognize it.
+        mushexIntentId: mushexIntentId.trim() || undefined,
       });
       const signature = await signCardPayload(payload);
       const body: CardPayBody = { vitoCardNumber, payload, signature };
       await (biometric ? payBio : pay).mutateAsync(body);
       setResult({
         ok: true,
-        message: `Paid ${currency} ${numeric.toFixed(2)} from your card purse.`,
+        message: mushexIntentId.trim()
+          ? `Paid ${currency} ${numeric.toFixed(2)} — bill settled from your card purse.`
+          : `Paid ${currency} ${numeric.toFixed(2)} from your card purse.`,
       });
     } catch (e) {
       // Honest failure — a rejected signature/replay/stale counter is a real 422 from mushe,
@@ -232,6 +238,17 @@ function PayFunction({ vitoCardNumber, serverLastCounter }: PayFunctionProps) {
             onChange={(e) => setAmount(e.target.value)}
             aria-label="Payment amount"
             className="w-36 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
+          Settle a bill (optional)
+          <input
+            value={mushexIntentId}
+            onChange={(e) => setMushexIntentId(e.target.value)}
+            aria-label="Payment intent to settle"
+            placeholder="Bill / payment reference"
+            data-testid="pay-intent-input"
+            className="w-56 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
           />
         </label>
         <button
