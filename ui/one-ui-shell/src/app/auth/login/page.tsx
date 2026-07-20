@@ -27,6 +27,7 @@ import {
   EyeOff,
   IdCard,
   ArrowRight,
+  ScanFace,
 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { GatewayEscalationExplainer } from "@/components/intelligent/GatewayEscalationExplainer";
@@ -298,7 +299,7 @@ export default function LoginPage() {
         <p className="text-xs text-muted-foreground text-center mb-3">
           Other sign-in methods
         </p>
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-3">
           <Link
             href="/auth/login/biometric"
             data-testid="passkey-signin-link"
@@ -306,6 +307,17 @@ export default function LoginPage() {
           >
             <Fingerprint className="w-4 h-4 text-primary" />
             Sign in with a passkey
+          </Link>
+          {/* L3 — ABIS 1:N scan-to-login. A DISTINCT path from device passkeys: no
+              password, no enrolled device — the person is found by their biometric.
+              Flag-gated in the BFF; the page shows an honest "not enabled" state when off. */}
+          <Link
+            href="/auth/login/scan"
+            data-testid="biometric-scan-signin-link"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 border border-border rounded-lg text-sm text-foreground hover:border-primary/25 hover:bg-primary-soft transition-colors"
+          >
+            <ScanFace className="w-4 h-4 text-primary" />
+            Sign in with your fingerprint
           </Link>
         </div>
       </div>

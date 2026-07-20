@@ -95,6 +95,34 @@ export function usePasskeyCallback() {
   });
 }
 
+// ── L3 biometric scan-to-login (ABIS 1:N) ─────────────────────────────────
+// Highest-risk auth path, flag-gated OFF in the BFF. A capture is identified 1:N;
+// ONLY a single strong unambiguous match mints a session (via Keycloak token
+// exchange). Weak / ambiguous / absent → 401 BIOMETRIC_NO_MATCH; unavailable →
+// 503 BIOMETRIC_UNAVAILABLE; feature off → 501 BIOMETRIC_LOGIN_NOT_ENABLED. The
+// UI never fabricates a session — it forwards whatever the BFF decides.
+
+interface BiometricIdentifyLoginPayload {
+  modality?: string;
+  /** A raw capture image (base64) — extracted server-side — OR ... */
+  sampleBase64?: string;
+  /** ... a pre-extracted probe template (base64). */
+  templateBase64?: string;
+}
+
+/** Identify 1:N from a capture and, only on a single strong match, mint a session. */
+export function useBiometricIdentifyLogin() {
+  const queryClient = useQueryClient();
+
+  return useMutation<LoginResponse, unknown, BiometricIdentifyLoginPayload>({
+    mutationFn: (payload: BiometricIdentifyLoginPayload) =>
+      apiClient.post<LoginResponse>("/internal/v1/auth/biometric/identify-login", payload),
+    onSuccess: () => {
+      queryClient.clear();
+    },
+  });
+}
+
 export function useLogout() {
   const queryClient = useQueryClient();
 

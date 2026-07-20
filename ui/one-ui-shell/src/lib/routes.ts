@@ -47,6 +47,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/auth/login/email", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Sign In with Email", navLabel: "Email Login" },
   { path: "/auth/login/provider-id", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Sign In with Provider ID", navLabel: "Provider ID Login" },
   { path: "/auth/login/biometric", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Biometric Verification", navLabel: "Biometric" },
+  { path: "/auth/login/scan", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Scan to sign in", navLabel: "Scan to sign in" },
   { path: "/auth/login/passkey/callback", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Completing passkey sign-in", navLabel: "Passkey Callback" },
   { path: "/auth/forgot-password", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Forgot Password", navLabel: "Forgot Password" },
   { path: "/auth/reset-password", zone: "auth", layout: "auth", sidebar: "main", guard: "none", pageTitle: "Reset Password", navLabel: "Reset Password" },
@@ -966,7 +967,10 @@ export const ROUTES: RouteDefinition[] = [
 // merge). Total 766.
 // L1 native passkey (Jul 2026): +1 — /auth/login/passkey/callback, the WebAuthn passwordless
 // auth-code return trip that exchanges the code for a session. Total 767.
-export const EXPECTED_ROUTE_COUNT = 767;
+// L3 ABIS 1:N scan-to-login (Jul 2026): +1 — /auth/login/scan, the biometric scan-to-login
+// page (capture → 1:N identify → session on a single strong match only). Flag-gated OFF in the
+// BFF; page shows an honest "not enabled" state when the feature is disabled. Total 768.
+export const EXPECTED_ROUTE_COUNT = 768;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
