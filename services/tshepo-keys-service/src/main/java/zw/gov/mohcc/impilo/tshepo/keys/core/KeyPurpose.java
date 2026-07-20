@@ -23,7 +23,11 @@ public enum KeyPurpose {
     /** GDHCN document signer certificates. */
     DOCUMENT_SIGNER,
     /** Future Verifiable Digital Health Certificate signing. */
-    VDHC;
+    VDHC,
+    /** VITO citizen QR tokens (pickup, wallet, emergency, health-id). */
+    QR_SIGNING,
+    /** SMART-card print-agent QR assertions (card credential signing). */
+    CARD_ASSERTION;
 
     public static KeyPurpose fromString(String value) {
         if (value == null || value.isBlank()) {

@@ -85,7 +85,7 @@ public class JwksService {
      * Build the JWKS JSON from all ACTIVE keys in the database.
      */
     private String buildJwksJson() {
-        List<SigningKeyEntity> activeKeys = signingKeyRepository.findAllActiveKeys();
+        List<SigningKeyEntity> activeKeys = signingKeyRepository.findAllVerificationKeys(java.time.Instant.now());
 
         List<JWK> jwkList = activeKeys.stream()
                 .map(this::toOctetKeyPair)
@@ -133,7 +133,7 @@ public class JwksService {
      * Get the JWKS as a parsed Map (for controller responses that need structured JSON).
      */
     public Map<String, Object> getJwksMap() {
-        List<SigningKeyEntity> activeKeys = signingKeyRepository.findAllActiveKeys();
+        List<SigningKeyEntity> activeKeys = signingKeyRepository.findAllVerificationKeys(java.time.Instant.now());
 
         List<JWK> jwkList = activeKeys.stream()
                 .map(this::toOctetKeyPair)

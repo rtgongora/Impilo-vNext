@@ -66,7 +66,7 @@ class JwksServiceTest {
         // Arrange: two active keys in the database
         SigningKeyEntity key1 = buildKeyEntity("kid-jwks-key0001", generateFakeEd25519PublicKeyPem());
         SigningKeyEntity key2 = buildKeyEntity("kid-jwks-key0002", generateFakeEd25519PublicKeyPem());
-        when(signingKeyRepository.findAllActiveKeys()).thenReturn(List.of(key1, key2));
+        when(signingKeyRepository.findAllVerificationKeys(any(Instant.class))).thenReturn(List.of(key1, key2));
 
         // Redis cache miss
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -98,7 +98,7 @@ class JwksServiceTest {
     void getJwks_excludesPrivateKeyMaterial() throws Exception {
         // Arrange
         SigningKeyEntity key = buildKeyEntity("kid-jwks-noprivk", generateFakeEd25519PublicKeyPem());
-        when(signingKeyRepository.findAllActiveKeys()).thenReturn(List.of(key));
+        when(signingKeyRepository.findAllVerificationKeys(any(Instant.class))).thenReturn(List.of(key));
 
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get(anyString())).thenReturn(null);
@@ -131,7 +131,7 @@ class JwksServiceTest {
 
         // Assert: returned cached value, did not query database
         assertThat(result).isEqualTo(cachedJwks);
-        verify(signingKeyRepository, never()).findAllActiveKeys();
+        verify(signingKeyRepository, never()).findAllVerificationKeys(any(Instant.class));
     }
 
     @Test
@@ -143,7 +143,7 @@ class JwksServiceTest {
 
         // Database returns one key
         SigningKeyEntity key = buildKeyEntity("kid-redis-fail01", generateFakeEd25519PublicKeyPem());
-        when(signingKeyRepository.findAllActiveKeys()).thenReturn(List.of(key));
+        when(signingKeyRepository.findAllVerificationKeys(any(Instant.class))).thenReturn(List.of(key));
 
         // Act
         String jwksJson = jwksService.getJwksJson();
@@ -159,7 +159,7 @@ class JwksServiceTest {
     @DisplayName("getJwks returns empty keys array when no active keys exist")
     void getJwks_noActiveKeys_returnsEmptyKeysArray() throws Exception {
         // Arrange
-        when(signingKeyRepository.findAllActiveKeys()).thenReturn(List.of());
+        when(signingKeyRepository.findAllVerificationKeys(any(Instant.class))).thenReturn(List.of());
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get(anyString())).thenReturn(null);
 
@@ -182,7 +182,7 @@ class JwksServiceTest {
     void getJwksMap_returnsMapWithKeysArray() {
         // Arrange
         SigningKeyEntity key = buildKeyEntity("kid-map-test0001", generateFakeEd25519PublicKeyPem());
-        when(signingKeyRepository.findAllActiveKeys()).thenReturn(List.of(key));
+        when(signingKeyRepository.findAllVerificationKeys(any(Instant.class))).thenReturn(List.of(key));
 
         // Act
         Map<String, Object> jwksMap = jwksService.getJwksMap();

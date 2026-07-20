@@ -42,6 +42,18 @@ public interface SigningKeyRepository extends JpaRepository<SigningKeyEntity, Lo
     List<SigningKeyEntity> findAllActiveKeys();
 
     /**
+     * Keys that may still be used to <em>verify</em> a signature: ACTIVE keys and
+     * ROTATED (superseded) keys that have not yet expired. This is what the JWKS
+     * endpoint publishes so that during a K1&rarr;K2 rotation-overlap window a
+     * credential signed under the previous kid still verifies until its key expires
+     * (issued cards/QRs survive to expiry). REVOKED and expired keys are excluded —
+     * a compromise/revocation removes a key from verification immediately.
+     */
+    @Query("SELECT k FROM SigningKeyEntity k WHERE k.status IN ('ACTIVE', 'ROTATED') "
+            + "AND (k.expiresAt IS NULL OR k.expiresAt > :now) ORDER BY k.createdAt DESC")
+    List<SigningKeyEntity> findAllVerificationKeys(@Param("now") Instant now);
+
+    /**
      * Find keys that are due for rotation (ACTIVE and created before the threshold).
      */
     @Query("SELECT k FROM SigningKeyEntity k WHERE k.status = 'ACTIVE' AND k.createdAt < :threshold")

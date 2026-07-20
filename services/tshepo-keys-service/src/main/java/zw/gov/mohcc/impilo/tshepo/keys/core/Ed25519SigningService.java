@@ -21,6 +21,7 @@ import zw.gov.mohcc.impilo.tshepo.keys.persistence.entity.SigningKeyEntity;
 import zw.gov.mohcc.impilo.tshepo.keys.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.tshepo.keys.persistence.repository.SigningKeyRepository;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
@@ -182,11 +183,35 @@ public class Ed25519SigningService {
     /**
      * Produce a JWS compact serialization for a specific (already-resolved) key. The JWS
      * {@code kid} header is the key's id, so verifiers can resolve it from the JWKS.
+     *
+     * <p>Two assembly paths, chosen by custody capability:</p>
+     * <ul>
+     *   <li><b>Software custody</b> ({@code supportsExport() == true}): the raw private key is
+     *       exported and handed to the Nimbus {@link Ed25519Signer} — the historical path.</li>
+     *   <li><b>HSM/KMS custody</b> ({@code supportsExport() == false}): the private key is never
+     *       exported. The JWS signing input ({@code base64url(header) . base64url(payload)}) is
+     *       assembled locally and signed via {@link KeyCustodyProvider#sign(byte[], byte[])} inside
+     *       the module, then the compact JWS is concatenated. The result is a standard EdDSA JWS
+     *       that {@link #verifyJws(String)} accepts — so JWS works on an HSM without exportPrivate.</li>
+     * </ul>
      */
     public String signJwsWithKey(SigningKeyEntity keyEntity, String payload) {
-        // JWS assembly needs the raw key locally (Nimbus signer) — software
-        // custody only; a KMS/HSM provider throws here, which is the residual
-        // migration surface documented on KeyCustodyProvider.
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.EdDSA)
+                .keyID(keyEntity.getKeyId())
+                .build();
+
+        if (!custodyProvider.supportsExport()) {
+            // HSM path: sign the JWS signing input inside the module (no key export).
+            Base64URL encodedHeader = header.toBase64URL();
+            Base64URL encodedPayload = new Payload(payload).toBase64URL();
+            byte[] signingInput = (encodedHeader.toString() + "." + encodedPayload.toString())
+                    .getBytes(StandardCharsets.US_ASCII);
+            byte[] signature = custodyProvider.sign(keyEntity.getPrivateKeyEncrypted(), signingInput);
+            Base64URL encodedSignature = Base64URL.encode(signature);
+            return encodedHeader + "." + encodedPayload + "." + encodedSignature;
+        }
+
+        // Software path: export the raw key for the Nimbus signer.
         byte[] privateKeyBytes = custodyProvider.exportPrivate(keyEntity.getPrivateKeyEncrypted());
         byte[] publicKeyBytes = decodePublicKeyPem(keyEntity.getPublicKeyPem());
 
@@ -196,10 +221,6 @@ public class Ed25519SigningService {
                     Curve.Ed25519,
                     Base64URL.encode(publicKeyBytes))
                     .d(Base64URL.encode(privateKeyBytes))
-                    .keyID(keyEntity.getKeyId())
-                    .build();
-
-            JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.EdDSA)
                     .keyID(keyEntity.getKeyId())
                     .build();
 

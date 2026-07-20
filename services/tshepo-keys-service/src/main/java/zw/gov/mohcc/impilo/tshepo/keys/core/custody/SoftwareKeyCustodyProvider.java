@@ -6,6 +6,7 @@ import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters;
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters;
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters;
 import org.bouncycastle.crypto.signers.Ed25519Signer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import zw.gov.mohcc.impilo.tshepo.keys.config.KeysProperties;
@@ -34,12 +35,27 @@ public class SoftwareKeyCustodyProvider implements KeyCustodyProvider {
     private final SecureRandom secureRandom = new SecureRandom();
     private final byte[] kekBytes;
 
-    public SoftwareKeyCustodyProvider(KeysProperties keysProperties) {
-        this.kekBytes = hexToBytes(keysProperties.getKek());
+    /**
+     * Spring-wired constructor: the KEK comes from the configured {@link KekProvider}
+     * (config by default; Vault/KMS when {@code impilo.keys.kek-source} selects it), so
+     * KEK custody is swappable without touching signing.
+     */
+    @Autowired
+    public SoftwareKeyCustodyProvider(KekProvider kekProvider) {
+        this.kekBytes = kekProvider.getKek();
         if (this.kekBytes.length != 32) {
             throw new IllegalStateException(
                     "KEK must be exactly 32 bytes (256 bits) for AES-256-GCM, got " + this.kekBytes.length);
         }
+    }
+
+    /**
+     * Convenience constructor (kept for direct/unit construction) that reads the KEK
+     * straight from {@link KeysProperties} via a {@link ConfigKekProvider}, preserving
+     * the historical {@code new SoftwareKeyCustodyProvider(keysProperties)} call shape.
+     */
+    public SoftwareKeyCustodyProvider(KeysProperties keysProperties) {
+        this(new ConfigKekProvider(keysProperties));
     }
 
     @Override
@@ -102,15 +118,5 @@ public class SoftwareKeyCustodyProvider implements KeyCustodyProvider {
         } catch (Exception e) {
             throw new RuntimeException("Failed to encrypt private key", e);
         }
-    }
-
-    private static byte[] hexToBytes(String hex) {
-        int len = hex.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
-                    + Character.digit(hex.charAt(i + 1), 16));
-        }
-        return data;
     }
 }

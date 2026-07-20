@@ -35,6 +35,18 @@ public interface KeyCustodyProvider {
      */
     byte[] exportPrivate(byte[] custodyBlob);
 
+    /**
+     * Whether {@link #exportPrivate(byte[])} is permitted for this provider.
+     *
+     * <p>{@code true} for software custody (the raw key can be handed to a local
+     * Nimbus signer); {@code false} for HSM/KMS custody, where the key never
+     * leaves the module. JWS assembly consults this to choose between the
+     * export-based path and a custody-{@link #sign(byte[], byte[])}-based path.</p>
+     */
+    default boolean supportsExport() {
+        return true;
+    }
+
     /** Custody class identifier: {@code SOFTWARE}, {@code KMS}, {@code HSM}. */
     String custodyType();
 }
