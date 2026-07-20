@@ -317,6 +317,20 @@ public class PolicyEngine {
             }
 
             if ("DENY".equalsIgnoreCase(rule.getEffect())) {
+                // A DENY rule fires only when its own scope + conditions apply — exactly like
+                // the ALLOW branch. Without this gating a conditional DENY (e.g. a path_contains
+                // rule that should block only /internal/v1/assets) fired on EVERY request that
+                // matched the coarse role/action, over-denying the whole role/tenant. Honouring
+                // the conditions here can only REDUCE denial, never introduce a new one.
+                if (rule.isFacilityScope() && request.facilityId() == null) {
+                    continue;
+                }
+                if (rule.isWorkspaceScope() && request.workspaceId() == null) {
+                    continue;
+                }
+                if (!evaluateConditions(rule.getConditions(), request)) {
+                    continue;
+                }
                 return PolicyStep4.deny(denyAndLog(request, "POLICY_DENY",
                         "Denied by policy rule: " + rule.getName(),
                         riskScore, startTime));

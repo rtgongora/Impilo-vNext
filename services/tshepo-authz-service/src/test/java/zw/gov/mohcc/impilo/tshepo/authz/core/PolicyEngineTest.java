@@ -463,6 +463,46 @@ class PolicyEngineTest {
     }
 
     @Test
+    @DisplayName("conditional DENY fires ONLY on its matching path — regression for DENY-ignores-conditions")
+    void evaluate_conditionalDeny_nonMatchingPath_isNotDenied() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        // A DENY pinned to /internal/v1/assets by path_contains, plus a general ALLOW for the role.
+        PolicyRuleEntity denyRule = buildDenyRule(null, null, "CLINICIAN", null, null);
+        denyRule.setConditions("{\"path_contains\": \"/internal/v1/assets\"}");
+        PolicyRuleEntity allowRule = buildAllowRule(null, null, "CLINICIAN", null, null);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(denyRule, allowRule));
+
+        // An UNRELATED path must NOT be denied by the assets-scoped DENY (the bug denied the whole role).
+        AuthzInternalRequest request = buildRequestWithPath(
+                "/v1/wellness/feed", "feed", "GET:/v1/wellness/feed", List.of("CLINICIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.ALLOW, response.verdict(),
+                "A conditional DENY (path_contains /internal/v1/assets) must not deny an unrelated path");
+    }
+
+    @Test
+    @DisplayName("conditional DENY still fires on its own pinned path")
+    void evaluate_conditionalDeny_matchingPath_denies() {
+        when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
+        PolicyRuleEntity denyRule = buildDenyRule(null, null, "CLINICIAN", null, null);
+        denyRule.setConditions("{\"path_contains\": \"/internal/v1/assets\"}");
+        PolicyRuleEntity allowRule = buildAllowRule(null, null, "CLINICIAN", null, null);
+        when(policyCacheService.getActiveRulesForResource(eq(TENANT_ID), anyString()))
+                .thenReturn(List.of(denyRule, allowRule));
+
+        AuthzInternalRequest request = buildRequestWithPath(
+                "/internal/v1/assets/list", "assets", "GET:/internal/v1/assets/list", List.of("CLINICIAN"));
+
+        AuthzResponse response = policyEngine.evaluate(request);
+
+        assertEquals(Verdict.DENY, response.verdict(), "The conditional DENY must still fire on its pinned path");
+        assertEquals("POLICY_DENY", response.errorCode());
+    }
+
+    @Test
     @DisplayName("path_contains: query-string smuggling of the pinned substring is NOT granted")
     void evaluate_pathContains_querySmuggling_denies() {
         when(riskScoring.score(eq(TENANT_ID), eq(DEVICE_FP), eq(ACTOR_ID))).thenReturn(10);
