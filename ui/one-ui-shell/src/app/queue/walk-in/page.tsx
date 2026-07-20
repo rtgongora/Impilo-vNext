@@ -21,6 +21,7 @@ import type { QueueEntryResource } from "@/hooks/queries/useQueue";
 import { getPatientDisplayName, getPatientQueueSummary } from "@/lib/queue-workflows";
 import { VitoClientRegistrationWizard } from "@/components/registry/VitoClientRegistrationWizard";
 import { BiometricVerifyField } from "@/components/biometric/BiometricVerifyField";
+import { EnrolBiometricStep } from "@/components/biometric/EnrolBiometricStep";
 import type { Modality } from "@/hooks/queries/useAbisBiometric";
 
 export default function WalkInPage() {
@@ -37,6 +38,9 @@ export default function WalkInPage() {
   const [liveProbe, setLiveProbe] = useState<{ modality: Modality; probeBase64: string } | null>(null);
 
   const [showNewPatient, setShowNewPatient] = useState(false);
+  // True only for a patient just created via the registration wizard — they get
+  // the ENROL step (register a first biometric), not the check-in VERIFY field.
+  const [justRegistered, setJustRegistered] = useState(false);
 
   const {
     data: patientsData,
@@ -51,6 +55,7 @@ export default function WalkInPage() {
     if (preselectedPatientData?.data && !selectedPatient) {
       setSelectedPatient(preselectedPatientData.data);
       setShowNewPatient(false);
+      setJustRegistered(false);
     }
   }, [preselectedPatientData?.data, selectedPatient]);
 
@@ -59,6 +64,7 @@ export default function WalkInPage() {
     setSearchSubmitted(searchTerm);
     setSelectedPatient(null);
     setShowNewPatient(false);
+    setJustRegistered(false);
   }
 
   async function handleCreateEntry() {
@@ -223,6 +229,7 @@ export default function WalkInPage() {
                       onClick={() => {
                         setSelectedPatient(patient);
                         setShowNewPatient(false);
+                        setJustRegistered(false);
                       }}
                       className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors ${
                         selectedPatient?.id === patient.id
@@ -257,18 +264,27 @@ export default function WalkInPage() {
                   onRegistered={(p) => {
                     setSelectedPatient(p);
                     setShowNewPatient(false);
+                    setJustRegistered(true);
                   }}
                 />
               </div>
             )}
 
-            {selectedPatient && (
+            {/* Newly-registered patient → ENROL a first biometric (register).
+                Existing/returning patient → VERIFY at check-in. Mutually exclusive. */}
+            {selectedPatient && justRegistered && selectedPatient.attributes?.cpid ? (
+              <EnrolBiometricStep
+                subjectRef={selectedPatient.attributes.cpid}
+                subjectLabel={getPatientDisplayName(selectedPatient)}
+                disabled={isSubmitting}
+              />
+            ) : selectedPatient ? (
               <BiometricVerifyField
-                label="Verify patient by biometric (optional)"
+                label="Verify at check-in (optional)"
                 onProbe={setLiveProbe}
                 disabled={isSubmitting}
               />
-            )}
+            ) : null}
 
             {error && (
               <div className="p-3 rounded-lg bg-danger-soft border border-danger/28 text-sm text-danger">{error}</div>
