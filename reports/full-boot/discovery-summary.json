@@ -1,16 +1,16 @@
 {
-  "total": 148,
+  "total": 151,
   "by_plane": {
-    "trust": 12,
+    "trust": 14,
     "registry": 8,
     "clinical": 20,
     "data": 12,
     "integration": 46,
-    "experience": 30,
+    "experience": 31,
     "enterprise": 17
   },
   "by_classification": {
-    "wave_sequenced_full_boot": 100,
+    "wave_sequenced_full_boot": 103,
     "external_dependency": 9,
     "required_full_boot": 22,
     "internal_package": 12,
@@ -18,8 +18,8 @@
   },
   "image_strategy": {
     "dockerfile": 1,
-    "shared-dockerfile-template": 76,
-    "jib": 20,
+    "shared-dockerfile-template": 78,
+    "jib": 21,
     "buildpacks": 15,
     "official-upstream-image": 0,
     "official-helm-chart": 8,
@@ -32,8 +32,8 @@
   },
   "runtime_image_required_count": 22,
   "dockerfile_count": 1,
-  "shared_template_count": 76,
-  "jib_count": 20,
+  "shared_template_count": 78,
+  "jib_count": 21,
   "buildpacks_count": 15,
   "official_image_count": 0,
   "official_chart_count": 8,

@@ -68,6 +68,7 @@ contracts/openapi/offline-sync.openapi.yaml
 contracts/openapi/organization-registry.openapi.yaml
 contracts/openapi/oros.openapi.yaml
 contracts/openapi/pacs-adapter.openapi.yaml
+contracts/openapi/participation.openapi.yaml
 contracts/openapi/patient-safety.openapi.yaml
 contracts/openapi/pct.openapi.yaml
 contracts/openapi/pharmacy-elmis.openapi.yaml
@@ -105,6 +106,8 @@ contracts/openapi/wellness.openapi.yaml
 contracts/openapi/workflow.openapi.yaml
 contracts/openapi/workforce-governance.openapi.yaml
 contracts/openapi/zibo.openapi.yaml
+services/abis-service/Dockerfile
+services/abis-service/pom.xml
 services/ai-model-registry-service/Dockerfile
 services/ai-model-registry-service/pom.xml
 services/analytics-pipeline-service/Dockerfile
@@ -194,6 +197,8 @@ services/llm-orchestration-service/Dockerfile
 services/llm-orchestration-service/pom.xml
 services/madi-service/Dockerfile
 services/madi-service/pom.xml
+services/matcher-engine/Dockerfile
+services/matcher-engine/pom.xml
 services/msika-apps-service/Dockerfile
 services/msika-apps-service/pom.xml
 services/msika-flow-service/Dockerfile
@@ -228,6 +233,8 @@ services/oros-service/Dockerfile
 services/oros-service/pom.xml
 services/pacs-adapter-service/Dockerfile
 services/pacs-adapter-service/pom.xml
+services/participation-service/Dockerfile
+services/participation-service/pom.xml
 services/patient-safety-service/pom.xml
 services/pct-service/Dockerfile
 services/pct-service/pom.xml

@@ -1,4 +1,5 @@
 id	build_tool	source_path	classification
+abis-service		services/abis-service	wave_sequenced_full_boot
 ai-model-registry-service		services/ai-model-registry-service	wave_sequenced_full_boot
 analytics-pipeline-service		services/analytics-pipeline-service	wave_sequenced_full_boot
 asset-registry-service		services/asset-registry-service	wave_sequenced_full_boot
@@ -49,6 +50,7 @@ learning-service		services/learning-service	wave_sequenced_full_boot
 live-service		services/live-service	wave_sequenced_full_boot
 llm-orchestration-service		services/llm-orchestration-service	wave_sequenced_full_boot
 madi-service		services/madi-service	wave_sequenced_full_boot
+matcher-engine		services/matcher-engine	wave_sequenced_full_boot
 msika-apps-service		services/msika-apps-service	wave_sequenced_full_boot
 msika-flow-service		services/msika-flow-service	wave_sequenced_full_boot
 msika-service		services/msika-service	wave_sequenced_full_boot
@@ -70,6 +72,7 @@ organization-registry-service		services/organization-registry-service	wave_seque
 oros-service		services/oros-service	wave_sequenced_full_boot
 oros-web		ui/oros-web	wave_sequenced_full_boot
 pacs-adapter-service		services/pacs-adapter-service	wave_sequenced_full_boot
+participation-service		services/participation-service	wave_sequenced_full_boot
 patient-safety-service		services/patient-safety-service	wave_sequenced_full_boot
 pct-service		services/pct-service	required_full_boot
 pct-web		ui/pct-web	wave_sequenced_full_boot

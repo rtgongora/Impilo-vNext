@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-20T16:20:04.521Z",
+  "generatedAt": "2026-07-20T18:11:29.828Z",
   "services": {
     "ai-model-registry-service": "unknown-or-partial",
     "analytics-pipeline-service": "unknown-or-partial",
@@ -88,6 +88,7 @@
     "tshepo-keys-service": "unknown-or-partial",
     "tshepo-offline-service": "unknown-or-partial",
     "abis-service": "unknown-or-partial",
+    "matcher-engine": "unknown-or-partial",
     "tshepo-service": "unknown-or-partial",
     "tuso-service": "unknown-or-partial",
     "ubomi-service": "unknown-or-partial",

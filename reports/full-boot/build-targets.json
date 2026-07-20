@@ -1,6 +1,20 @@
 {
-  "generated_at": "2026-07-16T10:15:06.589Z",
+  "generated_at": "2026-07-20T18:11:00.276Z",
   "targets": [
+    {
+      "id": "abis-service",
+      "path": "services/abis-service",
+      "component_name": "abis-service",
+      "type": "backend_service",
+      "plane": "trust",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "jib",
+      "image_strategy_status": "valid",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
+      "classification_confidence": "certain"
+    },
     {
       "id": "ai-model-registry-service",
       "path": "services/ai-model-registry-service",
@@ -702,6 +716,20 @@
       "classification_confidence": "certain"
     },
     {
+      "id": "matcher-engine",
+      "path": "services/matcher-engine",
+      "component_name": "matcher-engine",
+      "type": "backend_service",
+      "plane": "trust",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain"
+    },
+    {
       "id": "msika-apps-service",
       "path": "services/msika-apps-service",
       "component_name": "msika-apps-service",
@@ -987,6 +1015,20 @@
       "component_name": "pacs-adapter-service",
       "type": "backend_service",
       "plane": "clinical",
+      "classification": "wave_sequenced_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain"
+    },
+    {
+      "id": "participation-service",
+      "path": "services/participation-service",
+      "component_name": "participation-service",
+      "type": "backend_service",
+      "plane": "experience",
       "classification": "wave_sequenced_full_boot",
       "build_required": true,
       "image_required": false,

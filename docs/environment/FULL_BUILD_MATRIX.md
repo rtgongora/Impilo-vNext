@@ -1,9 +1,10 @@
 # Full Build Matrix
 
-> 131 buildable targets. Regenerate after classification.
+> 134 buildable targets. Regenerate after classification.
 
 | Service | Plane | Path | Tool | Command | Artifact | Status | Failure | Log |
 |---|---|---|---|---|---|---|---|---|
+| abis-service | trust | services/abis-service | maven | cd services/abis-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | ai-model-registry-service | data | services/ai-model-registry-service | maven | cd services/ai-model-registry-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | analytics-pipeline-service | integration | services/analytics-pipeline-service | maven | cd services/analytics-pipeline-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | asset-registry-service | integration | services/asset-registry-service | maven | cd services/asset-registry-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
@@ -58,6 +59,7 @@
 | live-service | experience | services/live-service | maven | cd services/live-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | llm-orchestration-service | integration | services/llm-orchestration-service | maven | cd services/llm-orchestration-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | madi-service | clinical | services/madi-service | maven | cd services/madi-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
+| matcher-engine | trust | services/matcher-engine | maven | cd services/matcher-engine && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | msika-apps-service | enterprise | services/msika-apps-service | maven | cd services/msika-apps-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | msika-flow-service | enterprise | services/msika-flow-service | maven | cd services/msika-flow-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | msika-service | enterprise | services/msika-service | maven | cd services/msika-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
@@ -84,6 +86,7 @@
 | oros-service | clinical | services/oros-service | maven | cd services/oros-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | oros-web | experience | ui/oros-web | npm | cd ui/oros-web && npm run build | jar\|dist | not_run | — | — |
 | pacs-adapter-service | clinical | services/pacs-adapter-service | maven | cd services/pacs-adapter-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
+| participation-service | experience | services/participation-service | maven | cd services/participation-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | patient-safety-service | clinical | services/patient-safety-service | maven | cd services/patient-safety-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | pct-service | clinical | services/pct-service | maven | cd services/pct-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | pct-web | experience | ui/pct-web | npm | cd ui/pct-web && npm run build | jar\|dist | not_run | — | — |

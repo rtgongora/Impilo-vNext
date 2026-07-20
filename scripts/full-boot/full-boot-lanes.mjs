@@ -12,6 +12,13 @@ import path from "node:path";
 export const DEDICATED_RUNTIME = new Set([
   "experience-bff",
   "one-ui-shell",
+  // Hand-registered in values-full-preview.yaml (ABIS_DEDUP_* env) — a generated
+  // fullBootServices entry would merge after it and flip enabled/env. Image build
+  // still happens via image-strategy targets.
+  "abis-service",
+  // Deployed via templates/matcher-engine.yaml (core-infra appliance, matcherEngine.*
+  // values), not the fullBootServices microservice template.
+  "matcher-engine",
 ]);
 
 export const OFFICIAL_INFRA = new Set([
