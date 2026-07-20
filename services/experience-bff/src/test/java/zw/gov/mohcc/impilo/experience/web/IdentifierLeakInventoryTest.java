@@ -41,8 +41,16 @@ class IdentifierLeakInventoryTest {
      * <p>Re-pinned 55 → 54: the D7 fix removed the raw-Health-ID emission in
      * {@code WalletOverviewService.identityAndTrust} (the wallet now surfaces the patient-facing
      * Impilo ID, not {@code healthId}). The ratchet only moves down.</p>
+     *
+     * <p>Re-pinned 54 → 56 (2026-07-20): the +2 sites are <b>server-side reads, not browser
+     * emissions</b> — {@code ActorContextFilter} reads the {@code health_id} JWT claim to force
+     * {@code X-Actor-ID} to the token-proven identity (PII Wave 0.3 stage 1a, commit 6f2ed276f:
+     * the hardening itself), and {@code AuthSessionController} reads {@code healthId} off the
+     * TSHEPO identity-mapping S2S response during flag-gated biometric login (L3, commit
+     * 956f4c367); neither literal reaches a browser payload. Consistent with the CJ8/CJ14 re-pin,
+     * which already counts internal contract field names.</p>
      */
-    private static final int BASELINE = 54;
+    private static final int BASELINE = 56;
 
     private static final Pattern LEAK = Pattern.compile("\"(healthId|impiloHealthId|health_id)\"");
 

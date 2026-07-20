@@ -96,7 +96,10 @@ class TrustProfileComposerTest {
     void happyPathComposesFourBlocksEachCitingItsSourceOfRecord() {
         Map<String, Object> profile = composer.compose(HEALTH_ID, null);
 
-        assertThat(profile.get("healthId")).isEqualTo(HEALTH_ID);
+        // PII Wave 0.3 stage 1c: the composer must NOT echo the raw Health ID to the
+        // browser — the healthId is server-side lookup input only.
+        assertThat(profile).doesNotContainKey("healthId");
+        assertThat(profile).containsKey("generatedAt");
         assertThat(block(profile, "identity"))
                 .containsEntry("status", "OK")
                 .containsEntry("sourceOfRecord", "identity-assurance-service");

@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import zw.gov.mohcc.impilo.experience.client.NdilaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.Map;
@@ -21,7 +23,7 @@ class AdminFacilityImportControllerTest {
 
     @Test
     void listRunsWrapsTusoDataInEnvelope() {
-        var controller = new AdminFacilityImportController(new StubTusoClient());
+        var controller = controller(new StubTusoClient());
 
         ResponseEntity<Map<String, Object>> response = controller.listRuns("req-1", "corr-1");
 
@@ -33,7 +35,7 @@ class AdminFacilityImportControllerTest {
 
     @Test
     void getRunReturnsNotFoundWhenTusoNull() {
-        var controller = new AdminFacilityImportController(new NullTusoClient());
+        var controller = controller(new NullTusoClient());
 
         ResponseEntity<Map<String, Object>> response = controller.getRun(99L, "req-1", "corr-1");
 
@@ -42,7 +44,7 @@ class AdminFacilityImportControllerTest {
 
     @Test
     void reviewProxiesRealBuckets() {
-        var controller = new AdminFacilityImportController(new StubTusoClient());
+        var controller = controller(new StubTusoClient());
 
         ResponseEntity<Map<String, Object>> response = controller.getRunReview(7L, "req-1", "corr-1");
 
@@ -54,7 +56,7 @@ class AdminFacilityImportControllerTest {
 
     @Test
     void rowsProxiesRealPersistedRows() {
-        var controller = new AdminFacilityImportController(new StubTusoClient());
+        var controller = controller(new StubTusoClient());
 
         ResponseEntity<Map<String, Object>> response =
                 controller.getRunRows(7L, Map.of("outcome", "IMPORTED", "page", "0"), "req-1", "corr-1");
@@ -67,7 +69,7 @@ class AdminFacilityImportControllerTest {
 
     @Test
     void duplicatesProxiesGroups() {
-        var controller = new AdminFacilityImportController(new StubTusoClient());
+        var controller = controller(new StubTusoClient());
 
         ResponseEntity<Map<String, Object>> response =
                 controller.getRunDuplicates(7L, "FACILITY_NAME", "req-1", "corr-1");
@@ -79,7 +81,7 @@ class AdminFacilityImportControllerTest {
 
     @Test
     void missingFieldChecklistSlicesProvenance() {
-        var controller = new AdminFacilityImportController(new StubTusoClient());
+        var controller = controller(new StubTusoClient());
 
         ResponseEntity<Map<String, Object>> response =
                 controller.missingFieldChecklist(55L, "req-1", "corr-1");
@@ -95,7 +97,7 @@ class AdminFacilityImportControllerTest {
 
     @Test
     void supplyCodeProxiesToTuso() {
-        var controller = new AdminFacilityImportController(new StubTusoClient());
+        var controller = controller(new StubTusoClient());
 
         ResponseEntity<Map<String, Object>> response = controller.supplyCode(
                 7L, 1L, Map.of("facilityCode", "ZWX1"), "req-1", "corr-1");
@@ -107,7 +109,7 @@ class AdminFacilityImportControllerTest {
 
     @Test
     void applyApprovedProxiesToTuso() {
-        var controller = new AdminFacilityImportController(new StubTusoClient());
+        var controller = controller(new StubTusoClient());
 
         ResponseEntity<Map<String, Object>> response =
                 controller.applyApproved(7L, Map.of(), "req-1", "corr-1");
@@ -118,14 +120,34 @@ class AdminFacilityImportControllerTest {
     }
 
     @Test
+    void hpaGeocodeReviewProxiesNdilaQueueInEnvelope() {
+        var controller = controller(new StubTusoClient());
+
+        ResponseEntity<Map<String, Object>> response =
+                controller.hpaGeocodeReview(200, "req-1", "corr-1");
+
+        assertEquals(200, response.getStatusCode().value());
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertEquals(1, data.path("count").asInt());
+        assertEquals("PENDING_REVIEW", data.path("queue").get(0).path("geocodeStatus").asText());
+        assertNotNull(response.getBody().get("meta"));
+        assertFalse(response.getBody().containsKey("error"));
+    }
+
+    @Test
     void downstreamConflictIsPropagatedNotMaskedAs502() {
-        var controller = new AdminFacilityImportController(new ConflictTusoClient());
+        var controller = controller(new ConflictTusoClient());
 
         ResponseEntity<Map<String, Object>> response =
                 controller.approve(7L, 1L, "req-1", "corr-1");
 
         assertEquals(409, response.getStatusCode().value());
         assertTrue(response.getBody().containsKey("error"));
+    }
+
+    /** Constructs the controller with stub Varapi/Ndila clients; only the TUSO stub varies per test. */
+    private static AdminFacilityImportController controller(TusoServiceClient tusoClient) {
+        return new AdminFacilityImportController(tusoClient, new StubVarapiClient(), new StubNdilaClient());
     }
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
@@ -190,6 +212,24 @@ class AdminFacilityImportControllerTest {
         @Override
         public JsonNode postImportRunAction(long runId, String action, Object body) {
             return node("{\"applied\":1,\"skipped\":0,\"rows\":[]}");
+        }
+    }
+
+    private static final class StubVarapiClient extends VarapiServiceClient {
+        private StubVarapiClient() {
+            super(new RestTemplate(), endpoints());
+        }
+    }
+
+    private static final class StubNdilaClient extends NdilaServiceClient {
+        private StubNdilaClient() {
+            super(new RestTemplate(), endpoints(), MAPPER);
+        }
+
+        @Override
+        public JsonNode hpaGeocodeReviewQueue(int limit) {
+            return node("{\"count\":1,\"queue\":[{\"locationId\":\"loc-1\",\"facilityCode\":\"ZW010125\","
+                    + "\"geocodeStatus\":\"PENDING_REVIEW\"}]}");
         }
     }
 

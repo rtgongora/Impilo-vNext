@@ -130,14 +130,17 @@ class GoldenPathIntegrationTest {
     }
 
     // ── Path C: Queue is sovereign-owned — BFF fails clean, never fabricates ──
-    // pct-service owns queue state. The BFF no longer holds an in-memory queue,
-    // so with pct-service unreachable in this integration JVM both create and list
-    // fail clean with 502 PCT_UNAVAILABLE rather than synthesising a seeded entry.
+    // pct-service owns queue state. In this integration JVM the sovereign WireMock
+    // (ExperienceBffSovereignWireMockSupport) answers as pct-service but does NOT
+    // stub /v1/journeys/start, so create receives an upstream 404 which the BFF
+    // surfaces honestly as CHECK_IN_REJECTED (QueueController propagates real PCT
+    // 4xx instead of masking it as PCT_UNAVAILABLE) — and never synthesises a
+    // seeded entry. List paths are likewise unstubbed and fail clean with 502.
     // (The golden "happy path" is covered against a stubbed PctServiceClient in
     // QueueControllerTest.createEntryReturnsJourneyCorrelationMetaWhenPctSucceeds.)
     @Test
     @Order(3)
-    @DisplayName("Path C: Queue create/list fail clean when pct-service is unavailable (no fabrication)")
+    @DisplayName("Path C: Queue create/list fail clean when pct-service cannot serve them (no fabrication)")
     void pathC_listQueueEntries() throws Exception {
         String fid = "f1000000-0000-0000-0000-000000000001";
         mvc.perform(post("/internal/v1/queue/entries")
@@ -151,8 +154,8 @@ class GoldenPathIntegrationTest {
                         .header("X-Request-ID", UUID.randomUUID().toString())
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
                         .header("Idempotency-Key", UUID.randomUUID().toString()))
-                .andExpect(status().isBadGateway())
-                .andExpect(jsonPath("$.error.code").value("PCT_UNAVAILABLE"));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error.code").value("CHECK_IN_REJECTED"));
 
         mvc.perform(get("/internal/v1/queue/entries")
                         .param("facility_id", fid)
