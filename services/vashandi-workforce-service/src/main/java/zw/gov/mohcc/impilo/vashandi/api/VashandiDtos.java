@@ -164,7 +164,12 @@ public final class VashandiDtos {
             OffsetDateTime eventTime,
             String checkInMode,
             String deviceId,
-            Boolean offline
+            Boolean offline,
+            // Optional biometric verification (same seam as the rostered check-in):
+            // MATCH → mode "biometric"; NO_MATCH → denied; UNAVAILABLE → falls back.
+            String biometricSubjectRef,
+            String biometricModality,
+            String biometricProbeBase64
     ) {
     }
 

@@ -47,18 +47,28 @@ public class AttendanceService {
      */
     private String resolveCheckInMode(VashandiDtos.CheckInRequest request, String defaultMode) {
         String requested = request.checkInMode() != null ? request.checkInMode() : defaultMode;
-        if (request.biometricProbeBase64() == null || request.biometricProbeBase64().isBlank()
-                || request.biometricSubjectRef() == null || request.biometricSubjectRef().isBlank()) {
+        return resolveBiometricMode(request.biometricSubjectRef(), request.biometricModality(),
+                request.biometricProbeBase64(), requested);
+    }
+
+    /**
+     * Shared biometric check-in resolution used by both rostered and ad-hoc check-in.
+     * No probe → the requested mode. MATCH → "biometric". NO_MATCH → null (caller
+     * denies). Engine UNAVAILABLE/NO_REFERENCE → the requested mode (care-first: a
+     * biometric outage must not block a worker clocking in).
+     */
+    private String resolveBiometricMode(String subjectRef, String modality, String probeBase64,
+                                        String requested) {
+        if (probeBase64 == null || probeBase64.isBlank() || subjectRef == null || subjectRef.isBlank()) {
             return requested;
         }
-        String modality = request.biometricModality() != null ? request.biometricModality() : "FINGERPRINT";
         var decision = biometricVerification.verify(
-                request.biometricSubjectRef(), modality, request.biometricProbeBase64());
+                subjectRef, modality != null ? modality : "FINGERPRINT", probeBase64);
         if (decision.isMatch()) {
             return "biometric";
         }
         if ("UNAVAILABLE".equals(decision.result()) || "NO_REFERENCE".equals(decision.result())) {
-            return requested; // care-first: don't block clock-in on a biometric outage
+            return requested;
         }
         return null; // NO_MATCH → deny
     }
@@ -163,6 +173,14 @@ public class AttendanceService {
             return new VashandiDtos.AttendanceActionResponse(null, "denied", "assignment or facility context required");
         }
 
+        // Optional biometric verification — same seam as the rostered path.
+        String mode = resolveBiometricMode(request.biometricSubjectRef(), request.biometricModality(),
+                request.biometricProbeBase64(),
+                request.checkInMode() != null ? request.checkInMode() : "adhoc_self_check_in");
+        if (mode == null) {
+            return new VashandiDtos.AttendanceActionResponse(null, "denied", "biometric verification failed");
+        }
+
         AttendanceEventEntity event = new AttendanceEventEntity();
         event.setTenantId(tenantId);
         event.setWorkforceProfileId(request.workforceProfileId());
@@ -175,7 +193,7 @@ public class AttendanceService {
         event.setAdhoc(true);
         event.setEventType("check_in");
         event.setEventTime(request.eventTime() != null ? request.eventTime() : OffsetDateTime.now());
-        event.setCheckInMode(request.checkInMode() != null ? request.checkInMode() : "adhoc_self_check_in");
+        event.setCheckInMode(mode);
         event.setDeviceId(request.deviceId());
         event.setOffline(request.offline() != null && request.offline());
         AttendanceEventEntity saved = attendanceRepository.save(event);

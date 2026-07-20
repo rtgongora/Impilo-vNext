@@ -51,18 +51,11 @@ export function CheckInOutPanel({ shiftId, workforceProfileId }: CheckInOutPanel
     <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
       <h3 className="font-medium text-foreground">Check in / out</h3>
       <p className="text-sm text-muted-foreground">Records attendance against shift {shiftId}.</p>
-      {hasRosteredShift ? (
-        <BiometricVerifyField
-          label="Verify by biometric (optional)"
-          onProbe={setLiveProbe}
-          disabled={checkIn.isPending}
-        />
-      ) : (
-        <p className="text-[11px] text-muted-foreground">
-          Biometric check-in is recorded against a rostered shift; this self-service check-in uses your
-          bound workforce profile and facility context.
-        </p>
-      )}
+      <BiometricVerifyField
+        label="Verify by biometric (optional)"
+        onProbe={setLiveProbe}
+        disabled={checkIn.isPending || adhocCheckIn.isPending}
+      />
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -80,7 +73,15 @@ export function CheckInOutPanel({ shiftId, workforceProfileId }: CheckInOutPanel
                   biometricModality: liveProbe?.modality,
                   biometricProbeBase64: liveProbe?.probeBase64,
                 })
-              : await adhocCheckIn.mutateAsync({ workforceProfileId, facilityId: facility?.id || undefined });
+              : await adhocCheckIn.mutateAsync({
+                  workforceProfileId,
+                  facilityId: facility?.id || undefined,
+                  // Same ABIS seam on the ad-hoc path: MATCH → biometric; NO_MATCH → denied;
+                  // UNAVAILABLE → falls back to self-service.
+                  biometricSubjectRef: liveProbe ? workforceProfileId : undefined,
+                  biometricModality: liveProbe?.modality,
+                  biometricProbeBase64: liveProbe?.probeBase64,
+                });
             if (result.success) {
               const event = (result.data ?? {}) as AttendanceEvent & { eventId?: string };
               startShift({

@@ -63,8 +63,26 @@ describe("CheckInOutPanel biometric check-in", () => {
     });
   });
 
-  it("does not render the probe capture on the self-service (adhoc) path", () => {
+  it("threads a captured probe into the self-service (adhoc) check-in request", async () => {
+    post.mockResolvedValue({ ok: true, templateBase64: "APROBE==" });
+    adhocMutateAsync.mockResolvedValue({ success: true, data: { eventId: "e-2" } });
+
     wrap(<CheckInOutPanel shiftId="self-service" workforceProfileId="wp-42" />);
-    expect(screen.queryByTestId("biometric-verify-field")).not.toBeInTheDocument();
+
+    // The biometric field is now available on the adhoc path too.
+    expect(screen.getByTestId("biometric-verify-field")).toBeInTheDocument();
+    const file = new File(["x"], "finger.png", { type: "image/png" });
+    fireEvent.change(screen.getByTestId("biometric-probe-file"), { target: { files: [file] } });
+    await waitFor(() => expect(screen.getByTestId("biometric-captured")).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("button", { name: /check in/i }));
+
+    await waitFor(() => expect(adhocMutateAsync).toHaveBeenCalled());
+    expect(adhocMutateAsync.mock.calls[0][0]).toMatchObject({
+      workforceProfileId: "wp-42",
+      biometricSubjectRef: "wp-42",
+      biometricModality: "FINGERPRINT",
+      biometricProbeBase64: "APROBE==",
+    });
   });
 });

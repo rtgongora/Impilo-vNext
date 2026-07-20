@@ -44,7 +44,7 @@ class AttendanceServiceAdhocTest {
     @Test
     void adhocCheckIn_deniedWhenNoProfile() throws Exception {
         VashandiDtos.AdhocCheckInRequest req = new VashandiDtos.AdhocCheckInRequest(
-                null, null, UUID.randomUUID(), null, null, null, null, null, null, null, null);
+                null, null, UUID.randomUUID(), null, null, null, null, null, null, null, null, null, null, null);
         VashandiDtos.AttendanceActionResponse response = service.adhocCheckIn(UUID.randomUUID(), req);
         assertThat(response.status()).isEqualTo("denied");
     }
@@ -52,7 +52,7 @@ class AttendanceServiceAdhocTest {
     @Test
     void adhocCheckIn_deniedWhenNoAssignmentAndNoFacility() throws Exception {
         VashandiDtos.AdhocCheckInRequest req = new VashandiDtos.AdhocCheckInRequest(
-                UUID.randomUUID(), null, null, null, null, null, null, null, null, null, null);
+                UUID.randomUUID(), null, null, null, null, null, null, null, null, null, null, null, null, null);
         VashandiDtos.AttendanceActionResponse response = service.adhocCheckIn(UUID.randomUUID(), req);
         assertThat(response.status()).isEqualTo("denied");
         assertThat(response.message()).contains("assignment or facility context required");
@@ -69,7 +69,7 @@ class AttendanceServiceAdhocTest {
         when(assignmentRepository.findByTenantIdAndId(tenant, assignmentId)).thenReturn(Optional.of(assignment));
 
         VashandiDtos.AdhocCheckInRequest req = new VashandiDtos.AdhocCheckInRequest(
-                UUID.randomUUID(), assignmentId, null, null, null, null, null, null, null, null, null);
+                UUID.randomUUID(), assignmentId, null, null, null, null, null, null, null, null, null, null, null, null);
         VashandiDtos.AttendanceActionResponse response = service.adhocCheckIn(tenant, req);
         assertThat(response.status()).isEqualTo("denied");
         assertThat(response.message()).contains("assignment not found for worker");
@@ -87,7 +87,7 @@ class AttendanceServiceAdhocTest {
         when(assignmentRepository.findByTenantIdAndId(tenant, assignmentId)).thenReturn(Optional.of(assignment));
 
         VashandiDtos.AdhocCheckInRequest req = new VashandiDtos.AdhocCheckInRequest(
-                profileId, assignmentId, null, null, null, null, null, null, null, null, null);
+                profileId, assignmentId, null, null, null, null, null, null, null, null, null, null, null, null);
         VashandiDtos.AttendanceActionResponse response = service.adhocCheckIn(tenant, req);
         assertThat(response.status()).isEqualTo("denied");
         assertThat(response.message()).contains("not active");
@@ -115,7 +115,7 @@ class AttendanceServiceAdhocTest {
         });
 
         VashandiDtos.AdhocCheckInRequest req = new VashandiDtos.AdhocCheckInRequest(
-                profileId, assignmentId, null, null, null, null, null, null, null, null, null);
+                profileId, assignmentId, null, null, null, null, null, null, null, null, null, null, null, null);
         VashandiDtos.AttendanceActionResponse response = service.adhocCheckIn(tenant, req);
 
         assertThat(response.status()).isEqualTo("completed");
@@ -135,9 +135,51 @@ class AttendanceServiceAdhocTest {
         });
 
         VashandiDtos.AdhocCheckInRequest req = new VashandiDtos.AdhocCheckInRequest(
-                profileId, null, facilityId, "ER", null, null, "FACILITY", null, null, null, null);
+                profileId, null, facilityId, "ER", null, null, "FACILITY", null, null, null, null, null, null, null);
         VashandiDtos.AttendanceActionResponse response = service.adhocCheckIn(tenant, req);
 
         assertThat(response.status()).isEqualTo("completed");
+    }
+
+    @Test
+    void adhocCheckIn_biometricMatch_marksModeBiometric() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        UUID profileId = UUID.randomUUID();
+        UUID facilityId = UUID.randomUUID();
+        when(biometricVerification.verify(any(), any(), any()))
+                .thenReturn(new zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient.Decision("MATCH", 0.97));
+        when(attendanceRepository.save(any())).thenAnswer(inv -> {
+            AttendanceEventEntity e = inv.getArgument(0);
+            e.setId(UUID.randomUUID());
+            return e;
+        });
+
+        VashandiDtos.AdhocCheckInRequest req = new VashandiDtos.AdhocCheckInRequest(
+                profileId, null, facilityId, null, null, null, "FACILITY", null, null, null, null,
+                "subj-1", "FINGERPRINT", "cHJvYmU=");
+        VashandiDtos.AttendanceActionResponse response = service.adhocCheckIn(tenant, req);
+
+        assertThat(response.status()).isEqualTo("completed");
+        org.mockito.ArgumentCaptor<AttendanceEventEntity> captor =
+                org.mockito.ArgumentCaptor.forClass(AttendanceEventEntity.class);
+        org.mockito.Mockito.verify(attendanceRepository).save(captor.capture());
+        assertThat(captor.getValue().getCheckInMode()).isEqualTo("biometric");
+    }
+
+    @Test
+    void adhocCheckIn_biometricNoMatch_denied() throws Exception {
+        UUID tenant = UUID.randomUUID();
+        UUID profileId = UUID.randomUUID();
+        UUID facilityId = UUID.randomUUID();
+        when(biometricVerification.verify(any(), any(), any()))
+                .thenReturn(new zw.gov.mohcc.impilo.shared.biometric.BiometricVerificationClient.Decision("NO_MATCH", 0.1));
+
+        VashandiDtos.AdhocCheckInRequest req = new VashandiDtos.AdhocCheckInRequest(
+                profileId, null, facilityId, null, null, null, "FACILITY", null, null, null, null,
+                "subj-1", "FINGERPRINT", "cHJvYmU=");
+        VashandiDtos.AttendanceActionResponse response = service.adhocCheckIn(tenant, req);
+
+        assertThat(response.status()).isEqualTo("denied");
+        org.mockito.Mockito.verify(attendanceRepository, org.mockito.Mockito.never()).save(any());
     }
 }

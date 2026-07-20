@@ -311,7 +311,14 @@ export function useCheckIn() {
 export function useAdhocCheckIn() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: { workforceProfileId: string; facilityId?: string; checkInMode?: string }) => adhocCheckIn(body),
+    mutationFn: (body: {
+      workforceProfileId: string;
+      facilityId?: string;
+      checkInMode?: string;
+      biometricSubjectRef?: string;
+      biometricModality?: string;
+      biometricProbeBase64?: string;
+    }) => adhocCheckIn(body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["vashandi", "attendance"] });
     },

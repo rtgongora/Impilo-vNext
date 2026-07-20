@@ -9,8 +9,18 @@ export async function checkIn(body: CheckInRequest) {
   return postVashandi<AttendanceEvent>("/attendance/check-in", body);
 }
 
+/** Body for ad-hoc self-service check-in, with optional biometric verification. */
+export interface AdhocCheckInBody {
+  workforceProfileId: string;
+  facilityId?: string;
+  checkInMode?: string;
+  biometricSubjectRef?: string;
+  biometricModality?: string;
+  biometricProbeBase64?: string;
+}
+
 /** Self-service check-in without a rostered shift — anchored to facility/assignment context. */
-export async function adhocCheckIn(body: { workforceProfileId: string; facilityId?: string; checkInMode?: string }) {
+export async function adhocCheckIn(body: AdhocCheckInBody) {
   return postVashandi<AttendanceEvent>("/attendance/adhoc-check-in", body);
 }
 
