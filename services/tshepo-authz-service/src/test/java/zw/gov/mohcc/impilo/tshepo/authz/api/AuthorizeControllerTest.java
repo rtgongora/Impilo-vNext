@@ -34,7 +34,10 @@ class AuthorizeControllerTest {
     @Mock private SessionAssuranceRouter sessionRouter;
 
     private AuthorizeController controller() {
-        return new AuthorizeController(policyEngine, sessionRouter, new ObjectMapper());
+        return new AuthorizeController(policyEngine, sessionRouter, new ObjectMapper(),
+                new zw.gov.mohcc.impilo.tshepo.authz.service.IdentityIntrospectionClient(
+                        new org.springframework.web.client.RestTemplate(),
+                        new zw.gov.mohcc.impilo.tshepo.authz.config.AuthzProperties()));
     }
 
     @Test

@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zw.gov.mohcc.impilo.tshepo.authz.core.PolicyEngine;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.AuthzInternalRequest;
+import zw.gov.mohcc.impilo.tshepo.authz.dto.DutyContext;
 import zw.gov.mohcc.impilo.tshepo.authz.session.SessionAssuranceRouter;
 import zw.gov.mohcc.impilo.tshepo.authz.session.SessionInfo;
 import zw.gov.mohcc.impilo.tshepo.authz.session.SessionValidationException;
@@ -41,11 +42,14 @@ public class ExtAuthzGrpcService extends AuthorizationGrpc.AuthorizationImplBase
 
     private final PolicyEngine policyEngine;
     private final SessionAssuranceRouter sessionRouter;
+    private final zw.gov.mohcc.impilo.tshepo.authz.service.IdentityIntrospectionClient introspectionClient;
 
     public ExtAuthzGrpcService(PolicyEngine policyEngine,
-                                SessionAssuranceRouter sessionRouter) {
+                                SessionAssuranceRouter sessionRouter,
+                                zw.gov.mohcc.impilo.tshepo.authz.service.IdentityIntrospectionClient introspectionClient) {
         this.policyEngine = policyEngine;
         this.sessionRouter = sessionRouter;
+        this.introspectionClient = introspectionClient;
     }
 
     @Override
@@ -84,6 +88,7 @@ public class ExtAuthzGrpcService extends AuthorizationGrpc.AuthorizationImplBase
             String assuranceLevel = headers.getOrDefault(TrustHeaders.ASSURANCE_LEVEL, "");
             String escalationGrantId = headers.getOrDefault(TrustHeaders.ESCALATION_GRANT_ID, "");
             String workflowContext = headers.getOrDefault(TrustHeaders.WORKFLOW_STATE, "");
+            String workContextToken = headers.getOrDefault(TrustHeaders.WORK_CONTEXT_TOKEN, "");
             String authorization = headers.getOrDefault("authorization", "");
 
             // Parse UUIDs
@@ -136,6 +141,11 @@ public class ExtAuthzGrpcService extends AuthorizationGrpc.AuthorizationImplBase
             String resourceType = AuthzInternalRequest.deriveResourceType(path);
             String resourceId = AuthzInternalRequest.deriveResourceId(path);
 
+            // Resolve the WORK_CONTEXT duty token (Vashandi-proven operational context) via
+            // identity introspection. Fail-open (absent) on any error — SHADOW/ENFORCE handling
+            // lives in the PolicyEngine, gated by tshepo.authz.work-context-mode.
+            DutyContext dutyContext = introspectionClient.introspect(workContextToken);
+
             // Build internal request
             AuthzInternalRequest authzRequest = new AuthzInternalRequest(
                     tenantId, actorId, actorType, roles, purposeOfUse,
@@ -145,7 +155,8 @@ public class ExtAuthzGrpcService extends AuthorizationGrpc.AuthorizationImplBase
                     emptyToNull(providerId), emptyToNull(departmentId),
                     emptyToNull(wardId), emptyToNull(programmeId),
                     emptyToNull(subjectId), emptyToNull(assuranceLevel),
-                    emptyToNull(escalationGrantId), emptyToNull(workflowContext)
+                    emptyToNull(escalationGrantId), emptyToNull(workflowContext),
+                    dutyContext
             );
 
             // Validate mandatory headers

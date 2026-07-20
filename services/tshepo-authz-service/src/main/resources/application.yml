@@ -96,6 +96,9 @@ tshepo:
     consent-evaluate-path: /v1/consent/evaluate
     # Identity service
     identity-service-url: ${TSHEPO_IDENTITY_URL:http://localhost:8181}
+    # WORK_CONTEXT duty-token binding: OFF | SHADOW | ENFORCE (default SHADOW — observe-only)
+    work-context-mode: ${TSHEPO_WORK_CONTEXT_MODE:SHADOW}
+    work-context-introspect-path: /v1/identity/tokens/introspect
     # Audit service
     audit-service-url: ${TSHEPO_AUDIT_URL:http://localhost:8183}
     audit-kafka-topic: tshepo.audit.events

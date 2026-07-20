@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.tshepo.authz.config.AuthzProperties;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.AuthzInternalRequest;
+import zw.gov.mohcc.impilo.tshepo.authz.dto.DutyContext;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyRuleEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.repository.PolicyDecisionLogRepository;
 import zw.gov.mohcc.impilo.tshepo.authz.service.*;
@@ -111,7 +112,7 @@ class TheatreAuthzMatrixTest {
                 null, "POST", path, "POST:" + path, resourceType, null,
                 loa, "session-1", null,
                 providerId, null, null, null, null, assurance,
-                null, null);
+                null, null, DutyContext.absent());
     }
 
     private AuthzInternalRequest provider(List<String> roles, String path) {

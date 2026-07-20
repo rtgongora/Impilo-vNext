@@ -44,13 +44,16 @@ public class AuthorizeController {
     private final PolicyEngine policyEngine;
     private final SessionAssuranceRouter sessionRouter;
     private final ObjectMapper objectMapper;
+    private final zw.gov.mohcc.impilo.tshepo.authz.service.IdentityIntrospectionClient introspectionClient;
 
     public AuthorizeController(PolicyEngine policyEngine,
                                 SessionAssuranceRouter sessionRouter,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper,
+                                zw.gov.mohcc.impilo.tshepo.authz.service.IdentityIntrospectionClient introspectionClient) {
         this.policyEngine = policyEngine;
         this.sessionRouter = sessionRouter;
         this.objectMapper = objectMapper;
+        this.introspectionClient = introspectionClient;
     }
 
     /**
@@ -88,6 +91,7 @@ public class AuthorizeController {
         String assuranceLevel = request.getHeader(TrustHeaders.ASSURANCE_LEVEL);
         String escalationGrantId = request.getHeader(TrustHeaders.ESCALATION_GRANT_ID);
         String workflowContext = request.getHeader(TrustHeaders.WORKFLOW_STATE);
+        String workContextToken = request.getHeader(TrustHeaders.WORK_CONTEXT_TOKEN);
         String authorization = request.getHeader("authorization");
 
         // Parse UUIDs
@@ -151,6 +155,11 @@ public class AuthorizeController {
         String resourceType = AuthzInternalRequest.deriveResourceType(originalPath);
         String resourceId = AuthzInternalRequest.deriveResourceId(originalPath);
 
+        // Resolve the WORK_CONTEXT duty token (Vashandi-proven context) via introspection.
+        // Fail-open on error; SHADOW/ENFORCE handling is in the PolicyEngine.
+        zw.gov.mohcc.impilo.tshepo.authz.dto.DutyContext dutyContext =
+                introspectionClient.introspect(workContextToken);
+
         // Build internal request
         AuthzInternalRequest authzRequest = new AuthzInternalRequest(
                 tenantId, actorId, actorType, roles, purposeOfUse,
@@ -160,7 +169,8 @@ public class AuthorizeController {
                 authorization != null ? authorization : "",
                 providerId, departmentId, wardId, programmeId,
                 subjectId, assuranceLevel,
-                escalationGrantId, workflowContext
+                escalationGrantId, workflowContext,
+                dutyContext
         );
 
         log.debug("ext_authz check: actor={}, action={}, resource={}, purpose={}, correlation={}, " +

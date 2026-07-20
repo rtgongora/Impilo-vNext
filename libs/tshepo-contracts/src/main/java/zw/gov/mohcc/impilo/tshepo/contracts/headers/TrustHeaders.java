@@ -84,6 +84,8 @@ public final class TrustHeaders {
     public static final String WORKSPACE_ID  = "x-workspace-id";
     public static final String PROGRAMME_ID  = "x-programme-id";
     public static final String SHIFT_ID      = "x-shift-id";
+    /** Signed, revocable WORK_CONTEXT duty token — the PDP's authoritative operational context. */
+    public static final String WORK_CONTEXT_TOKEN = "x-work-context-token";
 
     // ── Governance (Health OS §11) ────────────────────────────────────────
     public static final String ASSURANCE_LEVEL = "x-assurance-level";

@@ -36,8 +36,28 @@ public record AuthzInternalRequest(
         /** Optional active workflow escalation grant (x-escalation-grant-id). */
         String escalationGrantId,
         /** Optional workflow / review context (x-workflow-state). */
-        String workflowContext
+        String workflowContext,
+        /**
+         * The introspected WORK_CONTEXT duty token (x-work-context-token), or
+         * {@link DutyContext#absent()} when none was carried. When {@code usable()},
+         * its operational context is the authoritative facility/dept/ward/org/role
+         * for this decision; the loose headers above are validated against it.
+         */
+        DutyContext dutyContext
 ) {
+    /**
+     * Return a copy with the given roles (used to fold the WORK_CONTEXT duty role into
+     * the effective role set — additive, never removing a Keycloak-claim role).
+     */
+    public AuthzInternalRequest withRoles(List<String> newRoles) {
+        return new AuthzInternalRequest(
+                tenantId, actorId, actorType, newRoles, purposeOfUse, deviceFingerprint,
+                correlationId, facilityId, workspaceId, shiftId, method, path, action,
+                resourceType, resourceId, loaLevel, sessionId, bearerToken, providerId,
+                departmentId, wardId, programmeId, subjectId, assuranceLevel,
+                escalationGrantId, workflowContext, dutyContext);
+    }
+
     /**
      * Derive a human-readable action from method + path.
      */

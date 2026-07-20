@@ -268,6 +268,17 @@ public class TokenIssuanceService {
             return inactiveIntrospectResponse();
         }
 
+        Map<String, Object> contextClaims = java.util.Map.of();
+        if (entity.getContextClaims() != null && !entity.getContextClaims().isBlank()) {
+            try {
+                contextClaims = objectMapper.readValue(
+                        entity.getContextClaims(),
+                        new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+            } catch (Exception e) {
+                log.warn("Failed to parse context_claims for jti={}: {}", jti, e.getMessage());
+            }
+        }
+
         return new IntrospectResponse(
                 true,
                 entity.getJti(),
@@ -276,7 +287,9 @@ public class TokenIssuanceService {
                 entity.getScope(),
                 entity.getTargetService(),
                 entity.getSubjectRef(),
-                entity.getExpiresAt()
+                entity.getExpiresAt(),
+                entity.getTokenKind(),
+                contextClaims
         );
     }
 
@@ -358,7 +371,7 @@ public class TokenIssuanceService {
     }
 
     private IntrospectResponse inactiveIntrospectResponse() {
-        return new IntrospectResponse(false, null, null, null, null, null, null, null);
+        return new IntrospectResponse(false, null, null, null, null, null, null, null, null, java.util.Map.of());
     }
 
     private void publishOutboxEvent(String aggregateType, String aggregateId,

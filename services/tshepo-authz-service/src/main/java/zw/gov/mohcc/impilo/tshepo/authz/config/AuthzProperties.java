@@ -26,6 +26,11 @@ public class AuthzProperties {
     private String opaUrl = "http://localhost:8181";
     private String opaMode = "OFF";
     private String identityServiceUrl = "http://localhost:8181";
+    // WORK_CONTEXT duty-token binding. Mode: OFF (never read the token) | SHADOW (introspect +
+    // compare token↔headers + audit divergence, decision UNCHANGED) | ENFORCE (mismatch/revoked
+    // denies clinical writes). Default SHADOW — observe-only, never denies. See Phase B.
+    private String workContextMode = "SHADOW";
+    private String workContextIntrospectPath = "/v1/identity/tokens/introspect";
     private String auditServiceUrl = "http://localhost:8183";
     private String auditKafkaTopic = "tshepo.audit.events";
     private String keysServiceUrl = "http://localhost:8184";
@@ -182,6 +187,12 @@ public class AuthzProperties {
     public void setConsentEvaluatePath(String consentEvaluatePath) { this.consentEvaluatePath = consentEvaluatePath; }
     public String getIdentityServiceUrl() { return identityServiceUrl; }
     public void setIdentityServiceUrl(String identityServiceUrl) { this.identityServiceUrl = identityServiceUrl; }
+
+    public String getWorkContextMode() { return workContextMode; }
+    public void setWorkContextMode(String workContextMode) { this.workContextMode = workContextMode; }
+
+    public String getWorkContextIntrospectPath() { return workContextIntrospectPath; }
+    public void setWorkContextIntrospectPath(String workContextIntrospectPath) { this.workContextIntrospectPath = workContextIntrospectPath; }
     public String getAuditServiceUrl() { return auditServiceUrl; }
     public void setAuditServiceUrl(String auditServiceUrl) { this.auditServiceUrl = auditServiceUrl; }
     public String getAuditKafkaTopic() { return auditKafkaTopic; }

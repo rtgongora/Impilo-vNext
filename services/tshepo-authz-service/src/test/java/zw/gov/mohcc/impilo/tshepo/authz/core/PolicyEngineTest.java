@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.tshepo.authz.config.AuthzProperties;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.AuthzInternalRequest;
+import zw.gov.mohcc.impilo.tshepo.authz.dto.DutyContext;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyDecisionLogEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyRuleEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.repository.PolicyDecisionLogRepository;
@@ -90,7 +91,7 @@ class PolicyEngineTest {
                 null, "GET", "/v1/patients", action, resourceType, resourceId,
                 loaLevel, "session-abc", null,
                 null, null, null, null, null, null,
-                null, null
+                null, null, DutyContext.absent()
         );
     }
 
@@ -224,7 +225,7 @@ class PolicyEngineTest {
                 null, "GET", "/v1/patients", "GET:/v1/patients", "patients", null,
                 3, "session-abc", null,
                 providerPublicId, null, null, null, null, null,
-                null, null
+                null, null, DutyContext.absent()
         );
     }
 
@@ -409,7 +410,7 @@ class PolicyEngineTest {
                 null, "POST", path, action, resourceType, null,
                 3, "session-abc", null,
                 null, null, null, null, null, null,
-                null, null
+                null, null, DutyContext.absent()
         );
     }
 
@@ -587,7 +588,7 @@ class PolicyEngineTest {
                 "patients", "cpid-12345",
                 acrLoaLevel, "session-abc", null,
                 null, null, null, null, null, assuranceLevel,
-                null, null
+                null, null, DutyContext.absent()
         );
     }
 
@@ -660,7 +661,7 @@ class PolicyEngineTest {
                 "patients", "cpid-12345",
                 acrLoa, "session-abc", null,
                 null, null, null, null, subjectId, assuranceLevel,
-                null, null
+                null, null, DutyContext.absent()
         );
     }
 
@@ -673,7 +674,7 @@ class PolicyEngineTest {
                 "patients", ACTOR_ID,
                 3, "session-abc", null,
                 providerWorkActivated ? "PUB-PROVIDER-1" : null, null, null, null, ACTOR_ID, "LOA3",
-                null, null
+                null, null, DutyContext.absent()
         );
     }
 
@@ -1032,7 +1033,7 @@ class PolicyEngineTest {
                 null, httpMethod, path, action, resourceType, null,
                 3, "session-abc", null,
                 null, null, null, null, null, assuranceLevel,
-                null, null
+                null, null, DutyContext.absent()
         );
     }
 
@@ -1165,7 +1166,7 @@ class PolicyEngineTest {
                 base.resourceType(), null,
                 1, "session-abc", null,
                 null, null, null, null, null, "LOA1",
-                null, null);
+                null, null, DutyContext.absent());
 
         AuthzResponse resp = policyEngine.evaluate(req);
         assertEquals(Verdict.DENY, resp.verdict(),

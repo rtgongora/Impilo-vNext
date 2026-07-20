@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.tshepo.authz.config.AuthzProperties;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.AuthzInternalRequest;
+import zw.gov.mohcc.impilo.tshepo.authz.dto.DutyContext;
 import zw.gov.mohcc.impilo.tshepo.authz.dto.EscalationGrantView;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyDecisionLogEntity;
 import zw.gov.mohcc.impilo.tshepo.authz.persistence.entity.PolicyRuleEntity;
@@ -140,6 +141,21 @@ public class PolicyEngine {
                         0, startTime);
             }
         }
+
+        // ────────────────────────────────────────────────────────────────
+        // WORK_CONTEXT duty-token binding (Vashandi-proven "on-duty, here, in this
+        // role, right now"). Gated by tshepo.authz.work-context-mode:
+        //   OFF     — never read the token.
+        //   SHADOW  — introspect + compare token↔headers + audit divergence; NEVER denies
+        //             (may fold the proven duty role additively when the token matches).
+        //   ENFORCE — a mismatched/revoked token denies a mutating (clinical-write) request.
+        // Fail-open by construction (an absent/unresolvable token never denies).
+        // ────────────────────────────────────────────────────────────────
+        DutyBinding duty = bindWorkContext(request, startTime);
+        if (duty.deny() != null) {
+            return duty.deny();
+        }
+        request = duty.request();
 
         // ────────────────────────────────────────────────────────────────
         // Step 1: Risk scoring — device reputation
@@ -955,5 +971,123 @@ public class PolicyEngine {
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // WORK_CONTEXT duty-token binding
+    // ════════════════════════════════════════════════════════════════════
+
+    /** Result of the binding step: the (possibly role-augmented) request, and an optional deny. */
+    private record DutyBinding(AuthzInternalRequest request, AuthzResponse deny) {}
+
+    /**
+     * Bind the introspected WORK_CONTEXT duty token to this request. See the call site for
+     * the mode semantics. Returns the effective request (duty role folded in when the token
+     * matches) plus an optional ENFORCE denial. Never denies in OFF/SHADOW.
+     */
+    private DutyBinding bindWorkContext(AuthzInternalRequest request, long startTime) {
+        String mode = properties.getWorkContextMode();
+        if (mode == null || "OFF".equalsIgnoreCase(mode)) {
+            return new DutyBinding(request, null);
+        }
+        DutyContext dc = request.dutyContext();
+        if (dc == null) {
+            return new DutyBinding(request, null);
+        }
+        boolean enforce = "ENFORCE".equalsIgnoreCase(mode);
+        boolean protectedWrite = isMutating(request.method());
+
+        // Token carried but identity says inactive (revoked / expired / unknown jti).
+        if (dc.present() && !dc.active()) {
+            signalWorkContext(request, "WORK_CONTEXT_REVOKED", Map.of("reason", "introspection_inactive"));
+            if (enforce && protectedWrite) {
+                return new DutyBinding(request, denyAndLog(request, "WORK_TOKEN_REVOKED",
+                        "Work-context token is revoked or expired", 0, startTime));
+            }
+            return new DutyBinding(request, null);
+        }
+
+        // No usable token. Absence NEVER denies (S2S / citizen / non-duty actors legitimately
+        // carry none) — even under ENFORCE; it is only a shadow signal on a present-but-wrong-kind
+        // token during a clinical write.
+        if (!dc.usable()) {
+            if (protectedWrite && dc.present()) {
+                signalWorkContext(request, "WORK_CONTEXT_UNUSABLE",
+                        Map.of("tokenKind", String.valueOf(dc.tokenKind())));
+            }
+            return new DutyBinding(request, null);
+        }
+
+        // Usable token — compare its proven context against the loose client trust headers.
+        List<String> mismatches = new ArrayList<>();
+        if (dc.actorId() != null && request.actorId() != null
+                && !dc.actorId().equalsIgnoreCase(request.actorId())) {
+            mismatches.add("actor");
+        }
+        if (dc.facilityId() != null && request.facilityId() != null
+                && !dc.facilityId().equalsIgnoreCase(request.facilityId().toString())) {
+            mismatches.add("facility");
+        }
+        if (dc.workspaceId() != null && request.workspaceId() != null
+                && !dc.workspaceId().equalsIgnoreCase(request.workspaceId().toString())) {
+            mismatches.add("workspace");
+        }
+        if (dc.providerId() != null && request.providerId() != null
+                && !dc.providerId().equalsIgnoreCase(request.providerId())) {
+            mismatches.add("provider");
+        }
+
+        if (!mismatches.isEmpty()) {
+            signalWorkContext(request, "WORK_CONTEXT_MISMATCH", Map.of(
+                    "fields", String.join(",", mismatches),
+                    "tokenFacility", String.valueOf(dc.facilityId()),
+                    "headerFacility", String.valueOf(request.facilityId())));
+            if (enforce && protectedWrite) {
+                return new DutyBinding(request, denyAndLog(request, "WORK_TOKEN_CONTEXT_MISMATCH",
+                        "Trust headers do not match the duty token (" + String.join(",", mismatches) + ")",
+                        0, startTime));
+            }
+            // Shadow: the context is suspect — do NOT fold the duty role.
+            return new DutyBinding(request, null);
+        }
+
+        // Matched. Fold the duty role into the effective role set (additive — never removes a
+        // Keycloak-claim role) so policy rules authored against the duty role also match.
+        AuthzInternalRequest effective = request;
+        if (dc.role() != null && !dc.role().isBlank()) {
+            List<String> roles = new ArrayList<>(request.roles() != null ? request.roles() : List.of());
+            if (roles.stream().noneMatch(r -> r != null && r.equalsIgnoreCase(dc.role()))) {
+                roles.add(dc.role());
+                effective = request.withRoles(roles);
+            }
+        }
+        signalWorkContext(request, "WORK_CONTEXT_MATCHED", Map.of(
+                "facility", String.valueOf(dc.facilityId()),
+                "role", String.valueOf(dc.role()),
+                "assignment", String.valueOf(dc.assignmentId())));
+        return new DutyBinding(effective, null);
+    }
+
+    /** Emit a governance signal (event_outbox) + log for a work-context binding outcome. */
+    private void signalWorkContext(AuthzInternalRequest request, String eventType, Map<String, Object> extra) {
+        try {
+            Map<String, Object> payload = new HashMap<>(extra);
+            payload.put("actorId", request.actorId());
+            payload.put("tenantId", request.tenantId() != null ? request.tenantId().toString() : null);
+            payload.put("path", request.path());
+            payload.put("method", request.method());
+            payload.put("mode", properties.getWorkContextMode());
+            auditPublisher.queueGovernanceEvent(eventType, request.actorId(), payload);
+        } catch (Exception e) {
+            log.warn("Failed to emit work-context signal {}: {}", eventType, e.getMessage());
+        }
+        log.info("WORK_CONTEXT binding: {} actor={} path={} mode={}",
+                eventType, request.actorId(), request.path(), properties.getWorkContextMode());
+    }
+
+    private static boolean isMutating(String method) {
+        if (method == null) return false;
+        String m = method.toUpperCase();
+        return m.equals("POST") || m.equals("PUT") || m.equals("PATCH") || m.equals("DELETE");
     }
 }
