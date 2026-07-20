@@ -148,7 +148,9 @@ public class EmergencyService {
     /**
      * Look up a request by its human {@code requestReference} (the reference the 202 receipt returned
      * to an anonymous requester). Returns empty when unknown so the public status lane can 404 without
-     * leaking existence detail. Tenant-scoped: a reference from another tenant never resolves.
+     * leaking existence detail. Tenant-scoped first, then reference-only fallback (see inline comment):
+     * the reference is the requester's capability, so a tenant-header mismatch on the anonymous lane
+     * must not orphan the lookup. Public status lane only — authenticated reads use {@link #getRequest}.
      */
     @Transactional(readOnly = true)
     public Optional<EmergencyRequestEntity> findRequestByReference(UUID tenantId, String requestReference) {

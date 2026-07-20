@@ -87,7 +87,7 @@ class EmergencyServiceTest {
     }
 
     @Test
-    void findRequestByReferenceResolvesTenantScopedAndMissesReturnEmpty() {
+    void findRequestByReferenceResolvesTenantScopedThenFallsBackAcrossTenants() {
         UUID tenant = UUID.randomUUID();
         UUID otherTenant = UUID.randomUUID();
         EmergencyRequestEntity r = service.createRequest(tenant, "PUBLIC_ANONYMOUS", null,
@@ -98,10 +98,16 @@ class EmergencyServiceTest {
         // Resolves for the owning tenant.
         assertThat(service.findRequestByReference(tenant, ref)).isPresent()
                 .get().extracting(EmergencyRequestEntity::getId).isEqualTo(r.getId());
-        // Tenant isolation: a reference never resolves under another tenant.
-        assertThat(service.findRequestByReference(otherTenant, ref)).isEmpty();
-        // Unknown / blank references are empty, never an existence oracle.
+        // Cross-tenant reference fallback (b38bbca56): the estate runs two "default tenant"
+        // UUIDs, so the public status lane's synthesized tenant can differ from the tenant the
+        // intake stored under. The reference is the requester's capability — a tenant-scoped
+        // miss falls back to a reference-only lookup and still resolves the same request.
+        assertThat(service.findRequestByReference(otherTenant, ref)).isPresent()
+                .get().extracting(EmergencyRequestEntity::getId).isEqualTo(r.getId());
+        // A TRUE miss (reference known to NO tenant) and blank/null input stay empty —
+        // the public lane's uniform 404 never becomes an existence oracle.
         assertThat(service.findRequestByReference(tenant, "SOS-DOES-NOT-EXIST")).isEmpty();
+        assertThat(service.findRequestByReference(otherTenant, "SOS-DOES-NOT-EXIST")).isEmpty();
         assertThat(service.findRequestByReference(tenant, "   ")).isEmpty();
         assertThat(service.findRequestByReference(tenant, null)).isEmpty();
     }
