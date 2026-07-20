@@ -35,16 +35,23 @@ import java.util.UUID;
  *   <li>{@code POST /v1/abis/templates} — enroll an encrypted template (opaque subject_ref).</li>
  *   <li>{@code POST /v1/abis/verify} — routine 1:1 verification (fail-closed → UNAVAILABLE).</li>
  *   <li>{@code POST /v1/abis/identify} — restricted 1:N; requires
- *       {@code X-Identify-Reason} ∈ {ENROLMENT, RECOVERY, DEDUPLICATION}; returns candidates
- *       for adjudication, NEVER an automatic merge.</li>
+ *       {@code X-Identify-Reason} ∈ {ENROLMENT, RECOVERY, DEDUPLICATION, LOGIN}; returns
+ *       candidates for adjudication, NEVER an automatic merge.</li>
  * </ul>
+ *
+ * <p>{@code LOGIN} is the highest-risk 1:N reason: it backs biometric scan-to-login
+ * (experience-bff {@code /auth/biometric/identify-login}). This endpoint STILL only
+ * returns scored candidates — it NEVER authenticates. The single-strong-candidate
+ * gate, session minting, and fail-closed governance live entirely in the BFF; a
+ * false accept here would only surface candidates, never a session. Enabling the
+ * LOGIN path requires 1:N false-accept-rate governance sign-off.</p>
  */
 @RestController
 @RequestMapping("/v1/abis")
 public class AbisController {
 
     static final String IDENTIFY_REASON_HEADER = "X-Identify-Reason";
-    static final Set<String> ALLOWED_IDENTIFY_REASONS = Set.of("ENROLMENT", "RECOVERY", "DEDUPLICATION");
+    static final Set<String> ALLOWED_IDENTIFY_REASONS = Set.of("ENROLMENT", "RECOVERY", "DEDUPLICATION", "LOGIN");
 
     private final AbisTemplateService templateService;
 

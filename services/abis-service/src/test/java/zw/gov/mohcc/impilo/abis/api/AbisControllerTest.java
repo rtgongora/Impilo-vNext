@@ -124,6 +124,29 @@ class AbisControllerTest {
     }
 
     @Test
+    void identifyAcceptsLoginReasonForScanToLogin() throws Exception {
+        // LOGIN is a sanctioned high-risk 1:N reason (biometric scan-to-login). ABIS still
+        // only returns scored candidates for the BFF's single-strong-candidate gate — never
+        // an authentication decision.
+        when(templateService.identify(any(), any(), any(), eq("LOGIN"), any()))
+                .thenReturn(List.of(new IdentificationCandidate("subj-opaque-9", 0.97, "vendor match")));
+
+        mockMvc.perform(post("/v1/abis/identify")
+                        .header("X-Tenant-ID", TENANT)
+                        .header("X-Identify-Reason", "LOGIN")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"modality":"FINGERPRINT","probeBase64":"%s"}
+                                """.formatted(PROBE_B64)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reason").value("LOGIN"))
+                .andExpect(jsonPath("$.decision").value("CANDIDATES_FOR_ADJUDICATION"))
+                .andExpect(jsonPath("$.candidates", hasSize(1)))
+                .andExpect(jsonPath("$.candidates[0].subjectRef").value("subj-opaque-9"))
+                .andExpect(jsonPath("$.candidates[0].mergedInto").doesNotExist());
+    }
+
+    @Test
     void identifyReturnsCandidatesForAdjudicationNeverAMerge() throws Exception {
         when(templateService.identify(any(), any(), any(), eq("DEDUPLICATION"), any()))
                 .thenReturn(List.of(new IdentificationCandidate("subj-opaque-2", 0.91, "vendor match")));
