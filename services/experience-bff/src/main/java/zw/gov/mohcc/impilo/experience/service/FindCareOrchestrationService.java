@@ -180,7 +180,10 @@ public class FindCareOrchestrationService {
         String nameQuery = null;
         if (explicit != null) {
             token = explicit;
-            tokens = List.of(explicit);
+            // Expand the explicit chip token to its related-service family (e.g. MATERNITY ->
+            // [MATERNITY, ANTENATAL, OBSTETRICS]) so related capabilities are not siloed — this is
+            // what stops "Maternity" and "Antenatal care" from returning disjoint result sets.
+            tokens = taxonomy.expand(explicit);
         } else if (q != null) {
             FindCareServiceTaxonomy.Interpretation interp = taxonomy.interpret(q);
             token = interp.primaryToken();
@@ -201,9 +204,12 @@ public class FindCareOrchestrationService {
         }
 
         // (b) Registry truth: facilities carrying an ACTIVE matching capability (or plain directory).
+        // The whole related-service family is sent (comma-joined) so a search matches any of them;
+        // TUSO splits the facet and ORs the tokens.
+        String serviceParam = tokens.isEmpty() ? null : String.join(",", tokens);
         JsonNode paged;
         try {
-            paged = tuso.publicFacilityServiceSearch(token, nameQuery, province, district, facilityType,
+            paged = tuso.publicFacilityServiceSearch(serviceParam, nameQuery, province, district, facilityType,
                     safePage, safeSize);
         } catch (Exception e) {
             log.warn("Find-care registry search failed: {}", e.getMessage());

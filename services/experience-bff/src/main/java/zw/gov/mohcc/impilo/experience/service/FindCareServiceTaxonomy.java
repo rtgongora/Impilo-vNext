@@ -72,6 +72,13 @@ public class FindCareServiceTaxonomy {
      * tokens against capability code OR display name, so the tokens double as both.
      */
     private static final Map<String, List<String>> SYNONYMS = new LinkedHashMap<>();
+
+    /**
+     * Related-service families keyed by canonical token → the tokens that should be searched together.
+     * Populated from {@link #SYNONYMS} co-occurrence in the static initializer below.
+     */
+    private static final Map<String, List<String>> TOKEN_FAMILY = new LinkedHashMap<>();
+
     static {
         // Maternal / child
         SYNONYMS.put("maternity", List.of("MATERNITY", "ANTENATAL"));
@@ -144,6 +151,45 @@ public class FindCareServiceTaxonomy {
         for (List<String> tokens : SYNONYMS.values()) {
             KNOWN_TOKENS.addAll(tokens);
         }
+
+        // Related-service families, derived from the curated synonym groups: two tokens are related
+        // when they co-occur in any single synonym's token list (1-hop, non-transitive). This is what
+        // lets a MATERNITY search also return ANTENATAL-coded clinics (and vice versa) instead of the
+        // two capability codes siloing their result sets.
+        Map<String, Set<String>> fam = new LinkedHashMap<>();
+        for (List<String> group : SYNONYMS.values()) {
+            for (String t : group) {
+                fam.computeIfAbsent(t, k -> new LinkedHashSet<>()).addAll(group);
+            }
+        }
+        for (Map.Entry<String, Set<String>> e : fam.entrySet()) {
+            TOKEN_FAMILY.put(e.getKey(), List.copyOf(e.getValue()));
+        }
+    }
+
+    /**
+     * Expand a single capability token into its related-service family (the requested token first,
+     * then any co-occurring tokens). An unknown token returns just itself. This is applied to the
+     * explicit chip {@code service=} param so "Maternity" and "Antenatal care" stop returning
+     * disjoint result sets. Never returns an empty list for a non-blank token.
+     */
+    public List<String> expand(String token) {
+        if (token == null || token.isBlank()) {
+            return List.of();
+        }
+        String norm = token.trim().toUpperCase();
+        List<String> family = TOKEN_FAMILY.get(norm);
+        if (family == null || family.isEmpty()) {
+            return List.of(norm);
+        }
+        List<String> out = new ArrayList<>();
+        out.add(norm);
+        for (String t : family) {
+            if (!out.contains(t)) {
+                out.add(t);
+            }
+        }
+        return List.copyOf(out);
     }
 
     /** Intent-flag phrases (do not, on their own, produce a capability token). */
