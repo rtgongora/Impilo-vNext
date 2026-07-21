@@ -1886,10 +1886,18 @@ public class TeleconsultController {
                     .put("system", "http://impilo.mohcc.gov.zw/fhir/teleconsult-referral")
                     .put("value", referralId);
 
-            fhirGatewayClient.forward(tenantId, correlationId, actorId,
+            JsonNode fwd = fhirGatewayClient.forward(tenantId, correlationId, actorId,
                     "DiagnosticReport", "CREATE", objectMapper.writeValueAsString(report),
                     patientRef, purposeOfUse);
-            return true;
+            // Honesty contract: only claim the summary was written when the gateway actually
+            // DELIVERED it (SUCCESS). NO_ROUTE / FORWARD_FAILED / CONSENT_DENIED are audited but
+            // mean the SHR did not receive the projection — the UI must be able to prompt a retry.
+            String outcome = fwd == null ? null : fwd.path("data").path("outcome").asText(null);
+            boolean delivered = "SUCCESS".equals(outcome);
+            if (!delivered) {
+                log.warn("Teleconsult {} FHIR summary NOT delivered — gateway outcome={}", referralId, outcome);
+            }
+            return delivered;
         } catch (Exception ex) {
             log.error("Teleconsult FHIR writeback FAILED for {} — clinical summary NOT recorded: {}",
                     referralId, ex.getMessage());
