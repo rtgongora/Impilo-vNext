@@ -26,6 +26,7 @@ import { TelemedicineRtcHealthPanel } from "@/components/telemedicine/Telemedici
 import { TelemedicineLiveSessionEmbed } from "@/components/live/TelemedicineLiveSessionEmbed";
 import { WaitingRoomAdmitControl } from "@/components/telemedicine/WaitingRoomAdmitControl";
 import { TeleconsultOrdersSection } from "@/components/telemedicine/TeleconsultOrdersSection";
+import { TeleconsultTasksPanel } from "@/components/telemedicine/TeleconsultTasksPanel";
 import { ReferralActionMenu } from "@/components/telemedicine/ReferralActionMenu";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -465,6 +466,9 @@ export default function TeleconsultSessionPage() {
             Coded orders require a linked encounter. This referral has no encounter reference.
           </p>
         )}
+
+        {/* TM-B7: referral-scoped follow-up/execution tasks + closure preconditions. */}
+        <TeleconsultTasksPanel sessionId={sessionId} patientCpid={session?.patientCpid as string | undefined} />
 
         <label className="block">
           <span className="text-xs font-medium text-muted-foreground">Follow-up instructions</span>

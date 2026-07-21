@@ -208,6 +208,77 @@ export function useReferralLifecycleAction(sessionId: string) {
   });
 }
 
+// ── TM-B7: in-session orders + tasks (execution loop) ──────────────────────
+
+/** A task linked to a teleconsult referral (follow-up, result review, patient action). */
+export interface ReferralTask {
+  taskId: string;
+  referralId: string | null;
+  sourceRef: string | null;
+  taskType: string;
+  assigneeId: string | null;
+  assigneeRole: string | null;
+  status: string;
+  blocksClosure: boolean;
+  dueAt: string | null;
+  notes: string | null;
+  createdBy: string | null;
+  createdAt: string | null;
+  completedBy: string | null;
+  completedAt: string | null;
+}
+
+/** TM-B7 — tasks scoped to a teleconsult session (referral). */
+export function useReferralTasks(sessionId: string | null | undefined) {
+  return useQuery<ApiResponse<ReferralTask[]>>({
+    queryKey: ["teleconsult-tasks", sessionId ?? null],
+    enabled: Boolean(sessionId),
+    queryFn: () =>
+      apiClient.get<ApiResponse<ReferralTask[]>>(
+        `/internal/v1/teleconsult/sessions/${encodeURIComponent(String(sessionId))}/tasks`,
+      ),
+  });
+}
+
+/** TM-B7 — create a follow-up / execution task on the current teleconsult session. */
+export function useCreateReferralTask(sessionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<ReferralTask>,
+    unknown,
+    { taskType: string; notes?: string; assigneeRole?: string; dueAt?: string; blocksClosure?: boolean }
+  >({
+    mutationFn: (payload) =>
+      apiClient.post<ApiResponse<ReferralTask>>(
+        `/internal/v1/teleconsult/sessions/${encodeURIComponent(sessionId)}/tasks`,
+        payload,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teleconsult-tasks", sessionId] });
+      queryClient.invalidateQueries({ queryKey: ["teleconsult-allowed-actions", sessionId] });
+    },
+  });
+}
+
+/** TM-B7 — place a diagnostic/clinical order from within the teleconsult session. */
+export function usePlaceReferralOrder(sessionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<Record<string, unknown>>,
+    unknown,
+    { orderType: string; patientCpid: string; ziboOrderCode?: string; priority?: string; clinicalNotes?: string }
+  >({
+    mutationFn: (payload) =>
+      apiClient.post<ApiResponse<Record<string, unknown>>>(
+        `/internal/v1/teleconsult/sessions/${encodeURIComponent(sessionId)}/orders`,
+        payload,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teleconsult-tasks", sessionId] });
+    },
+  });
+}
+
 export function useCreateTelemedicineSession() {
   const queryClient = useQueryClient();
 
