@@ -6,7 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
@@ -22,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,25 +68,39 @@ public class HpaEnrichmentImportService {
     static final String IDENTITY_CONFLICT = "IDENTITY_CONFLICT";
     static final String QUARANTINED_DATA_QUALITY = "QUARANTINED_DATA_QUALITY";
 
+    /**
+     * Records reconciled per database transaction. The apply commits incrementally
+     * in chunks (rather than one estate-wide transaction) so the Hibernate
+     * persistence context stays small — a single giant transaction accumulates
+     * every created/loaded entity and dirty-checks the whole set on each flush,
+     * degrading super-linearly across 6k+ records. Chunking also makes the import
+     * resumable: committed facilities carry the deterministic HPA_INSTITUTION_ID,
+     * so a re-run matches them and creates nothing new.
+     */
+    static final int CHUNK_SIZE = 200;
+
     private final JdbcTemplate jdbc;
     private final ObjectMapper objectMapper;
     private final FacilityMatchService matchService;
     private final FacilityRepository facilityRepository;
     private final FacilityIdentifierRepository identifierRepository;
     private final FacilityContactRepository contactRepository;
+    private final TransactionTemplate txTemplate;
 
     public HpaEnrichmentImportService(JdbcTemplate jdbc,
                                       ObjectMapper objectMapper,
                                       FacilityMatchService matchService,
                                       FacilityRepository facilityRepository,
                                       FacilityIdentifierRepository identifierRepository,
-                                      FacilityContactRepository contactRepository) {
+                                      FacilityContactRepository contactRepository,
+                                      PlatformTransactionManager transactionManager) {
         this.jdbc = jdbc;
         this.objectMapper = objectMapper;
         this.matchService = matchService;
         this.facilityRepository = facilityRepository;
         this.identifierRepository = identifierRepository;
         this.contactRepository = contactRepository;
+        this.txTemplate = new TransactionTemplate(transactionManager);
     }
 
     /** Import request: the server-side feed path + dry-run flag (+ optional explicit tenant for rigs). */
@@ -97,7 +113,9 @@ public class HpaEnrichmentImportService {
             int routedToReview, int quarantined, int unchangedIdempotent,
             Map<String, Integer> countsByOutcome) {}
 
-    @Transactional
+    // NOT @Transactional: the orchestrator commits per chunk (see flushChunk) so
+    // no single transaction spans the whole estate. The batch header and finalise
+    // rows are written via JdbcTemplate, which autocommits outside a transaction.
     public HpaImportSummary importFeed(HpaImportRequest request) {
         UUID tenantId = resolveTenant(request.tenantId());
         String actorId = resolveActor();
@@ -106,42 +124,97 @@ public class HpaEnrichmentImportService {
             throw new IllegalArgumentException("HPA feed not readable: " + request.feedPath());
         }
 
-        long liveTusoScanned = facilityRepository.findByTenantId(tenantId).size();
+        long liveTusoScanned = facilityRepository.countByTenantId(tenantId);
         Long batchId = insertBatch(tenantId, request.dryRun(), request.feedChecksum(), liveTusoScanned, actorId);
 
-        Map<String, Integer> counts = new LinkedHashMap<>();
-        int total = 0, enriched = 0, createdEst = 0, createdUnresolved = 0,
-                review = 0, quarantine = 0, unchanged = 0;
-
+        Tallies t = new Tallies();
+        List<JsonNode> chunk = new ArrayList<>(CHUNK_SIZE);
         try (BufferedReader reader = Files.newBufferedReader(feed, StandardCharsets.UTF_8)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.isBlank()) {
                     continue;
                 }
-                total++;
-                JsonNode record = objectMapper.readTree(line);
-                Outcome outcome = reconcile(tenantId, actorId, batchId, record, request.dryRun());
-                counts.merge(outcome.decision, 1, Integer::sum);
-                switch (outcome.category) {
-                    case ENRICH -> enriched++;
-                    case CREATE_ESTABLISHMENT -> createdEst++;
-                    case CREATE_UNRESOLVED -> createdUnresolved++;
-                    case REVIEW -> review++;
-                    case QUARANTINE -> quarantine++;
-                    case IDEMPOTENT -> unchanged++;
+                chunk.add(objectMapper.readTree(line));
+                if (chunk.size() >= CHUNK_SIZE) {
+                    flushChunk(tenantId, actorId, batchId, chunk, request.dryRun(), t);
+                    chunk.clear();
                 }
+            }
+            if (!chunk.isEmpty()) {
+                flushChunk(tenantId, actorId, batchId, chunk, request.dryRun(), t);
             }
         } catch (IOException e) {
             updateBatchStatus(batchId, "FAILED");
             throw new IllegalStateException("HPA feed read failed: " + e.getMessage(), e);
         }
 
-        finaliseBatch(batchId, total, enriched, createdEst, createdUnresolved, review, quarantine, unchanged, counts);
-        log.info("HPA import batch={} dryRun={} total={} enriched={} created={} unresolved={} review={} quarantine={} idempotent={}",
-                batchId, request.dryRun(), total, enriched, createdEst, createdUnresolved, review, quarantine, unchanged);
-        return new HpaImportSummary(batchId, request.dryRun(), total, liveTusoScanned,
-                enriched, createdEst, createdUnresolved, review, quarantine, unchanged, counts);
+        finaliseBatch(batchId, t.total, t.enriched, t.createdEst, t.createdUnresolved,
+                t.review, t.quarantine, t.idempotent, t.counts);
+        if (t.failed > 0) {
+            updateBatchStatus(batchId, "COMPLETED_WITH_FAILURES");
+        }
+        log.info("HPA import batch={} dryRun={} total={} enriched={} created={} unresolved={} review={} quarantine={} idempotent={} failed={}",
+                batchId, request.dryRun(), t.total, t.enriched, t.createdEst, t.createdUnresolved,
+                t.review, t.quarantine, t.idempotent, t.failed);
+        return new HpaImportSummary(batchId, request.dryRun(), t.total, liveTusoScanned,
+                t.enriched, t.createdEst, t.createdUnresolved, t.review, t.quarantine, t.idempotent, t.counts);
+    }
+
+    /**
+     * Reconcile one chunk in a single transaction. Each chunk transaction gets its
+     * own short-lived persistence context (open-in-view is disabled), closed on
+     * commit — so no entity state accumulates across chunks and flush cost stays
+     * bounded to CHUNK_SIZE records. If the chunk fails as a unit, each record is
+     * retried in its own transaction so one poison row cannot drop the rest.
+     */
+    private void flushChunk(UUID tenantId, String actorId, long batchId,
+                            List<JsonNode> chunk, boolean dryRun, Tallies tallies) {
+        List<JsonNode> records = List.copyOf(chunk);
+        try {
+            List<Outcome> outcomes = txTemplate.execute(status -> {
+                List<Outcome> os = new ArrayList<>(records.size());
+                for (JsonNode record : records) {
+                    os.add(reconcile(tenantId, actorId, batchId, record, dryRun));
+                }
+                return os;
+            });
+            outcomes.forEach(tallies::add);
+        } catch (RuntimeException chunkFailure) {
+            log.warn("HPA chunk of {} records failed as a unit — retrying individually: {}",
+                    records.size(), chunkFailure.toString());
+            for (JsonNode record : records) {
+                try {
+                    Outcome outcome = txTemplate.execute(status ->
+                            reconcile(tenantId, actorId, batchId, record, dryRun));
+                    tallies.add(outcome);
+                } catch (RuntimeException recordFailure) {
+                    tallies.total++;
+                    tallies.failed++;
+                    log.warn("HPA record failed srk={}: {}",
+                            text(record, "source_record_key"), recordFailure.toString());
+                }
+            }
+        }
+    }
+
+    /** Mutable running totals for the import — mirrors the HpaImportSummary fields. */
+    private static final class Tallies {
+        int total, enriched, createdEst, createdUnresolved, review, quarantine, idempotent, failed;
+        final Map<String, Integer> counts = new LinkedHashMap<>();
+
+        void add(Outcome o) {
+            total++;
+            counts.merge(o.decision(), 1, Integer::sum);
+            switch (o.category()) {
+                case ENRICH -> enriched++;
+                case CREATE_ESTABLISHMENT -> createdEst++;
+                case CREATE_UNRESOLVED -> createdUnresolved++;
+                case REVIEW -> review++;
+                case QUARANTINE -> quarantine++;
+                case IDEMPOTENT -> idempotent++;
+            }
+        }
     }
 
     // ── Reconciliation ──────────────────────────────────────────────────────
