@@ -124,8 +124,11 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
      * index on name). Each row = [FacilityEntity, similarity score]. Steward
      * material — candidates are never disclosed to registrants.
      */
+    // Returns (facility id, score) pairs — NOT f.* : a native query mapped to
+    // List<Object[]> yields raw columns, so selecting f.* would make row[0] the id
+    // column (a Number), never a FacilityEntity. The caller loads the entity by id.
     @org.springframework.data.jpa.repository.Query(value =
-            "SELECT f.*, similarity(lower(f.name), :normalisedName) AS score"
+            "SELECT f.id AS id, similarity(lower(f.name), :normalisedName) AS score"
                     + " FROM tuso.facility f"
                     + " WHERE f.tenant_id = :tenantId"
                     + "   AND similarity(lower(f.name), :normalisedName) >= :minScore"

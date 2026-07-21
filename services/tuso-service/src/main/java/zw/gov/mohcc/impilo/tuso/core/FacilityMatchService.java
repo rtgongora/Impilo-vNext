@@ -88,8 +88,14 @@ public class FacilityMatchService {
             String normalised = normalise(name);
             for (Object[] row : facilityRepository.findSimilarByName(
                     tenantId, normalised, sameDistrictSimilarityThreshold)) {
-                FacilityEntity facility = (FacilityEntity) row[0];
+                // Native query returns (facility id, score) columns — row[0] is the id
+                // (a Number), NOT an entity — so load the FacilityEntity by id.
+                Long facilityId = ((Number) row[0]).longValue();
                 double score = ((Number) row[1]).doubleValue();
+                FacilityEntity facility = facilityRepository.findById(facilityId).orElse(null);
+                if (facility == null) {
+                    continue;
+                }
                 boolean sameDistrict = district != null && !district.isBlank()
                         && district.trim().equalsIgnoreCase(facility.getDistrict());
                 double threshold = sameDistrict ? sameDistrictSimilarityThreshold : nameSimilarityThreshold;
