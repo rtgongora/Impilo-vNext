@@ -53,6 +53,10 @@ rito:
   outbox:
     poll-interval-ms: 2000
   emit-mode: ${RITO_EMIT_MODE:DUAL}
+  # RW4: how often the reputation aggregator recomputes provider summaries from
+  # PUBLISHED ratings. Derived read-model — safe to recompute frequently.
+  reputation:
+    recompute-interval-ms: ${RITO_REPUTATION_RECOMPUTE_INTERVAL_MS:60000}
   # Signal-ingestion topics consumed from sibling systems-of-record. Rito treats these as
   # read-only quality/safety signals — it never owns the source record (see SoR boundary doc).
   signals:
