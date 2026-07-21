@@ -188,6 +188,61 @@ class TelemedicineOrchestrationServiceTest {
     }
 
     @Test
+    void authorityGate_enforce_blocksAcceptWhenProviderNotActive() {
+        gateProperties.setMode(zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.ENFORCE);
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "SUBMITTED");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+
+            PctDomainException ex = org.junit.jupiter.api.Assertions.assertThrows(PctDomainException.class,
+                    () -> service.acceptReferral(referralId.toString(),
+                            Map.of("accepted_by", "p1",
+                                    "authority", Map.of("resolved", true, "status", "SUSPENDED"))));
+            assertThat(ex.getCode()).isEqualTo("PROVIDER_NOT_AUTHORIZED");
+            assertThat(ex.getStatus()).isEqualTo(403);
+            assertThat(referral.getStatus()).isEqualTo("SUBMITTED"); // not accepted
+        }
+    }
+
+    @Test
+    void authorityGate_enforce_allowsAcceptWhenProviderActive() {
+        gateProperties.setMode(zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.ENFORCE);
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "SUBMITTED");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+            when(referralRepository.save(any(ReferralEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            service.acceptReferral(referralId.toString(),
+                    Map.of("accepted_by", "p1", "authority", Map.of("resolved", true, "status", "ACTIVE")));
+            assertThat(referral.getStatus()).isEqualTo("ACCEPTED");
+        }
+    }
+
+    @Test
+    void authorityGate_shadow_doesNotBlockUnresolvedProvider() {
+        gateProperties.setMode(zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.SHADOW);
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "SUBMITTED");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+            when(referralRepository.save(any(ReferralEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            // resolved:false (e.g. VARAPI unreachable) — shadow records but never blocks.
+            service.acceptReferral(referralId.toString(),
+                    Map.of("accepted_by", "p1", "authority", Map.of("resolved", false, "status", "UNKNOWN")));
+            assertThat(referral.getStatus()).isEqualTo("ACCEPTED");
+        }
+    }
+
+    @Test
     void attachRecording_writes_ref_to_the_matching_referral() {
         UUID referralId = UUID.randomUUID();
         ReferralEntity referral = newReferral(referralId, "COMPLETED");

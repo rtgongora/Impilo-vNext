@@ -745,6 +745,7 @@ public class TeleconsultController {
             @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
             @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(value = CompanionHeaders.PROVIDER_ID, required = false) String providerId,
             @RequestBody(required = false) Map<String, Object> body) {
         try {
             telemedicineGovernanceService.assertGovernedMutate();
@@ -758,6 +759,9 @@ public class TeleconsultController {
                 copyIfPresent(body, acceptance, "scheduled_at", "scheduledAt");
                 copyIfPresent(body, acceptance, "notes", "note");
             }
+            // TM-B8 authority gate: resolve the accepting provider's VARAPI standing and attach
+            // the evidence. PCT is the authoritative enforcement point (shadow-then-enforce).
+            acceptance.put("authority", resolveAcceptAuthority(providerId, actorId));
             var accepted = pctClient.acceptReferral(id, acceptance);
             emitTelemedicineNotification("TELECONSULT_ACCEPTED", accepted, actorId, "Teleconsult request accepted.");
             telemedicineGovernanceService.audit(
@@ -783,7 +787,7 @@ public class TeleconsultController {
             @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
             @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
-        return accept(id, requestId, correlationId, tenantId, purposeOfUse, facilityId, actorId, null);
+        return accept(id, requestId, correlationId, tenantId, purposeOfUse, facilityId, actorId, null, null);
     }
 
     private static void copyIfPresent(Map<String, Object> from, Map<String, Object> to, String toKey, String altKey) {
@@ -1169,6 +1173,39 @@ public class TeleconsultController {
     private void applyBillingContext(Map<String, Object> payload, String patientCpid,
                                      String facilityRef, Map<String, Object> body) {
         billingContextService.applyBillingContext(payload, patientCpid, facilityRef, body);
+    }
+
+    /**
+     * TM-B8: resolve the accepting provider's VARAPI standing (derived {@code status} axis:
+     * ACTIVE / SUSPENDED / REVOKED) as authority evidence for PCT's accept gate. Best-effort —
+     * a VARAPI outage or unresolved provider yields {@code resolved:false} (PCT records it in
+     * shadow; only ENFORCE blocks). Never throws.
+     */
+    private Map<String, Object> resolveAcceptAuthority(String providerId, String actorId) {
+        Map<String, Object> authority = new LinkedHashMap<>();
+        String id = firstNonBlank(providerId, actorId);
+        authority.put("checker", "experience-bff");
+        authority.put("providerId", id);
+        if (id == null || id.isBlank()) {
+            authority.put("resolved", false);
+            authority.put("status", "UNKNOWN");
+            return authority;
+        }
+        try {
+            JsonNode provider = varapiClient.getProvider(id);
+            if (provider == null || provider.isNull() || !provider.hasNonNull("status")) {
+                authority.put("resolved", false);
+                authority.put("status", "UNKNOWN");
+            } else {
+                authority.put("resolved", true);
+                authority.put("status", provider.get("status").asText("UNKNOWN"));
+            }
+        } catch (Exception e) {
+            log.warn("Provider authority resolution failed for {}: {}", id, e.getMessage());
+            authority.put("resolved", false);
+            authority.put("status", "UNKNOWN");
+        }
+        return authority;
     }
 
     private ResponseEntity<Map<String, Object>> ok(Object data, String requestId, String correlationId, HttpStatus status) {

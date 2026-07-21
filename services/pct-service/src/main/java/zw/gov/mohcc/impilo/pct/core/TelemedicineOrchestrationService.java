@@ -290,9 +290,44 @@ public class TelemedicineOrchestrationService {
         return toReferralPayload(saved);
     }
 
+    /**
+     * Provider-authority-on-accept gate (TM-B8). The BFF resolves the accepting provider's
+     * VARAPI status (derived axis: ACTIVE / SUSPENDED / REVOKED) and attaches a structured
+     * {@code authority} block. PCT is the authoritative backstop: an unresolved or non-ACTIVE
+     * provider fails the gate. Shadow-then-enforce — SHADOW records, ENFORCE rejects 403
+     * {@code PROVIDER_NOT_AUTHORIZED}. Licence/active axes fail closed.
+     */
+    @SuppressWarnings("unchecked")
+    private void assertAuthorityForAccept(ReferralEntity entity, Map<String, Object> request) {
+        var mode = gateProperties.getMode();
+        if (mode == zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.OFF) {
+            return;
+        }
+        Object authorityObj = request == null ? null : request.get("authority");
+        Map<String, Object> authority = authorityObj instanceof Map ? (Map<String, Object>) authorityObj : Map.of();
+        boolean resolved = Boolean.parseBoolean(String.valueOf(authority.getOrDefault("resolved", "false")));
+        String status = defaulted(asString(authority.get("status")), "").trim().toUpperCase(Locale.ROOT);
+        boolean satisfied = resolved && "ACTIVE".equals(status);
+        try {
+            gateRecorder.recordGate("authority_accept", satisfied, mode.name(),
+                    "resolved=" + resolved + " status=" + status);
+        } catch (Exception e) {
+            log.warn("Authority gate telemetry failed for referral {}: {}", entity.getReferralId(), e.getMessage());
+        }
+        if (!satisfied) {
+            log.warn("Authority gate [{}] NOT satisfied for referral {} (resolved={}, status={})",
+                    mode, entity.getReferralId(), resolved, status);
+            if (mode == zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.ENFORCE) {
+                throw new PctDomainException("PROVIDER_NOT_AUTHORIZED", 403,
+                        "The accepting provider is not in good standing (status=" + status + ").");
+            }
+        }
+    }
+
     @Transactional
     public Map<String, Object> acceptReferral(String referralId, Map<String, Object> request) {
         ReferralEntity entity = getReferralEntity(referralId);
+        assertAuthorityForAccept(entity, request);
         referralStateMachine.apply(entity, ReferralStatus.ACCEPTED, "accept");
         Map<String, Object> acceptance = new LinkedHashMap<>();
         acceptance.put("responseType", "ACCEPTED");

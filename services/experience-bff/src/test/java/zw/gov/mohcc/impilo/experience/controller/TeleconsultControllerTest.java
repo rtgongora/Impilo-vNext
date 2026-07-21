@@ -37,6 +37,7 @@ import org.mockito.ArgumentCaptor;
 class TeleconsultControllerTest {
 
     private PctServiceClient pctClient;
+    private VarapiServiceClient varapiClient;
     private MvumoServiceClient mvumoClient;
     private CostaServiceClient costaClient;
     private CoverageServiceClient coverageClient;
@@ -57,7 +58,7 @@ class TeleconsultControllerTest {
         pctClient = Mockito.mock(PctServiceClient.class);
         mvumoClient = Mockito.mock(MvumoServiceClient.class);
         DocumentServiceClient documentClient = Mockito.mock(DocumentServiceClient.class);
-        VarapiServiceClient varapiClient = Mockito.mock(VarapiServiceClient.class);
+        varapiClient = Mockito.mock(VarapiServiceClient.class);
         TusoServiceClient tusoClient = Mockito.mock(TusoServiceClient.class);
         coverageClient = Mockito.mock(CoverageServiceClient.class);
         // Real billing-context service over the mocked coverage/tuso clients — the extraction
@@ -95,12 +96,43 @@ class TeleconsultControllerTest {
         Mockito.when(pctClient.acceptReferral(eq("ref-401"), any())).thenThrow(upstream);
 
         var response = controller.accept(
-                "ref-401", "req-1", "corr-1", "tenant-a", "TREATMENT", "fac-1", "provider-1", Map.of());
+                "ref-401", "req-1", "corr-1", "tenant-a", "TREATMENT", "fac-1", "provider-1", null, Map.of());
 
         assertEquals(403, response.getStatusCode().value());
         assertNotNull(response.getBody());
         Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
         assertEquals("PROVIDER_NOT_AUTHORIZED", error.get("code"));
+    }
+
+    @Test
+    void acceptAttachesResolvedProviderAuthorityFromVarapi() {
+        // TM-B8: the accept payload sent to PCT carries the resolved VARAPI standing.
+        Mockito.when(varapiClient.getProvider(eq("PROV-1")))
+                .thenReturn(objectMapper.createObjectNode().put("status", "ACTIVE"));
+        Mockito.when(pctClient.acceptReferral(eq("ref-a"), any()))
+                .thenReturn(objectMapper.createObjectNode().put("id", "ref-a"));
+        ArgumentCaptor<Map<String, Object>> cap = ArgumentCaptor.forClass(Map.class);
+
+        controller.accept("ref-a", "req", "corr", "tenant", "TREATMENT", "fac", "actor-1", "PROV-1", Map.of());
+
+        Mockito.verify(pctClient).acceptReferral(eq("ref-a"), cap.capture());
+        Map<?, ?> authority = (Map<?, ?>) cap.getValue().get("authority");
+        assertEquals(true, authority.get("resolved"));
+        assertEquals("ACTIVE", authority.get("status"));
+    }
+
+    @Test
+    void acceptMarksAuthorityUnresolvedWhenVarapiFails() {
+        Mockito.when(varapiClient.getProvider(any())).thenThrow(new RuntimeException("varapi down"));
+        Mockito.when(pctClient.acceptReferral(eq("ref-b"), any()))
+                .thenReturn(objectMapper.createObjectNode().put("id", "ref-b"));
+        ArgumentCaptor<Map<String, Object>> cap = ArgumentCaptor.forClass(Map.class);
+
+        controller.accept("ref-b", "req", "corr", "tenant", "TREATMENT", "fac", "actor-1", "PROV-1", Map.of());
+
+        Mockito.verify(pctClient).acceptReferral(eq("ref-b"), cap.capture());
+        Map<?, ?> authority = (Map<?, ?>) cap.getValue().get("authority");
+        assertEquals(false, authority.get("resolved")); // BFF never blocks; PCT decides
     }
 
     @Test
@@ -110,7 +142,7 @@ class TeleconsultControllerTest {
                 .thenThrow(new RuntimeException("connection refused"));
 
         var response = controller.accept(
-                "ref-500", "req-1", "corr-1", "tenant-a", "TREATMENT", "fac-1", "provider-1", Map.of());
+                "ref-500", "req-1", "corr-1", "tenant-a", "TREATMENT", "fac-1", "provider-1", null, Map.of());
 
         assertEquals(502, response.getStatusCode().value());
         Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
@@ -711,7 +743,7 @@ class TeleconsultControllerTest {
         Mockito.when(pctClient.acceptReferral(eq("ref-77"), any())).thenReturn(accepted);
 
         var response = controller.accept(
-                "ref-77", "req-a", "corr-a", "tenant-a", "TREATMENT", "fac-1", "dr-ncube",
+                "ref-77", "req-a", "corr-a", "tenant-a", "TREATMENT", "fac-1", "dr-ncube", null,
                 Map.of("receiving_facility_id", "fac-99", "scheduled_at", "2026-08-01T10:00:00Z", "notes", "review am"));
 
         assertEquals(200, response.getStatusCode().value());
