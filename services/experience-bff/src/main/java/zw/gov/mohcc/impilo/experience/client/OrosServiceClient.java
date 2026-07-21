@@ -67,6 +67,36 @@ public class OrosServiceClient {
     }
 
     /**
+     * Place an order originating from a governed telemedicine consultation (TM-B7).
+     * Stamps {@code requestSource=TELECONSULT} and {@code sourceRef=referralId} so the order's
+     * provenance links back to the virtual-care case (and the OROS duplicate-order guard can key
+     * on referral + coded item).
+     *
+     * @param referralId  the owning teleconsult referral id (== sessionId)
+     * @param ziboOrderCode the coded item (drives the duplicate guard); may be {@code null}
+     */
+    public JsonNode placeTeleconsultOrder(String referralId, String orderType, String priority,
+                                          String patientCpid, String ziboOrderCode,
+                                          String clinicalNotes, List<Map<String, Object>> items) {
+        String url = baseUrl + "/v1/orders";
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("orderType", orderType);
+        if (priority != null) body.put("priority", priority);
+        body.put("patientCpid", patientCpid);
+        body.put("requestSource", "TELECONSULT");
+        body.put("sourceRef", referralId);
+        if (ziboOrderCode != null) body.put("ziboOrderCode", ziboOrderCode);
+        if (clinicalNotes != null) body.put("clinicalNotes", clinicalNotes);
+        if (items != null && !items.isEmpty()) body.put("items", items);
+
+        log.info("OROS: Placing TELECONSULT order type={} referral={} code={}",
+                orderType, referralId, ziboOrderCode);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Get a single order by its ID.
      *
      * @param orderId the OROS order ID

@@ -23,6 +23,7 @@ import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.KhulumaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MvumoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
+import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.RtcGatewayServiceClient;
@@ -72,6 +73,7 @@ public class TeleconsultController {
     private final VitoServiceClient vitoClient;
     private final BookingServiceClient bookingClient;
     private final KhulumaServiceClient khulumaClient;
+    private final OrosServiceClient orosClient;
     private final ObjectMapper objectMapper;
 
     public TeleconsultController(PctServiceClient pctClient,
@@ -88,6 +90,7 @@ public class TeleconsultController {
                                  RtcGatewayServiceClient rtcClient,
                                  BookingServiceClient bookingClient,
                                  KhulumaServiceClient khulumaClient,
+                                 OrosServiceClient orosClient,
                                  TelemedicineGovernanceService telemedicineGovernanceService,
                                  ObjectMapper objectMapper) {
         this.pctClient = pctClient;
@@ -104,6 +107,7 @@ public class TeleconsultController {
         this.rtcClient = rtcClient;
         this.bookingClient = bookingClient;
         this.khulumaClient = khulumaClient;
+        this.orosClient = orosClient;
         this.telemedicineGovernanceService = telemedicineGovernanceService;
         this.objectMapper = objectMapper;
     }
@@ -809,6 +813,81 @@ public class TeleconsultController {
                     "POST:teleconsult/" + action, "SUCCESS",
                     actorId, "PROVIDER", extractPatient(result), "TeleconsultReferral", id, Map.of());
             return ok(result, requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    /**
+     * TM-B7: place a diagnostic/clinical order from within a teleconsult session. The order is
+     * stamped with TELECONSULT provenance (source_ref = referral/session id) so the fulfilment +
+     * result-return trail links back to the virtual-care case; OROS rejects a duplicate active
+     * order for the same referral + coded item (409 CONFLICT, surfaced verbatim by A0 passthrough).
+     */
+    @PostMapping("/sessions/{id}/orders")
+    public ResponseEntity<Map<String, Object>> placeSessionOrder(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            String orderType = val(body, "orderType", "order_type");
+            String priority = val(body, "priority");
+            String patientCpid = val(body, "patientCpid", "patient_cpid");
+            String ziboCode = val(body, "ziboOrderCode", "zibo_order_code");
+            String clinicalNotes = val(body, "clinicalNotes", "clinical_notes");
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> items = body.get("items") instanceof List
+                    ? (List<Map<String, Object>>) body.get("items") : null;
+            JsonNode result = orosClient.placeTeleconsultOrder(
+                    id, orderType, priority, patientCpid, ziboCode, clinicalNotes, items);
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_ORDER_PLACED", "POST:teleconsult/orders", "SUCCESS",
+                    actorId, "PROVIDER", patientCpid, "TeleconsultReferral", id, Map.of());
+            return ok(result, requestId, correlationId, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return upstreamFailure("OROS_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    /** TM-B7: list tasks linked to a teleconsult session (referral). */
+    @GetMapping("/sessions/{id}/tasks")
+    public ResponseEntity<Map<String, Object>> listSessionTasks(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ok(pctClient.listReferralTasks(id), requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    /** TM-B7: create a follow-up / execution task scoped to a teleconsult session (referral). */
+    @PostMapping("/sessions/{id}/tasks")
+    public ResponseEntity<Map<String, Object>> addSessionTask(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            JsonNode result = pctClient.addReferralTask(id, body == null ? Map.of() : body);
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_TASK_CREATED", "POST:teleconsult/tasks", "SUCCESS",
+                    actorId, "PROVIDER", extractPatient(result), "TeleconsultReferral", id, Map.of());
+            return ok(result, requestId, correlationId, HttpStatus.CREATED);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }

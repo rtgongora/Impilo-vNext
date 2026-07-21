@@ -18,6 +18,7 @@ import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MvumoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
+import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.RtcGatewayServiceClient;
@@ -46,6 +47,7 @@ class TeleconsultControllerTest {
     private NotificationServiceClient notificationClient;
     private BookingServiceClient bookingClient;
     private KhulumaServiceClient khulumaClient;
+    private OrosServiceClient orosClient;
 
     private TelemedicineGovernanceService governanceService;
     private VitoServiceClient vitoClient;
@@ -72,6 +74,7 @@ class TeleconsultControllerTest {
         rtcClient = Mockito.mock(RtcGatewayServiceClient.class);
         bookingClient = Mockito.mock(BookingServiceClient.class);
         khulumaClient = Mockito.mock(KhulumaServiceClient.class);
+        orosClient = Mockito.mock(OrosServiceClient.class);
         governanceService = Mockito.mock(TelemedicineGovernanceService.class);
         vitoClient = Mockito.mock(VitoServiceClient.class);
         // Default: patient exists in VITO so existing createSession tests pass the intake guard.
@@ -80,7 +83,7 @@ class TeleconsultControllerTest {
         controller = new TeleconsultController(
                 pctClient, vitoClient, mvumoClient, documentClient, varapiClient, tusoClient, billingContextService,
                 notificationClient, fhirGatewayClient, costaClient, analyticsClient, rtcClient,
-                bookingClient, khulumaClient, governanceService, objectMapper
+                bookingClient, khulumaClient, orosClient, governanceService, objectMapper
         );
     }
 
@@ -102,6 +105,54 @@ class TeleconsultControllerTest {
         assertNotNull(response.getBody());
         Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
         assertEquals("PROVIDER_NOT_AUTHORIZED", error.get("code"));
+    }
+
+    @Test
+    void placeSessionOrderStampsTeleconsultProvenance() {
+        // TM-B7: an order placed in-session delegates to OROS with the referral id as source_ref.
+        Mockito.when(orosClient.placeTeleconsultOrder(
+                        eq("ref-ord"), eq("LAB"), any(), eq("CPID-1"), eq("ZIBO-CBC"), any(), any()))
+                .thenReturn(objectMapper.createObjectNode().put("orderId", "ORD-1"));
+
+        var response = controller.placeSessionOrder(
+                "ref-ord", "req", "corr", "tenant", "TREATMENT", "fac", "actor-1",
+                Map.of("orderType", "LAB", "patientCpid", "CPID-1", "ziboOrderCode", "ZIBO-CBC"));
+
+        assertEquals(201, response.getStatusCode().value());
+        Mockito.verify(orosClient).placeTeleconsultOrder(
+                eq("ref-ord"), eq("LAB"), any(), eq("CPID-1"), eq("ZIBO-CBC"), any(), any());
+    }
+
+    @Test
+    void placeSessionOrderPassesThroughDuplicateConflict() {
+        // TM-B7: OROS 409 CONFLICT (duplicate active order) surfaces as 409, not a fake outage.
+        String body = "{\"success\":false,\"error\":{\"code\":\"CONFLICT\","
+                + "\"message\":\"already exists\",\"status\":409}}";
+        HttpClientErrorException upstream = HttpClientErrorException.create(
+                HttpStatus.CONFLICT, "Conflict", org.springframework.http.HttpHeaders.EMPTY,
+                body.getBytes(java.nio.charset.StandardCharsets.UTF_8), java.nio.charset.StandardCharsets.UTF_8);
+        Mockito.when(orosClient.placeTeleconsultOrder(any(), any(), any(), any(), any(), any(), any()))
+                .thenThrow(upstream);
+
+        var response = controller.placeSessionOrder(
+                "ref-dup", "req", "corr", "tenant", "TREATMENT", "fac", "actor-1",
+                Map.of("orderType", "LAB", "patientCpid", "CPID-1", "ziboOrderCode", "ZIBO-CBC"));
+
+        assertEquals(409, response.getStatusCode().value());
+    }
+
+    @Test
+    void addSessionTaskDelegatesToPct() {
+        // TM-B7: a follow-up task created in-session delegates to PCT referral-scoped tasks.
+        Mockito.when(pctClient.addReferralTask(eq("ref-t"), any()))
+                .thenReturn(objectMapper.createObjectNode().put("taskId", "T-1"));
+
+        var response = controller.addSessionTask(
+                "ref-t", "req", "corr", "tenant", "TREATMENT", "fac", "actor-1",
+                Map.of("taskType", "FOLLOW_UP", "blocksClosure", true));
+
+        assertEquals(201, response.getStatusCode().value());
+        Mockito.verify(pctClient).addReferralTask(eq("ref-t"), any());
     }
 
     @Test

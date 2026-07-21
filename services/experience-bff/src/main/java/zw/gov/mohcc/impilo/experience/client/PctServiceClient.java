@@ -576,6 +576,22 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    /** TM-B7 tasks linked to a teleconsult referral. */
+    public JsonNode listReferralTasks(String referralId) {
+        String url = baseUrl + "/v1/referrals/" + referralId + "/tasks";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** TM-B7 create a follow-up / execution task scoped to a teleconsult referral. */
+    public JsonNode addReferralTask(String referralId, Map<String, Object> request) {
+        String url = baseUrl + "/v1/referrals/" + referralId + "/tasks";
+        log.info("PCT: creating task on referral {}", referralId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url,
+                request == null ? Map.of() : request, JsonNode.class);
+        return extractData(response);
+    }
+
     private Map<String, Object> enrichAcceptWithDutyAudit(String referralId, Map<String, Object> request) {
         Map<String, Object> body = request == null ? new LinkedHashMap<>() : new LinkedHashMap<>(request);
         if (virtualPoolDutyService == null || body.containsKey("on_duty") || body.containsKey("onDuty")) {
