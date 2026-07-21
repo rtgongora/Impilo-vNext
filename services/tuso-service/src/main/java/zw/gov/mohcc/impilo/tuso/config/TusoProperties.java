@@ -9,6 +9,7 @@ public class TusoProperties {
     private GofrProperties gofr = new GofrProperties();
     private ZiboProperties zibo = new ZiboProperties();
     private VarapiProperties varapi = new VarapiProperties();
+    private RitoProperties rito = new RitoProperties();
     private AlertThresholds alerts = new AlertThresholds();
     private int configCacheTtlSeconds = 300;
     private OutboxProperties outbox = new OutboxProperties();
@@ -30,6 +31,9 @@ public class TusoProperties {
     public VarapiProperties getVarapi() { return varapi; }
     public void setVarapi(VarapiProperties varapi) { this.varapi = varapi; }
 
+    public RitoProperties getRito() { return rito; }
+    public void setRito(RitoProperties rito) { this.rito = rito; }
+
     public AlertThresholds getAlerts() { return alerts; }
     public void setAlerts(AlertThresholds alerts) { this.alerts = alerts; }
 
@@ -40,6 +44,17 @@ public class TusoProperties {
     public void setOutbox(OutboxProperties outbox) { this.outbox = outbox; }
 
     // --- Nested classes ---
+
+    /** Rito Experience & Reputation — read-only facility experience summary (RW8). */
+    public static class RitoProperties {
+        private boolean enabled = false;
+        private String baseUrl = "http://localhost:8391";
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public String getBaseUrl() { return baseUrl; }
+        public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+    }
 
     public static class GofrProperties {
         private String baseUrl = "http://localhost:3000";

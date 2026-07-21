@@ -353,7 +353,8 @@ public class FacilityController {
                 entity.getUpdatedAt(),
                 entity.getCreatedBy(),
                 entity.getUpdatedBy(),
-                null, null, null, null, null // HPA disclosure — public-profile only
+                null, null, null, null, null, // HPA disclosure — public-profile only
+                null // experience — Rito-sourced, public-profile only
         );
     }
 
@@ -440,7 +441,8 @@ public class FacilityController {
                 entity.getUpdatedAt(),
                 entity.getCreatedBy(),
                 entity.getUpdatedBy(),
-                null, null, null, null, null // HPA disclosure — public-profile only
+                null, null, null, null, null, // HPA disclosure — public-profile only
+                null // experience — Rito-sourced, public-profile only
         );
     }
 

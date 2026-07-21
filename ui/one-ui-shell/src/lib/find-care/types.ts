@@ -123,6 +123,24 @@ export interface FacilityProfile {
   verificationStatus?: string | null;
   profileIncomplete?: boolean | null;
   siteUnresolved?: boolean | null;
+  /**
+   * Read-only, Rito-sourced verified facility-experience summary. Optional — present when
+   * Rito reputation is available. Verified experience domains only; never respondent identity.
+   */
+  experience?: FacilityExperienceSummary | null;
+}
+
+export interface FacilityExperienceDomain {
+  domain: string;
+  verifiedMeanScore: number | null;
+  verifiedCount: number;
+}
+
+export interface FacilityExperienceSummary {
+  source: string;
+  reportingPeriod: string | null;
+  verifiedInteractionTotal: number;
+  domains: FacilityExperienceDomain[];
 }
 
 /**

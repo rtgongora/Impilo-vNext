@@ -36,9 +36,12 @@ public class PublicFacilityController {
     private static final Logger log = LoggerFactory.getLogger(PublicFacilityController.class);
 
     private final FacilityService facilityService;
+    private final zw.gov.mohcc.impilo.tuso.integration.RitoClient ritoClient;
 
-    public PublicFacilityController(FacilityService facilityService) {
+    public PublicFacilityController(FacilityService facilityService,
+                                    zw.gov.mohcc.impilo.tuso.integration.RitoClient ritoClient) {
         this.facilityService = facilityService;
+        this.ritoClient = ritoClient;
     }
 
     @GetMapping("/{id}/profile")
@@ -56,7 +59,7 @@ public class PublicFacilityController {
             throw new org.springframework.web.server.ResponseStatusException(
                     org.springframework.http.HttpStatus.NOT_FOUND, "Facility not found: " + id);
         }
-        FacilityResponse response = toPublicFacilityResponse(detail);
+        FacilityResponse response = toPublicFacilityResponse(detail, ctx.tenantId().toString());
 
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
     }
@@ -106,7 +109,7 @@ public class PublicFacilityController {
      * Only includes: name, code, type, district, province, status, level, lat/lon, and capabilities.
      * Contacts, identifiers, internal operational details, and audit fields are excluded.
      */
-    private FacilityResponse toPublicFacilityResponse(FacilityService.FacilityDetail detail) {
+    private FacilityResponse toPublicFacilityResponse(FacilityService.FacilityDetail detail, String tenantId) {
         FacilityEntity entity = detail.facility();
 
         List<FacilityResponse.CapabilityDetail> capabilities = detail.capabilities() != null
@@ -158,7 +161,11 @@ public class PublicFacilityController {
                 metaString(entity, "source_effective_date"),
                 metaString(entity, "verification_status"),
                 metaBool(entity, "geospatial_incomplete") || metaBool(entity, "missing_operating_status"),
-                metaBool(entity, "site_resolution_unresolved")
+                metaBool(entity, "site_resolution_unresolved"),
+                // Read-only, Rito-sourced verified facility-experience summary (gated, fail-open).
+                entity.getFacilityUuid() != null
+                        ? ritoClient.getFacilityExperience(entity.getFacilityUuid().toString(), tenantId)
+                        : null
         );
     }
 

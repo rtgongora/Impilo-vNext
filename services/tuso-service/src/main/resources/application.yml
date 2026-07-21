@@ -66,6 +66,11 @@ tuso:
   # VARAPI integration (provider eligibility)
   varapi:
     base-url: ${VARAPI_BASE_URL:http://localhost:8083}
+  # Rito Experience & Reputation (RW8): read-only facility experience summary composed
+  # onto the public facility profile. Off by default; enable once Rito reputation is live.
+  rito:
+    enabled: ${TUSO_RITO_ENABLED:false}
+    base-url: ${TUSO_RITO_BASE_URL:http://localhost:8391}
 
   # MusheX payment intents for HPA registration fees (SI 78 of 2017).
   mushex:

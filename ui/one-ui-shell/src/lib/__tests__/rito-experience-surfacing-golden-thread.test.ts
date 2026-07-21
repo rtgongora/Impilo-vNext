@@ -34,10 +34,23 @@ describe("Rito experience surfacing golden thread", () => {
     expect(client).toContain("isEnabled()"); // gated + fail-open
   });
 
-  it("Rito exposes the public verified-experience read", () => {
+  it("Rito exposes the public verified-experience read (provider + facility)", () => {
     const controller = read(
       "services/rito-quality-safety-service/src/main/java/zw/gov/mohcc/impilo/rito/api/controller/PublicReputationController.java",
     );
     expect(controller).toContain("/v1/public/rito/reputation");
+    expect(controller).toContain("/facility/{facilityId}");
+  });
+
+  it("Tuso composes a facility experience card (RW8), read-only from Rito", () => {
+    const card = read("ui/one-ui-shell/src/components/public/find-care/FacilityExperienceCard.tsx");
+    expect(card).toContain("Patient experience");
+    expect(card).toContain("Source:");
+
+    const client = read(
+      "services/tuso-service/src/main/java/zw/gov/mohcc/impilo/tuso/integration/RitoClient.java",
+    );
+    expect(client).toContain("/v1/public/rito/reputation/facility/");
+    expect(client).toContain("it never owns or stores ratings");
   });
 });

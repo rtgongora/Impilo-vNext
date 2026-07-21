@@ -45,8 +45,18 @@ public record FacilityResponse(
         String sourceEffectiveDate,
         String verificationStatus,
         Boolean profileIncomplete,
-        Boolean siteUnresolved
+        Boolean siteUnresolved,
+        // Read-only, Rito-sourced verified facility-experience summary (RW8). TUSO composes
+        // and displays it; it never owns or stores ratings. Null when Rito is disabled/unavailable.
+        FacilityExperienceSummary experience
 ) {
+    /** Verified facility-experience summary composed from Rito. Source is always "Rito". */
+    public record FacilityExperienceSummary(String source, String reportingPeriod,
+                                            int verifiedInteractionTotal,
+                                            java.util.List<ExperienceDomain> domains) {}
+
+    public record ExperienceDomain(String domain, java.math.BigDecimal verifiedMeanScore, int verifiedCount) {}
+
     public record OperatingModelDetail(
             String facilityTier,
             String deploymentMode,

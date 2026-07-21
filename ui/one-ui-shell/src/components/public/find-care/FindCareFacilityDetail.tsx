@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { FacilityHpaDisclosure } from "@/components/public/find-care/FacilityHpaDisclosure";
+import { FacilityExperienceCard } from "@/components/public/find-care/FacilityExperienceCard";
 import type {
   FacilityCapability,
   FacilityPractitionersResponse,
@@ -228,6 +229,8 @@ export function FindCareFacilityDetail({ facilityId }: FindCareFacilityDetailPro
 
       {/* Honest regulatory-source disclosure for regulator-listed (HPA) records. */}
       <FacilityHpaDisclosure profile={profile} />
+
+      <FacilityExperienceCard profile={profile} />
 
       {/* Services offered (registry truth) */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
