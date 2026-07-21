@@ -388,6 +388,11 @@ public class EncounterService {
         payload.put("patientCpid", encounter.getSubjectCpid());
         payload.put("encounterType", encounter.getEncounterType());
         payload.put("endedAt", encounter.getEndedAt().toString());
+        // Provider/facility attribution so a downstream verified rating (Rito Experience
+        // & Reputation) can be provably tied to the provider who attended this encounter.
+        payload.put("attendingProviderId", encounter.getAssignedProviderId());
+        payload.put("facilityId", encounter.getFacilityId() != null ? encounter.getFacilityId().toString() : null);
+        payload.put("modality", encounter.getModality());
         writeOutbox("ENCOUNTER", encounter.getEncounterRef().toString(),
                 "ENCOUNTER_COMPLETED", toJson(payload));
 
