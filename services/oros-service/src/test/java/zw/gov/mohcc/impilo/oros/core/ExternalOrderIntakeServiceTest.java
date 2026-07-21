@@ -65,7 +65,7 @@ class ExternalOrderIntakeServiceTest {
             h.when(TrustContextHolder::require).thenReturn(ctx());
             when(orderRepository.findByTenantIdAndExternalOrderRef(TENANT, "urn:ext|EXT-1")).thenReturn(Optional.empty());
             OrderEntity draft = order("ORD-NEW", OrderStatus.DRAFT);
-            when(stateMachine.createDraft(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+            when(stateMachine.createDraft(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                     .thenReturn(draft);
             when(orderRepository.save(any())).thenAnswer(i -> i.getArgument(0));
             when(submissionService.submit("ORD-NEW")).thenReturn(order("ORD-NEW", OrderStatus.PLACED));
@@ -75,7 +75,7 @@ class ExternalOrderIntakeServiceTest {
             assertThat(result.getStatus()).isEqualTo(OrderStatus.PLACED);
             assertThat(draft.getExternalOrderRef()).isEqualTo("urn:ext|EXT-1");
             verify(stateMachine).createDraft(eq(FACILITY), eq("CPID-1"), eq(OrderType.IMAGING),
-                    eq(OrderPriority.STAT), eq(RequestSource.EXTERNAL), any(), any(), eq("Cough"),
+                    eq(OrderPriority.STAT), eq(RequestSource.EXTERNAL), any(), any(), any(), eq("Cough"),
                     any(), any(), any(), any(), any());
             verify(routingEngine).routeOrder(any());
             verify(workstepEngine).createWorkstepsForOrder(any());
@@ -92,7 +92,7 @@ class ExternalOrderIntakeServiceTest {
                     OrderPriority.ROUTINE, "FBC", "Full Blood Count", "anaemia", "urn:ext|LAB-9");
             when(orderRepository.findByTenantIdAndExternalOrderRef(TENANT, "urn:ext|LAB-9")).thenReturn(Optional.empty());
             OrderEntity draft = order("ORD-LAB", OrderStatus.DRAFT);
-            when(stateMachine.createDraft(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+            when(stateMachine.createDraft(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                     .thenReturn(draft);
             when(orderRepository.save(any())).thenAnswer(i -> i.getArgument(0));
             when(submissionService.submit("ORD-LAB")).thenReturn(order("ORD-LAB", OrderStatus.PLACED));
@@ -101,7 +101,7 @@ class ExternalOrderIntakeServiceTest {
 
             assertThat(result.getStatus()).isEqualTo(OrderStatus.PLACED);
             verify(stateMachine).createDraft(eq(FACILITY), eq("CPID-2"), eq(OrderType.LAB),
-                    eq(OrderPriority.ROUTINE), eq(RequestSource.EXTERNAL), any(), any(), eq("anaemia"),
+                    eq(OrderPriority.ROUTINE), eq(RequestSource.EXTERNAL), any(), any(), any(), eq("anaemia"),
                     any(), any(), any(), any(), any());
         }
     }
@@ -115,7 +115,7 @@ class ExternalOrderIntakeServiceTest {
                     .thenReturn(Optional.of(order("ORD-OLD", OrderStatus.PLACED)));
 
             assertThat(service().create(input()).getOrderId()).isEqualTo("ORD-OLD");
-            verify(stateMachine, never()).createDraft(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+            verify(stateMachine, never()).createDraft(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
         }
     }
 }

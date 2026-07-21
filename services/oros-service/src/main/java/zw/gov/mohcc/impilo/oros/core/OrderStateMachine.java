@@ -98,6 +98,7 @@ public class OrderStateMachine {
     public OrderEntity placeOrder(UUID facilityId, String patientCpid, OrderType type,
                                   OrderPriority priority, String ziboCode,
                                   String encounterRef, String clinicalNotes,
+                                  RequestSource requestSource, String sourceRef,
                                   List<OrderItemData> items) {
         TrustContext ctx = TrustContextHolder.require();
 
@@ -117,6 +118,8 @@ public class OrderStateMachine {
         order.setEncounterRef(encounterRef);
         order.setZiboOrderCode(ziboCode);
         order.setClinicalNotes(clinicalNotes);
+        order.setRequestSource(requestSource != null ? requestSource : RequestSource.INTERNAL);
+        order.setSourceRef(sourceRef);
 
         order = orderRepository.save(order);
 
@@ -139,6 +142,7 @@ public class OrderStateMachine {
     @Transactional
     public OrderEntity createDraft(UUID facilityId, String patientCpid, OrderType type,
                                    OrderPriority priority, RequestSource requestSource,
+                                   String sourceRef,
                                    String ziboCode, String encounterRef, String clinicalNotes,
                                    String referringProviderId, String referringProviderName,
                                    OffsetDateTime scheduledAt, String safetyJson,
@@ -161,6 +165,7 @@ public class OrderStateMachine {
         order.setZiboOrderCode(ziboCode);
         order.setClinicalNotes(clinicalNotes);
         order.setRequestSource(requestSource != null ? requestSource : RequestSource.INTERNAL);
+        order.setSourceRef(sourceRef);
         order.setReferringProviderId(referringProviderId);
         order.setReferringProviderName(referringProviderName);
         order.setScheduledAt(scheduledAt);

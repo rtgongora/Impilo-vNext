@@ -168,7 +168,7 @@ class OrosIntegrationTest {
             OrderEntity order = stateMachine.placeOrder(
                     FACILITY_ID, "CPID-INTEGRATION-001", OrderType.LAB,
                     OrderPriority.URGENT, "ZIBO-CBC", "ENC-INT-001",
-                    "Integration test order", items);
+                    "Integration test order", null, null, items);
 
             assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
             assertThat(order.getOrderId()).hasSize(26);

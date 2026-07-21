@@ -18,5 +18,9 @@ public enum RequestSource {
     /** Manual walk-in intake at the fulfilling unit. */
     WALK_IN,
     /** Received from an external electronic system or external manual referral. */
-    EXTERNAL
+    EXTERNAL,
+    /** Placed from within a governed telemedicine consultation (TM-B7). Carries the
+     *  teleconsult referral id in {@code source_ref} so the order's provenance links
+     *  back to the virtual-care case. */
+    TELECONSULT
 }

@@ -66,7 +66,7 @@ public class ExternalOrderIntakeService {
 
         OrderEntity draft = stateMachine.createDraft(
                 ctx.facilityId(), input.patientCpid(), input.orderType(), input.priority(),
-                RequestSource.EXTERNAL, null, null, input.clinicalNotes(),
+                RequestSource.EXTERNAL, null, null, null, input.clinicalNotes(),
                 null, null, null, null, items);
         draft.setExternalOrderRef(input.externalRef());
         orderRepository.save(draft);

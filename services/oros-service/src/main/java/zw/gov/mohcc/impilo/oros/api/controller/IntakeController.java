@@ -90,7 +90,7 @@ public class IntakeController {
 
         OrderEntity draft = stateMachine.createDraft(
                 ctx.facilityId(), request.patientCpid(), request.orderType(), request.priority(),
-                source, request.ziboOrderCode(), request.encounterRef(), request.clinicalNotes(),
+                source, null, request.ziboOrderCode(), request.encounterRef(), request.clinicalNotes(),
                 request.referringProviderId(), request.referringProviderName(),
                 request.scheduledAt(), request.safetyJson(), toItemData(request.items()));
 

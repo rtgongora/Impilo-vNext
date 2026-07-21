@@ -28,6 +28,9 @@ public record PlaceOrderRequest(
         @Valid List<OrderItemDto> items,
         // ── Diagnostic/imaging journey (optional) ──
         RequestSource requestSource,
+        // Provenance link to the originating object (e.g. teleconsult referral id when
+        // requestSource = TELECONSULT). TM-B7.
+        String sourceRef,
         String referringProviderId,
         String referringProviderName,
         OffsetDateTime scheduledAt,

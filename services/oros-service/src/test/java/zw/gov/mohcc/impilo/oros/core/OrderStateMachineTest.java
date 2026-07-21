@@ -392,7 +392,8 @@ class OrderStateMachineTest {
 
                 OrderEntity order = stateMachine.placeOrder(
                         FACILITY_ID, "CPID-001", OrderType.LAB, OrderPriority.URGENT,
-                        "ZIBO-LAB-001", "ENC-123", "Patient presents with fatigue", items);
+                        "ZIBO-LAB-001", "ENC-123", "Patient presents with fatigue",
+                        null, null, items);
 
                 assertThat(order).isNotNull();
                 assertThat(order.getOrderId()).isNotNull().hasSize(26);
@@ -426,7 +427,7 @@ class OrderStateMachineTest {
 
                 OrderEntity order = stateMachine.placeOrder(
                         FACILITY_ID, "CPID-002", OrderType.IMAGING, null,
-                        null, null, null, null);
+                        null, null, null, null, null, null);
 
                 assertThat(order.getPriority()).isEqualTo(OrderPriority.ROUTINE);
             }
@@ -443,10 +444,10 @@ class OrderStateMachineTest {
 
                 OrderEntity order1 = stateMachine.placeOrder(
                         FACILITY_ID, "CPID-001", OrderType.LAB, null,
-                        null, null, null, null);
+                        null, null, null, null, null, null);
                 OrderEntity order2 = stateMachine.placeOrder(
                         FACILITY_ID, "CPID-002", OrderType.LAB, null,
-                        null, null, null, null);
+                        null, null, null, null, null, null);
 
                 assertThat(order1.getOrderId()).isNotEqualTo(order2.getOrderId());
             }
@@ -474,7 +475,7 @@ class OrderStateMachineTest {
 
                 OrderEntity order = stateMachine.createDraft(
                         FACILITY_ID, "CPID-IMG-001", OrderType.IMAGING, OrderPriority.ROUTINE,
-                        RequestSource.INTERNAL, "ZIBO-XR", "ENC-1", "Cough 2 weeks",
+                        RequestSource.INTERNAL, null, "ZIBO-XR", "ENC-1", "Cough 2 weeks",
                         "prov-1", "Dr Referrer", null, "{\"pregnant\":false}", items);
 
                 assertThat(order.getStatus()).isEqualTo(OrderStatus.DRAFT);

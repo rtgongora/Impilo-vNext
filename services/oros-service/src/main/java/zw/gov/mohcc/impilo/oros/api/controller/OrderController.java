@@ -102,6 +102,8 @@ public class OrderController {
                 request.ziboOrderCode(),
                 request.encounterRef(),
                 request.clinicalNotes(),
+                request.requestSource(),
+                request.sourceRef(),
                 toItemData(request.items()));
 
         orchestratePlacement(order);
@@ -125,6 +127,7 @@ public class OrderController {
                 request.orderType(),
                 request.priority(),
                 request.requestSource(),
+                request.sourceRef(),
                 request.ziboOrderCode(),
                 request.encounterRef(),
                 request.clinicalNotes(),

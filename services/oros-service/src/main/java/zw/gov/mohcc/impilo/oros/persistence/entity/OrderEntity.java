@@ -82,6 +82,11 @@ public class OrderEntity {
     @Column(name = "accession_number", length = 64)
     private String accessionNumber;
 
+    /** Provenance link to the originating object (e.g. the teleconsult referral id when
+     *  request_source = TELECONSULT). TM-B7. */
+    @Column(name = "source_ref", length = 128)
+    private String sourceRef;
+
     @Column(name = "referring_provider_id", length = 64)
     private String referringProviderId;
 
@@ -173,6 +178,8 @@ public class OrderEntity {
 
     public String getExternalRefs() { return externalRefs; }
     public void setExternalRefs(String externalRefs) { this.externalRefs = externalRefs; }
+    public String getSourceRef() { return sourceRef; }
+    public void setSourceRef(String sourceRef) { this.sourceRef = sourceRef; }
 
     public String getButanoRefs() { return butanoRefs; }
     public void setButanoRefs(String butanoRefs) { this.butanoRefs = butanoRefs; }
