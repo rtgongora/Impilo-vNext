@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,26 +28,52 @@ public class NdilaController {
         this.client = client;
     }
 
+    /**
+     * The browser's actual street basemap: the citizen public MVT lane (self-hosted Martin, no
+     * auth, no PII). The ndila {@code /api/v1/ndila/tiles} config is role-gated and advertises a
+     * raster PNG path that a bearer-less MapLibre tile request can never load — so the workspace and
+     * citizen maps both draw their base from this public vector lane. This is also what lets the map
+     * "default to something" when the role-gated ndila config call is unavailable, instead of the
+     * blank low-connectivity canvas.
+     */
+    private static final String PUBLIC_MAP_VECTOR_LANE = "/internal/v1/public/gateway/map/tiles/{z}/{x}/{y}.mvt";
+
     @GetMapping("/tiles/config")
     public ResponseEntity<Map<String, Object>> tileConfig(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        ObjectNode cfg;
         try {
             JsonNode data = client.tileConfig();
-            if (data == null || data.isNull()) {
-                return unavailable("NDILA_EMPTY_CONFIG", "Ndila returned no tile configuration", requestId, correlationId);
-            }
-            // The ndila service advertises tile templates under its own /api/v1/... namespace,
-            // but the browser can only reach tiles through this BFF at /internal/v1/ndila/tiles/...
-            // (which is also the prefix the web client's trust-header synthesis matches). Rewrite
-            // the templates so tiles actually load in the deployed shell (QA #1).
-            rewriteTileTemplates(data);
-            return ResponseEntity.ok(Map.of(
-                    "data", data,
-                    "meta", meta(requestId, correlationId)));
+            cfg = (data instanceof ObjectNode obj) ? obj : JsonNodeFactory.instance.objectNode();
         } catch (Exception e) {
-            log.warn("Ndila tile config failed: {}", e.getMessage());
-            return unavailable("NDILA_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            // Ndila tile config is role-gated and may be unreachable, but the browser basemap does
+            // not depend on it — fall back to the working public street lane, never a blank map.
+            log.warn("Ndila tile config unavailable, serving public street basemap: {}", e.getMessage());
+            cfg = JsonNodeFactory.instance.objectNode();
+        }
+        applyPublicVectorBasemap(cfg);
+        return ResponseEntity.ok(Map.of(
+                "data", cfg,
+                "meta", meta(requestId, correlationId)));
+    }
+
+    /**
+     * Force the browser tile config onto the reachable public MVT vector lane, preserving any
+     * attribution/zoom metadata ndila supplied. Drops the role-gated raster template so
+     * {@code buildNdilaMapStyle} never selects the unreachable raster branch (vector takes
+     * precedence regardless).
+     */
+    private static void applyPublicVectorBasemap(ObjectNode cfg) {
+        cfg.put("provider", "OSM_OSRM");
+        cfg.put("providerName", "OSM_OSRM");
+        cfg.put("vectorTileUrlTemplate", PUBLIC_MAP_VECTOR_LANE);
+        cfg.remove("tileUrlTemplate");
+        if (!cfg.hasNonNull("maxZoom")) {
+            cfg.put("maxZoom", 14);
+        }
+        if (!cfg.hasNonNull("attribution")) {
+            cfg.put("attribution", "© OpenMapTiles © OpenStreetMap contributors");
         }
     }
 
@@ -345,33 +372,4 @@ public class NdilaController {
         return m;
     }
 
-    /** Rewrite ndila-owned tile templates onto this BFF's reachable, header-synthesised path. */
-    private static void rewriteTileTemplates(JsonNode data) {
-        if (!(data instanceof ObjectNode obj)) {
-            return;
-        }
-        for (String field : List.of("tileUrlTemplate", "vectorTileUrlTemplate")) {
-            JsonNode node = obj.get(field);
-            if (node != null && node.isTextual()) {
-                String rewritten = rewriteTilePath(node.asText());
-                if (rewritten != null) {
-                    obj.put(field, rewritten);
-                }
-            }
-        }
-    }
-
-    private static String rewriteTilePath(String template) {
-        if (template == null) {
-            return null;
-        }
-        // Only rewrite the service's own tile namespaces; leave external provider URLs alone.
-        if (template.startsWith("/api/v1/ndila/tiles/")) {
-            return template.replaceFirst("^/api/v1/ndila/tiles/", "/internal/v1/ndila/tiles/");
-        }
-        if (template.startsWith("/api/v1/maps/tiles/")) {
-            return template.replaceFirst("^/api/v1/maps/tiles/", "/internal/v1/ndila/tiles/");
-        }
-        return null;
-    }
 }

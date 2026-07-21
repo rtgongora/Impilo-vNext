@@ -6,6 +6,8 @@ import { apiClient, type ApiResponse } from "@/lib/api-client";
 export type NdilaTileConfig = {
   provider?: string;
   tileUrlTemplate?: string;
+  /** Self-hosted MVT street lane (public gateway passthrough) — the browser-reachable basemap. */
+  vectorTileUrlTemplate?: string;
   attribution?: string;
   maxZoom?: number;
   supportsOffline?: boolean;

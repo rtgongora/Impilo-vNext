@@ -4,7 +4,11 @@ import dynamic from "next/dynamic";
 import { Loader2, MapPin, ShieldAlert } from "lucide-react";
 import { useNdilaTileConfig } from "@/hooks/queries/useNdila";
 import type { NdilaCoordinate } from "@/lib/ndila/ndila-client";
-import { isMockTileTemplate, isUnsafePublicOsmTemplate } from "@/lib/ndila/build-ndila-map-style";
+import {
+  isMockTileTemplate,
+  isUnsafePublicOsmTemplate,
+  isVectorTileTemplate,
+} from "@/lib/ndila/build-ndila-map-style";
 import type { NdilaGeoMarker } from "./NdilaMapLibre";
 
 const NdilaMapLibre = dynamic(() => import("./NdilaMapLibre").then((mod) => mod.NdilaMapLibre), {
@@ -57,7 +61,9 @@ export function NdilaMap({
 }: NdilaMapProps) {
   const tileQ = useNdilaTileConfig();
   const tileCfg = tileQ.data;
-  const isMock = isMockTileTemplate(tileCfg?.tileUrlTemplate);
+  // A live vector (MVT) basemap counts as live tiles even though there is no raster template.
+  const isMock =
+    isMockTileTemplate(tileCfg?.tileUrlTemplate) && !isVectorTileTemplate(tileCfg?.vectorTileUrlTemplate);
   const isUnsafe = isUnsafePublicOsmTemplate(tileCfg?.tileUrlTemplate);
 
   const geoMarkers: NdilaGeoMarker[] = markers.map((marker) => ({
