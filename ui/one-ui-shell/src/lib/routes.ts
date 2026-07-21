@@ -151,6 +151,15 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/coverage/contracts", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Provider Contracts", navLabel: "Contracts", navZone: "professional" },
   { path: "/coverage/operations", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Ruvimbo Operations", navLabel: "Ruvimbo Ops", navZone: "professional" },
 
+  // ── Zone: Ruvimbo (health financing — canonical product face over Coverage) ──
+  // /ruvimbo is a role-aware entry resolver; /coverage/* stays alive via redirects.
+  { path: "/ruvimbo", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Ruvimbo", navLabel: "Ruvimbo", navZone: "life" },
+  { path: "/ruvimbo/member", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Ruvimbo", navLabel: "My Ruvimbo", navZone: "life" },
+  { path: "/ruvimbo/provider", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "CLINICAL", pageTitle: "Ruvimbo Provider", navLabel: "Ruvimbo Provider", navZone: "professional" },
+  { path: "/ruvimbo/payer", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Ruvimbo Payer", navLabel: "Ruvimbo Payer", navZone: "professional" },
+  { path: "/ruvimbo/administration", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Ruvimbo Administration", navLabel: "Ruvimbo Administration", navZone: "professional" },
+  { path: "/ruvimbo/performance", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Ruvimbo Performance", navLabel: "Ruvimbo Performance", navZone: "professional" },
+
   // â”€â”€ Zone: Identity Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/id-services", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Identity Services", navLabel: "ID Services", navZone: "professional" },
   { path: "/ai-governance", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "AI Governance", navLabel: "AI Governance", navZone: "professional" },
@@ -1006,8 +1015,9 @@ export const ROUTES: RouteDefinition[] = [
 // workspace: alert triage board + accountable closure + plans/devices), /work/telemonitoring/chw
 // (OF-B23 CHW monitoring worklist over the PCT generic-task lane), /my/monitoring (OF-B27 citizen
 // monitoring home with §14.6 patient-wording law).
-// Khuluma first-class communication front door (Jul 2026): +7 role-aware hub routes. Total 792.
-export const EXPECTED_ROUTE_COUNT = 792;
+// Khuluma first-class communication front door (Jul 2026): +7 role-aware hub routes.
+// Ruvimbo canonical product face (Jul 2026): +6 role-aware financing routes. Total 798.
+export const EXPECTED_ROUTE_COUNT = 798;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

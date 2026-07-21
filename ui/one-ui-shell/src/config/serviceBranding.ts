@@ -387,6 +387,7 @@ export const ROUTE_SERVICE_SLUG_PREFIXES: ReadonlyArray<{
   { prefix: "/ndila", slug: "ndila" },
   { prefix: "/madi", slug: "madi" },
   { prefix: "/rito", slug: "rito" },
+  { prefix: "/ruvimbo", slug: "ruvimbo" },
   { prefix: "/coverage", slug: "ruvimbo" },
   { prefix: "/my-life/feedback", slug: "rito" },
   { prefix: "/work/facility/rito", slug: "rito" },

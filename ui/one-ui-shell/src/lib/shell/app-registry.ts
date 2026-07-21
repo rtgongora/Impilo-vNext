@@ -61,11 +61,14 @@ export const SHELL_APPS: AppDefinition[] = [
     description: "Health coverage, benefits, enrolment, subsidies and claims",
     icon: "ShieldCheck",
     category: "citizen",
-    href: "/coverage/member",
+    // Role-aware entry resolver (/ruvimbo) routes citizen → member, provider → provider,
+    // payer → payer, admin → administration; /coverage/member stays alive via redirect.
+    href: "/ruvimbo",
     activeFlag: true,
     systemAppFlag: false,
     weight: 4,
     maturity: "live",
+    serviceSlug: "ruvimbo",
   },
   {
     id: "app-clinical",
