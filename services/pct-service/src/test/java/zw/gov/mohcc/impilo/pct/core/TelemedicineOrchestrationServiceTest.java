@@ -57,12 +57,15 @@ class TelemedicineOrchestrationServiceTest {
         ReferralStateMachine referralStateMachine = new ReferralStateMachine(
                 transitionRecorder,
                 new zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralTransitionGuardProperties());
+        gateProperties = new zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties();
         service = new TelemedicineOrchestrationService(
                 referralRepository, telehealthSessionRepository, outboxRepository, telemetryService,
                 sessionProviderRouter, providerProperties, liveSessionIntegration, virtualPoolQueueService,
-                referralStateMachine, new ObjectMapper());
+                referralStateMachine, transitionRecorder, gateProperties, new ObjectMapper());
         tenantId = UUID.randomUUID();
     }
+
+    private zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties gateProperties;
 
     private TrustContext context() {
         return new TrustContext(
@@ -107,6 +110,80 @@ class TelemedicineOrchestrationServiceTest {
                     Map.of("closureNarrative", "Resolved remotely; advised follow-up in 2 weeks."));
 
             assertThat(countValueEvents()).isEqualTo(1L);
+        }
+    }
+
+    @Test
+    void consentGate_enforce_blocksMediaSubmitWithoutConsent() {
+        gateProperties.setMode(zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.ENFORCE);
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "DRAFT");
+            referral.setVirtualMode("video");
+            referral.setConsentStatus("PENDING");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+
+            PctDomainException ex = org.junit.jupiter.api.Assertions.assertThrows(PctDomainException.class,
+                    () -> service.submitReferral(referralId.toString()));
+            assertThat(ex.getCode()).isEqualTo("CONSENT_REQUIRED_MISSING");
+            assertThat(ex.getStatus()).isEqualTo(409);
+            assertThat(referral.getStatus()).isEqualTo("DRAFT"); // not submitted
+        }
+    }
+
+    @Test
+    void consentGate_enforce_allowsMediaSubmitWithGrantedConsent() {
+        gateProperties.setMode(zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.ENFORCE);
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "DRAFT");
+            referral.setVirtualMode("video");
+            referral.setConsentStatus("GRANTED"); // citizen media lane sets GRANTED pre-submit
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+            when(referralRepository.save(any(ReferralEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            service.submitReferral(referralId.toString());
+            assertThat(referral.getStatus()).isEqualTo("SUBMITTED");
+        }
+    }
+
+    @Test
+    void consentGate_shadow_doesNotBlockMediaSubmitWithoutConsent() {
+        gateProperties.setMode(zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.SHADOW);
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "DRAFT");
+            referral.setVirtualMode("video");
+            referral.setConsentStatus("PENDING");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+            when(referralRepository.save(any(ReferralEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            service.submitReferral(referralId.toString()); // shadow: records, does not block
+            assertThat(referral.getStatus()).isEqualTo("SUBMITTED");
+        }
+    }
+
+    @Test
+    void consentGate_enforce_exemptsNonMediaReferral() {
+        gateProperties.setMode(zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.ENFORCE);
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "DRAFT");
+            referral.setVirtualMode("message"); // async/message: no media consent needed
+            referral.setConsentStatus("PENDING");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+            when(referralRepository.save(any(ReferralEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            service.submitReferral(referralId.toString());
+            assertThat(referral.getStatus()).isEqualTo("SUBMITTED");
         }
     }
 

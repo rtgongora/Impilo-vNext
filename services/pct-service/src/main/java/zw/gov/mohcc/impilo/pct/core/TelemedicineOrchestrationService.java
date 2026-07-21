@@ -50,7 +50,15 @@ public class TelemedicineOrchestrationService {
     private final LiveSessionIntegration liveSessionIntegration;
     private final VirtualPoolQueueService virtualPoolQueueService;
     private final ReferralStateMachine referralStateMachine;
+    private final ReferralTransitionRecorder gateRecorder;
+    private final zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties gateProperties;
     private final ObjectMapper objectMapper;
+
+    /** Consent postures that satisfy the submit gate (video/audio media referrals). */
+    private static final java.util.Set<String> CONSENT_SATISFIED =
+            java.util.Set.of("GRANTED", "OBTAINED", "WAIVED", "EMERGENCY_APPROVED", "NOT_REQUIRED");
+    private static final java.util.Set<String> MEDIA_VIRTUAL_MODES =
+            java.util.Set.of("VIDEO", "AUDIO");
 
     public TelemedicineOrchestrationService(
             ReferralRepository referralRepository,
@@ -62,6 +70,8 @@ public class TelemedicineOrchestrationService {
             LiveSessionIntegration liveSessionIntegration,
             VirtualPoolQueueService virtualPoolQueueService,
             ReferralStateMachine referralStateMachine,
+            ReferralTransitionRecorder gateRecorder,
+            zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties gateProperties,
             ObjectMapper objectMapper) {
         this.referralRepository = referralRepository;
         this.telehealthSessionRepository = telehealthSessionRepository;
@@ -72,7 +82,43 @@ public class TelemedicineOrchestrationService {
         this.liveSessionIntegration = liveSessionIntegration;
         this.virtualPoolQueueService = virtualPoolQueueService;
         this.referralStateMachine = referralStateMachine;
+        this.gateRecorder = gateRecorder;
+        this.gateProperties = gateProperties;
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Consent-on-submit gate (TM-B8). A video/audio media referral must carry a satisfied
+     * consent posture before it is submitted. Shadow-then-enforce: records the decision and,
+     * only in ENFORCE, rejects with {@code CONSENT_REQUIRED_MISSING} 409. Non-media referrals
+     * (message/async, or no virtual mode) are exempt.
+     */
+    private void assertConsentForSubmit(ReferralEntity entity) {
+        var mode = gateProperties.getMode();
+        if (mode == zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.OFF) {
+            return;
+        }
+        String virtualMode = defaulted(entity.getVirtualMode(), "").trim().toUpperCase(Locale.ROOT);
+        boolean mediaReferral = MEDIA_VIRTUAL_MODES.contains(virtualMode);
+        if (!mediaReferral) {
+            return; // consent-on-submit applies to governed media referrals only
+        }
+        String consentStatus = defaulted(entity.getConsentStatus(), "").trim().toUpperCase(Locale.ROOT);
+        boolean satisfied = CONSENT_SATISFIED.contains(consentStatus);
+        try {
+            gateRecorder.recordGate("consent_submit", satisfied, mode.name(),
+                    "virtualMode=" + virtualMode + " consentStatus=" + consentStatus);
+        } catch (Exception e) {
+            log.warn("Consent gate telemetry failed for referral {}: {}", entity.getReferralId(), e.getMessage());
+        }
+        if (!satisfied) {
+            log.warn("Consent gate [{}] NOT satisfied for referral {} (virtualMode={}, consentStatus={})",
+                    mode, entity.getReferralId(), virtualMode, consentStatus);
+            if (mode == zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.ENFORCE) {
+                throw new PctDomainException("CONSENT_REQUIRED_MISSING", 409,
+                        "A video/audio teleconsult cannot be submitted without captured consent.");
+            }
+        }
     }
 
     @Transactional
@@ -232,6 +278,7 @@ public class TelemedicineOrchestrationService {
     @Transactional
     public Map<String, Object> submitReferral(String referralId) {
         ReferralEntity entity = getReferralEntity(referralId);
+        assertConsentForSubmit(entity);
         referralStateMachine.apply(entity, ReferralStatus.SUBMITTED, "submit");
         entity.setSubmittedAt(OffsetDateTime.now());
         ReferralEntity saved = referralRepository.save(entity);

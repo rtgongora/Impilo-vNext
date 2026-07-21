@@ -56,4 +56,19 @@ public class ReferralTransitionRecorder {
                         "allowed", Boolean.toString(allowed),
                         "mode", mode));
     }
+
+    /**
+     * Record a safety/authority gate decision (TM-B8) in an independent transaction —
+     * the shadow signal for the consent-on-submit and authority-on-accept gates.
+     * journeyId is null (see above).
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void recordGate(String gate, boolean satisfied, String mode, String detail) {
+        telemetryService.record("telemedicine.gate." + gate, null,
+                Map.<String, Object>of(
+                        "gate", gate,
+                        "satisfied", Boolean.toString(satisfied),
+                        "mode", mode,
+                        "detail", detail == null ? "" : detail));
+    }
 }
