@@ -279,6 +279,17 @@ public class HpaEnrichmentImportService {
             return new Outcome(decision, Category.REVIEW, top.facility().getId());
         }
 
+        // No credible match now. But if this record was already routed to a steward
+        // (identity conflict / possible-existing) in a prior committed run, it must
+        // NOT silently materialise as a new facility just because the estate has since
+        // grown — it stays in the review queue until a human resolves it. Without this
+        // the ambiguous review tail is non-idempotent: a re-run creates a few records.
+        if (priorReviewPending(srk)) {
+            recordDecision(tenantId, batchId, srk, POSSIBLE_EXISTING_REVIEW, "MEDIUM", null, true,
+                    "IDEMPOTENT_PRIOR_REVIEW_PENDING");
+            return new Outcome(POSSIBLE_EXISTING_REVIEW, Category.REVIEW, null);
+        }
+
         // No credible match → create an incomplete regulator-listed record immediately.
         boolean unresolvedSite = siteResolution != null && siteResolution.contains("UNRESOLVED");
         String decision = unresolvedSite ? NEW_ESTABLISHMENT_SITE_UNRESOLVED : NEW_REGULATED_ESTABLISHMENT;
@@ -622,5 +633,21 @@ public class HpaEnrichmentImportService {
     /** Cap a value to a DB column width so legacy free-text never overflows the insert. */
     private static String clip(String s, int max) {
         return (s == null || s.length() <= max) ? s : s.substring(0, max);
+    }
+
+    /**
+     * True when this feed record was already routed to a steward (identity conflict
+     * or possible-existing) in a prior non-dry-run batch. Such a record is never
+     * auto-created on a later run — it waits for human resolution — so re-imports
+     * stay idempotent even for the ambiguous review tail. Indexed by V037
+     * idx_hmd_srk on hpa_match_decision(source_record_key).
+     */
+    private boolean priorReviewPending(String srk) {
+        Integer n = jdbc.queryForObject(
+                "SELECT count(*) FROM tuso.hpa_match_decision d JOIN tuso.hpa_import_batch b ON d.batch_id = b.id "
+                        + "WHERE d.source_record_key = ? AND b.dry_run = false "
+                        + "AND d.decision_outcome IN ('IDENTITY_CONFLICT','POSSIBLE_EXISTING_REVIEW')",
+                Integer.class, srk);
+        return n != null && n > 0;
     }
 }

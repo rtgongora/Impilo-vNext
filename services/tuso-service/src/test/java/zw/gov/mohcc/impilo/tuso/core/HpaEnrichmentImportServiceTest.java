@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityIdentifierEntity;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityContactRepository;
@@ -21,6 +23,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.lenient;
@@ -42,13 +45,18 @@ class HpaEnrichmentImportServiceTest {
     @Mock FacilityRepository facilityRepository;
     @Mock FacilityIdentifierRepository identifierRepository;
     @Mock FacilityContactRepository contactRepository;
+    @Mock PlatformTransactionManager transactionManager;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final UUID TENANT = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private HpaEnrichmentImportService service() {
+        // TransactionTemplate runs each chunk's callback inline against this mock
+        // manager (getTransaction returns a real status; commit is a no-op).
+        lenient().when(transactionManager.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
         return new HpaEnrichmentImportService(
-                jdbc, objectMapper, matchService, facilityRepository, identifierRepository, contactRepository);
+                jdbc, objectMapper, matchService, facilityRepository, identifierRepository,
+                contactRepository, transactionManager);
     }
 
     private static String record(long id, String name) {
@@ -74,7 +82,7 @@ class HpaEnrichmentImportServiceTest {
         // Batch id + no-op field-assertion existence checks.
         lenient().when(jdbc.queryForObject(anyString(), eq(Long.class), any(Object[].class))).thenReturn(1L);
         lenient().when(jdbc.queryForObject(anyString(), eq(Integer.class), any(Object[].class))).thenReturn(0);
-        when(facilityRepository.findByTenantId(TENANT)).thenReturn(List.of());
+        lenient().when(facilityRepository.countByTenantId(TENANT)).thenReturn(0L);
 
         // 100 already carries our HPA identifier → idempotent.
         FacilityEntity existing = mock(FacilityEntity.class, RETURNS_DEEP_STUBS);
@@ -107,5 +115,32 @@ class HpaEnrichmentImportServiceTest {
         assertThat(summary.countsByOutcome().get("CONFIRMED_EXISTING_ENRICH")).isEqualTo(2); // idempotent + enrich
         assertThat(summary.countsByOutcome().get("NEW_REGULATED_ESTABLISHMENT")).isEqualTo(1);
         assertThat(summary.countsByOutcome().get("QUARANTINED_DATA_QUALITY")).isEqualTo(1);
+    }
+
+    @Test
+    void previouslyReviewedRecordIsNotReCreatedOnReRun() throws Exception {
+        // A record with no live match that was ALREADY routed to a steward in a prior
+        // committed run must stay in review, not silently materialise as a new facility.
+        Path feed = Files.createTempFile("hpa-feed-rerun", ".jsonl");
+        Files.write(feed, List.of(record(300, "Gamma Pharmacy")));
+
+        lenient().when(jdbc.update(anyString(), any(Object[].class))).thenReturn(1);
+        lenient().when(jdbc.queryForObject(anyString(), eq(Long.class), any(Object[].class))).thenReturn(1L);
+        lenient().when(jdbc.queryForObject(anyString(), eq(Integer.class), any(Object[].class))).thenReturn(0);
+        // The prior-review guard query reports a pending steward decision for this record.
+        lenient().when(jdbc.queryForObject(contains("decision_outcome IN"), eq(Integer.class), any(Object[].class)))
+                .thenReturn(1);
+        lenient().when(facilityRepository.countByTenantId(TENANT)).thenReturn(0L);
+        lenient().when(identifierRepository.findBySystemAndValue(eq("HPA_INSTITUTION_ID"), any()))
+                .thenReturn(Optional.empty());
+        when(matchService.matchForRegistration(eq(TENANT), eq("Gamma Pharmacy"), any(), any(), any()))
+                .thenReturn(FacilityMatchService.MatchResult.none());
+
+        HpaEnrichmentImportService.HpaImportSummary summary = service().importFeed(
+                new HpaEnrichmentImportService.HpaImportRequest(feed.toString(), false, TENANT, "chk"));
+
+        assertThat(summary.createdEstablishment()).isZero();          // NOT re-created
+        assertThat(summary.routedToReview()).isEqualTo(1);            // stays in the steward queue
+        assertThat(summary.countsByOutcome().get("POSSIBLE_EXISTING_REVIEW")).isEqualTo(1);
     }
 }
