@@ -139,6 +139,12 @@ public class SecurityConfig {
                             .requestMatchers("/api/v1/ndila/intelligence/**").hasAnyRole(NDILA_INTELLIGENCE_ROLES)
                             .requestMatchers("/api/v1/ndila/audience/**").hasAnyRole(NDILA_INTELLIGENCE_ROLES)
 
+                            // Internal HPA location import (service-to-service, in-cluster only;
+                            // not gateway-routed externally). Mirrors the tuso/varapi internal HPA
+                            // import endpoints: grants no authority and writes only UNVERIFIED
+                            // candidate locations keyed to a tuso facility.
+                            .requestMatchers("/internal/v1/locations/hpa-import/**").permitAll()
+
                             // Provider configs / ops
                             .requestMatchers("/internal/v1/ndila/providers/**").hasAnyRole(NDILA_ADMIN_ROLES)
                             .requestMatchers("/internal/v1/ndila/**").hasAnyRole(NDILA_VIEWER_ROLES)
