@@ -252,9 +252,11 @@ public class HpaEnrichmentImportService {
         facility.setVersion(1);
         facility.setCreatedBy(actorId);
         facility.setName(text(hpa, "institution_name_raw"));
-        setIfPresent(text(hpa, "institution_type"), facility::setFacilityType);
+        // facility_type is varchar(50); some HPA institution_type strings exceed it
+        // (e.g. combined-discipline labels ~52 chars) — clip to the column width.
+        setIfPresent(clip(text(hpa, "institution_type"), 50), facility::setFacilityType);
         setIfPresent(text(hpa, "province"), facility::setProvince);
-        setIfPresent(text(hpa, "designation"), facility::setOwnership);
+        setIfPresent(clip(text(hpa, "designation"), 50), facility::setOwnership);
         facility.setDescription("HPA regulator-listed institution (" + BUNDLE_ID + ")");
         // Regulator-listed ≠ operational. Never assume ACTIVE/open from a regulatory listing.
         facility.setRegulatoryStatus(FacilityRegulatoryStatus.IMPORTED_PENDING_CONFIGURATION);
@@ -478,13 +480,16 @@ public class HpaEnrichmentImportService {
         }
         FacilityContactEntity contact = new FacilityContactEntity();
         contact.setFacility(facility);
-        contact.setContactType("HPA_LEGACY_CANDIDATE_UNVERIFIED");
+        // Must fit facility_contact.contact_type varchar(30); legacy free-text
+        // phone/email are capped to their column widths (50/255) — HPA legacy
+        // phone fields can hold several numbers in one string.
+        contact.setContactType("HPA_LEGACY_UNVERIFIED");
         contact.setRole("FACILITY");
         if (!isBlank(phone)) {
-            contact.setPhone(phone.trim());
+            contact.setPhone(clip(phone.trim(), 50));
         }
         if (!isBlank(email)) {
-            contact.setEmail(email.trim());
+            contact.setEmail(clip(email.trim(), 255));
         }
         contactRepository.save(contact);
     }
@@ -539,5 +544,10 @@ public class HpaEnrichmentImportService {
 
     private static boolean isBlank(String s) {
         return s == null || s.isBlank();
+    }
+
+    /** Cap a value to a DB column width so legacy free-text never overflows the insert. */
+    private static String clip(String s, int max) {
+        return (s == null || s.length() <= max) ? s : s.substring(0, max);
     }
 }
