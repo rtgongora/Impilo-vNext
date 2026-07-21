@@ -66,6 +66,8 @@ class RitoFeedbackRequestConsumerTest {
         // real contact + comm-preferences; Khuluma never carries PII.
         assertThat(content.patientRef()).isEqualTo("CPID-42");
         assertThat(content.variables()).containsEntry("encounterRef", encounterRef);
+        // The in-app deep link the notification template turns into the tap target (RW12).
+        assertThat(content.variables()).containsEntry("feedbackPath", "/feedback/visit/" + encounterRef);
     }
 
     @Test

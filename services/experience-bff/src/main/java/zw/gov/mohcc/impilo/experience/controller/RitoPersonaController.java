@@ -36,6 +36,14 @@ public class RitoPersonaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(rito.createCase(body));
     }
 
+    // ── Post-visit rating (citizen / caregiver — RW12) ───────────────
+    // Closes the in-app feedback link: the patient rates the verified encounter. Rito resolves
+    // the attributed provider from the encounter and stamps the rating verified.
+    @PostMapping({"/internal/v1/nompilo/rito/ratings", "/internal/v1/mobile/rito/ratings"})
+    public ResponseEntity<JsonNode> citizenSubmitRating(@RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(rito.submitRating(body));
+    }
+
     @GetMapping({"/internal/v1/nompilo/rito/cases/{id}", "/internal/v1/mobile/rito/cases/{id}"})
     public ResponseEntity<JsonNode> citizenTrack(@PathVariable String id) {
         return ResponseEntity.ok(rito.getCase(id));
@@ -91,6 +99,25 @@ public class RitoPersonaController {
         return ResponseEntity.ok(rito.correctiveActionAction(id, action, body != null ? body : Map.of()));
     }
 
+    // ── Provider workspace: my reputation + ratings + response (RW13) ─
+    @GetMapping("/internal/v1/work/rito/my-reputation")
+    public ResponseEntity<JsonNode> myReputation(
+            @RequestParam("provider_public_id") String providerPublicId,
+            @RequestParam(required = false) String period) {
+        return ResponseEntity.ok(rito.reputationManagementView(providerPublicId, period));
+    }
+
+    @GetMapping("/internal/v1/work/rito/my-ratings")
+    public ResponseEntity<JsonNode> myRatings(@RequestParam("provider_public_id") String providerPublicId) {
+        return ResponseEntity.ok(rito.listProviderRatings(providerPublicId));
+    }
+
+    @PostMapping("/internal/v1/work/rito/ratings/{ratingId}/response")
+    public ResponseEntity<JsonNode> providerRespondToRating(
+            @PathVariable String ratingId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(rito.respondToRating(ratingId, body));
+    }
+
     // ── Facility mode (quality focal / manager / safety lead) ────────
     @GetMapping({"/internal/v1/facility/rito/dashboard", "/internal/v1/mobile/rito/facility/dashboard"})
     public ResponseEntity<JsonNode> facilityDashboard(
@@ -123,6 +150,29 @@ public class RitoPersonaController {
     @GetMapping("/internal/v1/facility/rito/safety-incidents/sentinel")
     public ResponseEntity<JsonNode> facilitySentinel() {
         return ResponseEntity.ok(rito.sentinelIncidents());
+    }
+
+    // ── Reputation management + moderation (facility leadership / quality — RW14) ──
+    // Gated by V044 (REGULATOR + FACILITY_SAFETY_FOCAL) + V021 broad /rito/ (FACILITY_ADMIN,
+    // DISTRICT_PHO). The management view exposes all four domains; the queue holds pending ratings.
+    @GetMapping({"/internal/v1/facility/rito/reputation/{providerPublicId}",
+                 "/internal/v1/above-site/rito/reputation/{providerPublicId}"})
+    public ResponseEntity<JsonNode> reputationManagement(
+            @PathVariable String providerPublicId, @RequestParam(required = false) String period) {
+        return ResponseEntity.ok(rito.reputationManagementView(providerPublicId, period));
+    }
+
+    @GetMapping({"/internal/v1/facility/rito/moderation-queue",
+                 "/internal/v1/above-site/rito/moderation-queue"})
+    public ResponseEntity<JsonNode> moderationQueue(@RequestParam(required = false) String state) {
+        return ResponseEntity.ok(rito.moderationQueue(state));
+    }
+
+    @PostMapping({"/internal/v1/facility/rito/ratings/{ratingId}/moderate",
+                  "/internal/v1/above-site/rito/ratings/{ratingId}/moderate"})
+    public ResponseEntity<JsonNode> moderateRating(
+            @PathVariable String ratingId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(rito.moderateRating(ratingId, body));
     }
 
     // ── Above-site (district / province / national supervisor) ───────

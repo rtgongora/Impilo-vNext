@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.rito.api.dto;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -41,6 +42,19 @@ public final class RatingDtos {
 
     /** A provider's response to a rating. */
     public record ProviderResponseRequest(String providerPublicId, String responseText, String respondedBy) {}
+
+    /** One domain measure on a rating, for list/queue display (RW12-14). */
+    public record DomainScoreView(String domain, String measure, BigDecimal score, String scale) {}
+
+    /**
+     * A rating row for the provider self-view (RW13) and moderation queue (RW14). Carries no
+     * respondent identity — respondentClass only (client/peer/etc.); the identity shield holds.
+     */
+    public record RatingSummary(UUID id, String providerPublicId, UUID facilityId, String encounterRef,
+                                String providerRole, String modality, String specialty,
+                                boolean verifiedInteraction, String respondentClass, String reportingPeriod,
+                                BigDecimal overallScore, String moderationState, OffsetDateTime submittedAt,
+                                List<DomainScoreView> domainScores, boolean hasProviderResponse) {}
 
     // ── Read surfaces (RW5) ──────────────────────────────────────────────────
 

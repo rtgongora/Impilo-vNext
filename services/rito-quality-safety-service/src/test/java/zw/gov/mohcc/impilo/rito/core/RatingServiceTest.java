@@ -82,4 +82,52 @@ class RatingServiceTest {
         assertThat(ratingRepository.findById(rating.getId()).orElseThrow().getModerationState())
                 .isEqualTo("PUBLISHED");
     }
+
+    @Test
+    void providerIsResolvedFromTheEncounterWhenTheCitizenOmitsIt() {
+        // RW12: the in-app rating link carries only the encounter ref — the attributed provider
+        // is resolved from the recorded verified interaction.
+        UUID tenant = UUID.randomUUID();
+        String provider = "PROVENCRESOLVE00000000000A";
+        String encounterRef = UUID.randomUUID().toString();
+        Map<String, Object> pct = new HashMap<>();
+        pct.put("encounterRef", encounterRef);
+        pct.put("attendingProviderId", provider);
+        verifiedInteractionService.recordFromPct(tenant, pct);
+
+        SubmitRatingRequest noProvider = new SubmitRatingRequest(null, null, null, encounterRef, null, null,
+                null, "CLIENT", true, null, null, new BigDecimal("5.0"), null,
+                List.of(new DomainScoreInput("CLIENT_EXPERIENCE", "overall", new BigDecimal("5.0"), "1-5")));
+        ProviderRatingEntity rating = ratingService.submitRating(tenant, noProvider);
+        assertThat(rating.getProviderPublicId()).isEqualTo(provider);
+        assertThat(rating.getVerifiedInteraction()).isTrue();
+    }
+
+    @Test
+    void submissionWithNoProviderAndNoEncounterIsRejected() {
+        UUID tenant = UUID.randomUUID();
+        SubmitRatingRequest empty = new SubmitRatingRequest(null, null, null, null, null, null, null,
+                "CLIENT", true, null, null, new BigDecimal("3.0"), null, List.of());
+        assertThatThrownBy(() -> ratingService.submitRating(tenant, empty))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void listForProviderAndModerationQueueSurfaceRatings() {
+        // RW13/RW14: the provider self-view + moderation queue read paths.
+        UUID tenant = UUID.randomUUID();
+        String provider = "PROVLIST0000000000000000A1";
+        ratingService.submitRating(tenant, request(provider, null));    // unverified => UNDER_REVIEW moderation
+
+        assertThat(ratingService.listForProvider(tenant, provider))
+                .hasSize(1)
+                .allSatisfy(s -> {
+                    assertThat(s.providerPublicId()).isEqualTo(provider);
+                    assertThat(s.domainScores()).hasSize(2);
+                    assertThat(s.hasProviderResponse()).isFalse();
+                });
+        // Default queue (SUBMITTED + UNDER_REVIEW) includes the freshly-submitted rating.
+        assertThat(ratingService.listByModerationState(tenant, null))
+                .anySatisfy(s -> assertThat(s.providerPublicId()).isEqualTo(provider));
+    }
 }

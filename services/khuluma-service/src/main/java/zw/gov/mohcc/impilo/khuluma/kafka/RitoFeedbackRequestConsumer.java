@@ -51,10 +51,14 @@ public class RitoFeedbackRequestConsumer {
 
             // recipient/patientRef = the patient CPID: notification-service resolves the actual
             // contact address + communication preferences from patientRef (Khuluma does not hold PII).
+            // feedbackPath = the canonical in-app deep link the template turns into the tap target
+            // (one-ui-shell /feedback/visit/{encounterRef}); the page resolves the provider from
+            // the encounter and records the verified rating.
             DispatchContent content = new DispatchContent(
                     templateKey,
                     Map.of("encounterRef", encounterRef,
-                            "facilityId", text(n, "facilityId") != null ? text(n, "facilityId") : ""),
+                            "facilityId", text(n, "facilityId") != null ? text(n, "facilityId") : "",
+                            "feedbackPath", "/feedback/visit/" + encounterRef),
                     patientCpid,
                     messageKind);
             deliveryService.dispatch(UUID.fromString(tenant), encounterRef, patientCpid, FEEDBACK_CHANNELS, content);

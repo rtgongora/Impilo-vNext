@@ -5,7 +5,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.rito.api.dto.RatingDtos.DomainScoreInput;
+import zw.gov.mohcc.impilo.rito.api.dto.RatingDtos.DomainScoreView;
 import zw.gov.mohcc.impilo.rito.api.dto.RatingDtos.ProviderResponseRequest;
+import zw.gov.mohcc.impilo.rito.api.dto.RatingDtos.RatingSummary;
 import zw.gov.mohcc.impilo.rito.api.dto.RatingDtos.SubmitRatingRequest;
 import zw.gov.mohcc.impilo.rito.events.RitoEventEmitter;
 import zw.gov.mohcc.impilo.rito.persistence.entity.*;
@@ -55,32 +57,41 @@ public class RatingService {
 
     @Transactional
     public ProviderRatingEntity submitRating(UUID tenantId, SubmitRatingRequest req) {
-        if (req.providerPublicId() == null || req.providerPublicId().isBlank()) {
-            throw new IllegalArgumentException("providerPublicId is required");
-        }
-
-        // Verification gate: a rating tied to a recorded PCT interaction is verified.
+        // Verification gate: a rating tied to a recorded PCT interaction is verified. Resolve
+        // the interaction first — it is also the authoritative source of the attributed provider
+        // when the (citizen) caller only holds the encounter reference from the feedback link.
         boolean verified = false;
         String verificationSource = "NONE";
         VerifiedInteractionEntity vi = null;
         if (req.encounterRef() != null && !req.encounterRef().isBlank()) {
             vi = verifiedInteractionRepository
                     .findByTenantIdAndEncounterRef(tenantId, req.encounterRef()).orElse(null);
-            if (vi != null) {
-                verified = true;
-                verificationSource = "PCT";
-                // Anti-manipulation invariant: one verified rating per (encounter, provider).
-                if (ratingRepository.existsByTenantIdAndEncounterRefAndProviderPublicIdAndVerifiedInteractionTrue(
-                        tenantId, req.encounterRef(), req.providerPublicId())) {
-                    throw new IllegalStateException(
-                            "A verified rating already exists for this encounter and provider");
-                }
+        }
+
+        // Provider attribution: prefer the request, else the verified interaction's attending
+        // provider. A post-visit rating from the in-app link carries only the encounter ref.
+        String providerPublicId = (req.providerPublicId() != null && !req.providerPublicId().isBlank())
+                ? req.providerPublicId()
+                : (vi != null ? vi.getAttendingProviderId() : null);
+        if (providerPublicId == null || providerPublicId.isBlank()) {
+            throw new IllegalArgumentException(
+                    "providerPublicId is required (and could not be resolved from the encounter)");
+        }
+
+        if (vi != null) {
+            verified = true;
+            verificationSource = "PCT";
+            // Anti-manipulation invariant: one verified rating per (encounter, provider).
+            if (ratingRepository.existsByTenantIdAndEncounterRefAndProviderPublicIdAndVerifiedInteractionTrue(
+                    tenantId, req.encounterRef(), providerPublicId)) {
+                throw new IllegalStateException(
+                        "A verified rating already exists for this encounter and provider");
             }
         }
 
         ProviderRatingEntity rating = new ProviderRatingEntity();
         rating.setTenantId(tenantId);
-        rating.setProviderPublicId(req.providerPublicId());
+        rating.setProviderPublicId(providerPublicId);
         // Prefer the authoritative context from the verified interaction where present.
         rating.setFacilityId(req.facilityId() != null ? req.facilityId()
                 : (vi != null ? vi.getFacilityId() : null));
@@ -160,6 +171,38 @@ public class RatingService {
         emitter.emit("PROVIDER_RATING", rating.getId().toString(), "rito.rating.provider_responded",
                 "PROVIDER", rating.getProviderPublicId(), Map.of("ratingId", rating.getId().toString()), tenantId);
         return response;
+    }
+
+    /** Ratings attributed to one provider (RW13 — provider's own reputation + response surface). */
+    @Transactional(readOnly = true)
+    public java.util.List<RatingSummary> listForProvider(UUID tenantId, String providerPublicId) {
+        return ratingRepository.findByTenantIdAndProviderPublicId(tenantId, providerPublicId).stream()
+                .map(this::toSummary).toList();
+    }
+
+    /**
+     * Ratings currently in a moderation state (RW14 — moderation queue). Defaults to the
+     * review-pending states when {@code state} is blank.
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<RatingSummary> listByModerationState(UUID tenantId, String state) {
+        java.util.List<ProviderRatingEntity> rows = (state == null || state.isBlank())
+                ? java.util.stream.Stream.of("SUBMITTED", "UNDER_REVIEW")
+                        .flatMap(s -> ratingRepository.findByTenantIdAndModerationState(tenantId, s).stream())
+                        .toList()
+                : ratingRepository.findByTenantIdAndModerationState(tenantId, state);
+        return rows.stream().map(this::toSummary).toList();
+    }
+
+    private RatingSummary toSummary(ProviderRatingEntity r) {
+        java.util.List<DomainScoreView> scores = domainScoreRepository.findByRatingId(r.getId()).stream()
+                .map(s -> new DomainScoreView(s.getDomain(), s.getMeasure(), s.getScore(), s.getScale()))
+                .toList();
+        boolean hasResponse = !providerResponseRepository.findByRatingId(r.getId()).isEmpty();
+        return new RatingSummary(r.getId(), r.getProviderPublicId(), r.getFacilityId(), r.getEncounterRef(),
+                r.getProviderRole(), r.getModality(), r.getSpecialty(), r.getVerifiedInteraction(),
+                r.getRespondentClass(), r.getReportingPeriod(), r.getOverallScore(), r.getModerationState(),
+                r.getSubmittedAt(), scores, hasResponse);
     }
 
     private ProviderRatingEntity requireRating(UUID tenantId, UUID ratingId) {

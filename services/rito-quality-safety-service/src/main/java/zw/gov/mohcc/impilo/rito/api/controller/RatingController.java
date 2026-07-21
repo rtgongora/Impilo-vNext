@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.rito.api.dto.RatingDtos.ModerationRequest;
 import zw.gov.mohcc.impilo.rito.api.dto.RatingDtos.ProviderResponseRequest;
+import zw.gov.mohcc.impilo.rito.api.dto.RatingDtos.RatingSummary;
 import zw.gov.mohcc.impilo.rito.api.dto.RatingDtos.SubmitRatingRequest;
 import zw.gov.mohcc.impilo.rito.core.RatingModerationService;
 import zw.gov.mohcc.impilo.rito.core.RatingService;
@@ -13,6 +14,7 @@ import zw.gov.mohcc.impilo.rito.persistence.entity.ProviderRatingEntity;
 import zw.gov.mohcc.impilo.rito.persistence.entity.ProviderResponseEntity;
 import zw.gov.mohcc.impilo.rito.persistence.entity.RatingModerationEntity;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -45,6 +47,22 @@ public class RatingController {
             @PathVariable UUID ratingId,
             @RequestBody ProviderResponseRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ratingService.respond(tenantId, ratingId, request));
+    }
+
+    /** Ratings attributed to one provider — provider self-view + response surface (RW13). */
+    @GetMapping("/provider/{providerPublicId}")
+    public ResponseEntity<List<RatingSummary>> listForProvider(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable String providerPublicId) {
+        return ResponseEntity.ok(ratingService.listForProvider(tenantId, providerPublicId));
+    }
+
+    /** Moderation queue — ratings pending review (RW14). Defaults to SUBMITTED + UNDER_REVIEW. */
+    @GetMapping("/queue")
+    public ResponseEntity<List<RatingSummary>> moderationQueue(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestParam(required = false) String state) {
+        return ResponseEntity.ok(ratingService.listByModerationState(tenantId, state));
     }
 
     @PostMapping("/{ratingId}/moderate")

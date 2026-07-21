@@ -213,6 +213,40 @@ public class RitoServiceClient {
         return get(b.toUriString(), "dashboard:" + kind);
     }
 
+    // ── Experience & Reputation: ratings + reputation (RW12-14) ──────
+    public JsonNode submitRating(Map<String, Object> body) {
+        return post(baseUrl + API + "/ratings", body, "submitRating");
+    }
+
+    public JsonNode respondToRating(String ratingId, Map<String, Object> body) {
+        return post(baseUrl + API + "/ratings/" + ratingId + "/response", body, "respondToRating");
+    }
+
+    public JsonNode moderateRating(String ratingId, Map<String, Object> body) {
+        return post(baseUrl + API + "/ratings/" + ratingId + "/moderate", body, "moderateRating");
+    }
+
+    public JsonNode listProviderRatings(String providerPublicId) {
+        return get(baseUrl + API + "/ratings/provider/" + providerPublicId, "listProviderRatings");
+    }
+
+    public JsonNode moderationQueue(String state) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + API + "/ratings/queue");
+        if (state != null && !state.isBlank()) {
+            b.queryParam("state", state);
+        }
+        return get(b.toUriString(), "moderationQueue");
+    }
+
+    public JsonNode reputationManagementView(String providerPublicId, String period) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(
+                baseUrl + API + "/reputation/" + providerPublicId + "/management");
+        if (period != null && !period.isBlank()) {
+            b.queryParam("period", period);
+        }
+        return get(b.toUriString(), "reputationManagementView");
+    }
+
     // ── Config ───────────────────────────────────────────────────────
     public JsonNode listSlaPolicies() {
         return get(baseUrl + API + "/config/sla-policies", "listSlaPolicies");
