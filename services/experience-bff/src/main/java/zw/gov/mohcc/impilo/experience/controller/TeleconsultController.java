@@ -775,6 +775,45 @@ public class TeleconsultController {
         }
     }
 
+    /** TM-B1: guard-permitted next actions for the referral's current state (drives contextual UI). */
+    @GetMapping("/sessions/{id}/allowed-actions")
+    public ResponseEntity<Map<String, Object>> allowedActions(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ok(pctClient.allowedActions(id), requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    /** TM-B1: reason-bound lifecycle transitions. Cancel/reopen/escalate/transfer. */
+    @PostMapping("/sessions/{id}/{action:cancel|reopen|escalate|transfer|error-mark}")
+    public ResponseEntity<Map<String, Object>> lifecycleAction(
+            @PathVariable String id,
+            @PathVariable String action,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            JsonNode result = pctClient.lifecycleAction(id, action, body == null ? Map.of() : body);
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_REFERRAL_" + action.toUpperCase(Locale.ROOT).replace('-', '_'),
+                    "POST:teleconsult/" + action, "SUCCESS",
+                    actorId, "PROVIDER", extractPatient(result), "TeleconsultReferral", id, Map.of());
+            return ok(result, requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
     /**
      * Compatibility alias for mobile join semantics. Canonical action remains /accept.
      */

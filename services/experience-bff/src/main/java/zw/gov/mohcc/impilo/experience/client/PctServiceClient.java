@@ -560,6 +560,22 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    /** TM-B1 guard-permitted next actions for the referral's current state. */
+    public JsonNode allowedActions(String referralId) {
+        String url = baseUrl + "/v1/referrals/" + referralId + "/allowed-actions";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** TM-B1 reason-bound lifecycle transition (cancel|reopen|escalate|transfer|error-mark). */
+    public JsonNode lifecycleAction(String referralId, String action, Map<String, Object> request) {
+        String url = baseUrl + "/v1/referrals/" + referralId + "/" + action;
+        log.info("PCT: lifecycle {} on referral {}", action, referralId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url,
+                request == null ? Map.of() : request, JsonNode.class);
+        return extractData(response);
+    }
+
     private Map<String, Object> enrichAcceptWithDutyAudit(String referralId, Map<String, Object> request) {
         Map<String, Object> body = request == null ? new LinkedHashMap<>() : new LinkedHashMap<>(request);
         if (virtualPoolDutyService == null || body.containsKey("on_duty") || body.containsKey("onDuty")) {

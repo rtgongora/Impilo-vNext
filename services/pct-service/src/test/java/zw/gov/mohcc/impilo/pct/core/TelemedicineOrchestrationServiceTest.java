@@ -243,6 +243,55 @@ class TelemedicineOrchestrationServiceTest {
     }
 
     @Test
+    void lifecycleCancel_requiresReason() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            mocked.when(TrustContextHolder::get).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "DRAFT");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+
+            PctDomainException ex = org.junit.jupiter.api.Assertions.assertThrows(PctDomainException.class,
+                    () -> service.cancelReferral(referralId.toString(), Map.of()));
+            assertThat(ex.getCode()).isEqualTo("REASON_REQUIRED");
+        }
+    }
+
+    @Test
+    void lifecycleCancel_transitionsToCancelledWithReason() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            mocked.when(TrustContextHolder::get).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "DRAFT");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+            when(referralRepository.save(any(ReferralEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            service.cancelReferral(referralId.toString(), Map.of("reason", "duplicate of REF-9"));
+            assertThat(referral.getStatus()).isEqualTo("CANCELLED");
+        }
+    }
+
+    @Test
+    void allowedActions_returnsGuardPermittedTargets() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "SUBMITTED");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+
+            Map<String, Object> res = service.allowedActions(referralId.toString());
+            assertThat(res.get("status")).isEqualTo("SUBMITTED");
+            @SuppressWarnings("unchecked")
+            java.util.List<String> targets = (java.util.List<String>) res.get("allowedTargets");
+            assertThat(targets).contains("ACCEPTED", "DECLINED");
+        }
+    }
+
+    @Test
     void attachRecording_writes_ref_to_the_matching_referral() {
         UUID referralId = UUID.randomUUID();
         ReferralEntity referral = newReferral(referralId, "COMPLETED");

@@ -132,6 +132,48 @@ public class TelemedicineController {
         return ResponseEntity.ok(ApiResponse.ok(telemedicineService.completeReferral(id, request == null ? Map.of() : request), correlationId));
     }
 
+    /** Guard-permitted next actions for the referral's current state (TM-B1). */
+    @GetMapping("/referrals/{id}/allowed-actions")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> allowedActions(@PathVariable String id) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(telemedicineService.allowedActions(id), correlationId));
+    }
+
+    @PostMapping("/referrals/{id}/cancel")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> cancelReferral(
+            @PathVariable String id, @RequestBody(required = false) Map<String, Object> request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(telemedicineService.cancelReferral(id, request == null ? Map.of() : request), correlationId));
+    }
+
+    @PostMapping("/referrals/{id}/reopen")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> reopenReferral(
+            @PathVariable String id, @RequestBody(required = false) Map<String, Object> request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(telemedicineService.reopenReferral(id, request == null ? Map.of() : request), correlationId));
+    }
+
+    @PostMapping("/referrals/{id}/error-mark")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> markEnteredInError(
+            @PathVariable String id, @RequestBody(required = false) Map<String, Object> request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(telemedicineService.markEnteredInError(id, request == null ? Map.of() : request), correlationId));
+    }
+
+    @PostMapping("/referrals/{id}/escalate")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> escalateReferral(
+            @PathVariable String id, @RequestBody(required = false) Map<String, Object> request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(telemedicineService.escalateReferral(id, request == null ? Map.of() : request), correlationId));
+    }
+
+    @PostMapping("/referrals/{id}/transfer")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> transferReferral(
+            @PathVariable String id, @RequestBody(required = false) Map<String, Object> request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(telemedicineService.transferReferral(id, request == null ? Map.of() : request), correlationId));
+    }
+
     @GetMapping("/patient/{cpid}/telehealth")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> listPatientTelehealthSessions(
             @PathVariable String cpid,

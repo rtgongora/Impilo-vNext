@@ -386,6 +386,76 @@ public class TelemedicineOrchestrationService {
         return toReferralPayload(saved);
     }
 
+    // ------------------------------------------------------------------
+    // Lifecycle actions (TM-B1): reason-bound transitions to the additive states.
+    // Each records the reason on the responses log and drives the guard.
+    // ------------------------------------------------------------------
+
+    /** The current status and the guard-permitted next actions — powers contextual UI. */
+    @Transactional(readOnly = true)
+    public Map<String, Object> allowedActions(String referralId) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("referralId", entity.getReferralId().toString());
+        out.put("status", entity.getStatus());
+        List<String> targets = ReferralStatus.fromLenient(entity.getStatus())
+                .map(s -> referralStateMachine.allowedTargets(s).stream().map(Enum::name).sorted().toList())
+                .orElse(List.of());
+        out.put("allowedTargets", targets);
+        return out;
+    }
+
+    @Transactional
+    public Map<String, Object> cancelReferral(String referralId, Map<String, Object> request) {
+        return lifecycleTransition(referralId, ReferralStatus.CANCELLED, "cancel", request,
+                "telemedicine.session.cancelled");
+    }
+
+    @Transactional
+    public Map<String, Object> reopenReferral(String referralId, Map<String, Object> request) {
+        return lifecycleTransition(referralId, ReferralStatus.REOPENED, "reopen", request,
+                "telemedicine.session.reopened");
+    }
+
+    @Transactional
+    public Map<String, Object> markEnteredInError(String referralId, Map<String, Object> request) {
+        return lifecycleTransition(referralId, ReferralStatus.ENTERED_IN_ERROR, "error-mark", request,
+                "telemedicine.session.entered_in_error");
+    }
+
+    @Transactional
+    public Map<String, Object> escalateReferral(String referralId, Map<String, Object> request) {
+        return lifecycleTransition(referralId, ReferralStatus.ESCALATED, "escalate", request,
+                "telemedicine.session.escalated");
+    }
+
+    @Transactional
+    public Map<String, Object> transferReferral(String referralId, Map<String, Object> request) {
+        return lifecycleTransition(referralId, ReferralStatus.TRANSFERRED, "transfer", request,
+                "telemedicine.session.transferred");
+    }
+
+    /** Shared lifecycle-transition mechanic: reason mandatory, guard-driven, reason logged. */
+    private Map<String, Object> lifecycleTransition(String referralId, ReferralStatus target, String action,
+                                                    Map<String, Object> request, String eventType) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        String reason = optional(request, "reason");
+        if (blank(reason)) {
+            throw new PctDomainException("REASON_REQUIRED", 400, action + " requires a reason.");
+        }
+        referralStateMachine.apply(entity, target, action);
+        Map<String, Object> logEntry = new LinkedHashMap<>();
+        logEntry.put("responseType", target.name());
+        logEntry.put("action", action);
+        logEntry.put("reason", reason);
+        logEntry.put("actorId", TrustContextHolder.get() != null ? TrustContextHolder.get().actorId() : "system");
+        logEntry.put("timestamp", OffsetDateTime.now().toString());
+        appendResponse(entity, logEntry);
+        ReferralEntity saved = referralRepository.save(entity);
+        emitOutbox(eventType, saved.getReferralId().toString(), toReferralPayload(saved));
+        return toReferralPayload(saved);
+    }
+
     /**
      * Stage 6 (Response Package): record a STRUCTURED clinical response (C7) — diagnosis, action plan, red
      * flags, follow-up — instead of free-text only. The structured fields are persisted to
