@@ -35,17 +35,23 @@ public class RitoReputationAggregator {
         int providers = 0;
         for (Object[] row : ratingRepository.findDistinctPublishedProviderPeriods()) {
             try {
-                UUID tenantId = (UUID) row[0];
-                String providerPublicId = (String) row[1];
-                String period = (String) row[2];
-                aggregationService.recomputeForProvider(tenantId, providerPublicId, period);
+                aggregationService.recomputeForProvider((UUID) row[0], (String) row[1], (String) row[2]);
                 providers++;
             } catch (RuntimeException e) {
-                log.warn("Reputation recompute failed for row: {}", e.getMessage());
+                log.warn("Provider reputation recompute failed for row: {}", e.getMessage());
             }
         }
-        if (providers > 0) {
-            log.debug("Reputation aggregator recomputed {} provider/period rollups", providers);
+        int facilities = 0;
+        for (Object[] row : ratingRepository.findDistinctPublishedFacilityPeriods()) {
+            try {
+                aggregationService.recomputeForFacility((UUID) row[0], (UUID) row[1], (String) row[2]);
+                facilities++;
+            } catch (RuntimeException e) {
+                log.warn("Facility reputation recompute failed for row: {}", e.getMessage());
+            }
+        }
+        if (providers > 0 || facilities > 0) {
+            log.debug("Reputation aggregator recomputed {} provider + {} facility rollups", providers, facilities);
         }
     }
 }

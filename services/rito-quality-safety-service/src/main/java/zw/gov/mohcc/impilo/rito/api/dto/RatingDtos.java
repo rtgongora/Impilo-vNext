@@ -64,4 +64,9 @@ public final class RatingDtos {
     public record ManagementViewResponse(String providerPublicId, String reportingPeriod,
                                          List<ManagementDomainSummary> domains,
                                          Map<String, Long> moderationStateCounts) {}
+
+    /** Public facility experience summary (RW8) — verified experience domains, source-tagged. */
+    public record FacilityExperienceSummaryResponse(UUID facilityId, String reportingPeriod,
+                                                    String source, int verifiedInteractionTotal,
+                                                    List<PublicDomainSummary> domains) {}
 }

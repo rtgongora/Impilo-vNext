@@ -5,9 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.rito.events.RitoEventEmitter;
+import zw.gov.mohcc.impilo.rito.persistence.entity.FacilityReputationSummaryEntity;
 import zw.gov.mohcc.impilo.rito.persistence.entity.ProviderRatingEntity;
 import zw.gov.mohcc.impilo.rito.persistence.entity.ProviderReputationSummaryEntity;
 import zw.gov.mohcc.impilo.rito.persistence.entity.RatingDomainScoreEntity;
+import zw.gov.mohcc.impilo.rito.persistence.repository.FacilityReputationSummaryRepository;
 import zw.gov.mohcc.impilo.rito.persistence.repository.ProviderRatingRepository;
 import zw.gov.mohcc.impilo.rito.persistence.repository.ProviderReputationSummaryRepository;
 import zw.gov.mohcc.impilo.rito.persistence.repository.RatingDomainScoreRepository;
@@ -32,16 +34,82 @@ public class ReputationAggregationService {
     private final ProviderRatingRepository ratingRepository;
     private final RatingDomainScoreRepository domainScoreRepository;
     private final ProviderReputationSummaryRepository summaryRepository;
+    private final FacilityReputationSummaryRepository facilitySummaryRepository;
     private final RitoEventEmitter emitter;
 
     public ReputationAggregationService(ProviderRatingRepository ratingRepository,
                                         RatingDomainScoreRepository domainScoreRepository,
                                         ProviderReputationSummaryRepository summaryRepository,
+                                        FacilityReputationSummaryRepository facilitySummaryRepository,
                                         RitoEventEmitter emitter) {
         this.ratingRepository = ratingRepository;
         this.domainScoreRepository = domainScoreRepository;
         this.summaryRepository = summaryRepository;
+        this.facilitySummaryRepository = facilitySummaryRepository;
         this.emitter = emitter;
+    }
+
+    /**
+     * Recompute the facility-level reputation aggregate (RW8): all PUBLISHED ratings AT a
+     * facility, across every provider, per domain. Idempotent upsert; emits rito.reputation.
+     */
+    @Transactional
+    public int recomputeForFacility(UUID tenantId, UUID facilityId, String period) {
+        List<ProviderRatingEntity> ratings = ratingRepository
+                .findByTenantIdAndFacilityId(tenantId, facilityId).stream()
+                .filter(r -> "PUBLISHED".equals(r.getModerationState()))
+                .filter(r -> period == null || period.equals(r.getReportingPeriod()))
+                .toList();
+
+        Map<String, Acc> byDomainAcc = new LinkedHashMap<>();
+        for (ProviderRatingEntity r : ratings) {
+            boolean verified = Boolean.TRUE.equals(r.getVerifiedInteraction());
+            Map<String, List<BigDecimal>> byDomain = new LinkedHashMap<>();
+            for (RatingDomainScoreEntity s : domainScoreRepository.findByRatingId(r.getId())) {
+                byDomain.computeIfAbsent(s.getDomain(), d -> new ArrayList<>()).add(s.getScore());
+            }
+            for (Map.Entry<String, List<BigDecimal>> e : byDomain.entrySet()) {
+                Acc a = byDomainAcc.computeIfAbsent(e.getKey(), k -> new Acc());
+                BigDecimal domainMean = mean(e.getValue());
+                a.count++;
+                a.sum = a.sum.add(domainMean);
+                int bucket = Math.max(1, Math.min(5, domainMean.setScale(0, RoundingMode.HALF_UP).intValue()));
+                a.histogram[bucket]++;
+                if (verified) {
+                    a.verifiedCount++;
+                    a.verifiedSum = a.verifiedSum.add(domainMean);
+                }
+            }
+        }
+
+        for (Map.Entry<String, Acc> e : byDomainAcc.entrySet()) {
+            String domain = e.getKey();
+            Acc a = e.getValue();
+            FacilityReputationSummaryEntity summary = facilitySummaryRepository
+                    .findByTenantIdAndFacilityIdAndDomainAndReportingPeriod(tenantId, facilityId, domain, period)
+                    .orElseGet(FacilityReputationSummaryEntity::new);
+            summary.setTenantId(tenantId);
+            summary.setFacilityId(facilityId);
+            summary.setDomain(domain);
+            summary.setReportingPeriod(period);
+            summary.setRatingCount(a.count);
+            summary.setVerifiedCount(a.verifiedCount);
+            summary.setMeanScore(a.count > 0 ? a.sum.divide(BigDecimal.valueOf(a.count), 2, RoundingMode.HALF_UP) : null);
+            summary.setVerifiedMeanScore(a.verifiedCount > 0
+                    ? a.verifiedSum.divide(BigDecimal.valueOf(a.verifiedCount), 2, RoundingMode.HALF_UP) : null);
+            summary.setDistribution(histogramJson(a.histogram));
+            summary.setLastRecomputedAt(java.time.OffsetDateTime.now());
+            facilitySummaryRepository.save(summary);
+        }
+
+        emitter.emit("REPUTATION", facilityId.toString(), "rito.reputation.facility_recomputed",
+                "FACILITY", facilityId.toString(),
+                Map.of("facilityId", facilityId.toString(),
+                        "period", period != null ? period : "ALL", "domains", byDomainAcc.size()),
+                tenantId);
+        log.info("Facility reputation recomputed facility={} period={} domains={}",
+                facilityId, period, byDomainAcc.size());
+        return byDomainAcc.size();
     }
 
     private static final class Acc {

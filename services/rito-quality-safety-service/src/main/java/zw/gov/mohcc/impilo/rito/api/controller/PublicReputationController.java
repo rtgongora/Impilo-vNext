@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.rito.api.dto.RatingDtos.ExperienceSummaryResponse;
+import zw.gov.mohcc.impilo.rito.api.dto.RatingDtos.FacilityExperienceSummaryResponse;
 import zw.gov.mohcc.impilo.rito.core.ReputationReadService;
 
 import java.util.UUID;
@@ -29,5 +30,14 @@ public class PublicReputationController {
             @PathVariable String providerPublicId,
             @RequestParam(required = false) String period) {
         return ResponseEntity.ok(readService.publicExperienceSummary(tenantId, providerPublicId, period));
+    }
+
+    /** Public facility experience summary (RW8) — TUSO composes this onto the facility profile. */
+    @GetMapping("/facility/{facilityId}")
+    public ResponseEntity<FacilityExperienceSummaryResponse> facilityExperienceSummary(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID facilityId,
+            @RequestParam(required = false) String period) {
+        return ResponseEntity.ok(readService.publicFacilityExperienceSummary(tenantId, facilityId, period));
     }
 }

@@ -30,12 +30,35 @@ public class ReputationReadService {
     private static final Set<String> PUBLIC_DOMAINS = Set.of("CLIENT_EXPERIENCE", "ACCESS_PROCESS");
 
     private final ProviderReputationSummaryRepository summaryRepository;
+    private final zw.gov.mohcc.impilo.rito.persistence.repository.FacilityReputationSummaryRepository facilitySummaryRepository;
     private final ProviderRatingRepository ratingRepository;
 
-    public ReputationReadService(ProviderReputationSummaryRepository summaryRepository,
-                                 ProviderRatingRepository ratingRepository) {
+    public ReputationReadService(
+            ProviderReputationSummaryRepository summaryRepository,
+            zw.gov.mohcc.impilo.rito.persistence.repository.FacilityReputationSummaryRepository facilitySummaryRepository,
+            ProviderRatingRepository ratingRepository) {
         this.summaryRepository = summaryRepository;
+        this.facilitySummaryRepository = facilitySummaryRepository;
         this.ratingRepository = ratingRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public FacilityExperienceSummaryResponse publicFacilityExperienceSummary(UUID tenantId, UUID facilityId, String period) {
+        String p = period != null ? period : OffsetDateTime.now().format(PERIOD);
+        List<PublicDomainSummary> domains = facilitySummaryRepository
+                .findByTenantIdAndFacilityIdAndReportingPeriod(tenantId, facilityId, p).stream()
+                .filter(s -> PUBLIC_DOMAINS.contains(s.getDomain()))
+                .map(s -> new PublicDomainSummary(s.getDomain(), s.getVerifiedMeanScore(),
+                        s.getVerifiedCount() != null ? s.getVerifiedCount() : 0, s.getDistribution()))
+                .sorted(Comparator.comparing(PublicDomainSummary::domain))
+                .toList();
+        int verifiedTotal = (int) ratingRepository.findByTenantIdAndFacilityId(tenantId, facilityId).stream()
+                .filter(r -> "PUBLISHED".equals(r.getModerationState()))
+                .filter(r -> p.equals(r.getReportingPeriod()))
+                .filter(r -> Boolean.TRUE.equals(r.getVerifiedInteraction()))
+                .map(ProviderRatingEntity::getEncounterRef)
+                .filter(java.util.Objects::nonNull).distinct().count();
+        return new FacilityExperienceSummaryResponse(facilityId, p, "Rito", verifiedTotal, domains);
     }
 
     @Transactional(readOnly = true)

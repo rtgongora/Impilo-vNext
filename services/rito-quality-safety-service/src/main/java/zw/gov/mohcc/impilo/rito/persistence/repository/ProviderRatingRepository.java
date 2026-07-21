@@ -13,6 +13,14 @@ public interface ProviderRatingRepository extends JpaRepository<ProviderRatingEn
 
     List<ProviderRatingEntity> findByTenantIdAndProviderPublicId(UUID tenantId, String providerPublicId);
 
+    /** All ratings at a facility (across every provider) — drives facility reputation (RW8). */
+    List<ProviderRatingEntity> findByTenantIdAndFacilityId(UUID tenantId, UUID facilityId);
+
+    /** Distinct (tenant, facility, period) with PUBLISHED ratings — facility recompute discovery. */
+    @Query("SELECT DISTINCT r.tenantId, r.facilityId, r.reportingPeriod "
+            + "FROM ProviderRatingEntity r WHERE r.moderationState = 'PUBLISHED' AND r.facilityId IS NOT NULL")
+    List<Object[]> findDistinctPublishedFacilityPeriods();
+
     /** Distinct (tenant, provider, period) tuples with PUBLISHED ratings — drives scheduled recompute. */
     @Query("SELECT DISTINCT r.tenantId, r.providerPublicId, r.reportingPeriod "
             + "FROM ProviderRatingEntity r WHERE r.moderationState = 'PUBLISHED'")

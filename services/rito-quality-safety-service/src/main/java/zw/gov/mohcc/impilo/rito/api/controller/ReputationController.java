@@ -44,4 +44,13 @@ public class ReputationController {
         int summaries = aggregationService.recomputeForProvider(tenantId, providerPublicId, period);
         return ResponseEntity.ok(Map.of("providerPublicId", providerPublicId, "summariesRecomputed", summaries));
     }
+
+    @PostMapping("/facility/{facilityId}/recompute")
+    public ResponseEntity<Map<String, Object>> recomputeFacility(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID facilityId,
+            @RequestParam(required = false) String period) {
+        int domains = aggregationService.recomputeForFacility(tenantId, facilityId, period);
+        return ResponseEntity.ok(Map.of("facilityId", facilityId.toString(), "domainsRecomputed", domains));
+    }
 }
