@@ -208,7 +208,17 @@ public class FacilityController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            JsonNode composite = tusoClient.getFacilityStatusComposite(id);
+            // TUSO's status-composite is keyed by the canonical facility UUID (never the numeric
+            // surrogate id). The UI addresses facilities by numeric id, so resolve id -> UUID
+            // first; a value that is already a UUID passes through unchanged.
+            String facilityUuid = id;
+            if (id.matches("\\d+")) {
+                JsonNode facility = tusoClient.getFacility(Long.parseLong(id));
+                if (facility != null && facility.hasNonNull("facilityUuid")) {
+                    facilityUuid = facility.get("facilityUuid").asText();
+                }
+            }
+            JsonNode composite = tusoClient.getFacilityStatusComposite(facilityUuid);
             if (composite == null || composite.isNull()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }

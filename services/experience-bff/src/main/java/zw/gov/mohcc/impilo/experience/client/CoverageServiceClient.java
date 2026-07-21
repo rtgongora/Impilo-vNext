@@ -187,8 +187,12 @@ public class CoverageServiceClient {
     }
 
     public JsonNode listAppealsForAppellant(String appellantId) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/appeals")
-                .queryParam("appellant_id", appellantId)
+        // coverage-service serves appeals at /internal/v1/appeals (AppealController), not under
+        // the /internal/v1/coverage/ prefix, and the query param is appellantId (camelCase) —
+        // matching createAppeal above. The old /internal/v1/coverage/appeals?appellant_id had no
+        // handler → 502.
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/appeals")
+                .queryParam("appellantId", appellantId)
                 .toUriString();
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
