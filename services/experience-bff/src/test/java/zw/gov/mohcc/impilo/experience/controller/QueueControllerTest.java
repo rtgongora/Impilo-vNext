@@ -352,6 +352,7 @@ class QueueControllerTest {
     }
 
     private static QueueController newController(PctServiceClient pctClient) {
-        return new QueueController(pctClient, mock(TshepoAuditServiceClient.class));
+        return new QueueController(pctClient, mock(TshepoAuditServiceClient.class),
+                mock(zw.gov.mohcc.impilo.experience.client.TusoServiceClient.class));
     }
 }

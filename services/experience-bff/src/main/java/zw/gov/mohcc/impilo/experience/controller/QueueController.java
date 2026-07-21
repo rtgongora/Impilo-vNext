@@ -14,6 +14,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
+import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
 import zw.gov.mohcc.impilo.experience.imaging.ImagingGovernanceService;
 import zw.gov.mohcc.impilo.experience.queue.QueueStatsAggregator;
@@ -37,10 +38,30 @@ public class QueueController {
 
     private final PctServiceClient pctClient;
     private final TshepoAuditServiceClient tshepoAuditServiceClient;
+    private final TusoServiceClient tusoClient;
 
-    public QueueController(PctServiceClient pctClient, TshepoAuditServiceClient tshepoAuditServiceClient) {
+    public QueueController(PctServiceClient pctClient, TshepoAuditServiceClient tshepoAuditServiceClient,
+                           TusoServiceClient tusoClient) {
         this.pctClient = pctClient;
         this.tshepoAuditServiceClient = tshepoAuditServiceClient;
+        this.tusoClient = tusoClient;
+    }
+
+    /**
+     * Resolve a facility identifier to its canonical UUID: PCT keys queues by the facility
+     * UUID, but the UI addresses facilities by their numeric surrogate id. A numeric id is
+     * looked up via TUSO; a value that is already a UUID passes through. Previously the raw
+     * {@code UUID.fromString("1776")} threw, and the queue read surfaced as PCT_UNAVAILABLE.
+     */
+    private UUID resolveFacilityUuid(String facilityId) {
+        String trimmed = facilityId.trim();
+        if (trimmed.matches("\\d+")) {
+            JsonNode f = tusoClient.getFacility(Long.parseLong(trimmed));
+            if (f != null && f.hasNonNull("facilityUuid")) {
+                return UUID.fromString(f.get("facilityUuid").asText());
+            }
+        }
+        return UUID.fromString(trimmed);
     }
 
     private static final Logger log = LoggerFactory.getLogger(QueueController.class);
@@ -79,7 +100,7 @@ public class QueueController {
             if (queueId != null && !queueId.isBlank()) {
                 data = pctClient.listQueueItems(UUID.fromString(queueId.trim()), status);
             } else if (facilityId != null && !facilityId.isBlank()) {
-                UUID fid = UUID.fromString(facilityId.trim());
+                UUID fid = resolveFacilityUuid(facilityId);
                 UUID wid = workspaceId != null && !workspaceId.isBlank() ? UUID.fromString(workspaceId.trim()) : null;
                 JsonNode queues = pctClient.listQueues(fid, wid);
                 if (queueType != null && !queueType.isBlank() && queues != null && queues.isArray()) {
@@ -511,7 +532,7 @@ public class QueueController {
 
         if (facilityId != null && !facilityId.isBlank()) {
             try {
-                JsonNode queues = pctClient.listQueues(UUID.fromString(facilityId.trim()), null);
+                JsonNode queues = pctClient.listQueues(resolveFacilityUuid(facilityId), null);
                 if (queues != null) {
                     Map<String, Object> agg = new LinkedHashMap<>(QueueStatsAggregator.fromPctQueueList(queues));
                     long sum = ((Number) agg.getOrDefault("waiting", 0L)).longValue()
