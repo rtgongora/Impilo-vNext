@@ -324,6 +324,10 @@ public class HpaEnrichmentImportService {
         applyLegacyEnrichment(tenantId, batchId, facility, facilityId, srk, legacyEnrichment);
         practitionerInChargeHandoff(tenantId, batchId, facilityId, hpa);
         computeCompletenessAndGaps(tenantId, batchId, facilityId, hpa);
+        // Emit the standard facility event so cache-eviction / downstream consumers
+        // of the tuso.facility topic stay coherent — the importer writes via JPA, not
+        // FacilityService, so it must publish the event itself.
+        publishFacilityEvent(tenantId, facilityId, "tuso.facility.updated", "HPA_ENRICHED", batchId);
     }
 
     private Long createRegulatorListed(UUID tenantId, String actorId, long batchId, JsonNode hpa, String srk,
@@ -379,6 +383,7 @@ public class HpaEnrichmentImportService {
         applyLegacyEnrichment(tenantId, batchId, facility, facilityId, srk, legacyEnrichment);
         practitionerInChargeHandoff(tenantId, batchId, facilityId, hpa);
         computeCompletenessAndGaps(tenantId, batchId, facilityId, hpa);
+        publishFacilityEvent(tenantId, facilityId, "tuso.facility.created", "HPA_REGULATOR_LISTED", batchId);
         return facilityId;
     }
 
@@ -469,6 +474,22 @@ public class HpaEnrichmentImportService {
         } catch (Exception e) {
             log.warn("stage candidate {} failed: {}", srk, e.getMessage());
         }
+    }
+
+    /**
+     * Emit a standard tuso.facility outbox event (drained by TusoOutboxPublisher
+     * onto the tuso.facility topic) so cache-eviction and other facility-event
+     * consumers stay coherent for HPA-created/enriched facilities, exactly as they
+     * would for a facility written through FacilityService.
+     */
+    private void publishFacilityEvent(UUID tenantId, long facilityId, String eventType, String action, long batchId) {
+        String payload = String.format(
+                "{\"facilityId\":%d,\"tenantId\":\"%s\",\"action\":\"%s\",\"source\":\"HPA\",\"batchId\":%d}",
+                facilityId, tenantId, action, batchId);
+        jdbc.update("INSERT INTO tuso.event_outbox (aggregate_type, aggregate_id, event_type, payload, "
+                        + "created_at, tenant_id, producer, subject_type, subject_id, schema_version) "
+                        + "VALUES ('FACILITY', ?, ?, ?::jsonb, now(), ?, 'tuso-hpa-import', 'FACILITY', ?, 1)",
+                String.valueOf(facilityId), eventType, payload, tenantId.toString(), String.valueOf(facilityId));
     }
 
     private void recordDecision(UUID tenantId, long batchId, String srk, String outcome, String confidence,
