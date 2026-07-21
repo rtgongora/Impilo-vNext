@@ -12,4 +12,6 @@ public interface PicNominationRepository extends JpaRepository<PicNominationEnti
     List<PicNominationEntity> findByProviderPublicIdOrderByNominatedAtDesc(String providerPublicId);
     List<PicNominationEntity> findByStateOrderByNominatedAtDesc(String state);
     List<PicNominationEntity> findByProviderPublicIdAndStateIn(String providerPublicId, Collection<String> states);
+
+    boolean existsByFacilityIdAndProviderPublicId(Long facilityId, String providerPublicId);
 }

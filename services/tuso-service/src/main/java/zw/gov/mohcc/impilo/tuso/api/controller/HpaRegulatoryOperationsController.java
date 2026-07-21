@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.tuso.core.ApplicationGovernanceService;
 import zw.gov.mohcc.impilo.tuso.core.InspectionContentService;
 import zw.gov.mohcc.impilo.tuso.core.InspectionVisitService;
+import zw.gov.mohcc.impilo.tuso.core.HpaPicNominationSeedService;
 import zw.gov.mohcc.impilo.tuso.core.PicNominationService;
 import zw.gov.mohcc.impilo.tuso.core.PremisesService;
 import zw.gov.mohcc.impilo.tuso.core.RegulatoryDemandSignalService;
@@ -58,6 +59,7 @@ public class HpaRegulatoryOperationsController {
     private final InspectionContentService contentService;
     private final FacilityInspectionRepository inspectionRepository;
     private final RegulatoryDemandSignalService demandSignalService;
+    private final HpaPicNominationSeedService picNominationSeedService;
 
     public HpaRegulatoryOperationsController(ApplicationGovernanceService governanceService,
                                              PicNominationService picNominationService,
@@ -67,7 +69,8 @@ public class HpaRegulatoryOperationsController {
                                              FacilityClassificationRepository classificationRepository,
                                              InspectionContentService contentService,
                                              FacilityInspectionRepository inspectionRepository,
-                                             RegulatoryDemandSignalService demandSignalService) {
+                                             RegulatoryDemandSignalService demandSignalService,
+                                             HpaPicNominationSeedService picNominationSeedService) {
         this.governanceService = governanceService;
         this.picNominationService = picNominationService;
         this.visitService = visitService;
@@ -77,7 +80,25 @@ public class HpaRegulatoryOperationsController {
         this.contentService = contentService;
         this.inspectionRepository = inspectionRepository;
         this.demandSignalService = demandSignalService;
+        this.picNominationSeedService = picNominationSeedService;
     }
+
+    /**
+     * Bulk-seed PIC nominations from the materialised HPA practitioner registry
+     * (VARAPI). Each (facility, provider) pair is driven through the HPA-2017
+     * nomination state machine; unclaimed providers park at ELIGIBILITY_CHECKED.
+     * Idempotent.
+     */
+    @PostMapping("/pic-nominations/seed-hpa")
+    public ResponseEntity<ApiResponse<HpaPicNominationSeedService.SeedSummary>> seedHpaPicNominations(
+            @org.springframework.web.bind.annotation.RequestBody(required = false) SeedHpaRequest request) {
+        TrustContext ctx = TrustContextHolder.require();
+        java.util.UUID tenantId = (request != null && request.tenantId() != null && !request.tenantId().isBlank())
+                ? java.util.UUID.fromString(request.tenantId().trim()) : null;
+        return ResponseEntity.ok(ApiResponse.ok(picNominationSeedService.seedFromHpa(tenantId), corr(ctx)));
+    }
+
+    public record SeedHpaRequest(String tenantId) {}
 
     // ---- Catalogues + rules ------------------------------------------------
 

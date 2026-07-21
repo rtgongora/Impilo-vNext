@@ -38,6 +38,31 @@ public class VarapiClient {
     }
 
     /**
+     * Fetch the (hpa_institution_id, provider_public_id) pairs for HPA practitioner
+     * candidates that VARAPI has materialised to a provider. TUSO consumes these to
+     * seed PIC nominations in the HPA-2017 state machine.
+     *
+     * @return list of pair maps; empty if VARAPI is unavailable
+     */
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> fetchHpaNominationPairs() {
+        try {
+            Map<String, Object> response = restClient.get()
+                    .uri("/v1/internal/providers/hpa-practitioner-import/nomination-pairs")
+                    .retrieve()
+                    .body((Class<Map<String, Object>>) (Class<?>) Map.class);
+            if (response == null) {
+                return Collections.emptyList();
+            }
+            Object data = response.get("data");
+            return (data instanceof List<?> list) ? (List<Map<String, Object>>) list : Collections.emptyList();
+        } catch (RestClientException e) {
+            log.warn("Failed to fetch HPA nomination pairs from VARAPI: {}", e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
      * Fetch the roles assigned to a provider.
      *
      * @param providerId the provider identifier
