@@ -81,4 +81,23 @@ public interface TaskRepository extends JpaRepository<TaskEntity, UUID> {
      * @return list of all tasks for the journey
      */
     List<TaskEntity> findByJourneyId(String journeyId);
+
+    /**
+     * Finds all tasks linked to a teleconsult referral within a tenant (TM-B7).
+     *
+     * @param tenantId   the tenant identifier
+     * @param referralId the owning referral identifier
+     * @return list of all tasks for the referral (any status)
+     */
+    List<TaskEntity> findByTenantIdAndReferralId(UUID tenantId, String referralId);
+
+    /**
+     * Finds open closure-blocking tasks for a referral — the completion
+     * precondition check. A referral cannot COMPLETE while any blocking task is
+     * still open (status != COMPLETED and != the given cancelled value).
+     *
+     * @param referralId the owning referral identifier
+     * @return list of unresolved blocking tasks
+     */
+    List<TaskEntity> findByReferralIdAndBlocksClosureTrueAndStatusNotIn(String referralId, List<String> statuses);
 }

@@ -19,8 +19,21 @@ public class TaskEntity {
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
-    @Column(name = "journey_id", nullable = false)
+    @Column(name = "journey_id")
     private String journeyId;
+
+    /** Owning teleconsult referral id when this is a referral-scoped task (TM-B7).
+     *  Mutually alternative to journeyId — referral cases are not pct_journeys rows. */
+    @Column(name = "referral_id", length = 64)
+    private String referralId;
+
+    /** Originating object id the task tracks (e.g. the OROS order id). TM-B7. */
+    @Column(name = "source_ref", length = 128)
+    private String sourceRef;
+
+    /** When true, this task must be resolved before its referral can COMPLETE. */
+    @Column(name = "blocks_closure", nullable = false)
+    private boolean blocksClosure = false;
 
     @Column(name = "encounter_id")
     private Long encounterId;
@@ -76,6 +89,15 @@ public class TaskEntity {
 
     public String getJourneyId() { return journeyId; }
     public void setJourneyId(String journeyId) { this.journeyId = journeyId; }
+
+    public String getReferralId() { return referralId; }
+    public void setReferralId(String referralId) { this.referralId = referralId; }
+
+    public String getSourceRef() { return sourceRef; }
+    public void setSourceRef(String sourceRef) { this.sourceRef = sourceRef; }
+
+    public boolean isBlocksClosure() { return blocksClosure; }
+    public void setBlocksClosure(boolean blocksClosure) { this.blocksClosure = blocksClosure; }
 
     public Long getEncounterId() { return encounterId; }
     public void setEncounterId(Long encounterId) { this.encounterId = encounterId; }

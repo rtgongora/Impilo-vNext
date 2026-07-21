@@ -113,6 +113,93 @@ public class TaskService {
     }
 
     /**
+     * Create a task scoped to a teleconsult referral (TM-B7).
+     *
+     * <p>Referral cases live on the {@code pct_referrals} spine, not on
+     * {@code pct_journeys}, so these tasks carry {@code referralId} (and an
+     * optional originating {@code sourceRef}, e.g. the OROS order id) instead of
+     * a journey id. When {@code blocksClosure} is true the referral cannot be
+     * completed until the task is resolved.</p>
+     *
+     * @param referralId   the owning teleconsult referral id
+     * @param sourceRef    the originating object id (e.g. order id); may be {@code null}
+     * @param taskType     the type of task (e.g. FOLLOW_UP, RESULT_REVIEW, PATIENT_ACTION)
+     * @param assigneeId   the assigned worker; may be {@code null} (unassigned pool task)
+     * @param assigneeRole the role of the assignee; may be {@code null}
+     * @param workspaceId  the workspace where the task is performed; may be {@code null}
+     * @param dueAt        the deadline; may be {@code null}
+     * @param notes        free-text instructions; may be {@code null}
+     * @param blocksClosure whether this task blocks referral completion
+     * @return the created task entity
+     */
+    @Transactional
+    public TaskEntity createReferralTask(String referralId, String sourceRef, String taskType,
+                                         String assigneeId, String assigneeRole, UUID workspaceId,
+                                         OffsetDateTime dueAt, String notes, boolean blocksClosure) {
+        TrustContext ctx = TrustContextHolder.require();
+
+        TaskEntity task = new TaskEntity();
+        task.setId(UUID.randomUUID());
+        task.setReferralId(referralId);
+        task.setSourceRef(sourceRef);
+        task.setTenantId(ctx.tenantId());
+        task.setTaskType(taskType);
+        task.setAssigneeId(assigneeId);
+        task.setAssigneeRole(assigneeRole);
+        task.setWorkspaceId(workspaceId);
+        task.setStatus("OPEN");
+        task.setDueAt(dueAt);
+        task.setNotes(notes);
+        task.setBlocksClosure(blocksClosure);
+        task.setCreatedBy(ctx.actorId());
+        task.setCreatedAt(OffsetDateTime.now());
+
+        task = taskRepository.save(task);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("taskId", task.getId().toString());
+        payload.put("referralId", referralId);
+        payload.put("sourceRef", sourceRef);
+        payload.put("taskType", taskType);
+        payload.put("assigneeId", assigneeId);
+        payload.put("assigneeRole", assigneeRole);
+        payload.put("workspaceId", workspaceId != null ? workspaceId.toString() : null);
+        payload.put("dueAt", dueAt != null ? dueAt.toString() : null);
+        payload.put("blocksClosure", blocksClosure);
+        writeOutbox("TASK", task.getId().toString(), "TASK_CREATED", toJson(payload));
+
+        log.info("Referral task created: id={}, type={}, referral={}, blocksClosure={}",
+                task.getId(), taskType, referralId, blocksClosure);
+
+        return task;
+    }
+
+    /**
+     * Retrieve all tasks linked to a teleconsult referral (any status).
+     *
+     * @param referralId the owning referral id
+     * @return list of tasks for the referral (may be empty)
+     */
+    @Transactional(readOnly = true)
+    public List<TaskEntity> getTasksForReferral(String referralId) {
+        return taskRepository.findByTenantIdAndReferralId(
+                TrustContextHolder.require().tenantId(), referralId);
+    }
+
+    /**
+     * Return the open closure-blocking tasks for a referral. A non-empty result
+     * means the referral cannot yet be completed (TM-B7 closure precondition).
+     *
+     * @param referralId the owning referral id
+     * @return unresolved blocking tasks (neither COMPLETED nor CANCELLED)
+     */
+    @Transactional(readOnly = true)
+    public List<TaskEntity> getOpenBlockingTasks(String referralId) {
+        return taskRepository.findByReferralIdAndBlocksClosureTrueAndStatusNotIn(
+                referralId, List.of(STATUS_COMPLETED, "CANCELLED"));
+    }
+
+    /**
      * Complete a task.
      *
      * <p>Sets the task status to {@code COMPLETED}, records the completing

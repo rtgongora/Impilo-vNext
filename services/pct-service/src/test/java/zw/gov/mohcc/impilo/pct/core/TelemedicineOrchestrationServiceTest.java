@@ -43,6 +43,7 @@ class TelemedicineOrchestrationServiceTest {
     @Mock private LiveSessionIntegration liveSessionIntegration;
     @Mock private VirtualPoolQueueService virtualPoolQueueService;
     @Mock private zw.gov.mohcc.impilo.pct.persistence.repository.ReferralTransitionRepository referralTransitionRepository;
+    @Mock private TaskService taskService;
 
     private TelemedicineOrchestrationService service;
     private UUID tenantId;
@@ -61,7 +62,7 @@ class TelemedicineOrchestrationServiceTest {
         service = new TelemedicineOrchestrationService(
                 referralRepository, telehealthSessionRepository, outboxRepository, telemetryService,
                 sessionProviderRouter, providerProperties, liveSessionIntegration, virtualPoolQueueService,
-                referralStateMachine, transitionRecorder, gateProperties, new ObjectMapper());
+                referralStateMachine, transitionRecorder, gateProperties, taskService, new ObjectMapper());
         tenantId = UUID.randomUUID();
     }
 
@@ -380,6 +381,84 @@ class TelemedicineOrchestrationServiceTest {
             assertThat(payload).contains("Adjusted antihypertensive dose");
             assertThat(payload).contains("Stable, BP controlled");
             assertThat(payload).contains("completedBy");
+        }
+    }
+
+    @Test
+    void completeReferral_closureGate_blocksInEnforce_whenOpenBlockingTasks() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            gateProperties.setMode(zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.ENFORCE);
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "RESPONDED");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+            // One open blocking task → closure precondition NOT satisfied.
+            zw.gov.mohcc.impilo.pct.persistence.entity.TaskEntity blocking =
+                    new zw.gov.mohcc.impilo.pct.persistence.entity.TaskEntity();
+            blocking.setId(UUID.randomUUID());
+            when(taskService.getOpenBlockingTasks(referralId.toString())).thenReturn(java.util.List.of(blocking));
+
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.completeReferral(referralId.toString(),
+                            Map.of("closureNarrative", "done")))
+                    .isInstanceOf(zw.gov.mohcc.impilo.pct.core.PctDomainException.class)
+                    .hasMessageContaining("open task");
+            // Referral remains open; no billable completion event.
+            assertThat(referral.getStatus()).isEqualTo("RESPONDED");
+            verify(outboxRepository, org.mockito.Mockito.never()).save(any());
+        }
+    }
+
+    @Test
+    void completeReferral_closureGate_allowsInShadow_evenWithOpenTasks() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            // default gateProperties mode = SHADOW
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "RESPONDED");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+            when(referralRepository.save(any(ReferralEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            zw.gov.mohcc.impilo.pct.persistence.entity.TaskEntity blocking =
+                    new zw.gov.mohcc.impilo.pct.persistence.entity.TaskEntity();
+            blocking.setId(UUID.randomUUID());
+            when(taskService.getOpenBlockingTasks(referralId.toString())).thenReturn(java.util.List.of(blocking));
+
+            service.completeReferral(referralId.toString(), Map.of("closureNarrative", "done"));
+
+            // Shadow records but never blocks — referral completes.
+            assertThat(referral.getStatus()).isEqualTo("COMPLETED");
+        }
+    }
+
+    @Test
+    void addReferralTask_delegatesToTaskServiceWithReferralScope() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "RESPONDED");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+            zw.gov.mohcc.impilo.pct.persistence.entity.TaskEntity created =
+                    new zw.gov.mohcc.impilo.pct.persistence.entity.TaskEntity();
+            created.setId(UUID.randomUUID());
+            created.setReferralId(referralId.toString());
+            created.setTaskType("RESULT_REVIEW");
+            created.setStatus("OPEN");
+            created.setBlocksClosure(true);
+            when(taskService.createReferralTask(org.mockito.ArgumentMatchers.eq(referralId.toString()),
+                    org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq("RESULT_REVIEW"),
+                    org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                    org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                    org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(true)))
+                    .thenReturn(created);
+
+            Map<String, Object> payload = service.addReferralTask(referralId.toString(), Map.of(
+                    "taskType", "RESULT_REVIEW", "blocksClosure", true, "sourceRef", "ORD-1"));
+
+            assertThat(payload.get("taskType")).isEqualTo("RESULT_REVIEW");
+            assertThat(payload.get("referralId")).isEqualTo(referralId.toString());
+            assertThat(payload.get("blocksClosure")).isEqualTo(true);
         }
     }
 

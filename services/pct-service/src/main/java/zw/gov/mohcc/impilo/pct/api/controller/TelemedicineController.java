@@ -174,6 +174,22 @@ public class TelemedicineController {
         return ResponseEntity.ok(ApiResponse.ok(telemedicineService.transferReferral(id, request == null ? Map.of() : request), correlationId));
     }
 
+    /** List tasks linked to a teleconsult referral (TM-B7 execution loop). */
+    @GetMapping("/referrals/{id}/tasks")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> listReferralTasks(@PathVariable String id) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(telemedicineService.listReferralTasks(id), correlationId));
+    }
+
+    /** Create a follow-up / execution task scoped to a teleconsult referral (TM-B7). */
+    @PostMapping("/referrals/{id}/tasks")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> addReferralTask(
+            @PathVariable String id, @RequestBody(required = false) Map<String, Object> request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(
+                telemedicineService.addReferralTask(id, request == null ? Map.of() : request), correlationId));
+    }
+
     @GetMapping("/patient/{cpid}/telehealth")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> listPatientTelehealthSessions(
             @PathVariable String cpid,

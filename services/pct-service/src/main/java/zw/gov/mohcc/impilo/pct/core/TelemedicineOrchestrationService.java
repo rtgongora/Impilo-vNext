@@ -52,6 +52,7 @@ public class TelemedicineOrchestrationService {
     private final ReferralStateMachine referralStateMachine;
     private final ReferralTransitionRecorder gateRecorder;
     private final zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties gateProperties;
+    private final TaskService taskService;
     private final ObjectMapper objectMapper;
 
     /** Consent postures that satisfy the submit gate (video/audio media referrals). */
@@ -72,6 +73,7 @@ public class TelemedicineOrchestrationService {
             ReferralStateMachine referralStateMachine,
             ReferralTransitionRecorder gateRecorder,
             zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties gateProperties,
+            TaskService taskService,
             ObjectMapper objectMapper) {
         this.referralRepository = referralRepository;
         this.telehealthSessionRepository = telehealthSessionRepository;
@@ -84,6 +86,7 @@ public class TelemedicineOrchestrationService {
         this.referralStateMachine = referralStateMachine;
         this.gateRecorder = gateRecorder;
         this.gateProperties = gateProperties;
+        this.taskService = taskService;
         this.objectMapper = objectMapper;
     }
 
@@ -324,6 +327,43 @@ public class TelemedicineOrchestrationService {
         }
     }
 
+    /**
+     * Closure-precondition gate (TM-B7). A referral cannot be completed while it has open
+     * closure-blocking tasks (e.g. an unreviewed critical result, an unassigned pending order).
+     * Shadow-then-enforce: records the decision and, only in ENFORCE, rejects with
+     * {@code OPEN_TASKS_BLOCK_CLOSURE} 409. Uses the same {@code gates.mode} as the other hard gates.
+     */
+    private void assertClosurePreconditions(ReferralEntity entity) {
+        var mode = gateProperties.getMode();
+        if (mode == zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.OFF) {
+            return;
+        }
+        List<zw.gov.mohcc.impilo.pct.persistence.entity.TaskEntity> blocking;
+        try {
+            blocking = taskService.getOpenBlockingTasks(entity.getReferralId().toString());
+        } catch (Exception e) {
+            log.warn("Closure-precondition lookup failed for referral {}: {}",
+                    entity.getReferralId(), e.getMessage());
+            return; // fail open — never let a task-store hiccup wedge a clinical completion
+        }
+        boolean satisfied = blocking.isEmpty();
+        try {
+            gateRecorder.recordGate("closure_preconditions", satisfied, mode.name(),
+                    "openBlockingTasks=" + blocking.size());
+        } catch (Exception e) {
+            log.warn("Closure gate telemetry failed for referral {}: {}", entity.getReferralId(), e.getMessage());
+        }
+        if (!satisfied) {
+            log.warn("Closure gate [{}] NOT satisfied for referral {} ({} open blocking task(s))",
+                    mode, entity.getReferralId(), blocking.size());
+            if (mode == zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralGateProperties.Mode.ENFORCE) {
+                throw new PctDomainException("OPEN_TASKS_BLOCK_CLOSURE", 409,
+                        "This consultation has " + blocking.size()
+                                + " open task(s) that must be resolved before it can be completed.");
+            }
+        }
+    }
+
     @Transactional
     public Map<String, Object> acceptReferral(String referralId, Map<String, Object> request) {
         ReferralEntity entity = getReferralEntity(referralId);
@@ -539,6 +579,10 @@ public class TelemedicineOrchestrationService {
                             + "(actions taken, patient outcome, or closure narrative).");
         }
 
+        // Closure precondition (TM-B7): open blocking tasks (unreviewed critical results,
+        // unassigned pending orders) hold the case open. Shadow-then-enforce.
+        assertClosurePreconditions(entity);
+
         referralStateMachine.apply(entity, ReferralStatus.COMPLETED, "complete");
         entity.setCompletedAt(OffsetDateTime.now());
         // Billing context may be finalised at completion (e.g. eligibility resolved); keep what
@@ -567,6 +611,66 @@ public class TelemedicineOrchestrationService {
                 "patientCpid", saved.getPatientCpid(),
                 "specialty", defaulted(saved.getSpecialty(), "GENERAL")));
         return toReferralPayload(saved);
+    }
+
+    // ── Referral-scoped tasks (TM-B7 execution loop) ─────────────────────────
+
+    /**
+     * Create a task scoped to a teleconsult referral — the execution/follow-up loop.
+     * Validates the referral exists (and tenant scope) before delegating to {@link TaskService}.
+     */
+    @Transactional
+    public Map<String, Object> addReferralTask(String referralId, Map<String, Object> request) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        Map<String, Object> req = request == null ? Map.of() : request;
+        String taskType = defaulted(optional(req, "taskType", "task_type"), "FOLLOW_UP");
+        String assigneeId = optional(req, "assigneeId", "assignee_id");
+        String assigneeRole = optional(req, "assigneeRole", "assignee_role");
+        String sourceRef = optional(req, "sourceRef", "source_ref");
+        String notes = optional(req, "notes", "note");
+        String dueRaw = optional(req, "dueAt", "due_at");
+        OffsetDateTime dueAt = null;
+        if (!blank(dueRaw)) {
+            try {
+                dueAt = OffsetDateTime.parse(dueRaw.trim());
+            } catch (Exception e) {
+                throw new PctDomainException("INVALID_DUE_AT", 400,
+                        "dueAt must be an ISO-8601 timestamp (got: " + dueRaw + ").");
+            }
+        }
+        boolean blocksClosure = Boolean.parseBoolean(
+                String.valueOf(req.getOrDefault("blocksClosure",
+                        req.getOrDefault("blocks_closure", "false"))));
+        var task = taskService.createReferralTask(entity.getReferralId().toString(), sourceRef, taskType,
+                assigneeId, assigneeRole, null, dueAt, notes, blocksClosure);
+        return toTaskPayload(task);
+    }
+
+    /** List all tasks linked to a teleconsult referral (any status). */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listReferralTasks(String referralId) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        return taskService.getTasksForReferral(entity.getReferralId().toString())
+                .stream().map(this::toTaskPayload).toList();
+    }
+
+    private Map<String, Object> toTaskPayload(zw.gov.mohcc.impilo.pct.persistence.entity.TaskEntity task) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("taskId", task.getId().toString());
+        m.put("referralId", task.getReferralId());
+        m.put("sourceRef", task.getSourceRef());
+        m.put("taskType", task.getTaskType());
+        m.put("assigneeId", task.getAssigneeId());
+        m.put("assigneeRole", task.getAssigneeRole());
+        m.put("status", task.getStatus());
+        m.put("blocksClosure", task.isBlocksClosure());
+        m.put("dueAt", task.getDueAt() != null ? task.getDueAt().toString() : null);
+        m.put("notes", task.getNotes());
+        m.put("createdBy", task.getCreatedBy());
+        m.put("createdAt", task.getCreatedAt() != null ? task.getCreatedAt().toString() : null);
+        m.put("completedBy", task.getCompletedBy());
+        m.put("completedAt", task.getCompletedAt() != null ? task.getCompletedAt().toString() : null);
+        return m;
     }
 
     @Transactional(readOnly = true)
