@@ -2180,6 +2180,13 @@ services:
     owner_team: TBD
     system_of_record_for:
       - Rito Quality Safety canonical records
+      # Provider/facility reputation (provider-reputation-doctrine.md): Rito is SoR
+      # for ratings and the derived reputation aggregate across four non-blendable
+      # domains (client experience / access & process / professional quality / safety
+      # & accountability). VARAPI and TUSO display governed read-only, Rito-sourced,
+      # source-tagged summaries only. A rating never mutates licence/scope/employment/
+      # access — patterns become governed referrals to the appropriate authority.
+      - Provider & facility ratings and reputation aggregate (experience, quality, safety feedback)
     consumes_from:
       - tshepo-authz-service
       - multiple-domain-services-via-bff
@@ -2882,6 +2889,11 @@ services:
     forbidden_responsibilities:
       - must-not-authorize-access-decisions
       - must-not-own-clinical-encounters
+      # Ratings/reputation are Rito's (provider-reputation-doctrine.md): VARAPI is
+      # provider-truth SoR only. It MAY compose/display a read-only, Rito-sourced,
+      # source-tagged experience summary on a provider profile, but never owns or
+      # stores ratings, scores or reputation.
+      - must-not-own-provider-ratings-or-reputation
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial

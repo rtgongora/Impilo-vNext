@@ -6,6 +6,12 @@
 - `doctrine-gap-matrix.md`
 - `healthcare-coding-standards.md`
 
+## Service Relationship & Reputation Pack
+
+- `service-relationship-doctrine.md` — the operational backbone (Tuso = *where*, Varapi = *who-authorised*, Vashandi = *who-working-here-now*, TSHEPO = *what-may-happen*); consumer contracts for Khuluma/Rito/Ndila/Nhume/Ruvimbo (+ PCT/OROS/Dura/Madi/Fundo/Msika/Indawo/Nompilo); canonical identifiers, the historical-context snapshot rule, the three integration patterns, and the responsibility matrix
+- `provider-reputation-doctrine.md` — provider ratings are owned by **Rito** (not Varapi); four non-blendable domains (client experience / access & process / professional quality / safety & accountability), contextual + PCT-verified ratings, the regulation firewall (a rating never modifies licence/scope/employment/access), anti-manipulation, and Varapi's read-only Rito-sourced summary
+- [`../architecture/rito-experience-reputation-design.md`](../architecture/rito-experience-reputation-design.md) — the Rito Experience & Reputation capability design (V005 schema, PCT verified-interaction intake, aggregation, moderation, governance firewall, Varapi read-only summary)
+
 ## National Health Services Gateway Pack
 
 - `health-services-gateway-doctrine.md` — canonical gateway doctrine (intent-led front door, progressive trust ladder R0–R5, persistent optional authentication, NHI-ready cover & payments, persistent Emergency Help, Nompilo trust-escalation mediation, mobile as third surface)
