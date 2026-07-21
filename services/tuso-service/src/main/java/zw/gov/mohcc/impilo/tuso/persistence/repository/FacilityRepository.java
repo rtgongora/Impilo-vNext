@@ -127,10 +127,16 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
     // Returns (facility id, score) pairs — NOT f.* : a native query mapped to
     // List<Object[]> yields raw columns, so selecting f.* would make row[0] the id
     // column (a Number), never a FacilityEntity. The caller loads the entity by id.
+    // `lower(f.name) % :normalisedName` is an index-backed prefilter (V037 gin
+    // index on lower(name)); it returns the trigram superset above the default
+    // pg_trgm threshold (0.3), which the >= :minScore clause (>= 0.55 in practice)
+    // then refines — so the result set is identical to a pure similarity scan but
+    // computed via the GIN index instead of a full per-tenant scan.
     @org.springframework.data.jpa.repository.Query(value =
             "SELECT f.id AS id, similarity(lower(f.name), :normalisedName) AS score"
                     + " FROM tuso.facility f"
                     + " WHERE f.tenant_id = :tenantId"
+                    + "   AND lower(f.name) % :normalisedName"
                     + "   AND similarity(lower(f.name), :normalisedName) >= :minScore"
                     + " ORDER BY score DESC LIMIT 5",
             nativeQuery = true)
