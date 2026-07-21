@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.tuso.integration.VarapiClient;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
+import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityIdentifierRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.FacilityRepository;
 import zw.gov.mohcc.impilo.tuso.persistence.repository.PicNominationRepository;
 
@@ -37,17 +38,22 @@ public class HpaPicNominationSeedService {
 
     private static final Logger log = LoggerFactory.getLogger(HpaPicNominationSeedService.class);
 
+    private static final String SYS_HPA_INSTITUTION_ID = "HPA_INSTITUTION_ID";
+
     private final VarapiClient varapiClient;
     private final FacilityRepository facilityRepository;
+    private final FacilityIdentifierRepository identifierRepository;
     private final PicNominationService picNominationService;
     private final PicNominationRepository nominationRepository;
 
     public HpaPicNominationSeedService(VarapiClient varapiClient,
                                        FacilityRepository facilityRepository,
+                                       FacilityIdentifierRepository identifierRepository,
                                        PicNominationService picNominationService,
                                        PicNominationRepository nominationRepository) {
         this.varapiClient = varapiClient;
         this.facilityRepository = facilityRepository;
+        this.identifierRepository = identifierRepository;
         this.picNominationService = picNominationService;
         this.nominationRepository = nominationRepository;
     }
@@ -69,14 +75,19 @@ public class HpaPicNominationSeedService {
             }
             long institutionId = ((Number) instObj).longValue();
             String providerPublicId = String.valueOf(providerObj).trim();
-            String facilityCode = "HPA-" + institutionId;
+            String hpaId = "HPA-" + institutionId;
 
-            Optional<FacilityEntity> facility = facilityRepository.findByTenantIdAndFacilityCode(tenantId, facilityCode);
-            if (facility.isEmpty()) {
+            // Resolve via the HPA_INSTITUTION_ID identifier — present on BOTH created
+            // (facility_code = HPA-<id>) and enriched (identifier only) facilities.
+            // Fall back to facility_code for created facilities.
+            Long facilityId = identifierRepository.findBySystemAndValue(SYS_HPA_INSTITUTION_ID, hpaId)
+                    .map(idn -> idn.getFacility() != null ? idn.getFacility().getId() : null)
+                    .orElseGet(() -> facilityRepository.findByTenantIdAndFacilityCode(tenantId, hpaId)
+                            .map(FacilityEntity::getId).orElse(null));
+            if (facilityId == null) {
                 skippedNoFacility++;
                 continue;
             }
-            Long facilityId = facility.get().getId();
 
             if (nominationRepository.existsByFacilityIdAndProviderPublicId(facilityId, providerPublicId)) {
                 skippedExisting++;
