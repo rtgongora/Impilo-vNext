@@ -29,7 +29,17 @@ public class SecurityBaselineConfig {
     @Bean
     public FilterRegistrationBean<RateLimitFilter> rateLimitFilter(RateLimitGuard guard) {
         FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new RateLimitFilter(guard));
+        // The anonymous user rate limit (100 burst, ~2/sec) protects public/user lanes.
+        // Internal service-to-service calls (/v1/internal/*) are trusted and network-
+        // isolated; a legitimate bulk internal operation must not be throttled as if it
+        // were an abusive anonymous client, so exempt them.
+        registration.setFilter(new RateLimitFilter(guard) {
+            @Override
+            protected boolean shouldNotFilter(jakarta.servlet.http.HttpServletRequest request) {
+                String uri = request.getRequestURI();
+                return (uri != null && uri.startsWith("/v1/internal/")) || super.shouldNotFilter(request);
+            }
+        });
         registration.addUrlPatterns("/v1/*");
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 5);
         return registration;
