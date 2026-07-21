@@ -55,7 +55,10 @@ export function NearbyEmergencyCare({
     setLoading(true);
     setError("");
     const params = new URLSearchParams();
-    params.set("q", "emergency");
+    // Match on the EMERGENCY service *capability*, not the word "emergency" in a
+    // facility name. Free-text q=emergency was falling through to a name LIKE search
+    // and surfacing the single facility literally named "Emergency…", far away.
+    params.set("service", "EMERGENCY");
     if (lat !== undefined && lng !== undefined) {
       params.set("lat", String(lat));
       params.set("lng", String(lng));
