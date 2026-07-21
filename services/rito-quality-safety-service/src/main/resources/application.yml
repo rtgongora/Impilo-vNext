@@ -58,6 +58,10 @@ rito:
   signals:
     topics:
       pct: ${RITO_SIGNAL_TOPIC_PCT:impilo.pct.encounter.flagged}
+      # Verified-interaction intake (RW2): completed encounters gate verified ratings.
+      # Legacy topic is always emitted; repoint to clinical.pct.encounter.completed once
+      # PCT canonical dual-emit is enabled platform-wide.
+      pct-encounter-completed: ${RITO_SIGNAL_TOPIC_PCT_ENCOUNTER_COMPLETED:pct.encounter.completed}
       tuso: ${RITO_SIGNAL_TOPIC_TUSO:impilo.tuso.inspection.finding.created}
       indawo: ${RITO_SIGNAL_TOPIC_INDAWO:impilo.indawo.inspection.finding.created}
       madi: ${RITO_SIGNAL_TOPIC_MADI:impilo.madi.haemovigilance.case.opened}

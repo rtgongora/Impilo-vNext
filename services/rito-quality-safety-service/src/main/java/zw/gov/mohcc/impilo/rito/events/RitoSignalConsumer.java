@@ -10,6 +10,7 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 import zw.gov.mohcc.impilo.rito.core.QualitySignalService;
+import zw.gov.mohcc.impilo.rito.core.VerifiedInteractionService;
 
 import java.util.Map;
 import java.util.UUID;
@@ -29,11 +30,39 @@ public class RitoSignalConsumer {
     private static final Logger log = LoggerFactory.getLogger(RitoSignalConsumer.class);
 
     private final QualitySignalService qualitySignalService;
+    private final VerifiedInteractionService verifiedInteractionService;
     private final ObjectMapper objectMapper;
 
-    public RitoSignalConsumer(QualitySignalService qualitySignalService, ObjectMapper objectMapper) {
+    public RitoSignalConsumer(QualitySignalService qualitySignalService,
+                              VerifiedInteractionService verifiedInteractionService,
+                              ObjectMapper objectMapper) {
         this.qualitySignalService = qualitySignalService;
+        this.verifiedInteractionService = verifiedInteractionService;
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Verified-interaction intake (RW2): a completed PCT encounter becomes an
+     * eligible-for-feedback interaction, so a later rating referencing the same
+     * encounter can be stamped verified. Distinct from the advisory quality-signal
+     * lane above — this records the interaction, it does not open a case.
+     */
+    @KafkaListener(
+            topics = {"${rito.signals.topics.pct-encounter-completed:pct.encounter.completed}"},
+            groupId = "rito-quality-safety-service")
+    public void onEncounterCompleted(String message) {
+        try {
+            Map<String, Object> root = objectMapper.readValue(message, new TypeReference<>() {
+            });
+            UUID tenantId = parseUuid(root, "tenantId", "tenant_id");
+            if (tenantId == null) {
+                log.warn("Skipping encounter-completed — no parseable tenantId");
+                return;
+            }
+            verifiedInteractionService.recordFromPct(tenantId, root);
+        } catch (Exception e) {
+            log.error("Failed to record verified interaction from encounter-completed: {}", e.getMessage(), e);
+        }
     }
 
     @KafkaListener(
