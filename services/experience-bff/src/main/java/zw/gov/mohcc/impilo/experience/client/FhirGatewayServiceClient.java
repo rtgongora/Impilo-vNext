@@ -57,4 +57,35 @@ public class FhirGatewayServiceClient {
                 url, HttpMethod.POST, new HttpEntity<>(body), JsonNode.class);
         return response.getBody();
     }
+
+    /**
+     * Governed clinical write via the gateway's PEP-enforced forward endpoint
+     * ({@code POST /internal/v1/gateway/forward}). Unlike {@link #createResource}, this hits the
+     * route fhir-gateway actually serves: consent PEP → route lookup → FhirForwarder → audit +
+     * outbox. {@code payload} is the FHIR resource serialised as a JSON string (the ForwardRequest
+     * contract). Returns the gateway's {@code {status,data}} envelope.
+     *
+     * @param resourceType FHIR resource type (must be in the gateway's clinical set to route)
+     * @param operation    e.g. CREATE / UPDATE
+     * @param payloadJson  the FHIR resource as a JSON string
+     */
+    public JsonNode forward(String tenantId, String correlationId, String actorId,
+                            String resourceType, String operation, String payloadJson,
+                            String subjectCpid, String purposeOfUse) {
+        String url = baseUrl + "/internal/v1/gateway/forward";
+        java.util.Map<String, Object> req = new java.util.LinkedHashMap<>();
+        req.put("tenantId", tenantId);
+        req.put("correlationId", correlationId);
+        req.put("actorId", actorId);
+        req.put("sourceIp", null);
+        req.put("resourceType", resourceType);
+        req.put("operation", operation);
+        req.put("payload", payloadJson);
+        req.put("subjectCpid", subjectCpid);
+        req.put("purposeOfUse", purposeOfUse);
+        log.info("FHIR Gateway: forwarding {} {} (subject={})", operation, resourceType, subjectCpid);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(req), JsonNode.class);
+        return response.getBody();
+    }
 }

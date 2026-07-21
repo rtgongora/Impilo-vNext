@@ -48,6 +48,7 @@ class TeleconsultControllerTest {
     private BookingServiceClient bookingClient;
     private KhulumaServiceClient khulumaClient;
     private OrosServiceClient orosClient;
+    private FhirGatewayServiceClient fhirGatewayClient;
 
     private TelemedicineGovernanceService governanceService;
     private VitoServiceClient vitoClient;
@@ -68,7 +69,7 @@ class TeleconsultControllerTest {
         TelemedicineBillingContextService billingContextService =
                 new TelemedicineBillingContextService(coverageClient, tusoClient);
         notificationClient = Mockito.mock(NotificationServiceClient.class);
-        FhirGatewayServiceClient fhirGatewayClient = Mockito.mock(FhirGatewayServiceClient.class);
+        fhirGatewayClient = Mockito.mock(FhirGatewayServiceClient.class);
         costaClient = Mockito.mock(CostaServiceClient.class);
         analyticsClient = Mockito.mock(AnalyticsPipelineServiceClient.class);
         rtcClient = Mockito.mock(RtcGatewayServiceClient.class);
@@ -198,6 +199,35 @@ class TeleconsultControllerTest {
         assertEquals(502, response.getStatusCode().value());
         Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
         assertEquals("PCT_UNAVAILABLE", error.get("code"));
+    }
+
+    @Test
+    void completeRoutesFhirSummaryThroughGovernedForwardNotBrokenFhirPath() {
+        // A4/TM-B6: the teleconsult clinical summary is written via the gateway forward endpoint
+        // (POST /internal/v1/gateway/forward) — NOT createResource (POST /fhir/{type}, a route
+        // fhir-gateway never served, which silently 404'd the summary).
+        Mockito.when(governanceService.normalizePurposeOfUse(any())).thenReturn("TREATMENT");
+        var completedNode = objectMapper.createObjectNode();
+        completedNode.put("patientCpid", "CPID-9").put("id", "ref-fhir");
+        completedNode.putObject("completion").put("closureNarrative", "done");
+        Mockito.when(pctClient.completeReferral(eq("ref-fhir"), any())).thenReturn(completedNode);
+
+        var response = controller.complete(
+                "ref-fhir", "req", "corr", "tenant-x", "TREATMENT", "fac", "actor-1",
+                Map.of("closureNarrative", "done"));
+
+        assertEquals(200, response.getStatusCode().value());
+        ArgumentCaptor<String> resourceType = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> payload = ArgumentCaptor.forClass(String.class);
+        Mockito.verify(fhirGatewayClient).forward(
+                eq("tenant-x"), eq("corr"), eq("actor-1"),
+                resourceType.capture(), eq("CREATE"), payload.capture(),
+                eq("CPID-9"), eq("TREATMENT"));
+        assertEquals("DiagnosticReport", resourceType.getValue());
+        // The forwarded payload is the FHIR resource JSON with the real conclusion.
+        org.junit.jupiter.api.Assertions.assertTrue(payload.getValue().contains("DiagnosticReport"));
+        org.junit.jupiter.api.Assertions.assertTrue(payload.getValue().contains("done"));
+        Mockito.verify(fhirGatewayClient, Mockito.never()).createResource(any(), any());
     }
 
     @Test
