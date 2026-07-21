@@ -13,6 +13,12 @@ spring:
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
+      # Put the tuso schema on the connection search_path so native queries can
+      # resolve pg_trgm functions (similarity(), % operator). The extension is
+      # created in the tuso schema (Flyway schemas=tuso), and Hibernate
+      # default_schema only qualifies entity SQL — it does NOT set search_path, so
+      # unqualified similarity() in FacilityMatchService fails without this.
+      connection-init-sql: SET search_path TO tuso, public
   jpa:
     hibernate:
       ddl-auto: validate
