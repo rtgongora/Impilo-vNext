@@ -1,5 +1,10 @@
 # Impilo vNext Telemedicine and Virtual Care Pipeline
 
+> **Superseded as normative source (2026-07-21):** the canonical specification is now
+> [`docs/telemedicine/NATIONAL_TELEMEDICINE_VIRTUAL_CARE_SPECIFICATION.md`](../telemedicine/NATIONAL_TELEMEDICINE_VIRTUAL_CARE_SPECIFICATION.md)
+> (with its traceability matrix, backlog and journey catalogue). This file is retained as the
+> historical functional-acceptance snapshot it records.
+
 ## Purpose
 Canonical status for native vNext telemedicine capability using provider-neutral runtime abstractions while preserving sovereign ownership boundaries (`PCT`, `OROS`, `BUTANO`, `TSHEPO`, `VARAPI`, `TUSO`, `COSTA/MusheX`).
 

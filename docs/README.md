@@ -14,6 +14,16 @@
 - `doctrine/CORE_TRANSACTION_REPO_AUDIT.md`
 - `templates/CORE_TRANSACTION_FEATURE_ALIGNMENT_CHECKLIST.md`
 
+## Telemedicine and Virtual Care (Canonical)
+
+- `telemedicine/NATIONAL_TELEMEDICINE_VIRTUAL_CARE_SPECIFICATION.md` — **canonical master specification** (doctrine, 7-stage lifecycle, state machine, service boundaries, APIs/events, trust/consent, UX, NFRs)
+- `telemedicine/telemedicine-traceability-gap-matrix.md` — requirement→implementation traceability + named gaps
+- `telemedicine/telemedicine-implementation-backlog.md` — prioritised epics with acceptance criteria
+- `telemedicine/telemedicine-journey-catalogue.md` — 40 end-to-end proof journeys
+- `architecture/telemedicine-virtual-hospitals-operating-model.md` — capability map + virtual-hospital doctrine (composes with the spec)
+- `architecture/IMPILO_LIVE.md` — Impilo Live engagement layer
+- `journeys/session-suite-telemedicine.md` — TELEMEDICINE session-mode runbook
+
 ## Architecture Alignment
 
 - `architecture/core-transaction-plane-map.md`
