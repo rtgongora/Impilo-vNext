@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineSessionProvider;
 import zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineSessionProviderRouter;
 import zw.gov.mohcc.impilo.pct.integration.LiveSessionIntegration;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.pct.domain.ReferralStatus;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ReferralEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.TelehealthSessionEntity;
 import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
@@ -48,6 +49,7 @@ public class TelemedicineOrchestrationService {
     private final TelemedicineProviderProperties providerProperties;
     private final LiveSessionIntegration liveSessionIntegration;
     private final VirtualPoolQueueService virtualPoolQueueService;
+    private final ReferralStateMachine referralStateMachine;
     private final ObjectMapper objectMapper;
 
     public TelemedicineOrchestrationService(
@@ -59,6 +61,7 @@ public class TelemedicineOrchestrationService {
             TelemedicineProviderProperties providerProperties,
             LiveSessionIntegration liveSessionIntegration,
             VirtualPoolQueueService virtualPoolQueueService,
+            ReferralStateMachine referralStateMachine,
             ObjectMapper objectMapper) {
         this.referralRepository = referralRepository;
         this.telehealthSessionRepository = telehealthSessionRepository;
@@ -68,6 +71,7 @@ public class TelemedicineOrchestrationService {
         this.providerProperties = providerProperties;
         this.liveSessionIntegration = liveSessionIntegration;
         this.virtualPoolQueueService = virtualPoolQueueService;
+        this.referralStateMachine = referralStateMachine;
         this.objectMapper = objectMapper;
     }
 
@@ -192,7 +196,7 @@ public class TelemedicineOrchestrationService {
         if (attachments != null) entity.setAttachmentDocumentIds(writeJsonArray(attachments));
 
         String status = optional(request, "status");
-        if (status != null) entity.setStatus(status.trim().toUpperCase(Locale.ROOT));
+        if (status != null) referralStateMachine.applyRaw(entity, status, "stage-update");
 
         // G18: persist the booking↔referral back-link the BFF sends after scheduling a teleconsult
         // appointment (previously swallowed — pct_referrals had no column for it).
@@ -228,7 +232,7 @@ public class TelemedicineOrchestrationService {
     @Transactional
     public Map<String, Object> submitReferral(String referralId) {
         ReferralEntity entity = getReferralEntity(referralId);
-        entity.setStatus("SUBMITTED");
+        referralStateMachine.apply(entity, ReferralStatus.SUBMITTED, "submit");
         entity.setSubmittedAt(OffsetDateTime.now());
         ReferralEntity saved = referralRepository.save(entity);
         // Pool-routed referrals enter the pool's materialised queue (priority from
@@ -242,7 +246,7 @@ public class TelemedicineOrchestrationService {
     @Transactional
     public Map<String, Object> acceptReferral(String referralId, Map<String, Object> request) {
         ReferralEntity entity = getReferralEntity(referralId);
-        entity.setStatus("ACCEPTED");
+        referralStateMachine.apply(entity, ReferralStatus.ACCEPTED, "accept");
         Map<String, Object> acceptance = new LinkedHashMap<>();
         acceptance.put("responseType", "ACCEPTED");
         acceptance.put("acceptedBy", defaulted(optional(request, "accepted_by", "acceptedBy"), "unknown"));
@@ -287,12 +291,12 @@ public class TelemedicineOrchestrationService {
 
         appendResponse(entity, response);
         if ("DECLINED".equals(responseType)) {
-            entity.setStatus("DECLINED");
+            referralStateMachine.apply(entity, ReferralStatus.DECLINED, "respond-decline");
         } else if ("MESSAGE".equals(responseType)) {
             appendMessage(entity, response);
-            entity.setStatus(defaulted(entity.getStatus(), "IN_REVIEW"));
+            referralStateMachine.applyRaw(entity, defaulted(entity.getStatus(), "IN_REVIEW"), "respond-message");
         } else {
-            entity.setStatus("RESPONDED");
+            referralStateMachine.apply(entity, ReferralStatus.RESPONDED, "respond");
         }
 
         ReferralEntity saved = referralRepository.save(entity);
@@ -324,7 +328,7 @@ public class TelemedicineOrchestrationService {
                 "responderId", responderId,
                 "diagnosis", defaulted(asString(structured.get("diagnosis")), ""),
                 "timestamp", OffsetDateTime.now().toString()));
-        entity.setStatus("RESPONDED");
+        referralStateMachine.apply(entity, ReferralStatus.RESPONDED, "respond-structured");
         if (entity.getStage() != null && entity.getStage() < 6) {
             entity.setStage(6);
         }
@@ -355,7 +359,7 @@ public class TelemedicineOrchestrationService {
             entity.setStage(3);
         }
         if ("DRAFT".equals(entity.getStatus())) {
-            entity.setStatus("ROUTED");
+            referralStateMachine.apply(entity, ReferralStatus.ROUTED, "route");
         }
         ReferralEntity saved = referralRepository.save(entity);
         emitOutbox("telemedicine.session.routed", saved.getReferralId().toString(), toReferralPayload(saved));
@@ -383,7 +387,7 @@ public class TelemedicineOrchestrationService {
                             + "(actions taken, patient outcome, or closure narrative).");
         }
 
-        entity.setStatus("COMPLETED");
+        referralStateMachine.apply(entity, ReferralStatus.COMPLETED, "complete");
         entity.setCompletedAt(OffsetDateTime.now());
         // Billing context may be finalised at completion (e.g. eligibility resolved); keep what
         // was captured at referral time unless the completion request overrides it.
@@ -524,7 +528,7 @@ public class TelemedicineOrchestrationService {
 
         if (saved.getReferralId() != null) {
             referralRepository.findByTenantIdAndReferralId(ctx.tenantId(), saved.getReferralId()).ifPresent(referral -> {
-                referral.setStatus("SCHEDULED");
+                referralStateMachine.apply(referral, ReferralStatus.SCHEDULED, "schedule-backlink");
                 referralRepository.save(referral);
             });
         }

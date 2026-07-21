@@ -42,16 +42,23 @@ class TelemedicineOrchestrationServiceTest {
     @Mock private TelemedicineProviderProperties providerProperties;
     @Mock private LiveSessionIntegration liveSessionIntegration;
     @Mock private VirtualPoolQueueService virtualPoolQueueService;
+    @Mock private zw.gov.mohcc.impilo.pct.persistence.repository.ReferralTransitionRepository referralTransitionRepository;
 
     private TelemedicineOrchestrationService service;
     private UUID tenantId;
 
     @BeforeEach
     void setUp() {
+        // Real guard in default SHADOW mode: it applies the status exactly as before
+        // (never blocks) while recording the transition ledger — existing behavioural
+        // assertions on the resulting status are unchanged.
+        ReferralStateMachine referralStateMachine = new ReferralStateMachine(
+                referralTransitionRepository, telemetryService,
+                new zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralTransitionGuardProperties());
         service = new TelemedicineOrchestrationService(
                 referralRepository, telehealthSessionRepository, outboxRepository, telemetryService,
                 sessionProviderRouter, providerProperties, liveSessionIntegration, virtualPoolQueueService,
-                new ObjectMapper());
+                referralStateMachine, new ObjectMapper());
         tenantId = UUID.randomUUID();
     }
 
