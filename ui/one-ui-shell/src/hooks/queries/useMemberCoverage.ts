@@ -154,6 +154,18 @@ export function useSubmitAppeal() {
   });
 }
 
+/**
+ * The member's digital card(s) — served from the wallet domain (Mushe card issuance),
+ * resolved to the caller's wallet by the actor header. Surfaced on My Ruvimbo so the
+ * health/member card lives alongside coverage rather than in a separate silo.
+ */
+export function useMyCards() {
+  return useQuery({
+    queryKey: ["member-wallet-cards"],
+    queryFn: async () => unwrapArray(await apiClient.get<unknown>("/internal/v1/wallet/cards")),
+  });
+}
+
 export function useCheckEligibility() {
   const queryClient = useQueryClient();
   return useMutation({

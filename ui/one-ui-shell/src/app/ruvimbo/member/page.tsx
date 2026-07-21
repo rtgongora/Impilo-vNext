@@ -40,6 +40,7 @@ import {
   useMyUtilization,
   useMyAppeals,
   useSubmitAppeal,
+  useMyCards,
 } from "@/hooks/queries/useMemberCoverage";
 import { useAuthorisations, useReferrals, useMemberDependants } from "@/hooks/queries/useRuvimbo";
 import { RuvimboSection } from "@/components/ruvimbo/RuvimboSection";
@@ -103,6 +104,7 @@ export default function RuvimboMemberPage() {
   const refQ = useReferrals(cpid || undefined);
   const appealsQ = useMyAppeals(cpid || null);
   const depQ = useMemberDependants(membershipId || undefined);
+  const cardsQ = useMyCards();
   const submitAppeal = useSubmitAppeal();
 
   const accumulators = arr(accumQ.data);
@@ -113,6 +115,7 @@ export default function RuvimboMemberPage() {
   const referrals = arr(refQ.data);
   const appeals = arr(appealsQ.data);
   const dependants = arr(depQ.data);
+  const cards = arr(cardsQ.data);
 
   const pendingAuths = useMemo(
     () => authorisations.filter((a) => /PENDING|SUBMITTED|ACK|INFO/i.test(readStr(a, "status"))).length,
@@ -155,7 +158,7 @@ export default function RuvimboMemberPage() {
     { title: "Manage dependants", onClick: () => setTab("dependants"), icon: <Users className="h-4 w-4" />, access: "open" },
     { title: "Appeal a decision", onClick: () => setTab("support"), icon: <Gavel className="h-4 w-4" />, access: "open" },
     { title: "Estimate my cost", icon: <Calculator className="h-4 w-4" />, access: "coming" },
-    { title: "Digital member card", icon: <ShieldCheck className="h-4 w-4" />, access: "coming" },
+    { title: "Digital member card", onClick: () => setTab("coverage"), icon: <ShieldCheck className="h-4 w-4" />, access: "open" },
   ];
 
   function sendAppeal() {
@@ -299,6 +302,39 @@ export default function RuvimboMemberPage() {
                       <div>Member no. <span className="font-mono text-foreground">{readStr(p, "memberNumber", "member_number") || "—"}</span></div>
                       <div>Relationship <span className="text-foreground">{readStr(p, "relationship") || "SELF"}</span></div>
                     </dl>
+                  </div>
+                ))}
+              </div>
+            </RuvimboSection>
+          )}
+
+          {tab === "coverage" && (
+            <RuvimboSection
+              title="Digital member card"
+              icon={<ShieldCheck className="h-4 w-4 text-violet-700" />}
+              isLoading={cardsQ.isLoading}
+              isError={cardsQ.isError}
+              onRetry={() => cardsQ.refetch()}
+              isEmpty={!cards.length}
+              emptyState={
+                <RuvimboEmptyState
+                  title="No digital card yet"
+                  explanation="Your health/member card lets you present your coverage at a facility. It appears here once issued."
+                  when="A card is issued after your membership is verified."
+                />
+              }
+            >
+              <div className="grid gap-3 sm:grid-cols-2">
+                {cards.map((c, i) => (
+                  <div key={readStr(c, "id") || i} className="rounded-xl bg-gradient-to-br from-violet-600 to-indigo-700 p-4 text-white shadow">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium uppercase tracking-wide text-white/80">{readStr(c, "cardType", "type") || "Member card"}</span>
+                      <Badge status={readStr(c, "status") || "ACTIVE"} />
+                    </div>
+                    <p className="mt-4 font-mono text-lg tracking-widest">
+                      {(readStr(c, "cardNumber", "maskedNumber", "pan") || "•••• •••• ••••").replace(/.(?=.{4})/g, "•")}
+                    </p>
+                    <p className="mt-2 text-sm text-white/90">{planName || readStr(c, "holderName", "name") || "—"}</p>
                   </div>
                 ))}
               </div>
