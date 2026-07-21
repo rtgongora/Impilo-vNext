@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 import zw.gov.mohcc.impilo.varapi.core.HpaPractitionerImportService;
+import zw.gov.mohcc.impilo.varapi.core.HpaPractitionerMaterializationService;
 
 import java.util.List;
 import java.util.Map;
@@ -30,14 +31,51 @@ public class HpaPractitionerImportController {
     private static final Logger log = LoggerFactory.getLogger(HpaPractitionerImportController.class);
 
     private final HpaPractitionerImportService importService;
+    private final HpaPractitionerMaterializationService materializationService;
     private final JdbcTemplate jdbc;
 
-    public HpaPractitionerImportController(HpaPractitionerImportService importService, JdbcTemplate jdbc) {
+    public HpaPractitionerImportController(HpaPractitionerImportService importService,
+                                           HpaPractitionerMaterializationService materializationService,
+                                           JdbcTemplate jdbc) {
         this.importService = importService;
+        this.materializationService = materializationService;
         this.jdbc = jdbc;
     }
 
     public record ImportApiRequest(String feedPath, String tenantId) {}
+
+    public record MaterializeApiRequest(String tenantId) {}
+
+    /**
+     * Phase 2 of the HPA import: materialise each distinct candidate practitioner as a
+     * PRELOADED (regulator-listed, unclaimed) provider identity. Grants no access —
+     * PRELOADED providers are INACTIVE until the real person claims them.
+     */
+    @PostMapping("/materialize-providers")
+    public ResponseEntity<ApiResponse<HpaPractitionerMaterializationService.MaterializeSummary>> materializeProviders(
+            @RequestBody MaterializeApiRequest request) {
+        log.info("HPA practitioner materialisation requested tenant={}", request.tenantId());
+        var summary = materializationService.materializeProviders(tenant(request.tenantId()));
+        return ResponseEntity.ok(ApiResponse.ok(summary, correlationId()));
+    }
+
+    /**
+     * (facility, provider) pairs for materialised candidates — consumed by TUSO to seed
+     * PIC nominations in the HPA-2017 state machine. Only rows resolved to a provider are
+     * returned; the provider public id is the durable Provider ID (never a free-text name).
+     */
+    @GetMapping("/nomination-pairs")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> nominationPairs() {
+        List<Map<String, Object>> rows = jdbc.queryForList(
+                "SELECT c.hpa_institution_id AS hpa_institution_id, p.provider_public_id AS provider_public_id, "
+                        + "min(c.practitioner_sequence) AS practitioner_sequence "
+                        + "FROM varapi.hpa_practitioner_candidate c "
+                        + "JOIN varapi.provider p ON p.id = c.resolved_provider_id "
+                        + "WHERE c.resolved_provider_id IS NOT NULL "
+                        + "GROUP BY c.hpa_institution_id, p.provider_public_id "
+                        + "ORDER BY c.hpa_institution_id");
+        return ResponseEntity.ok(ApiResponse.ok(rows, correlationId()));
+    }
 
     @PostMapping("/apply")
     public ResponseEntity<ApiResponse<HpaPractitionerImportService.ImportSummary>> apply(
