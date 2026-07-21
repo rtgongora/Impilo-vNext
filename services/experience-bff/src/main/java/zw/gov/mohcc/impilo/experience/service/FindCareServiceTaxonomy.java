@@ -131,6 +131,15 @@ public class FindCareServiceTaxonomy {
         SYNONYMS.put("doctor", List.of("GENERAL", "OPD"));
         SYNONYMS.put("family plan", List.of("FAMILY_PLANNING"));
         SYNONYMS.put("contracept", List.of("FAMILY_PLANNING"));
+        // Emergency / casualty — the EMERGENCY capability is seeded for every hospital tier
+        // (tuso V028). Without these, free-text "emergency" was unrecognized and degraded to a
+        // facility-name search (matching only a facility literally named "Emergency…").
+        SYNONYMS.put("emergency", List.of("EMERGENCY"));
+        SYNONYMS.put("casualty", List.of("EMERGENCY"));
+        SYNONYMS.put("accident and emergency", List.of("EMERGENCY"));
+        SYNONYMS.put("a&e", List.of("EMERGENCY"));
+        SYNONYMS.put("ambulance", List.of("EMERGENCY"));
+        SYNONYMS.put("trauma", List.of("EMERGENCY"));
 
         for (List<String> tokens : SYNONYMS.values()) {
             KNOWN_TOKENS.addAll(tokens);
