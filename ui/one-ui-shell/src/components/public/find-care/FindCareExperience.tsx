@@ -224,6 +224,31 @@ export function FindCareExperience() {
   const total = results?.total ?? 0;
   const hasNext = results ? (results.page + 1) * results.size < results.total : false;
 
+  // Facility-type filter options accumulate across searches so the dropdown keeps every type
+  // seen — otherwise selecting a type (which narrows the server results) would collapse the
+  // list to just that one option and strand the user.
+  const [facilityTypeOptions, setFacilityTypeOptions] = useState<string[]>([]);
+  useEffect(() => {
+    if (!results) return;
+    setFacilityTypeOptions((prev) => {
+      const seen = new Set(prev);
+      results.results.forEach((r) => {
+        if (r.facilityType) seen.add(r.facilityType);
+      });
+      return Array.from(seen).sort();
+    });
+  }, [results]);
+
+  // Distance radius is a client-side refinement over the (distance-sorted) results — only when a
+  // location was shared. Facilities whose distance couldn't be computed are never dropped by it.
+  const radiusKm = filters.radiusKm ? Number(filters.radiusKm) : 0;
+  const radiusActive = Boolean(location) && radiusKm > 0;
+  const visibleResults =
+    results && radiusActive
+      ? results.results.filter((r) => r.distanceMeters == null || r.distanceMeters <= radiusKm * 1000)
+      : results?.results ?? [];
+  const radiusHiddenCount = results ? results.results.length - visibleResults.length : 0;
+
   return (
     <div className="space-y-6">
       {/* ── Need-first search ─────────────────────────────────────────── */}
@@ -379,6 +404,50 @@ export function FindCareExperience() {
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
               />
             </div>
+            {/* Facility-type preference — narrows to a kind of facility (registry-filtered). */}
+            <div>
+              <label htmlFor="find-care-type" className="text-xs font-medium text-slate-600">
+                Facility type
+              </label>
+              <select
+                id="find-care-type"
+                value={filters.facilityType}
+                onChange={(e) => {
+                  setFilters({ facilityType: e.target.value });
+                  setTimeout(() => void runSearch(0), 0);
+                }}
+                disabled={facilityTypeOptions.length === 0}
+                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                <option value="">All facility types</option>
+                {facilityTypeOptions.map((tp) => (
+                  <option key={tp} value={tp}>
+                    {tp}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Distance radius — client-side; only meaningful once a location is shared. */}
+            <div>
+              <label htmlFor="find-care-radius" className="text-xs font-medium text-slate-600">
+                Within distance
+              </label>
+              <select
+                id="find-care-radius"
+                value={filters.radiusKm}
+                onChange={(e) => setFilters({ radiusKm: e.target.value })}
+                disabled={!location}
+                title={location ? undefined : "Share your location to filter by distance"}
+                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
+              >
+                <option value="">Any distance</option>
+                <option value="5">Within 5 km</option>
+                <option value="10">Within 10 km</option>
+                <option value="25">Within 25 km</option>
+                <option value="50">Within 50 km</option>
+                <option value="100">Within 100 km</option>
+              </select>
+            </div>
           </div>
         </div>
       </section>
@@ -485,9 +554,13 @@ export function FindCareExperience() {
             <p className="text-sm text-slate-600">
               {total === 0
                 ? "No facilities matched. Try a different service, a shorter word, or another province."
-                : `${total} facilit${total === 1 ? "y" : "ies"} found${
-                    results.distanceAvailable ? " · sorted by nearest" : " · sorted by best match"
-                  }`}
+                : radiusActive
+                  ? `${visibleResults.length} within ${radiusKm} km${
+                      radiusHiddenCount > 0 ? ` · ${radiusHiddenCount} farther hidden` : ""
+                    }`
+                  : `${total} facilit${total === 1 ? "y" : "ies"} found${
+                      results.distanceAvailable ? " · sorted by nearest" : " · sorted by best match"
+                    }`}
             </p>
             {total > 0 && (
               <div className="inline-flex overflow-hidden rounded-lg border border-slate-300" role="group" aria-label="View mode">
@@ -520,14 +593,20 @@ export function FindCareExperience() {
           {/* Map view = spatial overview on top; full action-parity cards render below regardless. */}
           {view === "map" && total > 0 && (
             <FindCareMap
-              results={results.results}
+              results={visibleResults}
               origin={location ? { lat: location.lat, lng: location.lng } : null}
               selectedFacilityId={selectedFacilityId}
             />
           )}
 
+          {radiusActive && visibleResults.length === 0 && (
+            <p className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+              No facilities within {radiusKm} km. Widen the distance or clear it to see all matches.
+            </p>
+          )}
+
           <div className="space-y-3">
-            {results.results.map((r: CareResult, i: number) => (
+            {visibleResults.map((r: CareResult, i: number) => (
               <FindCareResultCard
                 key={r.facilityId ?? `${r.name}-${i}`}
                 result={r}
