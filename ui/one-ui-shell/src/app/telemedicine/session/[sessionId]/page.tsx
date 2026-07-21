@@ -26,9 +26,32 @@ import { TelemedicineRtcHealthPanel } from "@/components/telemedicine/Telemedici
 import { TelemedicineLiveSessionEmbed } from "@/components/live/TelemedicineLiveSessionEmbed";
 import { WaitingRoomAdmitControl } from "@/components/telemedicine/WaitingRoomAdmitControl";
 import { TeleconsultOrdersSection } from "@/components/telemedicine/TeleconsultOrdersSection";
+import { ReferralActionMenu } from "@/components/telemedicine/ReferralActionMenu";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useTelemedicineMediaToken } from "@/hooks/queries/useTelemedicine";
+
+/**
+ * Small standing chip for consent / provider-authority values — styled like ReferralStatusBadge
+ * but keyed off a positive/pending/blocked axis rather than the referral state machine.
+ */
+function StandingChip({ label, value }: { label: string; value: string }) {
+  const v = value.toUpperCase();
+  const tone =
+    v === "GRANTED" || v === "ACTIVE" || v === "VERIFIED" || v === "GOOD_STANDING"
+      ? "bg-emerald-100 text-emerald-700"
+      : v === "PENDING" || v === "REQUESTED" || v === "UNKNOWN"
+        ? "bg-amber-100 text-amber-700"
+        : v === "DENIED" || v === "REVOKED" || v === "SUSPENDED" || v === "EXPIRED"
+          ? "bg-rose-100 text-rose-700"
+          : "bg-slate-100 text-slate-500";
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${tone}`}>{value}</span>
+    </span>
+  );
+}
 
 interface Message {
   id: string;
@@ -47,6 +70,8 @@ export default function TeleconsultSessionPage() {
   // Session state
   const [session, setSession] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
+  /** Bumped after a lifecycle action so the referral payload is re-fetched. */
+  const [reloadNonce, setReloadNonce] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -116,7 +141,7 @@ export default function TeleconsultSessionPage() {
     }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId]);
+  }, [sessionId, reloadNonce]);
 
   async function ensureGovernedMediaOnLoad() {
     try {
@@ -232,6 +257,21 @@ export default function TeleconsultSessionPage() {
   const liveEventId = String(session?.liveEventId ?? attributes.liveEventId ?? "");
   const impiloLiveJoinPath = String(session?.impiloLiveJoinPath ?? attributes.impiloLiveJoinPath ?? "");
   const consentGranted = Boolean(session?.consentToken ?? attributes.consentReference ?? attributes.consentReference);
+  /** Governed consent state as reported on the referral payload (GRANTED/PENDING/…), if present. */
+  const consentStatus = String(
+    session?.consentStatus ?? session?.consent_status ?? attributes.consentStatus ?? attributes.consent_status ?? "",
+  ).toUpperCase();
+  /**
+   * Last provider-standing (authority) decision, only if PCT persisted it onto the referral.
+   * Never fabricated — when absent we show consent alone.
+   */
+  const authorityNode = (session?.authority ?? attributes.authority) as Record<string, unknown> | undefined;
+  const authorityStatus = String(
+    (authorityNode && typeof authorityNode === "object" ? authorityNode.status : undefined) ??
+      session?.authorityStatus ??
+      attributes.authority_status ??
+      "",
+  ).toUpperCase();
 
   /** Video is front and centre while a call is live (governed media held and not ended). */
   const callFront = hasGovernedMedia && !callEnded;
@@ -476,16 +516,31 @@ export default function TeleconsultSessionPage() {
         </div>
       </div>
 
-      {/* Consent */}
+      {/* Consent & provider standing */}
       <div className="p-3 border-b">
-        <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Consent</h4>
-        {Boolean(session?.consentToken) ? (
-          <div className="flex items-center gap-1.5 text-xs text-green-700">
-            <Shield className="w-3.5 h-3.5" /> Verified
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">Pending</p>
-        )}
+        <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Consent & standing</h4>
+        <div className="space-y-1.5">
+          {consentStatus ? (
+            <StandingChip label="Consent" value={consentStatus} />
+          ) : Boolean(session?.consentToken) ? (
+            <div className="flex items-center gap-1.5 text-xs text-green-700">
+              <Shield className="w-3.5 h-3.5" /> Verified
+            </div>
+          ) : (
+            <StandingChip label="Consent" value="PENDING" />
+          )}
+          {/* Provider-authority decision only when PCT persisted it; otherwise consent alone. */}
+          {authorityStatus && <StandingChip label="Provider standing" value={authorityStatus} />}
+        </div>
+      </div>
+
+      {/* Reason-bound lifecycle actions (guard-permitted transitions only) */}
+      <div className="p-3 border-b">
+        <ReferralActionMenu
+          sessionId={sessionId}
+          status={status}
+          onActionComplete={() => setReloadNonce((n) => n + 1)}
+        />
       </div>
 
       {/* Referral letter excerpt */}

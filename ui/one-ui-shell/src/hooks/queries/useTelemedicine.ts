@@ -56,13 +56,16 @@ type TelemedicineOpsResponse = ApiResponse<{
   overdueScheduledSessions: number;
 }>;
 
-export function useTelemedicineSessions(params?: {
-  providerId?: string;
-  patientId?: string;
-  facilityId?: string;
-  referralId?: string;
-  status?: string;
-}) {
+export function useTelemedicineSessions(
+  params?: {
+    providerId?: string;
+    patientId?: string;
+    facilityId?: string;
+    referralId?: string;
+    status?: string;
+  },
+  options?: { enabled?: boolean },
+) {
   const queryParams = new URLSearchParams();
   if (params?.providerId) queryParams.set("referrerId", params.providerId);
   if (params?.patientId) queryParams.set("patientId", params.patientId);
@@ -73,6 +76,9 @@ export function useTelemedicineSessions(params?: {
 
   return useQuery<SessionsResponse>({
     queryKey: ["telemedicine-sessions", params],
+    // The BFF list requires a patient/referrer/facility filter (else 400). Callers guard
+    // with enabled until a filter is available rather than firing a doomed request.
+    enabled: options?.enabled ?? true,
     queryFn: () =>
       apiClient.get<SessionsResponse>(
         `/internal/v1/teleconsult/sessions${qs ? `?${qs}` : ""}`
@@ -143,6 +149,58 @@ export function useDeclineTeleconsultSession() {
     mutationFn: ({ id, reason }) =>
       apiClient.post<SessionResponse>(`/internal/v1/teleconsult/sessions/${id}/decline`, { reason }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["telemedicine-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["telemedicine-specialty-workbench"] });
+      queryClient.invalidateQueries({ queryKey: ["incoming-referrals"] });
+    },
+  });
+}
+
+/** TM-B1 reason-bound lifecycle transitions the guard exposes on a referral. */
+export type ReferralLifecycleActionName = "cancel" | "reopen" | "escalate" | "transfer";
+
+/** Guard-permitted next actions for a referral's current state (drives the action menu). */
+export interface ReferralAllowedActions {
+  referralId: string;
+  status: string;
+  allowedTargets: string[];
+}
+
+/**
+ * TM-B1 — the guard-permitted next states for a referral. Enabled only when a session id is
+ * present. The `allowedTargets` list is the source of truth for which lifecycle buttons render;
+ * the UI never guesses transitions locally.
+ */
+export function useReferralAllowedActions(sessionId: string | null | undefined) {
+  return useQuery<ApiResponse<ReferralAllowedActions>>({
+    queryKey: ["teleconsult-allowed-actions", sessionId ?? null],
+    enabled: Boolean(sessionId),
+    queryFn: () =>
+      apiClient.get<ApiResponse<ReferralAllowedActions>>(
+        `/internal/v1/teleconsult/sessions/${encodeURIComponent(String(sessionId))}/allowed-actions`,
+      ),
+  });
+}
+
+/**
+ * TM-B1 — post a reason-bound lifecycle transition (cancel/reopen/escalate/transfer). A reason is
+ * mandatory (the BFF rejects a blank one with REASON_REQUIRED). Invalidates the referral's
+ * allowed-actions plus the session/worklist queries so contextual UI re-derives after the move.
+ */
+export function useReferralLifecycleAction(sessionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<Record<string, unknown>>,
+    unknown,
+    { action: ReferralLifecycleActionName; reason: string }
+  >({
+    mutationFn: ({ action, reason }) =>
+      apiClient.post<ApiResponse<Record<string, unknown>>>(
+        `/internal/v1/teleconsult/sessions/${encodeURIComponent(sessionId)}/${action}`,
+        { reason },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teleconsult-allowed-actions", sessionId] });
       queryClient.invalidateQueries({ queryKey: ["telemedicine-sessions"] });
       queryClient.invalidateQueries({ queryKey: ["telemedicine-specialty-workbench"] });
       queryClient.invalidateQueries({ queryKey: ["incoming-referrals"] });

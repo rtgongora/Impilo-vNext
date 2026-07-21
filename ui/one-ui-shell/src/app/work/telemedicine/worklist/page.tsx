@@ -19,11 +19,24 @@ import { ArrowLeft, Stethoscope, Clock, Loader2, Video } from "lucide-react";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import {
   useTelemedicineSpecialtyWorkbench,
+  useTelemedicineSessions,
   useAcceptTeleconsultSession,
   useDeclineTeleconsultSession,
 } from "@/hooks/queries/useTelemedicine";
 import { useTeleconsultPoolQueue } from "@/hooks/queries/useVirtualCare";
 import { useVirtualHospitalDirectory } from "@/hooks/queries/useTelemedicineOperatingModel";
+import { ReferralStatusBadge } from "@/components/telemedicine/ReferralStatusBadge";
+
+/** Off-path lifecycle outcomes — the exception bucket. */
+const EXCEPTION_STATUSES = ["DECLINED", "CANCELLED", "ESCALATED", "TRANSFERRED", "EXPIRED", "ABANDONED"];
+/** Parked / execution-phase states awaiting a party or step — the awaiting bucket. */
+const AWAITING_STATUSES = [
+  "AWAITING_LOCAL_ACTION",
+  "AWAITING_PATIENT_ACTION",
+  "AWAITING_RESULTS",
+  "FOLLOW_UP_DUE",
+  "COMPLETED_AWAITING_CLOSURE",
+];
 
 function extractItems(payload: unknown): Array<Record<string, unknown>> {
   if (Array.isArray(payload)) return payload as Array<Record<string, unknown>>;
@@ -310,11 +323,110 @@ function PoolQueuePanel({ actions }: { actions: ReferralActions }) {
   );
 }
 
+/**
+ * Lifecycle bucket — the facility's teleconsult referrals partitioned by state. The BFF list
+ * filters by a single status per call, so we fetch the facility-scoped incoming list once
+ * (existing hook, no invented endpoint) and partition client-side into the bucket's status set.
+ * Read-only: exception/awaiting states are not accept/decline targets.
+ */
+function LifecycleBucketPanel({ statuses, emptyLabel }: { statuses: string[]; emptyLabel: string }) {
+  const facility = useFacilityStore((s) => s.facility);
+  const sessions = useTelemedicineSessions(
+    facility?.id ? { facilityId: facility.id } : undefined,
+    { enabled: Boolean(facility?.id) },
+  );
+
+  if (!facility) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
+        Select a facility context to load lifecycle buckets.
+      </div>
+    );
+  }
+
+  if (sessions.isLoading) {
+    return (
+      <p className="inline-flex items-center gap-2 text-sm text-slate-400">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading referrals…
+      </p>
+    );
+  }
+
+  if (sessions.isError) {
+    return (
+      <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        The referral list could not be loaded.
+        <button
+          type="button"
+          onClick={() => sessions.refetch()}
+          className="ml-2 rounded-md border border-rose-300 px-2 py-1 text-xs font-medium hover:bg-rose-100"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  const allowed = new Set(statuses);
+  const items = extractItems(sessions.data?.data).filter((item) =>
+    allowed.has(String(item.status ?? "").toUpperCase()),
+  );
+
+  if (items.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
+        {emptyLabel}
+      </div>
+    );
+  }
+
+  return (
+    <ul className="space-y-3">
+      {items.map((item, index) => {
+        const id = String(item.id ?? item.referralId ?? index);
+        const waiting = waitingLabel(item);
+        return (
+          <li key={id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium text-slate-800">
+                    {String(item.specialty ?? item.clinical_question ?? item.clinicalQuestion ?? "Teleconsult referral")}
+                  </span>
+                  <ReferralStatusBadge status={String(item.status ?? "")} />
+                  {waiting && (
+                    <span className="inline-flex items-center gap-1 text-xs text-slate-400">
+                      <Clock className="h-3 w-3" /> {waiting}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-slate-600">
+                  {String(item.reason ?? item.clinical_summary ?? item.clinicalSummary ?? "")}
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  From {String(item.referred_by_name ?? item.referredByName ?? "referring clinician")}
+                  {item.origin_facility_name ? ` · ${String(item.origin_facility_name)}` : ""}
+                </p>
+              </div>
+              <Link
+                href={`/telemedicine/session/${id}`}
+                className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-teal-600 hover:underline"
+              >
+                <Video className="h-3 w-3" /> Session
+              </Link>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export default function SpecialistWorklistPage() {
   const facility = useFacilityStore((s) => s.facility);
   const accept = useAcceptTeleconsultSession();
   const decline = useDeclineTeleconsultSession();
-  const [view, setView] = useState<"facility" | "pools">("facility");
+  const [view, setView] = useState<"facility" | "pools" | "awaiting" | "exceptions">("facility");
 
   const actions: ReferralActions = {
     acceptPending: accept.isPending,
@@ -374,12 +486,44 @@ export default function SpecialistWorklistPage() {
         >
           Virtual hospital pools
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === "awaiting"}
+          onClick={() => setView("awaiting")}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+            view === "awaiting" ? "bg-white text-teal-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          Awaiting action
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={view === "exceptions"}
+          onClick={() => setView("exceptions")}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+            view === "exceptions" ? "bg-white text-teal-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          Exceptions
+        </button>
       </div>
 
       {view === "facility" ? (
         <FacilityWorklistPanel actions={actions} />
-      ) : (
+      ) : view === "pools" ? (
         <PoolQueuePanel actions={actions} />
+      ) : view === "awaiting" ? (
+        <LifecycleBucketPanel
+          statuses={AWAITING_STATUSES}
+          emptyLabel="No referrals are awaiting local, patient, results, follow-up or closure action."
+        />
+      ) : (
+        <LifecycleBucketPanel
+          statuses={EXCEPTION_STATUSES}
+          emptyLabel="No exception-state referrals (declined, cancelled, escalated, transferred, expired or abandoned)."
+        />
       )}
     </div>
   );

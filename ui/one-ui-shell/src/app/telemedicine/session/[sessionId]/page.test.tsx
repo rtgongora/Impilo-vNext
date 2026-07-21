@@ -95,6 +95,13 @@ vi.mock("@/hooks/queries/useTelemedicine", () => ({
     mutateAsync: vi.fn().mockResolvedValue({ data: { room_url: "wss://livekit.test", token: "tok" } }),
     isPending: false,
   }),
+  useReferralAllowedActions: () => ({
+    data: { data: { referralId: "session-1", status: "RESPONDED", allowedTargets: [] } },
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+  useReferralLifecycleAction: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
 }));
 
 describe("TelemedicineSessionPage", () => {
