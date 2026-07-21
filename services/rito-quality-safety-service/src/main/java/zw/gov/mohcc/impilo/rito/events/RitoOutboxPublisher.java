@@ -90,6 +90,7 @@ public class RitoOutboxPublisher extends CompanionOutboxPublisher {
             case "SURVEY" -> "rito.survey";
             case "PROVIDER_RATING" -> "rito.rating";
             case "REPUTATION" -> "rito.reputation";
+            case "FEEDBACK_REQUEST" -> "rito.feedback.request";
             default -> "rito.events";
         };
     }

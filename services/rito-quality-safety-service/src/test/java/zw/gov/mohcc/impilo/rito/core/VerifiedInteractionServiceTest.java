@@ -41,6 +41,8 @@ class VerifiedInteractionServiceTest {
         assertThat(first.getFacilityId()).isEqualTo(facility);
         assertThat(first.getModality()).isEqualTo("PHYSICAL");
         assertThat(first.getSourceSystem()).isEqualTo("PCT");
+        // Rito requests post-visit feedback on recording the interaction (RW9).
+        assertThat(first.getFeedbackRequested()).isTrue();
 
         // Re-consuming the same ENCOUNTER_COMPLETED event is a no-op — one row per encounter.
         VerifiedInteractionEntity second = service.recordFromPct(tenant, payload);
