@@ -3,8 +3,10 @@ package zw.gov.mohcc.impilo.oros.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.oros.domain.OrderPriority;
 import zw.gov.mohcc.impilo.oros.domain.OrderStatus;
 import zw.gov.mohcc.impilo.oros.domain.OrderType;
@@ -121,6 +123,8 @@ public class OrderStateMachine {
         order.setRequestSource(requestSource != null ? requestSource : RequestSource.INTERNAL);
         order.setSourceRef(sourceRef);
 
+        guardNoDuplicateTeleconsultOrder(ctx.tenantId(), order);
+
         order = orderRepository.save(order);
 
         persistItems(orderId, items);
@@ -171,6 +175,8 @@ public class OrderStateMachine {
         order.setScheduledAt(scheduledAt);
         order.setSafetyJson(safetyJson);
 
+        guardNoDuplicateTeleconsultOrder(ctx.tenantId(), order);
+
         order = orderRepository.save(order);
         persistItems(orderId, items);
 
@@ -180,6 +186,30 @@ public class OrderStateMachine {
                 orderId, type, order.getRequestSource(), facilityId);
         return order;
     }
+
+    /**
+     * Duplicate-order guard for teleconsult orders (TM-B7). When an order originates from a
+     * telemedicine consultation ({@code TELECONSULT}) and carries both a referral link
+     * ({@code sourceRef}) and a coded item ({@code ziboOrderCode}), reject placement if a
+     * non-terminal order with the same referral + code already exists — preventing the same test
+     * being ordered twice across reconnects, retries, or two providers on the same case.
+     */
+    private void guardNoDuplicateTeleconsultOrder(UUID tenantId, OrderEntity order) {
+        if (order.getRequestSource() != RequestSource.TELECONSULT) return;
+        if (order.getSourceRef() == null || order.getZiboOrderCode() == null) return;
+        List<OrderEntity> active = orderRepository
+                .findByTenantIdAndSourceRefAndZiboOrderCodeAndStatusNotIn(
+                        tenantId, order.getSourceRef(), order.getZiboOrderCode(), TERMINAL_STATUSES);
+        if (!active.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "An active order for this consultation and item already exists "
+                            + "(referral=" + order.getSourceRef() + ", code=" + order.getZiboOrderCode() + ").");
+        }
+    }
+
+    /** Terminal order states — excluded from the duplicate-order active-set check. */
+    private static final Set<OrderStatus> TERMINAL_STATUSES = EnumSet.of(
+            OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.REJECTED, OrderStatus.FAILED);
 
     /**
      * Update an existing {@code DRAFT} order. Replaces its items wholesale.

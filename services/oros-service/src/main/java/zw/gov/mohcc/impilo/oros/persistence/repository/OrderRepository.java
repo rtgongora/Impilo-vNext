@@ -35,6 +35,14 @@ public interface OrderRepository extends JpaRepository<OrderEntity, String> {
     List<OrderEntity> findByPatientCpidOrderByPlacedAtDesc(String patientCpid);
 
     /**
+     * Duplicate-order guard for teleconsult provenance (TM-B7): finds non-terminal orders
+     * with the same originating source_ref and coded item within a tenant. A non-empty result
+     * means an equivalent order for this teleconsult referral + code is still active.
+     */
+    List<OrderEntity> findByTenantIdAndSourceRefAndZiboOrderCodeAndStatusNotIn(
+            UUID tenantId, String sourceRef, String ziboOrderCode, Collection<OrderStatus> statuses);
+
+    /**
      * Finds all orders for a patient within a specific tenant.
      *
      * @param tenantId     the tenant UUID

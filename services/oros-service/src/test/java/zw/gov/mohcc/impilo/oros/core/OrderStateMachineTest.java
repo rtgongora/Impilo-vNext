@@ -452,6 +452,48 @@ class OrderStateMachineTest {
                 assertThat(order1.getOrderId()).isNotEqualTo(order2.getOrderId());
             }
         }
+
+        @Test
+        @DisplayName("placeOrder rejects a duplicate active TELECONSULT order (same referral + code)")
+        void placeOrderRejectsDuplicateTeleconsultOrder() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+
+                OrderEntity existing = new OrderEntity();
+                existing.setOrderId("EXISTING");
+                when(orderRepository.findByTenantIdAndSourceRefAndZiboOrderCodeAndStatusNotIn(
+                        eq(TENANT_ID), eq("REF-1"), eq("ZIBO-CBC"), any()))
+                        .thenReturn(java.util.List.of(existing));
+
+                assertThatThrownBy(() -> stateMachine.placeOrder(
+                        FACILITY_ID, "CPID-001", OrderType.LAB, null,
+                        "ZIBO-CBC", null, null, RequestSource.TELECONSULT, "REF-1", null))
+                        .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                        .hasMessageContaining("already exists");
+                // Guard fires before persistence.
+                verify(orderRepository, never()).save(any(OrderEntity.class));
+            }
+        }
+
+        @Test
+        @DisplayName("placeOrder allows a TELECONSULT order when no active duplicate exists")
+        void placeOrderAllowsTeleconsultOrderWhenNoDuplicate() {
+            try (MockedStatic<TrustContextHolder> mockedHolder = mockStatic(TrustContextHolder.class)) {
+                mockedHolder.when(TrustContextHolder::require).thenReturn(createTrustContext());
+                when(orderRepository.findByTenantIdAndSourceRefAndZiboOrderCodeAndStatusNotIn(
+                        eq(TENANT_ID), eq("REF-1"), eq("ZIBO-CBC"), any()))
+                        .thenReturn(java.util.List.of());
+                when(orderRepository.save(any(OrderEntity.class)))
+                        .thenAnswer(invocation -> invocation.getArgument(0));
+
+                OrderEntity order = stateMachine.placeOrder(
+                        FACILITY_ID, "CPID-001", OrderType.LAB, null,
+                        "ZIBO-CBC", null, null, RequestSource.TELECONSULT, "REF-1", java.util.List.of());
+
+                assertThat(order.getRequestSource()).isEqualTo(RequestSource.TELECONSULT);
+                assertThat(order.getSourceRef()).isEqualTo("REF-1");
+            }
+        }
     }
 
     @Nested
