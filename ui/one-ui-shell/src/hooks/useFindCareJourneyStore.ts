@@ -18,7 +18,7 @@ import { create } from "zustand";
 import type { CareSearchResponse } from "@/lib/find-care/types";
 
 /** Bumped when the persisted shape changes; a mismatch discards stale state. */
-export const FIND_CARE_JOURNEY_VERSION = "2026-07-17";
+export const FIND_CARE_JOURNEY_VERSION = "2026-07-21";
 
 const STORAGE_KEY = "exp:find_care_journey";
 const STORAGE_VERSION_KEY = "exp:find_care_journey_version";
@@ -36,6 +36,8 @@ export interface FindCareFilters {
   province: string;
   district: string;
   facilityType: string;
+  /** Max distance in km ("" = any). Client-side refinement — only bites when a location is shared. */
+  radiusKm: string;
 }
 
 export type FindCareView = "list" | "map";
@@ -73,7 +75,7 @@ interface FindCareJourneyState extends FindCareJourneySnapshot {
   hydrate: () => void;
 }
 
-const EMPTY_FILTERS: FindCareFilters = { province: "", district: "", facilityType: "" };
+const EMPTY_FILTERS: FindCareFilters = { province: "", district: "", facilityType: "", radiusKm: "" };
 
 const INITIAL_SNAPSHOT: FindCareJourneySnapshot = {
   need: "",
