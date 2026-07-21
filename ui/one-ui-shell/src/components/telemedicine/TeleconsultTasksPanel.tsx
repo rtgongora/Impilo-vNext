@@ -200,9 +200,10 @@ function PlaceCodedOrderForm({ sessionId, patientCpid }: { sessionId: string; pa
       setSuccess("Order placed with teleconsult provenance.");
     } catch (err) {
       // A0 passthrough surfaces the OROS 409 duplicate-order code verbatim.
-      const code = (err as { code?: string; body?: { error?: { code?: string } } })?.body?.error?.code;
+      const e = err as { status?: number; code?: string; body?: { error?: { code?: string } } };
+      const code = e?.body?.error?.code ?? e?.code;
       setError(
-        code === "CONFLICT"
+        code === "DUPLICATE_TELECONSULT_ORDER" || e?.status === 409
           ? "An active order for this consultation and item already exists."
           : "Failed to place order. Verify BFF/OROS availability.",
       );

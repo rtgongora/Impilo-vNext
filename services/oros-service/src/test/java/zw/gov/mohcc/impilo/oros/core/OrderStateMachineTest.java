@@ -468,7 +468,7 @@ class OrderStateMachineTest {
                 assertThatThrownBy(() -> stateMachine.placeOrder(
                         FACILITY_ID, "CPID-001", OrderType.LAB, null,
                         "ZIBO-CBC", null, null, RequestSource.TELECONSULT, "REF-1", null))
-                        .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                        .isInstanceOf(zw.gov.mohcc.impilo.oros.core.OrosDomainException.class)
                         .hasMessageContaining("already exists");
                 // Guard fires before persistence.
                 verify(orderRepository, never()).save(any(OrderEntity.class));

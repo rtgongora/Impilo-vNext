@@ -3,10 +3,8 @@ package zw.gov.mohcc.impilo.oros.core;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.oros.domain.OrderPriority;
 import zw.gov.mohcc.impilo.oros.domain.OrderStatus;
 import zw.gov.mohcc.impilo.oros.domain.OrderType;
@@ -201,7 +199,7 @@ public class OrderStateMachine {
                 .findByTenantIdAndSourceRefAndZiboOrderCodeAndStatusNotIn(
                         tenantId, order.getSourceRef(), order.getZiboOrderCode(), TERMINAL_STATUSES);
         if (!active.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
+            throw new OrosDomainException("DUPLICATE_TELECONSULT_ORDER", 409,
                     "An active order for this consultation and item already exists "
                             + "(referral=" + order.getSourceRef() + ", code=" + order.getZiboOrderCode() + ").");
         }
