@@ -28,6 +28,7 @@ import {
   useGatewayTransactions,
   useRouteGateway,
   useEmployers,
+  usePerformanceSummary,
 } from "@/hooks/queries/useRuvimbo";
 import { RuvimboSection } from "@/components/ruvimbo/RuvimboSection";
 import { RuvimboSummaryCard } from "@/components/ruvimbo/RuvimboSummaryCard";
@@ -77,6 +78,7 @@ export default function RuvimboAdministrationPage() {
           {tab === "payers" && <PayersPanel payersQ={payersQ} payers={payers} />}
           {tab === "switch" && <SwitchPanel />}
           {tab === "bulk" && <BulkPanel employersQ={employersQ} employers={employers} />}
+          {tab === "platform" && <IntegrationHealthPanel />}
           {tab === "platform" && <PlatformPanel />}
         </div>
       </PageShell>
@@ -166,6 +168,43 @@ function BulkPanel({ employersQ, employers }: { employersQ: any; employers: Reco
           ))}
         </tbody>
       </table>
+    </RuvimboSection>
+  );
+}
+
+function IntegrationHealthPanel() {
+  const q = usePerformanceSummary();
+  const s = asRecord(q.data);
+  const sw = asRecord(s.switch);
+  const swBy = asRecord(sw.byStatus);
+  const total = readNum(sw, "total");
+  const pending = readNum(swBy, "PENDING");
+  const rejected = readNum(swBy, "REJECTED");
+  const accepted = readNum(swBy, "ACCEPTED");
+  const healthy = total === 0 || (pending + rejected) / total < 0.1;
+  const cells = [
+    { label: "Switch throughput", value: total.toLocaleString(), tone: "neutral" as const },
+    { label: "Accepted", value: accepted.toLocaleString(), tone: "positive" as const },
+    { label: "Awaiting response", value: pending.toLocaleString(), tone: pending ? ("warning" as const) : ("neutral" as const) },
+    { label: "Rejected", value: rejected.toLocaleString(), tone: rejected ? ("danger" as const) : ("neutral" as const) },
+  ];
+  const toneCls: Record<string, string> = { neutral: "text-foreground", positive: "text-green-700", warning: "text-warning-foreground", danger: "text-danger" };
+  return (
+    <RuvimboSection title="Integration health" icon={<Radio className="h-4 w-4 text-violet-700" />} isLoading={q.isLoading} isError={q.isError} onRetry={() => q.refetch()}>
+      <div className="mb-3 flex items-center gap-2 text-sm">
+        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${healthy ? "bg-green-100 text-green-800" : "bg-amber-100 text-warning-foreground"}`}>
+          {healthy ? "Claims switch healthy" : "Attention: elevated pending/rejected"}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {cells.map((c) => (
+          <div key={c.label} className="rounded-lg border border-border p-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{c.label}</p>
+            <p className={`mt-1 text-xl font-bold ${toneCls[c.tone]}`}>{c.value}</p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">Live from the claims-switch gateway. Certificate, routing and data-quality monitors follow with the rules/terminology services.</p>
     </RuvimboSection>
   );
 }
