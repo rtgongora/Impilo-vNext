@@ -840,6 +840,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/my-life/feedback", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Feedback", navLabel: "Feedback & Safety", navZone: "life" },
   { path: "/my-life/feedback/new", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Share Feedback", navLabel: "Share Feedback", navZone: "life" },
   { path: "/my-life/feedback/[caseId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Feedback", navLabel: "Track", navZone: "life" },
+  { path: "/feedback/visit/[encounterRef]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Rate your visit", navLabel: "Rate your visit", navZone: "life" },
+  { path: "/work/rito/my-reputation", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Reputation", navLabel: "My Reputation", navZone: "professional" },
+  { path: "/work/facility/rito/reputation", zone: "facility", layout: "app", sidebar: "facility", guard: "facility", pageTitle: "Reputation & Moderation", navLabel: "Reputation", navZone: "work" },
   { path: "/work/facility/rito", zone: "facility", layout: "app", sidebar: "facility", guard: "facility", pageTitle: "Facility Quality & Safety", navLabel: "Quality & Safety", navZone: "work" },
   { path: "/work/above-site/rito", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Above-Site Quality & Safety", navLabel: "Quality Oversight", navZone: "work" },
   { path: "/work/dura", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Dura — Stock & Supply", navLabel: "Dura Stock", navZone: "work" },
@@ -970,7 +973,7 @@ export const ROUTES: RouteDefinition[] = [
 // L3 ABIS 1:N scan-to-login (Jul 2026): +1 — /auth/login/scan, the biometric scan-to-login
 // page (capture → 1:N identify → session on a single strong match only). Flag-gated OFF in the
 // BFF; page shows an honest "not enabled" state when the feature is disabled. Total 768.
-export const EXPECTED_ROUTE_COUNT = 768;
+export const EXPECTED_ROUTE_COUNT = 771;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
