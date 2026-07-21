@@ -47,6 +47,11 @@ test.describe("Coverage enrollment journey", () => {
       timeout: 15_000,
     });
     await expect(page.getByTestId("coverage-member-plans-table")).toContainText("ACTIVE");
+
+    // Appeals section must render its data, not the error box (regression guard for
+    // the cross-namespace BFF hop that made "Appeals" fail live).
+    await expect(page.getByText("Claim partially declined — requesting review")).toBeVisible();
+    await expect(page.getByText("Could not load this section.")).toHaveCount(0);
   });
 
   test("coverage hub links back from enroll", async ({ page }) => {

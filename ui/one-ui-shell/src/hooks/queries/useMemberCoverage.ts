@@ -10,8 +10,13 @@ type UnknownRecord = Record<string, unknown>;
 function unwrapArray(res: unknown): unknown[] {
   if (!res) return [];
   if (Array.isArray(res)) return res;
-  const obj = res as { data?: unknown };
+  const obj = res as { data?: unknown; content?: unknown };
   if (Array.isArray(obj.data)) return obj.data;
+  // Tolerate a Spring Page envelope ({content:[…]}), whether returned bare or
+  // nested under `data` — so a paginated list never renders as empty.
+  const data = obj.data as { content?: unknown } | undefined;
+  if (data && Array.isArray(data.content)) return data.content;
+  if (Array.isArray(obj.content)) return obj.content;
   return [];
 }
 
