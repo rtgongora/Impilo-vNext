@@ -276,6 +276,11 @@ export function useCreateCapitation() {
   return useMutation({ mutationFn: (body: Record<string, unknown>) => apiClient.post(`${BASE}/capitation-reports`, body), ...w });
 }
 
+// ── Performance summary (live aggregated counts) ────────────────────────────
+export function usePerformanceSummary() {
+  return useObjectQuery(["ruvimbo-performance-summary"], `${BASE}/performance/summary`);
+}
+
 // ── Claims switch / payer gateway ───────────────────────────────────────────
 export function useGatewayTransactions(status = "ROUTED") {
   return useListQuery(["ruvimbo-gateway", status], `${BASE}/gateway/transactions?status=${encodeURIComponent(status)}`);

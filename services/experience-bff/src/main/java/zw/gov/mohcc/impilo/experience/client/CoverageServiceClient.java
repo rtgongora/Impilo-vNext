@@ -199,6 +199,11 @@ public class CoverageServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    public JsonNode getPerformanceSummary() {
+        String url = baseUrl + "/internal/v1/coverage/performance/summary";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     public JsonNode listAppealsForAppellant(String appellantId) {
         // AppealController is mounted at /internal/v1/appeals (NOT under the /coverage
         // prefix) and its query param is `appellantId`. Calling the old
