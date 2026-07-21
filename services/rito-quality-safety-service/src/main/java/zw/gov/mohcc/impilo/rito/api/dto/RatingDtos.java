@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.rito.api.dto;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -40,4 +41,27 @@ public final class RatingDtos {
 
     /** A provider's response to a rating. */
     public record ProviderResponseRequest(String providerPublicId, String responseText, String respondedBy) {}
+
+    // ── Read surfaces (RW5) ──────────────────────────────────────────────────
+
+    /** Public per-domain summary — verified fields only (no respondent identity). */
+    public record PublicDomainSummary(String domain, BigDecimal verifiedMeanScore,
+                                      int verifiedCount, String distribution) {}
+
+    /**
+     * Public verified-experience summary for a provider profile. Shows only the verified
+     * experience domains; source-tagged "Rito". VARAPI/TUSO compose this read-only.
+     */
+    public record ExperienceSummaryResponse(String providerPublicId, String reportingPeriod,
+                                            String source, int verifiedInteractionTotal,
+                                            List<PublicDomainSummary> domains) {}
+
+    /** Authorised management per-domain summary — verified AND overall (all four domains). */
+    public record ManagementDomainSummary(String domain, BigDecimal meanScore, int ratingCount,
+                                          BigDecimal verifiedMeanScore, int verifiedCount, String distribution) {}
+
+    /** Authorised management view — all domains + moderation counts (TSHEPO-gated lane). */
+    public record ManagementViewResponse(String providerPublicId, String reportingPeriod,
+                                         List<ManagementDomainSummary> domains,
+                                         Map<String, Long> moderationStateCounts) {}
 }
