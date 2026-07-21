@@ -151,6 +151,15 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/coverage/contracts", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Provider Contracts", navLabel: "Contracts", navZone: "professional" },
   { path: "/coverage/operations", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Ruvimbo Operations", navLabel: "Ruvimbo Ops", navZone: "professional" },
 
+  // ── Zone: Ruvimbo (health financing — canonical product face over Coverage) ──
+  // /ruvimbo is a role-aware entry resolver; /coverage/* stays alive via redirects.
+  { path: "/ruvimbo", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Ruvimbo", navLabel: "Ruvimbo", navZone: "life" },
+  { path: "/ruvimbo/member", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Ruvimbo", navLabel: "My Ruvimbo", navZone: "life" },
+  { path: "/ruvimbo/provider", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "CLINICAL", pageTitle: "Ruvimbo Provider", navLabel: "Ruvimbo Provider", navZone: "professional" },
+  { path: "/ruvimbo/payer", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Ruvimbo Payer", navLabel: "Ruvimbo Payer", navZone: "professional" },
+  { path: "/ruvimbo/administration", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Ruvimbo Administration", navLabel: "Ruvimbo Administration", navZone: "professional" },
+  { path: "/ruvimbo/performance", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Ruvimbo Performance", navLabel: "Ruvimbo Performance", navZone: "professional" },
+
   // â”€â”€ Zone: Identity Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/id-services", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Identity Services", navLabel: "ID Services", navZone: "professional" },
   { path: "/ai-governance", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "AI Governance", navLabel: "AI Governance", navZone: "professional" },
@@ -973,7 +982,7 @@ export const ROUTES: RouteDefinition[] = [
 // L3 ABIS 1:N scan-to-login (Jul 2026): +1 — /auth/login/scan, the biometric scan-to-login
 // page (capture → 1:N identify → session on a single strong match only). Flag-gated OFF in the
 // BFF; page shows an honest "not enabled" state when the feature is disabled. Total 768.
-export const EXPECTED_ROUTE_COUNT = 771;
+export const EXPECTED_ROUTE_COUNT = 777;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
