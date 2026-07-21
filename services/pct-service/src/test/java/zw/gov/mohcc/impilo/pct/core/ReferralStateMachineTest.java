@@ -2,12 +2,9 @@ package zw.gov.mohcc.impilo.pct.core;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralTransitionGuardProperties;
 import zw.gov.mohcc.impilo.pct.domain.ReferralStatus;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ReferralEntity;
-import zw.gov.mohcc.impilo.pct.persistence.entity.ReferralTransitionEntity;
-import zw.gov.mohcc.impilo.pct.persistence.repository.ReferralTransitionRepository;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -17,25 +14,25 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 class ReferralStateMachineTest {
 
-    private ReferralTransitionRepository ledger;
-    private TelemetryService telemetry;
+    private ReferralTransitionRecorder recorder;
     private ReferralTransitionGuardProperties props;
     private ReferralStateMachine sm;
 
     @BeforeEach
     void setUp() {
-        ledger = mock(ReferralTransitionRepository.class);
-        when(ledger.save(any())).thenAnswer(i -> i.getArgument(0));
-        telemetry = mock(TelemetryService.class);
+        recorder = mock(ReferralTransitionRecorder.class);
         props = new ReferralTransitionGuardProperties();
-        sm = new ReferralStateMachine(ledger, telemetry, props);
+        sm = new ReferralStateMachine(recorder, props);
     }
 
     private ReferralEntity referral(String status) {
@@ -96,10 +93,9 @@ class ReferralStateMachineTest {
         sm.apply(e, ReferralStatus.COMPLETED, "complete"); // illegal, but shadow
 
         assertEquals("COMPLETED", e.getStatus()); // applied — live path not blocked
-        ArgumentCaptor<ReferralTransitionEntity> cap = ArgumentCaptor.forClass(ReferralTransitionEntity.class);
-        verify(ledger).save(cap.capture());
-        assertFalse(cap.getValue().isAllowed());
-        assertEquals("SHADOW", cap.getValue().getMode());
+        // Recorded as a violation in SHADOW mode.
+        verify(recorder).record(any(), any(), eq("DRAFT"), eq("COMPLETED"), eq("complete"),
+                anyString(), eq(false), eq("SHADOW"));
     }
 
     @Test
@@ -129,7 +125,7 @@ class ReferralStateMachineTest {
         ReferralEntity e = referral("DRAFT");
         sm.apply(e, ReferralStatus.COMPLETED, "complete"); // illegal, but OFF = kill switch
         assertEquals("COMPLETED", e.getStatus());
-        verify(ledger, never()).save(any());
+        verify(recorder, never()).record(any(), any(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString());
     }
 
     // ---- raw passthrough (updateReferralStage backdoor) ----
@@ -153,7 +149,7 @@ class ReferralStateMachineTest {
     @Test
     void ledgerFailureNeverBreaksTheTransition() {
         // The clinical mutation must survive a ledger write failure (best-effort audit).
-        when(ledger.save(any())).thenThrow(new RuntimeException("db down"));
+        doThrow(new RuntimeException("db down")).when(recorder).record(any(), any(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), anyString());
         props.setMode(ReferralTransitionGuardProperties.Mode.SHADOW);
         ReferralEntity e = referral("SUBMITTED");
         sm.apply(e, ReferralStatus.ACCEPTED, "accept");

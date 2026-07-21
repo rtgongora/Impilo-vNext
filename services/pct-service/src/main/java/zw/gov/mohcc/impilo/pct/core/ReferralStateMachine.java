@@ -6,8 +6,6 @@ import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralTransitionGuardProperties;
 import zw.gov.mohcc.impilo.pct.domain.ReferralStatus;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ReferralEntity;
-import zw.gov.mohcc.impilo.pct.persistence.entity.ReferralTransitionEntity;
-import zw.gov.mohcc.impilo.pct.persistence.repository.ReferralTransitionRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -113,15 +111,12 @@ public class ReferralStateMachine {
         TRANSITIONS = m;
     }
 
-    private final ReferralTransitionRepository transitionRepository;
-    private final TelemetryService telemetryService;
+    private final ReferralTransitionRecorder recorder;
     private final ReferralTransitionGuardProperties properties;
 
-    public ReferralStateMachine(ReferralTransitionRepository transitionRepository,
-                                TelemetryService telemetryService,
+    public ReferralStateMachine(ReferralTransitionRecorder recorder,
                                 ReferralTransitionGuardProperties properties) {
-        this.transitionRepository = transitionRepository;
-        this.telemetryService = telemetryService;
+        this.recorder = recorder;
         this.properties = properties;
     }
 
@@ -210,23 +205,11 @@ public class ReferralStateMachine {
     private void recordRaw(ReferralEntity entity, String fromStatus, String toStatus,
                            String action, boolean allowed, ReferralTransitionGuardProperties.Mode mode) {
         try {
-            ReferralTransitionEntity row = new ReferralTransitionEntity();
-            row.setReferralId(entity.getReferralId());
-            row.setTenantId(entity.getTenantId());
-            row.setFromStatus(fromStatus);
-            row.setToStatus(toStatus);
-            row.setAction(action);
-            row.setActor(resolveActor());
-            row.setAllowed(allowed);
-            row.setMode(mode.name());
-            transitionRepository.save(row);
-            telemetryService.record("telemedicine.referral.transition",
-                    entity.getReferralId() == null ? null : entity.getReferralId().toString(),
-                    Map.<String, Object>of("from", fromStatus == null ? "" : fromStatus,
-                            "to", toStatus, "action", action,
-                            "allowed", Boolean.toString(allowed), "mode", mode.name()));
+            // Independent (REQUIRES_NEW) transaction: an audit failure can never poison
+            // or roll back the clinical mutation.
+            recorder.record(entity.getReferralId(), entity.getTenantId(), fromStatus, toStatus,
+                    action, resolveActor(), allowed, mode.name());
         } catch (Exception e) {
-            // The ledger must never break a clinical mutation — record failures are logged only.
             log.warn("Failed to record referral transition ledger row: {}", e.getMessage());
         }
     }

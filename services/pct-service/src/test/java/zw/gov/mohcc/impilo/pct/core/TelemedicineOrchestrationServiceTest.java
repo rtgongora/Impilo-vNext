@@ -52,8 +52,10 @@ class TelemedicineOrchestrationServiceTest {
         // Real guard in default SHADOW mode: it applies the status exactly as before
         // (never blocks) while recording the transition ledger — existing behavioural
         // assertions on the resulting status are unchanged.
+        ReferralTransitionRecorder transitionRecorder =
+                new ReferralTransitionRecorder(referralTransitionRepository, telemetryService);
         ReferralStateMachine referralStateMachine = new ReferralStateMachine(
-                referralTransitionRepository, telemetryService,
+                transitionRecorder,
                 new zw.gov.mohcc.impilo.pct.core.telemedicine.ReferralTransitionGuardProperties());
         service = new TelemedicineOrchestrationService(
                 referralRepository, telehealthSessionRepository, outboxRepository, telemetryService,
