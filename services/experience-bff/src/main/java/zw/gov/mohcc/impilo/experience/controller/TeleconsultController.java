@@ -200,7 +200,7 @@ public class TeleconsultController {
                     requestId,
                     correlationId);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -253,7 +253,7 @@ public class TeleconsultController {
                     id, Map.of("routingType", normalizedRoutingType(val(body, "routingType", "routing_type"))));
             return ok(normalizeReferralPayload(updated), requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -298,7 +298,7 @@ public class TeleconsultController {
             response.put("status", "PENDING");
             return ok(response, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("MVUMO_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("MVUMO_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -335,7 +335,7 @@ public class TeleconsultController {
                     id, Map.of());
             return ok(normalizeReferralPayload(submitted), requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -376,7 +376,7 @@ public class TeleconsultController {
             }
             return ok(normalizeReferralPayload(list), requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -482,9 +482,9 @@ public class TeleconsultController {
                     actorId, role, patientId, "TeleconsultSession", id, Map.of("provider", "rtc-gateway"));
             return ok(media, requestId, correlationId, HttpStatus.OK);
         } catch (HttpClientErrorException e) {
-            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e, requestId, correlationId);
         } catch (Exception e) {
-            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -551,7 +551,7 @@ public class TeleconsultController {
                     e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
                     requestId, correlationId);
         } catch (Exception e) {
-            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -579,7 +579,7 @@ public class TeleconsultController {
                     e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
                     requestId, correlationId);
         } catch (Exception e) {
-            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -621,7 +621,7 @@ public class TeleconsultController {
                     e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
                     requestId, correlationId);
         } catch (Exception e) {
-            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -667,7 +667,7 @@ public class TeleconsultController {
                     e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
                     requestId, correlationId);
         } catch (Exception e) {
-            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -715,7 +715,7 @@ public class TeleconsultController {
                     e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
                     requestId, correlationId);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -732,7 +732,7 @@ public class TeleconsultController {
             }
             return ok(normalizeReferralPayload(referral), requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -767,7 +767,7 @@ public class TeleconsultController {
                     id, Map.of());
             return ok(accepted, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -834,7 +834,7 @@ public class TeleconsultController {
                     id, Map.of("reason", reason));
             return ok(response, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -872,7 +872,7 @@ public class TeleconsultController {
                     id, Map.of("messageLength", message.length()));
             return ok(response, requestId, correlationId, HttpStatus.ACCEPTED);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -889,7 +889,7 @@ public class TeleconsultController {
             }
             return ok(extractMessageThread(referral), requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -907,7 +907,7 @@ public class TeleconsultController {
             }
             return ok(response, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -960,7 +960,7 @@ public class TeleconsultController {
                     id, Map.of("breakGlass", Boolean.parseBoolean(val(body, "breakGlassOverride", "break_glass_override"))));
             return ok(completed, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -1020,7 +1020,7 @@ public class TeleconsultController {
                     e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
                     requestId, correlationId);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -1069,7 +1069,7 @@ public class TeleconsultController {
                     e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
                     requestId, correlationId);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -1089,7 +1089,7 @@ public class TeleconsultController {
             JsonNode providers = varapiClient.searchProviders(request);
             return ok(providers, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("VARAPI_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("VARAPI_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -1109,7 +1109,7 @@ public class TeleconsultController {
             JsonNode facilities = tusoClient.searchFacilities(request);
             return ok(facilities, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("TUSO_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("TUSO_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -1127,7 +1127,7 @@ public class TeleconsultController {
             return error(HttpStatus.BAD_REQUEST, "INVALID_FACILITY_ID",
                     "facility_id must be numeric", requestId, correlationId);
         } catch (Exception e) {
-            return upstreamFailure("TUSO_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("TUSO_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -1188,6 +1188,37 @@ public class TeleconsultController {
         log.warn("Teleconsult upstream failure: {}", message);
         return error(HttpStatus.BAD_GATEWAY, code,
                 message != null ? message : "Teleconsult upstream unavailable", requestId, correlationId);
+    }
+
+    /**
+     * Upstream-error passthrough (A0, TM-B1 prerequisite). Domain rejections from
+     * sovereign services (4xx: ILLEGAL_TRANSITION, CONSENT_REQUIRED_MISSING,
+     * PROVIDER_NOT_AUTHORIZED, …) must reach clients with their real status and
+     * code — masking them as 502 PCT_UNAVAILABLE turns governed rejections into
+     * fake outages. 5xx and transport failures keep the upstream-failure shape.
+     */
+    private ResponseEntity<Map<String, Object>> upstreamFailure(String code, Exception e, String requestId, String correlationId) {
+        if (e instanceof org.springframework.web.client.HttpStatusCodeException http
+                && http.getStatusCode().is4xxClientError()) {
+            String upstreamCode = code;
+            String upstreamMessage = http.getMessage();
+            try {
+                JsonNode body = objectMapper.readTree(http.getResponseBodyAsString());
+                // PCT envelope: {success:false, error:{code,message,status}}; generic: {error:{code,message}}
+                JsonNode err = body.path("error");
+                if (err.hasNonNull("code")) {
+                    upstreamCode = err.path("code").asText(upstreamCode);
+                }
+                if (err.hasNonNull("message")) {
+                    upstreamMessage = err.path("message").asText(upstreamMessage);
+                }
+            } catch (Exception parseFailure) {
+                log.debug("Upstream 4xx body not parseable, forwarding status only: {}", parseFailure.getMessage());
+            }
+            log.info("Teleconsult upstream domain rejection passed through: {} {}", http.getStatusCode(), upstreamCode);
+            return error(HttpStatus.valueOf(http.getStatusCode().value()), upstreamCode, upstreamMessage, requestId, correlationId);
+        }
+        return upstreamFailure(code, e.getMessage(), requestId, correlationId);
     }
 
     private ValidationError validateStoredRoutingAndAttachments(JsonNode referral) {
@@ -1540,7 +1571,7 @@ public class TeleconsultController {
             }
             return ok(health, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -1563,7 +1594,7 @@ public class TeleconsultController {
             }
             return ok(payload, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 
@@ -1595,7 +1626,7 @@ public class TeleconsultController {
             }
             return ok(rows, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
-            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
         }
     }
 

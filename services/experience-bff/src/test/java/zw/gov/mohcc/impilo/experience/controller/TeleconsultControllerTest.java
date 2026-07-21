@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.experience.client.AnalyticsPipelineServiceClient;
 import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
@@ -80,6 +81,40 @@ class TeleconsultControllerTest {
                 notificationClient, fhirGatewayClient, costaClient, analyticsClient, rtcClient,
                 bookingClient, khulumaClient, governanceService, objectMapper
         );
+    }
+
+    @Test
+    void acceptPassesThroughUpstreamDomainRejectionInsteadOfMaskingAsOutage() {
+        // A0: a governed 4xx from PCT (e.g. TM-B1 ILLEGAL_TRANSITION / PROVIDER_NOT_AUTHORIZED)
+        // must reach the client with its real status + code, not a 502 PCT_UNAVAILABLE.
+        String body = "{\"success\":false,\"error\":{\"code\":\"PROVIDER_NOT_AUTHORIZED\","
+                + "\"message\":\"licence suspended\",\"status\":403}}";
+        HttpClientErrorException upstream = HttpClientErrorException.create(
+                HttpStatus.FORBIDDEN, "Forbidden", org.springframework.http.HttpHeaders.EMPTY,
+                body.getBytes(java.nio.charset.StandardCharsets.UTF_8), java.nio.charset.StandardCharsets.UTF_8);
+        Mockito.when(pctClient.acceptReferral(eq("ref-401"), any())).thenThrow(upstream);
+
+        var response = controller.accept(
+                "ref-401", "req-1", "corr-1", "tenant-a", "TREATMENT", "fac-1", "provider-1", Map.of());
+
+        assertEquals(403, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("PROVIDER_NOT_AUTHORIZED", error.get("code"));
+    }
+
+    @Test
+    void acceptStillReportsTransportFailureAsUpstreamOutage() {
+        // A genuine 5xx / transport failure keeps the upstream-failure (502) shape.
+        Mockito.when(pctClient.acceptReferral(eq("ref-500"), any()))
+                .thenThrow(new RuntimeException("connection refused"));
+
+        var response = controller.accept(
+                "ref-500", "req-1", "corr-1", "tenant-a", "TREATMENT", "fac-1", "provider-1", Map.of());
+
+        assertEquals(502, response.getStatusCode().value());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("PCT_UNAVAILABLE", error.get("code"));
     }
 
     @Test
