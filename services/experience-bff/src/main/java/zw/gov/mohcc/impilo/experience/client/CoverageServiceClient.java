@@ -187,14 +187,21 @@ public class CoverageServiceClient {
     }
 
     public JsonNode listAppealsForAppellant(String appellantId) {
-        // coverage-service serves appeals at /internal/v1/appeals (AppealController), not under
-        // the /internal/v1/coverage/ prefix, and the query param is appellantId (camelCase) —
-        // matching createAppeal above. The old /internal/v1/coverage/appeals?appellant_id had no
-        // handler → 502.
+        // AppealController is mounted at /internal/v1/appeals (NOT under the /coverage
+        // prefix) and its query param is `appellantId`. Calling the old
+        // /internal/v1/coverage/appeals?appellant_id path 404s upstream, which the caller
+        // re-emits as COVERAGE_UNAVAILABLE — the source of the member "Appeals" red box.
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/appeals")
                 .queryParam("appellantId", appellantId)
                 .toUriString();
-        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+        JsonNode data = extractData(restTemplate.getForEntity(url, JsonNode.class));
+        // list() returns ApiResponse<Page<…>> → data is a Spring Page envelope
+        // {content:[…]}. Unwrap to the plain array the member UI expects, so appeals
+        // matches every sibling coverage list (which return a bare List).
+        if (data != null && data.has("content")) {
+            return data.get("content");
+        }
+        return data;
     }
 
     public JsonNode createAppeal(Map<String, Object> body) {

@@ -85,7 +85,24 @@ export async function installCoverageMocks(page: Page) {
     }
 
     if (method === "GET" && path === "/appeals") {
-      return route.fulfill(emptyList);
+      // Non-empty so the test exercises the render path (the section previously
+      // errored live). The BFF returns a plain array under `data` after unwrapping
+      // the coverage-service Page envelope.
+      return route.fulfill(
+        json({
+          data: [
+            {
+              id: "eeeeeeee-0001-0000-0000-000000000001",
+              claimId: "cccccccc-0001-0000-0000-000000000001",
+              appellantId: COVERAGE_E2E.clientId,
+              reason: "Claim partially declined — requesting review",
+              status: "PENDING",
+              decision: null,
+              createdAt: "2026-07-20T09:00:00Z",
+            },
+          ],
+        }),
+      );
     }
 
     if (method === "POST" && path === "/eligibility/enrollment") {
