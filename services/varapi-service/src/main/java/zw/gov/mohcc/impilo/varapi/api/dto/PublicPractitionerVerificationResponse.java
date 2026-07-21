@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.varapi.api.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Allow-listed public disclosure for practitioner register verification
@@ -39,14 +41,25 @@ public record PublicPractitionerVerificationResponse(
         String licenceStatus,
         LocalDate licenceValidFrom,
         LocalDate licenceValidTo,
-        String registeringAuthority
+        String registeringAuthority,
+        ExperienceSummary experienceSummary
 ) {
 
     public static final String STATUS_NOT_FOUND = "NOT_FOUND";
 
+    /**
+     * Read-only, Rito-sourced patient-experience summary (RW6). VARAPI composes and
+     * displays it; it never owns or stores it. Verified experience domains only —
+     * {@code source} is always "Rito". Null when Rito is disabled/unavailable.
+     */
+    public record ExperienceSummary(String source, String reportingPeriod,
+                                    int verifiedInteractionTotal, List<ExperienceDomain> domains) {}
+
+    public record ExperienceDomain(String domain, BigDecimal verifiedMeanScore, int verifiedCount) {}
+
     /** Uniform miss shape — same fields, all null except the status. */
     public static PublicPractitionerVerificationResponse notFound() {
         return new PublicPractitionerVerificationResponse(
-                STATUS_NOT_FOUND, null, null, null, null, null, null, null, null, null, null);
+                STATUS_NOT_FOUND, null, null, null, null, null, null, null, null, null, null, null);
     }
 }

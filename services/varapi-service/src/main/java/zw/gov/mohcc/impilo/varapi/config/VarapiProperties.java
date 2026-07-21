@@ -15,6 +15,7 @@ public class VarapiProperties {
     private OutboxProperties outbox = new OutboxProperties();
     private GovernanceProperties governance = new GovernanceProperties();
     private MusheXProperties mushex = new MusheXProperties();
+    private RitoProperties rito = new RitoProperties();
     private FundoProperties fundo = new FundoProperties();
     private LearningPlatformSyncProperties learningPlatformSync = new LearningPlatformSyncProperties();
     private CouncilRegulatoryProperties councilRegulatory = new CouncilRegulatoryProperties();
@@ -52,6 +53,9 @@ public class VarapiProperties {
 
     public MusheXProperties getMushex() { return mushex; }
     public void setMushex(MusheXProperties mushex) { this.mushex = mushex; }
+
+    public RitoProperties getRito() { return rito; }
+    public void setRito(RitoProperties rito) { this.rito = rito; }
 
     public FundoProperties getFundo() { return fundo; }
     public void setFundo(FundoProperties fundo) { this.fundo = fundo; }
@@ -169,6 +173,17 @@ public class VarapiProperties {
     public static class MusheXProperties {
         private boolean enabled = false;
         private String baseUrl = "http://localhost:8102";
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public String getBaseUrl() { return baseUrl; }
+        public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+    }
+
+    /** Rito Experience & Reputation — read-only provider experience summary (RW6). */
+    public static class RitoProperties {
+        private boolean enabled = false;
+        private String baseUrl = "http://localhost:8391";
 
         public boolean isEnabled() { return enabled; }
         public void setEnabled(boolean enabled) { this.enabled = enabled; }

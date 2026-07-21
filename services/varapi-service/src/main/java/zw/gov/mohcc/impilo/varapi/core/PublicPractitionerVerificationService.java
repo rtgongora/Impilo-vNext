@@ -36,12 +36,15 @@ public class PublicPractitionerVerificationService {
 
     private final ProviderCouncilRegistrationRecordRepository registrationRepository;
     private final PublicPractitionerProjectionSupport projection;
+    private final zw.gov.mohcc.impilo.varapi.integration.RitoClient ritoClient;
 
     public PublicPractitionerVerificationService(
             ProviderCouncilRegistrationRecordRepository registrationRepository,
-            PublicPractitionerProjectionSupport projection) {
+            PublicPractitionerProjectionSupport projection,
+            zw.gov.mohcc.impilo.varapi.integration.RitoClient ritoClient) {
         this.registrationRepository = registrationRepository;
         this.projection = projection;
+        this.ritoClient = ritoClient;
     }
 
     @Transactional(readOnly = true)
@@ -72,6 +75,12 @@ public class PublicPractitionerVerificationService {
                 ? projection.resolveLicenceWindow(tenantId, provider.getId())
                 : LicenceWindow.EMPTY;
 
+        // Read-only, Rito-sourced patient-experience summary — composed, never owned.
+        // Gated + fail-open: null when Rito is disabled/unavailable.
+        PublicPractitionerVerificationResponse.ExperienceSummary experience = provider != null
+                ? ritoClient.getExperienceSummary(tenantId, provider.getProviderPublicId())
+                : null;
+
         return new PublicPractitionerVerificationResponse(
                 registerStatus,
                 displayName,
@@ -83,6 +92,7 @@ public class PublicPractitionerVerificationService {
                 licence.status(),
                 licence.validFrom(),
                 licence.validTo(),
-                authority);
+                authority,
+                experience);
     }
 }

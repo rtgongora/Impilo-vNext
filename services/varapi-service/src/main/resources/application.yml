@@ -115,6 +115,11 @@ varapi:
   mushex:
     enabled: ${VARAPI_MUSHEX_ENABLED:false}
     base-url: ${VARAPI_MUSHEX_BASE_URL:http://localhost:8102}
+  # Rito Experience & Reputation (RW6): read-only provider experience summary composed
+  # onto the public provider profile. Off by default; enable once Rito reputation is live.
+  rito:
+    enabled: ${VARAPI_RITO_ENABLED:false}
+    base-url: ${VARAPI_RITO_BASE_URL:http://localhost:8391}
   fundo:
     webhook-enabled: ${VARAPI_FUNDO_WEBHOOK_ENABLED:true}
     webhook-shared-secret: ${FUNDO_WEBHOOK_SECRET:CHANGE_ME}

@@ -64,7 +64,11 @@ class PublicPractitionerVerificationControllerTest {
         controller = new PublicPractitionerVerificationController(
                 new PublicPractitionerVerificationService(
                         registrationRepository,
-                        new PublicPractitionerProjectionSupport(councilLicenceRepository, licenseRepository)));
+                        new PublicPractitionerProjectionSupport(councilLicenceRepository, licenseRepository),
+                        // Rito disabled by default → experience summary is null (fail-open).
+                        new zw.gov.mohcc.impilo.varapi.integration.RitoClient(
+                                new org.springframework.web.client.RestTemplate(),
+                                new zw.gov.mohcc.impilo.varapi.config.VarapiProperties())));
         TrustContextHolder.set(new TrustContext(
                 tenantId, "public-gateway", "SYSTEM", "PUBLIC_ACCESS", "device",
                 UUID.randomUUID(), null, null, null, AccessMode.INTERNAL));
@@ -213,7 +217,7 @@ class PublicPractitionerVerificationControllerTest {
         var missNode = json.readTree(json.writeValueAsString(body));
         var hitNode = json.readTree(json.writeValueAsString(
                 new PublicPractitionerVerificationResponse("REGISTERED", "Dr X", "P", "C",
-                        "N-1", LocalDate.now(), null, "ACTIVE", LocalDate.now(), null, "Council")));
+                        "N-1", LocalDate.now(), null, "ACTIVE", LocalDate.now(), null, "Council", null)));
         assertThat(iterToList(missNode.fieldNames())).isEqualTo(iterToList(hitNode.fieldNames()));
     }
 
