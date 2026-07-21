@@ -13,7 +13,7 @@ export function WelcomeHero() {
   const { t } = useI18n();
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+    <section className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-8 shadow-sm">
       <p className="text-sm font-medium uppercase tracking-wide text-emerald-700">
         {t("public.welcome.eyebrow")}
       </p>

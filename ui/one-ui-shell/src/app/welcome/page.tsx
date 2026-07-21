@@ -104,33 +104,64 @@ const INTENT_PILLARS: Array<{
   },
 ];
 
+/**
+ * The three-step trust ladder (Account → Temporary → Verified). Colour graduates
+ * emerald → teal → sky to read as forward progress. Class strings are written in
+ * full (not interpolated) so Tailwind's JIT scanner keeps them.
+ */
+const STEPS: Array<{
+  n: number;
+  title: string;
+  body: string;
+  card: string;
+  badge: string;
+  heading: string;
+}> = [
+  {
+    n: 1,
+    title: "Account",
+    body: "Start an account in minutes. Begin or continue a Health ID request and get help — no private records yet.",
+    card: "border-emerald-200 bg-emerald-50/50",
+    badge: "bg-emerald-600",
+    heading: "text-emerald-900",
+  },
+  {
+    n: 2,
+    title: "Temporary Health ID",
+    body: "Receive care, show your ID at a facility, and book selected services while your identity is being verified. Sensitive records stay protected.",
+    card: "border-teal-200 bg-teal-50/50",
+    badge: "bg-teal-600",
+    heading: "text-teal-900",
+  },
+  {
+    n: 3,
+    title: "Verified Health ID",
+    body: "Once verified, see your health summary, appointments, results, prescriptions and care plans — and control who can access them.",
+    card: "border-sky-200 bg-sky-50/50",
+    badge: "bg-sky-600",
+    heading: "text-sky-900",
+  },
+];
+
 export default function WelcomePage() {
   return (
     <PublicShell>
       <WelcomeHero />
 
       <section className="mt-8 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="font-semibold text-slate-900">1 · Account</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Start an account in minutes. Begin or continue a Health ID request and get help — no
-            private records yet.
-          </p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="font-semibold text-slate-900">2 · Temporary Health ID</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Receive care, show your ID at a facility, and book selected services while your identity
-            is being verified. Sensitive records stay protected.
-          </p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="font-semibold text-slate-900">3 · Verified Health ID</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Once verified, see your health summary, appointments, results, prescriptions and care
-            plans — and control who can access them.
-          </p>
-        </div>
+        {STEPS.map((step) => (
+          <div key={step.n} className={`rounded-xl border p-5 ${step.card}`}>
+            <div className="flex items-center gap-2.5">
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white ${step.badge}`}
+              >
+                {step.n}
+              </span>
+              <h2 className={`font-semibold ${step.heading}`}>{step.title}</h2>
+            </div>
+            <p className="mt-2 text-sm text-slate-600">{step.body}</p>
+          </div>
+        ))}
       </section>
 
       <section className="mt-10" aria-labelledby="intent-heading">
@@ -143,10 +174,10 @@ export default function WelcomePage() {
         </p>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {INTENT_PILLARS.map((pillar) => {
-            const cardClass = `group rounded-xl border bg-white p-5 transition ${
+            const cardClass = `group rounded-xl border p-5 transition ${
               pillar.tone === "emergency"
-                ? "border-red-200 hover:border-red-300 hover:bg-red-50/40"
-                : "border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/40"
+                ? "border-red-200 bg-red-50/40 hover:border-red-300 hover:bg-red-50/70"
+                : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40"
             }`;
             const inner = (
               <>
@@ -203,7 +234,7 @@ export default function WelcomePage() {
         </div>
       </section>
 
-      <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6">
+      <section className="mt-8 rounded-xl border border-emerald-100 bg-emerald-50/50 p-6">
         <h2 className="font-semibold text-slate-900">Built for everyone</h2>
         <p className="mt-1 text-sm text-slate-600">
           Impilo is designed to be usable on low-cost phones and shared devices, with accessibility
