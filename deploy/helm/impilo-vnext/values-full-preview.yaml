@@ -441,6 +441,14 @@ fullBootServices:
   oros-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  # TM-B17: Rito consumes clinical.teleconsult.lifecycle (verified interactions → feedback loop);
+  # analytics-pipeline consumes the same stream ("§24 metrics from events only").
+  rito-quality-safety-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
+  analytics-pipeline-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
   pacs-adapter-service:
     env:
       SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
