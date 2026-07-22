@@ -14,6 +14,7 @@
  * them yet — stated in the helpdesk panel instead of faking a table.
  */
 
+import { SessionDiagnosticsLookup } from "@/components/telemedicine/SessionDiagnosticsLookup";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -234,19 +235,9 @@ export default function TelemedicineOperationsPage() {
         <h2 className="mb-2 flex items-center gap-2 text-base font-semibold text-slate-800">
           <Wrench className="h-5 w-5 text-teal-600" /> Helpdesk diagnostics
         </h2>
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          <div className="mb-1 flex items-center gap-2 font-medium">
-            <AlertTriangle className="h-4 w-4" /> Per-session failure diagnostics not yet queryable
-          </div>
-          <p>
-            LiveKit webhook events (joins, disconnects, media failures) are ingested by the RTC
-            gateway and published to <span className="font-mono">impilo.rtc.*</span> Kafka topics
-            (W0 workstream), but no query API exposes per-session failure reasons, participant
-            device state or ICE diagnostics yet. Until that API exists this panel will not show a
-            pretend failure table. Transport-level readiness above is live; retry and reschedule
-            run through the existing session workspace.
-          </p>
-        </div>
+        {/* TM-B19: per-session failure diagnostics over rtc.session_events + participant_stats.
+            Transport telemetry only — the query API carries no clinical content by construction. */}
+        <SessionDiagnosticsLookup />
       </section>
     </div>
   );

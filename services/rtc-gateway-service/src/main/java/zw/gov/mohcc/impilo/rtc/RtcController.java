@@ -30,13 +30,16 @@ public class RtcController {
     private final RtcRecordingService recordingService;
     private final RtcSessionStatsService statsService;
     private final RtcStreamOutService streamOutService;
+    private final zw.gov.mohcc.impilo.rtc.persistence.RtcTelemetryPersistence telemetryPersistence;
 
     public RtcController(RtcGatewayService service, RtcRecordingService recordingService,
-                         RtcSessionStatsService statsService, RtcStreamOutService streamOutService) {
+                         RtcSessionStatsService statsService, RtcStreamOutService streamOutService,
+                         zw.gov.mohcc.impilo.rtc.persistence.RtcTelemetryPersistence telemetryPersistence) {
         this.service = service;
         this.recordingService = recordingService;
         this.statsService = statsService;
         this.streamOutService = streamOutService;
+        this.telemetryPersistence = telemetryPersistence;
     }
 
     @PostMapping("/sessions")
@@ -152,6 +155,24 @@ public class RtcController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return ResponseEntity.ok(dataEnvelope(recordingService.list(sessionId), requestId, correlationId));
+    }
+
+    /**
+     * TM-B19: per-session diagnostics timeline over rtc.session_events — the helpdesk/ops query
+     * API. Transport telemetry ONLY (event type, participant identity, room, occurred-at); the
+     * source table structurally carries no clinical content, so a diagnostics viewer never sees
+     * clinical data by construction.
+     */
+    @GetMapping("/sessions/{sessionId}/events")
+    public ResponseEntity<Map<String, Object>> sessionEvents(
+            @PathVariable String sessionId,
+            @org.springframework.web.bind.annotation.RequestParam(value = "limit", defaultValue = "200") int limit,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("sessionId", sessionId);
+        body.put("events", telemetryPersistence.findSessionEvents(sessionId, limit));
+        return ResponseEntity.ok(dataEnvelope(body, requestId, correlationId));
     }
 
     /** Media-quality aggregates from webhook telemetry (participant_stats) — internal analytics seam. */

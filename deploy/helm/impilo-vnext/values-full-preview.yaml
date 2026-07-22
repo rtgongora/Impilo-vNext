@@ -410,6 +410,8 @@ fullBootServices:
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: "DEBUG"
   notification-service:
     env:
+      # TM-B19: consume queue lifecycle + SLA-breach streams (ops alerts) — preview default is off.
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
       # Channel adapters stay log-mode until an operator provides real SMTP/SMS
       # credentials (scripts/secrets/bootstrap-secrets.sh seeds placeholders so
       # the secretKeyRef mounts schedule). Flip to smtp/http once real values

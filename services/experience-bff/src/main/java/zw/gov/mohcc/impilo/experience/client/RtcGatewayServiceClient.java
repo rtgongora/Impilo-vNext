@@ -102,6 +102,20 @@ public class RtcGatewayServiceClient {
                 baseUrl + API + "/sessions/" + sessionId + "/recordings", JsonNode.class));
     }
 
+    /** TM-B19: per-session transport diagnostics (session_events timeline — no clinical content). */
+    public JsonNode getSessionEvents(String sessionId, int limit) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/internal/v1/rtc/sessions/" + sessionId + "/events?limit=" + limit, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** TM-B19: participant media aggregates (joins/durations/disconnect reasons). */
+    public JsonNode getSessionStats(String sessionId) {
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                baseUrl + "/internal/v1/rtc/sessions/" + sessionId + "/stats", JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode endSession(String sessionId) {
         log.info("RTC: end session id={}", sessionId);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(

@@ -855,6 +855,45 @@ public class TeleconsultController {
     }
 
     /**
+     * TM-B19: per-session failure diagnostics for the helpdesk/ops surface. Combines the rtc
+     * session-events timeline with participant media aggregates. NO clinical content by
+     * construction — both sources are transport telemetry (event types, identities, durations,
+     * disconnect reasons); the response never touches the referral's clinical fields.
+     */
+    @GetMapping("/ops/session-diagnostics/{id}")
+    public ResponseEntity<Map<String, Object>> sessionDiagnostics(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            telemedicineGovernanceService.assertGovernedRead();
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("sessionId", id);
+            try {
+                out.put("events", pickEvents(rtcClient.getSessionEvents(id, 200)));
+            } catch (Exception ex) {
+                out.put("events", java.util.List.of());
+                out.put("eventsError", "RTC_EVENTS_UNAVAILABLE");
+            }
+            try {
+                out.put("stats", rtcClient.getSessionStats(id));
+            } catch (Exception ex) {
+                out.put("stats", null);
+                out.put("statsError", "RTC_STATS_UNAVAILABLE");
+            }
+            return ok(out, requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("RTC_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    private Object pickEvents(JsonNode eventsPayload) {
+        if (eventsPayload == null) return java.util.List.of();
+        JsonNode events = eventsPayload.path("events");
+        return events.isArray() ? events : eventsPayload;
+    }
+
+    /**
      * TM-B15 (B15-1): MDT / specialist-board proxies. The board is a pct-owned clinical record;
      * identity visibility (pseudonymised presentation) is enforced server-side in pct — the viewer
      * identity forwarded here is what pct's read model pseudonymises against.

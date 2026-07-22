@@ -41,9 +41,52 @@ public class QueueLifecycleNotificationConsumer {
     private final NotifyService notifyService;
     private final ObjectMapper objectMapper;
 
+    /** TM-B19: inbox identity that receives teleconsult ops alerts (SLA breaches). */
+    @org.springframework.beans.factory.annotation.Value("${notification.telemedicine.ops-recipient:ops:telemedicine}")
+    private String opsRecipient;
+
     public QueueLifecycleNotificationConsumer(NotifyService notifyService, ObjectMapper objectMapper) {
         this.notifyService = notifyService;
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * TM-B19: the SLA-breach stream was emit-only — pct's QueueSlaEscalationJob published
+     * {@code pct.telemedicine.queue.sla.breached} "for the comms plane" but nothing subscribed.
+     * A breach now lands as an IN_APP ops notification (configurable ops inbox identity), so a
+     * queue aging past its SLA is VISIBLE, not just escalated in-table.
+     */
+    @KafkaListener(
+            topics = "${notification.kafka.sla-breach-topic:pct.telemedicine.queue.sla.breached}",
+            groupId = "${notification.kafka.queue-events.group-id:notification-service-queue-events}"
+    )
+    public void onQueueSlaBreached(ConsumerRecord<String, String> record) {
+        try {
+            JsonNode event = objectMapper.readTree(record.value());
+            String tenantId = event.path("tenantId").asText(null);
+            if (tenantId == null || tenantId.isBlank()) {
+                log.warn("SLA-breach event without tenantId — skipped (offset={})", record.offset());
+                return;
+            }
+            String queueRef = event.path("queueId").asText(
+                    event.path("poolId").asText(event.path("aggregateId").asText("unknown-queue")));
+            NotifyRequest request = new NotifyRequest(
+                    "TELECONSULT_SLA_BREACH",
+                    CHANNEL_IN_APP,
+                    opsRecipient,
+                    java.util.Map.of(
+                            "message", "Teleconsult queue SLA breached: " + queueRef
+                                    + " — a waiting case has aged past its window.",
+                            "queueRef", queueRef),
+                    null,
+                    "OPS_ALERT",
+                    opsRecipient,
+                    null);
+            RequestContext ctx = RequestContext.of(tenantId, "system", null, null, null, null, null);
+            notifyService.enqueue(request, ctx);
+        } catch (Exception e) {
+            log.warn("Failed to map SLA-breach event to notification (offset={}): {}", record.offset(), e.getMessage());
+        }
     }
 
     @KafkaListener(

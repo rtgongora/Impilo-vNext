@@ -47,6 +47,30 @@ public class RtcTelemetryPersistence {
         return inserted > 0;
     }
 
+    /**
+     * TM-B19: session-diagnostics READ path over {@code rtc.session_events} (write-only until now).
+     * Returns transport/media telemetry ONLY — the table structurally contains no clinical content
+     * (event type, participant identity, room, raw LiveKit payload), which is what makes the
+     * helpdesk surface safe by construction.
+     */
+    public java.util.List<java.util.Map<String, Object>> findSessionEvents(String sessionId, int limit) {
+        int capped = Math.max(1, Math.min(limit, 500));
+        return jdbc.query(
+                "SELECT event_type, participant_identity, room_name, occurred_at "
+                        + "FROM rtc.session_events WHERE session_id = ? "
+                        + "ORDER BY occurred_at ASC LIMIT " + capped,
+                (rs, i) -> {
+                    java.util.Map<String, Object> row = new java.util.LinkedHashMap<>();
+                    row.put("eventType", rs.getString("event_type"));
+                    row.put("participantIdentity", rs.getString("participant_identity"));
+                    row.put("roomName", rs.getString("room_name"));
+                    java.sql.Timestamp at = rs.getTimestamp("occurred_at");
+                    row.put("occurredAt", at == null ? null : at.toInstant().toString());
+                    return row;
+                },
+                sessionId);
+    }
+
     public void markSessionStarted(String sessionId, Instant startedAt) {
         jdbc.update("UPDATE rtc.rtc_sessions SET started_at = COALESCE(started_at, ?), updated_at = now() WHERE id = ?",
                 timestamp(startedAt), sessionId);
