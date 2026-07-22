@@ -3,11 +3,28 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WaitingRoomAdmitControl } from "./WaitingRoomAdmitControl";
 
+type PoolContext = {
+  poolId: string;
+  depth: number;
+  oldestWaitingMinutes: number | null;
+  estimatedWaitMinutes: number;
+};
+
+type WaitingRoomState = {
+  data: {
+    data: {
+      waiting: Array<Record<string, string>>;
+      poolContext?: PoolContext | null;
+    };
+  };
+  isLoading: boolean;
+};
+
 const { admitMutate, denyMutate, waitingState } = vi.hoisted(() => ({
   admitMutate: vi.fn(),
   denyMutate: vi.fn(),
   waitingState: {
-    current: { data: { data: { waiting: [] as Array<Record<string, string>> } }, isLoading: false },
+    current: { data: { data: { waiting: [] } }, isLoading: false } as WaitingRoomState,
   },
 }));
 
@@ -59,6 +76,62 @@ describe("WaitingRoomAdmitControl", () => {
     await user.click(screen.getByRole("button", { name: /admit/i }));
     expect(admitMutate).toHaveBeenCalledTimes(1);
     expect(admitMutate.mock.calls[0][0]).toEqual({ identity: "pat-1" });
+  });
+
+  it("renders the pool-queue context banner when poolContext is present", () => {
+    waitingState.current = {
+      data: {
+        data: {
+          waiting: [],
+          poolContext: {
+            poolId: "pool-cardio",
+            depth: 4,
+            oldestWaitingMinutes: 12,
+            estimatedWaitMinutes: 7,
+          },
+        },
+      },
+      isLoading: false,
+    };
+
+    render(<WaitingRoomAdmitControl sessionId="s-pool" />);
+
+    const banner = screen.getByTestId("waiting-room-pool-context");
+    expect(banner).toBeInTheDocument();
+    expect(banner).toHaveTextContent("4 waiting");
+    expect(banner).toHaveTextContent("~7 min est. wait");
+    expect(banner).toHaveTextContent("longest wait 12 min");
+  });
+
+  it("omits the longest-wait clause when oldestWaitingMinutes is null", () => {
+    waitingState.current = {
+      data: {
+        data: {
+          waiting: [],
+          poolContext: {
+            poolId: "pool-cardio",
+            depth: 2,
+            oldestWaitingMinutes: null,
+            estimatedWaitMinutes: 3,
+          },
+        },
+      },
+      isLoading: false,
+    };
+
+    render(<WaitingRoomAdmitControl sessionId="s-pool" />);
+
+    const banner = screen.getByTestId("waiting-room-pool-context");
+    expect(banner).toHaveTextContent("2 waiting");
+    expect(banner).not.toHaveTextContent("longest wait");
+  });
+
+  it("does not render the pool-context banner for non-pool sessions", () => {
+    waitingState.current = { data: { data: { waiting: [] } }, isLoading: false };
+
+    render(<WaitingRoomAdmitControl sessionId="s-1" />);
+
+    expect(screen.queryByTestId("waiting-room-pool-context")).not.toBeInTheDocument();
   });
 
   it("denies by identity with a reason", async () => {

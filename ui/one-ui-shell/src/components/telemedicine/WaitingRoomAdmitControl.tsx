@@ -7,12 +7,13 @@
  */
 
 import { useState } from "react";
-import { Check, Loader2, UserX, Users } from "lucide-react";
+import { Check, Clock, Loader2, UserX, Users } from "lucide-react";
 import {
   useAdmitTelemedicineParticipant,
   useDenyTelemedicineParticipant,
   useTelemedicineWaitingRoom,
   type TelemedicineWaitingRoomEntry,
+  type TelemedicineWaitingRoomPoolContext,
 } from "@/hooks/queries/useTelemedicine";
 
 function formatRequestedAt(requestedAt: string) {
@@ -28,6 +29,8 @@ export function WaitingRoomAdmitControl({ sessionId }: { sessionId: string }) {
   const [pendingIdentity, setPendingIdentity] = useState<string | null>(null);
 
   const waiting: TelemedicineWaitingRoomEntry[] = waitingRoom.data?.data?.waiting ?? [];
+  const poolContext: TelemedicineWaitingRoomPoolContext | null =
+    waitingRoom.data?.data?.poolContext ?? null;
 
   function handleAdmit(entry: TelemedicineWaitingRoomEntry) {
     setPendingIdentity(entry.identity);
@@ -60,6 +63,20 @@ export function WaitingRoomAdmitControl({ sessionId }: { sessionId: string }) {
           {waiting.length}
         </span>
       </div>
+      {poolContext ? (
+        <div
+          data-testid="waiting-room-pool-context"
+          className="mb-2 flex items-center gap-1.5 rounded-md bg-sky-50 px-2 py-1 text-[10px] text-sky-800"
+        >
+          <Clock className="w-3 h-3 shrink-0" />
+          <span>
+            Pool queue: {poolContext.depth} waiting · ~{poolContext.estimatedWaitMinutes} min est. wait
+            {poolContext.oldestWaitingMinutes != null
+              ? ` · longest wait ${poolContext.oldestWaitingMinutes} min`
+              : ""}
+          </span>
+        </div>
+      ) : null}
       {waiting.length === 0 ? (
         <p className="text-[11px] text-muted-foreground">No one is waiting to join.</p>
       ) : (

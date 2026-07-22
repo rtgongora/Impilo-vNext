@@ -363,7 +363,26 @@ export interface TelemedicineWaitingRoomEntry {
   requestedAt: string;
 }
 
-type WaitingRoomResponse = ApiResponse<{ waiting: TelemedicineWaitingRoomEntry[] }>;
+/**
+ * Pool-queue context for POOL-routed teleconsults. Present only when the case is served
+ * from a shared pool; `null`/absent for direct (non-pool) sessions. Read-only signal the
+ * provider waiting room surfaces so the consulting clinician sees queue pressure.
+ */
+export interface TelemedicineWaitingRoomPoolContext {
+  poolId: string;
+  /** People currently waiting in the pool. */
+  depth: number;
+  /** Longest current wait in minutes, or null when unknown. */
+  oldestWaitingMinutes: number | null;
+  /** Estimated wait for the next admit, in minutes. */
+  estimatedWaitMinutes: number;
+}
+
+type WaitingRoomResponse = ApiResponse<{
+  waiting: TelemedicineWaitingRoomEntry[];
+  /** Pool-queue context (POOL routing only); null/absent for direct sessions. */
+  poolContext?: TelemedicineWaitingRoomPoolContext | null;
+}>;
 
 /** Provider-only waiting room list; polls while the session page is open. */
 export function useTelemedicineWaitingRoom(
