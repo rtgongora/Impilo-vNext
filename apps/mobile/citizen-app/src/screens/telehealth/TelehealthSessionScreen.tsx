@@ -23,6 +23,7 @@ import { AdaptiveSessionRoomNative, PreJoinNative, type PreJoinChoices } from "@
 import {
   joinSession,
   endSession,
+  withdrawTelehealthConsent,
   fetchSession,
   requestSessionMediaToken,
   refreshSessionMediaToken,
@@ -194,6 +195,21 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
       setError(err instanceof Error ? err : new Error(String(err)));
     }
   }, [session.id, mediaTokenRequest, mediaRoomUrl]);
+
+  // TM-B18 parity (B5-4): withdrawal is recorded server-side FIRST (WITHDRAWN + ASYNC floor),
+  // then local media drops immediately — the fastest possible publish-stop on device.
+  const handleWithdrawConsent = useCallback(async () => {
+    setError(null);
+    try {
+      await withdrawTelehealthConsent(session.id);
+      setMediaToken(null);
+      const updated = await fetchSession(session.id);
+      setSession(updated);
+      setStage("POST_CONSULT");
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
+  }, [session.id]);
 
   const handleEnd = useCallback(async () => {
     setIsEnding(true);
@@ -374,6 +390,15 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
                   variant="primary"
                   onPress={() => setShowEndForm(true)}
                   testID="end-session-btn"
+                />
+                {/* TM-B18 parity (B5-4): consent withdrawal — records WITHDRAWN server-side,
+                    floors media to ASYNC, then drops local media immediately. Visit continues
+                    by secure message; care is never lost. */}
+                <Button
+                  title="Withdraw Consent"
+                  variant="outline"
+                  onPress={handleWithdrawConsent}
+                  testID="withdraw-consent-btn"
                 />
               </View>
             </CardBody>

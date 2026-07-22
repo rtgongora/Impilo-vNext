@@ -74,10 +74,19 @@ export async function createReferral(input: CreateReferralInput): Promise<Referr
     );
     return mapReferral(response.data.data);
   } catch (error) {
+    // TM-B18/TM-B11: the queued replay carries the offline S&F controls — the local record id is
+    // the client package id, so pct dedupes a replayed create at the SoR (never a duplicate case),
+    // and captured_at records when the package was actually captured on this device.
+    const offlineRecordId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const offline = await queueClinicalCreateOnRetryableError(error, {
       collection: "clinical_referrals",
       path: "/internal/v1/mobile/provider/referrals",
-      payload,
+      recordId: offlineRecordId,
+      payload: {
+        ...payload,
+        client_offline_id: offlineRecordId,
+        captured_at: new Date().toISOString(),
+      },
     });
     if (!offline) throw error;
     return {

@@ -101,6 +101,30 @@ export async function endSession(id: string, notes?: string): Promise<void> {
 
 const TELECONSULT_V1 = "/internal/v1/teleconsult";
 
+/**
+ * TM-B18 parity (B5-4): mid-session consent withdrawal — records WITHDRAWN + floors media to
+ * ASYNC server-side; the caller must drop local media immediately after this resolves. The visit
+ * is NOT cancelled — it continues on the secure message thread.
+ */
+export async function withdrawTelehealthConsent(sessionId: string, reason?: string): Promise<void> {
+  await apiClient.post(`${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/consent-withdraw`, {
+    reason: reason ?? "Patient withdrew consent during the session",
+  });
+}
+
+/** TM-B18 parity (B5-2): native downgrade ladder VIDEO → AUDIO → ASYNC (restore=true steps up). */
+export async function changeTelehealthMediaModality(
+  sessionId: string,
+  modality: "VIDEO" | "AUDIO" | "ASYNC",
+  options?: { reason?: string; restore?: boolean }
+): Promise<void> {
+  await apiClient.post(`${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/media-downgrade`, {
+    modality,
+    reason: options?.reason,
+    restore: options?.restore ?? false,
+  });
+}
+
 export type MediaTokenStatus = "READY" | "WAITING" | "DENIED";
 
 export interface MediaTokenResult {

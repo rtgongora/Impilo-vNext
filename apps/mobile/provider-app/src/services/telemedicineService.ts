@@ -163,6 +163,97 @@ export async function fetchTelemedicineWaitingRoom(sessionId: string): Promise<W
     .filter((participant) => participant.identity.length > 0);
 }
 
+/** TM-B18: pool context for the waiting room (queue depth / oldest waiting / estimated wait). */
+export interface WaitingRoomPoolContext {
+  poolId?: string;
+  depth?: number;
+  oldestWaitingMinutes?: number;
+  estimatedWaitMinutes?: number;
+}
+
+export async function fetchTelemedicineWaitingRoomPoolContext(
+  sessionId: string
+): Promise<WaitingRoomPoolContext | null> {
+  const response = await apiClient.get<{ data?: { poolContext?: WaitingRoomPoolContext | null } }>(
+    `${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/waiting-room`
+  );
+  const root = (response.data?.data ?? response.data ?? {}) as { poolContext?: WaitingRoomPoolContext | null };
+  return root.poolContext ?? null;
+}
+
+/* ── TM-B18 parity: guarded lifecycle + downgrade ladder + provider notes + tasks ──
+ * Mirrors the web console's teleconsult surface; every action is server-guarded
+ * (illegal transitions 409, dissent/reason requirements enforced in pct). */
+
+export interface AllowedActionsResult {
+  allowedActions: string[];
+}
+
+export async function fetchTeleconsultAllowedActions(sessionId: string): Promise<string[]> {
+  const response = await apiClient.get<{ data?: { allowedActions?: string[]; allowed_actions?: string[] } }>(
+    `${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/allowed-actions`
+  );
+  const root = (response.data?.data ?? {}) as { allowedActions?: string[]; allowed_actions?: string[] };
+  return root.allowedActions ?? root.allowed_actions ?? [];
+}
+
+/** Reason-bound guarded lifecycle transition (cancel/reopen/escalate/transfer/error-mark). */
+export async function performTeleconsultLifecycleAction(
+  sessionId: string,
+  action: "cancel" | "reopen" | "escalate" | "transfer" | "error-mark",
+  reason: string
+): Promise<void> {
+  await apiClient.post(`${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/${action}`, { reason });
+}
+
+/** TM-B18 (epic-named): native media downgrade ladder VIDEO → AUDIO → ASYNC; restore=true to step up. */
+export async function changeTeleconsultMediaModality(
+  sessionId: string,
+  modality: "VIDEO" | "AUDIO" | "ASYNC",
+  options?: { reason?: string; restore?: boolean }
+): Promise<void> {
+  await apiClient.post(`${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/media-downgrade`, {
+    modality,
+    reason: options?.reason,
+    restore: options?.restore ?? false,
+  });
+}
+
+export interface ProviderNote {
+  author?: string;
+  authorName?: string;
+  note?: string;
+  timestamp?: string;
+}
+
+/** Provider-only side-channel — never patient-visible (structural boundary in pct). */
+export async function fetchTeleconsultProviderNotes(sessionId: string): Promise<ProviderNote[]> {
+  const response = await apiClient.get<{ data?: { providerNotes?: ProviderNote[] } }>(
+    `${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/provider-notes`
+  );
+  return (response.data?.data ?? {}).providerNotes ?? [];
+}
+
+export async function addTeleconsultProviderNote(sessionId: string, note: string): Promise<void> {
+  await apiClient.post(`${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/provider-note`, { note });
+}
+
+export interface TeleconsultTask {
+  taskId?: string;
+  title?: string;
+  status?: string;
+  blocksClosure?: boolean;
+}
+
+export async function fetchTeleconsultTasks(sessionId: string): Promise<TeleconsultTask[]> {
+  const response = await apiClient.get<{ data?: { tasks?: TeleconsultTask[] } | TeleconsultTask[] }>(
+    `${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/tasks`
+  );
+  const root = response.data?.data ?? [];
+  if (Array.isArray(root)) return root;
+  return root.tasks ?? [];
+}
+
 export async function admitTelemedicineParticipant(sessionId: string, identity: string): Promise<void> {
   await apiClient.post(
     `${TELECONSULT_V1}/sessions/${encodeURIComponent(sessionId)}/admit`,

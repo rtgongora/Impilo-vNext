@@ -46,7 +46,13 @@ public class MobileReferralController {
             String urgency,
             String clinical_summary,
             @NotBlank String referred_by,
-            String referred_by_name
+            String referred_by_name,
+            // TM-B18/TM-B11: optional offline store-and-forward controls (additive) — the mobile
+            // SyncEngine replays creates with these so pct dedupes/verifies at the SoR.
+            String client_offline_id,
+            String package_checksum,
+            String captured_at,
+            String package_expires_at
     ) {}
 
     @PostMapping
@@ -72,6 +78,11 @@ public class MobileReferralController {
             if (request.encounter_id() != null) pctBody.put("encounterId", request.encounter_id());
             if (request.specialty() != null) pctBody.put("specialty", request.specialty());
             if (request.clinical_summary() != null) pctBody.put("clinicalSummary", request.clinical_summary());
+            // TM-B18/TM-B11: forward offline S&F controls when present (replay lane)
+            if (request.client_offline_id() != null) pctBody.put("client_offline_id", request.client_offline_id());
+            if (request.package_checksum() != null) pctBody.put("package_checksum", request.package_checksum());
+            if (request.captured_at() != null) pctBody.put("captured_at", request.captured_at());
+            if (request.package_expires_at() != null) pctBody.put("package_expires_at", request.package_expires_at());
             JsonNode pctResult = pctClient.createReferral(pctBody);
             if (pctResult == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No referral payload returned", requestId, correlationId);
