@@ -42,12 +42,13 @@ import {
   useSubmitAppeal,
   useMyCards,
 } from "@/hooks/queries/useMemberCoverage";
-import { useAuthorisations, useReferrals, useMemberDependants } from "@/hooks/queries/useRuvimbo";
+import { useAuthorisations, useReferrals, useMemberDependants, useMemberNetworks } from "@/hooks/queries/useRuvimbo";
 import { RuvimboSection } from "@/components/ruvimbo/RuvimboSection";
 import { RuvimboSummaryCard } from "@/components/ruvimbo/RuvimboSummaryCard";
 import { RuvimboSubNav, type RuvimboTab } from "@/components/ruvimbo/RuvimboSubNav";
 import { RuvimboActionGrid, type RuvimboActionItem } from "@/components/ruvimbo/RuvimboActionGrid";
 import { RuvimboEmptyState } from "@/components/ruvimbo/RuvimboEmptyState";
+import { RuvimboCostEstimate } from "@/components/ruvimbo/RuvimboCostEstimate";
 import {
   asRecord,
   readStr,
@@ -104,6 +105,7 @@ export default function RuvimboMemberPage() {
   const refQ = useReferrals(cpid || undefined);
   const appealsQ = useMyAppeals(cpid || null);
   const depQ = useMemberDependants(membershipId || undefined);
+  const networksQ = useMemberNetworks(cpid || undefined);
   const cardsQ = useMyCards();
   const submitAppeal = useSubmitAppeal();
 
@@ -157,7 +159,7 @@ export default function RuvimboMemberPage() {
     { title: "Track a claim", onClick: () => setTab("claims"), icon: <History className="h-4 w-4" />, access: "open" },
     { title: "Manage dependants", onClick: () => setTab("dependants"), icon: <Users className="h-4 w-4" />, access: "open" },
     { title: "Appeal a decision", onClick: () => setTab("support"), icon: <Gavel className="h-4 w-4" />, access: "open" },
-    { title: "Estimate my cost", icon: <Calculator className="h-4 w-4" />, access: "coming" },
+    { title: "Estimate my cost", onClick: () => setTab("benefits"), icon: <Calculator className="h-4 w-4" />, access: "open" },
     { title: "Digital member card", onClick: () => setTab("coverage"), icon: <ShieldCheck className="h-4 w-4" />, access: "open" },
   ];
 
@@ -416,6 +418,8 @@ export default function RuvimboMemberPage() {
             </RuvimboSection>
           )}
 
+          {tab === "benefits" && <RuvimboCostEstimate defaultCpid={cpid || undefined} />}
+
           {tab === "authorisations" && (
             <>
               <RuvimboSection
@@ -548,15 +552,50 @@ export default function RuvimboMemberPage() {
           )}
 
           {tab === "findcare" && (
-            <RuvimboSection title="Find covered care" icon={<MapPin className="h-4 w-4 text-violet-700" />}>
-              <RuvimboEmptyState
-                icon={<MapPin className="h-6 w-6" />}
-                title="Search the national facility directory"
-                explanation="Find facilities, providers, pharmacies and laboratories. Network-aware filtering — showing only in-network providers, referral and authorisation requirements, and estimated co-payment — is being added on top of the directory."
-                when="Until network filtering lands, use the directory to find care; coverage status for a service can be checked under Benefits."
-                actions={[{ label: "Open facility directory", href: "/welcome/find-care" }]}
-                guidance="Network-aware 'covered care' search is a tracked enhancement (Ruvimbo R1/R2)."
-              />
+            <RuvimboSection
+              title="Find covered care"
+              icon={<MapPin className="h-4 w-4 text-violet-700" />}
+              isLoading={networksQ.isLoading}
+              isError={networksQ.isError}
+              onRetry={() => networksQ.refetch()}
+            >
+              {(() => {
+                const nd = asRecord(networksQ.data);
+                const networks = arr(nd.networks);
+                const inNet = Array.isArray(nd.inNetworkProviderIds) ? (nd.inNetworkProviderIds as unknown[]) : [];
+                if (!networks.length) {
+                  return (
+                    <RuvimboEmptyState
+                      icon={<MapPin className="h-6 w-6" />}
+                      title="Search the national facility directory"
+                      explanation="Your payer has not published a provider network, so all directory facilities are open to you. Find facilities, providers, pharmacies and laboratories in the national directory."
+                      when="When your payer publishes a network, your in-network providers will be highlighted here."
+                      actions={[{ label: "Open facility directory", href: "/welcome/find-care" }]}
+                    />
+                  );
+                }
+                return (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Your plan covers <span className="font-semibold text-foreground">{inNet.length}</span> in-network provider(s) across{" "}
+                      <span className="font-semibold text-foreground">{networks.length}</span> network(s). Using an in-network provider minimises what you pay.
+                    </p>
+                    <ul className="divide-y divide-border">
+                      {networks.map((n, i) => (
+                        <li key={readStr(n, "networkId") || i} className="flex items-center justify-between gap-2 py-2 text-sm">
+                          <span className="text-foreground">{readStr(n, "networkType") || "Network"}</span>
+                          <span className="text-muted-foreground">
+                            {Array.isArray((n as { providerIds?: unknown }).providerIds) ? ((n as { providerIds: unknown[] }).providerIds).length : 0} providers
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href="/welcome/find-care" className="inline-block rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-700">
+                      Search the facility directory
+                    </Link>
+                  </div>
+                );
+              })()}
             </RuvimboSection>
           )}
 

@@ -10,7 +10,7 @@
  * injects; forms drive the real eligibility-v2, authorisation, claim-v2 and estimate seams.
  */
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Stethoscope,
   ShieldCheck,
@@ -28,8 +28,6 @@ import {
   useAuthorisations,
   useAuthorisationAction,
   useReferrals,
-  useLiabilityEstimates,
-  useCreateLiabilityEstimate,
   useCheckEligibilityV2,
   useClaimV2,
   useClaimEob,
@@ -43,6 +41,7 @@ import { RuvimboSection } from "@/components/ruvimbo/RuvimboSection";
 import { RuvimboSummaryCard } from "@/components/ruvimbo/RuvimboSummaryCard";
 import { RuvimboSubNav, type RuvimboTab } from "@/components/ruvimbo/RuvimboSubNav";
 import { RuvimboEmptyState } from "@/components/ruvimbo/RuvimboEmptyState";
+import { RuvimboCostEstimate } from "@/components/ruvimbo/RuvimboCostEstimate";
 import { asRecord, readStr, readNum, statusTone } from "@/components/ruvimbo/util";
 
 type TabKey = "overview" | "eligibility" | "authorisations" | "referrals" | "claims" | "estimates" | "contracts";
@@ -305,42 +304,5 @@ function ClaimConsolePanel({ providerId }: { providerId?: string }) {
 }
 
 function EstimatesPanel() {
-  const [cpid, setCpid] = useState("");
-  const [charge, setCharge] = useState("");
-  const q = useLiabilityEstimates(cpid || undefined);
-  const create = useCreateLiabilityEstimate();
-  const rows = (q.data ?? []).map(asRecord);
-  const latest = useMemo(() => (create.data ? ruvimboObject(create.data) : null), [create.data]);
-  return (
-    <RuvimboSection title="Patient cost estimates" icon={<Calculator className="h-4 w-4 text-violet-700" />}>
-      <div className="grid gap-2 sm:grid-cols-4">
-        {field(cpid, setCpid, "Member CPID *")}
-        {field(charge, setCharge, "Provider charge *")}
-        <button type="button" disabled={!cpid || !charge || create.isPending} onClick={() => create.mutate({ member_cpid: cpid, charge_amount: Number(charge) })} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-50">
-          {create.isPending ? <Loader2 className="mr-1 inline h-4 w-4 animate-spin" /> : null}Estimate
-        </button>
-      </div>
-      <p className="mt-1 text-xs text-muted-foreground">The estimate applies the plan benefit rules to the charge. It is an estimate, not a final claim decision.</p>
-      {latest ? (
-        <div className="mt-3 rounded-lg border border-border p-3 text-sm">
-          <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
-            <div className="text-muted-foreground">Allowed <span className="block font-semibold text-foreground">{readNum(latest, "allowedAmount").toLocaleString()}</span></div>
-            <div className="text-muted-foreground">Payer <span className="block font-semibold text-foreground">{readNum(latest, "payerAmount").toLocaleString()}</span></div>
-            <div className="text-muted-foreground">Copay <span className="block font-semibold text-foreground">{readNum(latest, "copayAmount", "copay").toLocaleString()}</span></div>
-            <div className="text-muted-foreground">Patient <span className="block font-semibold text-foreground">{readNum(latest, "patientResponsibility").toLocaleString()}</span></div>
-          </div>
-        </div>
-      ) : null}
-      {cpid && rows.length ? (
-        <ul className="mt-3 divide-y divide-border">
-          {rows.map((r, i) => (
-            <li key={readStr(r, "id") || i} className="flex items-center justify-between gap-2 py-2 text-sm">
-              <span className="text-muted-foreground">Charge {readNum(r, "chargeAmount", "charge_amount").toLocaleString()}</span>
-              <span className="font-medium text-foreground">Patient {readNum(r, "patientResponsibility").toLocaleString()}</span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </RuvimboSection>
-  );
+  return <RuvimboCostEstimate editableCpid heading="Patient cost estimate" />;
 }

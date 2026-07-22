@@ -266,6 +266,15 @@ public class CostaServiceClient {
     }
 
     /**
+     * The current effective price for a single service (tariff) code — the seam a composed
+     * cost estimate needs. Returns the tariff (price, currency, …) or throws on 404/unpriced.
+     */
+    public JsonNode getTariffByCode(String code) {
+        String url = baseUrl + "/costa/v1/tariffs/by-code/" + code;
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    /**
      * List tariffs (paginated, tenant-scoped via trust headers).
      */
     public JsonNode listTariffs(int page, int size) {

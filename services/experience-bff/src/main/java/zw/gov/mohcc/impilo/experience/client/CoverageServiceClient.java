@@ -186,6 +186,13 @@ public class CoverageServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    public JsonNode getMemberNetworks(String memberCpid) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/networks/for-member")
+                .queryParam("member_cpid", memberCpid)
+                .toUriString();
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     public JsonNode getPerformanceSummary() {
         String url = baseUrl + "/internal/v1/coverage/performance/summary";
         return extractData(restTemplate.getForEntity(url, JsonNode.class));

@@ -312,6 +312,20 @@ public class CoverageController {
         }
     }
 
+    @GetMapping("/networks/for-member")
+    public ResponseEntity<Map<String, Object>> memberNetworks(
+            @RequestParam(name = "member_cpid") String memberCpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = coverageClient.getMemberNetworks(memberCpid);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
     @GetMapping("/performance/summary")
     public ResponseEntity<Map<String, Object>> performanceSummary(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,

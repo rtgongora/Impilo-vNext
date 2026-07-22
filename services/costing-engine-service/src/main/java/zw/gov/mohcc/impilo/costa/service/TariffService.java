@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -33,6 +34,16 @@ public class TariffService {
 
     public Page<TariffEntity> listTariffs(UUID tenantId, Pageable pageable) {
         return tariffRepository.findByTenantIdAndStatus(tenantId, "ACTIVE", pageable);
+    }
+
+    /**
+     * The current effective price for a service (tariff) code — the seam a cost estimate
+     * needs. Returns the most recently effective ACTIVE tariff, or empty if none is priced.
+     */
+    @Transactional(readOnly = true)
+    public Optional<TariffEntity> priceFor(UUID tenantId, String tariffCode) {
+        return tariffRepository.findEffectiveTariff(tenantId, tariffCode, LocalDate.now())
+                .stream().findFirst();
     }
 
     @Transactional
