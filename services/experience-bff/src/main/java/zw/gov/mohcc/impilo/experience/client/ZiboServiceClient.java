@@ -382,6 +382,23 @@ public class ZiboServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Validate a single FHIR coding against a registered CodeSystem (TM-B6 pre-submission check).
+     * Returns the {@code ValidationResultDto} ({@code valid} flag + message). Used to catch a
+     * coded diagnosis / order code that isn't in the governed terminology before it is filed.
+     */
+    public JsonNode validateCoding(String system, String code, String display) {
+        String url = baseUrl + "/v1/validate/coding";
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("system", system);
+        body.put("code", code);
+        if (display != null) body.put("display", display);
+        log.info("ZIBO: validateCoding system={} code={}", system, code);
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

@@ -78,6 +78,7 @@ public class TeleconsultController {
     private final OrosServiceClient orosClient;
     private final DaidzaiServiceClient daidzaiClient;
     private final NhumeServiceClient nhumeClient;
+    private final zw.gov.mohcc.impilo.experience.telemedicine.TeleconsultResponseValidationService responseValidationService;
     private final ObjectMapper objectMapper;
 
     public TeleconsultController(PctServiceClient pctClient,
@@ -97,6 +98,7 @@ public class TeleconsultController {
                                  OrosServiceClient orosClient,
                                  DaidzaiServiceClient daidzaiClient,
                                  NhumeServiceClient nhumeClient,
+                                 zw.gov.mohcc.impilo.experience.telemedicine.TeleconsultResponseValidationService responseValidationService,
                                  TelemedicineGovernanceService telemedicineGovernanceService,
                                  ObjectMapper objectMapper) {
         this.pctClient = pctClient;
@@ -116,6 +118,7 @@ public class TeleconsultController {
         this.orosClient = orosClient;
         this.daidzaiClient = daidzaiClient;
         this.nhumeClient = nhumeClient;
+        this.responseValidationService = responseValidationService;
         this.telemedicineGovernanceService = telemedicineGovernanceService;
         this.objectMapper = objectMapper;
     }
@@ -1161,12 +1164,30 @@ public class TeleconsultController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestBody Map<String, Object> body) {
         try {
             telemedicineGovernanceService.assertGovernedMutate();
-            var response = pctClient.respondReferralStructured(id, body == null ? Map.of() : body);
+            Map<String, Object> reqBody = body == null ? Map.of() : body;
+            // TM-B6 pre-submission validation (terminology + prescribing authority + allergy) — runs
+            // BEFORE the response is filed. In ENFORCE a response carrying an ERROR is blocked (422);
+            // in SHADOW the issues are recorded and attached so the provider still sees them.
+            String patientCpid = val(reqBody, "patientCpid", "patient_cpid", "patientId", "patient_id");
+            var validation = responseValidationService.validate(reqBody, actorId, patientCpid);
+            if (validation.blocks()) {
+                Map<String, Object> errBody = new java.util.LinkedHashMap<>();
+                errBody.put("error", Map.of("code", "RESPONSE_VALIDATION_FAILED",
+                        "message", "This response has issues that must be resolved before it can be filed."));
+                errBody.put("validation", objectMapper.convertValue(responseValidationService.toJson(validation), Map.class));
+                errBody.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errBody);
+            }
+            var response = pctClient.respondReferralStructured(id, reqBody);
             if (response == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No consultation response payload returned", requestId, correlationId);
+            }
+            if (response instanceof ObjectNode obj) {
+                obj.set("preSubmissionValidation", responseValidationService.toJson(validation));
             }
             return ok(response, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {

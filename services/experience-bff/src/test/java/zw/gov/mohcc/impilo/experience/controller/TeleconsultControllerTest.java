@@ -54,6 +54,7 @@ class TeleconsultControllerTest {
     private FhirGatewayServiceClient fhirGatewayClient;
     private DaidzaiServiceClient daidzaiClient;
     private NhumeServiceClient nhumeClient;
+    private zw.gov.mohcc.impilo.experience.telemedicine.TeleconsultResponseValidationService responseValidationService;
 
     private TelemedicineGovernanceService governanceService;
     private VitoServiceClient vitoClient;
@@ -83,6 +84,11 @@ class TeleconsultControllerTest {
         orosClient = Mockito.mock(OrosServiceClient.class);
         daidzaiClient = Mockito.mock(DaidzaiServiceClient.class);
         nhumeClient = Mockito.mock(NhumeServiceClient.class);
+        // Real validation service in default SHADOW over mocked clients — never blocks, so existing
+        // response tests are unaffected; the individual checks are unit-tested separately.
+        var ziboClient = Mockito.mock(zw.gov.mohcc.impilo.experience.client.ZiboServiceClient.class);
+        responseValidationService = new zw.gov.mohcc.impilo.experience.telemedicine.TeleconsultResponseValidationService(
+                ziboClient, varapiClient, pctClient, objectMapper, "SHADOW");
         governanceService = Mockito.mock(TelemedicineGovernanceService.class);
         vitoClient = Mockito.mock(VitoServiceClient.class);
         // Default: patient exists in VITO so existing createSession tests pass the intake guard.
@@ -91,7 +97,8 @@ class TeleconsultControllerTest {
         controller = new TeleconsultController(
                 pctClient, vitoClient, mvumoClient, documentClient, varapiClient, tusoClient, billingContextService,
                 notificationClient, fhirGatewayClient, costaClient, analyticsClient, rtcClient,
-                bookingClient, khulumaClient, orosClient, daidzaiClient, nhumeClient, governanceService, objectMapper
+                bookingClient, khulumaClient, orosClient, daidzaiClient, nhumeClient,
+                responseValidationService, governanceService, objectMapper
         );
     }
 
@@ -194,13 +201,16 @@ class TeleconsultControllerTest {
                 .thenReturn(objectMapper.createObjectNode().put("status", "RESPONDED"));
 
         var response = controller.submitStructuredResponse(
-                "ref-s", "req", "corr",
+                "ref-s", "req", "corr", "actor-1",
                 Map.of("diagnosis", "I10", "patientInstructions", "Recheck BP in 2 weeks"));
 
         assertEquals(200, response.getStatusCode().value());
         ArgumentCaptor<Map<String, Object>> cap = ArgumentCaptor.forClass(Map.class);
         Mockito.verify(pctClient).respondReferralStructured(eq("ref-s"), cap.capture());
         assertEquals("Recheck BP in 2 weeks", cap.getValue().get("patientInstructions"));
+        // The pre-submission validation result is attached to the filed response (TM-B6).
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertTrue(data.has("preSubmissionValidation"));
     }
 
     @Test
