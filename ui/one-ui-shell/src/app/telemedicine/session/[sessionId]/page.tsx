@@ -31,6 +31,7 @@ import { ReferralActionMenu } from "@/components/telemedicine/ReferralActionMenu
 import { TeleconsultReadinessChecklist } from "@/components/telemedicine/TeleconsultReadinessChecklist";
 import { TeleconsultPatientSummaryPanel } from "@/components/telemedicine/TeleconsultPatientSummaryPanel";
 import { TeleconsultPriorConsultsPanel } from "@/components/telemedicine/TeleconsultPriorConsultsPanel";
+import { TeleconsultMediaLadder } from "@/components/telemedicine/TeleconsultMediaLadder";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useTelemedicineMediaToken } from "@/hooks/queries/useTelemedicine";
@@ -703,6 +704,16 @@ export default function TeleconsultSessionPage() {
               {videoActive ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
             </button>
             <LowBandwidthToggle audioOnly={audioOnly} onAudioOnlyChange={setAudioOnly} />
+          </div>
+
+          {/* TM-B5 B5-2: media downgrade ladder (video → audio → async chat) */}
+          <div className="px-3 pt-2">
+            <TeleconsultMediaLadder
+              sessionId={sessionId}
+              mediaModality={session?.mediaModality as string | undefined}
+              virtualMode={session?.virtualMode as string | undefined}
+              onChanged={(rung) => setAudioOnly(rung !== "VIDEO")}
+            />
           </div>
 
           {/* Pre-call placeholder — during a live call the video is front and centre. */}

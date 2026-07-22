@@ -964,6 +964,7 @@ public class TelemedicineOrchestrationService {
         body.put("preferredMode", entity.getPreferredMode());
         body.put("modality", entity.getModality());
         body.put("virtualMode", entity.getVirtualMode());
+        body.put("mediaModality", entity.getMediaModality()); // TM-B5 B5-2: current effective media rung (nullable)
         body.put("patientCategory", entity.getPatientCategory());
         body.put("facilityCategory", entity.getFacilityCategory());
         body.put("routingTarget", readJsonMap(entity.getRoutingTarget()));
