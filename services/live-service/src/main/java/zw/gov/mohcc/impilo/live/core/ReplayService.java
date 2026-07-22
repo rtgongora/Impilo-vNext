@@ -22,6 +22,10 @@ public class ReplayService {
 
     private static final Logger log = LoggerFactory.getLogger(ReplayService.class);
 
+    // TM-B16: teaching-consent gate mode — OFF | SHADOW (default; logs would-blocks) | ENFORCE.
+    @org.springframework.beans.factory.annotation.Value("${live.learning.teaching-consent.mode:SHADOW}")
+    private String teachingConsentMode;
+
     private final LiveEventService eventService;
     private final LiveEventSessionRepository sessionRepository;
     private final LiveMediaProvider mediaProvider;
@@ -66,6 +70,24 @@ public class ReplayService {
             log.info("Recording available for event {} but replay is not allowed — artifact not adopted",
                     event.getId());
             return;
+        }
+        // TM-B16 (B16-1): learning artefacts require a SEPARATE teaching consent — never
+        // care-consent alone (spec §8 rows 18-19, journey #12). Shadow-then-enforce:
+        //   SHADOW (default) records what WOULD be blocked without breaking existing replays;
+        //   ENFORCE refuses adoption when no teaching-consent directive was captured.
+        boolean teachingConsentMissing = event.getTeachingConsentRef() == null
+                || event.getTeachingConsentRef().isBlank();
+        if (teachingConsentMissing) {
+            if ("ENFORCE".equalsIgnoreCase(teachingConsentMode)) {
+                log.warn("TEACHING_CONSENT_MISSING (ENFORCE): recording for event {} NOT adopted as a "
+                        + "learning artefact — no teaching-consent directive captured at scheduling",
+                        event.getId());
+                return;
+            }
+            if ("SHADOW".equalsIgnoreCase(teachingConsentMode)) {
+                log.warn("TEACHING_CONSENT_MISSING (SHADOW): recording for event {} would be blocked "
+                        + "under ENFORCE — no teaching-consent directive", event.getId());
+            }
         }
         if (recording.storageBucket() == null || recording.storageKey() == null) {
             log.warn("Recording available for session {} without storage location (bucket={}, key={}) — skipped",

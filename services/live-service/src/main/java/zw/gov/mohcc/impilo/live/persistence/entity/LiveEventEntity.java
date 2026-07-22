@@ -137,6 +137,11 @@ public class LiveEventEntity {
     @Column(name = "replay_allowed", nullable = false)
     private boolean replayAllowed;
 
+    // TM-B16 (B16-1): MVUMO teaching-consent directive captured at scheduling. Learning artefacts
+    // must never proceed on care-consent alone (spec §8 rows 18-19) — ReplayService gates on this.
+    @Column(name = "teaching_consent_ref", length = 128)
+    private String teachingConsentRef;
+
     @Column(name = "consent_required", nullable = false)
     private boolean consentRequired;
 
@@ -268,6 +273,8 @@ public class LiveEventEntity {
     public boolean isRecordingAllowed() { return recordingAllowed; }
     public void setRecordingAllowed(boolean recordingAllowed) { this.recordingAllowed = recordingAllowed; }
     public boolean isReplayAllowed() { return replayAllowed; }
+    public String getTeachingConsentRef() { return teachingConsentRef; }
+    public void setTeachingConsentRef(String teachingConsentRef) { this.teachingConsentRef = teachingConsentRef; }
     public void setReplayAllowed(boolean replayAllowed) { this.replayAllowed = replayAllowed; }
     public boolean isConsentRequired() { return consentRequired; }
     public void setConsentRequired(boolean consentRequired) { this.consentRequired = consentRequired; }

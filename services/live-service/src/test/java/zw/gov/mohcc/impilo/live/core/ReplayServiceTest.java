@@ -92,6 +92,56 @@ class ReplayServiceTest {
 
     // ── onRecordingAvailable (W1 event-driven replay pipeline) ───────────────
 
+    // ── TM-B16 (B16-1): teaching-consent gate — artefacts never on care-consent alone ──
+
+    @Test
+    void onRecordingAvailable_enforceMode_missingTeachingConsent_refusesAdoption() {
+        org.springframework.test.util.ReflectionTestUtils.setField(replayService, "teachingConsentMode", "ENFORCE");
+        LiveEventEntity event = event(LiveEventStatus.ENDED.name(), true); // replayAllowed, NO teaching consent
+        LiveEventSessionEntity session = session("room-1", null);
+
+        replayService.onRecordingAvailable(event, session, "rtc-gateway",
+                new ReplayService.RecordingAvailable("egress-1", "impilo-recordings", "k.mp4", 60L, 1L));
+
+        verifyNoInteractions(documentServiceClient);
+        verify(sessionRepository, never()).save(any());
+    }
+
+    @Test
+    void onRecordingAvailable_enforceMode_withTeachingConsent_adopts() {
+        org.springframework.test.util.ReflectionTestUtils.setField(replayService, "teachingConsentMode", "ENFORCE");
+        LiveEventEntity event = event(LiveEventStatus.ENDED.name(), true);
+        event.setTeachingConsentRef("mvumo:directive:teaching-123");
+        LiveEventSessionEntity session = session("room-1", null);
+        UUID documentObjectId = UUID.randomUUID();
+        when(documentServiceClient.registerExternal(eq(tenantId), any()))
+                .thenReturn(Map.of("success", true, "data", Map.of("objectId", documentObjectId.toString())));
+        when(documentServiceClient.getSignedUrl(tenantId, documentObjectId.toString()))
+                .thenReturn(Map.of("data", Map.of("url", "https://minio.local/s/r.mp4")));
+
+        replayService.onRecordingAvailable(event, session, "rtc-gateway",
+                new ReplayService.RecordingAvailable("egress-2", "impilo-recordings", "k2.mp4", 60L, 1L));
+
+        verify(documentServiceClient).registerExternal(eq(tenantId), any());
+    }
+
+    @Test
+    void onRecordingAvailable_shadowMode_missingTeachingConsent_stillAdopts() {
+        org.springframework.test.util.ReflectionTestUtils.setField(replayService, "teachingConsentMode", "SHADOW");
+        LiveEventEntity event = event(LiveEventStatus.ENDED.name(), true);
+        LiveEventSessionEntity session = session("room-1", null);
+        UUID documentObjectId = UUID.randomUUID();
+        when(documentServiceClient.registerExternal(eq(tenantId), any()))
+                .thenReturn(Map.of("success", true, "data", Map.of("objectId", documentObjectId.toString())));
+        when(documentServiceClient.getSignedUrl(tenantId, documentObjectId.toString()))
+                .thenReturn(Map.of("data", Map.of("url", "https://minio.local/s/r.mp4")));
+
+        replayService.onRecordingAvailable(event, session, "rtc-gateway",
+                new ReplayService.RecordingAvailable("egress-3", "impilo-recordings", "k3.mp4", 60L, 1L));
+
+        verify(documentServiceClient).registerExternal(eq(tenantId), any()); // would-block logged only
+    }
+
     @Test
     void onRecordingAvailable_registersArtifactStampsRefTransitionsAndEmits() {
         LiveEventEntity event = event(LiveEventStatus.ENDED.name(), true);
