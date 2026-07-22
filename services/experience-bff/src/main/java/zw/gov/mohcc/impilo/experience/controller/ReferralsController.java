@@ -40,7 +40,12 @@ public class ReferralsController {
             String urgency,
             String clinical_summary,
             String referred_by,
-            String referred_by_name
+            String referred_by_name,
+            // TM-B11: optional offline store-and-forward controls (additive — online callers omit).
+            String client_offline_id,
+            String package_checksum,
+            String captured_at,
+            String package_expires_at
     ) {}
 
     public record CompleteReferralRequest(
@@ -156,6 +161,12 @@ public class ReferralsController {
         referralData.put("referred_by", request.referred_by() != null ? request.referred_by() : actorId);
         referralData.put("referred_by_name", request.referred_by_name());
         referralData.put("tenant_id", tenantId);
+        // TM-B11: forward offline S&F controls only when present (replay lane); pct verifies
+        // integrity/expiry and dedupes on client_offline_id at the SoR.
+        if (request.client_offline_id() != null) referralData.put("client_offline_id", request.client_offline_id());
+        if (request.package_checksum() != null) referralData.put("package_checksum", request.package_checksum());
+        if (request.captured_at() != null) referralData.put("captured_at", request.captured_at());
+        if (request.package_expires_at() != null) referralData.put("package_expires_at", request.package_expires_at());
 
         JsonNode result = pctClient.createReferral(referralData);
 

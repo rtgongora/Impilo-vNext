@@ -127,7 +127,53 @@ public class TelemedicineOrchestrationService {
     @Transactional
     public Map<String, Object> createReferral(Map<String, Object> request) {
         TrustContext ctx = TrustContextHolder.require();
+
+        // ── TM-B11 (B11-1): offline store-and-forward intake ─────────────────────────────
+        // All three controls are OPT-IN (only offline/S&F clients send them) so the live online
+        // lane is untouched. Client clocks are ADVISORY (spec §19) — the server applies the expiry
+        // window as sent but keeps its own authoritative ordering.
+        String clientOfflineId = trimmedOrNull(optional(request, "client_offline_id", "clientOfflineId"));
+        if (clientOfflineId != null) {
+            var existing = referralRepository.findByTenantIdAndClientOfflineId(ctx.tenantId(), clientOfflineId);
+            if (existing.isPresent()) {
+                // Duplicate-event prevention at the SoR: a replayed offline create returns the
+                // referral it already produced — never a second case (journeys #15/#16).
+                Map<String, Object> replay = toReferralPayload(existing.get());
+                replay.put("replayed", true);
+                return replay;
+            }
+        }
+        OffsetDateTime capturedAt = parseTimestamp(optional(request, "captured_at", "capturedAt"), "captured_at");
+        OffsetDateTime packageExpiresAt =
+                parseTimestamp(optional(request, "package_expires_at", "packageExpiresAt"), "package_expires_at");
+        if (packageExpiresAt != null && packageExpiresAt.isBefore(OffsetDateTime.now())) {
+            // A stale S&F package must not silently route as if fresh — the client shows the
+            // rejection and the site re-captures/reviews (spec §19 expiry/review deadline).
+            throw new PctDomainException("PACKAGE_EXPIRED", 422,
+                    "store-and-forward package expired at " + packageExpiresAt + " — re-capture required.");
+        }
+        String packageChecksum = trimmedOrNull(optional(request, "package_checksum", "packageChecksum"));
+        if (packageChecksum != null) {
+            // S&F integrity contract v1: sha256 hex over the canonical string
+            //   patientId + "|" + reason + "|" + virtualMode + "|" + capturedAt(as sent, or "")
+            // sealed by the client at capture time; a mismatch means the clinical content was
+            // altered or corrupted between capture and sync — refuse intake.
+            String canonical = required(request, "patientId", "patient_id") + "|"
+                    + required(request, "reason", "clinical_question") + "|"
+                    + defaulted(optional(request, "virtual_mode", "virtualMode"), "video") + "|"
+                    + defaulted(optional(request, "captured_at", "capturedAt"), "");
+            String computed = sha256Hex(canonical);
+            if (!computed.equalsIgnoreCase(packageChecksum)) {
+                throw new PctDomainException("INTEGRITY_CHECK_FAILED", 409,
+                        "package checksum does not match the delivered content — package refused.");
+            }
+        }
+
         ReferralEntity referral = new ReferralEntity();
+        referral.setClientOfflineId(clientOfflineId);
+        referral.setPackageChecksum(packageChecksum);
+        referral.setCapturedAt(capturedAt);
+        referral.setPackageExpiresAt(packageExpiresAt);
         referral.setTenantId(ctx.tenantId());
         referral.setPatientCpid(required(request, "patientId", "patient_id"));
         referral.setEncounterId(optional(request, "encounterId", "encounter_id"));
@@ -965,6 +1011,10 @@ public class TelemedicineOrchestrationService {
         body.put("modality", entity.getModality());
         body.put("virtualMode", entity.getVirtualMode());
         body.put("mediaModality", entity.getMediaModality()); // TM-B5 B5-2: current effective media rung (nullable)
+        // TM-B11: S&F provenance for stale banners + audit (nullable on online-lane referrals)
+        body.put("clientOfflineId", entity.getClientOfflineId());
+        body.put("capturedAt", entity.getCapturedAt() == null ? null : entity.getCapturedAt().toString());
+        body.put("packageExpiresAt", entity.getPackageExpiresAt() == null ? null : entity.getPackageExpiresAt().toString());
         body.put("patientCategory", entity.getPatientCategory());
         body.put("facilityCategory", entity.getFacilityCategory());
         body.put("routingTarget", readJsonMap(entity.getRoutingTarget()));
@@ -1119,6 +1169,37 @@ public class TelemedicineOrchestrationService {
         out.put("referralId", entity.getReferralId().toString());
         out.put("providerNotes", readJsonMapList(entity.getProviderNotes()));
         return out;
+    }
+
+    // ── TM-B11 S&F helpers ───────────────────────────────────────────────────────────
+    private static String trimmedOrNull(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    /** Parse an ISO-8601 offset timestamp; null-safe; malformed input is a clean 400, never a 500. */
+    private static OffsetDateTime parseTimestamp(String value, String fieldName) {
+        String trimmed = trimmedOrNull(value);
+        if (trimmed == null) return null;
+        try {
+            return OffsetDateTime.parse(trimmed);
+        } catch (java.time.format.DateTimeParseException ex) {
+            throw new PctDomainException("INVALID_TIMESTAMP", 400,
+                    fieldName + " must be an ISO-8601 offset timestamp (was: " + trimmed + ")");
+        }
+    }
+
+    private static String sha256Hex(String input) {
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(digest.length * 2);
+            for (byte b : digest) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 unavailable", e); // JVM-guaranteed algorithm
+        }
     }
 
     private void appendResponse(ReferralEntity entity, Map<String, Object> payload) {

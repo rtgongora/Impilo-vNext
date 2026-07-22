@@ -159,6 +159,28 @@ CEVT=$(PSQL pct "SELECT count(*) FROM $OTBL WHERE aggregate_id='$REF2' AND event
 CREC=$(PSQL pct "SELECT count(*) FROM $RTBL WHERE referral_id='$REF2' AND responses::text LIKE '%CONSENT_WITHDRAWN%' AND responses::text LIKE '%no longer comfortable%'")
 [ "${CREC:-0}" = 1 ] && ok "withdrawal recorded on the case with reason + provenance" || bad "withdrawal note missing ($CREC)"
 
+# ── J-TH-9: B11-1 offline S&F intake — replay dedupe + integrity + expiry ────
+say "J-TH-9: offline S&F package — idempotent replay, checksum verify, expiry refusal"
+OFFID="offline-pkg-$(uuidgen | cut -c1-8)"; OFFPAT=$(uuidgen); CAPAT="2026-07-22T06:00:00Z"
+OFFREASON="Offline-captured chest pain consult"
+CSUM=$(printf '%s|%s|%s|%s' "$OFFPAT" "$OFFREASON" "message" "$CAPAT" | sha256sum | cut -d' ' -f1)
+SF1=$(curl -sS $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals \
+  -d "{\"patientId\":\"$OFFPAT\",\"reason\":\"$OFFREASON\",\"virtual_mode\":\"message\",\"client_offline_id\":\"$OFFID\",\"package_checksum\":\"$CSUM\",\"captured_at\":\"$CAPAT\"}")
+SFREF=$(echo "$SF1" | jval id)
+[ -n "$SFREF" ] && ok "S&F package accepted with valid checksum (referral $SFREF)" || bad "S&F create failed: $(echo $SF1|head -c 200)"
+SF2=$(curl -sS $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals \
+  -d "{\"patientId\":\"$OFFPAT\",\"reason\":\"$OFFREASON\",\"virtual_mode\":\"message\",\"client_offline_id\":\"$OFFID\",\"package_checksum\":\"$CSUM\",\"captured_at\":\"$CAPAT\"}")
+SFREF2=$(echo "$SF2" | jval id)
+echo "$SF2" | grep -q '"replayed"' && [ "$SFREF2" = "$SFREF" ] && ok "replayed create returns the SAME referral (replayed=true)" || bad "replay minted new/lost id ($SFREF2 vs $SFREF)"
+NDUP=$(PSQL pct "SELECT count(*) FROM $RTBL WHERE client_offline_id='$OFFID'")
+[ "$NDUP" = "1" ] && ok "exactly one row for the package id (duplicate-event prevention at SoR)" || bad "dup rows=$NDUP"
+BADSUM=$(curl -sS -o /dev/null -w '%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals \
+  -d "{\"patientId\":\"$OFFPAT\",\"reason\":\"TAMPERED content\",\"virtual_mode\":\"message\",\"client_offline_id\":\"other-$OFFID\",\"package_checksum\":\"$CSUM\",\"captured_at\":\"$CAPAT\"}")
+[ "$BADSUM" = "409" ] && ok "tampered content refused 409 INTEGRITY_CHECK_FAILED" || bad "tamper not refused (HTTP $BADSUM)"
+EXPIRED=$(curl -sS -o /dev/null -w '%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals \
+  -d "{\"patientId\":\"$OFFPAT\",\"reason\":\"stale package\",\"virtual_mode\":\"message\",\"package_expires_at\":\"2026-01-01T00:00:00Z\"}")
+[ "$EXPIRED" = "422" ] && ok "expired package refused 422 PACKAGE_EXPIRED" || bad "stale package accepted (HTTP $EXPIRED)"
+
 # ── J-TH-2: A1 illegal transition rejected under ENFORCE ─────────────────────
 say "J-TH-2: SUBMITTED->COMPLETED is refused 409 ILLEGAL_TRANSITION (ENFORCE)"
 R=$(curl -sS -w '\n%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF/complete \

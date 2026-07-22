@@ -20,6 +20,7 @@ import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useCreateTelemedicineSession } from "@/hooks/queries/useTelemedicine";
+import { useDurableDraft } from "@/hooks/useDurableDraft";
 import { useClinicalSpecialties } from "@/hooks/queries/useClinicalSpecialties";
 import { useUploadDocumentFile } from "@/hooks/queries/useClinicalDocuments";
 import { usePatientSummary } from "@/hooks/queries/useSummary";
@@ -128,6 +129,26 @@ export default function NewTeleconsultPage() {
   const [consentType, setConsentType] = useState("");
   const [consentReference, setConsentReference] = useState<string | null>(null);
 
+  // TM-B11 (B11-2): device-local durable draft — a refresh/crash mid-composition restores the
+  // clinical text (journey #34). Cleared on successful submit; server draft stays the real truth.
+  const draftSnapshot = {
+    urgency, specialty, referralLetter, presentingProblems, clinicalQuestion, routingType, routingTarget,
+  };
+  const { restoredAt: draftRestoredAt, clear: clearDurableDraft } = useDurableDraft(
+    "impilo:teleconsult-draft",
+    draftSnapshot,
+    (d) => {
+      setUrgency(d.urgency || "ROUTINE");
+      setSpecialty(d.specialty || "");
+      setReferralLetter(d.referralLetter || "");
+      setPresentingProblems(d.presentingProblems || "");
+      setClinicalQuestion(d.clinicalQuestion || "");
+      setRoutingType(d.routingType || "");
+      setRoutingTarget(d.routingTarget || "");
+    },
+    (d) => Boolean(d.referralLetter?.trim() || d.presentingProblems?.trim() || d.clinicalQuestion?.trim()),
+  );
+
   const canSubmit = referralLetter.trim() && routingType && consentReference;
   // The `specialty` field submits the display label (unchanged PCT contract). We
   // additionally resolve the governed code from the selected label and send it as
@@ -229,6 +250,7 @@ export default function NewTeleconsultPage() {
       // Stage 2→3: Submit
       await apiClient.post(`/internal/v1/teleconsult/sessions/${sid}/submit`);
 
+      clearDurableDraft(); // TM-B11: the case now exists server-side — the local draft is done
       setSubmitted(true);
       setTimeout(() => router.push(`/telemedicine/session/${sid}`), 2000);
     } catch {
@@ -256,6 +278,28 @@ export default function NewTeleconsultPage() {
   return (
     <AppLayout>
       <PageShell title="New Teleconsultation" subtitle="Build and submit a clinical referral package">
+        {draftRestoredAt && (
+          <div
+            className="mb-4 flex max-w-6xl flex-wrap items-center gap-2 rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm text-sky-900 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200"
+            data-testid="durable-draft-restored"
+          >
+            <span>
+              Draft restored from this device (saved {new Date(draftRestoredAt).toLocaleString()}). Review
+              before submitting — older drafts may be stale.
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                clearDurableDraft();
+                setReferralLetter(""); setPresentingProblems(""); setClinicalQuestion("");
+                setSpecialty(""); setRoutingType(""); setRoutingTarget(""); setUrgency("ROUTINE");
+              }}
+              className="rounded-md border border-sky-400 px-2 py-0.5 text-xs font-medium hover:bg-sky-100 dark:hover:bg-sky-900"
+            >
+              Discard draft
+            </button>
+          </div>
+        )}
         <div className="flex gap-6 max-w-6xl">
           {/* Left navigation — steps */}
           <nav className="w-48 shrink-0 space-y-1">

@@ -78,6 +78,20 @@ public class ReferralEntity {
     @Column(name = "media_modality")
     private String mediaModality;
 
+    // TM-B11 (B11-1): offline store-and-forward intake controls (V050). client_offline_id is
+    // UNIQUE per tenant — a replayed offline create returns the existing referral, never a duplicate.
+    @Column(name = "client_offline_id")
+    private String clientOfflineId;
+
+    @Column(name = "package_checksum")
+    private String packageChecksum;
+
+    @Column(name = "captured_at")
+    private OffsetDateTime capturedAt;
+
+    @Column(name = "package_expires_at")
+    private OffsetDateTime packageExpiresAt;
+
     // Billing context captured at referral time (composed by the BFF from coverage/registry)
     // and propagated to COSTA on the teleconsult value-trigger so charging rules can fire.
     @Column(name = "patient_category")
@@ -227,6 +241,18 @@ public class ReferralEntity {
     public void setModality(String modality) { this.modality = modality; }
     public String getMediaModality() { return mediaModality; }
     public void setMediaModality(String mediaModality) { this.mediaModality = mediaModality; }
+
+    public String getClientOfflineId() { return clientOfflineId; }
+    public void setClientOfflineId(String clientOfflineId) { this.clientOfflineId = clientOfflineId; }
+
+    public String getPackageChecksum() { return packageChecksum; }
+    public void setPackageChecksum(String packageChecksum) { this.packageChecksum = packageChecksum; }
+
+    public OffsetDateTime getCapturedAt() { return capturedAt; }
+    public void setCapturedAt(OffsetDateTime capturedAt) { this.capturedAt = capturedAt; }
+
+    public OffsetDateTime getPackageExpiresAt() { return packageExpiresAt; }
+    public void setPackageExpiresAt(OffsetDateTime packageExpiresAt) { this.packageExpiresAt = packageExpiresAt; }
 
     public String getVirtualMode() { return virtualMode; }
     public void setVirtualMode(String virtualMode) { this.virtualMode = virtualMode; }
