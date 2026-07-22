@@ -28,9 +28,13 @@ import { WaitingRoomAdmitControl } from "@/components/telemedicine/WaitingRoomAd
 import { TeleconsultOrdersSection } from "@/components/telemedicine/TeleconsultOrdersSection";
 import { TeleconsultTasksPanel } from "@/components/telemedicine/TeleconsultTasksPanel";
 import { ReferralActionMenu } from "@/components/telemedicine/ReferralActionMenu";
+import { TeleconsultReadinessChecklist } from "@/components/telemedicine/TeleconsultReadinessChecklist";
+import { TeleconsultPatientSummaryPanel } from "@/components/telemedicine/TeleconsultPatientSummaryPanel";
+import { TeleconsultPriorConsultsPanel } from "@/components/telemedicine/TeleconsultPriorConsultsPanel";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useTelemedicineMediaToken } from "@/hooks/queries/useTelemedicine";
+import { usePatientSummary } from "@/hooks/queries/useSummary";
 
 /**
  * Small standing chip for consent / provider-authority values — styled like ReferralStatusBadge
@@ -277,6 +281,15 @@ export default function TeleconsultSessionPage() {
       attributes.authority_status ??
       "",
   ).toUpperCase();
+
+  // ── TM-B14/B5: provider workspace context (patient summary + readiness signals) ──
+  const patientCpid = String((session?.patientCpid as string) ?? (session?.patientId as string) ?? "");
+  const patientSummaryQ = usePatientSummary(patientCpid || undefined);
+  const consentOk =
+    consentStatus === "GRANTED" || consentStatus === "OBTAINED" || Boolean(session?.consentToken);
+  const authorityOk =
+    authorityStatus === "ACTIVE" || authorityStatus === "GOOD_STANDING" || authorityStatus === "VERIFIED";
+  const patientContextOk = patientSummaryQ.isSuccess && Boolean(patientSummaryQ.data?.data);
 
   /** Video is front and centre while a call is live (governed media held and not ended). */
   const callFront = hasGovernedMedia && !callEnded;
@@ -549,6 +562,19 @@ export default function TeleconsultSessionPage() {
           {authorityStatus && <StandingChip label="Provider standing" value={authorityStatus} />}
         </div>
       </div>
+
+      {/* TM-B14/B5: provider workspace context panels (readiness → summary → prior consults) */}
+      {patientCpid ? (
+        <div className="p-3 border-b space-y-3">
+          <TeleconsultReadinessChecklist
+            consentOk={consentOk}
+            authorityOk={authorityOk}
+            patientContextOk={patientContextOk}
+          />
+          <TeleconsultPatientSummaryPanel patientId={patientCpid} />
+          <TeleconsultPriorConsultsPanel patientCpid={patientCpid} currentSessionId={sessionId} />
+        </div>
+      ) : null}
 
       {/* Reason-bound lifecycle actions (guard-permitted transitions only) */}
       <div className="p-3 border-b">
