@@ -27,6 +27,7 @@ import zw.gov.mohcc.impilo.experience.client.NhumeServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.client.VashandiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.RtcGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
@@ -48,7 +49,10 @@ import java.util.*;
 public class TeleconsultController {
 
     private static final Logger log = LoggerFactory.getLogger(TeleconsultController.class);
-    private static final Set<String> UNSUPPORTED_ROUTING_TYPES = Set.of("POOL", "NATIONAL_POOL");
+    // TM-B3: POOL/NATIONAL_POOL are now served by the Vashandi virtual-pool directory (was 501).
+    // UNIT remains genuinely unimplemented (needs a canonical facility-unit directory).
+    private static final Set<String> UNSUPPORTED_ROUTING_TYPES = Set.of("UNIT");
+    private static final Set<String> POOL_ROUTING_TYPES = Set.of("POOL", "NATIONAL_POOL");
     private static final Set<String> TEAM_ROUTING_TYPES = Set.of("TEAM", "SPECIALTY_POOL");
     private static final Set<String> PRACTITIONER_ROUTING_TYPES = Set.of("PRACTITIONER", "PROVIDER");
     private static final String ON_CALL_ROUTING_TYPE = "ON_CALL";
@@ -78,6 +82,7 @@ public class TeleconsultController {
     private final OrosServiceClient orosClient;
     private final DaidzaiServiceClient daidzaiClient;
     private final NhumeServiceClient nhumeClient;
+    private final VashandiServiceClient vashandiClient;
     private final zw.gov.mohcc.impilo.experience.telemedicine.TeleconsultResponseValidationService responseValidationService;
     private final ObjectMapper objectMapper;
 
@@ -98,6 +103,7 @@ public class TeleconsultController {
                                  OrosServiceClient orosClient,
                                  DaidzaiServiceClient daidzaiClient,
                                  NhumeServiceClient nhumeClient,
+                                 VashandiServiceClient vashandiClient,
                                  zw.gov.mohcc.impilo.experience.telemedicine.TeleconsultResponseValidationService responseValidationService,
                                  TelemedicineGovernanceService telemedicineGovernanceService,
                                  ObjectMapper objectMapper) {
@@ -118,6 +124,7 @@ public class TeleconsultController {
         this.orosClient = orosClient;
         this.daidzaiClient = daidzaiClient;
         this.nhumeClient = nhumeClient;
+        this.vashandiClient = vashandiClient;
         this.responseValidationService = responseValidationService;
         this.telemedicineGovernanceService = telemedicineGovernanceService;
         this.objectMapper = objectMapper;
@@ -1631,6 +1638,32 @@ public class TeleconsultController {
                         "ON_CALL routing target must identify a specialty key");
             }
             return null;
+        }
+        if (POOL_ROUTING_TYPES.contains(routingType)) {
+            // TM-B3: the POOL target is a virtual-pool id resolved against the Vashandi virtual-pool
+            // directory (formerly a 501 stub). The pool queue itself is materialised in PCT; here we
+            // only confirm the pool exists so a referral cannot be routed into a non-existent pool.
+            String poolId = routingTarget.trim();
+            if (poolId.length() < 2) {
+                return new ValidationError(HttpStatus.BAD_REQUEST, "INVALID_ROUTING_TARGET",
+                        routingType + " routing target must identify a virtual pool");
+            }
+            try {
+                JsonNode onDuty = vashandiClient.getVirtualPoolOnDuty(poolId);
+                if (onDuty == null || onDuty.isNull()) {
+                    return new ValidationError(HttpStatus.BAD_REQUEST, "INVALID_ROUTING_TARGET",
+                            "Virtual pool '" + poolId + "' was not found in the pool directory");
+                }
+                return null;
+            } catch (HttpClientErrorException.NotFound notFound) {
+                return new ValidationError(HttpStatus.BAD_REQUEST, "INVALID_ROUTING_TARGET",
+                        "Virtual pool '" + poolId + "' was not found in the pool directory");
+            } catch (Exception e) {
+                // Fail-open: a directory outage must not block routing (same posture as the accept-time
+                // on-duty resolution, which records UNKNOWN rather than blocking).
+                log.warn("Vashandi pool directory lookup failed for pool {}: {} — allowing routing", poolId, e.getMessage());
+                return null;
+            }
         }
         if ("WORKSPACE".equals(routingType)) {
             try {

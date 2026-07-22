@@ -54,6 +54,7 @@ class TeleconsultControllerTest {
     private FhirGatewayServiceClient fhirGatewayClient;
     private DaidzaiServiceClient daidzaiClient;
     private NhumeServiceClient nhumeClient;
+    private zw.gov.mohcc.impilo.experience.client.VashandiServiceClient vashandiClient;
     private zw.gov.mohcc.impilo.experience.telemedicine.TeleconsultResponseValidationService responseValidationService;
 
     private TelemedicineGovernanceService governanceService;
@@ -84,6 +85,7 @@ class TeleconsultControllerTest {
         orosClient = Mockito.mock(OrosServiceClient.class);
         daidzaiClient = Mockito.mock(DaidzaiServiceClient.class);
         nhumeClient = Mockito.mock(NhumeServiceClient.class);
+        vashandiClient = Mockito.mock(zw.gov.mohcc.impilo.experience.client.VashandiServiceClient.class);
         // Real validation service in default SHADOW over mocked clients — never blocks, so existing
         // response tests are unaffected; the individual checks are unit-tested separately.
         var ziboClient = Mockito.mock(zw.gov.mohcc.impilo.experience.client.ZiboServiceClient.class);
@@ -97,7 +99,7 @@ class TeleconsultControllerTest {
         controller = new TeleconsultController(
                 pctClient, vitoClient, mvumoClient, documentClient, varapiClient, tusoClient, billingContextService,
                 notificationClient, fhirGatewayClient, costaClient, analyticsClient, rtcClient,
-                bookingClient, khulumaClient, orosClient, daidzaiClient, nhumeClient,
+                bookingClient, khulumaClient, orosClient, daidzaiClient, nhumeClient, vashandiClient,
                 responseValidationService, governanceService, objectMapper
         );
     }
