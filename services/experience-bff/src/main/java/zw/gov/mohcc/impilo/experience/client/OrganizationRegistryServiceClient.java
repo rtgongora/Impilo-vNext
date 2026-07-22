@@ -45,6 +45,12 @@ public class OrganizationRegistryServiceClient {
         return getForJson(trimSlash(baseUrl) + "/v1/organizations/" + organizationId);
     }
 
+    /** Regulatory appointments held by a person (ROM-W2) — the org-session context source. */
+    public JsonNode listAppointmentsByPerson(String personHealthId) {
+        return getForJson(trimSlash(baseUrl) + "/v1/regulatory/appointments/by-person/"
+                + java.net.URLEncoder.encode(personHealthId, java.nio.charset.StandardCharsets.UTF_8));
+    }
+
     public JsonNode createOrganization(Object body) {
         return postForJson(trimSlash(baseUrl) + "/v1/organizations", body);
     }

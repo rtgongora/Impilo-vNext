@@ -154,9 +154,22 @@ public class TokenIssuanceService {
         Instant expiresAt = now.plusSeconds(ttl);
 
         // Stable-for-the-session context only; live licence/scope truth stays PDP-resolved.
+        // A regulatory work session (ROM-W2) is ORG-scoped: no facility, no provider — the
+        // context subject is the organisation + appointment role. A clinical session is
+        // facility-scoped as before. Exactly one of the two must anchor the token.
+        boolean orgScoped = (request.facilityId() == null)
+                && request.organisationId() != null && !request.organisationId().isBlank();
+        if (!orgScoped && request.facilityId() == null) {
+            throw new IllegalArgumentException(
+                    "a work-context token requires either a facilityId (clinical) or an organisationId (regulatory)");
+        }
         Map<String, Object> context = new java.util.LinkedHashMap<>();
-        context.put("provider_id", request.providerPublicId());
-        context.put("facility_id", request.facilityId().toString());
+        if (request.providerPublicId() != null && !request.providerPublicId().isBlank()) {
+            context.put("provider_id", request.providerPublicId());
+        }
+        if (request.facilityId() != null) {
+            context.put("facility_id", request.facilityId().toString());
+        }
         if (request.departmentId() != null && !request.departmentId().isBlank()) {
             context.put("department_id", request.departmentId());
         }
@@ -209,7 +222,11 @@ public class TokenIssuanceService {
         entity.setActorId(request.actorId());
         entity.setTargetService("tshepo-authz");
         entity.setScope("work:context");
-        entity.setSubjectRef(request.providerPublicId());
+        // Subject = provider (clinical) or organisation (regulatory), else the actor.
+        String subjectRef = request.providerPublicId() != null && !request.providerPublicId().isBlank()
+                ? request.providerPublicId()
+                : (orgScoped ? request.organisationId() : request.actorId());
+        entity.setSubjectRef(subjectRef);
         entity.setJti(jti);
         entity.setExpiresAt(expiresAt);
         entity.setStatus("ACTIVE");
@@ -217,15 +234,22 @@ public class TokenIssuanceService {
         entity.setContextClaims(contextJson);
         tokenRepo.save(entity);
 
-        publishOutboxEvent("ScopedToken", jti, "WORK_CONTEXT_TOKEN_ISSUED",
-                Map.of("tenantId", request.tenantId(),
-                       "actorId", request.actorId(),
-                       "providerPublicId", request.providerPublicId(),
-                       "facilityId", request.facilityId().toString(),
-                       "jti", jti));
+        Map<String, Object> outbox = new java.util.LinkedHashMap<>();
+        outbox.put("tenantId", request.tenantId());
+        outbox.put("actorId", request.actorId());
+        outbox.put("subjectRef", subjectRef);
+        outbox.put("jti", jti);
+        if (request.facilityId() != null) {
+            outbox.put("facilityId", request.facilityId().toString());
+        }
+        if (orgScoped) {
+            outbox.put("organisationId", request.organisationId());
+        }
+        publishOutboxEvent("ScopedToken", jti, "WORK_CONTEXT_TOKEN_ISSUED", outbox);
 
-        log.info("Issued work-context token: jti={}, actor={}, facility={}, workspace={}, ttl={}s",
-                jti, request.actorId(), request.facilityId(), request.workspaceId(), ttl);
+        log.info("Issued work-context token: jti={}, actor={}, {}={}, workspace={}, ttl={}s",
+                jti, request.actorId(), orgScoped ? "org" : "facility",
+                orgScoped ? request.organisationId() : request.facilityId(), request.workspaceId(), ttl);
 
         return new ScopedTokenResponse(signedToken, jti, "work:context", "tshepo-authz", expiresAt);
     }

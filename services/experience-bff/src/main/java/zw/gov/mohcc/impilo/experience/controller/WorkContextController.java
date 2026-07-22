@@ -35,13 +35,16 @@ public class WorkContextController {
     private final VashandiServiceClient vashandiClient;
     private final zw.gov.mohcc.impilo.experience.client.VarapiServiceClient varapiClient;
     private final zw.gov.mohcc.impilo.experience.client.TshepoIdentityServiceClient tshepoIdentityClient;
+    private final zw.gov.mohcc.impilo.experience.client.OrganizationRegistryServiceClient orgRegistryClient;
 
     public WorkContextController(VashandiServiceClient vashandiClient,
                                  zw.gov.mohcc.impilo.experience.client.VarapiServiceClient varapiClient,
-                                 zw.gov.mohcc.impilo.experience.client.TshepoIdentityServiceClient tshepoIdentityClient) {
+                                 zw.gov.mohcc.impilo.experience.client.TshepoIdentityServiceClient tshepoIdentityClient,
+                                 zw.gov.mohcc.impilo.experience.client.OrganizationRegistryServiceClient orgRegistryClient) {
         this.vashandiClient = vashandiClient;
         this.varapiClient = varapiClient;
         this.tshepoIdentityClient = tshepoIdentityClient;
+        this.orgRegistryClient = orgRegistryClient;
     }
 
     @GetMapping
@@ -90,9 +93,18 @@ public class WorkContextController {
         String facilityId = str(body.get("facilityId"));
         String workspaceId = str(body.get("workspaceId"));
         String previousJti = str(body.get("previousJti"));
+        String regulatoryOrgId = str(body.get("organisationId"));
+
+        // ROM-W2 — regulatory (org-scoped) work session. Regulatory personnel are NOT
+        // facility-attached and are not varapi providers; their context is an ACTIVE
+        // org-registry appointment. This branch bypasses the provider + facility gates.
+        if (facilityId == null && regulatoryOrgId != null) {
+            return startRegulatorySession(tenantId, requestId, correlationId, actorId,
+                    regulatoryOrgId, previousJti);
+        }
         if (facilityId == null) {
             return errorBody(org.springframework.http.HttpStatus.BAD_REQUEST,
-                    "FACILITY_REQUIRED", "A facility is required to start a work session.",
+                    "CONTEXT_REQUIRED", "A facility (clinical) or organisation (regulatory) is required to start a work session.",
                     requestId, correlationId);
         }
 
@@ -181,6 +193,72 @@ public class WorkContextController {
         response.put("data", Map.of("id", actorId, "type", "work-session", "attributes", attributes));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Start an org-scoped regulatory work session (ROM-W2). The context is the person's ACTIVE
+     * org-registry appointment at the requested organisation. Cross-org isolation is enforced at
+     * the PDP (authz org dimension); here we only prove the appointment exists and mint the token.
+     * Generic denial — never disclose which other orgs the person is appointed at.
+     */
+    private ResponseEntity<Map<String, Object>> startRegulatorySession(
+            String tenantId, String requestId, String correlationId, String actorId,
+            String organisationId, String previousJti) {
+
+        JsonNode matched = matchActiveAppointment(orgRegistryClient.listAppointmentsByPerson(actorId), organisationId);
+        if (matched == null) {
+            return errorBody(org.springframework.http.HttpStatus.FORBIDDEN,
+                    "WORK_SESSION_UNAVAILABLE",
+                    "Regulatory workspace access is currently unavailable for the selected organisation.",
+                    requestId, correlationId);
+        }
+
+        Map<String, Object> issueRequest = new LinkedHashMap<>();
+        issueRequest.put("tenantId", tenantId);
+        issueRequest.put("actorId", actorId);
+        issueRequest.put("organisationId", organisationId);
+        issueRequest.put("assignmentId", text(matched, "id"));
+        issueRequest.put("roleTemplateId", text(matched, "roleCode"));
+        issueRequest.put("purposeOfUse", "REGULATORY_DUTY");
+        String jurisdiction = text(matched, "jurisdictionCode");
+        if (previousJti != null) {
+            issueRequest.put("previousJti", previousJti);
+        }
+
+        JsonNode issued = tshepoIdentityClient.issueWorkContextToken(issueRequest);
+        JsonNode data = issued != null ? issued.path("data") : null;
+        if (data == null || data.isMissingNode() || data.isNull()) {
+            return errorBody(org.springframework.http.HttpStatus.BAD_GATEWAY,
+                    "WORK_TOKEN_UNAVAILABLE", "The regulatory work session could not be started. Try again.",
+                    requestId, correlationId);
+        }
+
+        Map<String, Object> attributes = new LinkedHashMap<>();
+        attributes.put("token", text(data, "token"));
+        attributes.put("jti", text(data, "jti"));
+        attributes.put("expiresAt", text(data, "expiresAt"));
+        attributes.put("organisationId", organisationId);
+        attributes.put("roleCode", text(matched, "roleCode"));
+        attributes.put("jurisdictionCode", jurisdiction);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", actorId, "type", "regulatory-work-session", "attributes", attributes));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
+    /** The requested organisation must be one of the person's ACTIVE appointments. */
+    private JsonNode matchActiveAppointment(JsonNode appointments, String organisationId) {
+        if (appointments == null || !appointments.isArray()) {
+            return null;
+        }
+        for (JsonNode a : appointments) {
+            if ("ACTIVE".equalsIgnoreCase(text(a, "status"))
+                    && organisationId.equalsIgnoreCase(text(a, "organizationId"))) {
+                return a;
+            }
+        }
+        return null;
     }
 
     /**
