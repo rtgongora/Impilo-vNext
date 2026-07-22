@@ -855,6 +855,53 @@ public class TeleconsultController {
     }
 
     /**
+     * TM-B5 (B5-4): consent withdrawn mid-session. PCT records the authoritative truth (consent
+     * WITHDRAWN + media rung forced to ASYNC); this endpoint then makes a best-effort rtc-gateway
+     * end to tear the live room down server-side, surfacing mediaStopped honestly (the client also
+     * drops media immediately on confirmation — the fastest stop). Case continues on the durable chat.
+     */
+    @PostMapping("/sessions/{id}/consent-withdraw")
+    public ResponseEntity<Map<String, Object>> consentWithdraw(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            Map<String, Object> reqBody = body == null ? new LinkedHashMap<>() : new LinkedHashMap<>(body);
+            if (actorId != null && !actorId.isBlank() && !reqBody.containsKey("responder_id")) {
+                reqBody.put("responder_id", actorId);
+            }
+            JsonNode result = pctClient.lifecycleAction(id, "consent-withdraw", reqBody);
+            // Best-effort server-side media stop — never fails the withdrawal (the recorded truth has
+            // already committed in PCT); the outcome is surfaced honestly so the UI never implies the
+            // room was torn down when it was not.
+            boolean mediaStopped = false;
+            try {
+                rtcClient.endSession(id);
+                mediaStopped = true;
+            } catch (Exception rtcEx) {
+                log.warn("Consent-withdraw {}: rtc end best-effort failed ({})", id, rtcEx.getMessage());
+            }
+            if (result != null && result.isObject()) {
+                ((com.fasterxml.jackson.databind.node.ObjectNode) result).put("mediaStopped", mediaStopped);
+            }
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_CONSENT_WITHDRAWN", "POST:teleconsult/consent-withdraw", "SUCCESS",
+                    actorId, "PATIENT", extractPatient(result), "TeleconsultReferral", id,
+                    Map.of("mediaStopped", String.valueOf(mediaStopped)));
+            return ok(result, requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    /**
      * TM-B5 (B5-3): labelled provider-only side-channel — provider-to-provider discussion that is
      * NEVER visible to the patient (stored in a separate pct column, off every patient-facing read).
      * These endpoints are provider-facing (governed mutate/read); the citizen telehealth accessors

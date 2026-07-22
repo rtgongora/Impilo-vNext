@@ -167,6 +167,15 @@ public class TelemedicineController {
         return ResponseEntity.ok(ApiResponse.ok(telemedicineService.escalateReferral(id, request == null ? Map.of() : request), correlationId));
     }
 
+    @PostMapping("/referrals/{id}/consent-withdraw")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> withdrawConsent(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(
+                telemedicineService.withdrawConsent(id, request == null ? Map.of() : request), correlationId));
+    }
+
     @PostMapping("/referrals/{id}/provider-note")
     public ResponseEntity<ApiResponse<Map<String, Object>>> addProviderNote(
             @PathVariable String id,

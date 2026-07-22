@@ -20,6 +20,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { PatientWaitingRoom, type PatientMediaGrant } from "@/components/telemedicine/patient/PatientWaitingRoom";
 import { PatientConsultView } from "@/components/telemedicine/patient/PatientConsultView";
+import { ConsentWithdrawControl } from "@/components/telemedicine/patient/ConsentWithdrawControl";
 import { PostConsultSummary } from "@/components/telemedicine/patient/PostConsultSummary";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -38,6 +39,7 @@ export default function MyTelehealthVisitPage() {
   const [loading, setLoading] = useState(true);
   const [grant, setGrant] = useState<PatientMediaGrant | null>(null);
   const [leftVisit, setLeftVisit] = useState(false);
+  const [consentWithdrawn, setConsentWithdrawn] = useState(false);
 
   const loadSession = useCallback(async () => {
     try {
@@ -70,6 +72,16 @@ export default function MyTelehealthVisitPage() {
   async function handleLeave() {
     // The person left (or the room closed). Re-read the session: if the care
     // team finished it we show the wrap-up; otherwise they can rejoin.
+    setGrant(null);
+    setLeftVisit(true);
+    await loadSession();
+  }
+
+  // TM-B5 B5-4: consent withdrawn mid-session — the withdrawal is already recorded server-side
+  // (WITHDRAWN + media floored to ASYNC); dropping the grant unmounts the room immediately, which
+  // stops local publish within a frame. The visit continues on the secure message thread.
+  async function handleConsentWithdrawn() {
+    setConsentWithdrawn(true);
     setGrant(null);
     setLeftVisit(true);
     await loadSession();
@@ -115,6 +127,9 @@ export default function MyTelehealthVisitPage() {
             </Link>
             <Video className="w-4 h-4 text-primary" />
             <span className="text-sm font-semibold text-foreground">Your video visit</span>
+            <span className="ml-auto">
+              <ConsentWithdrawControl sessionId={sessionId} onWithdrawn={handleConsentWithdrawn} />
+            </span>
           </div>
           <PatientConsultView
             roomUrl={grant.roomUrl}
@@ -148,7 +163,12 @@ export default function MyTelehealthVisitPage() {
           <PostConsultSummary session={session} />
         ) : (
           <div className="space-y-3">
-            {leftVisit && (
+            {consentWithdrawn ? (
+              <div className="max-w-2xl mx-auto rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200" data-testid="consent-withdrawn-notice">
+                Your consent withdrawal was recorded and video/audio has ended. Your visit is not
+                cancelled — the care team will continue with you by secure message.
+              </div>
+            ) : leftVisit && (
               <div className="max-w-2xl mx-auto rounded-lg border border-border bg-card p-3 text-sm text-muted-foreground" data-testid="patient-left-notice">
                 You left the visit. If that was a mistake, you can ask to join again below.
               </div>

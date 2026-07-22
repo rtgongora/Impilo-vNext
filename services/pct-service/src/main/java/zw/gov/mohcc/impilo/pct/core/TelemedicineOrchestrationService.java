@@ -1051,6 +1051,37 @@ public class TelemedicineOrchestrationService {
         entity.setMessages(writeJsonArray(messages));
     }
 
+    // TM-B5 (B5-4): consent withdrawn mid-session. Authoritative case action — flips consent to
+    // WITHDRAWN and forces the media rung to ASYNC (live media must stop; the case continues on the
+    // durable chat). The actual publish-stop is driven by the client (leave room) + a best-effort
+    // rtc-gateway end from the BFF; THIS records the clinical/consent truth and the modality floor.
+    @Transactional
+    public Map<String, Object> withdrawConsent(String referralId, Map<String, Object> request) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        String reason = defaulted(optional(request, "reason"), "Patient withdrew consent");
+        String priorConsent = entity.getConsentStatus();
+        String priorModality = effectiveModality(entity);
+        entity.setConsentStatus("WITHDRAWN");
+        entity.setMediaModality("ASYNC");
+
+        Map<String, Object> note = new LinkedHashMap<>();
+        note.put("responseType", "CONSENT_WITHDRAWN");
+        note.put("priorConsent", priorConsent);
+        note.put("fromModality", priorModality);
+        note.put("toModality", "ASYNC");
+        note.put("reason", reason);
+        note.put("responderId", defaulted(optional(request, "responder_id", "responderId"), "patient"));
+        note.put("timestamp", OffsetDateTime.now().toString());
+        appendResponse(entity, note);
+
+        ReferralEntity saved = referralRepository.save(entity);
+        Map<String, Object> payload = toReferralPayload(saved);
+        payload.put("reason", reason);
+        payload.put("mediaStoppedFloor", "ASYNC");
+        emitOutbox("telemedicine.session.consent_withdrawn", saved.getReferralId().toString(), payload);
+        return payload;
+    }
+
     // TM-B5 (B5-3): provider-only side-channel. Lands in provider_notes (structurally separate from
     // the patient-visible `messages` thread), so it cannot surface on any patient-facing read.
     @Transactional

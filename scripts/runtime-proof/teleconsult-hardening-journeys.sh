@@ -145,6 +145,20 @@ echo "$GPN" | grep -q "dosage privately" && ok "provider read-back returns the s
 PEVT=$(PSQL pct "SELECT count(*) FROM $OTBL WHERE aggregate_id='$REF2' AND event_type='telemedicine.session.provider_note_added.v1'")
 [ "${PEVT:-0}" -ge 1 ] && ok "emitted telemedicine.session.provider_note_added.v1" || bad "no provider_note event ($PEVT)"
 
+# ── J-TH-8: B5-4 consent withdrawal forces media floor + records truth ───────
+say "J-TH-8: mid-session consent withdrawal → WITHDRAWN + media forced to ASYNC + versioned event"
+curl -sS $(hdr PATIENT rig-patient) -X POST $PCT/v1/referrals/$REF2/consent-withdraw \
+  -d '{"reason":"patient no longer comfortable on camera"}' >/dev/null
+CW=$(PSQL pct "SELECT consent_status FROM $RTBL WHERE referral_id='$REF2'")
+[ "$CW" = "WITHDRAWN" ] && ok "consent_status=WITHDRAWN recorded" || bad "consent not withdrawn ($CW)"
+CM=$(PSQL pct "SELECT media_modality FROM $RTBL WHERE referral_id='$REF2'")
+[ "$CM" = "ASYNC" ] && ok "media rung forced to ASYNC (publish floor)" || bad "media not floored ($CM)"
+CEVT=$(PSQL pct "SELECT count(*) FROM $OTBL WHERE aggregate_id='$REF2' AND event_type='telemedicine.session.consent_withdrawn.v1'")
+[ "${CEVT:-0}" -ge 1 ] && ok "emitted telemedicine.session.consent_withdrawn.v1" || bad "no consent_withdrawn event ($CEVT)"
+# the withdrawal is recorded on the responses log with provenance (reason + prior state)
+CREC=$(PSQL pct "SELECT count(*) FROM $RTBL WHERE referral_id='$REF2' AND responses::text LIKE '%CONSENT_WITHDRAWN%' AND responses::text LIKE '%no longer comfortable%'")
+[ "${CREC:-0}" = 1 ] && ok "withdrawal recorded on the case with reason + provenance" || bad "withdrawal note missing ($CREC)"
+
 # ── J-TH-2: A1 illegal transition rejected under ENFORCE ─────────────────────
 say "J-TH-2: SUBMITTED->COMPLETED is refused 409 ILLEGAL_TRANSITION (ENFORCE)"
 R=$(curl -sS -w '\n%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF/complete \
