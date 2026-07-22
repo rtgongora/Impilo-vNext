@@ -12,6 +12,19 @@
 - `provider-reputation-doctrine.md` — provider ratings are owned by **Rito** (not Varapi); four non-blendable domains (client experience / access & process / professional quality / safety & accountability), contextual + PCT-verified ratings, the regulation firewall (a rating never modifies licence/scope/employment/access), anti-manipulation, and Varapi's read-only Rito-sourced summary
 - [`../architecture/rito-experience-reputation-design.md`](../architecture/rito-experience-reputation-design.md) — the Rito Experience & Reputation capability design (V005 schema, PCT verified-interaction intake, aggregation, moderation, governance firewall, Varapi read-only summary)
 
+## Regulatory Operating Model Pack
+
+- `regulatory-operating-model-doctrine.md` — HPA + the eight professional councils as nine
+  distinct regulatory organisations on one governed substrate; appointment-before-access (person
+  → identity → organisation → appointment → role → jurisdiction → workspace → records); strict
+  cross-council isolation + docket-scoped committees; two-sided delivery law (every process =
+  applicant journey + regulator workflow); progressive applications; correspondence duality
+  (applicant-visible vs internal); the CPD seam (Fundo evidences, Varapi adjudicates); five
+  report classes; oversight-without-intrusion; audit visibility incl. access
+- [`../design/regulatory-operating-model/`](../design/regulatory-operating-model/README.md) —
+  the ROM spec pack (ownership rulings R1–R8, generic model spec, context & isolation spec,
+  build waves ROM-W0–W11, nine equal-depth organisation parameter files)
+
 ## National Health Services Gateway Pack
 
 - `health-services-gateway-doctrine.md` — canonical gateway doctrine (intent-led front door, progressive trust ladder R0–R5, persistent optional authentication, NHI-ready cover & payments, persistent Emergency Help, Nompilo trust-escalation mediation, mobile as third surface)
