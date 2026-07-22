@@ -300,6 +300,13 @@ experienceBff:
     WORKFORCE_GOVERNANCE_BASE_URL: http://workforce-governance-service:8165
     VASHANDI_BASE_URL: http://vashandi-workforce-service:8167
     FHIR_GATEWAY_BASE_URL: http://fhir-gateway-service:8091
+    # fhir-gateway downstreams — both were unset, so the gateway used its localhost:8182
+    # / NO_ROUTE defaults and EVERY governed FHIR write failed in-cluster (consent PEP
+    # fail-closed to DENY + no delivery target). Same class as the booking/guidance/abis
+    # fixes above. CONSENT points at tshepo-consent-service; DEFAULT_TARGET_BASE lets writes
+    # route to the SHR (HAPI) without a per-(tenant×resource) fhir_route row.
+    CONSENT_SERVICE_BASE_URL: http://tshepo-consent-service:8182
+    FHIR_GATEWAY_DEFAULT_TARGET_BASE: http://hapi-fhir:8090/fhir
     # Booking/scheduling downstreams — unset previously, so the BFF called localhost
     # and citizen/provider appointment surfaces returned 500 (connection refused).
     BOOKING_BASE_URL: http://booking-service:8265
