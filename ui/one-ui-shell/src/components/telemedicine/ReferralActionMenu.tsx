@@ -13,12 +13,13 @@
  */
 
 import { useState } from "react";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, RefreshCw } from "lucide-react";
 import {
   useReferralAllowedActions,
   useReferralLifecycleAction,
   type ReferralLifecycleActionName,
 } from "@/hooks/queries/useTelemedicine";
+import { isStaleWrite } from "@/lib/stale-write";
 
 interface LifecycleActionDef {
   action: ReferralLifecycleActionName;
@@ -136,11 +137,34 @@ export function ReferralActionMenu({
               className="mt-1 block w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
             />
           </label>
-          {lifecycle.isError && (
+          {lifecycle.isError && isStaleWrite(lifecycle.error) ? (
+            <div
+              className="mt-1 rounded-md border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-800"
+              data-testid="referral-action-stale-write"
+            >
+              <span className="inline-flex items-center gap-1 font-medium">
+                <AlertTriangle className="h-3 w-3" /> This consultation was changed by someone else.
+              </span>
+              <p className="mt-0.5">Reload the latest state before retrying, so your change doesn&apos;t overwrite theirs.</p>
+              <button
+                type="button"
+                data-testid="referral-action-reload"
+                onClick={() => {
+                  allowed.refetch();
+                  setOpenAction(null);
+                  setReason("");
+                  onActionComplete?.();
+                }}
+                className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-amber-400 px-2 py-0.5 font-medium hover:bg-amber-100"
+              >
+                <RefreshCw className="h-3 w-3" /> Reload latest
+              </button>
+            </div>
+          ) : lifecycle.isError ? (
             <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-rose-700">
               <AlertTriangle className="h-3 w-3" /> The action could not be applied. Please retry.
             </p>
-          )}
+          ) : null}
           <div className="mt-2 flex justify-end gap-2">
             <button
               type="button"

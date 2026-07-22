@@ -85,4 +85,31 @@ describe("ReferralActionMenu", () => {
 
     expect(screen.getByTestId("referral-action-error")).toHaveTextContent(/could not be loaded/i);
   });
+
+  it("surfaces a distinct reload affordance on a STALE_WRITE conflict (TM-B6)", async () => {
+    const user = userEvent.setup();
+    const refetch = vi.fn();
+    allowedState.current = {
+      data: { data: { referralId: "r-1", status: "RESPONDED", allowedTargets: ["ESCALATED"] } },
+      isLoading: false,
+      isError: false,
+      refetch,
+    };
+    // The lifecycle mutation failed because someone else edited the referral concurrently.
+    lifecycleState.current = {
+      mutate: lifecycleMutate,
+      isPending: false,
+      isError: true,
+      error: { status: 409, error: { code: "STALE_WRITE" } },
+    } as never;
+    render(<ReferralActionMenu sessionId="r-1" status="RESPONDED" />);
+
+    await user.click(screen.getByTestId("referral-action-escalate"));
+    // The generic failure message must NOT be shown — the conflict is surfaced specifically.
+    const stale = screen.getByTestId("referral-action-stale-write");
+    expect(stale).toHaveTextContent(/changed by someone else/i);
+    // Reload refetches the guard so the next attempt sees the latest state.
+    await user.click(screen.getByTestId("referral-action-reload"));
+    expect(refetch).toHaveBeenCalled();
+  });
 });
