@@ -53,13 +53,16 @@ Companion to the [National Telemedicine & Virtual Care Specification](NATIONAL_T
 
 | Asset | Journeys |
 |---|---|
+| `scripts/runtime-proof/telemedicine-suite.sh` (TM-B20 aggregator) | CI-runnable entry point — runs every member below + tallies |
+| `scripts/runtime-proof/teleconsult-hardening-journeys.sh` (J-TH-1..4) | #7/#8 illegal-transition guard, #37 no-show/expiry timer, TM-B20 event versioning (`.v1`) |
 | `scripts/runtime-proof/virtual-care-journeys.sh` (J-VC-1..3) | #1 spine (+ negative consent/routability) |
+| `scripts/runtime-proof/virtual-care-full-journeys.sh` (J-VC-4..7) | sovereign VH directory + activation + SLA + duty read-back |
 | `scripts/e2e/session-recording-proof.sh` | #22 |
 | `ui/one-ui-shell/e2e/telehealth-patient-flow.spec.ts` | #1/#3 waiting-room negative proof + admit |
 | `ui/one-ui-shell/e2e/session-media-core.spec.ts`, `session-media-hold.spec.ts` | #1 media, #13 |
 | `scripts/e2e/rtc-media-diagnostic.mjs` | media-path diagnostics (supports #11–#13) |
 | `e2e/telemedicine-*.spec.ts`, `journeys/comms-chat.journey.spec.ts`, `ai-guidance-nompilo-flow.spec.ts` | hub/composer, comms, guidance surfaces |
-| **To create per TM-B20** | #2, #4–#12, #14–#21, #23–#40 as their epics land |
+| **To create per TM-B20** | remaining #2, #4–#6, #9–#12, #14–#21, #23–#36, #38–#40 as their epics land |
 
 ## Test-class coverage requirements
 
