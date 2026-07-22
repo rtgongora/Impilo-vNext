@@ -855,6 +855,58 @@ public class TeleconsultController {
     }
 
     /**
+     * TM-B5 (B5-3): labelled provider-only side-channel — provider-to-provider discussion that is
+     * NEVER visible to the patient (stored in a separate pct column, off every patient-facing read).
+     * These endpoints are provider-facing (governed mutate/read); the citizen telehealth accessors
+     * do not expose provider_notes.
+     */
+    @PostMapping("/sessions/{id}/provider-note")
+    public ResponseEntity<Map<String, Object>> addProviderNote(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            String note = val(body, "note", "message", "text");
+            if (note == null || note.isBlank()) {
+                return error(HttpStatus.BAD_REQUEST, "INVALID_NOTE", "note is required", requestId, correlationId);
+            }
+            Map<String, Object> req = new LinkedHashMap<>();
+            req.put("note", note);
+            if (actorId != null && !actorId.isBlank()) req.put("author", actorId);
+            String authorName = val(body, "authorName", "author_name");
+            if (authorName != null && !authorName.isBlank()) req.put("authorName", authorName);
+            JsonNode result = pctClient.lifecycleAction(id, "provider-note", req);
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_PROVIDER_NOTE_ADDED", "POST:teleconsult/provider-note", "SUCCESS",
+                    actorId, "PROVIDER", null, "TeleconsultReferral", id, Map.of());
+            return ok(result, requestId, correlationId, HttpStatus.ACCEPTED);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    @GetMapping("/sessions/{id}/provider-notes")
+    public ResponseEntity<Map<String, Object>> getProviderNotes(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            JsonNode result = pctClient.getProviderNotes(id);
+            return ok(result, requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    /**
      * TM-B5 (B5-2): media-modality downgrade ladder VIDEO -> AUDIO -> ASYNC. On media failure or
      * bandwidth loss the client (or provider) steps the session down a rung; ASYNC drops live media
      * and continues on the durable case-persisted message thread. Monotonic in PCT (restore=true to

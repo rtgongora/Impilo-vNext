@@ -98,6 +98,12 @@ public class ReferralEntity {
     @Column(name = "messages", columnDefinition = "jsonb")
     private String messages = "[]";
 
+    // TM-B5 (B5-3): provider-only side-channel — structurally separate from patient-visible messages
+    // so it never leaks through any patient-facing read.
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "provider_notes", columnDefinition = "jsonb")
+    private String providerNotes = "[]";
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "responses", columnDefinition = "jsonb")
     private String responses = "[]";
@@ -234,6 +240,9 @@ public class ReferralEntity {
     public void setAttachmentDocumentIds(String attachmentDocumentIds) { this.attachmentDocumentIds = attachmentDocumentIds; }
     public String getMessages() { return messages; }
     public void setMessages(String messages) { this.messages = messages; }
+
+    public String getProviderNotes() { return providerNotes; }
+    public void setProviderNotes(String providerNotes) { this.providerNotes = providerNotes; }
     public String getResponses() { return responses; }
     public void setResponses(String responses) { this.responses = responses; }
     public String getConsentType() { return consentType; }

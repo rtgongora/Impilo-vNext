@@ -131,6 +131,20 @@ REST=$(curl -sS -o /dev/null -w '%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X PO
 M3=$(PSQL pct "SELECT media_modality FROM $RTBL WHERE referral_id='$REF2'")
 [ "$REST" = "200" ] && [ "$M3" = "VIDEO" ] && ok "provider restore=true steps back up to VIDEO" || bad "restore failed (HTTP $REST, modality=$M3)"
 
+# ── J-TH-7: B5-3 provider-only side-channel is structurally isolated ─────────
+say "J-TH-7: provider note lands in provider_notes, NEVER in the patient-visible messages"
+SECRET="INTERNAL: discuss dosage privately"
+curl -sS $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF2/provider-note \
+  -d "{\"note\":\"$SECRET\",\"author\":\"rig-dr-moyo\"}" >/dev/null
+PN=$(PSQL pct "SELECT jsonb_array_length(provider_notes) FROM $RTBL WHERE referral_id='$REF2'")
+[ "${PN:-0}" -ge 1 ] && ok "provider note stored in provider_notes ($PN)" || bad "provider note not stored ($PN)"
+LEAK=$(PSQL pct "SELECT count(*) FROM $RTBL WHERE referral_id='$REF2' AND messages::text LIKE '%dosage privately%'")
+[ "${LEAK:-1}" = 0 ] && ok "provider note ABSENT from patient-visible messages (no leak)" || bad "LEAK: provider note found in messages ($LEAK)"
+GPN=$(curl -sS $(hdr PROVIDER rig-dr-moyo) $PCT/v1/referrals/$REF2/provider-notes)
+echo "$GPN" | grep -q "dosage privately" && ok "provider read-back returns the side-channel note" || bad "provider notes GET missing note"
+PEVT=$(PSQL pct "SELECT count(*) FROM $OTBL WHERE aggregate_id='$REF2' AND event_type='telemedicine.session.provider_note_added.v1'")
+[ "${PEVT:-0}" -ge 1 ] && ok "emitted telemedicine.session.provider_note_added.v1" || bad "no provider_note event ($PEVT)"
+
 # ── J-TH-2: A1 illegal transition rejected under ENFORCE ─────────────────────
 say "J-TH-2: SUBMITTED->COMPLETED is refused 409 ILLEGAL_TRANSITION (ENFORCE)"
 R=$(curl -sS -w '\n%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF/complete \

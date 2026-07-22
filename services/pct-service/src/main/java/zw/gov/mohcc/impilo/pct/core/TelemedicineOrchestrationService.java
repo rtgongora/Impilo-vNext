@@ -1051,6 +1051,45 @@ public class TelemedicineOrchestrationService {
         entity.setMessages(writeJsonArray(messages));
     }
 
+    // TM-B5 (B5-3): provider-only side-channel. Lands in provider_notes (structurally separate from
+    // the patient-visible `messages` thread), so it cannot surface on any patient-facing read.
+    @Transactional
+    public Map<String, Object> addProviderNote(String referralId, Map<String, Object> request) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        String note = optional(request, "note", "message", "text");
+        if (blank(note)) {
+            throw new PctDomainException("NOTE_REQUIRED", 400, "a provider note requires text.");
+        }
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("author", defaulted(optional(request, "author", "responder_id", "responderId"), "unknown"));
+        String authorName = optional(request, "authorName", "author_name");
+        if (!blank(authorName)) row.put("authorName", authorName);
+        row.put("note", note);
+        row.put("timestamp", OffsetDateTime.now().toString());
+
+        List<Map<String, Object>> notes = new ArrayList<>(readJsonMapList(entity.getProviderNotes()));
+        notes.add(row);
+        entity.setProviderNotes(writeJsonArray(notes));
+        ReferralEntity saved = referralRepository.save(entity);
+        emitOutbox("telemedicine.session.provider_note_added", saved.getReferralId().toString(),
+                toReferralPayload(saved));
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("referralId", saved.getReferralId().toString());
+        out.put("providerNotes", notes);
+        return out;
+    }
+
+    /** Provider-facing read of the side-channel. NOT exposed on any patient/citizen accessor. */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getProviderNotes(String referralId) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("referralId", entity.getReferralId().toString());
+        out.put("providerNotes", readJsonMapList(entity.getProviderNotes()));
+        return out;
+    }
+
     private void appendResponse(ReferralEntity entity, Map<String, Object> payload) {
         List<Map<String, Object>> responses = new ArrayList<>(readJsonMapList(entity.getResponses()));
         responses.add(payload);

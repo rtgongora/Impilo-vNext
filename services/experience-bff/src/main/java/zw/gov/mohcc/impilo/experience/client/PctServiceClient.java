@@ -576,6 +576,13 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    /** TM-B5 B5-3: provider-only side-channel notes (never patient-visible). */
+    public JsonNode getProviderNotes(String referralId) {
+        String url = baseUrl + "/v1/referrals/" + referralId + "/provider-notes";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     /** TM-B7 tasks linked to a teleconsult referral. */
     public JsonNode listReferralTasks(String referralId) {
         String url = baseUrl + "/v1/referrals/" + referralId + "/tasks";

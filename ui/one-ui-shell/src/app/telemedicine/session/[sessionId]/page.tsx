@@ -32,6 +32,7 @@ import { TeleconsultReadinessChecklist } from "@/components/telemedicine/Telecon
 import { TeleconsultPatientSummaryPanel } from "@/components/telemedicine/TeleconsultPatientSummaryPanel";
 import { TeleconsultPriorConsultsPanel } from "@/components/telemedicine/TeleconsultPriorConsultsPanel";
 import { TeleconsultMediaLadder } from "@/components/telemedicine/TeleconsultMediaLadder";
+import { TeleconsultProviderNotes } from "@/components/telemedicine/TeleconsultProviderNotes";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useTelemedicineMediaToken } from "@/hooks/queries/useTelemedicine";
@@ -495,6 +496,9 @@ export default function TeleconsultSessionPage() {
 
         {/* TM-B7: referral-scoped follow-up/execution tasks + closure preconditions. */}
         <TeleconsultTasksPanel sessionId={sessionId} patientCpid={session?.patientCpid as string | undefined} />
+
+        {/* TM-B5 B5-3: provider-only side-channel (never patient-visible). */}
+        <TeleconsultProviderNotes sessionId={sessionId} />
 
         <label className="block">
           <span className="text-xs font-medium text-muted-foreground">Follow-up instructions</span>
