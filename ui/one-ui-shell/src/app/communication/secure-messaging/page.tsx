@@ -77,7 +77,10 @@ export default function SecureMessagingPage() {
 
   return (
     <AppLayout>
-      <PageShell title="Secure Messaging" subtitle="Encrypted clinical messaging backed by live message channels">
+      <PageShell title="Communication Ops — Secure Messaging" subtitle="Facility clinical message channels (operations)">
+        <a href="/khuluma" className="mb-3 inline-block rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 hover:bg-emerald-100">
+          Looking for Khuluma — messages, calls, meetings and updates? Open the Khuluma hub →
+        </a>
         {channelsLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

@@ -244,10 +244,20 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/scheduling/bookings/config", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Booking Configuration", navLabel: "Booking Config", navZone: "work" },
 
   // â”€â”€ Zone: Communication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  { path: "/communication", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Communication Hub", navLabel: "Communication", navZone: "work" },
-  { path: "/communication/secure-messaging", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Secure Messaging", navLabel: "Messaging", navZone: "work" },
-  { path: "/communication/approvals", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Comms Approval Queue", navLabel: "Approvals", navZone: "work" },
-  { path: "/communication/announcements", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Facility Announcements", navLabel: "Announcements", navZone: "work" },
+  { path: "/communication", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Communication Ops — Hub", navLabel: "Communication", navZone: "work" },
+  { path: "/communication/secure-messaging", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Communication Ops — Secure Messaging", navLabel: "Messaging", navZone: "work" },
+  { path: "/communication/approvals", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Communication Ops — Approval Queue", navLabel: "Approvals", navZone: "work" },
+  { path: "/communication/announcements", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Communication Ops — Facility Announcements", navLabel: "Announcements", navZone: "work" },
+
+  // ── Khuluma — the communication front door (role-aware hub over the live khuluma-service).
+  // Impilo Live stays sovereign (link-out to /live); messaging is one workspace, not the identity.
+  { path: "/khuluma", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma", navLabel: "Khuluma", navZone: "life" },
+  { path: "/khuluma/inbox", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Inbox", navLabel: "Inbox", navZone: "life" },
+  { path: "/khuluma/calls", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Calls", navLabel: "Calls", navZone: "life" },
+  { path: "/khuluma/meetings", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Meetings", navLabel: "Meetings", navZone: "life" },
+  { path: "/khuluma/updates", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Updates & Actions", navLabel: "Updates", navZone: "life" },
+  { path: "/khuluma/channels", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Teams & Channels", navLabel: "Channels", navZone: "work" },
+  { path: "/khuluma/feedback", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Feedback & Support", navLabel: "Feedback", navZone: "life" },
   // Khuluma — Impilo Comms Hub (the comms orchestration umbrella): unified conversations, presence, calls, meetings.
   { path: "/work/comms", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Comms Hub", navLabel: "Khuluma", navZone: "work" },
   { path: "/my/comms", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Messages", navLabel: "Khuluma", navZone: "life" },
@@ -973,7 +983,7 @@ export const ROUTES: RouteDefinition[] = [
 // L3 ABIS 1:N scan-to-login (Jul 2026): +1 — /auth/login/scan, the biometric scan-to-login
 // page (capture → 1:N identify → session on a single strong match only). Flag-gated OFF in the
 // BFF; page shows an honest "not enabled" state when the feature is disabled. Total 768.
-export const EXPECTED_ROUTE_COUNT = 771;
+export const EXPECTED_ROUTE_COUNT = 778;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
