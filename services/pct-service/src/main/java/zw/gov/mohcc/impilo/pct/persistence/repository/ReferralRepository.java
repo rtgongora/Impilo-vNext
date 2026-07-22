@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.pct.persistence.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import zw.gov.mohcc.impilo.pct.persistence.entity.ReferralEntity;
 
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -23,4 +24,19 @@ public interface ReferralRepository extends JpaRepository<ReferralEntity, UUID> 
      */
     List<ReferralEntity> findByTenantIdAndRoutingPoolIdAndStatusInOrderByCreatedAtAsc(
             UUID tenantId, String routingPoolId, Collection<String> statuses);
+
+    /**
+     * Lifecycle-timer expiry sweep (TM-B2): oldest-first batch of referrals still
+     * awaiting acceptance (pre-accept statuses SUBMITTED/ROUTED). The awaiting-since
+     * threshold is applied in code per status (submittedAt / routedAt / createdAt),
+     * so this returns the candidate window and the job decides staleness.
+     */
+    List<ReferralEntity> findTop100ByStatusInOrderByCreatedAtAsc(Collection<String> statuses);
+
+    /**
+     * Lifecycle-timer no-show sweep (TM-B4): SCHEDULED teleconsults whose scheduled
+     * start is already past the no-show cutoff, oldest first — candidates for ABANDONED.
+     */
+    List<ReferralEntity> findTop100ByStatusAndScheduledAtBeforeOrderByScheduledAtAsc(
+            String status, OffsetDateTime scheduledAtBefore);
 }
