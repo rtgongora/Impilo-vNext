@@ -37,14 +37,32 @@ public class PublicPractitionerVerificationService {
     private final ProviderCouncilRegistrationRecordRepository registrationRepository;
     private final PublicPractitionerProjectionSupport projection;
     private final zw.gov.mohcc.impilo.varapi.integration.RitoClient ritoClient;
+    private final zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderGoodStandingRepository goodStandingRepository;
 
     public PublicPractitionerVerificationService(
             ProviderCouncilRegistrationRecordRepository registrationRepository,
             PublicPractitionerProjectionSupport projection,
-            zw.gov.mohcc.impilo.varapi.integration.RitoClient ritoClient) {
+            zw.gov.mohcc.impilo.varapi.integration.RitoClient ritoClient,
+            zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderGoodStandingRepository goodStandingRepository) {
         this.registrationRepository = registrationRepository;
         this.projection = projection;
         this.ritoClient = ritoClient;
+        this.goodStandingRepository = goodStandingRepository;
+    }
+
+    /**
+     * Public-safe good-standing projection: only GOOD vs NOT_IN_GOOD_STANDING is disclosed —
+     * an active investigation or the precise adverse reason is never revealed on the public lane.
+     */
+    private String resolvePublicGoodStanding(UUID tenantId, ProviderEntity provider,
+                                             ProviderCouncilRegistrationRecordEntity record) {
+        if (provider == null || record.getCouncil() == null) {
+            return null;
+        }
+        return goodStandingRepository
+                .findByTenantIdAndProviderIdAndCouncilId(tenantId, provider.getId(), record.getCouncil().getId())
+                .map(gs -> "GOOD".equals(gs.getStanding()) ? "GOOD" : "NOT_IN_GOOD_STANDING")
+                .orElse(null);
     }
 
     @Transactional(readOnly = true)
@@ -93,6 +111,7 @@ public class PublicPractitionerVerificationService {
                 licence.validFrom(),
                 licence.validTo(),
                 authority,
-                experience);
+                experience,
+                resolvePublicGoodStanding(tenantId, provider, record));
     }
 }

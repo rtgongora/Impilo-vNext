@@ -42,7 +42,8 @@ public record PublicPractitionerVerificationResponse(
         LocalDate licenceValidFrom,
         LocalDate licenceValidTo,
         String registeringAuthority,
-        ExperienceSummary experienceSummary
+        ExperienceSummary experienceSummary,
+        String goodStanding
 ) {
 
     public static final String STATUS_NOT_FOUND = "NOT_FOUND";
@@ -60,6 +61,6 @@ public record PublicPractitionerVerificationResponse(
     /** Uniform miss shape — same fields, all null except the status. */
     public static PublicPractitionerVerificationResponse notFound() {
         return new PublicPractitionerVerificationResponse(
-                STATUS_NOT_FOUND, null, null, null, null, null, null, null, null, null, null, null);
+                STATUS_NOT_FOUND, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 }
