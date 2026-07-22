@@ -21,6 +21,7 @@ import { PageShell } from "@/components/PageShell";
 import { PatientWaitingRoom, type PatientMediaGrant } from "@/components/telemedicine/patient/PatientWaitingRoom";
 import { PatientConsultView } from "@/components/telemedicine/patient/PatientConsultView";
 import { ConsentWithdrawControl } from "@/components/telemedicine/patient/ConsentWithdrawControl";
+import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
 import { PostConsultSummary } from "@/components/telemedicine/patient/PostConsultSummary";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -180,6 +181,11 @@ export default function MyTelehealthVisitPage() {
               specialty={specialty}
               onAdmitted={setGrant}
             />
+            {/* TM-B10: route-bound Nompilo guidance — waiting-room status, device check, privacy,
+                danger-sign escalate-only, reconnection. Guidance only; never clinical judgement. */}
+            <div className="max-w-2xl mx-auto">
+              <NompiloContextualGuidance routePath="/my/telehealth" />
+            </div>
           </div>
         )}
       </PageShell>

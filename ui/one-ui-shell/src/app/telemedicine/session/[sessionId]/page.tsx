@@ -33,6 +33,7 @@ import { TeleconsultPatientSummaryPanel } from "@/components/telemedicine/Teleco
 import { TeleconsultPriorConsultsPanel } from "@/components/telemedicine/TeleconsultPriorConsultsPanel";
 import { TeleconsultMediaLadder } from "@/components/telemedicine/TeleconsultMediaLadder";
 import { TeleconsultProviderNotes } from "@/components/telemedicine/TeleconsultProviderNotes";
+import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useTelemedicineMediaToken } from "@/hooks/queries/useTelemedicine";
@@ -499,6 +500,9 @@ export default function TeleconsultSessionPage() {
 
         {/* TM-B5 B5-3: provider-only side-channel (never patient-visible). */}
         <TeleconsultProviderNotes sessionId={sessionId} />
+
+        {/* TM-B10: advisory-only Nompilo prompts (red-flag review reminder etc.) — never clinical judgement. */}
+        <NompiloContextualGuidance routePath="/telemedicine/session" />
 
         <label className="block">
           <span className="text-xs font-medium text-muted-foreground">Follow-up instructions</span>
