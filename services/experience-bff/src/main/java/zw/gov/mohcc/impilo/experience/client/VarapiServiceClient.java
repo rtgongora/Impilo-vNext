@@ -58,6 +58,40 @@ public class VarapiServiceClient {
         return restTemplate.getForEntity(baseUrl + "/v1/me/regulatory/summary", JsonNode.class).getBody();
     }
 
+    /** GET a /v1/me/regulatory/<sub> read (trust headers forwarded → caller's own record). */
+    public JsonNode getMeRegulatory(String sub) {
+        return restTemplate.getForEntity(baseUrl + "/v1/me/regulatory" + sub, JsonNode.class).getBody();
+    }
+
+    /** GET a regulatory application correspondence sub-resource (ROM-U). */
+    public JsonNode getRegulatoryApplication(Long applicationId, String sub) {
+        return restTemplate.getForEntity(
+                baseUrl + "/v1/internal/regulatory/applications/" + applicationId + sub, JsonNode.class).getBody();
+    }
+
+    /** POST to a regulatory application correspondence sub-resource (ROM-U). */
+    public JsonNode postRegulatoryApplication(Long applicationId, String sub, Object body) {
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/internal/regulatory/applications/" + applicationId + sub, body, JsonNode.class).getBody();
+    }
+
+    /** The open provider-application queue (regulator console, ROM-U). */
+    public JsonNode getOpenApplications() {
+        return restTemplate.getForEntity(baseUrl + "/v1/internal/providers/applications/open", JsonNode.class).getBody();
+    }
+
+    /** A single provider application (regulator console). */
+    public JsonNode getApplication(Long applicationId) {
+        return restTemplate.getForEntity(
+                baseUrl + "/v1/internal/providers/applications/" + applicationId, JsonNode.class).getBody();
+    }
+
+    /** POST a provider-application action (decision/approve/close, regulator console). */
+    public JsonNode postApplicationAction(Long applicationId, String action, Object body) {
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/internal/providers/applications/" + applicationId + "/" + action, body, JsonNode.class).getBody();
+    }
+
     public JsonNode getProviderLicenses(String providerId) {
         String url = baseUrl + "/v1/internal/providers/" + providerId + "/licenses";
         log.info("VARAPI: Getting licenses for provider={}", providerId);

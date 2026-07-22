@@ -210,6 +210,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/verify/practitioner", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Verify a Health Professional", navLabel: "Verify Health Professional", navZone: "life" },
   { path: "/professional/pic-nominations", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "PIC Nominations", navLabel: "PIC Nominations", navZone: "professional" },
   { path: "/professional/regulatory", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Regulatory Affairs", navLabel: "My Regulatory Affairs", navZone: "professional" },
+  { path: "/professional/regulatory/applications/[id]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory Application", navLabel: "Application", navZone: "professional" },
   { path: "/share/claim", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Claim Shared Documents", navLabel: "Claim Shared Documents", navZone: "life" },
   { path: "/collaboration/access", zone: "home", layout: "minimal", sidebar: "main", guard: "none", pageTitle: "Provider collaboration access", navLabel: "Collaboration access", navZone: "life" },
 
@@ -976,7 +977,7 @@ export const ROUTES: RouteDefinition[] = [
 // L3 ABIS 1:N scan-to-login (Jul 2026): +1 — /auth/login/scan, the biometric scan-to-login
 // page (capture → 1:N identify → session on a single strong match only). Flag-gated OFF in the
 // BFF; page shows an honest "not enabled" state when the feature is disabled. Total 768.
-export const EXPECTED_ROUTE_COUNT = 774;
+export const EXPECTED_ROUTE_COUNT = 775;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

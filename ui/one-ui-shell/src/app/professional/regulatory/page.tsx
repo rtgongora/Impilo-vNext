@@ -10,7 +10,17 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, BadgeCheck, Loader2, ScrollText, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import {
+  AlertTriangle,
+  BadgeCheck,
+  ChevronRight,
+  FileText,
+  Loader2,
+  RefreshCw,
+  ScrollText,
+  ShieldCheck,
+} from "lucide-react";
 import { LuminousStage } from "shared-ui";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -39,11 +49,46 @@ interface Summary {
   providerPublicId?: string | null;
   councils: CouncilRegistration[];
 }
+interface RenewalEligibility {
+  linked: boolean;
+  providerPublicId?: string | null;
+  eligible: boolean;
+  cpdRequirementMet: boolean;
+  earnedPoints: number;
+  requiredPoints: number;
+  outstanding: string[];
+}
+interface Application {
+  id: number;
+  applicationType: string;
+  workflowState: string;
+  councilCode: string;
+  submittedAt?: string | null;
+}
 
-function unwrap(payload: unknown): Summary {
+function unwrapObject<T>(payload: unknown): T {
   const p = (payload as { data?: unknown })?.data ?? payload;
-  const s = p as Partial<Summary>;
+  return p as T;
+}
+function unwrapList<T>(payload: unknown): T[] {
+  const p = (payload as { data?: unknown })?.data ?? payload;
+  return Array.isArray(p) ? (p as T[]) : [];
+}
+function unwrap(payload: unknown): Summary {
+  const s = unwrapObject<Partial<Summary>>(payload);
   return { linked: !!s?.linked, providerPublicId: s?.providerPublicId ?? null, councils: s?.councils ?? [] };
+}
+function unwrapRenewal(payload: unknown): RenewalEligibility {
+  const r = unwrapObject<Partial<RenewalEligibility>>(payload);
+  return {
+    linked: !!r?.linked,
+    providerPublicId: r?.providerPublicId ?? null,
+    eligible: !!r?.eligible,
+    cpdRequirementMet: !!r?.cpdRequirementMet,
+    earnedPoints: Number(r?.earnedPoints ?? 0),
+    requiredPoints: Number(r?.requiredPoints ?? 0),
+    outstanding: r?.outstanding ?? [],
+  };
 }
 
 const STANDING_STYLE: Record<string, string> = {
@@ -55,20 +100,30 @@ const STANDING_STYLE: Record<string, string> = {
 
 export default function MyRegulatoryAffairsPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [renewal, setRenewal] = useState<RenewalEligibility | null>(null);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const res = await apiClient.get<unknown>("/internal/v1/me/regulatory/summary");
-      setSummary(unwrap(res));
-    } catch {
+    // Fetch all three in parallel; tolerate individual failures so one failing
+    // lane never blanks the whole page. The summary is the primary lane — only it
+    // sets the page-level error.
+    const [summaryRes, renewalRes, applicationsRes] = await Promise.allSettled([
+      apiClient.get<unknown>("/internal/v1/me/regulatory/summary"),
+      apiClient.get<unknown>("/internal/v1/me/regulatory/renewal-eligibility"),
+      apiClient.get<unknown>("/internal/v1/me/regulatory/applications"),
+    ]);
+    if (summaryRes.status === "fulfilled") {
+      setSummary(unwrap(summaryRes.value));
+    } else {
       setError("Could not load your regulatory affairs.");
-    } finally {
-      setLoading(false);
     }
+    setRenewal(renewalRes.status === "fulfilled" ? unwrapRenewal(renewalRes.value) : null);
+    setApplications(applicationsRes.status === "fulfilled" ? unwrapList<Application>(applicationsRes.value) : []);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -83,6 +138,8 @@ export default function MyRegulatoryAffairsPage() {
         serviceSlug="varapi"
       >
         <LuminousStage className="space-y-6 p-5 sm:p-6">
+          {!loading && !error && renewal?.linked && <RenewalCard renewal={renewal} />}
+
           {loading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading…
@@ -139,6 +196,42 @@ export default function MyRegulatoryAffairsPage() {
             ))
           )}
 
+          {!loading && !error && summary?.linked && (
+            <section className="space-y-3">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <FileText className="h-4 w-4 text-teal-600" /> My applications
+              </h2>
+              {applications.length === 0 ? (
+                <p className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                  No applications in progress.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {applications.map((a) => (
+                    <li key={a.id}>
+                      <Link
+                        href={`/professional/regulatory/applications/${a.id}`}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3 transition hover:border-teal-300 hover:bg-teal-50/40"
+                      >
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-medium text-foreground">
+                            {a.applicationType?.replace(/_/g, " ") || "Application"}
+                            <span className="ml-1.5 text-xs font-normal text-muted-foreground">· {a.councilCode}</span>
+                          </div>
+                          <div className="mt-0.5 text-xs text-muted-foreground">
+                            {a.workflowState?.replace(/_/g, " ").toLowerCase()}
+                            {a.submittedAt ? ` · submitted ${a.submittedAt}` : ""}
+                          </div>
+                        </div>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+
           <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
             <span>
@@ -154,6 +247,59 @@ export default function MyRegulatoryAffairsPage() {
         </LuminousStage>
       </PageShell>
     </AppLayout>
+  );
+}
+
+function RenewalCard({ renewal }: { renewal: RenewalEligibility }) {
+  const pct =
+    renewal.requiredPoints > 0
+      ? Math.min(100, Math.round((renewal.earnedPoints / renewal.requiredPoints) * 100))
+      : renewal.cpdRequirementMet
+        ? 100
+        : 0;
+
+  if (renewal.eligible) {
+    return (
+      <section className="rounded-2xl border border-teal-200 bg-teal-50 p-4">
+        <div className="flex items-center gap-2 text-sm font-semibold text-teal-800">
+          <RefreshCw className="h-4 w-4" /> You can renew
+        </div>
+        <p className="mt-1 text-xs text-teal-800">
+          You have met the requirements to renew your registration. Renewal is CPD-gated by your
+          council; you may proceed when the council opens your renewal window.
+        </p>
+        <div className="mt-2 text-xs text-teal-800">
+          {renewal.earnedPoints} of {renewal.requiredPoints} CPD points
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+      <div className="flex items-center gap-2 text-sm font-semibold text-amber-900">
+        <RefreshCw className="h-4 w-4" /> Not yet eligible to renew
+      </div>
+      <div className="mt-2 text-xs text-amber-900">
+        {renewal.earnedPoints} of {renewal.requiredPoints} CPD points
+      </div>
+      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-amber-200">
+        <div className="h-full rounded-full bg-amber-500" style={{ width: `${pct}%` }} />
+      </div>
+      {renewal.outstanding.length > 0 && (
+        <ul className="mt-3 space-y-1">
+          {renewal.outstanding.map((o, i) => (
+            <li key={i} className="flex items-start gap-1.5 text-xs text-amber-900">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {o}
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-3 text-[11px] text-amber-800">
+        Renewal is CPD-gated by your council — it becomes available once your continuing-development
+        requirement is met.
+      </p>
+    </section>
   );
 }
 

@@ -40,4 +40,11 @@ public class MeRegulatoryController {
         TrustContext ctx = TrustContextHolder.require();
         return renewalEligibilityService.evaluateForPerson(ctx.tenantId(), ctx.actorId());
     }
+
+    /** My applications (ROM-U) — the signed-in person's own regulatory applications. */
+    @GetMapping("/applications")
+    public java.util.List<MyRegulatoryService.MyApplication> myApplications() {
+        TrustContext ctx = TrustContextHolder.require();
+        return myRegulatoryService.applicationsForPerson(ctx.tenantId(), ctx.actorId());
+    }
 }

@@ -23,15 +23,18 @@ public class MyRegulatoryService {
     private final ProviderCouncilRegistrationRecordRepository registrationRepository;
     private final ProviderGoodStandingRepository goodStandingRepository;
     private final RegisterEntryRestrictionRepository restrictionRepository;
+    private final ProviderApplicationRepository applicationRepository;
 
     public MyRegulatoryService(ProviderRepository providerRepository,
                                ProviderCouncilRegistrationRecordRepository registrationRepository,
                                ProviderGoodStandingRepository goodStandingRepository,
-                               RegisterEntryRestrictionRepository restrictionRepository) {
+                               RegisterEntryRestrictionRepository restrictionRepository,
+                               ProviderApplicationRepository applicationRepository) {
         this.providerRepository = providerRepository;
         this.registrationRepository = registrationRepository;
         this.goodStandingRepository = goodStandingRepository;
         this.restrictionRepository = restrictionRepository;
+        this.applicationRepository = applicationRepository;
     }
 
     public record Restriction(String type, String description, String status,
@@ -47,6 +50,27 @@ public class MyRegulatoryService {
         static MyRegulatorySummary unlinked() {
             return new MyRegulatorySummary(false, null, List.of());
         }
+    }
+
+    public record MyApplication(Long id, String applicationType, String workflowState,
+                                String councilCode, String submittedAt) {}
+
+    /** The signed-in person's own applications (ROM-U). */
+    @Transactional(readOnly = true)
+    public List<MyApplication> applicationsForPerson(UUID tenantId, String personHealthId) {
+        UUID healthId = parseUuid(personHealthId);
+        if (healthId == null) {
+            return List.of();
+        }
+        ProviderEntity provider = providerRepository.findByTenantIdAndImpiloHealthId(tenantId, healthId).orElse(null);
+        if (provider == null) {
+            return List.of();
+        }
+        return applicationRepository.findByTenantIdAndProviderId(tenantId, provider.getId()).stream()
+                .map(a -> new MyApplication(a.getId(), a.getApplicationType(), a.getWorkflowState(),
+                        a.getCouncil() != null ? a.getCouncil().getCouncilCode() : null,
+                        a.getSubmittedAt() != null ? a.getSubmittedAt().toString() : null))
+                .toList();
     }
 
     /** Resolve the person (Health-ID) → their provider → their regulatory affairs. */
