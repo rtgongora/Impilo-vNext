@@ -48,6 +48,16 @@ public class TusoServiceClient {
      * @param notes      optional notes
      * @return the booking response from TUSO
      */
+    /** Practice establishment lanes (ROM-U6). */
+    public com.fasterxml.jackson.databind.JsonNode getMyEstablishments() {
+        return restTemplate.getForEntity(baseUrl + "/v1/internal/regulatory/practice-establishments/mine",
+                com.fasterxml.jackson.databind.JsonNode.class).getBody();
+    }
+    public com.fasterxml.jackson.databind.JsonNode postEstablishment(String sub, Object body) {
+        return restTemplate.postForEntity(baseUrl + "/v1/internal/regulatory/practice-establishments" + sub, body,
+                com.fasterxml.jackson.databind.JsonNode.class).getBody();
+    }
+
     public JsonNode createBooking(UUID resourceId, String subjectRef, String purpose,
                                   OffsetDateTime startTime, OffsetDateTime endTime, String notes) {
         String url = baseUrl + "/v1/internal/resources/" + resourceId + "/bookings";

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.experience.client.ReportingServiceClient;
+import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 
 import java.util.Map;
@@ -20,9 +22,15 @@ import java.util.Map;
 public class RegulatoryConsoleBffController {
 
     private final VarapiServiceClient varapiClient;
+    private final TusoServiceClient tusoClient;
+    private final ReportingServiceClient reportingClient;
 
-    public RegulatoryConsoleBffController(VarapiServiceClient varapiClient) {
+    public RegulatoryConsoleBffController(VarapiServiceClient varapiClient,
+                                          TusoServiceClient tusoClient,
+                                          ReportingServiceClient reportingClient) {
         this.varapiClient = varapiClient;
+        this.tusoClient = tusoClient;
+        this.reportingClient = reportingClient;
     }
 
     @GetMapping("/applications")
@@ -86,5 +94,54 @@ public class RegulatoryConsoleBffController {
     @PostMapping("/disciplinary/{caseId}/determine")
     public ResponseEntity<JsonNode> determineProceeding(@PathVariable Long caseId, @RequestBody Map<String, Object> body) {
         return ResponseEntity.ok(varapiClient.postDisciplinary("/" + caseId + "/determine", body));
+    }
+
+    // ── Committee hearings / dockets (ROM-U4) ──
+    @GetMapping("/hearings/my-docket")
+    public ResponseEntity<JsonNode> myDocket() {
+        return ResponseEntity.ok(varapiClient.getMyDocket());
+    }
+
+    @PostMapping("/hearings/docket")
+    public ResponseEntity<JsonNode> assignDocket(@RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(varapiClient.postHearing("/docket", body));
+    }
+
+    @PostMapping("/hearings/{caseId}/schedule")
+    public ResponseEntity<JsonNode> scheduleHearing(@PathVariable Long caseId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(varapiClient.postHearing("/" + caseId + "/schedule", body));
+    }
+
+    @PostMapping("/hearings/{caseId}/appeal")
+    public ResponseEntity<JsonNode> fileAppeal(@PathVariable Long caseId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(varapiClient.postHearing("/" + caseId + "/appeal", body));
+    }
+
+    // ── Dashboards + HPA oversight (ROM-U5) ──
+    /** Run a governed regulatory report definition by key (W9 defs: reg.operational.*, reg.management.*, …). */
+    @PostMapping("/reports/{reportKey}/run")
+    public ResponseEntity<JsonNode> runReport(@PathVariable String reportKey, @RequestBody(required = false) Map<String, Object> params) {
+        return ResponseEntity.ok(reportingClient.runReport(reportKey, params));
+    }
+
+    @GetMapping("/oversight/grants")
+    public ResponseEntity<JsonNode> oversightGrants(@RequestParam("orgId") String orgId) {
+        return ResponseEntity.ok(varapiClient.getOversightGrants(orgId));
+    }
+
+    @PostMapping("/oversight/grants")
+    public ResponseEntity<JsonNode> grantOversight(@RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(varapiClient.postOversightGrant(body));
+    }
+
+    // ── Practice establishment — regulator decision lanes (ROM-U6) ──
+    @PostMapping("/practice-establishments/{id}/approve")
+    public ResponseEntity<JsonNode> approveEstablishment(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(tusoClient.postEstablishment("/" + id + "/approve", body));
+    }
+
+    @PostMapping("/practice-establishments/{id}/reject")
+    public ResponseEntity<JsonNode> rejectEstablishment(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(tusoClient.postEstablishment("/" + id + "/reject", body));
     }
 }

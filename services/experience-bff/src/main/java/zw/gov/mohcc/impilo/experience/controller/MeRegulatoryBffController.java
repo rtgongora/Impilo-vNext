@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 
 import java.util.Map;
@@ -17,9 +18,27 @@ import java.util.Map;
 public class MeRegulatoryBffController {
 
     private final VarapiServiceClient varapiClient;
+    private final TusoServiceClient tusoClient;
 
-    public MeRegulatoryBffController(VarapiServiceClient varapiClient) {
+    public MeRegulatoryBffController(VarapiServiceClient varapiClient, TusoServiceClient tusoClient) {
         this.varapiClient = varapiClient;
+        this.tusoClient = tusoClient;
+    }
+
+    // ── Practice establishment — applicant/owner lanes (ROM-U6) ──
+    @GetMapping("/practice-establishments")
+    public ResponseEntity<JsonNode> myEstablishments() {
+        return ResponseEntity.ok(tusoClient.getMyEstablishments());
+    }
+
+    @PostMapping("/practice-establishments")
+    public ResponseEntity<JsonNode> createEstablishment(@RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(tusoClient.postEstablishment("", body));
+    }
+
+    @PostMapping("/practice-establishments/{id}/submit")
+    public ResponseEntity<JsonNode> submitEstablishment(@PathVariable String id) {
+        return ResponseEntity.ok(tusoClient.postEstablishment("/" + id + "/submit", Map.of()));
     }
 
     @GetMapping("/summary")

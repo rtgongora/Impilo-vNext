@@ -102,6 +102,23 @@ public class VarapiServiceClient {
                 baseUrl + "/v1/internal/regulatory/disciplinary" + sub, body, JsonNode.class).getBody();
     }
 
+    /** Hearings/docket lanes (ROM-U4). */
+    public JsonNode getMyDocket() {
+        return restTemplate.getForEntity(baseUrl + "/v1/internal/regulatory/hearings/my-docket", JsonNode.class).getBody();
+    }
+    public JsonNode postHearing(String sub, Object body) {
+        return restTemplate.postForEntity(baseUrl + "/v1/internal/regulatory/hearings" + sub, body, JsonNode.class).getBody();
+    }
+
+    /** Oversight grants (ROM-U5). */
+    public JsonNode getOversightGrants(String orgId) {
+        return restTemplate.getForEntity(
+                baseUrl + "/v1/internal/regulatory/oversight/grants?orgId=" + orgId, JsonNode.class).getBody();
+    }
+    public JsonNode postOversightGrant(Object body) {
+        return restTemplate.postForEntity(baseUrl + "/v1/internal/regulatory/oversight/grants", body, JsonNode.class).getBody();
+    }
+
     public JsonNode getProviderLicenses(String providerId) {
         String url = baseUrl + "/v1/internal/providers/" + providerId + "/licenses";
         log.info("VARAPI: Getting licenses for provider={}", providerId);
