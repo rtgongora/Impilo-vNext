@@ -29,6 +29,22 @@ public class ProviderDisciplinaryCaseEntity {
     @Column(name = "status", nullable = false, length = 20)
     private String status = "OPEN";
 
+    // ROM-W7 disciplinary FSM + rito-referral firewall
+    @Column(name = "case_stage", nullable = false, length = 40)
+    private String caseStage = "RECEIVED";
+
+    @Column(name = "council_id")
+    private Long councilId;
+
+    @Column(name = "source_rito_case_id", length = 128)
+    private String sourceRitoCaseId;
+
+    @Column(name = "opened_by", length = 128)
+    private String openedBy;
+
+    @Column(name = "respondent_notified", nullable = false)
+    private Boolean respondentNotified = false;
+
     @Column(name = "opened_date")
     private LocalDate openedDate;
 
@@ -96,6 +112,16 @@ public class ProviderDisciplinaryCaseEntity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getCaseStage() { return caseStage; }
+    public void setCaseStage(String caseStage) { this.caseStage = caseStage; }
+    public Long getCouncilId() { return councilId; }
+    public void setCouncilId(Long councilId) { this.councilId = councilId; }
+    public String getSourceRitoCaseId() { return sourceRitoCaseId; }
+    public void setSourceRitoCaseId(String sourceRitoCaseId) { this.sourceRitoCaseId = sourceRitoCaseId; }
+    public String getOpenedBy() { return openedBy; }
+    public void setOpenedBy(String openedBy) { this.openedBy = openedBy; }
+    public Boolean getRespondentNotified() { return respondentNotified; }
+    public void setRespondentNotified(Boolean respondentNotified) { this.respondentNotified = respondentNotified; }
 
     public LocalDate getOpenedDate() { return openedDate; }
     public void setOpenedDate(LocalDate openedDate) { this.openedDate = openedDate; }
