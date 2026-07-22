@@ -255,34 +255,40 @@ public class LearningServiceClient {
         if (!props.isConfigured()) {
             return null;
         }
-        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/fundo/" + relativePath;
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body == null ? Map.of() : body, headers);
-            ResponseEntity<JsonNode> res = restTemplate.postForEntity(url, entity, JsonNode.class);
-            return unwrapData(res.getBody());
+            return postFundoStrict(relativePath, body);
         } catch (Exception e) {
             log.debug("Learning Fundo POST {} failed: {}", relativePath, e.getMessage());
             return null;
         }
     }
 
+    public JsonNode postFundoStrict(String relativePath, Map<String, Object> body) {
+        ensureConfigured();
+        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/fundo/" + relativePath;
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body == null ? Map.of() : body, jsonHeaders());
+        ResponseEntity<JsonNode> res = restTemplate.postForEntity(url, entity, JsonNode.class);
+        return unwrapData(res.getBody());
+    }
+
     public JsonNode putFundo(String relativePath, Map<String, Object> body) {
         if (!props.isConfigured()) {
             return null;
         }
-        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/fundo/" + relativePath;
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body == null ? Map.of() : body, headers);
-            ResponseEntity<JsonNode> res = restTemplate.exchange(url, HttpMethod.PUT, entity, JsonNode.class);
-            return unwrapData(res.getBody());
+            return putFundoStrict(relativePath, body);
         } catch (Exception e) {
             log.debug("Learning Fundo PUT {} failed: {}", relativePath, e.getMessage());
             return null;
         }
+    }
+
+    public JsonNode putFundoStrict(String relativePath, Map<String, Object> body) {
+        ensureConfigured();
+        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/fundo/" + relativePath;
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body == null ? Map.of() : body, jsonHeaders());
+        ResponseEntity<JsonNode> res = restTemplate.exchange(url, HttpMethod.PUT, entity, JsonNode.class);
+        return unwrapData(res.getBody());
     }
 
     private static JsonNode unwrapData(JsonNode root) {
@@ -297,5 +303,17 @@ public class LearningServiceClient {
             return base.substring(0, base.length() - 1);
         }
         return base;
+    }
+
+    private void ensureConfigured() {
+        if (!props.isConfigured()) {
+            throw new IllegalStateException("Learning service is not configured");
+        }
+    }
+
+    private static HttpHeaders jsonHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
     }
 }

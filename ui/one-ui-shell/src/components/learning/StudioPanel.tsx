@@ -20,6 +20,9 @@ import { asArray, asRecord, asText, type ModalKey, type Row } from "@/components
 import { Panel, CreationCard, CreationTemplate, StatusPill, countOf } from "@/components/learning/SharedComponents";
 import { SectionFormComponent } from "./SectionFormComponent";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
+import { ModuleManagementPanel } from "./studio/ModuleManagementPanel";
+import { ModuleDetailPage } from "./ModuleDetailPage";
+import { SearchFilterPagination } from "./SearchFilterPagination";
 import { apiClient } from "@/lib/api-client";
 
 const FUNDO = "/internal/v1/learning/fundo";
@@ -42,15 +45,71 @@ export interface CourseStructure extends Row {
   }>;
 }
 
+function unwrapNamedData(value: unknown, key: string) {
+  const envelope = asRecord(value);
+  return asRecord(envelope[key] ?? envelope);
+}
+
+function apiErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) return error.message;
+  const record = asRecord(error);
+  const apiError = asRecord(record.error);
+  const message = asText(apiError.message ?? record.message, fallback);
+  try {
+    const parsed = JSON.parse(message);
+    const parsedError = asRecord(asRecord(parsed).error);
+    return asText(parsedError.message ?? parsedError.code, message);
+  } catch {
+    return message;
+  }
+}
+
 export function Studio({ data, setModal }: { data: Record<string, unknown>; setModal: (m: ModalKey, defaults?: Row) => void }) {
   const [activeTab, setActiveTab] = useState<ContentType>("courses");
-  const [courseView, setCourseView] = useState<"sections" | null>(null);
+  const [courseView, setCourseView] = useState<"sections" | "moduleDetail" | null>(null);
   const [selectedCourseForSections, setSelectedCourseForSections] = useState<CourseStructure | null>(null);
   const [modules, setModules] = useState<Array<any>>([]);
+  const [selectedModuleForDetail, setSelectedModuleForDetail] = useState<string | null>(null);
   const [showAddSection, setShowAddSection] = useState(false);
+  const [selectedModuleForSection, setSelectedModuleForSection] = useState<string | null>(null);
+  const [editingSection, setEditingSection] = useState<{ moduleId: string; sectionId: string } | null>(null);
   const [deletingCourse, setDeletingCourse] = useState<Row | null>(null);
+  const [deletingModule, setDeletingModule] = useState<string | null>(null);
+  const [deletingSection, setDeletingSection] = useState<{ moduleId: string; sectionId: string } | null>(null);
   const [loadingStructure, setLoadingStructure] = useState(false);
   const [structureError, setStructureError] = useState<string | null>(null);
+  const [showModuleModal, setShowModuleModal] = useState(false);
+  const [editingModule, setEditingModule] = useState<{ id: string; title: string; description?: string } | null>(null);
+  const [moduleModalTitle, setModuleModalTitle] = useState("");
+  const [moduleModalDescription, setModuleModalDescription] = useState("");
+  const [isSubmittingModule, setIsSubmittingModule] = useState(false);
+
+  // Search, filter, pagination state
+  const [searchQuery, setSearchQuery] = useState<Record<ContentType, string>>({
+    courses: "",
+    resources: "",
+    media: "",
+    activities: "",
+    cohorts: "",
+    sessions: "",
+  });
+  const [filterValue, setFilterValue] = useState<Record<ContentType, string>>({
+    courses: "",
+    resources: "",
+    media: "",
+    activities: "",
+    cohorts: "",
+    sessions: "",
+  });
+  const [currentPage, setCurrentPage] = useState<Record<ContentType, number>>({
+    courses: 1,
+    resources: 1,
+    media: 1,
+    activities: 1,
+    cohorts: 1,
+    sessions: 1,
+  });
+  const pageSize = 10;
 
   const studio = asRecord(data.studio);
   const library = asArray(asRecord(data.library).items);
@@ -66,6 +125,29 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
   const publishedCount = countOf(studio.publishedCourses, 0);
   const courseCount = Math.max(visibleCourses.length, draftCount + publishedCount);
 
+  // Helper function to filter and paginate items
+  const filterAndPaginateItems = (items: Array<Row>, tabType: ContentType): Array<Row> => {
+    const query = searchQuery[tabType].toLowerCase();
+    const filtered = items.filter((item) => {
+      const title = asText(item.title ?? item.name, "").toLowerCase();
+      const description = asText(item.description ?? item.code ?? "", "").toLowerCase();
+      return title.includes(query) || description.includes(query);
+    });
+
+    const start = (currentPage[tabType] - 1) * pageSize;
+    const end = start + pageSize;
+    return filtered.slice(start, end);
+  };
+
+  const getTotalFilteredCount = (items: Array<Row>, tabType: ContentType): number => {
+    const query = searchQuery[tabType].toLowerCase();
+    return items.filter((item) => {
+      const title = asText(item.title ?? item.name, "").toLowerCase();
+      const description = asText(item.description ?? item.code ?? "", "").toLowerCase();
+      return title.includes(query) || description.includes(query);
+    }).length;
+  };
+
   // Handler to fetch course structure on demand
   const handleManageSections = async (course: Row) => {
     setLoadingStructure(true);
@@ -78,14 +160,14 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
       }
 
       const response = await apiClient.get<{ data?: any }>(`${FUNDO}/courses/${courseId}/structure`);
-      const structure = asRecord(response.data);
+      const structure = unwrapNamedData(response.data, "structure");
 
       setSelectedCourseForSections(structure as CourseStructure);
       setModules(asArray(structure.modules));
       setCourseView("sections");
       setShowAddSection(false);
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to load course structure";
+      const errorMsg = apiErrorMessage(err, "Failed to load course structure");
       setStructureError(errorMsg);
       console.error("Failed to fetch course structure:", err);
     } finally {
@@ -93,20 +175,418 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
     }
   };
 
+  // Module handlers
+  const handleAddModule = () => {
+    setEditingModule(null);
+    setModuleModalTitle("");
+    setModuleModalDescription("");
+    setShowModuleModal(true);
+  };
+
+  const handleEditModule = (moduleId: string) => {
+    const module = modules.find((m) => m.id === moduleId);
+    if (module) {
+      setEditingModule({
+        id: module.id,
+        title: module.title,
+        description: module.description,
+      });
+      setModuleModalTitle(module.title);
+      setModuleModalDescription(module.description || "");
+      setShowModuleModal(true);
+    }
+  };
+
+  const handleDeleteModule = (moduleId: string) => {
+    setDeletingModule(moduleId);
+  };
+
+  const handleSaveModule = async () => {
+    if (!moduleModalTitle.trim()) {
+      setStructureError("Module title is required");
+      return;
+    }
+
+    setIsSubmittingModule(true);
+    try {
+      const courseId = asText(selectedCourseForSections?.id);
+      if (!courseId) {
+        setStructureError("Invalid course ID");
+        return;
+      }
+
+      if (editingModule) {
+        // Update existing module
+        await apiClient.put(`${FUNDO}/modules/${editingModule.id}`, {
+          title: moduleModalTitle,
+          description: moduleModalDescription || null,
+        });
+
+        setModules(
+          modules.map((m) =>
+            m.id === editingModule.id
+              ? { ...m, title: moduleModalTitle, description: moduleModalDescription }
+              : m
+          )
+        );
+        setStructureError(null);
+      } else {
+        // Create new module
+        const moduleResponse = await apiClient.post(`${FUNDO}/courses/${courseId}/modules`, {
+          title: moduleModalTitle,
+          description: moduleModalDescription || null,
+          sequence: modules.length + 1,
+          status: "PUBLISHED",
+        });
+
+        const moduleData = asRecord(asRecord(moduleResponse).data);
+        const createdModule = unwrapNamedData(moduleData, "module");
+        const createdModuleId = asText(createdModule.id, "");
+        if (!createdModuleId) {
+          throw new Error("Backend did not return a module ID");
+        }
+
+        const newModule = {
+          id: createdModuleId,
+          title: asText(createdModule.title, moduleModalTitle),
+          description: asText(createdModule.description, moduleModalDescription),
+          sequence: createdModule.sequence || modules.length + 1,
+          status: asText(createdModule.status, "PUBLISHED"),
+          lessons: [],
+        };
+
+        setModules([...modules, newModule]);
+        setStructureError(null);
+      }
+
+      setShowModuleModal(false);
+      setEditingModule(null);
+      setModuleModalTitle("");
+      setModuleModalDescription("");
+    } catch (err) {
+      const errorMsg = apiErrorMessage(err, "Failed to save module");
+      setStructureError(`Failed to save module: ${errorMsg}`);
+      console.error("Module save error:", err);
+    } finally {
+      setIsSubmittingModule(false);
+    }
+  };
+
+  const confirmDeleteModule = async () => {
+    if (!deletingModule) return;
+
+    try {
+      await apiClient.delete(`${FUNDO}/modules/${deletingModule}`);
+      setModules(modules.filter((m) => m.id !== deletingModule));
+      setStructureError(null);
+    } catch (err) {
+      const errorMsg = apiErrorMessage(err, "Failed to delete module");
+      setStructureError(`Failed to delete module: ${errorMsg}`);
+      console.error("Module delete error:", err);
+    } finally {
+      setDeletingModule(null);
+    }
+  };
+
+  // Section handlers
+  const handleAddSection = (moduleId: string) => {
+    setSelectedModuleForSection(moduleId);
+    setEditingSection(null);
+    setShowAddSection(true);
+  };
+
+  const handleEditSection = (moduleId: string, sectionId: string) => {
+    const module = modules.find((m) => m.id === moduleId);
+    if (module) {
+      const section = asArray(module.lessons).find((s) => s.id === sectionId);
+      if (section) {
+        setSelectedModuleForSection(moduleId);
+        setEditingSection({ moduleId, sectionId });
+        setShowAddSection(true);
+      }
+    }
+  };
+
+  const handleDeleteSection = (moduleId: string, sectionId: string) => {
+    setDeletingSection({ moduleId, sectionId });
+  };
+
+  const confirmDeleteSection = async () => {
+    if (!deletingSection) return;
+
+    try {
+      await apiClient.delete(`${FUNDO}/lessons/${deletingSection.sectionId}`);
+
+      // Update local state
+      setModules(
+        modules.map((module) =>
+          module.id === deletingSection.moduleId
+            ? {
+                ...module,
+                lessons: asArray(module.lessons).filter((s) => s.id !== deletingSection.sectionId),
+              }
+            : module
+        )
+      );
+      setStructureError(null);
+    } catch (err) {
+      const errorMsg = apiErrorMessage(err, "Failed to delete section");
+      setStructureError(`Failed to delete section: ${errorMsg}`);
+      console.error("Section delete error:", err);
+    } finally {
+      setDeletingSection(null);
+    }
+  };
+
+  const handleSectionSubmit = async (newSection: Row) => {
+    if (!selectedModuleForSection) {
+      setStructureError("No module selected. Please try again.");
+      return;
+    }
+
+    try {
+      const courseId = asText(selectedCourseForSections?.id);
+      if (!courseId) {
+        setStructureError("Invalid course ID");
+        return;
+      }
+
+      if (editingSection) {
+        // Update existing section
+        await apiClient.put(`${FUNDO}/lessons/${editingSection.sectionId}`, {
+          title: newSection.title,
+          contentType: newSection.contentType || newSection.type,
+          contentBody: newSection.contentBody,
+          contentRef: newSection.contentRef,
+          contentFormat: newSection.contentFormat,
+          contentBlocksJson: newSection.contentBlocksJson,
+          status: newSection.status || "DRAFT",
+        });
+
+        setModules(
+          modules.map((module) =>
+            module.id === editingSection.moduleId
+              ? {
+                  ...module,
+                  lessons: asArray(module.lessons).map((s) =>
+                    s.id === editingSection.sectionId
+                      ? {
+                          ...s,
+                          title: newSection.title,
+                          contentType: newSection.contentType || newSection.type,
+                          status: newSection.status || "DRAFT",
+                        }
+                      : s
+                  ),
+                }
+              : module
+          )
+        );
+      } else {
+        // Create new section
+        const lessonResponse = await apiClient.post(`${FUNDO}/modules/${selectedModuleForSection}/lessons`, {
+          title: newSection.title,
+          contentType: newSection.contentType || newSection.type,
+          contentBody: newSection.contentBody,
+          contentRef: newSection.contentRef,
+          contentFormat: newSection.contentFormat,
+          contentBlocksJson: newSection.contentBlocksJson,
+          sequence: 999, // Backend will handle sequence
+          required: newSection.required ?? true,
+          status: newSection.status || "DRAFT",
+        });
+
+        const lessonData = asRecord(asRecord(lessonResponse).data);
+        const createdLesson = unwrapNamedData(lessonData, "lesson");
+        const createdLessonId = asText(createdLesson.id, "");
+        if (!createdLessonId) {
+          throw new Error("Backend did not return a lesson ID");
+        }
+
+        const newLesson = {
+          id: createdLessonId,
+          title: asText(createdLesson.title, asText(newSection.title, "Section")),
+          contentType: asText(createdLesson.contentType, asText(newSection.contentType ?? newSection.type, "TEXT")),
+          sequence: createdLesson.sequence || 999,
+          status: asText(createdLesson.status, "DRAFT"),
+        };
+
+        setModules(
+          modules.map((module) =>
+            module.id === selectedModuleForSection
+              ? {
+                  ...module,
+                  lessons: [...asArray(module.lessons), newLesson],
+                }
+              : module
+          )
+        );
+      }
+
+      setShowAddSection(false);
+      setSelectedModuleForSection(null);
+      setEditingSection(null);
+      setStructureError(null);
+    } catch (err) {
+      const errorMsg = apiErrorMessage(err, "Failed to save section");
+      setStructureError(`Failed to save section: ${errorMsg}`);
+      console.error("Section save error:", err);
+    }
+  };
+
+  // Show module detail page
+  if (courseView === "moduleDetail" && selectedCourseForSections && selectedModuleForDetail) {
+    const module = modules.find((m) => m.id === selectedModuleForDetail);
+    if (module) {
+      return (
+        <ModuleDetailPage
+          courseId={asText(selectedCourseForSections.id)}
+          courseName={asText(selectedCourseForSections.title ?? selectedCourseForSections.name, "Course")}
+          module={module}
+          onBack={() => {
+            setCourseView("sections");
+            setSelectedModuleForDetail(null);
+          }}
+          onModuleUpdate={(updatedModule) => {
+            setModules(modules.map((m) => (m.id === updatedModule.id ? updatedModule : m)));
+          }}
+        />
+      );
+    }
+  }
+
   // Show module management view (formerly section view)
   if (courseView === "sections" && selectedCourseForSections) {
     return (
       <>
-        <ModuleManagementView
-          courseView={courseView}
-          setCourseView={setCourseView}
-          selectedCourseForSections={selectedCourseForSections}
-          setSelectedCourseForSections={setSelectedCourseForSections}
+        <ModuleManagementPanel
+          courseTitle={asText(selectedCourseForSections.title ?? selectedCourseForSections.name, "Course")}
           modules={modules}
-          setModules={setModules}
-          structureError={structureError}
-          setStructureError={setStructureError}
+          onBack={() => {
+            setCourseView(null);
+            setSelectedCourseForSections(null);
+            setStructureError(null);
+          }}
+          onAddModule={handleAddModule}
+          onViewModule={(moduleId) => {
+            setSelectedModuleForDetail(moduleId);
+            setCourseView("moduleDetail");
+          }}
+          onEditModule={handleEditModule}
+          onDeleteModule={handleDeleteModule}
+          error={structureError || undefined}
         />
+
+        {/* Module Modal */}
+        {showModuleModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+              <h2 className="mb-4 text-lg font-bold text-slate-950">{editingModule ? "Edit Module" : "Add Module"}</h2>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Module Title *</label>
+                  <input
+                    type="text"
+                    value={moduleModalTitle}
+                    onChange={(e) => setModuleModalTitle(e.target.value)}
+                    placeholder="e.g., Introduction to Anatomy"
+                    className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Description (optional)</label>
+                  <textarea
+                    value={moduleModalDescription}
+                    onChange={(e) => setModuleModalDescription(e.target.value)}
+                    placeholder="Brief description of the module"
+                    rows={2}
+                    className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setShowModuleModal(false);
+                      setEditingModule(null);
+                      setModuleModalTitle("");
+                      setModuleModalDescription("");
+                    }}
+                    disabled={isSubmittingModule}
+                    className="flex-1 h-9 rounded-md border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveModule}
+                    disabled={isSubmittingModule}
+                    className="flex-1 h-9 rounded-md bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 transition disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                  >
+                    {isSubmittingModule ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Module"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Module Confirmation */}
+        {deletingModule && (
+          <DeleteConfirmationDialog
+            title="Delete Module"
+            message="Are you sure you want to delete this module and all its sections? This action cannot be undone."
+            onConfirm={confirmDeleteModule}
+            onCancel={() => setDeletingModule(null)}
+          />
+        )}
+
+        {/* Delete Section Confirmation */}
+        {deletingSection && (
+          <DeleteConfirmationDialog
+            title="Delete Section"
+            message="Are you sure you want to delete this section? This action cannot be undone."
+            onConfirm={confirmDeleteSection}
+            onCancel={() => setDeletingSection(null)}
+          />
+        )}
+
+        {/* Section Form Modal */}
+        {showAddSection && selectedModuleForSection && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur overflow-y-auto">
+            <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-lg my-8">
+              <h2 className="mb-4 text-lg font-bold text-slate-950">{editingSection ? "Edit Section" : "Add Section"}</h2>
+              <SectionFormComponent
+                onCancel={() => {
+                  setShowAddSection(false);
+                  setSelectedModuleForSection(null);
+                  setEditingSection(null);
+                }}
+                onSubmit={handleSectionSubmit}
+                courseId={asText(selectedCourseForSections?.id as string)}
+                sequenceNo={0}
+                initialData={
+                  editingSection
+                    ? (() => {
+                        const module = modules.find((m) => m.id === editingSection.moduleId);
+                        if (module) {
+                          const section = asArray(module.lessons).find((s) => s.id === editingSection.sectionId);
+                          return section;
+                        }
+                        return undefined;
+                      })()
+                    : undefined
+                }
+              />
+            </div>
+          </div>
+        )}
+
         {deletingCourse && (
           <DeleteConfirmationDialog
             title="Delete Course"
@@ -171,10 +651,21 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
       {/* Tab Content - Courses */}
       {activeTab === "courses" && (
         <>
-          <Panel title={`Courses (${courseCount})`}>
+          <Panel title={`Courses (${getTotalFilteredCount(visibleCourses, "courses")})`}>
+            <SearchFilterPagination
+              totalItems={getTotalFilteredCount(visibleCourses, "courses")}
+              pageSize={pageSize}
+              currentPage={currentPage.courses}
+              onPageChange={(page) => setCurrentPage({ ...currentPage, courses: page })}
+              onSearch={(query) => {
+                setSearchQuery({ ...searchQuery, courses: query });
+                setCurrentPage({ ...currentPage, courses: 1 });
+              }}
+              searchPlaceholder="Search courses..."
+            />
             {visibleCourses.length > 0 ? (
-              <div className="space-y-2">
-                {visibleCourses.map((row, index) => (
+              <div className="space-y-2 mt-4">
+                {filterAndPaginateItems(visibleCourses, "courses").map((row, index) => (
                   <ContentListItem key={String(row.id ?? row.code ?? index)} row={row} type="course" onEdit={() => setModal("course", row)} onManage={() => handleManageSections(row)} onDelete={() => setDeletingCourse(row)} />
                 ))}
               </div>
@@ -201,10 +692,21 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
 
       {/* Tab Content - Resources */}
       {activeTab === "resources" && (
-        <Panel title={`Library Resources (${library.length})`}>
+        <Panel title={`Library Resources (${getTotalFilteredCount(library, "resources")})`}>
+          <SearchFilterPagination
+            totalItems={getTotalFilteredCount(library, "resources")}
+            pageSize={pageSize}
+            currentPage={currentPage.resources}
+            onPageChange={(page) => setCurrentPage({ ...currentPage, resources: page })}
+            onSearch={(query) => {
+              setSearchQuery({ ...searchQuery, resources: query });
+              setCurrentPage({ ...currentPage, resources: 1 });
+            }}
+            searchPlaceholder="Search resources..."
+          />
           {library.length > 0 ? (
-            <div className="space-y-2">
-              {library.map((row, index) => (
+            <div className="space-y-2 mt-4">
+              {filterAndPaginateItems(library, "resources").map((row, index) => (
                 <ContentListItem key={String(row.id ?? index)} row={row} type="resource" onEdit={() => setModal("library", row)} />
               ))}
             </div>
@@ -219,10 +721,21 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
 
       {/* Tab Content - Media */}
       {activeTab === "media" && (
-        <Panel title={`Media Assets (${media.length})`}>
+        <Panel title={`Media Assets (${getTotalFilteredCount(media, "media")})`}>
+          <SearchFilterPagination
+            totalItems={getTotalFilteredCount(media, "media")}
+            pageSize={pageSize}
+            currentPage={currentPage.media}
+            onPageChange={(page) => setCurrentPage({ ...currentPage, media: page })}
+            onSearch={(query) => {
+              setSearchQuery({ ...searchQuery, media: query });
+              setCurrentPage({ ...currentPage, media: 1 });
+            }}
+            searchPlaceholder="Search media..."
+          />
           {media.length > 0 ? (
-            <div className="space-y-2">
-              {media.map((row, index) => (
+            <div className="space-y-2 mt-4">
+              {filterAndPaginateItems(media, "media").map((row, index) => (
                 <ContentListItem key={String(row.id ?? index)} row={row} type="media" onEdit={() => setModal("media", row)} />
               ))}
             </div>
@@ -237,10 +750,21 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
 
       {/* Tab Content - Activities */}
       {activeTab === "activities" && (
-        <Panel title={`Interactive Activities (${activities.length})`}>
+        <Panel title={`Interactive Activities (${getTotalFilteredCount(activities, "activities")})`}>
+          <SearchFilterPagination
+            totalItems={getTotalFilteredCount(activities, "activities")}
+            pageSize={pageSize}
+            currentPage={currentPage.activities}
+            onPageChange={(page) => setCurrentPage({ ...currentPage, activities: page })}
+            onSearch={(query) => {
+              setSearchQuery({ ...searchQuery, activities: query });
+              setCurrentPage({ ...currentPage, activities: 1 });
+            }}
+            searchPlaceholder="Search activities..."
+          />
           {activities.length > 0 ? (
-            <div className="space-y-2">
-              {activities.map((row, index) => (
+            <div className="space-y-2 mt-4">
+              {filterAndPaginateItems(activities, "activities").map((row, index) => (
                 <ContentListItem key={String(row.id ?? index)} row={row} type="activity" onEdit={() => setModal("activity", row)} />
               ))}
             </div>
@@ -255,10 +779,21 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
 
       {/* Tab Content - Cohorts */}
       {activeTab === "cohorts" && (
-        <Panel title={`Cohorts (${cohorts.length})`}>
+        <Panel title={`Cohorts (${getTotalFilteredCount(cohorts, "cohorts")})`}>
+          <SearchFilterPagination
+            totalItems={getTotalFilteredCount(cohorts, "cohorts")}
+            pageSize={pageSize}
+            currentPage={currentPage.cohorts}
+            onPageChange={(page) => setCurrentPage({ ...currentPage, cohorts: page })}
+            onSearch={(query) => {
+              setSearchQuery({ ...searchQuery, cohorts: query });
+              setCurrentPage({ ...currentPage, cohorts: 1 });
+            }}
+            searchPlaceholder="Search cohorts..."
+          />
           {cohorts.length > 0 ? (
-            <div className="space-y-2">
-              {cohorts.map((row, index) => (
+            <div className="space-y-2 mt-4">
+              {filterAndPaginateItems(cohorts, "cohorts").map((row, index) => (
                 <ContentListItem key={String(row.id ?? index)} row={row} type="cohort" onEdit={() => setModal("cohort", row)} />
               ))}
             </div>
@@ -273,10 +808,21 @@ export function Studio({ data, setModal }: { data: Record<string, unknown>; setM
 
       {/* Tab Content - Sessions */}
       {activeTab === "sessions" && (
-        <Panel title={`Sessions (${sessions.length})`}>
+        <Panel title={`Sessions (${getTotalFilteredCount(sessions, "sessions")})`}>
+          <SearchFilterPagination
+            totalItems={getTotalFilteredCount(sessions, "sessions")}
+            pageSize={pageSize}
+            currentPage={currentPage.sessions}
+            onPageChange={(page) => setCurrentPage({ ...currentPage, sessions: page })}
+            onSearch={(query) => {
+              setSearchQuery({ ...searchQuery, sessions: query });
+              setCurrentPage({ ...currentPage, sessions: 1 });
+            }}
+            searchPlaceholder="Search sessions..."
+          />
           {sessions.length > 0 ? (
-            <div className="space-y-2">
-              {sessions.map((row, index) => (
+            <div className="space-y-2 mt-4">
+              {filterAndPaginateItems(sessions, "sessions").map((row, index) => (
                 <ContentListItem key={String(row.id ?? index)} row={row} type="session" onEdit={() => setModal("session", row)} />
               ))}
             </div>
@@ -350,14 +896,18 @@ function ModuleManagementView({
       });
 
       const moduleData = asRecord(asRecord(moduleResponse).data);
-      const createdModule = asRecord(moduleData.module || moduleData);
+      const createdModule = unwrapNamedData(moduleData, "module");
+      const createdModuleId = asText(createdModule.id, "");
+      if (!createdModuleId) {
+        throw new Error("Backend did not return a module ID");
+      }
 
       const newModule = {
-        id: asText(createdModule.id),
-        title: asText(createdModule.title),
-        description: asText(createdModule.description),
+        id: createdModuleId,
+        title: asText(createdModule.title, newModuleTitle),
+        description: asText(createdModule.description, newModuleDescription),
         sequence: createdModule.sequence || modules.length + 1,
-        status: asText(createdModule.status),
+        status: asText(createdModule.status, "PUBLISHED"),
         lessons: [],
       };
 
@@ -369,7 +919,7 @@ function ModuleManagementView({
       setShowAddModule(false);
       setStructureError(null);
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to create module";
+      const errorMsg = apiErrorMessage(err, "Failed to create module");
       setStructureError(`Failed to create module: ${errorMsg}`);
       console.error("Module creation error:", err);
     } finally {
@@ -398,22 +948,32 @@ function ModuleManagementView({
       });
 
       const lessonData = asRecord(asRecord(lessonResponse).data);
-      const createdLesson = asRecord(lessonData.lesson || lessonData);
+      const createdLesson = unwrapNamedData(lessonData, "lesson");
+      const createdLessonId = asText(createdLesson.id, "");
+      if (!createdLessonId) {
+        throw new Error("Backend did not return a lesson ID");
+      }
 
       // Update local state
       const newLesson = {
-        id: asText(createdLesson.id),
-        title: asText(createdLesson.title),
-        contentType: asText(createdLesson.contentType),
+        id: createdLessonId,
+        title: asText(createdLesson.title, asText(newSection.title, "Section")),
+        contentType: asText(createdLesson.contentType, asText(newSection.contentType ?? newSection.type, "TEXT")),
         sequence: createdLesson.sequence || allSections.length + 1,
-        status: asText(createdLesson.status),
+        status: asText(createdLesson.status, "DRAFT"),
       };
 
       setAllSections([...allSections, newLesson]);
+      const updatedModule = {
+        ...selectedModule,
+        lessons: [...asArray(selectedModule.lessons), newLesson],
+      };
+      setSelectedModule(updatedModule);
+      setModules(modules.map((module) => (module.id === selectedModule.id ? updatedModule : module)));
       setShowAddSection(false);
       setStructureError(null);
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to save section to backend";
+      const errorMsg = apiErrorMessage(err, "Failed to save section to backend");
       setStructureError(`Failed to save section: ${errorMsg}`);
       console.error("Section save error:", err);
     }
@@ -682,4 +1242,3 @@ function ContentListItem({
     </div>
   );
 }
-

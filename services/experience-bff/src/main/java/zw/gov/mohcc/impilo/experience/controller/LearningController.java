@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -420,8 +422,12 @@ public class LearningController {
     public ResponseEntity<Map<String, Object>> createCourse(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestBody Map<String, Object> body) {
-        JsonNode n = learningClient.postFundo("catalog", body);
-        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+        try {
+            JsonNode n = learningClient.postFundoStrict("catalog", body);
+            return authoringData(n, "Learning course create failed upstream");
+        } catch (Exception e) {
+            return authoringFailure(e, "Learning course create failed upstream");
+        }
     }
 
     @PutMapping("/fundo/catalog/{courseId}")
@@ -429,8 +435,12 @@ public class LearningController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @PathVariable String courseId,
             @RequestBody Map<String, Object> body) {
-        JsonNode n = learningClient.putFundo("catalog/" + courseId, body);
-        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+        try {
+            JsonNode n = learningClient.putFundoStrict("catalog/" + courseId, body);
+            return authoringData(n, "Learning course update failed upstream");
+        } catch (Exception e) {
+            return authoringFailure(e, "Learning course update failed upstream");
+        }
     }
 
     @PostMapping("/fundo/courses/{courseId}/modules")
@@ -438,8 +448,12 @@ public class LearningController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @PathVariable String courseId,
             @RequestBody Map<String, Object> body) {
-        JsonNode n = learningClient.postFundo("courses/" + courseId + "/modules", body);
-        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+        try {
+            JsonNode n = learningClient.postFundoStrict("courses/" + courseId + "/modules", body);
+            return authoringData(n, "Learning module create failed upstream");
+        } catch (Exception e) {
+            return authoringFailure(e, "Learning module create failed upstream");
+        }
     }
 
     @PutMapping("/fundo/modules/{moduleId}")
@@ -447,8 +461,12 @@ public class LearningController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @PathVariable String moduleId,
             @RequestBody Map<String, Object> body) {
-        JsonNode n = learningClient.putFundo("modules/" + moduleId, body);
-        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+        try {
+            JsonNode n = learningClient.putFundoStrict("modules/" + moduleId, body);
+            return authoringData(n, "Learning module update failed upstream");
+        } catch (Exception e) {
+            return authoringFailure(e, "Learning module update failed upstream");
+        }
     }
 
     @PostMapping("/fundo/modules/{moduleId}/lessons")
@@ -456,8 +474,12 @@ public class LearningController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @PathVariable String moduleId,
             @RequestBody Map<String, Object> body) {
-        JsonNode n = learningClient.postFundo("modules/" + moduleId + "/lessons", body);
-        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+        try {
+            JsonNode n = learningClient.postFundoStrict("modules/" + moduleId + "/lessons", body);
+            return authoringData(n, "Learning lesson create failed upstream");
+        } catch (Exception e) {
+            return authoringFailure(e, "Learning lesson create failed upstream");
+        }
     }
 
     @PutMapping("/fundo/lessons/{lessonId}")
@@ -465,8 +487,12 @@ public class LearningController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @PathVariable String lessonId,
             @RequestBody Map<String, Object> body) {
-        JsonNode n = learningClient.putFundo("lessons/" + lessonId, body);
-        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+        try {
+            JsonNode n = learningClient.putFundoStrict("lessons/" + lessonId, body);
+            return authoringData(n, "Learning lesson update failed upstream");
+        } catch (Exception e) {
+            return authoringFailure(e, "Learning lesson update failed upstream");
+        }
     }
 
     @PostMapping("/fundo/pathways")
@@ -739,6 +765,32 @@ public class LearningController {
             }
         }
         return out;
+    }
+
+    private static ResponseEntity<Map<String, Object>> authoringData(JsonNode data, String failureMessage) {
+        if (data != null && !data.isNull() && !data.isMissingNode() && data.size() > 0) {
+            return ResponseEntity.ok(Map.of("data", data));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(Map.of("error", Map.of(
+                        "code", "LEARNING_UPSTREAM_UNAVAILABLE",
+                        "message", failureMessage)));
+    }
+
+    private static ResponseEntity<Map<String, Object>> authoringFailure(Exception e, String fallbackMessage) {
+        if (e instanceof HttpStatusCodeException upstream) {
+            String body = upstream.getResponseBodyAsString();
+            String message = body == null || body.isBlank() ? upstream.getStatusText() : body;
+            return ResponseEntity.status(upstream.getStatusCode())
+                    .body(Map.of("error", Map.of(
+                            "code", "LEARNING_UPSTREAM_ERROR",
+                            "message", message,
+                            "upstreamStatus", upstream.getStatusCode().value())));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(Map.of("error", Map.of(
+                        "code", "LEARNING_UPSTREAM_UNAVAILABLE",
+                        "message", e.getMessage() == null || e.getMessage().isBlank() ? fallbackMessage : e.getMessage())));
     }
 
     private JsonNode dispatchToCommsHub(Map<String, Object> body) {

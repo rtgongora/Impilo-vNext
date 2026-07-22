@@ -21,18 +21,41 @@ export function SectionFormComponent({
   onSubmit,
   courseId,
   sequenceNo,
+  initialData,
 }: {
   onCancel: () => void;
   onSubmit: (section: Row) => void;
   courseId: string;
   sequenceNo: number;
+  initialData?: Row;
 }) {
-  const [sectionType, setSectionType] = useState("");
-  const [sectionTitle, setSectionTitle] = useState("");
-  const [sectionContentRef, setSectionContentRef] = useState("");
-  const [sectionTranscript, setSectionTranscript] = useState("");
+  const [sectionType, setSectionType] = useState<string>(
+    (initialData?.contentType as string) || (initialData?.type as string) || ""
+  );
+  const [sectionTitle, setSectionTitle] = useState<string>(
+    (initialData?.title as string) || (initialData?.name as string) || ""
+  );
+  const [sectionContentRef, setSectionContentRef] = useState<string>(
+    (initialData?.contentRef as string) || (initialData?.contentBody as string) || ""
+  );
+  const [sectionTranscript, setSectionTranscript] = useState<string>(
+    (initialData?.transcript as string) || ""
+  );
   const [error, setError] = useState<string | null>(null);
-  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>(() => {
+    if (initialData?.questions) {
+      return initialData.questions as QuizQuestion[];
+    }
+    if (initialData?.contentBlocksJson) {
+      try {
+        const parsed = JSON.parse(initialData.contentBlocksJson as string);
+        return parsed.questions || [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
 
@@ -227,7 +250,7 @@ export function SectionFormComponent({
 
   return (
     <div className="mb-4 p-4 rounded-lg border border-teal-200 bg-teal-50">
-      <h3 className="font-semibold text-slate-950 mb-3">Create New Section</h3>
+      <h3 className="font-semibold text-slate-950 mb-3">{initialData ? "Edit Section" : "Create New Section"}</h3>
 
       {error && (
         <div className="mb-3 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3">
@@ -591,10 +614,10 @@ export function SectionFormComponent({
             {isSubmitting ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>Creating...</span>
+                <span>{initialData ? "Updating..." : "Creating..."}</span>
               </>
             ) : (
-              "Create Section"
+              initialData ? "Update Section" : "Create Section"
             )}
           </button>
           <button

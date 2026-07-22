@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning Studio - Course Module Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Brand Colors - Preserved from brief */
+      --teal-25: #f7fefd;
+      --teal-50: #f0fdfa;
+      --teal-100: #ccfbf1;
+      --teal-600: #0d9488;
+      --teal-700: #0f766e;
+      --teal-800: #115e59;
+
+      /* Slate Palette */
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --slate-950: #020617;
+
+      /* Semantic Colors */
+      --red-50: #fef2f2;
+      --red-100: #fee2e2;
+      --red-600: #dc2626;
+      --red-700: #b91c1c;
+
+      /* Spacing */
+      --spacing-1: 2px;
+      --spacing-2: 4px;
+      --spacing-3: 8px;
+      --spacing-4: 12px;
+      --spacing-5: 16px;
+      --spacing-6: 24px;
+      --spacing-7: 32px;
+
+      /* Typography */
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: linear-gradient(135deg, var(--slate-50) 0%, var(--teal-50) 100%);
+      color: var(--slate-900);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Layout */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--spacing-6);
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: var(--spacing-6);
+      animation: slideDown 0.4s ease-out;
+    }
+
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      color: var(--slate-600);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: var(--spacing-3);
+      transition: all 0.2s;
+    }
+
+    .back-button:hover {
+      color: var(--teal-700);
+      transform: translateX(-4px);
+    }
+
+    .back-button::before {
+      content: '←';
+      font-size: 18px;
+    }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--slate-950);
+      margin-bottom: var(--spacing-2);
+      letter-spacing: -0.02em;
+    }
+
+    .course-meta {
+      display: flex;
+      gap: var(--spacing-4);
+      color: var(--slate-600);
+      font-size: 14px;
+    }
+
+    .meta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      background: white;
+      padding: var(--spacing-2) var(--spacing-3);
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    /* Error Banner */
+    .error-banner {
+      background: var(--red-50);
+      border-left: 4px solid var(--red-600);
+      padding: var(--spacing-4);
+      margin-bottom: var(--spacing-5);
+      border-radius: 6px;
+      display: none;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .error-banner.show {
+      display: block;
+    }
+
+    .error-banner .error-text {
+      color: var(--red-700);
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    /* Success Message */
+    .success-banner {
+      background: var(--teal-50);
+      border-left: 4px solid var(--teal-600);
+      padding: var(--spacing-4);
+      margin-bottom: var(--spacing-5);
+      border-radius: 6px;
+      display: none;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .success-banner.show {
+      display: block;
+    }
+
+    .success-banner .success-text {
+      color: var(--teal-800);
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    /* Main Layout */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-6);
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Modules Panel - Full Width */
+    .modules-sidebar {
+      background: white;
+      border-radius: 12px;
+      padding: var(--spacing-5);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+      animation: slideDown 0.4s ease-out;
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-5);
+      padding-bottom: var(--spacing-3);
+      border-bottom: 2px solid var(--slate-100);
+    }
+
+    .sidebar-title {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--slate-950);
+    }
+
+    #modulesList {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+      gap: var(--spacing-5);
+    }
+
+    .add-module-btn {
+      background: var(--teal-700);
+      color: white;
+      border: none;
+      padding: var(--spacing-2) var(--spacing-3);
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+
+    .add-module-btn:hover {
+      background: var(--teal-800);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(15, 118, 110, 0.2);
+    }
+
+    .add-module-btn:active {
+      transform: translateY(0);
+    }
+
+    .add-module-btn.loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .add-module-btn .icon-svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Module Card */
+    .module-card {
+      background: white;
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+    }
+
+    .module-card:hover {
+      border-color: var(--teal-700);
+      box-shadow: 0 4px 12px rgba(15, 118, 110, 0.1);
+    }
+
+    .module-card.expanded {
+      background: var(--teal-25);
+      border: 1px solid var(--teal-300);
+      box-shadow: 0 4px 12px rgba(15, 118, 110, 0.12);
+    }
+
+    .module-header {
+      padding: var(--spacing-3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      user-select: none;
+      position: relative;
+    }
+
+    .module-header:hover {
+      background: var(--slate-100);
+    }
+
+    .expand-icon {
+      color: var(--slate-400);
+      font-size: 16px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+    }
+
+    .module-card.expanded .expand-icon {
+      transform: rotate(90deg);
+      color: var(--teal-700);
+    }
+
+    .module-number {
+      background: var(--teal-700);
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .module-title {
+      flex: 1;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--slate-950);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .section-count-badge {
+      background: var(--teal-100);
+      color: var(--teal-800);
+      padding: 2px var(--spacing-2);
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .module-actions {
+      display: flex;
+      gap: var(--spacing-1);
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+
+    .module-header:hover .module-actions {
+      opacity: 1;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--slate-500);
+      cursor: pointer;
+      padding: var(--spacing-1);
+      border-radius: 4px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+    }
+
+    .icon-btn:hover {
+      background: var(--slate-200);
+      color: var(--slate-700);
+    }
+
+    .icon-btn.edit-btn:hover {
+      background: var(--teal-100);
+      color: var(--teal-700);
+    }
+
+    .icon-btn.delete-btn:hover {
+      background: var(--red-100);
+      color: var(--red-700);
+    }
+
+    .icon-btn.loading {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* Section List */
+    .sections-list {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .module-card.expanded .sections-list {
+      max-height: 2000px;
+    }
+
+    .sections-container {
+      padding: var(--spacing-4) var(--spacing-5) var(--spacing-4) var(--spacing-5);
+      border-left: 3px solid var(--teal-100);
+      margin-left: var(--spacing-4);
+    }
+
+    .section-item {
+      background: white;
+      border: 1px solid var(--slate-200);
+      border-radius: 6px;
+      padding: var(--spacing-3) var(--spacing-4);
+      margin-bottom: var(--spacing-3);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      transition: all 0.2s;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .section-item:hover {
+      border-color: var(--teal-700);
+      box-shadow: 0 2px 8px rgba(15, 118, 110, 0.12);
+      transform: translateX(2px);
+    }
+
+    .drag-handle {
+      color: var(--slate-300);
+      cursor: grab;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .section-number {
+      background: var(--slate-100);
+      color: var(--slate-700);
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .section-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-900);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .section-meta {
+      display: flex;
+      gap: var(--spacing-2);
+      margin-top: 2px;
+    }
+
+    .content-type-badge {
+      background: var(--slate-100);
+      color: var(--slate-600);
+      padding: 1px var(--spacing-2);
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--teal-600);
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+
+    .status-indicator.draft {
+      background: var(--slate-400);
+    }
+
+    .section-actions {
+      display: flex;
+      gap: var(--spacing-1);
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+
+    .section-item:hover .section-actions {
+      opacity: 1;
+    }
+
+    .add-section-btn {
+      background: var(--slate-100);
+      color: var(--slate-700);
+      border: 1px dashed var(--slate-300);
+      padding: var(--spacing-2) var(--spacing-3);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-2);
+      width: 100%;
+      margin-top: var(--spacing-2);
+    }
+
+    .add-section-btn:hover {
+      background: var(--teal-50);
+      border-color: var(--teal-700);
+      color: var(--teal-700);
+    }
+
+    .add-section-btn.loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .add-section-btn .icon-svg {
+      width: 14px;
+      height: 14px;
+    }
+
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: var(--spacing-6);
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      animation: scaleIn 0.2s ease-out;
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--slate-950);
+      margin-bottom: var(--spacing-4);
+    }
+
+    .modal-text {
+      color: var(--slate-600);
+      font-size: 14px;
+      margin-bottom: var(--spacing-5);
+      line-height: 1.6;
+    }
+
+    .form-group {
+      margin-bottom: var(--spacing-4);
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-700);
+      margin-bottom: var(--spacing-2);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: var(--spacing-3);
+      border: 1px solid var(--slate-300);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: var(--font-body);
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--teal-700);
+      box-shadow: 0 0 0 3px var(--teal-100);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: var(--spacing-3);
+      border: 1px solid var(--slate-300);
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: var(--font-body);
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: var(--teal-700);
+      box-shadow: 0 0 0 3px var(--teal-100);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: var(--spacing-3);
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: var(--spacing-3) var(--spacing-5);
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--teal-700);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--teal-800);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(15, 118, 110, 0.2);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary.loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .btn-secondary {
+      background: var(--slate-100);
+      color: var(--slate-700);
+    }
+
+    .btn-secondary:hover {
+      background: var(--slate-200);
+    }
+
+    .btn-danger {
+      background: var(--red-600);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: var(--red-700);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(220, 38, 38, 0.2);
+    }
+
+    .btn-danger:active {
+      transform: translateY(0);
+    }
+
+    .btn-danger.loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* SVG Icon Styles */
+    .icon-svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Search Panel */
+    .search-panel {
+      margin-bottom: var(--spacing-5);
+      padding-bottom: var(--spacing-4);
+      border-bottom: 2px solid var(--slate-100);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: var(--spacing-3) var(--spacing-4);
+      border: 1px solid var(--slate-300);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: var(--font-body);
+      background: white;
+      transition: all 0.2s;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--teal-700);
+      box-shadow: 0 0 0 3px var(--teal-100);
+    }
+
+    .search-input::placeholder {
+      color: var(--slate-400);
+    }
+
+    .search-results {
+      margin-top: var(--spacing-3);
+      display: none;
+    }
+
+    .search-results.show {
+      display: block;
+    }
+
+    .search-result-item {
+      padding: var(--spacing-2) var(--spacing-3);
+      margin-bottom: var(--spacing-2);
+      border-radius: 6px;
+      background: var(--teal-50);
+      border-left: 3px solid var(--teal-700);
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .search-result-item:hover {
+      background: var(--teal-100);
+      transform: translateX(2px);
+    }
+
+    .search-result-module {
+      font-weight: 600;
+      color: var(--teal-700);
+    }
+
+    .search-result-section {
+      color: var(--slate-600);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .search-no-results {
+      padding: var(--spacing-3);
+      text-align: center;
+      color: var(--slate-500);
+      font-size: 12px;
+    }
+
+    /* Rich Text Editor */
+    .rich-text-editor {
+      border: 1px solid var(--slate-300);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      gap: var(--spacing-2);
+      padding: var(--spacing-3);
+      background: var(--slate-50);
+      border-bottom: 1px solid var(--slate-200);
+      flex-wrap: wrap;
+    }
+
+    .editor-btn {
+      padding: var(--spacing-2) var(--spacing-3);
+      border: 1px solid var(--slate-300);
+      border-radius: 4px;
+      background: white;
+      color: var(--slate-700);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .editor-btn:hover {
+      background: var(--slate-100);
+      border-color: var(--teal-700);
+      color: var(--teal-700);
+    }
+
+    .editor-textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: var(--spacing-4);
+      border: none;
+      font-family: var(--font-body);
+      font-size: 14px;
+      resize: vertical;
+      font-weight: normal;
+    }
+
+    .editor-textarea:focus {
+      outline: none;
+    }
+
+    /* File Upload */
+    .file-upload-area {
+      border: 2px dashed var(--teal-300);
+      border-radius: 8px;
+      padding: var(--spacing-6);
+      text-align: center;
+      background: var(--teal-50);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .file-upload-area:hover {
+      border-color: var(--teal-700);
+      background: var(--teal-100);
+    }
+
+    .file-upload-area.dragover {
+      border-color: var(--teal-700);
+      background: var(--teal-100);
+      transform: scale(1.02);
+    }
+
+    .file-upload-icon {
+      font-size: 32px;
+      margin-bottom: var(--spacing-3);
+    }
+
+    .file-upload-text {
+      color: var(--slate-700);
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: var(--spacing-1);
+    }
+
+    .file-upload-hint {
+      color: var(--slate-500);
+      font-size: 12px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .uploaded-file {
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: 6px;
+      padding: var(--spacing-3);
+      margin-top: var(--spacing-3);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+    }
+
+    .file-icon {
+      font-size: 24px;
+    }
+
+    .file-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-name {
+      font-weight: 600;
+      color: var(--slate-900);
+      font-size: 13px;
+      word-break: break-word;
+    }
+
+    .file-size {
+      color: var(--slate-500);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .remove-file-btn {
+      background: var(--red-100);
+      color: var(--red-700);
+      border: none;
+      padding: var(--spacing-2);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 12px;
+      font-weight: 600;
+      padding: var(--spacing-1) var(--spacing-2);
+    }
+
+    .remove-file-btn:hover {
+      background: var(--red-200);
+    }
+
+    /* Responsive */
+    @media (max-width: 1400px) {
+      #modulesList {
+        grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+      }
+    }
+
+    @media (max-width: 1024px) {
+      #modulesList {
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      }
+
+      .page-title {
+        font-size: 24px;
+      }
+
+      .sidebar-title {
+        font-size: 24px;
+      }
+
+      .container {
+        padding: var(--spacing-4);
+      }
+    }
+
+    @media (max-width: 768px) {
+      #modulesList {
+        grid-template-columns: 1fr;
+      }
+
+      .course-meta {
+        flex-direction: column;
+        gap: var(--spacing-2);
+      }
+    }
+
+    @media (max-width: 640px) {
+      #modulesList {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar-title {
+        font-size: 20px;
+      }
+
+      .add-module-btn {
+        padding: var(--spacing-1) var(--spacing-2);
+        font-size: 11px;
+      }
+
+      .add-module-btn .icon-svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .modal {
+        width: 95%;
+        padding: var(--spacing-5);
+      }
+
+      .modal-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- SVG Icons -->
+  <svg style="display: none;" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="icon-edit" viewBox="0 0 24 24">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+    </symbol>
+    <symbol id="icon-delete" viewBox="0 0 24 24">
+      <polyline points="3 6 5 6 21 6"></polyline>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      <line x1="10" y1="11" x2="10" y2="17"></line>
+      <line x1="14" y1="11" x2="14" y2="17"></line>
+    </symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </symbol>
+  </svg>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <a href="#" class="back-button">Back to Courses</a>
+      <h1 class="page-title">Clinical Foundations: Anatomy & Physiology</h1>
+      <div class="course-meta">
+        <span class="meta-badge">📚 3 Modules</span>
+        <span class="meta-badge">📝 12 Sections</span>
+        <span class="meta-badge">⏱️ Est. 6 hours</span>
+      </div>
+    </div>
+
+    <!-- Error Banner -->
+    <div id="errorBanner" class="error-banner">
+      <p class="error-text" id="errorText"></p>
+    </div>
+
+    <!-- Success Banner -->
+    <div id="successBanner" class="success-banner">
+      <p class="success-text" id="successText"></p>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+      <!-- Full Width: Modules Panel -->
+      <div class="modules-sidebar" style="grid-column: 1 / -1;">
+        <div class="sidebar-header">
+          <h2 class="sidebar-title">Modules</h2>
+          <button class="add-module-btn" id="addModuleBtn">
+            <svg class="icon-svg"><use href="#icon-plus"></use></svg>
+            Module
+          </button>
+        </div>
+
+        <!-- Search Panel -->
+        <div class="search-panel">
+          <input
+            type="text"
+            class="search-input"
+            id="searchInput"
+            placeholder="Search modules & sections..."
+          />
+          <div class="search-results" id="searchResults">
+            <!-- Search results will appear here -->
+          </div>
+        </div>
+
+        <div id="modulesList">
+          <!-- Modules will be rendered here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Add/Edit Module -->
+  <div id="moduleModal" class="modal-overlay">
+    <div class="modal">
+      <h3 class="modal-title" id="moduleModalTitle">Add Module</h3>
+      <form id="moduleForm">
+        <div class="form-group">
+          <label class="form-label" for="moduleTitle">Module Title</label>
+          <input type="text" id="moduleTitle" class="form-input" placeholder="e.g., Cardiovascular System" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="moduleDescription">Description (optional)</label>
+          <input type="text" id="moduleDescription" class="form-input" placeholder="Brief description of the module">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancelModuleBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveModuleBtn">Save Module</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Add/Edit Section -->
+  <div id="sectionModal" class="modal-overlay">
+    <div class="modal">
+      <h3 class="modal-title" id="sectionModalTitle">Add Section</h3>
+      <form id="sectionForm">
+        <div class="form-group">
+          <label class="form-label" for="sectionTitle">Section Title</label>
+          <input type="text" id="sectionTitle" class="form-input" placeholder="e.g., Heart Anatomy Overview" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="contentType">Content Type</label>
+          <select id="contentType" class="form-select" onchange="updateFormUI()">
+            <option value="text">Text</option>
+            <option value="video">Video</option>
+            <option value="document">Document</option>
+            <option value="quiz">Quiz</option>
+            <option value="assignment">Assignment</option>
+          </select>
+        </div>
+
+        <!-- Dynamic Content Area -->
+        <div id="contentArea">
+          <!-- TEXT CONTENT -->
+          <div id="textContent" class="form-group">
+            <label class="form-label">Content</label>
+            <div class="rich-text-editor">
+              <div class="editor-toolbar">
+                <button type="button" class="editor-btn" onclick="formatText('bold')">
+                  <strong>B</strong>
+                </button>
+                <button type="button" class="editor-btn" onclick="formatText('italic')">
+                  <em>I</em>
+                </button>
+                <button type="button" class="editor-btn" onclick="formatText('underline')">
+                  <u>U</u>
+                </button>
+                <button type="button" class="editor-btn" onclick="formatText('heading')">
+                  H1
+                </button>
+              </div>
+              <textarea
+                id="textContent_input"
+                class="editor-textarea"
+                placeholder="Enter your text content here. Use the toolbar for formatting..."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- VIDEO CONTENT -->
+          <div id="videoContent" class="form-group" style="display: none;">
+            <label class="form-label">Video File</label>
+            <div class="file-upload-area" id="videoDropZone" ondrop="handleVideoDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+              <div class="file-upload-icon">🎬</div>
+              <div class="file-upload-text">Drag and drop your video here</div>
+              <div class="file-upload-hint">Or click to browse (MP4, WebM, Ogg)</div>
+              <input type="file" id="videoFile" class="file-input" accept="video/*" onchange="handleFileSelect(event)">
+            </div>
+            <div id="videoPreview"></div>
+            <div class="form-group" style="margin-top: var(--spacing-4);">
+              <label class="form-label" for="videoUrl">Or paste video URL</label>
+              <input type="url" id="videoUrl" class="form-input" placeholder="https://example.com/video.mp4">
+            </div>
+          </div>
+
+          <!-- DOCUMENT CONTENT -->
+          <div id="documentContent" class="form-group" style="display: none;">
+            <label class="form-label">Document File</label>
+            <div class="file-upload-area" id="docDropZone" ondrop="handleDocDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+              <div class="file-upload-icon">📄</div>
+              <div class="file-upload-text">Drag and drop your document here</div>
+              <div class="file-upload-hint">Or click to browse (PDF, DOCX, PPT)</div>
+              <input type="file" id="docFile" class="file-input" accept=".pdf,.doc,.docx,.ppt,.pptx" onchange="handleFileSelect(event)">
+            </div>
+            <div id="docPreview"></div>
+          </div>
+
+          <!-- QUIZ CONTENT -->
+          <div id="quizContent" class="form-group" style="display: none;">
+            <label class="form-label">Quiz Configuration</label>
+            <input type="text" id="quizTitle" class="form-input" placeholder="Quiz title" style="margin-bottom: var(--spacing-3);">
+            <textarea id="quizDescription" class="form-input" placeholder="Quiz description" rows="3" style="margin-bottom: var(--spacing-3);"></textarea>
+            <div style="background: var(--teal-50); padding: var(--spacing-3); border-radius: 6px; font-size: 12px; color: var(--slate-600);">
+              ℹ️ Create questions and answers in the course management system
+            </div>
+          </div>
+
+          <!-- ASSIGNMENT CONTENT -->
+          <div id="assignmentContent" class="form-group" style="display: none;">
+            <label class="form-label">Assignment Details</label>
+            <input type="text" id="assignmentTitle" class="form-input" placeholder="Assignment title" style="margin-bottom: var(--spacing-3);">
+            <textarea id="assignmentDescription" class="form-input" placeholder="Assignment description and instructions" rows="4" style="margin-bottom: var(--spacing-3);"></textarea>
+            <div class="form-group">
+              <label class="form-label" for="dueDate">Due Date (optional)</label>
+              <input type="date" id="dueDate" class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="sectionStatus">Status</label>
+          <select id="sectionStatus" class="form-select">
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancelSectionBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveSectionBtn">Save Section</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal-overlay">
+    <div class="modal">
+      <h3 class="modal-title" id="confirmTitle">Confirm Action</h3>
+      <p class="modal-text" id="confirmText">Are you sure you want to proceed?</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancelConfirmBtn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmActionBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sample data
+    let modules = [
+      {
+        id: 1,
+        title: 'Introduction to Human Anatomy',
+        sectionCount: 4,
+        sections: [
+          { id: 1, title: 'What is Anatomy?', contentType: 'video', status: 'published' },
+          { id: 2, title: 'Anatomical Terminology', contentType: 'text', status: 'published' },
+          { id: 3, title: 'Body Planes and Sections', contentType: 'video', status: 'published' },
+          { id: 4, title: 'Quiz: Basic Anatomy', contentType: 'quiz', status: 'draft' }
+        ]
+      },
+      {
+        id: 2,
+        title: 'Cardiovascular System',
+        sectionCount: 5,
+        sections: [
+          { id: 5, title: 'Heart Anatomy Overview', contentType: 'video', status: 'published' },
+          { id: 6, title: 'Cardiac Cycle Explained', contentType: 'text', status: 'published' },
+          { id: 7, title: 'Blood Vessels and Circulation', contentType: 'video', status: 'published' },
+          { id: 8, title: 'Common Cardiovascular Disorders', contentType: 'text', status: 'published' },
+          { id: 9, title: 'Case Study: Heart Attack', contentType: 'assignment', status: 'draft' }
+        ]
+      },
+      {
+        id: 3,
+        title: 'Respiratory System',
+        sectionCount: 3,
+        sections: [
+          { id: 10, title: 'Lung Structure and Function', contentType: 'video', status: 'published' },
+          { id: 11, title: 'Gas Exchange Mechanism', contentType: 'text', status: 'published' },
+          { id: 12, title: 'Respiratory Diseases', contentType: 'video', status: 'draft' }
+        ]
+      }
+    ];
+
+    let nextModuleId = 4;
+    let nextSectionId = 13;
+    let currentModuleId = null;
+    let currentSectionId = null;
+    let confirmCallback = null;
+
+    // Render modules
+    function renderModules() {
+      const modulesList = document.getElementById('modulesList');
+      modulesList.innerHTML = modules.map((module, index) => `
+        <div class="module-card ${index === 0 ? 'expanded' : ''}" data-module-id="${module.id}">
+          <div class="module-header">
+            <span class="expand-icon">▶</span>
+            <div class="module-number">${index + 1}</div>
+            <div class="module-title">${module.title}</div>
+            <span class="section-count-badge">${module.sectionCount} sections</span>
+            <div class="module-actions" onclick="event.stopPropagation();">
+              <button class="icon-btn edit-btn" onclick="editModule(${module.id})" title="Edit module">
+                <svg class="icon-svg"><use href="#icon-edit"></use></svg>
+              </button>
+              <button class="icon-btn delete-btn" onclick="deleteModule(${module.id})" title="Delete module">
+                <svg class="icon-svg"><use href="#icon-delete"></use></svg>
+              </button>
+            </div>
+          </div>
+          <div class="sections-list">
+            <div class="sections-container">
+              ${module.sections.map((section, sIdx) => `
+                <div class="section-item" data-section-id="${section.id}">
+                  <span class="drag-handle">⋮⋮</span>
+                  <div class="section-number">${sIdx + 1}</div>
+                  <div class="section-content">
+                    <div class="section-title">${section.title}</div>
+                    <div class="section-meta">
+                      <span class="content-type-badge">${section.contentType}</span>
+                    </div>
+                  </div>
+                  <div class="status-indicator ${section.status}"></div>
+                  <div class="section-actions">
+                    <button class="icon-btn edit-btn" onclick="editSection(${module.id}, ${section.id})" title="Edit section">
+                      <svg class="icon-svg"><use href="#icon-edit"></use></svg>
+                    </button>
+                    <button class="icon-btn delete-btn" onclick="deleteSection(${module.id}, ${section.id})" title="Delete section">
+                      <svg class="icon-svg"><use href="#icon-delete"></use></svg>
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+              <button class="add-section-btn" onclick="addSection(${module.id})">
+                <svg class="icon-svg"><use href="#icon-plus"></use></svg>
+                Add Section
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Add click handlers for module headers
+      document.querySelectorAll('.module-header').forEach(header => {
+        header.addEventListener('click', function() {
+          const card = this.parentElement;
+          card.classList.toggle('expanded');
+        });
+      });
+
+      updateStats();
+    }
+
+    // Update statistics
+    function updateStats() {
+      document.getElementById('totalModules').textContent = modules.length;
+      const totalSections = modules.reduce((sum, m) => sum + m.sectionCount, 0);
+      document.getElementById('totalSections').textContent = totalSections;
+    }
+
+    // Show message
+    function showMessage(type, text) {
+      if (type === 'error') {
+        const banner = document.getElementById('errorBanner');
+        document.getElementById('errorText').textContent = text;
+        banner.classList.add('show');
+        setTimeout(() => banner.classList.remove('show'), 5000);
+      } else if (type === 'success') {
+        const banner = document.getElementById('successBanner');
+        document.getElementById('successText').textContent = text;
+        banner.classList.add('show');
+        setTimeout(() => banner.classList.remove('show'), 3000);
+      }
+    }
+
+    // Add module
+    document.getElementById('addModuleBtn').addEventListener('click', function() {
+      currentModuleId = null;
+      document.getElementById('moduleModalTitle').textContent = 'Add Module';
+      document.getElementById('moduleTitle').value = '';
+      document.getElementById('moduleDescription').value = '';
+      document.getElementById('moduleModal').classList.add('show');
+    });
+
+    // Edit module
+    function editModule(moduleId) {
+      const module = modules.find(m => m.id === moduleId);
+      if (!module) return;
+
+      currentModuleId = moduleId;
+      document.getElementById('moduleModalTitle').textContent = 'Edit Module';
+      document.getElementById('moduleTitle').value = module.title;
+      document.getElementById('moduleDescription').value = module.description || '';
+      document.getElementById('moduleModal').classList.add('show');
+    }
+
+    // Delete module
+    function deleteModule(moduleId) {
+      const module = modules.find(m => m.id === moduleId);
+      if (!module) return;
+
+      showConfirmDialog(
+        'Delete Module',
+        `Are you sure you want to delete "${module.title}" and all its sections? This action cannot be undone.`,
+        () => {
+          const btn = event.target;
+          btn.classList.add('loading');
+          btn.innerHTML = '<span class="spinner"></span>';
+
+          setTimeout(() => {
+            modules = modules.filter(m => m.id !== moduleId);
+            renderModules();
+            showMessage('success', 'Module deleted successfully');
+            btn.classList.remove('loading');
+          }, 500);
+        }
+      );
+    }
+
+    // Save module
+    document.getElementById('moduleForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const btn = document.getElementById('saveModuleBtn');
+      btn.classList.add('loading');
+      btn.innerHTML = '<span class="spinner"></span> Saving...';
+
+      setTimeout(() => {
+        const title = document.getElementById('moduleTitle').value;
+        const description = document.getElementById('moduleDescription').value;
+
+        if (currentModuleId) {
+          // Edit existing module
+          const module = modules.find(m => m.id === currentModuleId);
+          if (module) {
+            module.title = title;
+            module.description = description;
+            showMessage('success', 'Module updated successfully');
+          }
+        } else {
+          // Add new module
+          modules.push({
+            id: nextModuleId++,
+            title: title,
+            description: description,
+            sectionCount: 0,
+            sections: []
+          });
+          showMessage('success', 'Module created successfully');
+        }
+
+        renderModules();
+        document.getElementById('moduleModal').classList.remove('show');
+        btn.classList.remove('loading');
+        btn.textContent = 'Save Module';
+      }, 500);
+    });
+
+    // Cancel module
+    document.getElementById('cancelModuleBtn').addEventListener('click', function() {
+      document.getElementById('moduleModal').classList.remove('show');
+    });
+
+    // Add section
+    function addSection(moduleId) {
+      currentModuleId = moduleId;
+      currentSectionId = null;
+      document.getElementById('sectionModalTitle').textContent = 'Add Section';
+      document.getElementById('sectionTitle').value = '';
+      document.getElementById('contentType').value = 'video';
+      document.getElementById('sectionStatus').value = 'published';
+      document.getElementById('sectionModal').classList.add('show');
+    }
+
+    // Edit section
+    function editSection(moduleId, sectionId) {
+      const module = modules.find(m => m.id === moduleId);
+      if (!module) return;
+
+      const section = module.sections.find(s => s.id === sectionId);
+      if (!section) return;
+
+      currentModuleId = moduleId;
+      currentSectionId = sectionId;
+      document.getElementById('sectionModalTitle').textContent = 'Edit Section';
+      document.getElementById('sectionTitle').value = section.title;
+      document.getElementById('contentType').value = section.contentType;
+      document.getElementById('sectionStatus').value = section.status;
+      document.getElementById('sectionModal').classList.add('show');
+    }
+
+    // Delete section
+    function deleteSection(moduleId, sectionId) {
+      const module = modules.find(m => m.id === moduleId);
+      if (!module) return;
+
+      const section = module.sections.find(s => s.id === sectionId);
+      if (!section) return;
+
+      showConfirmDialog(
+        'Delete Section',
+        `Are you sure you want to delete "${section.title}"? This action cannot be undone.`,
+        () => {
+          const btn = event.target;
+          btn.classList.add('loading');
+          btn.innerHTML = '<span class="spinner"></span>';
+
+          setTimeout(() => {
+            module.sections = module.sections.filter(s => s.id !== sectionId);
+            module.sectionCount = module.sections.length;
+            renderModules();
+            showMessage('success', 'Section deleted successfully');
+            btn.classList.remove('loading');
+          }, 500);
+        }
+      );
+    }
+
+    // Save section
+    document.getElementById('sectionForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const btn = document.getElementById('saveSectionBtn');
+      btn.classList.add('loading');
+      btn.innerHTML = '<span class="spinner"></span> Saving...';
+
+      setTimeout(() => {
+        const title = document.getElementById('sectionTitle').value;
+        const contentType = document.getElementById('contentType').value;
+        const status = document.getElementById('sectionStatus').value;
+
+        const module = modules.find(m => m.id === currentModuleId);
+        if (!module) return;
+
+        if (currentSectionId) {
+          // Edit existing section
+          const section = module.sections.find(s => s.id === currentSectionId);
+          if (section) {
+            section.title = title;
+            section.contentType = contentType;
+            section.status = status;
+            showMessage('success', 'Section updated successfully');
+          }
+        } else {
+          // Add new section
+          module.sections.push({
+            id: nextSectionId++,
+            title: title,
+            contentType: contentType,
+            status: status
+          });
+          module.sectionCount = module.sections.length;
+          showMessage('success', 'Section created successfully');
+        }
+
+        renderModules();
+        document.getElementById('sectionModal').classList.remove('show');
+        btn.classList.remove('loading');
+        btn.textContent = 'Save Section';
+      }, 500);
+    });
+
+    // Cancel section
+    document.getElementById('cancelSectionBtn').addEventListener('click', function() {
+      document.getElementById('sectionModal').classList.remove('show');
+    });
+
+    // Confirm dialog
+    function showConfirmDialog(title, text, callback) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmText').textContent = text;
+      confirmCallback = callback;
+      document.getElementById('confirmModal').classList.add('show');
+    }
+
+    document.getElementById('confirmActionBtn').addEventListener('click', function() {
+      if (confirmCallback) {
+        confirmCallback();
+        confirmCallback = null;
+      }
+      document.getElementById('confirmModal').classList.remove('show');
+    });
+
+    document.getElementById('cancelConfirmBtn').addEventListener('click', function() {
+      confirmCallback = null;
+      document.getElementById('confirmModal').classList.remove('show');
+    });
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.classList.remove('show');
+        }
+      });
+    });
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      const query = e.target.value.toLowerCase();
+      const searchResults = document.getElementById('searchResults');
+
+      if (!query.trim()) {
+        searchResults.classList.remove('show');
+        return;
+      }
+
+      let results = [];
+      modules.forEach((module, moduleIdx) => {
+        if (module.title.toLowerCase().includes(query)) {
+          results.push({
+            type: 'module',
+            moduleId: module.id,
+            moduleTitle: module.title,
+            moduleIdx: moduleIdx
+          });
+        }
+
+        module.sections.forEach((section, sectionIdx) => {
+          if (section.title.toLowerCase().includes(query)) {
+            results.push({
+              type: 'section',
+              moduleId: module.id,
+              moduleTitle: module.title,
+              moduleIdx: moduleIdx,
+              sectionId: section.id,
+              sectionTitle: section.title,
+              sectionIdx: sectionIdx
+            });
+          }
+        });
+      });
+
+      if (results.length === 0) {
+        searchResults.innerHTML = '<div class="search-no-results">No results found</div>';
+        searchResults.classList.add('show');
+      } else {
+        searchResults.innerHTML = results.map(result => {
+          if (result.type === 'module') {
+            return `
+              <div class="search-result-item" onclick="jumpToModule(${result.moduleId})">
+                <div class="search-result-module">📚 ${result.moduleTitle}</div>
+              </div>
+            `;
+          } else {
+            return `
+              <div class="search-result-item" onclick="jumpToSection(${result.moduleId}, ${result.sectionId})">
+                <div class="search-result-module">📚 ${result.moduleTitle}</div>
+                <div class="search-result-section">└─ ${result.sectionTitle}</div>
+              </div>
+            `;
+          }
+        }).join('');
+        searchResults.classList.add('show');
+      }
+    });
+
+    function jumpToModule(moduleId) {
+      const moduleCard = document.querySelector(`[data-module-id="${moduleId}"]`);
+      if (moduleCard) {
+        moduleCard.classList.add('expanded');
+        moduleCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchResults').classList.remove('show');
+      }
+    }
+
+    function jumpToSection(moduleId, sectionId) {
+      jumpToModule(moduleId);
+      setTimeout(() => {
+        const sectionItem = document.querySelector(`[data-section-id="${sectionId}"]`);
+        if (sectionItem) {
+          sectionItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          sectionItem.style.backgroundColor = 'rgba(15, 118, 110, 0.1)';
+          setTimeout(() => sectionItem.style.backgroundColor = '', 2000);
+        }
+      }, 300);
+    }
+
+    // Update form UI based on content type
+    function updateFormUI() {
+      const contentType = document.getElementById('contentType').value;
+
+      // Hide all content types
+      document.getElementById('textContent').style.display = 'none';
+      document.getElementById('videoContent').style.display = 'none';
+      document.getElementById('documentContent').style.display = 'none';
+      document.getElementById('quizContent').style.display = 'none';
+      document.getElementById('assignmentContent').style.display = 'none';
+
+      // Show selected content type
+      switch(contentType) {
+        case 'text':
+          document.getElementById('textContent').style.display = 'block';
+          break;
+        case 'video':
+          document.getElementById('videoContent').style.display = 'block';
+          break;
+        case 'document':
+          document.getElementById('documentContent').style.display = 'block';
+          break;
+        case 'quiz':
+          document.getElementById('quizContent').style.display = 'block';
+          break;
+        case 'assignment':
+          document.getElementById('assignmentContent').style.display = 'block';
+          break;
+      }
+    }
+
+    // Rich text editor formatting
+    function formatText(format) {
+      const textarea = document.getElementById('textContent_input');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+
+      let formattedText = selectedText;
+      switch(format) {
+        case 'bold':
+          formattedText = `**${selectedText}**`;
+          break;
+        case 'italic':
+          formattedText = `_${selectedText}_`;
+          break;
+        case 'underline':
+          formattedText = `__${selectedText}__`;
+          break;
+        case 'heading':
+          formattedText = `# ${selectedText}`;
+          break;
+      }
+
+      textarea.value = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+      textarea.focus();
+    }
+
+    // File handling
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('dragover');
+    }
+
+    function handleDragLeave(e) {
+      e.currentTarget.classList.remove('dragover');
+    }
+
+    function handleVideoDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleFileSelect({ target: { files: files, type: 'video' } });
+      }
+    }
+
+    function handleDocDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleFileSelect({ target: { files: files, type: 'doc' } });
+      }
+    }
+
+    function handleFileSelect(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      const file = files[0];
+      const fileSize = (file.size / 1024 / 1024).toFixed(2);
+      const fileIcon = file.type.includes('video') ? '🎬' : '📄';
+
+      const fileHTML = `
+        <div class="uploaded-file">
+          <div class="file-icon">${fileIcon}</div>
+          <div class="file-details">
+            <div class="file-name">${file.name}</div>
+            <div class="file-size">${fileSize} MB</div>
+          </div>
+          <button type="button" class="remove-file-btn" onclick="this.parentElement.remove()">Remove</button>
+        </div>
+      `;
+
+      if (file.type.includes('video')) {
+        document.getElementById('videoPreview').innerHTML = fileHTML;
+      } else {
+        document.getElementById('docPreview').innerHTML = fileHTML;
+      }
+    }
+
+    // Override file input clicks
+    document.getElementById('videoDropZone').addEventListener('click', () => document.getElementById('videoFile').click());
+    document.getElementById('docDropZone').addEventListener('click', () => document.getElementById('docFile').click());
+
+    // Initial render
+    renderModules();
+  </script>
+</body>
+</html>
