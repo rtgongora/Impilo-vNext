@@ -1,0 +1,36 @@
+{
+  "sessionMode": "MDT",
+  "owningService": "PCT",
+  "liveModes": ["CLINICAL_SESSION"],
+  "roles": {
+    "CHAIR": { "canPublish": true, "canSubscribe": true, "canPublishData": true, "roomAdmin": true },
+    "PRESENTER": { "canPublish": true, "canSubscribe": true, "canPublishData": true },
+    "PANEL_MEMBER": { "canPublish": true, "canSubscribe": true, "canPublishData": true },
+    "SCRIBE": { "canPublish": true, "canSubscribe": true, "canPublishData": true, "audioOnlyDefault": true },
+    "OBSERVER": { "canPublish": false, "canSubscribe": true, "canPublishData": false, "hidden": true }
+  },
+  "defaultLayout": "board",
+  "joinFlow": "LOBBY",
+  "lobbyBehaviour": "WAITING_ROOM",
+  "tokenTtlSeconds": 7200,
+  "maxParticipants": 20,
+  "roomPrefix": "impilo-mdt",
+  "recording": {
+    "defaultOn": false,
+    "whoCanStart": ["CHAIR"],
+    "consentRequired": true,
+    "sensitivityClass": "CLINICAL",
+    "artifactOwner": "PCT"
+  },
+  "chat": { "enabled": true, "moderated": true, "persistence": "SESSION" },
+  "moderationRequired": true,
+  "screenShareRoles": ["CHAIR", "PRESENTER"],
+  "resourceSharing": true,
+  "auditDepth": "CLINICAL",
+  "telemetry": { "participantStats": true, "qualityEvents": true },
+  "postSessionActions": ["SUMMARY"],
+  "khulumaNotificationKeys": [],
+  "mobileParity": "VIEW_ONLY",
+  "fallbackRules": { "audioFirstAllowed": true, "reconnectGraceSeconds": 120, "sipFallback": false },
+  "completionCriteriaRef": null
+}

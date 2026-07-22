@@ -27,7 +27,8 @@ public final class SessionTemplateRegistry {
             SessionMode.LIVE_EVENT, "live-event.json",
             SessionMode.LEARNING_LIVE, "learning-live.json",
             SessionMode.LEARNING_RECORDING, "learning-recording.json",
-            SessionMode.TELEMEDICINE, "telemedicine.json");
+            SessionMode.TELEMEDICINE, "telemedicine.json",
+            SessionMode.MDT, "mdt.json");
 
     private final Map<SessionMode, SessionTemplate> templates;
 

@@ -10,7 +10,9 @@ public enum SessionMode {
     LIVE_EVENT,
     LEARNING_LIVE,
     LEARNING_RECORDING,
-    TELEMEDICINE;
+    TELEMEDICINE,
+    /** TM-B15: chaired MDT / specialist-board review — board layout, CHAIR-governed, no patient role. */
+    MDT;
 
     /** Lenient parse for wire values; returns null when unknown. */
     public static SessionMode fromWire(String value) {

@@ -576,6 +576,32 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    /** TM-B15: MDT / specialist-board spine (pct-owned clinical record). */
+    public JsonNode mdtCreateSession(Map<String, Object> request) {
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(baseUrl + "/v1/mdt/sessions", request, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode mdtGetBoard(String mdtSessionId, String viewer) {
+        String url = baseUrl + "/v1/mdt/sessions/" + mdtSessionId
+                + (viewer == null || viewer.isBlank() ? "" : "?viewer=" + viewer);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode mdtAddCase(String mdtSessionId, Map<String, Object> request) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/mdt/sessions/" + mdtSessionId + "/cases", request, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode mdtRecordOutcome(String caseItemId, Map<String, Object> request) {
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                baseUrl + "/v1/mdt/cases/" + caseItemId + "/outcome", request, JsonNode.class);
+        return extractData(response);
+    }
+
     /** TM-B5 B5-3: provider-only side-channel notes (never patient-visible). */
     public JsonNode getProviderNotes(String referralId) {
         String url = baseUrl + "/v1/referrals/" + referralId + "/provider-notes";

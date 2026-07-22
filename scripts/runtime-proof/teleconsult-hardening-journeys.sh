@@ -181,6 +181,36 @@ EXPIRED=$(curl -sS -o /dev/null -w '%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X
   -d "{\"patientId\":\"$OFFPAT\",\"reason\":\"stale package\",\"virtual_mode\":\"message\",\"package_expires_at\":\"2026-01-01T00:00:00Z\"}")
 [ "$EXPIRED" = "422" ] && ok "expired package refused 422 PACKAGE_EXPIRED" || bad "stale package accepted (HTTP $EXPIRED)"
 
+# ── J-TH-10: B15-1 MDT board — consensus+dissent, referral write-back, pseudonymised read ──
+say "J-TH-10: MDT board records consensus+dissent, writes back to the referral, pseudonymises server-side"
+REF3=$(mkref message)
+curl -sS $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF3/submit >/dev/null
+curl -sS $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF3/accept -d '{"notes":"accepting for board review"}' >/dev/null
+MDT=$(curl -sS $(hdr PROVIDER rig-dr-chair) -X POST $PCT/v1/mdt/sessions \
+  -d '{"title":"Oncology board","chair_id":"rig-dr-chair","scribe_id":"rig-dr-scribe","specialty":"ONCOLOGY"}')
+MDTID=$(echo "$MDT" | jval mdtSessionId)
+[ -n "$MDTID" ] && ok "MDT board session created ($MDTID, PSEUDONYMISED default)" || bad "MDT create failed: $(echo $MDT|head -c 200)"
+CASE=$(curl -sS $(hdr PROVIDER rig-dr-chair) -X POST $PCT/v1/mdt/sessions/$MDTID/cases \
+  -d "{\"referral_id\":\"$REF3\",\"presenter_id\":\"rig-dr-moyo\"}")
+CASEID=$(echo "$CASE" | jval caseItemId)
+[ -n "$CASEID" ] && ok "case added to the agenda (item $CASEID)" || bad "add case failed: $(echo $CASE|head -c 200)"
+NODOTE=$(curl -sS -o /dev/null -w '%{http_code}' $(hdr PROVIDER rig-dr-chair) -X POST $PCT/v1/mdt/cases/$CASEID/outcome \
+  -d '{"recommendation":"Proceed to surgery","positions":[{"participant":"rig-dr-b","position":"DISSENT"}]}')
+[ "$NODOTE" = "400" ] && ok "silent dissent refused 400 DISSENT_NOTE_REQUIRED" || bad "dissent without note accepted (HTTP $NODOTE)"
+OUT=$(curl -sS $(hdr PROVIDER rig-dr-chair) -X POST $PCT/v1/mdt/cases/$CASEID/outcome \
+  -d '{"recommendation":"Proceed to neoadjuvant therapy before surgery","recorded_by":"rig-dr-scribe","positions":[{"participant":"rig-dr-chair","position":"AGREE"},{"participant":"rig-dr-b","position":"AGREE"},{"participant":"rig-dr-c","position":"DISSENT","note":"prefers immediate surgery"}]}')
+AGREE=$(echo "$OUT" | jval agree); DISS=$(echo "$OUT" | jval dissent)
+[ "$AGREE" = "2" ] && [ "$DISS" = "1" ] && ok "outcome recorded (2 agree, 1 dissent with note)" || bad "outcome counts wrong ($AGREE/$DISS)"
+WB=$(PSQL pct "SELECT count(*) FROM $RTBL WHERE referral_id='$REF3' AND responses::text LIKE '%MDT board recommendation (2 agree, 1 dissent)%'")
+[ "${WB:-0}" = 1 ] && ok "consensus package written back onto the referral (SoR canonical)" || bad "no write-back on referral ($WB)"
+BOARD_ANON=$(curl -sS $(hdr PROVIDER rig-dr-random) "$PCT/v1/mdt/sessions/$MDTID?viewer=rig-dr-random")
+echo "$BOARD_ANON" | grep -q '"pseudonymised": *true' && ! echo "$BOARD_ANON" | grep -q "$REF3" \
+  && ok "non-privileged viewer gets pseudonymised board (no referral id server-side)" || bad "pseudonymisation leak: $(echo $BOARD_ANON|head -c 200)"
+BOARD_CHAIR=$(curl -sS $(hdr PROVIDER rig-dr-chair) "$PCT/v1/mdt/sessions/$MDTID?viewer=rig-dr-chair")
+echo "$BOARD_CHAIR" | grep -q "$REF3" && ok "chair sees the full case identity" || bad "chair view missing referral"
+MEVT=$(PSQL pct "SELECT count(*) FROM $OTBL WHERE aggregate_id='$MDTID' AND event_type IN ('telemedicine.session.mdt_created.v1','telemedicine.session.mdt_case_added.v1','telemedicine.session.mdt_outcome_recorded.v1')")
+[ "${MEVT:-0}" = 3 ] && ok "all 3 MDT lifecycle events versioned .v1" || bad "MDT events=$MEVT (expected 3)"
+
 # ── J-TH-2: A1 illegal transition rejected under ENFORCE ─────────────────────
 say "J-TH-2: SUBMITTED->COMPLETED is refused 409 ILLEGAL_TRANSITION (ENFORCE)"
 R=$(curl -sS -w '\n%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF/complete \

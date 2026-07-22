@@ -855,6 +855,76 @@ public class TeleconsultController {
     }
 
     /**
+     * TM-B15 (B15-1): MDT / specialist-board proxies. The board is a pct-owned clinical record;
+     * identity visibility (pseudonymised presentation) is enforced server-side in pct — the viewer
+     * identity forwarded here is what pct's read model pseudonymises against.
+     */
+    @PostMapping("/mdt/sessions")
+    public ResponseEntity<Map<String, Object>> mdtCreateSession(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            Map<String, Object> req = body == null ? new LinkedHashMap<>() : new LinkedHashMap<>(body);
+            if (actorId != null && !actorId.isBlank() && !req.containsKey("chair_id")) {
+                req.put("chair_id", actorId);
+            }
+            return ok(pctClient.mdtCreateSession(req), requestId, correlationId, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    @GetMapping("/mdt/sessions/{id}")
+    public ResponseEntity<Map<String, Object>> mdtBoard(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            return ok(pctClient.mdtGetBoard(id, actorId), requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/mdt/sessions/{id}/cases")
+    public ResponseEntity<Map<String, Object>> mdtAddCase(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            return ok(pctClient.mdtAddCase(id, body), requestId, correlationId, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/mdt/cases/{caseItemId}/outcome")
+    public ResponseEntity<Map<String, Object>> mdtOutcome(
+            @PathVariable String caseItemId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            Map<String, Object> req = new LinkedHashMap<>(body);
+            if (actorId != null && !actorId.isBlank() && !req.containsKey("recorded_by")) {
+                req.put("recorded_by", actorId);
+            }
+            return ok(pctClient.mdtRecordOutcome(caseItemId, req), requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    /**
      * TM-B5 (B5-4): consent withdrawn mid-session. PCT records the authoritative truth (consent
      * WITHDRAWN + media rung forced to ASYNC); this endpoint then makes a best-effort rtc-gateway
      * end to tear the live room down server-side, surfacing mediaStopped honestly (the client also
