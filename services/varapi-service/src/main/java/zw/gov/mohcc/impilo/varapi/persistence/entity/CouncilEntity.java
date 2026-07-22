@@ -43,6 +43,10 @@ public class CouncilEntity {
     @Column(name = "registration_number_pattern", length = 512)
     private String registrationNumberPattern;
 
+    /** FK to org_registry organisation identity (ROM R1). Null only for legacy non-ROM rows. */
+    @Column(name = "org_registry_org_id")
+    private UUID orgRegistryOrgId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -102,6 +106,9 @@ public class CouncilEntity {
     public void setRegistrationNumberPattern(String registrationNumberPattern) {
         this.registrationNumberPattern = registrationNumberPattern;
     }
+
+    public UUID getOrgRegistryOrgId() { return orgRegistryOrgId; }
+    public void setOrgRegistryOrgId(UUID orgRegistryOrgId) { this.orgRegistryOrgId = orgRegistryOrgId; }
 
     public Instant getCreatedAt() { return createdAt; }
 

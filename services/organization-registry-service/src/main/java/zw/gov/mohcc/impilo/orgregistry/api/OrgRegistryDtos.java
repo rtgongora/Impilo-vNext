@@ -34,6 +34,22 @@ public final class OrgRegistryDtos {
     public record VerifyOrganizationRequest(List<UUID> verifiedRepresentativeIds) {
     }
 
+    /** Create a regulatory appointment (ROM-W1) — lands PENDING_VERIFICATION. */
+    public record CreateAppointmentRequest(
+            String personHealthId,
+            String roleCode,
+            String jurisdictionCode,
+            String source,
+            String evidenceRef,
+            String appointedBy,
+            LocalDate validFrom,
+            LocalDate validTo) {
+    }
+
+    /** End/revoke an appointment. {@code reason} = "REVOKED" marks revocation, else ENDED. */
+    public record EndAppointmentRequest(String reason) {
+    }
+
     public record CreateAffiliationRequest(
             String subjectType,
             String subjectRef,
