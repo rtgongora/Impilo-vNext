@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.notification.api.dto.WorkerResponse;
@@ -57,8 +58,10 @@ public class WorkerService {
 
     @Transactional
     public WorkerResponse processPending(int limit) {
+        // Only pick rows that are due now: not_before unset (immediate, legacy behaviour)
+        // or already elapsed. Future-dated (scheduled) notifications stay PENDING.
         List<NotificationEntity> pending = notificationRepository
-                .findByStatusOrderByCreatedAtAsc(NotificationStatus.PENDING);
+                .findDue(NotificationStatus.PENDING, OffsetDateTime.now(), PageRequest.of(0, limit));
 
         int toProcess = Math.min(pending.size(), limit);
         int sent = 0;

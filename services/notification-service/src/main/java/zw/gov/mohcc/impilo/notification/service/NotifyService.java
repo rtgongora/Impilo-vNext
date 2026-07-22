@@ -74,6 +74,7 @@ public class NotifyService {
         entity.setTenantId(ctx.tenantId());
         entity.setPodId(ctx.podId());
         entity.setPatientRef(request.patientRef());
+        entity.setNotBefore(request.notBefore());
 
         java.util.Optional<Boolean> allow =
                 mvumoPreferenceClient.evaluateAllowed(

@@ -57,6 +57,8 @@ public class TelemedicineCommsWorkflowService {
                             "Your virtual consultation is ready. Please open Impilo to join.");
                     metricsStore.incrementRemindersSent();
                     emitCommsEvent("telemedicine.communication.reminder_sent", payload);
+                    // TM-B9: enqueue future-dated T-minus reminders (held by notification-service until due).
+                    scheduleTeleconsultReminders(eventType, payload);
                 }
                 case "telemedicine.session.join_link.created" -> {
                     sendSafeNotification(eventType, "IN_APP", "TELEMEDICINE_JOIN_LINK", payload,
@@ -104,6 +106,10 @@ public class TelemedicineCommsWorkflowService {
                             "Your follow-up has been scheduled. Please open Impilo to view details.");
                     metricsStore.incrementFollowupsSent();
                     emitCommsEvent("telemedicine.communication.followup_sent", payload);
+                    // TM-B9: on completion, enqueue a post-consult feedback prompt for a short delay later.
+                    if ("telemedicine.session.completed".equals(eventType)) {
+                        scheduleFeedbackPrompt(eventType, payload);
+                    }
                 }
                 default -> log.debug("No comms workflow bound to event {}", eventType);
             }
@@ -160,6 +166,64 @@ public class TelemedicineCommsWorkflowService {
                     workflowTelemetry.recordNotificationDispatch(eventType, "SMS", templateKey + "_FALLBACK_SMS", "FAILED", payload);
                 }
             }
+        }
+    }
+
+    /**
+     * TM-B9: on scheduling, enqueue future-dated patient reminders that notification-service holds
+     * (via {@code notBefore}) and dispatches when due — T-minus appointment reminders (24h, 1h) and
+     * a device/connectivity pre-check (15 min before). Reminders whose time is already past are skipped.
+     */
+    private void scheduleTeleconsultReminders(String eventType, Map<String, Object> payload) {
+        OffsetDateTime scheduled = parseDate(string(payload, "scheduledAt", "scheduled_at"));
+        if (scheduled == null) {
+            return;
+        }
+        enqueueScheduledReminder(eventType, "TELECONSULT_REMINDER", payload, scheduled.minusHours(24),
+                "Reminder: your virtual consultation is tomorrow. Open Impilo to be ready.");
+        enqueueScheduledReminder(eventType, "TELECONSULT_REMINDER", payload, scheduled.minusHours(1),
+                "Your virtual consultation is in 1 hour. Open Impilo to join on time.");
+        enqueueScheduledReminder(eventType, "TELECONSULT_DEVICE_CHECK", payload, scheduled.minusMinutes(15),
+                "Your consultation starts soon — test your camera, microphone and connection in Impilo now.");
+    }
+
+    /** TM-B9: post-consult feedback prompt, enqueued for a short delay after completion. */
+    private void scheduleFeedbackPrompt(String eventType, Map<String, Object> payload) {
+        enqueueScheduledReminder(eventType, "TELECONSULT_FEEDBACK_PROMPT", payload,
+                OffsetDateTime.now().plusHours(1),
+                "How was your virtual consultation? Share quick feedback in Impilo.");
+    }
+
+    /**
+     * Enqueue a single future-dated reminder with {@code notBefore}. Best-effort: a failure is logged
+     * but never breaks the lifecycle workflow (notification-service owns delivery + template fallback).
+     * Reminders in the past are skipped so a late-arriving 'scheduled' event can't backfill stale nudges.
+     */
+    private void enqueueScheduledReminder(String eventType, String templateKey, Map<String, Object> payload,
+                                          OffsetDateTime notBefore, String message) {
+        if (notBefore == null || notBefore.isBefore(OffsetDateTime.now())) {
+            return;
+        }
+        String recipient = string(payload, "patientCpid", "patientId", "patient_id");
+        if (recipient == null || recipient.isBlank()) {
+            return;
+        }
+        try {
+            String scheduledAt = string(payload, "scheduledAt", "scheduled_at");
+            Map<String, Object> variables = new LinkedHashMap<>();
+            variables.put("message", enforceSensitiveContentPolicy("IN_APP", message));
+            variables.put("scheduledAt", scheduledAt == null ? "" : scheduledAt);
+            variables.put("telemedicineLinkage", linkagePayload(payload));
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("templateKey", templateKey);
+            body.put("channel", "IN_APP");
+            body.put("to", recipient);
+            body.put("notBefore", notBefore.toString());
+            body.put("variables", variables);
+            notificationClient.sendNotification(body);
+            workflowTelemetry.recordNotificationDispatch(eventType, "IN_APP", templateKey, "SCHEDULED", payload);
+        } catch (Exception ex) {
+            log.warn("Failed to schedule teleconsult reminder {} at {}: {}", templateKey, notBefore, ex.getMessage());
         }
     }
 

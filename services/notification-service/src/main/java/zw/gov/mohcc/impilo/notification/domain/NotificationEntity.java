@@ -56,6 +56,10 @@ public class NotificationEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
+    /** Scheduled (future-dated) send gate (TM-B9/B1). NULL = dispatch immediately. */
+    @Column(name = "not_before")
+    private OffsetDateTime notBefore;
+
     @Column(name = "sent_at")
     private OffsetDateTime sentAt;
 
@@ -112,6 +116,9 @@ public class NotificationEntity {
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+
+    public OffsetDateTime getNotBefore() { return notBefore; }
+    public void setNotBefore(OffsetDateTime notBefore) { this.notBefore = notBefore; }
 
     public OffsetDateTime getSentAt() { return sentAt; }
     public void setSentAt(OffsetDateTime sentAt) { this.sentAt = sentAt; }

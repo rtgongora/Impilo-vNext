@@ -82,7 +82,8 @@ public class OrosResultCriticalKafkaListener {
                 vars,
                 text(root, "patientCpid"),
                 MESSAGE_KIND,
-                requesterId);
+                requesterId,
+                null);
 
         RequestContext ctx = RequestContext.of(tenantId, null, null, null, null, null, null);
         notifyService.enqueue(request, ctx);

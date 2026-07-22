@@ -112,6 +112,6 @@ public class QueueLifecycleNotificationConsumer {
         if (templateKey == null) {
             return null;
         }
-        return new NotifyRequest(templateKey, CHANNEL_IN_APP, cpid, vars, cpid, MESSAGE_KIND, cpid);
+        return new NotifyRequest(templateKey, CHANNEL_IN_APP, cpid, vars, cpid, MESSAGE_KIND, cpid, null);
     }
 }
