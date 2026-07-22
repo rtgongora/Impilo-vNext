@@ -110,6 +110,22 @@ class TeleconsultControllerTest {
     }
 
     @Test
+    void submitStructuredResponseDelegatesToPctStructuredEndpoint() {
+        // TM-B6 response v2: the structured route forwards the v1 spine + additive sections to PCT.
+        Mockito.when(pctClient.respondReferralStructured(eq("ref-s"), any()))
+                .thenReturn(objectMapper.createObjectNode().put("status", "RESPONDED"));
+
+        var response = controller.submitStructuredResponse(
+                "ref-s", "req", "corr",
+                Map.of("diagnosis", "I10", "patientInstructions", "Recheck BP in 2 weeks"));
+
+        assertEquals(200, response.getStatusCode().value());
+        ArgumentCaptor<Map<String, Object>> cap = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(pctClient).respondReferralStructured(eq("ref-s"), cap.capture());
+        assertEquals("Recheck BP in 2 weeks", cap.getValue().get("patientInstructions"));
+    }
+
+    @Test
     void placeSessionOrderStampsTeleconsultProvenance() {
         // TM-B7: an order placed in-session delegates to OROS with the referral id as source_ref.
         Mockito.when(orosClient.placeTeleconsultOrder(

@@ -638,6 +638,15 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    /** TM-B6 structured response (v1 spine + v2 additive sections: coded diagnosis, prescriptions,
+     *  orders, patient instructions, onward referral). */
+    public JsonNode respondReferralStructured(String referralId, Map<String, Object> request) {
+        String url = baseUrl + "/v1/referrals/" + referralId + "/respond-structured";
+        log.info("PCT: Structured response to referral id={}", referralId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
     /**
      * List incoming referrals for a facility.
      */

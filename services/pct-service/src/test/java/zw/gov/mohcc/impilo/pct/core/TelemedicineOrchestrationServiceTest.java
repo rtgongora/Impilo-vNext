@@ -463,6 +463,37 @@ class TelemedicineOrchestrationServiceTest {
     }
 
     @Test
+    void respondStructured_persistsV2AdditiveSections_preservingV1Spine() {
+        try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
+            mocked.when(TrustContextHolder::require).thenReturn(context());
+            UUID referralId = UUID.randomUUID();
+            ReferralEntity referral = newReferral(referralId, "ACCEPTED");
+            when(referralRepository.findByTenantIdAndReferralId(tenantId, referralId))
+                    .thenReturn(Optional.of(referral));
+            when(referralRepository.save(any(ReferralEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            service.respondReferralStructured(referralId.toString(), Map.of(
+                    "responderId", "prov-1",
+                    // v1 spine
+                    "diagnosis", "Hypertension",
+                    "actionPlan", "Adjust dose",
+                    // v2 additive sections
+                    "codedDiagnosis", Map.of("system", "ICD-10", "code", "I10", "display", "Essential hypertension"),
+                    "prescriptions", java.util.List.of(Map.of("medication", "Amlodipine", "dosage", "5mg", "frequency", "OD")),
+                    "patientInstructions", "Take with food; recheck BP in 2 weeks"));
+
+            String json = referral.getStructuredResponse();
+            // v1 spine preserved
+            assertThat(json).contains("Hypertension").contains("Adjust dose");
+            // v2 sections persisted as structured content (not flattened)
+            assertThat(json).contains("schemaVersion").contains("codedDiagnosis").contains("I10");
+            assertThat(json).contains("Amlodipine").contains("patientInstructions");
+            // still transitions to RESPONDED
+            assertThat(referral.getStatus()).isEqualTo("RESPONDED");
+        }
+    }
+
+    @Test
     void createReferral_persistsPoolRoutingWhenSupplied() {
         try (MockedStatic<TrustContextHolder> mocked = org.mockito.Mockito.mockStatic(TrustContextHolder.class)) {
             mocked.when(TrustContextHolder::require).thenReturn(context());

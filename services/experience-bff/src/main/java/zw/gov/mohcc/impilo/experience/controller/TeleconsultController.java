@@ -1033,6 +1033,29 @@ public class TeleconsultController {
         }
     }
 
+    /**
+     * TM-B6: structured response (v1 spine + v2 additive sections). The provider console posts here
+     * when it captures coded diagnosis / prescriptions / patient instructions / onward referral —
+     * the enriched record the FHIR Composition + DiagnosticReport project and the patient timeline reads.
+     */
+    @PostMapping("/sessions/{id}/response-structured")
+    public ResponseEntity<Map<String, Object>> submitStructuredResponse(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            var response = pctClient.respondReferralStructured(id, body == null ? Map.of() : body);
+            if (response == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No consultation response payload returned", requestId, correlationId);
+            }
+            return ok(response, requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
     @PostMapping("/sessions/{id}/complete")
     public ResponseEntity<Map<String, Object>> complete(
             @PathVariable String id,

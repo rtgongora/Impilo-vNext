@@ -507,12 +507,23 @@ public class TelemedicineOrchestrationService {
         String responderId = defaulted(optional(request, "responder_id", "responderId"), "unknown");
 
         Map<String, Object> structured = new LinkedHashMap<>();
+        // v1 spine (preserved, unchanged — existing consumers keep reading these four).
         structured.put("diagnosis", optional(request, "diagnosis"));
         structured.put("actionPlan", optional(request, "action_plan", "actionPlan"));
         structured.put("redFlags", optional(request, "red_flags", "redFlags"));
         structured.put("followUp", optional(request, "follow_up", "followUp"));
         structured.put("responderId", responderId);
         structured.put("timestamp", OffsetDateTime.now().toString());
+        // v2 additive sections (TM-B6): only written when supplied, so a v1 client is unaffected.
+        // These give the response the clinical depth the FHIR Composition + DiagnosticReport project
+        // and the patient timeline reads (coded diagnosis, prescriptions, orders, plain-language
+        // instructions, onward referral). Stored as-received to stay forward-compatible.
+        structured.put("schemaVersion", 2);
+        putIfPresent(structured, "codedDiagnosis", request, "codedDiagnosis", "coded_diagnosis");
+        putIfPresent(structured, "prescriptions", request, "prescriptions");
+        putIfPresent(structured, "orders", request, "orders");
+        putIfPresent(structured, "patientInstructions", request, "patientInstructions", "patient_instructions");
+        putIfPresent(structured, "onwardReferral", request, "onwardReferral", "onward_referral");
         entity.setStructuredResponse(writeJsonObject(structured));
 
         appendResponse(entity, Map.of(
@@ -1101,6 +1112,23 @@ public class TelemedicineOrchestrationService {
             }
         }
         return null;
+    }
+
+    /**
+     * Copy the first-present key's value (any type — String/List/Map) from {@code request} into
+     * {@code target} under {@code targetKey}. Used to carry the additive response-v2 sections
+     * through as-received (forward-compatible) without flattening structured payloads to strings.
+     */
+    private void putIfPresent(Map<String, Object> target, String targetKey,
+                              Map<String, Object> request, String... sourceKeys) {
+        if (request == null) return;
+        for (String key : sourceKeys) {
+            Object value = request.get(key);
+            if (value != null) {
+                target.put(targetKey, value);
+                return;
+            }
+        }
     }
 
     private String defaulted(String value, String fallback) {

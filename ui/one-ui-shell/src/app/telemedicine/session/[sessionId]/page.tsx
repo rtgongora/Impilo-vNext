@@ -101,6 +101,7 @@ export default function TeleconsultSessionPage() {
   const [redFlags, setRedFlags] = useState("");
   const [followUp, setFollowUp] = useState("");
   const [orders, setOrders] = useState("");
+  const [patientInstructions, setPatientInstructions] = useState("");
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [submittingResponse, setSubmittingResponse] = useState(false);
 
@@ -219,9 +220,12 @@ export default function TeleconsultSessionPage() {
   async function handleSubmitResponse() {
     setSubmittingResponse(true);
     try {
-      await apiClient.post(`/internal/v1/teleconsult/sessions/${sessionId}/response`, {
+      // TM-B6 response v2: structured endpoint captures the v1 spine + additive sections
+      // (orders, plain-language patient instructions) that the FHIR Composition projects.
+      await apiClient.post(`/internal/v1/teleconsult/sessions/${sessionId}/response-structured`, {
         responseNote, diagnosis, actionPlan, redFlags, followUp,
         orders: orders.split("\n").filter(Boolean),
+        patientInstructions: patientInstructions.trim() || undefined,
       });
       setSession((s) => s ? { ...s, status: "RESPONDED", stage: 6 } : s);
     } catch { /* fallback — mark locally */ }
@@ -452,6 +456,14 @@ export default function TeleconsultSessionPage() {
           <textarea value={orders} onChange={(e) => setOrders(e.target.value)} rows={2}
             className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
             placeholder="Narrative summary of the plan — place coded orders below." />
+        </label>
+
+        <label className="block">
+          <span className="text-xs font-medium text-muted-foreground">Patient instructions (plain language)</span>
+          <textarea value={patientInstructions} onChange={(e) => setPatientInstructions(e.target.value)} rows={2}
+            data-testid="response-patient-instructions"
+            className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm"
+            placeholder="What the patient should do — in words they'll understand. Shown on their post-consult summary." />
         </label>
 
         {/* Real coded orders to the SoR rails (labs/imaging/meds), encounter-scoped (G17). */}
