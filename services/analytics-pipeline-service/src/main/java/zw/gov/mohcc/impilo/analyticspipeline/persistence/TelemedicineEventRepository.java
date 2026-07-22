@@ -11,6 +11,18 @@ public interface TelemedicineEventRepository extends JpaRepository<TelemedicineE
 
     long countByTenantId(UUID tenantId);
 
+    // TM-B17: cross-tenant aggregate variants — events carry their envelope tenant (no longer the
+    // hardcoded default), so the preview aggregates count everything.
+    @Query("""
+            SELECT e.eventType AS eventType, COUNT(e) AS eventCount
+            FROM TelemedicineEventEntity e
+            GROUP BY e.eventType
+            ORDER BY e.eventType
+            """)
+    List<EventTypeCount> countGroupedByEventTypeAll();
+
+    List<TelemedicineEventEntity> findByEventTypeStartingWith(String prefix);
+
     @Query("""
             SELECT e.eventType AS eventType, COUNT(e) AS eventCount
             FROM TelemedicineEventEntity e

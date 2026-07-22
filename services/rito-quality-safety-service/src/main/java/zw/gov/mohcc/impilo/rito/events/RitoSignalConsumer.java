@@ -47,6 +47,47 @@ public class RitoSignalConsumer {
      * encounter can be stamped verified. Distinct from the advisory quality-signal
      * lane above — this records the interaction, it does not open a case.
      */
+    /**
+     * TM-B17 (G1): a COMPLETED teleconsult becomes an eligible-for-feedback verified interaction,
+     * exactly like a completed facility encounter — journey #29's missing Rito hook. Envelope shape
+     * (pct outbox): {eventType, aggregateId=referralId, tenantId, occurredAt, payload:{referral…}}
+     * on clinical.teleconsult.lifecycle; only telemedicine.session.completed(.v1) records here.
+     * encounterRef = the referral id — the teleconsult case IS the verified interaction, so the
+     * existing rating capture (/feedback/visit/{ref}) verifies against it unchanged.
+     */
+    @KafkaListener(
+            topics = {"${rito.signals.topics.teleconsult-lifecycle:clinical.teleconsult.lifecycle}"},
+            groupId = "rito-quality-safety-service")
+    public void onTeleconsultLifecycle(String message) {
+        try {
+            Map<String, Object> root = objectMapper.readValue(message, new TypeReference<>() {
+            });
+            String eventType = String.valueOf(root.getOrDefault("eventType", ""));
+            if (!eventType.startsWith("telemedicine.session.completed")) {
+                return; // only completions become feedback-eligible interactions
+            }
+            UUID tenantId = parseUuid(root, "tenantId", "tenant_id");
+            String referralId = String.valueOf(root.getOrDefault("aggregateId", "")).trim();
+            if (tenantId == null || referralId.isEmpty() || "null".equals(referralId)) {
+                log.warn("Skipping teleconsult-completed — missing tenantId or referral aggregateId");
+                return;
+            }
+            Map<String, Object> payload = new java.util.LinkedHashMap<>();
+            if (root.get("payload") instanceof Map<?, ?> inner) {
+                for (Map.Entry<?, ?> entry : inner.entrySet()) {
+                    payload.put(String.valueOf(entry.getKey()), entry.getValue());
+                }
+            }
+            payload.put("encounterRef", referralId);
+            if (!payload.containsKey("attendingProviderId") && payload.get("providerId") != null) {
+                payload.put("attendingProviderId", payload.get("providerId"));
+            }
+            verifiedInteractionService.recordFromPct(tenantId, payload);
+        } catch (Exception e) {
+            log.error("Failed to record verified interaction from teleconsult-completed: {}", e.getMessage(), e);
+        }
+    }
+
     @KafkaListener(
             topics = {"${rito.signals.topics.pct-encounter-completed:pct.encounter.completed}"},
             groupId = "rito-quality-safety-service")

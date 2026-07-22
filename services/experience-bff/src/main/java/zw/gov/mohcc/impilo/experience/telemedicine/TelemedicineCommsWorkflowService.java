@@ -219,6 +219,13 @@ public class TelemedicineCommsWorkflowService {
             variables.put("message", enforceSensitiveContentPolicy("IN_APP", message));
             variables.put("scheduledAt", scheduledAt == null ? "" : scheduledAt);
             variables.put("telemedicineLinkage", linkagePayload(payload));
+            // TM-B17 (G2): the feedback prompt's {{joinUrl}} must land somewhere real — the Rito
+            // capture surface, keyed by the referral id (which G1 records as the verified
+            // interaction's encounterRef, so the rating verifies). Khuluma deep-link convention.
+            String sessionRef = string(payload, "referralId", "referral_id", "sessionId", "session_id", "id");
+            if ("TELECONSULT_FEEDBACK_PROMPT".equals(templateKey) && sessionRef != null && !sessionRef.isBlank()) {
+                variables.put("joinUrl", "/feedback/visit/" + sessionRef);
+            }
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("templateKey", templateKey);
             body.put("channel", "IN_APP");

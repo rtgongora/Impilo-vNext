@@ -15,6 +15,11 @@ export default function TelemedicineAnalyticsPage() {
 
   const aggregates = data?.data ?? {};
   const eventsByType = aggregates.eventsByType ?? {};
+  // TM-B17: §24 aggregates derived from the event stream (outcome distribution + time-to-acceptance).
+  const outcomeDistribution: Record<string, number> =
+    (aggregates as { outcomeDistribution?: Record<string, number> }).outcomeDistribution ?? {};
+  const avgTimeToAcceptance =
+    (aggregates as { avgTimeToAcceptanceMinutes?: number | null }).avgTimeToAcceptanceMinutes ?? null;
 
   return (
     <AppLayout>
@@ -53,6 +58,12 @@ export default function TelemedicineAnalyticsPage() {
                 <p className="mt-2 text-2xl font-semibold text-foreground">{aggregates.eventsAccepted ?? 0}</p>
               </div>
               <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Avg time to acceptance</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">
+                  {avgTimeToAcceptance == null ? "—" : `${avgTimeToAcceptance} min`}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Facility scope</p>
                 <p className="mt-2 text-sm font-medium text-foreground">{facility?.name ?? "All facilities"}</p>
               </div>
@@ -74,6 +85,26 @@ export default function TelemedicineAnalyticsPage() {
                   {Object.entries(eventsByType).map(([type, count]) => (
                     <li key={type} className="flex items-center justify-between py-2 text-sm">
                       <span className="font-medium text-foreground">{type}</span>
+                      <span className="text-muted-foreground">{count}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            {/* TM-B17 (G5): outcome distribution from completion notes, via the event stream. */}
+            <section className="rounded-xl border border-border bg-card p-5 shadow-sm" data-testid="outcome-distribution">
+              <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                Outcome distribution
+              </h2>
+              {Object.keys(outcomeDistribution).length === 0 ? (
+                <p className="mt-3 text-sm text-muted-foreground">No completed consultations with recorded outcomes yet.</p>
+              ) : (
+                <ul className="mt-3 divide-y divide-slate-100">
+                  {Object.entries(outcomeDistribution).map(([outcome, count]) => (
+                    <li key={outcome} className="flex items-center justify-between py-2 text-sm">
+                      <span className="font-medium text-foreground">{outcome}</span>
                       <span className="text-muted-foreground">{count}</span>
                     </li>
                   ))}
