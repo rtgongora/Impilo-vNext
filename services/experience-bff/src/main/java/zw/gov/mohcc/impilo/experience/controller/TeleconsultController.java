@@ -858,7 +858,7 @@ public class TeleconsultController {
             putIfNumber(incident, "lat", body.get("lat"));
             putIfNumber(incident, "lng", body.get("lng"));
             JsonNode created = daidzaiClient.createIncident(incident);
-            String incidentId = created == null ? null : extractId(created);
+            String incidentId = firstText(created, "id", "incident_id", "incidentId");
             node.put("emergencyDispatched", incidentId != null && !incidentId.isBlank());
             if (incidentId != null) node.put("emergencyIncidentId", incidentId);
         } catch (Exception e) {
@@ -906,7 +906,7 @@ public class TeleconsultController {
                 delivery.put("recipient", Map.of("kind", "PATIENT", "ref", patient));
             }
             JsonNode created = nhumeClient.createDelivery(delivery);
-            String deliveryId = created == null ? null : extractId(created);
+            String deliveryId = firstText(created, "delivery_id", "deliveryId", "id");
             node.put("transferDispatched", deliveryId != null && !deliveryId.isBlank());
             if (deliveryId != null) node.put("transferDeliveryId", deliveryId);
         } catch (Exception e) {
@@ -914,6 +914,18 @@ public class TeleconsultController {
                     referralId, e.getMessage());
             node.put("transferDispatched", false);
         }
+    }
+
+    /** First non-blank text value among the given JSON fields (handles snake/camel id variants). */
+    private String firstText(JsonNode node, String... fields) {
+        if (node == null) return null;
+        for (String f : fields) {
+            if (node.hasNonNull(f)) {
+                String v = node.get(f).asText();
+                if (v != null && !v.isBlank()) return v;
+            }
+        }
+        return null;
     }
 
     private void putIfNumber(Map<String, Object> target, String key, Object value) {
