@@ -197,6 +197,40 @@ class TeleconsultControllerTest {
     }
 
     @Test
+    void waitingRoom_addsPoolContext_forPoolRoutedReferral() {
+        // TM-B2: a POOL-routed waiting room surfaces queue depth + oldest-wait + estimated wait.
+        Mockito.when(rtcClient.listParticipants(eq("ref-wr"))).thenReturn(objectMapper.createArrayNode());
+        Mockito.when(pctClient.getReferral(eq("ref-wr")))
+                .thenReturn(objectMapper.createObjectNode().put("routingKind", "POOL").put("routingPoolId", "GENERAL"));
+        var stats = objectMapper.createArrayNode();
+        stats.addObject().put("depth", 3).put("oldestWaitingMinutes", 20);
+        Mockito.when(pctClient.getVirtualPoolStats(eq("GENERAL"))).thenReturn(stats);
+
+        var response = controller.waitingRoom("ref-wr", "req", "corr");
+
+        assertEquals(200, response.getStatusCode().value());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> pool = (Map<String, Object>) data.get("poolContext");
+        assertNotNull(pool);
+        assertEquals(3L, pool.get("depth"));
+        assertEquals(45L, pool.get("estimatedWaitMinutes")); // 3 × 15
+    }
+
+    @Test
+    void waitingRoom_nullPoolContext_whenNotPoolRouted() {
+        Mockito.when(rtcClient.listParticipants(eq("ref-fac"))).thenReturn(objectMapper.createArrayNode());
+        Mockito.when(pctClient.getReferral(eq("ref-fac")))
+                .thenReturn(objectMapper.createObjectNode().put("routingKind", "PRACTITIONER").put("routingPoolId", ""));
+
+        var response = controller.waitingRoom("ref-fac", "req", "corr");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) response.getBody().get("data");
+        org.junit.jupiter.api.Assertions.assertNull(data.get("poolContext"));
+    }
+
+    @Test
     void submitStructuredResponseDelegatesToPctStructuredEndpoint() {
         // TM-B6 response v2: the structured route forwards the v1 spine + additive sections to PCT.
         Mockito.when(pctClient.respondReferralStructured(eq("ref-s"), any()))

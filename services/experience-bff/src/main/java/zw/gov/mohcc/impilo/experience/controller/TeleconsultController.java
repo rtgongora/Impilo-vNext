@@ -593,6 +593,9 @@ public class TeleconsultController {
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("sessionId", id);
             data.put("waiting", waiting);
+            // TM-B2: for a POOL-routed case, surface queue depth + oldest-wait + a rough estimated
+            // wait so the waiting-room UI can show "N ahead of you, ~M min" instead of an opaque spinner.
+            data.put("poolContext", resolveWaitingRoomPoolContext(id));
             return ok(data, requestId, correlationId, HttpStatus.OK);
         } catch (ResponseStatusException e) {
             HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
@@ -602,6 +605,47 @@ public class TeleconsultController {
                     requestId, correlationId);
         } catch (Exception e) {
             return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    /** A rough per-consult minutes figure used only to turn queue depth into a human wait estimate. */
+    private static final long ESTIMATED_MINUTES_PER_CONSULT = 15;
+
+    /**
+     * TM-B2: pool-queue context for a waiting POOL-routed referral — depth, oldest wait, and a rough
+     * estimated wait (depth × per-consult minutes). Best-effort: any lookup failure returns null so
+     * the waiting room still renders. Non-pool referrals return null (no queue context applies).
+     */
+    private Map<String, Object> resolveWaitingRoomPoolContext(String referralId) {
+        try {
+            JsonNode referral = pctClient.getReferral(referralId);
+            if (referral == null) return null;
+            String routingKind = referral.path("routingKind").asText(null);
+            String poolId = referral.path("routingPoolId").asText(null);
+            if (poolId == null || poolId.isBlank()) return null;
+            if (routingKind != null && !"POOL".equalsIgnoreCase(routingKind) && !"NATIONAL_POOL".equalsIgnoreCase(routingKind)) {
+                return null;
+            }
+            JsonNode stats = pctClient.getVirtualPoolStats(poolId);
+            if (stats == null || !stats.isArray() || stats.isEmpty()) return null;
+            long depth = 0;
+            Long oldest = null;
+            for (JsonNode q : stats) {
+                depth += q.path("depth").asLong(0);
+                if (q.hasNonNull("oldestWaitingMinutes")) {
+                    long ow = q.path("oldestWaitingMinutes").asLong();
+                    oldest = (oldest == null) ? ow : Math.max(oldest, ow);
+                }
+            }
+            Map<String, Object> ctx = new LinkedHashMap<>();
+            ctx.put("poolId", poolId);
+            ctx.put("depth", depth);
+            ctx.put("oldestWaitingMinutes", oldest);
+            ctx.put("estimatedWaitMinutes", depth * ESTIMATED_MINUTES_PER_CONSULT);
+            return ctx;
+        } catch (Exception ex) {
+            log.debug("Pool context enrichment skipped for waiting-room {}: {}", referralId, ex.getMessage());
+            return null;
         }
     }
 
