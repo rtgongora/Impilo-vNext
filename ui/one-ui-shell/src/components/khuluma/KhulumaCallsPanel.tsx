@@ -88,7 +88,7 @@ export function KhulumaCallsPanel() {
         To place a call, open a conversation in your <Link href="/khuluma/inbox" className="font-medium text-emerald-700 hover:text-emerald-900">Inbox</Link> and use its call action.
       </p>
 
-      {activeCall ? <CommsCallModal call={activeCall} onEnd={() => setActiveCall(null)} /> : null}
+      {activeCall ? <CommsCallModal call={activeCall} direction="incoming" onEnd={() => setActiveCall(null)} /> : null}
     </>
   );
 }

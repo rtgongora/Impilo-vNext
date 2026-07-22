@@ -26,7 +26,8 @@ import { useCommsSummary, useCommsInbox, useIncomingCalls, useUpdatePresence } f
 import { useNotifications, useMarkNotificationRead } from "@/hooks/queries/useNotifications";
 import { useDiscoverChannels } from "@/hooks/queries/useKhulumaChannels";
 import { useMyCaregivingLinkages, useMyCaregivers } from "@/hooks/queries/useCaregiverLinkage";
-import { useEscalationQueue, useOnCall, useDeliveryAdapters } from "@/hooks/queries/useKhulumaOps";
+import { useEscalationQueue, useOnCall, useDeliveryAdapters, useKhulumaSessions, useEscalationAction } from "@/hooks/queries/useKhulumaOps";
+import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
 import { KhulumaSubNav } from "./KhulumaSubNav";
 import { KhulumaAttentionStrip, type AttentionChip } from "./KhulumaAttentionStrip";
 import { KhulumaActionGrid, type KhulumaActionItem } from "./KhulumaActionGrid";
@@ -61,6 +62,8 @@ export function KhulumaHome() {
   const escalationsQ = useEscalationQueue(isWork);
   const onCallQ = useOnCall(isWork);
   const adaptersQ = useDeliveryAdapters(isWork);
+  const sessionsQ = useKhulumaSessions();
+  const escalationAction = useEscalationAction();
 
   const conversations = rows(inboxQ.data);
   const notifications = rows(notifQ.data);
@@ -74,11 +77,14 @@ export function KhulumaHome() {
 
   const unreadMessages = readNum(asRecord(asRecord(summaryQ.data).messages), "unreadCount");
   const actionableUpdates = useMemo(() => notifications.filter(isUnreadNotif), [notifications]);
+  const sessionsEnv = asRecord(asRecord(sessionsQ.data).data);
+  const sessions = Array.isArray(sessionsEnv.items) ? (sessionsEnv.items as unknown[]).map(asRecord) : [];
 
   const chips: AttentionChip[] = [
     { label: "unread messages", value: unreadMessages, href: "/khuluma/inbox", icon: <Inbox className="h-4 w-4" />, tone: "warning" },
     { label: "updates need action", value: actionableUpdates.length, href: "/khuluma/updates", icon: <Bell className="h-4 w-4" />, tone: "warning" },
     { label: "calls waiting", value: incoming.length, href: "/khuluma/calls", icon: <Phone className="h-4 w-4" />, tone: "danger" },
+    { label: "upcoming sessions", value: sessions.length, href: "/khuluma/meetings", icon: <CalendarPlus className="h-4 w-4" />, tone: "neutral" },
     ...(isWork ? [{ label: "escalations open", value: escalations.length, href: "/khuluma/updates", icon: <AlertTriangle className="h-4 w-4" />, tone: "danger" as const }] : []),
   ];
 
@@ -97,7 +103,7 @@ export function KhulumaHome() {
     <AppLayout>
       <PageShell title="Khuluma" subtitle="Messages, calls, meetings, updates and coordination across Impilo" serviceSlug="khuluma">
         {/* Presence + attention */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2" data-testid="khuluma-home" data-persona={persona}>
           <div className="text-xs text-muted-foreground">
             {isWork ? "Professional context" : "Personal context"}
           </div>
@@ -115,9 +121,42 @@ export function KhulumaHome() {
 
         <KhulumaAttentionStrip chips={chips} />
         <KhulumaActionGrid actions={actions} />
+        <NompiloContextualGuidance routePath="/khuluma" />
         <KhulumaSubNav />
 
         <div className="grid gap-4 lg:grid-cols-2">
+          {/* Upcoming sessions (BFF composite: booking + telehealth) */}
+          <KhulumaSection
+            title="What's next"
+            icon={<CalendarPlus className="h-4 w-4 text-emerald-700" />}
+            isLoading={sessionsQ.isLoading}
+            isError={sessionsQ.isError}
+            onRetry={() => sessionsQ.refetch()}
+            isEmpty={!sessions.length}
+            emptyState={
+              <KhulumaEmptyState
+                title="No upcoming sessions"
+                explanation="Your appointments and teleconsultations appear here so you know what's next and can join on time."
+                when="Sessions appear once you have a booking or scheduled teleconsultation."
+                actions={[{ label: "Find care", href: "/welcome/find-care", variant: "secondary" }]}
+              />
+            }
+          >
+            <ul className="divide-y divide-border">
+              {sessions.slice(0, 5).map((s, i) => (
+                <li key={readStr(s, "id") || i} className="flex items-center justify-between gap-2 py-2 text-sm">
+                  <span className="min-w-0">
+                    <span className="block truncate text-foreground">{readStr(s, "title") || "Session"}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{readStr(s, "kind")} · {formatWhen(readStr(s, "startAt"))}</span>
+                  </span>
+                  {readStr(s, "joinHref") ? (
+                    <Link href={readStr(s, "joinHref")} className="shrink-0 rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-700">Open</Link>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </KhulumaSection>
+
           {/* Recent conversations */}
           <KhulumaSection
             title="Recent conversations"
@@ -208,12 +247,26 @@ export function KhulumaHome() {
               }
             >
               <ul className="divide-y divide-border">
-                {escalations.slice(0, 4).map((e, i) => (
-                  <li key={readStr(e, "id") || i} className="flex items-center justify-between gap-2 py-2 text-sm">
-                    <span className="truncate text-foreground">{readStr(e, "subject", "reason", "title") || "Escalation"}</span>
-                    <span className="text-xs text-muted-foreground">{readStr(e, "status")}</span>
-                  </li>
-                ))}
+                {escalations.slice(0, 4).map((e, i) => {
+                  const id = readStr(e, "id");
+                  const st = readStr(e, "status").toUpperCase();
+                  return (
+                    <li key={id || i} className="flex items-center justify-between gap-2 py-2 text-sm">
+                      <span className="min-w-0 flex-1 truncate text-foreground">{readStr(e, "subject", "reason", "title") || "Escalation"}</span>
+                      <span className="text-xs text-muted-foreground">{st}</span>
+                      {id ? (
+                        <span className="flex gap-1">
+                          {/OPEN|ASSIGNED/.test(st) ? (
+                            <button type="button" disabled={escalationAction.isPending} onClick={() => escalationAction.mutate({ id, action: "accept" })} className="rounded-md border border-border px-2 py-0.5 text-[11px] font-medium hover:bg-muted disabled:opacity-50">Accept</button>
+                          ) : null}
+                          {st !== "RESOLVED" ? (
+                            <button type="button" disabled={escalationAction.isPending} onClick={() => escalationAction.mutate({ id, action: "resolve" })} className="rounded-md bg-emerald-600 px-2 py-0.5 text-[11px] font-medium text-white hover:bg-emerald-700 disabled:opacity-50">Resolve</button>
+                          ) : null}
+                        </span>
+                      ) : null}
+                    </li>
+                  );
+                })}
                 {onCall.slice(0, 3).map((o, i) => (
                   <li key={"oc" + i} className="flex items-center justify-between gap-2 py-2 text-sm">
                     <span className="truncate text-muted-foreground">On call: {readStr(o, "displayName", "actorId") || "—"}</span>

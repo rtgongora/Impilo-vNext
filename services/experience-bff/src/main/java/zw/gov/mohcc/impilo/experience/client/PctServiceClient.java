@@ -302,6 +302,16 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    /**
+     * A patient's telehealth sessions (read-only) — used by the Khuluma "upcoming sessions"
+     * composite. Consumes the stable per-CPID reader; does not touch teleconsult orchestration.
+     */
+    public JsonNode listPatientTelehealth(String patientCpid) {
+        String url = baseUrl + "/v1/patient/" + patientCpid + "/telehealth";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode createEncounterImagingLink(long encounterId, Map<String, Object> body) {
         String url = baseUrl + "/v1/encounters/" + encounterId + "/imaging-links";
         ResponseEntity<JsonNode> response =
