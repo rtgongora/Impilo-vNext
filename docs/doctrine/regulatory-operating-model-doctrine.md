@@ -101,6 +101,16 @@ of a committee grants docket-scoped visibility, not council-wide access.
 dimensions on policy rules), proven in SHADOW before ENFORCE, and continuously asserted by the
 conformance pack.
 
+4.4. **Dual capacity and self-regulation.** A regulator is frequently also a registrant — a
+council member who practises. The same person holds coexisting capacities on one Health-ID
+anchor (clinical provider + regulatory appointment); a regulatory session SHALL NOT require,
+inherit or expose clinical facility/provider context, nor a clinical session inherit regulatory
+authority (per §2.4). Because a regulator may be a registrant of the same council, a person
+SHALL NOT act in a regulatory capacity on their own record — no self-review, self-decision,
+self-moderation, self-adjudication, or committee sitting on a matter whose subject is that same
+person. Such an action SHALL be refused (RECUSAL_REQUIRED) and audited; the tie is detected on
+the person Health-ID, never the provider identifier alone.
+
 ---
 
 ## 5. Two-sided delivery

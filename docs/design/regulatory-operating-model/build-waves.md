@@ -9,6 +9,14 @@ ENFORCE. Migration ledger in [`README.md`](README.md).
 **Law honoured throughout**: every wave delivers its process as BOTH the applicant journey and
 the regulator workflow (doctrine §5).
 
+**Dual-capacity + recusal (doctrine §4.4, cross-cutting)**: a regulator may also be a registrant
+of the same council. Capacities never bleed (regulatory token carries no facility/provider;
+clinical token carries no regulatory authority — already true after W2). And a person may not act
+in a regulatory capacity on their OWN record: W4 (application review), W7 (disciplinary
+transitions) and W8 (committee docket assignment + sitting) SHALL refuse a self-subject action
+(`actor Health-ID == subject Health-ID`) with a `RECUSAL_REQUIRED` outcome + audit entry. Asserted
+by the pack as **ROM-RECUSAL** (W11).
+
 ---
 
 **ROM-W0 — Doctrine + spec pack** *(docs only)*
@@ -119,7 +127,8 @@ ROM-OWN (org identity single SoR, councils FK-bound), ROM-APPT (access only from
 appointment), ROM-ISO (cross-council denied), ROM-CTX (full chain in token → workspace),
 ROM-APPL (two-sided application; INTERNAL never leaks), ROM-CPD (renewal consumes varapi
 adjudication only), ROM-FIREWALL (rito→disciplinary human-mediated), ROM-COMMITTEE (docketed
-only), ROM-OVERSIGHT (aggregates + grants, no workspaces), ROM-AUDIT (review/change/approve/
+only), ROM-OVERSIGHT (aggregates + grants, no workspaces), ROM-RECUSAL (a person cannot act as
+regulator on their own record — self-subject action refused), ROM-AUDIT (review/change/approve/
 access trail for a full W4 journey). authz SHADOW→ENFORCE for V045/V046/V047 after soak
 (strictly AFTER the identity program's flip); council_users deprecation completed (backfill
 verified; forbidden token recorded).

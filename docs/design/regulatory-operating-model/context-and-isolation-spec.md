@@ -72,6 +72,36 @@ An inspector is not finance; a committee member is not council-wide; HPA is not 
 council's desk. Every DENY row is proven live by the conformance pack (ROM-ISO / ROM-COMMITTEE
 / ROM-OVERSIGHT).
 
+## 3a. Dual-capacity persons (one person, clinical + regulatory)
+
+Most council members and many council officers ARE practising professionals — an MDPCZ or NCZ
+member is typically a registrant with a full clinical life. The same person therefore holds, on
+one Health-ID anchor: a clinical identity (varapi provider + vashandi assignments, driving
+`my_professional` / `facility_work`) AND one or more regulatory appointments (org-registry,
+driving `regulatory_work`). These are **coexisting capacities**, not a person type. The build
+already reflects this: the org-session branch resolves the appointment regardless of whether the
+person is also a provider, and mints a clean org-only token; the clinical session path is
+unchanged. The person switches capacity via the mode picker.
+
+Two invariants follow:
+
+- **Capacity isolation, not person typing.** A regulatory session SHALL NOT require, inherit or
+  expose clinical facility/provider context; a clinical session SHALL NOT inherit regulatory
+  authority. Each capacity's token carries only its own dimensions (regulatory: org_id + role +
+  jurisdiction; clinical: facility + provider + workspace). Never conflate them because they
+  belong to the same person (doctrine §2.4).
+
+- **Self-regulation firewall (recusal).** Because a regulator may also be a registrant of the
+  same council, a person SHALL NOT act in a regulatory capacity on their OWN record — reviewing,
+  deciding, moderating, adjudicating or sitting on a committee for a case, application, register
+  entry, complaint or disciplinary matter whose subject is that same person (or, where declared,
+  a conflicted relationship). This is a governed recusal, enforced where the actions live:
+  varapi application/disciplinary services and the committee docket (W4/W7/W8) SHALL refuse a
+  self-subject action (`actor person == subject person`) with a RECUSAL_REQUIRED outcome and an
+  audit entry; the conformance pack asserts it (ROM-RECUSAL). Detecting the tie uses the person
+  Health-ID on both sides (regulator appointment ↔ subject register entry/case), never the
+  provider public id alone.
+
 ## 4. Applicant-side context (non-regulator capacities)
 
 - "My Regulatory Affairs" rides `my_professional` (no new mode): NEW varapi self endpoints
