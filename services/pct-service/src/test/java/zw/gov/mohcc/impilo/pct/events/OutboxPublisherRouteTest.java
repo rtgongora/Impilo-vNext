@@ -35,4 +35,12 @@ class OutboxPublisherRouteTest {
         assertEquals("clinical.teleconsult.lifecycle", OutboxPublisher.routeTopic("telemedicine.session.completed"));
         assertEquals("clinical.teleconsult.lifecycle", OutboxPublisher.routeTopic("telemedicine.session.routed"));
     }
+
+    @Test
+    void versioned_v1_session_events_still_route_to_lifecycle_topic() {
+        // TM-B20: prefix routing (startsWith "telemedicine.session.") must survive the .v1 suffix,
+        // so the versioned events land on the same topic as their legacy bare names.
+        assertEquals("clinical.teleconsult.lifecycle", OutboxPublisher.routeTopic("telemedicine.session.completed.v1"));
+        assertEquals("clinical.teleconsult.lifecycle", OutboxPublisher.routeTopic("telemedicine.session.expired.v1"));
+    }
 }

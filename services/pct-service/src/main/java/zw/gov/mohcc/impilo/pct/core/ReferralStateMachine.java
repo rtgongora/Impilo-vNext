@@ -212,6 +212,15 @@ public class ReferralStateMachine {
         } catch (Exception e) {
             log.warn("Failed to record referral transition ledger row: {}", e.getMessage());
         }
+        try {
+            // Best-effort telemetry in its OWN transaction — kept separate from the ledger write
+            // above so a context-less thread (timer/consumer) that can't emit telemetry still
+            // persists the ledger row.
+            recorder.recordTransitionTelemetry(fromStatus, toStatus, action, allowed, mode.name());
+        } catch (Exception e) {
+            log.debug("Transition telemetry skipped ({} -> {}, action={}): {}",
+                    fromStatus, toStatus, action, e.getMessage());
+        }
     }
 
     private String resolveActor() {

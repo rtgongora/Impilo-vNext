@@ -32,6 +32,17 @@ public class ReferralTransitionRecorder {
         this.telemetryService = telemetryService;
     }
 
+    /**
+     * Persist the transition ledger row in an independent transaction. Telemetry is emitted
+     * SEPARATELY (see {@link #recordTransitionTelemetry}) — deliberately not in this transaction —
+     * so a telemetry failure can never roll back the durable audit row. TelemetryService.record()
+     * calls {@code TrustContextHolder.require()}, which throws on threads that never passed through
+     * a request (the ReferralLifecycleTimerJob expire/abandon sweeps run on the scheduler with no
+     * TrustContext); because that telemetry method is {@code @Transactional} it marks the shared
+     * transaction rollback-only on the way out, which — if the two shared this transaction — would
+     * silently drop the ledger row for every timer-driven transition (caught by
+     * teleconsult-hardening-journeys.sh J-TH-4).
+     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(UUID referralId, UUID tenantId, String fromStatus, String toStatus,
                        String action, String actor, boolean allowed, String mode) {
@@ -45,9 +56,17 @@ public class ReferralTransitionRecorder {
         row.setAllowed(allowed);
         row.setMode(mode);
         transitionRepository.save(row);
+    }
 
-        // journeyId is intentionally null: this is a referral transition, not a journey,
-        // and the telemetry journey_id column is ULID-sized (varchar 26).
+    /**
+     * Best-effort transition telemetry in its OWN independent transaction, so a missing
+     * TrustContext on timer/consumer threads rolls back only this (empty) transaction and never
+     * the ledger row. journeyId is intentionally null: this is a referral transition, not a
+     * journey, and the telemetry journey_id column is ULID-sized (varchar 26).
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void recordTransitionTelemetry(String fromStatus, String toStatus, String action,
+                                          boolean allowed, String mode) {
         telemetryService.record("telemedicine.referral.transition", null,
                 Map.<String, Object>of(
                         "from", fromStatus == null ? "" : fromStatus,

@@ -78,7 +78,8 @@ class ReferralLifecycleTimerJobTest {
 
         ArgumentCaptor<EventOutboxEntity> outbox = ArgumentCaptor.forClass(EventOutboxEntity.class);
         verify(outboxRepository).save(outbox.capture());
-        assertThat(outbox.getValue().getEventType()).isEqualTo("telemedicine.session.expired");
+        // TM-B20: lifecycle events are versioned .v1 at the outbox choke point.
+        assertThat(outbox.getValue().getEventType()).isEqualTo("telemedicine.session.expired.v1");
         assertThat(outbox.getValue().getPayload()).contains("EXPIRED").contains(r.getReferralId().toString());
     }
 
@@ -125,6 +126,7 @@ class ReferralLifecycleTimerJobTest {
 
         ArgumentCaptor<EventOutboxEntity> outbox = ArgumentCaptor.forClass(EventOutboxEntity.class);
         verify(outboxRepository).save(outbox.capture());
-        assertThat(outbox.getValue().getEventType()).isEqualTo("telemedicine.session.abandoned");
+        // TM-B20: lifecycle events are versioned .v1 at the outbox choke point.
+        assertThat(outbox.getValue().getEventType()).isEqualTo("telemedicine.session.abandoned.v1");
     }
 }
