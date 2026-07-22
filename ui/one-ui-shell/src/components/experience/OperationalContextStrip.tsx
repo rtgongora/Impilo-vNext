@@ -20,6 +20,9 @@ const MODE_ICONS: Record<OperationalMode, ComponentType<{ className?: string }>>
   facility_work: Building2,
   registry_admin: ShieldCheck,
   organization_admin: UserCog,
+  // TM-B cross-lane build unblock: the ROM work added the `regulatory_work` OperationalMode to
+  // the shared type but not this icon map, breaking `next build` (Record must be exhaustive).
+  regulatory_work: Shield,
 };
 
 export function OperationalContextStrip() {
