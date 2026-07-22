@@ -1854,6 +1854,19 @@ public class TeleconsultController {
      * fhir-gateway outage. (A durable retry belongs in a sovereign service —
      * the BFF is stateless; failures are logged at ERROR for reconciliation.)
      */
+    private static final String TELECONSULT_REFERRAL_SYSTEM = "http://impilo.mohcc.gov.zw/fhir/teleconsult-referral";
+
+    /**
+     * Project a completed teleconsult to the SHR (TM-B6): a virtual-class {@code Encounter}, the
+     * {@code DiagnosticReport} summary, and a response {@code Composition} document — each routed
+     * through the governed gateway forward endpoint (consent PEP → route → audit + outbox), each
+     * carrying the referral id as a business identifier so the three link back to the case.
+     *
+     * <p>Honesty contract: returns true only when the SHR actually received the clinical record —
+     * i.e. the DiagnosticReport AND Composition both delivered (the Encounter is best-effort
+     * context). Any gateway non-SUCCESS (NO_ROUTE/FORWARD_FAILED/CONSENT_DENIED/auth) → false, so
+     * completion never falsely claims a clinical summary reached the SHR.</p>
+     */
     private boolean writeTeleconsultSummaryToFhir(String referralId, JsonNode completed, String actorId,
                                                   String tenantId, String correlationId, String purposeOfUse) {
         try {
@@ -1862,47 +1875,103 @@ public class TeleconsultController {
                 log.warn("Teleconsult {} completed without a patient reference — no FHIR summary written", referralId);
                 return false;
             }
-            // A FHIR-valid DiagnosticReport (coded code + reference subject), routed through the
-            // governed gateway forward endpoint (consent PEP → route → audit + outbox) — NOT the
-            // /fhir/{type} path fhir-gateway never served.
+            String now = OffsetDateTime.now().toString();
+            String conclusion = teleconsultConclusion(referralId, completed);
+
+            // 1. Virtual-class Encounter — the context the summary + composition belong to.
+            ObjectNode encounter = objectMapper.createObjectNode();
+            encounter.put("resourceType", "Encounter");
+            encounter.put("status", "finished");
+            ObjectNode encClass = encounter.putObject("class");
+            encClass.put("system", "http://terminology.hl7.org/CodeSystem/v3-ActCode");
+            encClass.put("code", "VR");
+            encClass.put("display", "virtual");
+            encounter.putObject("subject").put("reference", "Patient/" + patientRef);
+            encounter.putObject("period").put("end", now);
+            encounter.putArray("identifier").addObject()
+                    .put("system", TELECONSULT_REFERRAL_SYSTEM).put("value", referralId);
+            boolean encounterOk = forwardFhirResource("Encounter", encounter, referralId, patientRef,
+                    tenantId, correlationId, actorId, purposeOfUse);
+
+            // 2. DiagnosticReport — the coded teleconsult summary.
             ObjectNode report = objectMapper.createObjectNode();
             report.put("resourceType", "DiagnosticReport");
             report.put("status", "final");
             ObjectNode code = report.putObject("code");
-            ArrayNode coding = code.putArray("coding");
-            ObjectNode c = coding.addObject();
-            c.put("system", "http://impilo.mohcc.gov.zw/fhir/CodeSystem/teleconsult");
-            c.put("code", "teleconsult-summary");
-            c.put("display", "Teleconsultation summary");
+            code.putArray("coding").addObject()
+                    .put("system", "http://impilo.mohcc.gov.zw/fhir/CodeSystem/teleconsult")
+                    .put("code", "teleconsult-summary")
+                    .put("display", "Teleconsultation summary");
             code.put("text", "Teleconsultation summary");
             report.putObject("subject").put("reference", "Patient/" + patientRef);
-            report.put("effectiveDateTime", OffsetDateTime.now().toString());
-            report.put("issued", OffsetDateTime.now().toString());
-            report.put("conclusion", teleconsultConclusion(referralId, completed));
-            ArrayNode performer = report.putArray("performer");
-            performer.addObject().put("display", defaultString(actorId, "unknown"));
-            ArrayNode identifier = report.putArray("identifier");
-            identifier.addObject()
-                    .put("system", "http://impilo.mohcc.gov.zw/fhir/teleconsult-referral")
-                    .put("value", referralId);
+            report.put("effectiveDateTime", now);
+            report.put("issued", now);
+            report.put("conclusion", conclusion);
+            report.putArray("performer").addObject().put("display", defaultString(actorId, "unknown"));
+            report.putArray("identifier").addObject()
+                    .put("system", TELECONSULT_REFERRAL_SYSTEM).put("value", referralId);
+            boolean reportOk = forwardFhirResource("DiagnosticReport", report, referralId, patientRef,
+                    tenantId, correlationId, actorId, purposeOfUse);
 
-            JsonNode fwd = fhirGatewayClient.forward(tenantId, correlationId, actorId,
-                    "DiagnosticReport", "CREATE", objectMapper.writeValueAsString(report),
-                    patientRef, purposeOfUse);
-            // Honesty contract: only claim the summary was written when the gateway actually
-            // DELIVERED it (SUCCESS). NO_ROUTE / FORWARD_FAILED / CONSENT_DENIED are audited but
-            // mean the SHR did not receive the projection — the UI must be able to prompt a retry.
-            String outcome = fwd == null ? null : fwd.path("data").path("outcome").asText(null);
-            boolean delivered = "SUCCESS".equals(outcome);
-            if (!delivered) {
-                log.warn("Teleconsult {} FHIR summary NOT delivered — gateway outcome={}", referralId, outcome);
+            // 3. Composition — the response document (what a clinician reads as the note of record).
+            ObjectNode composition = objectMapper.createObjectNode();
+            composition.put("resourceType", "Composition");
+            composition.put("status", "final");
+            ObjectNode compType = composition.putObject("type");
+            compType.putArray("coding").addObject()
+                    .put("system", "http://impilo.mohcc.gov.zw/fhir/CodeSystem/teleconsult")
+                    .put("code", "teleconsult-summary")
+                    .put("display", "Teleconsultation summary");
+            compType.put("text", "Teleconsultation summary");
+            composition.putObject("subject").put("reference", "Patient/" + patientRef);
+            composition.put("date", now);
+            composition.putArray("author").addObject().put("display", defaultString(actorId, "unknown"));
+            composition.put("title", "Teleconsultation Summary");
+            composition.putObject("identifier")
+                    .put("system", TELECONSULT_REFERRAL_SYSTEM).put("value", referralId);
+            ObjectNode section = composition.putArray("section").addObject();
+            section.put("title", "Assessment & Plan");
+            ObjectNode text = section.putObject("text");
+            text.put("status", "generated");
+            text.put("div", "<div xmlns=\"http://www.w3.org/1999/xhtml\">" + xhtmlEscape(conclusion) + "</div>");
+            boolean compositionOk = forwardFhirResource("Composition", composition, referralId, patientRef,
+                    tenantId, correlationId, actorId, purposeOfUse);
+
+            if (!encounterOk) {
+                log.warn("Teleconsult {} Encounter projection not delivered (context best-effort)", referralId);
             }
-            return delivered;
+            // The clinical record of truth = DiagnosticReport + Composition. Both must land.
+            return reportOk && compositionOk;
         } catch (Exception ex) {
             log.error("Teleconsult FHIR writeback FAILED for {} — clinical summary NOT recorded: {}",
                     referralId, ex.getMessage());
             return false;
         }
+    }
+
+    /** Forward one FHIR resource through the governed gateway; true iff outcome == SUCCESS (delivered). */
+    private boolean forwardFhirResource(String resourceType, ObjectNode resource, String referralId,
+                                        String patientRef, String tenantId, String correlationId,
+                                        String actorId, String purposeOfUse) {
+        try {
+            JsonNode fwd = fhirGatewayClient.forward(tenantId, correlationId, actorId,
+                    resourceType, "CREATE", objectMapper.writeValueAsString(resource), patientRef, purposeOfUse);
+            String outcome = fwd == null ? null : fwd.path("data").path("outcome").asText(null);
+            boolean delivered = "SUCCESS".equals(outcome);
+            if (!delivered) {
+                log.warn("Teleconsult {} {} NOT delivered — gateway outcome={}", referralId, resourceType, outcome);
+            }
+            return delivered;
+        } catch (Exception ex) {
+            log.error("Teleconsult {} {} forward FAILED: {}", referralId, resourceType, ex.getMessage());
+            return false;
+        }
+    }
+
+    /** Minimal XHTML escaping for FHIR narrative div content. */
+    private String xhtmlEscape(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
     /** Prefer a real conclusion from the structured response; fall back to a neutral completion note. */

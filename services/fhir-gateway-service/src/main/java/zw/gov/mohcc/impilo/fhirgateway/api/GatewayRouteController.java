@@ -32,7 +32,7 @@ public class GatewayRouteController {
             "DiagnosticReport", "ImagingStudy", "Procedure", "MedicationAdministration", "Immunization",
             "CarePlan", "ClinicalImpression", "ServiceRequest", "Specimen", "DocumentReference",
             "AllergyIntolerance", "MedicationStatement", "FamilyMemberHistory", "RiskAssessment",
-            "QuestionnaireResponse", "EpisodeOfCare"
+            "QuestionnaireResponse", "EpisodeOfCare", "Composition"
     );
 
     private final GatewayRouteService routeService;
