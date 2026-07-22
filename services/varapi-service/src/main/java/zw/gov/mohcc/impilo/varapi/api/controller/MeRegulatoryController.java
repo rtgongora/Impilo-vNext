@@ -47,4 +47,11 @@ public class MeRegulatoryController {
         TrustContext ctx = TrustContextHolder.require();
         return myRegulatoryService.applicationsForPerson(ctx.tenantId(), ctx.actorId());
     }
+
+    /** Complaints involving me (ROM-U3) — disciplinary matters where I am the respondent. */
+    @GetMapping("/complaints")
+    public java.util.List<MyRegulatoryService.MyComplaint> myComplaints() {
+        TrustContext ctx = TrustContextHolder.require();
+        return myRegulatoryService.complaintsForPerson(ctx.tenantId(), ctx.actorId());
+    }
 }

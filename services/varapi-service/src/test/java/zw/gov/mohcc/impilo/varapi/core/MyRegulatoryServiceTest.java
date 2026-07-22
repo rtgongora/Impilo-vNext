@@ -34,6 +34,7 @@ class MyRegulatoryServiceTest {
     @Mock ProviderGoodStandingRepository goodStandingRepository;
     @Mock RegisterEntryRestrictionRepository restrictionRepository;
     @Mock zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderApplicationRepository applicationRepository;
+    @Mock zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderDisciplinaryCaseRepository disciplinaryRepository;
 
     MyRegulatoryService service;
     UUID tenant;
@@ -42,7 +43,7 @@ class MyRegulatoryServiceTest {
     @BeforeEach
     void setUp() {
         service = new MyRegulatoryService(providerRepository, registrationRepository,
-                goodStandingRepository, restrictionRepository, applicationRepository);
+                goodStandingRepository, restrictionRepository, applicationRepository, disciplinaryRepository);
         tenant = UUID.randomUUID();
         healthId = UUID.randomUUID();
         lenient().when(restrictionRepository.findByTenantIdAndRegistrationRecordIdInAndStatus(

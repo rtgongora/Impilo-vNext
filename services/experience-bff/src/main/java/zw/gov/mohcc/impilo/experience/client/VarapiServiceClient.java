@@ -92,6 +92,16 @@ public class VarapiServiceClient {
                 baseUrl + "/v1/internal/providers/applications/" + applicationId + "/" + action, body, JsonNode.class).getBody();
     }
 
+    /** Disciplinary proceeding lanes (regulator console, ROM-U3). */
+    public JsonNode getDisciplinaryForProvider(Long providerId) {
+        return restTemplate.getForEntity(
+                baseUrl + "/v1/internal/regulatory/disciplinary/provider/" + providerId, JsonNode.class).getBody();
+    }
+    public JsonNode postDisciplinary(String sub, Object body) {
+        return restTemplate.postForEntity(
+                baseUrl + "/v1/internal/regulatory/disciplinary" + sub, body, JsonNode.class).getBody();
+    }
+
     public JsonNode getProviderLicenses(String providerId) {
         String url = baseUrl + "/v1/internal/providers/" + providerId + "/licenses";
         log.info("VARAPI: Getting licenses for provider={}", providerId);

@@ -37,6 +37,12 @@ public class MeRegulatoryBffController {
         return ResponseEntity.ok(varapiClient.getMeRegulatory("/applications"));
     }
 
+    /** Complaints involving me (ROM-U3) — disciplinary matters where I am the respondent. */
+    @GetMapping("/complaints")
+    public ResponseEntity<JsonNode> complaints() {
+        return ResponseEntity.ok(varapiClient.getMeRegulatory("/complaints"));
+    }
+
     /** The applicant's view of one application — APPLICANT-visible thread + RFIs (never internal notes). */
     @GetMapping("/applications/{applicationId}/correspondence")
     public ResponseEntity<JsonNode> applicationCorrespondence(@PathVariable Long applicationId) {

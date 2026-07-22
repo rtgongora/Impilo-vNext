@@ -24,17 +24,20 @@ public class MyRegulatoryService {
     private final ProviderGoodStandingRepository goodStandingRepository;
     private final RegisterEntryRestrictionRepository restrictionRepository;
     private final ProviderApplicationRepository applicationRepository;
+    private final ProviderDisciplinaryCaseRepository disciplinaryRepository;
 
     public MyRegulatoryService(ProviderRepository providerRepository,
                                ProviderCouncilRegistrationRecordRepository registrationRepository,
                                ProviderGoodStandingRepository goodStandingRepository,
                                RegisterEntryRestrictionRepository restrictionRepository,
-                               ProviderApplicationRepository applicationRepository) {
+                               ProviderApplicationRepository applicationRepository,
+                               ProviderDisciplinaryCaseRepository disciplinaryRepository) {
         this.providerRepository = providerRepository;
         this.registrationRepository = registrationRepository;
         this.goodStandingRepository = goodStandingRepository;
         this.restrictionRepository = restrictionRepository;
         this.applicationRepository = applicationRepository;
+        this.disciplinaryRepository = disciplinaryRepository;
     }
 
     public record Restriction(String type, String description, String status,
@@ -70,6 +73,28 @@ public class MyRegulatoryService {
                 .map(a -> new MyApplication(a.getId(), a.getApplicationType(), a.getWorkflowState(),
                         a.getCouncil() != null ? a.getCouncil().getCouncilCode() : null,
                         a.getSubmittedAt() != null ? a.getSubmittedAt().toString() : null))
+                .toList();
+    }
+
+    public record MyComplaint(Long id, String caseStage, String status, String summary,
+                              boolean respondentNotified, String openedDate) {}
+
+    /** Complaints/disciplinary matters involving the signed-in person (ROM-U3, respondent view). */
+    @Transactional(readOnly = true)
+    public List<MyComplaint> complaintsForPerson(UUID tenantId, String personHealthId) {
+        UUID healthId = parseUuid(personHealthId);
+        if (healthId == null) {
+            return List.of();
+        }
+        ProviderEntity provider = providerRepository.findByTenantIdAndImpiloHealthId(tenantId, healthId).orElse(null);
+        if (provider == null) {
+            return List.of();
+        }
+        return disciplinaryRepository.findByProviderId(provider.getId()).stream()
+                .filter(c -> tenantId.equals(c.getTenantId()))
+                .map(c -> new MyComplaint(c.getId(), c.getCaseStage(), c.getStatus(), c.getSummary(),
+                        Boolean.TRUE.equals(c.getRespondentNotified()),
+                        c.getOpenedDate() != null ? c.getOpenedDate().toString() : null))
                 .toList();
     }
 

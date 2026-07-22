@@ -66,4 +66,25 @@ public class RegulatoryConsoleBffController {
     public ResponseEntity<JsonNode> decision(@PathVariable Long applicationId, @RequestBody Map<String, Object> body) {
         return ResponseEntity.ok(varapiClient.postApplicationAction(applicationId, "decision", body));
     }
+
+    // ── Disciplinary proceeding lanes (ROM-U3) — all recusal-guarded downstream ──
+    @GetMapping("/disciplinary/provider/{providerId}")
+    public ResponseEntity<JsonNode> disciplinaryForProvider(@PathVariable Long providerId) {
+        return ResponseEntity.ok(varapiClient.getDisciplinaryForProvider(providerId));
+    }
+
+    @PostMapping("/disciplinary")
+    public ResponseEntity<JsonNode> openProceeding(@RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(varapiClient.postDisciplinary("", body));
+    }
+
+    @PostMapping("/disciplinary/{caseId}/advance")
+    public ResponseEntity<JsonNode> advanceProceeding(@PathVariable Long caseId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(varapiClient.postDisciplinary("/" + caseId + "/advance", body));
+    }
+
+    @PostMapping("/disciplinary/{caseId}/determine")
+    public ResponseEntity<JsonNode> determineProceeding(@PathVariable Long caseId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(varapiClient.postDisciplinary("/" + caseId + "/determine", body));
+    }
 }
