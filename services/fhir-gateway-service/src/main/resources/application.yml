@@ -56,6 +56,11 @@ fhir-gateway:
     poll-interval-ms: 2000
   consent:
     base-url: ${CONSENT_SERVICE_BASE_URL:http://localhost:8182}
+  # Environment-wide default FHIR base for resources with no explicit fhir_route row
+  # (e.g. http://hapi-fhir:8090/fhir). Empty preserves strict NO_ROUTE behaviour; per-tenant
+  # route rows always override. Lets governed FHIR writes work with one config value instead
+  # of a route row per (tenant × resource type).
+  default-target-base: ${FHIR_GATEWAY_DEFAULT_TARGET_BASE:}
 
 management:
   endpoints:

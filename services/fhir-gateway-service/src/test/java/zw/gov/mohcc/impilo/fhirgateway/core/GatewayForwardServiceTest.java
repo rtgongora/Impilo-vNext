@@ -19,6 +19,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -41,8 +44,9 @@ class GatewayForwardServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Empty default-target base → strict NO_ROUTE behaviour preserved for the existing tests.
         service = new GatewayForwardService(routeRepository, auditLogRepository, outboxRepository,
-                consentEnforcementService, fhirForwarder);
+                consentEnforcementService, fhirForwarder, "");
 
         when(consentEnforcementService.evaluate(any(), any(), any(), any(), any()))
                 .thenReturn(ConsentOutcome.PERMIT);
@@ -81,5 +85,34 @@ class GatewayForwardServiceTest {
 
         // The old code returned SUCCESS here without ever forwarding. Now it must NOT.
         assertThat(forwardPatient().outcome()).isEqualTo("FORWARD_FAILED");
+    }
+
+    @Test
+    void recordsNoRoute_whenNoRouteAndNoDefaultBase() {
+        // Observation has no route row and the default base is empty → strict NO_ROUTE.
+        when(routeRepository.findByTenantIdAndResourceTypeAndEnabledTrue(any(), eq("Observation")))
+                .thenReturn(List.of());
+        GatewayForwardService.ForwardResult result = service.forward(tenant, "actor-1", UUID.randomUUID(),
+                "10.0.0.1", "Observation", "CREATE", "{\"resourceType\":\"Observation\"}", "cpid-1", "TREATMENT");
+        assertThat(result.outcome()).isEqualTo("NO_ROUTE");
+        verifyNoInteractions(fhirForwarder);
+    }
+
+    @Test
+    void usesDefaultTargetBase_whenConfiguredAndNoExplicitRoute() {
+        // A gateway configured with an environment-wide default base forwards unrouted resources
+        // to {base}/{resourceType} instead of dropping them as NO_ROUTE.
+        when(routeRepository.findByTenantIdAndResourceTypeAndEnabledTrue(any(), eq("Observation")))
+                .thenReturn(List.of());
+        GatewayForwardService withDefault = new GatewayForwardService(routeRepository, auditLogRepository,
+                outboxRepository, consentEnforcementService, fhirForwarder, "http://hapi-fhir:8090/fhir/");
+        when(fhirForwarder.send(eq("http://hapi-fhir:8090/fhir/Observation"), any(), any(), any()))
+                .thenReturn(new FhirForwarder.ForwardAttempt(true, 201, "forwarded"));
+
+        GatewayForwardService.ForwardResult result = withDefault.forward(tenant, "actor-1", UUID.randomUUID(),
+                "10.0.0.1", "Observation", "CREATE", "{\"resourceType\":\"Observation\"}", "cpid-1", "TREATMENT");
+
+        assertThat(result.outcome()).isEqualTo("SUCCESS");
+        verify(fhirForwarder).send(eq("http://hapi-fhir:8090/fhir/Observation"), any(), any(), any());
     }
 }

@@ -23,17 +23,28 @@ public class GatewayForwardService {
     private final EventOutboxRepository outboxRepository;
     private final ConsentEnforcementService consentEnforcementService;
     private final FhirForwarder fhirForwarder;
+    /**
+     * Optional environment-wide default FHIR base (e.g. {@code http://hapi-fhir:8090/fhir}). When
+     * set and no explicit per-tenant {@code fhir_route} row matches, the gateway forwards to
+     * {@code {base}/{resourceType}}. Empty (the default) preserves the strict NO_ROUTE behaviour.
+     * This makes governed FHIR writes work with a single config value while per-tenant route rows
+     * still override, instead of requiring a route row per (tenant × resource type).
+     */
+    private final String defaultTargetBase;
 
     public GatewayForwardService(FhirRouteRepository routeRepository,
                                  FhirAuditLogRepository auditLogRepository,
                                  EventOutboxRepository outboxRepository,
                                  ConsentEnforcementService consentEnforcementService,
-                                 FhirForwarder fhirForwarder) {
+                                 FhirForwarder fhirForwarder,
+                                 @org.springframework.beans.factory.annotation.Value(
+                                         "${fhir-gateway.default-target-base:}") String defaultTargetBase) {
         this.routeRepository = routeRepository;
         this.auditLogRepository = auditLogRepository;
         this.outboxRepository = outboxRepository;
         this.consentEnforcementService = consentEnforcementService;
         this.fhirForwarder = fhirForwarder;
+        this.defaultTargetBase = defaultTargetBase == null ? "" : defaultTargetBase.trim();
     }
 
     @Transactional
@@ -69,13 +80,19 @@ public class GatewayForwardService {
         String outcome;
         String targetEndpoint;
 
-        if (routes.isEmpty()) {
+        if (routes.isEmpty() && defaultTargetBase.isEmpty()) {
             outcome = "NO_ROUTE";
             targetEndpoint = null;
             log.warn("No active route found for tenant={} resourceType={}", tenantId, resourceType);
         } else {
-            FhirRouteEntity route = routes.get(0);
-            targetEndpoint = route.getTargetEndpoint();
+            if (routes.isEmpty()) {
+                // Environment-wide default: {base}/{resourceType}.
+                targetEndpoint = defaultTargetBase.replaceAll("/+$", "") + "/" + resourceType;
+                log.info("No explicit route for tenant={} resourceType={}; using default target {}",
+                        tenantId, resourceType, targetEndpoint);
+            } else {
+                targetEndpoint = routes.get(0).getTargetEndpoint();
+            }
             log.info("Forwarding {} {} to {} for tenant={}", operation, resourceType,
                     targetEndpoint, tenantId);
             // Actually deliver the resource downstream and record the REAL outcome — previously
