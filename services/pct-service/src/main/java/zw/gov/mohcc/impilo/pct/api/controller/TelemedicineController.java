@@ -167,6 +167,14 @@ public class TelemedicineController {
         return ResponseEntity.ok(ApiResponse.ok(telemedicineService.escalateReferral(id, request == null ? Map.of() : request), correlationId));
     }
 
+    @PostMapping("/referrals/{id}/media-modality")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> changeMediaModality(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(telemedicineService.changeMediaModality(id, request), correlationId));
+    }
+
     @PostMapping("/referrals/{id}/transfer")
     public ResponseEntity<ApiResponse<Map<String, Object>>> transferReferral(
             @PathVariable String id, @RequestBody(required = false) Map<String, Object> request) {

@@ -854,6 +854,40 @@ public class TeleconsultController {
         }
     }
 
+    /**
+     * TM-B5 (B5-2): media-modality downgrade ladder VIDEO -> AUDIO -> ASYNC. On media failure or
+     * bandwidth loss the client (or provider) steps the session down a rung; ASYNC drops live media
+     * and continues on the durable case-persisted message thread. Monotonic in PCT (restore=true to
+     * step up). The step + reason are recorded on the case and emit a versioned lifecycle event.
+     */
+    @PostMapping("/sessions/{id}/media-downgrade")
+    public ResponseEntity<Map<String, Object>> mediaDowngrade(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            Map<String, Object> reqBody = body == null ? new LinkedHashMap<>() : new LinkedHashMap<>(body);
+            if (actorId != null && !actorId.isBlank() && !reqBody.containsKey("responder_id")) {
+                reqBody.put("responder_id", actorId);
+            }
+            JsonNode result = pctClient.lifecycleAction(id, "media-modality", reqBody);
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_MEDIA_DOWNGRADE", "POST:teleconsult/media-downgrade", "SUCCESS",
+                    actorId, "PROVIDER", extractPatient(result), "TeleconsultReferral", id,
+                    Map.of("toModality", String.valueOf(reqBody.getOrDefault("modality", ""))));
+            return ok(result, requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
     /** TM-B1: reason-bound lifecycle transitions. Cancel/reopen/escalate/transfer. */
     @PostMapping("/sessions/{id}/{action:cancel|reopen|escalate|transfer|error-mark}")
     public ResponseEntity<Map<String, Object>> lifecycleAction(

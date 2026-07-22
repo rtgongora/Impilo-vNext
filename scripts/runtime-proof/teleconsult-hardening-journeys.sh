@@ -114,6 +114,23 @@ MSGCT=$(PSQL pct "SELECT jsonb_array_length(messages) FROM $RTBL WHERE referral_
 HASTS=$(PSQL pct "SELECT count(*) FROM $RTBL WHERE referral_id='$REF' AND messages @> '[{\"responderId\":\"rig-dr-moyo\"}]' AND messages::text LIKE '%timestamp%'")
 [ "${HASTS:-0}" = 1 ] && ok "message carries server provenance (author + timestamp)" || bad "message missing provenance ($HASTS)"
 
+# ── J-TH-6: B5-2 media-modality downgrade ladder VIDEO→AUDIO→ASYNC ───────────
+say "J-TH-6: media downgrade ladder is monotonic + recorded + versioned-evented"
+REF2=$(mkref video); curl -sS $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF2/submit >/dev/null
+curl -sS $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF2/media-modality -d '{"modality":"AUDIO","reason":"video froze"}' >/dev/null
+M1=$(PSQL pct "SELECT media_modality FROM $RTBL WHERE referral_id='$REF2'")
+[ "$M1" = "AUDIO" ] && ok "VIDEO→AUDIO recorded (media_modality=AUDIO)" || bad "step-down not recorded ($M1)"
+DEVT=$(PSQL pct "SELECT count(*) FROM $OTBL WHERE aggregate_id='$REF2' AND event_type='telemedicine.session.media_downgraded.v1'")
+[ "${DEVT:-0}" -ge 1 ] && ok "emitted telemedicine.session.media_downgraded.v1" || bad "no downgrade event ($DEVT)"
+curl -sS $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF2/media-modality -d '{"modality":"ASYNC","reason":"audio dropped"}' >/dev/null
+M2=$(PSQL pct "SELECT media_modality FROM $RTBL WHERE referral_id='$REF2'")
+[ "$M2" = "ASYNC" ] && ok "AUDIO→ASYNC recorded (continues on durable chat)" || bad "async step not recorded ($M2)"
+UP=$(curl -sS -o /dev/null -w '%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF2/media-modality -d '{"modality":"VIDEO","reason":"try again"}')
+[ "$UP" = "409" ] && ok "illegal step-UP ASYNC→VIDEO refused 409 (no silent reversal)" || bad "step-up not rejected (HTTP $UP)"
+REST=$(curl -sS -o /dev/null -w '%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF2/media-modality -d '{"modality":"VIDEO","reason":"bandwidth back","restore":true}')
+M3=$(PSQL pct "SELECT media_modality FROM $RTBL WHERE referral_id='$REF2'")
+[ "$REST" = "200" ] && [ "$M3" = "VIDEO" ] && ok "provider restore=true steps back up to VIDEO" || bad "restore failed (HTTP $REST, modality=$M3)"
+
 # ── J-TH-2: A1 illegal transition rejected under ENFORCE ─────────────────────
 say "J-TH-2: SUBMITTED->COMPLETED is refused 409 ILLEGAL_TRANSITION (ENFORCE)"
 R=$(curl -sS -w '\n%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF/complete \

@@ -73,6 +73,11 @@ public class ReferralEntity {
     @Column(name = "virtual_mode")
     private String virtualMode;
 
+    // TM-B5 (B5-2): runtime effective media rung (VIDEO|AUDIO|ASYNC), distinct from the requested
+    // virtual_mode. NULL = as requested. Stepped down the downgrade ladder on media failure/bandwidth.
+    @Column(name = "media_modality")
+    private String mediaModality;
+
     // Billing context captured at referral time (composed by the BFF from coverage/registry)
     // and propagated to COSTA on the teleconsult value-trigger so charging rules can fire.
     @Column(name = "patient_category")
@@ -214,6 +219,9 @@ public class ReferralEntity {
     public void setPreferredMode(String preferredMode) { this.preferredMode = preferredMode; }
     public String getModality() { return modality; }
     public void setModality(String modality) { this.modality = modality; }
+    public String getMediaModality() { return mediaModality; }
+    public void setMediaModality(String mediaModality) { this.mediaModality = mediaModality; }
+
     public String getVirtualMode() { return virtualMode; }
     public void setVirtualMode(String virtualMode) { this.virtualMode = virtualMode; }
     public String getPatientCategory() { return patientCategory; }

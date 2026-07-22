@@ -475,6 +475,74 @@ public class TelemedicineOrchestrationService {
                 "telemedicine.session.transferred");
     }
 
+    // TM-B5 (B5-2): media-modality downgrade ladder VIDEO -> AUDIO -> ASYNC. Monotonic by default
+    // (media failure / bandwidth only ever steps DOWN); a provider may restore upward with
+    // restore=true. This is NOT a referral-status transition — the case stays live; only the media
+    // rung moves. ASYNC = drop live media and continue on the durable message thread (already
+    // case-persisted, see B5-1). Records the step with reason + provenance and emits a versioned
+    // lifecycle event so the record shows the full modality history.
+    private static final List<String> MEDIA_LADDER = List.of("ASYNC", "AUDIO", "VIDEO"); // ascending rungs
+
+    private int mediaRung(String modality) {
+        if (modality == null) return -1;
+        return MEDIA_LADDER.indexOf(modality.trim().toUpperCase(Locale.ROOT));
+    }
+
+    /** Effective rung today: explicit media_modality, else derived from the requested virtual_mode. */
+    private String effectiveModality(ReferralEntity entity) {
+        if (!blank(entity.getMediaModality())) return entity.getMediaModality().trim().toUpperCase(Locale.ROOT);
+        String vm = entity.getVirtualMode() == null ? "video" : entity.getVirtualMode().trim().toLowerCase(Locale.ROOT);
+        return switch (vm) {
+            case "audio" -> "AUDIO";
+            case "message", "async" -> "ASYNC";
+            default -> "VIDEO";
+        };
+    }
+
+    @Transactional
+    public Map<String, Object> changeMediaModality(String referralId, Map<String, Object> request) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        String target = optional(request, "modality", "media_modality", "mediaModality");
+        if (blank(target)) {
+            throw new PctDomainException("MODALITY_REQUIRED", 400, "media modality change requires a target modality.");
+        }
+        target = target.trim().toUpperCase(Locale.ROOT);
+        int targetRung = mediaRung(target);
+        if (targetRung < 0) {
+            throw new PctDomainException("INVALID_MODALITY", 400,
+                    "modality must be one of VIDEO, AUDIO, ASYNC (was " + target + ").");
+        }
+        String from = effectiveModality(entity);
+        int fromRung = mediaRung(from);
+        boolean restore = Boolean.parseBoolean(String.valueOf(optional(request, "restore", "restoreUp")));
+        // Stepping UP the ladder (rung increase) is a restore — only permitted with an explicit flag,
+        // so a failed-media auto-downgrade can never be silently reversed.
+        if (targetRung > fromRung && !restore) {
+            throw new PctDomainException("INVALID_MODALITY_STEP", 409,
+                    "cannot raise media from " + from + " to " + target + " without restore=true.");
+        }
+        String reason = defaulted(optional(request, "reason"), restore ? "provider restored media" : "media step-down");
+
+        Map<String, Object> note = new LinkedHashMap<>();
+        note.put("responseType", "MODALITY_CHANGE");
+        note.put("fromModality", from);
+        note.put("toModality", target);
+        note.put("restore", restore);
+        note.put("reason", reason);
+        note.put("responderId", defaulted(optional(request, "responder_id", "responderId"), "system"));
+        note.put("timestamp", OffsetDateTime.now().toString());
+        appendResponse(entity, note);
+        entity.setMediaModality(target);
+
+        ReferralEntity saved = referralRepository.save(entity);
+        Map<String, Object> payload = toReferralPayload(saved);
+        payload.put("fromModality", from);
+        payload.put("toModality", target);
+        payload.put("reason", reason);
+        emitOutbox("telemedicine.session.media_downgraded", saved.getReferralId().toString(), payload);
+        return payload;
+    }
+
     /** Shared lifecycle-transition mechanic: reason mandatory, guard-driven, reason logged. */
     private Map<String, Object> lifecycleTransition(String referralId, ReferralStatus target, String action,
                                                     Map<String, Object> request, String eventType) {
