@@ -22,6 +22,8 @@ import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.KhulumaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MvumoServiceClient;
+import zw.gov.mohcc.impilo.experience.client.DaidzaiServiceClient;
+import zw.gov.mohcc.impilo.experience.client.NhumeServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
@@ -74,6 +76,8 @@ public class TeleconsultController {
     private final BookingServiceClient bookingClient;
     private final KhulumaServiceClient khulumaClient;
     private final OrosServiceClient orosClient;
+    private final DaidzaiServiceClient daidzaiClient;
+    private final NhumeServiceClient nhumeClient;
     private final ObjectMapper objectMapper;
 
     public TeleconsultController(PctServiceClient pctClient,
@@ -91,6 +95,8 @@ public class TeleconsultController {
                                  BookingServiceClient bookingClient,
                                  KhulumaServiceClient khulumaClient,
                                  OrosServiceClient orosClient,
+                                 DaidzaiServiceClient daidzaiClient,
+                                 NhumeServiceClient nhumeClient,
                                  TelemedicineGovernanceService telemedicineGovernanceService,
                                  ObjectMapper objectMapper) {
         this.pctClient = pctClient;
@@ -108,6 +114,8 @@ public class TeleconsultController {
         this.bookingClient = bookingClient;
         this.khulumaClient = khulumaClient;
         this.orosClient = orosClient;
+        this.daidzaiClient = daidzaiClient;
+        this.nhumeClient = nhumeClient;
         this.telemedicineGovernanceService = telemedicineGovernanceService;
         this.objectMapper = objectMapper;
     }
@@ -806,7 +814,18 @@ public class TeleconsultController {
             @RequestBody(required = false) Map<String, Object> body) {
         try {
             telemedicineGovernanceService.assertGovernedMutate();
-            JsonNode result = pctClient.lifecycleAction(id, action, body == null ? Map.of() : body);
+            Map<String, Object> reqBody = body == null ? Map.of() : body;
+            JsonNode result = pctClient.lifecycleAction(id, action, reqBody);
+            // TM-B12 emergency side effects: the PCT state transition is the clinical source of
+            // truth and has already committed — the dispatch below is best-effort so a downstream
+            // outage never blocks the escalation, but its success/failure is surfaced honestly
+            // (emergencyDispatched/transferDispatched + ref) so the console never implies EMS/transport
+            // was summoned when it was not.
+            if ("escalate".equals(action)) {
+                attachEmergencyDispatch(result, id, reqBody, tenantId, actorId, facilityId);
+            } else if ("transfer".equals(action)) {
+                attachTransferDispatch(result, id, reqBody, tenantId, actorId, facilityId);
+            }
             telemedicineGovernanceService.audit(
                     tenantId, correlationId, purposeOfUse, facilityId,
                     "TELEMEDICINE_REFERRAL_" + action.toUpperCase(Locale.ROOT).replace('-', '_'),
@@ -815,6 +834,72 @@ public class TeleconsultController {
             return ok(result, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e, requestId, correlationId);
+        }
+    }
+
+    /**
+     * TM-B12: on escalation, raise a Daidzai emergency incident so EMS / emergency response is
+     * actually summoned (not just a state flag). Best-effort — never fails the transition; the
+     * outcome is written back onto the referral payload so the UI can confirm or prompt a manual call.
+     */
+    private void attachEmergencyDispatch(JsonNode result, String referralId, Map<String, Object> body,
+                                         String tenantId, String actorId, String facilityId) {
+        if (!(result instanceof ObjectNode node)) return;
+        try {
+            String patient = extractPatient(result);
+            Map<String, Object> incident = new java.util.LinkedHashMap<>();
+            incident.put("emergencyCategory", defaultString(val(body, "emergencyCategory", "emergency_category"), "MEDICAL"));
+            incident.put("severity", defaultString(val(body, "severity"), "HIGH"));
+            incident.put("description", defaultString(val(body, "reason"), "Teleconsult clinical escalation " + referralId));
+            incident.put("facilityId", facilityId);
+            incident.put("subjectIdentityMode", defaultString(val(body, "subjectIdentityMode", "subject_identity_mode"), "IDENTIFIED"));
+            incident.put("subjectCpid", patient);
+            incident.put("locationDescription", val(body, "locationDescription", "location_description"));
+            putIfNumber(incident, "lat", body.get("lat"));
+            putIfNumber(incident, "lng", body.get("lng"));
+            JsonNode created = daidzaiClient.createIncident(incident);
+            String incidentId = created == null ? null : extractId(created);
+            node.put("emergencyDispatched", incidentId != null && !incidentId.isBlank());
+            if (incidentId != null) node.put("emergencyIncidentId", incidentId);
+        } catch (Exception e) {
+            log.error("Teleconsult {} escalation raised state but Daidzai incident FAILED — EMS NOT dispatched: {}",
+                    referralId, e.getMessage());
+            node.put("emergencyDispatched", false);
+        }
+    }
+
+    /**
+     * TM-B12: on transfer, open a Nhume delivery for the patient/case transport (Ndila destination
+     * passed through when supplied). Best-effort with the same honesty contract as escalation.
+     */
+    private void attachTransferDispatch(JsonNode result, String referralId, Map<String, Object> body,
+                                        String tenantId, String actorId, String facilityId) {
+        if (!(result instanceof ObjectNode node)) return;
+        try {
+            Map<String, Object> delivery = new java.util.LinkedHashMap<>();
+            delivery.put("originFacilityId", facilityId);
+            delivery.put("destinationFacilityId", val(body, "destinationFacilityId", "destination_facility_id", "toFacilityId"));
+            delivery.put("subjectCpid", extractPatient(result));
+            delivery.put("reason", defaultString(val(body, "reason"), "Teleconsult transfer " + referralId));
+            delivery.put("cargoType", "PATIENT");
+            delivery.put("originRef", "TeleconsultReferral/" + referralId);
+            delivery.put("ndilaDestination", val(body, "ndilaDestination", "ndila_destination", "destination"));
+            JsonNode created = nhumeClient.createDelivery(delivery);
+            String deliveryId = created == null ? null : extractId(created);
+            node.put("transferDispatched", deliveryId != null && !deliveryId.isBlank());
+            if (deliveryId != null) node.put("transferDeliveryId", deliveryId);
+        } catch (Exception e) {
+            log.error("Teleconsult {} transfer raised state but Nhume delivery FAILED — transport NOT arranged: {}",
+                    referralId, e.getMessage());
+            node.put("transferDispatched", false);
+        }
+    }
+
+    private void putIfNumber(Map<String, Object> target, String key, Object value) {
+        if (value instanceof Number n) {
+            target.put(key, n);
+        } else if (value instanceof String s && !s.isBlank()) {
+            try { target.put(key, Double.parseDouble(s.trim())); } catch (NumberFormatException ignored) { /* skip */ }
         }
     }
 

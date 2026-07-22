@@ -17,6 +17,8 @@ import zw.gov.mohcc.impilo.experience.client.CoverageServiceClient;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MvumoServiceClient;
+import zw.gov.mohcc.impilo.experience.client.DaidzaiServiceClient;
+import zw.gov.mohcc.impilo.experience.client.NhumeServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
@@ -50,6 +52,8 @@ class TeleconsultControllerTest {
     private KhulumaServiceClient khulumaClient;
     private OrosServiceClient orosClient;
     private FhirGatewayServiceClient fhirGatewayClient;
+    private DaidzaiServiceClient daidzaiClient;
+    private NhumeServiceClient nhumeClient;
 
     private TelemedicineGovernanceService governanceService;
     private VitoServiceClient vitoClient;
@@ -77,6 +81,8 @@ class TeleconsultControllerTest {
         bookingClient = Mockito.mock(BookingServiceClient.class);
         khulumaClient = Mockito.mock(KhulumaServiceClient.class);
         orosClient = Mockito.mock(OrosServiceClient.class);
+        daidzaiClient = Mockito.mock(DaidzaiServiceClient.class);
+        nhumeClient = Mockito.mock(NhumeServiceClient.class);
         governanceService = Mockito.mock(TelemedicineGovernanceService.class);
         vitoClient = Mockito.mock(VitoServiceClient.class);
         // Default: patient exists in VITO so existing createSession tests pass the intake guard.
@@ -85,7 +91,7 @@ class TeleconsultControllerTest {
         controller = new TeleconsultController(
                 pctClient, vitoClient, mvumoClient, documentClient, varapiClient, tusoClient, billingContextService,
                 notificationClient, fhirGatewayClient, costaClient, analyticsClient, rtcClient,
-                bookingClient, khulumaClient, orosClient, governanceService, objectMapper
+                bookingClient, khulumaClient, orosClient, daidzaiClient, nhumeClient, governanceService, objectMapper
         );
     }
 
@@ -107,6 +113,78 @@ class TeleconsultControllerTest {
         assertNotNull(response.getBody());
         Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
         assertEquals("PROVIDER_NOT_AUTHORIZED", error.get("code"));
+    }
+
+    @Test
+    void escalateRaisesDaidzaiEmergencyIncidentAndReportsDispatch() {
+        // TM-B12: escalation transitions the referral AND raises a real Daidzai incident (EMS),
+        // reporting the dispatch outcome + incident id back onto the payload.
+        Mockito.when(pctClient.lifecycleAction(eq("ref-esc"), eq("escalate"), any()))
+                .thenReturn(objectMapper.createObjectNode().put("patientCpid", "CPID-7").put("status", "ESCALATED"));
+        Mockito.when(daidzaiClient.createIncident(any()))
+                .thenReturn(objectMapper.createObjectNode().put("id", "INC-1"));
+
+        var response = controller.lifecycleAction(
+                "ref-esc", "escalate", "req", "corr", "tenant", "TREATMENT", "fac-1", "actor-1",
+                Map.of("reason", "SpO2 dropping, needs ED", "severity", "CRITICAL"));
+
+        assertEquals(200, response.getStatusCode().value());
+        ArgumentCaptor<Map<String, Object>> cap = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(daidzaiClient).createIncident(cap.capture());
+        assertEquals("CRITICAL", cap.getValue().get("severity"));
+        assertEquals("CPID-7", cap.getValue().get("subjectCpid"));
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertTrue(data.path("emergencyDispatched").asBoolean());
+        assertEquals("INC-1", data.path("emergencyIncidentId").asText());
+    }
+
+    @Test
+    void escalateReportsNotDispatched_whenDaidzaiFails_butStillTransitions() {
+        // Honesty: a Daidzai outage must NOT block the clinical escalation, but the console must
+        // see emergencyDispatched=false so it can prompt a manual EMS call.
+        Mockito.when(pctClient.lifecycleAction(eq("ref-esc2"), eq("escalate"), any()))
+                .thenReturn(objectMapper.createObjectNode().put("patientCpid", "CPID-7").put("status", "ESCALATED"));
+        Mockito.when(daidzaiClient.createIncident(any())).thenThrow(new RuntimeException("daidzai down"));
+
+        var response = controller.lifecycleAction(
+                "ref-esc2", "escalate", "req", "corr", "tenant", "TREATMENT", "fac-1", "actor-1",
+                Map.of("reason", "deteriorating"));
+
+        assertEquals(200, response.getStatusCode().value());
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertEquals(false, data.path("emergencyDispatched").asBoolean());
+    }
+
+    @Test
+    void transferOpensNhumeDeliveryAndReportsDispatch() {
+        // TM-B12: transfer transitions the referral AND opens a Nhume delivery for transport.
+        Mockito.when(pctClient.lifecycleAction(eq("ref-tx"), eq("transfer"), any()))
+                .thenReturn(objectMapper.createObjectNode().put("patientCpid", "CPID-7").put("status", "TRANSFERRED"));
+        Mockito.when(nhumeClient.createDelivery(any()))
+                .thenReturn(objectMapper.createObjectNode().put("id", "DEL-1"));
+
+        var response = controller.lifecycleAction(
+                "ref-tx", "transfer", "req", "corr", "tenant", "TREATMENT", "fac-1", "actor-1",
+                Map.of("reason", "needs surgical", "destinationFacilityId", "fac-2"));
+
+        assertEquals(200, response.getStatusCode().value());
+        Mockito.verify(nhumeClient).createDelivery(any());
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertTrue(data.path("transferDispatched").asBoolean());
+        assertEquals("DEL-1", data.path("transferDeliveryId").asText());
+    }
+
+    @Test
+    void cancelDoesNotTriggerEmergencyOrTransferDispatch() {
+        // Only escalate/transfer fire side effects — other lifecycle actions must not.
+        Mockito.when(pctClient.lifecycleAction(eq("ref-c"), eq("cancel"), any()))
+                .thenReturn(objectMapper.createObjectNode().put("status", "CANCELLED"));
+
+        controller.lifecycleAction("ref-c", "cancel", "req", "corr", "tenant", "TREATMENT", "fac", "actor",
+                Map.of("reason", "patient no longer needs"));
+
+        Mockito.verify(daidzaiClient, Mockito.never()).createIncident(any());
+        Mockito.verify(nhumeClient, Mockito.never()).createDelivery(any());
     }
 
     @Test

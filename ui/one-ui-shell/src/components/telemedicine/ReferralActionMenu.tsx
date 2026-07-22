@@ -51,6 +51,9 @@ export function ReferralActionMenu({
   const lifecycle = useReferralLifecycleAction(sessionId);
   const [openAction, setOpenAction] = useState<ReferralLifecycleActionName | null>(null);
   const [reason, setReason] = useState("");
+  // TM-B12: after an escalate/transfer, the response reports whether EMS / transport was actually
+  // dispatched. A provider must see this — a failed dispatch means they have to call manually.
+  const [dispatch, setDispatch] = useState<{ kind: "emergency" | "transfer"; ok: boolean; ref?: string } | null>(null);
 
   const targets = allowed.data?.data?.allowedTargets ?? [];
   const permitted = LIFECYCLE_ACTIONS.filter((a) => targets.includes(a.target));
@@ -64,10 +67,17 @@ export function ReferralActionMenu({
   function submit() {
     const trimmed = reason.trim();
     if (!active || !trimmed) return;
+    const acted = active.action;
     lifecycle.mutate(
-      { action: active.action, reason: trimmed },
+      { action: acted, reason: trimmed },
       {
-        onSuccess: () => {
+        onSuccess: (res) => {
+          const d = (res?.data ?? {}) as Record<string, unknown>;
+          if (acted === "escalate") {
+            setDispatch({ kind: "emergency", ok: d.emergencyDispatched === true, ref: d.emergencyIncidentId as string | undefined });
+          } else if (acted === "transfer") {
+            setDispatch({ kind: "transfer", ok: d.transferDispatched === true, ref: d.transferDeliveryId as string | undefined });
+          }
           setOpenAction(null);
           setReason("");
           onActionComplete?.();
@@ -84,6 +94,31 @@ export function ReferralActionMenu({
 
       {status && (
         <p className="text-[11px] text-muted-foreground">Current state: {status}</p>
+      )}
+
+      {dispatch && (
+        dispatch.ok ? (
+          <div
+            className="rounded-md border border-emerald-300 bg-emerald-50 p-2 text-[11px] text-emerald-800"
+            data-testid="referral-dispatch-ok"
+          >
+            {dispatch.kind === "emergency"
+              ? `Emergency response dispatched${dispatch.ref ? ` — incident ${dispatch.ref}` : ""}.`
+              : `Transport arranged${dispatch.ref ? ` — delivery ${dispatch.ref}` : ""}.`}
+          </div>
+        ) : (
+          <div
+            className="rounded-md border border-rose-400 bg-rose-50 p-2 text-[11px] font-medium text-rose-800"
+            data-testid="referral-dispatch-failed"
+          >
+            <span className="inline-flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              {dispatch.kind === "emergency"
+                ? "State updated, but EMS was NOT dispatched automatically — call emergency response manually now."
+                : "State updated, but transport was NOT arranged automatically — arrange it manually now."}
+            </span>
+          </div>
+        )
       )}
 
       {allowed.isLoading ? (

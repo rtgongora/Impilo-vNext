@@ -86,6 +86,38 @@ describe("ReferralActionMenu", () => {
     expect(screen.getByTestId("referral-action-error")).toHaveTextContent(/could not be loaded/i);
   });
 
+  it("confirms EMS dispatch after a successful escalation (TM-B12)", async () => {
+    const user = userEvent.setup();
+    allowedState.current.data.data.allowedTargets = ["ESCALATED"];
+    // The escalate mutation succeeds and the response reports EMS was dispatched.
+    lifecycleMutate.mockImplementation((_vars, opts) =>
+      opts?.onSuccess?.({ data: { emergencyDispatched: true, emergencyIncidentId: "INC-1" } }),
+    );
+    render(<ReferralActionMenu sessionId="r-1" status="RESPONDED" />);
+
+    await user.click(screen.getByTestId("referral-action-escalate"));
+    await user.type(screen.getByPlaceholderText(/reason \(required\)/i), "SpO2 dropping");
+    await user.click(screen.getByTestId("referral-action-submit"));
+
+    expect(screen.getByTestId("referral-dispatch-ok")).toHaveTextContent(/incident INC-1/i);
+  });
+
+  it("warns to call EMS manually when auto-dispatch failed (TM-B12)", async () => {
+    const user = userEvent.setup();
+    allowedState.current.data.data.allowedTargets = ["ESCALATED"];
+    // Escalation transitioned state, but Daidzai was down → emergencyDispatched=false.
+    lifecycleMutate.mockImplementation((_vars, opts) =>
+      opts?.onSuccess?.({ data: { emergencyDispatched: false } }),
+    );
+    render(<ReferralActionMenu sessionId="r-1" status="RESPONDED" />);
+
+    await user.click(screen.getByTestId("referral-action-escalate"));
+    await user.type(screen.getByPlaceholderText(/reason \(required\)/i), "deteriorating");
+    await user.click(screen.getByTestId("referral-action-submit"));
+
+    expect(screen.getByTestId("referral-dispatch-failed")).toHaveTextContent(/call emergency response manually/i);
+  });
+
   it("surfaces a distinct reload affordance on a STALE_WRITE conflict (TM-B6)", async () => {
     const user = userEvent.setup();
     const refetch = vi.fn();
