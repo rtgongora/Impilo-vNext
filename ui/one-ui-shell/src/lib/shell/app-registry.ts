@@ -419,13 +419,14 @@ export const SHELL_APPS: AppDefinition[] = [
   {
     id: "app-khuluma",
     appCode: "khuluma",
-    name: "Khuluma comms",
-    description: "Conversations, calls, meetings, and clinical escalation",
+    name: "Khuluma",
+    // The communication front door: role-aware hub at /khuluma (citizen 'life' + provider
+    // 'work'). Messaging is one workspace; calls/meetings link the sovereign Impilo Live stage.
+    description: "Messages, calls, meetings, updates and escalation — your communication hub",
     icon: "MessageSquare",
-    category: "operations",
-    href: "/work/comms",
+    category: "citizen",
+    href: "/khuluma",
     activeFlag: true,
-    requiredRole: "OPERATIONS_AGGREGATE",
     systemAppFlag: false,
     weight: 25,
     serviceSlug: "khuluma",
@@ -891,9 +892,9 @@ export const SHELL_COMMANDS: ShellCommand[] = [
   },
   {
     id: "cmd-comms",
-    label: "Comms hub",
-    keywords: ["comms", "messages", "secure messaging", "communication"],
-    action: { type: "navigate", href: "/communication/secure-messaging" },
+    label: "Khuluma — Comms hub",
+    keywords: ["comms", "messages", "secure messaging", "communication", "khuluma"],
+    action: { type: "navigate", href: "/khuluma" },
   },
   {
     id: "cmd-support",
@@ -1092,8 +1093,7 @@ export const SHELL_COMMANDS: ShellCommand[] = [
     id: "cmd-khuluma",
     label: "Khuluma comms hub",
     keywords: ["khuluma", "comms hub", "conversations", "calls", "meetings", "escalation"],
-    action: { type: "navigate", href: "/work/comms" },
-    requiredRole: "OPERATIONS_AGGREGATE",
+    action: { type: "navigate", href: "/khuluma" },
   },
   {
     id: "cmd-rito",

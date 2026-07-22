@@ -395,6 +395,7 @@ export const ROUTE_SERVICE_SLUG_PREFIXES: ReadonlyArray<{
   { prefix: "/emergency", slug: "daidzai" },
   { prefix: "/work/dura", slug: "dura" },
   { prefix: "/inventory", slug: "dura" },
+  { prefix: "/khuluma", slug: "khuluma" },
   { prefix: "/work/comms", slug: "khuluma" },
   { prefix: "/my/comms", slug: "khuluma" },
   { prefix: "/admin/comms-ops", slug: "khuluma" },
@@ -439,8 +440,8 @@ export const SERVICE_SURFACE_COVERAGE: Record<ServiceBrandingSlug, ServiceSurfac
   },
   khuluma: {
     status: "surfaced",
-    primaryRoutes: ["/work/comms", "/my/comms", "/admin/comms-ops"],
-    notes: "Communications hub — worker + citizen conversations and comms operations console.",
+    primaryRoutes: ["/khuluma", "/work/comms", "/my/comms", "/admin/comms-ops"],
+    notes: "Communication front door — role-aware /khuluma hub over conversations, calls, meetings, updates and escalation.",
   },
   madi: { status: "surfaced", primaryRoutes: ["/madi", "/madi/donor"] },
   ruvimbo: {

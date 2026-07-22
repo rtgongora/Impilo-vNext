@@ -252,10 +252,20 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/scheduling/bookings/config", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Booking Configuration", navLabel: "Booking Config", navZone: "work" },
 
   // â”€â”€ Zone: Communication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  { path: "/communication", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Communication Hub", navLabel: "Communication", navZone: "work" },
-  { path: "/communication/secure-messaging", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Secure Messaging", navLabel: "Messaging", navZone: "work" },
-  { path: "/communication/approvals", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Comms Approval Queue", navLabel: "Approvals", navZone: "work" },
-  { path: "/communication/announcements", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Facility Announcements", navLabel: "Announcements", navZone: "work" },
+  { path: "/communication", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Communication Ops — Hub", navLabel: "Communication", navZone: "work" },
+  { path: "/communication/secure-messaging", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Communication Ops — Secure Messaging", navLabel: "Messaging", navZone: "work" },
+  { path: "/communication/approvals", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Communication Ops — Approval Queue", navLabel: "Approvals", navZone: "work" },
+  { path: "/communication/announcements", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Communication Ops — Facility Announcements", navLabel: "Announcements", navZone: "work" },
+
+  // ── Khuluma — the communication front door (role-aware hub over the live khuluma-service).
+  // Impilo Live stays sovereign (link-out to /live); messaging is one workspace, not the identity.
+  { path: "/khuluma", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma", navLabel: "Khuluma", navZone: "life" },
+  { path: "/khuluma/inbox", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Inbox", navLabel: "Inbox", navZone: "life" },
+  { path: "/khuluma/calls", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Calls", navLabel: "Calls", navZone: "life" },
+  { path: "/khuluma/meetings", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Meetings", navLabel: "Meetings", navZone: "life" },
+  { path: "/khuluma/updates", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Updates & Actions", navLabel: "Updates", navZone: "life" },
+  { path: "/khuluma/channels", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Teams & Channels", navLabel: "Channels", navZone: "work" },
+  { path: "/khuluma/feedback", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Feedback & Support", navLabel: "Feedback", navZone: "life" },
   // Khuluma — Impilo Comms Hub (the comms orchestration umbrella): unified conversations, presence, calls, meetings.
   { path: "/work/comms", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Khuluma — Comms Hub", navLabel: "Khuluma", navZone: "work" },
   { path: "/my/comms", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Messages", navLabel: "Khuluma", navZone: "life" },
@@ -995,8 +1005,9 @@ export const ROUTES: RouteDefinition[] = [
 // Wave OF-C monitoring surfaces (23 Jul 2026): +3 — /work/telemonitoring (OF-B28 §14.8 command
 // workspace: alert triage board + accountable closure + plans/devices), /work/telemonitoring/chw
 // (OF-B23 CHW monitoring worklist over the PCT generic-task lane), /my/monitoring (OF-B27 citizen
-// monitoring home with §14.6 patient-wording law). Total 785.
-export const EXPECTED_ROUTE_COUNT = 785;
+// monitoring home with §14.6 patient-wording law).
+// Khuluma first-class communication front door (Jul 2026): +7 role-aware hub routes. Total 792.
+export const EXPECTED_ROUTE_COUNT = 792;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
