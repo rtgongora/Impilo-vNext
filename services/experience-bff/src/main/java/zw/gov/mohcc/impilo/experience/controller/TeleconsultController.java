@@ -876,14 +876,35 @@ public class TeleconsultController {
                                         String tenantId, String actorId, String facilityId) {
         if (!(result instanceof ObjectNode node)) return;
         try {
+            String destFacility = val(body, "destinationFacilityId", "destination_facility_id", "toFacilityId");
+            String ndila = val(body, "ndilaDestination", "ndila_destination", "destination");
+            String caseRef = "TeleconsultReferral/" + referralId;
+            // Nhume CreateDeliveryRequest is snake_case; request_source is @NotBlank.
             Map<String, Object> delivery = new java.util.LinkedHashMap<>();
-            delivery.put("originFacilityId", facilityId);
-            delivery.put("destinationFacilityId", val(body, "destinationFacilityId", "destination_facility_id", "toFacilityId"));
-            delivery.put("subjectCpid", extractPatient(result));
-            delivery.put("reason", defaultString(val(body, "reason"), "Teleconsult transfer " + referralId));
-            delivery.put("cargoType", "PATIENT");
-            delivery.put("originRef", "TeleconsultReferral/" + referralId);
-            delivery.put("ndilaDestination", val(body, "ndilaDestination", "ndila_destination", "destination"));
+            delivery.put("request_source", "TELECONSULT");
+            delivery.put("delivery_type", "PATIENT_TRANSFER");
+            delivery.put("priority", "URGENT");
+            delivery.put("requesting_actor_id", actorId);
+            delivery.put("requesting_actor_type", "PROVIDER");
+            delivery.put("requesting_facility_id", facilityId);
+            delivery.put("telehealth_session_ref", caseRef);
+            delivery.put("clinical_context_ref", caseRef);
+            delivery.put("notes", defaultString(val(body, "reason"), "Teleconsult transfer " + referralId));
+            delivery.put("submit_immediately", true);
+            if (facilityId != null) {
+                delivery.put("origin", Map.of("kind", "FACILITY", "ref", facilityId));
+            }
+            if (destFacility != null || ndila != null) {
+                Map<String, Object> dest = new java.util.LinkedHashMap<>();
+                dest.put("kind", "FACILITY");
+                if (destFacility != null) dest.put("ref", destFacility);
+                if (ndila != null) dest.put("label", ndila);
+                delivery.put("destination", dest);
+            }
+            String patient = extractPatient(result);
+            if (patient != null) {
+                delivery.put("recipient", Map.of("kind", "PATIENT", "ref", patient));
+            }
             JsonNode created = nhumeClient.createDelivery(delivery);
             String deliveryId = created == null ? null : extractId(created);
             node.put("transferDispatched", deliveryId != null && !deliveryId.isBlank());
