@@ -35,6 +35,23 @@ public class PctApiExceptionHandler {
                 .body(ApiResponse.error(ex.getCode(), ex.getMessage(), ex.getStatus(), correlationId));
     }
 
+    /**
+     * Optimistic-concurrency guard (TM-B6): a concurrent edit of the same referral (double-accept,
+     * provider-complete vs timer-expire) that Hibernate's {@code @Version} check detected. Surfaced
+     * as a clean 409 STALE_WRITE so the experience layer prompts a reload-and-retry instead of
+     * silently losing an update or returning a 500. Covers Spring's OptimisticLockingFailureException,
+     * which wraps JPA's ObjectOptimisticLockingFailureException / OptimisticLockException.
+     */
+    @ExceptionHandler(org.springframework.dao.OptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Void>> handleStaleWrite(
+            org.springframework.dao.OptimisticLockingFailureException ex) {
+        String correlationId = safeCorrelationId();
+        log.info("PCT stale write (optimistic lock): {}", ex.getMessage());
+        return ResponseEntity.status(409).body(ApiResponse.error("STALE_WRITE",
+                "This consultation was changed by someone else. Reload the latest version and retry.",
+                409, correlationId));
+    }
+
     private String safeCorrelationId() {
         TrustContext ctx = TrustContextHolder.get();
         return ctx != null && ctx.correlationId() != null ? ctx.correlationId().toString() : null;

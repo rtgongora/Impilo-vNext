@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -22,6 +23,13 @@ public class ReferralEntity {
 
     @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
+
+    /** Optimistic-concurrency guard (TM-B6). A concurrent edit of the same referral
+     *  (double-accept, provider-complete vs timer-expire) is detected as a stale write
+     *  and surfaced as 409 STALE_WRITE rather than silently last-write-wins. */
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version = 0L;
 
     @Column(name = "patient_cpid", nullable = false)
     private String patientCpid;
@@ -169,6 +177,9 @@ public class ReferralEntity {
     public void setReferralId(UUID referralId) { this.referralId = referralId; }
     public UUID getTenantId() { return tenantId; }
     public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
+
+    public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
     public String getPatientCpid() { return patientCpid; }
     public void setPatientCpid(String patientCpid) { this.patientCpid = patientCpid; }
     public String getEncounterId() { return encounterId; }
