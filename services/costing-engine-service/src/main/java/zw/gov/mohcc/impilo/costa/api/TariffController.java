@@ -35,6 +35,15 @@ public class TariffController {
         return ResponseEntity.ok(ApiResponse.ok(paged, ctx.correlationId().toString()));
     }
 
+    @GetMapping("/by-code/{code}")
+    public ResponseEntity<ApiResponse<TariffEntity>> priceByCode(@PathVariable("code") String code) {
+        var ctx = TrustContextHolder.require();
+        return tariffService.priceFor(ctx.tenantId(), code)
+                .map(t -> ResponseEntity.ok(ApiResponse.ok(t, ctx.correlationId().toString())))
+                .orElseGet(() -> ResponseEntity.status(404)
+                        .body(ApiResponse.error("TARIFF_NOT_FOUND", "No active tariff for " + code, 404, ctx.correlationId().toString())));
+    }
+
     @PostMapping("/import")
     public ResponseEntity<ApiResponse<List<TariffEntity>>> importCsv(@RequestParam("file") MultipartFile file) {
         var ctx = TrustContextHolder.require();

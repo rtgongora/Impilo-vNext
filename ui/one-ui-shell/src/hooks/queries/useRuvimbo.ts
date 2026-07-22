@@ -276,6 +276,24 @@ export function useCreateCapitation() {
   return useMutation({ mutationFn: (body: Record<string, unknown>) => apiClient.post(`${BASE}/capitation-reports`, body), ...w });
 }
 
+// ── Covered care (member's in-network providers) ────────────────────────────
+export function useMemberNetworks(memberCpid?: string) {
+  return useObjectQuery(
+    ["ruvimbo-member-networks", memberCpid ?? null],
+    `${BASE}/networks/for-member?member_cpid=${encodeURIComponent(memberCpid ?? "")}`,
+    Boolean(memberCpid),
+  );
+}
+
+// ── Cost estimate (COSTA price + coverage liability, composed) ──────────────
+export function useCostEstimate(memberCpid?: string, serviceCode?: string) {
+  return useObjectQuery(
+    ["ruvimbo-cost-estimate", memberCpid ?? null, serviceCode ?? null],
+    `${BASE}/cost-estimate?member_cpid=${encodeURIComponent(memberCpid ?? "")}&service_code=${encodeURIComponent(serviceCode ?? "")}`,
+    Boolean(memberCpid && serviceCode),
+  );
+}
+
 // ── Performance summary (live aggregated counts) ────────────────────────────
 export function usePerformanceSummary() {
   return useObjectQuery(["ruvimbo-performance-summary"], `${BASE}/performance/summary`);
