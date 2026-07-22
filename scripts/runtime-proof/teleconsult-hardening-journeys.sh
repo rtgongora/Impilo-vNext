@@ -105,6 +105,15 @@ BARE=$(PSQL pct "SELECT count(*) FROM $OTBL WHERE aggregate_id='$REF' AND event_
 [ "${V1:-0}" -ge 1 ] && ok "≥1 versioned telemedicine.session.*.v1 outbox row ($V1)" || bad "no .v1 lifecycle rows ($V1)"
 [ "${BARE:-0}" = 0 ] && ok "zero unversioned telemedicine.session rows (TM-B20 acceptance)" || bad "$BARE bare unversioned lifecycle rows leaked"
 
+# ── J-TH-5: TM-B5/OD-10 chat transcript is durably case-persisted with provenance ──
+say "J-TH-5: session chat persists to the case (referral.messages) with server provenance"
+curl -sS $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF/respond \
+  -d '{"response_type":"MESSAGE","message":"Please describe the cough at night","responder_id":"rig-dr-moyo"}' >/dev/null
+MSGCT=$(PSQL pct "SELECT jsonb_array_length(messages) FROM $RTBL WHERE referral_id='$REF'")
+[ "${MSGCT:-0}" -ge 1 ] && ok "chat message stored on the case ($MSGCT in referral.messages)" || bad "message not persisted ($MSGCT)"
+HASTS=$(PSQL pct "SELECT count(*) FROM $RTBL WHERE referral_id='$REF' AND messages @> '[{\"responderId\":\"rig-dr-moyo\"}]' AND messages::text LIKE '%timestamp%'")
+[ "${HASTS:-0}" = 1 ] && ok "message carries server provenance (author + timestamp)" || bad "message missing provenance ($HASTS)"
+
 # ── J-TH-2: A1 illegal transition rejected under ENFORCE ─────────────────────
 say "J-TH-2: SUBMITTED->COMPLETED is refused 409 ILLEGAL_TRANSITION (ENFORCE)"
 R=$(curl -sS -w '\n%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF/complete \
@@ -133,6 +142,10 @@ EXPV1=$(PSQL pct "SELECT count(*) FROM $OTBL WHERE aggregate_id='$REF' AND event
 [ "${EXPV1:-0}" -ge 1 ] && ok "emitted telemedicine.session.expired.v1" || bad "no expired.v1 event ($EXPV1)"
 LEXP=$(PSQL pct "SELECT count(*) FROM $LTBL WHERE referral_id='$REF' AND action='expire' AND allowed=true")
 [ "${LEXP:-0}" -ge 1 ] && ok "ledger records the guarded 'expire' edge (allowed=true)" || bad "no expire ledger row ($LEXP)"
+# OD-10 survival guarantee: the chat transcript persisted in J-TH-5 is on the durable case row,
+# so it outlives the session lifecycle end (EXPIRED here stands in for room close) — zero content lost.
+SURV=$(PSQL pct "SELECT jsonb_array_length(messages) FROM $RTBL WHERE referral_id='$REF'")
+[ "${SURV:-0}" -ge 1 ] && ok "chat transcript survives session end (still $SURV on the case after EXPIRED)" || bad "transcript lost on session end ($SURV)"
 
 echo "RESULT: PASS=$PASS FAIL=$FAIL SKIP=$SKIP" | tee -a "$EV/journal.txt"
 teardown
