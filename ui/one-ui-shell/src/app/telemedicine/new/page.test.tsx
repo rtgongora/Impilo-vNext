@@ -64,6 +64,14 @@ vi.mock("@/hooks/queries/useTelemedicine", () => ({
   useCreateTelemedicineSession: () => ({ mutateAsync: createMutateAsync, isPending: false }),
 }));
 
+// The governed specialty ValueSet hook is exercised in its own unit test; here we
+// stub it to the fallback shape so the picker renders without a QueryClientProvider.
+vi.mock("@/hooks/queries/useClinicalSpecialties", () => ({
+  useClinicalSpecialties: () => ({
+    specialties: [{ code: "Internal Medicine", display: "Internal Medicine" }],
+  }),
+}));
+
 describe("NewTeleconsultPage", () => {
   beforeEach(() => {
     push.mockReset();

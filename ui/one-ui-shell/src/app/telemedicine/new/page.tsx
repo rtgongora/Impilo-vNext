@@ -20,6 +20,7 @@ import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useCreateTelemedicineSession } from "@/hooks/queries/useTelemedicine";
+import { useClinicalSpecialties } from "@/hooks/queries/useClinicalSpecialties";
 import { useUploadDocumentFile } from "@/hooks/queries/useClinicalDocuments";
 import { usePatientSummary } from "@/hooks/queries/useSummary";
 import { useEncounterVitals } from "@/hooks/queries/useVitals";
@@ -94,6 +95,10 @@ export default function NewTeleconsultPage() {
   const encounterId = searchParams.get("encounterId") || "";
 
   const createSession = useCreateTelemedicineSession();
+  // Governed specialty ValueSet (TM-B2/B3) — bound to the ZIBO clinical-specialty
+  // CodeSystem. The hook always yields a non-empty list (falls back to the
+  // hardcoded labels below) so the picker is never blank.
+  const { specialties } = useClinicalSpecialties();
   const [activeStep, setActiveStep] = useState<Step>("letter");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -124,6 +129,12 @@ export default function NewTeleconsultPage() {
   const [consentReference, setConsentReference] = useState<string | null>(null);
 
   const canSubmit = referralLetter.trim() && routingType && consentReference;
+  // The `specialty` field submits the display label (unchanged PCT contract). We
+  // additionally resolve the governed code from the selected label and send it as
+  // `specialtyCode` (accepted harmlessly alongside the existing field).
+  const specialtyCode = specialty
+    ? specialties.find((s) => s.display === specialty)?.code
+    : undefined;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -210,6 +221,7 @@ export default function NewTeleconsultPage() {
         routingTarget,
         urgency,
         specialty,
+        specialtyCode,
         purposeOfUse,
         consentReference,
       });
@@ -291,7 +303,16 @@ export default function NewTeleconsultPage() {
               <select value={specialty} onChange={(e) => setSpecialty(e.target.value)}
                 className="w-full text-xs border border-border rounded-md px-2 py-1.5">
                 <option value="">Select...</option>
-                {SPECIALTIES.map((s) => <option key={s} value={s}>{s}</option>)}
+                {/* Options come from the governed ZIBO clinical-specialty ValueSet (TM-B2/B3).
+                    The option value stays the display label so the `specialty` submit value is
+                    unchanged; the code travels separately as `specialtyCode`. If the ValueSet
+                    is somehow empty the hook already returns the hardcoded fallback below. */}
+                {(specialties.length > 0
+                  ? specialties
+                  : SPECIALTIES.map((s) => ({ code: s, display: s }))
+                ).map((s) => (
+                  <option key={s.code} value={s.display}>{s.display}</option>
+                ))}
               </select>
             </div>
 
