@@ -24,9 +24,16 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // /error: the container's exception re-dispatch target — without this, any thrown
+                // @ResponseStatus exception (e.g. the TM-B4 409 slot-race conflict) surfaces as 403.
+                .requestMatchers("/error").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                .requestMatchers(disableOauthForTests ? "/v1/**" : "/__disabled_test_auth_bypass__").permitAll()
+                // Rig/preview-only flag (never a prod config): the appointments API mounts under
+                // /internal/v1/** — the flag must cover it too or rig calls 403 (TM-B4 J-TH-11).
+                .requestMatchers(disableOauthForTests
+                        ? new String[]{"/v1/**", "/internal/v1/**"}
+                        : new String[]{"/__disabled_test_auth_bypass__"}).permitAll()
                 .anyRequest().authenticated()
             );
         if (!disableOauthForTests && issuerUri != null && !issuerUri.isBlank()) {

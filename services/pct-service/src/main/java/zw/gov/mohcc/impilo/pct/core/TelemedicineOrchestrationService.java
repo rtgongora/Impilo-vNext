@@ -1101,6 +1101,26 @@ public class TelemedicineOrchestrationService {
         entity.setMessages(writeJsonArray(messages));
     }
 
+    // TM-B4 (scheduling half, G-2): a booking-service reschedule must reach the teleconsult spine —
+    // referral scheduled_at moves and telemedicine.session.rescheduled fires (the BFF comms consumer
+    // already handles it and re-plans the T-minus reminders). Status untouched: SCHEDULED stays.
+    @Transactional
+    public Map<String, Object> rescheduleReferral(String referralId, Map<String, Object> request) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        String scheduledAtRaw = optional(request, "scheduled_at", "scheduledAt");
+        if (blank(scheduledAtRaw)) {
+            throw new PctDomainException("SCHEDULED_AT_REQUIRED", 400, "reschedule requires scheduled_at.");
+        }
+        OffsetDateTime newTime = parseTimestamp(scheduledAtRaw, "scheduled_at");
+        OffsetDateTime priorTime = entity.getScheduledAt();
+        entity.setScheduledAt(newTime);
+        ReferralEntity saved = referralRepository.save(entity);
+        Map<String, Object> payload = toReferralPayload(saved);
+        payload.put("priorScheduledAt", priorTime == null ? null : priorTime.toString());
+        emitOutbox("telemedicine.session.rescheduled", saved.getReferralId().toString(), payload);
+        return payload;
+    }
+
     // TM-B5 (B5-4): consent withdrawn mid-session. Authoritative case action — flips consent to
     // WITHDRAWN and forces the media rung to ASYNC (live media must stop; the case continues on the
     // durable chat). The actual publish-stop is driven by the client (leave room) + a best-effort

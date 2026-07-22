@@ -167,6 +167,14 @@ public class TelemedicineController {
         return ResponseEntity.ok(ApiResponse.ok(telemedicineService.escalateReferral(id, request == null ? Map.of() : request), correlationId));
     }
 
+    @PostMapping("/referrals/{id}/reschedule")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> rescheduleReferral(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        return ResponseEntity.ok(ApiResponse.ok(telemedicineService.rescheduleReferral(id, request), correlationId));
+    }
+
     @PostMapping("/referrals/{id}/consent-withdraw")
     public ResponseEntity<ApiResponse<Map<String, Object>>> withdrawConsent(
             @PathVariable String id,

@@ -67,6 +67,7 @@ docker run -d --name th-rig-kafka -p $KPORT:$KPORT redpandadata/redpanda:latest 
 docker run -d --name th-rig-redis -p $RPORT:6379 redis:7-alpine >/dev/null
 sleep 12
 docker exec th-rig-pg psql -U impilo -d postgres -c "CREATE DATABASE pct" >/dev/null 2>&1
+docker exec th-rig-pg psql -U impilo -d postgres -c "CREATE DATABASE booking" >/dev/null 2>&1
 
 env POSTGRES_HOST=localhost POSTGRES_PORT=$PGPORT POSTGRES_USER=impilo POSTGRES_PASSWORD=impilo \
   IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:$KPORT \
@@ -78,12 +79,23 @@ env POSTGRES_HOST=localhost POSTGRES_PORT=$PGPORT POSTGRES_USER=impilo POSTGRES_
   PCT_TELEMEDICINE_LIFECYCLE_SWEEP_INTERVAL_MS=5000 \
   nohup java -jar "$(jar pct-service)" > "$RIGLOG/pct.log" 2>&1 & echo $! > "$RIGLOG/pct.pid"
 
-teardown(){ [ -f "$RIGLOG/pct.pid" ] && kill "$(cat "$RIGLOG/pct.pid")" 2>/dev/null
+# TM-B4: booking-service joins the rig (external_ref + slot-race + lifecycle outbox proofs).
+BOOKING=http://localhost:29389
+env POSTGRES_HOST=localhost POSTGRES_PORT=$PGPORT POSTGRES_USER=impilo POSTGRES_PASSWORD=impilo \
+  IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS=true SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:$KPORT \
+  SPRING_DATA_REDIS_HOST=localhost SPRING_DATA_REDIS_PORT=$RPORT \
+  REDIS_HOST=localhost REDIS_PORT=$RPORT SERVER_PORT=29389 \
+  nohup java -jar "$(jar booking-service)" > "$RIGLOG/booking.log" 2>&1 & echo $! > "$RIGLOG/booking.pid"
+
+teardown(){ for p in pct booking; do [ -f "$RIGLOG/$p.pid" ] && kill "$(cat "$RIGLOG/$p.pid")" 2>/dev/null; done
   [ -z "${KEEP_RIG:-}" ] && docker rm -f th-rig-pg th-rig-kafka th-rig-redis >/dev/null 2>&1; }
 
 c=000
 for i in $(seq 1 24); do c=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:29388/actuator/health 2>/dev/null); [ "$c" = 200 ] && break; sleep 5; done
 [ "$c" = 200 ] && ok "pct-service healthy" || { bad "pct-service not healthy ($c) — see $RIGLOG/pct.log"; teardown; exit 1; }
+b=000
+for i in $(seq 1 18); do b=$(curl -s -o /dev/null -w '%{http_code}' $BOOKING/actuator/health 2>/dev/null); [ "$b" = 200 ] && break; sleep 5; done
+[ "$b" = 200 ] && ok "booking-service healthy" || { bad "booking-service not healthy ($b) — see $RIGLOG/booking.log"; teardown; exit 1; }
 
 # resolve schema-qualified table names (flyway may use `pct.` schema or public)
 RTBL=pct_referrals; OTBL=pct_event_outbox; LTBL=pct_referral_transitions
@@ -210,6 +222,28 @@ BOARD_CHAIR=$(curl -sS $(hdr PROVIDER rig-dr-chair) "$PCT/v1/mdt/sessions/$MDTID
 echo "$BOARD_CHAIR" | grep -q "$REF3" && ok "chair sees the full case identity" || bad "chair view missing referral"
 MEVT=$(PSQL pct "SELECT count(*) FROM $OTBL WHERE aggregate_id='$MDTID' AND event_type IN ('telemedicine.session.mdt_created.v1','telemedicine.session.mdt_case_added.v1','telemedicine.session.mdt_outcome_recorded.v1')")
 [ "${MEVT:-0}" = 3 ] && ok "all 3 MDT lifecycle events versioned .v1" || bad "MDT events=$MEVT (expected 3)"
+
+# ── J-TH-11: TM-B4 scheduling — external_ref, slot-race 409, reschedule reaches the spine ──
+say "J-TH-11: scheduling half — dedicated linkage, slot-race guard, reschedule propagation"
+REF4=$(mkref video)
+APPT=$(curl -sS $(hdr PROVIDER rig-dr-moyo) -X POST $BOOKING/v1/appointments \
+  -d "{\"patient_cpid\":\"$(uuidgen)\",\"facility_id\":\"1001\",\"provider_id\":\"rig-dr-moyo\",\"appointment_type\":\"TELECONSULT\",\"scheduled_at\":\"2026-08-01T09:00:00Z\",\"end_at\":\"2026-08-01T09:30:00Z\",\"external_ref\":\"teleconsult:referral:$REF4\"}")
+APPTID=$(echo "$APPT" | jval id)
+[ -n "$APPTID" ] && ok "TELECONSULT appointment created ($APPTID)" || bad "appointment create failed: $(echo $APPT|head -c 200)"
+XR=$(docker exec th-rig-pg psql -U impilo -d booking -tAc "SELECT external_ref FROM booking.appointment WHERE id='$APPTID'")
+[ "$XR" = "teleconsult:referral:$REF4" ] && ok "dedicated external_ref persisted (no notes-tagging)" || bad "external_ref=$XR"
+CLASH=$(curl -sS -o /dev/null -w '%{http_code}' $(hdr PROVIDER rig-dr-moyo) -X POST $BOOKING/v1/appointments \
+  -d "{\"patient_cpid\":\"$(uuidgen)\",\"facility_id\":\"1001\",\"provider_id\":\"rig-dr-moyo\",\"appointment_type\":\"TELECONSULT\",\"scheduled_at\":\"2026-08-01T09:10:00Z\",\"end_at\":\"2026-08-01T09:40:00Z\"}")
+[ "$CLASH" = "409" ] && ok "overlapping double-booking refused 409 (slot-race guard)" || bad "double-booking accepted (HTTP $CLASH)"
+curl -sS $(hdr PROVIDER rig-dr-moyo) -X POST $BOOKING/v1/appointments/$APPTID/reschedule \
+  -d '{"scheduled_at":"2026-08-02T14:00:00Z","end_at":"2026-08-02T14:30:00Z"}' >/dev/null
+BEVT=$(docker exec th-rig-pg psql -U impilo -d booking -tAc "SELECT count(*) FROM booking.event_outbox WHERE event_type='appointment.rescheduled' AND payload::text LIKE '%$REF4%'")
+[ "${BEVT:-0}" = 1 ] && ok "booking emits appointment.rescheduled with externalRef (no silent change)" || bad "no rescheduled outbox ($BEVT)"
+curl -sS $(hdr PROVIDER rig-dr-moyo) -X POST $PCT/v1/referrals/$REF4/reschedule -d '{"scheduled_at":"2026-08-02T14:00:00Z"}' >/dev/null
+NEWT=$(PSQL pct "SELECT scheduled_at FROM $RTBL WHERE referral_id='$REF4'")
+echo "$NEWT" | grep -q "2026-08-02" && ok "referral scheduled_at moved on the spine" || bad "spine not updated ($NEWT)"
+RESV=$(PSQL pct "SELECT count(*) FROM $OTBL WHERE aggregate_id='$REF4' AND event_type='telemedicine.session.rescheduled.v1'")
+[ "${RESV:-0}" = 1 ] && ok "emitted telemedicine.session.rescheduled.v1 (reminders re-plan downstream)" || bad "no rescheduled event ($RESV)"
 
 # ── J-TH-2: A1 illegal transition rejected under ENFORCE ─────────────────────
 say "J-TH-2: SUBMITTED->COMPLETED is refused 409 ILLEGAL_TRANSITION (ENFORCE)"

@@ -43,7 +43,9 @@ public record AppointmentResponse(
         @JsonProperty("check_in_status") String checkInStatus,
         @JsonProperty("checkInStatus") String checkInStatusAlias,
         @JsonProperty("created_at") Instant createdAt,
-        @JsonProperty("createdAt") Instant createdAtAlias
+        @JsonProperty("createdAt") Instant createdAtAlias,
+        @JsonProperty("external_ref") String externalRef,
+        @JsonProperty("externalRef") String externalRefAlias
 ) {
     public static AppointmentResponse from(AppointmentEntity entity) {
         return new AppointmentResponse(
@@ -65,6 +67,7 @@ public record AppointmentResponse(
                 entity.getEncounterId(), entity.getEncounterId(),
                 entity.getQueueTokenId(), entity.getQueueTokenId(),
                 entity.getCheckInStatus(), entity.getCheckInStatus(),
-                entity.getCreatedAt(), entity.getCreatedAt());
+                entity.getCreatedAt(), entity.getCreatedAt(),
+                entity.getExternalRef(), entity.getExternalRef());
     }
 }

@@ -35,6 +35,7 @@ public class SchedulingController {
     private final SchedulingServiceClient schedulingServiceClient;
     private final AppointmentCheckInService appointmentCheckInService;
     private final AppointmentCommsWorkflowService appointmentComms;
+    private final zw.gov.mohcc.impilo.experience.client.PctServiceClient pctClient;
 
     @Value("${impilo.scheduling.use-remote-slots:true}")
     private boolean useRemoteSlots;
@@ -43,12 +44,42 @@ public class SchedulingController {
                                 TusoServiceClient tusoClient,
                                 SchedulingServiceClient schedulingServiceClient,
                                 AppointmentCheckInService appointmentCheckInService,
-                                AppointmentCommsWorkflowService appointmentComms) {
+                                AppointmentCommsWorkflowService appointmentComms,
+                                zw.gov.mohcc.impilo.experience.client.PctServiceClient pctClient) {
         this.bookingServiceClient = bookingServiceClient;
         this.tusoClient = tusoClient;
         this.schedulingServiceClient = schedulingServiceClient;
         this.appointmentCheckInService = appointmentCheckInService;
         this.appointmentComms = appointmentComms;
+        this.pctClient = pctClient;
+    }
+
+    /**
+     * TM-B4 (G-2): a reschedule of a TELECONSULT appointment must reach the teleconsult spine —
+     * pct moves the referral's scheduled_at and emits telemedicine.session.rescheduled.v1, which
+     * re-plans the T-minus reminders. Detected via the dedicated external_ref linkage (booking
+     * V002, format "teleconsult:referral:<id>"). Best-effort: a spine outage never fails the
+     * booking reschedule, but is logged honestly.
+     */
+    private void propagateTeleconsultReschedule(com.fasterxml.jackson.databind.JsonNode rescheduled,
+                                                java.util.Map<String, Object> body) {
+        try {
+            String externalRef = rescheduled.path("external_ref").asText(
+                    rescheduled.path("externalRef").asText(null));
+            if (externalRef == null || !externalRef.startsWith("teleconsult:referral:")) {
+                return;
+            }
+            String referralId = externalRef.substring("teleconsult:referral:".length());
+            Object newTime = body.getOrDefault("scheduled_at", body.get("scheduledAt"));
+            if (referralId.isBlank() || newTime == null) {
+                return;
+            }
+            pctClient.lifecycleAction(referralId, "reschedule",
+                    java.util.Map.of("scheduled_at", String.valueOf(newTime)));
+        } catch (Exception ex) {
+            log.warn("Teleconsult reschedule propagation failed (booking updated, spine stale): {}",
+                    ex.getMessage());
+        }
     }
 
     public record CreateAppointmentRequest(
@@ -188,6 +219,7 @@ public class SchedulingController {
         JsonNode rescheduled = bookingServiceClient.rescheduleAppointment(id.toString(), body);
         if (rescheduled != null) {
             appointmentComms.onAppointmentRescheduled(rescheduled);
+            propagateTeleconsultReschedule(rescheduled, body);
         }
 
         Map<String, Object> response = new LinkedHashMap<>();

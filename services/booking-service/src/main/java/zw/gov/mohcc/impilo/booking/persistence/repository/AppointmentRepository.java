@@ -15,6 +15,11 @@ public interface AppointmentRepository extends JpaRepository<AppointmentEntity, 
 
     Optional<AppointmentEntity> findByIdAndTenantId(UUID id, UUID tenantId);
 
+    // TM-B4 slot-race guard: candidate overlaps for (provider, window) — overlap iff
+    // existing.start < newEnd AND existing.end > newStart; status filtering happens in the service.
+    java.util.List<AppointmentEntity> findByTenantIdAndProviderIdAndStartTimeLessThanAndEndTimeGreaterThan(
+            UUID tenantId, String providerId, java.time.Instant newEnd, java.time.Instant newStart);
+
     @Query("""
             SELECT a FROM AppointmentEntity a
             WHERE a.tenantId = :tenantId

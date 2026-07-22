@@ -41,7 +41,8 @@ public class AppointmentController {
             @JsonProperty("end_at") String endAt,
             String reason,
             String notes,
-            @JsonProperty("resource_id") String resourceId
+            @JsonProperty("resource_id") String resourceId,
+            @JsonProperty("external_ref") String externalRef
     ) {}
 
     public record CitizenAppointmentBody(
@@ -85,7 +86,8 @@ public class AppointmentController {
                 body.endAt(),
                 body.reason(),
                 body.notes(),
-                body.resourceId()));
+                body.resourceId(),
+                body.externalRef()));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(created, ctx.correlationId().toString()));
     }

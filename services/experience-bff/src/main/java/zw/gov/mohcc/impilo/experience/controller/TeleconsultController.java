@@ -2797,16 +2797,15 @@ public class TeleconsultController {
     }
 
     /**
-     * Scheduled teleconsult: create the booking-service appointment (type TELECONSULT, tagged
-     * with the referral id in {@code notes} — the appointment aggregate has no dedicated
-     * external-ref field), write the appointment linkage back onto the referral, and send the
+     * Scheduled teleconsult: create the booking-service appointment (type TELECONSULT, linked via
+     * the dedicated {@code external_ref} column — booking V002; the {@code notes} tag remains for
+     * back-compat readers), write the appointment linkage back onto the referral, and send the
      * booking confirmation notification.
      *
-     * <p>Seams (honest): PCT's referral stage update ignores unknown keys, so the
-     * {@code appointment_id} written on the referral PUT is forward-wiring only until PCT grows
-     * the column — the durable link lives on the appointment's notes tag. notification-service's
-     * NotifyRequest has no scheduledAt, so a time-of-appointment reminder cannot be scheduled —
-     * we send an immediate confirmation on the reminder template instead.</p>
+     * <p>Formerly-stale seams, now closed (TM-B4): PCT has real {@code appointment_id}/
+     * {@code scheduled_at} columns (V032), and notification-service supports {@code notBefore}
+     * scheduling (V016) — T-minus reminders ride {@code telemedicine.session.scheduled}/
+     * {@code .rescheduled} through TelemedicineCommsWorkflowService.</p>
      */
     private JsonNode scheduleTeleconsultAppointment(JsonNode created, String scheduledAt,
                                                     String facilityHeader, String actorId,
@@ -2831,6 +2830,8 @@ public class TeleconsultController {
             appointment.put("appointment_type", "TELECONSULT");
             appointment.put("scheduled_at", scheduledAt);
             appointment.put("reason", val(body, "clinicalQuestion", "reason"));
+            // TM-B4: dedicated machine linkage (booking V002) — notes tag kept for back-compat reads.
+            appointment.put("external_ref", "teleconsult:referral:" + referralId);
             appointment.put("notes", "teleconsult:referral:" + referralId);
             JsonNode appt = bookingClient.createAppointment(appointment);
             String appointmentId = appt != null && appt.hasNonNull("id") ? appt.get("id").asText() : null;

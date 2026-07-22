@@ -78,6 +78,10 @@ public class AppointmentEntity {
     @Column(name = "virtual_meeting_details", columnDefinition = "jsonb")
     private Map<String, Object> virtualMeetingDetails;
 
+    // TM-B4: dedicated machine linkage to the owning case (e.g. teleconsult referral id) — V002.
+    @Column(name = "external_ref", length = 160)
+    private String externalRef;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     private AppointmentStatus status = AppointmentStatus.SCHEDULED;
@@ -185,6 +189,9 @@ public class AppointmentEntity {
     public void setChannel(String channel) { this.channel = channel; }
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
+    public String getExternalRef() { return externalRef; }
+    public void setExternalRef(String externalRef) { this.externalRef = externalRef; }
+
     public Map<String, Object> getVirtualMeetingDetails() { return virtualMeetingDetails; }
     public void setVirtualMeetingDetails(Map<String, Object> virtualMeetingDetails) { this.virtualMeetingDetails = virtualMeetingDetails; }
     public AppointmentStatus getStatus() { return status; }

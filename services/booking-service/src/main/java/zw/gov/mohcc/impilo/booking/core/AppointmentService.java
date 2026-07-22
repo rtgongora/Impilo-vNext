@@ -72,6 +72,11 @@ public class AppointmentService {
         Instant scheduledAt = parseDateTime(request.scheduledAt());
         Instant endAt = request.endAt() != null ? parseDateTime(request.endAt()) : scheduledAt.plusSeconds(30 * 60);
 
+        // TM-B4 slot-race: refuse a double-booking of the same provider's window up front (409).
+        // Pre-insert check — deterministic for the sequential case; the residual concurrent-insert
+        // window is documented for an exclusion-constraint upgrade.
+        assertProviderWindowFree(ctx.tenantId(), request.providerId(), scheduledAt, endAt, null);
+
         AppointmentEntity entity = baseEntity(ctx, request.patientCpid(), request.patientId());
         entity.setFacilityId(parseFacilityId(request.facilityId()));
         entity.setProviderId(request.providerId());
@@ -83,9 +88,35 @@ public class AppointmentService {
         entity.setReason(request.reason());
         entity.setNotes(request.notes());
         entity.setResourceId(parseUuidOrNull(request.resourceId()));
+        entity.setExternalRef(request.externalRef());
         entity = appointmentRepository.save(entity);
         publishBookedEvent(entity);
         return AppointmentResponse.from(entity);
+    }
+
+    /** TM-B4: overlap guard — same provider, overlapping window, live statuses only. */
+    private void assertProviderWindowFree(UUID tenantId, String providerId,
+                                          Instant start, Instant end, UUID excludeId) {
+        if (providerId == null || providerId.isBlank()) {
+            return; // no provider axis to double-book against
+        }
+        boolean clash = appointmentRepository
+                .findByTenantIdAndProviderIdAndStartTimeLessThanAndEndTimeGreaterThan(
+                        tenantId, providerId, end, start).stream()
+                .filter(a -> excludeId == null || !a.getId().equals(excludeId))
+                .anyMatch(a -> a.getStatus() != AppointmentStatus.CANCELLED
+                        && a.getStatus() != AppointmentStatus.NO_SHOW);
+        if (clash) {
+            throw new AppointmentConflictException(
+                    "Provider " + providerId + " already has an appointment overlapping "
+                            + start + " – " + end);
+        }
+    }
+
+    /** 409 CONFLICT: the requested provider window is already booked (TM-B4 slot-race guard). */
+    @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.CONFLICT)
+    public static class AppointmentConflictException extends RuntimeException {
+        public AppointmentConflictException(String message) { super(message); }
     }
 
     @Transactional
@@ -164,7 +195,11 @@ public class AppointmentService {
         entity.setCancelledAt(Instant.now());
         entity.setCancelledBy(ctx.actorId());
         entity.setCancelReason(reason != null ? reason : "Cancelled");
-        return AppointmentResponse.from(appointmentRepository.save(entity));
+        AppointmentEntity saved = appointmentRepository.save(entity);
+        // TM-B4 (G-4): lifecycle outbox — booking-side changes must not be silent to downstream
+        // consumers (reminder re-planning, teleconsult spine) that only heard appointment.booked.
+        publishLifecycleEvent(saved, "appointment.cancelled");
+        return AppointmentResponse.from(saved);
     }
 
     /**
@@ -240,10 +275,29 @@ public class AppointmentService {
         TrustContext ctx = TrustContextHolder.require();
         AppointmentEntity entity = requireAppointment(id, ctx.tenantId());
         Instant start = parseDateTime(scheduledAt);
+        Instant end = endAt != null ? parseDateTime(endAt) : start.plusSeconds(30 * 60);
+        // TM-B4 slot-race: the new window must also be free (excluding this appointment itself).
+        assertProviderWindowFree(ctx.tenantId(), entity.getProviderId(), start, end, entity.getId());
         entity.setStartTime(start);
-        entity.setEndTime(endAt != null ? parseDateTime(endAt) : start.plusSeconds(30 * 60));
+        entity.setEndTime(end);
         entity.setStatus(AppointmentStatus.RESCHEDULED);
-        return AppointmentResponse.from(appointmentRepository.save(entity));
+        AppointmentEntity saved = appointmentRepository.save(entity);
+        publishLifecycleEvent(saved, "appointment.rescheduled"); // TM-B4 (G-4)
+        return AppointmentResponse.from(saved);
+    }
+
+    /** TM-B4 (G-4): reschedule/cancel outbox — carries externalRef so the teleconsult spine can react. */
+    private void publishLifecycleEvent(AppointmentEntity entity, String eventType) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("appointmentId", entity.getId().toString());
+        payload.put("facilityId", entity.getFacilityId());
+        payload.put("patientCpid", entity.getPatientCpid());
+        payload.put("status", entity.getStatus().name());
+        payload.put("scheduledAt", entity.getStartTime().toString());
+        if (entity.getExternalRef() != null) {
+            payload.put("externalRef", entity.getExternalRef());
+        }
+        outboxPublisher.append("APPOINTMENT", entity.getId().toString(), eventType, payload);
     }
 
     private AppointmentEntity baseEntity(TrustContext ctx, String cpid, String patientId) {
@@ -348,7 +402,9 @@ public class AppointmentService {
             String endAt,
             String reason,
             String notes,
-            String resourceId
+            String resourceId,
+            // TM-B4: dedicated machine linkage to the owning case (e.g. the teleconsult referral id)
+            String externalRef
     ) {}
 
     public record CreateCitizenAppointmentRequest(
