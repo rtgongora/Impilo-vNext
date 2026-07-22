@@ -37,6 +37,19 @@ export function useDeliveryAdapters(enabled = true) {
   });
 }
 
+/**
+ * "What's happening next" — the citizen's upcoming sessions, composed by the BFF from booking
+ * appointments + pct telehealth ({items[], sources[{name,ok,error}]} envelope for honest degrade).
+ */
+export function useKhulumaSessions(enabled = true) {
+  return useQuery({
+    queryKey: ["khuluma-sessions-upcoming"],
+    queryFn: () => apiClient.get<unknown>(`${BASE}/sessions/upcoming`),
+    enabled,
+    refetchInterval: 60_000,
+  });
+}
+
 /** Escalation lifecycle actions (assign/accept/resolve/escalate/cancel) — real state transitions. */
 export function useEscalationAction() {
   const qc = useQueryClient();

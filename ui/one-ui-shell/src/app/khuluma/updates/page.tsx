@@ -6,6 +6,7 @@ import { KhulumaWorkspace } from "@/components/khuluma/KhulumaWorkspace";
 import { KhulumaSection } from "@/components/khuluma/KhulumaSection";
 import { KhulumaEmptyState } from "@/components/khuluma/KhulumaEmptyState";
 import { useNotifications, useMarkNotificationRead } from "@/hooks/queries/useNotifications";
+import { NompiloContextualGuidance } from "@/components/intelligent/NompiloContextualGuidance";
 import { rows, readStr, formatWhen } from "@/components/khuluma/util";
 
 function unread(n: Record<string, unknown>): boolean {
@@ -25,6 +26,7 @@ export default function KhulumaUpdatesPage() {
 
   return (
     <KhulumaWorkspace title="Khuluma — Updates & Actions" subtitle="Everything that needs your attention">
+      <NompiloContextualGuidance routePath="/khuluma/updates" />
       <KhulumaSection
         title="Updates"
         icon={<Bell className="h-4 w-4 text-emerald-700" />}
