@@ -30,7 +30,7 @@ const PRESENCE_OPTIONS = ["ONLINE", "AWAY", "BUSY", "DND", "OFFLINE"] as const;
  * room). Backed entirely by real `/internal/v1/khuluma/**` BFF endpoints; realtime is an optional
  * enhancement (see {@link useKhulumaRealtime}) — the hub stays correct via refetch without it.
  */
-export function CommsHub({ persona }: { persona: "work" | "life" }) {
+export function CommsHub({ persona, defaultCompose }: { persona: "work" | "life"; defaultCompose?: boolean }) {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const currentActorId = user?.healthId ?? user?.id ?? "";
@@ -43,7 +43,7 @@ export function CommsHub({ persona }: { persona: "work" | "life" }) {
   // "New conversation" composer. Chat respects the no-public-people-search
   // boundary: you start a conversation with someone whose identifier you
   // already have (Health ID / Provider ID), or add several for a group.
-  const [composeOpen, setComposeOpen] = useState(false);
+  const [composeOpen, setComposeOpen] = useState(defaultCompose ?? false);
   const [composeTitle, setComposeTitle] = useState("");
   const [recipientId, setRecipientId] = useState("");
   const [recipientName, setRecipientName] = useState("");
