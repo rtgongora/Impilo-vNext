@@ -196,6 +196,35 @@ public class WorkContextController {
     }
 
     /**
+     * The signed-in person's regulatory appointments (ROM-W2) — drives the regulatory workspace
+     * picker. Composition only; org-registry is the SoR. Degrades to an empty list.
+     */
+    @GetMapping("/regulatory/appointments")
+    public ResponseEntity<Map<String, Object>> myRegulatoryAppointments(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(CompanionHeaders.ACTOR_ID) String actorId) {
+        JsonNode appointments = orgRegistryClient.listAppointmentsByPerson(actorId);
+        List<Object> items = new java.util.ArrayList<>();
+        if (appointments != null && appointments.isArray()) {
+            for (JsonNode a : appointments) {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("id", text(a, "id"));
+                item.put("organizationId", text(a, "organizationId"));
+                item.put("roleCode", text(a, "roleCode"));
+                item.put("jurisdictionCode", text(a, "jurisdictionCode"));
+                item.put("status", text(a, "status"));
+                items.add(item);
+            }
+        }
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", actorId, "type", "regulatory-appointments",
+                "attributes", Map.of("appointments", items)));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Start an org-scoped regulatory work session (ROM-W2). The context is the person's ACTIVE
      * org-registry appointment at the requested organisation. Cross-org isolation is enforced at
      * the PDP (authz org dimension); here we only prove the appointment exists and mint the token.

@@ -845,6 +845,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/facility/rito/reputation", zone: "facility", layout: "app", sidebar: "facility", guard: "facility", pageTitle: "Reputation & Moderation", navLabel: "Reputation", navZone: "work" },
   { path: "/work/facility/rito", zone: "facility", layout: "app", sidebar: "facility", guard: "facility", pageTitle: "Facility Quality & Safety", navLabel: "Quality & Safety", navZone: "work" },
   { path: "/work/above-site/rito", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Above-Site Quality & Safety", navLabel: "Quality Oversight", navZone: "work" },
+  { path: "/work/regulatory", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory Workspaces", navLabel: "Regulatory", navZone: "work" },
+  { path: "/work/regulatory/[orgId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory Workspace", navLabel: "Regulatory Org", navZone: "work" },
   { path: "/work/dura", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Dura — Stock & Supply", navLabel: "Dura Stock", navZone: "work" },
   { path: "/work/patient-safety", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Patient Safety — Pharmacovigilance", navLabel: "Patient Safety", navZone: "work" },
   { path: "/work/patient-safety/new", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "New Safety Report", navLabel: "New Report", navZone: "work" },
@@ -973,7 +975,7 @@ export const ROUTES: RouteDefinition[] = [
 // L3 ABIS 1:N scan-to-login (Jul 2026): +1 — /auth/login/scan, the biometric scan-to-login
 // page (capture → 1:N identify → session on a single strong match only). Flag-gated OFF in the
 // BFF; page shows an honest "not enabled" state when the feature is disabled. Total 768.
-export const EXPECTED_ROUTE_COUNT = 771;
+export const EXPECTED_ROUTE_COUNT = 773;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

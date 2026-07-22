@@ -18,6 +18,7 @@ export type OperationalMode =
   | "my_life"
   | "my_professional"
   | "facility_work"
+  | "regulatory_work"
   | "registry_admin"
   | "organization_admin";
 
@@ -69,6 +70,7 @@ export const OPERATIONAL_MODE_ORDER: OperationalMode[] = [
   "my_life",
   "my_professional",
   "facility_work",
+  "regulatory_work",
   "registry_admin",
   "organization_admin",
 ];
@@ -97,6 +99,15 @@ export const OPERATIONAL_MODE_DEF: Record<OperationalMode, OperationalModeDefini
     description: "Operational patient care and facility workflows (queue, chart, wards).",
     trustTier: "standard",
     expectsFacilityWorkSequence: true,
+  },
+  regulatory_work: {
+    id: "regulatory_work",
+    label: "Regulatory Work",
+    shortLabel: "Regulatory",
+    description:
+      "Council / HPA regulatory operations (registers, applications, inspections, complaints) — org-scoped by appointment, never facility-attached.",
+    trustTier: "elevated",
+    expectsFacilityWorkSequence: false,
   },
   registry_admin: {
     id: "registry_admin",
