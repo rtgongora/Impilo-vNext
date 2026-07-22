@@ -126,7 +126,7 @@ export default function CitizenRequestHealthIdPage() {
 
   return (
     <div className="max-w-lg mx-auto bg-card rounded-xl border border-border p-6">
-      <h1 className="text-xl font-semibold text-foreground mb-1">Request Health ID</h1>
+      <h1 className="text-xl font-semibold text-foreground mb-1">Request Impilo ID</h1>
       <p className="text-sm text-muted-foreground mb-6">New or replacement health identity document.</p>
       {restored && (
         <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3">

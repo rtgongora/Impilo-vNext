@@ -283,7 +283,7 @@ export default function RegisterPage() {
 
           {/* Health ID — optional link */}
           <div className="rounded-lg border border-border p-4 space-y-3">
-            <p className="text-sm font-medium text-foreground">Do you have a Health ID?</p>
+            <p className="text-sm font-medium text-foreground">Do you have an Impilo ID?</p>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -293,7 +293,7 @@ export default function RegisterPage() {
                   onChange={() => setHasHealthId(true)}
                   className="w-4 h-4 text-primary border-border focus:ring-primary/40"
                 />
-                <span className="text-sm text-foreground">I have a Health ID</span>
+                <span className="text-sm text-foreground">I have an Impilo ID</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -314,7 +314,7 @@ export default function RegisterPage() {
                   type="text"
                   value={healthId}
                   onChange={(e) => setHealthId(e.target.value)}
-                  placeholder="Enter your Health ID"
+                  placeholder="Enter your Impilo ID"
                   className="w-full pl-10 pr-3 py-3 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 />
               </div>
@@ -322,7 +322,7 @@ export default function RegisterPage() {
 
             {hasHealthId === false && (
               <p className="text-xs text-muted-foreground">
-                No problem. You can request or link a Health ID at any time from your profile.
+                No problem. You can request or link an Impilo ID at any time from your profile.
               </p>
             )}
           </div>
@@ -387,7 +387,7 @@ export default function RegisterPage() {
 
       <NompiloHint
         message="Everyone starts as a person on Impilo. You don't need to choose a role — professional access is activated later if you qualify."
-        suggestions={["If you have a Health ID, enter it to link your records", "No Health ID? You can request one after signing up"]}
+        suggestions={["If you have an Impilo ID, enter it to link your records", "No Impilo ID? You can request one after signing up"]}
       />
     </AuthLayout>
   );

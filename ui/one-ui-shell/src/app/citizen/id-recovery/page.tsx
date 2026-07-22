@@ -64,7 +64,7 @@ export default function CitizenIdRecoveryPage() {
     return (
       <div className="max-w-lg mx-auto bg-card rounded-xl border border-border p-6">
         <h1 className="text-xl font-semibold text-foreground mb-1">ID recovery</h1>
-        <p className="text-sm text-muted-foreground mb-6">Recover access to your Impilo Health ID (step-up required).</p>
+        <p className="text-sm text-muted-foreground mb-6">Recover access to your Impilo ID (step-up required).</p>
         {stepUpRequired && (
           <div className="bg-warning-soft border border-warning/35 rounded-lg p-4 mb-4 text-sm text-warning-foreground">
             <p className="mb-2">Enter your step-up verification token.</p>

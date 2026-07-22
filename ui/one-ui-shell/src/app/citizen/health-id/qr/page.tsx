@@ -45,7 +45,7 @@ function MyHealthIdQr() {
   if (status === "loading") {
     return (
       <div className="text-center text-sm text-muted-foreground py-8">
-        Loading your Health ID…
+        Loading your Impilo ID…
       </div>
     );
   }
@@ -54,9 +54,9 @@ function MyHealthIdQr() {
     return (
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
-          You do not have a registered Health ID yet. Submit a request first on{" "}
+          You do not have a registered Impilo ID yet. Submit a request first on{" "}
           <a href="/citizen/health-id/request" className="text-primary hover:underline">
-            Request Health ID
+            Request Impilo ID
           </a>
           .
         </p>
@@ -91,7 +91,7 @@ function MyHealthIdQr() {
           )}
           {profile.healthId && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Health ID</span>
+              <span className="text-muted-foreground">Impilo ID</span>
               <span className="font-mono text-foreground">{profile.healthId}</span>
             </div>
           )}
@@ -186,7 +186,7 @@ function QrResolver() {
           </p>
           {resolution.healthId && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Health ID</span>
+              <span className="text-muted-foreground">Impilo ID</span>
               <span className="font-mono font-semibold text-foreground">{resolution.healthId}</span>
             </div>
           )}
@@ -262,7 +262,7 @@ export default function CitizenHealthIdQrPage() {
   return (
     <div className="max-w-lg mx-auto space-y-6">
       <div className="bg-card rounded-xl border border-border p-6">
-        <h1 className="text-xl font-semibold text-foreground mb-1 text-center">My Health ID QR</h1>
+        <h1 className="text-xl font-semibold text-foreground mb-1 text-center">My Impilo ID QR</h1>
         <p className="text-sm text-muted-foreground text-center mb-6">
           Present this token at participating facilities (render as QR in production clients).
         </p>
@@ -272,7 +272,7 @@ export default function CitizenHealthIdQrPage() {
       <div className="bg-card rounded-xl border border-border p-6">
         <h2 className="text-base font-semibold text-foreground mb-1">Verify a QR Token</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Paste any Health ID QR token to resolve the associated identity and verify its authenticity.
+          Paste any Impilo ID QR token to resolve the associated identity and verify its authenticity.
         </p>
         <QrResolver />
       </div>

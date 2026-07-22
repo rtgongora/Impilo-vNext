@@ -12,7 +12,7 @@ export function CitizenOnboardingOrchestrationRail() {
       <div className="flex items-start gap-3 text-sm text-foreground">
         <Shield className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <div className="space-y-2">
-          <p className="font-medium text-foreground">Citizen onboarding → Health ID issuance</p>
+          <p className="font-medium text-foreground">Citizen onboarding → Impilo ID issuance</p>
           <p>
             Registration establishes person identity (CITIZEN). Issuance queue operators proof, approve, issue, and
             deliver cards; pickup verification closes the loop at facility handover.

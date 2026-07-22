@@ -54,8 +54,8 @@ export function HealthIdStatusChip() {
     <Link
       href={href}
       data-testid="health-id-status-chip"
-      aria-label={`Health ID status: ${ASSURANCE_LABELS[level]}${showNext ? `. Next: ${nextBestStep}` : ""}`}
-      title={showNext ? `${ASSURANCE_LABELS[level]} — ${nextBestStep}` : `Health ID: ${ASSURANCE_LABELS[level]}`}
+      aria-label={`Impilo ID status: ${ASSURANCE_LABELS[level]}${showNext ? `. Next: ${nextBestStep}` : ""}`}
+      title={showNext ? `${ASSURANCE_LABELS[level]} — ${nextBestStep}` : `Impilo ID: ${ASSURANCE_LABELS[level]}`}
       className={[
         "fixed right-2 top-2 z-[9000] inline-flex max-w-[70vw] items-center gap-1.5 rounded-full border px-2.5 py-1",
         "text-xs font-medium shadow-sm backdrop-blur transition-colors hover:shadow",

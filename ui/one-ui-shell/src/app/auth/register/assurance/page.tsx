@@ -68,7 +68,7 @@ export default function AssuranceChoicePage() {
       title: "Basic Access",
       description:
         "Access wellness, communities, marketplace, and public health content.",
-      detail: "No Health ID required.",
+      detail: "No Impilo ID required.",
       color: "impilo",
       borderColor: "border-primary/25",
       bgColor: "bg-primary-soft",
@@ -80,7 +80,7 @@ export default function AssuranceChoicePage() {
       icon: Clock,
       title: "Temporary Health Access",
       description:
-        "Get a provisional Health ID for remote consultations, prescription collection, and basic health records.",
+        "Get a provisional Impilo ID for remote consultations, prescription collection, and basic health records.",
       detail: "Valid for 90 days — visit a facility to complete verification.",
       color: "amber",
       borderColor: "border-warning/35",
@@ -93,7 +93,7 @@ export default function AssuranceChoicePage() {
       icon: CheckCircle2,
       title: "Full Activation",
       description:
-        "I have a Health ID or will complete in-person verification now.",
+        "I have an Impilo ID or will complete in-person verification now.",
       detail: "Full access to all health services.",
       color: "emerald",
       borderColor: "border-success/25",
@@ -170,7 +170,7 @@ export default function AssuranceChoicePage() {
         <div className="mt-4 rounded-xl border border-warning/35 bg-warning-soft/50 p-4">
           <p className="text-sm font-medium text-foreground">Verification completes at a facility</p>
           <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-            Your provisional Health ID works for 90 days. Bring your National ID to any health facility
+            Your provisional Impilo ID works for 90 days. Bring your National ID to any health facility
             to confirm your identity and unlock full health services — your details are captured and
             checked there.
           </p>

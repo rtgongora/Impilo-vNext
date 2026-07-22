@@ -130,7 +130,7 @@ function IdentityFunction({ active }: { active: boolean }) {
               <QRCodeSVG value={token} size={168} level="M" includeMargin={false} />
             </div>
             <p className="text-[11px] text-rose-700/80 text-center">
-              First responders scan to resolve your Health ID via the verify seam.
+              First responders scan to resolve your Impilo ID via the verify seam.
             </p>
           </div>
         </div>

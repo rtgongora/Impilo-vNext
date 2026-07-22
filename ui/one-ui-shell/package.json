@@ -15,6 +15,7 @@
     "test:routes": "node scripts/route-parity-check.mjs",
     "test:launchers": "node ../../scripts/frontend/check-launcher-dead-ends.mjs",
     "test:no-stubs": "node scripts/no-stub-guard.mjs",
+    "test:copy-audit": "node scripts/impilo-id-audit.mjs",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:headed": "playwright test --headed"

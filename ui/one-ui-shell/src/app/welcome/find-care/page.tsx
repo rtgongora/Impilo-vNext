@@ -60,8 +60,8 @@ export default function FindCarePage() {
       <section className="mt-8 rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="font-semibold text-slate-900">Visiting a facility</h2>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
-          <li>Bring an identity document if you have one — it helps verify your Health ID faster.</li>
-          <li>No Health ID yet? Staff can register you and issue a temporary Health ID on arrival.</li>
+          <li>Bring an identity document if you have one — it helps verify your Impilo ID faster.</li>
+          <li>No Impilo ID yet? Staff can register you and issue a temporary Impilo ID on arrival.</li>
           <li>You control consent: you decide who can see your records.</li>
         </ul>
       </section>

@@ -10,7 +10,7 @@ export default function CitizenLayout({ children }: { children: ReactNode }) {
     <AppLayout>
       <PageShell
         title="Citizen self-service"
-        subtitle="Health ID, delegated pickup, recovery, and document claim — consolidated in Experience (same gateway contracts as legacy portal/self-service apps)"
+        subtitle="Impilo ID, delegated pickup, recovery, and document claim — consolidated in Experience (same gateway contracts as legacy portal/self-service apps)"
       >
         <CitizenSelfServiceGate>{children}</CitizenSelfServiceGate>
       </PageShell>

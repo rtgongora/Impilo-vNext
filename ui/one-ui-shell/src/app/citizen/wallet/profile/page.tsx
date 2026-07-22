@@ -75,7 +75,7 @@ export default function WalletProfilePage() {
           </dl>
         ) : (
           <p className="text-sm text-muted-foreground">
-            No profile on file yet. Once you have a Health ID your details will appear here.
+            No profile on file yet. Once you have an Impilo ID your details will appear here.
           </p>
         )}
       </section>

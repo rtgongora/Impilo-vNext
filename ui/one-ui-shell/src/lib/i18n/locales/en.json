@@ -164,11 +164,11 @@
     "welcome": {
       "eyebrow": "Ministry of Health & Child Care",
       "title": "Your health, connected and protected.",
-      "intro": "Impilo is Zimbabwe's national Health Operating System. Create an account to request a Health ID, receive care, view your records, and manage who can see them — with strong privacy and your consent at every step.",
+      "intro": "Impilo is Zimbabwe's national Health Operating System. Create an account to request an Impilo ID, receive care, view your records, and manage who can see them — with strong privacy and your consent at every step.",
       "createAccount": "Create an account",
       "signIn": "Sign in",
-      "requestHealthId": "Request a Health ID",
-      "noHealthIdNeeded": "You do not need a Health ID to get started — create an account first, then request one."
+      "requestHealthId": "Request an Impilo ID",
+      "noHealthIdNeeded": "You do not need an Impilo ID to get started — create an account first, then request one."
     },
     "emergency": {
       "breadcrumb": "Emergency",

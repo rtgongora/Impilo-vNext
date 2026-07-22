@@ -153,7 +153,7 @@ export default function PersonHealthWalletPage() {
       label: "Identity & trust",
       icon: IdCard,
       source: "VITO · Identity assurance",
-      note: "View your Health ID, trust level and how to upgrade",
+      note: "View your Impilo ID, trust level and how to upgrade",
     },
     {
       href: "/citizen/wallet/records",

@@ -135,21 +135,21 @@ export default function IdStatusPage() {
                 )}
                 <span className="text-sm font-medium text-warning-foreground">
                   {provisional.isLoading
-                    ? "Issuing your provisional Health ID…"
-                    : "Your provisional Health ID is being prepared"}
+                    ? "Issuing your provisional Impilo ID…"
+                    : "Your provisional Impilo ID is being prepared"}
                 </span>
               </div>
               <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
                 {provisional.isError
-                  ? "We could not retrieve your provisional Health ID just now. It will appear here once it is ready — you can continue and check again shortly."
-                  : "This usually only takes a moment. You can continue to Impilo and your provisional Health ID will be available from your profile once issued."}
+                  ? "We could not retrieve your provisional Impilo ID just now. It will appear here once it is ready — you can continue and check again shortly."
+                  : "This usually only takes a moment. You can continue to Impilo and your provisional Impilo ID will be available from your profile once issued."}
               </p>
             </div>
           ) : (
             <div className="mt-4 rounded-xl border border-warning/35 bg-warning-soft p-4 text-left space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Provisional Health ID
+                  Provisional Impilo ID
                 </span>
                 <span className="text-sm font-mono font-semibold text-warning-foreground">
                   {provisionalId}
@@ -170,7 +170,7 @@ export default function IdStatusPage() {
 
           <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
             Visit a facility to complete verification and receive your permanent
-            Health ID.
+            Impilo ID.
           </p>
 
           <div className="mt-6 space-y-3">
@@ -208,7 +208,7 @@ export default function IdStatusPage() {
           Fully Verified Account
         </h2>
         <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-          Your Health ID is verified. You have full access to all Impilo health
+          Your Impilo ID is verified. You have full access to all Impilo health
           services, records, and facilities.
         </p>
 

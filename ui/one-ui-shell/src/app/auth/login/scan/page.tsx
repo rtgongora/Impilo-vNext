@@ -136,7 +136,7 @@ export default function BiometricScanLoginPage() {
 
       <h2 className="text-xl font-semibold text-foreground mb-1">Scan to sign in</h2>
       <p className="text-sm text-muted-foreground mb-6">
-        Scan your fingerprint or face. We&apos;ll find your Health ID — no password needed.
+        Scan your fingerprint or face. We&apos;ll find your Impilo ID — no password needed.
       </p>
 
       {error && (

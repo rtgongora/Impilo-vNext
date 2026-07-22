@@ -59,7 +59,7 @@ describe("RegisterPage", () => {
     expect(screen.getByText("Email or phone")).toBeInTheDocument();
     expect(screen.getByText("Password")).toBeInTheDocument();
     expect(screen.getByText("Confirm password")).toBeInTheDocument();
-    expect(screen.getByText("Do you have a Health ID?")).toBeInTheDocument();
+    expect(screen.getByText("Do you have an Impilo ID?")).toBeInTheDocument();
   });
 
   it("shows sign-in link for existing users", () => {

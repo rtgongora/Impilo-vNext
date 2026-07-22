@@ -6,8 +6,8 @@ import { IdentityAssuranceBanner } from "@/components/citizen/IdentityAssuranceB
 const LINKS: { href: string; label: string; note: string }[] = [
   { href: "/citizen/my-care", label: "My Care", note: "Your health at a glance and how to carry on with your care" },
   { href: "/citizen/wallet", label: "My Health Wallet", note: "Your health life in one place — identity, records, care, consent, payments" },
-  { href: "/citizen/health-id/qr", label: "My Health ID QR", note: "VITO portal contract via gateway" },
-  { href: "/citizen/health-id/request", label: "Request Health ID", note: "POST /api/v1/portal/id/request" },
+  { href: "/citizen/health-id/qr", label: "My Impilo ID QR", note: "VITO portal contract via gateway" },
+  { href: "/citizen/health-id/request", label: "Request Impilo ID", note: "POST /api/v1/portal/id/request" },
   { href: "/citizen/id-recovery", label: "ID recovery", note: "Step-up + VITO recovery" },
   { href: "/citizen/delegated-pickup", label: "Delegated pickup", note: "Create / redeem pickup" },
   { href: "/verify/credential", label: "Verify a credential", note: "GET /v1/public/verify/{token} — set NEXT_PUBLIC_CREDENTIAL_VERIFY_PUBLIC_URL" },

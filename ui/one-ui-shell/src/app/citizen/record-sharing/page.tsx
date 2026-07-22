@@ -143,7 +143,7 @@ export default function CitizenRecordSharingPage() {
   if (!healthId) {
     return (
       <div className="max-w-xl p-6 text-sm text-foreground">
-        Sign in with a profile that has a Health ID to manage record sharing.
+        Sign in with a profile that has an Impilo ID to manage record sharing.
       </div>
     );
   }

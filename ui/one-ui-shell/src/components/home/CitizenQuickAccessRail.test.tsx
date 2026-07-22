@@ -17,7 +17,7 @@ describe("CitizenQuickAccessRail", () => {
   it("renders the home quick access destinations", () => {
     render(<CitizenQuickAccessRail />);
 
-    expect(screen.getByRole("link", { name: /My Health ID/i })).toHaveAttribute("href", "/citizen/health-id/qr");
+    expect(screen.getByRole("link", { name: /My Impilo ID/i })).toHaveAttribute("href", "/citizen/health-id/qr");
     expect(screen.getByRole("link", { name: /Medications/i })).toHaveAttribute("href", "/home/medications");
     expect(screen.getByRole("link", { name: /Care Team/i })).toHaveAttribute("href", "/home/care-team");
     expect(screen.getByRole("link", { name: /Coverage/i })).toHaveAttribute("href", "/coverage");

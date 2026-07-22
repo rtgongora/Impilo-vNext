@@ -8,7 +8,7 @@ import type { GatewayPillar } from "@/lib/gateway-intent";
 export const metadata = {
   title: "Welcome to Impilo — Zimbabwe's Health Operating System",
   description:
-    "Discover Impilo, find care, get emergency information, and create an account or request a Health ID. No Health ID is needed to get started.",
+    "Discover Impilo, find care, get emergency information, and create an account or request an Impilo ID. No Impilo ID is needed to get started.",
 };
 
 /**
@@ -113,19 +113,19 @@ export default function WelcomePage() {
         <div className="rounded-xl border border-slate-200 bg-white p-5">
           <h2 className="font-semibold text-slate-900">1 · Account</h2>
           <p className="mt-1 text-sm text-slate-600">
-            Start an account in minutes. Begin or continue a Health ID request and get help — no
+            Start an account in minutes. Begin or continue an Impilo ID request and get help — no
             private records yet.
           </p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="font-semibold text-slate-900">2 · Temporary Health ID</h2>
+          <h2 className="font-semibold text-slate-900">2 · Temporary Impilo ID</h2>
           <p className="mt-1 text-sm text-slate-600">
             Receive care, show your ID at a facility, and book selected services while your identity
             is being verified. Sensitive records stay protected.
           </p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="font-semibold text-slate-900">3 · Verified Health ID</h2>
+          <h2 className="font-semibold text-slate-900">3 · Verified Impilo ID</h2>
           <p className="mt-1 text-sm text-slate-600">
             Once verified, see your health summary, appointments, results, prescriptions and care
             plans — and control who can access them.

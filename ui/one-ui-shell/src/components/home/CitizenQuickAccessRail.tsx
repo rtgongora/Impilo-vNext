@@ -156,14 +156,14 @@ export function CitizenQuickAccessRail({ className = "", collapsible = false }: 
           "flex items-center gap-3 rounded-xl border border-primary/25 bg-gradient-to-br from-primary-soft to-impilo-100 p-3 transition-colors hover:border-impilo-300",
           collapsed ? "h-11 w-11 justify-center p-0" : "",
         ].join(" ")}
-        title="My Health ID"
+        title="My Impilo ID"
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary">
           <QrCode className="h-5 w-5 text-white" />
         </span>
         {!collapsed ? (
           <span>
-            <span className="block text-sm font-semibold text-primary-hover">My Health ID</span>
+            <span className="block text-sm font-semibold text-primary-hover">My Impilo ID</span>
             <span className="block text-[11px] text-primary">Tap to show QR</span>
           </span>
         ) : null}

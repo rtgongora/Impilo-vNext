@@ -354,7 +354,7 @@ export default function LoginPage() {
             className="w-full flex items-center justify-center gap-2 px-3 py-2.5 border border-border rounded-lg text-sm text-foreground hover:border-primary/25 hover:bg-primary-soft transition-colors"
           >
             <IdCard className="w-4 h-4 text-primary" />
-            Request a Health ID
+            Request an Impilo ID
           </Link>
           <Link
             href="/home"
@@ -442,7 +442,7 @@ export default function LoginPage() {
       )}
 
       <NompiloHint
-        message="Welcome to Impilo. Sign in with your email, phone number, or Health ID. If you don't have an account yet, you can create one below."
+        message="Welcome to Impilo. Sign in with your email, phone number, or Impilo ID. If you don't have an account yet, you can create one below."
         suggestions={["Forgot your password? Use the link below the form", "New here? Tap 'Create an account' to get started"]}
       />
     </AuthLayout>

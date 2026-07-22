@@ -56,7 +56,7 @@ export default function WellnessActivityPage() {
         <LuminousStage className="space-y-6 p-5 sm:p-6">
         {!patientId && (
           <p className="text-sm text-warning-foreground bg-warning-soft border border-warning/35 rounded-lg px-4 py-3">
-            Sign in to track activity against your Health ID.
+            Sign in to track activity against your Impilo ID.
           </p>
         )}
 

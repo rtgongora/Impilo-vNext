@@ -21,7 +21,7 @@ export default function WalletIdentityPage() {
       <div>
         <h1 className="text-xl font-semibold text-foreground">Identity & trust</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Your Health ID, current trust level, and what you can do now — with the next steps to raise
+          Your Impilo ID, current trust level, and what you can do now — with the next steps to raise
           your assurance.
         </p>
       </div>
@@ -67,7 +67,7 @@ export default function WalletIdentityPage() {
 
       <div className="flex flex-wrap gap-3 text-sm">
         <Link href="/citizen/health-id/qr" className="text-primary-hover underline">
-          Show my Health ID QR
+          Show my Impilo ID QR
         </Link>
         <Link href="/citizen/id-recovery" className="text-primary-hover underline">
           Recover or correct my ID
