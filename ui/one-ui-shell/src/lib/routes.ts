@@ -214,6 +214,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/professional/regulatory/complaints", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Complaints involving me", navLabel: "Complaints involving me", navZone: "professional" },
   { path: "/professional/practice-regulation", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Practice & Facility Regulation", navLabel: "Practice & Facility Regulation", navZone: "professional" },
   { path: "/work/regulators/[regulatorId]/committee", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Committee & hearings", navLabel: "Committee", navZone: "work" },
+  { path: "/work/regulators/[regulatorId]/bulk-import", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Bulk import", navLabel: "Bulk import", navZone: "work" },
   { path: "/work/regulatory/[orgId]/dashboard", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Regulatory dashboards", navLabel: "Dashboards", navZone: "work" },
   { path: "/work/regulatory/hpa/oversight", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "HPA oversight", navLabel: "HPA oversight", navZone: "work" },
   { path: "/share/claim", zone: "home", layout: "app", sidebar: "main", guard: "none", pageTitle: "Claim Shared Documents", navLabel: "Claim Shared Documents", navZone: "life" },
@@ -982,7 +983,7 @@ export const ROUTES: RouteDefinition[] = [
 // L3 ABIS 1:N scan-to-login (Jul 2026): +1 — /auth/login/scan, the biometric scan-to-login
 // page (capture → 1:N identify → session on a single strong match only). Flag-gated OFF in the
 // BFF; page shows an honest "not enabled" state when the feature is disabled. Total 768.
-export const EXPECTED_ROUTE_COUNT = 780;
+export const EXPECTED_ROUTE_COUNT = 781;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -119,6 +119,17 @@ public class VarapiServiceClient {
         return restTemplate.postForEntity(baseUrl + "/v1/internal/regulatory/oversight/grants", body, JsonNode.class).getBody();
     }
 
+    /** Regulatory bulk-import lanes (ROM-U7). */
+    public JsonNode getImports() {
+        return restTemplate.getForEntity(baseUrl + "/v1/internal/regulatory/imports", JsonNode.class).getBody();
+    }
+    public JsonNode getImportRows(Long batchId) {
+        return restTemplate.getForEntity(baseUrl + "/v1/internal/regulatory/imports/" + batchId + "/rows", JsonNode.class).getBody();
+    }
+    public JsonNode postImport(String sub, Object body) {
+        return restTemplate.postForEntity(baseUrl + "/v1/internal/regulatory/imports" + sub, body, JsonNode.class).getBody();
+    }
+
     public JsonNode getProviderLicenses(String providerId) {
         String url = baseUrl + "/v1/internal/providers/" + providerId + "/licenses";
         log.info("VARAPI: Getting licenses for provider={}", providerId);

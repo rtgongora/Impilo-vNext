@@ -144,4 +144,30 @@ public class RegulatoryConsoleBffController {
     public ResponseEntity<JsonNode> rejectEstablishment(@PathVariable String id, @RequestBody Map<String, Object> body) {
         return ResponseEntity.ok(tusoClient.postEstablishment("/" + id + "/reject", body));
     }
+
+    // ── Bulk import: STAGE → MATCH → REVIEW → APPLY (ROM-U7) ──
+    @GetMapping("/imports")
+    public ResponseEntity<JsonNode> imports() {
+        return ResponseEntity.ok(varapiClient.getImports());
+    }
+
+    @PostMapping("/imports")
+    public ResponseEntity<JsonNode> stageImport(@RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(varapiClient.postImport("", body));
+    }
+
+    @GetMapping("/imports/{batchId}/rows")
+    public ResponseEntity<JsonNode> importRows(@PathVariable Long batchId) {
+        return ResponseEntity.ok(varapiClient.getImportRows(batchId));
+    }
+
+    @PostMapping("/imports/rows/{rowId}/review")
+    public ResponseEntity<JsonNode> reviewImportRow(@PathVariable Long rowId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(varapiClient.postImport("/rows/" + rowId + "/review", body));
+    }
+
+    @PostMapping("/imports/{batchId}/apply")
+    public ResponseEntity<JsonNode> applyImport(@PathVariable Long batchId) {
+        return ResponseEntity.ok(varapiClient.postImport("/" + batchId + "/apply", Map.of()));
+    }
 }
