@@ -53,6 +53,11 @@ public class VarapiServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    /** My Regulatory Affairs (ROM-W3): the signed-in person's own registrations/standing. */
+    public JsonNode getMyRegulatorySummary() {
+        return restTemplate.getForEntity(baseUrl + "/v1/me/regulatory/summary", JsonNode.class).getBody();
+    }
+
     public JsonNode getProviderLicenses(String providerId) {
         String url = baseUrl + "/v1/internal/providers/" + providerId + "/licenses";
         log.info("VARAPI: Getting licenses for provider={}", providerId);
