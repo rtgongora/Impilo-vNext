@@ -224,8 +224,10 @@ public class ReferralLifecycleTimerJob {
     /** Direct (TrustContext-free) outbox write — tenant comes from the entity, not a TrustContext. */
     private void emitLifecycleEvent(String eventType, ReferralEntity referral,
                                     String previousStatus, String reason) {
+        // TM-B20: version the timer-emitted lifecycle events (expired/abandoned) at the choke point.
+        String versionedType = zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineEventVersion.withV1(eventType);
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("eventType", eventType);
+        payload.put("eventType", versionedType);
         payload.put("tenantId", referral.getTenantId().toString());
         payload.put("referralId", referral.getReferralId().toString());
         payload.put("patientCpid", referral.getPatientCpid());
@@ -238,7 +240,7 @@ public class ReferralLifecycleTimerJob {
         EventOutboxEntity outbox = new EventOutboxEntity();
         outbox.setAggregateType("telemedicine");
         outbox.setAggregateId(referral.getReferralId().toString());
-        outbox.setEventType(eventType);
+        outbox.setEventType(versionedType);
         outbox.setTenantId(referral.getTenantId());
         try {
             outbox.setPayload(objectMapper.writeValueAsString(payload));

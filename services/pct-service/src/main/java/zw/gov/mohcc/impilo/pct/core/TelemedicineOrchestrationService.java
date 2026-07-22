@@ -1054,13 +1054,14 @@ public class TelemedicineOrchestrationService {
 
     /** Outbox emit for consumer/system threads that carry no TrustContext (tenantId supplied). */
     private void emitOutbox(String eventType, String aggregateId, UUID tenantId, Map<String, Object> payload) {
+        String versionedType = zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineEventVersion.withV1(eventType);
         EventOutboxEntity outbox = new EventOutboxEntity();
         outbox.setAggregateType("telemedicine");
         outbox.setAggregateId(aggregateId);
-        outbox.setEventType(eventType);
+        outbox.setEventType(versionedType);
         outbox.setTenantId(tenantId);
         Map<String, Object> envelope = new LinkedHashMap<>();
-        envelope.put("eventType", eventType);
+        envelope.put("eventType", versionedType);
         envelope.put("aggregateId", aggregateId);
         envelope.put("tenantId", tenantId);
         envelope.put("occurredAt", OffsetDateTime.now().toString());
@@ -1071,13 +1072,14 @@ public class TelemedicineOrchestrationService {
 
     private void emitOutbox(String eventType, String aggregateId, Map<String, Object> payload) {
         TrustContext ctx = TrustContextHolder.require();
+        String versionedType = zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineEventVersion.withV1(eventType);
         EventOutboxEntity outbox = new EventOutboxEntity();
         outbox.setAggregateType("telemedicine");
         outbox.setAggregateId(aggregateId);
-        outbox.setEventType(eventType);
+        outbox.setEventType(versionedType);
         outbox.setTenantId(ctx.tenantId());
         Map<String, Object> envelope = new LinkedHashMap<>();
-        envelope.put("eventType", eventType);
+        envelope.put("eventType", versionedType);
         envelope.put("aggregateId", aggregateId);
         envelope.put("tenantId", ctx.tenantId());
         envelope.put("occurredAt", OffsetDateTime.now().toString());

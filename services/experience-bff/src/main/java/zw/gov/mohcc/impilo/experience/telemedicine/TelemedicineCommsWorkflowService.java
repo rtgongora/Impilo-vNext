@@ -49,6 +49,9 @@ public class TelemedicineCommsWorkflowService {
         if (eventType == null || eventType.isBlank()) {
             return;
         }
+        // TM-B20: accept both the legacy bare name and the versioned `.v1` name during the
+        // migration window — match the switch on the bare form regardless of producer version.
+        eventType = TelemedicineEventVersion.strip(eventType);
         workflowTelemetry.onEventReceived(eventType, payload);
         try {
             switch (eventType) {
@@ -121,7 +124,9 @@ public class TelemedicineCommsWorkflowService {
     }
 
     private void emitCommsEvent(String eventType, Map<String, Object> payload) {
-        eventPublisher.publish(eventType, string(payload, "id", "sessionId", "referralId"), linkagePayload(payload));
+        // TM-B20: stamp `.v1` on outbound communication events (single choke point).
+        eventPublisher.publish(TelemedicineEventVersion.withV1(eventType),
+                string(payload, "id", "sessionId", "referralId"), linkagePayload(payload));
     }
 
     private void sendSafeNotification(String eventType, String channel, String templateKey, Map<String, Object> payload, String candidateMessage) {
