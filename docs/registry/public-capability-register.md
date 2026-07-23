@@ -96,9 +96,9 @@ reference-only fallback (daidzai SOS status).
 
 | Capability | Owning service | Lane | Status |
 |---|---|---|---|
-| Browse/search listings, catalogs, items, storefronts (indicative pricing) | msika-service | `PublicListingBrowseController` (new) | PLANNED-W3 |
-| Approved vendors + verification badges | msika-flow-service | `PublicVendorController` (new) | PLANNED-W3 |
-| Product registry search/detail | product-registry-service | `PublicProductController` (new) | PLANNED-W3 |
+| Browse/search listings (indicative pricing) | msika-service | `/internal/v1/public/gateway/marketplace/listings` + `/welcome/marketplace` | LIVE (PF-W3) |
+| Approved vendors + verification badges | msika-flow-service | `/internal/v1/public/gateway/marketplace/vendors` | LIVE (PF-W3) |
+| Product registry search/detail | product-registry-service | `PublicProductController` built (service-side) | PLANNED (BFF wiring deferred — needs base-url client) |
 | Facility service catalogues | tuso-service | public facility profile | LIVE (extend if needed W3) |
 | Temporary guest basket (client-side, claimed at sign-in — PD-7) | one-ui-shell | localStorage | PLANNED-W3 |
 | Sign-in trigger: order, pay, submit prescription, track delivery, supplier account, institutional prices | — | authenticated | LIVE (authenticated) |

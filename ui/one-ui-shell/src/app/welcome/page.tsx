@@ -111,10 +111,10 @@ const INTENT_PILLARS: Array<{
   },
   {
     title: "Health products & suppliers",
-    description: "Find pharmacies and health products, order and track delivery.",
-    href: "/auth/login?returnTo=%2Fmarketplace",
-    access: "sign-in",
-    intent: { pillar: "products-suppliers", goal: "browse-products", dest: "/marketplace" },
+    description:
+      "Browse medicines, health products, services and approved suppliers with indicative prices. Sign in only to order or pay.",
+    href: "/welcome/marketplace",
+    access: "open",
   },
 ];
 

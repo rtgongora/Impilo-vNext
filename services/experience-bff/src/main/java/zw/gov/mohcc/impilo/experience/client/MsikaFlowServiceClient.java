@@ -329,6 +329,15 @@ public class MsikaFlowServiceClient {
         return restTemplate.getForEntity(url, String.class);
     }
 
+    /** Public approved-vendors directory (anonymous-safe) — ACTIVE vendors, allow-listed. */
+    public com.fasterxml.jackson.databind.JsonNode publicVendors(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/public/vendors")
+                .queryParams(copy(queryParams)).toUriString();
+        ResponseEntity<com.fasterxml.jackson.databind.JsonNode> r =
+                restTemplate.getForEntity(url, com.fasterxml.jackson.databind.JsonNode.class);
+        return r.getBody() == null ? null : r.getBody().get("data");
+    }
+
     public ResponseEntity<String> getVendor(String vendorId) {
         String url = baseUrl + "/v1/vendors/" + vendorId;
         log.info("MSIKA Flow: Fetching vendor={}", vendorId);

@@ -43,6 +43,24 @@ public class MsikaServiceClient {
         return restTemplate.getForEntity(url, String.class);
     }
 
+    /** Public marketplace listing browse (anonymous-safe) — PUBLISHED listings, allow-listed. */
+    public com.fasterxml.jackson.databind.JsonNode publicListings(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/public/marketplace/listings")
+                .queryParams(queryParams).toUriString();
+        ResponseEntity<com.fasterxml.jackson.databind.JsonNode> r =
+                restTemplate.getForEntity(url, com.fasterxml.jackson.databind.JsonNode.class);
+        return r.getBody() == null ? null : r.getBody().get("data");
+    }
+
+    /** One public marketplace listing (anonymous-safe). */
+    public com.fasterxml.jackson.databind.JsonNode publicListing(String listingId) {
+        String url = baseUrl + "/v1/public/marketplace/listings/"
+                + org.springframework.web.util.UriUtils.encodePathSegment(listingId, java.nio.charset.StandardCharsets.UTF_8);
+        ResponseEntity<com.fasterxml.jackson.databind.JsonNode> r =
+                restTemplate.getForEntity(url, com.fasterxml.jackson.databind.JsonNode.class);
+        return r.getBody() == null ? null : r.getBody().get("data");
+    }
+
     // ── Requirement sourcing (HPA requirement codes → sourcing categories) ────────────
 
     public ResponseEntity<String> listSourcingCategories() {
