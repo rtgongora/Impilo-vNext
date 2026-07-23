@@ -20,7 +20,9 @@ class PublicGatewayGuidanceBffControllerTest {
 
     private static PublicGatewayGuidanceBffController controller(RestTemplate restTemplate) {
         return new PublicGatewayGuidanceBffController(
-                new GuidanceServiceClient(restTemplate, ServiceClientConfig.testServiceEndpoints()));
+                new GuidanceServiceClient(restTemplate, ServiceClientConfig.testServiceEndpoints()),
+                org.mockito.Mockito.mock(
+                        zw.gov.mohcc.impilo.experience.service.PublicGuidanceAskService.class));
     }
 
     @Test

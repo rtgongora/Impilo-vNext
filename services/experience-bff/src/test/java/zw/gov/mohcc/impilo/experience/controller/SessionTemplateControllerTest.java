@@ -41,15 +41,16 @@ class SessionTemplateControllerTest {
     }
 
     @Test
-    void list_returnsAllFiveModes() {
+    void list_returnsAllRegisteredModes() {
         ResponseEntity<Map<String, Object>> response = controller.list("req-3", "corr-3");
 
         assertEquals(200, response.getStatusCode().value());
         Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
         @SuppressWarnings("unchecked")
         List<String> modes = (List<String>) ((Map<?, ?>) data.get("attributes")).get("modes");
-        assertEquals(5, modes.size());
+        // Six modes since TM-B15 added MDT (chaired specialist-board review).
+        assertEquals(6, modes.size());
         assertTrue(modes.containsAll(List.of(
-                "MEETING", "LIVE_EVENT", "LEARNING_LIVE", "LEARNING_RECORDING", "TELEMEDICINE")));
+                "MEETING", "LIVE_EVENT", "LEARNING_LIVE", "LEARNING_RECORDING", "TELEMEDICINE", "MDT")));
     }
 }

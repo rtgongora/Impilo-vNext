@@ -172,6 +172,7 @@ class SchedulingControllerTest {
                 mock(TusoServiceClient.class),
                 mock(SchedulingServiceClient.class),
                 new AppointmentCheckInService(bookingClient, pctClient, comms),
-                comms);
+                comms,
+                pctClient);
     }
 }
