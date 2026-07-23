@@ -77,6 +77,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | **8391** | `rito-quality-safety-service` | Rito — quality, safety & client voice (complaints/incidents/audits/CAPA/QI/surveys) |
 | **8392** | `daidzai-service` | Daidzai — emergency/disaster/public-health response command (SOS/incident, mission tracking, resource-request, affected-site; orchestrates Nhume/Ndila/PCT/Khuluma/Rito) |
 | **8393** | `participation-service` | Participation — citizen Get-Involved & co-design (ideas/experience contributions, moderated public idea board + support, testing cohorts; "something could be better" vs Rito's "something went wrong") |
+| **8394** | `telemonitoring-service` | Telemonitoring — community remote monitoring (Vol II §14, OF-B22): MonitoringPlan/ThresholdProfile/AlertRule/AlertEpisode lifecycle + DeviceAssignmentId; single monitoring-band Observation writer to BUTANO; never talks to devices, never duplicates surveillance/wellness |
 | **8122** | `community-service` | Community health / CHW / outreach (PCT care setting) |
 | 8093 | `document-service` | Document Store |
 | **8113** | `pacs-adapter-service` | |

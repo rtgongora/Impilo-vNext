@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
-# Microservices: 96 | enabled: 96 (all waves)
+# Microservices: 97 | enabled: 97 (all waves)
 fullBootServices:
   ai-model-registry-service:
     enabled: true
@@ -393,6 +393,10 @@ fullBootServices:
     enabled: true
     port: 8180
     database: surveillance
+  telemonitoring-service:
+    enabled: true
+    port: 8394
+    database: telemonitoring
   tshepo-audit-service:
     enabled: true
     port: 8183
@@ -552,6 +556,7 @@ postgres:
     - simba
     - support
     - surveillance
+    - telemonitoring
     - tshepo_audit
     - tshepo_authz
     - tshepo_consent

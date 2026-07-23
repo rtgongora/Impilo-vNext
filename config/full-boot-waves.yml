@@ -55,6 +55,7 @@ waves:
       - pharmacy-service
       - rules-service
       - scheduling-service
+      - telemonitoring-service
   - id: 4
     name: optional-data
     plane: data

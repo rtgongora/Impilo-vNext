@@ -463,6 +463,12 @@ fullBootServices:
       MUSHEX_URL: "http://mushex-service:8102"
       MSIKAFLOW_INTEGRATION_COSTAURL: "http://costing-engine-service:8101"
       MSIKAFLOW_INTEGRATION_COVERAGEURL: "http://coverage-service:8140"
+  # OF-B22: telemonitoring's OrosEnrolmentConsumer turns oros.order.placed
+  # (OrderType OTHER + TM-MON order-code prefix) into DRAFT monitoring plans —
+  # a silent listener would silently break the §14.2 enrolment spine.
+  telemonitoring-service:
+    env:
+      SPRING_KAFKA_LISTENER_AUTO_STARTUP: "true"
   # TM-B17: Rito consumes clinical.teleconsult.lifecycle (verified interactions → feedback loop);
   # analytics-pipeline consumes the same stream ("§24 metrics from events only").
   rito-quality-safety-service:
