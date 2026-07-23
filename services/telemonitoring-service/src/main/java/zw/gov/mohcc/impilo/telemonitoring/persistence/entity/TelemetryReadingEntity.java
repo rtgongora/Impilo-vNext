@@ -80,7 +80,10 @@ public class TelemetryReadingEntity {
     @Column(name = "source", length = 64)
     private String source;
 
-    /** {trustLevel, calibrationPosture, calibrationReason, source, ...} — travels into the Observation. */
+    /** {trustLevel, calibrationPosture, calibrationReason, source, ...} — travels into the Observation.
+     *  The @JdbcTypeCode is LOAD-BEARING (estate law): without it Hibernate binds varchar and every
+     *  Postgres INSERT fails the jsonb cast — caught live by the M4 gate (0 readings persisted). */
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Column(name = "quality_stamp", columnDefinition = "jsonb")
     private String qualityStamp;
 
