@@ -261,6 +261,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/my/comms", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Khuluma — Messages", navLabel: "Khuluma", navZone: "life" },
   // OF-B7 — citizen offer-comparison + selection over the msika-flow request-for-offer marketplace.
   { path: "/my/orders/[requestId]/offers", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Compare Offers", navLabel: "Offers", navZone: "life" },
+  // OF-B27 — citizen remote-monitoring home (my plan, my readings, my device, alert notices).
+  { path: "/my/monitoring", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Monitoring", navLabel: "My Monitoring", navZone: "life" },
 
   // â”€â”€ Zone: Queue (Clinical) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/queue", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Patient Queue", navLabel: "Queue", navZone: "work" },
@@ -876,6 +878,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/work/daidzai/verify-callbacks", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Callback Verification", navLabel: "Callbacks", navZone: "work" },
   { path: "/work/daidzai/missions", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Mission Tracking", navLabel: "Missions", navZone: "work" },
   { path: "/work/daidzai/disasters", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Disaster Command", navLabel: "Disasters", navZone: "work" },
+  // OF-B28/OF-B23 — remote-monitoring command workspace (§14.8 clinical desk) + CHW monitoring view.
+  { path: "/work/telemonitoring", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Remote Monitoring Command", navLabel: "Remote Monitoring", navZone: "work" },
+  { path: "/work/telemonitoring/chw", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "CHW Monitoring", navLabel: "CHW Monitoring", navZone: "work" },
   // Sorting desk — pre-triage visit-type sort (G12).
   { path: "/work/sorting-desk", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Sorting Desk", navLabel: "Sorting Desk", navZone: "work" },
   // WS#8 — Death & Post-Death Pathway (provider/facility surfaces).
@@ -987,7 +992,11 @@ export const ROUTES: RouteDefinition[] = [
 // BFF; page shows an honest "not enabled" state when the feature is disabled. Total 768.
 // OF-B7 patient offer-comparison (Jul 2026): +1 — /my/orders/[requestId]/offers, the citizen
 // comparison/selection surface over msika-flow marketplace requests (§8.6/§11.6 UX contract).
-export const EXPECTED_ROUTE_COUNT = 782;
+// Wave OF-C monitoring surfaces (23 Jul 2026): +3 — /work/telemonitoring (OF-B28 §14.8 command
+// workspace: alert triage board + accountable closure + plans/devices), /work/telemonitoring/chw
+// (OF-B23 CHW monitoring worklist over the PCT generic-task lane), /my/monitoring (OF-B27 citizen
+// monitoring home with §14.6 patient-wording law). Total 785.
+export const EXPECTED_ROUTE_COUNT = 785;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

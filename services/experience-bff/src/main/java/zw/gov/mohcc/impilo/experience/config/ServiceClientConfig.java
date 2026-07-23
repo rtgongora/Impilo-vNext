@@ -145,7 +145,9 @@ public class ServiceClientConfig {
             /** identity-assurance-service — identity assurance level + upgrade workflow (port 8201). */
             String identityAssuranceBaseUrl,
             /** Participation — citizen Get-Involved & co-design (port 8393). */
-            String participationBaseUrl
+            String participationBaseUrl,
+            /** Telemonitoring — monitoring plans, device assignments, readings, alert episodes (port 8394). */
+            String telemonitoringBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -226,6 +228,7 @@ public class ServiceClientConfig {
             if (patientSafetyBaseUrl == null) patientSafetyBaseUrl = "http://localhost:8202";
             if (identityAssuranceBaseUrl == null) identityAssuranceBaseUrl = "http://localhost:8201";
             if (participationBaseUrl == null) participationBaseUrl = "http://localhost:8393";
+            if (telemonitoringBaseUrl == null) telemonitoringBaseUrl = "http://localhost:8394";
         }
     }
 
@@ -242,7 +245,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null
         );
     }
 
@@ -263,7 +266,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null
+                null, null, null, null, null, null
         );
     }
 
