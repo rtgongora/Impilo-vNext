@@ -5,6 +5,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.msikaflow.domain.SelectionStatus;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -48,6 +49,34 @@ public class SelectionEntity {
     /** Discrete coded outcome on failure (RC-2/3/6/7 family). */
     @Column(name = "failure_code", length = 64)
     private String failureCode;
+
+    /** OF-B10 — the real MusheX payment intent id for a positive shortfall (step 8). */
+    @Column(name = "payment_intent_id", length = 64)
+    private String paymentIntentId;
+
+    /** Last observed MusheX intent status (projection only — MusheX owns the truth). */
+    @Column(name = "payment_status", length = 24)
+    private String paymentStatus;
+
+    /** Due-now shortfall the intent was opened for (§10.4 `due_now`). */
+    @Column(name = "shortfall_amount", precision = 14, scale = 2)
+    private BigDecimal shortfallAmount;
+
+    @Column(name = "shortfall_currency", length = 8)
+    private String shortfallCurrency;
+
+    /** OF-B9 — the step-7 financial block snapshot (estimate-never-final, §10.5). */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "financial_json", columnDefinition = "jsonb")
+    private String financialJson;
+
+    /** OF-B8 — PA posture recorded at step 7 (projection over cv_authorisations). */
+    @Column(name = "pa_status", length = 24)
+    private String paStatus;
+
+    /** The cv_authorisations row the posture came from, when one exists. */
+    @Column(name = "pa_reference", length = 64)
+    private String paReference;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "step_log_json", columnDefinition = "jsonb")
@@ -100,6 +129,27 @@ public class SelectionEntity {
 
     public String getFailureCode() { return failureCode; }
     public void setFailureCode(String failureCode) { this.failureCode = failureCode; }
+
+    public String getPaymentIntentId() { return paymentIntentId; }
+    public void setPaymentIntentId(String paymentIntentId) { this.paymentIntentId = paymentIntentId; }
+
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public BigDecimal getShortfallAmount() { return shortfallAmount; }
+    public void setShortfallAmount(BigDecimal shortfallAmount) { this.shortfallAmount = shortfallAmount; }
+
+    public String getShortfallCurrency() { return shortfallCurrency; }
+    public void setShortfallCurrency(String shortfallCurrency) { this.shortfallCurrency = shortfallCurrency; }
+
+    public String getFinancialJson() { return financialJson; }
+    public void setFinancialJson(String financialJson) { this.financialJson = financialJson; }
+
+    public String getPaStatus() { return paStatus; }
+    public void setPaStatus(String paStatus) { this.paStatus = paStatus; }
+
+    public String getPaReference() { return paReference; }
+    public void setPaReference(String paReference) { this.paReference = paReference; }
 
     public String getStepLogJson() { return stepLogJson; }
     public void setStepLogJson(String stepLogJson) { this.stepLogJson = stepLogJson; }

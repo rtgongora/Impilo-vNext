@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.msikaflow.api.dto.ApiResponse;
 import zw.gov.mohcc.impilo.msikaflow.api.dto.MarketplaceDtos.*;
 import zw.gov.mohcc.impilo.msikaflow.core.CommitmentService;
 import zw.gov.mohcc.impilo.msikaflow.core.MarketplaceRequestService;
+import zw.gov.mohcc.impilo.msikaflow.core.OfferFinancialsService;
 import zw.gov.mohcc.impilo.msikaflow.core.PublishedSnapshotBuilder;
 import zw.gov.mohcc.impilo.msikaflow.persistence.entity.FulfillmentOfferEntity;
 import zw.gov.mohcc.impilo.msikaflow.persistence.entity.FulfillmentOfferLineEntity;
@@ -35,13 +36,16 @@ public class MarketplaceRequestController {
 
     private final MarketplaceRequestService requestService;
     private final CommitmentService commitmentService;
+    private final OfferFinancialsService offerFinancialsService;
     private final ObjectMapper objectMapper;
 
     public MarketplaceRequestController(MarketplaceRequestService requestService,
                                         CommitmentService commitmentService,
+                                        OfferFinancialsService offerFinancialsService,
                                         ObjectMapper objectMapper) {
         this.requestService = requestService;
         this.commitmentService = commitmentService;
+        this.offerFinancialsService = offerFinancialsService;
         this.objectMapper = objectMapper;
     }
 
@@ -62,7 +66,8 @@ public class MarketplaceRequestController {
                 new MarketplaceRequestService.CreateCommand(
                         dto.orosOrderId(), dto.orosOrderVersionId(), dto.profile(),
                         dto.publicationMode(), dto.coarseZone(), dto.urgency(), lines,
-                        dto.invitedVendorIds(), dto.prescriptionToken()),
+                        dto.invitedVendorIds(), dto.prescriptionToken(),
+                        dto.fundingMode(), dto.coverageId()),
                 http);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(view(request), TrustHeaderExtractor.correlationId(http)));
@@ -136,8 +141,11 @@ public class MarketplaceRequestController {
     public ResponseEntity<ApiResponse<List<OfferView>>> listOffers(
             @PathVariable String requestId, HttpServletRequest http) {
         UUID tenantId = TrustHeaderExtractor.tenantId(http);
-        List<OfferView> views = requestService.listOffers(requestId, tenantId).stream()
-                .map(r -> offerView(r.offer(), r.lines(), r.rankedBecause()))
+        List<OfferView> views = requestService.listOffers(requestId, tenantId, http).stream()
+                .map(r -> offerView(r.offer(), r.lines(), r.rankedBecause(),
+                        r.financials() != null
+                                ? parse(offerFinancialsService.toJson(r.financials()))
+                                : null))
                 .toList();
         return ResponseEntity.ok(ApiResponse.ok(views, TrustHeaderExtractor.correlationId(http)));
     }
@@ -179,6 +187,11 @@ public class MarketplaceRequestController {
 
     private OfferView offerView(FulfillmentOfferEntity offer, List<FulfillmentOfferLineEntity> lines,
                                 List<String> rankedBecause) {
+        return offerView(offer, lines, rankedBecause, null);
+    }
+
+    private OfferView offerView(FulfillmentOfferEntity offer, List<FulfillmentOfferLineEntity> lines,
+                                List<String> rankedBecause, JsonNode financials) {
         List<OfferLineView> lineViews = lines.stream()
                 .map(l -> new OfferLineView(l.getOfferLineId(), l.getRequestLineRef(), l.getItemCode(),
                         l.getQuantity(), l.getUnitPrice(), l.getStockGrade().name(),
@@ -187,14 +200,16 @@ public class MarketplaceRequestController {
         return new OfferView(offer.getOfferId(), offer.getRequestId(), offer.getVendorId(),
                 offer.getStatus().name(), offer.getStatusReason(), offer.getPriceTotal(),
                 offer.getCurrency(), offer.getFulfillmentWindowHours(), offer.getTtlExpiresAt(),
-                lineViews, rankedBecause);
+                lineViews, rankedBecause, financials);
     }
 
     private SelectionView selectionView(CommitmentService.CommitResult result) {
         SelectionEntity s = result.selection();
         return new SelectionView(s.getSelectionId(), s.getRequestId(), s.getOfferId(),
                 s.getStatus().name(), result.outcomeCode(), result.committed(), result.replayed(),
-                s.getPrescriptionClaimId(), s.getCommittedAt(), parse(s.getStepLogJson()));
+                s.getPrescriptionClaimId(), s.getCommittedAt(), parse(s.getStepLogJson()),
+                parse(s.getFinancialJson()), s.getPaymentIntentId(), s.getPaymentStatus(),
+                s.getShortfallAmount(), s.getShortfallCurrency(), s.getPaStatus(), s.getPaReference());
     }
 
     private JsonNode parse(String json) {

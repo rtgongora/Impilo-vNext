@@ -41,6 +41,7 @@ class MarketplaceRequestServiceTest {
     @Mock private VendorProfileRepository vendorRepository;
     @Mock private EventOutboxRepository outboxRepository;
     @Mock private EligibilityService eligibilityService;
+    @Mock private OfferFinancialsService offerFinancialsService;
     @Mock private OrosClient orosClient;
     @Mock private InventoryClient inventoryClient;
 
@@ -56,8 +57,14 @@ class MarketplaceRequestServiceTest {
     void setUp() {
         service = new MarketplaceRequestService(requestRepository, invitationRepository,
                 offerRepository, offerLineRepository, vendorRepository, outboxRepository,
-                eligibilityService, orosClient, inventoryClient, mapper,
+                eligibilityService, offerFinancialsService, orosClient, inventoryClient, mapper,
                 120, 120, 60, true);
+        // OF-B9 default: financial block computed per offer; UNVERIFIED never hides an offer.
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(new OfferFinancialsService.FinancialBlock(
+                        OfferFinancialsService.STATUS_SELF_PAY, FundingMode.SELF_PAY, "ZWG",
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, null, List.of(), null,
+                        false, OfferFinancialsService.PA_NOT_REQUIRED, null, null, OffsetDateTime.now()));
 
         when(requestRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(invitationRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -75,7 +82,7 @@ class MarketplaceRequestServiceTest {
                 "OROS-1", "OV-1", MarketplaceProfile.MEDICATION, mode, "zone-1", "ROUTINE",
                 List.of(new PublishedSnapshotBuilder.RequestLine(
                         "L1", "ZIBO-X", "ZIBO", 2, "TAB", controlled, false, true)),
-                invited, null);
+                invited, null, null, null);
     }
 
     private VendorProfileEntity vendor(String id) {
@@ -479,12 +486,47 @@ class MarketplaceRequestServiceTest {
         when(vendorRepository.findById(anyString())).thenReturn(Optional.of(vendor(VENDOR_A)));
         when(eligibilityService.coversZone(any(), anyString())).thenReturn(false);
 
-        List<MarketplaceRequestService.RankedOffer> ranked = service.listOffers(REQUEST_ID, TENANT);
+        List<MarketplaceRequestService.RankedOffer> ranked = service.listOffers(REQUEST_ID, TENANT, null);
         assertEquals(2, ranked.size());
         // complete offer ranks first (clinical completeness dominates price — §4.5)
         assertEquals(cheapComplete.getOfferId(), ranked.get(0).offer().getOfferId());
         assertTrue(ranked.get(0).rankedBecause().containsAll(List.of("SUITABLE", "CHEAPEST", "COMPLETE")));
         assertTrue(ranked.get(1).rankedBecause().contains("SUITABLE"));
         assertFalse(ranked.get(1).rankedBecause().contains("COMPLETE"));
+        // OF-B9: every ranked offer carries its financial block
+        assertNotNull(ranked.get(0).financials());
+        assertNotNull(ranked.get(1).financials());
+        verify(offerFinancialsService, times(2)).compute(any(), any(), any(), any());
+    }
+
+    // ── OF-B8/OF-B9: funding election validation (fail-closed ambiguity) ──
+
+    @Test
+    void create_payerCoveredWithoutCoverageId_isRejected() {
+        MarketplaceRequestService.CreateCommand cmd = new MarketplaceRequestService.CreateCommand(
+                "OROS-1", "OV-1", MarketplaceProfile.MEDICATION, PublicationMode.INVITED,
+                "zone-1", "ROUTINE",
+                List.of(new PublishedSnapshotBuilder.RequestLine(
+                        "L1", "ZIBO-X", "ZIBO", 2, "TAB", false, false, true)),
+                List.of(VENDOR_A), null, FundingMode.PAYER_COVERED, null);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> service.createFromOrder(TENANT, "actor-1", cmd, null));
+        assertTrue(ex.getMessage().contains("COVERAGE_REF_REQUIRED"));
+    }
+
+    @Test
+    void create_payerCoveredWithCoverageId_persistsElection() {
+        UUID coverageId = UUID.randomUUID();
+        MarketplaceRequestService.CreateCommand cmd = new MarketplaceRequestService.CreateCommand(
+                "OROS-1", "OV-1", MarketplaceProfile.MEDICATION, PublicationMode.INVITED,
+                "zone-1", "ROUTINE",
+                List.of(new PublishedSnapshotBuilder.RequestLine(
+                        "L1", "ZIBO-X", "ZIBO", 2, "TAB", false, false, true)),
+                List.of(VENDOR_A), null, FundingMode.PAYER_COVERED, coverageId);
+        MarketplaceRequestEntity request = service.createFromOrder(TENANT, "actor-1", cmd, null);
+        assertEquals(FundingMode.PAYER_COVERED, request.getFundingMode());
+        assertEquals(coverageId, request.getCoverageId());
+        // §11.8: the coverage ref never leaks into the published snapshot
+        assertFalse(request.getPublishedLinesJson().contains(coverageId.toString()));
     }
 }

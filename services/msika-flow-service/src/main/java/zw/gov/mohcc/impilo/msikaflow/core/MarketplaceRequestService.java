@@ -44,6 +44,7 @@ public class MarketplaceRequestService {
     private final VendorProfileRepository vendorRepository;
     private final EventOutboxRepository outboxRepository;
     private final EligibilityService eligibilityService;
+    private final OfferFinancialsService offerFinancialsService;
     private final OrosClient orosClient;
     private final InventoryClient inventoryClient;
     private final ObjectMapper objectMapper;
@@ -60,6 +61,7 @@ public class MarketplaceRequestService {
                                      VendorProfileRepository vendorRepository,
                                      EventOutboxRepository outboxRepository,
                                      EligibilityService eligibilityService,
+                                     OfferFinancialsService offerFinancialsService,
                                      OrosClient orosClient,
                                      InventoryClient inventoryClient,
                                      ObjectMapper objectMapper,
@@ -74,6 +76,7 @@ public class MarketplaceRequestService {
         this.vendorRepository = vendorRepository;
         this.outboxRepository = outboxRepository;
         this.eligibilityService = eligibilityService;
+        this.offerFinancialsService = offerFinancialsService;
         this.orosClient = orosClient;
         this.inventoryClient = inventoryClient;
         this.objectMapper = objectMapper;
@@ -94,7 +97,11 @@ public class MarketplaceRequestService {
             String urgency,
             List<PublishedSnapshotBuilder.RequestLine> lines,
             List<String> invitedVendorIds,
-            String prescriptionToken
+            String prescriptionToken,
+            /* OF-B8/OF-B9 (§10.3): NULL => SELF_PAY, fail-closed */
+            FundingMode fundingMode,
+            /* Ruvimbo member-coverage ref; required for PAYER_COVERED */
+            UUID coverageId
     ) {}
 
     @Transactional
@@ -130,6 +137,12 @@ public class MarketplaceRequestService {
                 && (cmd.coarseZone() == null || cmd.coarseZone().isBlank())) {
             throw new IllegalArgumentException("coarseZone is required for GEO_RADIUS publication");
         }
+        if (cmd.fundingMode() == FundingMode.PAYER_COVERED && cmd.coverageId() == null) {
+            // OF-B9 fail-closed ambiguity: a payer election without a coverage
+            // reference could never be verified at step 7 — reject at creation.
+            throw new IllegalArgumentException(
+                    "COVERAGE_REF_REQUIRED: PAYER_COVERED requires a Ruvimbo coverageId");
+        }
 
         // OF-B1 version pin — verified against OROS, fail-closed on an unreachable order plane.
         if (verifyOrderVersion) {
@@ -160,6 +173,8 @@ public class MarketplaceRequestService {
                 cmd.profile().name(), cmd.coarseZone(), cmd.urgency(), cmd.lines()));
         request.setInvitedVendorIds(JsonSupport.toJsonSafe(objectMapper, cmd.invitedVendorIds(), null));
         request.setPrescriptionToken(cmd.prescriptionToken());
+        request.setFundingMode(cmd.fundingMode());
+        request.setCoverageId(cmd.coverageId());
         request.setRequestedBy(actorId);
         requestRepository.save(request);
         log.info("Marketplace request created: id={} order={} pin={} mode={} controlled={}",
@@ -405,13 +420,22 @@ public class MarketplaceRequestService {
         return offer;
     }
 
-    // ── comparison view (basic ranked-because set) ───────────────────────
+    // ── comparison view (basic ranked-because set + OF-B9 financial block) ──
 
     public record RankedOffer(FulfillmentOfferEntity offer, List<FulfillmentOfferLineEntity> lines,
-                              List<String> rankedBecause) {}
+                              List<String> rankedBecause,
+                              OfferFinancialsService.FinancialBlock financials) {}
 
+    /**
+     * §8.6/§8.7 comparison listing. Each ranked offer carries its OF-B9
+     * financial block (COSTA charge → Ruvimbo liability → PA posture) computed
+     * fresh — engines unreachable degrade the block to {@code UNVERIFIED}
+     * (display truth, §10.4) without hiding the offer. The same computation is
+     * re-run at commitment step 7, where the payer-covered gate fails closed.
+     */
     @Transactional(readOnly = true)
-    public List<RankedOffer> listOffers(String requestId, UUID tenantId) {
+    public List<RankedOffer> listOffers(String requestId, UUID tenantId,
+                                        jakarta.servlet.http.HttpServletRequest inbound) {
         MarketplaceRequestEntity request = getRequest(requestId, tenantId);
         List<FulfillmentOfferEntity> active = offerRepository
                 .findByRequestIdAndStatus(requestId, OfferStatus.ACTIVE);
@@ -438,7 +462,9 @@ public class MarketplaceRequestService {
             if (coversAllLines(lines, requestLineRefs)) {
                 labels.add("COMPLETE");
             }
-            ranked.add(new RankedOffer(offer, lines, labels));
+            OfferFinancialsService.FinancialBlock financials =
+                    offerFinancialsService.compute(request, offer, lines, inbound);
+            ranked.add(new RankedOffer(offer, lines, labels, financials));
         }
         // Declared default sort: clinical completeness first, then price — never price alone (§4.5).
         ranked.sort(Comparator

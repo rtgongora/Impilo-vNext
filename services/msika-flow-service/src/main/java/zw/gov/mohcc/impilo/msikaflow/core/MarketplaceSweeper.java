@@ -18,9 +18,12 @@ public class MarketplaceSweeper {
     private static final Logger log = LoggerFactory.getLogger(MarketplaceSweeper.class);
 
     private final MarketplaceRequestService requestService;
+    private final CommitmentService commitmentService;
 
-    public MarketplaceSweeper(MarketplaceRequestService requestService) {
+    public MarketplaceSweeper(MarketplaceRequestService requestService,
+                              CommitmentService commitmentService) {
         this.requestService = requestService;
+        this.commitmentService = commitmentService;
     }
 
     @Scheduled(fixedDelayString = "${msika-flow.marketplace.sweep-interval-ms:60000}")
@@ -30,9 +33,13 @@ public class MarketplaceSweeper {
             int offers = requestService.sweepExpiredOffers(now);
             int windows = requestService.sweepOfferWindows(now);
             int selections = requestService.sweepSelectionWindows(now);
-            if (offers + windows + selections > 0) {
-                log.info("Marketplace sweep: expiredOffers={} closedOfferWindows={} lapsedSelectionWindows={}",
-                        offers, windows, selections);
+            // OF-B10 §8.8.4 — AWAITING_PAYMENT retry window = reservation TTL;
+            // lapse compensates (holds + claim) and fails PAYMENT_TIMEOUT.
+            int payments = commitmentService.sweepAwaitingPayment(now);
+            if (offers + windows + selections + payments > 0) {
+                log.info("Marketplace sweep: expiredOffers={} closedOfferWindows={} "
+                                + "lapsedSelectionWindows={} paymentTimeouts={}",
+                        offers, windows, selections, payments);
             }
         } catch (Exception e) {
             log.error("Marketplace sweep failed: {}", e.getMessage(), e);

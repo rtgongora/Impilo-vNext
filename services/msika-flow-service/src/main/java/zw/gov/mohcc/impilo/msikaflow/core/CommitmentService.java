@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.msikaflow.domain.*;
 import zw.gov.mohcc.impilo.msikaflow.integration.InventoryClient;
+import zw.gov.mohcc.impilo.msikaflow.integration.MushexClient;
 import zw.gov.mohcc.impilo.msikaflow.integration.OrosClient;
 import zw.gov.mohcc.impilo.msikaflow.persistence.entity.*;
 import zw.gov.mohcc.impilo.msikaflow.persistence.repository.*;
@@ -26,16 +27,25 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * OF-B6/OF-B11 — the §8.9 commitment orchestrator for the wave's scope:
- * revalidate offer (RC-2/RC-4) → eligibility recheck (RC-6) → DURA conditional
- * reserve, fail-close (RC-3) → OROS prescription claim (RC-7) → controlled-register
- * write (§13.4) → COMMITTED → losing offers released → dispatch seam → events.
+ * OF-B6/OF-B11 (+ finance lane OF-B8/OF-B9/OF-B10) — the §8.9 commitment
+ * orchestrator: revalidate offer (RC-2/RC-4) → eligibility recheck (RC-6) →
+ * DURA conditional reserve, fail-close (RC-3) → OROS prescription claim (RC-7)
+ * → financial clearance re-verification (step 7: COSTA charge + Ruvimbo
+ * liability + PA posture, §8.7) → payment execution (step 8: one MusheX intent
+ * per obligation, intent → PAID, §8.8) → controlled-register write (§13.4) →
+ * COMMITTED → losing offers released → dispatch seam → events.
  *
  * <p>RC-1 rides the Idempotency-Key + single-active-selection invariant;
- * RC-5-style compensation releases the DURA holds and the OROS claim on any
- * later-step failure; RC-8 dispatch is idempotent on the selection id.
- * Financial clearance and payment (steps 7–8) are OF-B9/OF-B10 scope and are
- * recorded as SKIPPED in the step log — honestly, not silently.</p>
+ * RC-5-style compensation releases the DURA holds, the OROS claim — and
+ * refunds a PAID intent — on any later-step failure; RC-8 dispatch is
+ * idempotent on the selection id.</p>
+ *
+ * <p>Step-8 doctrine (OF-B10, settled): a positive due-now shortfall opens a
+ * real MusheX PaymentIntent and holds the selection at {@code AWAITING_PAYMENT};
+ * the {@code mushex.payment.status.changed} callback resumes steps 9–12 on
+ * PAID, or compensates on terminal failure; the reservation-TTL sweep is the
+ * timeout backstop (§8.8.4 — the retry window IS the reservation TTL). NO
+ * two-phase capture; escrow-on-PoD remains the documented OF-B17/OF-B18 seam.</p>
  */
 @Service
 public class CommitmentService {
@@ -52,6 +62,14 @@ public class CommitmentService {
     public static final String CODE_CONTROLLED_VENDOR_UNAUTHORISED = "CONTROLLED_VENDOR_UNAUTHORISED"; // §13.4
     public static final String CODE_CLAIM_FAILED = "CLAIM_FAILED";                   // RC-7
     public static final String CODE_CONTROLLED_REGISTER_WRITE_FAILED = "CONTROLLED_REGISTER_WRITE_FAILED";
+    // Finance lane (steps 7–8)
+    public static final String CODE_FINANCIAL_UNVERIFIED = "FINANCIAL_UNVERIFIED";   // §10.4 degradation, fail-closed
+    public static final String CODE_NOT_COVERED = "NOT_COVERED";                     // hard Ruvimbo refusal
+    public static final String CODE_PA_REQUIRED = "PA_REQUIRED";                     // OF-B8 §8.7.6
+    public static final String CODE_PAYMENT_INTENT_FAILED = "PAYMENT_INTENT_FAILED"; // step 8, intent never opened
+    public static final String CODE_PAYMENT_FAILED = "PAYMENT_FAILED";               // terminal intent failure
+    public static final String CODE_PAYMENT_TIMEOUT = "PAYMENT_TIMEOUT";             // reservation-TTL lapse
+    public static final String CODE_AWAITING_PAYMENT = "AWAITING_PAYMENT";           // held, not an error
 
     public record CommitResult(SelectionEntity selection, boolean committed, String outcomeCode,
                                boolean replayed) {}
@@ -66,6 +84,8 @@ public class CommitmentService {
     private final EligibilityService eligibilityService;
     private final InventoryClient inventoryClient;
     private final OrosClient orosClient;
+    private final OfferFinancialsService offerFinancialsService;
+    private final MushexClient mushexClient;
     private final ObjectMapper objectMapper;
     private final long defaultFulfillmentWindowHours;
 
@@ -79,6 +99,8 @@ public class CommitmentService {
                              EligibilityService eligibilityService,
                              InventoryClient inventoryClient,
                              OrosClient orosClient,
+                             OfferFinancialsService offerFinancialsService,
+                             MushexClient mushexClient,
                              ObjectMapper objectMapper,
                              @Value("${msika-flow.marketplace.default-fulfillment-window-hours:24}") long defaultFulfillmentWindowHours) {
         this.requestRepository = requestRepository;
@@ -91,6 +113,8 @@ public class CommitmentService {
         this.eligibilityService = eligibilityService;
         this.inventoryClient = inventoryClient;
         this.orosClient = orosClient;
+        this.offerFinancialsService = offerFinancialsService;
+        this.mushexClient = mushexClient;
         this.objectMapper = objectMapper;
         this.defaultFulfillmentWindowHours = defaultFulfillmentWindowHours;
     }
@@ -109,9 +133,11 @@ public class CommitmentService {
             SelectionEntity existing = replay.get();
             log.info("Selection replay: key={} selection={} status={}",
                     idempotencyKey, existing.getSelectionId(), existing.getStatus());
+            String replayOutcome = existing.getStatus() == SelectionStatus.COMMITTED ? CODE_COMMITTED
+                    : existing.getStatus() == SelectionStatus.AWAITING_PAYMENT ? CODE_AWAITING_PAYMENT
+                    : existing.getFailureCode();
             return new CommitResult(existing, existing.getStatus() == SelectionStatus.COMMITTED,
-                    existing.getStatus() == SelectionStatus.COMMITTED ? CODE_COMMITTED
-                            : existing.getFailureCode(), true);
+                    replayOutcome, true);
         }
         boolean liveSelectionExists = selectionRepository.findByRequestId(requestId).stream()
                 .anyMatch(s -> s.getStatus() != SelectionStatus.FAILED
@@ -261,27 +287,220 @@ public class CommitmentService {
             steps.skip(6, "PRESCRIPTION_CLAIM", "no prescription token / non-medication profile");
         }
 
-        // ── Steps 7–8: financial clearance + payment — OF-B9/OF-B10 scope ──
-        steps.skip(7, "FINANCIAL_CLEARANCE", "OF-B9 wave scope — not evaluated, recorded honestly");
-        steps.skip(8, "PAYMENT_EXECUTION", "OF-B10 wave scope — nothing charged in this wave");
-
-        // ── §13.4: mandatory controlled-register write before commitment completes ──
-        if (request.isControlled()) {
-            boolean allWritten = true;
-            for (FulfillmentOfferLineEntity line : lines) {
-                boolean written = inventoryClient.recordControlledIssue(
-                        duraSource.get().facilityId(), duraSource.get().storeId(), line.getItemCode(),
-                        BigDecimal.valueOf(line.getQuantity()), null,
-                        eligibilityService.providerRef(vendor), selection.getSelectionId(), inbound);
-                if (!written) {
-                    allWritten = false;
-                    break;
-                }
-            }
-            if (!allWritten) {
+        // ── Step 7: financial clearance re-verification (OF-B9/OF-B8, §8.7/§10.4) ──
+        OfferFinancialsService.FinancialBlock financials =
+                offerFinancialsService.compute(request, offer, lines, inbound);
+        String financialJson = offerFinancialsService.toJson(financials);
+        selection.setFinancialJson(financialJson);
+        selection.setPaStatus(financials.paStatus());
+        selection.setPaReference(financials.paReference() != null
+                ? financials.paReference().toString() : null);
+        // Display truth: the step-7 block is stamped onto the offer's snapshot
+        // whatever the outcome (VERIFIED / NOT_COVERED / UNVERIFIED / SELF_PAY).
+        attachFinancialsToOfferSnapshot(offer, financialJson);
+        if (financials.fundingMode() == FundingMode.PAYER_COVERED) {
+            if (!financials.payerVerified()) {
+                // §10.4/§10.5: unverifiable or refused coverage FAILS CLOSED for
+                // payer-covered flows — the stock holds and claim are compensated.
+                String code = OfferFinancialsService.STATUS_NOT_COVERED.equals(financials.status())
+                        ? CODE_NOT_COVERED : CODE_FINANCIAL_UNVERIFIED;
                 releaseReservations(reserved, inbound);
                 markProjectionsReleased(selection.getSelectionId());
                 releaseClaimIfAny(selection, inbound);
+                steps.fail(7, "FINANCIAL_CLEARANCE", code,
+                        "status=" + financials.status()
+                                + (financials.detail() != null ? " — " + financials.detail() : ""));
+                return failSelection(selection, request, offer, steps, code, true, inbound);
+            }
+            if (!financials.paSatisfied()) {
+                // OF-B8 §8.7.6: this offer is conditional on approval — PA
+                // not-approved refuses the commitment with the coded outcome.
+                releaseReservations(reserved, inbound);
+                markProjectionsReleased(selection.getSelectionId());
+                releaseClaimIfAny(selection, inbound);
+                steps.fail(7, "FINANCIAL_CLEARANCE", CODE_PA_REQUIRED,
+                        "paStatus=" + financials.paStatus()
+                                + (financials.paReference() != null
+                                        ? " authorisation=" + financials.paReference() : ""));
+                return failSelection(selection, request, offer, steps, CODE_PA_REQUIRED, true, inbound);
+            }
+            steps.pass(7, "FINANCIAL_CLEARANCE", null,
+                    "VERIFIED covered=" + financials.coveredAmount()
+                            + " patient=" + financials.patientLiability() + " " + financials.currency()
+                            + " (ESTIMATE — never final, §10.5)"
+                            + (financials.paRequired() ? " paStatus=" + financials.paStatus() : ""));
+        } else {
+            steps.pass(7, "FINANCIAL_CLEARANCE", null,
+                    "explicit self-pay election — due-now = offer price "
+                            + financials.patientLiability() + " " + financials.currency());
+        }
+
+        // ── Step 8: payment execution (OF-B10, §8.8 — intent → PAID, no 2-phase capture) ──
+        BigDecimal shortfall = financials.shortfall();
+        if (shortfall == null || shortfall.signum() <= 0) {
+            // Zero due-now shortfall (fully covered) — recorded WAIVED, never silently skipped.
+            selection.setShortfallAmount(BigDecimal.ZERO);
+            selection.setShortfallCurrency(financials.currency());
+            steps.waived(8, "PAYMENT_EXECUTION", "zero due-now shortfall — nothing to charge");
+        } else {
+            Optional<MushexClient.MushexIntentCreated> intent = mushexClient.createSelectionPaymentIntent(
+                    inbound, selection.getSelectionId(), shortfall, financials.currency());
+            if (intent.isEmpty()) {
+                // No real intent → no AWAITING_PAYMENT limbo: fail closed with compensation.
+                releaseReservations(reserved, inbound);
+                markProjectionsReleased(selection.getSelectionId());
+                releaseClaimIfAny(selection, inbound);
+                steps.fail(8, "PAYMENT_EXECUTION", CODE_PAYMENT_INTENT_FAILED,
+                        "MusheX intent create failed — holds and claim compensated");
+                return failSelection(selection, request, offer, steps, CODE_PAYMENT_INTENT_FAILED, true, inbound);
+            }
+            selection.setPaymentIntentId(intent.get().intentId());
+            selection.setPaymentStatus(intent.get().status());
+            selection.setShortfallAmount(shortfall);
+            selection.setShortfallCurrency(financials.currency());
+            selection.setStatus(SelectionStatus.AWAITING_PAYMENT);
+            steps.pending(8, "PAYMENT_EXECUTION",
+                    "intent " + intent.get().intentId() + " opened for " + shortfall + " "
+                            + financials.currency() + " — held until PAID (reservation TTL is the retry window)");
+            selection.setStepLogJson(steps.toJson(objectMapper));
+            selectionRepository.save(selection);
+            publishSelectionEvent(selection, request, offer, "SELECTION_AWAITING_PAYMENT", CODE_AWAITING_PAYMENT);
+            log.info("Selection awaiting payment: selection={} intent={} amount={} {}",
+                    selection.getSelectionId(), intent.get().intentId(), shortfall, financials.currency());
+            return new CommitResult(selection, false, CODE_AWAITING_PAYMENT, false);
+        }
+
+        // ── Steps 9–12 (waived-payment path completes synchronously) ──
+        return completeCommitment(selection, request, offer, lines, vendor, steps, inbound);
+    }
+
+    /**
+     * OF-B10 — payment-event resume seam ({@code mushex.payment.status.changed}
+     * consumed by {@code PaymentEventConsumer}). PAID resumes steps 9–12;
+     * terminal failure compensates per RC-5 (holds + claim released); interim
+     * statuses only refresh the projection. CC-2 holds: a payment event alone
+     * never sets fulfilment state — it resumes the guarded commitment sequence,
+     * which still enforces §13.4 and the state machines.
+     *
+     * @return the outcome when a held selection was resumed; empty when the
+     *         intent maps to no held selection (not a marketplace payment).
+     */
+    @Transactional
+    public Optional<CommitResult> onPaymentStatusChanged(String mushexPaymentIntentId, String status) {
+        Optional<SelectionEntity> found = selectionRepository.findFirstByPaymentIntentId(mushexPaymentIntentId);
+        if (found.isEmpty()) {
+            return Optional.empty();
+        }
+        SelectionEntity selection = found.get();
+        String normalised = status != null ? status.trim().toUpperCase() : "";
+        if (selection.getStatus() != SelectionStatus.AWAITING_PAYMENT) {
+            // Late/duplicate event — refresh the projection only, never re-run steps.
+            selection.setPaymentStatus(normalised);
+            selectionRepository.save(selection);
+            log.info("Payment event for non-held selection {} (status={}) — projection updated only",
+                    selection.getSelectionId(), selection.getStatus());
+            return Optional.empty();
+        }
+        selection.setPaymentStatus(normalised);
+        MarketplaceRequestEntity request = requestRepository.findById(selection.getRequestId()).orElse(null);
+        FulfillmentOfferEntity offer = offerRepository.findById(selection.getOfferId()).orElse(null);
+        if (request == null || offer == null) {
+            log.error("Held selection {} lost its request/offer rows — cannot resume", selection.getSelectionId());
+            selectionRepository.save(selection);
+            return Optional.empty();
+        }
+        List<FulfillmentOfferLineEntity> lines = offerLineRepository.findByOfferId(selection.getOfferId());
+        StepLog steps = StepLog.fromJson(objectMapper, selection.getStepLogJson());
+        switch (normalised) {
+            case "PAID" -> {
+                VendorProfileEntity vendor = vendorRepository.findById(offer.getVendorId())
+                        .filter(v -> selection.getTenantId().equals(v.getTenantId()))
+                        .orElse(null);
+                steps.pass(8, "PAYMENT_EXECUTION", null,
+                        "intent " + mushexPaymentIntentId + " PAID — commitment resumed");
+                return Optional.of(completeCommitment(selection, request, offer, lines, vendor, steps, null));
+            }
+            case "FAILED", "CANCELLED", "REJECTED" -> {
+                // §8.8.4 + lane doctrine: terminal failure compensates — DURA holds
+                // and the prescription claim are released; nothing was charged.
+                releaseLineReservations(lines, null);
+                markProjectionsReleased(selection.getSelectionId());
+                releaseClaimIfAny(selection, null);
+                steps.fail(8, "PAYMENT_EXECUTION", CODE_PAYMENT_FAILED,
+                        "intent " + mushexPaymentIntentId + " " + normalised + " — holds and claim compensated");
+                return Optional.of(failSelection(selection, request, offer, steps, CODE_PAYMENT_FAILED, true, null));
+            }
+            default -> {
+                // PENDING / AUTHORIZED / PARTIALLY_PAID …: projection refresh only.
+                selectionRepository.save(selection);
+                return Optional.empty();
+            }
+        }
+    }
+
+    /**
+     * OF-B10 timeout backstop (§8.8.4): an AWAITING_PAYMENT selection whose
+     * offer TTL (re-bound to the DURA reservation TTL at step 5) has lapsed is
+     * compensated and failed with {@code PAYMENT_TIMEOUT} — no zombie holds,
+     * honest re-offer posture. Invoked by {@link MarketplaceSweeper}.
+     */
+    @Transactional
+    public int sweepAwaitingPayment(OffsetDateTime now) {
+        int swept = 0;
+        for (SelectionEntity selection : selectionRepository.findByStatus(SelectionStatus.AWAITING_PAYMENT)) {
+            FulfillmentOfferEntity offer = offerRepository.findById(selection.getOfferId()).orElse(null);
+            MarketplaceRequestEntity request = requestRepository.findById(selection.getRequestId()).orElse(null);
+            if (offer == null || request == null) {
+                continue;
+            }
+            if (offer.getTtlExpiresAt() == null || offer.getTtlExpiresAt().isAfter(now)) {
+                continue; // retry window (reservation TTL) still open
+            }
+            List<FulfillmentOfferLineEntity> lines = offerLineRepository.findByOfferId(selection.getOfferId());
+            releaseLineReservations(lines, null);
+            markProjectionsReleased(selection.getSelectionId());
+            releaseClaimIfAny(selection, null);
+            StepLog steps = StepLog.fromJson(objectMapper, selection.getStepLogJson());
+            steps.fail(8, "PAYMENT_EXECUTION", CODE_PAYMENT_TIMEOUT,
+                    "payment window (reservation TTL) lapsed at " + offer.getTtlExpiresAt()
+                            + " — holds and claim compensated");
+            failSelection(selection, request, offer, steps, CODE_PAYMENT_TIMEOUT, true, null);
+            swept++;
+        }
+        return swept;
+    }
+
+    /**
+     * Steps 9–12 of the §8.9 sequence — shared by the synchronous (waived
+     * payment) path and the PAID-callback resume path. Compensation here is the
+     * full RC-5 chain: DURA holds + claim released AND a PAID intent refunded.
+     */
+    private CommitResult completeCommitment(SelectionEntity selection, MarketplaceRequestEntity request,
+                                            FulfillmentOfferEntity offer, List<FulfillmentOfferLineEntity> lines,
+                                            VendorProfileEntity vendor, StepLog steps,
+                                            HttpServletRequest inbound) {
+        // ── §13.4: mandatory controlled-register write before commitment completes ──
+        if (request.isControlled()) {
+            Optional<EligibilityService.DuraSource> duraSource =
+                    vendor != null ? eligibilityService.duraSource(vendor) : Optional.empty();
+            boolean allWritten = duraSource.isPresent();
+            if (allWritten) {
+                for (FulfillmentOfferLineEntity line : lines) {
+                    boolean written = inventoryClient.recordControlledIssue(
+                            duraSource.get().facilityId(), duraSource.get().storeId(), line.getItemCode(),
+                            BigDecimal.valueOf(line.getQuantity()), null,
+                            eligibilityService.providerRef(vendor), selection.getSelectionId(), inbound);
+                    if (!written) {
+                        allWritten = false;
+                        break;
+                    }
+                }
+            }
+            if (!allWritten) {
+                releaseLineReservations(lines, inbound);
+                markProjectionsReleased(selection.getSelectionId());
+                releaseClaimIfAny(selection, inbound);
+                refundIfPaid(selection, inbound);
                 steps.fail(9, "CONTROLLED_REGISTER_WRITE", CODE_CONTROLLED_REGISTER_WRITE_FAILED,
                         "controlled commitment cannot complete without the register write (§13.4)");
                 return failSelection(selection, request, offer, steps,
@@ -304,8 +523,8 @@ public class CommitmentService {
         requestRepository.save(request);
 
         // ── Step 10: losing offers released ──
-        for (FulfillmentOfferEntity other : offerRepository.findByRequestId(requestId)) {
-            if (!other.getOfferId().equals(offerId) && other.getStatus() == OfferStatus.ACTIVE) {
+        for (FulfillmentOfferEntity other : offerRepository.findByRequestId(request.getRequestId())) {
+            if (!other.getOfferId().equals(offer.getOfferId()) && other.getStatus() == OfferStatus.ACTIVE) {
                 other.setStatus(OfferStatus.NOT_SELECTED);
                 other.setStatusReason("ANOTHER_OFFER_COMMITTED");
                 offerRepository.save(other);
@@ -327,7 +546,7 @@ public class CommitmentService {
         // ── Step 12: events ──
         publishSelectionEvent(selection, request, offer, "SELECTION_COMMITTED", CODE_COMMITTED);
         log.info("Selection committed: selection={} request={} offer={} vendor={}",
-                selection.getSelectionId(), requestId, offerId, offer.getVendorId());
+                selection.getSelectionId(), request.getRequestId(), offer.getOfferId(), offer.getVendorId());
         return new CommitResult(selection, true, CODE_COMMITTED, false);
     }
 
@@ -370,6 +589,64 @@ public class CommitmentService {
                 log.error("Compensation release failed for DURA reservation {} — TTL sweep is the backstop",
                         hold.reservationId());
             }
+        }
+    }
+
+    /**
+     * Line-ref-based compensation twin of {@link #releaseReservations} for the
+     * deferred paths (payment callback / timeout sweep) where the in-memory
+     * hold list no longer exists — the refs were persisted on the offer lines
+     * at step 5.
+     */
+    private void releaseLineReservations(List<FulfillmentOfferLineEntity> lines, HttpServletRequest inbound) {
+        for (FulfillmentOfferLineEntity line : lines) {
+            if (line.getDuraReservationRef() == null) {
+                continue;
+            }
+            try {
+                boolean released = inventoryClient.release(UUID.fromString(line.getDuraReservationRef()), inbound);
+                if (!released) {
+                    log.error("Compensation release failed for DURA reservation {} — TTL sweep is the backstop",
+                            line.getDuraReservationRef());
+                }
+            } catch (IllegalArgumentException e) {
+                log.error("Unparseable DURA reservation ref {} on line {}",
+                        line.getDuraReservationRef(), line.getOfferLineId());
+            }
+        }
+    }
+
+    /**
+     * OF-B9 — merges the step-7 financial block into the offer's eligibility
+     * snapshot (§8.7 "offer view + eligibility snapshot" contract) so the
+     * audited snapshot carries the money truth the patient acted on.
+     */
+    private void attachFinancialsToOfferSnapshot(FulfillmentOfferEntity offer, String financialJson) {
+        try {
+            com.fasterxml.jackson.databind.JsonNode existing =
+                    offer.getEligibilitySnapshotJson() != null && !offer.getEligibilitySnapshotJson().isBlank()
+                            ? objectMapper.readTree(offer.getEligibilitySnapshotJson())
+                            : objectMapper.createObjectNode();
+            if (existing instanceof ObjectNode snapshot) {
+                snapshot.set("financials", objectMapper.readTree(financialJson));
+                offer.setEligibilitySnapshotJson(snapshot.toString());
+                offerRepository.save(offer);
+            }
+        } catch (Exception e) {
+            log.warn("Could not attach financial block to offer {} snapshot: {}",
+                    offer.getOfferId(), e.getMessage());
+        }
+    }
+
+    /**
+     * RC-5: a PAID intent whose commitment later failed is refunded
+     * automatically and visibly (§8.8.4) — never a silently kept payment.
+     */
+    private void refundIfPaid(SelectionEntity selection, HttpServletRequest inbound) {
+        if (selection.getPaymentIntentId() != null && "PAID".equalsIgnoreCase(selection.getPaymentStatus())
+                && selection.getShortfallAmount() != null && selection.getShortfallAmount().signum() > 0) {
+            mushexClient.tryRefund(inbound, selection.getPaymentIntentId(), selection.getShortfallAmount(),
+                    "COMMITMENT_COMPENSATION:" + selection.getSelectionId());
         }
     }
 
@@ -427,6 +704,26 @@ public class CommitmentService {
             payload.put("outcomeCode", code);
             payload.put("priceTotal", offer.getPriceTotal() != null ? offer.getPriceTotal().toPlainString() : null);
             payload.put("currency", offer.getCurrency());
+            // OF-B9/OF-B10 — the financial posture rides every selection event
+            // (msika.flow.selection financial status; §8.7/§8.8 event contract).
+            if (selection.getFinancialJson() != null) {
+                try {
+                    payload.put("financials", objectMapper.readTree(selection.getFinancialJson()));
+                } catch (Exception ignored) {
+                    // unparseable snapshot — omit rather than fail the event
+                }
+            }
+            if (selection.getPaymentIntentId() != null) {
+                payload.put("paymentIntentId", selection.getPaymentIntentId());
+                payload.put("paymentStatus", selection.getPaymentStatus());
+                payload.put("shortfallAmount", selection.getShortfallAmount() != null
+                        ? selection.getShortfallAmount().toPlainString() : null);
+                payload.put("shortfallCurrency", selection.getShortfallCurrency());
+            }
+            if (selection.getPaStatus() != null) {
+                payload.put("paStatus", selection.getPaStatus());
+                payload.put("paReference", selection.getPaReference());
+            }
             EventOutboxEntity outbox = new EventOutboxEntity();
             outbox.setAggregateType("MarketplaceSelection");
             outbox.setAggregateId(selection.getSelectionId());
@@ -459,6 +756,51 @@ public class CommitmentService {
 
         void partial(int seq, String step, String detail) {
             entries.add(new Entry(seq, step, "PARTIAL", null, detail, OffsetDateTime.now()));
+        }
+
+        /** OF-B10 — zero-shortfall payment step: nothing owed, recorded, never skipped. */
+        void waived(int seq, String step, String detail) {
+            entries.add(new Entry(seq, step, "WAIVED", null, detail, OffsetDateTime.now()));
+        }
+
+        /** OF-B10 — step opened but held (AWAITING_PAYMENT); a later entry resolves it. */
+        void pending(int seq, String step, String detail) {
+            entries.add(new Entry(seq, step, "PENDING", null, detail, OffsetDateTime.now()));
+        }
+
+        /**
+         * Rehydrates the append-only log for the deferred resume paths so the
+         * PAID/FAILED continuation appends to the original history instead of
+         * replacing it.
+         */
+        static StepLog fromJson(ObjectMapper mapper, String json) {
+            StepLog log = new StepLog();
+            if (json == null || json.isBlank()) {
+                return log;
+            }
+            try {
+                com.fasterxml.jackson.databind.JsonNode arr = mapper.readTree(json);
+                if (arr.isArray()) {
+                    for (com.fasterxml.jackson.databind.JsonNode n : arr) {
+                        OffsetDateTime at;
+                        try {
+                            at = OffsetDateTime.parse(n.path("at").asText());
+                        } catch (Exception e) {
+                            at = OffsetDateTime.now();
+                        }
+                        log.entries.add(new Entry(
+                                n.path("seq").asInt(),
+                                n.path("step").asText(null),
+                                n.path("status").asText(null),
+                                n.hasNonNull("code") ? n.get("code").asText() : null,
+                                n.hasNonNull("detail") ? n.get("detail").asText() : null,
+                                at));
+                    }
+                }
+            } catch (Exception e) {
+                // Unparseable history: keep going with a fresh log rather than losing the outcome.
+            }
+            return log;
         }
 
         String toJson(ObjectMapper mapper) {

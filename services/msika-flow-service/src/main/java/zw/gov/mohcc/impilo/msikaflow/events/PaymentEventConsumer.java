@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.msikaflow.core.CommitmentService;
 import zw.gov.mohcc.impilo.msikaflow.core.PaymentService;
 
 @Service
@@ -14,10 +15,14 @@ public class PaymentEventConsumer {
     private static final Logger log = LoggerFactory.getLogger(PaymentEventConsumer.class);
 
     private final PaymentService paymentService;
+    private final CommitmentService commitmentService;
     private final ObjectMapper objectMapper;
 
-    public PaymentEventConsumer(PaymentService paymentService, ObjectMapper objectMapper) {
+    public PaymentEventConsumer(PaymentService paymentService,
+                                CommitmentService commitmentService,
+                                ObjectMapper objectMapper) {
         this.paymentService = paymentService;
+        this.commitmentService = commitmentService;
         this.objectMapper = objectMapper;
     }
 
@@ -59,6 +64,14 @@ public class PaymentEventConsumer {
             }
 
             paymentService.handlePaymentCallback(mushexPaymentIntentId, status, actorId);
+            // OF-B10 — a held marketplace selection (AWAITING_PAYMENT) resumes
+            // its guarded steps 9–12 on PAID, or compensates on terminal failure.
+            // CC-2: the event itself never sets fulfilment state — the commitment
+            // sequence (state machines + §13.4 gate) does.
+            commitmentService.onPaymentStatusChanged(mushexPaymentIntentId, status)
+                    .ifPresent(result -> log.info(
+                            "Marketplace selection {} resumed from payment event: outcome={}",
+                            result.selection().getSelectionId(), result.outcomeCode()));
             log.info("Processed payment event: mushexId={} status={}", mushexPaymentIntentId, status);
 
         } catch (Exception e) {

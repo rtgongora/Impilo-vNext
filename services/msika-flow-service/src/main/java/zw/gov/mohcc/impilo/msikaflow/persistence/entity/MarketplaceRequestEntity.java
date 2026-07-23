@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.msikaflow.persistence.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import zw.gov.mohcc.impilo.msikaflow.domain.FundingMode;
 import zw.gov.mohcc.impilo.msikaflow.domain.MarketplaceProfile;
 import zw.gov.mohcc.impilo.msikaflow.domain.MarketplaceRequestStatus;
 import zw.gov.mohcc.impilo.msikaflow.domain.PublicationMode;
@@ -84,6 +85,22 @@ public class MarketplaceRequestEntity {
     @Column(name = "prescription_token", length = 512)
     private String prescriptionToken;
 
+    /**
+     * OF-B8/OF-B9 — the funding-source election (§10.3). NULL is treated as
+     * SELF_PAY everywhere (fail-closed: silence never fabricates coverage).
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "funding_mode", length = 16)
+    private FundingMode fundingMode;
+
+    /**
+     * Ruvimbo member-coverage reference for PAYER_COVERED flows. Held on the
+     * request row only — NEVER included in the §11.8 published snapshot,
+     * vendor views or event payloads.
+     */
+    @Column(name = "coverage_id")
+    private UUID coverageId;
+
     @Column(name = "requested_by", length = 128)
     private String requestedBy;
 
@@ -151,6 +168,12 @@ public class MarketplaceRequestEntity {
 
     public String getPrescriptionToken() { return prescriptionToken; }
     public void setPrescriptionToken(String prescriptionToken) { this.prescriptionToken = prescriptionToken; }
+
+    public FundingMode getFundingMode() { return fundingMode; }
+    public void setFundingMode(FundingMode fundingMode) { this.fundingMode = fundingMode; }
+
+    public UUID getCoverageId() { return coverageId; }
+    public void setCoverageId(UUID coverageId) { this.coverageId = coverageId; }
 
     public String getRequestedBy() { return requestedBy; }
     public void setRequestedBy(String requestedBy) { this.requestedBy = requestedBy; }

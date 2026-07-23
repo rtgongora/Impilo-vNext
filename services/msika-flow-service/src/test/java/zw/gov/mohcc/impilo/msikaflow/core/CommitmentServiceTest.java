@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import zw.gov.mohcc.impilo.msikaflow.domain.*;
 import zw.gov.mohcc.impilo.msikaflow.integration.InventoryClient;
+import zw.gov.mohcc.impilo.msikaflow.integration.MushexClient;
 import zw.gov.mohcc.impilo.msikaflow.integration.OrosClient;
 import zw.gov.mohcc.impilo.msikaflow.persistence.entity.*;
 import zw.gov.mohcc.impilo.msikaflow.persistence.repository.*;
@@ -46,6 +47,8 @@ class CommitmentServiceTest {
     @Mock private EligibilityService eligibilityService;
     @Mock private InventoryClient inventoryClient;
     @Mock private OrosClient orosClient;
+    @Mock private OfferFinancialsService offerFinancialsService;
+    @Mock private MushexClient mushexClient;
 
     private final ObjectMapper mapper = new ObjectMapper();
     private CommitmentService service;
@@ -71,7 +74,8 @@ class CommitmentServiceTest {
     void setUp() {
         service = new CommitmentService(requestRepository, offerRepository, offerLineRepository,
                 selectionRepository, vendorRepository, reservationRepository, outboxRepository,
-                eligibilityService, inventoryClient, orosClient, mapper, 24);
+                eligibilityService, inventoryClient, orosClient,
+                offerFinancialsService, mushexClient, mapper, 24);
 
         request = new MarketplaceRequestEntity();
         request.setRequestId(REQUEST_ID);
@@ -132,6 +136,7 @@ class CommitmentServiceTest {
                 .thenAnswer(inv -> Optional.ofNullable(savedSelection.get()));
         when(requestRepository.findByRequestIdAndTenantId(REQUEST_ID, TENANT))
                 .thenReturn(Optional.of(request));
+        when(requestRepository.findById(REQUEST_ID)).thenReturn(Optional.of(request));
         when(requestRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(offerRepository.findByOfferIdAndTenantId(OFFER_ID, TENANT)).thenReturn(Optional.of(offer));
         when(offerRepository.findByRequestId(REQUEST_ID)).thenReturn(List.of(offer, otherOffer));
@@ -164,6 +169,38 @@ class CommitmentServiceTest {
         when(orosClient.claimPrescription(anyString(), anyString(), anyString(), any()))
                 .thenReturn(Optional.of(new OrosClient.PrescriptionClaim("CLAIM-1", "PV-1", false)));
         when(orosClient.releaseClaim(anyString(), anyString(), any())).thenReturn(true);
+
+        // OF-B9/OF-B10 defaults: zero-shortfall self-pay block (step 8 WAIVED —
+        // the pre-finance suite semantics); finance tests override per scenario.
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(selfPayBlock(BigDecimal.ZERO));
+        when(offerFinancialsService.toJson(any())).thenAnswer(inv -> {
+            OfferFinancialsService.FinancialBlock b = inv.getArgument(0);
+            return "{\"status\":\"" + b.status() + "\",\"estimateNeverFinal\":true}";
+        });
+        when(mushexClient.createSelectionPaymentIntent(any(), anyString(), any(), any()))
+                .thenReturn(Optional.of(new MushexClient.MushexIntentCreated("mpi-1", "CREATED")));
+        when(mushexClient.tryRefund(any(), anyString(), any(), anyString()))
+                .thenReturn(Optional.of(new MushexClient.MushexRefundCreated("ref-1", "PENDING")));
+    }
+
+    private static OfferFinancialsService.FinancialBlock selfPayBlock(BigDecimal amount) {
+        return new OfferFinancialsService.FinancialBlock(
+                OfferFinancialsService.STATUS_SELF_PAY, FundingMode.SELF_PAY, "ZWG",
+                amount, BigDecimal.ZERO, amount, null, List.of(), null,
+                false, OfferFinancialsService.PA_NOT_REQUIRED, null,
+                "self-pay elected", OffsetDateTime.now());
+    }
+
+    private static OfferFinancialsService.FinancialBlock payerBlock(String status, BigDecimal covered,
+                                                                    BigDecimal patient, boolean paRequired,
+                                                                    String paStatus, UUID paRef) {
+        return new OfferFinancialsService.FinancialBlock(
+                status, FundingMode.PAYER_COVERED, "USD",
+                covered != null && patient != null ? covered.add(patient) : null,
+                covered, patient,
+                UUID.randomUUID(), List.of(UUID.randomUUID()), "CPID-1",
+                paRequired, paStatus, paRef, null, OffsetDateTime.now());
     }
 
     private EligibilityService.EligibilityResult eligible() {
@@ -210,8 +247,15 @@ class CommitmentServiceTest {
         assertTrue(result.selection().getStepLogJson().contains("DURA_RESERVATION"));
         assertTrue(result.selection().getStepLogJson().contains("FULFILMENT_DISPATCH"));
         assertTrue(result.selection().getStepLogJson().contains("PARTIAL"));
-        // nothing charged in this wave — payment step honestly SKIPPED
-        assertTrue(result.selection().getStepLogJson().contains("SKIPPED"));
+        // OF-B9/OF-B10: steps 7/8 are REAL now — clearance passed, zero
+        // shortfall recorded WAIVED; the old SKIPPED entries are gone.
+        assertTrue(result.selection().getStepLogJson().contains("FINANCIAL_CLEARANCE"));
+        assertTrue(result.selection().getStepLogJson().contains("PAYMENT_EXECUTION"));
+        assertTrue(result.selection().getStepLogJson().contains("WAIVED"));
+        assertFalse(result.selection().getStepLogJson().contains("SKIPPED"));
+        // financial snapshot persisted with the binding estimate label
+        assertNotNull(result.selection().getFinancialJson());
+        assertTrue(result.selection().getFinancialJson().contains("estimateNeverFinal"));
         verify(inventoryClient, never()).release(any(), any());
     }
 
@@ -402,5 +446,297 @@ class CommitmentServiceTest {
         verify(inventoryClient).release(eq(DURA_RESERVATION), any());
         verify(orosClient).releaseClaim(eq("CLAIM-1"), anyString(), any());
         assertEquals(SelectionStatus.FAILED, result.selection().getStatus());
+    }
+
+    // ═════════ Finance lane — OF-B9 step 7 (financial clearance) ═════════
+
+    @Test
+    void step7_payerCovered_unverified_failsClosed_withCompensation() {
+        // §10.4/§10.5: engines unreachable → UNVERIFIED → payer-covered commitment refused.
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(payerBlock(OfferFinancialsService.STATUS_UNVERIFIED, null, null,
+                        false, OfferFinancialsService.PA_UNVERIFIED, null));
+
+        CommitmentService.CommitResult result =
+                service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-F1", null);
+
+        assertFalse(result.committed());
+        assertEquals(CommitmentService.CODE_FINANCIAL_UNVERIFIED, result.outcomeCode());
+        assertEquals(SelectionStatus.FAILED, result.selection().getStatus());
+        // full compensation: DURA hold + prescription claim released
+        verify(inventoryClient).release(eq(DURA_RESERVATION), any());
+        verify(orosClient).releaseClaim(eq("CLAIM-1"), anyString(), any());
+        // nothing was ever charged
+        verify(mushexClient, never()).createSelectionPaymentIntent(any(), anyString(), any(), any());
+        assertEquals(MarketplaceRequestStatus.OFFERS_AVAILABLE, request.getStatus());
+    }
+
+    @Test
+    void step7_payerCovered_notCovered_failsClosed_withDistinctCode() {
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(payerBlock(OfferFinancialsService.STATUS_NOT_COVERED, null, null,
+                        false, OfferFinancialsService.PA_NOT_REQUIRED, null));
+
+        CommitmentService.CommitResult result =
+                service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-F2", null);
+
+        assertFalse(result.committed());
+        assertEquals(CommitmentService.CODE_NOT_COVERED, result.outcomeCode());
+        verify(inventoryClient).release(eq(DURA_RESERVATION), any());
+    }
+
+    @Test
+    void step7_selfPay_proceeds_despiteNoCoverageEngines() {
+        // Explicit self-pay proceeds even when engines were never consulted (§10.4).
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(selfPayBlock(BigDecimal.ZERO));
+
+        CommitmentService.CommitResult result =
+                service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-F3", null);
+
+        assertTrue(result.committed());
+        assertTrue(result.selection().getStepLogJson().contains("self-pay"));
+    }
+
+    // ═════════ OF-B8 — PA seam at step 7 ═════════
+
+    @Test
+    void step7_paRequired_notApproved_refusesCoded_paRequired() {
+        UUID paRef = UUID.randomUUID();
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(payerBlock(OfferFinancialsService.STATUS_VERIFIED,
+                        new BigDecimal("100.00"), BigDecimal.ZERO,
+                        true, OfferFinancialsService.PA_NOT_APPROVED, paRef));
+
+        CommitmentService.CommitResult result =
+                service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-F4", null);
+
+        assertFalse(result.committed());
+        assertEquals(CommitmentService.CODE_PA_REQUIRED, result.outcomeCode());
+        // PA state recorded on the commitment (OF-B8 contract)
+        assertEquals(OfferFinancialsService.PA_NOT_APPROVED, result.selection().getPaStatus());
+        assertEquals(paRef.toString(), result.selection().getPaReference());
+        verify(inventoryClient).release(eq(DURA_RESERVATION), any());
+    }
+
+    @Test
+    void step7_paPending_alsoRefuses_conditionalOffer() {
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(payerBlock(OfferFinancialsService.STATUS_VERIFIED,
+                        new BigDecimal("100.00"), BigDecimal.ZERO,
+                        true, OfferFinancialsService.PA_PENDING, UUID.randomUUID()));
+
+        CommitmentService.CommitResult result =
+                service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-F5", null);
+
+        assertFalse(result.committed());
+        assertEquals(CommitmentService.CODE_PA_REQUIRED, result.outcomeCode());
+    }
+
+    @Test
+    void step7_paApproved_zeroShortfall_commitsWithWaivedPayment() {
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(payerBlock(OfferFinancialsService.STATUS_VERIFIED,
+                        new BigDecimal("120.00"), BigDecimal.ZERO,
+                        true, OfferFinancialsService.PA_APPROVED, UUID.randomUUID()));
+
+        CommitmentService.CommitResult result =
+                service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-F6", null);
+
+        assertTrue(result.committed());
+        assertEquals(OfferFinancialsService.PA_APPROVED, result.selection().getPaStatus());
+        assertTrue(result.selection().getStepLogJson().contains("WAIVED"));
+        assertEquals(BigDecimal.ZERO, result.selection().getShortfallAmount());
+        verify(mushexClient, never()).createSelectionPaymentIntent(any(), anyString(), any(), any());
+    }
+
+    // ═════════ OF-B10 — step 8 (payment) + resume + compensation ═════════
+
+    @Test
+    void step8_positiveShortfall_createsIntent_holdsAwaitingPayment() {
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(selfPayBlock(new BigDecimal("120.00")));
+
+        CommitmentService.CommitResult result =
+                service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-P1", null);
+
+        assertFalse(result.committed());
+        assertEquals(CommitmentService.CODE_AWAITING_PAYMENT, result.outcomeCode());
+        assertEquals(SelectionStatus.AWAITING_PAYMENT, result.selection().getStatus());
+        assertEquals("mpi-1", result.selection().getPaymentIntentId());
+        assertEquals(new BigDecimal("120.00"), result.selection().getShortfallAmount());
+        verify(mushexClient).createSelectionPaymentIntent(any(),
+                eq(result.selection().getSelectionId()), eq(new BigDecimal("120.00")), eq("ZWG"));
+        // held — nothing committed, stock stays reserved, offer stays in-commit
+        assertEquals(OfferStatus.REVALIDATING, offer.getStatus());
+        assertEquals(MarketplaceRequestStatus.SELECTION_PENDING, request.getStatus());
+        verify(inventoryClient, never()).release(any(), any());
+        assertTrue(result.selection().getStepLogJson().contains("PENDING"));
+    }
+
+    @Test
+    void step8_intentCreateFails_failsClosed_withCompensation() {
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(selfPayBlock(new BigDecimal("120.00")));
+        when(mushexClient.createSelectionPaymentIntent(any(), anyString(), any(), any()))
+                .thenReturn(Optional.empty());
+
+        CommitmentService.CommitResult result =
+                service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-P2", null);
+
+        assertFalse(result.committed());
+        assertEquals(CommitmentService.CODE_PAYMENT_INTENT_FAILED, result.outcomeCode());
+        verify(inventoryClient).release(eq(DURA_RESERVATION), any());
+        verify(orosClient).releaseClaim(eq("CLAIM-1"), anyString(), any());
+        assertEquals(MarketplaceRequestStatus.OFFERS_AVAILABLE, request.getStatus());
+    }
+
+    @Test
+    void paidCallback_resumesCommitment_toCommitted() {
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(selfPayBlock(new BigDecimal("120.00")));
+        service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-P3", null);
+        SelectionEntity held = savedSelection.get();
+        when(selectionRepository.findFirstByPaymentIntentId("mpi-1")).thenReturn(Optional.of(held));
+
+        Optional<CommitmentService.CommitResult> resumed =
+                service.onPaymentStatusChanged("mpi-1", "PAID");
+
+        assertTrue(resumed.isPresent());
+        assertTrue(resumed.get().committed());
+        assertEquals(CommitmentService.CODE_COMMITTED, resumed.get().outcomeCode());
+        assertEquals(SelectionStatus.COMMITTED, held.getStatus());
+        assertEquals("PAID", held.getPaymentStatus());
+        assertEquals(OfferStatus.COMMITTED, offer.getStatus());
+        assertEquals(MarketplaceRequestStatus.COMMITTED, request.getStatus());
+        // the step log kept its history AND gained the PAID resolution
+        assertTrue(held.getStepLogJson().contains("PAID"));
+        assertTrue(held.getStepLogJson().contains("DURA_RESERVATION"));
+        // CC-2: the losing offer release still ran through the guarded sequence
+        assertEquals(OfferStatus.NOT_SELECTED, otherOffer.getStatus());
+    }
+
+    @Test
+    void failedCallback_compensates_selectionFails_paymentFailed() {
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(selfPayBlock(new BigDecimal("120.00")));
+        service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-P4", null);
+        SelectionEntity held = savedSelection.get();
+        when(selectionRepository.findFirstByPaymentIntentId("mpi-1")).thenReturn(Optional.of(held));
+
+        Optional<CommitmentService.CommitResult> resumed =
+                service.onPaymentStatusChanged("mpi-1", "FAILED");
+
+        assertTrue(resumed.isPresent());
+        assertFalse(resumed.get().committed());
+        assertEquals(CommitmentService.CODE_PAYMENT_FAILED, resumed.get().outcomeCode());
+        assertEquals(SelectionStatus.FAILED, held.getStatus());
+        // RC-5 family compensation: hold + claim released; nothing was paid, so no refund
+        verify(inventoryClient).release(eq(DURA_RESERVATION), any());
+        verify(orosClient).releaseClaim(eq("CLAIM-1"), anyString(), any());
+        verify(mushexClient, never()).tryRefund(any(), anyString(), any(), anyString());
+        assertEquals(MarketplaceRequestStatus.OFFERS_AVAILABLE, request.getStatus());
+    }
+
+    @Test
+    void interimCallback_pending_updatesProjectionOnly() {
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(selfPayBlock(new BigDecimal("120.00")));
+        service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-P5", null);
+        SelectionEntity held = savedSelection.get();
+        when(selectionRepository.findFirstByPaymentIntentId("mpi-1")).thenReturn(Optional.of(held));
+
+        Optional<CommitmentService.CommitResult> resumed =
+                service.onPaymentStatusChanged("mpi-1", "PENDING");
+
+        assertTrue(resumed.isEmpty());
+        assertEquals(SelectionStatus.AWAITING_PAYMENT, held.getStatus());
+        assertEquals("PENDING", held.getPaymentStatus());
+        verify(inventoryClient, never()).release(any(), any());
+    }
+
+    @Test
+    void unknownIntentCallback_isIgnored() {
+        when(selectionRepository.findFirstByPaymentIntentId("mpi-unknown"))
+                .thenReturn(Optional.empty());
+        assertTrue(service.onPaymentStatusChanged("mpi-unknown", "PAID").isEmpty());
+    }
+
+    @Test
+    void rc5_controlledWriteFailsAfterPaid_refundsAutomatically() {
+        request.setControlled(true);
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(selfPayBlock(new BigDecimal("120.00")));
+        service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-P6", null);
+        SelectionEntity held = savedSelection.get();
+        assertEquals(SelectionStatus.AWAITING_PAYMENT, held.getStatus());
+        when(selectionRepository.findFirstByPaymentIntentId("mpi-1")).thenReturn(Optional.of(held));
+        // §13.4 register write fails during the PAID resume
+        when(inventoryClient.recordControlledIssue(any(), any(), anyString(), any(), any(),
+                any(), anyString(), any())).thenReturn(false);
+
+        Optional<CommitmentService.CommitResult> resumed =
+                service.onPaymentStatusChanged("mpi-1", "PAID");
+
+        assertTrue(resumed.isPresent());
+        assertEquals(CommitmentService.CODE_CONTROLLED_REGISTER_WRITE_FAILED, resumed.get().outcomeCode());
+        // RC-5: the PAID money comes back — automatically and visibly
+        verify(mushexClient).tryRefund(any(), eq("mpi-1"), eq(new BigDecimal("120.00")), anyString());
+        verify(inventoryClient).release(eq(DURA_RESERVATION), any());
+        verify(orosClient).releaseClaim(eq("CLAIM-1"), anyString(), any());
+    }
+
+    @Test
+    void sweep_awaitingPaymentPastReservationTtl_timesOutWithCompensation() {
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(selfPayBlock(new BigDecimal("120.00")));
+        service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-P7", null);
+        SelectionEntity held = savedSelection.get();
+        when(selectionRepository.findByStatus(SelectionStatus.AWAITING_PAYMENT))
+                .thenReturn(List.of(held));
+        offer.setTtlExpiresAt(OffsetDateTime.now().minusMinutes(1));
+
+        int swept = service.sweepAwaitingPayment(OffsetDateTime.now());
+
+        assertEquals(1, swept);
+        assertEquals(SelectionStatus.FAILED, held.getStatus());
+        assertEquals(CommitmentService.CODE_PAYMENT_TIMEOUT, held.getFailureCode());
+        verify(inventoryClient).release(eq(DURA_RESERVATION), any());
+        verify(orosClient).releaseClaim(eq("CLAIM-1"), anyString(), any());
+        assertEquals(MarketplaceRequestStatus.OFFERS_AVAILABLE, request.getStatus());
+    }
+
+    @Test
+    void sweep_leavesLiveRetryWindowsAlone() {
+        when(offerFinancialsService.compute(any(), any(), any(), any()))
+                .thenReturn(selfPayBlock(new BigDecimal("120.00")));
+        service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-P8", null);
+        SelectionEntity held = savedSelection.get();
+        when(selectionRepository.findByStatus(SelectionStatus.AWAITING_PAYMENT))
+                .thenReturn(List.of(held));
+        offer.setTtlExpiresAt(OffsetDateTime.now().plusHours(1));
+
+        assertEquals(0, service.sweepAwaitingPayment(OffsetDateTime.now()));
+        assertEquals(SelectionStatus.AWAITING_PAYMENT, held.getStatus());
+    }
+
+    @Test
+    void rc1_replayOfHeldSelection_returnsAwaitingPayment() {
+        SelectionEntity held = new SelectionEntity();
+        held.setSelectionId("01SELDDDDDDDDDDDDDDDDDDDDD");
+        held.setTenantId(TENANT);
+        held.setRequestId(REQUEST_ID);
+        held.setOfferId(OFFER_ID);
+        held.setStatus(SelectionStatus.AWAITING_PAYMENT);
+        held.setIdempotencyKey("IDEM-P9");
+        when(selectionRepository.findFirstByTenantIdAndIdempotencyKey(TENANT, "IDEM-P9"))
+                .thenReturn(Optional.of(held));
+
+        CommitmentService.CommitResult result =
+                service.commit(REQUEST_ID, OFFER_ID, TENANT, "patient-1", "IDEM-P9", null);
+
+        assertTrue(result.replayed());
+        assertFalse(result.committed());
+        assertEquals(CommitmentService.CODE_AWAITING_PAYMENT, result.outcomeCode());
     }
 }

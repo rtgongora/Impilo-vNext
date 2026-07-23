@@ -34,6 +34,15 @@ public class LiabilityEstimateEntity {
     @Column(name = "assumptions", columnDefinition = "TEXT") private String assumptions;
     @Column(name = "ruleset_version", length = 32) private String rulesetVersion;
     @Column(name = "expires_at") private OffsetDateTime expiresAt;
+    /**
+     * OF-B8 (§10.6): the benefit's PA requirement recorded at estimate time —
+     * copied from cv_benefit_definitions.requires_authorisation so checkout
+     * callers learn the PA posture from the pricing call and the estimate row
+     * carries the PA assumption it was computed under (§10.5).
+     */
+    @Column(name = "requires_authorisation", nullable = false)
+    private boolean requiresAuthorisation = false;
+
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt = OffsetDateTime.now();
 
     public LiabilityEstimateEntity() {}
@@ -76,5 +85,7 @@ public class LiabilityEstimateEntity {
     public void setRulesetVersion(String v) { this.rulesetVersion = v; }
     public OffsetDateTime getExpiresAt() { return expiresAt; }
     public void setExpiresAt(OffsetDateTime v) { this.expiresAt = v; }
+    public boolean isRequiresAuthorisation() { return requiresAuthorisation; }
+    public void setRequiresAuthorisation(boolean v) { this.requiresAuthorisation = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
 }

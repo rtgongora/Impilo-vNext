@@ -16,6 +16,7 @@ import zw.gov.mohcc.impilo.msikaflow.api.TrustHeaderExtractor;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Real MusheX payment-rail client — a port of COSTA's {@code MushexPaymentIntentClient}
@@ -90,6 +91,75 @@ public class MushexClient {
             throw e;
         } catch (Exception e) {
             throw new IllegalStateException("MusheX response parse failed", e);
+        }
+    }
+
+    /**
+     * OF-B10 — commitment step 8 (§8.8): one MusheX {@code PaymentIntent} per
+     * selection payment obligation, {@code sourceType=MSIKA_SELECTION}, stable
+     * idempotency key {@code MSIKA_SELECTION:<selectionId>} so retries can never
+     * double-create intents. §10.7 binding: the payload carries amount, currency
+     * and the opaque selection id ONLY — no item names, no ZIBO codes, no
+     * diagnosis, no prescriber identity.
+     *
+     * <p>Returns {@code Optional.empty()} on any failure — the caller fails the
+     * commitment closed with compensation; a selection without a real intent
+     * must never sit in {@code AWAITING_PAYMENT}.</p>
+     */
+    public Optional<MushexIntentCreated> createSelectionPaymentIntent(HttpServletRequest inbound,
+                                                                      String selectionId,
+                                                                      BigDecimal amount,
+                                                                      String currency) {
+        try {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("sourceType", "MSIKA_SELECTION");
+            body.put("sourceId", selectionId);
+            body.put("amount", amount);
+            body.put("currency", currency != null ? currency : "USD");
+            body.put("idempotencyKey", "MSIKA_SELECTION:" + selectionId);
+
+            ResponseEntity<String> response = restClient.post()
+                    .uri("/mushex/v1/payment-intents")
+                    .headers(h -> copyTrustHeaders(inbound, h))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .toEntity(String.class);
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                log.warn("MusheX selection intent create failed: HTTP {}", response.getStatusCode());
+                return Optional.empty();
+            }
+            JsonNode data = objectMapper.readTree(response.getBody()).path("data");
+            if (data.hasNonNull("intentId")) {
+                return Optional.of(new MushexIntentCreated(data.get("intentId").asText(),
+                        data.path("status").asText("CREATED")));
+            }
+            log.warn("MusheX selection intent response missing intentId");
+            return Optional.empty();
+        } catch (Exception e) {
+            log.warn("MusheX selection intent create failed: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * OF-B10 RC-5 compensation refund — best-effort variant of
+     * {@link #requestRefund}: a PAID intent whose commitment later failed is
+     * refunded automatically and visibly; a refund transport failure is
+     * returned as {@code Optional.empty()} (logged loud) so the caller records
+     * the unresolved money state honestly instead of throwing away the
+     * compensation chain.
+     */
+    public Optional<MushexRefundCreated> tryRefund(HttpServletRequest inbound,
+                                                   String mushexPaymentIntentId,
+                                                   BigDecimal amount,
+                                                   String reason) {
+        try {
+            return Optional.of(requestRefund(inbound, mushexPaymentIntentId, amount, reason));
+        } catch (Exception e) {
+            log.error("MusheX compensation refund FAILED for intent {} — manual reconciliation required: {}",
+                    mushexPaymentIntentId, e.getMessage());
+            return Optional.empty();
         }
     }
 

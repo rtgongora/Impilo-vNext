@@ -104,12 +104,15 @@ public final class AuthorisationDtos {
                                BigDecimal standardCharge, BigDecimal allowedAmount, BigDecimal payerEstimate,
                                BigDecimal copay, BigDecimal coinsurance, BigDecimal nonCovered,
                                BigDecimal patientResponsibility, String currency, String assumptions,
-                               String rulesetVersion, OffsetDateTime expiresAt) {
+                               String rulesetVersion, OffsetDateTime expiresAt,
+                               /* OF-B8 §10.6 — benefit PA requirement at estimate time */
+                               boolean requiresAuthorisation) {
         public static EstimateView of(LiabilityEstimateEntity e) {
             return new EstimateView(e.getId(), e.getCoverageId(), e.getMemberCpid(), e.getBenefitCode(),
                     e.getStandardCharge(), e.getAllowedAmount(), e.getPayerEstimate(), e.getCopay(),
                     e.getCoinsurance(), e.getNonCovered(), e.getPatientResponsibility(), e.getCurrency(),
-                    e.getAssumptions(), e.getRulesetVersion(), e.getExpiresAt());
+                    e.getAssumptions(), e.getRulesetVersion(), e.getExpiresAt(),
+                    e.isRequiresAuthorisation());
         }
     }
 }

@@ -73,6 +73,7 @@ public class LiabilityEstimateService {
         BigDecimal coveragePct = new BigDecimal("100.00");
         String currency = "USD";
         String assumptions;
+        boolean requiresAuthorisation = false;
         if (planVersionId != null && benefitCode != null) {
             BenefitDefinitionEntity def = benefitRepository
                     .findByTenantIdAndPlanVersionIdAndBenefitCode(tenantId, planVersionId, benefitCode)
@@ -81,8 +82,12 @@ public class LiabilityEstimateService {
                 copay = def.getCopayAmount() != null ? def.getCopayAmount() : BigDecimal.ZERO;
                 coveragePct = def.getCoveragePercent() != null ? def.getCoveragePercent() : coveragePct;
                 currency = def.getCurrency();
+                // OF-B8 (§10.6): PA requirement recorded as an estimate assumption.
+                requiresAuthorisation = def.isRequiresAuthorisation();
                 assumptions = "Covered benefit " + benefitCode + " at " + coveragePct + "% after "
-                        + copay + " co-pay. Estimate only — not a final claim determination.";
+                        + copay + " co-pay."
+                        + (requiresAuthorisation ? " Prior authorisation REQUIRED for this benefit." : "")
+                        + " Estimate only — not a final claim determination.";
             } else {
                 coveragePct = BigDecimal.ZERO;
                 assumptions = "Benefit " + benefitCode + " not covered on this plan — full charge is patient responsibility.";
@@ -129,6 +134,7 @@ public class LiabilityEstimateService {
         e.setPatientResponsibility(patient);
         e.setCurrency(currency);
         e.setAssumptions(assumptions);
+        e.setRequiresAuthorisation(requiresAuthorisation);
         e.setRulesetVersion(RULESET_VERSION);
         e.setExpiresAt(OffsetDateTime.now().plusSeconds(VALIDITY_SECONDS));
         estimateRepository.save(e);

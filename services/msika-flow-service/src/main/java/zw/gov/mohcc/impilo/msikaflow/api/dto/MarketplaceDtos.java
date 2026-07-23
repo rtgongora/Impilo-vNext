@@ -5,12 +5,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import zw.gov.mohcc.impilo.msikaflow.domain.FundingMode;
 import zw.gov.mohcc.impilo.msikaflow.domain.MarketplaceProfile;
 import zw.gov.mohcc.impilo.msikaflow.domain.PublicationMode;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * OF-B4/OF-B6 request/response shapes for {@code /v1/marketplace-requests}.
@@ -43,7 +45,11 @@ public final class MarketplaceDtos {
             String urgency,
             @NotEmpty List<RequestLineDto> lines,
             List<String> invitedVendorIds,
-            String prescriptionToken
+            String prescriptionToken,
+            /* OF-B8/OF-B9 §10.3 — funding election; null => SELF_PAY (fail-closed) */
+            FundingMode fundingMode,
+            /* Ruvimbo member-coverage ref; required when fundingMode=PAYER_COVERED */
+            UUID coverageId
     ) {}
 
     public record RequestView(
@@ -105,7 +111,10 @@ public final class MarketplaceDtos {
             Integer fulfillmentWindowHours,
             OffsetDateTime ttlExpiresAt,
             List<OfferLineView> lines,
-            List<String> rankedBecause
+            List<String> rankedBecause,
+            /* OF-B9 §10.4 per-offer financial block (estimateNeverFinal:true inside);
+               null on non-comparison views where financials were not computed */
+            JsonNode financials
     ) {}
 
     public record SelectDto(@NotBlank String offerId) {}
@@ -120,7 +129,15 @@ public final class MarketplaceDtos {
             boolean replayed,
             String prescriptionClaimId,
             OffsetDateTime committedAt,
-            JsonNode stepLog
+            JsonNode stepLog,
+            /* OF-B9/OF-B10 — step-7 financial snapshot + payment posture */
+            JsonNode financials,
+            String paymentIntentId,
+            String paymentStatus,
+            BigDecimal shortfallAmount,
+            String shortfallCurrency,
+            String paStatus,
+            String paReference
     ) {}
 
     public record WithdrawDto(String reason) {}
