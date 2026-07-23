@@ -133,6 +133,13 @@ public class OutboxPublisher {
 
             case "RECONCILE_RESOLVED" -> "inventory.reconcile.resolved";
 
+            // OF-B11 reservation lifecycle events (Vol II §8.9)
+            case "RESERVATION_CREATED" -> "inventory.reservation.created.v1";
+            case "RESERVATION_RELEASED" -> "inventory.reservation.released.v1";
+            case "RESERVATION_CONSUMED" -> "inventory.reservation.consumed.v1";
+            case "RESERVATION_EXPIRED" -> "inventory.reservation.expired.v1";
+            case "RESERVATION_STATUS_CHANGED" -> "inventory.reservation.status_changed";
+
             default -> "inventory.events";
         };
     }

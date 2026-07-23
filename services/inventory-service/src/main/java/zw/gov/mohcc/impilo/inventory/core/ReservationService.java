@@ -61,4 +61,14 @@ public interface ReservationService {
      * Available quantity = on-hand − active reservations.
      */
     int availableQuantity(UUID facilityId, UUID storeId, String itemCode);
+
+    /**
+     * System expiry sweep (OF-B11 / §8.9.3 fail-close): flip every ACTIVE
+     * reservation whose {@code expiresAt} has lapsed to EXPIRED and emit the
+     * reservation-expired events. Runs without a trust context (scheduled).
+     *
+     * @param now the sweep instant
+     * @return number of reservations expired
+     */
+    int expireLapsed(OffsetDateTime now);
 }

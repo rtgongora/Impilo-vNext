@@ -21,6 +21,10 @@ public interface StockReservationRepository extends JpaRepository<StockReservati
 
     List<StockReservationEntity> findByTenantIdAndRefTypeAndRefId(UUID tenantId, String refType, String refId);
 
+    /** Expiry-sweep candidates (OF-B11): ACTIVE holds whose TTL has lapsed, across all tenants. */
+    List<StockReservationEntity> findByStatusAndExpiresAtIsNotNullAndExpiresAtBefore(
+            ReservationStatus status, java.time.OffsetDateTime cutoff);
+
     /**
      * Sum of quantity held by active reservations for an item at a store.
      * Returns 0 when there are no active reservations.
