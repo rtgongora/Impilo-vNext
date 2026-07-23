@@ -37,6 +37,7 @@ class LiabilityEstimateServiceTest {
     @Mock private CoveragePlanRepository planRepository;
     @Mock private BenefitDefinitionRepository benefitRepository;
     @Mock private LiabilityEstimateRepository estimateRepository;
+    @Mock private FormularyService formularyService;
     @Mock private CoverageEventService eventService;
 
     private LiabilityEstimateService service;
@@ -49,7 +50,7 @@ class LiabilityEstimateServiceTest {
     @BeforeEach
     void setUp() {
         service = new LiabilityEstimateService(memberRepository, planRepository,
-                benefitRepository, estimateRepository, eventService);
+                benefitRepository, estimateRepository, formularyService, eventService);
 
         MemberCoverageEntity member = new MemberCoverageEntity(tenantId, "pod-1", "CPID-1",
                 planId, "M-1", "SELF", java.time.LocalDate.now());

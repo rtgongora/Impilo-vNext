@@ -40,11 +40,15 @@ import java.util.UUID;
  *   <li>§10.4 degradation — engines unreachable → status {@code UNVERIFIED}
  *       (display truth); commitment step 7 fails CLOSED for payer-covered
  *       flows and proceeds only for the explicit self-pay election.</li>
- *   <li>Benefit-code note — until the OF-B8 payer-formulary layer
- *       ({@code cv_formulary}) lands, the offer line's coded {@code itemCode}
- *       is passed as the benefit code; plans that don't define that code
- *       price honestly as non-covered (full charge = patient share), never
- *       silently as covered.</li>
+ *   <li>Benefit-code mapping (OF-B8, the formulary half) — a MEDICATION line
+ *       (its published-snapshot {@code codingSystem} is WHO ATC) passes its
+ *       ATC code as {@code medicationCode}, and Ruvimbo resolves the plan
+ *       benefit THROUGH the payer formulary ({@code cv_formulary}); the
+ *       estimate comes back carrying the MAPPED benefit code (which is what
+ *       the PA flow then uses). Non-medication lines pass their item code as
+ *       the benefit code unchanged. Either way a plan that doesn't cover the
+ *       line prices honestly as non-covered (full charge = patient share),
+ *       never silently as covered.</li>
  * </ul>
  */
 @Service
@@ -152,6 +156,8 @@ public class OfferFinancialsService {
         Map<String, BigDecimal> paAmounts = new LinkedHashMap<>();
         String currency = null;
         String memberCpid = null;
+        // OF-B8 — the published snapshot is the coding-system truth per line.
+        Map<String, String> codingSystemByLineRef = codingSystemsFromSnapshot(request);
         for (FulfillmentOfferLineEntity line : lines) {
             BigDecimal lineCharge = charge.get().lineCharges().get(line.getItemCode());
             if (lineCharge == null) {
@@ -160,8 +166,15 @@ public class OfferFinancialsService {
                 return unverified(mode, offer,
                         "COSTA returned no charge for line " + line.getItemCode(), now);
             }
-            CoverageClient.EstimateResult result =
-                    coverageClient.estimateLiability(coverageId, line.getItemCode(), lineCharge, inbound);
+            String codingSystem = line.getRequestLineRef() != null
+                    ? codingSystemByLineRef.get(line.getRequestLineRef()) : null;
+            CoverageClient.EstimateResult result = isAtcSystem(codingSystem)
+                    // Medication line: ATC code goes over the seam as the
+                    // medication code — Ruvimbo maps it through cv_formulary
+                    // to the plan benefit (OF-B8 benefit-code mapping).
+                    ? coverageClient.estimateMedicationLiability(
+                            coverageId, line.getItemCode(), codingSystem, lineCharge, inbound)
+                    : coverageClient.estimateLiability(coverageId, line.getItemCode(), lineCharge, inbound);
             if (result.outcome() == CoverageClient.Outcome.UNREACHABLE) {
                 return unverified(mode, offer, "Ruvimbo liability engine unreachable", now);
             }
@@ -261,6 +274,54 @@ public class OfferFinancialsService {
                     log.warn("PA auto-submit failed for coverage {} — posture UNVERIFIED", coverageId);
                     return new PaPosture(PA_UNVERIFIED, null);
                 });
+    }
+
+    /** Canonical WHO ATC system URI — the ZIBO-registered national medicine coding. */
+    static final String ATC_SYSTEM = "http://www.whocc.no/atc";
+
+    /**
+     * True when the line's coding system is WHO ATC (http/https, optional
+     * trailing slash) — the marker that the line is a MEDICATION coded against
+     * the ZIBO national registry.
+     */
+    static boolean isAtcSystem(String codingSystem) {
+        if (codingSystem == null || codingSystem.isBlank()) {
+            return false;
+        }
+        String normalised = codingSystem.trim().toLowerCase(java.util.Locale.ROOT)
+                .replaceFirst("^https://", "http://");
+        if (normalised.endsWith("/")) {
+            normalised = normalised.substring(0, normalised.length() - 1);
+        }
+        return ATC_SYSTEM.equals(normalised);
+    }
+
+    /**
+     * Reads {@code lineRef -> codingSystem} out of the request's §11.8
+     * published snapshot (the only line-coding truth msika-flow holds). An
+     * unparseable/absent snapshot yields an empty map — every line then rides
+     * the non-medication path, which prices honestly rather than guessing.
+     */
+    private Map<String, String> codingSystemsFromSnapshot(MarketplaceRequestEntity request) {
+        String json = request.getPublishedLinesJson();
+        if (json == null || json.isBlank()) {
+            return Map.of();
+        }
+        try {
+            Map<String, String> out = new LinkedHashMap<>();
+            for (com.fasterxml.jackson.databind.JsonNode line : objectMapper.readTree(json).path("lines")) {
+                String lineRef = line.path("lineRef").asText(null);
+                String codingSystem = line.path("codingSystem").asText(null);
+                if (lineRef != null && codingSystem != null && !codingSystem.isBlank()) {
+                    out.put(lineRef, codingSystem);
+                }
+            }
+            return out;
+        } catch (Exception e) {
+            log.warn("Unparseable published snapshot on request {} — treating all lines as non-medication: {}",
+                    request.getRequestId(), e.getMessage());
+            return Map.of();
+        }
     }
 
     private FinancialBlock unverified(FundingMode mode, FulfillmentOfferEntity offer,

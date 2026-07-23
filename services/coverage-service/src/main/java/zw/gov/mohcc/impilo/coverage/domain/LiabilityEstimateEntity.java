@@ -43,6 +43,18 @@ public class LiabilityEstimateEntity {
     @Column(name = "requires_authorisation", nullable = false)
     private boolean requiresAuthorisation = false;
 
+    // OF-B8 (V020) — the medication resolution this estimate was computed under:
+    // the ATC-coded medication line and the cv_formulary row that mapped it to
+    // its plan benefit (audit + §10.5 assumptions traceability).
+    @Column(name = "medication_code", length = 64)
+    private String medicationCode;
+    @Column(name = "coding_system", length = 255)
+    private String codingSystem;
+    @Column(name = "formulary_ref")
+    private UUID formularyRef;
+    @Column(name = "formulary_tier", length = 24)
+    private String formularyTier;
+
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt = OffsetDateTime.now();
 
     public LiabilityEstimateEntity() {}
@@ -87,5 +99,13 @@ public class LiabilityEstimateEntity {
     public void setExpiresAt(OffsetDateTime v) { this.expiresAt = v; }
     public boolean isRequiresAuthorisation() { return requiresAuthorisation; }
     public void setRequiresAuthorisation(boolean v) { this.requiresAuthorisation = v; }
+    public String getMedicationCode() { return medicationCode; }
+    public void setMedicationCode(String v) { this.medicationCode = v; }
+    public String getCodingSystem() { return codingSystem; }
+    public void setCodingSystem(String v) { this.codingSystem = v; }
+    public UUID getFormularyRef() { return formularyRef; }
+    public void setFormularyRef(UUID v) { this.formularyRef = v; }
+    public String getFormularyTier() { return formularyTier; }
+    public void setFormularyTier(String v) { this.formularyTier = v; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
 }

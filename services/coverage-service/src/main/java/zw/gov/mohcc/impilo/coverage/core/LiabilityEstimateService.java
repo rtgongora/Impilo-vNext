@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.coverage.domain.BenefitDefinitionEntity;
 import zw.gov.mohcc.impilo.coverage.domain.CoveragePlanEntity;
+import zw.gov.mohcc.impilo.coverage.domain.FormularyEntity;
 import zw.gov.mohcc.impilo.coverage.domain.LiabilityEstimateEntity;
 import zw.gov.mohcc.impilo.coverage.domain.MemberCoverageEntity;
 import zw.gov.mohcc.impilo.coverage.repository.BenefitDefinitionRepository;
@@ -27,6 +28,14 @@ import java.util.UUID;
  *   coinsurance      = (allowed - copay) - payerEstimate   (the member's share of the covered part)
  *   patient          = copay + coinsurance + nonCovered
  *
+ * <p>OF-B8 medication path (Vol II §8.1.5/§10): when the charge line is a MEDICATION —
+ * the caller passes {@code medicationCode} (ATC-coded against the ZIBO national registry) —
+ * the plan's benefit is resolved through the V020 payer formulary ({@code cv_formulary}):
+ * an active covered listing maps the medication to its plan benefit (tier + PA flag recorded);
+ * an explicit exclusion or absent/expired listing prices honestly as NON-COVERED — a payer
+ * formulary never covers by silence. Non-medication callers pass a benefit code directly and
+ * are unchanged.</p>
+ *
  * An estimate is explicitly NOT a final claim determination (recorded in assumptions).
  */
 @Service
@@ -39,17 +48,20 @@ public class LiabilityEstimateService {
     private final CoveragePlanRepository planRepository;
     private final BenefitDefinitionRepository benefitRepository;
     private final LiabilityEstimateRepository estimateRepository;
+    private final FormularyService formularyService;
     private final CoverageEventService eventService;
 
     public LiabilityEstimateService(MemberCoverageRepository memberRepository,
                                     CoveragePlanRepository planRepository,
                                     BenefitDefinitionRepository benefitRepository,
                                     LiabilityEstimateRepository estimateRepository,
+                                    FormularyService formularyService,
                                     CoverageEventService eventService) {
         this.memberRepository = memberRepository;
         this.planRepository = planRepository;
         this.benefitRepository = benefitRepository;
         this.estimateRepository = estimateRepository;
+        this.formularyService = formularyService;
         this.eventService = eventService;
     }
 
@@ -58,8 +70,22 @@ public class LiabilityEstimateService {
         return estimateRepository.findByTenantIdAndMemberCpidOrderByCreatedAtDesc(tenantId, memberCpid);
     }
 
+    /** Non-medication path — the caller names the plan benefit directly (unchanged contract). */
     @Transactional
     public LiabilityEstimateEntity estimate(UUID tenantId, String podId, UUID coverageId, String benefitCode,
+                                            BigDecimal standardCharge, String facilityId, UUID correlationId) {
+        return estimate(tenantId, podId, coverageId, benefitCode, null, null,
+                standardCharge, facilityId, correlationId);
+    }
+
+    /**
+     * Full path. Exactly one of {@code benefitCode} / {@code medicationCode} drives resolution:
+     * a non-null {@code medicationCode} resolves the benefit THROUGH the payer formulary
+     * (OF-B8 benefit-code mapping); otherwise {@code benefitCode} is used directly.
+     */
+    @Transactional
+    public LiabilityEstimateEntity estimate(UUID tenantId, String podId, UUID coverageId, String benefitCode,
+                                            String medicationCode, String codingSystem,
                                             BigDecimal standardCharge, String facilityId, UUID correlationId) {
         if (standardCharge == null || standardCharge.signum() < 0) {
             throw new IllegalArgumentException("standardCharge must be a non-negative amount from COSTA");
@@ -74,7 +100,62 @@ public class LiabilityEstimateService {
         String currency = "USD";
         String assumptions;
         boolean requiresAuthorisation = false;
-        if (planVersionId != null && benefitCode != null) {
+        FormularyEntity formularyEntry = null;
+        String resolvedBenefitCode = benefitCode;
+        boolean medicationLine = medicationCode != null && !medicationCode.isBlank();
+
+        if (medicationLine && planVersionId != null) {
+            // ── OF-B8: medication → payer formulary → benefit mapping ────
+            FormularyService.FormularyResolution resolution = formularyService.resolve(
+                    tenantId, planVersionId, medicationCode, codingSystem, OffsetDateTime.now());
+            switch (resolution.status()) {
+                case ON_FORMULARY -> {
+                    formularyEntry = resolution.entry();
+                    resolvedBenefitCode = formularyEntry.getBenefitCode();
+                    BenefitDefinitionEntity def = benefitRepository
+                            .findByTenantIdAndPlanVersionIdAndBenefitCode(tenantId, planVersionId, resolvedBenefitCode)
+                            .orElse(null);
+                    if (def != null) {
+                        copay = def.getCopayAmount() != null ? def.getCopayAmount() : BigDecimal.ZERO;
+                        coveragePct = def.getCoveragePercent() != null ? def.getCoveragePercent() : coveragePct;
+                        currency = def.getCurrency();
+                        // Formulary PA flag surfaces EXACTLY like the benefit-level flag.
+                        requiresAuthorisation = def.isRequiresAuthorisation()
+                                || formularyEntry.isRequiresAuthorisation();
+                        assumptions = "Medication " + medicationCode + " on formulary (tier "
+                                + formularyEntry.getTier() + ") under benefit " + resolvedBenefitCode
+                                + " at " + coveragePct + "% after " + copay + " co-pay."
+                                + (requiresAuthorisation ? " Prior authorisation REQUIRED for this medication." : "")
+                                + " Estimate only — not a final claim determination.";
+                    } else {
+                        // A formulary row pointing at an undefined benefit is a
+                        // configuration fault — priced honestly as non-covered.
+                        coveragePct = BigDecimal.ZERO;
+                        assumptions = "Medication " + medicationCode + " maps to benefit " + resolvedBenefitCode
+                                + " which this plan version does not define — treated as non-covered. Estimate only.";
+                    }
+                }
+                case EXCLUDED -> {
+                    formularyEntry = resolution.entry();
+                    resolvedBenefitCode = medicationCode;
+                    coveragePct = BigDecimal.ZERO;
+                    assumptions = "Medication " + medicationCode
+                            + " is explicitly excluded from this plan's formulary — full charge is patient responsibility.";
+                }
+                case NOT_LISTED -> {
+                    resolvedBenefitCode = medicationCode;
+                    coveragePct = BigDecimal.ZERO;
+                    assumptions = "Medication " + medicationCode
+                            + " has no active listing on this plan's formulary — full charge is patient responsibility.";
+                }
+                default -> throw new IllegalStateException("Unhandled formulary status: " + resolution.status());
+            }
+        } else if (medicationLine) {
+            resolvedBenefitCode = medicationCode;
+            coveragePct = BigDecimal.ZERO;
+            assumptions = "No plan version resolved for medication " + medicationCode
+                    + " — treated as non-covered. Estimate only.";
+        } else if (planVersionId != null && benefitCode != null) {
             BenefitDefinitionEntity def = benefitRepository
                     .findByTenantIdAndPlanVersionIdAndBenefitCode(tenantId, planVersionId, benefitCode)
                     .orElse(null);
@@ -124,7 +205,16 @@ public class LiabilityEstimateService {
         e.setCoverageId(coverageId);
         e.setMemberCpid(member.getClientId());
         e.setFacilityId(facilityId);
-        e.setBenefitCode(benefitCode);
+        e.setBenefitCode(resolvedBenefitCode);
+        if (medicationLine) {
+            e.setMedicationCode(medicationCode);
+            e.setCodingSystem(codingSystem != null && !codingSystem.isBlank()
+                    ? codingSystem : FormularyEntity.ATC_CODING_SYSTEM);
+        }
+        if (formularyEntry != null) {
+            e.setFormularyRef(formularyEntry.getId());
+            e.setFormularyTier(formularyEntry.getTier());
+        }
         e.setStandardCharge(standardCharge.setScale(2, RoundingMode.HALF_UP));
         e.setAllowedAmount(allowed.setScale(2, RoundingMode.HALF_UP));
         e.setPayerEstimate(payerEstimate.setScale(2, RoundingMode.HALF_UP));
@@ -142,7 +232,10 @@ public class LiabilityEstimateService {
         java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
         payload.put("estimate_id", e.getId().toString());
         payload.put("coverage_id", coverageId.toString());
-        payload.put("benefit_code", benefitCode);
+        payload.put("benefit_code", resolvedBenefitCode);
+        if (medicationLine) {
+            payload.put("medication_code", medicationCode);
+        }
         payload.put("patient_responsibility", patient);
         payload.put("payer_estimate", e.getPayerEstimate());
         eventService.emitDomain("LIABILITY_ESTIMATE", e.getId().toString(),

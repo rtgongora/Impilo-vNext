@@ -83,4 +83,27 @@ class ServiceOriginatedHeaderContractTest {
                 .isNotEqualTo(CoverageClient.paSubmissionIdempotencyKey(coverageId, changedAuthType))
                 .startsWith("msika-flow-pa:" + coverageId + ":");
     }
+
+    @Test
+    @DisplayName("OF-B8: medication liability key is deterministic AND disjoint from the benefit-code key family")
+    void medicationLiabilityIdempotencyKey_deterministic_andDisjointFromBenefitFamily() {
+        UUID coverageId = UUID.randomUUID();
+        String atc = "http://www.whocc.no/atc";
+        String a = CoverageClient.medicationLiabilityIdempotencyKey(coverageId, "J01CA04", atc, new BigDecimal("25.00"));
+        String b = CoverageClient.medicationLiabilityIdempotencyKey(coverageId, "J01CA04", atc, new BigDecimal("25.00"));
+        String differentCharge = CoverageClient.medicationLiabilityIdempotencyKey(coverageId, "J01CA04", atc, new BigDecimal("30.00"));
+        String differentMed = CoverageClient.medicationLiabilityIdempotencyKey(coverageId, "N02AA01", atc, new BigDecimal("25.00"));
+
+        assertThat(a).isEqualTo(b)
+                .isNotEqualTo(differentCharge)
+                .isNotEqualTo(differentMed)
+                .startsWith("msika-flow-liability-med:");
+        // Null coding system normalises to the ATC default — same logical call.
+        assertThat(CoverageClient.medicationLiabilityIdempotencyKey(coverageId, "J01CA04", null, new BigDecimal("25.0")))
+                .isEqualTo(a);
+        // The SAME code string through the old benefit-code path must be a
+        // DIFFERENT key — the two body shapes must never replay each other.
+        assertThat(CoverageClient.liabilityIdempotencyKey(coverageId, "J01CA04", new BigDecimal("25.00")))
+                .isNotEqualTo(a);
+    }
 }

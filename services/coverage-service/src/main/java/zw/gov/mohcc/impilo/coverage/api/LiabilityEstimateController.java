@@ -37,6 +37,7 @@ public class LiabilityEstimateController {
             @Valid @RequestBody EstimateRequest req) {
         UUID tid = UUID.fromString(tenantId);
         EstimateView view = EstimateView.of(service.estimate(tid, podId, req.coverageId(), req.benefitCode(),
+                req.medicationCode(), req.codingSystem(),
                 req.standardCharge(), req.facilityId(), CorrelationIds.fromHeader(correlationId)));
         return ResponseEntity.status(HttpStatus.CREATED).body(view);
     }

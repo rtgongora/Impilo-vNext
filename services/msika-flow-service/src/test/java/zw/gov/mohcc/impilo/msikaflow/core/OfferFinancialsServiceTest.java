@@ -314,6 +314,126 @@ class OfferFinancialsServiceTest {
         assertTrue(node.path("paRequired").asBoolean());
     }
 
+    // ── OF-B8 medication mapping (the formulary half) ────────────────────
+
+    private void makeMedicationRequest(String lineRef, String codingSystem) {
+        request.setFundingMode(FundingMode.PAYER_COVERED);
+        request.setCoverageId(COVERAGE_ID);
+        request.setPublishedLinesJson("{\"profile\":\"MEDICATION\",\"lines\":[{\"lineRef\":\""
+                + lineRef + "\",\"itemCode\":\"" + line.getItemCode()
+                + "\",\"codingSystem\":\"" + codingSystem + "\",\"quantity\":2,"
+                + "\"controlled\":false,\"coldChain\":false,\"substitutionAllowed\":true}]}");
+        line.setRequestLineRef(lineRef);
+    }
+
+    @Test
+    void atcCodedLine_passesAtcAsMedicationCode_andUsesMappedBenefitForPa() {
+        line.setItemCode("N02AA01");
+        makeMedicationRequest("L1", "http://www.whocc.no/atc");
+        when(costaClient.chargeForLines(anyList(), any())).thenReturn(Optional.of(
+                new CostaClient.CostaCharge(new BigDecimal("25.00"),
+                        Map.of("N02AA01", new BigDecimal("25.00")))));
+        // Formulary-shaped answer: coverage resolved the ATC code through
+        // cv_formulary and returns the MAPPED plan benefit + the PA flag.
+        when(coverageClient.estimateMedicationLiability(
+                eq(COVERAGE_ID), eq("N02AA01"), eq("http://www.whocc.no/atc"),
+                eq(new BigDecimal("25.00")), any()))
+                .thenReturn(new CoverageClient.EstimateResult(CoverageClient.Outcome.OK,
+                        estimate(UUID.randomUUID(), "ACUTE_MEDS", "25.00", "20.00", "5.00", true)));
+        UUID submittedId = UUID.randomUUID();
+        when(coverageClient.findAuthorisations(eq("CPID-1"), any()))
+                .thenReturn(Optional.of(List.of()));
+        when(coverageClient.submitAuthorisation(eq(COVERAGE_ID), eq(List.of("ACUTE_MEDS")), any(), any()))
+                .thenReturn(Optional.of(submittedId));
+
+        OfferFinancialsService.FinancialBlock block =
+                service.compute(request, offer, List.of(line), null);
+
+        assertEquals(OfferFinancialsService.STATUS_VERIFIED, block.status());
+        assertEquals(new BigDecimal("20.00"), block.coveredAmount());
+        assertEquals(new BigDecimal("5.00"), block.patientLiability());
+        assertTrue(block.paRequired());
+        assertEquals(OfferFinancialsService.PA_PENDING, block.paStatus());
+        // The PA submission carries the MAPPED benefit code, not the raw ATC code.
+        verify(coverageClient).submitAuthorisation(eq(COVERAGE_ID), eq(List.of("ACUTE_MEDS")), any(), any());
+        // The interim (itemCode-as-benefit-code) path is never used for a medication line.
+        verify(coverageClient, never()).estimateLiability(any(), anyString(), any(), any());
+    }
+
+    @Test
+    void atcCodedLine_notOnFormulary_isHonestlyNonCovered_patientPaysFull() {
+        line.setItemCode("Z88XX01");
+        makeMedicationRequest("L1", "http://www.whocc.no/atc");
+        when(costaClient.chargeForLines(anyList(), any())).thenReturn(Optional.of(
+                new CostaClient.CostaCharge(new BigDecimal("75.00"),
+                        Map.of("Z88XX01", new BigDecimal("75.00")))));
+        // Formulary-shaped NOT_LISTED answer: estimate exists, payer share 0.
+        when(coverageClient.estimateMedicationLiability(
+                eq(COVERAGE_ID), eq("Z88XX01"), anyString(), any(), any()))
+                .thenReturn(new CoverageClient.EstimateResult(CoverageClient.Outcome.OK,
+                        estimate(UUID.randomUUID(), "Z88XX01", "75.00", "0.00", "75.00", false)));
+
+        OfferFinancialsService.FinancialBlock block =
+                service.compute(request, offer, List.of(line), null);
+
+        assertEquals(OfferFinancialsService.STATUS_VERIFIED, block.status());
+        assertEquals(new BigDecimal("0.00"), block.coveredAmount());
+        assertEquals(new BigDecimal("75.00"), block.patientLiability());
+        assertFalse(block.paRequired());
+    }
+
+    @Test
+    void nonAtcCodedLine_staysOnBenefitCodePath() {
+        makeMedicationRequest("L1", "https://impilo.gov.zw/fhir/CodeSystem/surgical-procedures");
+        when(costaClient.chargeForLines(anyList(), any())).thenReturn(Optional.of(
+                costaCharge60()));
+        when(coverageClient.estimateLiability(eq(COVERAGE_ID), eq("ZIBO-X"), eq(new BigDecimal("60.00")), any()))
+                .thenReturn(new CoverageClient.EstimateResult(CoverageClient.Outcome.OK,
+                        estimate(UUID.randomUUID(), "ZIBO-X", "60.00", "48.00", "12.00", false)));
+
+        OfferFinancialsService.FinancialBlock block =
+                service.compute(request, offer, List.of(line), null);
+
+        assertEquals(OfferFinancialsService.STATUS_VERIFIED, block.status());
+        verify(coverageClient, never()).estimateMedicationLiability(any(), anyString(), anyString(), any(), any());
+    }
+
+    @Test
+    void missingSnapshot_treatsLinesAsNonMedication_neverGuesses() {
+        request.setFundingMode(FundingMode.PAYER_COVERED);
+        request.setCoverageId(COVERAGE_ID);
+        request.setPublishedLinesJson(null);
+        line.setRequestLineRef("L1");
+        when(costaClient.chargeForLines(anyList(), any())).thenReturn(Optional.of(
+                costaCharge60()));
+        when(coverageClient.estimateLiability(eq(COVERAGE_ID), eq("ZIBO-X"), any(), any()))
+                .thenReturn(new CoverageClient.EstimateResult(CoverageClient.Outcome.OK,
+                        estimate(UUID.randomUUID(), "ZIBO-X", "60.00", "48.00", "12.00", false)));
+
+        OfferFinancialsService.FinancialBlock block =
+                service.compute(request, offer, List.of(line), null);
+
+        assertEquals(OfferFinancialsService.STATUS_VERIFIED, block.status());
+        verify(coverageClient, never()).estimateMedicationLiability(any(), anyString(), anyString(), any(), any());
+    }
+
+    @Test
+    void atcSystemDetection_normalisesSchemeAndTrailingSlash() {
+        assertTrue(OfferFinancialsService.isAtcSystem("http://www.whocc.no/atc"));
+        assertTrue(OfferFinancialsService.isAtcSystem("https://www.whocc.no/atc"));
+        assertTrue(OfferFinancialsService.isAtcSystem("http://www.whocc.no/atc/"));
+        assertTrue(OfferFinancialsService.isAtcSystem(" HTTP://WWW.WHOCC.NO/ATC "));
+        assertFalse(OfferFinancialsService.isAtcSystem(null));
+        assertFalse(OfferFinancialsService.isAtcSystem(""));
+        assertFalse(OfferFinancialsService.isAtcSystem("https://impilo.gov.zw/fhir/CodeSystem/clinical-specialty"));
+    }
+
+    /** COSTA charge fixture for the default ZIBO-X line. */
+    private static CostaClient.CostaCharge costaCharge60() {
+        return new CostaClient.CostaCharge(new BigDecimal("60.00"),
+                Map.of("ZIBO-X", new BigDecimal("60.00")));
+    }
+
     private MarketplaceRequestEntity selfPayRequest() {
         MarketplaceRequestEntity r = new MarketplaceRequestEntity();
         r.setRequestId("01REQBBBBBBBBBBBBBBBBBBBBB");

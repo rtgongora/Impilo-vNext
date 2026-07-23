@@ -97,6 +97,11 @@ public final class AuthorisationDtos {
     public record EstimateRequest(
             @NotNull UUID coverageId,
             String benefitCode,
+            /* OF-B8 medication path — an ATC-coded medication line resolves its
+             * benefit THROUGH the payer formulary (cv_formulary) instead of a
+             * direct benefit code. codingSystem defaults to WHO ATC. */
+            String medicationCode,
+            String codingSystem,
             @NotNull BigDecimal standardCharge,
             String facilityId) {}
 
@@ -106,13 +111,16 @@ public final class AuthorisationDtos {
                                BigDecimal patientResponsibility, String currency, String assumptions,
                                String rulesetVersion, OffsetDateTime expiresAt,
                                /* OF-B8 §10.6 — benefit PA requirement at estimate time */
-                               boolean requiresAuthorisation) {
+                               boolean requiresAuthorisation,
+                               /* OF-B8 formulary resolution recorded on the estimate */
+                               String medicationCode, String codingSystem, String formularyTier) {
         public static EstimateView of(LiabilityEstimateEntity e) {
             return new EstimateView(e.getId(), e.getCoverageId(), e.getMemberCpid(), e.getBenefitCode(),
                     e.getStandardCharge(), e.getAllowedAmount(), e.getPayerEstimate(), e.getCopay(),
                     e.getCoinsurance(), e.getNonCovered(), e.getPatientResponsibility(), e.getCurrency(),
                     e.getAssumptions(), e.getRulesetVersion(), e.getExpiresAt(),
-                    e.isRequiresAuthorisation());
+                    e.isRequiresAuthorisation(),
+                    e.getMedicationCode(), e.getCodingSystem(), e.getFormularyTier());
         }
     }
 }
